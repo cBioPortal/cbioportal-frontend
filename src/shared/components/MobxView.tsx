@@ -1,5 +1,5 @@
 import { observable } from 'mobx';
-import { getMobxPromiseGroupStatus } from '../lib/getMobxPromiseGroupStatus';
+import { getMobxPromiseGroupStatus } from 'cbioportal-frontend-commons';
 
 export type MobxView = {
     isComplete: boolean;

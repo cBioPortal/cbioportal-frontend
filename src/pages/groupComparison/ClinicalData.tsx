@@ -6,7 +6,11 @@ import { action, autorun, computed, IReactionDisposer, observable } from 'mobx';
 import { SimpleGetterLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import ClinicalDataEnrichmentsTable from './ClinicalDataEnrichmentsTable';
 import _ from 'lodash';
-import { DownloadControls, remoteData } from 'cbioportal-frontend-commons';
+import {
+    DownloadControls,
+    getMobxPromiseGroupStatus,
+    remoteData,
+} from 'cbioportal-frontend-commons';
 import client from 'shared/api/cbioportalClientInstance';
 import {
     boxPlotTooltip,
@@ -25,7 +29,6 @@ import ScrollBar from 'shared/components/Scrollbar/ScrollBar';
 import BoxScatterPlot, {
     IBoxScatterPlotData,
 } from 'shared/components/plots/BoxScatterPlot';
-import { getMobxPromiseGroupStatus } from 'shared/lib/getMobxPromiseGroupStatus';
 import { scatterPlotSize } from 'shared/components/plots/PlotUtils';
 import {
     CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG,

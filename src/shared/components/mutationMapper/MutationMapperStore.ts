@@ -80,6 +80,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
                     mutationMapperConfig.isoformOverrideSource,
                 filterMutationsBySelectedTranscript:
                     mutationMapperStoreConfig.filterMutationsBySelectedTranscript,
+                enableCivic: mutationMapperConfig.show_civic,
             },
             getMutations
         );

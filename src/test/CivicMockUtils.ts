@@ -3,12 +3,11 @@ import {
     ICivicVariant,
     ICivicEntry,
     ICivicVariantData,
-} from 'shared/model/Civic';
+} from 'react-mutation-mapper';
 import {
     DiscreteCopyNumberData,
     Mutation,
 } from 'shared/api/generated/CBioPortalAPI';
-import * as _ from 'lodash';
 
 export function getCivicVariantData(): ICivicVariantData {
     return {

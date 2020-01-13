@@ -1,4 +1,13 @@
 export {
+    default as Civic,
+    download as civicDownload,
+    sortValue as civicSortValue,
+} from './component/civic/Civic';
+export {
+    default as ClinVarId,
+    getClinVarId,
+} from './component/clinvar/ClinVarId';
+export {
     default as ClinVar,
     sortValue as clinVarSortValue,
 } from './component/column/ClinVar';
@@ -40,7 +49,13 @@ export {
     MUTATION_STATUS_BADGE_STYLE_OVERRIDE,
     MutationStatusBadgeSelectorProps,
 } from './component/filter/MutationStatusBadgeSelector';
-
+export {
+    default as GnomadFrequency,
+    calculateAlleleFrequency as calculateGnomadAllelFrequency,
+} from './component/gnomad/GnomadFrequency';
+export {
+    default as GnomadFrequencyTable,
+} from './component/gnomad/GnomadFrequencyTable';
 export {
     default as OncoKB,
     sortValue as oncoKbAnnotationSortValue,
@@ -58,18 +73,6 @@ export { default as OncoKbTooltip } from './component/oncokb/OncoKbTooltip';
 export { default as ReferenceList } from './component/oncokb/ReferenceList';
 export { default as RefComponent } from './component/oncokb/RefComponent';
 export { default as SummaryWithRefs } from './component/oncokb/SummaryWithRefs';
-
-export {
-    default as ClinVarId,
-    getClinVarId,
-} from './component/clinvar/ClinVarId';
-export {
-    default as GnomadFrequency,
-    calculateAlleleFrequency as calculateGnomadAllelFrequency,
-} from './component/gnomad/GnomadFrequency';
-export {
-    default as GnomadFrequencyTable,
-} from './component/gnomad/GnomadFrequencyTable';
 
 export * from './component/dataTable/ColumnSelector';
 export * from './component/mutationMapper/FilterResetPanel';
@@ -115,6 +118,7 @@ export { PositionFilter } from './filter/PositionFilter';
 export { ProteinImpactTypeFilter } from './filter/ProteinImpactTypeFilter';
 
 export { IHotspotIndex } from './model/CancerHotspot';
+export * from './model/Civic';
 export { DataFilter, DataFilterType } from './model/DataFilter';
 export { DataStore } from './model/DataStore';
 export { DomainSpec } from './model/DomainSpec';
@@ -126,7 +130,10 @@ export { MutationMapperStore } from './model/MutationMapperStore';
 export { RemoteData } from './model/RemoteData';
 export { SequenceSpec } from './model/SequenceSpec';
 
+export { default as CivicAPI } from './store/CivicDataFetcher';
+
 export * from './util/CancerHotspotsUtils';
+export * from './util/CivicUtils';
 export * from './util/DataFetcherUtils';
 export * from './util/FilterUtils';
 export * from './util/FormatUtils';
