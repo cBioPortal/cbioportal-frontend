@@ -23,16 +23,16 @@ import client from '../shared/api/cbioportalClientInstance';
 import internalClient from '../shared/api/cbioportalInternalClientInstance';
 import $ from 'jquery';
 import { AppStore } from '../AppStore';
-import { cachePostMethodsOnClient } from 'cbioportal-frontend-commons';
 import CBioPortalAPI from '../shared/api/generated/CBioPortalAPI';
 import CBioPortalAPIInternal from '../shared/api/generated/CBioPortalAPIInternal';
-import CivicAPI from '../shared/api/CivicAPI';
 import {
+    cachePostMethodsOnClient,
     Genome2StructureAPI,
     GenomeNexusAPI,
     GenomeNexusAPIInternal,
     OncoKbAPI,
 } from 'cbioportal-frontend-commons';
+import { CivicAPI } from 'react-mutation-mapper';
 import AppConfig from 'appConfig';
 import { sendSentryMessage } from '../shared/lib/tracking';
 import { log } from '../shared/lib/consoleLog';

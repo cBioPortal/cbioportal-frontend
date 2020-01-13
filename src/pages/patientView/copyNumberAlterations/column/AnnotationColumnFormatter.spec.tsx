@@ -10,7 +10,6 @@ import {
     getExpectedCnaCivicEntry,
     getCnaCivicEmptyVariants,
 } from 'test/CivicMockUtils';
-import { ICivicEntry } from 'shared/model/Civic';
 
 describe('AnnotationColumnFormatter', () => {
     before(() => {});

@@ -29,9 +29,11 @@ import MobxPromiseCache from '../../../shared/lib/MobxPromiseCache';
 import { ICoExpressionPlotProps } from './CoExpressionPlot';
 import { bind } from 'bind-decorator';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
-import { getMobxPromiseGroupStatus } from '../../../shared/lib/getMobxPromiseGroupStatus';
 import { IDataQueryFilter } from 'shared/lib/StoreUtils';
-import { remoteData } from 'cbioportal-frontend-commons';
+import {
+    remoteData,
+    getMobxPromiseGroupStatus,
+} from 'cbioportal-frontend-commons';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 
 export interface ICoExpressionTabProps {
