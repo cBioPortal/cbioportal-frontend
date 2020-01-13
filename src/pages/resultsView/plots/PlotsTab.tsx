@@ -68,7 +68,11 @@ import WaterfallPlot from 'shared/components/plots/WaterfallPlot';
 import TablePlot from 'shared/components/plots/TablePlot';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import InfoIcon from '../../../shared/components/InfoIcon';
-import { DownloadControls, remoteData } from 'cbioportal-frontend-commons';
+import {
+    DownloadControls,
+    getMobxPromiseGroupStatus,
+    remoteData,
+} from 'cbioportal-frontend-commons';
 import BoxScatterPlot, {
     IBoxScatterPlotData,
 } from '../../../shared/components/plots/BoxScatterPlot';
@@ -81,7 +85,6 @@ import {
     dataPointIsLimited,
 } from '../../../shared/components/plots/PlotUtils';
 import { getTablePlotDownloadData } from '../../../shared/components/plots/TablePlotUtils';
-import { getMobxPromiseGroupStatus } from '../../../shared/lib/getMobxPromiseGroupStatus';
 import MultipleCategoryBarPlot from '../../../shared/components/plots/MultipleCategoryBarPlot';
 import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
 import onMobxPromise from '../../../shared/lib/onMobxPromise';

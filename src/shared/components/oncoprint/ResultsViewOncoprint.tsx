@@ -14,6 +14,7 @@ import {
     capitalize,
     FadeInteraction,
     getBrowserWindow,
+    getMobxPromiseGroupStatus,
     isWebdriver,
     remoteData,
     svgToPdfDownload,
@@ -78,7 +79,6 @@ import WindowStore from '../window/WindowStore';
 import { OncoprintAnalysisCaseType } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
 import { MakeMobxView } from '../MobxView';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
-import { getMobxPromiseGroupStatus } from '../../lib/getMobxPromiseGroupStatus';
 
 interface IResultsViewOncoprintProps {
     divId: string;
