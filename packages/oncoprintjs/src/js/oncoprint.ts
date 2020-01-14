@@ -41,6 +41,7 @@ export type InitParams = {
     init_vert_zoom?: number;
     init_track_group_padding?: number;
     init_cell_padding_on?: boolean;
+    max_height?:number;
 };
 
 export type HorzZoomCallback = (zoom:number)=>void;
