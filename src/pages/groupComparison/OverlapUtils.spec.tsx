@@ -43,7 +43,10 @@ describe('OverlapUtils', () => {
                 joinGroupNames([{ name: 'nameA', ordinal: '1' }], 'and')
             ).toEqualJSX(
                 <span>
-                    (<strong>1</strong>)&nbsp;nameA
+                    <>
+                        (<strong>1</strong>)&nbsp;
+                    </>
+                    nameA
                 </span>
             );
             expect(
@@ -57,11 +60,17 @@ describe('OverlapUtils', () => {
             ).toEqualJSX(
                 <span>
                     <span>
-                        (<strong>1</strong>)&nbsp;nameA
+                        <>
+                            (<strong>1</strong>)&nbsp;
+                        </>
+                        nameA
                     </span>{' '}
                     and{' '}
                     <span>
-                        (<strong>B</strong>)&nbsp;nameB
+                        <>
+                            (<strong>B</strong>)&nbsp;
+                        </>
+                        nameB
                     </span>
                 </span>
             );
@@ -77,15 +86,24 @@ describe('OverlapUtils', () => {
             ).toEqualJSX(
                 <span>
                     <span>
-                        (<strong>1</strong>)&nbsp;nameA
+                        <>
+                            (<strong>1</strong>)&nbsp;
+                        </>
+                        nameA
                     </span>
                     ,{' '}
                     <span>
-                        (<strong>2</strong>)&nbsp;nameB
+                        <>
+                            (<strong>2</strong>)&nbsp;
+                        </>
+                        nameB
                     </span>
                     , and{' '}
                     <span>
-                        (<strong>3</strong>)&nbsp;nameC
+                        <>
+                            (<strong>3</strong>)&nbsp;
+                        </>
+                        nameC
                     </span>
                 </span>
             );
@@ -102,19 +120,31 @@ describe('OverlapUtils', () => {
             ).toEqualJSX(
                 <span>
                     <span>
-                        (<strong>1</strong>)&nbsp;nameA
+                        <>
+                            (<strong>1</strong>)&nbsp;
+                        </>
+                        nameA
                     </span>
                     ,{' '}
                     <span>
-                        (<strong>2</strong>)&nbsp;nameB
+                        <>
+                            (<strong>2</strong>)&nbsp;
+                        </>
+                        nameB
                     </span>
                     ,{' '}
                     <span>
-                        (<strong>3</strong>)&nbsp;nameC
+                        <>
+                            (<strong>3</strong>)&nbsp;
+                        </>
+                        nameC
                     </span>
                     , and{' '}
                     <span>
-                        (<strong>4</strong>)&nbsp;nameD
+                        <>
+                            (<strong>4</strong>)&nbsp;
+                        </>
+                        nameD
                     </span>
                 </span>
             );

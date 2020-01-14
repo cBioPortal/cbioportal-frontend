@@ -67,11 +67,17 @@ export default class GroupTickLabelComponent extends React.Component<
                 <TruncatedTextWithTooltipSVG
                     text={this.group!.name}
                     textRef={this.ref}
-                    prefixTspans={[
-                        <tspan>(</tspan>,
-                        <tspan fontWeight="bold">{this.group!.ordinal}</tspan>,
-                        <tspan>)&nbsp;</tspan>,
-                    ]}
+                    prefixTspans={
+                        this.group!.ordinal.length > 0
+                            ? [
+                                  <tspan>(</tspan>,
+                                  <tspan fontWeight="bold">
+                                      {this.group!.ordinal}
+                                  </tspan>,
+                                  <tspan>)&nbsp;</tspan>,
+                              ]
+                            : undefined
+                    }
                     datum={this.group}
                     tooltip={(group: ComparisonGroup) => {
                         return <div>{renderGroupNameWithOrdinal(group)}</div>;

@@ -1,7 +1,6 @@
 import * as React from 'react';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { observer } from 'mobx-react';
-import GroupComparisonStore from './GroupComparisonStore';
 import { action, computed, observable } from 'mobx';
 import Venn from './OverlapVenn';
 import _ from 'lodash';
@@ -20,9 +19,11 @@ import WindowStore from 'shared/components/window/WindowStore';
 import { getPatientIdentifiers } from '../studyView/StudyViewUtils';
 import OverlapExclusionIndicator from './OverlapExclusionIndicator';
 import OverlapUpset from './OverlapUpset';
+import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 
 export interface IOverlapProps {
-    store: GroupComparisonStore;
+    store: ComparisonStore;
+    resultsViewMode?: boolean;
 }
 
 const SVG_ID = 'comparison-tab-overlap-svg';
@@ -327,6 +328,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                     plotElt = (
                         <OverlapUpset
                             store={this.props.store}
+                            disableGroupCreation={this.props.resultsViewMode}
                             sideBySide={this.areUpsetPlotsSidebySide}
                             maxWidth={this.maxWidth}
                             samplesVennPartition={
@@ -344,6 +346,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                     plotElt = (
                         <Venn
                             svgId={SVG_ID}
+                            disableGroupCreation={this.props.resultsViewMode}
                             sampleGroups={this.sampleGroupsWithCases.result!}
                             patientGroups={this.patientGroupsWithCases.result!}
                             uidToGroup={this.uidToGroup.result!}
@@ -365,7 +368,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
         await: () => [this.plot],
         render: () => (
             <div
-                data-test="ComparisonPageOverlapTabDiv"
+                data-test="ComparisonPageOverlapTabContent"
                 className="borderedChart posRelative"
             >
                 {this.plotExists && (

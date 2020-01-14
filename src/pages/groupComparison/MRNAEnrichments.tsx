@@ -6,14 +6,15 @@ import { MakeMobxView } from '../../shared/components/MobxView';
 import EnrichmentsDataSetDropdown from '../resultsView/enrichments/EnrichmentsDataSetDropdown';
 import LoadingIndicator from '../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../shared/components/ErrorMessage';
-import GroupComparisonStore from './GroupComparisonStore';
 import ExpressionEnrichmentContainer from '../resultsView/enrichments/ExpressionEnrichmentsContainer';
 import { MakeEnrichmentsTabUI } from './GroupComparisonUtils';
 import { remoteData } from 'cbioportal-frontend-commons';
 import * as _ from 'lodash';
+import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 
 export interface IMRNAEnrichmentsProps {
-    store: GroupComparisonStore;
+    store: ComparisonStore;
+    resultsViewMode?: boolean;
 }
 
 @observer
@@ -90,6 +91,7 @@ export default class MRNAEnrichments extends React.Component<
                         sampleKeyToSample={
                             this.props.store.sampleKeyToSample.result!
                         }
+                        isGeneCheckBoxEnabled={this.props.resultsViewMode}
                     />
                 </div>
             );
