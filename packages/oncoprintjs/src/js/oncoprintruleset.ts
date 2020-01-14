@@ -641,8 +641,7 @@ class LinearInterpRuleSet extends ConditionRuleSet {
                 var shift_to_make_pos = Math.abs(range[0]) + 1;
                 var log_range = Math.log(range[1] + shift_to_make_pos) - Math.log(range[0] + shift_to_make_pos);
                 var log_range_lower = Math.log(range[0] + shift_to_make_pos);
-                return function (val) {
-                    val = parseFloat(val as any);
+                return function (val:number) {
                     return (Math.log(val + shift_to_make_pos) - log_range_lower) / log_range;
                 };
             } else {

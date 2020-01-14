@@ -435,12 +435,12 @@ export default class OncoprintModel {
             return calculateTrackTops(model, false);
         });
         this.cell_tops = new CachedProperty({}, function() {
+            const track_ids = model.getTracks();
             const track_tops = model.track_tops.get();
             const cell_tops:TrackProp<number> = {};
-            for (const k in track_tops) {
-                if (track_tops.hasOwnProperty(k)) {
-                    const key = parseInt(k, 10);
-                    cell_tops[key] = track_tops[key] + model.getTrackPadding(key, true);
+            for (const id of track_ids) {
+                if (id in track_tops) {
+                    cell_tops[id] = track_tops[id] + model.getTrackPadding(id, true);
                 }
             }
             return cell_tops;
@@ -459,12 +459,12 @@ export default class OncoprintModel {
             return calculateHeaderTops(model, true);
         });
         this.cell_tops_zoomed = new CachedProperty({}, function() {
+            const track_ids = model.getTracks();
             const track_tops = model.track_tops_zoomed.get();
             const cell_tops:TrackProp<number> = {};
-            for (const k in track_tops) {
-                if (track_tops.hasOwnProperty(k)) {
-                    const key = parseInt(k, 10);
-                    cell_tops[key] = track_tops[key] + model.getTrackPadding(key);
+            for (const id of track_ids) {
+                if (id in track_tops) {
+                    cell_tops[id] = track_tops[id] + model.getTrackPadding(id);
                 }
             }
             return cell_tops;
@@ -841,8 +841,8 @@ export default class OncoprintModel {
 
 
         function z_comparator(shapeA:ComputedShapeParams, shapeB:ComputedShapeParams) {
-            const zA = parseFloat(shapeA.z as any);
-            const zB = parseFloat(shapeB.z as any);
+            const zA = shapeA.z;
+            const zB = shapeB.z;
             if (zA < zB) {
                 return -1;
             } else if (zA > zB) {

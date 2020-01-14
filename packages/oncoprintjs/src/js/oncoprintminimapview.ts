@@ -100,6 +100,7 @@ export default class OncoprintMinimapView {
     private resize_hover:"r"|"l"|"t"|"b"|"tl"|"br"|"bl"|"tr"|false = false;
 
     private rendering_suppressed = false;
+    private visible = false;
 
     constructor(
         private $div:JQuery,
@@ -638,6 +639,10 @@ export default class OncoprintMinimapView {
         return model.getZoomedColumnLeft(model.getIdOrder()[colIndex]);
     }
 
+    private get shouldRender() {
+        return this.visible && !this.rendering_suppressed;
+    }
+
     private getNewCanvas() {
         const old_canvas = this.$canvas[0];
         old_canvas.removeEventListener("webglcontextlost", this.handleContextLost);
@@ -838,7 +843,7 @@ export default class OncoprintMinimapView {
     };
 
     private drawOncoprint(model:OncoprintModel, cell_view:OncoprintWebGLCellView) {
-        if (this.rendering_suppressed) {
+        if (!this.shouldRender) {
             return;
         }
 
@@ -896,7 +901,7 @@ export default class OncoprintMinimapView {
     }
 
     private drawOverlayRect(model:OncoprintModel, cell_view:OncoprintWebGLCellView, opt_rect?:OverlayRectSpec) {
-        if (this.rendering_suppressed) {
+        if (!this.shouldRender) {
             return;
         }
 
@@ -980,7 +985,7 @@ export default class OncoprintMinimapView {
     }
 
     private drawOncoprintAndOverlayRect(model:OncoprintModel, cell_view:OncoprintWebGLCellView) {
-        if (this.rendering_suppressed) {
+        if (!this.shouldRender) {
             return;
         }
         this.drawOncoprint(model, cell_view);
@@ -1053,6 +1058,14 @@ export default class OncoprintMinimapView {
     }
     public hideIds(model:OncoprintModel, cell_view:OncoprintWebGLCellView) {
         this.drawOncoprintAndOverlayRect(model, cell_view);
+    }
+
+    public setMinimapVisible(visible:boolean, model?:OncoprintModel, cell_view?:OncoprintWebGLCellView) {
+        this.visible = visible;
+
+        if (this.visible && model && cell_view) {
+            this.drawOncoprintAndOverlayRect(model, cell_view);
+        }
     }
 
     public setWindowPosition(x:number, y:number) {
