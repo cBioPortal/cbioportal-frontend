@@ -49,7 +49,7 @@ export function sortSamples(samples: Array<ClinicalDataBySampleId>,
         naturalSortIndex: number;
     };
     // put primaries first (could be extended with more if necessary)
-    let sampleTypeOrdering: string[] = ['Primary'];
+    let sampleTypeOrdering: string[] = ['primary', 'metastasis', 'cfdna'];
     let sampleOrder: sampleOrderT[] = [];
     
     for (let i: number = 0; i < samples.length; i++) {
@@ -58,7 +58,8 @@ export function sortSamples(samples: Array<ClinicalDataBySampleId>,
         let eventOrdering = collectionDayMap[id];
 
         // 2. if cases have derived normalized case types, put primary first
-        let sampleTypeIndex = sampleTypeOrdering.indexOf(clinicalDataLegacyCleanAndDerived[id].DERIVED_NORMALIZED_CASE_TYPE);
+        const caseType = clinicalDataLegacyCleanAndDerived[id].DERIVED_NORMALIZED_CASE_TYPE;
+        let sampleTypeIndex = caseType ? sampleTypeOrdering.indexOf(caseType.toLowerCase()) : -1;
         if (sampleTypeIndex === -1) {
             sampleTypeIndex = sampleTypeOrdering.length;
         }

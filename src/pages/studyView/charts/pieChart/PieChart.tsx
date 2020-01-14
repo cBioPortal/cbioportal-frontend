@@ -6,13 +6,13 @@ import _ from "lodash";
 import {getFrequencyStr, toSvgDomNodeWithLegend} from "pages/studyView/StudyViewUtils";
 import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
 import {AbstractChart} from "pages/studyView/charts/ChartContainer";
-import ifndef from "shared/lib/ifndef";
 import autobind from 'autobind-decorator';
 import {ClinicalDataCountSummary} from "pages/studyView/StudyViewUtils";
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
 import {DefaultTooltip, getTextWidth} from "cbioportal-frontend-commons";
 import {DEFAULT_NA_COLOR} from "shared/lib/Colors";
+import ifNotDefined from "../../../../shared/lib/ifNotDefined";
 
 export interface IPieChartProps {
     width: number;
@@ -190,10 +190,10 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                 events={this.userEvents}
                 style={{
                     data: {
-                        fill: ifndef(this.fill, "#cccccc"),
-                        stroke: ifndef(this.stroke, "0x000000"),
-                        strokeWidth: ifndef(this.strokeWidth, 0),
-                        fillOpacity: ifndef(this.fillOpacity, 1),
+                        fill: ifNotDefined(this.fill, "#cccccc"),
+                        stroke: ifNotDefined(this.stroke, "0x000000"),
+                        strokeWidth: ifNotDefined(this.strokeWidth, 0),
+                        fillOpacity: ifNotDefined(this.fillOpacity, 1),
                         cursor: 'pointer'
                     },
                     labels: {
