@@ -325,7 +325,7 @@ export function getGeneticTrackRuleSetParams(
     }
     rule_set = _.cloneDeep(rule_set);
     if (distinguishGermlineMutations) {
-        Object.assign(rule_set.rule_params, germline_rule_params);
+        Object.assign(rule_set.rule_params.conditional, germline_rule_params);
     }
     return rule_set;
 }
