@@ -43,7 +43,7 @@ categories:
     labels:
       - 'chore'
       - 'dependencies'
-  - title: ':shipit: Prototype'
+  - title: '📐 Prototype'
     labels:
       - 'cl-prototype'
 exclude-labels:
