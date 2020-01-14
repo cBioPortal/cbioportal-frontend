@@ -306,7 +306,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             studyName = <StudyLink studyId={study.studyId}>{study.name}</StudyLink>;
         }
 
-        if (this.patientViewPageStore.patientViewData.isComplete && this.patientViewPageStore.studyMetaData.isComplete && sampleManager !== null) {
+        if (this.patientViewPageStore.patientViewData.isComplete &&
+            this.patientViewPageStore.studyMetaData.isComplete &&
+            this.patientViewPageStore.clinicalEvents.isComplete &&
+            sampleManager !== null) {
 
             sampleHeader = _.map(sampleManager!.samples, (sample: ClinicalDataBySampleId) => {
                 const isPDX:boolean = (sampleManager &&
