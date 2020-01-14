@@ -7,13 +7,14 @@ import EnrichmentsDataSetDropdown from '../resultsView/enrichments/EnrichmentsDa
 import ExpressionEnrichmentContainer from '../resultsView/enrichments/ExpressionEnrichmentsContainer';
 import Loader from '../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../shared/components/ErrorMessage';
-import GroupComparisonStore from './GroupComparisonStore';
 import { MakeEnrichmentsTabUI } from './GroupComparisonUtils';
 import { remoteData } from 'cbioportal-frontend-commons';
 import * as _ from 'lodash';
+import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 
 export interface IProteinEnrichmentsProps {
-    store: GroupComparisonStore;
+    store: ComparisonStore;
+    resultsViewMode?: boolean;
 }
 
 @observer
@@ -89,6 +90,7 @@ export default class ProteinEnrichments extends React.Component<
                         sampleKeyToSample={
                             this.props.store.sampleKeyToSample.result!
                         }
+                        isGeneCheckBoxEnabled={this.props.resultsViewMode}
                     />
                 </div>
             );

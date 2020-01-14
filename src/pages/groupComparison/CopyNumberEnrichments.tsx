@@ -2,7 +2,6 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import EnrichmentsDataSetDropdown from '../resultsView/enrichments/EnrichmentsDataSetDropdown';
 import AlterationEnrichmentContainer from '../resultsView/enrichments/AlterationEnrichmentsContainer';
-import GroupComparisonStore from './GroupComparisonStore';
 import autobind from 'autobind-decorator';
 import { MolecularProfile } from '../../shared/api/generated/CBioPortalAPI';
 import { MakeMobxView } from '../../shared/components/MobxView';
@@ -12,9 +11,12 @@ import { MakeEnrichmentsTabUI } from './GroupComparisonUtils';
 import { remoteData } from 'cbioportal-frontend-commons';
 import _ from 'lodash';
 import { AlterationContainerType } from 'pages/resultsView/enrichments/EnrichmentsUtil';
+import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
+import { ResultsViewPageStore } from '../resultsView/ResultsViewPageStore';
 
 export interface ICopyNumberEnrichmentsProps {
-    store: GroupComparisonStore;
+    store: ComparisonStore;
+    resultsViewStore?: ResultsViewPageStore;
 }
 
 @observer
@@ -106,6 +108,7 @@ export default class CopyNumberEnrichments extends React.Component<
                         onSetPatientLevelEnrichments={
                             this.props.store.setUsePatientLevelEnrichments
                         }
+                        store={this.props.resultsViewStore}
                     />
                 </div>
             );

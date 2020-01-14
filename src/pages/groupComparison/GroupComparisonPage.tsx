@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { inject, observer } from 'mobx-react';
-import GroupComparisonStore, { OverlapStrategy } from './GroupComparisonStore';
+import GroupComparisonStore from './GroupComparisonStore';
 import MutationEnrichments from './MutationEnrichments';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
@@ -34,6 +34,7 @@ import GroupComparisonURLWrapper, {
 
 import styles from './styles.module.scss';
 import 'cbioportal-frontend-commons/dist/styles.css';
+import { OverlapStrategy } from '../../shared/lib/comparison/ComparisonStore';
 
 export interface IGroupComparisonPageProps {
     routing: any;
