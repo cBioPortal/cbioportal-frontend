@@ -24,7 +24,7 @@ function extractRGBA(str:string):[number,number,number,number] {
 type AddVertexCallback = (vertex:[number,number,number], color:[number,number,number,number])=>void;
 
 function rectangleToVertexes(params:ComputedShapeParams, z_index:number, addVertex:AddVertexCallback) {
-    const x = parseFloat(params.x as any), y = parseFloat(params.y as any), height = parseFloat(params.height as any), width = parseFloat(params.width as any);
+    const x = params.x, y = params.y, height = params.height, width = params.width;
 
     // Fill
     const fill_rgba = extractRGBA(params.fill);
@@ -37,7 +37,7 @@ function rectangleToVertexes(params:ComputedShapeParams, z_index:number, addVert
     addVertex([x,y+height,z_index],fill_rgba);
 
     // Stroke
-    const stroke_width = parseFloat(params['stroke-width'] as any);
+    const stroke_width = params['stroke-width'];
     if (stroke_width > 0) {
         // left side
         const stroke_rgba = extractRGBA(params.stroke);
@@ -80,15 +80,15 @@ function rectangleToVertexes(params:ComputedShapeParams, z_index:number, addVert
 
 function triangleToVertexes(params:ComputedShapeParams, z_index:number, addVertex:AddVertexCallback) {
     const fill_rgba = extractRGBA(params.fill);
-    addVertex([parseFloat(params.x1 as any), parseFloat(params.y1 as any), z_index], fill_rgba);
-    addVertex([parseFloat(params.x2 as any), parseFloat(params.y2 as any), z_index], fill_rgba);
-    addVertex([parseFloat(params.x3 as any), parseFloat(params.y3 as any), z_index], fill_rgba);
+    addVertex([params.x1, params.y1, z_index], fill_rgba);
+    addVertex([params.x2, params.y2, z_index], fill_rgba);
+    addVertex([params.x3, params.y3, z_index], fill_rgba);
 }
 
 function ellipseToVertexes(params:ComputedShapeParams, z_index:number, addVertex:AddVertexCallback) {
-    const center = {x: parseFloat(params.x as any) + parseFloat(params.width as any) / 2, y: parseFloat(params.y as any) + parseFloat(params.height as any) / 2};
-    const horzrad = parseFloat(params.width as any) / 2;
-    const vertrad = parseFloat(params.height as any) / 2;
+    const center = {x:params.x +params.width / 2, y:params.y +params.height / 2};
+    const horzrad =params.width / 2;
+    const vertrad =params.height / 2;
 
     const fill_rgba = extractRGBA(params.fill);
     addVertex([center.x, center.y, z_index], fill_rgba);
@@ -126,10 +126,10 @@ function ellipseToVertexes(params:ComputedShapeParams, z_index:number, addVertex
 
 function lineToVertexes(params:ComputedShapeParams, z_index:number, addVertex:AddVertexCallback) {
     // For simplicity of dealing with webGL we'll implement lines as thin triangle pairs
-    let x1 = parseFloat(params.x1 as any);
-    let x2 = parseFloat(params.x2 as any);
-    let y1 = parseFloat(params.y1 as any);
-    let y2 = parseFloat(params.y2 as any);
+    let x1 = params.x1;
+    let x2 = params.x2;
+    let y1 = params.y1;
+    let y2 = params.y2;
 
     if (x1 !== x2) {
         // WLOG make x1,y1 the one on the left
@@ -147,7 +147,7 @@ function lineToVertexes(params:ComputedShapeParams, z_index:number, addVertex:Ad
     const perpendicular_vector_length = Math.sqrt(perpendicular_vector[0] * perpendicular_vector[0] + perpendicular_vector[1] * perpendicular_vector[1]);
     const unit_perp_vector = [perpendicular_vector[0] / perpendicular_vector_length, perpendicular_vector[1] / perpendicular_vector_length];
 
-    const half_stroke_width = parseFloat(params['stroke-width'] as any) / 2;
+    const half_stroke_width = params['stroke-width'] / 2;
     const direction1 = [unit_perp_vector[0] * half_stroke_width, unit_perp_vector[1] * half_stroke_width];
     const direction2 = [direction1[0] * -1, direction1[1] * -1];
     const A = [x1 + direction1[0], y1 + direction1[1]];

@@ -193,12 +193,16 @@ export function bucketSortHelper<T>(
     // bucket sort the specified range
     // gather elements into buckets
     var buckets:{[vectorElt:string]:T[]} = {};
+    var keys = [];
     var vector, key;
     var sortFirst = [];
     for (var i=sort_range_lower_index_incl; i<sort_range_upper_index_excl; i++) {
         vector = getVector(array[i]);
         if (vector.length > vector_index) {
             key = vector[vector_index];
+            if (!(key in buckets)) {
+                keys.push(key);
+            }
             buckets[key] = buckets[key] || [];
             buckets[key].push(array[i]);
         } else {
@@ -207,12 +211,8 @@ export function bucketSortHelper<T>(
         }
     }
     // reduce in sorted order
-    var keys:any[] = Object.keys(buckets);
     if (!isStringElt) {
         // sort numbers
-        for (var i=0; i<keys.length; i++) {
-            keys[i] = parseFloat(keys[i]);
-        }
         keys.sort(sgndiff);
     } else {
         // sort strings

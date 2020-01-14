@@ -476,8 +476,10 @@ export default class Oncoprint {
         }
         if (visible) {
             this.$minimap_div.css({'display': 'block', 'top': this.cell_view.getVisibleAreaHeight(this.model) + 30, 'left': $(this.ctr_selector).width() - this.$minimap_div.outerWidth() - 10});
+            this.minimap_view.setMinimapVisible(true, this.model, this.cell_view);
         } else {
             this.$minimap_div.css('display', 'none');
+            this.minimap_view.setMinimapVisible(false);
             this.executeMinimapCloseCallbacks();
         }
         this.resizeAndOrganizeAfterTimeout();
