@@ -1,9 +1,9 @@
 {
   "swagger": "2.0",
   "info": {
-    "description": "OncoKB, a comprehensive and curated precision oncology knowledge base, offers oncologists detailed, evidence-based information about individual somatic mutations and structural alterations present in patient tumors with the goal of supporting optimal treatment decisions.",
+    "description": "These endpoints are designed for premium users. Please contact OncoKB team(contact@oncokb.org) if you want to be upgraded.",
     "version": "v1.0.0",
-    "title": "OncoKB APIs",
+    "title": "OncoKB APIs for Premium Users",
     "contact": {
       "name": "OncoKB",
       "url": "https://www.oncokb.org",
@@ -24,16 +24,20 @@
       "description": "OncoKB Drugs"
     },
     {
-      "name": "Genesets",
-      "description": "Genesets curated by OncoKB"
-    },
-    {
       "name": "Annotations",
       "description": "Providing annotation services"
     },
     {
+      "name": "Cancer Genes",
+      "description": "Cancer Genes"
+    },
+    {
       "name": "Genes",
       "description": "OncoKB Genes"
+    },
+    {
+      "name": "Genesets",
+      "description": "Genesets Api Controller"
     },
     {
       "name": "Info",
@@ -46,10 +50,6 @@
     {
       "name": "Search",
       "description": "The search endpoints"
-    },
-    {
-      "name": "Utils",
-      "description": "Utility endpoints to download annotated variants, actionable variants, cancer gene list and all curated genes"
     },
     {
       "name": "Variants",
@@ -68,7 +68,7 @@
         ],
         "summary": "annotateCopyNumberAlterationsGet",
         "description": "Annotate copy number alteration.",
-        "operationId": "annotateCopyNumberAlterationsGetUsingGET",
+        "operationId": "annotateCopyNumberAlterationsGetUsingGET_1",
         "consumes": [
           "application/json"
         ],
@@ -133,7 +133,7 @@
         ],
         "summary": "annotateCopyNumberAlterationsPost",
         "description": "Annotate copy number alterations.",
-        "operationId": "annotateCopyNumberAlterationsPostUsingPOST",
+        "operationId": "annotateCopyNumberAlterationsPostUsingPOST_1",
         "consumes": [
           "application/json"
         ],
@@ -180,7 +180,7 @@
         ],
         "summary": "annotateMutationsByGenomicChangeGet",
         "description": "Annotate mutation by genomic change.",
-        "operationId": "annotateMutationsByGenomicChangeGetUsingGET",
+        "operationId": "annotateMutationsByGenomicChangeGetUsingGET_1",
         "consumes": [
           "application/json"
         ],
@@ -224,7 +224,7 @@
         ],
         "summary": "annotateMutationsByGenomicChangePost",
         "description": "Annotate mutations by genomic change.",
-        "operationId": "annotateMutationsByGenomicChangePostUsingPOST",
+        "operationId": "annotateMutationsByGenomicChangePostUsingPOST_1",
         "consumes": [
           "application/json"
         ],
@@ -271,7 +271,7 @@
         ],
         "summary": "annotateMutationsByHGVSgGet",
         "description": "Annotate mutation by HGVSg.",
-        "operationId": "annotateMutationsByHGVSgGetUsingGET",
+        "operationId": "annotateMutationsByHGVSgGetUsingGET_1",
         "consumes": [
           "application/json"
         ],
@@ -315,7 +315,7 @@
         ],
         "summary": "annotateMutationsByHGVSgPost",
         "description": "Annotate mutations by genomic change.",
-        "operationId": "annotateMutationsByHGVSgPostUsingPOST",
+        "operationId": "annotateMutationsByHGVSgPostUsingPOST_1",
         "consumes": [
           "application/json"
         ],
@@ -362,7 +362,7 @@
         ],
         "summary": "annotateMutationsByProteinChangeGet",
         "description": "Annotate mutation by protein change.",
-        "operationId": "annotateMutationsByProteinChangeGetUsingGET",
+        "operationId": "annotateMutationsByProteinChangeGetUsingGET_1",
         "consumes": [
           "application/json"
         ],
@@ -455,7 +455,7 @@
         ],
         "summary": "annotateMutationsByProteinChangePost",
         "description": "Annotate mutations by protein change.",
-        "operationId": "annotateMutationsByProteinChangePostUsingPOST",
+        "operationId": "annotateMutationsByProteinChangePostUsingPOST_1",
         "consumes": [
           "application/json"
         ],
@@ -502,7 +502,7 @@
         ],
         "summary": "annotateStructuralVariantsGet",
         "description": "Annotate structural variant.",
-        "operationId": "annotateStructuralVariantsGetUsingGET",
+        "operationId": "annotateStructuralVariantsGetUsingGET_1",
         "consumes": [
           "application/json"
         ],
@@ -593,7 +593,7 @@
         ],
         "summary": "annotateStructuralVariantsPost",
         "description": "Annotate structural variants.",
-        "operationId": "annotateStructuralVariantsPostUsingPOST",
+        "operationId": "annotateStructuralVariantsPostUsingPOST_1",
         "consumes": [
           "application/json"
         ],
@@ -665,8 +665,7 @@
         "tags": [
           "Drugs"
         ],
-        "summary": "drugsGet",
-        "description": "Get all curated drugs.",
+        "summary": "Get all curated drugs.",
         "operationId": "drugsGetUsingGET",
         "consumes": [
           "application/json"
@@ -692,8 +691,7 @@
         "tags": [
           "Drugs"
         ],
-        "summary": "drugsLookupGet",
-        "description": "Search drugs.",
+        "summary": "Search drugs.",
         "operationId": "drugsLookupGetUsingGET",
         "consumes": [
           "application/json"
@@ -1290,7 +1288,7 @@
           "Info"
         ],
         "summary": "infoGet",
-        "operationId": "infoGetUsingGET",
+        "operationId": "infoGetUsingGET_1",
         "consumes": [
           "application/json"
         ],
@@ -1314,7 +1312,7 @@
         ],
         "summary": "levelsGet",
         "description": "Get all levels.",
-        "operationId": "levelsGetUsingGET",
+        "operationId": "levelsGetUsingGET_1",
         "consumes": [
           "application/json"
         ],
@@ -1338,7 +1336,7 @@
         ],
         "summary": "levelsResistanceGet",
         "description": "Get all resistance levels.",
-        "operationId": "levelsResistanceGetUsingGET",
+        "operationId": "levelsResistanceGetUsingGET_1",
         "consumes": [
           "application/json"
         ],
@@ -1362,7 +1360,7 @@
         ],
         "summary": "levelsSensitiveGet",
         "description": "Get all sensitive levels.",
-        "operationId": "levelsSensitiveGetUsingGET",
+        "operationId": "levelsSensitiveGetUsingGET_1",
         "consumes": [
           "application/json"
         ],
@@ -1598,7 +1596,7 @@
       "get": {
         "tags": [
           "Variants",
-          "Utils"
+          "Cancer Genes"
         ],
         "summary": "utilsAllActionableVariantsGet",
         "description": "Get All Actionable Variants.",
@@ -1641,7 +1639,7 @@
       "get": {
         "tags": [
           "Variants",
-          "Utils"
+          "Cancer Genes"
         ],
         "summary": "utilsAllActionableVariantsTxtGet",
         "description": "Get All Actionable Variants in text file.",
@@ -1681,7 +1679,7 @@
       "get": {
         "tags": [
           "Variants",
-          "Utils"
+          "Cancer Genes"
         ],
         "summary": "utilsAllAnnotatedVariantsGet",
         "description": "Get All Annotated Variants.",
@@ -1724,7 +1722,7 @@
       "get": {
         "tags": [
           "Variants",
-          "Utils"
+          "Cancer Genes"
         ],
         "summary": "utilsAllAnnotatedVariantsTxtGet",
         "description": "Get All Annotated Variants in text file.",
@@ -1764,7 +1762,7 @@
       "get": {
         "tags": [
           "Genes",
-          "Utils"
+          "Cancer Genes"
         ],
         "summary": "utilsAllCuratedGenesGet",
         "description": "Get list of genes OncoKB curated",
@@ -1807,7 +1805,7 @@
       "get": {
         "tags": [
           "Genes",
-          "Utils"
+          "Cancer Genes"
         ],
         "summary": "utilsAllCuratedGenesTxtGet",
         "description": "Get list of genes OncoKB curated in text file.",
@@ -1846,12 +1844,11 @@
     "/utils/cancerGeneList": {
       "get": {
         "tags": [
-          "Genes",
-          "Utils"
+          "Cancer Genes"
         ],
         "summary": "utilsCancerGeneListGet",
         "description": "Get cancer gene list",
-        "operationId": "utilsCancerGeneListGetUsingGET",
+        "operationId": "utilsCancerGeneListGetUsingGET_1",
         "consumes": [
           "application/json"
         ],
@@ -1889,12 +1886,11 @@
     "/utils/cancerGeneList.txt": {
       "get": {
         "tags": [
-          "Genes",
-          "Utils"
+          "Cancer Genes"
         ],
         "summary": "utilsCancerGeneListTxtGet",
         "description": "Get cancer gene list in text file.",
-        "operationId": "utilsCancerGeneListTxtGetUsingGET",
+        "operationId": "utilsCancerGeneListTxtGetUsingGET_1",
         "consumes": [
           "application/json"
         ],

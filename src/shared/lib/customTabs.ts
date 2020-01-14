@@ -4,6 +4,11 @@ import {ICustomTabConfiguration} from "../model/ITabConfiguration";
 import {autorun} from "mobx";
 
 export function loadCustomTabDeps(tab:any){
+    if (tab.pathsToCSS) {
+        tab.pathsToCSS.forEach((str: string) => {
+            $('head').append(`<link rel="stylesheet" href=${str} type="text/css" />`);
+        });
+    }
     if (tab.pathsToJs) {
         const proms:Promise<any>[] = [];
         tab.pathsToJs.forEach((str:string)=>{
