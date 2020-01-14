@@ -250,7 +250,7 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
     private refreshOncoprint(props:IOncoprintProps) {
         if (!this.oncoprint) {
             // instantiate new one
-            this.oncoprint = new OncoprintJS(`#${props.divId}`, props.width, props.initParams)
+            this.oncoprint = new OncoprintJS(`#${props.divId}`, props.width, props.initParams);
             this.oncoprint.setTrackGroupLegendOrder([GENETIC_TRACK_GROUP_INDEX, CLINICAL_TRACK_GROUP_INDEX]);
             (window as any).frontendOnc = this.oncoprint;
             if (props.oncoprintRef) {
