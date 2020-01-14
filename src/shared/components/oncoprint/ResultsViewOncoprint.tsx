@@ -1268,6 +1268,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 onMinimapClose={this.onMinimapClose}
                                 onDeleteClinicalTrack={this.onDeleteClinicalTrack}
                                 onTrackSortDirectionChange={this.onTrackSortDirectionChange}
+
+                                initParams={{ max_height: Number.POSITIVE_INFINITY }}
                             />
                         </div>
                     </div>
