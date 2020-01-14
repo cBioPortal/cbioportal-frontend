@@ -94,33 +94,65 @@ function runResultsTestSuite(prefix) {
         assertScreenShotMatch(res);
     });
 
-    it(`${prefix} enrichments tab`, function() {
-        browser.click('a.tabAnchor_enrichments');
+    it(`${prefix} comparison tab overlap`, function() {
+        browser.click('a.tabAnchor_comparison');
         browser.waitForVisible(
-            'div[data-test="MutationEnrichmentsTab"]',
-            10000
+            'div[data-test="ComparisonPageOverlapTabContent"]'
         );
-        browser.click('b=CDK14');
-        browser.waitForExist('[data-test="enrichmentsTabDiv"]', 10000);
-        var res = browser.checkElement('[data-test="enrichmentsTabDiv"]', {
-            hide: ['.qtip'],
-        });
+        var res = browser.checkElement(
+            'div[data-test="ComparisonPageOverlapTabDiv"]',
+            { hide: ['.qtip'] }
+        );
         assertScreenShotMatch(res);
     });
 
-    it(`${prefix} enrichments tab patient mode`, function() {
+    it(`${prefix} comparison tab clinical`, function() {
+        browser.click('.comparisonTabSubTabs .tabAnchor_clinical');
+        browser.waitForVisible('div[data-test="ComparisonPageClinicalTabDiv"]');
+        var res = browser.checkElement(
+            'div[data-test="ComparisonPageClinicalTabDiv"]',
+            { hide: ['.qtip'] }
+        );
+        assertScreenShotMatch(res);
+    });
+
+    it(`${prefix} comparison tab mutation enrichments`, function() {
+        browser.click('.comparisonTabSubTabs .tabAnchor_mutations');
+        browser.waitForVisible(
+            'div[data-test="GroupComparisonMutationEnrichments"]'
+        );
+        var res = browser.checkElement(
+            'div[data-test="GroupComparisonMutationEnrichments"]',
+            { hide: ['.qtip'] }
+        );
+        assertScreenShotMatch(res);
+    });
+
+    it(`${prefix} comparison tab mutation enrichments patient mode`, function() {
         browser.execute(function() {
             resultsViewPageStore.setUsePatientLevelEnrichments(true);
         });
         browser.waitForVisible(
-            'div[data-test="MutationEnrichmentsTab"]',
-            10000
+            'div[data-test="GroupComparisonMutationEnrichments"]'
         );
-        browser.click('b=CDK14');
-        browser.waitForExist('[data-test="enrichmentsTabDiv"]', 10000);
-        var res = browser.checkElement('[data-test="enrichmentsTabDiv"]', {
-            hide: ['.qtip'],
-        });
+        var res = browser.checkElement(
+            'div[data-test="GroupComparisonMutationEnrichments"]',
+            { hide: ['.qtip'] }
+        );
+        assertScreenShotMatch(res);
+    });
+
+    it(`${prefix} comparison tab mrna enrichments`, function() {
+        browser.click('.comparisonTabSubTabs .tabAnchor_mrna');
+        browser.waitForVisible(
+            'div[data-test="GroupComparisonMRNAEnrichments"]'
+        );
+        browser.click('b=ETV5');
+        browser.waitForVisible('div[data-test="MiniBoxPlot"]');
+        var res = browser.checkElement(
+            'div[data-test="GroupComparisonMRNAEnrichments"]',
+            { hide: ['.qtip'] }
+        );
         assertScreenShotMatch(res);
     });
 

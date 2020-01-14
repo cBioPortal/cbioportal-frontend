@@ -30,12 +30,12 @@ import {
 import client from 'shared/api/cbioportalClientInstance';
 import { action, computed, observable, ObservableMap, reaction } from 'mobx';
 import {
-    remoteData,
-    generateQueryVariantId,
-    stringListToSet,
     CancerGene,
+    generateQueryVariantId,
     getProteinPositionFromProteinChange,
     IndicatorQueryResp,
+    remoteData,
+    stringListToSet,
     VariantAnnotation,
 } from 'cbioportal-frontend-commons';
 import { cached, labelMobxPromises, MobxPromise } from 'mobxpromise';
@@ -117,25 +117,25 @@ import {
     QueryStore,
 } from 'shared/components/query/QueryStore';
 import {
-    OncoprintAnalysisCaseType,
     annotateMolecularDatum,
     compileMutations,
     computeCustomDriverAnnotationReport,
     computeGenePanelInformation,
     CoverageInformation,
+    excludeMutationAndSVProfiles,
     fetchPatients,
     fetchQueriedStudies,
     filterAndAnnotateMutations,
     FilteredAndAnnotatedMutationsReport,
     filterSubQueryData,
+    getMolecularProfiles,
     getOncoKbOncogenic,
     getSampleAlteredMap,
     groupDataByCase,
     initializeCustomDriverAnnotationSettings,
     isRNASeqProfile,
     makeEnrichmentDataPromise,
-    getMolecularProfiles,
-    excludeMutationAndSVProfiles,
+    OncoprintAnalysisCaseType,
 } from './ResultsViewPageStoreUtils';
 import MobxPromiseCache from '../../shared/lib/MobxPromiseCache';
 import { isSampleProfiledInMultiple } from '../../shared/lib/isSampleProfiled';
@@ -151,6 +151,7 @@ import { ServerConfigHelpers } from '../../config/config';
 import {
     parseSamplesSpecifications,
     populateSampleSpecificationsFromVirtualStudies,
+    ResultsViewComparisonSubTab,
     ResultsViewTab,
     substitutePhysicalStudiesForVirtualStudies,
 } from './ResultsViewPageHelpers';
@@ -190,9 +191,9 @@ import {
     getDefaultPriorityByUniqueKey,
     getFilteredStudiesWithSamples,
     getPriorityByClinicalAttribute,
+    getUniqueKey,
     StudyWithSamples,
     UniqueKey,
-    getUniqueKey,
 } from 'pages/studyView/StudyViewUtils';
 import {
     FRACTION_GENOME_ALTERED,
@@ -202,8 +203,8 @@ import { IVirtualStudyProps } from 'pages/studyView/virtualStudy/VirtualStudy';
 import { decideMolecularProfileSortingOrder } from './download/DownloadUtils';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import {
-    Treatment,
     fetchTreatmentByMolecularProfileIds,
+    Treatment,
 } from 'shared/lib/GenericAssayUtils/TreatmentUtils';
 
 type Optional<T> =
@@ -5076,6 +5077,15 @@ export class ResultsViewPageStore {
 
     @action clearErrors() {
         this.ajaxErrors = [];
+    }
+
+    @autobind
+    @action
+    public navigateToSurvivalTab() {
+        this.urlWrapper.setTabId(ResultsViewTab.COMPARISON);
+        this.urlWrapper.setComparisonSubTabId(
+            ResultsViewComparisonSubTab.SURVIVAL
+        );
     }
 
     readonly overallSurvivalDescriptions = remoteData({

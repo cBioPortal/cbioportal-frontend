@@ -1,6 +1,5 @@
 import { MobxPromise } from 'mobxpromise/dist/src/MobxPromise';
 import {
-    ClinicalData,
     PatientIdentifier,
     Sample,
     SampleIdentifier,
@@ -20,7 +19,6 @@ import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyM
 import ComplexKeySet from '../../shared/lib/complexKeyDataStructures/ComplexKeySet';
 import ComplexKeyCounter from '../../shared/lib/complexKeyDataStructures/ComplexKeyCounter';
 import ComplexKeyGroupsMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap';
-import GroupComparisonStore from './GroupComparisonStore';
 import {
     MakeMobxView,
     MobxViewAlwaysComponent,
@@ -30,6 +28,7 @@ import Loader from '../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../shared/components/ErrorMessage';
 import { stringListToIndexSet } from 'cbioportal-frontend-commons';
 import { GroupComparisonTab } from './GroupComparisonTabs';
+import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 import { DataType } from 'pages/studyView/StudyViewUtils';
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
@@ -41,7 +40,7 @@ export type ComparisonGroup = Omit<SessionGroupData, 'studies' | 'color'> & {
     ordinal: string;
     studies: { id: string; samples: string[]; patients: string[] }[]; // include patients, filter out nonexistent samples
     nonExistentSamples: SampleIdentifier[]; // samples specified in the group which no longer exist in our DB
-    savedInSession: boolean;
+    nameOfEnrichmentDirection?: string;
 };
 
 export type StudyViewComparisonGroup = Omit<GroupData, 'studies' | 'color'> & {
@@ -349,7 +348,7 @@ export function getOverlapFilteredGroups<
 }
 
 export function MakeEnrichmentsTabUI(
-    getStore: () => GroupComparisonStore,
+    getStore: () => ComparisonStore,
     getEnrichmentsUI: () => MobxViewAlwaysComponent,
     enrichmentType: string,
     multiGroupAnalysisPossible?: boolean,
