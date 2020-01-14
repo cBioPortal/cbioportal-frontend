@@ -305,7 +305,7 @@ export default class OncoprintModel {
         this.sort_config = {};
         this.rendering_suppressed_depth = 0;
 
-        this.max_height = 500;
+        this.max_height = ifndef(params.max_height, 500);
         this.cell_width = ifndef(params.init_cell_width, 6);
         this.horz_zoom = ifndef(params.init_horz_zoom, 1);
         this.vert_zoom = ifndef(params.init_vert_zoom, 1);
@@ -715,7 +715,12 @@ export default class OncoprintModel {
     public getMinVertZoom() {
         // Can't zoom to be smaller than max height
         // That zoom would be z*this.getOncoprintHeight(true) = max_height
-        return this.max_height / this.getOncoprintHeight(true);
+        if (this.max_height < Number.POSITIVE_INFINITY) {
+            return this.max_height / this.getOncoprintHeight(true);
+        } else {
+            // if no max height, then cant vert zoom
+            return 1;
+        }
     }
 
     public setHorzScroll(s:number) {
