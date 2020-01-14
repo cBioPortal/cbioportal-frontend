@@ -1,5 +1,5 @@
 import * as React from "react";
-import OncoprintJS, {TrackId, CustomTrackOption, TrackGroupHeader} from "oncoprintjs";
+import OncoprintJS, {TrackId, CustomTrackOption, TrackGroupHeader, TrackSortDirection, InitParams, ColumnLabel} from "oncoprintjs";
 import {GenePanelData, MolecularProfile} from "../../api/generated/CBioPortalAPI";
 import {observer} from "mobx-react";
 import {computed} from "mobx";
@@ -10,6 +10,7 @@ import {
     ExtendedAlteration
 } from "../../../pages/resultsView/ResultsViewPageStore";
 import "./styles.scss";
+import {ShapeParams} from "oncoprintjs/dist/js/oncoprintshape";
 
 export type ClinicalTrackDatum = {
     attr_id: string;
@@ -112,20 +113,30 @@ export interface IBaseHeatmapTrackSpec {
     molecularAlterationType: MolecularProfile["molecularAlterationType"];
     datatype: MolecularProfile["datatype"];
     data: IBaseHeatmapTrackDatum[];
+    description?: string;
     trackGroupIndex: number;
+    hasColumnSpacing?:boolean;
 }
-
 export interface IHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     data: IBaseHeatmapTrackDatum[]; // can be IGeneHeatmapTrackDatum or ITreatmentHeatmapTrackDatum
+    naLegendLabel?:string;
+    onRemove?: () => void;
     info?: string;
     labelColor?: string;
+    labelCircleColor?: string;
+    labelFontWeight?:string;
+    labelLeftPadding?:number;
+    tooltip?:(dataUnderMouse:IGeneHeatmapTrackDatum[])=>JQuery;
+    initSortDirection?:TrackSortDirection;
+    movable?:boolean;
+    sortDirectionChangeable?:boolean; // never updated
     trackLinkUrl?: string | undefined;
-    onRemove: () => void;
     molecularProfileName?: string;
     pivotThreshold?: number;
     sortOrder?: string;
     maxProfileValue?: number;
     minProfileValue?: number;
+    customNaShapes?:ShapeParams[];
 }
 export interface IGenesetHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     data: IGenesetHeatmapTrackDatum[];
@@ -145,9 +156,11 @@ export interface IOncoprintProps {
     geneticTracksOrder?:string[]; // track keys
     genesetHeatmapTracks: IGenesetHeatmapTrackSpec[];
     heatmapTracks: IHeatmapTrackSpec[];
+    heatmapTracksOrder?:{[trackGroupIndex:number]:string[]}; // track keys
     heatmapTrackHeaders?:{[trackGroupIndex:number]:TrackGroupHeader};
     divId:string;
     width:number;
+    initParams?:InitParams;
     caseLinkOutInTooltips:boolean;
 
     molecularProfileIdToMolecularProfile?:{[molecularProfileId:string]:MolecularProfile};
@@ -155,6 +168,9 @@ export interface IOncoprintProps {
     horzZoomToFitIds?:string[];
 
     hiddenIds?:string[];
+    columnLabels?:{[uid:string]:ColumnLabel};
+    highlightedIds?:string[];
+    highlightedTracks?:string[]; // track keys
 
     alterationTypesInQuery?:string[];
 
@@ -162,6 +178,7 @@ export interface IOncoprintProps {
     distinguishDrivers?:boolean;
     distinguishGermlineMutations?:boolean;
 
+    showTrackLabels?:boolean;
     showSublabels?:boolean;
 
     sortConfig?:{
@@ -204,6 +221,19 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
         this.div = div;
     }
 
+    public getTrackSpecKey(targetTrackId:TrackId) {
+        let ret:string|null = null;
+
+        _.forEach(this.trackSpecKeyToTrackId, (trackId:TrackId, key:string)=>{
+            if (trackId === targetTrackId) {
+                ret = key;
+                return false;
+            }
+        });
+
+        return ret;
+    }
+
     @computed get sortByMutationType() {
         return  this.props.distinguishMutationType &&
                 this.props.sortConfig &&
@@ -219,7 +249,7 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
     private refreshOncoprint(props:IOncoprintProps) {
         if (!this.oncoprint) {
             // instantiate new one
-            this.oncoprint = new OncoprintJS(`#${props.divId}`, props.width);
+            this.oncoprint = new OncoprintJS(`#${props.divId}`, props.width, props.initParams)
             this.oncoprint.setTrackGroupLegendOrder([GENETIC_TRACK_GROUP_INDEX, CLINICAL_TRACK_GROUP_INDEX]);
             (window as any).frontendOnc = this.oncoprint;
             if (props.oncoprintRef) {
