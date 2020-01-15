@@ -1,8 +1,10 @@
 import LazyMobXCache, {AugmentedData} from "../lib/LazyMobXCache";
-import {TreatmentMolecularData, TreatmentDataFilterCriteria} from "../api/generated/CBioPortalAPIInternal";
-import client from "shared/api/cbioportalInternalClientInstance";
+import internalClient from "shared/api/cbioportalInternalClientInstance";
+import client from "shared/api/cbioportalClientInstance";
 import _ from "lodash";
 import {IDataQueryFilter} from "../lib/StoreUtils";
+import { SampleMolecularIdentifier, GenericAssayDataMultipleStudyFilter, GenericAssayData, GenericAssayDataFilter } from "shared/api/generated/CBioPortalAPI";
+import { fetchTreatmentData, TreatmentMolecularData } from "shared/lib/GenericAssayUtils/TreatmentUtils";
 
 export type TreatmentMolecularDataEnhanced = TreatmentMolecularData & {
     thresholdType?: ">"|"<";
@@ -81,22 +83,8 @@ async function fetch(
         _.groupBy(queries, q => q.molecularProfileId),
         profileQueries => profileQueries.map(q => q.treatmentId)
     );
-    const params = Object.keys(treatmentIdsByProfile)
-        .map(profileId => ({
-            geneticProfileId: profileId,
-            // the Swagger-generated type expected by the client method below
-            // incorrectly requires both samples and a sample list;
-            // use 'as' to tell TypeScript that this object really does fit.
-            // tslint:disable-next-line: no-object-literal-type-assertion
-            treatmentDataFilterCriteria: {
-                treatmentIds: treatmentIdsByProfile[profileId],
-                ...sampleFilterByProfile[profileId]
-            } as TreatmentDataFilterCriteria
-        })
-    );
-    const dataPromises = params.map(param => client.fetchTreatmentGeneticDataItemsUsingPOST(param));
-    const results: TreatmentMolecularData[][] = await Promise.all(dataPromises);
-    return augmentQueryResults(queries, results);
+    const treatmentDataResult = await fetchTreatmentData(treatmentIdsByProfile, sampleFilterByProfile);
+    return augmentQueryResults(queries, treatmentDataResult);
 }
 
 export default class TreatmentMolecularDataCache extends LazyMobXCache<TreatmentMolecularData[], IQuery, IQuery>{

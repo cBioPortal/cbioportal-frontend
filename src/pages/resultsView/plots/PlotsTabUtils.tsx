@@ -23,7 +23,7 @@ import {
 } from "shared/lib/Colors";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
 import {IBoxScatterPlotData} from "../../../shared/components/plots/BoxScatterPlot";
-import {AlterationTypeConstants, AnnotatedMutation, AnnotatedNumericGeneMolecularData} from "../ResultsViewPageStore";
+import {AlterationTypeConstants, GenericAssayTypeConstants, AnnotatedMutation, AnnotatedNumericGeneMolecularData} from "../ResultsViewPageStore";
 import numeral from "numeral";
 import GenesetMolecularDataCache from "../../../shared/cache/GenesetMolecularDataCache";
 import { GenesetMolecularData } from "../../../shared/api/generated/CBioPortalAPIInternal";
@@ -44,7 +44,7 @@ export const dataTypeToDisplayType:{[s:string]:string} = {
     [AlterationTypeConstants.METHYLATION]: "DNA Methylation",
     [CLIN_ATTR_DATA_TYPE]:"Clinical Attribute",
     [GENESET_DATA_TYPE]:"Gene Sets",
-    [AlterationTypeConstants.GENERIC_ASSAY]: "Treatment Response"
+    [GenericAssayTypeConstants.TREATMENT_RESPONSE]: "Treatment Response"
 };
 
 export const mutationTypeToDisplayName:{[oncoprintMutationType:string]:string} = {
@@ -59,7 +59,7 @@ export const mutationTypeToDisplayName:{[oncoprintMutationType:string]:string} =
 export const dataTypeDisplayOrder = [
     CLIN_ATTR_DATA_TYPE, AlterationTypeConstants.MUTATION_EXTENDED, AlterationTypeConstants.COPY_NUMBER_ALTERATION,
     AlterationTypeConstants.MRNA_EXPRESSION, GENESET_DATA_TYPE, AlterationTypeConstants.PROTEIN_LEVEL,
-    AlterationTypeConstants.METHYLATION, AlterationTypeConstants.GENERIC_ASSAY
+    AlterationTypeConstants.METHYLATION, ..._.keys(GenericAssayTypeConstants)
 ];
 export function sortMolecularProfilesForDisplay(profiles:MolecularProfile[]) {
     if (!profiles.length) {
@@ -774,6 +774,15 @@ export function makeAxisDataPromise(
 
     let ret:MobxPromise<IAxisData> = remoteData(()=>new Promise<IAxisData>(()=>0));
 
+    if (selection.dataType && _.keys(GenericAssayTypeConstants).includes(selection.dataType)) {
+        if (selection.treatmentId !== undefined && selection.dataSourceId !== undefined) {
+            ret = makeAxisDataPromise_Treatment(
+                selection.treatmentId, selection.dataSourceId, treatmentMolecularDataCachePromise,
+                molecularProfileIdToMolecularProfile);
+            return ret;
+        }
+    }
+
     switch (selection.dataType) {
         case undefined:
             break;
@@ -794,13 +803,6 @@ export function makeAxisDataPromise(
         if (selection.genesetId !== undefined && selection.dataSourceId !== undefined) {
                 ret = makeAxisDataPromise_Geneset(
                     selection.genesetId, selection.dataSourceId, genesetMolecularDataCachePromise,
-                    molecularProfileIdToMolecularProfile);
-            }
-            break;
-        case AlterationTypeConstants.GENERIC_ASSAY:
-            if (selection.treatmentId !== undefined && selection.dataSourceId !== undefined) {
-                ret = makeAxisDataPromise_Treatment(
-                    selection.treatmentId, selection.dataSourceId, treatmentMolecularDataCachePromise,
                     molecularProfileIdToMolecularProfile);
             }
             break;
@@ -855,12 +857,6 @@ export function getAxisLabel(
                 label = `${selection.genesetId}: ${profile.name}`;
             }
             break;
-        case AlterationTypeConstants.GENERIC_ASSAY:
-            if (!!(profile && selection.selectedTreatmentOption && selection.selectedTreatmentOption.label)) {
-                const treatmentName = selection.selectedTreatmentOption.label;
-                label = `${treatmentName}: ${profile.name}`;
-            }
-            break;
         default:
             // molecular profile
             if (profile
@@ -870,6 +866,13 @@ export function getAxisLabel(
             }
             break;
     }
+    if (selection.dataType && _.keys(GenericAssayTypeConstants).includes(selection.dataType)) {
+        if (!!(profile && selection.selectedTreatmentOption && selection.selectedTreatmentOption.label)) {
+            const treatmentName = selection.selectedTreatmentOption.label;
+            label = `${treatmentName}: ${profile.name}`;
+        }
+    }
+
     if (transformationSection) {
         label += ` (${transformationSection})`;
     }
@@ -1400,7 +1403,7 @@ export function logScalePossible(
     axisSelection: AxisMenuSelection
 ) {
     if (axisSelection.dataType !== CLIN_ATTR_DATA_TYPE) {
-        if (axisSelection.dataType === AlterationTypeConstants.GENERIC_ASSAY) {
+        if (axisSelection.dataType && _.keys(GenericAssayTypeConstants).includes(axisSelection.dataType)) {
             return true;
         }
         // molecular profile
@@ -1781,17 +1784,17 @@ export function getCnaQueries(
 ) {
     const queries:{entrezGeneId:number}[] = [];
     if (horzSelection.dataType !== CLIN_ATTR_DATA_TYPE
-        && horzSelection.dataType !== AlterationTypeConstants.GENERIC_ASSAY
+        && (horzSelection.dataType === undefined || !_.keys(GenericAssayTypeConstants).includes(horzSelection.dataType))
         && horzSelection.entrezGeneId !== undefined) {
         queries.push({entrezGeneId: horzSelection.entrezGeneId});
     }
     if (vertSelection.dataType !== CLIN_ATTR_DATA_TYPE
-        && horzSelection.dataType !== AlterationTypeConstants.GENERIC_ASSAY
+        && (horzSelection.dataType === undefined || !_.keys(GenericAssayTypeConstants).includes(horzSelection.dataType))
         && vertSelection.entrezGeneId !== undefined) {
         queries.push({entrezGeneId: vertSelection.entrezGeneId});
     }
     if (vertSelection.dataType === AlterationTypeConstants.COPY_NUMBER_ALTERATION
-        && horzSelection.dataType === AlterationTypeConstants.GENERIC_ASSAY
+        && (horzSelection.dataType === undefined || !_.keys(GenericAssayTypeConstants).includes(horzSelection.dataType))
         && vertSelection.entrezGeneId !== undefined) {
         queries.push({entrezGeneId: vertSelection.entrezGeneId});
     }
@@ -1827,8 +1830,8 @@ export function getMutationQueries(
 }
 
 export function showWaterfallPlot(horzSelection:AxisMenuSelection, vertSelection:AxisMenuSelection):boolean {
-    return (vertSelection.dataType === AlterationTypeConstants.GENERIC_ASSAY && horzSelection.dataType === NONE_SELECTED_OPTION_STRING_VALUE)
-    || (horzSelection.dataType === AlterationTypeConstants.GENERIC_ASSAY && vertSelection.dataType === NONE_SELECTED_OPTION_STRING_VALUE);
+    return (vertSelection.dataType !== undefined && _.keys(GenericAssayTypeConstants).includes(vertSelection.dataType) && horzSelection.dataType === NONE_SELECTED_OPTION_STRING_VALUE)
+    || (horzSelection.dataType !== undefined && _.keys(GenericAssayTypeConstants).includes(horzSelection.dataType) && vertSelection.dataType === NONE_SELECTED_OPTION_STRING_VALUE);
 }
 
 export function getScatterPlotDownloadData(
@@ -2026,7 +2029,7 @@ export function makeAxisLogScaleFunction(axisSelection:AxisMenuSelection):IAxisL
     let fLogScale;     // function for (log-)transforming a value
     let fInvLogScale;  // function for back-transforming a value transformed with fLogScale
 
-    if(axisSelection.dataType !== AlterationTypeConstants.GENERIC_ASSAY) {
+    if(axisSelection.dataType === undefined || !_.keys(GenericAssayTypeConstants).includes(axisSelection.dataType)) {
         // log-transformation parameters for non-treatment reponse 
         // profile data. Note: log2-transformation is used by default
         label = "log2";

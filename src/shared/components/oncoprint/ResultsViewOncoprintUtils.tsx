@@ -6,8 +6,8 @@ import naturalSort from "javascript-natural-sort";
 import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
 import {Group} from "../../api/ComparisonGroupClient";
 import * as React from "react";
-import { Treatment } from "shared/api/generated/CBioPortalAPIInternal";
 import { ISelectOption } from "./controls/OncoprintControls";
+import { Treatment } from "shared/lib/GenericAssayUtils/TreatmentUtils";
 
 export const alterationTypeToProfiledForText:{[alterationType:string]:string} = {
     "MUTATION_EXTENDED": "mutations",
