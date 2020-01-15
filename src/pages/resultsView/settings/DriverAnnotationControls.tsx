@@ -8,6 +8,7 @@ import {
     DefaultTooltip,
     getNCBIlink
 } from "cbioportal-frontend-commons";
+import 'rc-tooltip/assets/bootstrap_white.css';
 
 
 export interface IDriverAnnotationControlsState {
@@ -325,6 +326,7 @@ export default class DriverAnnotationControls extends React.Component<IDriverAnn
                                         EVENT_KEY.customDriverBinaryAnnotation
                                     }
                                     onClick={this.onInputClick}
+                                    data-test="annotateCustomBinary"
                                 />{' '}
                                 {
                                     this.props.state
