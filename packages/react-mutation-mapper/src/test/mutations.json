@@ -1,0 +1,35 @@
+[
+    {
+        "endPosition": 55210075,
+        "chromosome": "7",
+        "mutationType": "Missense_Mutation",
+        "proteinChange": "L62R",
+        "proteinPosEnd": 62,
+        "proteinPosStart": 62,
+        "referenceAllele": "T",
+        "startPosition": 55210075,
+        "variantAllele": "G"
+    },
+    {
+        "endPosition": 55220275,
+        "chromosome": "7",
+        "mutationType": "Missense_Mutation",
+        "proteinChange": "R222L",
+        "proteinPosEnd": 222,
+        "proteinPosStart": 222,
+        "referenceAllele": "G",
+        "startPosition": 55220275,
+        "variantAllele": "T"
+    },
+    {
+        "endPosition": 55249018,
+        "chromosome": "7",
+        "mutationType": "In_Frame_Insertion",
+        "proteinChange": "H773dup",
+        "proteinPosEnd": 773,
+        "proteinPosStart": 773,
+        "referenceAllele": "-",
+        "startPosition": 55249017,
+        "variantAllele": "CCA"
+    }
+]

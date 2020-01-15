@@ -2310,7 +2310,7 @@ export class StudyViewPageStore {
     readonly oncokbCancerGenes = remoteData<CancerGene[]>({
         await: () => [],
         invoke: async () => {
-            return oncoKBClient.utilsCancerGeneListGetUsingGET({});
+            return oncoKBClient.utilsCancerGeneListGetUsingGET_1({});
         },
         onError: (error => {
         }),
