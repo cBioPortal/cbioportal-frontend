@@ -83,13 +83,14 @@ export function getMutationData(): Mutation
     return {
        center: "broad.mit.edu", endPosition: 178936091, entrezGeneId: 5290, fisValue: 1.4013e-45, functionalImpactScore:"",
        gene: {geneticEntityId: 4233, entrezGeneId: 5290, hugoGeneSymbol: "PIK3CA", type: "protein-coding"},
+       alleleSpecificCopyNumber: {ascnIntegerCopyNumber: -1, ascnMethod: "", ccfMCopies: -1, ccfMCopiesUpper: -1,
+       clonal: false, minorCopyNumber: -1, mutantCopies: -1, totalCopyNumber: -1 },
        molecularProfileId: "ccle_mutations", keyword: "PIK3CA E545 missense", linkMsa:"", linkPdb: "", linkXvar: "", mutationStatus: "NA",
        mutationType: "Missense_Mutation", ncbiBuild: "GRCh37", normalAltCount: -1, normalRefCount: -1, proteinChange: "E545K", proteinPosEnd: 545,
        proteinPosStart: 545, referenceAllele: "G", refseqMrnaId: "NM_006218.2", sampleId: "NCIH508_LARGE_INTESTINE", patientId: "PATIENT1",
        studyId: "STUDY1", uniquePatientKey: "", uniqueSampleKey: "", startPosition: 178936091, tumorAltCount: -1, tumorRefCount: -1,
        validationStatus: "NA", variantAllele: "A", variantType: "SNP", aminoAcidChange: "", driverFilter: "", driverFilterAnnotation: "", driverTiersFilter: "",
-       driverTiersFilterAnnotation: "", chr: "3"/*wildType:false,
-        sequenced:true*/
+       driverTiersFilterAnnotation: "", chr: "3"
    };
 }
 

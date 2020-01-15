@@ -72,11 +72,12 @@ import MultipleCategoryBarPlot from "../../../shared/components/plots/MultipleCa
 import {RESERVED_CLINICAL_VALUE_COLORS} from "shared/lib/Colors";
 import onMobxPromise from "../../../shared/lib/onMobxPromise";
 import "./styles.scss";
-import { Treatment } from "shared/api/generated/CBioPortalAPIInternal";
 import { showWaterfallPlot } from 'pages/resultsView/plots/PlotsTabUtils';
 import AlterationFilterWarning from "../../../shared/components/banners/AlterationFilterWarning";
 import LastPlotsTabSelectionForDatatype from "./LastPlotsTabSelectionForDatatype";
 import { generateQuickPlots } from "./QuickPlots";
+import { Treatment } from "shared/lib/GenericAssayUtils/TreatmentUtils";
+import { GenericAssayTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
 
 enum EventKey {
     horz_logScale,
@@ -883,7 +884,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @computed get horzDatatypeOptions() {
         let noneDatatypeOption = undefined;
         // listen to updates of `dataTypeOptions` and on the selected data type for the vertical axis
-        if (this.dataTypeOptions && this.vertSelection.dataType === AlterationTypeConstants.GENERIC_ASSAY) {
+        if (this.dataTypeOptions && this.vertSelection.dataType && _.keys(GenericAssayTypeConstants).includes(this.vertSelection.dataType)) {
             noneDatatypeOption = [{ value: NONE_SELECTED_OPTION_STRING_VALUE, label: NONE_SELECTED_OPTION_LABEL}];
         }
         const options = (noneDatatypeOption || []).concat((this.dataTypeOptions.result || []) as any[]);
@@ -893,7 +894,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @computed get vertDatatypeOptions() {
         let noneDatatypeOption = undefined;
         // listen to updates of `dataTypeOptions` and on the selected data type for the horzontal axis
-        if (this.dataTypeOptions && this.horzSelection.dataType === AlterationTypeConstants.GENERIC_ASSAY) {
+        if (this.dataTypeOptions && this.horzSelection.dataType && _.keys(GenericAssayTypeConstants).includes(this.horzSelection.dataType)) {
             noneDatatypeOption = [{ value: NONE_SELECTED_OPTION_STRING_VALUE, label: NONE_SELECTED_OPTION_LABEL}];
         }
         return (noneDatatypeOption || []).concat((this.dataTypeOptions.result || []) as any[]);
@@ -963,7 +964,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         let sameTreatmentOption = undefined;
         // listen to updates of `horzTreatmentOptions` or the selected data type for the horzontal axis
         if (this.horzTreatmentOptions || this.horzSelection.dataType) {
-            if (this.horzSelection.dataType === AlterationTypeConstants.GENERIC_ASSAY) {
+            if (this.horzSelection.dataType && _.keys(GenericAssayTypeConstants).includes(this.horzSelection.dataType)) {
                 // when the data type on the horizontal axis is a treatment profile
                 // add an option to select the same treatment
                 if (this.horzSelection.dataType && this.showTreatmentSelectBox(this.horzSelection.dataType)
@@ -979,7 +980,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         return dataType !== NONE_SELECTED_OPTION_STRING_VALUE
                 && dataType !== GENESET_DATA_TYPE
                 && dataType !== CLIN_ATTR_DATA_TYPE
-                && dataType !== AlterationTypeConstants.GENERIC_ASSAY;
+                && !_.keys(GenericAssayTypeConstants).includes(dataType);
     }
 
     private showGenesetSelectBox(dataType:string):boolean {
@@ -989,7 +990,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     private showTreatmentSelectBox(dataType:string):boolean {
         return dataType !== NONE_SELECTED_OPTION_STRING_VALUE
-                && dataType === AlterationTypeConstants.GENERIC_ASSAY;
+                && _.keys(GenericAssayTypeConstants).includes(dataType);
     }
 
     private showDatasourceBox(dataType:string):boolean {
@@ -1042,7 +1043,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
             // show only data types we have profiles for
             const dataTypeIds:string[] = _.uniq(
-                profiles.map(profile=>profile.molecularAlterationType)
+                profiles.map(profile=>{
+                    if (profile.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY) {
+                        return profile.genericAssayType;
+                    }
+                    else return profile.molecularAlterationType;
+                })
             ).filter(type=>!!dataTypeToDisplayType[type]); // only show profiles of the type we want to show
 
             // if no gene sets are queried, remove gene set profile from dataTypeIds
@@ -1087,7 +1093,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         invoke:()=>{
             const profiles = this.props.store.molecularProfilesInStudies.result!;
             const map = _.mapValues(
-                _.groupBy(profiles, profile=>profile.molecularAlterationType), // create a map from profile type to list of profiles of that type
+                _.groupBy(profiles, profile=> {
+                    if (profile.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY) {
+                        return profile.genericAssayType;
+                    }
+                    else return profile.molecularAlterationType;
+                }), // create a map from profile type to list of profiles of that type
                 profilesOfType=>(
                     sortMolecularProfilesForDisplay(profilesOfType).map(p=>({value:p.molecularProfileId, label:p.name}))// create options out of those profiles
                 )
@@ -1240,13 +1251,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @computed get bothAxesMolecularProfile() {
-        return (this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE && this.horzSelection.dataType !== AlterationTypeConstants.GENERIC_ASSAY) &&
-             (this.vertSelection.dataType !== CLIN_ATTR_DATA_TYPE && this.vertSelection.dataType !== AlterationTypeConstants.GENERIC_ASSAY);
+        return (this.horzSelection.dataType === undefined || this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE && !_.keys(GenericAssayTypeConstants).includes(this.horzSelection.dataType)) &&
+             (this.vertSelection.dataType === undefined || this.vertSelection.dataType !== CLIN_ATTR_DATA_TYPE && !_.keys(GenericAssayTypeConstants).includes(this.vertSelection.dataType));
     }
 
     @computed get oneAxisMolecularProfile() {
-        return !this.bothAxesMolecularProfile && ((this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE && this.horzSelection.dataType !== AlterationTypeConstants.GENERIC_ASSAY) ||
-             (this.vertSelection.dataType !== CLIN_ATTR_DATA_TYPE && this.vertSelection.dataType !== AlterationTypeConstants.GENERIC_ASSAY));
+        return !this.bothAxesMolecularProfile && (this.horzSelection.dataType === undefined || ((this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE && this.horzSelection.dataType && !_.keys(GenericAssayTypeConstants).includes(this.horzSelection.dataType)) ||
+             (this.vertSelection.dataType === undefined || this.vertSelection.dataType !== CLIN_ATTR_DATA_TYPE && !_.keys(GenericAssayTypeConstants).includes(this.vertSelection.dataType))));
     }
 
     @computed get sameGeneInBothAxes() {
@@ -1270,7 +1281,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @computed get horzLimitValueTypes():string[] {
-        if (this.horzAxisDataPromise.result && this.horzSelection.dataType === AlterationTypeConstants.GENERIC_ASSAY) {
+        if (this.horzAxisDataPromise.result && this.horzSelection.dataType && _.keys(GenericAssayTypeConstants).includes(this.horzSelection.dataType)) {
+            console.log(this.horzAxisDataPromise.result);
             return getLimitValues(this.horzAxisDataPromise.result.data);
         }
         return [] as string[];
@@ -1281,7 +1293,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @computed get vertLimitValueTypes():string[] {
-        if (this.vertAxisDataPromise.result && this.vertSelection.dataType === AlterationTypeConstants.GENERIC_ASSAY) {
+        if (this.vertAxisDataPromise.result && this.vertSelection.dataType && _.keys(GenericAssayTypeConstants).includes(this.vertSelection.dataType)) {
             return getLimitValues(this.vertAxisDataPromise.result.data);
         }
         return [] as string[];
@@ -1858,7 +1870,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 options={this.vertTreatmentOptions && this.horzTreatmentOptions? (vertical ? this.vertTreatmentOptions : this.horzTreatmentOptions.result): []}
                                 clearable={false}
                                 searchable={false}
-                                disabled={axisSelection.dataType === CLIN_ATTR_DATA_TYPE || axisSelection.dataType !== AlterationTypeConstants.GENERIC_ASSAY}
+                                disabled={axisSelection.dataType === undefined || axisSelection.dataType === CLIN_ATTR_DATA_TYPE || !_.keys(GenericAssayTypeConstants).includes(axisSelection.dataType)}
                             />
                         </div>
                     </div>)}
@@ -2222,7 +2234,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @computed get showNoTreamentsSelectedWarning() {
-        return ( (this.vertSelection.dataType === AlterationTypeConstants.GENERIC_ASSAY || this.horzSelection.dataType === AlterationTypeConstants.GENERIC_ASSAY)
+        return ( (this.vertSelection.dataType && _.keys(GenericAssayTypeConstants).includes(this.vertSelection.dataType) || this.horzSelection.dataType && _.keys(GenericAssayTypeConstants).includes(this.horzSelection.dataType))
                   && this.vertTreatmentOptions.length === 0);
     }
 

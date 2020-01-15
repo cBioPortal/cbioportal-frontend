@@ -174,8 +174,12 @@ describe('StudyViewUtils', () => {
                 },
                 numberOfSamplesPerPatient: [],
                 withCNAData: false,
-                withMutationData: false
-            } as any;
+                withMutationData: false,
+                withFusionData:false
+            } as StudyViewFilterWithSampleIdentifierFilters;
+
+            let genes = [{ entrezGeneId: 1, hugoGeneSymbol: "GENE1" }, { entrezGeneId: 2, hugoGeneSymbol: "GENE2" }] as Gene[];
+
 
             assert.isTrue(
                 getVirtualStudyDescription(
