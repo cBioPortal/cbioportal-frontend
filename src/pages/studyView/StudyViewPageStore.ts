@@ -3805,7 +3805,7 @@ export class StudyViewPageStore {
             if(UniqueKey.WITH_CNA_DATA === chartUniqueKey) {
                 this._withCNADataFilter = undefined;
             }
-            if(UniqueKey.WITH_FUSION_DATA === chartMeta.uniqueKey) {
+            if(UniqueKey.WITH_FUSION_DATA === chartUniqueKey) {
                 this._withFusionDataFilter = undefined;
             }
             this._chartSampleIdentifiersFilterSet.delete(chartUniqueKey)
