@@ -33,6 +33,7 @@ export interface IGeneSymbolValidatorProps {
         oql: OQL
     ) => void;
     wrap?: boolean;
+    replaceGene:(oldSymbol: string, newSymbol: string)=>void;
 }
 
 export type GeneValidationResult = {
@@ -194,24 +195,10 @@ export default class GeneSymbolValidator extends React.Component<
                 }
                 errorMessageOnly={this.props.errorMessageOnly}
                 wrapTheContent={this.props.wrap}
-                replaceGene={this.replaceGene}
+                replaceGene={this.props.replaceGene}
             >
                 {this.props.children}
             </GeneSymbolValidatorMessage>
         );
-    }
-
-    @autobind
-    @action
-    private replaceGene(oldSymbol: string, newSymbol: string) {
-        let updatedQuery = normalizeQuery(
-            this.props.geneQuery
-                .toUpperCase()
-                .replace(
-                    new RegExp(`\\b${oldSymbol.toUpperCase()}\\b`, 'g'),
-                    () => newSymbol.toUpperCase()
-                )
-        );
-        this.props.updateGeneQuery(updatedQuery);
     }
 }
