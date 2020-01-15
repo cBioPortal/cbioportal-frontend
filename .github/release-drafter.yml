@@ -43,6 +43,9 @@ categories:
     labels:
       - 'chore'
       - 'dependencies'
+  - title: ':shipit: Prototype'
+    labels:
+      - 'cl-prototype'
 exclude-labels:
   - 'skip-changelog'      
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'

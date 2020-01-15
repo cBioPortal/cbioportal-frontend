@@ -483,8 +483,8 @@ function transitionTracks(
         for (const spec of prevProps.heatmapTracks) {
             if (heatmap01 === undefined && spec.molecularAlterationType === AlterationTypeConstants.METHYLATION) {
                 heatmap01 = trackSpecKeyToTrackId[spec.key];
-            } else if (heatmap === undefined
-                        && spec.molecularAlterationType !==  AlterationTypeConstants.METHYLATION
+            } else if (heatmap === undefined 
+                        && spec.molecularAlterationType !==  AlterationTypeConstants.METHYLATION 
                         && spec.molecularAlterationType !==  AlterationTypeConstants.GENERIC_ASSAY) {
                 heatmap = trackSpecKeyToTrackId[spec.key];
             }
