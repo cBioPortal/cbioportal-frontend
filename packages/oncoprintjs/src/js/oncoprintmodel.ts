@@ -658,7 +658,7 @@ export default class OncoprintModel {
         const numerator = width - (gapsBetween.length*this.getGapSize());
 
         // denominator calculations
-        const columnWidthWithPadding = this.getCellWidth(true) + this.getCellPadding(true);
+        const columnWidthWithPadding = this.getCellWidth(true) + this.getCellPadding(true, true);
         const columnWidthNoPadding = this.getCellWidth(true);
 
         const denominatorWithPadding = (right_col_excl - left_col_incl)*columnWidthWithPadding;
