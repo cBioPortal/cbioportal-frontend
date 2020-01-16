@@ -145,11 +145,14 @@ export default class GnomadFrequency extends React.Component<GnomadFrequencyProp
                 display = <span>0</span>;
             } else {
                 // show frequency as number with 4 significant digits
-                var significantDigitsFormatter = new Intl.NumberFormat("en", { 
-                    minimumSignificantDigits: 1,
-                    maximumSignificantDigits:4
-                });
-                display = <span>{significantDigitsFormatter.format(result['Total'].alleleFrequency)}</span>;
+                display = (
+                    <span>
+                        {result['Total'].alleleFrequency.toLocaleString(undefined, {
+                            maximumSignificantDigits: 4,
+                            minimumSignificantDigits: 1,
+                        })}
+                    </span>
+                );
             }
 
             overlay = () => <GnomadFrequencyTable data={sorted} gnomadUrl={gnomadUrl} />;
