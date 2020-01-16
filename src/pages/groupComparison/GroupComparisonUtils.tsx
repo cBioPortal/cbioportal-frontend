@@ -3,7 +3,6 @@ import {ClinicalData, PatientIdentifier, Sample, SampleIdentifier} from "../../s
 import _ from "lodash";
 import {
     ClinicalDataEnrichment,
-    CopyNumberGeneFilterElement,
     StudyViewFilter
 } from "../../shared/api/generated/CBioPortalAPIInternal";
 import {AlterationEnrichmentWithQ} from "../resultsView/enrichments/EnrichmentsUtil";
@@ -12,7 +11,6 @@ import * as React from "react";
 import ComplexKeyMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyMap";
 import ComplexKeySet from "../../shared/lib/complexKeyDataStructures/ComplexKeySet";
 import ComplexKeyCounter from "../../shared/lib/complexKeyDataStructures/ComplexKeyCounter";
-import {GeneIdentifier} from "../studyView/StudyViewPageStore";
 import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap";
 import GroupComparisonStore from "./GroupComparisonStore";
 import {MakeMobxView, MobxViewAlwaysComponent} from "../../shared/components/MobxView";
@@ -21,6 +19,7 @@ import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import {stringListToIndexSet} from "cbioportal-frontend-commons";
 import { GroupComparisonTab } from "./GroupComparisonTabs"
+import { DataType } from 'pages/studyView/StudyViewUtils';
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
@@ -382,27 +381,24 @@ export function CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG(numSelectedGroups:number) {
 export function getDefaultGroupName(
     filters:StudyViewFilter,
     customChartFilterSet:{[chartId:string]:string[]},
-    entrezGeneIdToGene:{[entrez:number]:GeneIdentifier}
+    clinicalAttributeIdToDataType:{[chartId:string]:string}
 ) {
-    const equalityFilters = _.sortBy( // sort clinical data equality filters into a canonical order - lets just do alphabetical by attribute id
-        filters.clinicalDataEqualityFilters || [],
-        filter=>filter.attributeId
-    ).map(filter=>filter.values.join("+")); // get each attributes selected values, joined by +
+
+    const equalityFilters = _.chain(filters.clinicalDataFilters || [])
+        .filter(clinicalDataFilter => clinicalAttributeIdToDataType[clinicalDataFilter.attributeId] === DataType.STRING)
+        .sortBy(filter => filter.attributeId) // sort clinical data equality filters into a canonical order - lets just do alphabetical by attribute id
+        .map(filter => filter.values.join("+")) // get each attributes selected values, joined by +
+        .value();
 
     const customChartValues =
         _(customChartFilterSet).keys().sortBy() // sort into a canonical order - lets just do alphabetical by chart id
             .map(key=>customChartFilterSet[key].join("+"))// get each attributes selected values, joined by +
             .value();
 
-    const mutatedGenes =
-        _.flattenDeep<number>((filters.mutatedGenes || []).map(filter=>filter.entrezGeneIds))
-            .map(entrezGeneId=>`${entrezGeneIdToGene[entrezGeneId].hugoGeneSymbol} mutant`);
 
-    const cnaGenes =
-        _.flattenDeep<CopyNumberGeneFilterElement>((filters.cnaGenes || []).map(filter=>filter.alterations))
-            .map(filterElt=>{
-                return `${entrezGeneIdToGene[filterElt.entrezGeneId].hugoGeneSymbol} ${filterElt.alteration === 2 ? "amp" : "del"}`;
-            });
+    const geneFilters = _.chain(filters.geneFilters || [])
+        .flatMapDeep(geneFilter => geneFilter.geneQueries)
+        .value();
 
     const withData:string[] = [];
     if (filters.withMutationData) {
@@ -413,8 +409,7 @@ export function getDefaultGroupName(
     }
 
 
-    const allFilters = mutatedGenes
-                        .concat(cnaGenes)
+    const allFilters = geneFilters
                         .concat(equalityFilters)
                         .concat(customChartValues)
                         .concat(withData);
