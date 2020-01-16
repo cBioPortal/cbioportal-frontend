@@ -20,6 +20,7 @@ export default class WindowWrapper
             this.windowObj = window;
             this.setWindowSize();
             this.windowObj.addEventListener("resize", this.handleWindowResize)
+            this.windowObj.donkeyAaron = true;
         }
     }
 
