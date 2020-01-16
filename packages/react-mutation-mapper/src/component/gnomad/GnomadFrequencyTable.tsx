@@ -6,7 +6,6 @@ import {GnomadSummary} from "../../model/GnomadSummary";
 import ColumnHeader from "../column/ColumnHeader";
 
 import "./gnomadFrequencyTable.scss";
-import { significantDigits } from "../../util/FormatUtils";
 
 export interface IGnomadFrequencyTableProps
 {
@@ -21,7 +20,14 @@ export function frequencyOutput(frequency: number) {
     }
     else {
         // show frequency as number with 4 significant digits
-        return <span>{significantDigits(frequency, 4)}</span>;
+        return (
+            <span>
+                {frequency.toLocaleString(undefined, {
+                    maximumSignificantDigits: 4,
+                    minimumSignificantDigits: 1,
+                })}
+            </span>
+        );
     }
 }
 
