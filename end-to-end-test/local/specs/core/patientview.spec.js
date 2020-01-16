@@ -231,10 +231,6 @@ describe('patient view page', function() {
 
         
         describe('gene panel modal', () => {
-            function closeModal() {
-                $('.modal-footer button').click();
-            }
-
             function clickOnGenePanelLinks() {
                 const genePanelLinks = $$('.rc-tooltip table td a');
                 genePanelLinks[genePanelLinks.length - 1].click();
@@ -253,8 +249,7 @@ describe('patient view page', function() {
                 assert($('#patient-view-gene-panel').isExisting());
             });
 
-            it('toggles gene panel modal from genomic tracks', () => {
-                // mouse over sample icon
+            it('toggles gene panel modal from sample icon in genomic tracks', () => {
                 browser
                     .moveToObject(
                         '.genomicOverviewTracksContainer svg[data-test=sample-icon]'
@@ -262,11 +257,9 @@ describe('patient view page', function() {
                     .pause(500);
                 clickOnGenePanelLinks();
                 assert($('#patient-view-gene-panel').isExisting());
-
-                closeModal();
-                assert(!$('#patient-view-gene-panel').isExisting());
-
-                // mouse over gene panel icon
+            });
+            
+            it('toggles gene panel modal from gene panel icon in genomic tracks', () => {
                 browser
                     .moveToObject(
                         '.genomicOverviewTracksContainer [data-test=cna-track-genepanel-icon-0]'
@@ -276,10 +269,8 @@ describe('patient view page', function() {
                 assert($('#patient-view-gene-panel').isExisting());
             });
 
-            it('toggles gene panel modal from mutations table', () => {
+            it('toggles gene panel modal from sample icon in mutations table', () => {
                 const mutationsTable = '[data-test=patientview-mutation-table]';
-
-                // mouse over sample icon in "Samples" column
                 browser
                     .moveToObject(
                         `${mutationsTable} table td [data-test=not-profiled-icon]`
@@ -287,23 +278,24 @@ describe('patient view page', function() {
                     .pause(500);
                 clickOnGenePanelLinks();
                 assert($('#patient-view-gene-panel').isExisting());
-
-                closeModal();
-                assert(!$('#patient-view-gene-panel').isExisting());
-
-                // click on gene panel id in "Gene panel" column
+            });
+            
+            it('toggles gene panel modal from gene panel id in mutations table', () => {
+                const mutationsTable = '[data-test=patientview-mutation-table]';
+                
+                // select option to show "Gene Panel" column
                 $(`${mutationsTable} button#dropdown-custom-1`).click();
                 $(`${mutationsTable} ul.dropdown-menu`)
                     .$$('li')[2]
                     .click();
+                
+                // click on gene panel id in mutations table
                 $(`${mutationsTable} table a`).click();
                 assert($('#patient-view-gene-panel').isExisting());
             });
 
-            it('toggles gene panel modal from copy number table', () => {
+            it('toggles gene panel modal from sample icon in copy number table', () => {
                 const copyNumberTable = '[data-test=patientview-copynumber-table]';
-
-                // mouse over sample icon in "Samples" column
                 browser
                     .moveToObject(
                         `${copyNumberTable} table td [data-test=not-profiled-icon]`
@@ -311,15 +303,18 @@ describe('patient view page', function() {
                     .pause(500);
                 clickOnGenePanelLinks();
                 assert($('#patient-view-gene-panel').isExisting());
+            });
+            
+            it('toggles gene panel modal from gene panel id in copy number table', () => {
+                const copyNumberTable = '[data-test=patientview-copynumber-table]';
 
-                closeModal();
-                assert(!$('#patient-view-gene-panel').isExisting());
-
-                // click on gene panel id in "Gene panel" column
+                // select option to show "Gene Panel" column
                 $(`${copyNumberTable} button#dropdown-custom-1`).click();
                 $(`${copyNumberTable} ul.dropdown-menu`)
                     .$$('li')[2]
                     .click();
+                    
+                // click on gene panel id in copy number table
                 $(`${copyNumberTable} table a`).click();
                 assert($('#patient-view-gene-panel').isExisting());
             });
