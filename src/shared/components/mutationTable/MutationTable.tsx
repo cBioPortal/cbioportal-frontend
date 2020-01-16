@@ -597,7 +597,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             Overall population allele frequency is shown. Hover over a frequency to see the frequency for each specific population.</span>),
             defaultSortDirection: "desc",
             visible: false,
-            align: "right"
+            align: "left"
         };
 
         this._columns[MutationTableColumnType.CLINVAR] = {

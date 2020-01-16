@@ -148,8 +148,8 @@ export default class GnomadFrequency extends React.Component<GnomadFrequencyProp
                 display = (
                     <span>
                         {result['Total'].alleleFrequency.toLocaleString(undefined, {
-                            maximumSignificantDigits: 4,
-                            minimumSignificantDigits: 1,
+                            maximumSignificantDigits: 2,
+                            minimumSignificantDigits: 2,
                         })}
                     </span>
                 );
