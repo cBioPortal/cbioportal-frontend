@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import styles from "./styles.module.scss";
 import { observer } from "mobx-react";
-import { computed, observable, action, reaction, IReactionDisposer } from 'mobx';
+import { computed, observable, action } from 'mobx';
 import { CancerStudy, Sample } from 'shared/api/generated/CBioPortalAPI';
 import classnames from 'classnames';
 import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
@@ -16,8 +16,6 @@ import {
     StudyViewFilterWithSampleIdentifierFilters, StudyWithSamples
 } from 'pages/studyView/StudyViewUtils';
 import autobind from 'autobind-decorator';
-import client from "shared/api/cbioportalClientInstance";
-import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {serializeEvent} from "../../../shared/lib/tracking";
 
 const Clipboard = require('clipboard');
@@ -74,7 +72,12 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
     constructor(props: IVirtualStudyProps) {
         super(props);
         this.name = props.name || '';
-        this.description = props.description || '';
+        this.description = props.description || getVirtualStudyDescription(
+            this.props.description,
+            this.props.studyWithSamples,
+            this.props.filter,
+            this.attributeNamesSet,
+            this.props.user);
     }
 
     @computed get namePlaceHolder() {
@@ -101,7 +104,7 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
 
                 let parameters = {
                     name: this.name || this.namePlaceHolder,
-                    description: this.description,
+                    description: '',
                     studyViewFilter: studyViewFilter,
                     origin: this.props.studyWithSamples.map(study => study.studyId),
                     studies: studies
@@ -145,25 +148,6 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
         );
     }
 
-    @computed get entrezIds() {
-        let entrezIds:number[] = [];
-        if(this.props.filter) {
-            if(this.props.filter.mutatedGenes){
-                this.props.filter.mutatedGenes.forEach(mutatedGene=>{
-                    entrezIds.push(...mutatedGene.entrezGeneIds);
-                })
-            }
-            if(this.props.filter.cnaGenes){
-                this.props.filter.cnaGenes.forEach(cnaGene=>{
-                    cnaGene.alterations.forEach(alteration=>{
-                        entrezIds.push(alteration.entrezGeneId);
-                    })
-                })
-            }
-        }
-        return entrezIds;
-    }
-
     @computed get attributeNamesSet() {
         return _.reduce(this.props.attributesMetaSet, (acc: { [id: string]: string }, next, key) => {
             acc[key] = next.displayName
@@ -171,33 +155,9 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
         }, {});
     }
 
-    readonly genes = remoteData({
-        invoke: async () => {
-            if(!_.isEmpty(this.entrezIds)){
-                return client.fetchGenesUsingPOST({geneIdType: "ENTREZ_GENE_ID", geneIds: this.entrezIds as any});
-            }
-            return [];
-        },
-        onResult: (genes) => {
-            this.description = getVirtualStudyDescription(
-                this.props.description,
-                this.props.studyWithSamples,
-                this.props.filter,
-                this.attributeNamesSet,
-                genes,
-                this.props.user);
-        },
-        default: []
-    });
-
     render() {
         return (
             <div className={styles.virtualStudy}>
-                <LoadingIndicator
-                    isLoading={(this.genes.isPending)}
-                    style={{ display: 'block', textAlign: 'center'}}
-                />
-                {this.genes.isComplete &&
                 <If condition={this.virtualStudy.isError}>
                     <Then>
                         <div style={{ textAlign: 'center' }}>
@@ -244,7 +204,7 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
                                             onChange={event => this.description = event.currentTarget.value}
                                         />
                                     </div>
-                                    <span style={{ 'display': 'block', 'font-weight': 'bold' }}>This virtual study was derived from:</span>
+                                    <span style={{ display: 'block', fontWeight: 'bold' }}>This virtual study was derived from:</span>
                                     <div className={styles.studiesSummaryInfo}>
                                         {
                                             this.props.studyWithSamples.map(study => <StudySummaryRecord {...study} />)
@@ -303,7 +263,7 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
                             </Else>
                         </If>
                     </Else>
-                </If> }
+                </If>
             </div>
         )
     }

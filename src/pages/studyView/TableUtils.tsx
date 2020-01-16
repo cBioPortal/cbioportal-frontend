@@ -4,13 +4,9 @@ import styles from "./table/tables.module.scss";
 import classnames from 'classnames';
 import {DefaultTooltip} from "cbioportal-frontend-commons";
 import {ICON_FILTER_OFF, ICON_FILTER_ON} from "shared/lib/Colors";
+import {getFrequencyStr, getCNAByAlteration} from "pages/studyView/StudyViewUtils";
 import {GenePanelList} from "pages/studyView/table/StudyViewGenePanelModal";
-import {getFrequencyStr} from "pages/studyView/StudyViewUtils";
 import {CSSProperties} from "react";
-import {
-    GeneIdentifier,
-    CopyNumberAlterationIdentifier
-} from "pages/studyView/StudyViewPageStore";
 import * as _ from "lodash";
 import {GeneTableUserSelectionWithIndex} from "pages/studyView/table/GeneTable";
 
@@ -20,33 +16,8 @@ export type AlteredGenesTableUserSelectionWithIndex = {
     rowIndex: number;
 };
 
-const UNIQUE_KEY_SEPARATOR = '*';
-
-export function getMutationUniqueKey(entrezGeneId: number, hugoGeneSymbol: string) {
-    return [entrezGeneId, hugoGeneSymbol].join(UNIQUE_KEY_SEPARATOR);
-}
-
-export function parseMutationUniqueKey(uniqueKey: string): GeneIdentifier {
-    const parts = uniqueKey.split(UNIQUE_KEY_SEPARATOR);
-
-    return {
-        entrezGeneId: Number(parts[0]),
-        hugoGeneSymbol: parts[1]
-    }
-}
-
-export function getCnaUniqueKey(entrezGeneId: number, hugoGeneSymbol: string, alteration: number) {
-    return [entrezGeneId, hugoGeneSymbol, alteration].join(UNIQUE_KEY_SEPARATOR);
-}
-
-export function parseCnaUniqueKey(uniqueKey: string): CopyNumberAlterationIdentifier {
-    const parts = uniqueKey.split(UNIQUE_KEY_SEPARATOR);
-
-    return {
-        entrezGeneId: Number(parts[0]),
-        hugoGeneSymbol: parts[1],
-        alteration: Number(parts[2]),
-    }
+export function getGeneCNAOQL(hugoGeneSymbol: string, alteration: number) {
+    return [hugoGeneSymbol, getCNAByAlteration(alteration)].join(':');
 }
 
 export function getGeneColumnHeaderRender(cellMargin: number, headerName: string, cancerGeneListFilterEnabled: boolean, isFilteredByCancerGeneList: boolean, cancerGeneIconToggle: (event: any) => void) {

@@ -85,17 +85,15 @@ export enum ChartTypeNameEnum {
 export const DEFAULT_SORTING_COLUMN = 'Freq';
 
 const studyViewFrontEnd = {
-    alwaysShownClinicalAttributes: ['SAMPLE_CANCER_TYPE', 'SAMPLE_CANCER_TYPE_DETAILED'],
+    alwaysShownClinicalAttributes: ['CANCER_TYPE', 'CANCER_TYPE_DETAILED'],
     defaultPriority: 1,
-    tableAttrs: ['SAMPLE_CANCER_TYPE', 'SAMPLE_CANCER_TYPE_DETAILED'],
+    tableAttrs: ['CANCER_TYPE', 'CANCER_TYPE_DETAILED'],
     initialBins: {
-        'SAMPLE_MSI_SCORE': [1, 2, 5, 10, 30]
+        'MSI_SCORE': [1, 2, 5, 10, 30]
     },
     priority: {
-        "SAMPLE_CANCER_TYPE": 3000,
-        "PATIENT_CANCER_TYPE": 3000,
-        "SAMPLE_CANCER_TYPE_DETAILED": 2000,
-        "PATIENT_CANCER_TYPE_DETAILED": 2000,
+        "CANCER_TYPE": 3000,
+        "CANCER_TYPE_DETAILED": 2000,
         "OS_SURVIVAL": 400,
         "DFS_SURVIVAL": 300,
         "MUTATION_COUNT_CNA_FRACTION": 200,
@@ -105,29 +103,19 @@ const studyViewFrontEnd = {
         "CANCER_STUDIES": 70,
         "SEQUENCED": 60,
         "HAS_CNA_DATA": 50,
-        "PATIENT_SAMPLE_COUNT": 40,
+        "SAMPLE_COUNT": 40,
         "MUTATION_COUNT": 30,
         "FRACTION_GENOME_ALTERED": 20,
-        "PATIENT_GENDER": 9,
-        "SAMPLE_GENDER": 9,
-        "PATIENT_SEX": 9,
-        "SAMPLE_SEX": 9,
-        "PATIENT_AGE": 9,
-        "SAMPLE_AGE": 9,
-        "PATIENT_RACE": 8,
-        "SAMPLE_RACE": 8,
-        "PATIENT_ETHNICITY": 8,
-        "SAMPLE_ETHNICITY": 8,
-        "SAMPLE_SAMPLE_TYPE": 8,
-        "PATIENT_SAMPLE_TYPE": 8,
-        "PATIENT_HISTOLOGY": 8,
-        "SAMPLE_HISTOLOGY": 8,
-        "SAMPLE_TUMOR_TYPE": 8,
-        "PATIENT_TUMOR_TYPE": 8,
-        "PATIENT_SUBTYPE": 8,
-        "SAMPLE_SUBTYPE": 8,
-        "PATIENT_TUMOR_SITE": 8,
-        "SAMPLE_TUMOR_SITE": 8
+        "GENDER": 9,
+        "SEX": 9,
+        "AGE": 9,
+        "RACE": 8,
+        "ETHNICITY": 8,
+        "SAMPLE_TYPE": 8,
+        "HISTOLOGY": 8,
+        "TUMOR_TYPE": 8,
+        "SUBTYPE": 8,
+        "TUMOR_SITE": 8
     },
     thresholds: {
         pieToTable: 20,

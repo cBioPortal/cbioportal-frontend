@@ -53,12 +53,13 @@ import {
     formatRange,
     getBinName,
     getGroupedClinicalDataByBins,
+    getFilteredAndCompressedDataIntervalFilters,
 } from 'pages/studyView/StudyViewUtils';
 import {
-    ClinicalDataIntervalFilterValue,
     DataBin,
     Sample,
-    StudyViewFilter
+    StudyViewFilter,
+    ClinicalDataFilterValue
 } from 'shared/api/generated/CBioPortalAPIInternal';
 import {CancerStudy, ClinicalAttribute, Gene} from 'shared/api/generated/CBioPortalAPI';
 import { StudyViewPageTabKeyEnum } from "pages/studyView/StudyViewPageTabs";
@@ -77,10 +78,8 @@ import { shallow } from 'enzyme';
 
 describe('StudyViewUtils', () => {
     const emptyStudyViewFilter: StudyViewFilter = {
-        clinicalDataEqualityFilters: [],
-        clinicalDataIntervalFilters: [],
-        cnaGenes: [],
-        mutatedGenes: []
+        clinicalDataFilters: [],
+        geneFilters: []
     } as any;
 
     describe('updateGeneQuery', () => {
@@ -131,33 +130,38 @@ describe('StudyViewUtils', () => {
                     '',
                     studies as any,
                     {} as any,
-                    {} as any,
-                    []
+                    {} as any
                 ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)'));
         });
         it('when filters are applied', () => {
             let filter = {
-                clinicalDataEqualityFilters: [{
+                clinicalDataFilters: [{
                     'attributeId': 'attribute1',
-                    'clinicalDataType': "SAMPLE",
-                    'values': ['value1']
-                }],
-                clinicalDataIntervalFilters: [{
+                    'values': [{
+                        'value':'value1'
+                    }]
+                },{
                     'attributeId': 'attribute2',
-                    'clinicalDataType': "PATIENT",
                     'values': [{
                         'end': 0,
                         'start': 10,
                         'value': `10`
                     }]
                 }],
-                mutatedGenes: [{ "entrezGeneIds": [1] }],
-                fusionGenes: [{ "entrezGeneIds": [1] }],
-                cnaGenes: [{ "alterations": [{ "entrezGeneId": 2, "alteration": -2 }] }],
+                geneFilters:[{
+                    geneQueries:[["GENE1"]],
+                    molecularProfileIds:["cancer_study_sequenced"]
+                },{
+                    geneQueries:[["GENE1"]],
+                    molecularProfileIds:["cancer_study_fusion"]
+                },{
+                    geneQueries:[["GENE2:HOMDEL"]],
+                    molecularProfileIds:["cancer_study_cna"]
+                }],
                 studyIds: ['study1', 'study2'],
                 sampleIdentifiers: [],
                 sampleIdentifiersSet: {
-                    'SAMPLE_attribute3': [{
+                    'attribute3': [{
                         'sampleId': 'sample 1',
                         'studyId': 'study1'
                     }, {
@@ -176,20 +180,24 @@ describe('StudyViewUtils', () => {
 
             let genes = [{ entrezGeneId: 1, hugoGeneSymbol: "GENE1" }, { entrezGeneId: 2, hugoGeneSymbol: "GENE2" }] as Gene[];
 
+
             assert.isTrue(
                 getVirtualStudyDescription(
                     '',
                     studies as any,
                     filter,
                     {
-                        'SAMPLE_attribute1': 'attribute1 name',
-                        'PATIENT_attribute2': 'attribute2 name',
-                        'SAMPLE_attribute3': 'attribute3 name'
-                    },
-                    genes
-                ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)\n\nFilters:\n' +
-                    '- CNA Genes:\n  - GENE2-DEL\n- Mutated Genes:\n  - GENE1\n- Fusion Genes:\n  - GENE1\nWith Mutation data: NO\n' +
-                    'With CNA data: NO\n- attribute1 name: value1\n- attribute2 name: 10 < x ≤ 0\n- attribute3 name: 2 samples\n\nCreated on 2019-12-24'));
+                        'attribute1': 'attribute1 name',
+                        'attribute2': 'attribute2 name',
+                        'attribute3': 'attribute3 name',
+                        'cancer_study_sequenced': ' Mutated Genes',
+                        'cancer_study_fusion': 'Fusion Genes',
+                        'cancer_study_cna': 'CNA Genes'
+                    }
+                ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)' +
+                    '\n\nFilters:\n-  Mutated Genes:\n  - GENE1\n- Fusion Genes:\n  - GENE1\n- CNA Genes:' +
+                    '\n  - GENE2:HOMDEL\nWith Mutation data: NO\nWith CNA data: NO\n- attribute1 name: value1\n' +
+                    '- attribute2 name: 10 < x ≤ 0\n- attribute3 name: 2 samples\n\nCreated on'));
         });
         it('when username is not null', () => {
             assert.isTrue(
@@ -198,7 +206,6 @@ describe('StudyViewUtils', () => {
                     studies as any,
                     {} as any,
                     {} as any,
-                    [],
                     'user1'
                 ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)'));
             assert.isTrue(
@@ -207,23 +214,18 @@ describe('StudyViewUtils', () => {
                     studies as any,
                     {} as any,
                     {} as any,
-                    [],
                     'user1'
                 ).endsWith('by user1'));
         });
         it('when previousDescription is defined', () => {
             let filter = {
-                clinicalDataEqualityFilters: [{
+                clinicalDataFilters: [{
                     'attributeId': 'attribute1',
-                    'clinicalDataType': "SAMPLE",
-                    'values': ['value1']
+                    'values': [{
+                        'value':"value1"
+                    }]
                 }]
-            } as StudyViewFilterWithSampleIdentifierFilters;
-
-            let genes = [{entrezGeneId: 1, hugoGeneSymbol: "GENE1"}, {
-                entrezGeneId: 2,
-                hugoGeneSymbol: "GENE2"
-            }] as Gene[];
+            } as any;
 
             assert.isTrue(
                 getVirtualStudyDescription(
@@ -231,26 +233,24 @@ describe('StudyViewUtils', () => {
                     studies as any,
                     filter,
                     {
-                        'SAMPLE_attribute1': 'attribute1 name',
-                        'PATIENT_attribute2': 'attribute2 name',
-                        'SAMPLE_attribute3': 'attribute3 name'
+                        'attribute1': 'attribute1 name',
+                        'attribute2': 'attribute2 name',
+                        'attribute3': 'attribute3 name'
                     },
-                    genes
                 ).startsWith('test\n\nCreated on'));
         });
     });
 
     describe('shouldShowChart', () => {
         const hasInfoFilter = {
-            clinicalDataEqualityFilters: [{
+            clinicalDataFilters: [{
                 'attributeId': 'attribute1',
-                'clinicalDataType': "SAMPLE" as 'SAMPLE',
-                'values': ['value1']
+                'values': [{
+                    'value':"value1"
+                }]
             }],
-            clinicalDataIntervalFilters: [],
-            mutatedGenes: [],
-            cnaGenes: []
-        };
+            geneFilters: []
+        } as any;
         it("return true when there is only one sample in the study", () => {
             assert.isTrue(shouldShowChart(emptyStudyViewFilter, 1, 1));
         });
@@ -628,7 +628,7 @@ describe('StudyViewUtils', () => {
         ] as any;
 
         it('generates clinical data interval filter values from data bins', () => {
-            const values: ClinicalDataIntervalFilterValue[] = getClinicalDataIntervalFilterValues(
+            const values: ClinicalDataFilterValue[] = getClinicalDataIntervalFilterValues(
                 [linearScaleDataBinsWithNa[0], linearScaleDataBinsWithNa[2], linearScaleDataBinsWithNa[5]] as any);
 
             assert.deepEqual(values, [
@@ -863,13 +863,13 @@ describe('StudyViewUtils', () => {
             {start: 20, end: 30},
             {start: 30, end: 40},
             {start: 40, end: 50}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithBothEndsClosedAndSpecialValues = [
             ...filterValuesWithBothEndsClosed,
             {value: "NA"},
             {value: "REDACTED"}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithBothEndsOpen = [
             {end: 10},
@@ -878,13 +878,13 @@ describe('StudyViewUtils', () => {
             {start: 30, end: 40},
             {start: 40, end: 50},
             {start: 50}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithBothEndsOpenAndSpecialValues = [
             ...filterValuesWithBothEndsOpen,
             {value: "NA"},
             {value: "REDACTED"}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithStartOpen = [
             {end: 10},
@@ -892,13 +892,13 @@ describe('StudyViewUtils', () => {
             {start: 20, end: 30},
             {start: 30, end: 40},
             {start: 40, end: 50},
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithStartOpenAndSpecialValues = [
             ...filterValuesWithStartOpen,
             {value: "NA"},
             {value: "REDACTED"}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithEndOpen = [
             {start: 10, end: 20},
@@ -906,40 +906,40 @@ describe('StudyViewUtils', () => {
             {start: 30, end: 40},
             {start: 40, end: 50},
             {start: 50}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithEndOpenAndSpecialValues = [
             ...filterValuesWithEndOpen,
             {value: "NA"},
             {value: "REDACTED"}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithSpecialValuesOnly = [
             {value: "NA"},
             {value: "REDACTED"}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithDistinctNumerals = [
             {start: 20, end: 20},
             {start: 30, end: 30},
             {start: 40, end: 40}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithDistinctNumeralsAndSpecialValues = [
             ...filterValuesWithDistinctNumerals,
             {value: "NA"},
             {value: "REDACTED"}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithSingleDistinctValue = [
             {start: 666, end: 666}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         const filterValuesWithSingleDistinctValueAndSpecialValues = [
             ...filterValuesWithSingleDistinctValue,
             {value: "NA"},
             {value: "REDACTED"}
-        ] as ClinicalDataIntervalFilterValue[];
+        ] as ClinicalDataFilterValue[];
 
         it ('generates display value for filter values with both ends closed', () => {
             const value = intervalFiltersDisplayValue(filterValuesWithBothEndsClosed);
@@ -1235,7 +1235,7 @@ describe('StudyViewUtils', () => {
 
     describe('getCNAByAlteration', ()=>{
         it('return proper string from proper alteration', ()=>{
-            assert.isTrue(getCNAByAlteration(-2) === 'DEL');
+            assert.isTrue(getCNAByAlteration(-2) === 'HOMDEL');
             assert.isTrue(getCNAByAlteration(2) === 'AMP');
         });
 

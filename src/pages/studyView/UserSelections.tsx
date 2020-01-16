@@ -3,8 +3,8 @@ import * as _ from 'lodash';
 import {observer} from "mobx-react";
 import {computed} from 'mobx';
 import styles from "./styles.module.scss";
-import {ClinicalDataIntervalFilterValue, CopyNumberGeneFilterElement} from 'shared/api/generated/CBioPortalAPIInternal';
-import {UniqueKey} from 'pages/studyView/StudyViewUtils';
+import {ClinicalDataFilterValue} from 'shared/api/generated/CBioPortalAPIInternal';
+import {UniqueKey, DataType, getUniqueKeyFromMolecularProfileIds, ChartType} from 'pages/studyView/StudyViewUtils';
 import {
     ChartMeta,
     getCNAColorByAlteration, getPatientIdentifiers,
@@ -18,33 +18,23 @@ import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
 import {DEFAULT_NA_COLOR, MUT_COLOR_FUSION, MUT_COLOR_MISSENSE} from "shared/lib/Colors";
 import {
     caseCounts,
-    getNumPatients,
-    getNumSamples, getSampleIdentifiers,
+    getSampleIdentifiers,
     StudyViewComparisonGroup
 } from "../groupComparison/GroupComparisonUtils";
 
 export interface IUserSelectionsProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;
     customChartsFilter: {[key:string]:string[]};
-    getSelectedGene: (entrezGeneId: number) => string|undefined;
     numberOfSelectedSamplesInCustomSelection: number;
     comparisonGroupSelection:StudyViewComparisonGroup[];
-    attributesMetaSet: { [id: string]: ChartMeta };
-    updateClinicalDataEqualityFilter: (chartMeta: ChartMeta, value: string[]) => void;
-    updateClinicalDataIntervalFilter: (chartMeta: ChartMeta, values: ClinicalDataIntervalFilterValue[]) => void;
-    updateCustomChartFilter: (chartMeta: ChartMeta, values: string[]) => void;
-    clearGeneFilter: () => void;
-    clearCNAGeneFilter: () => void;
-    removeMutatedGeneFilter: (entrezGeneId: number) => void;
-    removeFusionGeneFilter: (entrezGeneId: number) => void;
-    removeCNAGeneFilter: (filter: CopyNumberGeneFilterElement) => void;
-    resetMutationCountVsCNAFilter: () => void;
-    removeWithMutationDataFilter: () => void;
-    removeWithCNADataFilter: () => void;
+    attributesMetaSet: { [id: string]: ChartMeta & { chartType: ChartType } };
+    updateClinicalDataFilterByValues: (uniqueKey: string, values: ClinicalDataFilterValue[]) => void;
+    updateCustomChartFilter: (uniqueKey: string, values: string[]) => void;
+    removeGeneFilter:(uniqueKey: string, oql: string) => void;
     removeCustomSelectionFilter: () => void,
     removeComparisonGroupSelectionFilter: ()=>void,
-    clearChartSampleIdentifierFilter: (chartMeta: ChartMeta) => void;
     clearAllFilters: () => void
+    clinicalAttributeIdToDataType: {[key:string]:string};
 }
 
 
@@ -95,47 +85,54 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                     group={false}/></div>);
         }
 
-        // Pie chart filters
-        _.reduce((this.props.filter.clinicalDataEqualityFilters || []), (acc, clinicalDataEqualityFilter) => {
-            const chartMeta = this.props.attributesMetaSet[clinicalDataEqualityFilter.clinicalDataType + '_' + clinicalDataEqualityFilter.attributeId];
+        _.reduce((this.props.filter.clinicalDataFilters || []), (acc, clinicalDataFilter) => {
+            const chartMeta = this.props.attributesMetaSet[clinicalDataFilter.attributeId];
             if (chartMeta) {
-                acc.push(
-                    <div className={styles.parentGroupLogic}>
-                        <GroupLogic
-                            components={[
-                                <span className={styles.filterClinicalAttrName}>{chartMeta.displayName}</span>,
-                                <GroupLogic components={clinicalDataEqualityFilter.values.map(label => {
-                                    return <PillTag
-                                        content={label}
-                                        backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
-                                        onDelete={() => this.props.updateClinicalDataEqualityFilter(chartMeta, _.remove(clinicalDataEqualityFilter.values, value => value !== label))}
+                const dataType = this.props.clinicalAttributeIdToDataType[clinicalDataFilter.attributeId];
+                if(dataType === DataType.STRING) {
+                    // Pie chart filter
+                    acc.push(
+                        <div className={styles.parentGroupLogic}>
+                            <GroupLogic
+                                components={[
+                                    <span className={styles.filterClinicalAttrName}>{chartMeta.displayName}</span>,
+                                    <GroupLogic
+                                        components={clinicalDataFilter.values.map(clinicalDataFilterValue => {
+                                            return <PillTag
+                                                content={clinicalDataFilterValue.value}
+                                                backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
+                                                onDelete={() => this.props.updateClinicalDataFilterByValues(chartMeta.uniqueKey,
+                                                    _.remove(clinicalDataFilter.values, value => value.value !== clinicalDataFilterValue.value))}
+                                            />
+                                        })}
+                                        operation={'or'}
+                                        group={false}
                                     />
-                                })} operation={'or'} group={false}/>
-                            ]}
-                            operation={':'}
-                            group={false}/></div>
-                );
-            }
-            return acc;
-        }, components);
-
-        // Bar chart filters
-        _.reduce((this.props.filter.clinicalDataIntervalFilters || []), (acc, clinicalDataIntervalFilter) => {
-            const chartMeta = this.props.attributesMetaSet[clinicalDataIntervalFilter.clinicalDataType + '_' + clinicalDataIntervalFilter.attributeId];
-            if (chartMeta) {
-                acc.push(
-                    <div className={styles.parentGroupLogic}><GroupLogic
-                        components={[
-                            <span className={styles.filterClinicalAttrName}>{chartMeta.displayName}</span>,
-                            <PillTag
-                                content={intervalFiltersDisplayValue(clinicalDataIntervalFilter.values)}
-                                backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
-                                onDelete={() => this.props.updateClinicalDataIntervalFilter(chartMeta, [])}
+                                ]}
+                                operation={':'}
+                                group={false}
                             />
-                        ]}
-                        operation={':'}
-                        group={false}/></div>
-                );
+                        </div>
+                    );
+                } else {
+                     // Bar chart filter
+                    acc.push(
+                        <div className={styles.parentGroupLogic}>
+                            <GroupLogic
+                                components={[
+                                    <span className={styles.filterClinicalAttrName}>{chartMeta.displayName}</span>,
+                                    <PillTag
+                                        content={intervalFiltersDisplayValue(clinicalDataFilter.values)}
+                                        backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
+                                        onDelete={() => this.props.updateClinicalDataFilterByValues(chartMeta.uniqueKey, [])}
+                                    />
+                                ]}
+                                operation={':'}
+                                group={false}
+                            />
+                        </div>
+                    );
+                }
             }
             return acc;
         }, components);
@@ -154,7 +151,7 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                                         return <PillTag
                                             content={label}
                                             backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
-                                            onDelete={() => this.props.updateCustomChartFilter(chartMeta, _.remove(content, value => value !== label))}
+                                            onDelete={() => this.props.updateCustomChartFilter(chartMeta.uniqueKey, _.remove(content, value => value !== label))}
                                         />
                                     })} operation={'or'} group={false}/>
                                 ]}
@@ -167,85 +164,50 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
             }, components);
         }
 
-        // Mutated Genes table
-        let chartMeta = this.props.attributesMetaSet[UniqueKey.MUTATED_GENES_TABLE];
-        if (chartMeta && !_.isEmpty(this.props.filter.mutatedGenes)) {
-            components.push(<div className={styles.parentGroupLogic}><GroupLogic
-                components={this.props.filter.mutatedGenes.map(filter => {
-                    return <GroupLogic
-                        components={filter.entrezGeneIds.map(entrezGene => {
-                            const hugoGeneSymbol = this.props.getSelectedGene(entrezGene);
-                            return <PillTag
-                                content={hugoGeneSymbol === undefined ? `Entrez Gene ID: ${entrezGene}` : hugoGeneSymbol}
-                                backgroundColor={MUT_COLOR_MISSENSE}
-                                onDelete={() => this.props.removeMutatedGeneFilter(entrezGene)}
+        _.reduce((this.props.filter.geneFilters || []), (acc, geneFilter) => {
+            const uniqueKey = getUniqueKeyFromMolecularProfileIds(geneFilter.molecularProfileIds);
+            const chartMeta = this.props.attributesMetaSet[uniqueKey];
+            if (chartMeta) {
+                acc.push(
+                    <div className={styles.parentGroupLogic}><GroupLogic
+                        components={geneFilter.geneQueries.map(geneQuery => {
+                            return <GroupLogic
+                                components={geneQuery.map(oql => {
+                                    let color = DEFAULT_NA_COLOR;
+                                    let displayGeneSymbol = oql;
+                                    switch (chartMeta.chartType) {
+                                        case UniqueKey.MUTATED_GENES_TABLE:
+                                            color = MUT_COLOR_MISSENSE;
+                                            break;
+                                        case UniqueKey.FUSION_GENES_TABLE:
+                                            color = MUT_COLOR_FUSION;
+                                            break;
+                                        case UniqueKey.CNA_GENES_TABLE: {
+                                            const oqlParts = oql.trim().split(":")
+                                            if (oqlParts.length === 2) {
+                                                displayGeneSymbol = oqlParts[0];
+                                                let tagColor = getCNAColorByAlteration(oqlParts[1])
+                                                if (tagColor) {
+                                                    color = tagColor;
+                                                }
+                                            }
+                                            break;
+                                        }
+                                    }
+                                    return <PillTag
+                                        content={displayGeneSymbol}
+                                        backgroundColor={color}
+                                        onDelete={() => this.props.removeGeneFilter(chartMeta.uniqueKey, oql)}
+                                    />
+                                })}
+                                operation="or"
+                                group={geneQuery.length > 1}
                             />
-                        })}
-                        operation="or"
-                        group={filter.entrezGeneIds.length > 1}
-                    />
-                })} operation={"and"} group={false}/></div>);
-        }
-
-        // Fusion Genes table
-        chartMeta = this.props.attributesMetaSet[UniqueKey.FUSION_GENES_TABLE];
-        if (chartMeta && !_.isEmpty(this.props.filter.fusionGenes)) {
-            components.push(<div className={styles.parentGroupLogic}><GroupLogic
-                components={this.props.filter.fusionGenes.map(filter => {
-                    return <GroupLogic
-                        components={filter.entrezGeneIds.map(entrezGene => {
-                            const hugoGeneSymbol = this.props.getSelectedGene(entrezGene);
-                            return <PillTag
-                                content={hugoGeneSymbol === undefined ? `Entrez Gene ID: ${entrezGene}` : hugoGeneSymbol}
-                                backgroundColor={MUT_COLOR_FUSION}
-                                onDelete={() => this.props.removeFusionGeneFilter(entrezGene)}
-                            />
-                        })}
-                        operation="or"
-                        group={filter.entrezGeneIds.length > 1}
-                    />
-                })} operation={"and"} group={false}/></div>);
-        }
-
-        // CNA table files
-        chartMeta = this.props.attributesMetaSet[UniqueKey.CNA_GENES_TABLE];
-        if (chartMeta && !_.isEmpty(this.props.filter.cnaGenes)) {
-            components.push(<div className={styles.parentGroupLogic}><GroupLogic
-                components={this.props.filter.cnaGenes.map(filter => {
-                    return <GroupLogic
-                        components={filter.alterations.map(filter => {
-                            const hugoGeneSymbol = this.props.getSelectedGene(filter.entrezGeneId);
-                            let tagColor = getCNAColorByAlteration(filter.alteration);
-                            tagColor = tagColor === undefined ? DEFAULT_NA_COLOR : tagColor;
-                            return <PillTag
-                                content={hugoGeneSymbol === undefined ? `Entrez Gene ID: ${filter.entrezGeneId}` : hugoGeneSymbol}
-                                backgroundColor={tagColor}
-                                onDelete={() => this.props.removeCNAGeneFilter(filter)}
-                            />
-                        })}
-                        operation="or"
-                        group={filter.alterations.length > 1}
-                    />
-                })} operation={"and"} group={false}/></div>);
-        }
-
-        // Mutation count vs FGA
-        if (this.props.filter.mutationCountVsCNASelection) {
-            const region = this.props.filter.mutationCountVsCNASelection;
-            components.push(
-                <div className={styles.parentGroupLogic}><GroupLogic
-                    components={[
-                        <span className={styles.filterClinicalAttrName}>Mutation Count vs FGA</span>,
-                        <PillTag
-                            content={`${Math.floor(region.yStart)} ≤ Mutation Count < ${Math.ceil(region.yEnd)} and ${region.xStart.toFixed(2)} ≤ FGA < ${region.xEnd.toFixed(2)}`}
-                            backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
-                            onDelete={this.props.resetMutationCountVsCNAFilter}
-                        />
-                    ]}
-                    operation={':'}
-                    group={false}/></div>
-            );
-        }
+                        })} operation={"and"} group={false} /></div>
+                );
+            }
+            return acc;
+        }, components);
 
         return components;
     }

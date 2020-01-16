@@ -104,8 +104,8 @@ describe('study laml_tcga tests', () => {
         browser.pause();
 
         browser.click("[data-test='add-chart-option-other-sample-id'] input");
-        browser.waitForVisible("[data-test='chart-container-SAMPLE_OTHER_SAMPLE_ID']", WAIT_FOR_VISIBLE_TIMEOUT);
-        const res = browser.checkElement("[data-test='chart-container-SAMPLE_OTHER_SAMPLE_ID']");
+        browser.waitForVisible("[data-test='chart-container-OTHER_SAMPLE_ID']", WAIT_FOR_VISIBLE_TIMEOUT);
+        const res = browser.checkElement("[data-test='chart-container-OTHER_SAMPLE_ID']");
         assertScreenShotMatch(res);
     });
 
@@ -229,7 +229,7 @@ describe('add chart should not be shown in other irrelevant tabs', () => {
 describe('check the filters are working properly', ()=>{
 
     before(function() {
-        const url = `${CBIOPORTAL_URL}/study?id=laml_tcga&filters=%7B%2522clinicalDataEqualityFilters%2522:%5B%7B%2522attributeId%2522:%2522SEX%2522,%2522clinicalDataType%2522:%2522PATIENT%2522,%2522values%2522:%5B%2522Female%2522%5D%7D%5D,%2522clinicalDataIntervalFilters%2522:%5B%7B%2522attributeId%2522:%2522AGE%2522,%2522clinicalDataType%2522:%2522PATIENT%2522,%2522values%2522:%5B%7B%2522start%2522:25,%2522end%2522:30%7D,%7B%2522start%2522:30,%2522end%2522:35%7D,%7B%2522start%2522:35,%2522end%2522:40%7D,%7B%2522start%2522:40,%2522end%2522:45%7D,%7B%2522start%2522:45,%2522end%2522:50%7D,%7B%2522start%2522:50,%2522end%2522:55%7D,%7B%2522start%2522:55,%2522end%2522:60%7D,%7B%2522start%2522:60,%2522end%2522:65%7D,%7B%2522start%2522:65,%2522end%2522:70%7D,%7B%2522start%2522:70,%2522end%2522:75%7D,%7B%2522start%2522:75,%2522end%2522:80%7D%5D%7D%5D,%2522mutatedGenes%2522:%5B%7B%2522entrezGeneIds%2522:%5B2322,4869%5D%7D%5D,%2522cnaGenes%2522:%5B%7B%2522alterations%2522:%5B%7B%2522alteration%2522:-2,%2522entrezGeneId%2522:2521%7D,%7B%2522alteration%2522:2,%2522entrezGeneId%2522:4297%7D%5D%7D%5D%7D`;
+        const url = `${CBIOPORTAL_URL}/study?id=laml_tcga&filters=%7B%22clinicalDataFilters%22%3A%5B%7B%22attributeId%22%3A%22SEX%22%2C%22values%22%3A%5B%7B%22value%22%3A%22Female%22%7D%5D%7D%2C%7B%22attributeId%22%3A%22AGE%22%2C%22values%22%3A%5B%7B%22start%22%3A20%2C%22end%22%3A25%7D%2C%7B%22start%22%3A25%2C%22end%22%3A30%7D%2C%7B%22start%22%3A30%2C%22end%22%3A35%7D%2C%7B%22start%22%3A35%2C%22end%22%3A40%7D%2C%7B%22start%22%3A40%2C%22end%22%3A45%7D%2C%7B%22start%22%3A45%2C%22end%22%3A50%7D%2C%7B%22start%22%3A50%2C%22end%22%3A55%7D%2C%7B%22start%22%3A55%2C%22end%22%3A60%7D%2C%7B%22start%22%3A60%2C%22end%22%3A65%7D%2C%7B%22start%22%3A65%2C%22end%22%3A70%7D%2C%7B%22start%22%3A70%2C%22end%22%3A75%7D%2C%7B%22start%22%3A75%2C%22end%22%3A80%7D%5D%7D%5D%2C%22geneFilters%22%3A%5B%7B%22molecularProfileIds%22%3A%5B%22laml_tcga_mutations%22%5D%2C%22geneQueries%22%3A%5B%5B%22NPM1%22%2C%22FLT3%22%5D%5D%7D%2C%7B%22molecularProfileIds%22%3A%5B%22laml_tcga_gistic%22%5D%2C%22geneQueries%22%3A%5B%5B%22FUS%3AHOMDEL%22%2C%22KMT2A%3AAMP%22%5D%5D%7D%5D%7D`;
         goToUrlAndSetLocalStorage(url);
         waitForNetworkQuiet(60000);
     });
@@ -274,7 +274,7 @@ describe('check the filters are working properly', ()=>{
 describe('check the fusion filter is working properly', ()=>{
 
     before(function() {
-        const url = `${CBIOPORTAL_URL}/study/summary?filters=%7B%2522fusionGenes%2522%3A%5B%7B%2522entrezGeneIds%2522%3A%5B2313%5D%7D%5D%7D&id=es_dfarber_broad_2014`;
+        const url = `${CBIOPORTAL_URL}/study/summary?id=es_dfarber_broad_2014&filters=%7B%22fusionGenes%22%3A%20%5B%7B%22hugoGeneSymbols%22%3A%20%5B%22FLI1%22%5D%7D%5D%7D`;
         goToUrlAndSetLocalStorage(url);
         waitForNetworkQuiet(60000);
     });
@@ -340,9 +340,9 @@ describe('crc_msk_2017 study tests', () => {
         browser.waitForVisible(ADD_CHART_BUTTON, WAIT_FOR_VISIBLE_TIMEOUT);
         browser.click(ADD_CHART_BUTTON);
 
-        browser.waitForVisible("[data-test='chart-container-SAMPLE_MSI_SCORE']", WAIT_FOR_VISIBLE_TIMEOUT);
+        browser.waitForVisible("[data-test='chart-container-MSI_SCORE']", WAIT_FOR_VISIBLE_TIMEOUT);
 
-        const res = checkElementWithMouseDisabled("[data-test='chart-container-SAMPLE_MSI_SCORE'] svg");
+        const res = checkElementWithMouseDisabled("[data-test='chart-container-MSI_SCORE'] svg");
         assertScreenShotMatch(res);
 
         toStudyViewClinicalDataTab();
@@ -352,8 +352,8 @@ describe('crc_msk_2017 study tests', () => {
 });
 
 describe('study view lgg_tcga study tests', () => {
-    const pieChart = "[data-test='chart-container-PATIENT_SEX']";
-    const table = "[data-test='chart-container-SAMPLE_CANCER_TYPE_DETAILED']";
+    const pieChart = "[data-test='chart-container-SEX']";
+    const table = "[data-test='chart-container-CANCER_TYPE_DETAILED']";
     before(() => {
         const url = `${CBIOPORTAL_URL}/study?id=lgg_tcga`;
         goToUrlAndSetLocalStorage(url);
@@ -361,7 +361,7 @@ describe('study view lgg_tcga study tests', () => {
         waitForNetworkQuiet();
     });
     describe('bar chart', () => {
-        const barChart = "[data-test='chart-container-SAMPLE_DAYS_TO_COLLECTION']";
+        const barChart = "[data-test='chart-container-DAYS_TO_COLLECTION']";
         it('the log scale should be used for Sample Collection', () => {
             browser.waitForVisible(barChart, WAIT_FOR_VISIBLE_TIMEOUT);
             browser.moveToObject(barChart);
