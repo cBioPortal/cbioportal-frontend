@@ -13,7 +13,6 @@ import * as React from "react";
 
 import {GnomadSummary} from "../../model/GnomadSummary";
 import GnomadFrequencyTable, {GnomadTableColumnName} from "./GnomadFrequencyTable";
-import { significantDigits } from "../../util/FormatUtils";
 
 const GNOMAD_POPULATION_NAME: {[key:string]: string} = {
     "African" : "afr",
@@ -146,7 +145,11 @@ export default class GnomadFrequency extends React.Component<GnomadFrequencyProp
                 display = <span>0</span>;
             } else {
                 // show frequency as number with 4 significant digits
-                display = <span>{significantDigits(result['Total'].alleleFrequency, 4)}</span>;
+                var significantDigitsFormatter = new Intl.NumberFormat("en", { 
+                    minimumSignificantDigits: 1,
+                    maximumSignificantDigits:4
+                });
+                display = <span>{significantDigitsFormatter.format(result['Total'].alleleFrequency)}</span>;
             }
 
             overlay = () => <GnomadFrequencyTable data={sorted} gnomadUrl={gnomadUrl} />;
