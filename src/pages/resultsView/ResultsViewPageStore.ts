@@ -173,12 +173,12 @@ import {DEFAULT_GENOME} from 'pages/resultsView/ResultsViewPageStoreUtils';
 import {
     ChartMeta,
     getChartMetaDataType,
-    getClinicalAttributeUniqueKey,
     getDefaultPriorityByUniqueKey,
     getFilteredStudiesWithSamples,
     getPriorityByClinicalAttribute,
     StudyWithSamples,
     UniqueKey,
+    getUniqueKey
 } from 'pages/studyView/StudyViewUtils';
 import {FRACTION_GENOME_ALTERED, MUTATION_COUNT,} from 'pages/studyView/StudyViewPageStore';
 import { IVirtualStudyProps } from 'pages/studyView/virtualStudy/VirtualStudy';
@@ -2345,7 +2345,7 @@ export class ResultsViewPageStore {
         _.reduce(
             this.clinicalAttributes.result,
             (acc: { [id: string]: ChartMeta }, attribute) => {
-                const uniqueKey = getClinicalAttributeUniqueKey(attribute);
+                const uniqueKey = getUniqueKey(attribute);
                 acc[uniqueKey] = {
                     displayName: attribute.displayName,
                     uniqueKey: uniqueKey,

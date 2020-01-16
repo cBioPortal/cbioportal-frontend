@@ -3,16 +3,15 @@ import {SingleGeneQuery} from "shared/lib/oql/oql-parser";
 import {unparseOQLQueryLine} from "shared/lib/oql/oqlfilter";
 import {
     ClinicalDataCount,
-    ClinicalDataIntervalFilterValue,
     DataBin,
     SampleIdentifier,
     StudyViewFilter,
-    ClinicalDataBinFilter
+    ClinicalDataBinFilter,
+    ClinicalDataFilterValue
 } from "shared/api/generated/CBioPortalAPIInternal";
 import {CancerStudy, ClinicalAttribute, Gene, PatientIdentifier, Sample, ClinicalData} from "shared/api/generated/CBioPortalAPI";
 import * as React from "react";
 import {buildCBioPortalPageUrl} from "../../shared/api/urls";
-import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
 import {BarDatum} from "./charts/barChart/BarChart";
 import { ChartUserSetting, CustomChart } from "./StudyViewPageStore";
 import { StudyViewPageTabKeyEnum } from "pages/studyView/StudyViewPageTabs";
@@ -30,6 +29,8 @@ import {StudyViewComparisonGroup} from "../groupComparison/GroupComparisonUtils"
 import styles from './styles.module.scss';
 import { getGroupParameters, getStudiesAttr } from "pages/groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils";
 import { SessionGroupData } from "shared/api/ComparisonGroupClient";
+import { IStudyViewScatterPlotData } from "./charts/scatterPlot/StudyViewScatterPlotUtils";
+import { CNA_TO_ALTERATION } from "pages/resultsView/enrichments/EnrichmentsUtil";
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -41,6 +42,11 @@ export enum NumericalGroupComparisonType {
     QUARTILES = 'QUARTILES',
     MEDIAN='MEDIAN',
     BINS = 'BINS'
+}
+
+export enum DataType {
+    STRING = 'STRING',
+    NUMBER = "NUMBER"
 }
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT';
@@ -65,8 +71,8 @@ export enum UniqueKey {
     DISEASE_FREE_SURVIVAL = 'DFS_SURVIVAL',
     OVERALL_SURVIVAL = 'OS_SURVIVAL',
     CANCER_STUDIES = 'CANCER_STUDIES',
-    MUTATION_COUNT = "SAMPLE_MUTATION_COUNT",
-    FRACTION_GENOME_ALTERED = "SAMPLE_FRACTION_GENOME_ALTERED",
+    MUTATION_COUNT = "MUTATION_COUNT",
+    FRACTION_GENOME_ALTERED = "FRACTION_GENOME_ALTERED",
     WITH_MUTATION_DATA = "WITH_MUTATION_DATA",
     WITH_FUSION_DATA = "WITH_FUSION_DATA",
     WITH_CNA_DATA = "WITH_CNA_DATA"
@@ -106,6 +112,13 @@ export enum Datalabel {
     YES = 'YES',
     NO = 'NO',
     NA = "NA"
+}
+
+export type RectangleBounds = {
+    xEnd?: number,
+    xStart?: number,
+    yEnd?: number,
+    yStart?: number
 }
 
 export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [{
@@ -369,17 +382,18 @@ export function getPriority(priorities: number[]): number {
     return priority;
 }
 
-export function getClinicalDataType(patientAttribute: boolean): ClinicalDataType {
-    return patientAttribute ? ClinicalDataTypeEnum.PATIENT : ClinicalDataTypeEnum.SAMPLE;
+export function getUniqueKey(attribute: ClinicalAttribute): string {
+    return attribute.clinicalAttributeId;
 }
 
-export function getClinicalAttributeUniqueKey(attribute: ClinicalAttribute): string {
-    const clinicalDataType = getClinicalDataType(attribute.patientAttribute);
-    return getClinicalAttributeUniqueKeyByDataTypeAttrId(clinicalDataType, attribute.clinicalAttributeId);
+const UNIQUE_KEY_SEPARATOR = ":";
+
+export function getUniqueKeyFromMolecularProfileIds(molecularProfileIds: string[]) {
+    return _.sortBy(molecularProfileIds).join(UNIQUE_KEY_SEPARATOR);
 }
 
-export function getClinicalAttributeUniqueKeyByDataTypeAttrId(dataType: ClinicalDataType , attrId: string): string {
-    return dataType + '_' + attrId;
+export function getMolecularProfileIdsFromUniqueKey(uniqueKey: string) {
+    return uniqueKey.split(UNIQUE_KEY_SEPARATOR);
 }
 
 export function getCurrentDate() {
@@ -391,7 +405,6 @@ export function getVirtualStudyDescription(
                                             studyWithSamples: StudyWithSamples[],
                                             filter: StudyViewFilterWithSampleIdentifierFilters,
                                             attributeNamesSet: { [id: string]: string },
-                                            genes: Gene[],
                                             user?: string) {
     let descriptionLines: string[] = [];
     const createdOnStr = 'Created on';
@@ -401,12 +414,7 @@ export function getVirtualStudyDescription(
         descriptionLines.push(previousDescription.replace(regex, ''));
     } else {
 
-        let entrezIdSet: { [id: string]: string } = _.reduce(genes, (acc: { [id: string]: string }, next) => {
-            acc[next.entrezGeneId] = next.hugoGeneSymbol
-            return acc
-        }, {})
         //add to samples and studies count
-
         let uniqueSampleKeys = _.uniq(_.flatMap(studyWithSamples, study => study.uniqueSampleKeys))
         descriptionLines.push(`${uniqueSampleKeys.length} sample${uniqueSampleKeys.length > 1 ? 's' : ''} from ${studyWithSamples.length} ${studyWithSamples.length > 1 ? 'studies:' : 'study:'}`);
         //add individual studies sample count
@@ -416,31 +424,14 @@ export function getVirtualStudyDescription(
         //add filters
         let filterLines: string[] = [];
         if (!_.isEmpty(filter)) {
-            if (filter.cnaGenes && filter.cnaGenes.length > 0) {
-                filterLines.push('- CNA Genes:')
-                filterLines = filterLines.concat(filter.cnaGenes.map(cnaGene => {
-                    return cnaGene.alterations.map(alteration => {
-                        let geneSymbol = entrezIdSet[alteration.entrezGeneId] || alteration.entrezGeneId
-                        return geneSymbol + "-" + getCNAByAlteration(alteration.alteration)
-                    }).join(', ').trim();
+
+            _.each(filter.geneFilters || [], (geneFilter) => {
+                let name = attributeNamesSet[getUniqueKeyFromMolecularProfileIds(geneFilter.molecularProfileIds)];
+                filterLines.push(`- ${name}:`);
+                filterLines = filterLines.concat(geneFilter.geneQueries.map(geneQuery => {
+                    return geneQuery.join(', ').trim();
                 }).map(line => '  - ' + line));
-            }
-            if (filter.mutatedGenes && filter.mutatedGenes.length > 0) {
-                filterLines.push('- Mutated Genes:')
-                filterLines = filterLines.concat(filter.mutatedGenes.map(mutatedGene => {
-                    return mutatedGene.entrezGeneIds.map(entrezGeneId => {
-                        return entrezIdSet[entrezGeneId] || entrezGeneId;
-                    }).join(', ').trim();
-                }).map(line => '  - ' + line));
-            }
-            if (filter.fusionGenes && filter.fusionGenes.length > 0) {
-                filterLines.push('- Fusion Genes:')
-                filterLines = filterLines.concat(filter.fusionGenes.map(fusionGene => {
-                    return fusionGene.entrezGeneIds.map(entrezGeneId => {
-                        return entrezIdSet[entrezGeneId] || entrezGeneId;
-                    }).join(', ').trim();
-                }).map(line => '  - ' + line));
-            }
+            });
 
             if (filter.withMutationData !== undefined) {
                 filterLines.push(`With Mutation data: ${filter.withMutationData ? 'YES' : 'NO'}`);
@@ -450,14 +441,9 @@ export function getVirtualStudyDescription(
                 filterLines.push(`With CNA data: ${filter.withCNAData ? 'YES' : 'NO'}`);
             }
 
-            _.each(filter.clinicalDataEqualityFilters || [], (clinicalDataEqualityFilter) => {
-                let name = attributeNamesSet[clinicalDataEqualityFilter.clinicalDataType + '_' + clinicalDataEqualityFilter.attributeId];
-                filterLines.push(`- ${name}: ${clinicalDataEqualityFilter.values.join(', ')}`);
-            });
-
-            _.each(filter.clinicalDataIntervalFilters || [], (clinicalDataIntervalFilter) => {
-                let name = attributeNamesSet[clinicalDataIntervalFilter.clinicalDataType + '_' + clinicalDataIntervalFilter.attributeId];
-                filterLines.push(`- ${name}: ${intervalFiltersDisplayValue(clinicalDataIntervalFilter.values)}`);
+            _.each(filter.clinicalDataFilters || [], (clinicalDataFilter) => {
+                let name = attributeNamesSet[clinicalDataFilter.attributeId];
+                filterLines.push(`- ${name}: ${intervalFiltersDisplayValue(clinicalDataFilter.values)}`);
             });
 
             _.each(filter.sampleIdentifiersSet || {}, (sampleIdentifiers, id) => {
@@ -479,14 +465,10 @@ export function getVirtualStudyDescription(
 
 export function isFiltered(filter: Partial<StudyViewFilterWithSampleIdentifierFilters>) {
     const flag = !(_.isEmpty(filter) || (
-            _.isEmpty(filter.clinicalDataEqualityFilters) &&
-            _.isEmpty(filter.clinicalDataIntervalFilters) &&
-            _.isEmpty(filter.cnaGenes) &&
-            _.isEmpty(filter.mutatedGenes) &&
-            _.isEmpty(filter.fusionGenes) &&
+            _.isEmpty(filter.clinicalDataFilters) &&
+            _.isEmpty(filter.geneFilters) &&
             filter.withMutationData === undefined &&
-            filter.withCNAData === undefined &&
-            !filter.mutationCountVsCNASelection)
+            filter.withCNAData === undefined)
     );
 
     if (filter.sampleIdentifiersSet) {
@@ -568,15 +550,12 @@ export function toSvgDomNodeWithLegend(svgElement: SVGElement,
     return svg;
 }
 
-export function getClinicalDataIntervalFilterValues(data: DataBin[]): ClinicalDataIntervalFilterValue[]
-{
-    const values: Partial<ClinicalDataIntervalFilterValue>[] = data.map(dataBin => ({
+export function getClinicalDataIntervalFilterValues(data: DataBin[]): ClinicalDataFilterValue[] {
+    return data.map(dataBin => ({
         start: dataBin.start,
         end: dataBin.end,
         value: dataBin.start === undefined && dataBin.end === undefined ? dataBin.specialValue : undefined
-    }));
-
-    return values as ClinicalDataIntervalFilterValue[];
+    } as ClinicalDataFilterValue));
 }
 
 export function filterNumericalBins(data: DataBin[]) {
@@ -630,9 +609,8 @@ export function generateNumericalData(numericalBins: DataBin[]): BarDatum[] {
 
             // in case the previous data bin is a single value data bin (i.e start === end),
             // no need to add 1 (no interval needed for the previous value)
-            if (index - 1 > 0 &&
-                numericalBins[index -1].start !== numericalBins[index -1].end)
-            {
+            if (index - 1 > -1 &&
+                numericalBins[index - 1].start !== numericalBins[index - 1].end) {
                 x++;
             }
         }
@@ -838,7 +816,7 @@ export function closestIntegerPowerOfTen(value: number, dataBinPosition: DataBin
     }
 }
 
-export function intervalFiltersDisplayValue(values: ClinicalDataIntervalFilterValue[]) {
+export function intervalFiltersDisplayValue(values: ClinicalDataFilterValue[]) {
     const categories = values
         .filter(value => value.start === undefined && value.end === undefined)
         .map(value => value.value);
@@ -994,30 +972,29 @@ export function getExponent(value: number): number
     return Number(Math.log10(Math.abs(value)).toFixed(fractionDigits));
 }
 
-
 export function getCNAByAlteration(alteration: number) {
-    if ([-2, 2].includes(alteration))
-        return alteration === -2 ? 'DEL' : 'AMP';
-    return '';
+    return CNA_TO_ALTERATION[alteration] || '';
 }
 
-export function getCNAColorByAlteration(alteration: number):string|undefined {
-    if ([-2, 2].includes(alteration))
-        return alteration === -2 ? CNA_COLOR_HOMDEL : CNA_COLOR_AMP;
-    return undefined;
+export function getCNAColorByAlteration(alteration: string): string | undefined {
+    switch (alteration) {
+        case "HOMDEL": return CNA_COLOR_HOMDEL;
+        case "AMP": return CNA_COLOR_AMP;
+        default: return undefined;
+    }
 }
 
 export function getDefaultChartTypeByClinicalAttribute(clinicalAttribute: ClinicalAttribute): ChartType | undefined {
-    if (STUDY_VIEW_CONFIG.tableAttrs.includes(getClinicalAttributeUniqueKey(clinicalAttribute))) {
+    if (STUDY_VIEW_CONFIG.tableAttrs.includes(getUniqueKey(clinicalAttribute))) {
         return ChartTypeEnum.TABLE;
     }
 
     // TODO: update logic when number of categories above PIE_TO_TABLE_LIMIT
-    if (clinicalAttribute.datatype === 'STRING') {
+    if (clinicalAttribute.datatype === DataType.STRING) {
         return ChartTypeEnum.PIE_CHART;
     }
 
-    if (clinicalAttribute.datatype === 'NUMBER') {
+    if (clinicalAttribute.datatype === DataType.NUMBER) {
         return ChartTypeEnum.BAR_CHART;
     }
 
@@ -1244,7 +1221,7 @@ export function getPriorityByClinicalAttribute(clinicalAttribute: ClinicalAttrib
     // the whether there are priorities predefined
     const priorityFromDB = Number(clinicalAttribute.priority);
     if (priorityFromDB === STUDY_VIEW_CONFIG.defaultPriority) {
-        const uniqueKey = getClinicalAttributeUniqueKey(clinicalAttribute);
+        const uniqueKey = getUniqueKey(clinicalAttribute);
         return STUDY_VIEW_CONFIG.priority[uniqueKey] === undefined ? STUDY_VIEW_CONFIG.defaultPriority : STUDY_VIEW_CONFIG.priority[uniqueKey];
     } else {
         return priorityFromDB
@@ -1386,10 +1363,8 @@ export function getSamplesByExcludingFiltersOnChart(
 
     //create filter without study/sample identifiers
     let updatedFilter: StudyViewFilter = {
-        clinicalDataEqualityFilters: filter.clinicalDataEqualityFilters,
-        clinicalDataIntervalFilters: filter.clinicalDataIntervalFilters,
-        cnaGenes: filter.cnaGenes,
-        mutatedGenes: filter.mutatedGenes
+        clinicalDataFilters: filter.clinicalDataFilters,
+        geneFilters: filter.geneFilters
     } as any;
 
     let _sampleIdentifiers = _.reduce(sampleIdentiferFilterSet, (acc, sampleIdentifiers, key) => {
@@ -1790,4 +1765,13 @@ export function getGroupsFromQuartiles(samples: Sample[], patientAttribute: bool
 
 export function getButtonNameWithDownPointer(buttonName: string) {
     return buttonName + " " + String.fromCharCode(9662);/*small solid down triangle*/
+}
+
+export function getFilteredAndCompressedDataIntervalFilters(values: ClinicalDataFilterValue[]): ClinicalDataFilterValue {
+    const numericals = values.filter(value => value.start !== undefined || value.end !== undefined);
+
+    // merge numericals into one interval
+    const start = numericals.length > 0 ? numericals[0].start : undefined;
+    const end = numericals.length > 0 ? numericals[numericals.length - 1].end : undefined;
+    return { start, end } as any
 }

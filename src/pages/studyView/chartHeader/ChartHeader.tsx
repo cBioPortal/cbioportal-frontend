@@ -6,7 +6,6 @@ import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {action, computed, observable} from "mobx";
 import {observer} from "mobx-react";
-import {saveSvgAsPng} from "save-svg-as-png";
 import {ChartTypeEnum} from "../StudyViewConfig";
 import {ChartMeta, getClinicalAttributeOverlay} from "../StudyViewUtils";
 import {

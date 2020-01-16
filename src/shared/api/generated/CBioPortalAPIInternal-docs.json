@@ -258,17 +258,6 @@
             "type": "number"
           },
           {
-            "name": "clinicalDataType",
-            "in": "query",
-            "description": "Clinical data type of both attributes",
-            "required": true,
-            "type": "string",
-            "enum": [
-              "SAMPLE",
-              "PATIENT"
-            ]
-          },
-          {
             "in": "body",
             "name": "studyViewFilter",
             "description": "Study view filter",
@@ -1759,13 +1748,6 @@
         "attributeId": {
           "type": "string"
         },
-        "clinicalDataType": {
-          "type": "string",
-          "enum": [
-            "SAMPLE",
-            "PATIENT"
-          ]
-        },
         "customBins": {
           "type": "array",
           "items": {
@@ -1780,6 +1762,12 @@
         },
         "start": {
           "type": "number"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClinicalDataFilterValue"
+          }
         }
       },
       "title": "ClinicalDataBinFilter"
@@ -1818,13 +1806,6 @@
         "attributeId": {
           "type": "string"
         },
-        "clinicalDataType": {
-          "type": "string",
-          "enum": [
-            "SAMPLE",
-            "PATIENT"
-          ]
-        },
         "counts": {
           "type": "array",
           "items": {
@@ -1858,67 +1839,22 @@
       },
       "title": "ClinicalDataEnrichment"
     },
-    "ClinicalDataEqualityFilter": {
-      "type": "object",
-      "properties": {
-        "attributeId": {
-          "type": "string"
-        },
-        "clinicalDataType": {
-          "type": "string",
-          "enum": [
-            "SAMPLE",
-            "PATIENT"
-          ]
-        },
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "title": "ClinicalDataEqualityFilter"
-    },
     "ClinicalDataFilter": {
       "type": "object",
       "properties": {
         "attributeId": {
           "type": "string"
         },
-        "clinicalDataType": {
-          "type": "string",
-          "enum": [
-            "SAMPLE",
-            "PATIENT"
-          ]
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClinicalDataFilterValue"
+          }
         }
       },
       "title": "ClinicalDataFilter"
     },
-    "ClinicalDataIntervalFilter": {
-      "type": "object",
-      "properties": {
-        "attributeId": {
-          "type": "string"
-        },
-        "clinicalDataType": {
-          "type": "string",
-          "enum": [
-            "SAMPLE",
-            "PATIENT"
-          ]
-        },
-        "values": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ClinicalDataIntervalFilterValue"
-          }
-        }
-      },
-      "title": "ClinicalDataIntervalFilter"
-    },
-    "ClinicalDataIntervalFilterValue": {
+    "ClinicalDataFilterValue": {
       "type": "object",
       "properties": {
         "end": {
@@ -1931,7 +1867,7 @@
           "type": "string"
         }
       },
-      "title": "ClinicalDataIntervalFilterValue"
+      "title": "ClinicalDataFilterValue"
     },
     "CoExpression": {
       "type": "object",
@@ -2026,32 +1962,6 @@
       },
       "title": "CopyNumberCountByGene"
     },
-    "CopyNumberGeneFilter": {
-      "type": "object",
-      "properties": {
-        "alterations": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/CopyNumberGeneFilterElement"
-          }
-        }
-      },
-      "title": "CopyNumberGeneFilter"
-    },
-    "CopyNumberGeneFilterElement": {
-      "type": "object",
-      "properties": {
-        "alteration": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        }
-      },
-      "title": "CopyNumberGeneFilterElement"
-    },
     "CosmicMutation": {
       "type": "object",
       "required": [
@@ -2123,13 +2033,6 @@
       "properties": {
         "attributeId": {
           "type": "string"
-        },
-        "clinicalDataType": {
-          "type": "string",
-          "enum": [
-            "SAMPLE",
-            "PATIENT"
-          ]
         },
         "count": {
           "type": "integer",
@@ -2206,18 +2109,26 @@
       },
       "title": "ExpressionEnrichment"
     },
-    "FusionGeneFilter": {
+    "GeneFilter": {
       "type": "object",
       "properties": {
-        "entrezGeneIds": {
+        "geneQueries": {
           "type": "array",
           "items": {
-            "type": "integer",
-            "format": "int32"
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "molecularProfileIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
           }
         }
       },
-      "title": "FusionGeneFilter"
+      "title": "GeneFilter"
     },
     "Geneset": {
       "type": "object",
@@ -2704,19 +2615,6 @@
       },
       "title": "MutationCountByGene"
     },
-    "MutationGeneFilter": {
-      "type": "object",
-      "properties": {
-        "entrezGeneIds": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
-      "title": "MutationGeneFilter"
-    },
     "MutationSpectrum": {
       "type": "object",
       "required": [
@@ -2792,24 +2690,6 @@
       },
       "title": "MutationSpectrumFilter"
     },
-    "RectangleBounds": {
-      "type": "object",
-      "properties": {
-        "xEnd": {
-          "type": "number"
-        },
-        "xStart": {
-          "type": "number"
-        },
-        "yEnd": {
-          "type": "number"
-        },
-        "yStart": {
-          "type": "number"
-        }
-      },
-      "title": "RectangleBounds"
-    },
     "Sample": {
       "type": "object",
       "required": [
@@ -2881,38 +2761,17 @@
     "StudyViewFilter": {
       "type": "object",
       "properties": {
-        "clinicalDataEqualityFilters": {
+        "clinicalDataFilters": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ClinicalDataEqualityFilter"
+            "$ref": "#/definitions/ClinicalDataFilter"
           }
         },
-        "clinicalDataIntervalFilters": {
+        "geneFilters": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ClinicalDataIntervalFilter"
+            "$ref": "#/definitions/GeneFilter"
           }
-        },
-        "cnaGenes": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/CopyNumberGeneFilter"
-          }
-        },
-        "fusionGenes": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/FusionGeneFilter"
-          }
-        },
-        "mutatedGenes": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/MutationGeneFilter"
-          }
-        },
-        "mutationCountVsCNASelection": {
-          "$ref": "#/definitions/RectangleBounds"
         },
         "sampleIdentifiers": {
           "type": "array",

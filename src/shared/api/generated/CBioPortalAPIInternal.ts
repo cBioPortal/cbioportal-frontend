@@ -38,8 +38,6 @@ export type ClinicalDataBinCountFilter = {
 export type ClinicalDataBinFilter = {
     'attributeId': string
 
-        'clinicalDataType': "SAMPLE" | "PATIENT"
-
         'customBins': Array < number >
 
         'disableLogScale': boolean
@@ -47,6 +45,8 @@ export type ClinicalDataBinFilter = {
         'end': number
 
         'start': number
+
+        'values': Array < ClinicalDataFilterValue >
 
 };
 export type ClinicalDataCount = {
@@ -64,8 +64,6 @@ export type ClinicalDataCountFilter = {
 export type ClinicalDataCountItem = {
     'attributeId': string
 
-        'clinicalDataType': "SAMPLE" | "PATIENT"
-
         'counts': Array < ClinicalDataCount >
 
 };
@@ -79,29 +77,13 @@ export type ClinicalDataEnrichment = {
         'score': number
 
 };
-export type ClinicalDataEqualityFilter = {
-    'attributeId': string
-
-        'clinicalDataType': "SAMPLE" | "PATIENT"
-
-        'values': Array < string >
-
-};
 export type ClinicalDataFilter = {
     'attributeId': string
 
-        'clinicalDataType': "SAMPLE" | "PATIENT"
+        'values': Array < ClinicalDataFilterValue >
 
 };
-export type ClinicalDataIntervalFilter = {
-    'attributeId': string
-
-        'clinicalDataType': "SAMPLE" | "PATIENT"
-
-        'values': Array < ClinicalDataIntervalFilterValue >
-
-};
-export type ClinicalDataIntervalFilterValue = {
+export type ClinicalDataFilterValue = {
     'end': number
 
         'start': number
@@ -149,16 +131,6 @@ export type CopyNumberCountByGene = {
         'totalCount': number
 
 };
-export type CopyNumberGeneFilter = {
-    'alterations': Array < CopyNumberGeneFilterElement >
-
-};
-export type CopyNumberGeneFilterElement = {
-    'alteration': number
-
-        'entrezGeneId': number
-
-};
 export type CosmicMutation = {
     'cosmicMutationId': string
 
@@ -189,8 +161,6 @@ export type DataAccessToken = {
 };
 export type DataBin = {
     'attributeId': string
-
-        'clinicalDataType': "SAMPLE" | "PATIENT"
 
         'count': number
 
@@ -229,8 +199,11 @@ export type ExpressionEnrichment = {
         'pValue': number
 
 };
-export type FusionGeneFilter = {
-    'entrezGeneIds': Array < number >
+export type GeneFilter = {
+    'geneQueries': Array < Array < string >
+        >
+
+        'molecularProfileIds': Array < string >
 
 };
 export type Geneset = {
@@ -449,10 +422,6 @@ export type MutationCountByGene = {
         'totalCount': number
 
 };
-export type MutationGeneFilter = {
-    'entrezGeneIds': Array < number >
-
-};
 export type MutationSpectrum = {
     'CtoA': number
 
@@ -483,16 +452,6 @@ export type MutationSpectrumFilter = {
     'sampleIds': Array < string >
 
         'sampleListId': string
-
-};
-export type RectangleBounds = {
-    'xEnd': number
-
-        'xStart': number
-
-        'yEnd': number
-
-        'yStart': number
 
 };
 export type Sample = {
@@ -526,17 +485,9 @@ export type ServerStatusMessage = {
 
 };
 export type StudyViewFilter = {
-    'clinicalDataEqualityFilters': Array < ClinicalDataEqualityFilter >
+    'clinicalDataFilters': Array < ClinicalDataFilter >
 
-        'clinicalDataIntervalFilters': Array < ClinicalDataIntervalFilter >
-
-        'cnaGenes': Array < CopyNumberGeneFilter >
-
-        'fusionGenes': Array < FusionGeneFilter >
-
-        'mutatedGenes': Array < MutationGeneFilter >
-
-        'mutationCountVsCNASelection': RectangleBounds
+        'geneFilters': Array < GeneFilter >
 
         'sampleIdentifiers': Array < SampleIdentifier >
 
@@ -799,7 +750,6 @@ export default class CBioPortalAPIInternal {
         'yAxisBinCount' ? : number,
         'yAxisStart' ? : number,
         'yAxisEnd' ? : number,
-        'clinicalDataType': "SAMPLE" | "PATIENT",
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any
     }): string {
@@ -837,10 +787,6 @@ export default class CBioPortalAPIInternal {
             queryParameters['yAxisEnd'] = parameters['yAxisEnd'];
         }
 
-        if (parameters['clinicalDataType'] !== undefined) {
-            queryParameters['clinicalDataType'] = parameters['clinicalDataType'];
-        }
-
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                 var parameter = parameters.$queryParameters[parameterName];
@@ -863,7 +809,6 @@ export default class CBioPortalAPIInternal {
      * @param {integer} yAxisBinCount - Number of the bins in Y axis
      * @param {number} yAxisStart - Starting point of the Y axis, if different than smallest value
      * @param {number} yAxisEnd - Starting point of the Y axis, if different than largest value
-     * @param {string} clinicalDataType - Clinical data type of both attributes
      * @param {} studyViewFilter - Study view filter
      */
     fetchClinicalDataDensityPlotUsingPOSTWithHttpInfo(parameters: {
@@ -875,7 +820,6 @@ export default class CBioPortalAPIInternal {
         'yAxisBinCount' ? : number,
         'yAxisStart' ? : number,
         'yAxisEnd' ? : number,
-        'clinicalDataType': "SAMPLE" | "PATIENT",
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any,
         $domain ? : string
@@ -934,15 +878,6 @@ export default class CBioPortalAPIInternal {
                 queryParameters['yAxisEnd'] = parameters['yAxisEnd'];
             }
 
-            if (parameters['clinicalDataType'] !== undefined) {
-                queryParameters['clinicalDataType'] = parameters['clinicalDataType'];
-            }
-
-            if (parameters['clinicalDataType'] === undefined) {
-                reject(new Error('Missing required  parameter: clinicalDataType'));
-                return;
-            }
-
             if (parameters['studyViewFilter'] !== undefined) {
                 body = parameters['studyViewFilter'];
             }
@@ -976,7 +911,6 @@ export default class CBioPortalAPIInternal {
      * @param {integer} yAxisBinCount - Number of the bins in Y axis
      * @param {number} yAxisStart - Starting point of the Y axis, if different than smallest value
      * @param {number} yAxisEnd - Starting point of the Y axis, if different than largest value
-     * @param {string} clinicalDataType - Clinical data type of both attributes
      * @param {} studyViewFilter - Study view filter
      */
     fetchClinicalDataDensityPlotUsingPOST(parameters: {
@@ -988,7 +922,6 @@ export default class CBioPortalAPIInternal {
             'yAxisBinCount' ? : number,
             'yAxisStart' ? : number,
             'yAxisEnd' ? : number,
-            'clinicalDataType': "SAMPLE" | "PATIENT",
             'studyViewFilter': StudyViewFilter,
             $queryParameters ? : any,
             $domain ? : string
