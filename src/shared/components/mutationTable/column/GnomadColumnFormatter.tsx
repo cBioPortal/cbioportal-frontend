@@ -3,20 +3,13 @@ import {Circle} from "better-react-spinkit";
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {
-    DefaultTooltip,
     TableCellStatusIndicator,
     TableCellStatus,
     MyVariantInfo,
-    MyVariantInfoAnnotation,
-    Gnomad,
-    AlleleCount,
-    AlleleNumber,
-    Homozygotes,
-    AlleleFrequency
+    MyVariantInfoAnnotation
 } from 'cbioportal-frontend-commons';
 import GenomeNexusMyVariantInfoCache, { GenomeNexusCacheDataType } from "shared/cache/GenomeNexusMyVariantInfoCache";
 import {calculateGnomadAllelFrequency, GnomadFrequency, gnomadSortValue} from "react-mutation-mapper";
-import generalStyles from "./styles.module.scss";
 
 export default class GnomadColumnFormatter {
 
@@ -24,9 +17,7 @@ export default class GnomadColumnFormatter {
                                  genomeNexusMyVariantInfoCache: GenomeNexusMyVariantInfoCache | undefined) {
         const genomeNexusCacheData = GnomadColumnFormatter.getGenomeNexusDataFromCache(data, genomeNexusMyVariantInfoCache);
         return (
-            <div className={generalStyles["integer-data"]}>
-                <span data-test='gnomad-column' data-test2={data[0].sampleId}>{GnomadColumnFormatter.getGnomadDataViz(genomeNexusCacheData)}</span>
-            </div>
+            <span data-test='gnomad-column' data-test2={data[0].sampleId}>{GnomadColumnFormatter.getGnomadDataViz(genomeNexusCacheData)}</span>
         );
     }
 

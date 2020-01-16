@@ -23,8 +23,8 @@ export function frequencyOutput(frequency: number) {
         return (
             <span>
                 {frequency.toLocaleString(undefined, {
-                    maximumSignificantDigits: 4,
-                    minimumSignificantDigits: 1,
+                    maximumSignificantDigits: 2,
+                    minimumSignificantDigits: 2,
                 })}
             </span>
         );
