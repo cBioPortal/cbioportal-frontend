@@ -1,15 +1,16 @@
 # cbioportal-frontend
 This is the frontend code for cBioPortal using React, MobX and TypeScript. Read more about the architecture of cBioPortal [here](https://docs.cbioportal.org/2.1-deployment/architecture-overview).
 
-## Live demo
-Master: https://master--cbioportalfrontend.netlify.com/
+## Branch Information
+| | main branch | upcoming release branch | later release candidate branch |
+| --- | --- | --- | --- |
+| Branch name | [`master`](https://github.com/cBioPortal/cbioportal-frontend/tree/master) |  [`release-2.3.0`](https://github.com/cBioPortal/cbioportal-frontend/tree/release-2.3.0) |  [`rc`](https://github.com/cBioPortal/cbioportal-frontend/tree/rc) |
+| Description | All bug fixes and features not requiring database migrations go here. This code is either already in production or will be released this week | Next release that requires database migrations. Thorough manual product review often takes place for this branch before release | Later releases with features that require database migrations. This is useful to allow merging in new features without affecting the upcoming release. Could be seen as a development branch, but note that only high quality pull requests are merged. That is the feature should be pretty much ready for release after merge. |
+| Status | [![CircleCI](https://circleci.com/gh/cBioPortal/cbioportal-frontend/tree/master.svg?style=svg)](https://circleci.com/gh/cBioPortal/cbioportal-frontend/tree/master) | [![CircleCI](https://circleci.com/gh/cBioPortal/cbioportal-frontend/tree/release-3.2.0.svg?style=svg)](https://circleci.com/gh/cBioPortal/cbioportal-frontend/tree/release-3.2.0) | [![CircleCI](https://circleci.com/gh/cBioPortal/cbioportal-frontend/tree/rc.svg?style=svg)](https://circleci.com/gh/cBioPortal/cbioportal-frontend/tree/rc) |
+| Live instance frontend | https://frontend.cbioportal.org / https://master--cbioportalfrontend.netlify.com/ | https://release-3-2-0--cbioportalfrontend.netlify.com | https://rc.cbioportal.org |
+| Live instance backend | https://www.cbioportal.org / https://master.cbioportal.org | https://beta.cbioportal.org | https://rc.cbioportal.org |
 
-Rc: https://rc--cbioportalfrontend.netlify.com/
-
-## Test status & Code Quality
-| Branch | master | rc |
-| --- | --- | --- |
-| Status | [![CircleCI](https://circleci.com/gh/cBioPortal/cbioportal-frontend/tree/master.svg?style=svg)](https://circleci.com/gh/cBioPortal/cbioportal-frontend/tree/master) | [![CircleCI](https://circleci.com/gh/cBioPortal/cbioportal-frontend/tree/rc.svg?style=svg)](https://circleci.com/gh/cBioPortal/cbioportal-frontend/tree/rc) |
+Note: you can always check the version of the live instance by checking the variable `window.FRONTEND_COMMIT` in the console.
 
 ## Run
 
