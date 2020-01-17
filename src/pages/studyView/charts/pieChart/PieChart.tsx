@@ -35,9 +35,18 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         super(props);
     }
 
+    @computed
+    get filters() {
+        const mappedValueSet = _.reduce(this.props.data, (acc, datum) => {
+            acc[datum.value.toLowerCase()] = datum.value;
+            return acc;
+        }, {} as { [id: string]: string });
+        return this.props.filters.map(filter => mappedValueSet[filter.toLowerCase()] || filter);
+    }
+
     @autobind
     private onUserSelection(filter: string) {
-        let filters = toJS(this.props.filters);
+        let filters = toJS(this.filters);
         if (_.includes(filters, filter)) {
             filters = _.filter(filters, obj => obj !== filter);
         } else {
@@ -101,7 +110,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     @computed
     get fill() {
         return (d: ClinicalDataCountSummary) => {
-            if (!_.isEmpty(this.props.filters) && !_.includes(this.props.filters, d.value)) {
+            if (!_.isEmpty(this.filters) && !_.includes(this.filters, d.value)) {
                 return DEFAULT_NA_COLOR;
             }
             return d.color;
@@ -111,7 +120,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     @computed
     get stroke() {
         return (d: ClinicalDataCountSummary) => {
-            if (!_.isEmpty(this.props.filters) && _.includes(this.props.filters, d.value)) {
+            if (!_.isEmpty(this.filters) && _.includes(this.filters, d.value)) {
                 return "#cccccc";
             }
             return null;
@@ -121,7 +130,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     @computed
     get strokeWidth() {
         return (d: ClinicalDataCountSummary) => {
-            if (!_.isEmpty(this.props.filters) && _.includes(this.props.filters, d.value)) {
+            if (!_.isEmpty(this.filters) && _.includes(this.filters, d.value)) {
                 return 3;
             }
             return 0;
@@ -131,7 +140,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     @computed
     get fillOpacity() {
         return (d: ClinicalDataCountSummary) => {
-            if (!_.isEmpty(this.props.filters) && !_.includes(this.props.filters, d.value)) {
+            if (!_.isEmpty(this.filters) && !_.includes(this.filters, d.value)) {
                 return '0.5';
             }
             return 1;
@@ -255,7 +264,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                         labelDescription={this.props.labelDescription}
                         patientAttribute={this.props.patientAttribute}
                         showAddRemoveAllButtons={true}
-                        filters={this.props.filters}
+                        filters={this.filters}
                         highlightedRow={this.highlightedRow}
                         onUserSelection={this.props.onUserSelection}
                     />)}
