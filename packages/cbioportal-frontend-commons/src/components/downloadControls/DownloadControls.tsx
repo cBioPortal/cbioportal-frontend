@@ -207,7 +207,7 @@ export default class DownloadControls extends React.Component<IDownloadControlsP
                                     className={classnames("btn btn-default btn-xs", {"active":!this.collapsed} )}
                                     style={{pointerEvents:"none"}}
                                 >
-                                    <span><i className="fa fa-cloud-download" aria-hidden="true"/></span>
+                                    <span>K<i className="fa fa-cloud-download" aria-hidden="true"/></span>
                                 </div>
                             </div>
                         </DefaultTooltip>
