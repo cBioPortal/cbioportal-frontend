@@ -2532,7 +2532,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             </Observer>
                         ) : <LoadingIndicator isLoading={true} center={true} size={"big"}/> }
                     </div>
-                    <div className="chartWrapper">
+                    <div className="chartWrapper">&nbsp;
                         {this.plot}
                     </div></div>
                 </div>
