@@ -17,6 +17,7 @@ describe('GeneSymbolValidator', () => {
             },
             geneQuery: 'TP53',
             skipGeneValidation: false,
+            replaceGene: ()=>{},
             updateGeneQuery: () => null,
         } as IGeneSymbolValidatorProps;
         wrapper = mount(<GeneSymbolValidator {...props} />);

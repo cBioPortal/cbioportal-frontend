@@ -92,7 +92,7 @@ export function getChmInfo(genomeBuild:string) {
     if (!referenceGenome || referenceGenome === "") {
         referenceGenome = DEFAULT_GENOME_BUILD;
     }
-    const genomeSize = referenceGenomeSizes[genomeBuild];
+    const genomeSize = referenceGenomeSizes[referenceGenome];
     if (genomeSize) {
         sel.genomeRef = genomeSize;
         sel.total = _.sum(genomeSize);

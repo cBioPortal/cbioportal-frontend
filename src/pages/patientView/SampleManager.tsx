@@ -25,7 +25,12 @@ export function sortSamples(samples: Array<ClinicalDataBySampleId>,
     // based on sample collection data (timeline event)
     let collectionDayMap: {[s:string]:number} = {};
     if (events) {
-        const specimenEvents = events.filter((e: ClinicalEvent) => (e.eventType === 'SPECIMEN'));
+        // use SPECIMEN or SAMPLE_ACQUISITION track on timeline to get timeline
+        // event
+        // TODO: SAMPLE_ACQUISITION is specific to genie_bpc_test study. We
+        // should probably have some config to allow people to choose what
+        // timeline tracks get labels
+        const specimenEvents = events.filter((e: ClinicalEvent) => (e.eventType === 'SPECIMEN' || 'SAMPLE_ACQUISITION'));
 
         collectionDayMap = specimenEvents.reduce((map:{[s:string]:number}, specimenEvent: ClinicalEvent) => {
             let sampleAttr = _.find(specimenEvent.attributes, (attr: ClinicalEventData) => {
