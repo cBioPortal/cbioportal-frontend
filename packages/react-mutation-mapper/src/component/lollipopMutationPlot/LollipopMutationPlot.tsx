@@ -562,7 +562,12 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
                     />
                 </div>
             );
-        } else {
+        }
+        else if (this.props.store.canonicalTranscript.isComplete &&
+            this.props.store.canonicalTranscript.result === undefined) {
+            return <span><i className="fa fa-exclamation-triangle text-danger"/> No Transcript found for {this.hugoGeneSymbol}</span>;
+        }
+        else {
             return this.props.loadingIndicator || <i className="fa fa-spinner fa-pulse fa-2x" />;
         }
     }
