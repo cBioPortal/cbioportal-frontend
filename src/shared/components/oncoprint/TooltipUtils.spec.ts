@@ -2686,17 +2686,17 @@ describe('Oncoprint TooltipUtils', () => {
             false
         );
 
-        it('Should handle categories for treatment genetic alterations', () => {
+        it('Should handle categories for generic assay genetic alterations', () => {
             const tooltipResult = fTreamentTooltip([
                 { profile_data: 8, sample: 'sampleID', category: '>8.00' },
             ]);
             assert.isTrue(
                 tooltipResult.html().indexOf('<b>&gt;8.00</b>') > -1,
-                'treatment - category is displayed when available'
+                'generic assay - category is displayed when available'
             );
         });
 
-        it('Should handle categories for multiple treatment genetic alterations', () => {
+        it('Should handle categories for multiple generic assay genetic alterations', () => {
             const tooltipResult = fTreamentTooltip([
                 { profile_data: 8, sample: 'sampleID', category: '>8.00' },
                 { profile_data: 7, sample: 'sampleID', category: '>7.00' },
@@ -2705,11 +2705,11 @@ describe('Oncoprint TooltipUtils', () => {
                 tooltipResult
                     .html()
                     .indexOf('<b>&gt;8.00, &gt;7.00 (2 data points)</b>') > -1,
-                'treatment - multiple categories are displayed when under mouse'
+                'generic assay - multiple categories are displayed when under mouse'
             );
         });
 
-        it('Should handle single values and single category for multiple treatment genetic alterations', () => {
+        it('Should handle single values and single category for multiple generic assay genetic alterations', () => {
             const tooltipResult = fTreamentTooltip([
                 { profile_data: 8, sample: 'sampleID', category: '' },
                 { profile_data: 7, sample: 'sampleID', category: '>7.00' },
@@ -2718,11 +2718,11 @@ describe('Oncoprint TooltipUtils', () => {
                 tooltipResult
                     .html()
                     .indexOf('<b>8.00</b> and <b>&gt;7.00</b>') > -1,
-                'treatment - multiple categories are displayed when under mouse'
+                'generic assay - multiple categories are displayed when under mouse'
             );
         });
 
-        it('Should handle multiple values and multiple categories for multiple treatment genetic alterations', () => {
+        it('Should handle multiple values and multiple categories for multiple generic assay genetic alterations', () => {
             const tooltipResult = fTreamentTooltip([
                 { profile_data: 6, sample: 'sampleID', category: '' },
                 { profile_data: 8, sample: 'sampleID', category: '' },
@@ -2736,7 +2736,7 @@ describe('Oncoprint TooltipUtils', () => {
                     .indexOf(
                         '<b>7.00 (average of 2 values)</b> and <b>&gt;7.00, &gt;9.00 (3 data points)</b>'
                     ) > -1,
-                'treatment - multiple values and categories (unique) are displayed when under mouse'
+                'generic assay - multiple values and categories (unique) are displayed when under mouse'
             );
         });
     });

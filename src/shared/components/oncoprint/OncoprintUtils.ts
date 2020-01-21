@@ -12,7 +12,7 @@ import {
     IGenesetHeatmapTrackDatum,
     IGenesetHeatmapTrackSpec,
     IHeatmapTrackSpec,
-    ITreatmentHeatmapTrackDatum,
+    IGenericAssayHeatmapTrackDatum,
 } from './Oncoprint';
 import {
     genetic_rule_set_different_colors_no_recurrence,
@@ -56,6 +56,7 @@ import {
 } from '../../cache/ClinicalDataCache';
 import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
 import { ISelectOption } from './controls/OncoprintControls';
+import { NOT_APPLICABLE_VALUE } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 interface IGenesetExpansionMap {
     [genesetTrackKey: string]: IHeatmapTrackSpec[];
@@ -182,7 +183,7 @@ export function getHeatmapTrackRuleSetParams(
     let na_legend_label = '';
     switch (trackSpec.molecularAlterationType) {
         case AlterationTypeConstants.GENERIC_ASSAY:
-            return getTreatmentTrackRuleSetParams(trackSpec);
+            return getGenericAssayTrackRuleSetParams(trackSpec);
             break;
         case AlterationTypeConstants.METHYLATION:
             value_range = [0, 1];
@@ -220,7 +221,7 @@ export function getHeatmapTrackRuleSetParams(
     };
 }
 
-export function getTreatmentTrackRuleSetParams(
+export function getGenericAssayTrackRuleSetParams(
     trackSpec: IHeatmapTrackSpec
 ): RuleSetParams {
     let value_range: [number, number];
@@ -229,7 +230,7 @@ export function getTreatmentTrackRuleSetParams(
     let value_stop_points: number[];
     let category_to_color: { [d: string]: string } | undefined;
 
-    // - Legends for treatments can be configured in two ways:
+    // - Legends for generic assay entities can be configured in two ways:
     //      1. Larger values are `better` and appear at the right side of the legend (a.k.a. ASC sort order)
     //      2. Smaller values are `better` and appeat at the right side of the legend (a.k.a. DESC sort order)
     // - The pivot threshold denotes the compound concentration that is the arbitrary boundary between effective (in red)
@@ -330,8 +331,8 @@ export function getTreatmentTrackRuleSetParams(
     }
 
     let counter = 0;
-    const categories = _(dataPoints as ITreatmentHeatmapTrackDatum[])
-        .filter((d: ITreatmentHeatmapTrackDatum) => !!d.category)
+    const categories = _(dataPoints as IGenericAssayHeatmapTrackDatum[])
+        .filter((d: IGenericAssayHeatmapTrackDatum) => !!d.category)
         .map(d => d.category)
         .uniq()
         .value();
@@ -994,7 +995,7 @@ export function makeHeatmapTracksMobxPromise(
     });
 }
 
-export function makeTreatmentProfileHeatmapTracksMobxPromise(
+export function makeGenericAssayProfileHeatmapTracksMobxPromise(
     oncoprint: ResultsViewOncoprint,
     sampleMode: boolean
 ) {
@@ -1003,23 +1004,18 @@ export function makeTreatmentProfileHeatmapTracksMobxPromise(
             oncoprint.props.store.samples,
             oncoprint.props.store.patients,
             oncoprint.props.store.molecularProfileIdToMolecularProfile,
-            oncoprint.props.store.treatmentMolecularDataCache,
-            oncoprint.props.store.treatmentLinkMap,
-            oncoprint.props.store.treatmentsInStudies,
+            oncoprint.props.store.genericAssayMolecularDataCache,
+            oncoprint.props.store
+                .genericAssayEntitiesGroupByGenericAssayTypeLinkMap,
+            oncoprint.props.store.genericAssayEntitiesGroupByGenericAssayType,
         ],
         invoke: async () => {
             const molecularProfileIdToMolecularProfile = oncoprint.props.store
                 .molecularProfileIdToMolecularProfile.result!;
             const molecularProfileIdToHeatmapTracks =
                 oncoprint.molecularProfileIdToHeatmapTracks;
-            const treatmentLinkMap = oncoprint.props.store.treatmentLinkMap
-                .result!;
 
-            const treatmentsById = _.keyBy(
-                oncoprint.props.store.treatmentsInStudies.result!,
-                t => t.treatmentId
-            );
-            const treatmentProfiles = _.filter(
+            const genericAssayProfiles = _.filter(
                 molecularProfileIdToHeatmapTracks,
                 d =>
                     d.molecularAlterationType ===
@@ -1027,17 +1023,38 @@ export function makeTreatmentProfileHeatmapTracksMobxPromise(
             );
 
             const cacheQueries = _.flatten(
-                treatmentProfiles.map(entry =>
-                    _.keys(entry.entities).map(treatmentId => ({
-                        molecularProfileId: entry.molecularProfileId,
-                        treatmentId,
-                        treatmentName: treatmentsById[treatmentId].name,
-                    }))
-                )
+                genericAssayProfiles.map(entry => {
+                    const type =
+                        molecularProfileIdToMolecularProfile[
+                            entry.molecularProfileId
+                        ].genericAssayType;
+                    const genericAssayEntitiesByEntityId = _.keyBy(
+                        oncoprint.props.store
+                            .genericAssayEntitiesGroupByGenericAssayType
+                            .result![type],
+                        t => t.stableId
+                    );
+                    return _.keys(entry.entities).map(entityId => {
+                        const entity = genericAssayEntitiesByEntityId[entityId];
+                        return {
+                            molecularProfileId: entry.molecularProfileId,
+                            stableId: entityId,
+                            entityName:
+                                'NAME' in entity.genericEntityMetaProperties
+                                    ? entity.genericEntityMetaProperties['NAME']
+                                    : NOT_APPLICABLE_VALUE,
+                        };
+                    });
+                })
             );
 
-            await oncoprint.props.store.treatmentMolecularDataCache.result!.getPromise(
-                cacheQueries,
+            await oncoprint.props.store.genericAssayMolecularDataCache.result!.getPromise(
+                cacheQueries.map(query => {
+                    return {
+                        molecularProfileId: query.molecularProfileId,
+                        stableId: query.stableId,
+                    };
+                }),
                 true
             );
 
@@ -1049,15 +1066,19 @@ export function makeTreatmentProfileHeatmapTracksMobxPromise(
                 const profile =
                     molecularProfileIdToMolecularProfile[molecularProfileId];
                 const dataCache = oncoprint.props.store
-                    .treatmentMolecularDataCache.result!;
+                    .genericAssayMolecularDataCache.result!;
 
-                const treatmentId = query.treatmentId;
+                const entityId = query.stableId;
                 const pivotThreshold = profile.pivotThreshold;
                 const sortOrder = profile.sortOrder;
+                const entityLinkMap = oncoprint.props.store
+                    .genericAssayEntitiesGroupByGenericAssayTypeLinkMap.result![
+                    profile.genericAssayType
+                ];
 
                 return {
-                    key: `TREATMENTHEATMAPTRACK_${molecularProfileId},${treatmentId}`,
-                    label: query.treatmentName,
+                    key: `GENERICASSAYHEATMAPTRACK_${molecularProfileId},${entityId}`,
+                    label: query.entityName,
                     molecularProfileId: query.molecularProfileId,
                     molecularProfileName:
                         molecularProfileIdToMolecularProfile[molecularProfileId]
@@ -1069,11 +1090,11 @@ export function makeTreatmentProfileHeatmapTracksMobxPromise(
                         molecularProfileIdToMolecularProfile[molecularProfileId]
                             .datatype,
                     data: makeHeatmapTrackData<
-                        ITreatmentHeatmapTrackDatum,
-                        'treatment_id'
+                        IGenericAssayHeatmapTrackDatum,
+                        'entityId'
                     >(
-                        'treatment_id',
-                        treatmentId,
+                        'entityId',
+                        entityId,
                         sampleMode ? samples : patients,
                         dataCache.get(query)!.data!.map(d => ({
                             ...d,
@@ -1083,7 +1104,7 @@ export function makeTreatmentProfileHeatmapTracksMobxPromise(
                     ),
                     pivotThreshold: pivotThreshold,
                     sortOrder: sortOrder,
-                    trackLinkUrl: treatmentLinkMap[treatmentId],
+                    trackLinkUrl: entityLinkMap[entityId],
                     trackGroupIndex: molecularProfileIdToHeatmapTracks[
                         molecularProfileId
                     ]!.trackGroupIndex,
@@ -1095,7 +1116,7 @@ export function makeTreatmentProfileHeatmapTracksMobxPromise(
                         if (trackGroup) {
                             const newEntities = _.keys(
                                 trackGroup.entities
-                            ).filter(entity => entity !== treatmentId);
+                            ).filter(entity => entity !== entityId);
                             oncoprint.addHeatmapTracks(
                                 molecularProfileId,
                                 newEntities
@@ -1301,28 +1322,28 @@ export function makeGenesetHeatmapTracksMobxPromise(
     });
 }
 
-export function extractTreatmentSelections(
+export function extractGenericAssaySelections(
     text: string,
-    selectedTreatments: string[],
-    treatmentsMap: { [treatmentId: string]: ISelectOption }
+    selectedGenericAssayEntityIds: string[],
+    genericAssayEntitiesOptionsByValueMap: { [entityId: string]: ISelectOption }
 ): string {
     // get values from input string
     const elements = splitHeatmapTextField(text);
 
-    // check values for valid treatment ids
-    const detectedTreatments: string[] = [];
+    // check values for valid entity ids
+    const detectedGenericAssayEntityIds: string[] = [];
     _.each(elements, (d: string) => {
-        if (d in treatmentsMap) {
-            detectedTreatments.push(d);
-            if (!selectedTreatments.includes(d)) {
-                selectedTreatments.push(d);
+        if (d in genericAssayEntitiesOptionsByValueMap) {
+            detectedGenericAssayEntityIds.push(d);
+            if (!selectedGenericAssayEntityIds.includes(d)) {
+                selectedGenericAssayEntityIds.push(d);
             }
         }
     });
 
-    // remove valid treatment ids from the input string
-    if (detectedTreatments.length > 0) {
-        _.each(detectedTreatments, (d: string) => {
+    // remove valid entity ids from the input string
+    if (detectedGenericAssayEntityIds.length > 0) {
+        _.each(detectedGenericAssayEntityIds, (d: string) => {
             text = text.replace(d, '');
         });
     }
