@@ -12,14 +12,12 @@ export interface IMutationMapperConfig {
     uniprot_id_url: string | null;
     ensembl_transcript_url: string | null;
     genomenexus_url: string | null;
-    oncokb_public_api_url: string | null;
 }
 
 export function convertToMutationMapperProps(config: IMutationMapperConfig): Partial<IMutationMapperProps>
 {
     return {
         genomeNexusUrl: config.genomenexus_url || undefined,
-        oncoKbPublicApiUrl: config.oncokb_public_api_url || undefined,
         isoformOverrideSource: config.isoformOverrideSource,
         myGeneInfoUrlTemplate: config.mygene_info_url || undefined,
         uniprotIdUrlTemplate: config.uniprot_id_url || undefined,
