@@ -20,7 +20,7 @@ import {
     AnnotatedMutation,
     CaseAggregatedData,
     IQueriedCaseData,
-    IQueriedMergedTrackCaseData, ResultsViewPageStore
+    IQueriedMergedTrackCaseData, ResultsViewPageStore, AlterationTypeConstants
 } from "./ResultsViewPageStore";
 import {IndicatorQueryResp, remoteData} from "cbioportal-frontend-commons";
 import _ from "lodash";
@@ -609,4 +609,9 @@ export function fetchPatients(samples:Sample[]) {
     return client.fetchPatientsUsingPOST({
         patientFilter
     });
+}
+
+export function excludeMutationAndSVProfiles(molecularprofiles: MolecularProfile[]): MolecularProfile[] {
+    const mutationAlterationTypes = [AlterationTypeConstants.MUTATION_EXTENDED, AlterationTypeConstants.FUSION, AlterationTypeConstants.STRUCTURAL_VARIANT];
+    return molecularprofiles.filter(profile => !mutationAlterationTypes.includes(profile.molecularAlterationType));
 }
