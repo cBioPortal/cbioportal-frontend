@@ -11,6 +11,20 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
 const ONCOPRINT_TIMEOUT = 60000;
 
+function getNthTrackOptionsElements(n) {
+    // n is one-indexed
+
+    const button_selector = "#oncoprintDiv .oncoprintjs__track_options__toggle_btn_img.nth-"+n;
+    const dropdown_selector = "#oncoprintDiv .oncoprintjs__track_options__dropdown.nth-"+n;
+
+    return {
+        button: $(button_selector),
+        button_selector,
+        dropdown: $(dropdown_selector),
+        dropdown_selector
+    };
+}
+
 describe("oncoprint screenshot tests", function() {
     it("coadread_tcga_pub with clinical and heatmap tracks", function(){
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=1&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%20NRAS%20BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=coadread_tcga_pub_rna_seq_mrna_median_Zscores&show_samples=false&clinicallist=0%2C2%2CMETHYLATION_SUBTYPE&heatmap_track_groups=coadread_tcga_pub_rna_seq_mrna_median_Zscores%2CKRAS%2CNRAS%2CBRAF&`;
@@ -93,11 +107,23 @@ describe("oncoprint screenshot tests", function() {
         var res = checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
+    it("removes top treatment track successfully", function() {
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=ccle_broad_2019&case_set_id=ccle_broad_2019_cnaseq&data_priority=0&gene_list=TP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ccle_broad_2019_cna&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ccle_broad_2019_mutations&profileFilter=0&tab_index=tab_visualize&heatmap_track_groups=ccle_broad_2019_CCLE_drug_treatment_IC50%2CAfatinib-2%2CAKTinhibitorVIII-1&treatment_list=Afatinib-2%3BAKTinhibitorVIII-1`);
+        waitForOncoprint(ONCOPRINT_TIMEOUT);
+
+        const elements = getNthTrackOptionsElements(2);
+        setDropdownOpen(true, elements.button_selector, elements.dropdown_selector, "Couldnt open top treatment track options");
+        browser.click(elements.dropdown_selector + ' li:nth-child(3)'); // Click Remove
+        waitForOncoprint(ONCOPRINT_TIMEOUT);
+
+        var res = checkOncoprintElement('.oncoprintContainer');
+        assertScreenShotMatch(res);
+    });
 });
 
 describe("track group headers", function() {
     beforeEach(function() {
-        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/results/oncoprint?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_ids=&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&heatmap_track_groups=coadread_tcga_pub_rna_seq_mrna_median_Zscores%2CKRAS%2CNRAS%2CBRAF%3Bcoadread_tcga_pub_methylation_hm27%2CKRAS%2CNRAS%2CBRAF&show_samples=false`);
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/results/oncoprint?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&heatmap_track_groups=coadread_tcga_pub_rna_seq_mrna_median_Zscores%2CKRAS%2CNRAS%2CBRAF%3Bcoadread_tcga_pub_methylation_hm27%2CKRAS%2CNRAS%2CBRAF&show_samples=false`);
         $('.alert-warning').$('button.close').click(); // close dev mode notification so it doesnt intercept clicks
 
         waitForOncoprint(ONCOPRINT_TIMEOUT);
@@ -153,21 +179,6 @@ describe("track group headers", function() {
 });
 
 describe("sorting", function(){
-
-    function getNthTrackOptionsElements(n) {
-        // n is one-indexed
-
-        const button_selector = "#oncoprintDiv .oncoprintjs__track_options__toggle_btn_img.nth-"+n;
-        const dropdown_selector = "#oncoprintDiv .oncoprintjs__track_options__dropdown.nth-"+n;
-
-        return {
-            button: $(button_selector),
-            button_selector,
-            dropdown: $(dropdown_selector),
-            dropdown_selector
-        };
-    }
-
     it("oncoprint should sort patients correctly in coadread_tcga_pub", function(){
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
