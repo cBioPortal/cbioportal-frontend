@@ -78,8 +78,24 @@ export class AppStore {
         invoke:async()=>{
             const portalVersionResult = await internalClient.getInfoUsingGET({});
             if (portalVersionResult && portalVersionResult.portalVersion) {
-                let version = portalVersionResult.portalVersion.split('-')[0];
-                if (!version.startsWith("v")) {
+                let version = undefined;
+
+                // try getting version from branch name assume like release-x.y.z
+                if (portalVersionResult.gitBranch && portalVersionResult.gitBranch.startsWith("release-")) {
+                    let branchVersion = portalVersionResult.gitBranch.split('-')[1];
+                    if (branchVersion.split('.').length == 3) {
+                        version = branchVersion;
+                    }
+                }
+
+                // if branch name does not contain version name, use
+                // portalVersion
+                if (version === undefined) {
+                    version = portalVersionResult.portalVersion.split('-')[0];
+                }
+
+                // add v prefix if missing
+                if (version !== undefined && !version.startsWith("v")) {
                     version = `v${version}`;
                 }
                 return Promise.resolve(version);
