@@ -120,4 +120,5 @@ export interface IServerConfig {
     dat_method: string;
     skin_show_gsva: boolean;
     oncoKbTokenDefined: boolean;
+    generic_assay_display_text: string; // this has a default
 }
