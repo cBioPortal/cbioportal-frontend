@@ -27,6 +27,7 @@ import {
     getSampleAlteredMap,
     getSingleGeneResultKey,
     getMultipleGeneResultKey,
+    parseGenericAssayGroups,
 } from './ResultsViewPageStoreUtils';
 import {
     IQueriedMergedTrackCaseData,
@@ -3332,6 +3333,62 @@ describe('getMultipleGeneResultKey', () => {
             ret,
             expectedResult,
             'get gene group result key(without name)'
+        );
+    });
+});
+
+describe('parseGenericAssayGroups', () => {
+    it('return empty result for empty generic assay group', () => {
+        const expectedResult = {};
+        const emptyGenericAssayGroups: string = '';
+        const result = parseGenericAssayGroups(emptyGenericAssayGroups);
+
+        assert.deepEqual(
+            result,
+            expectedResult,
+            'empty result for empty generic assay group'
+        );
+    });
+
+    it('return result for single correct formatted generic assay group', () => {
+        const PROFILE_ID = 'PROFILE_ID';
+        const ENTITY_ID_1 = 'ENTITY_ID_1';
+        const ENTITY_ID_2 = 'ENTITY_ID_2';
+        const VALID_SINGLE_GENERIC_ASSAY_GROUP = `${PROFILE_ID},${ENTITY_ID_1},${ENTITY_ID_2}`;
+        const expectedResult = {
+            PROFILE_ID: [ENTITY_ID_1, ENTITY_ID_2],
+        };
+        const result = parseGenericAssayGroups(
+            VALID_SINGLE_GENERIC_ASSAY_GROUP
+        );
+
+        assert.deepEqual(
+            result,
+            expectedResult,
+            'return result for single correct formatted generic assay group'
+        );
+    });
+
+    it('return result for multiple correct formatted generic assay groups', () => {
+        const PROFILE_ID_1 = 'PROFILE_ID_1';
+        const ENTITY_ID_1 = 'ENTITY_ID_1';
+        const ENTITY_ID_2 = 'ENTITY_ID_2';
+        const PROFILE_ID_2 = 'PROFILE_ID_2';
+        const ENTITY_ID_3 = 'ENTITY_ID_3';
+        const ENTITY_ID_4 = 'ENTITY_ID_4';
+        const VALID_MULTIPLE_GENERIC_ASSAY_GROUP = `${PROFILE_ID_1},${ENTITY_ID_1},${ENTITY_ID_2};${PROFILE_ID_2},${ENTITY_ID_3},${ENTITY_ID_4}`;
+        const expectedResult = {
+            PROFILE_ID_1: [ENTITY_ID_1, ENTITY_ID_2],
+            PROFILE_ID_2: [ENTITY_ID_3, ENTITY_ID_4],
+        };
+        const result = parseGenericAssayGroups(
+            VALID_MULTIPLE_GENERIC_ASSAY_GROUP
+        );
+
+        assert.deepEqual(
+            result,
+            expectedResult,
+            'return result for multiple correct formatted generic assay groups'
         );
     });
 });

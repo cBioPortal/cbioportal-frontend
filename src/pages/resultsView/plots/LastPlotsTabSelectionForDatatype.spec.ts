@@ -9,7 +9,7 @@ function createFakeCallbacks() {
         gene: sinon.stub(),
         geneSet: sinon.stub(),
         source: sinon.stub(),
-        treatment: sinon.stub(),
+        genericAssay: sinon.stub(),
     };
 }
 
@@ -31,13 +31,13 @@ describe('PlotsTabSelectionHistory', () => {
                 fakes.gene,
                 fakes.geneSet,
                 fakes.source,
-                fakes.treatment
+                fakes.genericAssay
             );
 
             assert.equal(fakes.gene.args.length, 0);
             assert.equal(fakes.geneSet.args.length, 0);
             assert.equal(fakes.source.args.length, 0);
-            assert.equal(fakes.treatment.args.length, 0);
+            assert.equal(fakes.genericAssay.args.length, 0);
         });
 
         it('should update genes when changes have been made to genes', () => {
@@ -55,13 +55,13 @@ describe('PlotsTabSelectionHistory', () => {
                 fakes.gene,
                 fakes.geneSet,
                 fakes.source,
-                fakes.treatment
+                fakes.genericAssay
             );
 
             assert.equal(fakes.gene.args.length, 1);
             assert.equal(fakes.geneSet.args.length, 0);
             assert.equal(fakes.source.args.length, 0);
-            assert.equal(fakes.treatment.args.length, 0);
+            assert.equal(fakes.genericAssay.args.length, 0);
 
             assert.deepEqual(fakes.gene.args[0], [{ value: 0, label: 'BRAF' }]);
         });
@@ -81,13 +81,13 @@ describe('PlotsTabSelectionHistory', () => {
                 fakes.gene,
                 fakes.geneSet,
                 fakes.source,
-                fakes.treatment
+                fakes.genericAssay
             );
 
             assert.equal(fakes.gene.args.length, 0);
             assert.equal(fakes.geneSet.args.length, 1);
             assert.equal(fakes.source.args.length, 0);
-            assert.equal(fakes.treatment.args.length, 0);
+            assert.equal(fakes.genericAssay.args.length, 0);
 
             assert.deepEqual(fakes.geneSet.args[0], [
                 { value: 'BRAF', label: 'BRAF' },
@@ -112,13 +112,13 @@ describe('PlotsTabSelectionHistory', () => {
                 fakes.gene,
                 fakes.geneSet,
                 fakes.source,
-                fakes.treatment
+                fakes.genericAssay
             );
 
             assert.equal(fakes.gene.args.length, 0);
             assert.equal(fakes.geneSet.args.length, 0);
             assert.equal(fakes.source.args.length, 1);
-            assert.equal(fakes.treatment.args.length, 0);
+            assert.equal(fakes.genericAssay.args.length, 0);
 
             assert.deepEqual(fakes.source.args[0], [
                 {
@@ -128,12 +128,12 @@ describe('PlotsTabSelectionHistory', () => {
             ]);
         });
 
-        it('should update treatments when changes have been made to treatments', () => {
+        it('should update generic assay entities when changes have been made to generic assay', () => {
             const subject = new LastPlotsTabSelectionForDatatype();
             const fakes = createFakeCallbacks();
             const newSelection: AxisMenuSelection = {
                 dataType: 'COPY_NUMBER_ALTERATION',
-                selectedTreatmentOption: {
+                selectedGenericAssayOption: {
                     value: 'test value',
                     label: 'test label',
                 },
@@ -146,15 +146,15 @@ describe('PlotsTabSelectionHistory', () => {
                 fakes.gene,
                 fakes.geneSet,
                 fakes.source,
-                fakes.treatment
+                fakes.genericAssay
             );
 
             assert.equal(fakes.gene.args.length, 0);
             assert.equal(fakes.geneSet.args.length, 0);
             assert.equal(fakes.source.args.length, 0);
-            assert.equal(fakes.treatment.args.length, 1);
+            assert.equal(fakes.genericAssay.args.length, 1);
 
-            assert.deepEqual(fakes.treatment.args[0], [
+            assert.deepEqual(fakes.genericAssay.args[0], [
                 { value: 'test value', label: 'test label' },
             ]);
         });
@@ -178,7 +178,7 @@ describe('PlotsTabSelectionHistory', () => {
                     value: 'coadread_tcga_pub_gistic',
                     label: 'Putative copy-number alterations from GISTIC',
                 },
-                selectedTreatmentOption: {
+                selectedGenericAssayOption: {
                     value: 'test value',
                     label: 'test label',
                 },
@@ -191,13 +191,13 @@ describe('PlotsTabSelectionHistory', () => {
                 fakes.gene,
                 fakes.geneSet,
                 fakes.source,
-                fakes.treatment
+                fakes.genericAssay
             );
 
             assert.equal(fakes.gene.args.length, 1);
             assert.equal(fakes.geneSet.args.length, 1);
             assert.equal(fakes.source.args.length, 1);
-            assert.equal(fakes.treatment.args.length, 1);
+            assert.equal(fakes.genericAssay.args.length, 1);
 
             assert.deepEqual(fakes.gene.args[0], [{ value: 0, label: 'BRAF' }]);
             assert.deepEqual(fakes.geneSet.args[0], [
@@ -209,7 +209,7 @@ describe('PlotsTabSelectionHistory', () => {
                     label: 'Putative copy-number alterations from GISTIC',
                 },
             ]);
-            assert.deepEqual(fakes.treatment.args[0], [
+            assert.deepEqual(fakes.genericAssay.args[0], [
                 { value: 'test value', label: 'test label' },
             ]);
         });
