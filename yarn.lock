@@ -11589,10 +11589,10 @@ ignore@^4.0.3:
   resolved "https://registry.yarnpkg.com/ignore/-/ignore-4.0.6.tgz#750e3db5862087b4737ebac8207ffd1ef27b25fc"
   integrity sha512-cyFDKrqc/YdcWFniJhzI42+AzS+gNwmUzOSFcRCQYwySuBBBy/KjuxWLZ/FHEH6Moq1NizMOBWyTcv8O4OZIMg==
 
-igv@2.2.0:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/igv/-/igv-2.2.0.tgz#616d551a1cb9d334dfbaa89584b1d470f3676564"
-  integrity sha512-rJvd5WxieEZYJ9hoONfz/qalp1VbhcAus851DVUGAbf8mGjvwM3Jn5b0k70TV8R2TOlVYCNU/o8j216YygU7PA==
+igv@2.3.5:
+  version "2.3.5"
+  resolved "https://registry.yarnpkg.com/igv/-/igv-2.3.5.tgz#fb235934c3ac9bf582e9f4c25825b558c337df16"
+  integrity sha512-jwEXn/6Vc5K3ckKoTW8ok+PB+AUyTEXPN4tQZ6DXRFx1Mn7thO/DS2LpBSbHdPhMYKSdOc6QRSiFe6/26hBHWw==
 
 image-palette@^2.1.0:
   version "2.1.0"
