@@ -653,7 +653,9 @@ function tryRemoveTrack(
         // removeCallback to forget its track ID
         const trackId = trackSpecKeyToTrackId[prevSpec.key];
         if (typeof trackId !== "undefined") {
-            oncoprint.removeTrack(trackId);
+            if (oncoprint.getTracks().includes(trackId)) {
+                oncoprint.removeTrack(trackId);
+            }
             delete trackSpecKeyToTrackId[prevSpec.key];
         }
         return true;
@@ -864,8 +866,10 @@ function transitionClinicalTrack(
             label: nextSpec.label,
             description: ((nextSpec.label || "").trim() === (nextSpec.description || "").trim()) ? undefined : nextSpec.description,
             removable: true,
-            removeCallback: ()=>{
+            removeCallback: () => {
                 delete getTrackSpecKeyToTrackId()[nextSpec.key];
+            },
+            onClickRemoveInTrackMenu: ()=>{
                 nextProps.onDeleteClinicalTrack && nextProps.onDeleteClinicalTrack(nextSpec.key);
             },
             sort_direction_changeable: true,
@@ -1010,12 +1014,15 @@ export function transitionHeatmapTrack(
             track_label_font_weight: nextSpec.labelFontWeight,
             track_label_left_padding: nextSpec.labelLeftPadding,
             target_group: nextSpec.trackGroupIndex,
-            removable: !!nextSpec.onRemove,
+            removable: !!nextSpec.onRemove || !!nextSpec.onClickRemoveInTrackMenu,
             movable: nextSpec.movable,
             na_legend_label: nextSpec.naLegendLabel,
             removeCallback: ()=>{
                 delete getTrackSpecKeyToTrackId()[nextSpec.key];
-                if (nextSpec.onRemove) nextSpec.onRemove();
+                nextSpec.onRemove && nextSpec.onRemove();
+            },
+            onClickRemoveInTrackMenu:()=>{
+                nextSpec.onClickRemoveInTrackMenu && nextSpec.onClickRemoveInTrackMenu();
             },
             sort_direction_changeable: ifNotDefined(nextSpec.sortDirectionChangeable, true),
             sortCmpFn: heatmapTrackSortComparator,
