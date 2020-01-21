@@ -542,10 +542,13 @@ export default class OncoprintControls extends React.Component<
             this.props.state.heatmapProfilesPromise &&
             this.props.state.heatmapProfilesPromise.result
         ) {
-            // only add GENERIC_ASSAY when generic_assay_type is TREATMENT_RESPONSE
-            // TODO: apply to all generic assay profiles when front-end implementation finish
-            const filteredHeatmapProfiles = this.filterHeatmapProfilesByGenericAssayType(
-                this.props.state.heatmapProfilesPromise.result
+            return _.map(
+                this.props.state.heatmapProfilesPromise.result,
+                profile => ({
+                    label: profile.name,
+                    value: profile.molecularProfileId,
+                    type: profile.molecularAlterationType,
+                })
             );
             return _.map(filteredHeatmapProfiles, profile => ({
                 label: profile.name,
@@ -781,22 +784,13 @@ export default class OncoprintControls extends React.Component<
                 title="Add Heatmap Tracks"
                 id="heatmapDropdown"
                 className="heatmap"
-                titleElement={
-                    <OncoprintDropdownCount
-                        // only add GENERIC_ASSAY when generic_assay_type is TREATMENT_RESPONSE
-                        // TODO: apply to all generic assay profiles when front-end implementation finish
-                        count={
-                            this.props.state.heatmapProfilesPromise
-                                .isComplete &&
-                            this.props.state.heatmapProfilesPromise!.result
-                                ? this.filterHeatmapProfilesByGenericAssayType(
-                                      this.props.state.heatmapProfilesPromise!
-                                          .result!
-                                  ).length
-                                : undefined
-                        }
-                    />
-                }
+                titleElement={<OncoprintDropdownCount
+                    count={
+                        this.props.state.heatmapProfilesPromise.isComplete && this.props.state.heatmapProfilesPromise!.result ?
+                            this.props.state.heatmapProfilesPromise!.result!.length :
+                            undefined
+                    }
+                />}
             >
                 {menu}
             </CustomDropdown>

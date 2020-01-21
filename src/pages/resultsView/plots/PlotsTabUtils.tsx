@@ -31,49 +31,35 @@ import {
     CNA_COLOR_AMP,
     CNA_COLOR_HOMDEL,
     DEFAULT_GREY,
-    MUT_COLOR_FUSION,
-    MUT_COLOR_INFRAME,
-    MUT_COLOR_INFRAME_PASSENGER,
-    MUT_COLOR_MISSENSE,
-    MUT_COLOR_MISSENSE_PASSENGER,
-    MUT_COLOR_OTHER,
-    MUT_COLOR_PROMOTER,
-    MUT_COLOR_TRUNC,
-    MUT_COLOR_TRUNC_PASSENGER,
-} from 'shared/lib/Colors';
-import { CoverageInformation } from '../ResultsViewPageStoreUtils';
-import { IBoxScatterPlotData } from '../../../shared/components/plots/BoxScatterPlot';
-import {
-    AlterationTypeConstants,
-    GenericAssayTypeConstants,
-    AnnotatedMutation,
-    AnnotatedNumericGeneMolecularData,
-} from '../ResultsViewPageStore';
-import numeral from 'numeral';
-import GenesetMolecularDataCache from '../../../shared/cache/GenesetMolecularDataCache';
-import { GenesetMolecularData } from '../../../shared/api/generated/CBioPortalAPIInternal';
-import { MUTATION_COUNT } from '../../studyView/StudyViewPageStore';
-import ClinicalDataCache from '../../../shared/cache/ClinicalDataCache';
-import TreatmentMolecularDataCache, {
-    TreatmentMolecularDataEnhanced,
-} from '../../../shared/cache/TreatmentMolecularDataCache';
-import {
-    getJitterForCase,
-    dataPointIsLimited,
-} from '../../../shared/components/plots/PlotUtils';
-import { isSampleProfiled } from '../../../shared/lib/isSampleProfiled';
+    MUT_COLOR_FUSION, MUT_COLOR_INFRAME, MUT_COLOR_INFRAME_PASSENGER,
+    MUT_COLOR_MISSENSE, MUT_COLOR_MISSENSE_PASSENGER, MUT_COLOR_OTHER, MUT_COLOR_PROMOTER, MUT_COLOR_TRUNC,
+    MUT_COLOR_TRUNC_PASSENGER
+} from "shared/lib/Colors";
+import {CoverageInformation} from "../ResultsViewPageStoreUtils";
+import {IBoxScatterPlotData} from "../../../shared/components/plots/BoxScatterPlot";
+import {AlterationTypeConstants, GenericAssayTypeConstants, AnnotatedMutation, AnnotatedNumericGeneMolecularData} from "../ResultsViewPageStore";
+import numeral from "numeral";
+import GenesetMolecularDataCache from "../../../shared/cache/GenesetMolecularDataCache";
+import { GenesetMolecularData } from "../../../shared/api/generated/CBioPortalAPIInternal";
+import {MUTATION_COUNT} from "../../studyView/StudyViewPageStore";
+import ClinicalDataCache from "../../../shared/cache/ClinicalDataCache";
+import TreatmentMolecularDataCache, { TreatmentMolecularDataEnhanced } from "../../../shared/cache/TreatmentMolecularDataCache";
+import { getJitterForCase, dataPointIsLimited } from "../../../shared/components/plots/PlotUtils";
+import { isSampleProfiled } from "../../../shared/lib/isSampleProfiled";
 
-export const CLIN_ATTR_DATA_TYPE = 'clinical_attribute';
-export const GENESET_DATA_TYPE = 'GENESET_SCORE';
-export const dataTypeToDisplayType: { [s: string]: string } = {
-    [AlterationTypeConstants.MUTATION_EXTENDED]: 'Mutation',
-    [AlterationTypeConstants.COPY_NUMBER_ALTERATION]: 'Copy Number',
-    [AlterationTypeConstants.MRNA_EXPRESSION]: 'mRNA',
-    [AlterationTypeConstants.PROTEIN_LEVEL]: 'Protein Level',
-    [AlterationTypeConstants.METHYLATION]: 'DNA Methylation',
-    [CLIN_ATTR_DATA_TYPE]: 'Clinical Attribute',
-    [GENESET_DATA_TYPE]: 'Gene Sets',
-    [GenericAssayTypeConstants.TREATMENT_RESPONSE]: 'Treatment Response',
+
+export const CLIN_ATTR_DATA_TYPE = "clinical_attribute";
+export const GENESET_DATA_TYPE = "GENESET_SCORE";
+export const dataTypeToDisplayType:{[s:string]:string} = {
+    [AlterationTypeConstants.MUTATION_EXTENDED]: "Mutation",
+    [AlterationTypeConstants.COPY_NUMBER_ALTERATION]: "Copy Number",
+    [AlterationTypeConstants.MRNA_EXPRESSION]: "mRNA",
+    [AlterationTypeConstants.PROTEIN_LEVEL]: "Protein Level",
+    [AlterationTypeConstants.METHYLATION]: "DNA Methylation",
+    [CLIN_ATTR_DATA_TYPE]:"Clinical Attribute",
+    [GENESET_DATA_TYPE]:"Gene Sets",
+    [GenericAssayTypeConstants.TREATMENT_RESPONSE]: "Treatment Response",
+    [GenericAssayTypeConstants.MUTATIONAL_SIGNATURE]: "Mutational Signature"
 };
 
 export const mutationTypeToDisplayName: {

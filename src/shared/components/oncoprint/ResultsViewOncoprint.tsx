@@ -984,19 +984,12 @@ export default class ResultsViewOncoprint extends React.Component<
 
         // derive treaments from heatmap tracks since the only way to add treatments right now
         // is to use heatmap UI in oncoprint
-        const treatment_list = _.filter(
-            tracksMap,
-            (x: HeatmapTrackGroupRecord) =>
-                x.molecularAlterationType ===
-                AlterationTypeConstants.GENERIC_ASSAY
-        )
-            .map(
-                (x: HeatmapTrackGroupRecord) =>
-                    `${_.keys(x.entities).join(';')}`
-            )
-            .join(';');
+        const generic_assay_groups = _.filter(tracksMap, (x:HeatmapTrackGroupRecord)=> x.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY)
+            .map((track)=>{
+                return `${track.molecularProfileId},${_.keys(track.entities).join(",")}`;
+            }).join(";");
 
-        this.urlWrapper.updateURL({ heatmap_track_groups, treatment_list });
+        this.urlWrapper.updateURL({ heatmap_track_groups, generic_assay_groups });
     }
 
     removeHeatmapTracksByProfileId(molecularProfileId: string) {

@@ -225,11 +225,10 @@ export const AlterationTypeConstants = {
     STRUCTURAL_VARIANT: 'STRUCTURAL_VARIANT',
 };
 
-// only show TREATMENT_RESPONSE in the plots tab for now
-// TODO: apply to all generic assay profiles when front-end implementation finish
 export const GenericAssayTypeConstants = {
     TREATMENT_RESPONSE: 'TREATMENT_RESPONSE',
-};
+    MUTATIONAL_SIGNATURE: 'MUTATIONAL_SIGNATURE'
+}
 
 export const AlterationTypeDisplayConstants = {
     COPY_NUMBER_ALTERATION: 'CNA',
@@ -560,6 +559,18 @@ export class ResultsViewPageStore {
             this.urlWrapper.query.treatment_list.trim().length
             ? this.urlWrapper.query.treatment_list.trim().split(/;/)
             : [];
+    }
+
+    @computed get parsedGenericAssayGroups() {
+        // empty if no heatmap tracks param
+        const groups = this.urlWrapper.query.generic_assay_groups ?
+        this.urlWrapper.query.generic_assay_groups.split(";").map((x:string)=>x.split(",")) : [];
+
+        const parsedGroups = groups.reduce((acc:{ [molecularProfileId:string]:string[]}, group)=>{
+            acc[group[0] as string] = group.slice(1);
+            return acc;
+        }, {});
+        return parsedGroups;
     }
 
     @computed
@@ -3916,7 +3927,10 @@ export class ResultsViewPageStore {
                 );
                 const linkMap: { [treatmentId: string]: string } = {};
                 treatments.forEach(({ treatmentId, refLink }) => {
-                    linkMap[treatmentId] = refLink;
+                    // if the data contains refLink, create a link map
+                    if (refLink) {
+                        linkMap[treatmentId] = refLink;
+                    }
                 });
                 return linkMap;
             } else {
