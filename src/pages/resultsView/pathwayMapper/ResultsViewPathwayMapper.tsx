@@ -121,7 +121,7 @@ export default class ResultsViewPathwayMapper extends React.Component<IResultsVi
 
             this.addGenomicData(this.alterationFrequencyData);
             // Toasts are removed with delay
-            setTimeout(() => {this.activeToasts.forEach(tId => {toast.dismiss(tId);});}, 1000);
+            setTimeout(() => {this.activeToasts.forEach(tId => {toast.dismiss(tId);});}, 2000);
         }
 
         return(

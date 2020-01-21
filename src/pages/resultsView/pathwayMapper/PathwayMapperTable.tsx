@@ -42,7 +42,7 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
         initialSortColumn: "name"
     };
     @observable protected _columns: { [columnEnum: number]: PathwayMapperTableColumn };
-    @observable selectedPathway: string = "";
+    @observable selectedPathway: string = "GBM-2008-TP53-pathway";
 
     constructor(props: IPathwayMapperTableProps) {
         super(props);
@@ -63,8 +63,8 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
                 return (
                         <Radio 
                             style={{marginTop: 0, marginBottom: 0}}
-                            checked={this.props.selectedPathway === d.name} 
-                            onChange={(e: any) => {this.props.changePathway(d.name);}}>
+                            checked={this.selectedPathway === d.name} 
+                            onChange={(e: any) => {this.props.changePathway(d.name); this.selectedPathway = d.name;}}>
                             <DefaultTooltip overlay={pwName} disabled={isPwNameShort}>
                                 <b>{(isPwNameShort ? pwName : pwName.substring(0, lengthThreshold) + "...")}</b>
                             </DefaultTooltip>
