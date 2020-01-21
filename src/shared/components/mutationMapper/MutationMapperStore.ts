@@ -44,6 +44,7 @@ import {defaultOncoKbIndicatorFilter} from "shared/lib/OncoKbUtils";
 import {IMutationMapperConfig} from "./MutationMapperConfig";
 import autobind from "autobind-decorator";
 import {normalizeMutation, normalizeMutations} from "./MutationMapperUtils";
+import {getOncoKbApiUrl} from "shared/api/urls";
 
 export interface IMutationMapperStoreConfig {
     filterMutationsBySelectedTranscript?:boolean
@@ -83,7 +84,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore
             myGeneUrlTemplate: this.mutationMapperConfig.mygene_info_url || undefined,
             uniprotIdUrlTemplate: this.mutationMapperConfig.uniprot_id_url || undefined,
             genomeNexusUrl: this.mutationMapperConfig.genomenexus_url || undefined,
-            oncoKbUrl: this.mutationMapperConfig.oncokb_public_api_url || undefined
+            oncoKbUrl: getOncoKbApiUrl() || undefined
         }, genomeNexusClient, internalGenomeNexusClient, oncoKBClient);
     }
 
