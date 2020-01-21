@@ -20,7 +20,7 @@ describe('Results Page', function() {
 
         describe('single study query with four genes', ()=>{
             before(()=>{
-                var url = `${CBIOPORTAL_URL}/results/cancerTypesSummary?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&case_ids=&gene_list=BRAF+KRAS+NRAS&gene_set_choice=user-defined-list&Action=Submit`;
+                var url = `${CBIOPORTAL_URL}/results/cancerTypesSummary?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=BRAF+KRAS+NRAS&gene_set_choice=user-defined-list&Action=Submit`;
                 goToUrlAndSetLocalStorage(url);
                 browser.waitForVisible('[data-test="cancerTypeSummaryChart"]',10000)
             });
@@ -133,7 +133,7 @@ describe('Results Page', function() {
 
         describe('3D structure visualizer', () => {
             before(() => {
-                var url = `${CBIOPORTAL_URL}/results/mutations?tab_index=tab_visualize&cancer_study_list=ov_tcga_pub&cancer_study_id=ov_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&Z_SCORE_THRESHOLD=2.0&case_set_id=ov_tcga_pub_3way_complete&case_ids=&gene_list=BRCA1+BRCA2&gene_set_choice=user-defined-list&Action=Submit`;
+                var url = `${CBIOPORTAL_URL}/results/mutations?tab_index=tab_visualize&cancer_study_list=ov_tcga_pub&cancer_study_id=ov_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&Z_SCORE_THRESHOLD=2.0&case_set_id=ov_tcga_pub_3way_complete&gene_list=BRCA1+BRCA2&gene_set_choice=user-defined-list&Action=Submit`;
                 browser.url(url);
                 browser.waitForExist('[data-test=view3DStructure]', 10000);
                 browser.waitForEnabled('[data-test=view3DStructure]', 10000);
@@ -150,7 +150,7 @@ describe('Results Page', function() {
 
         describe('Lollipop Plot Tracks', () => {
             before(() => {
-                var url = `${CBIOPORTAL_URL}/results/mutations?tab_index=tab_visualize&cancer_study_list=ov_tcga_pub&cancer_study_id=ov_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&Z_SCORE_THRESHOLD=2.0&case_set_id=ov_tcga_pub_3way_complete&case_ids=&gene_list=TP53+PTEN&gene_set_choice=user-defined-list&Action=Submit`;
+                var url = `${CBIOPORTAL_URL}/results/mutations?tab_index=tab_visualize&cancer_study_list=ov_tcga_pub&cancer_study_id=ov_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&Z_SCORE_THRESHOLD=2.0&case_set_id=ov_tcga_pub_3way_complete&gene_list=TP53+PTEN&gene_set_choice=user-defined-list&Action=Submit`;
                 browser.url(url);
                 browser.waitForExist('[data-test=view3DStructure]', 10000);
                 browser.waitForEnabled('[data-test=view3DStructure]', 10000);
