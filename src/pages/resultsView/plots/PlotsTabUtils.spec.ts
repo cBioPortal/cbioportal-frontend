@@ -16,6 +16,7 @@ import {
     IWaterfallPlotData,
     getWaterfallPlotDownloadData,
     getLimitValues,
+    deriveDisplayTextFromGenericAssayType,
 } from './PlotsTabUtils';
 import {
     Mutation,
@@ -38,6 +39,8 @@ import {
     IAxisData,
     axisHasNegativeNumbers,
 } from 'pages/resultsView/plots/PlotsTabUtils';
+import AppConfig from 'appConfig';
+import ServerConfigDefaults from 'config/serverConfigDefaults';
 import * as _ from 'lodash';
 
 describe('PlotsTabUtils', () => {
@@ -690,10 +693,11 @@ describe('PlotsTabUtils', () => {
             assert.equal(funcs!.fInvLogScale(3), 8);
         });
 
-        it('should return log10-transformation function for non treatment data', () => {
+        it('should return log10-transformation function for treatment data', () => {
             const axisMenuSelection = ({
                 dataType: GenericAssayTypeConstants.TREATMENT_RESPONSE,
                 logScale: true,
+                isGenericAssayType: true,
             } as any) as AxisMenuSelection;
             const funcs = makeAxisLogScaleFunction(axisMenuSelection);
             assert.equal(funcs!.fLogScale(10), 1);
@@ -706,6 +710,7 @@ describe('PlotsTabUtils', () => {
             const axisMenuSelection = ({
                 dataType: GenericAssayTypeConstants.TREATMENT_RESPONSE,
                 logScale: true,
+                isGenericAssayType: true,
             } as any) as AxisMenuSelection;
             const funcs = makeAxisLogScaleFunction(axisMenuSelection);
             assert.equal(funcs!.fLogScale(0, 10), 1);
@@ -841,6 +846,42 @@ describe('PlotsTabUtils', () => {
             ];
             const types = getLimitValues(data);
             assert.deepEqual(types, []);
+        });
+    });
+
+    describe('deriveDisplayTextFromGenericAssayType', () => {
+        before(() => {
+            AppConfig.serverConfig.generic_assay_display_text = ServerConfigDefaults.generic_assay_display_text!;
+        });
+        it('derive from the existing display text', () => {
+            const displayText = 'Treatment Response';
+            const derivedText = deriveDisplayTextFromGenericAssayType(
+                GenericAssayTypeConstants.TREATMENT_RESPONSE
+            );
+            assert.equal(displayText, derivedText);
+        });
+        it('derive from the type', () => {
+            const displayText = 'New Type';
+            const derivedText = deriveDisplayTextFromGenericAssayType(
+                'NEW_TYPE'
+            );
+            assert.equal(displayText, derivedText);
+        });
+        it('derive from the existing display text - plural', () => {
+            const displayText = 'Treatment Responses';
+            const derivedText = deriveDisplayTextFromGenericAssayType(
+                GenericAssayTypeConstants.TREATMENT_RESPONSE,
+                true
+            );
+            assert.equal(displayText, derivedText);
+        });
+        it('derive from the type - plural', () => {
+            const displayText = 'New Types';
+            const derivedText = deriveDisplayTextFromGenericAssayType(
+                'NEW_TYPE',
+                true
+            );
+            assert.equal(displayText, derivedText);
         });
     });
 });

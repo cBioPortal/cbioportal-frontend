@@ -17,7 +17,7 @@ const oncoprintTabUrl =
     '/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_all&clinicallist=NUM_SAMPLES_PER_PATIENT%2CPROFILED_IN_study_es_0_mutations%2CPROFILED_IN_study_es_0_gistic&data_priority=0&gene_list=CDKN2A%2520MDM2%2520MDM4%2520TP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&show_samples=false&tab_index=tab_visualize';
 const plotsTabUrl =
     CBIOPORTAL_URL +
-    '/results/plots?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_cnaseq&clinicallist=PROFILED_IN_study_es_0_mutations%2CPROFILED_IN_study_es_0_gistic&data_priority=0&gene_list=CDKN2A%2520MDM2%2520MDM4%2520TP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&show_samples=false&tab_index=tab_visualize&treatment_list=17-AAG%3BAEW541';
+    '/results/plots?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_cnaseq&clinicallist=PROFILED_IN_study_es_0_mutations%2CPROFILED_IN_study_es_0_gistic&data_priority=0&gene_list=CDKN2A%2520MDM2%2520MDM4%2520TP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&show_samples=false&tab_index=tab_visualize&generic_assay_groups=study_es_0_treatment_ic50,Afatinib-1,Afatinib-2';
 
 describe('treatment feature', function() {
     //this.retries(2);
@@ -84,7 +84,9 @@ describe('treatment feature', function() {
                     'IC50 values of compounds on cellular phenotype readout'
                 );
                 assert(
-                    $('.oncoprint__controls__heatmap_menu.treatment-selector')
+                    $(
+                        '.oncoprint__controls__heatmap_menu.generic-assay-selector'
+                    )
                 );
             });
 
@@ -139,7 +141,9 @@ describe('treatment feature', function() {
                     'IC50 values of compounds on cellular phenotype readout'
                 );
                 var treatments = getSelectCheckedOptions(
-                    $('.oncoprint__controls__heatmap_menu .treatment-selector')
+                    $(
+                        '.oncoprint__controls__heatmap_menu .generic-assay-selector'
+                    )
                 );
                 assert.equal(treatments.length, 10);
             });
@@ -151,7 +155,9 @@ describe('treatment feature', function() {
                     'IC50 values of compounds on cellular phenotype readout'
                 );
                 var treatments = getSelectCheckedOptions(
-                    $('.oncoprint__controls__heatmap_menu .treatment-selector')
+                    $(
+                        '.oncoprint__controls__heatmap_menu .generic-assay-selector'
+                    )
                 );
                 var treatment = treatments[0];
                 var treatmentName = treatment.getText();
@@ -168,25 +174,25 @@ describe('treatment feature', function() {
                     'IC50 values of compounds on cellular phenotype readout'
                 );
                 var searchBox = $(
-                    '.oncoprint__controls__heatmap_menu .treatment-selector .default-checked-select'
+                    '.oncoprint__controls__heatmap_menu .generic-assay-selector .default-checked-select'
                 ).$('input');
                 searchBox.setValue('17-AAG');
                 var treatments = $(
-                    '.oncoprint__controls__heatmap_menu .treatment-selector'
+                    '.oncoprint__controls__heatmap_menu .generic-assay-selector'
                 ).$$('.checked-select-option');
                 assert.equal(treatments.length, 1);
 
                 // test if add all button displays number of filtered treatments
                 var addAllButton = $(
-                    '.oncoprint__controls__heatmap_menu .treatment-selector .default-checked-select button'
+                    '.oncoprint__controls__heatmap_menu .generic-assay-selector .default-checked-select button'
                 );
                 assert.equal(addAllButton.getText(), 'Select all (1)');
 
                 // test if add all button only adds filtered treatments
                 addAllButton.click();
-                var selectedTreatments = $('.icon-area.treatment-textarea').$$(
-                    'div.icon'
-                );
+                var selectedTreatments = $(
+                    '.icon-area.generic-assay-textarea'
+                ).$$('div.icon');
                 assert.equal(selectedTreatments.length, 1);
             });
 
@@ -198,11 +204,11 @@ describe('treatment feature', function() {
                 );
 
                 var searchBox = $(
-                    '.oncoprint__controls__heatmap_menu .treatment-selector .default-checked-select'
+                    '.oncoprint__controls__heatmap_menu .generic-assay-selector .default-checked-select'
                 ).$('input');
                 searchBox.setValue('AZ');
                 var treatments = $(
-                    '.oncoprint__controls__heatmap_menu .treatment-selector'
+                    '.oncoprint__controls__heatmap_menu .generic-assay-selector'
                 ).$$('.checked-select-option');
                 assert.equal(treatments.length, 2);
 
@@ -215,9 +221,11 @@ describe('treatment feature', function() {
                 assert.equal(treatments.length, 2);
             });
 
-            it('initializes from `treatment_list` URL parameter', () => {
+            it('initializes from `generic_assay_groups` URL parameter', () => {
                 goToUrlAndSetLocalStorage(
-                    oncoprintTabUrl.concat('&treatment_list=17-AAG')
+                    oncoprintTabUrl.concat(
+                        '&generic_assay_groups=study_es_0_treatment_ic50,17-AAG'
+                    )
                 );
                 waitForOncoprint();
                 openHeatmapMenu();
@@ -227,7 +235,9 @@ describe('treatment feature', function() {
                 );
                 assert($('div.icon*=17-AAG').isExisting());
                 var selectMenuEntry = selectCheckedOption(
-                    $('.oncoprint__controls__heatmap_menu .treatment-selector'),
+                    $(
+                        '.oncoprint__controls__heatmap_menu .generic-assay-selector'
+                    ),
                     'Name of 17-AAG',
                     true
                 );
@@ -238,7 +248,7 @@ describe('treatment feature', function() {
                 );
             });
 
-            it('sets `treatment_list` URL parameter', () => {
+            it('sets `generic_assay_groups` URL parameter', () => {
                 openHeatmapMenu();
                 selectReactSelectOption(
                     $('.oncoprint__controls__heatmap_menu'),
@@ -248,10 +258,10 @@ describe('treatment feature', function() {
                     '17-AAG'
                 );
                 $('div.icon-area div.icon').waitForExist();
-                $('button=Add Treatment Response to Heatmap').click();
+                $('button=Add Treatment Responses to Heatmap').click();
                 waitForOncoprint();
                 var url = browser.url().value;
-                var regex = /treatment_list=17-AAG/;
+                var regex = /generic_assay_groups=study_es_0_treatment_ic50%2C17-AAG/;
                 assert(url.match(regex));
             });
         });
@@ -332,9 +342,23 @@ describe('treatment feature', function() {
                     'IC50 values of compounds on cellular phenotype readout'
                 );
 
-                var horzEntitySelect = $('[name=h-treatment-selector]').$('..');
-                assert(reactSelectOption(horzEntitySelect, 'Name of 17-AAG'));
-                assert(reactSelectOption(horzEntitySelect, 'Name of AEW541'));
+                $('[data-test=generic-assay-info-icon]').waitForExist();
+                assert(
+                    browser.execute(function() {
+                        resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
+                            value: '17-AAG',
+                            label: 'Name of 17-AAG',
+                        });
+                    })
+                );
+                assert(
+                    browser.execute(function() {
+                        resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
+                            value: 'AEW541',
+                            label: 'Name of AEW541',
+                        });
+                    })
+                );
             });
 
             it('vertical axis menu shows treatment entry in entity menu', () => {
@@ -351,9 +375,23 @@ describe('treatment feature', function() {
                     'IC50 values of compounds on cellular phenotype readout'
                 );
 
-                var vertEntitySelect = $('[name=v-treatment-selector]').$('..');
-                assert(reactSelectOption(vertEntitySelect, 'Name of 17-AAG'));
-                assert(reactSelectOption(vertEntitySelect, 'Name of AEW541'));
+                $('[data-test=generic-assay-info-icon]').waitForExist();
+                assert(
+                    browser.execute(function() {
+                        resultsViewPlotsTab.onVerticalAxisGenericAssaySelect({
+                            value: '17-AAG',
+                            label: 'Name of 17-AAG',
+                        });
+                    })
+                );
+                assert(
+                    browser.execute(function() {
+                        resultsViewPlotsTab.onVerticalAxisGenericAssaySelect({
+                            value: 'AEW541',
+                            label: 'Name of AEW541',
+                        });
+                    })
+                );
             });
 
             it('has Ordered samples entry in vert. menu when treatment selected on horz. axis', () => {
@@ -370,8 +408,15 @@ describe('treatment feature', function() {
                     'IC50 values of compounds on cellular phenotype readout'
                 );
 
-                var vertEntitySelect = $('[name=v-treatment-selector]').$('..');
-                selectReactSelectOption(vertEntitySelect, 'Name of AEW541');
+                $('[data-test=generic-assay-info-icon]').waitForExist();
+                assert(
+                    browser.execute(function() {
+                        resultsViewPlotsTab.onVerticalAxisGenericAssaySelect({
+                            value: 'AEW541',
+                            label: 'Name of AEW541',
+                        });
+                    })
+                );
 
                 var horzDataSelect = $('[name=h-profile-type-selector]').$(
                     '..'
@@ -393,8 +438,15 @@ describe('treatment feature', function() {
                     'IC50 values of compounds on cellular phenotype readout'
                 );
 
-                var horzEntitySelect = $('[name=h-treatment-selector]').$('..');
-                selectReactSelectOption(horzEntitySelect, 'Name of AEW541');
+                $('[data-test=generic-assay-info-icon]').waitForExist();
+                assert(
+                    browser.execute(function() {
+                        resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
+                            value: 'AEW541',
+                            label: 'Name of AEW541',
+                        });
+                    })
+                );
 
                 var vertDataSelect = $('[name=v-profile-type-selector]').$(
                     '..'
@@ -432,8 +484,15 @@ describe('treatment feature', function() {
                     'EC50 values of compounds on cellular phenotype readout'
                 );
 
-                var horzEntitySelect = $('[name=h-treatment-selector]').$('..');
-                selectReactSelectOption(horzEntitySelect, 'Name of AEW541');
+                $('[data-test=generic-assay-info-icon]').waitForExist();
+                assert(
+                    browser.execute(function() {
+                        resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
+                            value: 'AEW541',
+                            label: 'Name of AEW541',
+                        });
+                    })
+                );
 
                 assert($('[data-test=ViewLimitValues]').isVisible());
             });
@@ -452,8 +511,15 @@ describe('treatment feature', function() {
                     'EC50 values of compounds on cellular phenotype readout'
                 );
 
-                var vertEntitySelect = $('[name=v-treatment-selector]').$('..');
-                selectReactSelectOption(vertEntitySelect, 'Name of AEW541');
+                $('[data-test=generic-assay-info-icon]').waitForExist();
+                assert(
+                    browser.execute(function() {
+                        resultsViewPlotsTab.onVerticalAxisGenericAssaySelect({
+                            value: 'AEW541',
+                            label: 'Name of AEW541',
+                        });
+                    })
+                );
 
                 assert($('[data-test=ViewLimitValues]').isVisible());
             });
@@ -528,11 +594,20 @@ var selectTreamentsBothAxes = () => {
         'IC50 values of compounds on cellular phenotype readout'
     );
 
-    var horzEntitySelect = $('[name=h-treatment-selector]').$('..');
-    selectReactSelectOption(horzEntitySelect, 'Name of AEW541');
+    $('[data-test=generic-assay-info-icon]').waitForExist();
+    browser.execute(function() {
+        resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
+            value: 'AEW541',
+            label: 'Name of AEW541',
+        });
+    });
 
-    var vertEntitySelect = $('[name=v-treatment-selector]').$('..');
-    selectReactSelectOption(vertEntitySelect, 'Name of AEW541');
+    browser.execute(function() {
+        resultsViewPlotsTab.onVerticalAxisGenericAssaySelect({
+            value: 'AEW541',
+            label: 'Name of AEW541',
+        });
+    });
 
     if (!$('[data-test=ViewLimitValues]').isSelected()) {
         $('[data-test=ViewLimitValues]').click();

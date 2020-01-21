@@ -1,6 +1,7 @@
 import { assert } from 'chai';
 import { PlotsTabOption, PlotsTabDataSource } from './PlotsTab';
 import { generateQuickPlots, ButtonInfo, TypeSourcePair } from './QuickPlots';
+import { GenericAssayTypeConstants } from '../ResultsViewPageStore';
 
 describe('Quick Plot Links in the Plots Tab', () => {
     describe('generateQuickplots', () => {
@@ -576,7 +577,10 @@ describe('Quick Plot Links in the Plots Tab', () => {
 
         it('should make sample order vs treatment IC50 quickplot', () => {
             const dataTypes: PlotsTabOption[] = [
-                { value: 'GENERIC_ASSAY', label: 'Treatments' },
+                {
+                    value: GenericAssayTypeConstants.TREATMENT_RESPONSE,
+                    label: 'Treatments',
+                },
             ];
             const dataSources: PlotsTabDataSource = {};
             const horizontal: TypeSourcePair = {
@@ -584,7 +588,7 @@ describe('Quick Plot Links in the Plots Tab', () => {
                 source: undefined,
             };
             const vertical: TypeSourcePair = {
-                type: 'GENERIC_ASSAY',
+                type: GenericAssayTypeConstants.TREATMENT_RESPONSE,
                 source: undefined,
             };
 
@@ -603,7 +607,8 @@ describe('Quick Plot Links in the Plots Tab', () => {
                     plotModel: {
                         vertical: {
                             dataType: {
-                                value: 'GENERIC_ASSAY',
+                                value:
+                                    GenericAssayTypeConstants.TREATMENT_RESPONSE,
                                 label: 'Treatments',
                             },
                             dataSource: undefined,

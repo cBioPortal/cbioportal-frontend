@@ -181,7 +181,7 @@ type TrackSpecsWithDynamicGroups = {
     genesetHeatmapTracks: { trackGroupIndex: number }[];
 };
 
-type TreatmentProfileToTrackIdMap = {
+type GenericAssayProfileToTrackIdMap = {
     [molecularProfileId: string]: undefined | TrackId;
 };
 
@@ -568,7 +568,7 @@ function transitionTracks(
         genesetHeatmap: undefined as undefined | TrackId,
         heatmap: undefined as undefined | TrackId,
         heatmap01: undefined as undefined | TrackId,
-        treatment: ({} as any) as TreatmentProfileToTrackIdMap,
+        genericAssay: ({} as any) as GenericAssayProfileToTrackIdMap,
     };
     const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
     if (
@@ -627,10 +627,10 @@ function transitionTracks(
         }
     }
 
-    // collect trackId of last assigned track for each treatment profile
+    // collect trackId of last assigned track for each generic assay profile
     // Note: the resolution of `trackIds for ruleset sharing` is different from
-    // the section above because different formatting is applied to each treatment profile (molecularProfileId)
-    trackIdForRuleSetSharing.treatment = _.chain(prevProps.heatmapTracks)
+    // the section above because different formatting is applied to each generic assay profile (molecularProfileId)
+    trackIdForRuleSetSharing.genericAssay = _.chain(prevProps.heatmapTracks)
         .filter(
             (s: IHeatmapTrackSpec) =>
                 s.molecularAlterationType ===
@@ -641,7 +641,7 @@ function transitionTracks(
         .mapValues((o: IHeatmapTrackSpec) => trackSpecKeyToTrackId[o.key])
         .value();
 
-    const treatmentProfilesMap = _.chain(nextProps.heatmapTracks)
+    const genericAssayProfilesMap = _.chain(nextProps.heatmapTracks)
         .filter(
             (s: IHeatmapTrackSpec) =>
                 s.molecularAlterationType ===
@@ -657,16 +657,16 @@ function transitionTracks(
         )
         .value();
 
-    // find the max and min treatment profile value in the next heatmap track group
+    // find the max and min generic assay profile value in the next heatmap track group
     // max and min value is used to create a custom legend for the track group
-    const treatmentProfileMaxValues = _.mapValues(
-        treatmentProfilesMap,
+    const genericAssayProfileMaxValues = _.mapValues(
+        genericAssayProfilesMap,
         (profile_data: number[]) => {
             return _.max(profile_data);
         }
     );
-    const treatmentProfileMinValues = _.mapValues(
-        treatmentProfilesMap,
+    const genericAssayProfileMinValues = _.mapValues(
+        genericAssayProfilesMap,
         (profile_data: number[]) => {
             return _.min(profile_data);
         }
@@ -777,11 +777,11 @@ function transitionTracks(
         (track: IHeatmapTrackSpec) => track.key
     );
     for (let track of nextProps.heatmapTracks) {
-        // add treatment layout/formatting information to the track specs
+        // add generic assay layout/formatting information to the track specs
         track.maxProfileValue =
-            treatmentProfileMaxValues[track.molecularProfileId];
+            genericAssayProfileMaxValues[track.molecularProfileId];
         track.minProfileValue =
-            treatmentProfileMinValues[track.molecularProfileId];
+            genericAssayProfileMinValues[track.molecularProfileId];
 
         transitionHeatmapTrack(
             track,
@@ -800,11 +800,11 @@ function transitionTracks(
     for (const track of prevProps.heatmapTracks || []) {
         // if its still there, then this track no longer exists
         if (prevHeatmapTracks.hasOwnProperty(track.key)) {
-            // add treatment layout/formatting information to the track specs
+            // add generic assay layout/formatting information to the track specs
             track.maxProfileValue =
-                treatmentProfileMaxValues[track.molecularProfileId];
+                genericAssayProfileMaxValues[track.molecularProfileId];
             track.minProfileValue =
-                treatmentProfileMinValues[track.molecularProfileId];
+                genericAssayProfileMinValues[track.molecularProfileId];
 
             transitionHeatmapTrack(
                 undefined,
@@ -1330,7 +1330,7 @@ export function transitionHeatmapTrack(
     trackIdForRuleSetSharing: {
         heatmap?: TrackId;
         heatmap01?: TrackId;
-        treatment?: TreatmentProfileToTrackIdMap;
+        genericAssay?: GenericAssayProfileToTrackIdMap;
     },
     expansionParentKey?: string
 ) {
@@ -1411,9 +1411,9 @@ export function transitionHeatmapTrack(
             }
             trackIdForRuleSetSharing[trackIdForRuleSetSharingKey] = newTrackId;
         } else {
-            // if the track is a treatment profile, add to trackIdForRuleSetSharing under its `molecularProfileId`
+            // if the track is a generic assay profile, add to trackIdForRuleSetSharing under its `molecularProfileId`
             // this makes the trackId available for existing tracks of the same mol.profile for ruleset sharing
-            trackIdForRuleSetSharing.treatment![
+            trackIdForRuleSetSharing.genericAssay![
                 nextSpec.molecularProfileId
             ] = newTrackId;
         }
@@ -1435,14 +1435,15 @@ export function transitionHeatmapTrack(
         ) {
             oncoprint.setTrackMovable(trackId, nextSpec.movable);
         }
-        // treatment profile tracks always are associated with the last added added track id
+        // generic assay profile tracks always are associated with the last added added track id
         if (
             nextSpec.molecularAlterationType ===
                 AlterationTypeConstants.GENERIC_ASSAY &&
-            trackIdForRuleSetSharing.treatment![nextSpec.molecularProfileId] !==
-                undefined
+            trackIdForRuleSetSharing.genericAssay![
+                nextSpec.molecularProfileId
+            ] !== undefined
         ) {
-            const rulesetTrackId = trackIdForRuleSetSharing.treatment![
+            const rulesetTrackId = trackIdForRuleSetSharing.genericAssay![
                 nextSpec.molecularProfileId
             ];
             oncoprint.shareRuleSet(rulesetTrackId!, trackId);
