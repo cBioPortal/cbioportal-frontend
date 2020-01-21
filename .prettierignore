@@ -12,6 +12,7 @@
 yarn.lock
 
 .prettierignore
+yarn.lock
 
 .DS_Store
 
