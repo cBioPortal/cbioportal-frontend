@@ -850,3 +850,22 @@ export function excludeMutationAndSVProfiles(
             !mutationAlterationTypes.includes(profile.molecularAlterationType)
     );
 }
+
+export function parseGenericAssayGroups(
+    generic_assay_groups: string
+): {
+    [molecularProfileId: string]: string[];
+} {
+    const groups = generic_assay_groups
+        ? generic_assay_groups.split(';').map((x: string) => x.split(','))
+        : [];
+
+    const parsedGroups = groups.reduce(
+        (acc: { [molecularProfileId: string]: string[] }, group) => {
+            acc[group[0] as string] = group.slice(1);
+            return acc;
+        },
+        {}
+    );
+    return parsedGroups;
+}
