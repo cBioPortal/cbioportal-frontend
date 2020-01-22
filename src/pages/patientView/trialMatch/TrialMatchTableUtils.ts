@@ -69,10 +69,10 @@ export function groupTrialMatchesByAgeNumerical(armGroup: ITrialMatch[]): IClini
             }
         };
         const positiveTrialMatches = _.filter(matchesGroupedByAge[age], (trialMatch:ITrialMatch) => {
-            if (!_.isUndefined(trialMatch.genomicAlteration)) return !trialMatch.genomicAlteration.includes('!')
+            if (!_.isUndefined(trialMatch.genomicAlteration) && trialMatch.genomicAlteration !== '') return !trialMatch.genomicAlteration.includes('!')
         });
         const negativeTrialMatches = _.filter(matchesGroupedByAge[age], (trialMatch:ITrialMatch) => {
-            if (!_.isUndefined(trialMatch.genomicAlteration)) return trialMatch.genomicAlteration.includes('!')
+            if (!_.isUndefined(trialMatch.genomicAlteration) && trialMatch.genomicAlteration !== '') return trialMatch.genomicAlteration.includes('!')
         });
         if (positiveTrialMatches.length > 0) {
             clinicalGroupMatch.matches = groupPositiveTrialMatchesByMatchType(positiveTrialMatches);
