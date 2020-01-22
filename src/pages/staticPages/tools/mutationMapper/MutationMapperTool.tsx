@@ -17,6 +17,7 @@ import StandaloneMutationMapper from "./StandaloneMutationMapper";
 import MutationMapperToolStore from "./MutationMapperToolStore";
 
 import AppConfig from "appConfig";
+import {getOncoKbApiUrl} from "shared/api/urls";
 
 interface IMutationMapperToolProps {
     routing: any;
@@ -375,6 +376,7 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
                     <MSKTab key={gene} id={gene} linkText={gene}>
                         <StandaloneMutationMapper
                             {...convertToMutationMapperProps(AppConfig.serverConfig)}
+                            oncoKbPublicApiUrl={getOncoKbApiUrl()}
                             store={mutationMapperStore}
                             trackVisibility={this.userSelectionStore.trackVisibility}
                             downloadDataFetcher={this.store.downloadDataFetcher}
