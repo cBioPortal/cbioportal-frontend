@@ -57,9 +57,7 @@ export default class IntegrativeGenomicsViewer extends React.Component<IGVProps,
 
         const browserProps = {
             genome: this.props.genome,
-            locus: this.props.locus,
-            // deep clone, because create browser method mutates the tracks object
-            tracks: _.cloneDeep(this.props.tracks)
+            locus: this.props.locus
         };
 
         igv.createBrowser(this.igvDiv, browserProps).then((browser: any) => {
@@ -68,6 +66,9 @@ export default class IntegrativeGenomicsViewer extends React.Component<IGVProps,
             if (this.igvDiv) {
                 this.updateSearch(this.igvDiv, this.props.disableSearch);
             }
+
+            // deep clone, because loadTrackList method mutates the tracks object
+            this.loadTrackList(browser, _.cloneDeep(this.props.tracks));
 
             // we need to store the list of last rendered tracks for a future comparison in the shouldComponentUpdate method,
             // because the component may still receive props when it is not visible
@@ -124,6 +125,19 @@ export default class IntegrativeGenomicsViewer extends React.Component<IGVProps,
         }
     }
 
+    private loadTrackList(igvBrowser: any, tracks: TrackProps[] | undefined)
+    {
+        igvBrowser.loadTrackList(tracks).then(() => {
+            if (this.props.onRenderingComplete) {
+                this.props.onRenderingComplete();
+            }
+        }).catch(() => {
+            if (this.props.onRenderingComplete) {
+                this.props.onRenderingComplete();
+            }
+        });
+    }
+
     private updateTracks(igvBrowser: any,
                          modifiedTrackNames: string[],
                          tracksByName:  {[trackName: string]: TrackProps})
@@ -143,15 +157,7 @@ export default class IntegrativeGenomicsViewer extends React.Component<IGVProps,
 
             // need to start loading on next render frame to be able to show "rendering" information in the loader
             onNextRenderFrame(() => {
-                igvBrowser.loadTrackList(tracksToLoad).then(() => {
-                    if (this.props.onRenderingComplete) {
-                        this.props.onRenderingComplete();
-                    }
-                }).catch(() => {
-                    if (this.props.onRenderingComplete) {
-                        this.props.onRenderingComplete();
-                    }
-                });
+                this.loadTrackList(igvBrowser, tracksToLoad);
             });
         }
     }
