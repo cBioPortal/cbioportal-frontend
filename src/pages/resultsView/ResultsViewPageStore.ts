@@ -126,6 +126,7 @@ import {
     isRNASeqProfile,
     makeEnrichmentDataPromise,
     getMolecularProfiles,
+    excludeMutationAndSVProfiles,
 } from './ResultsViewPageStoreUtils';
 import MobxPromiseCache from '../../shared/lib/MobxPromiseCache';
 import {isSampleProfiledInMultiple} from '../../shared/lib/isSampleProfiled';
@@ -202,6 +203,7 @@ export const AlterationTypeConstants = {
     GENESET_SCORE: 'GENESET_SCORE',
     METHYLATION: 'METHYLATION',
     GENERIC_ASSAY: 'GENERIC_ASSAY',
+    STRUCTURAL_VARIANT: 'STRUCTURAL_VARIANT'
 };
 
 // only show TREATMENT_RESPONSE in the plots tab for now
@@ -1210,12 +1212,9 @@ export class ResultsViewPageStore {
             this.samples,
         ],
         invoke: () => {
-            // we get mutations with mutations endpoint, all other alterations with this one, so filter out mutation genetic profile
-            const profilesWithoutMutationProfile = _.filter(
-                this.selectedMolecularProfiles.result,
-                (profile: MolecularProfile) =>
-                    profile.molecularAlterationType !== 'MUTATION_EXTENDED'
-            );
+            // we get mutations with mutations endpoint, structural variants and fusions with structural variant endpoint.
+            // filter out mutation genetic profile and structural variant profiles
+            const profilesWithoutMutationProfile = excludeMutationAndSVProfiles(this.selectedMolecularProfiles.result!);
             const genes = this.genes.result;
 
             if (
@@ -1269,13 +1268,9 @@ export class ResultsViewPageStore {
             this.samples,
         ],
         invoke: () => {
-            // we get mutations with mutations endpoint, all other alterations with this one, so filter out mutation genetic profile
-            const profilesWithoutMutationProfile = _.filter(
-                this.nonSelectedMolecularProfiles.result,
-                (profile: MolecularProfile) =>
-                    profile.molecularAlterationType !==
-                    AlterationTypeConstants.MUTATION_EXTENDED
-            );
+            // we get mutations with mutations endpoint, structural variants and fusions with structural variant endpoint.
+            // filter out mutation genetic profile and structural variant profiles
+            const profilesWithoutMutationProfile = excludeMutationAndSVProfiles(this.nonSelectedMolecularProfiles.result);
             const genes = this.genes.result;
 
             if (
