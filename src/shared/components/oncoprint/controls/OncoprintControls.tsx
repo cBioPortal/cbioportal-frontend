@@ -712,15 +712,16 @@ export default class OncoprintControls extends React.Component<
                                 </button>,
                             ]}
 
-                        {this.props.state.ngchmButtonActive &&
-                            (<DefaultTooltip overlay={<span>Open a new tab for NG-CHM with this study from MD Anderson Cancer Center compendium.</span>}>
+                        {this.props.state.ngchmButtonActive && [
+                            <hr />,
+                            (<DefaultTooltip overlay={<span>Open a new tab to visualize this study as Next Generation Clustered Heatmaps from MD Anderson Cancer Center.</span>}>
                              <button
                                  className={classNames("btn", "btn-sm", "btn-default")}
                                  name={EVENT_KEY.viewNGCHM}
                                  onClick={this.onButtonClick}
-                             >View Next-Generation Clustered Heat Map (NG-CHM)</button>
+                             >Whole Study Heatmap (NG-CHM) <i className="fa fa-external-link" aria-hidden="true"></i></button>
                              </DefaultTooltip>)
-                        }
+                        ]}
                     </div>
                 );
             }
