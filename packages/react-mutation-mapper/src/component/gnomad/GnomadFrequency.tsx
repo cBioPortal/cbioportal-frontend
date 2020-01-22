@@ -82,8 +82,7 @@ export type GnomadFrequencyProps = {
 @observer
 export default class GnomadFrequency extends React.Component<GnomadFrequencyProps, {}>
 {
-    public render()
-    {
+    public gnomad() {
         const myVariantInfo = this.props.myVariantInfo;
 
         let gnomadUrl = "";
@@ -145,7 +144,15 @@ export default class GnomadFrequency extends React.Component<GnomadFrequencyProp
             if (result["Total"].alleleFrequency === 0) {
                 display = <span>0</span>;
             } else {
-                display = <span>{parseFloat(result["Total"].alleleFrequency.toString()).toExponential(1)}</span>;
+                // show frequency as number with 4 significant digits
+                display = (
+                    <span>
+                        {result['Total'].alleleFrequency.toLocaleString(undefined, {
+                            maximumSignificantDigits: 2,
+                            minimumSignificantDigits: 2,
+                        })}
+                    </span>
+                );
             }
 
             overlay = () => <GnomadFrequencyTable data={sorted} gnomadUrl={gnomadUrl} />;
@@ -154,15 +161,19 @@ export default class GnomadFrequency extends React.Component<GnomadFrequencyProp
             display = <span style={{height: '100%', width: '100%', display: 'block', overflow: 'hidden'}}>&nbsp;</span>;
             overlay = () => <span>Variant has no data in gnomAD.</span>;
         }
+        return { overlay, display };
+    }
 
+    public render()
+    {
         return (
             <DefaultTooltip
-                overlay={overlay}
+                overlay={this.gnomad().overlay}
                 placement="topRight"
                 trigger={['hover', 'focus']}
                 destroyTooltipOnHide={true}
             >
-                {display}
+                {this.gnomad().display}
             </DefaultTooltip>
         );
     }
