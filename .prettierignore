@@ -6,6 +6,8 @@
 *map
 *min.js
 *min.css
+*sh
+*yml
 
 ./src/shared/api/generated/**
 ./packages/**/dist/**
