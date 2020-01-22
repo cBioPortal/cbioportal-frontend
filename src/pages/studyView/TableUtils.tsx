@@ -8,7 +8,6 @@ import {getFrequencyStr, getCNAByAlteration} from "pages/studyView/StudyViewUtil
 import {GenePanelList} from "pages/studyView/table/StudyViewGenePanelModal";
 import {CSSProperties} from "react";
 import * as _ from "lodash";
-import {GeneTableUserSelectionWithIndex} from "pages/studyView/table/GeneTable";
 
 export type AlteredGenesTableUserSelectionWithIndex = {
     entrezGeneId: number;
@@ -88,17 +87,3 @@ export function getFreqColumnRender(type: FreqColumnType, numberOfProfiledCases:
         </DefaultTooltip>
     );
 }
-
-export function rowIsChecked(uniqueKey: string, preSelectedRows: GeneTableUserSelectionWithIndex[], selectedRows: GeneTableUserSelectionWithIndex[]) {
-    return _.some(
-        preSelectedRows.concat(selectedRows),
-        (row: GeneTableUserSelectionWithIndex) => row.uniqueKey === uniqueKey
-    );
-};
-
-export function rowIsDisabled(uniqueKey: string, selectedRows: GeneTableUserSelectionWithIndex[]) {
-    return _.some(
-        selectedRows,
-        (row: GeneTableUserSelectionWithIndex) => row.uniqueKey === uniqueKey
-    );
-};

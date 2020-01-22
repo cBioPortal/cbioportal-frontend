@@ -67,8 +67,12 @@ $study-view-table-icon-size: 10px;
   background-color: #ffffff;
 }
 
-.highlightedRow {
+.highlightedEvenRow, .highlightedRow {
   background-color: #d3d3d3;
+}
+
+.highlightedOddRow {
+  background-color: #e0e0e0;
 }
 
 .cancerGeneIcon {

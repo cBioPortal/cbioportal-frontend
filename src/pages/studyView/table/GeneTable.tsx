@@ -17,16 +17,13 @@ import {
 import {
     OncokbCancerGene
 } from "pages/studyView/StudyViewPageStore";
-import {getFreqColumnRender, getGeneColumnHeaderRender, rowIsChecked, rowIsDisabled} from "pages/studyView/TableUtils";
+import {getFreqColumnRender, getGeneColumnHeaderRender} from "pages/studyView/TableUtils";
 import {GeneCell} from "pages/studyView/table/GeneCell";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import styles from "pages/studyView/table/tables.module.scss";
 import MobxPromise from "mobxpromise";
-
-export type GeneTableUserSelectionWithIndex = {
-    uniqueKey: string;
-    rowIndex: number;
-};
+import { stringListToIndexSet, stringListToSet } from "cbioportal-frontend-commons";
+import ifNotDefined from "shared/lib/ifNotDefined";
 
 export type GeneTableRow = OncokbCancerGene & {
     entrezGeneId: number
@@ -61,7 +58,7 @@ export type GeneTableProps = & {
     promise: MobxPromise<GeneTableRow[]>;
     width: number;
     height: number;
-    filters: string[];
+    filters: string[][];
     onUserSelection: (value: string[]) => void;
     numOfSelectedSamples: number;
     onGeneSelect: (hugoGeneSymbol: string) => void;
@@ -89,7 +86,7 @@ class GeneTableComponent extends FixedHeaderTable<GeneTableRow> {
 
 @observer
 export class GeneTable extends React.Component<GeneTableProps, {}> {
-    @observable protected preSelectedRows: GeneTableUserSelectionWithIndex[] = [];
+    @observable protected selectedRowsKeys: string[] = [];
     @observable protected sortBy: GeneTableColumnKey;
     @observable private sortDirection: SortDirection;
     @observable private modalSettings: {
@@ -367,11 +364,38 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
         return this.isFilteredByCancerGeneList ? _.filter(this.props.promise.result, data => data.isCancerGene) : (this.props.promise.result || []);
     }
 
+    @computed get flattenedFilters() {
+        return _.flatMap(this.props.filters);
+    }
+
+    @computed get selectableTableData() {
+        if (this.flattenedFilters.length === 0) {
+            return this.tableData;
+        }
+        return _.filter(this.tableData, data => !this.flattenedFilters.includes(data.uniqueKey));
+    }
+
+    @computed
+    get preSelectedRows() {
+        if (this.flattenedFilters.length === 0) {
+            return [];
+        }
+        const order = stringListToIndexSet(this.flattenedFilters);
+        return _.chain(this.tableData)
+            .filter(data => this.flattenedFilters.includes(data.uniqueKey))
+            .sortBy<GeneTableRow>(data => ifNotDefined(order[data.uniqueKey], Number.POSITIVE_INFINITY))
+            .value();
+    }
+
+    @computed
+    get preSelectedRowsKeys() {
+        return this.preSelectedRows.map(row => row.uniqueKey);
+    }
+
     @computed
     get tableColumns() {
         return this.props.columns.map(column => this.getDefaultColumnDefinition(column.columnKey, this.columnsWidth[column.columnKey], this.cellMargin[column.columnKey]));
     }
-
 
     @autobind
     @action
@@ -399,88 +423,58 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
         return !!this.props.cancerGeneFilterEnabled && this.props.filterByCancerGenes;
     }
 
+    @computed get allSelectedRowsKeysSet() {
+        return stringListToSet([...this.selectedRowsKeys, ...this.preSelectedRowsKeys]);
+    }
+
     @autobind
     isChecked(uniqueKey: string) {
-        return rowIsChecked(uniqueKey, this.preSelectedRows, this.selectedRows);
+        return !!this.allSelectedRowsKeysSet[uniqueKey];
     }
 
     @autobind
     isDisabled(uniqueKey: string) {
-        return rowIsDisabled(uniqueKey, this.selectedRows);
+        return _.some(this.preSelectedRowsKeys, (key) => key === uniqueKey);
     }
 
     @autobind
     togglePreSelectRow(uniqueKey: string) {
-        const record: GeneTableUserSelectionWithIndex | undefined = _.find(
-            this.preSelectedRows,
-            (row: GeneTableUserSelectionWithIndex) => row.uniqueKey === uniqueKey
-        );
+        const record = _.find(this.selectedRowsKeys,(key) => key === uniqueKey);
         if (_.isUndefined(record)) {
-            let dataIndex = -1;
-            // definitely there is a match
-            const datum = _.find(
-                this.tableData,
-                (row, index: number) => {
-                    const exist = row.uniqueKey! === uniqueKey;
-                    if (exist) {
-                        dataIndex = index;
-                    }
-                    return exist;
-                }
-            );
-
-            if (!_.isUndefined(datum)) {
-                this.preSelectedRows.push({
-                    rowIndex: dataIndex,
-                    uniqueKey: datum.uniqueKey!,
-                });
-            }
+            this.selectedRowsKeys.push(uniqueKey);
         } else {
-            this.preSelectedRows = _.xorBy(this.preSelectedRows, [record], "rowIndex");
+            this.selectedRowsKeys = _.xorBy(this.selectedRowsKeys, [record]);
         }
     }
 
     @autobind
     @action
     afterSelectingRows() {
-        this.props.onUserSelection(
-            this.preSelectedRows.map(row => row.uniqueKey)
-        );
-        this.preSelectedRows = [];
-    }
-
-    @computed
-    get selectedRows() {
-        if (this.props.filters.length === 0) {
-            return [];
-        } else {
-            return _.reduce(
-                this.tableData,
-                (
-                    acc: GeneTableUserSelectionWithIndex[],
-                    row,
-                    index: number
-                ) => {
-                    if (_.includes(this.props.filters, row.uniqueKey)) {
-                        acc.push({
-                            rowIndex: index,
-                            uniqueKey: row.uniqueKey
-                        });
-                    }
-                    return acc;
-                },
-                []
-            );
-        }
+        this.props.onUserSelection(this.selectedRowsKeys);
+        this.selectedRowsKeys = [];
     }
 
     @autobind
     isSelectedRow(data: GeneTableRow) {
-        return !_.isUndefined(
-            _.find(_.union(this.selectedRows, this.preSelectedRows), function (row) {
-                return row.uniqueKey === data.uniqueKey;
-            })
-        );
+        return this.isChecked(data.uniqueKey);
+    }
+
+    @computed get filterKeyToIndexSet() {
+        return _.reduce(this.props.filters, (acc, next, index) => {
+            next.forEach(key => {
+                acc[key] = index;
+            });
+            return acc;
+        }, {} as { [id: string]: number });
+    }
+
+    @autobind
+    selectedRowClassName(data: GeneTableRow) {
+        const index = this.filterKeyToIndexSet[data.uniqueKey];
+        if (index === undefined) {
+            return this.props.filters.length % 2 === 0 ? styles.highlightedEvenRow : styles.highlightedOddRow;
+        }
+        return index % 2 === 0 ? styles.highlightedEvenRow : styles.highlightedOddRow;
     }
 
     @autobind
@@ -498,14 +492,16 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                     <GeneTableComponent
                         width={this.props.width}
                         height={this.props.height}
-                        data={this.tableData}
+                        data={this.selectableTableData}
                         columns={this.tableColumns}
-                        showSelectSamples={true && this.preSelectedRows.length > 0}
+                        showSelectSamples={true && this.selectedRowsKeys.length > 0}
                         isSelectedRow={this.isSelectedRow}
                         afterSelectingRows={this.afterSelectingRows}
                         sortBy={this.sortBy}
                         sortDirection={this.sortDirection}
                         afterSorting={this.afterSorting}
+                        fixedTopRowsData={this.preSelectedRows}
+                        highlightedRowClassName={this.selectedRowClassName}
                     />
                 )}
                 {this.props.genePanelCache ? (
