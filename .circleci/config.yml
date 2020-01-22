@@ -3,64 +3,65 @@
 # Check https://circleci.com/docs/2.0/language-javascript/ for more details
 #
 defaults: &defaults
-    working_directory: /tmp/repo
-    docker:
-        # specify the version you desire here
-        - image: circleci/node:8.12.0-browsers
+  working_directory: /tmp/repo
+  docker:
+    # specify the version you desire here
+    - image: circleci/node:8.12.0-browsers
 
 run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
-    steps:
-        - run:
-              name: 'Install yarn at specific version'
-              command: sudo npm install --global yarn@1.21.1
-        - attach_workspace:
-              at: /tmp/
-        - run:
-              name: 'Spin up frontend over ssl if necessary and run end to end tests'
-              command: |
-                  yarn serveDist & \
-                  cd end-to-end-test && \
-                  yarn install --frozen-lockfile && \
-                  ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome '2.42' && \
-                  ./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome '2.42' & \
-                  ./scripts/env_vars.sh && \
-                  eval "$(./scripts/env_vars.sh)" && \
-                  curl $CBIOPORTAL_URL > /dev/null && \
-                  sleep 5s && \
-                  curl $CBIOPORTAL_URL > /dev/null && \
-                  sleep 5s && \
-                  curl $CBIOPORTAL_URL > /dev/null && \
-                  sleep 20s && \
-                  (curl --insecure https://localhost:3000 || curl http://localhost:3000) > /dev/null && \
-                  sleep 1s && \
-                  cd end-to-end-test && \
-                  echo "CBIOPORTAL_URL=$CBIOPORTAL_URL"
-                  yarn run e2e
-              when: always
-              environment:
-                  JUNIT_REPORT_PATH: ./remote/junit/
-                  SCREENSHOT_DIRECTORY: ./remote/screenshots
-                  FRONTEND_TEST_USE_LOCAL_DIST: true
-                  NO_PARALLEL: true
-        - run:
-              name: 'Make sure all screenshots are tracked (otherwise the test will always be successful)'
-              command: 'for f in end-to-end-test/remote/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
-        - store_artifacts:
-              path: /tmp/repo/end-to-end-test/remote/screenshots
-              destination: /screenshots
-        - store_artifacts:
-              path: /tmp/repo/end-to-end-test/shared/image-compare
-              destination: /image-compare
-        - store_artifacts:
-              path: /tmp/repo/end-to-end-test/remote/error
-              destination: /errorShots
-        - store_test_results:
-              path: /tmp/repo/end-to-end-test/remote/junit
-        - store_artifacts:
-              path: /tmp/repo/end-to-end-test/remote/junit
-        - store_artifacts:
-              path: /tmp/repo/end-to-end-test/shared/imageCompare.html
-              destination: /imageCompare.html
+  steps:
+    - run:
+        name: "Install yarn at specific version"
+        command:
+          sudo npm install --global yarn@1.21.1
+    - attach_workspace:
+        at: /tmp/
+    - run:
+        name: "Spin up frontend over ssl if necessary and run end to end tests"
+        command: |
+          yarn serveDist & \
+          cd end-to-end-test && \
+          yarn install --frozen-lockfile && \
+          ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome '2.42' && \
+          ./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome '2.42' & \
+          ./scripts/env_vars.sh && \
+          eval "$(./scripts/env_vars.sh)" && \
+          curl $CBIOPORTAL_URL > /dev/null && \
+          sleep 5s && \
+          curl $CBIOPORTAL_URL > /dev/null && \
+          sleep 5s && \
+          curl $CBIOPORTAL_URL > /dev/null && \
+          sleep 20s && \
+          (curl --insecure https://localhost:3000 || curl http://localhost:3000) > /dev/null && \
+          sleep 1s && \
+          cd end-to-end-test && \
+          echo "CBIOPORTAL_URL=$CBIOPORTAL_URL"
+          yarn run e2e
+        when: always
+        environment:
+          JUNIT_REPORT_PATH: ./remote/junit/
+          SCREENSHOT_DIRECTORY: ./remote/screenshots
+          FRONTEND_TEST_USE_LOCAL_DIST: true
+          NO_PARALLEL: true
+    - run:
+        name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
+        command: 'for f in end-to-end-test/remote/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
+    -  store_artifacts:
+        path: /tmp/repo/end-to-end-test/remote/screenshots
+        destination: /screenshots
+    -  store_artifacts:
+        path: /tmp/repo/end-to-end-test/shared/image-compare
+        destination: /image-compare
+    -  store_artifacts:
+        path: /tmp/repo/end-to-end-test/remote/error
+        destination: /errorShots
+    - store_test_results:
+        path: /tmp/repo/end-to-end-test/remote/junit
+    - store_artifacts:
+        path: /tmp/repo/end-to-end-test/remote/junit
+    - store_artifacts:
+        path: /tmp/repo/end-to-end-test/shared/imageCompare.html
+        destination: /imageCompare.html
 
 version: 2
 jobs:
@@ -113,140 +114,141 @@ jobs:
           paths:
             - repo
 
-    prettier:
-        <<: *defaults
-        steps:
-            - attach_workspace:
-                  at: /tmp/
-            - run:
-                  name: 'Check code style with Prettier'
-                  command: 'yarn run prettierCheck'
+  api_sync:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: /tmp/
+      # check that all api responses are still the same
+      - run: "bash src/test/check_api_sync.sh"
 
-    api_sync:
-        <<: *defaults
-        steps:
-            - attach_workspace:
-                  at: /tmp/
-            # check that all api responses are still the same
-            - run: 'bash src/test/check_api_sync.sh'
-
-    unit_tests:
-        <<: *defaults
-        steps:
-            - run:
-                  name: 'Install yarn at specific version'
-                  command: sudo npm install --global yarn@1.21.1
-            - attach_workspace:
-                  at: /tmp/
-            # run tests!
-            - run:
-                  command: 'yarn run test'
-                  environment:
-                      JUNIT_REPORT_PATH: ./junit/
-                      JUNIT_REPORT_NAME: test-results.xml
-                      DISABLE_SOURCEMAP: true
-                      NO_PARALLEL: true
-                  when: always
-            - store_test_results:
-                  path: /tmp/repo/junit
-            - store_artifacts:
-                  path: /tmp/repo/junit
-
-    check_forgotten_spec_only_statements:
-        <<: *defaults
-        steps:
-            - attach_workspace:
-                  at: /tmp/
-            # check that no `.only` statements are still in the tests
-            # Ignore doTest.only in oql parser
-            - run: "! grep '\\.only' $(find ./src ./end-to-end-test -type f -name '*spec*' | grep -v node_modules) | grep -v 'doTest.only = function' | grep -v expectedParsedResult"
-
-    end_to_end_tests:
-        <<: *defaults
-        environment:
-            SPEC_FILE_PATTERN: ./remote/specs/core/**/*.spec.js
-        <<: *run_e2e_and_save_artifacts
-
-    end_to_end_tests_localdb:
-        working_directory: /tmp/repo
-        machine:
-            enabled: true
-            image: ubuntu-1604:201903-01
-        steps:
-            - attach_workspace:
-                  at: /tmp/
-            - run:
-                  # needed to get python3 on the path (https://discuss.circleci.com/t/pyenv-pyvenv-command-not-found/4087/2)
-                  name: Add python3 to path [corrects bug in circle ci image and may be removed in the future]
-                  command: pyenv local 3.5.2 && virtualenv venv
-            - run:
-                  name: Setup python libraries
-                  command: |
-                      pip3 install requests pyyaml
-            - run:
-                  name: Setup e2e-environment
-                  command: |
-                      source $PORTAL_SOURCE_DIR/env/custom.sh || true && \
-                      cd $TEST_HOME/local/runtime-config && \
-                      ./setup_environment.sh && ./setup_environment.sh >> $BASH_ENV
-            - run:
-                  name: Generate checksum of data that populates the test database
-                  command: |
-                      $TEST_HOME/local/runtime-config/db_content_fingerprint.sh > /tmp/db_data_md5key
-            - restore_cache:
-                  keys:
-                      - v4-e2e-database-files-{{ checksum "/tmp/db_data_md5key" }}
-            - run:
-                  name: Create MySQL data directory when no cache found
-                  command: |
-                      mkdir -p $DB_DATA_DIR
-            - run:
-                  name: Setup docker images and containers
-                  command: |
-                      docker network create $DOCKER_NETWORK_NAME && \
-                      cd $TEST_HOME/local/docker && \
-                      if (ls $DB_DATA_DIR/* 2> /dev/null > /dev/null); then \
-                        ./setup_docker_containers.sh -p -e; \
-                      else \
-                        ./setup_docker_containers.sh -p -e -d; \
-                      fi
-            - run:
-                  name: Change owner of MySQL database files (needed by cache)
-                  command: |
-                      sudo chmod -R 777 $DB_DATA_DIR && \
-                      sudo chown -R circleci:circleci $DB_DATA_DIR
-            - save_cache:
-                  paths:
-                      - /tmp/mysql
-                  key: v4-e2e-database-files-{{ checksum "/tmp/db_data_md5key" }}
-            - run:
-                  name: Run end-2-end tests with studies in local database
-                  command: |
-                      cd $PORTAL_SOURCE_DIR && $TEST_HOME/local/runtime-config/run_container_screenshot_test.sh
-            - run:
-                  name: 'Make sure all screenshots are tracked (otherwise the test will always be successful)'
-                  command: 'for f in $TEST_HOME/local/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
-            - store_artifacts:
-                  path: /tmp/repo/end-to-end-test/local/screenshots
-                  destination: /screenshots
-            - store_artifacts:
-                  path: /tmp/repo/end-to-end-test/shared/image-compare
-                  destination: /image-compare
-            - store_artifacts:
-                  path: /tmp/repo/end-to-end-test/local/errorShots
-                  destination: /errorShots
-            - store_test_results:
-                  path: /tmp/repo/end-to-end-test/local/junit
-            - store_artifacts:
-                  path: /tmp/repo/end-to-end-test/local/junit
-            - store_artifacts:
-                  path: /tmp/repo/end-to-end-test/shared/imageCompare.html
-                  destination: /imageCompare.html
-        environment:
-            PORTAL_SOURCE_DIR: /tmp/repo
-            TEST_HOME: /tmp/repo/end-to-end-test
-            FRONTEND_TEST_USE_LOCAL_DIST: true
+  unit_tests:
+    <<: *defaults
+    steps:
+      - run:
+          name: "Install yarn at specific version"
+          command:
+            sudo npm install --global yarn@1.21.1
+      - attach_workspace:
+          at: /tmp/
+      # run tests!
+      - run:
+          command: "yarn run test"
+          environment:
+            JUNIT_REPORT_PATH: ./junit/
+            JUNIT_REPORT_NAME: test-results.xml
+            DISABLE_SOURCEMAP: true
             NO_PARALLEL: true
+          when: always
+      - store_test_results:
+          path: /tmp/repo/junit
+      - store_artifacts:
+          path: /tmp/repo/junit
+
+  check_forgotten_spec_only_statements:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: /tmp/
+      # check that no `.only` statements are still in the tests
+      # Ignore doTest.only in oql parser
+      - run: "! grep '\\.only' $(find ./src ./end-to-end-test -type f -name '*spec*' | grep -v node_modules) | grep -v 'doTest.only = function' | grep -v expectedParsedResult"
+
+  end_to_end_tests:
+    <<: *defaults
+    environment:
+      SPEC_FILE_PATTERN: ./remote/specs/core/**/*.spec.js
+    <<: *run_e2e_and_save_artifacts
+
+  end_to_end_tests_localdb:
+    working_directory: /tmp/repo
+    machine:
+      enabled: true
+      image: ubuntu-1604:201903-01
+    steps:
+      - attach_workspace:
+          at: /tmp/
+      - run:
+          # needed to get python3 on the path (https://discuss.circleci.com/t/pyenv-pyvenv-command-not-found/4087/2)
+          name: Add python3 to path [corrects bug in circle ci image and may be removed in the future]
+          command: pyenv local 3.5.2 && virtualenv venv
+      - run:
+          name: Setup python libraries
+          command: |
+              pip3 install requests pyyaml
+      - run:
+          name: Setup e2e-environment
+          command: |
+              source $PORTAL_SOURCE_DIR/env/custom.sh || true && \
+              cd $TEST_HOME/local/runtime-config && \
+              ./setup_environment.sh && ./setup_environment.sh >> $BASH_ENV
+      - run:
+          name: Generate checksum of data that populates the test database
+          command: |
+              $TEST_HOME/local/runtime-config/db_content_fingerprint.sh > /tmp/db_data_md5key
+      - restore_cache:
+          keys:
+          - v4-e2e-database-files-{{ checksum "/tmp/db_data_md5key" }}
+      - run:
+          name: Create MySQL data directory when no cache found
+          command: |
+              mkdir -p $DB_DATA_DIR
+      - run:
+          name: Setup docker images and containers
+          command: |
+              docker network create $DOCKER_NETWORK_NAME && \
+              cd $TEST_HOME/local/docker && \
+              if (ls $DB_DATA_DIR/* 2> /dev/null > /dev/null); then \
+                ./setup_docker_containers.sh -p -e; \
+              else \
+                ./setup_docker_containers.sh -p -e -d; \
+              fi
+      - run:
+          name: Change owner of MySQL database files (needed by cache)
+          command: |
+              sudo chmod -R 777 $DB_DATA_DIR && \
+              sudo chown -R circleci:circleci $DB_DATA_DIR
+      - save_cache:
+          paths:
+            - /tmp/mysql
+          key: v4-e2e-database-files-{{ checksum "/tmp/db_data_md5key" }}
+      - run:
+          name: Run end-2-end tests with studies in local database
+          command: |
+              cd $PORTAL_SOURCE_DIR && $TEST_HOME/local/runtime-config/run_container_screenshot_test.sh
+      - run:
+          name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
+          command: 'for f in $TEST_HOME/local/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
+      -  store_artifacts:
+          path: /tmp/repo/end-to-end-test/local/screenshots
+          destination: /screenshots
+      -  store_artifacts:
+          path: /tmp/repo/end-to-end-test/shared/image-compare
+          destination: /image-compare
+      -  store_artifacts:
+          path: /tmp/repo/end-to-end-test/local/errorShots
+          destination: /errorShots
+      - store_test_results:
+          path: /tmp/repo/end-to-end-test/local/junit
+      - store_artifacts:
+          path: /tmp/repo/end-to-end-test/local/junit
+      - store_artifacts:
+          path: /tmp/repo/end-to-end-test/shared/imageCompare.html
+          destination: /imageCompare.html
+    environment:
+        PORTAL_SOURCE_DIR: /tmp/repo
+        TEST_HOME: /tmp/repo/end-to-end-test
+        FRONTEND_TEST_USE_LOCAL_DIST: true
+        NO_PARALLEL: true
+
+  prettier:
+    <<: *defaults
+    steps:
+    - attach_workspace:
+        at: /tmp/
+    - run:
+        name: 'Check code style with Prettier'
+        command: 'yarn run prettierCheck'
 
 workflows:
     version: 2
@@ -254,43 +256,44 @@ workflows:
         jobs:
             - install
             - prettier:
-                  requires:
-                      - install
+                requires:
+                    - install
             - unit_tests:
-                  requires:
-                      - install
+                requires:
+                    - install
             - end_to_end_tests:
-                  requires:
-                      - install
+                requires:
+                    - install
             - end_to_end_tests_localdb:
-                  requires:
-                      - install
+                requires:
+                    - install
             - api_sync:
                   requires:
-                      - install
+                    - install
             - check_forgotten_spec_only_statements:
                   requires:
-                      - install
+                    - install
     nightly:
-        triggers:
-            - schedule:
-                  cron: '0 22 * * *'
-                  filters:
-                      branches:
-                          only:
-                              - master
-                              - rc
-        jobs:
-            - install
-            - api_sync:
-                  requires:
-                      - install
-            - unit_tests:
-                  requires:
-                      - install
-            - end_to_end_tests:
-                  requires:
-                      - install
-            - end_to_end_tests_localdb:
-                  requires:
-                      - install
+       triggers:
+           - schedule:
+               cron: "0 22 * * *"
+               filters:
+                   branches:
+                       only:
+                           - master
+                           - rc
+       jobs:
+           - install
+           - api_sync:
+               requires:
+                   - install
+           - unit_tests:
+               requires:
+                   - install
+           - end_to_end_tests:
+               requires:
+                   - install
+           - end_to_end_tests_localdb:
+               requires:
+                   - install
+
