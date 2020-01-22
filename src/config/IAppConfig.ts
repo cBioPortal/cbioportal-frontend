@@ -117,4 +117,5 @@ export interface IServerConfig {
     dat_uuid_revoke_other_tokens: boolean;
     dat_method: string;
     skin_show_gsva:boolean;
+    oncoKbTokenDefined: boolean;
 }

@@ -13,6 +13,7 @@ import {AppStore} from "../../../AppStore";
 
 import "./mutations.scss";
 import AlterationFilterWarning from "../../../shared/components/banners/AlterationFilterWarning";
+import {getOncoKbApiUrl} from "shared/api/urls";
 
 export interface IMutationsPageProps {
     routing?: any;
@@ -73,7 +74,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
             </div>
         );
     }
-    
+
     protected generateTabs(genes: string[])
     {
         const tabs: JSX.Element[] = [];
@@ -110,6 +111,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                         </div>
                         <ResultsViewMutationMapper
                             {...convertToMutationMapperProps(AppConfig.serverConfig)}
+                            oncoKbPublicApiUrl={getOncoKbApiUrl()}
                             store={mutationMapperStore}
                             trackVisibility={this.userSelectionStore.trackVisibility}
                             discreteCNACache={this.props.store.discreteCNACache}
@@ -130,7 +132,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
 
         return tabs;
     }
-    
+
     protected handleTabChange(id: string) {
         // update the hash if routing exits
         if (this.props.routing) {
