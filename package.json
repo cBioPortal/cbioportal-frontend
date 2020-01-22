@@ -50,9 +50,9 @@
         "testModules": "lerna run test --ignore=cbioportal-frontend --stream",
         "test:watch": "yarn run test -- --watch",
         "test:debug": "yarn run test -- --debug --browsers=Chrome_with_debugging --single-run=false",
-        "prettierLastCommit": "yarn run prettier --write $(git diff-tree --no-commit-id --name-only -r $(git rev-parse HEAD))",
         "prettierCurrentChanges": "yarn run prettier --write $(git diff HEAD --name-only)",
-        "prettierCheck": "yarn run prettier -c $(git diff $(echo $BRANCH_ENV) --name-only)",
+        "prettierCheck": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && yarn run prettier -c $(git diff $(echo $BRANCH_ENV) --name-only)",
+        "prettierFix": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && yarn run prettier --write $(git diff $(echo $BRANCH_ENV) --name-only)",
         "syncmock": "node src/test/fetchMockData.js --diff"
     },
     "engines": {
