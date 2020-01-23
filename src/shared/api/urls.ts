@@ -155,19 +155,19 @@ export function getProxyUrlIfNecessary(url:any) {
 
 export function getOncoKbApiUrl() {
 
-    if (AppConfig.serverConfig.oncoKbTokenDefined) {
-        return buildCBioPortalAPIUrl(`proxy/oncokb`);
-    }
+    // if (AppConfig.serverConfig.oncoKbTokenDefined) {
+    //     return buildCBioPortalAPIUrl(`proxy/oncokb`);
+    // }
     // TODO workaround for temporary backward compatibility
     //  remove this after documenting OncoKB token for all portal instances
-    else {
+    //else {
         let url = AppConfig.serverConfig.oncokb_public_api_url;
         if (typeof url === 'string') {
             return buildCBioPortalAPIUrl(`proxy/${trimProtocol(url)}`);
         } else {
             return undefined;
         }
-    }
+    //}
 }
 
 export function getGenomeNexusApiUrl() {
