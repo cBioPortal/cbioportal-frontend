@@ -3,6 +3,7 @@
   YARN_VERSION = "1.21.1"
   YARN_FLAGS = "--frozen-lockfile"
   BABEL_CACHE_FOLDER = "/opt/build/cache/"
+  CACHE_ROOT_FOLDER = "/opt/build/cache"
   BUILD_REPORT_ERRORS_ONLY = "true"
   TYPESCRIPT_TRANSPILEONLY = "true"
 
