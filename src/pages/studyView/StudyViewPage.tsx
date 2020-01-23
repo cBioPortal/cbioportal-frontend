@@ -390,11 +390,10 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                     }
                                                     destroyTooltipOnHide={true}
                                                     overlay={() => (
-                                                        <div style={{ width: "300px" }}>
+                                                        <div style={{ width: "350px" }}>
                                                             <CustomCaseSelection
                                                                 allSamples={this.store.samples.result}
                                                                 selectedSamples={this.store.selectedSamples.result}
-                                                                submitButtonText={"Select"}
                                                                 disableGrouping={true}
                                                                 queriedStudies={
                                                                     this.store.queriedPhysicalStudyIds.result
