@@ -1,6 +1,6 @@
 cat yarn.lock webpack.config.js vendor-bundles.webpack.config.js > has_vender_build_changed
 
-vendorKey=$(md5sum -q has_vender_build_changed)
+vendorKey=$(md5sum has_vender_build_changed | cut -d ' ' -f 1)
 
 CACHE_ROOT=$CACHE_ROOT_FOLDER
 
