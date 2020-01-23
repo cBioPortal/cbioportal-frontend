@@ -368,6 +368,10 @@ div.SelectedStudiesWindow {
         margin-bottom: 8px;
     }
 
+    :global(.oqlValidationContainer) {
+        min-height:27px;
+    }
+
     .buttonRow {
         margin-bottom: 8px;
         justify-content: space-between;

@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import $ from 'jquery';
 import URL from 'url';
 import { inject, observer } from 'mobx-react';
-import { computed, observable, reaction, runInAction } from 'mobx';
+import {action, computed, observable, reaction, runInAction} from 'mobx';
 import { ResultsViewPageStore } from './ResultsViewPageStore';
 import CancerSummaryContainer from 'pages/resultsView/cancerSummary/CancerSummaryContainer';
 import Mutations from './mutation/Mutations';
@@ -47,6 +47,7 @@ import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicato
 import onMobxPromise from "shared/lib/onMobxPromise";
 import {createQueryStore} from "shared/lib/createQueryStore";
 import {handleLegacySubmission, handlePostedSubmission} from "shared/lib/redirectHelpers";
+import OQLTextArea, {GeneBoxType} from "shared/components/GeneSelectionBox/OQLTextArea";
 
 function initStore(appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
     const resultsViewPageStore = new ResultsViewPageStore(
@@ -93,6 +94,8 @@ export default class ResultsViewPage extends React.Component<
     private resultsViewPageStore: ResultsViewPageStore;
 
     private urlWrapper: ResultsViewURLWrapper;
+
+    @observable showOQLEditor = false;
 
     @observable showTabs = true;
 
@@ -476,6 +479,29 @@ export default class ResultsViewPage extends React.Component<
         return isRoutedTo || (!isExcludedInList && !isExcluded);
     }
 
+    @computed get quickOQLSubmitButtion(){
+        return ( <>
+            <button className={"btn btn-primary btn-sm"} style={{marginLeft:10}} onClick={this.handleQuickOQLSubmission}>Go</button>
+            &nbsp;
+            <button className={'btn btn-link btn-sm'} onClick={this.toggleOQLEditor}>Cancel</button>
+        </>)
+    }
+
+    @autobind
+    @action
+    handleQuickOQLSubmission(){
+        this.showOQLEditor = false;
+        this.urlWrapper.updateURL({
+                                      gene_list:this.oqlSubmission
+                                  });
+    }
+
+    @autobind
+    @action
+    toggleOQLEditor(){
+        this.showOQLEditor = !this.showOQLEditor;
+    }
+
     @autobind
     private getTabHref(tabId: string) {
         return URL.format({
@@ -484,6 +510,8 @@ export default class ResultsViewPage extends React.Component<
             hash: this.props.routing.location.hash,
         });
     }
+
+    @observable oqlSubmission = "";
 
     @computed get pageContent() {
         if (this.resultsViewPageStore.invalidStudyIds.result.length > 0) {
@@ -543,10 +571,32 @@ export default class ResultsViewPage extends React.Component<
                                     <QuerySummary
                                         routingStore={this.props.routing}
                                         store={this.resultsViewPageStore}
-                                        onToggleQueryFormVisiblity={visible => {
-                                            this.showTabs = visible;
+                                        onToggleQueryFormVisibility={visible => {
+                                            runInAction(()=>{
+                                                this.showTabs = visible;
+                                                this.showOQLEditor = false;
+                                            });
                                         }}
+                                        onToggleOQLEditUIVisibility={this.toggleOQLEditor}
                                     />
+
+                                    {
+                                        (this.showOQLEditor) && (
+                                            <div className={'quick_oql_edit'}>
+                                                <OQLTextArea
+                                                    inputGeneQuery={this.resultsViewPageStore.oqlText}
+                                                    validateInputGeneQuery={true}
+                                                    callback={(...args)=>{
+                                                        this.oqlSubmission = args[2];
+                                                    }}
+                                                    location={GeneBoxType.DEFAULT}
+                                                    submitButton={this.quickOQLSubmitButtion}
+                                                />
+
+                                            </div>
+                                        )
+                                    }
+
                                 </div>
 
                                 {// we don't show the result tabs if we don't have valid query
