@@ -37,7 +37,7 @@
   },
   "engines": {
     "node": "8.12.0",
-    "yarn": "1.13.0"
+    "yarn": "1.21.1"
   },
   "author": "",
   "license": "",
@@ -103,6 +103,7 @@
     "bootstrap-sass": "3.3.7",
     "bowser": "^1.7.1",
     "bundle-loader": "^0.5.4",
+    "cbioportal-frontend-commons": "0.1.2",
     "chart.js": "^2.6.0",
     "classnames": "^2.2.5",
     "clinical-timeline": "0.0.18",
@@ -167,7 +168,7 @@
     "pushstate-server": "3.0.1",
     "qtip2": "^3.0.3",
     "raw-loader": "^0.5.1",
-    "rc-animate": "^2.4.1",
+    "rc-animate": "2.4.1",
     "rc-slider": "^8.3.5",
     "rc-tooltip": "3.7.3",
     "rc-trigger": "2.2.2",
@@ -193,7 +194,7 @@
     "react-markdown": "^3.4.1",
     "react-mfb": "^0.6.0",
     "react-motion": "^0.4.7",
-    "react-mutation-mapper": "^0.3.1",
+    "react-mutation-mapper": "0.3.1",
     "react-overlays": "0.7.4",
     "react-portal": "^4.2.0",
     "react-rangeslider": "^2.1.0",
@@ -210,7 +211,7 @@
     "react-tooltip": "^3.2.2",
     "react-transition-group": "^2.5.1",
     "react-twitter-widgets": "^1.7.1",
-    "react-virtualized": "^9.20.1",
+    "react-virtualized": "9.20.1",
     "react-zeroclipboard": "^3.2.2",
     "reactable": "^0.14.1",
     "reactour": "^1.15.0",

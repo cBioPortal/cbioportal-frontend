@@ -17,7 +17,7 @@ import {
 } from "react-mutation-mapper";
 
 import 'react-mutation-mapper/dist/styles.css';
-import 'cbioportal-frontend-commons/styles.css';
+import 'cbioportal-frontend-commons/dist/styles.css';
 import 'react-table/react-table.css';
 
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
