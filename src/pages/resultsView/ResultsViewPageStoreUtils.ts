@@ -15,12 +15,14 @@ import {
 import oql_parser from '../../shared/lib/oql/oql-parser';
 import {groupBy} from "../../shared/lib/StoreUtils";
 import {
+    AlterationTypeConstants,
     AnnotatedExtendedAlteration,
     AnnotatedNumericGeneMolecularData,
     AnnotatedMutation,
     CaseAggregatedData,
     IQueriedCaseData,
-    IQueriedMergedTrackCaseData, ResultsViewPageStore, AlterationTypeConstants
+    IQueriedMergedTrackCaseData,
+    ResultsViewPageStore
 } from "./ResultsViewPageStore";
 import {IndicatorQueryResp, remoteData} from "cbioportal-frontend-commons";
 import _ from "lodash";
@@ -34,7 +36,6 @@ import { AlteredStatus } from "./mutualExclusivity/MutualExclusivityUtil";
 import {Group} from "../../shared/api/ComparisonGroupClient";
 import {isNotGermlineMutation} from "../../shared/lib/MutationUtils";
 import { StructuralVariantFilterExt } from '../../shared/model/Fusion';
-import { AlterationTypeConstants } from './ResultsViewPageStore';
 
 type CustomDriverAnnotationReport = {
     hasBinary: boolean,

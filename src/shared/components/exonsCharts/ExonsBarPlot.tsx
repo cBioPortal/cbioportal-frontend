@@ -23,7 +23,7 @@
 
 import React from 'react';
 import ExonsBarPlotStore from './ExonsBarPlotStore';
-import DefaultTooltip from '../../../public-lib/components/defaultTooltip/DefaultTooltip';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { PfamDomainRangeExt } from '../../model/Fusion';
 import { ExonRangeExt } from '../../model/Fusion';
 import  "./ExonBarPlot.scss";

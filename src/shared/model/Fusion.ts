@@ -21,7 +21,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-import { EnsemblTranscript, Exon, PfamDomainRange } from '../../public-lib/api/generated/GenomeNexusAPI';
+import { EnsemblTranscript, Exon, PfamDomainRange} from 'cbioportal-frontend-commons';
 import { SampleMolecularIdentifier, StructuralVariant } from '../api/generated/CBioPortalAPI';
 
 export type ExonRangeExt = Exon & {

@@ -27,9 +27,8 @@ import {
 } from '../../../shared/api/generated/CBioPortalAPI';
 import { cached, labelMobxPromises, MobxPromise } from "mobxpromise";
 import { computed } from 'mobx';
-import {remoteData} from "public-lib/api/remoteData";
+import {remoteData, PfamDomain, PfamDomainRange, EnsemblTranscript} from "cbioportal-frontend-commons";
 import { fetchEnsemblTranscriptsByEnsemblFilter, fetchPfamDomainData } from '../../../shared/lib/StoreUtils';
-import { PfamDomain, PfamDomainRange, EnsemblTranscript } from '../../../public-lib/api/generated/GenomeNexusAPI';
 import * as _ from 'lodash';
 import { EnsemblTranscriptExt, StructuralVariantExt } from '../../../shared/model/Fusion';
 import ResultViewFusionMapperDataStore from './ResultViewFusionMapperDataStore';

@@ -27,7 +27,7 @@ import { Gene, StructuralVariant } from '../../api/generated/CBioPortalAPI';
 import { EnsemblTranscriptExt, StructuralVariantExt } from '../../model/Fusion';
 import { PfamDomainRangeExt } from '../../model/Fusion';
 import MobxPromise from 'mobxpromise/dist/src/MobxPromise';
-import { PfamDomain } from '../../../public-lib/api/generated/GenomeNexusAPI';
+import { PfamDomain } from 'cbioportal-frontend-commons';
 import ResultViewFusionMapperDataStore from '../../../pages/resultsView/fusion/ResultViewFusionMapperDataStore';
 
 const fusionList = [

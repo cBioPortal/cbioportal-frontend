@@ -22,7 +22,7 @@
  **/
 
 import { Gene } from '../../api/generated/CBioPortalAPI';
-import { PfamDomain } from '../../../public-lib/api/generated/GenomeNexusAPI';
+import { remoteData, PfamDomain } from 'cbioportal-frontend-commons';
 import {
     EnsemblTranscriptExt,
     ExonRangeExt,
@@ -32,7 +32,6 @@ import {
 } from '../../model/Fusion';
 import ResultViewFusionMapperDataStore from '../../../pages/resultsView/fusion/ResultViewFusionMapperDataStore';
 import MobxPromise from 'mobxpromise';
-import { remoteData } from '../../../public-lib';
 import * as _ from 'lodash';
 
 export class ExonsChartStore {

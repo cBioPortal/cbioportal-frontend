@@ -2631,13 +2631,15 @@ describe("getParamsForStructuralVariants", ()=>{
         datatype: 'DISCRETE',
         showProfileInAnalysisTab: true,
         pivotThreshold: 0,
-        sortOrder: ''
+        sortOrder: '',
+        genericAssayType: ''
     }];
     let samples: Sample[] = [
         {
             "uniqueSampleKey": "QjA4NTpjaG9sX251c18yMDEy",
             "uniquePatientKey": "QjA4NTpjaG9sX251c18yMDEy",
             "sampleType": "Primary Solid Tumor",
+            "profiledForFusions": true,
             "sequenced": true,
             "copyNumberSegmentPresent": false,
             "sampleId": "B085",
@@ -2648,6 +2650,7 @@ describe("getParamsForStructuralVariants", ()=>{
             "uniqueSampleKey": "QjA5OTpjaG9sX251c18yMDEy",
             "uniquePatientKey": "QjA5OTpjaG9sX251c18yMDEy",
             "sampleType": "Primary Solid Tumor",
+            "profiledForFusions": true,
             "sequenced": true,
             "copyNumberSegmentPresent": false,
             "sampleId": "B099",
@@ -2658,6 +2661,7 @@ describe("getParamsForStructuralVariants", ()=>{
             "uniqueSampleKey": "UjEwNDpjaG9sX251c18yMDEy",
             "uniquePatientKey": "UjEwNDpjaG9sX251c18yMDEy",
             "sampleType": "Primary Solid Tumor",
+            "profiledForFusions": true,
             "sequenced": true,
             "copyNumberSegmentPresent": false,
             "sampleId": "R104",
