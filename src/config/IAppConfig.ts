@@ -37,6 +37,7 @@ export interface IServerConfig {
     oncoprint_oncokb_default: boolean;
     oncoprint_hotspots_default: boolean;
     genomenexus_url: string | null;
+    genomenexus_website_url: string | null;
     mygene_info_url: string | null;
     g2s_url: string | null;
     google_analytics_profile_id: string | null;
