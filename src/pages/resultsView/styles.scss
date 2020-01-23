@@ -125,3 +125,14 @@
     width: 100%;
     max-width: 555px;
 }
+
+.quick_oql_edit {
+    display:flex;
+    margin-top:10px;
+    align-items: flex-start;
+
+    .oqlValidationContainer {
+        min-height:27px;
+    }
+
+}
