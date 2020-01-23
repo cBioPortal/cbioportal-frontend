@@ -38,6 +38,8 @@ superagentCache(superagent);
 handleLongUrls();
 
 
+console.log("moo");
+
 // YOU MUST RUN THESE initialize and then set the public path after
 
 initializeConfiguration();
