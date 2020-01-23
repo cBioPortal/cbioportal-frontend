@@ -175,6 +175,10 @@ export function getGenomeNexusApiUrl() {
     return getProxyUrlIfNecessary(url);
 }
 
+export function buildGenomeNexusHgvsgUrl(hgvsg: string) {
+    return `${AppConfig.serverConfig.genomenexus_website_url}/variant/${hgvsg}`;
+}
+
 export function getSessionUrl() {
     if (AppConfig.serverConfig && AppConfig.serverConfig.hasOwnProperty("apiRoot")) {
         // TODO: remove this after switch to AWS. This is a hack to use proxy
