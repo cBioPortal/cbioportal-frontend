@@ -36,10 +36,6 @@ superagentCache(superagent);
 // this must occur before we initialize tracking
 // it fixes the hash portion of url when cohort patient list is too long
 handleLongUrls();
-
-
-console.log("moo");
-
 // YOU MUST RUN THESE initialize and then set the public path after
 
 initializeConfiguration();
