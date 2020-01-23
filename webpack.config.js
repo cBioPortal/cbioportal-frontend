@@ -180,7 +180,7 @@ var config = {
                     {
                         loader: "ts-loader",
                         options:{
-                            transpileOnly: (isDev || isTest)
+                            transpileOnly: (isDev || isTest || (process.env.NETLIFY && process.env.CONTEXT !== "production"))
                         }
                     }
                 ],
