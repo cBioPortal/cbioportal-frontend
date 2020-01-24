@@ -8,6 +8,7 @@
 *min.css
 *sh
 *yml
+*json
 
 ./src/shared/api/generated/**
 ./packages/**/dist/**
