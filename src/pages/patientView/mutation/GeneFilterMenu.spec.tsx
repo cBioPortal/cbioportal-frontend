@@ -3,7 +3,6 @@ import { shallow } from "enzyme";
 import { assert } from 'chai';
 import GeneFilterMenu, { GeneFilterOption } from './GeneFilterMenu';
 import sinon from 'sinon';
-import { debug } from 'util';
 
 describe("GeneFilterOptions", ()=>{
 

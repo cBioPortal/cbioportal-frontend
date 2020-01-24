@@ -15,14 +15,12 @@
         "paths": {
             "*": [
                 "src/*",
-                "node_modules/@types/*"
             ]
         },
         "lib":["es2015", "es2016.array.include", "dom"]
     },
     "exclude": ["./node_modules/*"],
     "include": [
-        "./node_modules/@types/**/*",
         "./typings/**/*",
         "./src/**/*"
     ],

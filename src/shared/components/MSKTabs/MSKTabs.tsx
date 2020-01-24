@@ -199,6 +199,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
 
             let children = (this.props.children as React.ReactElement<IMSKTabProps>[]);
 
+            // @ts-ignore
             const toArrayedChildren:ReactChild[] = React.Children.toArray(children);
 
             const targetTabId = (()=>{
