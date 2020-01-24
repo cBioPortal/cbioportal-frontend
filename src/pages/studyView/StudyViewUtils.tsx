@@ -16,6 +16,7 @@ import {
     PatientIdentifier,
     Sample,
     ClinicalData,
+    ClinicalDataMultiStudyFilter,
 } from 'shared/api/generated/CBioPortalAPI';
 import * as React from 'react';
 import { buildCBioPortalPageUrl } from '../../shared/api/urls';
@@ -2416,4 +2417,104 @@ export function getFilteredAndCompressedDataIntervalFilters(
             ? numericals[numericals.length - 1].end
             : undefined;
     return { start, end } as any;
+}
+
+export async function getClinicalDataBySamples(samples: Sample[]) {
+    let clinicalData: {
+        [sampleId: string]: { [attributeId: string]: string };
+    } = {};
+
+    let sampleClinicalData = await defaultClient.fetchClinicalDataUsingPOST({
+        clinicalDataType: 'SAMPLE',
+        clinicalDataMultiStudyFilter: {
+            identifiers: _.map(samples, sample => {
+                return {
+                    entityId: sample.sampleId,
+                    studyId: sample.studyId,
+                };
+            }),
+        } as ClinicalDataMultiStudyFilter,
+    });
+
+    _.forEach(sampleClinicalData, item => {
+        clinicalData[item.uniqueSampleKey] = {
+            ...(clinicalData[item.uniqueSampleKey] || {}),
+            [item.clinicalAttributeId]: item.value,
+        };
+    });
+
+    let patientClinicalData = await defaultClient.fetchClinicalDataUsingPOST({
+        clinicalDataType: ClinicalDataTypeEnum.PATIENT,
+        clinicalDataMultiStudyFilter: {
+            identifiers: _.map(samples, sample => {
+                return {
+                    entityId: sample.patientId,
+                    studyId: sample.studyId,
+                };
+            }),
+        } as ClinicalDataMultiStudyFilter,
+    });
+
+    const patientSamplesMap = _.groupBy(
+        samples,
+        sample => sample.uniquePatientKey
+    );
+
+    _.forEach(patientClinicalData, item => {
+        (patientSamplesMap[item.uniquePatientKey] || []).forEach(sample => {
+            clinicalData[sample.uniqueSampleKey] = {
+                ...(clinicalData[sample.uniqueSampleKey] || {}),
+                [item.clinicalAttributeId]: item.value,
+            };
+        });
+    });
+    return clinicalData;
+}
+
+export function updateSavedUserPreferenceChartIds(
+    chartSettings: ChartUserSetting[]
+): ChartUserSetting[] {
+    const customChartRegex = /^CUSTOM_FILTERS_\d+/i;
+    const chartIdWithDataTypeRegex = /^(?:PATIENT_|SAMPLE_)([a-zA-Z0-9_]+)/i;
+    let numberOfClinicalAttributeCharts = 0;
+    let numberOfChartRequiringUpdates = 0;
+    const specialChartKeySet = _.reduce(
+        UniqueKey,
+        (acc, next) => {
+            acc[next] = true;
+            return acc;
+        },
+        {} as { [id: string]: boolean }
+    );
+
+    chartSettings.forEach(chartSetting => {
+        let customChartmatch = chartSetting.id.match(customChartRegex);
+        if (
+            !customChartmatch &&
+            specialChartKeySet[chartSetting.id] === undefined
+        ) {
+            numberOfClinicalAttributeCharts++;
+            let match = chartSetting.id.match(chartIdWithDataTypeRegex);
+            if (!!match) {
+                numberOfChartRequiringUpdates++;
+            }
+        }
+    });
+
+    // Some of the clinical attributes id contains SAMPLE_ or PATIENT_ prefix. Updating them would not show those charts.
+    // Only way is to check if the chart ids requires update is to see if the
+    // number of clinical attribute charts shown is same as the number of chart ids requiring updates
+    if (numberOfClinicalAttributeCharts === numberOfChartRequiringUpdates) {
+        return chartSettings.map(chartSetting => {
+            let match = chartSetting.id.match(chartIdWithDataTypeRegex);
+            if (!!match) {
+                return {
+                    ...chartSetting,
+                    id: match[1],
+                };
+            }
+            return chartSetting;
+        });
+    }
+    return chartSettings;
 }

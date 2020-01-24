@@ -54,6 +54,7 @@ import {
     getBinName,
     getGroupedClinicalDataByBins,
     getFilteredAndCompressedDataIntervalFilters,
+    updateSavedUserPreferenceChartIds,
 } from 'pages/studyView/StudyViewUtils';
 import {
     DataBin,
@@ -82,6 +83,7 @@ import {
 } from 'shared/lib/Colors';
 import { IStudyViewDensityScatterPlotDatum } from './charts/scatterPlot/StudyViewDensityScatterPlot';
 import { shallow } from 'enzyme';
+import { ChartUserSetting } from './StudyViewPageStore';
 
 describe('StudyViewUtils', () => {
     const emptyStudyViewFilter: StudyViewFilter = {
@@ -3325,6 +3327,64 @@ describe('StudyViewUtils', () => {
                         },
                     ],
                 } as any
+            );
+        });
+    });
+
+    describe('updateChartIds', () => {
+        const chartSetting1: ChartUserSetting = {
+            id: 'SAMPLE_CANCER_TYPE',
+            chartType: 'PIE_CHART',
+            layout: {
+                x: 0,
+                y: 0,
+                w: 1,
+                h: 1,
+            },
+            patientAttribute: false,
+        };
+        const chartSetting2: ChartUserSetting = {
+            id: 'SAMPLE_SAMPLE_TYPE',
+            chartType: 'PIE_CHART',
+            layout: {
+                x: 0,
+                y: 0,
+                w: 1,
+                h: 1,
+            },
+            patientAttribute: false,
+        };
+
+        it('should return correct chart settings', () => {
+            assert.deepEqual(
+                updateSavedUserPreferenceChartIds([chartSetting1]),
+                [{ ...chartSetting1, id: 'CANCER_TYPE' }]
+            );
+            assert.deepEqual(
+                updateSavedUserPreferenceChartIds([
+                    { ...chartSetting1, id: 'CANCER_TYPE' },
+                ]),
+                [{ ...chartSetting1, id: 'CANCER_TYPE' }]
+            );
+            assert.deepEqual(
+                updateSavedUserPreferenceChartIds([
+                    chartSetting1,
+                    chartSetting2,
+                ]),
+                [
+                    { ...chartSetting1, id: 'CANCER_TYPE' },
+                    { ...chartSetting2, id: 'SAMPLE_TYPE' },
+                ]
+            );
+            assert.deepEqual(
+                updateSavedUserPreferenceChartIds([
+                    { ...chartSetting1, id: 'CANCER_TYPE' },
+                    { ...chartSetting2, id: 'SAMPLE_TYPE' },
+                ]),
+                [
+                    { ...chartSetting1, id: 'CANCER_TYPE' },
+                    { ...chartSetting2, id: 'SAMPLE_TYPE' },
+                ]
             );
         });
     });
