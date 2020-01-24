@@ -43,7 +43,7 @@ import GenesetMolecularDataCache from "../../../shared/cache/GenesetMolecularDat
 import { GenesetMolecularData } from "../../../shared/api/generated/CBioPortalAPIInternal";
 import {MUTATION_COUNT} from "../../studyView/StudyViewPageStore";
 import ClinicalDataCache from "../../../shared/cache/ClinicalDataCache";
-import TreatmentMolecularDataCache, { TreatmentMolecularDataEnhanced } from "../../../shared/cache/TreatmentMolecularDataCache";
+import GenericAssayMolecularDataCache, { GenericAssayDataEnhanced } from "../../../shared/cache/GenericAssayMolecularDataCache";
 import { getJitterForCase, dataPointIsLimited } from "../../../shared/components/plots/PlotUtils";
 import { isSampleProfiled } from "../../../shared/lib/isSampleProfiled";
 
@@ -905,32 +905,22 @@ function makeAxisDataPromise_Geneset(
 }
 
 function makeAxisDataPromise_Treatment(
-    treatmentId: string,
-    molecularProfileId: string,
-    treatmentMolecularDataCachePromise: MobxPromise<
-        TreatmentMolecularDataCache
-    >,
-    molecularProfileIdToMolecularProfile: MobxPromise<{
-        [molecularProfileId: string]: MolecularProfile;
-    }>
-): MobxPromise<IAxisData> {
+    entityId:string,
+    molecularProfileId:string,
+    genericAssayMolecularDataCachePromise:MobxPromise<GenericAssayMolecularDataCache>,
+    molecularProfileIdToMolecularProfile:MobxPromise<{[molecularProfileId:string]:MolecularProfile}>
+):MobxPromise<IAxisData> {
+
     return remoteData({
-        await: () => [
-            treatmentMolecularDataCachePromise,
-            molecularProfileIdToMolecularProfile,
-        ],
+        await:()=>[genericAssayMolecularDataCachePromise, molecularProfileIdToMolecularProfile],
         invoke: async () => {
             const profile = molecularProfileIdToMolecularProfile.result![
                 molecularProfileId
             ];
             const makeRequest = true;
-            await treatmentMolecularDataCachePromise.result!.getPromise(
-                { treatmentId, molecularProfileId },
-                makeRequest
-            );
-            const data: TreatmentMolecularDataEnhanced[] = treatmentMolecularDataCachePromise.result!.get(
-                { molecularProfileId, treatmentId }
-            )!.data!;
+            await genericAssayMolecularDataCachePromise.result!.getPromise(
+                 {stableId: entityId, molecularProfileId}, makeRequest);
+            const data:GenericAssayDataEnhanced[] = genericAssayMolecularDataCachePromise.result!.get({molecularProfileId, stableId: entityId})!.data!;
             return Promise.resolve({
                 data: data.map(d => {
                     return {
@@ -939,8 +929,8 @@ function makeAxisDataPromise_Treatment(
                         thresholdType: d.thresholdType,
                     };
                 }),
-                datatype: 'number',
-                treatmentId: treatmentId,
+                datatype: "number",
+                treatmentId: entityId
             });
         },
     });
@@ -968,11 +958,10 @@ export function makeAxisDataPromise(
     coverageInformation: MobxPromise<CoverageInformation>,
     samples: MobxPromise<Sample[]>,
     genesetMolecularDataCachePromise: MobxPromise<GenesetMolecularDataCache>,
-    treatmentMolecularDataCachePromise: MobxPromise<TreatmentMolecularDataCache>
-): MobxPromise<IAxisData> {
-    let ret: MobxPromise<IAxisData> = remoteData(
-        () => new Promise<IAxisData>(() => 0)
-    );
+    genericAssayMolecularDataCachePromise: MobxPromise<GenericAssayMolecularDataCache>
+):MobxPromise<IAxisData> {
+
+    let ret:MobxPromise<IAxisData> = remoteData(()=>new Promise<IAxisData>(()=>0));
 
     if (
         selection.dataType &&
@@ -983,11 +972,8 @@ export function makeAxisDataPromise(
             selection.dataSourceId !== undefined
         ) {
             ret = makeAxisDataPromise_Treatment(
-                selection.treatmentId,
-                selection.dataSourceId,
-                treatmentMolecularDataCachePromise,
-                molecularProfileIdToMolecularProfile
-            );
+                selection.treatmentId, selection.dataSourceId, genericAssayMolecularDataCachePromise,
+                molecularProfileIdToMolecularProfile);
             return ret;
         }
     }

@@ -58,27 +58,19 @@ import OncoprintJS, {
 import fileDownload from 'react-file-download';
 import tabularDownload from './tabularDownload';
 import classNames from 'classnames';
-import {
-    clinicalAttributeIsLocallyComputed,
-    SpecialAttribute,
-} from '../../cache/ClinicalDataCache';
-import OqlStatusBanner from '../banners/OqlStatusBanner';
-import {
-    getAnnotatingProgressMessage,
-    treatmentsToSelectOptions,
-} from './ResultsViewOncoprintUtils';
-import ProgressIndicator, {
-    IProgressIndicatorItem,
-} from '../progressIndicator/ProgressIndicator';
-import autobind from 'autobind-decorator';
-import { parseOQLQuery } from '../../lib/oql/oqlfilter';
-import AlterationFilterWarning from '../banners/AlterationFilterWarning';
-import { selectDisplayValue } from './DataUtils';
-import WindowStore from '../window/WindowStore';
-import { OncoprintAnalysisCaseType } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
-import { MakeMobxView } from '../MobxView';
-import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
-import { getMobxPromiseGroupStatus } from '../../lib/getMobxPromiseGroupStatus';
+import {clinicalAttributeIsLocallyComputed, SpecialAttribute} from "../../cache/ClinicalDataCache";
+import OqlStatusBanner from "../banners/OqlStatusBanner";
+import {getAnnotatingProgressMessage, genericAssayEntitiesToSelectOptionsGroupByGenericAssayType} from "./ResultsViewOncoprintUtils";
+import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/ProgressIndicator";
+import autobind from "autobind-decorator";
+import {parseOQLQuery} from "../../lib/oql/oqlfilter";
+import AlterationFilterWarning from "../banners/AlterationFilterWarning";
+import { selectDisplayValue } from "./DataUtils";
+import WindowStore from "../window/WindowStore";
+import {OncoprintAnalysisCaseType} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
+import {MakeMobxView} from "../MobxView";
+import ResultsViewURLWrapper from "pages/resultsView/ResultsViewURLWrapper";
+import {getMobxPromiseGroupStatus} from "../../lib/getMobxPromiseGroupStatus";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -173,8 +165,8 @@ export default class ResultsViewOncoprint extends React.Component<
         );
     }
 
-    @computed get selectedTreatmentsFromUrl() {
-        return this.props.store.treatmentList;
+    @computed get parsedGenericAssayGroupsFromUrl(){
+        return this.props.store.parsedGenericAssayGroups;
     }
 
     @observable distinguishGermlineMutations: boolean = true;
@@ -250,11 +242,10 @@ export default class ResultsViewOncoprint extends React.Component<
     }
 
     public expansionsByGeneticTrackKey = observable.map<number[]>();
-    public expansionsByGenesetHeatmapTrackKey = observable.map<
-        IGenesetExpansionRecord[]
-    >();
+    public expansionsByGenesetHeatmapTrackKey =
+        observable.map<IGenesetExpansionRecord[]>();
 
-    @computed get molecularProfileIdToHeatmapTracks() {
+    @computed get molecularProfileIdToHeatmapTracks(){
         // empty if no heatmap tracks param
         const groups = this.urlWrapper.query.heatmap_track_groups
             ? this.urlWrapper.query.heatmap_track_groups
@@ -317,7 +308,6 @@ export default class ResultsViewOncoprint extends React.Component<
                 map[molecularProfileId] = trackGroup;
             }
         });
-
         return map;
     }
 
@@ -470,8 +460,8 @@ export default class ResultsViewOncoprint extends React.Component<
             get heatmapProfilesPromise() {
                 return self.props.store.heatmapMolecularProfiles;
             },
-            get treatmentsPromise() {
-                return self.props.store.treatmentsInStudies;
+            get genericAssayEntitiesGroupByGenericAssayTypePromise() {
+                return self.props.store.genericAssayEntitiesGroupByGenericAssayType;
             },
             get selectedHeatmapProfile() {
                 return self.selectedHeatmapProfile;
@@ -479,7 +469,10 @@ export default class ResultsViewOncoprint extends React.Component<
             get selectedHeatmapProfileAlterationType() {
                 return self.selectedHeatmapProfileAlterationType;
             },
-            get heatmapIsDynamicallyQueried() {
+            get selectedHeatmapProfileGenericAssayType() {
+                return self.selectedHeatmapProfileGenericAssayType;
+            },
+            get heatmapIsDynamicallyQueried () {
                 return self.heatmapIsDynamicallyQueried;
             },
             get ngchmButtonActive() {
@@ -548,10 +541,7 @@ export default class ResultsViewOncoprint extends React.Component<
                 } else {
                     return self.horzZoom;
                 }
-            },
-            get selectedTreatmentsInit() {
-                return self.selectedTreatmentsFromUrl;
-            },
+            }
         });
     }
 
@@ -760,11 +750,8 @@ export default class ResultsViewOncoprint extends React.Component<
                 ).map(q => q.gene);
                 this.addHeatmapTracks(this.selectedHeatmapProfile, genes);
             },
-            onClickAddTreatmentsToHeatmap: (treatmentIds: string[]) => {
-                this.addHeatmapTracks(
-                    this.selectedHeatmapProfile,
-                    treatmentIds
-                );
+            onClickAddGenericAssaysToHeatmap:(entityIds:string[])=>{
+                this.addHeatmapTracks(this.selectedHeatmapProfile, entityIds);
             },
             onClickNGCHM: () => {
                 window.open(this.props.store.remoteNgchmUrl.result, '_blank');
@@ -925,12 +912,11 @@ export default class ResultsViewOncoprint extends React.Component<
         invoke: async () => getUnalteredUids(this.geneticTracks.result!),
     });
 
-    readonly treatmentSelectOptions = remoteData<ISelectOption[]>({
-        await: () => [this.props.store.treatmentsInStudies],
-        invoke: async () =>
-            treatmentsToSelectOptions(
-                this.props.store.treatmentsInStudies.result || []
-            ),
+    readonly genericAssayEntitiesSelectOptionsGroupByGenericAssayType = remoteData<{ [genericAssayType: string]: ISelectOption[] }>({
+        await:() => [this.props.store.genericAssayEntitiesGroupByGenericAssayType],
+        invoke:async() => {
+            return Promise.resolve(genericAssayEntitiesToSelectOptionsGroupByGenericAssayType(this.props.store.genericAssayEntitiesGroupByGenericAssayType.result || {}));
+        }
     });
 
     @computed get selectedHeatmapProfileAlterationType(): string {
@@ -941,15 +927,14 @@ export default class ResultsViewOncoprint extends React.Component<
         return molecularProfile.molecularAlterationType;
     }
 
-    public addHeatmapTracks(molecularProfileId: string, entities: string[]) {
-        const tracksMap = _.cloneDeep(
-            this.molecularProfileIdToHeatmapTracks
-        ) as {
-            [molecularProfileId: string]: Pick<
-                HeatmapTrackGroupRecord,
-                'entities' | 'molecularProfileId' | 'molecularAlterationType'
-            >;
-        };
+    @computed get selectedHeatmapProfileGenericAssayType():string {
+        let molecularProfile = this.props.store.molecularProfileIdToMolecularProfile.result[this.selectedHeatmapProfile];
+        return molecularProfile.genericAssayType;
+    }
+
+    public addHeatmapTracks(molecularProfileId:string, entities:string[]) {
+
+        const tracksMap = _.cloneDeep(this.molecularProfileIdToHeatmapTracks) as {[molecularProfileId:string]:Pick<HeatmapTrackGroupRecord, "entities"|"molecularProfileId"|"molecularAlterationType">};
 
         const entitiesMap = _.chain(entities)
             .keyBy(entity => entity)
@@ -1473,25 +1458,16 @@ export default class ResultsViewOncoprint extends React.Component<
 
     @autobind
     private getControls() {
-        if (
-            this.oncoprint &&
-            !this.oncoprint.webgl_unavailable &&
-            (this.treatmentSelectOptions.isComplete ||
-                this.treatmentSelectOptions.isError)
-        ) {
-            return (
-                <FadeInteraction showByDefault={true} show={true}>
-                    <OncoprintControls
-                        handlers={this.controlsHandlers}
-                        state={this.controlsState}
-                        store={this.props.store}
-                        treatmentSelectOptions={
-                            this.treatmentSelectOptions.result
-                        }
-                        selectedTreatmentIds={this.selectedTreatmentsFromUrl}
-                    />
-                </FadeInteraction>
-            );
+        if (this.oncoprint && !this.oncoprint.webgl_unavailable && (this.genericAssayEntitiesSelectOptionsGroupByGenericAssayType.isComplete || this.genericAssayEntitiesSelectOptionsGroupByGenericAssayType.isError))  {
+            return (<FadeInteraction showByDefault={true} show={true}>
+                <OncoprintControls
+                    handlers={this.controlsHandlers}
+                    state={this.controlsState}
+                    store={this.props.store}
+                    genericAssayEntitiesSelectOptionsGroupByGenericAssayType={this.genericAssayEntitiesSelectOptionsGroupByGenericAssayType.result}
+                    parsedGenericAssayGroupsFromUrl={this.parsedGenericAssayGroupsFromUrl}
+                />
+            </FadeInteraction>);
         } else {
             return <span />;
         }

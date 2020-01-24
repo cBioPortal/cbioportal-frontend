@@ -1,18 +1,52 @@
 .oncoprint__controls {
     display: flex;
 
-    .rangeslider {
-        margin: 0;
-        .rangeslider__labels {
-            display: none;
-        }
-        .rangeslider__handle {
-            height: 10px;
-            width: 10px;
-            &:after {
-                display: none;
-            }
-        }
+  display:flex;
+  
+  .rangeslider {
+    margin:0;
+    .rangeslider__labels {
+      display:none;
+    }
+    .rangeslider__handle {
+      height:10px;
+      width:10px;
+      &:after {
+        display:none;
+      }
+    }
+  }
+  
+  .checkbox, .radio {
+    &:first-child {
+      margin-top:0px;
+    }
+  }
+  .dropdown-menu {
+    width:270px;
+    padding:12px !important;
+    > *, button {
+      margin-bottom:10px;
+      width:100%;
+    }
+    > :last-child {
+      margin-bottom:0 !important;
+    }
+    &.heatmap {
+      width:450px;
+    }
+  }
+  
+  .oncoprint__controls__heatmap_menu {
+    textarea {
+      width:100%;
+      min-height:50px;
+      border:1px solid $borderColor;
+      resize: vertical;
+      
+      &.generic-assay-textarea {
+        border-radius: 2px;
+      }
     }
 
     .checkbox,
@@ -37,12 +71,53 @@
         }
     }
 
-    .oncoprint__controls__heatmap_menu {
-        textarea {
-            width: 100%;
-            min-height: 50px;
-            border: 1px solid $borderColor;
-            resize: vertical;
+    .generic-assay-selector {
+      
+      button {
+        width: auto;
+        margin: 0;
+        padding: 5px 10px;
+        vertical-align: middle;
+      }
+      
+    }
+        
+    .text-icon-area {
+      width:100%;
+      min-height:50px;
+      overflow: hidden;
+      margin-bottom: 5px;
+
+      $iconMargin: 2px;
+      $iconPadding: 1px;
+
+      .icon-area {
+        min-height:0px;
+        overflow: hidden;
+        padding: 1px;
+        padding-bottom: 2px;
+
+        .icon {
+          padding: $iconPadding;
+          padding-left: $iconPadding+6;
+          padding-right: $iconPadding+6;
+          margin: $iconMargin;
+          margin-bottom: $iconMargin+1;
+          background: $brand-primary;
+          color: white;
+          border-radius: 4px;
+          float: left;
+        }
+
+      }
+      
+      .text-area {
+        width:100%;
+        min-height: 50px;
+        resize: vertical;
+        overflow: hidden;
+        border:1px solid $borderColor;
+      }
 
             &.treatment-textarea {
                 border-radius: 2px;
