@@ -10,7 +10,7 @@
   },
   "description": "",
   "pre-commit": [
-    "prettierCurrentChanges"
+    "prettierFixCurrentChanges"
   ],
   "scripts": {
     "start": "lerna run watch --parallel",
@@ -50,7 +50,7 @@
     "testModules": "lerna run test --ignore=cbioportal-frontend --stream",
     "test:watch": "yarn run test -- --watch",
     "test:debug": "yarn run test -- --debug --browsers=Chrome_with_debugging --single-run=false",
-    "prettierCurrentChanges": "yarn run prettier --write $(git diff HEAD --name-only)",
+    "prettierFixCurrentChanges": "yarn run prettier --write $(git diff HEAD --name-only)",
     "prettierCheckCircleCI": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && yarn run prettier -c $(git diff origin/$(echo $BRANCH_ENV) --name-only)",
     "prettierFixLocal": "yarn run prettier --write $(git diff $(echo $BRANCH_ENV) --name-only)",
     "syncmock": "node src/test/fetchMockData.js --diff"
