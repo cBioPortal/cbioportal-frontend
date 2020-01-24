@@ -51,7 +51,7 @@
     "test:watch": "yarn run test -- --watch",
     "test:debug": "yarn run test -- --debug --browsers=Chrome_with_debugging --single-run=false",
     "prettierCurrentChanges": "yarn run prettier --write $(git diff HEAD --name-only)",
-    "prettierCheckCircleCI": "yarn run prettier -c $(git diff origin/master --name-only)",
+    "prettierCheckCircleCI": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && yarn run prettier -c $(git diff origin/$(echo $BRANCH_ENV) --name-only)",
     "prettierFixLocal": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && yarn run prettier --write $(git diff $(echo $BRANCH_ENV) --name-only)",
     "syncmock": "node src/test/fetchMockData.js --diff"
   },
