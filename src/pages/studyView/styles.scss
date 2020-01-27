@@ -106,3 +106,16 @@ iframe.mdacc-heatmap-iframe {
     height: calc(100vh - 200px);
     min-height: 700px;
 }
+
+.resourcesTab {
+    .resourcesSection {
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px dashed #ddd;
+        margin-bottom: 30px;
+
+        &:last-child {
+            margin-bottom: 0px;
+        }
+    }
+}

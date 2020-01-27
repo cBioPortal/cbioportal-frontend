@@ -19,11 +19,11 @@ import {
     ClinicalDataCountItem,
     ClinicalDataFilter,
     DensityPlotBin,
+    GeneFilter,
     Sample,
     SampleIdentifier,
     StudyViewFilter,
     DataFilterValue,
-    GeneFilter,
     GenomicDataCount,
     ClinicalDataBin,
     GenomicDataBinFilter,
@@ -42,6 +42,8 @@ import {
     MolecularProfile,
     MolecularProfileFilter,
     Patient,
+    ResourceData,
+    ResourceDefinition,
 } from 'cbioportal-ts-api-client';
 import { fetchCopyNumberSegmentsForSamples } from 'shared/lib/StoreUtils';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
@@ -50,54 +52,53 @@ import {
     AnalysisGroup,
     calculateLayout,
     ChartMeta,
+    ChartMetaDataTypeEnum,
+    ChartMetaWithDimensionAndChartType,
     ChartType,
     clinicalAttributeComparator,
     ChartDataCountSet,
     ClinicalDataCountSummary,
     ClinicalDataTypeEnum,
     Datalabel,
+    DataType,
     generateScatterPlotDownloadData,
+    GenomicDataCountWithSampleUniqueKeys,
     getChartMetaDataType,
-    getUniqueKey,
-    getClinicalDataCountWithColorByCategoryCounts,
+    getChartSettingsMap,
+    getClinicalDataBySamples,
     getClinicalDataCountWithColorByClinicalDataCount,
     getDataIntervalFilterValues,
     getClinicalEqualityFilterValuesByString,
     getCNAByAlteration,
+    getCNASamplesCount,
     getDefaultPriorityByUniqueKey,
+    getFilteredAndCompressedDataIntervalFilters,
     getFilteredSampleIdentifiers,
     getFilteredStudiesWithSamples,
     getFrequencyStr,
+    getGroupsFromBins,
+    getGroupsFromQuartiles,
+    getMolecularProfileIdsFromUniqueKey,
+    getMolecularProfileOptions,
+    getMolecularProfileSamplesSet,
     getPriorityByClinicalAttribute,
     getQValue,
     getRequestedAwaitPromisesForClinicalData,
     getSamplesByExcludingFiltersOnChart,
+    getUniqueKey,
+    getUniqueKeyFromMolecularProfileIds,
     isFiltered,
     isLogScaleByDataBins,
     MutationCountVsCnaYBinsMin,
+    NumericalGroupComparisonType,
+    RectangleBounds,
     shouldShowChart,
     showOriginStudiesInSummaryDescription,
     SPECIAL_CHARTS,
+    SpecialChartsUniqueKeyEnum,
     StudyWithSamples,
     submitToPage,
-    ChartMetaWithDimensionAndChartType,
-    SpecialChartsUniqueKeyEnum,
-    getChartSettingsMap,
-    getGroupsFromBins,
-    NumericalGroupComparisonType,
-    getGroupsFromQuartiles,
-    DataType,
-    RectangleBounds,
-    getFilteredAndCompressedDataIntervalFilters,
-    getUniqueKeyFromMolecularProfileIds,
-    getMolecularProfileIdsFromUniqueKey,
-    getClinicalDataBySamples,
     updateSavedUserPreferenceChartIds,
-    ChartMetaDataTypeEnum,
-    getMolecularProfileOptions,
-    getMolecularProfileSamplesSet,
-    GenomicDataCountWithSampleUniqueKeys,
-    getCNASamplesCount,
     getGenomicDataAsClinicalData,
     convertGenomicDataBinsToClinicalDataBins,
     getGenomicChartUniqueKey,
@@ -133,8 +134,8 @@ import {
     finalizeStudiesAttr,
     getSampleIdentifiers,
     MAX_GROUPS_IN_SESSION,
-    StudyViewComparisonGroup,
     splitData,
+    StudyViewComparisonGroup,
 } from '../groupComparison/GroupComparisonUtils';
 import { LoadingPhase } from '../groupComparison/GroupComparisonLoading';
 import { sleepUntil } from '../../shared/lib/TimeUtils';
@@ -142,9 +143,9 @@ import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyM
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import {
     DataType as DownloadDataType,
+    pluralize,
     remoteData,
     stringListToSet,
-    pluralize,
 } from 'cbioportal-frontend-commons';
 import { CancerGene } from 'oncokb-ts-api-client';
 
@@ -152,8 +153,8 @@ import { AppStore } from 'AppStore';
 import { getGeneCNAOQL } from 'pages/studyView/TableUtils';
 import { MultiSelectionTableRow } from './table/MultiSelectionTable';
 import {
-    getSelectedGroups,
     getGroupParameters,
+    getSelectedGroups,
 } from '../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
 import { IStudyViewScatterPlotData } from './charts/scatterPlot/StudyViewScatterPlotUtils';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
@@ -162,12 +163,14 @@ import {
     DataTypeConstants,
 } from 'pages/resultsView/ResultsViewPageStore';
 import {
-    survivalClinicalDataVocabulary,
     generateStudyViewSurvivalPlotTitle,
     getSurvivalAttributes,
     plotsPriority,
+    survivalClinicalDataVocabulary,
 } from 'pages/resultsView/survival/SurvivalUtil';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
+import StudyViewURLWrapper from './StudyViewURLWrapper';
+import client from '../../shared/api/cbioportalClientInstance';
 
 export type ChartUserSetting = {
     id: string;
@@ -223,6 +226,7 @@ export type StudyViewURLQuery = {
     tab?: StudyViewPageTabKeyEnum;
     id?: string;
     studyId?: string;
+    resourceUrl?: string; // for open resource tabs
     cancer_study_id?: string;
     filters?: string;
     filterAttributeId?: string;
@@ -281,7 +285,8 @@ export class StudyViewPageStore {
 
     constructor(
         private appStore: AppStore,
-        private sessionServiceIsEnabled: boolean
+        private sessionServiceIsEnabled: boolean,
+        private urlWrapper: StudyViewURLWrapper
     ) {
         this.reactionDisposers.push(
             reaction(
@@ -395,6 +400,17 @@ export class StudyViewPageStore {
         for (const disposer of this.reactionDisposers) {
             disposer();
         }
+    }
+
+    private _isResourceTabOpen = observable.map<boolean>();
+    @autobind
+    public isResourceTabOpen(resourceId: string) {
+        return !!this._isResourceTabOpen.get(resourceId);
+    }
+    @autobind
+    @action
+    public setResourceTabOpen(resourceId: string, open: boolean) {
+        this._isResourceTabOpen.set(resourceId, open);
     }
 
     @observable.ref
@@ -902,12 +918,8 @@ export class StudyViewPageStore {
         [uniqueKey: string]: ClinicalDataBin[];
     } = {};
 
-    @observable currentTab: StudyViewPageTabKey;
-
-    @action
-    updateCurrentTab(newTabId: StudyViewPageTabKey | undefined) {
-        this.currentTab =
-            newTabId === undefined ? StudyViewPageTabKeyEnum.SUMMARY : newTabId;
+    @computed get currentTab() {
+        return this.urlWrapper.tabId;
     }
 
     @observable pageStatusMessages: { [code: string]: StatusMessage } = {};
@@ -2853,6 +2865,76 @@ export class StudyViewPageStore {
             disableLogScale: false,
         } as ClinicalDataBinFilter;
     }
+
+    readonly studies = remoteData<CancerStudy[]>({
+        invoke: () => {
+            if (this.studyIds.length > 0) {
+                return defaultClient.fetchStudiesUsingPOST({
+                    studyIds: toJS(this.studyIds),
+                });
+            } else {
+                return Promise.resolve([]);
+            }
+        },
+    });
+
+    readonly resourceDefinitions = remoteData({
+        invoke: () => {
+            const promises = [];
+            const ret: ResourceDefinition[] = [];
+            for (const studyId of this.studyIds) {
+                promises.push(
+                    client
+                        .getAllResourceDefinitionsInStudyUsingGET({ studyId })
+                        .then(data => {
+                            ret.push(...data);
+                        })
+                );
+            }
+            return Promise.all(promises).then(() => ret);
+        },
+        onResult: defs => {
+            if (defs) {
+                for (const def of defs)
+                    if (def.openByDefault)
+                        this.setResourceTabOpen(def.resourceId, true);
+            }
+        },
+    });
+
+    readonly studyResourceData = remoteData<ResourceData[]>({
+        await: () => [this.resourceDefinitions],
+        invoke: () => {
+            const ret: ResourceData[] = [];
+            const studyResourceDefinitions = this.resourceDefinitions.result!.filter(
+                d => d.resourceType === 'STUDY'
+            );
+            const promises = [];
+            for (const resource of studyResourceDefinitions) {
+                promises.push(
+                    client
+                        .getAllStudyResourceDataInStudyUsingGET({
+                            studyId: resource.studyId,
+                            resourceId: resource.resourceId,
+                            projection: 'DETAILED',
+                        })
+                        .then(data => ret.push(...data))
+                );
+            }
+            return Promise.all(promises).then(() => ret);
+        },
+    });
+
+    readonly resourceIdToResourceData = remoteData<{
+        [resourceId: string]: ResourceData[];
+    }>({
+        await: () => [this.studyResourceData],
+        invoke: () => {
+            return Promise.resolve(
+                _.groupBy(this.studyResourceData.result!, d => d.resourceId)
+            );
+        },
+    });
 
     readonly clinicalAttributes = remoteData({
         await: () => [this.queriedPhysicalStudyIds],

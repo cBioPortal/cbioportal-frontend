@@ -9,7 +9,7 @@ import {
 import { computed, observable } from 'mobx';
 import _ from 'lodash';
 import CBIOPORTAL_VICTORY_THEME from 'shared/theme/cBioPoralTheme';
-import { DataFilterValue, ClinicalDataBin } from 'cbioportal-ts-api-client';
+import {ClinicalDataBin, DataFilterValue} from 'cbioportal-ts-api-client';
 import { AbstractChart } from 'pages/studyView/charts/ChartContainer';
 import autobind from 'autobind-decorator';
 import BarChartAxisLabel from './BarChartAxisLabel';
