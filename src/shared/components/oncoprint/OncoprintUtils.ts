@@ -12,8 +12,8 @@ import {
     IGenesetHeatmapTrackDatum,
     IGenesetHeatmapTrackSpec,
     IHeatmapTrackSpec,
-    ITreatmentHeatmapTrackDatum,
-} from './Oncoprint';
+    IGenericAssayHeatmapTrackDatum
+} from "./Oncoprint";
 import {
     genetic_rule_set_different_colors_no_recurrence,
     genetic_rule_set_different_colors_recurrence,
@@ -316,12 +316,8 @@ export function getTreatmentTrackRuleSetParams(
     }
 
     let counter = 0;
-    const categories = _(dataPoints as ITreatmentHeatmapTrackDatum[])
-        .filter((d: ITreatmentHeatmapTrackDatum) => !!d.category)
-        .map(d => d.category)
-        .uniq()
-        .value();
-    categories.forEach((d: string) => {
+    const categories = _(dataPoints as IGenericAssayHeatmapTrackDatum[]).filter((d:IGenericAssayHeatmapTrackDatum) => !!d.category).map((d)=>d.category).uniq().value();
+    categories.forEach( (d:string) => {
         if (category_to_color === undefined) {
             category_to_color = {};
         }
@@ -1034,20 +1030,11 @@ export function makeTreatmentProfileHeatmapTracksMobxPromise(
                     key: `TREATMENTHEATMAPTRACK_${molecularProfileId},${entityId}`,
                     label: query.treatmentName,
                     molecularProfileId: query.molecularProfileId,
-                    molecularProfileName:
-                        molecularProfileIdToMolecularProfile[molecularProfileId]
-                            .name,
-                    molecularAlterationType:
-                        molecularProfileIdToMolecularProfile[molecularProfileId]
-                            .molecularAlterationType,
-                    datatype:
-                        molecularProfileIdToMolecularProfile[molecularProfileId]
-                            .datatype,
-                    data: makeHeatmapTrackData<
-                        ITreatmentHeatmapTrackDatum,
-                        'treatment_id'
-                    >(
-                        'treatment_id',
+                    molecularProfileName: molecularProfileIdToMolecularProfile[molecularProfileId].name,
+                    molecularAlterationType: molecularProfileIdToMolecularProfile[molecularProfileId].molecularAlterationType,
+                    datatype: molecularProfileIdToMolecularProfile[molecularProfileId].datatype,
+                    data: makeHeatmapTrackData<IGenericAssayHeatmapTrackDatum, 'entityId'>(
+                        'entityId',
                         entityId,
                         sampleMode ? samples : patients,
                         dataCache.get(query)!.data!.map(d => ({
@@ -1266,29 +1253,26 @@ export function makeGenesetHeatmapTracksMobxPromise(
     });
 }
 
-export function extractTreatmentSelections(
-    text: string,
-    selectedTreatments: string[],
-    treatmentsMap: { [treatmentId: string]: ISelectOption }
-): string {
+export function extractGenericAssaySelections(text:string, selectedGenericAssayEntityIds:string[], genericAssayEntitiesOptionsByValueMap:{[entityId:string]:ISelectOption}):string {
+
     // get values from input string
     const elements = splitHeatmapTextField(text);
 
-    // check values for valid treatment ids
-    const detectedTreatments: string[] = [];
-    _.each(elements, (d: string) => {
-        if (d in treatmentsMap) {
-            detectedTreatments.push(d);
-            if (!selectedTreatments.includes(d)) {
-                selectedTreatments.push(d);
+    // check values for valid entity ids
+    const detectedGenericAssayEntityIds:string[] = [];
+    _.each(elements, (d:string)=> {
+        if (d in genericAssayEntitiesOptionsByValueMap) {
+            detectedGenericAssayEntityIds.push(d);
+            if (! selectedGenericAssayEntityIds.includes(d)) {
+                selectedGenericAssayEntityIds.push(d);
             }
         }
     });
 
-    // remove valid treatment ids from the input string
-    if (detectedTreatments.length > 0) {
-        _.each(detectedTreatments, (d: string) => {
-            text = text.replace(d, '');
+    // remove valid entity ids from the input string
+    if (detectedGenericAssayEntityIds.length > 0) {
+        _.each(detectedGenericAssayEntityIds, (d:string) => {
+            text = text.replace(d, "");
         });
     }
 

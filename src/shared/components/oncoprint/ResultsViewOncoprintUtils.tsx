@@ -3,11 +3,9 @@ import {ClinicalAttribute, MolecularProfile, Sample, GenericAssayMeta} from "../
 import {SpecialAttribute} from "../../cache/ClinicalDataCache";
 import _ from "lodash";
 import naturalSort from "javascript-natural-sort";
-import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
 import {Group} from "../../api/ComparisonGroupClient";
 import * as React from "react";
 import { ISelectOption } from "./controls/OncoprintControls";
-import { Treatment } from "shared/lib/GenericAssayUtils/TreatmentUtils";
 import { NOT_APPLICABLE_VALUE } from "shared/lib/GenericAssayUtils/GenericAssayCommonUtils";
 
 export const alterationTypeToProfiledForText:{[alterationType:string]:string} = {
@@ -226,7 +224,7 @@ export function makeProfiledInClinicalAttributes(
 }
 
 export function genericAssayEntitiesToSelectOptionsGroupByGenericAssayType(genericAssayEntitiesGroupByGenericAssayType: { [genericAssayType: string]: GenericAssayMeta[] }): { [genericAssayType: string]: ISelectOption[] } {
-    // Note: name and desc are optional fields for treatment entities
+    // Note: name and desc are optional fields for generic assay entities
     // When not provided in the data file, these fields are assigned the
     // value of the entity_stable_id. The code below hides fields when
     // indentical to the entity_stable_id.
@@ -253,7 +251,7 @@ export function genericAssayEntitiesToSelectOptionsGroupByGenericAssayType(gener
             // field and displays the label field. To allow searching in all words
             // that appear in the label field, the value field is made identical to
             // the label field. The id field is added to track the unique identifier
-            // of the treatment.
+            // of the generic assay.
             return {
                 id: d.stableId,
                 value: label,

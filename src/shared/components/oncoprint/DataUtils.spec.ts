@@ -11,12 +11,9 @@ import {
     GeneticTrackDatum,
     IGeneHeatmapTrackDatum,
     IGenesetHeatmapTrackDatum,
-    ITreatmentHeatmapTrackDatum,
-} from 'shared/components/oncoprint/Oncoprint';
-import {
-    AlterationTypeConstants,
-    AnnotatedExtendedAlteration,
-} from '../../../pages/resultsView/ResultsViewPageStore';
+    IGenericAssayHeatmapTrackDatum
+} from "shared/components/oncoprint/Oncoprint";
+import {AlterationTypeConstants, AnnotatedExtendedAlteration} from "../../../pages/resultsView/ResultsViewPageStore";
 import {
     ClinicalAttribute,
     GenePanelData,
@@ -1646,112 +1643,121 @@ describe('DataUtils', () => {
             });
         });
 
-        it('adds thresholdType and category to trackDatum', () => {
-            let data = [{ value: 8, thresholdType: '>' as '>' }];
-            const partialTrackDatum = {};
-            fillHeatmapTrackDatum<ITreatmentHeatmapTrackDatum, 'treatment_id'>(
-                partialTrackDatum,
-                'treatment_id',
-                'TREATMENT_ID_1',
-                { patientId: 'patient', studyId: 'study' } as Sample,
-                data
-            );
-            assert.deepEqual(partialTrackDatum, {
-                treatment_id: 'TREATMENT_ID_1',
-                study_id: 'study',
-                profile_data: 8,
-                thresholdType: '>',
-                category: '>8.00',
-            });
-        });
+       it('adds thresholdType and category to trackDatum', () => {
+           let data = [
+            {value:8, thresholdType: '>' as '>'},
+           ];
+           const partialTrackDatum = {};
+           fillHeatmapTrackDatum<IGenericAssayHeatmapTrackDatum, "entityId">(
+            partialTrackDatum,
+            "entityId",
+            "TREATMENT_ID_1",
+            {patientId:"patient", studyId:"study"} as Sample,
+            data
+           )
+           assert.deepEqual(
+            partialTrackDatum,
+            {entityId: "TREATMENT_ID_1", study_id:"study", profile_data:8, thresholdType: '>', category: '>8.00'}
+           );
+       });
 
-        it('returns smallest value with ASC sort order', () => {
-            let data = [{ value: 1 }, { value: 2 }, { value: 3 }];
-            const partialTrackDatum = {};
-            fillHeatmapTrackDatum<ITreatmentHeatmapTrackDatum, 'treatment_id'>(
-                partialTrackDatum,
-                'treatment_id',
-                'TREATMENT_ID_1',
-                { patientId: 'patient', studyId: 'study' } as Sample,
-                data,
-                'ASC'
-            );
-            assert.deepEqual(partialTrackDatum, {
-                treatment_id: 'TREATMENT_ID_1',
-                study_id: 'study',
-                profile_data: 1,
-            });
-        });
+       it('returns smallest value with ASC sort order', () => {
+           let data = [
+            {value:1},
+            {value:2},
+            {value:3}
+           ];
+           const partialTrackDatum = {};
+           fillHeatmapTrackDatum<IGenericAssayHeatmapTrackDatum, "entityId">(
+            partialTrackDatum,
+            "entityId",
+            "TREATMENT_ID_1",
+            {patientId:"patient", studyId:"study"} as Sample,
+            data,
+            "ASC"
+           )
+           assert.deepEqual(
+            partialTrackDatum,
+            {entityId: "TREATMENT_ID_1", study_id:"study", profile_data:1}
+           );
+       });
 
-        it('returns largest value with DESC sort order', () => {
-            let data = [{ value: 1 }, { value: 2 }, { value: 3 }];
-            const partialTrackDatum = {};
-            fillHeatmapTrackDatum<ITreatmentHeatmapTrackDatum, 'treatment_id'>(
-                partialTrackDatum,
-                'treatment_id',
-                'TREATMENT_ID_1',
-                { patientId: 'patient', studyId: 'study' } as Sample,
-                data,
-                'DESC'
-            );
-            assert.deepEqual(partialTrackDatum, {
-                treatment_id: 'TREATMENT_ID_1',
-                study_id: 'study',
-                profile_data: 3,
-            });
-        });
+       it('returns largest value with DESC sort order', () => {
+           let data = [
+            {value:1},
+            {value:2},
+            {value:3}
+           ];
+           const partialTrackDatum = {};
+           fillHeatmapTrackDatum<IGenericAssayHeatmapTrackDatum, "entityId">(
+            partialTrackDatum,
+            "entityId",
+            "TREATMENT_ID_1",
+            {patientId:"patient", studyId:"study"} as Sample,
+            data,
+            "DESC"
+           )
+           assert.deepEqual(
+            partialTrackDatum,
+            {entityId: "TREATMENT_ID_1", study_id:"study", profile_data:3}
+           );
+       });
 
-        it('selects non-threshold over threshold data point when values are equal', () => {
-            let data = [{ value: 1, thresholdType: '>' as '>' }, { value: 1 }];
-            const partialTrackDatum = {};
-            fillHeatmapTrackDatum<ITreatmentHeatmapTrackDatum, 'treatment_id'>(
-                partialTrackDatum,
-                'treatment_id',
-                'TREATMENT_ID_1',
-                { patientId: 'patient', studyId: 'study' } as Sample,
-                data
-            );
-            assert.deepEqual(partialTrackDatum, {
-                treatment_id: 'TREATMENT_ID_1',
-                study_id: 'study',
-                profile_data: 1,
-            });
-        });
+       it('selects non-threshold over threshold data point when values are equal', () => {
+        let data = [
+         {value:1, thresholdType: '>' as '>'},
+         {value:1}
+        ];
+        const partialTrackDatum = {};
+        fillHeatmapTrackDatum<IGenericAssayHeatmapTrackDatum, "entityId">(
+         partialTrackDatum,
+         "entityId",
+         "TREATMENT_ID_1",
+         {patientId:"patient", studyId:"study"} as Sample,
+         data
+        )
+        assert.deepEqual(
+         partialTrackDatum,
+         {entityId: "TREATMENT_ID_1", study_id:"study", profile_data:1}
+        );
+       });
 
-        it('handles all NaN-value data points', () => {
-            let data = [{ value: NaN }, { value: NaN }];
-            const partialTrackDatum = {} as ITreatmentHeatmapTrackDatum;
-            fillHeatmapTrackDatum<ITreatmentHeatmapTrackDatum, 'treatment_id'>(
-                partialTrackDatum,
-                'treatment_id',
-                'TREATMENT_ID_1',
-                { patientId: 'patient', studyId: 'study' } as Sample,
-                data,
-                'DESC'
-            );
-            assert.isTrue(partialTrackDatum.na);
-        });
+       it('handles all NaN-value data points', () => {
+           let data = [
+            {value:NaN},
+            {value:NaN}
+           ];
+           const partialTrackDatum = {} as IGenericAssayHeatmapTrackDatum;
+           fillHeatmapTrackDatum<IGenericAssayHeatmapTrackDatum, "entityId">(
+            partialTrackDatum,
+            "entityId",
+            "TREATMENT_ID_1",
+            {patientId:"patient", studyId:"study"} as Sample,
+            data,
+            "DESC"
+           );
+           assert.isTrue(partialTrackDatum.na);
+       });
 
-        it('Prefers largest non-threshold absolute value when no sort order provided', () => {
-            let data = [
-                { value: -10 },
-                { value: 10, thresholdType: '>' as '>' },
-            ];
-            const partialTrackDatum = {};
-            fillHeatmapTrackDatum<ITreatmentHeatmapTrackDatum, 'treatment_id'>(
-                partialTrackDatum,
-                'treatment_id',
-                'TREATMENT_ID_1',
-                { patientId: 'patient', studyId: 'study' } as Sample,
-                data
-            );
-            assert.deepEqual(partialTrackDatum, {
-                treatment_id: 'TREATMENT_ID_1',
-                study_id: 'study',
-                profile_data: -10,
-            });
-        });
-    });
+       it('Prefers largest non-threshold absolute value when no sort order provided', () => {
+           let data = [
+            {value:-10},
+            {value:10, thresholdType: '>' as '>'}
+           ];
+           const partialTrackDatum = {};
+           fillHeatmapTrackDatum<IGenericAssayHeatmapTrackDatum, "entityId">(
+            partialTrackDatum,
+            "entityId",
+            "TREATMENT_ID_1",
+            {patientId:"patient", studyId:"study"} as Sample,
+            data
+           )
+           assert.deepEqual(
+            partialTrackDatum,
+            {entityId: "TREATMENT_ID_1", study_id:"study", profile_data:-10}
+           );
+       });
+   });
 
     describe('fillClinicalTrackDatum', () => {
         it('creates datum correctly when no data given', () => {

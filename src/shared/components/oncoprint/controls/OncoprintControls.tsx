@@ -48,7 +48,7 @@ import OncoprintDropdownCount from 'pages/resultsView/oncoprint/OncoprintDropdow
 import TextIconArea, {
     ITextIconAreaItemProps,
 } from 'shared/components/textIconArea/TextIconArea';
-import { extractTreatmentSelections } from '../OncoprintUtils';
+import { extractGenericAssaySelections } from '../OncoprintUtils';
 
 export interface IOncoprintControlsHandlers {
     onSelectColumnType?: (type: 'sample' | 'patient') => void;
@@ -510,7 +510,7 @@ export default class OncoprintControls extends React.Component<
 
     @autobind
     private onChangeGenericAssayTextArea(text: string): string {
-        return extractTreatmentSelections(
+        return extractGenericAssaySelections(
             text,
             this._selectedGenericAssayEntityIds,
             this.genericAssayEntitiesOptionsByValueMap

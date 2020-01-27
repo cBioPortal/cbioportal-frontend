@@ -75,8 +75,8 @@ export interface IGeneHeatmapTrackDatum extends IBaseHeatmapTrackDatum {
 export interface IGenesetHeatmapTrackDatum extends IBaseHeatmapTrackDatum {
     geneset_id: string;
 }
-export interface ITreatmentHeatmapTrackDatum extends IBaseHeatmapTrackDatum {
-    treatment_id: string;
+export interface IGenericAssayHeatmapTrackDatum extends IBaseHeatmapTrackDatum {
+    entityId: string;
 }
 
 export type GeneticTrackDatum_Data = Pick<
@@ -148,8 +148,8 @@ export interface IBaseHeatmapTrackSpec {
     hasColumnSpacing?: boolean;
 }
 export interface IHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
-    data: IBaseHeatmapTrackDatum[]; // can be IGeneHeatmapTrackDatum or ITreatmentHeatmapTrackDatum
-    naLegendLabel?: string;
+    data: IBaseHeatmapTrackDatum[]; // can be IGeneHeatmapTrackDatum or IGenericAssayHeatmapTrackDatum
+    naLegendLabel?:string;
     info?: string;
     labelColor?: string;
     labelCircleColor?: string;

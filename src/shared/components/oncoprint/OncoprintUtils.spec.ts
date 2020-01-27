@@ -2,10 +2,10 @@ import {
     alterationInfoForCaseAggregatedDataByOQLLine,
     makeGeneticTrackWith,
     percentAltered,
-    extractTreatmentSelections,
-    getTreatmentTrackRuleSetParams,
-} from './OncoprintUtils';
-import { observable } from 'mobx';
+    extractGenericAssaySelections,
+    getTreatmentTrackRuleSetParams
+} from "./OncoprintUtils";
+import {observable} from "mobx";
 import * as _ from 'lodash';
 import { assert } from 'chai';
 import { IQueriedMergedTrackCaseData } from '../../../pages/resultsView/ResultsViewPageStore';
@@ -717,27 +717,20 @@ describe('getTreatmentTrackRuleSetParams', () => {
     });
 });
 
-describe('extractTreatmentSelections', () => {
-    const selectedTreatments: string[] = [];
+describe('extractGenericAssaySelections', () => {
+
+    const selectedTreatments:string[] = [];
     const treatmentMap = {
         treatmentA: { id: 'treatmentA', value: 'valueA', label: 'labelA' },
     };
 
     it('Adds recognized treatments to selection', () => {
-        extractTreatmentSelections(
-            'treatmentA treatmentB',
-            selectedTreatments,
-            treatmentMap
-        );
+        extractGenericAssaySelections("treatmentA treatmentB", selectedTreatments, treatmentMap);
         assert.deepEqual(selectedTreatments, ['treatmentA']);
     });
 
     it('Removed recognized treatments from text field', () => {
-        const text = extractTreatmentSelections(
-            'treatmentC treatmentA treatmentB',
-            selectedTreatments,
-            treatmentMap
-        );
+        const text = extractGenericAssaySelections('treatmentC treatmentA treatmentB', selectedTreatments, treatmentMap);
         assert.equal(text, 'treatmentC  treatmentB');
     });
 });

@@ -1,16 +1,9 @@
-import { assert } from 'chai';
-import {
-    GenePanelData,
-    MolecularProfile,
-} from '../../api/generated/CBioPortalAPI';
-import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewPageStore';
-import {
-    alterationTypeToProfiledForText,
-    makeProfiledInClinicalAttributes,
-    treatmentsToSelectOptions,
-} from './ResultsViewOncoprintUtils';
-import { SpecialAttribute } from '../../cache/ClinicalDataCache';
-import { Treatment } from 'shared/lib/GenericAssayUtils/TreatmentUtils';
+import {assert} from "chai";
+import {GenePanelData, MolecularProfile} from "../../api/generated/CBioPortalAPI";
+import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
+import {alterationTypeToProfiledForText, makeProfiledInClinicalAttributes, genericAssayEntitiesToSelectOptionsGroupByGenericAssayType} from "./ResultsViewOncoprintUtils";
+import {SpecialAttribute} from "../../cache/ClinicalDataCache";
+import { Treatment } from "shared/lib/GenericAssayUtils/TreatmentUtils";
 
 describe('ResultsViewOncoprintUtils', () => {
     describe('makeProfiledInClinicalAttributes', () => {
@@ -368,6 +361,7 @@ describe('ResultsViewOncoprintUtils', () => {
         });
     });
 
+    // TODO: should implement tests for the new genericAssayEntitiesToSelectOptionsGroupByGenericAssayType method
     describe('treatmentSelectOptions()', () => {
         it('Includes entity_stable_id and description when present and unique', () => {
             const treatments = [
