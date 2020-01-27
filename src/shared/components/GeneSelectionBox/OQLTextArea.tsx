@@ -12,7 +12,11 @@ import {
 } from 'mobx';
 import { Gene } from 'shared/api/generated/CBioPortalAPI';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
-import {GeneReplacement, Focus, normalizeQuery} from 'shared/components/query/QueryStore';
+import {
+    GeneReplacement,
+    Focus,
+    normalizeQuery,
+} from 'shared/components/query/QueryStore';
 import {
     getEmptyGeneValidationResult,
     getFocusOutText,
@@ -22,7 +26,7 @@ import GeneSymbolValidator, {
     GeneValidationResult,
 } from './GeneSymbolValidator';
 import autobind from 'autobind-decorator';
-import bind from "bind-decorator";
+import bind from 'bind-decorator';
 
 export interface IGeneSelectionBoxProps {
     focus?: Focus;
@@ -30,7 +34,7 @@ export interface IGeneSelectionBoxProps {
     validateInputGeneQuery?: boolean;
     location?: GeneBoxType;
     textBoxPrompt?: string;
-    submitButton?:JSX.Element;
+    submitButton?: JSX.Element;
     callback?: (
         oql: {
             query: SingleGeneQuery[];
@@ -236,17 +240,17 @@ export default class OQLTextArea extends React.Component<
             : 'Click gene symbols below or enter here';
     }
 
-    @bind onChange(event:any){
+    @bind onChange(event: any) {
         this.currentTextAreaValue = event.currentTarget.value;
         this.geneQuery = this.currentTextAreaValue;
         this.updateQueryToBeValidateDebounce();
     }
 
-    @bind onFocus(){
+    @bind onFocus() {
         this.isFocused = true;
     }
 
-    @bind onBlur(){
+    @bind onBlur() {
         this.isFocused = false;
     }
 
@@ -266,38 +270,36 @@ export default class OQLTextArea extends React.Component<
         return (
             <div className={styles.genesSelection}>
                 <div className={styles.topRow}>
-                <textarea
-                    ref={this.textAreaRef as any}
-                    onFocus={this.onFocus}
-                    onBlur={this.onBlur}
-                    className={classnames(this.textAreaClasses)}
-                    rows={5}
-                    cols={80}
-                    placeholder={this.promptText}
-                    title={this.promptText}
-                    defaultValue={this.getTextAreaValue()}
-                    onChange={this.onChange}
-                    data-test="geneSet"
-                />
+                    <textarea
+                        ref={this.textAreaRef as any}
+                        onFocus={this.onFocus}
+                        onBlur={this.onBlur}
+                        className={classnames(this.textAreaClasses)}
+                        rows={5}
+                        cols={80}
+                        placeholder={this.promptText}
+                        title={this.promptText}
+                        defaultValue={this.getTextAreaValue()}
+                        onChange={this.onChange}
+                        data-test="geneSet"
+                    />
 
-                {
-                    (this.props.submitButton) && this.props.submitButton
-                }
+                    {this.props.submitButton && this.props.submitButton}
                 </div>
                 <div className={'oqlValidationContainer'}>
-                <GeneSymbolValidator
-                    focus={this.props.focus}
-                    geneQuery={this.queryToBeValidated}
-                    skipGeneValidation={this.skipGenesValidation}
-                    updateGeneQuery={this.updateGeneQuery}
-                    afterValidation={this.afterGeneSymbolValidation}
-                    replaceGene={this.replaceGene}
-                    errorMessageOnly={
-                        this.props.location === GeneBoxType.STUDY_VIEW_PAGE
-                    }
-                >
-                    {this.props.children}
-                </GeneSymbolValidator>
+                    <GeneSymbolValidator
+                        focus={this.props.focus}
+                        geneQuery={this.queryToBeValidated}
+                        skipGeneValidation={this.skipGenesValidation}
+                        updateGeneQuery={this.updateGeneQuery}
+                        afterValidation={this.afterGeneSymbolValidation}
+                        replaceGene={this.replaceGene}
+                        errorMessageOnly={
+                            this.props.location === GeneBoxType.STUDY_VIEW_PAGE
+                        }
+                    >
+                        {this.props.children}
+                    </GeneSymbolValidator>
                 </div>
             </div>
         );

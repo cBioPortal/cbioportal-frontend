@@ -4,14 +4,13 @@
     position: relative;
     display: flex;
     height: 100%;
-    border-radius:$border-radius-base;
+    border-radius: $border-radius-base;
     background: white;
 
     &.highlight {
         border: 2px solid #e5e076;
     }
 }
-
 
 .chartHeightOne {
     height: 195px;
@@ -22,20 +21,19 @@
 }
 
 .chartWidthOne {
-    width:195px;
+    width: 195px;
 }
 
 .chartWidthTwo {
-    width:400px;
+    width: 400px;
 }
 
 .chartLoader {
-    position:absolute;
-    top:50%;
-    left:50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
     transform: translate(-50%, -50%);
     > div {
-        margin-left:0px !important;
+        margin-left: 0px !important;
     }
-
 }

@@ -57,13 +57,13 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
         return (
             <div className="studyViewSummaryHeader">
                 <div className={styles.rightPanel}>
-                    <div className={"small"}>
-                    <OQLTextArea
-                        inputGeneQuery={this.props.store.geneQueryStr}
-                        validateInputGeneQuery={false}
-                        callback={this.updateSelectedGenes}
-                        location={GeneBoxType.STUDY_VIEW_PAGE}
-                    />
+                    <div className={'small'}>
+                        <OQLTextArea
+                            inputGeneQuery={this.props.store.geneQueryStr}
+                            validateInputGeneQuery={false}
+                            callback={this.updateSelectedGenes}
+                            location={GeneBoxType.STUDY_VIEW_PAGE}
+                        />
                     </div>
                     <button
                         disabled={this.isQueryButtonDisabled}

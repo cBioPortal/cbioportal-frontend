@@ -1,25 +1,27 @@
-import * as React from "react";
-import TruncatedTextWithTooltipSVG from "../../../shared/components/TruncatedTextWithTooltipSVG";
-import {ComparisonGroup} from "../GroupComparisonUtils";
-import {renderGroupNameWithOrdinal} from "../OverlapUtils";
-import {OverlapStrategy} from "../GroupComparisonStore";
-import {insertBetween} from "../../../shared/lib/ArrayUtils";
+import * as React from 'react';
+import TruncatedTextWithTooltipSVG from '../../../shared/components/TruncatedTextWithTooltipSVG';
+import { ComparisonGroup } from '../GroupComparisonUtils';
+import { renderGroupNameWithOrdinal } from '../OverlapUtils';
+import { OverlapStrategy } from '../GroupComparisonStore';
+import { insertBetween } from '../../../shared/lib/ArrayUtils';
 
 export interface IGroupLegendLabelComponentProps {
     maxLabelWidth: number;
-    uidToGroup:{[uid:string]:ComparisonGroup};
-    dy?:string;
-    dx?:string;
+    uidToGroup: { [uid: string]: ComparisonGroup };
+    dy?: string;
+    dx?: string;
 
     // always there, given by victory, but has to be optional so we don't get typeerrors when passing it as a victory label component prop
-    text?:string;
+    text?: string;
 
     // unused props given by victory that we have to extract
-    datum?:any;
+    datum?: any;
 }
 
-export const GroupLegendLabelComponent:React.FunctionComponent<IGroupLegendLabelComponentProps> = (props:IGroupLegendLabelComponentProps)=>{
-    const {uidToGroup, dx, dy, datum, text, ...rest} = props;
+export const GroupLegendLabelComponent: React.FunctionComponent<
+    IGroupLegendLabelComponentProps
+> = (props: IGroupLegendLabelComponentProps) => {
+    const { uidToGroup, dx, dy, datum, text, ...rest } = props;
 
     const group = uidToGroup[props.text!];
     return (
@@ -27,15 +29,11 @@ export const GroupLegendLabelComponent:React.FunctionComponent<IGroupLegendLabel
             text={group!.name}
             prefixTspans={[
                 <tspan>(</tspan>,
-                <tspan style={{fontWeight:"bold"}}>{group!.ordinal}</tspan>,
-                <tspan>) </tspan>
+                <tspan style={{ fontWeight: 'bold' }}>{group!.ordinal}</tspan>,
+                <tspan>) </tspan>,
             ]}
-            tooltip={()=>{
-                return (
-                    <div>
-                        {renderGroupNameWithOrdinal(group)}
-                    </div>
-                );
+            tooltip={() => {
+                return <div>{renderGroupNameWithOrdinal(group)}</div>;
             }}
             maxWidth={props.maxLabelWidth}
             dy={dy}
@@ -45,25 +43,34 @@ export const GroupLegendLabelComponent:React.FunctionComponent<IGroupLegendLabel
     );
 };
 
-export const SurvivalTabGroupLegendLabelComponent:React.FunctionComponent<IGroupLegendLabelComponentProps> = (props:IGroupLegendLabelComponentProps)=>{
-    const {uidToGroup, dx, dy, datum, text, ...rest} = props;
+export const SurvivalTabGroupLegendLabelComponent: React.FunctionComponent<
+    IGroupLegendLabelComponentProps
+> = (props: IGroupLegendLabelComponentProps) => {
+    const { uidToGroup, dx, dy, datum, text, ...rest } = props;
 
     const groupUids = JSON.parse(text!) as string[];
-    const groups = groupUids.map(uid=>uidToGroup[uid]);
-    const groupOrdinals = groups.map(group=>group.ordinal);
-    const textToTruncate = `Only ${groupOrdinals.map(o=>`(${o})`).join(", ")}`;
+    const groups = groupUids.map(uid => uidToGroup[uid]);
+    const groupOrdinals = groups.map(group => group.ordinal);
+    const textToTruncate = `Only ${groupOrdinals
+        .map(o => `(${o})`)
+        .join(', ')}`;
     return (
         <TruncatedTextWithTooltipSVG
             text={textToTruncate}
-            renderTruncatedText={(truncatedText:string)=>{
+            renderTruncatedText={(truncatedText: string) => {
                 const ret = [];
-                for (let i=0; i<truncatedText.length; i++) {
-                    const bold = ((i > 0) &&
-                        (i < truncatedText.length - 1) &&
-                        (truncatedText[i-1] === "(") &&
-                        (truncatedText[i+1] === ")"));
+                for (let i = 0; i < truncatedText.length; i++) {
+                    const bold =
+                        i > 0 &&
+                        i < truncatedText.length - 1 &&
+                        truncatedText[i - 1] === '(' &&
+                        truncatedText[i + 1] === ')';
                     if (bold) {
-                        ret.push(<tspan style={{fontWeight:"bold"}}>{truncatedText[i]}</tspan>)
+                        ret.push(
+                            <tspan style={{ fontWeight: 'bold' }}>
+                                {truncatedText[i]}
+                            </tspan>
+                        );
                     } else {
                         ret.push(<tspan>{truncatedText[i]}</tspan>);
                     }
@@ -71,10 +78,16 @@ export const SurvivalTabGroupLegendLabelComponent:React.FunctionComponent<IGroup
                 return ret;
             }}
             alwaysShowTooltip={true}
-            tooltip={()=>{
+            tooltip={() => {
                 return (
                     <div>
-                        Only {insertBetween(<span>,&nbsp;</span>, groups.map(group=>renderGroupNameWithOrdinal(group)))}
+                        Only{' '}
+                        {insertBetween(
+                            <span>,&nbsp;</span>,
+                            groups.map(group =>
+                                renderGroupNameWithOrdinal(group)
+                            )
+                        )}
                     </div>
                 );
             }}

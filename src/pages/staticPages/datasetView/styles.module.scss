@@ -1,7 +1,7 @@
 .dataSets {
-  :global(.tableMainToolbar) {
-    :global(.tableFilter) {
-      float: left !important;
+    :global(.tableMainToolbar) {
+        :global(.tableFilter) {
+            float: left !important;
+        }
     }
-  }
 }

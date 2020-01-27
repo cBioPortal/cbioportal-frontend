@@ -1,4 +1,4 @@
-import { CountSummary } from "shared/api/generated/CBioPortalAPIInternal";
+import { CountSummary } from 'shared/api/generated/CBioPortalAPIInternal';
 
 export interface AlterationEnrichmentRow {
     checked: boolean;
@@ -9,7 +9,7 @@ export interface AlterationEnrichmentRow {
     logRatio?: number;
     pValue?: number;
     qValue?: number;
-    value?:number; // for copy number, used in group comparison
-    groupsSet:{[id:string]:CountSummary & {alteredPercentage:number}};
-    enrichedGroup?:string;
+    value?: number; // for copy number, used in group comparison
+    groupsSet: { [id: string]: CountSummary & { alteredPercentage: number } };
+    enrichedGroup?: string;
 }

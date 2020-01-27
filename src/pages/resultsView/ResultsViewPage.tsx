@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import $ from 'jquery';
 import URL from 'url';
 import { inject, observer } from 'mobx-react';
-import {action, computed, observable, reaction, runInAction} from 'mobx';
+import { action, computed, observable, reaction, runInAction } from 'mobx';
 import { ResultsViewPageStore } from './ResultsViewPageStore';
 import CancerSummaryContainer from 'pages/resultsView/cancerSummary/CancerSummaryContainer';
 import Mutations from './mutation/Mutations';
@@ -22,7 +22,7 @@ import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import autobind from 'autobind-decorator';
 import { ITabConfiguration } from '../../shared/model/ITabConfiguration';
-import {getBrowserWindow} from 'cbioportal-frontend-commons';
+import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import CoExpressionTab from './coExpression/CoExpressionTab';
 import Helmet from 'react-helmet';
 import { showCustomTab } from '../../shared/lib/customTabs';
@@ -43,24 +43,29 @@ import ExtendedRouterStore from 'shared/lib/ExtendedRouterStore';
 import GeneSymbolValidationError from 'shared/components/query/GeneSymbolValidationError';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import setWindowVariable from 'shared/lib/setWindowVariable';
-import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import onMobxPromise from "shared/lib/onMobxPromise";
-import {createQueryStore} from "shared/lib/createQueryStore";
-import {handleLegacySubmission, handlePostedSubmission} from "shared/lib/redirectHelpers";
-import OQLTextArea, {GeneBoxType} from "shared/components/GeneSelectionBox/OQLTextArea";
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import onMobxPromise from 'shared/lib/onMobxPromise';
+import { createQueryStore } from 'shared/lib/createQueryStore';
+import {
+    handleLegacySubmission,
+    handlePostedSubmission,
+} from 'shared/lib/redirectHelpers';
+import OQLTextArea, {
+    GeneBoxType,
+} from 'shared/components/GeneSelectionBox/OQLTextArea';
 
 function initStore(appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
-    const resultsViewPageStore = new ResultsViewPageStore(
-        appStore,
-        urlWrapper
-    );
+    const resultsViewPageStore = new ResultsViewPageStore(appStore, urlWrapper);
 
     setWindowVariable('resultsViewPageStore', resultsViewPageStore);
 
     reaction(
         () => [resultsViewPageStore.studyIds, resultsViewPageStore.oqlText],
         () => {
-            if (resultsViewPageStore.studyIds.isComplete && resultsViewPageStore.oqlText) {
+            if (
+                resultsViewPageStore.studyIds.isComplete &&
+                resultsViewPageStore.oqlText
+            ) {
                 trackQuery(
                     resultsViewPageStore.studyIds.result!,
                     resultsViewPageStore.oqlText,
@@ -112,12 +117,17 @@ export default class ResultsViewPage extends React.Component<
 
         if (this.urlWrapper.hasSessionId) {
             onMobxPromise(this.urlWrapper.remoteSessionData, () => {
-                this.resultsViewPageStore = initStore(props.appStore, this.urlWrapper);
+                this.resultsViewPageStore = initStore(
+                    props.appStore,
+                    this.urlWrapper
+                );
             });
         } else {
-            this.resultsViewPageStore = initStore(props.appStore, this.urlWrapper);
+            this.resultsViewPageStore = initStore(
+                props.appStore,
+                this.urlWrapper
+            );
         }
-
     }
 
     private handleTabChange(id: string, replace?: boolean) {
@@ -366,9 +376,15 @@ export default class ResultsViewPage extends React.Component<
                             id={ResultsViewTab.NETWORK}
                             linkText={'Network'}
                         >
-                            <div className="alert alert-info">The Network tab has been retired. For similar
-                                functionality, please visit <a href="http://www.pathwaycommons.org/pcviz/"
-                                                               target="_blank">http://www.pathwaycommons.org/pcviz/</a>
+                            <div className="alert alert-info">
+                                The Network tab has been retired. For similar
+                                functionality, please visit{' '}
+                                <a
+                                    href="http://www.pathwaycommons.org/pcviz/"
+                                    target="_blank"
+                                >
+                                    http://www.pathwaycommons.org/pcviz/
+                                </a>
                             </div>
                         </MSKTab>
                     );
@@ -479,26 +495,39 @@ export default class ResultsViewPage extends React.Component<
         return isRoutedTo || (!isExcludedInList && !isExcluded);
     }
 
-    @computed get quickOQLSubmitButtion(){
-        return ( <>
-            <button className={"btn btn-primary btn-sm"} style={{marginLeft:10}} onClick={this.handleQuickOQLSubmission}>Submit Query</button>
-            &nbsp;
-            <button className={'btn btn-link btn-sm'} onClick={this.toggleOQLEditor}>Cancel</button>
-        </>)
+    @computed get quickOQLSubmitButtion() {
+        return (
+            <>
+                <button
+                    className={'btn btn-primary btn-sm'}
+                    style={{ marginLeft: 10 }}
+                    onClick={this.handleQuickOQLSubmission}
+                >
+                    Submit Query
+                </button>
+                &nbsp;
+                <button
+                    className={'btn btn-link btn-sm'}
+                    onClick={this.toggleOQLEditor}
+                >
+                    Cancel
+                </button>
+            </>
+        );
     }
 
     @autobind
     @action
-    handleQuickOQLSubmission(){
+    handleQuickOQLSubmission() {
         this.showOQLEditor = false;
         this.urlWrapper.updateURL({
-                                      gene_list:this.oqlSubmission
-                                  });
+            gene_list: this.oqlSubmission,
+        });
     }
 
     @autobind
     @action
-    toggleOQLEditor(){
+    toggleOQLEditor() {
         this.showOQLEditor = !this.showOQLEditor;
     }
 
@@ -511,7 +540,7 @@ export default class ResultsViewPage extends React.Component<
         });
     }
 
-    @observable oqlSubmission = "";
+    @observable oqlSubmission = '';
 
     @computed get pageContent() {
         if (this.resultsViewPageStore.invalidStudyIds.result.length > 0) {
@@ -524,7 +553,10 @@ export default class ResultsViewPage extends React.Component<
                         showDownloadTab={false}
                         showAlerts={true}
                         getQueryStore={() =>
-                            createQueryStore(this.urlWrapper.query, this.urlWrapper)
+                            createQueryStore(
+                                this.urlWrapper.query,
+                                this.urlWrapper
+                            )
                         }
                     />
                 </div>
@@ -554,14 +586,19 @@ export default class ResultsViewPage extends React.Component<
                         </div>
                     )}
                     {this.resultsViewPageStore.studies.isPending && (
-                        <LoadingIndicator isLoading={true} center={true} size={"big"}></LoadingIndicator>
+                        <LoadingIndicator
+                            isLoading={true}
+                            center={true}
+                            size={'big'}
+                        ></LoadingIndicator>
                     )}
                     {this.resultsViewPageStore.studies.isComplete && (
                         <>
                             <Helmet>
                                 <title>
                                     {buildResultsViewPageTitle(
-                                        this.resultsViewPageStore.hugoGeneSymbols,
+                                        this.resultsViewPageStore
+                                            .hugoGeneSymbols,
                                         this.resultsViewPageStore.studies.result
                                     )}
                                 </title>
@@ -572,41 +609,44 @@ export default class ResultsViewPage extends React.Component<
                                         routingStore={this.props.routing}
                                         store={this.resultsViewPageStore}
                                         onToggleQueryFormVisibility={visible => {
-                                            runInAction(()=>{
+                                            runInAction(() => {
                                                 this.showTabs = visible;
                                                 this.showOQLEditor = false;
                                             });
                                         }}
-                                        onToggleOQLEditUIVisibility={this.toggleOQLEditor}
+                                        onToggleOQLEditUIVisibility={
+                                            this.toggleOQLEditor
+                                        }
                                     />
 
-                                    {
-                                        (this.showOQLEditor) && (
-                                            <div className={'quick_oql_edit'}>
-                                                <OQLTextArea
-                                                    inputGeneQuery={this.resultsViewPageStore.oqlText}
-                                                    validateInputGeneQuery={true}
-                                                    callback={(...args)=>{
-                                                        this.oqlSubmission = args[2];
-                                                    }}
-                                                    location={GeneBoxType.DEFAULT}
-                                                    submitButton={this.quickOQLSubmitButtion}
-                                                />
-
-                                            </div>
-                                        )
-                                    }
-
+                                    {this.showOQLEditor && (
+                                        <div className={'quick_oql_edit'}>
+                                            <OQLTextArea
+                                                inputGeneQuery={
+                                                    this.resultsViewPageStore
+                                                        .oqlText
+                                                }
+                                                validateInputGeneQuery={true}
+                                                callback={(...args) => {
+                                                    this.oqlSubmission =
+                                                        args[2];
+                                                }}
+                                                location={GeneBoxType.DEFAULT}
+                                                submitButton={
+                                                    this.quickOQLSubmitButtion
+                                                }
+                                            />
+                                        </div>
+                                    )}
                                 </div>
 
                                 {// we don't show the result tabs if we don't have valid query
                                 this.showTabs &&
                                     !this.resultsViewPageStore.genesInvalid &&
-                                    !this.resultsViewPageStore.isQueryInvalid && (
+                                    !this.resultsViewPageStore
+                                        .isQueryInvalid && (
                                         <MSKTabs
-                                            key={
-                                                this.urlWrapper.hash
-                                            }
+                                            key={this.urlWrapper.hash}
                                             activeTabId={
                                                 this.resultsViewPageStore.tabId
                                             }
@@ -629,9 +669,13 @@ export default class ResultsViewPage extends React.Component<
     }
 
     public render() {
-
-        if (this.urlWrapper.isPendingSession || this.urlWrapper.isLoadingSession) {
-            return <LoadingIndicator isLoading={true} center={true} size={"big"}/>
+        if (
+            this.urlWrapper.isPendingSession ||
+            this.urlWrapper.isLoadingSession
+        ) {
+            return (
+                <LoadingIndicator isLoading={true} center={true} size={'big'} />
+            );
         }
 
         if (
@@ -639,10 +683,7 @@ export default class ResultsViewPage extends React.Component<
             !this.resultsViewPageStore.tabId
         ) {
             setTimeout(() => {
-                this.handleTabChange(
-                    this.resultsViewPageStore.tabId,
-                    true
-                );
+                this.handleTabChange(this.resultsViewPageStore.tabId, true);
             });
             return null;
         } else {

@@ -1,5 +1,5 @@
 .integer-data {
-  text-align: right !important;
+    text-align: right !important;
 }
 
 /***
@@ -7,8 +7,8 @@
     TODO remove after switching to bootstrap 4
 */
 :global(.gnomad-frequency-table .text-wrap) {
-  white-space: normal;
+    white-space: normal;
 }
 :global(.gnomad-frequency-table .font-weight-bold) {
-  font-weight: bold;
+    font-weight: bold;
 }

@@ -1,101 +1,100 @@
 .armDiv {
-  margin: 0 0 3px 0;
+    margin: 0 0 3px 0;
 }
 .criteriaHr {
-  margin:3px 0 !important;
-  border-top-color: rgb(221, 221, 221) !important;
+    margin: 3px 0 !important;
+    border-top-color: rgb(221, 221, 221) !important;
 }
-.alterationUl{
-  margin-bottom: -20px !important;
-  list-style-type: none;
-  padding-left: 15px;
+.alterationUl {
+    margin-bottom: -20px !important;
+    list-style-type: none;
+    padding-left: 15px;
 }
 .genomicSpan {
-  margin-right:5px;
+    margin-right: 5px;
 }
 .tooltip {
-  maxHeight: 400px;
-  maxWidth: 600px;
-  overflow: auto;
+    maxheight: 400px;
+    maxwidth: 600px;
+    overflow: auto;
 }
 .statusBackground {
-  display: block;
-  padding: 10px;
-  width: 130px;
-  border-radius: 10px;
-  background: #73AD21;
-  text-align: center;
-  color: #ffffff;
+    display: block;
+    padding: 10px;
+    width: 130px;
+    border-radius: 10px;
+    background: #73ad21;
+    text-align: center;
+    color: #ffffff;
 }
 .icon {
-  .marginLeft {
-    margin-left:5px;
-  }
-  .marginRight {
-    margin-right:5px;
-  }
+    .marginLeft {
+        margin-left: 5px;
+    }
+    .marginRight {
+        margin-right: 5px;
+    }
 }
 
 .matchInfoContainer {
-  display: flex;
-  justify-content: space-between;
+    display: flex;
+    justify-content: space-between;
 
-  .sampleIdsContainer {
-    flex: 0 0 auto;
-    width: 30px;
-  }
+    .sampleIdsContainer {
+        flex: 0 0 auto;
+        width: 30px;
+    }
 
-  .genomicInfoContainer {
-    flex: 1 1 auto;
-    margin: 0 5px 0 0;
-
-  }
+    .genomicInfoContainer {
+        flex: 1 1 auto;
+        margin: 0 5px 0 0;
+    }
 }
 
 .criteriaContainer {
-  display: flex;
-  justify-content: space-between;
-
-  .firstLeft {
-    flex: 1 1 auto;
-    margin: 0 5px 0 0;
-  }
-
-  .firstRight{
-    display:flex;
-    flex: 0 0 auto;
-    width: 50%;
+    display: flex;
     justify-content: space-between;
 
-    .secondLeft {
-      flex: 0 0 auto;
-      width: 85px;
-      margin-right: 10px;
+    .firstLeft {
+        flex: 1 1 auto;
+        margin: 0 5px 0 0;
     }
-    .secondRight{
-      flex: 1 1 auto;
+
+    .firstRight {
+        display: flex;
+        flex: 0 0 auto;
+        width: 50%;
+        justify-content: space-between;
+
+        .secondLeft {
+            flex: 0 0 auto;
+            width: 85px;
+            margin-right: 10px;
+        }
+        .secondRight {
+            flex: 1 1 auto;
+        }
     }
-  }
 }
 .powered {
-  padding-right: 9px;
-  text-align: right;
-  font-size: 13px;
+    padding-right: 9px;
+    text-align: right;
+    font-size: 13px;
 }
 .statusContainer {
-  margin: 20% 0 20% 0;
+    margin: 20% 0 20% 0;
 
-  a:hover {
-    text-decoration: none;
-  }
+    a:hover {
+        text-decoration: none;
+    }
 }
 .feedback {
-  font-size: 12px;
+    font-size: 12px;
 
-  .feedbackButton {
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 10px;
-  }
+    .feedbackButton {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 10px;
+    }
 }

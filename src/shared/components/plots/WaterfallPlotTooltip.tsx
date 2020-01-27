@@ -1,21 +1,24 @@
-import {observer} from "mobx-react";
-import * as React from "react";
-import {observable} from "mobx";
-import {Popover} from "react-bootstrap";
-import bind from "bind-decorator";
-import classnames from "classnames";
+import { observer } from 'mobx-react';
+import * as React from 'react';
+import { observable } from 'mobx';
+import { Popover } from 'react-bootstrap';
+import bind from 'bind-decorator';
+import classnames from 'classnames';
 
 export interface IWaterfallPlotTooltipProps {
-    container:HTMLDivElement;
-    overlay:JSX.Element;
-    targetCoords:{x:number, y:number};
-    targetHovered?:boolean;
-    className?:string;
-    placement?:string;
+    container: HTMLDivElement;
+    overlay: JSX.Element;
+    targetCoords: { x: number; y: number };
+    targetHovered?: boolean;
+    className?: string;
+    placement?: string;
 }
 
 @observer
-export default class WaterfallPlotTooltip extends React.Component<IWaterfallPlotTooltipProps, {}> {
+export default class WaterfallPlotTooltip extends React.Component<
+    IWaterfallPlotTooltipProps,
+    {}
+> {
     @observable isHovered = false; // allows persistence when mouse rolls over tooltip
 
     @bind
@@ -32,13 +35,29 @@ export default class WaterfallPlotTooltip extends React.Component<IWaterfallPlot
         const arrowOffsetTop = 30; // experimentally determined
         const arrowOffsetLeft = 24; // experimentally determined
         const leftPadding = 5;
-        const horizontal = !this.props.placement || this.props.placement === "left" || this.props.placement === "right";
+        const horizontal =
+            !this.props.placement ||
+            this.props.placement === 'left' ||
+            this.props.placement === 'right';
         if (this.props.targetHovered || this.isHovered) {
             return (
                 <Popover
-                    className={classnames("cbioportal-frontend", "cbioTooltip", this.props.className)}
-                    positionLeft={this.props.targetCoords.x + this.props.container.offsetLeft + leftPadding - (!horizontal ? arrowOffsetLeft + 6 : 0)}
-                    positionTop={this.props.targetCoords.y + this.props.container.offsetTop - (horizontal ? arrowOffsetTop : -5)}
+                    className={classnames(
+                        'cbioportal-frontend',
+                        'cbioTooltip',
+                        this.props.className
+                    )}
+                    positionLeft={
+                        this.props.targetCoords.x +
+                        this.props.container.offsetLeft +
+                        leftPadding -
+                        (!horizontal ? arrowOffsetLeft + 6 : 0)
+                    }
+                    positionTop={
+                        this.props.targetCoords.y +
+                        this.props.container.offsetTop -
+                        (horizontal ? arrowOffsetTop : -5)
+                    }
                     onMouseEnter={this.onMouseEnter}
                     onMouseLeave={this.onMouseLeave}
                     arrowOffsetTop={horizontal ? arrowOffsetTop : undefined}

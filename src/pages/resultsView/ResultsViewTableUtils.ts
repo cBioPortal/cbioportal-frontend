@@ -1,13 +1,13 @@
-import {logicalAnd} from "../../shared/lib/LogicUtils";
-import _ from "lodash";
+import { logicalAnd } from '../../shared/lib/LogicUtils';
+import _ from 'lodash';
 
-function cytobandFilterSingle(d: { cytoband: string }, filterString:string) {
+function cytobandFilterSingle(d: { cytoband: string }, filterString: string) {
     if (!filterString.length) {
         return true;
     } else {
         let match = false;
         let reject = false;
-        if (filterString[0] === "-") {
+        if (filterString[0] === '-') {
             filterString = filterString.substring(1);
             reject = true;
         }
@@ -19,7 +19,7 @@ function cytobandFilterSingle(d: { cytoband: string }, filterString:string) {
     }
 }
 
-export function cytobandFilter(d: { cytoband: string }, filterString:string) {
+export function cytobandFilter(d: { cytoband: string }, filterString: string) {
     filterString = filterString.trim();
     if (!filterString.length) {
         return true;
@@ -28,14 +28,18 @@ export function cytobandFilter(d: { cytoband: string }, filterString:string) {
         const positiveQueries = [];
         const negativeQueries = [];
         for (const q of queryElts) {
-            if (q[0] === "-") {
+            if (q[0] === '-') {
                 negativeQueries.push(q);
             } else {
                 positiveQueries.push(q);
             }
         }
-        const positiveResult = positiveQueries.length ? _.some(positiveQueries, q=>cytobandFilterSingle(d, q)) : true;
-        const negativeResult = negativeQueries.length ? logicalAnd(negativeQueries.map(q=>cytobandFilterSingle(d, q))) : true;
+        const positiveResult = positiveQueries.length
+            ? _.some(positiveQueries, q => cytobandFilterSingle(d, q))
+            : true;
+        const negativeResult = negativeQueries.length
+            ? logicalAnd(negativeQueries.map(q => cytobandFilterSingle(d, q)))
+            : true;
         return positiveResult && negativeResult;
     }
 }

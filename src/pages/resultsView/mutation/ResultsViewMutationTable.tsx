@@ -1,28 +1,30 @@
-import * as React from "react";
-import {observer} from "mobx-react";
+import * as React from 'react';
+import { observer } from 'mobx-react';
 import {
-    IMutationTableProps, MutationTableColumnType, default as MutationTable
-} from "shared/components/mutationTable/MutationTable";
-import CancerTypeColumnFormatter from "shared/components/mutationTable/column/CancerTypeColumnFormatter";
-import TumorAlleleFreqColumnFormatter from "shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter";
-import { Mutation } from "shared/api/generated/CBioPortalAPI";
-import ExonColumnFormatter from "shared/components/mutationTable/column/ExonColumnFormatter";
-import GnomadColumnFormatter from "shared/components/mutationTable/column/GnomadColumnFormatter";
+    IMutationTableProps,
+    MutationTableColumnType,
+    default as MutationTable,
+} from 'shared/components/mutationTable/MutationTable';
+import CancerTypeColumnFormatter from 'shared/components/mutationTable/column/CancerTypeColumnFormatter';
+import TumorAlleleFreqColumnFormatter from 'shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter';
+import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import ExonColumnFormatter from 'shared/components/mutationTable/column/ExonColumnFormatter';
+import GnomadColumnFormatter from 'shared/components/mutationTable/column/GnomadColumnFormatter';
 
 export interface IResultsViewMutationTableProps extends IMutationTableProps {
     // add results view specific props here if needed
-    totalNumberOfExons?:string;
+    totalNumberOfExons?: string;
 }
 //
 @observer
-export default class ResultsViewMutationTable extends MutationTable<IResultsViewMutationTableProps> {
-
-    constructor(props:IResultsViewMutationTableProps) {
+export default class ResultsViewMutationTable extends MutationTable<
+    IResultsViewMutationTableProps
+> {
+    constructor(props: IResultsViewMutationTableProps) {
         super(props);
     }
 
-    public static defaultProps =
-    {
+    public static defaultProps = {
         ...MutationTable.defaultProps,
         columns: [
             MutationTableColumnType.STUDY,
@@ -54,23 +56,36 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
             MutationTableColumnType.HGVSC,
             MutationTableColumnType.GNOMAD,
             MutationTableColumnType.CLINVAR,
-            MutationTableColumnType.DBSNP
-        ]
+            MutationTableColumnType.DBSNP,
+        ],
     };
 
-    componentWillUpdate(nextProps:IResultsViewMutationTableProps) {
-        this._columns[MutationTableColumnType.STUDY].visible = !!(nextProps.studyIdToStudy && (Object.keys(nextProps.studyIdToStudy).length > 1));
+    componentWillUpdate(nextProps: IResultsViewMutationTableProps) {
+        this._columns[MutationTableColumnType.STUDY].visible = !!(
+            nextProps.studyIdToStudy &&
+            Object.keys(nextProps.studyIdToStudy).length > 1
+        );
     }
 
     protected generateColumns() {
         super.generateColumns();
 
         // override default visibility for some columns
-        this._columns[MutationTableColumnType.CANCER_TYPE].visible = CancerTypeColumnFormatter.isVisible(
-            this.props.dataStore ? this.props.dataStore.allData : this.props.data,
-            this.props.uniqueSampleKeyToTumorType);
-        this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ].visible = TumorAlleleFreqColumnFormatter.isVisible(
-            this.props.dataStore ? this.props.dataStore.allData : this.props.data);
+        this._columns[
+            MutationTableColumnType.CANCER_TYPE
+        ].visible = CancerTypeColumnFormatter.isVisible(
+            this.props.dataStore
+                ? this.props.dataStore.allData
+                : this.props.data,
+            this.props.uniqueSampleKeyToTumorType
+        );
+        this._columns[
+            MutationTableColumnType.TUMOR_ALLELE_FREQ
+        ].visible = TumorAlleleFreqColumnFormatter.isVisible(
+            this.props.dataStore
+                ? this.props.dataStore.allData
+                : this.props.data
+        );
 
         // order columns
         this._columns[MutationTableColumnType.STUDY].order = 0;
@@ -105,17 +120,29 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
         this._columns[MutationTableColumnType.DBSNP].order = 280;
 
         // exclude
-        this._columns[MutationTableColumnType.CANCER_TYPE].shouldExclude = ()=>{
+        this._columns[
+            MutationTableColumnType.CANCER_TYPE
+        ].shouldExclude = () => {
             return !this.props.uniqueSampleKeyToTumorType;
         };
-        this._columns[MutationTableColumnType.NUM_MUTATIONS].shouldExclude = ()=>{
+        this._columns[
+            MutationTableColumnType.NUM_MUTATIONS
+        ].shouldExclude = () => {
             return !this.props.mutationCountCache;
         };
 
         // customization for columns
-        this._columns[MutationTableColumnType.EXON].render = 
-            (d:Mutation[]) => (ExonColumnFormatter.renderFunction(d, this.props.genomeNexusCache, false));
-        this._columns[MutationTableColumnType.EXON].headerRender = 
-            () => <span style = {{display:'inline-block'}}>Exon<br/>({this.props.totalNumberOfExons} in total)</span>;
+        this._columns[MutationTableColumnType.EXON].render = (d: Mutation[]) =>
+            ExonColumnFormatter.renderFunction(
+                d,
+                this.props.genomeNexusCache,
+                false
+            );
+        this._columns[MutationTableColumnType.EXON].headerRender = () => (
+            <span style={{ display: 'inline-block' }}>
+                Exon
+                <br />({this.props.totalNumberOfExons} in total)
+            </span>
+        );
     }
 }

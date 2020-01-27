@@ -1,7 +1,11 @@
-import {CategorizedConfigItems, IAppConfig, IServerConfig} from "./IAppConfig";
-import * as _ from "lodash";
-import ServerConfigDefaults from "./serverConfigDefaults";
-import memoize from "memoize-weak-decorator";
+import {
+    CategorizedConfigItems,
+    IAppConfig,
+    IServerConfig,
+} from './IAppConfig';
+import * as _ from 'lodash';
+import ServerConfigDefaults from './serverConfigDefaults';
+import memoize from 'memoize-weak-decorator';
 
 import {
     getCbioPortalApiUrl,
@@ -9,39 +13,37 @@ import {
     getG2SApiUrl,
     getGenomeNexusApiUrl,
     getOncoKbApiUrl,
-    trimTrailingSlash
-} from "../shared/api/urls";
-import genomeNexusClient from "../shared/api/genomeNexusClientInstance";
-import internalGenomeNexusClient from "../shared/api/genomeNexusInternalClientInstance";
-import oncoKBClient from "../shared/api/oncokbClientInstance";
-import genome2StructureClient from "../shared/api/g2sClientInstance";
-import client from "../shared/api/cbioportalClientInstance";
-import internalClient from "../shared/api/cbioportalInternalClientInstance";
-import $ from "jquery";
-import {AppStore} from "../AppStore";
-import {cachePostMethodsOnClient} from "cbioportal-frontend-commons";
-import CBioPortalAPI from "../shared/api/generated/CBioPortalAPI";
-import CBioPortalAPIInternal from "../shared/api/generated/CBioPortalAPIInternal";
-import CivicAPI from "../shared/api/CivicAPI";
+    trimTrailingSlash,
+} from '../shared/api/urls';
+import genomeNexusClient from '../shared/api/genomeNexusClientInstance';
+import internalGenomeNexusClient from '../shared/api/genomeNexusInternalClientInstance';
+import oncoKBClient from '../shared/api/oncokbClientInstance';
+import genome2StructureClient from '../shared/api/g2sClientInstance';
+import client from '../shared/api/cbioportalClientInstance';
+import internalClient from '../shared/api/cbioportalInternalClientInstance';
+import $ from 'jquery';
+import { AppStore } from '../AppStore';
+import { cachePostMethodsOnClient } from 'cbioportal-frontend-commons';
+import CBioPortalAPI from '../shared/api/generated/CBioPortalAPI';
+import CBioPortalAPIInternal from '../shared/api/generated/CBioPortalAPIInternal';
+import CivicAPI from '../shared/api/CivicAPI';
 import {
     Genome2StructureAPI,
     GenomeNexusAPI,
     GenomeNexusAPIInternal,
-    OncoKbAPI
-} from "cbioportal-frontend-commons";
-import AppConfig from "appConfig";
-import {sendSentryMessage} from "../shared/lib/tracking";
-import {log} from "../shared/lib/consoleLog";
+    OncoKbAPI,
+} from 'cbioportal-frontend-commons';
+import AppConfig from 'appConfig';
+import { sendSentryMessage } from '../shared/lib/tracking';
+import { log } from '../shared/lib/consoleLog';
 
+const config: any = (window as any).frontendConfig || { serverConfig: {} };
 
-const config:any = (window as any).frontendConfig || { serverConfig:{} };
-
-const win = (window as any);
+const win = window as any;
 
 export default config;
 
-export function updateConfig(obj:Partial<IAppConfig>){
-
+export function updateConfig(obj: Partial<IAppConfig>) {
     // handle serverConfig
     if (obj.serverConfig) {
         setServerConfig(obj.serverConfig);
@@ -60,13 +62,10 @@ export function updateConfig(obj:Partial<IAppConfig>){
     // we have to use assign here (as opposed to replacing the reference because importers
     // already have reference and those will become detached from this
     Object.assign(config, nextConfig);
-
 }
 
-export function setServerConfig(serverConfig:{[key:string]:any }){
-
-    _.each(ServerConfigDefaults,(defaultVal,key)=>{
-
+export function setServerConfig(serverConfig: { [key: string]: any }) {
+    _.each(ServerConfigDefaults, (defaultVal, key) => {
         // we only want to work on props which are actually passed to us for setting
         // WE DO NOT EVER SET DEFAULT VALUES EXCEPT WHEN A PASSED VALUE IS NULL
         if (serverConfig.hasOwnProperty(key)) {
@@ -80,14 +79,19 @@ export function setServerConfig(serverConfig:{[key:string]:any }){
                 }
             } else {
                 // for non booleans, only resolve to default if prop is missing or null
-                if (serverConfig.hasOwnProperty(key) && serverConfig[key] === null) {
+                if (
+                    serverConfig.hasOwnProperty(key) &&
+                    serverConfig[key] === null
+                ) {
                     serverConfig[key] = defaultVal;
                 }
             }
         }
     });
 
-    const frontendOverride = (serverConfig.frontendConfigOverride) ? JSON.parse(serverConfig.frontendConfigOverride) : {};
+    const frontendOverride = serverConfig.frontendConfigOverride
+        ? JSON.parse(serverConfig.frontendConfigOverride)
+        : {};
 
     // TODO: temp WARNING remove after we are done testing with AWS. This allows
     // one to change the backend api through the frontendConfigOverride file, so
@@ -99,31 +103,40 @@ export function setServerConfig(serverConfig:{[key:string]:any }){
     }
 
     // allow any hardcoded serverConfig props to override those from service
-    const mergedConfig = Object.assign({}, serverConfig, frontendOverride , config.serverConfig || {});
+    const mergedConfig = Object.assign(
+        {},
+        serverConfig,
+        frontendOverride,
+        config.serverConfig || {}
+    );
 
     config.serverConfig = mergedConfig;
-
 }
 
 export class ServerConfigHelpers {
-
-    @memoize static skin_example_study_queries(str:string){
+    @memoize static skin_example_study_queries(str: string) {
         const matches = str.match(/.+/g);
-        return (matches) ? matches.map((s:string)=>s.trim()) : [];
+        return matches ? matches.map((s: string) => s.trim()) : [];
     }
 
-    @memoize static parseConfigFormat(str:string|null): CategorizedConfigItems {
+    @memoize static parseConfigFormat(
+        str: string | null
+    ): CategorizedConfigItems {
         if (str && str.length) {
             // get rid of a trailing semicolon
-            str = str.replace(/;$/,"");
+            str = str.replace(/;$/, '');
             return _.chain(str)
-                .split(";").map((s)=>s.split("#")).fromPairs().mapValues((s)=>s.split(",")).value();
+                .split(';')
+                .map(s => s.split('#'))
+                .fromPairs()
+                .mapValues(s => s.split(','))
+                .value();
         } else {
             return {};
         }
     }
 
-    @memoize static parseQuerySetsOfGenes(json:string){
+    @memoize static parseQuerySetsOfGenes(json: string) {
         try {
             return JSON.parse(json);
         } catch (ex) {
@@ -131,26 +144,34 @@ export class ServerConfigHelpers {
         }
     }
 
-    static sessionServiceIsEnabled(){
+    static sessionServiceIsEnabled() {
         return config.serverConfig.sessionServiceEnabled;
     }
 
-    static getUserEmailAddress() : string | undefined {
-        return (config.serverConfig.user_email_address && config.serverConfig.user_email_address !== "anonymousUser") ?
-            config.serverConfig.user_email_address : undefined;
+    static getUserEmailAddress(): string | undefined {
+        return config.serverConfig.user_email_address &&
+            config.serverConfig.user_email_address !== 'anonymousUser'
+            ? config.serverConfig.user_email_address
+            : undefined;
     }
-
-};
-
-function cachePostMethods(obj: any,
-                          excluded: string[] = [],
-                          regex: RegExp = /UsingPOST$/)
-{
-    cachePostMethodsOnClient(obj, excluded, regex, AppConfig.serverConfig.api_cache_limit, sendSentryMessage, log);
 }
 
-export function initializeAPIClients(){
+function cachePostMethods(
+    obj: any,
+    excluded: string[] = [],
+    regex: RegExp = /UsingPOST$/
+) {
+    cachePostMethodsOnClient(
+        obj,
+        excluded,
+        regex,
+        AppConfig.serverConfig.api_cache_limit,
+        sendSentryMessage,
+        log
+    );
+}
 
+export function initializeAPIClients() {
     // we need to set the domain of our api clients
     (client as any).domain = getCbioPortalApiUrl();
     (internalClient as any).domain = getCbioPortalApiUrl();
@@ -161,7 +182,10 @@ export function initializeAPIClients(){
 
     // add POST caching
     cachePostMethods(CBioPortalAPI);
-    cachePostMethods(CBioPortalAPIInternal, ['fetchMutatedGenesUsingPOST', 'fetchCNAGenesUsingPOST']);
+    cachePostMethods(CBioPortalAPIInternal, [
+        'fetchMutatedGenesUsingPOST',
+        'fetchCNAGenesUsingPOST',
+    ]);
     cachePostMethods(CivicAPI);
     cachePostMethods(Genome2StructureAPI);
     cachePostMethods(GenomeNexusAPI, [], /POST$/);
@@ -177,10 +201,13 @@ export function initializeConfiguration() {
     if (localStorage.frontendConfig) {
         try {
             updateConfig(JSON.parse(localStorage.frontendConfig));
-            console.log("Using localStorage.frontendConfig (overriding window.frontendConfig): " + localStorage.frontendConfig);
+            console.log(
+                'Using localStorage.frontendConfig (overriding window.frontendConfig): ' +
+                    localStorage.frontendConfig
+            );
         } catch (err) {
             // ignore
-            console.log("Error parsing localStorage.frontendConfig")
+            console.log('Error parsing localStorage.frontendConfig');
         }
     }
 
@@ -193,39 +220,39 @@ export function initializeConfiguration() {
     // @ts-ignore: ENV_* are defined in webpack.config.js
     const frontendUrl = config.frontendUrl || `//${win.location.host}/`;
 
-    const configServiceUrl = config.configurationServiceUrl || `${APIROOT}config_service.jsp`;
+    const configServiceUrl =
+        config.configurationServiceUrl || `${APIROOT}config_service.jsp`;
 
     // should override both when in dev mode and when serving compiled source
     // code outside of legacy project
     // @ts-ignore: ENV_* are defined in webpack.config.js
-    if (IS_DEV_MODE || !(config.frontendUrl)) {
-    // @ts-ignore: ENV_* are defined in webpack.config.js
+    if (IS_DEV_MODE || !config.frontendUrl) {
+        // @ts-ignore: ENV_* are defined in webpack.config.js
         const envConfig: Partial<IAppConfig> = {
             configurationServiceUrl: configServiceUrl,
             apiRoot: APIROOT,
             frontendUrl: frontendUrl,
             serverConfig: {
-                genomenexus_url: GENOME_NEXUS_ROOT
-            } as IServerConfig
+                genomenexus_url: GENOME_NEXUS_ROOT,
+            } as IServerConfig,
         };
         updateConfig(envConfig);
     }
-
 }
 
-export function setConfigDefaults(){
+export function setConfigDefaults() {
     setServerConfig(ServerConfigDefaults);
 }
 
-export function fetchServerConfig(){
+export function fetchServerConfig() {
     return $.ajax({
         url: getConfigurationServiceApiUrl(),
-        dataType: "jsonp",
-        jsonpCallback: "callback"
+        dataType: 'jsonp',
+        jsonpCallback: 'callback',
     });
 }
 
-export function initializeAppStore(appStore:AppStore, config:IServerConfig) {
+export function initializeAppStore(appStore: AppStore, config: IServerConfig) {
     appStore.authMethod = config.authenticationMethod;
     appStore.userName = config.user_email_address;
 }

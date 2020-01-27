@@ -6,50 +6,39 @@ import { shallow } from 'enzyme';
 import labelMobxPromises from 'mobxpromise';
 
 describe('WaterfallPlot', () => {
-
-    let testData:IBaseWaterfallPlotData[] = [
-        {value: 2},
-        {value: 4}
-    ];
-    let testProps:IWaterfallPlotProps<IBaseWaterfallPlotData> = {
+    let testData: IBaseWaterfallPlotData[] = [{ value: 2 }, { value: 4 }];
+    let testProps: IWaterfallPlotProps<IBaseWaterfallPlotData> = {
         data: testData,
         chartWidth: 600,
         chartHeight: 400,
         horizontal: true,
-        sortOrder: "ASC"
+        sortOrder: 'ASC',
     };
-    let plot:WaterfallPlot<IBaseWaterfallPlotData> = new WaterfallPlot<IBaseWaterfallPlotData>(testProps);
-    
+    let plot: WaterfallPlot<IBaseWaterfallPlotData> = new WaterfallPlot<
+        IBaseWaterfallPlotData
+    >(testProps);
+
     beforeEach(() => {
-        
         testProps = {
             data: testData,
             chartWidth: 600,
             chartHeight: 400,
             horizontal: true,
-            sortOrder: "ASC"
+            sortOrder: 'ASC',
         };
-        
-        testData = [
-            {value: 2},
-            {value: 4}
-        ];
-        
-        plot = new WaterfallPlot<IBaseWaterfallPlotData>(testProps);
 
+        testData = [{ value: 2 }, { value: 4 }];
+
+        plot = new WaterfallPlot<IBaseWaterfallPlotData>(testProps);
     });
 
     describe('#waterfallPlotData', () => {
-
         it('Datum has internally computed field', () => {
-
             const datum = plot.waterfallPlotData[0];
             assert.isDefined(datum.order);
-
         });
 
         it('Sort order parameter controls ordering of data', () => {
-            
             // test "ASC" and horizontal is false
             testProps.horizontal = false;
             let datum1 = plot.waterfallPlotData[0];
@@ -58,34 +47,34 @@ describe('WaterfallPlot', () => {
             assert.equal(datum1.value, 2);
             assert.equal(datum2.order, 2);
             assert.equal(datum2.value, 4);
-            
+
             // test "DESC" and horizontal is false
-            testProps.sortOrder = "DESC";
+            testProps.sortOrder = 'DESC';
             plot = new WaterfallPlot<IBaseWaterfallPlotData>(testProps);
-            
+
             datum1 = plot.waterfallPlotData[0];
             datum2 = plot.waterfallPlotData[1];
             assert.equal(datum1.order, 1);
             assert.equal(datum1.value, 4);
             assert.equal(datum2.order, 2);
             assert.equal(datum2.value, 2);
-            
+
             // test "ASC" and horizontal is true
             testProps.horizontal = true;
-            testProps.sortOrder = "ASC";
+            testProps.sortOrder = 'ASC';
             plot = new WaterfallPlot<IBaseWaterfallPlotData>(testProps);
-            
+
             datum1 = plot.waterfallPlotData[0];
             datum2 = plot.waterfallPlotData[1];
             assert.equal(datum1.order, 1);
             assert.equal(datum1.value, 4);
             assert.equal(datum2.order, 2);
             assert.equal(datum2.value, 2);
-            
+
             // test "DESC" and horizontal is true
-            testProps.sortOrder = "DESC";
+            testProps.sortOrder = 'DESC';
             plot = new WaterfallPlot<IBaseWaterfallPlotData>(testProps);
-            
+
             datum1 = plot.waterfallPlotData[0];
             datum2 = plot.waterfallPlotData[1];
             assert.equal(datum1.order, 1);
@@ -93,32 +82,27 @@ describe('WaterfallPlot', () => {
             assert.equal(datum2.order, 2);
             assert.equal(datum2.value, 4);
         });
-
     });
 
     describe('#styledWaterfallPlotData', () => {
-        
         it('Datum has styling info when passed to component', () => {
-    
-            testProps.fill = "test";
-            testProps.stroke = "test";
+            testProps.fill = 'test';
+            testProps.stroke = 'test';
             testProps.strokeOpacity = 1;
             testProps.strokeWidth = 1;
-            testProps.symbol = "test";
-    
+            testProps.symbol = 'test';
+
             plot = new WaterfallPlot<IBaseWaterfallPlotData>(testProps);
             const datum = plot.styledWaterfallPlotData[0];
-    
+
             assert.isDefined(datum.fill);
             assert.isDefined(datum.stroke);
             assert.isDefined(datum.strokeOpacity);
             assert.isDefined(datum.strokeWidth);
             assert.isDefined(datum.symbol);
-            
         });
-
     });
-    
+
     describe('#plotDomain', () => {
         it('Has correct x dimensions', () => {
             const domain = plot.plotDomain;
@@ -133,37 +117,34 @@ describe('WaterfallPlot', () => {
     });
 
     describe('Search indicators', () => {
-
         it('Absent when no highlight param passed', () => {
             testProps.highlight = undefined;
             assert.equal(plot.searchLabels.length, 0);
         });
-        
+
         it('Absent when no samples match', () => {
-            testProps.highlight = (d) => false;
+            testProps.highlight = d => false;
             assert.equal(plot.searchLabels.length, 0);
         });
-        
+
         it('Present when search function is passed', () => {
-            testProps.highlight = (d) => true;
+            testProps.highlight = d => true;
             assert.equal(plot.searchLabels.length, 2);
         });
 
         it('Present when search function is passed', () => {
-            testProps.highlight = (d) => true;
+            testProps.highlight = d => true;
             assert.equal(plot.searchLabels.length, 2);
         });
 
         it('Search label data points have x/y coordinates', () => {
-            testProps.highlight = (d) => true;
+            testProps.highlight = d => true;
             assert.isDefined(plot.searchLabels[0].searchindicatorx);
             assert.isDefined(plot.searchLabels[0].searchindicatory);
         });
-
     });
 
     describe('Limit value indicators', () => {
-
         it('Absent when labelVisibility param not passed', () => {
             testProps.labelVisibility = undefined;
             plot = new WaterfallPlot<IBaseWaterfallPlotData>(testProps);
@@ -171,9 +152,9 @@ describe('WaterfallPlot', () => {
         });
 
         it('Absent when no datapoints are limited', () => {
-           testProps.labelVisibility = () => false;
-           plot = new WaterfallPlot<IBaseWaterfallPlotData>(testProps);
-           assert.equal(plot.limitLabels.length, 0);
+            testProps.labelVisibility = () => false;
+            plot = new WaterfallPlot<IBaseWaterfallPlotData>(testProps);
+            assert.equal(plot.limitLabels.length, 0);
         });
 
         it('Present when datapoints are limited', () => {
@@ -188,7 +169,5 @@ describe('WaterfallPlot', () => {
             assert.isDefined(plot.limitLabels[0].labelx);
             assert.isDefined(plot.limitLabels[0].labely);
         });
-        
     });
-
 });
