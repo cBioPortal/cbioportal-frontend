@@ -481,7 +481,7 @@ export default class ResultsViewPage extends React.Component<
 
     @computed get quickOQLSubmitButtion(){
         return ( <>
-            <button className={"btn btn-primary btn-sm"} style={{marginLeft:10}} onClick={this.handleQuickOQLSubmission}>Go</button>
+            <button className={"btn btn-primary btn-sm"} style={{marginLeft:10}} onClick={this.handleQuickOQLSubmission}>Submit Query</button>
             &nbsp;
             <button className={'btn btn-link btn-sm'} onClick={this.toggleOQLEditor}>Cancel</button>
         </>)
