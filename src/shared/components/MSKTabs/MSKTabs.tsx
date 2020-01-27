@@ -26,6 +26,7 @@ export interface IMSKTabProps {
     unmountOnHide?: boolean;
     onTabDidMount?: (tab: HTMLDivElement) => void;
     onTabUnmount?: (tab: HTMLDivElement) => void;
+    onClickClose?: (tabId: string) => void;
 }
 
 @observer
@@ -379,6 +380,22 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                     pages[currentPage - 1] = [];
                 }
 
+                let closeButton: JSX.Element | null = null;
+                if (tab.props.onClickClose) {
+                    const onClickClose = tab.props.onClickClose;
+                    closeButton = (
+                        <div
+                            className="closeButton"
+                            onClick={e => {
+                                e.stopPropagation();
+                                onClickClose(tab.props.id);
+                            }}
+                        >
+                            <i className="fa fa-md fa-times-circle" />
+                        </div>
+                    );
+                }
+
                 pages[currentPage - 1].push(
                     <li
                         key={tab.props.id}
@@ -400,6 +417,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                             style={tab.props.anchorStyle}
                         >
                             {tab.props.linkText}
+                            {closeButton}
                         </a>
                     </li>
                 );

@@ -66,3 +66,16 @@
     //font-size: 17px !important;
     //margin-right:30px !important;
 }
+
+.resourcesTab {
+    .resourcesSection {
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px dashed #ddd;
+        margin-bottom: 30px;
+
+        &:last-child {
+            margin-bottom: 0px;
+        }
+    }
+}

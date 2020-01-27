@@ -50,8 +50,14 @@ import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { seekUrlHash } from 'shared/lib/seekUrlHash';
 import { PagePath } from 'shared/enums/PagePaths';
 import { ResultsViewTab } from 'pages/resultsView/ResultsViewPageHelpers';
-import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
-import { PatientViewPageTabs } from 'pages/patientView/PatientViewPageTabs';
+import {
+    StudyViewPageTabKeyEnum,
+    StudyViewResourceTabPrefix,
+} from 'pages/studyView/StudyViewPageTabs';
+import {
+    PatientViewPageTabs,
+    PatientViewResourceTabPrefix,
+} from 'pages/patientView/PatientViewPageTabs';
 import { GroupComparisonTab } from 'pages/groupComparison/GroupComparisonTabs';
 import { handleEncodedURLRedirect } from 'shared/lib/redirectHelpers';
 
@@ -68,12 +74,20 @@ function tabParamValidator(tabEnum) {
 }
 
 /**
- * Validates results page custom tab
+ * Validates results page and patient page custom tabs
  * @param location
  */
 function customTabParamValidator(location) {
-    var regex = /results\/customTab\d+/;
-    return location.pathname.match(regex) !== null;
+    const resultsRegex = /results\/customTab\d+/;
+    const patientViewRegex = new RegExp(
+        `patient\/${PatientViewResourceTabPrefix}.+`
+    );
+    const studyViewRegex = new RegExp(`study\/${StudyViewResourceTabPrefix}.+`);
+    return (
+        location.pathname.match(resultsRegex) !== null ||
+        patientViewRegex.test(location.pathname) ||
+        studyViewRegex.test(location.pathname)
+    );
 }
 
 // accepts bundle-loader's deferred loader function and defers execution of route's render

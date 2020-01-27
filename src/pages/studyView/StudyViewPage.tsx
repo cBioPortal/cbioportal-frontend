@@ -3,11 +3,11 @@ import * as _ from 'lodash';
 import { inject, Observer, observer } from 'mobx-react';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
 import {
+    action,
     computed,
     IReactionDisposer,
-    reaction,
     observable,
-    action,
+    reaction,
 } from 'mobx';
 import {
     CustomChart,
@@ -15,13 +15,16 @@ import {
     StudyViewPageTabDescriptions,
     StudyViewURLQuery,
 } from 'pages/studyView/StudyViewPageStore';
-import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
+import {
+    extractResourceIdFromTabId,
+    getStudyViewResourceTabId,
+    StudyViewPageTabKeyEnum,
+} from 'pages/studyView/StudyViewPageTabs';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { ClinicalDataTab } from './tabs/ClinicalDataTab';
 import {
     DefaultTooltip,
     getBrowserWindow,
-    isWebdriver,
     remoteData,
 } from 'cbioportal-frontend-commons';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
@@ -48,10 +51,7 @@ import classNames from 'classnames';
 import AppConfig from 'appConfig';
 import SocialAuthButton from '../../shared/components/SocialAuthButton';
 import { ServerConfigHelpers } from '../../config/config';
-import {
-    getStudyViewTabId,
-    getButtonNameWithDownPointer,
-} from './StudyViewUtils';
+import { getButtonNameWithDownPointer } from './StudyViewUtils';
 import { Alert, Modal } from 'react-bootstrap';
 import 'cbioportal-frontend-commons/dist/styles.css';
 import 'react-grid-layout/css/styles.css';
@@ -61,8 +61,12 @@ import './styles.scss';
 import autobind from 'autobind-decorator';
 import { BookmarkModal } from 'pages/resultsView/bookmark/BookmarkModal';
 import { ShareUrls } from 'pages/resultsView/querySummary/ShareUI';
-import request from 'superagent';
 import { getBitlyShortenedUrl } from '../../shared/lib/bitly';
+import { MakeMobxView } from '../../shared/components/MobxView';
+import OpenResourceTab from '../../shared/components/resources/OpenResourceTab';
+import StudyViewURLWrapper from './StudyViewURLWrapper';
+import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
+import { ResourceData } from 'cbioportal-ts-api-client';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -97,6 +101,7 @@ export default class StudyViewPage extends React.Component<
     IStudyViewPageProps,
     {}
 > {
+    private urlWrapper: StudyViewURLWrapper;
     private store: StudyViewPageStore;
     private enableCustomSelectionInTabs = [
         StudyViewPageTabKeyEnum.SUMMARY,
@@ -114,10 +119,21 @@ export default class StudyViewPage extends React.Component<
 
     constructor(props: IStudyViewPageProps) {
         super(props);
+
+        this.urlWrapper = new StudyViewURLWrapper(this.props.routing);
+
         this.store = new StudyViewPageStore(
             this.props.appStore,
-            ServerConfigHelpers.sessionServiceIsEnabled()
+            ServerConfigHelpers.sessionServiceIsEnabled(),
+            this.urlWrapper
         );
+
+        const openResourceId =
+            this.urlWrapper.tabId &&
+            extractResourceIdFromTabId(this.urlWrapper.tabId);
+        if (openResourceId) {
+            this.store.setResourceTabOpen(openResourceId, true);
+        }
 
         getBrowserWindow().studyPage = this;
 
@@ -132,12 +148,6 @@ export default class StudyViewPage extends React.Component<
                     return;
                 }
 
-                this.store.updateCurrentTab(
-                    getStudyViewTabId(
-                        getBrowserWindow().globalStores.routing.location
-                            .pathname
-                    )
-                );
                 const newStudyViewFilter: StudyViewURLQuery = _.pick(query, [
                     'id',
                     'studyId',
@@ -197,7 +207,7 @@ export default class StudyViewPage extends React.Component<
     }
 
     private handleTabChange(id: string) {
-        this.props.routing.updateRoute({}, `study/${id}`);
+        this.urlWrapper.setTab(id);
     }
 
     @observable showBookmarkModal = false;
@@ -211,6 +221,44 @@ export default class StudyViewPage extends React.Component<
     @autobind
     onBookmarkClick() {
         this.toggleBookmarkModal();
+    }
+
+    @autobind
+    @action
+    private openResource(resource: ResourceData) {
+        // open tab
+        this.store.setResourceTabOpen(resource.resourceId, true);
+        // go to tab
+        this.urlWrapper.setTab(getStudyViewResourceTabId(resource.resourceId));
+        // deep link
+        this.urlWrapper.setResourceUrl(resource.url);
+    }
+
+    @autobind
+    @action
+    private closeResourceTab(tabId: string) {
+        // close tab
+        const resourceId = extractResourceIdFromTabId(tabId);
+        if (resourceId) {
+            this.store.setResourceTabOpen(resourceId, false);
+            // go to resources tab if we're currently on that tab
+            if (
+                this.urlWrapper.tabId === getStudyViewResourceTabId(resourceId)
+            ) {
+                this.urlWrapper.setTab(StudyViewPageTabKeyEnum.FILES_AND_LINKS);
+            }
+        }
+    }
+
+    @computed get shouldShowResources() {
+        if (this.store.resourceIdToResourceData.isComplete) {
+            return _.some(
+                this.store.resourceIdToResourceData.result,
+                data => data.length > 0
+            );
+        } else {
+            return false;
+        }
     }
 
     @computed get studyViewFullUrlWithFilter() {
@@ -354,6 +402,42 @@ export default class StudyViewPage extends React.Component<
         );
     }
 
+    readonly openResourceTabs = MakeMobxView({
+        await: () => [
+            this.store.resourceDefinitions,
+            this.store.resourceIdToResourceData,
+        ],
+        render: () => {
+            const openDefinitions = this.store.resourceDefinitions.result!.filter(
+                d => this.store.isResourceTabOpen(d.resourceId)
+            );
+            const sorted = _.sortBy(openDefinitions, d => d.priority);
+            const resourceDataById = this.store.resourceIdToResourceData
+                .result!;
+
+            const tabs: JSX.Element[] = [];
+            sorted.forEach(def => {
+                const data = resourceDataById[def.resourceId];
+                if (data && data.length > 0) {
+                    tabs.push(
+                        <MSKTab
+                            key={getStudyViewResourceTabId(def.resourceId)}
+                            id={getStudyViewResourceTabId(def.resourceId)}
+                            linkText={def.displayName}
+                            onClickClose={this.closeResourceTab}
+                        >
+                            <OpenResourceTab
+                                resourceData={resourceDataById[def.resourceId]}
+                                urlWrapper={this.urlWrapper}
+                            />
+                        </MSKTab>
+                    );
+                }
+            });
+            return tabs;
+        },
+    });
+
     content() {
         return (
             <div className="studyView">
@@ -457,6 +541,23 @@ export default class StudyViewPage extends React.Component<
                                     >
                                         <CNSegments store={this.store} />
                                     </MSKTab>
+                                    <MSKTab
+                                        key={4}
+                                        id={
+                                            StudyViewPageTabKeyEnum.FILES_AND_LINKS
+                                        }
+                                        linkText={RESOURCES_TAB_NAME}
+                                        hide={!this.shouldShowResources}
+                                    >
+                                        <div>
+                                            <ResourcesTab
+                                                store={this.store}
+                                                openResource={this.openResource}
+                                            />
+                                        </div>
+                                    </MSKTab>
+
+                                    {this.openResourceTabs.component}
                                 </MSKTabs>
 
                                 <div className={styles.absolutePanel}>
