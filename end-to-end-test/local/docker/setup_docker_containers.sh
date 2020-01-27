@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e 
+set -e
 set -u # unset variables throw error
 set -o pipefail # pipes fail when partial command fails
 shopt -s nullglob # allows files and dir globs to be null - needed in 'for ... do' loops that should not run when no files/dirs are detected by expansion
@@ -51,25 +51,12 @@ build_database_container() {
     while ! docker run --rm --net=$DOCKER_NETWORK_NAME mysql:5.7 mysqladmin ping -u $DB_USER -p$DB_PASSWORD -h$DB_HOST --silent; do
         echo Waiting for cbioportal database to initialize...
         sleeptime=$sleeptime+10
-        if (($sleeptime > $maxtime)); then 
+        if (($sleeptime > $maxtime)); then
             echo Timeout reached. Terminating test!
             exit 1
         fi
         sleep 10
     done
-
-    # when seed database has been loaded, create a container that does 
-    # not depend on the seed data to be present in /tmp (this benefits local testing only)
-    (docker stop $DB_HOST && docker rm $DB_HOST) || true
-    docker run -d \
-        --name=$DB_HOST \
-        --net=$DOCKER_NETWORK_NAME \
-        -e MYSQL_ROOT_PASSWORD=$DB_USER \
-        -e MYSQL_USER=$DB_USER \
-        -e MYSQL_PASSWORD=$DB_PASSWORD \
-        -e MYSQL_DATABASE=$DB_PORTAL_DB_NAME \
-        -v "$DB_DATA_DIR:/var/lib/mysql/" \
-        mysql:5.7
 
     # migrate database schema to most recent version
     echo Migrating database schema to most recent version ...
@@ -81,7 +68,7 @@ build_database_container() {
 }
 
 run_database_container() {
-    # when seed database has been loaded, create a container that does 
+    # when seed database has been loaded, create a container that does
     # not depend on the seed data to be present in /tmp (this benefits local testing only)
     (docker stop $DB_HOST && docker rm $DB_HOST) || true
     docker run -d \
@@ -111,13 +98,13 @@ run_cbioportal_container() {
         -p 8081:8080 \
         $BACKEND_IMAGE_NAME \
         /bin/sh -c 'java ${JAVA_OPTS} -jar webapp-runner.jar /app.war'
-    
+
     sleeptime=0
     maxtime=180
     while ! docker run --rm --net=$DOCKER_NETWORK_NAME $BACKEND_IMAGE_NAME ping -c 1 "$E2E_CBIOPORTAL_HOST_NAME" &> /dev/null; do
         echo Waiting for cbioportal to initialize...
         sleeptime=$sleeptime+10
-        if (($sleeptime > $maxtime)); then 
+        if (($sleeptime > $maxtime)); then
             echo Timeout reached. Terminating test!
             exit 1
         fi
