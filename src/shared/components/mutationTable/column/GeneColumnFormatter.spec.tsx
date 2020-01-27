@@ -1,16 +1,15 @@
 import GeneColumnFormatter from './GeneColumnFormatter';
 import React from 'react';
 import { assert } from 'chai';
-import {shallow, mount, ReactWrapper} from 'enzyme';
+import { shallow, mount, ReactWrapper } from 'enzyme';
 import sinon from 'sinon';
-import {initMutation} from "test/MutationMockUtils";
+import { initMutation } from 'test/MutationMockUtils';
 
 describe('GeneColumnFormatter', () => {
-
     const mutation = initMutation({
         gene: {
-            hugoGeneSymbol: "DIABLO"
-        }
+            hugoGeneSymbol: 'DIABLO',
+        },
     });
 
     const tableData = [[mutation]];
@@ -24,11 +23,14 @@ describe('GeneColumnFormatter', () => {
     });
 
     it('renders display value', () => {
-        assert.isTrue(component.find(`span`).text().indexOf("DIABLO") > -1,
-            'Gene symbol display value is correct');
+        assert.isTrue(
+            component
+                .find(`span`)
+                .text()
+                .indexOf('DIABLO') > -1,
+            'Gene symbol display value is correct'
+        );
     });
 
-    after(() => {
-
-    });
+    after(() => {});
 });

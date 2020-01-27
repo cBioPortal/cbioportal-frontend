@@ -1,7 +1,7 @@
 export interface PatientSurvival {
     patientId: string;
     studyId: string;
-    uniquePatientKey:string;
+    uniquePatientKey: string;
     months: number;
     status: boolean;
 }

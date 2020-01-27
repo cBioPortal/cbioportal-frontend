@@ -1,7 +1,7 @@
-import {GenesetCorrelation} from "../api/generated/CBioPortalAPIInternal";
-import client from "shared/api/cbioportalInternalClientInstance";
-import _ from "lodash";
-import {IDataQueryFilter} from "../lib/StoreUtils";
+import { GenesetCorrelation } from '../api/generated/CBioPortalAPIInternal';
+import client from 'shared/api/cbioportalInternalClientInstance';
+import _ from 'lodash';
+import { IDataQueryFilter } from '../lib/StoreUtils';
 
 interface IQuery {
     genesetId: string;
@@ -9,17 +9,17 @@ interface IQuery {
 }
 
 type SampleFilterByProfile = {
-    [molecularProfileId: string]: IDataQueryFilter
+    [molecularProfileId: string]: IDataQueryFilter;
 };
 
 async function fetch(
-    {genesetId, molecularProfileId}: IQuery,
+    { genesetId, molecularProfileId }: IQuery,
     sampleFilterByProfile: SampleFilterByProfile
 ): Promise<GenesetCorrelation[]> {
     const param = {
         genesetId,
         geneticProfileId: molecularProfileId,
-        ...sampleFilterByProfile[molecularProfileId]
+        ...sampleFilterByProfile[molecularProfileId],
     };
     return client.fetchCorrelatedGenesUsingPOST(param);
 }
@@ -30,7 +30,7 @@ class AsyncStateChain<S> {
         this.stateChain = Promise.resolve(initState);
     }
     appendTransition<A>(
-        useState: (currentState: S) => Promise<{newState: S, output: A}>
+        useState: (currentState: S) => Promise<{ newState: S; output: A }>
     ): Promise<A> {
         // Synchronously replace stateChain by a promise of the new state,
         // and return a promise of the output
@@ -51,33 +51,42 @@ class GenesetCorrelatedGeneIteration {
         this.sampleFilterByProfile = sampleFilterByProfile;
     }
     async next(maxNumber: number) {
-        return this.nextGeneIndexStateChain.appendTransition(async currentIndex => {
-            if (this.data === undefined) {
-                this.data = await fetch(this.query, this.sampleFilterByProfile);
+        return this.nextGeneIndexStateChain.appendTransition(
+            async currentIndex => {
+                if (this.data === undefined) {
+                    this.data = await fetch(
+                        this.query,
+                        this.sampleFilterByProfile
+                    );
+                }
+                // select the first n genes starting from the index,
+                // up to the end of the array
+                const nextGenes = this.data.slice(
+                    currentIndex,
+                    currentIndex + maxNumber
+                );
+                return {
+                    newState: currentIndex + nextGenes.length,
+                    output: nextGenes,
+                };
             }
-            // select the first n genes starting from the index,
-            // up to the end of the array
-            const nextGenes = this.data.slice(
-                currentIndex,
-                currentIndex + maxNumber
-            );
-            return {newState: currentIndex + nextGenes.length, output: nextGenes};
-        });
+        );
     }
 
     /**
      * Resets the iteration so that next() will start from the beginning.
      */
     reset(): void {
-        this.nextGeneIndexStateChain.appendTransition((currentIndex) => Promise.resolve({newState: 0, output: undefined}));
+        this.nextGeneIndexStateChain.appendTransition(currentIndex =>
+            Promise.resolve({ newState: 0, output: undefined })
+        );
     }
 }
 
-export default class GenesetCorrelatedGeneCache  {
-
+export default class GenesetCorrelatedGeneCache {
     private sampleFilterByProfile: SampleFilterByProfile;
     private iterations: {
-        [iterationKey: string]: GenesetCorrelatedGeneIteration
+        [iterationKey: string]: GenesetCorrelatedGeneIteration;
     } = {};
 
     constructor(sampleFilterByProfile: SampleFilterByProfile) {
@@ -85,9 +94,12 @@ export default class GenesetCorrelatedGeneCache  {
     }
 
     initIteration(iterationKey: string, query: IQuery) {
-        if (!Object.prototype.hasOwnProperty.call(this.iterations, iterationKey)) {
+        if (
+            !Object.prototype.hasOwnProperty.call(this.iterations, iterationKey)
+        ) {
             this.iterations[iterationKey] = new GenesetCorrelatedGeneIteration(
-                query, this.sampleFilterByProfile
+                query,
+                this.sampleFilterByProfile
             );
         }
     }
@@ -102,5 +114,4 @@ export default class GenesetCorrelatedGeneCache  {
     reset(iterationKey: string): void {
         this.iterations[iterationKey].reset();
     }
-
 }

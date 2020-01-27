@@ -7,7 +7,7 @@ import { GeneReplacement } from 'shared/components/query/QueryStore';
 import ReactSelect from 'react-select1';
 import classNames from 'classnames';
 import * as _ from 'lodash';
-import {DropdownButton, MenuItem} from "react-bootstrap";
+import { DropdownButton, MenuItem } from 'react-bootstrap';
 
 export type GeneSymbolValidatorMessageProps = {
     errorMessageOnly?: boolean;
@@ -75,14 +75,19 @@ const RenderSuggestion = function(props: RenderSuggestionProps) {
                 title="Select symbol"
                 id={`geneReplace_${props.alias}`}
             >
-                {
-                    options.map((item, i)=>{
-                        return <MenuItem onClick={()=>{ props.replaceGene(props.alias, item.value)  }} eventKey={i+1}>{item.label}</MenuItem>
-                    })
-                }
+                {options.map((item, i) => {
+                    return (
+                        <MenuItem
+                            onClick={() => {
+                                props.replaceGene(props.alias, item.value);
+                            }}
+                            eventKey={i + 1}
+                        >
+                            {item.label}
+                        </MenuItem>
+                    );
+                })}
             </DropdownButton>
-
-
         </div>
     );
 };
@@ -138,27 +143,33 @@ const GeneSymbolValidatorMessageChild = (
                     <span>Invalid gene symbols.</span>
                 </div>
 
-                {
-                    props.genes.suggestions.map((suggestion, index) =>
+                {props.genes.suggestions.map((suggestion, index) => (
                     <RenderSuggestion
                         key={index}
                         genes={suggestion.genes}
                         alias={suggestion.alias}
                         replaceGene={props.replaceGene}
-                    />)
-                }
+                    />
+                ))}
             </div>
         );
     }
 
     // TDOD: remove this condition once multiple entrez gene ids is supported
-    const hugoGeneSymbolSet = _.groupBy(props.genes.found, gene => gene.hugoGeneSymbol);
-    const genesWithMultipleEntrezGeneIds = _.reduce(hugoGeneSymbolSet, (acc, genes, hugoGeneSymbol) => {
-        if (genes.length > 1) {
-            acc.push(hugoGeneSymbol);
-        }
-        return acc;
-    }, [] as string[]);
+    const hugoGeneSymbolSet = _.groupBy(
+        props.genes.found,
+        gene => gene.hugoGeneSymbol
+    );
+    const genesWithMultipleEntrezGeneIds = _.reduce(
+        hugoGeneSymbolSet,
+        (acc, genes, hugoGeneSymbol) => {
+            if (genes.length > 1) {
+                acc.push(hugoGeneSymbol);
+            }
+            return acc;
+        },
+        [] as string[]
+    );
 
     if (genesWithMultipleEntrezGeneIds.length > 0) {
         return (
@@ -171,7 +182,10 @@ const GeneSymbolValidatorMessageChild = (
                         className={styles.icon}
                         name="exclamation-circle"
                     />
-                    <span>The portal does not currently support the following gene(s):</span>
+                    <span>
+                        The portal does not currently support the following
+                        gene(s):
+                    </span>
                 </div>
 
                 {genesWithMultipleEntrezGeneIds.map((gene, index) => (
@@ -221,7 +235,10 @@ class GeneSymbolValidatorMessage extends React.Component<
 
         return (
             <div id="geneBoxValidationStatus">
-                <GeneSymbolValidatorMessageChild replaceGene={this.props.replaceGene} {...this.props} />
+                <GeneSymbolValidatorMessageChild
+                    replaceGene={this.props.replaceGene}
+                    {...this.props}
+                />
             </div>
         );
     }

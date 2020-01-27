@@ -1,20 +1,32 @@
 import {
-    fetchCosmicData, fetchOncoKbData, makeStudyToCancerTypeMap,
-    mergeMutationsIncludingUncalled, generateMutationIdByEvent, generateMutationIdByGeneAndProteinChangeAndEvent,
-    fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants, findSamplesWithoutCancerTypeClinicalData,
-    fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData,
+    fetchCosmicData,
+    fetchOncoKbData,
+    makeStudyToCancerTypeMap,
+    mergeMutationsIncludingUncalled,
+    generateMutationIdByEvent,
+    generateMutationIdByGeneAndProteinChangeAndEvent,
+    fetchCivicGenes,
+    fetchCnaCivicGenes,
+    fetchCivicVariants,
+    findSamplesWithoutCancerTypeClinicalData,
+    fetchSamplesWithoutCancerTypeClinicalData,
+    fetchStudiesForSamplesWithoutCancerTypeClinicalData,
     fetchGermlineConsentedSamples,
-    noGenePanelUsed
-} from "./StoreUtils";
+    noGenePanelUsed,
+} from './StoreUtils';
 import * as _ from 'lodash';
 import { assert } from 'chai';
 import sinon from 'sinon';
-import {MobxPromise} from "mobxpromise";
-import {CancerStudy, Mutation, ClinicalData, Sample} from "../api/generated/CBioPortalAPI";
-import {initMutation} from "test/MutationMockUtils";
+import { MobxPromise } from 'mobxpromise';
+import {
+    CancerStudy,
+    Mutation,
+    ClinicalData,
+    Sample,
+} from '../api/generated/CBioPortalAPI';
+import { initMutation } from 'test/MutationMockUtils';
 
 describe('StoreUtils', () => {
-
     let emptyMutationData: MobxPromise<Mutation[]>;
     let emptyUncalledMutationData: MobxPromise<Mutation[]>;
     let mutationDataWithNoKeyword: MobxPromise<Mutation[]>;
@@ -25,138 +37,150 @@ describe('StoreUtils', () => {
     let mutationDataWithBothMutationsAndFusions: MobxPromise<Mutation[]>;
 
     before(() => {
-        emptyMutationData =  {
+        emptyMutationData = {
             result: [],
             status: 'complete' as 'complete',
             peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
-            error: undefined
+            error: undefined,
         };
 
-        mutationDataWithNoKeyword =  {
+        mutationDataWithNoKeyword = {
             result: [{}, {}] as Mutation[],
             status: 'complete' as 'complete',
             peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
-            error: undefined
+            error: undefined,
         };
 
-        mutationDataWithKeywords =  {
-            result: [{keyword:"one"}] as Mutation[],
+        mutationDataWithKeywords = {
+            result: [{ keyword: 'one' }] as Mutation[],
             status: 'complete' as 'complete',
             peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
-            error: undefined
+            error: undefined,
         };
 
-        emptyUncalledMutationData =  {
+        emptyUncalledMutationData = {
             result: [],
             status: 'complete' as 'complete',
             peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
-            error: undefined
+            error: undefined,
         };
 
-
         const fusions: Mutation[] = [
-            initMutation({gene: { // fusion for ERG
-                hugoGeneSymbol: "ERG",
-                proteinChange: "TMPRSS2-ERG fusion"
-            }}),
-            initMutation({gene: { // same fusion for TMPRSS2
-                hugoGeneSymbol: "TMPRSS2",
-                proteinChange: "TMPRSS2-ERG fusion"
-            }}),
-            initMutation({gene: { // different fusion
-                hugoGeneSymbol: "FOXP1",
-                proteinChange: "FOXP1-intragenic"
-            }}),
+            initMutation({
+                gene: {
+                    // fusion for ERG
+                    hugoGeneSymbol: 'ERG',
+                    proteinChange: 'TMPRSS2-ERG fusion',
+                },
+            }),
+            initMutation({
+                gene: {
+                    // same fusion for TMPRSS2
+                    hugoGeneSymbol: 'TMPRSS2',
+                    proteinChange: 'TMPRSS2-ERG fusion',
+                },
+            }),
+            initMutation({
+                gene: {
+                    // different fusion
+                    hugoGeneSymbol: 'FOXP1',
+                    proteinChange: 'FOXP1-intragenic',
+                },
+            }),
         ];
 
         const mutations: Mutation[] = [
-            initMutation({ // mutation
+            initMutation({
+                // mutation
                 gene: {
-                    chromosome: "X",
-                    hugoGeneSymbol: "TP53",
+                    chromosome: 'X',
+                    hugoGeneSymbol: 'TP53',
                 },
-                proteinChange: "mutated",
+                proteinChange: 'mutated',
                 startPosition: 100,
                 endPosition: 100,
-                referenceAllele: "A",
-                variantAllele: "T"
+                referenceAllele: 'A',
+                variantAllele: 'T',
             }),
-            initMutation({ // another mutation with the same mutation event
+            initMutation({
+                // another mutation with the same mutation event
                 gene: {
-                    chromosome: "X",
-                    hugoGeneSymbol: "TP53"
+                    chromosome: 'X',
+                    hugoGeneSymbol: 'TP53',
                 },
-                proteinChange: "mutated",
+                proteinChange: 'mutated',
                 startPosition: 100,
                 endPosition: 100,
-                referenceAllele: "A",
-                variantAllele: "T"
+                referenceAllele: 'A',
+                variantAllele: 'T',
             }),
-            initMutation({ // mutation with different mutation event
+            initMutation({
+                // mutation with different mutation event
                 gene: {
-                    chromosome: "Y",
-                    hugoGeneSymbol: "PTEN"
+                    chromosome: 'Y',
+                    hugoGeneSymbol: 'PTEN',
                 },
-                proteinChange: "mutated",
+                proteinChange: 'mutated',
                 startPosition: 111,
                 endPosition: 112,
-                referenceAllele: "T",
-                variantAllele: "A"
+                referenceAllele: 'T',
+                variantAllele: 'A',
             }),
         ];
 
-        uncalledMutationDataWithNewEvent =  {
+        uncalledMutationDataWithNewEvent = {
             result: [
-                initMutation({ // mutation with different mutation event
+                initMutation({
+                    // mutation with different mutation event
                     gene: {
-                        chromosome: "17",
-                        hugoGeneSymbol: "BRCA1"
+                        chromosome: '17',
+                        hugoGeneSymbol: 'BRCA1',
                     },
-                    proteinChange: "mutated",
+                    proteinChange: 'mutated',
                     startPosition: 111,
                     endPosition: 112,
-                    referenceAllele: "T",
-                    variantAllele: "A"
-                })
+                    referenceAllele: 'T',
+                    variantAllele: 'A',
+                }),
             ],
             status: 'complete' as 'complete',
             peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
-            error: undefined
+            error: undefined,
         };
 
-        mutationDataWithFusionsOnly =  {
+        mutationDataWithFusionsOnly = {
             result: fusions,
             status: 'complete' as 'complete',
             peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
-            error: undefined
+            error: undefined,
         };
 
-        mutationDataWithMutationsOnly =  {
+        mutationDataWithMutationsOnly = {
             result: mutations,
             status: 'complete' as 'complete',
             peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
-            error: undefined
+            error: undefined,
         };
 
         mutationDataWithBothMutationsAndFusions = {
@@ -166,51 +190,60 @@ describe('StoreUtils', () => {
             isPending: false,
             isError: false,
             isComplete: true,
-            error: undefined
+            error: undefined,
         };
     });
 
-    after(() => {
-
-    });
+    after(() => {});
 
     describe('fetchCosmicCount', () => {
-
-        it("won't fetch cosmic data if there are no mutations", (done) => {
+        it("won't fetch cosmic data if there are no mutations", done => {
             const fetchStub = sinon.stub();
             const internalClient = {
-                fetchCosmicCountsUsingPOST: fetchStub
+                fetchCosmicCountsUsingPOST: fetchStub,
             };
 
-            fetchCosmicData(emptyMutationData, emptyUncalledMutationData, internalClient as any).then((data: any) => {
+            fetchCosmicData(
+                emptyMutationData,
+                emptyUncalledMutationData,
+                internalClient as any
+            ).then((data: any) => {
                 assert.isUndefined(data);
                 assert.isFalse(fetchStub.called);
                 done();
             });
         });
 
-        it("won't fetch cosmic data if there ARE mutations, but none with keywords", (done) => {
+        it("won't fetch cosmic data if there ARE mutations, but none with keywords", done => {
             const fetchStub = sinon.stub();
             const internalClient = {
-                fetchCosmicCountsUsingPOST: fetchStub
+                fetchCosmicCountsUsingPOST: fetchStub,
             };
 
-            fetchCosmicData(mutationDataWithNoKeyword, emptyUncalledMutationData, internalClient as any).then((data: any) => {
+            fetchCosmicData(
+                mutationDataWithNoKeyword,
+                emptyUncalledMutationData,
+                internalClient as any
+            ).then((data: any) => {
                 assert.isUndefined(data);
                 assert.isFalse(fetchStub.called);
                 done();
             });
         });
 
-        it('will fetch cosmic data if there are mutations with keywords', (done) => {
+        it('will fetch cosmic data if there are mutations with keywords', done => {
             const fetchStub = sinon.stub();
             fetchStub.returns(Promise.resolve([]));
 
             const internalClient = {
-                fetchCosmicCountsUsingPOST: fetchStub
+                fetchCosmicCountsUsingPOST: fetchStub,
             };
 
-            fetchCosmicData(mutationDataWithKeywords, emptyUncalledMutationData, internalClient as any).then((data: any) => {
+            fetchCosmicData(
+                mutationDataWithKeywords,
+                emptyUncalledMutationData,
+                internalClient as any
+            ).then((data: any) => {
                 //assert.isUndefined(data);
                 assert.isTrue(fetchStub.called);
                 done();
@@ -218,92 +251,128 @@ describe('StoreUtils', () => {
         });
     });
 
-    describe('makeStudyToCancerTypeMap', ()=>{
-        let studies:CancerStudy[];
-        before(()=>{
+    describe('makeStudyToCancerTypeMap', () => {
+        let studies: CancerStudy[];
+        before(() => {
             studies = [];
             studies.push({
-                studyId: "0",
+                studyId: '0',
                 cancerType: {
-                    name: "ZERO"
-                }
+                    name: 'ZERO',
+                },
             } as CancerStudy);
             studies.push({
-                studyId: "1",
+                studyId: '1',
                 cancerType: {
-                    name: "ONE"
-                }
+                    name: 'ONE',
+                },
             } as CancerStudy);
             studies.push({
-                studyId: "2",
+                studyId: '2',
                 cancerType: {
-                    name: "TWO"
-                }
+                    name: 'TWO',
+                },
             } as CancerStudy);
             studies.push({
-                studyId: "3",
+                studyId: '3',
                 cancerType: {
-                    name: "three"
-                }
+                    name: 'three',
+                },
             } as CancerStudy);
         });
 
-        it('gives empty map if no studies', ()=>{
+        it('gives empty map if no studies', () => {
             assert.deepEqual(makeStudyToCancerTypeMap([]), {});
         });
-        it('handles one study properly', ()=>{
-            assert.deepEqual(makeStudyToCancerTypeMap([studies[0]]), { 0: "ZERO" });
+        it('handles one study properly', () => {
+            assert.deepEqual(makeStudyToCancerTypeMap([studies[0]]), {
+                0: 'ZERO',
+            });
         });
-        it('handles more than one study properly', ()=>{
-            assert.deepEqual(makeStudyToCancerTypeMap([studies[1], studies[2]]), { 1: "ONE", 2:"TWO" });
-            assert.deepEqual(makeStudyToCancerTypeMap([studies[2], studies[1], studies[3]]), { 1:"ONE", 2:"TWO", 3:"three" });
-            assert.deepEqual(makeStudyToCancerTypeMap(studies), { 0: "ZERO", 1:"ONE", 2:"TWO", 3:"three" });
+        it('handles more than one study properly', () => {
+            assert.deepEqual(
+                makeStudyToCancerTypeMap([studies[1], studies[2]]),
+                { 1: 'ONE', 2: 'TWO' }
+            );
+            assert.deepEqual(
+                makeStudyToCancerTypeMap([studies[2], studies[1], studies[3]]),
+                { 1: 'ONE', 2: 'TWO', 3: 'three' }
+            );
+            assert.deepEqual(makeStudyToCancerTypeMap(studies), {
+                0: 'ZERO',
+                1: 'ONE',
+                2: 'TWO',
+                3: 'three',
+            });
         });
     });
 
     describe('mergeMutationsIncludingUncalled', () => {
-        it("merges mutations properly when there is only fusion data", () => {
-            const mergedFusions = mergeMutationsIncludingUncalled(mutationDataWithFusionsOnly, emptyMutationData);
+        it('merges mutations properly when there is only fusion data', () => {
+            const mergedFusions = mergeMutationsIncludingUncalled(
+                mutationDataWithFusionsOnly,
+                emptyMutationData
+            );
 
             assert.equal(mergedFusions.length, 3);
         });
 
-        it("merges mutations properly when there is only mutation data", () => {
-            const mergedMutations = mergeMutationsIncludingUncalled(mutationDataWithMutationsOnly, emptyMutationData);
+        it('merges mutations properly when there is only mutation data', () => {
+            const mergedMutations = mergeMutationsIncludingUncalled(
+                mutationDataWithMutationsOnly,
+                emptyMutationData
+            );
 
             assert.equal(mergedMutations.length, 2);
 
-            const sortedMutations = _.sortBy(mergedMutations, "length");
+            const sortedMutations = _.sortBy(mergedMutations, 'length');
 
             assert.equal(sortedMutations[0].length, 1);
             assert.equal(sortedMutations[1].length, 2);
 
-            assert.equal(generateMutationIdByGeneAndProteinChangeAndEvent(sortedMutations[1][0]),
-                generateMutationIdByGeneAndProteinChangeAndEvent(sortedMutations[1][1]),
-                "mutation ids of merged mutations should be same");
+            assert.equal(
+                generateMutationIdByGeneAndProteinChangeAndEvent(
+                    sortedMutations[1][0]
+                ),
+                generateMutationIdByGeneAndProteinChangeAndEvent(
+                    sortedMutations[1][1]
+                ),
+                'mutation ids of merged mutations should be same'
+            );
 
-            assert.equal(generateMutationIdByEvent(sortedMutations[1][0]),
+            assert.equal(
+                generateMutationIdByEvent(sortedMutations[1][0]),
                 generateMutationIdByEvent(sortedMutations[1][1]),
-                "event based mutation ids of merged mutations should be same, too");
+                'event based mutation ids of merged mutations should be same, too'
+            );
         });
 
-        it("merges mutations properly when there are both mutation and fusion data ", () => {
-            const mergedMutations = mergeMutationsIncludingUncalled(mutationDataWithBothMutationsAndFusions, emptyMutationData);
+        it('merges mutations properly when there are both mutation and fusion data ', () => {
+            const mergedMutations = mergeMutationsIncludingUncalled(
+                mutationDataWithBothMutationsAndFusions,
+                emptyMutationData
+            );
 
             assert.equal(mergedMutations.length, 5);
         });
 
-        it("does not include new mutation events from the uncalled mutations, only mutation events already called in >=1 sample should be added", () => {
-            const mergedMutations = mergeMutationsIncludingUncalled(mutationDataWithBothMutationsAndFusions, uncalledMutationDataWithNewEvent);
+        it('does not include new mutation events from the uncalled mutations, only mutation events already called in >=1 sample should be added', () => {
+            const mergedMutations = mergeMutationsIncludingUncalled(
+                mutationDataWithBothMutationsAndFusions,
+                uncalledMutationDataWithNewEvent
+            );
 
             assert.equal(mergedMutations.length, 5);
         });
     });
 
     describe('fetchOncoKbData', () => {
-        it("won't fetch onkokb data if there are no mutations", (done) => {
+        it("won't fetch onkokb data if there are no mutations", done => {
             fetchOncoKbData({}, [], emptyMutationData).then((data: any) => {
-                assert.deepEqual(data, {uniqueSampleKeyToTumorType: {}, indicatorMap: {}});
+                assert.deepEqual(data, {
+                    uniqueSampleKeyToTumorType: {},
+                    indicatorMap: {},
+                });
                 done();
             });
         });
@@ -311,95 +380,120 @@ describe('StoreUtils', () => {
 
     describe('fetchGermlineConsentedSamples', () => {
         const studyIdsWithoutGermlineData: MobxPromise<string[]> = {
-            result: [
-                "study_with_no_germline_data"
-            ],
+            result: ['study_with_no_germline_data'],
             status: 'complete' as 'complete',
             peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
-            error: undefined
+            error: undefined,
         };
 
         const studyIdsWithSomeGermlineData: MobxPromise<string[]> = {
-            result: [
-                "study_with_no_germline_data",
-                "mskimpact"
-            ],
+            result: ['study_with_no_germline_data', 'mskimpact'],
             status: 'complete' as 'complete',
             peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
-            error: undefined
+            error: undefined,
         };
 
-        const studiesWithGermlineConsentedSamples = ["mskimpact"];
+        const studiesWithGermlineConsentedSamples = ['mskimpact'];
 
-
-        it("won't fetch germline consented samples for studies with no germline data", (done) => {
+        it("won't fetch germline consented samples for studies with no germline data", done => {
             const getAllSampleIdsInSampleListStub = sinon.stub();
             const client = {
                 getAllSampleIdsInSampleListUsingGET: getAllSampleIdsInSampleListStub,
             };
 
-            fetchGermlineConsentedSamples(studyIdsWithoutGermlineData, studiesWithGermlineConsentedSamples, client as any)
+            fetchGermlineConsentedSamples(
+                studyIdsWithoutGermlineData,
+                studiesWithGermlineConsentedSamples,
+                client as any
+            )
                 .then((data: any) => {
                     assert.deepEqual(data, []);
-                    assert.isTrue(getAllSampleIdsInSampleListStub.notCalled, "getAllSampleIdsInSample should NOT be called");
+                    assert.isTrue(
+                        getAllSampleIdsInSampleListStub.notCalled,
+                        'getAllSampleIdsInSample should NOT be called'
+                    );
                     done();
-                }).catch(done);
+                })
+                .catch(done);
         });
 
-        it("will fetch germline consented samples for only the studies with germline data", (done) => {
+        it('will fetch germline consented samples for only the studies with germline data', done => {
             const getAllSampleIdsInSampleListStub = sinon.stub();
-            getAllSampleIdsInSampleListStub.returns(Promise.resolve([
-                {
-                    sampleId: "mskimpact_sample_0",
-                    studyId: "mskimpact"
-                },
-                {
-                    sampleId: "mskimpact_sample_1",
-                    studyId: "mskimpact"
-                },
-                {
-                    sampleId: "mskimpact_sample_2",
-                    studyId: "mskimpact"
-                }
-            ]));
+            getAllSampleIdsInSampleListStub.returns(
+                Promise.resolve([
+                    {
+                        sampleId: 'mskimpact_sample_0',
+                        studyId: 'mskimpact',
+                    },
+                    {
+                        sampleId: 'mskimpact_sample_1',
+                        studyId: 'mskimpact',
+                    },
+                    {
+                        sampleId: 'mskimpact_sample_2',
+                        studyId: 'mskimpact',
+                    },
+                ])
+            );
 
             const client = {
                 getAllSampleIdsInSampleListUsingGET: getAllSampleIdsInSampleListStub,
             };
 
-            fetchGermlineConsentedSamples(studyIdsWithSomeGermlineData, studiesWithGermlineConsentedSamples, client as any)
+            fetchGermlineConsentedSamples(
+                studyIdsWithSomeGermlineData,
+                studiesWithGermlineConsentedSamples,
+                client as any
+            )
                 .then((data: any) => {
-                    assert.isTrue(getAllSampleIdsInSampleListStub.calledOnce,
-                        "getAllSampleIdsInSample should be called only once");
-                    assert.isTrue(getAllSampleIdsInSampleListStub.calledWith({sampleListId: "mskimpact_germline"}),
-                        "getAllSampleIdsInSample should be called with the correct sample list id (mskimpact_germline)");
-                    assert.equal(data.length, 3, "getAllSampleIdsInSample should return an array of size 3");
+                    assert.isTrue(
+                        getAllSampleIdsInSampleListStub.calledOnce,
+                        'getAllSampleIdsInSample should be called only once'
+                    );
+                    assert.isTrue(
+                        getAllSampleIdsInSampleListStub.calledWith({
+                            sampleListId: 'mskimpact_germline',
+                        }),
+                        'getAllSampleIdsInSample should be called with the correct sample list id (mskimpact_germline)'
+                    );
+                    assert.equal(
+                        data.length,
+                        3,
+                        'getAllSampleIdsInSample should return an array of size 3'
+                    );
                     done();
-                }).catch(done);
+                })
+                .catch(done);
         });
     });
 
     describe('fetchCivicData', () => {
-        it("won't fetch civic genes if there are no mutations", (done) => {
-            fetchCivicGenes(emptyMutationData, emptyUncalledMutationData).then((data: any) => {
-                assert.deepEqual(data, {});
-                done();
-            });
+        it("won't fetch civic genes if there are no mutations", done => {
+            fetchCivicGenes(emptyMutationData, emptyUncalledMutationData).then(
+                (data: any) => {
+                    assert.deepEqual(data, {});
+                    done();
+                }
+            );
         });
 
-        it("won't fetch civic variants if there are no mutations", (done) => {
-            fetchCivicVariants({}, emptyMutationData, emptyUncalledMutationData).then((data: any) => {
+        it("won't fetch civic variants if there are no mutations", done => {
+            fetchCivicVariants(
+                {},
+                emptyMutationData,
+                emptyUncalledMutationData
+            ).then((data: any) => {
                 assert.deepEqual(data, {});
                 done();
             });
         });
-        it("won't fetch civic variants if there are no civic genes", (done) => {
+        it("won't fetch civic variants if there are no civic genes", done => {
             fetchCivicVariants({}).then((data: any) => {
                 assert.deepEqual(data, {});
                 done();
@@ -408,95 +502,145 @@ describe('StoreUtils', () => {
     });
 
     describe('samples without cancer type clinical data', () => {
-        const studyId: string = "study";
+        const studyId: string = 'study';
         let samples: MobxPromise<Sample[]> = {
             result: [
-                {sampleId: "Sample1", uniqueSampleKey: "Sample1"},
-                {sampleId: "Sample2", uniqueSampleKey: "Sample2"},
-                {sampleId: "Sample3", uniqueSampleKey: "Sample3"},
-                {sampleId: "Sample4", uniqueSampleKey: "Sample4"}
+                { sampleId: 'Sample1', uniqueSampleKey: 'Sample1' },
+                { sampleId: 'Sample2', uniqueSampleKey: 'Sample2' },
+                { sampleId: 'Sample3', uniqueSampleKey: 'Sample3' },
+                { sampleId: 'Sample4', uniqueSampleKey: 'Sample4' },
             ] as Sample[],
             status: 'complete' as 'complete',
             peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
-            error: undefined
+            error: undefined,
         };
 
         let samplesWithoutCancerTypeClinicalData: MobxPromise<Sample[]> = {
             result: [
-                {sampleId: "Sample4", studyId: "study4", uniqueSampleKey: "Sample4"}
+                {
+                    sampleId: 'Sample4',
+                    studyId: 'study4',
+                    uniqueSampleKey: 'Sample4',
+                },
             ] as Sample[],
             status: 'complete' as 'complete',
             peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
-            error: undefined
+            error: undefined,
         };
 
         let sampleIds: MobxPromise<string[]> = {
-            result: ["Sample1", "Sample2", "Sample3", "Sample4"] as string[],
+            result: ['Sample1', 'Sample2', 'Sample3', 'Sample4'] as string[],
             status: 'complete' as 'complete',
             peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
-            error: undefined
+            error: undefined,
         };
 
         let clinicalDataForSamples: MobxPromise<ClinicalData[]> = {
             result: [
-                {clinicalAttributeId: 'CANCER_TYPE_DETAILED', sampleId: 'Sample1', value: "Invasive Breast Carcinoma", uniqueSampleKey: "Sample1"},
-                {clinicalAttributeId: 'CANCER_TYPE', sampleId: 'Sample1', value: "Breast", uniqueSampleKey: "Sample1"},
-                {clinicalAttributeId: 'CANCER_TYPE_DETAILED', sampleId: 'Sample2', value: "Prostate Adenocarcinoma", uniqueSampleKey: "Sample2"},
-                {clinicalAttributeId: 'CANCER_TYPE', sampleId: 'Sample3', value: "Skin", uniqueSampleKey: "Sample3"}
+                {
+                    clinicalAttributeId: 'CANCER_TYPE_DETAILED',
+                    sampleId: 'Sample1',
+                    value: 'Invasive Breast Carcinoma',
+                    uniqueSampleKey: 'Sample1',
+                },
+                {
+                    clinicalAttributeId: 'CANCER_TYPE',
+                    sampleId: 'Sample1',
+                    value: 'Breast',
+                    uniqueSampleKey: 'Sample1',
+                },
+                {
+                    clinicalAttributeId: 'CANCER_TYPE_DETAILED',
+                    sampleId: 'Sample2',
+                    value: 'Prostate Adenocarcinoma',
+                    uniqueSampleKey: 'Sample2',
+                },
+                {
+                    clinicalAttributeId: 'CANCER_TYPE',
+                    sampleId: 'Sample3',
+                    value: 'Skin',
+                    uniqueSampleKey: 'Sample3',
+                },
             ] as ClinicalData[],
             status: 'complete' as 'complete',
             peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
-            error: undefined
+            error: undefined,
         };
 
         it('finds samples without cancer type clinical data', () => {
-            const samplesWithoutCancerType = findSamplesWithoutCancerTypeClinicalData(samples, clinicalDataForSamples);
+            const samplesWithoutCancerType = findSamplesWithoutCancerTypeClinicalData(
+                samples,
+                clinicalDataForSamples
+            );
 
-            assert.deepEqual(samplesWithoutCancerType, [{sampleId: "Sample4", uniqueSampleKey: "Sample4"} as Partial<Sample>]);
+            assert.deepEqual(samplesWithoutCancerType, [
+                { sampleId: 'Sample4', uniqueSampleKey: 'Sample4' } as Partial<
+                    Sample
+                >,
+            ]);
         });
 
         const fetchSamplesStub = sinon.stub();
         const fetchStudiesStub = sinon.stub();
 
-
         const client = {
             fetchSamplesUsingPOST: fetchSamplesStub,
-            fetchStudiesUsingPOST: fetchStudiesStub
+            fetchStudiesUsingPOST: fetchStudiesStub,
         };
 
         it('fetches samples without cancer type clinical data', () => {
             const samplesWithoutCancerTypeClinicalData = fetchSamplesWithoutCancerTypeClinicalData(
-                sampleIds, studyId, clinicalDataForSamples, client as any);
+                sampleIds,
+                studyId,
+                clinicalDataForSamples,
+                client as any
+            );
 
-            assert.isTrue(fetchSamplesStub.called, "fetchSamples should be called");
-            assert.isTrue(fetchSamplesStub.calledWith(
-                {
+            assert.isTrue(
+                fetchSamplesStub.called,
+                'fetchSamples should be called'
+            );
+            assert.isTrue(
+                fetchSamplesStub.calledWith({
                     sampleFilter: {
-                        sampleIdentifiers: [{sampleId: "Sample4", studyId: "study"}]
-                    }
-                }
-            ), "fetchSamples should be called with the correct sample id (Sample4)");
+                        sampleIdentifiers: [
+                            { sampleId: 'Sample4', studyId: 'study' },
+                        ],
+                    },
+                }),
+                'fetchSamples should be called with the correct sample id (Sample4)'
+            );
         });
 
         it('fetches studies for samples without cancer type clinical data', () => {
             const studies = fetchStudiesForSamplesWithoutCancerTypeClinicalData(
-                samplesWithoutCancerTypeClinicalData, client as any);
+                samplesWithoutCancerTypeClinicalData,
+                client as any
+            );
 
-            assert.isTrue(fetchStudiesStub.calledOnce, "fetchStudies should be called only once");
-            assert.isTrue(fetchStudiesStub.calledWith({studyIds: ["study4"], projection: "DETAILED"}),
-                "fetchStudy should be called with the correct study id (study4)");
+            assert.isTrue(
+                fetchStudiesStub.calledOnce,
+                'fetchStudies should be called only once'
+            );
+            assert.isTrue(
+                fetchStudiesStub.calledWith({
+                    studyIds: ['study4'],
+                    projection: 'DETAILED',
+                }),
+                'fetchStudy should be called with the correct study id (study4)'
+            );
         });
     });
 
@@ -514,5 +658,4 @@ describe('StoreUtils', () => {
             assert.isFalse(noGenePanelUsed('dummy_gene_panel_id'));
         });
     });
-
 });

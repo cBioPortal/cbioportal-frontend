@@ -3,9 +3,9 @@
 // Behavior undefined on non-sorted arrays.
 
 export function sortedFindWith<T>(
-    sortedArray:T[],
-    oracle:(t:T)=>number // -1, 0, 1
-):T|undefined {
+    sortedArray: T[],
+    oracle: (t: T) => number // -1, 0, 1
+): T | undefined {
     let lowIncl = 0;
     let highExcl = sortedArray.length;
     let middle;
@@ -20,7 +20,7 @@ export function sortedFindWith<T>(
             case -1:
                 // "too small"
                 // target element must be in [middle+1, high)
-                lowIncl = middle+1;
+                lowIncl = middle + 1;
                 break;
             case 0:
                 // we found it

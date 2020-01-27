@@ -13,25 +13,27 @@ const ArgumentParser = require('argparse').ArgumentParser;
 
 const API_ROOT = 'cbioportal-rc.herokuapp.com/api';
 
+const storeFile = (url, outputFile) => response => {
+    let str = '';
 
-const storeFile = (url, outputFile) =>
-    (response) => {
-        let str = '';
+    response.on('data', chunk => {
+        str += chunk;
+    });
 
-        response.on('data', (chunk) => {
-            str += chunk;
-        });
-
-        response.on('end', () => {
-            fs.writeFile(outputFile, JSON.stringify(JSON.parse(str), null, 4), (e) => {
+    response.on('end', () => {
+        fs.writeFile(
+            outputFile,
+            JSON.stringify(JSON.parse(str), null, 4),
+            e => {
                 if (e) {
                     return 1;
                 }
                 console.log(`✓ Downloaded ${url} to ${outputFile}`.green);
                 return 0;
-            });
-        });
-    };
+            }
+        );
+    });
+};
 
 const downloadFileFromURL = (url, file, postData) => {
     const urlSplit = url.split('/');
@@ -46,8 +48,8 @@ const downloadFileFromURL = (url, file, postData) => {
         options.headers = {
             'Content-Type': 'application/json',
             'Cache-Control': 'no-cache',
-            'Accept': 'application/json',
-            'Content-Length': JSON.stringify(postData).length
+            Accept: 'application/json',
+            'Content-Length': JSON.stringify(postData).length,
         };
     } else {
         options.method = 'GET';
@@ -58,18 +60,17 @@ const downloadFileFromURL = (url, file, postData) => {
     }
     req.end();
 
-    req.on('error', (e) => {
+    req.on('error', e => {
         console.error(e);
     });
 };
 
-
-const main = (testDiff) => {
+const main = testDiff => {
     const failed = [];
     let URLsProcessed = 0;
     let fail;
 
-    mockDataURLs.forEach((x) => {
+    mockDataURLs.forEach(x => {
         URLsProcessed += 1;
 
         if (x.implemented === 'true') {
@@ -77,7 +78,7 @@ const main = (testDiff) => {
             fail = downloadFileFromURL(`${API_ROOT}/${x.url}`, x.file, x.data);
             if (testDiff) {
                 const diff = spawn('git', ['diff', '--quiet', x.file]);
-                diff.on('close', (code) => {
+                diff.on('close', code => {
                     if (!code || fail) {
                         failed.push(x);
                     }
@@ -89,9 +90,15 @@ const main = (testDiff) => {
 
         if (URLsProcessed === mockDataURLs.length) {
             if (failed.length > 0) {
-                console.log('✗ FAILED: Following files in API differ from stored mockData:'.red);
-                failed.forEach((file) => {
-                    console.log(`✗ File from API is differs from stored mock ${file}`.red);
+                console.log(
+                    '✗ FAILED: Following files in API differ from stored mockData:'
+                        .red
+                );
+                failed.forEach(file => {
+                    console.log(
+                        `✗ File from API is differs from stored mock ${file}`
+                            .red
+                    );
                 });
                 process.exit(1);
             }
@@ -102,16 +109,13 @@ const main = (testDiff) => {
 if (require.main === module) {
     const parser = new ArgumentParser({
         addHelp: true,
-        description: 'Download mock data & test if it is different from repo'
+        description: 'Download mock data & test if it is different from repo',
     });
-    parser.addArgument(
-        ['-d', '--diff'],
-        {
-            help: 'Test if files are different using git diff',
-            type: Boolean,
-            action: 'storeTrue'
-        }
-    );
+    parser.addArgument(['-d', '--diff'], {
+        help: 'Test if files are different using git diff',
+        type: Boolean,
+        action: 'storeTrue',
+    });
     const args = parser.parseArgs();
     main(args.diff);
 }

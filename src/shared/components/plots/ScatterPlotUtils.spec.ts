@@ -1,10 +1,10 @@
-import {assert} from "chai";
-import {getRegressionComputations} from "./ScatterPlotUtils";
+import { assert } from 'chai';
+import { getRegressionComputations } from './ScatterPlotUtils';
 
-describe("ScatterPlotUtils", () => {
-    describe("getRegressionComputations", ()=>{
-        it("gives the correct regression equation, R^2, and function for a sample input with no correlation", ()=>{
-            const data:[number,number][] = [
+describe('ScatterPlotUtils', () => {
+    describe('getRegressionComputations', () => {
+        it('gives the correct regression equation, R^2, and function for a sample input with no correlation', () => {
+            const data: [number, number][] = [
                 [0.10198768, 0.10165061],
                 [0.10150876, 0.47896164],
                 [0.30063469, 0.43840858],
@@ -14,7 +14,7 @@ describe("ScatterPlotUtils", () => {
                 [0.02858332, 0.79155903],
                 [0.49389574, 0.54855519],
                 [0.77610317, 0.9879552],
-                [0.00350206, 0.73565457]
+                [0.00350206, 0.73565457],
             ];
 
             const computations = getRegressionComputations(data);
@@ -23,41 +23,47 @@ describe("ScatterPlotUtils", () => {
             const b = 0.59449349756220937;
             const r2 = 0.010257434869772463;
             // test regression equation to make sure its approximately the same as what python gives
-            const match = computations.string.match(/y = ([\d.]+)x \+ ([\d.]+)/);
-            assert.isNotNull(match, "equation has correct form");
+            const match = computations.string.match(
+                /y = ([\d.]+)x \+ ([\d.]+)/
+            );
+            assert.isNotNull(match, 'equation has correct form');
             const M = parseFloat(match![1]);
             const B = parseFloat(match![2]);
             assert.approximately(M, m, 0.05);
             assert.approximately(B, b, 0.05);
             // make sure `predict` gives the same result as the equation
-            for (let i=0; i<100; i+=1) {
-                assert.approximately(computations.predict(i)[1], M*i + B, 0.0000005, `value for ${i}`);
+            for (let i = 0; i < 100; i += 1) {
+                assert.approximately(
+                    computations.predict(i)[1],
+                    M * i + B,
+                    0.0000005,
+                    `value for ${i}`
+                );
             }
             // test R^2
-            assert.approximately(computations.r2,  r2, 0.05, "R^2");
-
+            assert.approximately(computations.r2, r2, 0.05, 'R^2');
         });
-        it("gives the correct regression equation, R^2, and function for a sample input with strong correlation", ()=>{
-            const data:[number,number][] = [
-                [0,0.33517481],
-                [1,3.00712561],
-                [2,6.73118302],
-                [3,9.25128682],
-                [4,12.0432596],
-                [5,15.9087018],
-                [6,18.71122156],
-                [7,21.69213527],
-                [8,24.57708193],
-                [9,27.98002031],
-                [10,30.67017471],
-                [11,33.55231386],
-                [12,36.20724938],
-                [13,39.21414698],
-                [14,42.74163248],
-                [15,45.95986539],
-                [16,48.28399276],
-                [17,51.52361803],
-                [18,54.62495359]
+        it('gives the correct regression equation, R^2, and function for a sample input with strong correlation', () => {
+            const data: [number, number][] = [
+                [0, 0.33517481],
+                [1, 3.00712561],
+                [2, 6.73118302],
+                [3, 9.25128682],
+                [4, 12.0432596],
+                [5, 15.9087018],
+                [6, 18.71122156],
+                [7, 21.69213527],
+                [8, 24.57708193],
+                [9, 27.98002031],
+                [10, 30.67017471],
+                [11, 33.55231386],
+                [12, 36.20724938],
+                [13, 39.21414698],
+                [14, 42.74163248],
+                [15, 45.95986539],
+                [16, 48.28399276],
+                [17, 51.52361803],
+                [18, 54.62495359],
             ];
 
             const computations = getRegressionComputations(data);
@@ -66,18 +72,25 @@ describe("ScatterPlotUtils", () => {
             const b = 0.41853989070105158;
             const r2 = 0.99970735279778178;
             // test regression equation to make sure its approximately the same as what python gives
-            const match = computations.string.match(/y = ([\d.]+)x \+ ([\d.]+)/);
-            assert.isNotNull(match, "equation has correct form");
+            const match = computations.string.match(
+                /y = ([\d.]+)x \+ ([\d.]+)/
+            );
+            assert.isNotNull(match, 'equation has correct form');
             const M = parseFloat(match![1]);
             const B = parseFloat(match![2]);
             assert.approximately(M, m, 0.05);
             assert.approximately(B, b, 0.05);
             // make sure `predict` gives the same result as the equation
-            for (let i=0; i<100; i+=1) {
-                assert.approximately(computations.predict(i)[1], M*i + B, 0.0000005, `value for ${i}`);
+            for (let i = 0; i < 100; i += 1) {
+                assert.approximately(
+                    computations.predict(i)[1],
+                    M * i + B,
+                    0.0000005,
+                    `value for ${i}`
+                );
             }
             // test R^2
-            assert.approximately(computations.r2,  r2, 0.05, "R^2");
+            assert.approximately(computations.r2, r2, 0.05, 'R^2');
         });
     });
 });

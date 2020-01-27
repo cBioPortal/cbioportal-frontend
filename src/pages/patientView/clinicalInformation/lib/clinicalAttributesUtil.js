@@ -29,7 +29,7 @@ function clean(clinicalData) {
         '[not evaluated]',
         '[not applicable]',
         '[not available]',
-        '[undefined]'
+        '[undefined]',
     ];
 
     const keys = Object.keys(clinicalData);
@@ -79,7 +79,6 @@ function getFirstKeyFound(object, keys) {
     return null;
 }
 
-
 /**
  * Derive clinical attributes from existing clinical attributes .e.g. age based
  * on a date of birth. TODO: Now only includes a funky hack to keep current
@@ -115,14 +114,20 @@ function derive(clinicalData) {
                     caseTypeNormalized = 'Recurrence';
                 } else if (caseTypeLower.indexOf('progr') >= 0) {
                     caseTypeNormalized = 'Progressed';
-                } else if (caseTypeLower.indexOf('xeno') >= 0 || caseTypeLower.indexOf('pdx') >= 0) {
+                } else if (
+                    caseTypeLower.indexOf('xeno') >= 0 ||
+                    caseTypeLower.indexOf('pdx') >= 0
+                ) {
                     caseTypeNormalized = 'Xenograft';
                 } else if (caseTypeLower.indexOf('cfdna') >= 0) {
                     caseTypeNormalized = 'cfDNA';
                 } else if (caseTypeLower.indexOf('prim') >= 0) {
                     caseTypeNormalized = 'Primary';
                 }
-                if (caseTypeNormalized !== null && typeof caseTypeNormalized !== 'undefined') {
+                if (
+                    caseTypeNormalized !== null &&
+                    typeof caseTypeNormalized !== 'undefined'
+                ) {
                     break;
                 }
             }
@@ -131,17 +136,33 @@ function derive(clinicalData) {
         return caseTypeNormalized;
     }
 
-    const caseTypeNormalized = normalizedCaseType(clinicalData, ['SAMPLE_CLASS', 'SAMPLE_TYPE', 'TUMOR_TISSUE_SITE', 'TUMOR_TYPE']);
+    const caseTypeNormalized = normalizedCaseType(clinicalData, [
+        'SAMPLE_CLASS',
+        'SAMPLE_TYPE',
+        'TUMOR_TISSUE_SITE',
+        'TUMOR_TYPE',
+    ]);
     if (caseTypeNormalized !== null) {
         let loc;
 
         derivedClinicalAttributes.DERIVED_NORMALIZED_CASE_TYPE = caseTypeNormalized;
 
         // TODO: DERIVED_SAMPLE_LOCATION should probably be a clinical attribute.
-        if (derivedClinicalAttributes.DERIVED_NORMALIZED_CASE_TYPE === 'Metastasis') {
-            loc = getFirstKeyFound(clinicalData, ['METASTATIC_SITE', 'TUMOR_SITE']);
-        } else if (derivedClinicalAttributes.DERIVED_NORMALIZED_CASE_TYPE === 'Primary') {
-            loc = getFirstKeyFound(clinicalData, ['PRIMARY_SITE', 'TUMOR_SITE']);
+        if (
+            derivedClinicalAttributes.DERIVED_NORMALIZED_CASE_TYPE ===
+            'Metastasis'
+        ) {
+            loc = getFirstKeyFound(clinicalData, [
+                'METASTATIC_SITE',
+                'TUMOR_SITE',
+            ]);
+        } else if (
+            derivedClinicalAttributes.DERIVED_NORMALIZED_CASE_TYPE === 'Primary'
+        ) {
+            loc = getFirstKeyFound(clinicalData, [
+                'PRIMARY_SITE',
+                'TUMOR_SITE',
+            ]);
         } else {
             loc = getFirstKeyFound(clinicalData, ['TUMOR_SITE']);
         }
@@ -168,14 +189,30 @@ function cleanAndDerive(clinicalData) {
  * @param {string} cancerStudyId    - short name of cancer study
  */
 function getSpanElements(clinicalData, cancerStudyId) {
-    return getSpanElementsFromCleanData(cleanAndDerive(clinicalData), cancerStudyId);
+    return getSpanElementsFromCleanData(
+        cleanAndDerive(clinicalData),
+        cancerStudyId
+    );
 }
 
-function getSpanElementsFromCleanData(clinicalAttributesCleanDerived, cancerStudyId) {
+function getSpanElementsFromCleanData(
+    clinicalAttributesCleanDerived,
+    cancerStudyId
+) {
     let spans = [];
-    return Object.keys(clinicalAttributesCleanDerived).map((key) => {
+    return Object.keys(clinicalAttributesCleanDerived).map(key => {
         let value = clinicalAttributesCleanDerived[key];
-        return <span is class="clinical-attribute" attr-id={key} attr-value={value} study={cancerStudyId}>{value}</span>
+        return (
+            <span
+                is
+                class="clinical-attribute"
+                attr-id={key}
+                attr-value={value}
+                study={cancerStudyId}
+            >
+                {value}
+            </span>
+        );
     });
 }
 
@@ -188,15 +225,25 @@ function getSpanElementsFromCleanData(clinicalAttributesCleanDerived, cancerStud
  */
 function addFirstOrderClass() {
     $('.sample-record-inline, #more-patient-info').each(() => {
-        const orderSortedAttributes = _.sortBy($(this).find('a > .clinical-attribute'), (y) => {
-            const order = parseInt($(y).css('order'), 10);
-            if (isNaN(order)) {
-                console.log('Warning: No order attribute found in .clinical-attribute.');
+        const orderSortedAttributes = _.sortBy(
+            $(this).find('a > .clinical-attribute'),
+            y => {
+                const order = parseInt($(y).css('order'), 10);
+                if (isNaN(order)) {
+                    console.log(
+                        'Warning: No order attribute found in .clinical-attribute.'
+                    );
+                }
+                return order;
             }
-            return order;
-        });
+        );
         $(orderSortedAttributes[0]).addClass('first-order');
     });
 }
 
-export { cleanAndDerive, getSpanElements, getSpanElementsFromCleanData, addFirstOrderClass };
+export {
+    cleanAndDerive,
+    getSpanElements,
+    getSpanElementsFromCleanData,
+    addFirstOrderClass,
+};

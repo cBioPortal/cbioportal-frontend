@@ -1,11 +1,10 @@
 .ChartControls {
-    display:flex !important;
+    display: flex !important;
     > * {
-      margin-right:10px;
+        margin-right: 10px;
     }
-    
-    > :last-child {	
-      margin-right:0;	
+
+    > :last-child {
+        margin-right: 0;
     }
-    
-  }
+}

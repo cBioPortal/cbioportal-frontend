@@ -10,16 +10,16 @@ export interface IMutationalSignature {
     numberOfMutationsForSample: number;
 }
 
-export interface IMutationalSignatureMeta{
+export interface IMutationalSignatureMeta {
     mutationalSignatureId: string;
     description: string;
     confidenceStatement: string;
 }
 
-export interface ISignificantMutationalSignaturesForSample{
+export interface ISignificantMutationalSignaturesForSample {
     numberOfMutationsForSample: number;
     confidenceStatement: string;
     significantSignatures: {
-        [mutationalSignatureId: string]: number
-    }
+        [mutationalSignatureId: string]: number;
+    };
 }

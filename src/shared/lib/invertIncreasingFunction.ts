@@ -1,13 +1,13 @@
 export function findXRangeOfIncreasingFunction(
-    func:(x:number)=>number,
-    y:number // the output range is so that func(range[0]) <= y <= func(range[1])
+    func: (x: number) => number,
+    y: number // the output range is so that func(range[0]) <= y <= func(range[1])
 ) {
     // find lower
     let lower = 0;
     let step = 1;
     while (func(lower) > y) {
         if (lower < Number.MIN_SAFE_INTEGER) {
-            throw new Error("Couldnt find lower bound");
+            throw new Error('Couldnt find lower bound');
         }
 
         lower -= step;
@@ -18,7 +18,7 @@ export function findXRangeOfIncreasingFunction(
     let upper = 0;
     while (func(upper) < y) {
         if (upper > Number.MAX_SAFE_INTEGER) {
-            throw new Error("Couldnt find upper bound");
+            throw new Error('Couldnt find upper bound');
         }
 
         upper += step;
@@ -29,10 +29,10 @@ export function findXRangeOfIncreasingFunction(
 }
 
 export default function invertIncreasingFunction(
-    func:(x:number)=>number,
+    func: (x: number) => number,
     y: number,
-    xRange?:[number,number],
-    iterations:number = 20
+    xRange?: [number, number],
+    iterations: number = 20
 ) {
     xRange = xRange || findXRangeOfIncreasingFunction(func, y);
     // tries to approximate the value x, within xRange, such that func(x) = targetOutput, assuming func is monotonic increasing
@@ -55,11 +55,11 @@ export default function invertIncreasingFunction(
 }
 
 export function invertDecreasingFunction(
-    func:(x:number)=>number,
+    func: (x: number) => number,
     y: number,
-    xRange?:[number,number],
-    iterations:number = 20
+    xRange?: [number, number],
+    iterations: number = 20
 ) {
-    const increasingFn = (x:number)=>-func(x);
+    const increasingFn = (x: number) => -func(x);
     return invertIncreasingFunction(increasingFn, -y, xRange, iterations);
 }

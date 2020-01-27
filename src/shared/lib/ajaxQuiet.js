@@ -2,14 +2,13 @@ window.ajaxRequests = {};
 var _send = XMLHttpRequest.prototype.send;
 var lastTimeout = null;
 
-export function setNetworkListener(){
-
+export function setNetworkListener() {
     window.ajaxQuiet = true;
 
     var xhrProto = XMLHttpRequest.prototype,
         origOpen = xhrProto.open;
 
-    xhrProto.open = function (method, url) {
+    xhrProto.open = function(method, url) {
         this._url = url;
         return origOpen.apply(this, arguments);
     };
@@ -17,10 +16,10 @@ export function setNetworkListener(){
     XMLHttpRequest.prototype.send = function() {
         window.ajaxQuiet = false;
         var id = Math.floor(Math.random() * 1000000000);
-        window.ajaxRequests[id] = { url:this._url, started: Date.now()  };
+        window.ajaxRequests[id] = { url: this._url, started: Date.now() };
         /* Wrap onreadystaechange callback */
         var callback = this.onreadystatechange;
-        this.onreadystatechange = function () {
+        this.onreadystatechange = function() {
             if (this.readyState == 4) {
                 delete window.ajaxRequests[id];
             }
@@ -28,9 +27,8 @@ export function setNetworkListener(){
             if (Object.keys(window.ajaxRequests).length === 0) {
                 window.ajaxQuiet = true;
             }
-        }
+        };
 
         _send.apply(this, arguments);
-    }
-
+    };
 }

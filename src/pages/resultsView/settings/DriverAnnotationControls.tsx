@@ -1,15 +1,14 @@
-import * as React from "react";
-import {observer} from "mobx-react";
-import ErrorIcon from "../../../shared/components/ErrorIcon";
-import {IObservableObject, ObservableMap} from "mobx";
-import autobind from "autobind-decorator";
+import * as React from 'react';
+import { observer } from 'mobx-react';
+import ErrorIcon from '../../../shared/components/ErrorIcon';
+import { IObservableObject, ObservableMap } from 'mobx';
+import autobind from 'autobind-decorator';
 import {
     EditableSpan,
     DefaultTooltip,
-    getNCBIlink
-} from "cbioportal-frontend-commons";
+    getNCBIlink,
+} from 'cbioportal-frontend-commons';
 import 'rc-tooltip/assets/bootstrap_white.css';
-
 
 export interface IDriverAnnotationControlsState {
     distinguishDrivers: boolean;
@@ -22,11 +21,11 @@ export interface IDriverAnnotationControlsState {
     annotateDriversHotspotsError?: boolean;
     annotateDriversHotspots?: boolean;
 
-    annotateDriversCBioPortal: boolean,
-    annotateCBioPortalInputValue: string,
+    annotateDriversCBioPortal: boolean;
+    annotateCBioPortalInputValue: string;
 
-    annotateDriversCOSMIC?: boolean,
-    annotateCOSMICInputValue?: string,
+    annotateDriversCOSMIC?: boolean;
+    annotateCOSMICInputValue?: string;
 
     customDriverAnnotationBinaryMenuLabel?: string;
     customDriverAnnotationTiersMenuLabel?: string;
@@ -36,60 +35,75 @@ export interface IDriverAnnotationControlsState {
 }
 
 export interface IDriverAnnotationControlsHandlers {
-    onSelectDistinguishDrivers: (distinguish: boolean) => void,
-    onSelectAnnotateOncoKb: (annotate: boolean) => void,
-    onSelectAnnotateHotspots?: (annotate: boolean) => void,
-    onSelectAnnotateCBioPortal: (annotate: boolean) => void,
-    onSelectAnnotateCOSMIC?: (annotate: boolean) => void,
-    onChangeAnnotateCBioPortalInputValue: (value: string) => void,
-    onChangeAnnotateCOSMICInputValue?: (value: string) => void,
+    onSelectDistinguishDrivers: (distinguish: boolean) => void;
+    onSelectAnnotateOncoKb: (annotate: boolean) => void;
+    onSelectAnnotateHotspots?: (annotate: boolean) => void;
+    onSelectAnnotateCBioPortal: (annotate: boolean) => void;
+    onSelectAnnotateCOSMIC?: (annotate: boolean) => void;
+    onChangeAnnotateCBioPortalInputValue: (value: string) => void;
+    onChangeAnnotateCOSMICInputValue?: (value: string) => void;
     onSelectCustomDriverAnnotationBinary?: (s: boolean) => void;
     onSelectCustomDriverAnnotationTier?: (value: string, s: boolean) => void;
-    onCustomDriverTierCheckboxClick?: (event: React.MouseEvent<HTMLInputElement>) => void;
+    onCustomDriverTierCheckboxClick?: (
+        event: React.MouseEvent<HTMLInputElement>
+    ) => void;
 }
 
 export interface IDriverAnnotationControlsProps {
     state: IDriverAnnotationControlsState & IObservableObject;
-    handlers: IDriverAnnotationControlsHandlers
+    handlers: IDriverAnnotationControlsHandlers;
 }
 
 enum EVENT_KEY {
-    distinguishDrivers = "0",
-    annotateOncoKb = "1",
-    annotateHotspots = "2",
-    annotateCBioPortal = "3",
-    annotateCOSMIC = "4",
-    customDriverBinaryAnnotation = "5",
+    distinguishDrivers = '0',
+    annotateOncoKb = '1',
+    annotateHotspots = '2',
+    annotateCBioPortal = '3',
+    annotateCOSMIC = '4',
+    customDriverBinaryAnnotation = '5',
 }
 
 @observer
-export default class DriverAnnotationControls extends React.Component<IDriverAnnotationControlsProps, {}> {
-
+export default class DriverAnnotationControls extends React.Component<
+    IDriverAnnotationControlsProps,
+    {}
+> {
     @autobind
     private onInputClick(event: React.MouseEvent<HTMLInputElement>) {
         switch ((event.target as HTMLInputElement).value) {
             case EVENT_KEY.distinguishDrivers:
-                this.props.handlers.onSelectDistinguishDrivers(!this.props.state.distinguishDrivers);
+                this.props.handlers.onSelectDistinguishDrivers(
+                    !this.props.state.distinguishDrivers
+                );
                 break;
             case EVENT_KEY.annotateOncoKb:
-                this.props.handlers.onSelectAnnotateOncoKb(!this.props.state.annotateDriversOncoKb);
+                this.props.handlers.onSelectAnnotateOncoKb(
+                    !this.props.state.annotateDriversOncoKb
+                );
                 break;
             case EVENT_KEY.annotateHotspots:
                 this.props.handlers.onSelectAnnotateHotspots &&
-                this.props.handlers.onSelectAnnotateHotspots(!this.props.state.annotateDriversHotspots);
+                    this.props.handlers.onSelectAnnotateHotspots(
+                        !this.props.state.annotateDriversHotspots
+                    );
                 break;
             case EVENT_KEY.annotateCBioPortal:
-                this.props.handlers.onSelectAnnotateCBioPortal(!this.props.state.annotateDriversCBioPortal);
+                this.props.handlers.onSelectAnnotateCBioPortal(
+                    !this.props.state.annotateDriversCBioPortal
+                );
                 break;
             case EVENT_KEY.annotateCOSMIC:
                 this.props.handlers.onSelectAnnotateCOSMIC &&
-                this.props.handlers.onSelectAnnotateCOSMIC(!this.props.state.annotateDriversCOSMIC);
+                    this.props.handlers.onSelectAnnotateCOSMIC(
+                        !this.props.state.annotateDriversCOSMIC
+                    );
                 break;
             case EVENT_KEY.customDriverBinaryAnnotation:
                 this.props.handlers.onSelectCustomDriverAnnotationBinary &&
-                this.props.handlers.onSelectCustomDriverAnnotationBinary(!this.props.state.annotateCustomDriverBinary);
+                    this.props.handlers.onSelectCustomDriverAnnotationBinary(
+                        !this.props.state.annotateCustomDriverBinary
+                    );
                 break;
-
         }
     }
 
@@ -102,25 +116,21 @@ export default class DriverAnnotationControls extends React.Component<IDriverAnn
                             data-test="ColorByDriver"
                             type="checkbox"
                             value={EVENT_KEY.distinguishDrivers}
-                            checked={
-                                this.props.state.distinguishDrivers
-                            }
+                            checked={this.props.state.distinguishDrivers}
                             onClick={this.onInputClick}
                         />{' '}
                         Putative drivers vs VUS:
                     </label>
                 </div>
-                <div style={{marginLeft: '20px'}}>
-                    {!this.props.state
-                        .annotateDriversOncoKbDisabled && (
+                <div style={{ marginLeft: '20px' }}>
+                    {!this.props.state.annotateDriversOncoKbDisabled && (
                         <div className="checkbox">
                             <label>
                                 <input
                                     type="checkbox"
                                     value={EVENT_KEY.annotateOncoKb}
                                     checked={
-                                        this.props.state
-                                            .annotateDriversOncoKb
+                                        this.props.state.annotateDriversOncoKb
                                     }
                                     onClick={this.onInputClick}
                                     data-test="annotateOncoKb"
@@ -132,26 +142,24 @@ export default class DriverAnnotationControls extends React.Component<IDriverAnn
                                 {this.props.state
                                     .annotateDriversOncoKbError && (
                                     <ErrorIcon
-                                        style={{marginRight: 4}}
+                                        style={{ marginRight: 4 }}
                                         tooltip={
                                             <span>
-                                                        Error loading OncoKb
-                                                        data. Please refresh the
-                                                        page or try again later.
-                                                    </span>
+                                                Error loading OncoKb data.
+                                                Please refresh the page or try
+                                                again later.
+                                            </span>
                                         }
                                     />
                                 )}
                                 <DefaultTooltip
                                     overlay={
-                                        <span>
-                                                    Oncogenicity from OncoKB
-                                                </span>
+                                        <span>Oncogenicity from OncoKB</span>
                                     }
                                     placement="top"
                                 >
                                     <img
-                                        src={require("../../../rootImages/oncokb.png")}
+                                        src={require('../../../rootImages/oncokb.png')}
                                         style={{
                                             maxHeight: '12px',
                                             cursor: 'pointer',
@@ -164,91 +172,84 @@ export default class DriverAnnotationControls extends React.Component<IDriverAnn
                         </div>
                     )}
                     {this.props.handlers.onSelectAnnotateHotspots &&
-                    !this.props.state
-                        .annotateDriversHotspotsDisabled && (
-                        <div className="checkbox">
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    value={
-                                        EVENT_KEY.annotateHotspots
-                                    }
-                                    checked={
-                                        this.props.state
-                                            .annotateDriversHotspots
-                                    }
-                                    onClick={this.onInputClick}
-                                    data-test="annotateHotspots"
-                                    disabled={
-                                        this.props.state
-                                            .annotateDriversHotspotsError
-                                    }
-                                />
-                                {this.props.state
-                                    .annotateDriversHotspotsError && (
-                                    <ErrorIcon
-                                        style={{marginRight: 4}}
-                                        tooltip={
-                                            <span>
-                                                            Error loading
-                                                            Hotspots data.
-                                                            Please refresh the
-                                                            page or try again
-                                                            later.
-                                                        </span>
+                        !this.props.state.annotateDriversHotspotsDisabled && (
+                            <div className="checkbox">
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        value={EVENT_KEY.annotateHotspots}
+                                        checked={
+                                            this.props.state
+                                                .annotateDriversHotspots
+                                        }
+                                        onClick={this.onInputClick}
+                                        data-test="annotateHotspots"
+                                        disabled={
+                                            this.props.state
+                                                .annotateDriversHotspotsError
                                         }
                                     />
-                                )}
-                                Hotspots
-                                <DefaultTooltip
-                                    overlay={
-                                        <div
+                                    {this.props.state
+                                        .annotateDriversHotspotsError && (
+                                        <ErrorIcon
+                                            style={{ marginRight: 4 }}
+                                            tooltip={
+                                                <span>
+                                                    Error loading Hotspots data.
+                                                    Please refresh the page or
+                                                    try again later.
+                                                </span>
+                                            }
+                                        />
+                                    )}
+                                    Hotspots
+                                    <DefaultTooltip
+                                        overlay={
+                                            <div
+                                                style={{
+                                                    maxWidth: '400px',
+                                                }}
+                                            >
+                                                Identified as a recurrent
+                                                hotspot (statistically
+                                                significant) in a
+                                                population-scale cohort of tumor
+                                                samples of various cancer types
+                                                using methodology based in part
+                                                on{' '}
+                                                <a
+                                                    href={getNCBIlink(
+                                                        '/pubmed/26619011'
+                                                    )}
+                                                    target="_blank"
+                                                >
+                                                    Chang et al., Nat
+                                                    Biotechnol, 2016.
+                                                </a>
+                                                Explore all mutations at{' '}
+                                                <a
+                                                    href="https://www.cancerhotspots.org"
+                                                    target="_blank"
+                                                >
+                                                    https://cancerhotspots.org
+                                                </a>
+                                            </div>
+                                        }
+                                        placement="top"
+                                    >
+                                        <img
+                                            src={require('../../../rootImages/cancer-hotspots.svg')}
                                             style={{
-                                                maxWidth: '400px',
+                                                height: '15px',
+                                                width: '15px',
+                                                cursor: 'pointer',
+                                                marginLeft: '5px',
                                             }}
-                                        >
-                                            Identified as a
-                                            recurrent hotspot
-                                            (statistically
-                                            significant) in a
-                                            population-scale cohort
-                                            of tumor samples of
-                                            various cancer types
-                                            using methodology based
-                                            in part on{' '}
-                                            <a
-                                                href={getNCBIlink(
-                                                    '/pubmed/26619011'
-                                                )}
-                                                target="_blank"
-                                            >
-                                                Chang et al., Nat
-                                                Biotechnol, 2016.
-                                            </a>
-                                            Explore all mutations at{' '}
-                                            <a
-                                                href="https://www.cancerhotspots.org"
-                                                target="_blank"
-                                            >
-                                                https://cancerhotspots.org
-                                            </a>
-                                        </div>
-                                    }
-                                    placement="top"
-                                >
-                                    <img
-                                        src={require("../../../rootImages/cancer-hotspots.svg")}
-                                        style={{
-                                            height: '15px',
-                                            width: '15px',
-                                            cursor: 'pointer',
-                                            marginLeft: '5px',
-                                        }}
-                                    />
-                                </DefaultTooltip>
-                            </label>
-                        </div>
-                    )}
+                                        />
+                                    </DefaultTooltip>
+                                </label>
+                            </div>
+                        )}
                     {this.props.handlers
                         .onChangeAnnotateCBioPortalInputValue && (
                         <div className="checkbox">
@@ -268,8 +269,7 @@ export default class DriverAnnotationControls extends React.Component<IDriverAnn
                             <EditableSpan
                                 value={
                                     this.props.state
-                                        .annotateCBioPortalInputValue ||
-                                    ''
+                                        .annotateCBioPortalInputValue || ''
                                 }
                                 setValue={
                                     this.props.handlers
@@ -281,16 +281,14 @@ export default class DriverAnnotationControls extends React.Component<IDriverAnn
                             />
                         </div>
                     )}
-                    {this.props.handlers
-                        .onChangeAnnotateCOSMICInputValue && (
+                    {this.props.handlers.onChangeAnnotateCOSMICInputValue && (
                         <div className="checkbox">
                             <label>
                                 <input
                                     type="checkbox"
                                     value={EVENT_KEY.annotateCOSMIC}
                                     checked={
-                                        this.props.state
-                                            .annotateDriversCOSMIC
+                                        this.props.state.annotateDriversCOSMIC
                                     }
                                     onClick={this.onInputClick}
                                     data-test="annotateCOSMICCount"
@@ -299,8 +297,8 @@ export default class DriverAnnotationControls extends React.Component<IDriverAnn
                             </label>
                             <EditableSpan
                                 value={
-                                    this.props.state
-                                        .annotateCOSMICInputValue || ''
+                                    this.props.state.annotateCOSMICInputValue ||
+                                    ''
                                 }
                                 setValue={
                                     this.props.handlers
@@ -333,7 +331,7 @@ export default class DriverAnnotationControls extends React.Component<IDriverAnn
                                         .customDriverAnnotationBinaryMenuLabel
                                 }
                                 <img
-                                    src={require("../../../rootImages/driver.png")}
+                                    src={require('../../../rootImages/driver.png')}
                                     alt="driver filter"
                                     style={{
                                         height: '15px',
@@ -348,17 +346,17 @@ export default class DriverAnnotationControls extends React.Component<IDriverAnn
                     {!!this.props.state
                         .customDriverAnnotationTiersMenuLabel && (
                         <span>
-                                    <span className="caret"/>
+                            <span className="caret" />
                             &nbsp;&nbsp;
                             <span>
-                                        {
-                                            this.props.state
-                                                .customDriverAnnotationTiersMenuLabel
-                                        }
-                                    </span>
+                                {
+                                    this.props.state
+                                        .customDriverAnnotationTiersMenuLabel
+                                }
+                            </span>
                             &nbsp;
                             <img
-                                src={require("../../../rootImages/driver_tiers.png")}
+                                src={require('../../../rootImages/driver_tiers.png')}
                                 alt="driver tiers filter"
                                 style={{
                                     height: '15px',
@@ -367,36 +365,36 @@ export default class DriverAnnotationControls extends React.Component<IDriverAnn
                                     marginLeft: '5px',
                                 }}
                             />
-                                    <div style={{marginLeft: '30px'}}>
-                                        {(
-                                            this.props.state
-                                                .customDriverAnnotationTiers ||
-                                            []
-                                        ).map(tier => (
-                                            <div className="checkbox">
-                                                <label>
-                                                    <input
-                                                        type="checkbox"
-                                                        value={tier}
-                                                        checked={
-                                                            !!(
-                                                                this.props.state
-                                                                    .selectedCustomDriverAnnotationTiers &&
-                                                                this.props.state.selectedCustomDriverAnnotationTiers.get(
-                                                                    tier
-                                                                )
-                                                            )
-                                                        }
-                                                        onClick={
-                                                            this.props.handlers.onCustomDriverTierCheckboxClick
-                                                        }
-                                                    />{' '}
-                                                    {tier}
-                                                </label>
-                                            </div>
-                                        ))}
+                            <div style={{ marginLeft: '30px' }}>
+                                {(
+                                    this.props.state
+                                        .customDriverAnnotationTiers || []
+                                ).map(tier => (
+                                    <div className="checkbox">
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                                value={tier}
+                                                checked={
+                                                    !!(
+                                                        this.props.state
+                                                            .selectedCustomDriverAnnotationTiers &&
+                                                        this.props.state.selectedCustomDriverAnnotationTiers.get(
+                                                            tier
+                                                        )
+                                                    )
+                                                }
+                                                onClick={
+                                                    this.props.handlers
+                                                        .onCustomDriverTierCheckboxClick
+                                                }
+                                            />{' '}
+                                            {tier}
+                                        </label>
                                     </div>
-                                </span>
+                                ))}
+                            </div>
+                        </span>
                     )}
                 </div>
             </div>

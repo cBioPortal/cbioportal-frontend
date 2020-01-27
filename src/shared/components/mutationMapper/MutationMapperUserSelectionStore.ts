@@ -1,8 +1,10 @@
-import {observable} from "mobx";
-import {initDefaultTrackVisibility, TrackVisibility} from "react-mutation-mapper";
+import { observable } from 'mobx';
+import {
+    initDefaultTrackVisibility,
+    TrackVisibility,
+} from 'react-mutation-mapper';
 
-export default class MutationMapperUserSelectionStore
-{
+export default class MutationMapperUserSelectionStore {
     @observable trackVisibility: TrackVisibility;
 
     constructor() {

@@ -1,36 +1,36 @@
 import { RouterStore } from 'mobx-react-router';
-import {action, computed, observable, runInAction} from 'mobx';
+import { action, computed, observable, runInAction } from 'mobx';
 import * as _ from 'lodash';
-import URL, {QueryParams} from 'url';
-import {remoteData} from "cbioportal-frontend-commons";
-import sessionClient from "../api/sessionServiceInstance";
-import AppConfig from "appConfig";
-import {ServerConfigHelpers} from "../../config/config";
-import hashString from "./hashString";
+import URL, { QueryParams } from 'url';
+import { remoteData } from 'cbioportal-frontend-commons';
+import sessionClient from '../api/sessionServiceInstance';
+import AppConfig from 'appConfig';
+import { ServerConfigHelpers } from '../../config/config';
+import hashString from './hashString';
 
-export function getSessionKey(hash:string){
-    return `session_${hash}`
+export function getSessionKey(hash: string) {
+    return `session_${hash}`;
 }
 
 export interface PortalSession {
-    id:string;
-    query:{ [key:string] : any };
-    path:string;
-    version:number;
-    timeStamp?:number;
+    id: string;
+    query: { [key: string]: any };
+    path: string;
+    version: number;
+    timeStamp?: number;
 }
 
-export function saveRemoteSession(data:any){
+export function saveRemoteSession(data: any) {
     const dataCopy = Object.assign({}, data);
-    delete dataCopy[""]; // artifact of mobx RouterStore URL serialization, when theres & at end of URL, which breaks session service
+    delete dataCopy['']; // artifact of mobx RouterStore URL serialization, when theres & at end of URL, which breaks session service
     return sessionClient.saveSession(dataCopy);
 }
 
-export function getRemoteSession(sessionId:string){
-    return sessionClient.getSession(sessionId)
+export function getRemoteSession(sessionId: string) {
+    return sessionClient.getSession(sessionId);
 }
 
-export function normalizeLegacySession(sessionData:any){
+export function normalizeLegacySession(sessionData: any) {
     // legacy sessions were stored with values as first item in arrays, so undo this
     sessionData.data = _.mapValues(sessionData.data, (value: any) => {
         if (_.isArray(value)) {
@@ -41,7 +41,10 @@ export function normalizeLegacySession(sessionData:any){
     });
 
     // convert cancer_study_id to cancer_study_list and get rid of cancer_study_id
-    if (sessionData.data.cancer_study_id && !sessionData.data.cancer_study_list) {
+    if (
+        sessionData.data.cancer_study_id &&
+        !sessionData.data.cancer_study_list
+    ) {
         sessionData.data.cancer_study_list = sessionData.data.cancer_study_id;
     }
     delete sessionData.data.cancer_study_id;
@@ -50,15 +53,18 @@ export function normalizeLegacySession(sessionData:any){
 }
 
 export default class ExtendedRouterStore extends RouterStore {
-
-
-    @action updateRoute(newParams: QueryParams, path:string | undefined = undefined, clear = false, replace = false) {
+    @action updateRoute(
+        newParams: QueryParams,
+        path: string | undefined = undefined,
+        clear = false,
+        replace = false
+    ) {
         // default to current path
-        path = (path !== undefined) ? path : this.location.pathname;
+        path = path !== undefined ? path : this.location.pathname;
 
         // if we're not clearing, we want to merge newParams onto existing query
         // but if we're clearing, we want to use newParams ONLY and wipe out existing query;
-        let newQuery:any;
+        let newQuery: any;
         if (!clear) {
             newQuery = _.clone(this.location.query);
             _.each(newParams, (v, k: string) => {
@@ -74,7 +80,7 @@ export default class ExtendedRouterStore extends RouterStore {
 
         // clear out any undefined props
         _.each(newQuery, (v, k: string) => {
-            if (v === undefined || v === "") {
+            if (v === undefined || v === '') {
                 delete newQuery[k];
             }
         });
@@ -82,8 +88,12 @@ export default class ExtendedRouterStore extends RouterStore {
         // put a leading slash if there isn't one
         path = URL.resolve('/', path);
 
-        this[replace ? "replace" : "push"]( URL.format({pathname: path, query: newQuery, hash:this.location.hash}) );
-
+        this[replace ? 'replace' : 'push'](
+            URL.format({
+                pathname: path,
+                query: newQuery,
+                hash: this.location.hash,
+            })
+        );
     }
-
 }

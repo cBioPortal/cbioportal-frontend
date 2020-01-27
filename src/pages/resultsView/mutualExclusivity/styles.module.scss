@@ -1,18 +1,18 @@
 .Checkboxes {
-  display: flex;
-  flex-direction: row;
-  float: left;
+    display: flex;
+    flex-direction: row;
+    float: left;
 }
 
 .Checkboxes > * {
-  margin:0 10px !important;
+    margin: 0 10px !important;
 }
 
 .Tendency {
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
 
-  &.Significant {
-    font-weight: bold;
-  }
+    &.Significant {
+        font-weight: bold;
+    }
 }

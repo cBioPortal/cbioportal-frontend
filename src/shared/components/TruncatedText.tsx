@@ -1,32 +1,36 @@
 import * as React from 'react';
 import classNames from 'classnames';
-import {observer} from "mobx-react";
-import {computed} from "mobx";
-import {DefaultTooltip} from "cbioportal-frontend-commons";
+import { observer } from 'mobx-react';
+import { computed } from 'mobx';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 
-export interface ITruncatedTextProps
-{
+export interface ITruncatedTextProps {
     text: string;
     className?: string;
     maxLength?: number; // max allowed length of the text
-    buffer?: number;    // buffer length before considering truncating the text
-    suffix?: string;    // will be added to the end of the text if truncated
-    addTooltip?: 'truncated'|'always' | 'never'; // when to add the tooltip
+    buffer?: number; // buffer length before considering truncating the text
+    suffix?: string; // will be added to the end of the text if truncated
+    addTooltip?: 'truncated' | 'always' | 'never'; // when to add the tooltip
     tooltip?: JSX.Element; // tooltip content
 }
 
-export function isTooLong(text: string, maxLength: number, buffer?: number):boolean
-{
-    return text != null && (text.length > maxLength + (buffer || 0));
+export function isTooLong(
+    text: string,
+    maxLength: number,
+    buffer?: number
+): boolean {
+    return text != null && text.length > maxLength + (buffer || 0);
 }
 
-export function truncateText(text: string, suffix: string, maxLength: number, buffer?: number)
-{
-    if (isTooLong(text, maxLength, buffer))
-    {
+export function truncateText(
+    text: string,
+    suffix: string,
+    maxLength: number,
+    buffer?: number
+) {
+    if (isTooLong(text, maxLength, buffer)) {
         return text.substring(0, maxLength) + suffix;
-    }
-    else {
+    } else {
         return text;
     }
 }
@@ -35,19 +39,21 @@ export function truncateText(text: string, suffix: string, maxLength: number, bu
  * @author Selcuk Onur Sumer
  */
 @observer
-export default class TruncatedText extends React.Component<ITruncatedTextProps, {}> {
+export default class TruncatedText extends React.Component<
+    ITruncatedTextProps,
+    {}
+> {
     public static defaultProps = {
         maxLength: 50,
         buffer: 2,
-        suffix: "...",
-        addTooltip: 'truncated'
+        suffix: '...',
+        addTooltip: 'truncated',
     };
 
-    public render()
-    {
+    public render() {
         let content = (
             <span
-                style={{whiteSpace: "nowrap"}}
+                style={{ whiteSpace: 'nowrap' }}
                 className={classNames(this.props.className)}
             >
                 {this.truncatedText}
@@ -57,7 +63,13 @@ export default class TruncatedText extends React.Component<ITruncatedTextProps, 
         if (this.needsTooltip) {
             content = (
                 <DefaultTooltip
-                    overlay={() => this.props.tooltip || <div style={{maxWidth: 500}}>{this.props.text}</div>}
+                    overlay={() =>
+                        this.props.tooltip || (
+                            <div style={{ maxWidth: 500 }}>
+                                {this.props.text}
+                            </div>
+                        )
+                    }
                     placement="right"
                     destroyTooltipOnHide={true}
                 >
@@ -69,16 +81,15 @@ export default class TruncatedText extends React.Component<ITruncatedTextProps, 
         return content;
     }
 
-    @computed get needsTooltip(): boolean
-    {
+    @computed get needsTooltip(): boolean {
         return (
             this.props.addTooltip !== 'never' &&
-            (this.props.addTooltip === 'always' || (this.props.addTooltip === 'truncated' && this.isTooLong))
+            (this.props.addTooltip === 'always' ||
+                (this.props.addTooltip === 'truncated' && this.isTooLong))
         );
     }
 
-    @computed get isTooLong(): boolean
-    {
+    @computed get isTooLong(): boolean {
         return isTooLong(
             this.props.text,
             this.props.maxLength || TruncatedText.defaultProps.maxLength,
@@ -86,8 +97,7 @@ export default class TruncatedText extends React.Component<ITruncatedTextProps, 
         );
     }
 
-    @computed get truncatedText(): string
-    {
+    @computed get truncatedText(): string {
         return truncateText(
             this.props.text,
             this.props.suffix || TruncatedText.defaultProps.suffix,

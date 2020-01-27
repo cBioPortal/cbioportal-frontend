@@ -117,6 +117,6 @@ export interface IServerConfig {
     query_product_limit: number;
     dat_uuid_revoke_other_tokens: boolean;
     dat_method: string;
-    skin_show_gsva:boolean;
+    skin_show_gsva: boolean;
     oncoKbTokenDefined: boolean;
 }

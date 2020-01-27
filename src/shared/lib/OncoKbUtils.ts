@@ -10,14 +10,15 @@ import {
     generateQueryVariant as generateGenericQueryVariant,
     generatePartialEvidenceQuery,
     LevelOfEvidence,
-    LEVELS
-} from "cbioportal-frontend-commons";
-import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import {IOncoKbData} from "shared/model/OncoKB";
+    LEVELS,
+} from 'cbioportal-frontend-commons';
+import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { IOncoKbData } from 'shared/model/OncoKB';
 
-export function generateIdToIndicatorMap(data:IndicatorQueryResp[]): {[queryId:string]: IndicatorQueryResp}
-{
-    const map:{[queryId:string]: IndicatorQueryResp} = {};
+export function generateIdToIndicatorMap(
+    data: IndicatorQueryResp[]
+): { [queryId: string]: IndicatorQueryResp } {
+    const map: { [queryId: string]: IndicatorQueryResp } = {};
 
     _.each(data, function(indicator) {
         map[indicator.query.id] = indicator;
@@ -26,29 +27,37 @@ export function generateIdToIndicatorMap(data:IndicatorQueryResp[]): {[queryId:s
     return map;
 }
 
-export function generateEvidenceQuery(queryVariants:Query[], evidenceTypes?:string): EvidenceQueries
-{
+export function generateEvidenceQuery(
+    queryVariants: Query[],
+    evidenceTypes?: string
+): EvidenceQueries {
     return {
         ...generatePartialEvidenceQuery(evidenceTypes),
-        queries: queryVariants
+        queries: queryVariants,
     } as EvidenceQueries;
 }
 
-export function generateQueryVariant(entrezGeneId:number,
-                                     tumorType:string | null,
-                                     alteration?:string,
-                                     mutationType?:string,
-                                     proteinPosStart?:number,
-                                     proteinPosEnd?:number,
-                                     alterationType?:string): Query
-{
+export function generateQueryVariant(
+    entrezGeneId: number,
+    tumorType: string | null,
+    alteration?: string,
+    mutationType?: string,
+    proteinPosStart?: number,
+    proteinPosEnd?: number,
+    alterationType?: string
+): Query {
     return generateGenericQueryVariant(
-        entrezGeneId, tumorType, alteration, mutationType, proteinPosStart, proteinPosEnd, alterationType
+        entrezGeneId,
+        tumorType,
+        alteration,
+        mutationType,
+        proteinPosStart,
+        proteinPosEnd,
+        alterationType
     ) as Query;
 }
 
-export function initEvidence()
-{
+export function initEvidence() {
     return {
         id: '',
         gene: {},
@@ -57,46 +66,54 @@ export function initEvidence()
         progImp: [],
         treatments: {
             sensitivity: [],
-            resistance: []
+            resistance: [],
         }, //separated by level type
         trials: [],
         oncogenic: '',
         oncogenicRefs: [],
         mutationEffect: {},
         mutationEffectRefs: [],
-        summary: ''
+        summary: '',
     };
 }
 
-export function getEvidenceQuery(mutation: Mutation, oncoKbData: IOncoKbData): Query|undefined
-{
+export function getEvidenceQuery(
+    mutation: Mutation,
+    oncoKbData: IOncoKbData
+): Query | undefined {
     // return null in case sampleToTumorMap is null
-    return oncoKbData.uniqueSampleKeyToTumorType ? generateQueryVariant(mutation.gene.entrezGeneId,
-        oncoKbData.uniqueSampleKeyToTumorType[mutation.uniqueSampleKey],
-        mutation.proteinChange,
-        mutation.mutationType,
-        mutation.proteinPosStart,
-        mutation.proteinPosEnd
-    ) : undefined;
+    return oncoKbData.uniqueSampleKeyToTumorType
+        ? generateQueryVariant(
+              mutation.gene.entrezGeneId,
+              oncoKbData.uniqueSampleKeyToTumorType[mutation.uniqueSampleKey],
+              mutation.proteinChange,
+              mutation.mutationType,
+              mutation.proteinPosStart,
+              mutation.proteinPosEnd
+          )
+        : undefined;
 }
 
 export function defaultOncoKbIndicatorFilter(indicator: IndicatorQueryResp) {
-    return indicator.oncogenic.toLowerCase().trim().includes("oncogenic");
+    return indicator.oncogenic
+        .toLowerCase()
+        .trim()
+        .includes('oncogenic');
 }
 
-export function processEvidence(evidences:EvidenceQueryRes[]) {
-    var result:any = {}; //id based.
+export function processEvidence(evidences: EvidenceQueryRes[]) {
+    var result: any = {}; //id based.
     if (evidences && evidences.length > 0) {
         evidences.forEach(function(record) {
             var id = record.query.id;
-            let datum:any = initEvidence(); // TODO define an extended evidence model?
-            var sensitivityTreatments:any = [];
-            var resistanceTreatments:any = [];
+            let datum: any = initEvidence(); // TODO define an extended evidence model?
+            var sensitivityTreatments: any = [];
+            var resistanceTreatments: any = [];
 
             let evidenceArr: Evidence[] = [];
             evidenceArr = evidenceArr.concat(record.evidences);
 
-            evidenceArr.forEach(function(evidence:any) {
+            evidenceArr.forEach(function(evidence: any) {
                 var description = '';
                 if (evidence.shortDescription) {
                     description = evidence.shortDescription;
@@ -112,7 +129,7 @@ export function processEvidence(evidences:EvidenceQueryRes[]) {
                         datum.oncogenicRefs = evidence.articles;
                     }
                 } else if (evidence.evidenceType === 'MUTATION_EFFECT') {
-                    let _datum:any = {};
+                    let _datum: any = {};
                     if (evidence.knownEffect) {
                         _datum.knownEffect = evidence.knownEffect;
                     }
@@ -125,16 +142,26 @@ export function processEvidence(evidences:EvidenceQueryRes[]) {
                     datum.alteration.push(_datum);
                 } else if (evidence.levelOfEvidence) {
                     //if evidence has level information, that means this is treatment evidence.
-                    if ([LevelOfEvidence.LEVEL_0].indexOf(evidence.levelOfEvidence) === -1) {
-                        var _treatment:any = {};
+                    if (
+                        [LevelOfEvidence.LEVEL_0].indexOf(
+                            evidence.levelOfEvidence
+                        ) === -1
+                    ) {
+                        var _treatment: any = {};
                         _treatment.alterations = evidence.alterations;
                         _treatment.articles = evidence.articles;
-                        _treatment.tumorType = getTumorTypeFromEvidence(evidence);
+                        _treatment.tumorType = getTumorTypeFromEvidence(
+                            evidence
+                        );
                         _treatment.level = evidence.levelOfEvidence;
                         _treatment.content = evidence.treatments;
                         _treatment.description = description || '';
 
-                        if (LEVELS.sensitivity.indexOf(getLevel(evidence.levelOfEvidence)) !== -1) {
+                        if (
+                            LEVELS.sensitivity.indexOf(
+                                getLevel(evidence.levelOfEvidence)
+                            ) !== -1
+                        ) {
                             sensitivityTreatments.push(_treatment);
                         } else {
                             resistanceTreatments.push(_treatment);
@@ -159,23 +186,28 @@ export function processEvidence(evidences:EvidenceQueryRes[]) {
     return result;
 }
 
-export function getTumorTypeFromEvidence(evidence:any) {
-    var tumorType = _.isObject(evidence.tumorType) ? evidence.tumorType.name : (evidence.subtype || evidence.cancerType);
+export function getTumorTypeFromEvidence(evidence: any) {
+    var tumorType = _.isObject(evidence.tumorType)
+        ? evidence.tumorType.name
+        : evidence.subtype || evidence.cancerType;
     var oncoTreeTumorType = '';
 
     if (_.isObject(evidence.oncoTreeType)) {
-        oncoTreeTumorType = evidence.oncoTreeType.name ? evidence.oncoTreeType.name :
-            (evidence.oncoTreeType.mainType ? evidence.oncoTreeType.mainType.name : '');
+        oncoTreeTumorType = evidence.oncoTreeType.name
+            ? evidence.oncoTreeType.name
+            : evidence.oncoTreeType.mainType
+            ? evidence.oncoTreeType.mainType.name
+            : '';
     }
 
-    if(oncoTreeTumorType) {
+    if (oncoTreeTumorType) {
         tumorType = oncoTreeTumorType;
     }
 
     return tumorType;
 }
 
-function getLevel(level:string) {
+function getLevel(level: string) {
     if (level) {
         var _level = level.match(/LEVEL_(R?\d[AB]?)/);
         if (_level instanceof Array && _level.length >= 2) {
@@ -184,6 +216,6 @@ function getLevel(level:string) {
             return level;
         }
     } else {
-        return "";
+        return '';
     }
 }

@@ -6,5 +6,5 @@ export interface IMyCancerGenome {
 }
 
 export interface IMyCancerGenomeData {
-    [hugoSymbol:string]: IMyCancerGenome[];
+    [hugoSymbol: string]: IMyCancerGenome[];
 }

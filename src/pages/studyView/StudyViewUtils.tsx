@@ -1,36 +1,59 @@
-import _ from "lodash";
-import {SingleGeneQuery} from "shared/lib/oql/oql-parser";
-import {unparseOQLQueryLine} from "shared/lib/oql/oqlfilter";
+import _ from 'lodash';
+import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
+import { unparseOQLQueryLine } from 'shared/lib/oql/oqlfilter';
 import {
     ClinicalDataCount,
     DataBin,
     SampleIdentifier,
     StudyViewFilter,
     ClinicalDataBinFilter,
-    ClinicalDataFilterValue
-} from "shared/api/generated/CBioPortalAPIInternal";
-import {CancerStudy, ClinicalAttribute, Gene, PatientIdentifier, Sample, ClinicalData} from "shared/api/generated/CBioPortalAPI";
-import * as React from "react";
-import {buildCBioPortalPageUrl} from "../../shared/api/urls";
-import {BarDatum} from "./charts/barChart/BarChart";
-import { ChartUserSetting, CustomChart } from "./StudyViewPageStore";
-import { StudyViewPageTabKeyEnum } from "pages/studyView/StudyViewPageTabs";
+    ClinicalDataFilterValue,
+} from 'shared/api/generated/CBioPortalAPIInternal';
+import {
+    CancerStudy,
+    ClinicalAttribute,
+    Gene,
+    PatientIdentifier,
+    Sample,
+    ClinicalData,
+} from 'shared/api/generated/CBioPortalAPI';
+import * as React from 'react';
+import { buildCBioPortalPageUrl } from '../../shared/api/urls';
+import { BarDatum } from './charts/barChart/BarChart';
+import { ChartUserSetting, CustomChart } from './StudyViewPageStore';
+import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 
-import {Layout} from 'react-grid-layout';
-import internalClient from "shared/api/cbioportalInternalClientInstance";
-import {VirtualStudy} from "shared/model/VirtualStudy";
-import defaultClient from "shared/api/cbioportalClientInstance";
-import {ChartDimension, ChartTypeEnum, Position, STUDY_VIEW_CONFIG} from "./StudyViewConfig";
-import {IStudyViewDensityScatterPlotDatum} from "./charts/scatterPlot/StudyViewDensityScatterPlot";
+import { Layout } from 'react-grid-layout';
+import internalClient from 'shared/api/cbioportalInternalClientInstance';
+import { VirtualStudy } from 'shared/model/VirtualStudy';
+import defaultClient from 'shared/api/cbioportalClientInstance';
+import {
+    ChartDimension,
+    ChartTypeEnum,
+    Position,
+    STUDY_VIEW_CONFIG,
+} from './StudyViewConfig';
+import { IStudyViewDensityScatterPlotDatum } from './charts/scatterPlot/StudyViewDensityScatterPlot';
 import MobxPromise from 'mobxpromise';
-import {getTextWidth, stringListToIndexSet} from "cbioportal-frontend-commons";
-import {CNA_COLOR_AMP, CNA_COLOR_HOMDEL, DEFAULT_NA_COLOR, getClinicalValueColor} from "shared/lib/Colors";
-import {StudyViewComparisonGroup} from "../groupComparison/GroupComparisonUtils";
+import {
+    getTextWidth,
+    stringListToIndexSet,
+} from 'cbioportal-frontend-commons';
+import {
+    CNA_COLOR_AMP,
+    CNA_COLOR_HOMDEL,
+    DEFAULT_NA_COLOR,
+    getClinicalValueColor,
+} from 'shared/lib/Colors';
+import { StudyViewComparisonGroup } from '../groupComparison/GroupComparisonUtils';
 import styles from './styles.module.scss';
-import { getGroupParameters, getStudiesAttr } from "pages/groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils";
-import { SessionGroupData } from "shared/api/ComparisonGroupClient";
-import { IStudyViewScatterPlotData } from "./charts/scatterPlot/StudyViewScatterPlotUtils";
-import { CNA_TO_ALTERATION } from "pages/resultsView/enrichments/EnrichmentsUtil";
+import {
+    getGroupParameters,
+    getStudiesAttr,
+} from 'pages/groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
+import { SessionGroupData } from 'shared/api/ComparisonGroupClient';
+import { IStudyViewScatterPlotData } from './charts/scatterPlot/StudyViewScatterPlotUtils';
+import { CNA_TO_ALTERATION } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -40,18 +63,18 @@ export enum ClinicalDataTypeEnum {
 
 export enum NumericalGroupComparisonType {
     QUARTILES = 'QUARTILES',
-    MEDIAN='MEDIAN',
-    BINS = 'BINS'
+    MEDIAN = 'MEDIAN',
+    BINS = 'BINS',
 }
 
 export enum DataType {
     STRING = 'STRING',
-    NUMBER = "NUMBER"
+    NUMBER = 'NUMBER',
 }
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT';
 export type ChartType =
-    'PIE_CHART'
+    | 'PIE_CHART'
     | 'BAR_CHART'
     | 'SURVIVAL'
     | 'TABLE'
@@ -71,70 +94,78 @@ export enum UniqueKey {
     DISEASE_FREE_SURVIVAL = 'DFS_SURVIVAL',
     OVERALL_SURVIVAL = 'OS_SURVIVAL',
     CANCER_STUDIES = 'CANCER_STUDIES',
-    MUTATION_COUNT = "MUTATION_COUNT",
-    FRACTION_GENOME_ALTERED = "FRACTION_GENOME_ALTERED",
-    WITH_MUTATION_DATA = "WITH_MUTATION_DATA",
-    WITH_FUSION_DATA = "WITH_FUSION_DATA",
-    WITH_CNA_DATA = "WITH_CNA_DATA"
+    MUTATION_COUNT = 'MUTATION_COUNT',
+    FRACTION_GENOME_ALTERED = 'FRACTION_GENOME_ALTERED',
+    WITH_MUTATION_DATA = 'WITH_MUTATION_DATA',
+    WITH_FUSION_DATA = 'WITH_FUSION_DATA',
+    WITH_CNA_DATA = 'WITH_CNA_DATA',
 }
 
-export type AnalysisGroup = { name?:string, value: string, color: string, legendText?: string };
+export type AnalysisGroup = {
+    name?: string;
+    value: string;
+    color: string;
+    legendText?: string;
+};
 
 export enum ChartMetaDataTypeEnum {
     CLINICAL = 'CLINICAL',
-    GENOMIC = 'GENOMIC'
+    GENOMIC = 'GENOMIC',
 }
 
-export type ChartMetaDataType = ChartMetaDataTypeEnum.CLINICAL | ChartMetaDataTypeEnum.GENOMIC;
+export type ChartMetaDataType =
+    | ChartMetaDataTypeEnum.CLINICAL
+    | ChartMetaDataTypeEnum.GENOMIC;
 export type ChartMeta = {
-    clinicalAttribute?: ClinicalAttribute,
-    uniqueKey: string,
-    displayName: string,
-    description: string,
-    priority: number,
-    dataType: ChartMetaDataType,
-    patientAttribute: boolean,
-    renderWhenDataChange: boolean
-}
+    clinicalAttribute?: ClinicalAttribute;
+    uniqueKey: string;
+    displayName: string;
+    description: string;
+    priority: number;
+    dataType: ChartMetaDataType;
+    patientAttribute: boolean;
+    renderWhenDataChange: boolean;
+};
 export type ChartMetaWithDimensionAndChartType = ChartMeta & {
-    dimension: ChartDimension,
-    chartType: ChartType,
-}
+    dimension: ChartDimension;
+    chartType: ChartType;
+};
 export type ClinicalDataCountSet = { [attrId: string]: number };
 export type StudyWithSamples = CancerStudy & {
-    uniqueSampleKeys: string[]
-}
+    uniqueSampleKeys: string[];
+};
 export type StudyViewFilterWithSampleIdentifierFilters = StudyViewFilter & {
-    sampleIdentifiersSet: { [id: string]: SampleIdentifier[] }
-}
+    sampleIdentifiersSet: { [id: string]: SampleIdentifier[] };
+};
 
 export enum Datalabel {
     YES = 'YES',
     NO = 'NO',
-    NA = "NA"
+    NA = 'NA',
 }
 
 export type RectangleBounds = {
-    xEnd?: number,
-    xStart?: number,
-    yEnd?: number,
-    yStart?: number
-}
+    xEnd?: number;
+    xStart?: number;
+    yEnd?: number;
+    yStart?: number;
+};
 
-export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [{
-    uniqueKey: UniqueKey.CANCER_STUDIES,
-    displayName: 'Cancer Studies',
-    description: 'Cancer Studies',
-    dataType: ChartMetaDataTypeEnum.CLINICAL,
-    patientAttribute: false,
-    chartType: ChartTypeEnum.PIE_CHART,
-    dimension: {
-        w: 1,
-        h: 1
+export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [
+    {
+        uniqueKey: UniqueKey.CANCER_STUDIES,
+        displayName: 'Cancer Studies',
+        description: 'Cancer Studies',
+        dataType: ChartMetaDataTypeEnum.CLINICAL,
+        patientAttribute: false,
+        chartType: ChartTypeEnum.PIE_CHART,
+        dimension: {
+            w: 1,
+            h: 1,
+        },
+        renderWhenDataChange: false,
+        priority: 70,
     },
-    renderWhenDataChange: false,
-    priority: 70
-},
     {
         uniqueKey: UniqueKey.WITH_MUTATION_DATA,
         displayName: 'With Mutation Data',
@@ -144,10 +175,10 @@ export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [{
         patientAttribute: false,
         dimension: {
             w: 1,
-            h: 1
+            h: 1,
         },
         priority: 0,
-        renderWhenDataChange: false
+        renderWhenDataChange: false,
     },
     {
         uniqueKey: UniqueKey.WITH_FUSION_DATA,
@@ -158,10 +189,10 @@ export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [{
         patientAttribute: false,
         dimension: {
             w: 1,
-            h: 1
+            h: 1,
         },
         priority: 0,
-        renderWhenDataChange: false
+        renderWhenDataChange: false,
     },
     {
         uniqueKey: UniqueKey.WITH_CNA_DATA,
@@ -172,120 +203,303 @@ export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [{
         patientAttribute: false,
         dimension: {
             w: 1,
-            h: 1
+            h: 1,
         },
         priority: 0,
-        renderWhenDataChange: false
-    }];
+        renderWhenDataChange: false,
+    },
+];
 
 export const COLORS = [
-    STUDY_VIEW_CONFIG.colors.theme.primary, STUDY_VIEW_CONFIG.colors.theme.secondary,
-    STUDY_VIEW_CONFIG.colors.theme.tertiary, STUDY_VIEW_CONFIG.colors.theme.quaternary,
-    '#990099', '#0099c6', '#dd4477', '#66aa00',
-    '#b82e2e', '#316395', '#994499', '#22aa99',
-    '#aaaa11', '#6633cc', '#e67300', '#8b0707',
-    '#651067', '#329262', '#5574a6', '#3b3eac',
-    '#b77322', '#16d620', '#b91383', '#f4359e',
-    '#9c5935', '#a9c413', '#2a778d', '#668d1c',
-    '#bea413', '#0c5922', '#743411', '#743440',
-    '#9986e2', '#6c3912', '#788508', '#609618',
-    '#790099', '#5099c6', '#2d4477', '#76aa00',
-    '#882e2e', '#916395', '#794499', '#92aa99',
-    '#2aaa11', '#5633cc', '#667300', '#100707',
-    '#751067', '#229262', '#4574a6', '#103eac',
-    '#177322', '#66d620', '#291383', '#94359e',
-    '#5c5935', '#29c413', '#6a778d', '#868d1c',
-    '#5ea413', '#6c5922', '#243411', '#103440',
-    '#2886e2', '#d93912', '#f28508', '#110618',
-    '#970099', '#0109c6', '#d10477', '#68aa00',
-    '#b12e2e', '#310395', '#944499', '#24aa99',
-    '#a4aa11', '#6333cc', '#e77300', '#820707',
-    '#610067', '#339262', '#5874a6', '#313eac',
-    '#b67322', '#13d620', '#b81383', '#f8359e',
-    '#935935', '#a10413', '#29778d', '#678d1c',
-    '#b2a413', '#075922', '#763411', '#773440',
-    '#2996e2', '#dc4912', '#f81508', '#104618',
-    '#991099', '#0049c6', '#dd2477', '#663a00',
-    '#b84e2e', '#312395', '#993499', '#223a99',
-    '#aa1a11', '#6673cc', '#e66300', '#8b5707',
-    '#656067', '#323262', '#5514a6', '#3b8eac',
-    '#b71322', '#165620', '#b99383', '#f4859e',
-    '#9c4935', '#a91413', '#2a978d', '#669d1c',
-    '#be1413', '#0c8922', '#742411', '#744440',
-    '#2983e2', '#dc3612', '#f88808', '#109518',
-    '#990599', '#0092c6', '#dd4977', '#66a900',
-    '#b8282e', '#316295', '#994199', '#22a499',
-    '#aaa101', '#66310c', '#e67200', '#8b0907',
-    '#651167', '#329962', '#5573a6', '#3b37ac',
-    '#b77822', '#16d120', '#b91783', '#f4339e',
-    '#9c5105', '#a9c713', '#2a710d', '#66841c',
-    '#bea913', '#0c5822', '#743911', '#743740',
-    '#298632', '#dc3922', '#f88588', '#109658',
-    '#990010', '#009916', '#dd4447', '#66aa60',
-    '#b82e9e', '#316365', '#994489', '#22aa69',
-    '#aaaa51', '#66332c', '#e67390', '#8b0777',
-    '#651037', '#329232', '#557486', '#3b3e4c',
-    '#b77372', '#16d690', '#b91310', '#f4358e',
-    '#9c5910', '#a9c493', '#2a773d', '#668d5c',
-    '#bea463', '#0c5952', '#743471', '#743450',
-    '#2986e3', '#dc3914', '#f88503', '#109614',
-    '#990092', '#0099c8', '#dd4476', '#66aa04',
-    '#b82e27', '#316397', '#994495', '#22aa93',
-    '#aaaa14', '#6633c1', '#e67303', '#8b0705',
-    '#651062', '#329267', '#5574a1', '#3b3ea5'
+    STUDY_VIEW_CONFIG.colors.theme.primary,
+    STUDY_VIEW_CONFIG.colors.theme.secondary,
+    STUDY_VIEW_CONFIG.colors.theme.tertiary,
+    STUDY_VIEW_CONFIG.colors.theme.quaternary,
+    '#990099',
+    '#0099c6',
+    '#dd4477',
+    '#66aa00',
+    '#b82e2e',
+    '#316395',
+    '#994499',
+    '#22aa99',
+    '#aaaa11',
+    '#6633cc',
+    '#e67300',
+    '#8b0707',
+    '#651067',
+    '#329262',
+    '#5574a6',
+    '#3b3eac',
+    '#b77322',
+    '#16d620',
+    '#b91383',
+    '#f4359e',
+    '#9c5935',
+    '#a9c413',
+    '#2a778d',
+    '#668d1c',
+    '#bea413',
+    '#0c5922',
+    '#743411',
+    '#743440',
+    '#9986e2',
+    '#6c3912',
+    '#788508',
+    '#609618',
+    '#790099',
+    '#5099c6',
+    '#2d4477',
+    '#76aa00',
+    '#882e2e',
+    '#916395',
+    '#794499',
+    '#92aa99',
+    '#2aaa11',
+    '#5633cc',
+    '#667300',
+    '#100707',
+    '#751067',
+    '#229262',
+    '#4574a6',
+    '#103eac',
+    '#177322',
+    '#66d620',
+    '#291383',
+    '#94359e',
+    '#5c5935',
+    '#29c413',
+    '#6a778d',
+    '#868d1c',
+    '#5ea413',
+    '#6c5922',
+    '#243411',
+    '#103440',
+    '#2886e2',
+    '#d93912',
+    '#f28508',
+    '#110618',
+    '#970099',
+    '#0109c6',
+    '#d10477',
+    '#68aa00',
+    '#b12e2e',
+    '#310395',
+    '#944499',
+    '#24aa99',
+    '#a4aa11',
+    '#6333cc',
+    '#e77300',
+    '#820707',
+    '#610067',
+    '#339262',
+    '#5874a6',
+    '#313eac',
+    '#b67322',
+    '#13d620',
+    '#b81383',
+    '#f8359e',
+    '#935935',
+    '#a10413',
+    '#29778d',
+    '#678d1c',
+    '#b2a413',
+    '#075922',
+    '#763411',
+    '#773440',
+    '#2996e2',
+    '#dc4912',
+    '#f81508',
+    '#104618',
+    '#991099',
+    '#0049c6',
+    '#dd2477',
+    '#663a00',
+    '#b84e2e',
+    '#312395',
+    '#993499',
+    '#223a99',
+    '#aa1a11',
+    '#6673cc',
+    '#e66300',
+    '#8b5707',
+    '#656067',
+    '#323262',
+    '#5514a6',
+    '#3b8eac',
+    '#b71322',
+    '#165620',
+    '#b99383',
+    '#f4859e',
+    '#9c4935',
+    '#a91413',
+    '#2a978d',
+    '#669d1c',
+    '#be1413',
+    '#0c8922',
+    '#742411',
+    '#744440',
+    '#2983e2',
+    '#dc3612',
+    '#f88808',
+    '#109518',
+    '#990599',
+    '#0092c6',
+    '#dd4977',
+    '#66a900',
+    '#b8282e',
+    '#316295',
+    '#994199',
+    '#22a499',
+    '#aaa101',
+    '#66310c',
+    '#e67200',
+    '#8b0907',
+    '#651167',
+    '#329962',
+    '#5573a6',
+    '#3b37ac',
+    '#b77822',
+    '#16d120',
+    '#b91783',
+    '#f4339e',
+    '#9c5105',
+    '#a9c713',
+    '#2a710d',
+    '#66841c',
+    '#bea913',
+    '#0c5822',
+    '#743911',
+    '#743740',
+    '#298632',
+    '#dc3922',
+    '#f88588',
+    '#109658',
+    '#990010',
+    '#009916',
+    '#dd4447',
+    '#66aa60',
+    '#b82e9e',
+    '#316365',
+    '#994489',
+    '#22aa69',
+    '#aaaa51',
+    '#66332c',
+    '#e67390',
+    '#8b0777',
+    '#651037',
+    '#329232',
+    '#557486',
+    '#3b3e4c',
+    '#b77372',
+    '#16d690',
+    '#b91310',
+    '#f4358e',
+    '#9c5910',
+    '#a9c493',
+    '#2a773d',
+    '#668d5c',
+    '#bea463',
+    '#0c5952',
+    '#743471',
+    '#743450',
+    '#2986e3',
+    '#dc3914',
+    '#f88503',
+    '#109614',
+    '#990092',
+    '#0099c8',
+    '#dd4476',
+    '#66aa04',
+    '#b82e27',
+    '#316397',
+    '#994495',
+    '#22aa93',
+    '#aaaa14',
+    '#6633c1',
+    '#e67303',
+    '#8b0705',
+    '#651062',
+    '#329267',
+    '#5574a1',
+    '#3b3ea5',
 ];
 
 export const EXPONENTIAL_FRACTION_DIGITS = 3;
 
 export const MutationCountVsCnaYBinsMin = 52; // calibrated so that the dots are right up against each other. needs to correspond with the width and height of the chart
 
-
-const OPERATOR_MAP: {[op:string]: string} = {
-    "<=": "≤",
-    "<" : "<",
-    ">=": "≥",
-    ">": ">"
+const OPERATOR_MAP: { [op: string]: string } = {
+    '<=': '≤',
+    '<': '<',
+    '>=': '≥',
+    '>': '>',
 };
 
-export function getClinicalAttributeOverlay(displayName: string, description: string, clinicalAttributeId?: string): JSX.Element {
+export function getClinicalAttributeOverlay(
+    displayName: string,
+    description: string,
+    clinicalAttributeId?: string
+): JSX.Element {
     const comparisonDisplayName = displayName.toLowerCase().trim();
-    let comparisonDescription = description.toLowerCase().trim().replace(/.&/, '');
-    return <div style={{maxWidth: '300px'}}>
-        <div><b>{displayName}</b> {!!clinicalAttributeId &&
-        <span className={styles.titleMeta}>ID: {clinicalAttributeId}</span>}</div>
-        {comparisonDescription !== comparisonDisplayName && <div>{description}</div>}
-    </div>;
+    let comparisonDescription = description
+        .toLowerCase()
+        .trim()
+        .replace(/.&/, '');
+    return (
+        <div style={{ maxWidth: '300px' }}>
+            <div>
+                <b>{displayName}</b>{' '}
+                {!!clinicalAttributeId && (
+                    <span className={styles.titleMeta}>
+                        ID: {clinicalAttributeId}
+                    </span>
+                )}
+            </div>
+            {comparisonDescription !== comparisonDisplayName && (
+                <div>{description}</div>
+            )}
+        </div>
+    );
 }
 
-export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: string): SingleGeneQuery[] {
-
-    let updatedQueries = _.filter(geneQueries,query=> query.gene !== selectedGene)
-    if(updatedQueries.length === geneQueries.length){
+export function updateGeneQuery(
+    geneQueries: SingleGeneQuery[],
+    selectedGene: string
+): SingleGeneQuery[] {
+    let updatedQueries = _.filter(
+        geneQueries,
+        query => query.gene !== selectedGene
+    );
+    if (updatedQueries.length === geneQueries.length) {
         updatedQueries.push({
             gene: selectedGene,
-            alterations: false
-        })
+            alterations: false,
+        });
     }
     return updatedQueries;
-
 }
 
 function translateSpecialText(text: string | undefined): string {
     if (!text) {
-        return "";
-    } else if (text === ">=") {
-        return "≥";
-    } else if (text === "<=") {
-        return "≤";
+        return '';
+    } else if (text === '>=') {
+        return '≥';
+    } else if (text === '<=') {
+        return '≤';
     }
 
     return text;
 }
 
-export function formatRange(min: number | undefined, max: number | undefined, special: string | undefined): string {
+export function formatRange(
+    min: number | undefined,
+    max: number | undefined,
+    special: string | undefined
+): string {
     special = translateSpecialText(special);
 
-    if(min === undefined) {
+    if (min === undefined) {
         if (max === undefined) {
             return special;
         } else {
@@ -297,46 +511,64 @@ export function formatRange(min: number | undefined, max: number | undefined, sp
         } else if (min !== max) {
             return `${special}${min.toLocaleString()}-${max.toLocaleString()}`;
         } else {
-            return `${special}${min.toLocaleString()}`
+            return `${special}${min.toLocaleString()}`;
         }
     }
 }
 
-function getBinStatsForTooltip(d:IStudyViewDensityScatterPlotDatum) {
+function getBinStatsForTooltip(d: IStudyViewDensityScatterPlotDatum) {
     let mutRange = formatRange(d.minY, d.maxY, undefined);
-    let fgaRange = "";
+    let fgaRange = '';
     if (d.maxX.toFixed(2) !== d.minX.toFixed(2)) {
         fgaRange = `${d.minX.toFixed(2)}-${d.maxX.toFixed(2)}`;
     } else {
         fgaRange = d.minX.toFixed(2);
     }
-    return {mutRange, fgaRange};
+    return { mutRange, fgaRange };
 }
 
-export function mutationCountVsCnaTooltip(d:IStudyViewDensityScatterPlotDatum) {
+export function mutationCountVsCnaTooltip(
+    d: IStudyViewDensityScatterPlotDatum
+) {
     const binStats = getBinStatsForTooltip(d);
     return (
         <div>
-            <div>Number of Samples: <b>{d.count.toLocaleString()}</b></div>
-            <div>Mutation Count: <b>{binStats.mutRange}</b></div>
-            <div>Fraction Genome Altered: <b>{binStats.fgaRange}</b></div>
+            <div>
+                Number of Samples: <b>{d.count.toLocaleString()}</b>
+            </div>
+            <div>
+                Mutation Count: <b>{binStats.mutRange}</b>
+            </div>
+            <div>
+                Fraction Genome Altered: <b>{binStats.fgaRange}</b>
+            </div>
         </div>
     );
 }
 
-export function generateScatterPlotDownloadData(data: IStudyViewScatterPlotData[],
-                                                sampleToAnalysisGroup?: {[sampleKey:string]:string},
-                                                analysisClinicalAttribute?: ClinicalAttribute,
-                                                analysisGroups?: AnalysisGroup[])
-{
-    const header = ["Cancer Study", "Patient ID", "Sample ID", "Mutation Count", "CNA Fraction"];
-    let valueToGroup: {[value: string] : AnalysisGroup};
+export function generateScatterPlotDownloadData(
+    data: IStudyViewScatterPlotData[],
+    sampleToAnalysisGroup?: { [sampleKey: string]: string },
+    analysisClinicalAttribute?: ClinicalAttribute,
+    analysisGroups?: AnalysisGroup[]
+) {
+    const header = [
+        'Cancer Study',
+        'Patient ID',
+        'Sample ID',
+        'Mutation Count',
+        'CNA Fraction',
+    ];
+    let valueToGroup: { [value: string]: AnalysisGroup };
 
-    if (analysisClinicalAttribute !== undefined && sampleToAnalysisGroup !== undefined) {
+    if (
+        analysisClinicalAttribute !== undefined &&
+        sampleToAnalysisGroup !== undefined
+    ) {
         header.push(analysisClinicalAttribute.displayName);
 
         if (analysisGroups !== undefined) {
-            header.push("Color");
+            header.push('Color');
             valueToGroup = _.keyBy(analysisGroups, 'value');
         }
     }
@@ -347,26 +579,39 @@ export function generateScatterPlotDownloadData(data: IStudyViewScatterPlotData[
             `${datum.patientId}`,
             `${datum.sampleId}`,
             `${datum.y}`,
-            `${datum.x}`
+            `${datum.x}`,
         ];
 
-        if (analysisClinicalAttribute !== undefined && sampleToAnalysisGroup !== undefined) {
+        if (
+            analysisClinicalAttribute !== undefined &&
+            sampleToAnalysisGroup !== undefined
+        ) {
             const value = sampleToAnalysisGroup[datum.uniqueSampleKey];
 
             row.push(value !== undefined ? `${value}` : Datalabel.NA);
 
             if (analysisGroups !== undefined && value !== undefined) {
-                row.push(valueToGroup[value] !== undefined ? valueToGroup[value].color : Datalabel.NA);
+                row.push(
+                    valueToGroup[value] !== undefined
+                        ? valueToGroup[value].color
+                        : Datalabel.NA
+                );
             }
         }
 
         return row;
     });
 
-    return [header].concat(rows).map(row => row.join("\t")).join("\n");
+    return [header]
+        .concat(rows)
+        .map(row => row.join('\t'))
+        .join('\n');
 }
 
-export function isSelected(datum: { uniqueSampleKey: string }, selectedSamples: { [uniqueSampleKey: string]: any }) {
+export function isSelected(
+    datum: { uniqueSampleKey: string },
+    selectedSamples: { [uniqueSampleKey: string]: any }
+) {
     return datum.uniqueSampleKey in selectedSamples;
 }
 
@@ -386,9 +631,11 @@ export function getUniqueKey(attribute: ClinicalAttribute): string {
     return attribute.clinicalAttributeId;
 }
 
-const UNIQUE_KEY_SEPARATOR = ":";
+const UNIQUE_KEY_SEPARATOR = ':';
 
-export function getUniqueKeyFromMolecularProfileIds(molecularProfileIds: string[]) {
+export function getUniqueKeyFromMolecularProfileIds(
+    molecularProfileIds: string[]
+) {
     return _.sortBy(molecularProfileIds).join(UNIQUE_KEY_SEPARATOR);
 }
 
@@ -401,11 +648,12 @@ export function getCurrentDate() {
 }
 
 export function getVirtualStudyDescription(
-                                            previousDescription: string | undefined,
-                                            studyWithSamples: StudyWithSamples[],
-                                            filter: StudyViewFilterWithSampleIdentifierFilters,
-                                            attributeNamesSet: { [id: string]: string },
-                                            user?: string) {
+    previousDescription: string | undefined,
+    studyWithSamples: StudyWithSamples[],
+    filter: StudyViewFilterWithSampleIdentifierFilters,
+    attributeNamesSet: { [id: string]: string },
+    user?: string
+) {
     let descriptionLines: string[] = [];
     const createdOnStr = 'Created on';
     if (previousDescription) {
@@ -413,43 +661,77 @@ export function getVirtualStudyDescription(
         const regex = new RegExp(`${createdOnStr}.*`);
         descriptionLines.push(previousDescription.replace(regex, ''));
     } else {
-
         //add to samples and studies count
-        let uniqueSampleKeys = _.uniq(_.flatMap(studyWithSamples, study => study.uniqueSampleKeys))
-        descriptionLines.push(`${uniqueSampleKeys.length} sample${uniqueSampleKeys.length > 1 ? 's' : ''} from ${studyWithSamples.length} ${studyWithSamples.length > 1 ? 'studies:' : 'study:'}`);
+        let uniqueSampleKeys = _.uniq(
+            _.flatMap(studyWithSamples, study => study.uniqueSampleKeys)
+        );
+        descriptionLines.push(
+            `${uniqueSampleKeys.length} sample${
+                uniqueSampleKeys.length > 1 ? 's' : ''
+            } from ${studyWithSamples.length} ${
+                studyWithSamples.length > 1 ? 'studies:' : 'study:'
+            }`
+        );
         //add individual studies sample count
         studyWithSamples.forEach(studyObj => {
-            descriptionLines.push(`- ${studyObj.name} (${studyObj.uniqueSampleKeys.length} sample${uniqueSampleKeys.length > 1 ? 's' : ''})`);
-        })
+            descriptionLines.push(
+                `- ${studyObj.name} (${
+                    studyObj.uniqueSampleKeys.length
+                } sample${uniqueSampleKeys.length > 1 ? 's' : ''})`
+            );
+        });
         //add filters
         let filterLines: string[] = [];
         if (!_.isEmpty(filter)) {
-
-            _.each(filter.geneFilters || [], (geneFilter) => {
-                let name = attributeNamesSet[getUniqueKeyFromMolecularProfileIds(geneFilter.molecularProfileIds)];
+            _.each(filter.geneFilters || [], geneFilter => {
+                let name =
+                    attributeNamesSet[
+                        getUniqueKeyFromMolecularProfileIds(
+                            geneFilter.molecularProfileIds
+                        )
+                    ];
                 filterLines.push(`- ${name}:`);
-                filterLines = filterLines.concat(geneFilter.geneQueries.map(geneQuery => {
-                    return geneQuery.join(', ').trim();
-                }).map(line => '  - ' + line));
+                filterLines = filterLines.concat(
+                    geneFilter.geneQueries
+                        .map(geneQuery => {
+                            return geneQuery.join(', ').trim();
+                        })
+                        .map(line => '  - ' + line)
+                );
             });
 
             if (filter.withMutationData !== undefined) {
-                filterLines.push(`With Mutation data: ${filter.withMutationData ? 'YES' : 'NO'}`);
+                filterLines.push(
+                    `With Mutation data: ${
+                        filter.withMutationData ? 'YES' : 'NO'
+                    }`
+                );
             }
 
             if (filter.withCNAData !== undefined) {
-                filterLines.push(`With CNA data: ${filter.withCNAData ? 'YES' : 'NO'}`);
+                filterLines.push(
+                    `With CNA data: ${filter.withCNAData ? 'YES' : 'NO'}`
+                );
             }
 
-            _.each(filter.clinicalDataFilters || [], (clinicalDataFilter) => {
+            _.each(filter.clinicalDataFilters || [], clinicalDataFilter => {
                 let name = attributeNamesSet[clinicalDataFilter.attributeId];
-                filterLines.push(`- ${name}: ${intervalFiltersDisplayValue(clinicalDataFilter.values)}`);
+                filterLines.push(
+                    `- ${name}: ${intervalFiltersDisplayValue(
+                        clinicalDataFilter.values
+                    )}`
+                );
             });
 
-            _.each(filter.sampleIdentifiersSet || {}, (sampleIdentifiers, id) => {
-                let name = attributeNamesSet[id] || id;
-                filterLines.push(`- ${name}: ${sampleIdentifiers.length} samples`);
-            })
+            _.each(
+                filter.sampleIdentifiersSet || {},
+                (sampleIdentifiers, id) => {
+                    let name = attributeNamesSet[id] || id;
+                    filterLines.push(
+                        `- ${name}: ${sampleIdentifiers.length} samples`
+                    );
+                }
+            );
         }
         if (filterLines.length > 0) {
             descriptionLines.push('');
@@ -459,77 +741,92 @@ export function getVirtualStudyDescription(
         descriptionLines.push('');
     }
     //add creation and user name
-    descriptionLines.push(`${createdOnStr} ` + getCurrentDate() + (user ? ' by ' + user : ''));
+    descriptionLines.push(
+        `${createdOnStr} ` + getCurrentDate() + (user ? ' by ' + user : '')
+    );
     return descriptionLines.join('\n');
 }
 
-export function isFiltered(filter: Partial<StudyViewFilterWithSampleIdentifierFilters>) {
-    const flag = !(_.isEmpty(filter) || (
-            _.isEmpty(filter.clinicalDataFilters) &&
+export function isFiltered(
+    filter: Partial<StudyViewFilterWithSampleIdentifierFilters>
+) {
+    const flag = !(
+        _.isEmpty(filter) ||
+        (_.isEmpty(filter.clinicalDataFilters) &&
             _.isEmpty(filter.geneFilters) &&
             filter.withMutationData === undefined &&
             filter.withCNAData === undefined)
     );
 
     if (filter.sampleIdentifiersSet) {
-        return flag || !_.isEmpty(filter.sampleIdentifiersSet)
+        return flag || !_.isEmpty(filter.sampleIdentifiersSet);
     } else {
         return flag;
     }
 }
 
 export function makePatientToClinicalAnalysisGroup(
-    samples:Pick<Sample, "uniqueSampleKey"|"uniquePatientKey">[],
-    sampleToAnalysisGroup:{[sampleKey:string]:string}
+    samples: Pick<Sample, 'uniqueSampleKey' | 'uniquePatientKey'>[],
+    sampleToAnalysisGroup: { [sampleKey: string]: string }
 ) {
     // only include a patient if all its samples are in the same analysis group
-    const badPatients:{[patientKey:string]:boolean} = {};
-    return _.reduce(samples, (map, sample)=>{
-        const patientKey = sample.uniquePatientKey;
-        if (!(patientKey in badPatients)) {
-            // weve not already determined that not all this patients samples are in the same group
+    const badPatients: { [patientKey: string]: boolean } = {};
+    return _.reduce(
+        samples,
+        (map, sample) => {
+            const patientKey = sample.uniquePatientKey;
+            if (!(patientKey in badPatients)) {
+                // weve not already determined that not all this patients samples are in the same group
 
-            const sampleGroup = sampleToAnalysisGroup[sample.uniqueSampleKey];
-            if (patientKey in map) {
-                if (map[patientKey] !== sampleGroup) {
-                    // this means that weve seen another sample for this patient thats not
-                    //  in the same group. therefore, not all this patients samples are in
-                    //  the same group, so we're going to omit it
-                    delete map[patientKey];
-                    badPatients[patientKey] = true;
-                } // otherwise, we already have the right group, so dont do anything
-            } else {
-                // this is the first sample weve seen from this patient
-                map[patientKey] = sampleGroup;
+                const sampleGroup =
+                    sampleToAnalysisGroup[sample.uniqueSampleKey];
+                if (patientKey in map) {
+                    if (map[patientKey] !== sampleGroup) {
+                        // this means that weve seen another sample for this patient thats not
+                        //  in the same group. therefore, not all this patients samples are in
+                        //  the same group, so we're going to omit it
+                        delete map[patientKey];
+                        badPatients[patientKey] = true;
+                    } // otherwise, we already have the right group, so dont do anything
+                } else {
+                    // this is the first sample weve seen from this patient
+                    map[patientKey] = sampleGroup;
+                }
             }
-        }
-        return map;
-    }, {} as {[patientKey:string]:string});
+            return map;
+        },
+        {} as { [patientKey: string]: string }
+    );
 }
 
-export function toSvgDomNodeWithLegend(svgElement: SVGElement,
-                                       params:{
-                                           legendGroupSelector: string,
-                                           selectorToHide?:string,
-                                           chartGroupSelector?: string,
-                                           centerLegend?: boolean
-                                       })
-{
+export function toSvgDomNodeWithLegend(
+    svgElement: SVGElement,
+    params: {
+        legendGroupSelector: string;
+        selectorToHide?: string;
+        chartGroupSelector?: string;
+        centerLegend?: boolean;
+    }
+) {
     const svg = svgElement.cloneNode(true) as SVGElement;
-    const legend = $(svgElement).find(params.legendGroupSelector).get(0);
+    const legend = $(svgElement)
+        .find(params.legendGroupSelector)
+        .get(0);
     const legendBBox = legend.getBoundingClientRect();
 
     if (params.selectorToHide) {
-        $(svg).find(params.selectorToHide).remove();
+        $(svg)
+            .find(params.selectorToHide)
+            .remove();
     }
 
-    const height = + $(svgElement).height()! + legendBBox.height;
+    const height = +$(svgElement).height()! + legendBBox.height;
     const width = Math.max($(svgElement).width()!, legendBBox.width);
 
     // adjust width and height to make sure that the legend is fully visible
-    $(svg).attr("height", height + 5);
-    $(svg).attr("width", width);
-    $(svg).css({height: height + 5, width});
+    $(svg).attr('height', height + 5);
+    $(svg).attr('width', width);
+    $(svg).css({ height: height + 5, width });
 
     // center elements
     if (params.centerLegend) {
@@ -539,35 +836,52 @@ export function toSvgDomNodeWithLegend(svgElement: SVGElement,
 
         if ($(svgElement).width()! > legendBBox.width) {
             // legend needs to be centered wrt the chart
-            $(svg).find(params.legendGroupSelector).attr("transform", transform);
-        }
-        else if (params.chartGroupSelector) {
+            $(svg)
+                .find(params.legendGroupSelector)
+                .attr('transform', transform);
+        } else if (params.chartGroupSelector) {
             // chart needs to be centered wrt the legend
-            $(svg).find(params.chartGroupSelector).attr("transform", transform);
+            $(svg)
+                .find(params.chartGroupSelector)
+                .attr('transform', transform);
         }
     }
 
     return svg;
 }
 
-export function getClinicalDataIntervalFilterValues(data: DataBin[]): ClinicalDataFilterValue[] {
-    return data.map(dataBin => ({
-        start: dataBin.start,
-        end: dataBin.end,
-        value: dataBin.start === undefined && dataBin.end === undefined ? dataBin.specialValue : undefined
-    } as ClinicalDataFilterValue));
+export function getClinicalDataIntervalFilterValues(
+    data: DataBin[]
+): ClinicalDataFilterValue[] {
+    return data.map(
+        dataBin =>
+            ({
+                start: dataBin.start,
+                end: dataBin.end,
+                value:
+                    dataBin.start === undefined && dataBin.end === undefined
+                        ? dataBin.specialValue
+                        : undefined,
+            } as ClinicalDataFilterValue)
+    );
 }
 
 export function filterNumericalBins(data: DataBin[]) {
-    return data.filter(dataBin => dataBin.start !== undefined || dataBin.end !== undefined);
+    return data.filter(
+        dataBin => dataBin.start !== undefined || dataBin.end !== undefined
+    );
 }
 
 export function filterCategoryBins(data: DataBin[]) {
-    return data.filter(dataBin => dataBin.start === undefined && dataBin.end === undefined);
+    return data.filter(
+        dataBin => dataBin.start === undefined && dataBin.end === undefined
+    );
 }
 
 export function filterIntervalBins(numericalBins: DataBin[]) {
-    return numericalBins.filter(dataBin => dataBin.start !== undefined && dataBin.end !== undefined);
+    return numericalBins.filter(
+        dataBin => dataBin.start !== undefined && dataBin.end !== undefined
+    );
 }
 
 export function calcIntervalBinValues(intervalBins: DataBin[]) {
@@ -584,11 +898,15 @@ export function calcIntervalBinValues(intervalBins: DataBin[]) {
     return values;
 }
 
-export function needAdditionShiftForLogScaleBarChart(numericalBins: DataBin[]):boolean {
-    return isLogScaleByDataBins(numericalBins) &&
+export function needAdditionShiftForLogScaleBarChart(
+    numericalBins: DataBin[]
+): boolean {
+    return (
+        isLogScaleByDataBins(numericalBins) &&
         numericalBins[0].start !== undefined &&
         numericalBins[0].start !== 0 &&
-        !isIntegerPowerOfTen(numericalBins[0].start);
+        !isIntegerPowerOfTen(numericalBins[0].start)
+    );
 }
 
 export function generateNumericalData(numericalBins: DataBin[]): BarDatum[] {
@@ -604,13 +922,18 @@ export function generateNumericalData(numericalBins: DataBin[]): BarDatum[] {
             x = index;
         }
         // we want to show special values (> or >=) right on the tick (or next tick depending on the prev bin end)
-        else if (index === numericalBins.length - 1 && dataBin.end === undefined) {
+        else if (
+            index === numericalBins.length - 1 &&
+            dataBin.end === undefined
+        ) {
             x = index;
 
             // in case the previous data bin is a single value data bin (i.e start === end),
             // no need to add 1 (no interval needed for the previous value)
-            if (index - 1 > -1 &&
-                numericalBins[index - 1].start !== numericalBins[index - 1].end) {
+            if (
+                index - 1 > -1 &&
+                numericalBins[index - 1].start !== numericalBins[index - 1].end
+            ) {
                 x++;
             }
         }
@@ -628,18 +951,21 @@ export function generateNumericalData(numericalBins: DataBin[]): BarDatum[] {
         return {
             x: x + xShift,
             y: dataBin.count,
-            dataBin
+            dataBin,
         };
     });
 }
 
-export function generateCategoricalData(categoryBins: DataBin[], startIndex: number): BarDatum[] {
+export function generateCategoricalData(
+    categoryBins: DataBin[],
+    startIndex: number
+): BarDatum[] {
     // x is not the actual data value, it is the normalized data for representation
     // y is the actual count value
     return categoryBins.map((dataBin: DataBin, index: number) => ({
         x: startIndex + index + 1,
         y: dataBin.count,
-        dataBin
+        dataBin,
     }));
 }
 
@@ -647,22 +973,28 @@ export function isLogScaleByValues(values: number[]) {
     return (
         // empty list is not considered log scale
         values.length > 0 &&
-        values.find(value =>
-            // any value between -1 and 1 (except 0) indicates that this is not a log scale
-            (value !== 0 && -1 < value && value < 1) ||
-            // any value not in the form of 10^0.5, 10^2, etc. also indicates that this is not a log scale
-            (value !== 0 && getExponent(value) % 0.5 !== 0)
+        values.find(
+            value =>
+                // any value between -1 and 1 (except 0) indicates that this is not a log scale
+                (value !== 0 && -1 < value && value < 1) ||
+                // any value not in the form of 10^0.5, 10^2, etc. also indicates that this is not a log scale
+                (value !== 0 && getExponent(value) % 0.5 !== 0)
         ) === undefined
     );
 }
 
-export function shouldShowChart(filer: Partial<StudyViewFilterWithSampleIdentifierFilters>, uniqueDataSize: number, sizeOfAllSamples: number) {
+export function shouldShowChart(
+    filer: Partial<StudyViewFilterWithSampleIdentifierFilters>,
+    uniqueDataSize: number,
+    sizeOfAllSamples: number
+) {
     return isFiltered(filer) || uniqueDataSize >= 2 || sizeOfAllSamples === 1;
 }
 
 export function isEveryBinDistinct(data?: DataBin[]) {
     return (
-        data && data.length > 0 &&
+        data &&
+        data.length > 0 &&
         data.find(dataBin => dataBin.start !== dataBin.end) === undefined
     );
 }
@@ -696,27 +1028,32 @@ export function formatNumericalTickValues(numericalBins: DataBin[]) {
     let values = calcIntervalBinValues(intervalBins);
 
     // use only interval bin values when determining logScale
-    const isLogScale = !isEveryBinDistinct(intervalBins) && isLogScaleByValues(values);
+    const isLogScale =
+        !isEveryBinDistinct(intervalBins) && isLogScaleByValues(values);
 
     if (firstBin.start === undefined) {
         values = [firstBin.end, ...values];
-    }
-    else if (isLogScale && firstBin.start !== 0)
-    {
+    } else if (isLogScale && firstBin.start !== 0) {
         // we don't want to start with a value like 10^0.5, -10^3.5, etc. we prefer integer powers of 10
         if (!isIntegerPowerOfTen(firstBin.start)) {
-            values = [closestIntegerPowerOfTen(firstBin.start, DataBinPosition.LEADING), ...values];
+            values = [
+                closestIntegerPowerOfTen(
+                    firstBin.start,
+                    DataBinPosition.LEADING
+                ),
+                ...values,
+            ];
         }
     }
 
     if (lastBin.end === undefined) {
         values.push(lastBin.start);
-    }
-    else if (isLogScale && lastBin.end !== 0)
-    {
+    } else if (isLogScale && lastBin.end !== 0) {
         // we don't want to end with a value like 10^3.5, -10^0.5, etc. we prefer integer powers of 10
         if (!isIntegerPowerOfTen(lastBin.end)) {
-            values.push(closestIntegerPowerOfTen(lastBin.end, DataBinPosition.TRAILING));
+            values.push(
+                closestIntegerPowerOfTen(lastBin.end, DataBinPosition.TRAILING)
+            );
         }
     }
 
@@ -724,53 +1061,61 @@ export function formatNumericalTickValues(numericalBins: DataBin[]) {
 
     if (isLogScale) {
         formatted = formatLogScaleValues(values);
-    }
-    else if (intervalBins.length > 0 &&
-        isScientificSmallValue(intervalBins[Math.floor(intervalBins.length / 2)].end))
-    {
+    } else if (
+        intervalBins.length > 0 &&
+        isScientificSmallValue(
+            intervalBins[Math.floor(intervalBins.length / 2)].end
+        )
+    ) {
         // scientific notation
         formatted = values.map(value => value.toExponential(0));
-    }
-    else {
+    } else {
         formatted = formatLinearScaleValues(values);
     }
 
     if (firstBin.start === undefined) {
-        formatted[0] = `${OPERATOR_MAP[firstBin.specialValue] || firstBin.specialValue}${formatted[0]}`;
+        formatted[0] = `${OPERATOR_MAP[firstBin.specialValue] ||
+            firstBin.specialValue}${formatted[0]}`;
     }
 
     if (lastBin.end === undefined) {
-        formatted[formatted.length - 1] =
-            `${OPERATOR_MAP[lastBin.specialValue] || lastBin.specialValue}${formatted[formatted.length - 1]}`;
+        formatted[formatted.length - 1] = `${OPERATOR_MAP[
+            lastBin.specialValue
+        ] || lastBin.specialValue}${formatted[formatted.length - 1]}`;
     }
 
     return formatted;
 }
 
-export function formatLinearScaleValues(values: number[])
-{
-    return values.map(value => isScientificSmallValue(value) ?
-        value.toExponential(0) : toFixedDigit(value));
+export function formatLinearScaleValues(values: number[]) {
+    return values.map(value =>
+        isScientificSmallValue(value)
+            ? value.toExponential(0)
+            : toFixedDigit(value)
+    );
 }
 
 export function formatLogScaleValues(values: number[]) {
     return values.map(value => {
         let displayValue;
 
-        if (value === -10 || value === -1 || value === 0 || value === 1 || value === 10) {
+        if (
+            value === -10 ||
+            value === -1 ||
+            value === 0 ||
+            value === 1 ||
+            value === 10
+        ) {
             displayValue = `${value}`;
-        }
-        else {
+        } else {
             const exponent = getExponent(value);
 
             if (Number.isInteger(exponent)) {
                 displayValue = `10^${exponent.toFixed(0)}`;
-            }
-            else if (exponent % 0.5 === 0) {
+            } else if (exponent % 0.5 === 0) {
                 // hide non integer powers of 10 (but we still show the tick itself)
-                displayValue = "";
-            }
-            else {
+                displayValue = '';
+            } else {
                 // show special outliers (if any) as is
                 displayValue = `${value}`;
             }
@@ -800,18 +1145,23 @@ export function isIntegerPowerOfTen(value: number) {
 
 export enum DataBinPosition {
     LEADING = 1,
-    TRAILING = -1
+    TRAILING = -1,
 }
 
-export function closestIntegerPowerOfTen(value: number, dataBinPosition: DataBinPosition) {
+export function closestIntegerPowerOfTen(
+    value: number,
+    dataBinPosition: DataBinPosition
+) {
     if (value) {
         const absLogValue = Math.log10(Math.abs(value));
-        const power = value * dataBinPosition > 0 ? Math.floor(absLogValue) : Math.ceil(absLogValue);
+        const power =
+            value * dataBinPosition > 0
+                ? Math.floor(absLogValue)
+                : Math.ceil(absLogValue);
         const integerPower = Math.pow(10, power);
 
         return Math.sign(value) * integerPower;
-    }
-    else {
+    } else {
         return 1;
     }
 }
@@ -821,33 +1171,37 @@ export function intervalFiltersDisplayValue(values: ClinicalDataFilterValue[]) {
         .filter(value => value.start === undefined && value.end === undefined)
         .map(value => value.value);
 
-    const numericals = values.filter(value => value.start !== undefined || value.end !== undefined);
+    const numericals = values.filter(
+        value => value.start !== undefined || value.end !== undefined
+    );
 
     // merge numericals into one interval
     const start = numericals.length > 0 ? numericals[0].start : undefined;
-    const end = numericals.length > 0 ? numericals[numericals.length - 1].end : undefined;
+    const end =
+        numericals.length > 0
+            ? numericals[numericals.length - 1].end
+            : undefined;
 
     let displayValues: string[] = [];
 
     if (numericals.length > 0) {
         // both ends open
         if (start === undefined && end === undefined) {
-            displayValues.push("All Numbers");
-        }
-        else if (start === undefined) {
+            displayValues.push('All Numbers');
+        } else if (start === undefined) {
             displayValues.push(`≤ ${formatValue(end)}`);
-        }
-        else if (end === undefined) {
+        } else if (end === undefined) {
             displayValues.push(`> ${formatValue(start)}`);
-        }
-        else if (start === end) {
+        } else if (start === end) {
             displayValues.push(`${formatValue(start)}`);
-        }
-        else if (numericals[0].start === numericals[0].end) {
-            displayValues.push(`${formatValue(start)} ≤ x ≤ ${formatValue(end)}`);
-        }
-        else {
-            displayValues.push(`${formatValue(start)} < x ≤ ${formatValue(end)}`);
+        } else if (numericals[0].start === numericals[0].end) {
+            displayValues.push(
+                `${formatValue(start)} ≤ x ≤ ${formatValue(end)}`
+            );
+        } else {
+            displayValues.push(
+                `${formatValue(start)} < x ≤ ${formatValue(end)}`
+            );
         }
     }
 
@@ -856,17 +1210,16 @@ export function intervalFiltersDisplayValue(values: ClinicalDataFilterValue[]) {
         displayValues = displayValues.concat(categories);
     }
 
-    return displayValues.length > 0 ? displayValues.join(", ") : "";
+    return displayValues.length > 0 ? displayValues.join(', ') : '';
 }
 
-export function formatValue(value: number|undefined) {
+export function formatValue(value: number | undefined) {
     let formatted;
 
     if (value !== undefined) {
         if (isScientificSmallValue(value)) {
             formatted = value.toExponential(0);
-        }
-        else {
+        } else {
             formatted = toFixedDigit(value);
         }
     }
@@ -874,8 +1227,7 @@ export function formatValue(value: number|undefined) {
     return formatted;
 }
 
-export function toFixedDigit(value: number, fractionDigits: number = 2)
-{
+export function toFixedDigit(value: number, fractionDigits: number = 2) {
     if (!value) {
         return `${value}`;
     }
@@ -892,8 +1244,9 @@ export function toFixedDigit(value: number, fractionDigits: number = 2)
     // for small numbers we need to know the exact number of leading decimal zeroes
     if (value < 1 && value > -1) {
         const absLogValue = Math.abs(Math.log10(absValue % 1));
-        const numberOfLeadingDecimalZeroes = Number.isInteger(absLogValue) ?
-            Math.floor(absLogValue) - 1 : Math.floor(absLogValue);
+        const numberOfLeadingDecimalZeroes = Number.isInteger(absLogValue)
+            ? Math.floor(absLogValue) - 1
+            : Math.floor(absLogValue);
 
         digits += numberOfLeadingDecimalZeroes;
     }
@@ -903,19 +1256,35 @@ export function toFixedDigit(value: number, fractionDigits: number = 2)
 
 export function getChartMetaDataType(uniqueKey: string): ChartMetaDataType {
     const GENOMIC_DATA_TYPES = [
-        UniqueKey.MUTATION_COUNT_CNA_FRACTION, UniqueKey.CNA_GENES_TABLE, UniqueKey.MUTATED_GENES_TABLE,
-        UniqueKey.MUTATION_COUNT, UniqueKey.FRACTION_GENOME_ALTERED, UniqueKey.WITH_MUTATION_DATA, UniqueKey.WITH_CNA_DATA,
-        UniqueKey.WITH_FUSION_DATA, UniqueKey.FUSION_GENES_TABLE
+        UniqueKey.MUTATION_COUNT_CNA_FRACTION,
+        UniqueKey.CNA_GENES_TABLE,
+        UniqueKey.MUTATED_GENES_TABLE,
+        UniqueKey.MUTATION_COUNT,
+        UniqueKey.FRACTION_GENOME_ALTERED,
+        UniqueKey.WITH_MUTATION_DATA,
+        UniqueKey.WITH_CNA_DATA,
+        UniqueKey.WITH_FUSION_DATA,
+        UniqueKey.FUSION_GENES_TABLE,
     ];
-    return _.includes(GENOMIC_DATA_TYPES, uniqueKey) ? ChartMetaDataTypeEnum.GENOMIC : ChartMetaDataTypeEnum.CLINICAL;
+    return _.includes(GENOMIC_DATA_TYPES, uniqueKey)
+        ? ChartMetaDataTypeEnum.GENOMIC
+        : ChartMetaDataTypeEnum.CLINICAL;
 }
 
 // 10px is reserved by ReactVisualized library as margin right
-export function getFixedHeaderNumberCellMargin(columnWidth: number, theLongestString:string) {
-    return Math.floor((columnWidth - 10 - getFixedHeaderTableMaxLengthStringPixel(theLongestString)) / 2);
+export function getFixedHeaderNumberCellMargin(
+    columnWidth: number,
+    theLongestString: string
+) {
+    return Math.floor(
+        (columnWidth -
+            10 -
+            getFixedHeaderTableMaxLengthStringPixel(theLongestString)) /
+            2
+    );
 }
 
-export function getFixedHeaderTableMaxLengthStringPixel(text:string) {
+export function getFixedHeaderTableMaxLengthStringPixel(text: string) {
     // This is a very specified function to calculate the text length
     // For fixed header table used in study view only
     const FRONT_SIZE = '13px';
@@ -953,7 +1322,7 @@ export function formatFrequency(value: number) {
     } else if (value === 0) {
         return 0;
     } else if (value < 100 && value >= 99.9) {
-         return 99.9;
+        return 99.9;
     } else if (value >= 0.1) {
         value = Math.round(value * 10) / 10;
     } else {
@@ -964,8 +1333,7 @@ export function formatFrequency(value: number) {
     return value;
 }
 
-export function getExponent(value: number): number
-{
+export function getExponent(value: number): number {
     // less precision for values like 3 and 31
     const fractionDigits = Math.abs(value) < 50 ? 1 : 2;
 
@@ -976,16 +1344,25 @@ export function getCNAByAlteration(alteration: number) {
     return CNA_TO_ALTERATION[alteration] || '';
 }
 
-export function getCNAColorByAlteration(alteration: string): string | undefined {
+export function getCNAColorByAlteration(
+    alteration: string
+): string | undefined {
     switch (alteration) {
-        case "HOMDEL": return CNA_COLOR_HOMDEL;
-        case "AMP": return CNA_COLOR_AMP;
-        default: return undefined;
+        case 'HOMDEL':
+            return CNA_COLOR_HOMDEL;
+        case 'AMP':
+            return CNA_COLOR_AMP;
+        default:
+            return undefined;
     }
 }
 
-export function getDefaultChartTypeByClinicalAttribute(clinicalAttribute: ClinicalAttribute): ChartType | undefined {
-    if (STUDY_VIEW_CONFIG.tableAttrs.includes(getUniqueKey(clinicalAttribute))) {
+export function getDefaultChartTypeByClinicalAttribute(
+    clinicalAttribute: ClinicalAttribute
+): ChartType | undefined {
+    if (
+        STUDY_VIEW_CONFIG.tableAttrs.includes(getUniqueKey(clinicalAttribute))
+    ) {
         return ChartTypeEnum.TABLE;
     }
 
@@ -1010,19 +1387,28 @@ export function getDefaultChartTypeByClinicalAttribute(clinicalAttribute: Clinic
  * @returns {ReactGridLayout.Layout[]}
  */
 
-
-export function findSpot(matrix: string[][], chartDimension: ChartDimension): Position {
+export function findSpot(
+    matrix: string[][],
+    chartDimension: ChartDimension
+): Position {
     if (matrix.length === 0) {
         return {
             x: 0,
-            y: 0
+            y: 0,
         };
     }
     let found: Position | undefined = undefined;
     _.each(matrix, (row: string[], rowIndex: number) => {
         _.each(row, (item: string, columnIndex: number) => {
-            if (!item && !isOccupied(matrix, {x: columnIndex, y: rowIndex}, chartDimension)) {
-                found = {x: columnIndex, y: rowIndex};
+            if (
+                !item &&
+                !isOccupied(
+                    matrix,
+                    { x: columnIndex, y: rowIndex },
+                    chartDimension
+                )
+            ) {
+                found = { x: columnIndex, y: rowIndex };
                 return false;
             }
         });
@@ -1034,14 +1420,18 @@ export function findSpot(matrix: string[][], chartDimension: ChartDimension): Po
     if (!found) {
         return {
             x: 0,
-            y: matrix.length
-        }
+            y: matrix.length,
+        };
     } else {
         return found;
     }
 }
 
-export function isOccupied(matrix: string[][], position: Position, chartDimension: ChartDimension) {
+export function isOccupied(
+    matrix: string[][],
+    position: Position,
+    chartDimension: ChartDimension
+) {
     let occupied = false;
     if (matrix.length === 0) {
         return false;
@@ -1076,7 +1466,7 @@ export function isOccupied(matrix: string[][], position: Position, chartDimensio
 }
 
 export function getDefaultChartDimension(): ChartDimension {
-    return {w: 1, h: 1};
+    return { w: 1, h: 1 };
 }
 
 export function calculateLayout(
@@ -1085,27 +1475,41 @@ export function calculateLayout(
     chartsDimension: { [uniqueId: string]: ChartDimension },
     currentGridLayout: Layout[],
     currentFocusedChartByUser?: ChartMeta,
-    currentFocusedChartByUserDimension?: ChartDimension): Layout[] {
+    currentFocusedChartByUserDimension?: ChartDimension
+): Layout[] {
     let layout: Layout[] = [];
-    let availableChartLayoutsMap:{[chartId:string]:boolean} = {}
+    let availableChartLayoutsMap: { [chartId: string]: boolean } = {};
     let matrix = [new Array(cols).fill('')] as string[][];
     // sort the visibleAttributes by priority
     visibleAttributes.sort(chartMetaComparator);
     // look if we need to put the chart to a fixed position and add the position to the matrix
     if (currentGridLayout.length > 0) {
         if (currentFocusedChartByUser && currentFocusedChartByUserDimension) {
-            const currentChartLayout = currentGridLayout.find((layout) => layout.i === currentFocusedChartByUser.uniqueKey)!;
+            const currentChartLayout = currentGridLayout.find(
+                layout => layout.i === currentFocusedChartByUser.uniqueKey
+            )!;
             if (currentChartLayout) {
-                const newChartLayout = calculateNewLayoutForFocusedChart(currentChartLayout, currentFocusedChartByUser, cols, currentFocusedChartByUserDimension);
+                const newChartLayout = calculateNewLayoutForFocusedChart(
+                    currentChartLayout,
+                    currentFocusedChartByUser,
+                    cols,
+                    currentFocusedChartByUserDimension
+                );
                 layout.push(newChartLayout);
-                availableChartLayoutsMap[currentFocusedChartByUser.uniqueKey] = true;
+                availableChartLayoutsMap[
+                    currentFocusedChartByUser.uniqueKey
+                ] = true;
                 matrix = generateMatrixByLayout(newChartLayout, cols);
-            }
-            else {
-                throw (new Error("cannot find matching unique key in the grid layout"));
+            } else {
+                throw new Error(
+                    'cannot find matching unique key in the grid layout'
+                );
             }
         } else {
-            const chartOrderMap = _.keyBy(currentGridLayout, chartLayout => chartLayout.i);
+            const chartOrderMap = _.keyBy(
+                currentGridLayout,
+                chartLayout => chartLayout.i
+            );
             // order charts based on x and y (first order by y, if y is same for both then order by x)
             // push all undefined charts to last
             visibleAttributes.sort((a, b) => {
@@ -1118,7 +1522,9 @@ export function calculateLayout(
                     if (!chart1) {
                         return 1;
                     }
-                    return (chart1.y === chart2.y ? chart1.x - chart2.x : chart1.y - chart2.y);
+                    return chart1.y === chart2.y
+                        ? chart1.x - chart2.x
+                        : chart1.y - chart2.y;
                 }
                 return 0;
             });
@@ -1126,42 +1532,61 @@ export function calculateLayout(
     }
 
     // filter out the fixed position chart then calculate layout
-    _.forEach(_.filter(visibleAttributes, (chart: ChartMeta) => !availableChartLayoutsMap[chart.uniqueKey]), (chart: ChartMeta) => {
-        const dimension = chartsDimension[chart.uniqueKey] || getDefaultChartDimension();
-        const position = findSpot(matrix, dimension);
-        while ((position.y + dimension.h) >= matrix.length) {
-            matrix.push(new Array(cols).fill(''));
-        }
-        layout.push({
-            i: chart.uniqueKey,
-            x: position.x,
-            y: position.y,
-            w: dimension.w,
-            h: dimension.h,
-            isResizable: false
-        });
-        const xMax = position.x + dimension.w;
-        const yMax = position.y + dimension.h;
-        for (let i = position.y; i < yMax; i++) {
-            for (let j = position.x; j < xMax; j++) {
-                matrix[i][j] = chart.uniqueKey;
+    _.forEach(
+        _.filter(
+            visibleAttributes,
+            (chart: ChartMeta) => !availableChartLayoutsMap[chart.uniqueKey]
+        ),
+        (chart: ChartMeta) => {
+            const dimension =
+                chartsDimension[chart.uniqueKey] || getDefaultChartDimension();
+            const position = findSpot(matrix, dimension);
+            while (position.y + dimension.h >= matrix.length) {
+                matrix.push(new Array(cols).fill(''));
+            }
+            layout.push({
+                i: chart.uniqueKey,
+                x: position.x,
+                y: position.y,
+                w: dimension.w,
+                h: dimension.h,
+                isResizable: false,
+            });
+            const xMax = position.x + dimension.w;
+            const yMax = position.y + dimension.h;
+            for (let i = position.y; i < yMax; i++) {
+                for (let j = position.x; j < xMax; j++) {
+                    matrix[i][j] = chart.uniqueKey;
+                }
             }
         }
-    });
+    );
     return layout;
 }
 
-export function calculateNewLayoutForFocusedChart(previousLayout: Layout, currentFocusedChartByUser: ChartMeta, cols: number, currentFocusedChartByUserDimension:ChartDimension): Layout {
+export function calculateNewLayoutForFocusedChart(
+    previousLayout: Layout,
+    currentFocusedChartByUser: ChartMeta,
+    cols: number,
+    currentFocusedChartByUserDimension: ChartDimension
+): Layout {
     const initialX = previousLayout.x;
     const initialY = previousLayout.y;
     const dimensionWidth = currentFocusedChartByUserDimension.w;
     let x = initialX;
     let y = initialY;
 
-    if (isFocusedChartShrunk({w: previousLayout.w, h: previousLayout.h}, currentFocusedChartByUserDimension)) {
+    if (
+        isFocusedChartShrunk(
+            { w: previousLayout.w, h: previousLayout.h },
+            currentFocusedChartByUserDimension
+        )
+    ) {
         x = initialX + previousLayout.w - dimensionWidth;
-    }
-    else if (initialX + dimensionWidth >= cols && initialX - dimensionWidth >= 0) {
+    } else if (
+        initialX + dimensionWidth >= cols &&
+        initialX - dimensionWidth >= 0
+    ) {
         x = cols - dimensionWidth;
     }
 
@@ -1171,11 +1596,14 @@ export function calculateNewLayoutForFocusedChart(previousLayout: Layout, curren
         y,
         w: currentFocusedChartByUserDimension.w,
         h: currentFocusedChartByUserDimension.h,
-        isResizable: false
+        isResizable: false,
     };
 }
 
-export function generateMatrixByLayout(layout: Layout, cols: number) : string[][] {
+export function generateMatrixByLayout(
+    layout: Layout,
+    cols: number
+): string[][] {
     let matrix = [new Array(cols).fill('')] as string[][];
     const xMax = layout.x + layout.w;
     const yMax = layout.y + layout.h;
@@ -1190,12 +1618,18 @@ export function generateMatrixByLayout(layout: Layout, cols: number) : string[][
     return matrix;
 }
 
-export function isFocusedChartShrunk(oldDimension: ChartDimension, newDimension: ChartDimension): boolean {
-    return (oldDimension.w + oldDimension.h) > (newDimension.w + newDimension.h);
+export function isFocusedChartShrunk(
+    oldDimension: ChartDimension,
+    newDimension: ChartDimension
+): boolean {
+    return oldDimension.w + oldDimension.h > newDimension.w + newDimension.h;
 }
 
-export function getPositionXByUniqueKey(layouts: Layout[], uniqueKey: string): number | undefined {
-    const findLayoutResult = _.find(layouts, (layout) => {
+export function getPositionXByUniqueKey(
+    layouts: Layout[],
+    uniqueKey: string
+): number | undefined {
+    const findLayoutResult = _.find(layouts, layout => {
         if (layout.i === uniqueKey) {
             return layout;
         }
@@ -1203,8 +1637,11 @@ export function getPositionXByUniqueKey(layouts: Layout[], uniqueKey: string): n
     return findLayoutResult ? findLayoutResult.x : undefined;
 }
 
-export function getPositionYByUniqueKey(layouts: Layout[], uniqueKey: string): number | undefined {
-    const findLayoutResult = _.find(layouts, (layout) => {
+export function getPositionYByUniqueKey(
+    layouts: Layout[],
+    uniqueKey: string
+): number | undefined {
+    const findLayoutResult = _.find(layouts, layout => {
         if (layout.i === uniqueKey) {
             return layout;
         }
@@ -1213,62 +1650,98 @@ export function getPositionYByUniqueKey(layouts: Layout[], uniqueKey: string): n
 }
 
 export function getDefaultPriorityByUniqueKey(uniqueKey: string): number {
-    return STUDY_VIEW_CONFIG.priority[uniqueKey] === undefined ? 1 : STUDY_VIEW_CONFIG.priority[uniqueKey];
+    return STUDY_VIEW_CONFIG.priority[uniqueKey] === undefined
+        ? 1
+        : STUDY_VIEW_CONFIG.priority[uniqueKey];
 }
 
-export function getPriorityByClinicalAttribute(clinicalAttribute: ClinicalAttribute): number {
+export function getPriorityByClinicalAttribute(
+    clinicalAttribute: ClinicalAttribute
+): number {
     // If the priority is the default which means the priority has not been manually modified, then we should check
     // the whether there are priorities predefined
     const priorityFromDB = Number(clinicalAttribute.priority);
     if (priorityFromDB === STUDY_VIEW_CONFIG.defaultPriority) {
         const uniqueKey = getUniqueKey(clinicalAttribute);
-        return STUDY_VIEW_CONFIG.priority[uniqueKey] === undefined ? STUDY_VIEW_CONFIG.defaultPriority : STUDY_VIEW_CONFIG.priority[uniqueKey];
+        return STUDY_VIEW_CONFIG.priority[uniqueKey] === undefined
+            ? STUDY_VIEW_CONFIG.defaultPriority
+            : STUDY_VIEW_CONFIG.priority[uniqueKey];
     } else {
-        return priorityFromDB
+        return priorityFromDB;
     }
 }
 
 // Grid includes 10px margin
-export function getWidthByDimension(chartDimension: ChartDimension, borderWidth: number) {
-    return STUDY_VIEW_CONFIG.layout.grid.w * chartDimension.w + (chartDimension.w - 1) * STUDY_VIEW_CONFIG.layout.gridMargin.x - borderWidth * 2;
+export function getWidthByDimension(
+    chartDimension: ChartDimension,
+    borderWidth: number
+) {
+    return (
+        STUDY_VIEW_CONFIG.layout.grid.w * chartDimension.w +
+        (chartDimension.w - 1) * STUDY_VIEW_CONFIG.layout.gridMargin.x -
+        borderWidth * 2
+    );
 }
 
 // Grid includes 15px header and 35px tool section
-export function getHeightByDimension(chartDimension: ChartDimension, chartHeight: number) {
-    return STUDY_VIEW_CONFIG.layout.grid.h * chartDimension.h + (chartDimension.h - 1) * STUDY_VIEW_CONFIG.layout.gridMargin.y - chartHeight;
+export function getHeightByDimension(
+    chartDimension: ChartDimension,
+    chartHeight: number
+) {
+    return (
+        STUDY_VIEW_CONFIG.layout.grid.h * chartDimension.h +
+        (chartDimension.h - 1) * STUDY_VIEW_CONFIG.layout.gridMargin.y -
+        chartHeight
+    );
 }
 
 // 30px tool section
-export function getTableHeightByDimension(chartDimension: ChartDimension, chartHeight: number) {
+export function getTableHeightByDimension(
+    chartDimension: ChartDimension,
+    chartHeight: number
+) {
     return getHeightByDimension(chartDimension, chartHeight) - 30;
 }
 
-export function getQValue(qvalue: number):string {
+export function getQValue(qvalue: number): string {
     if (qvalue === 0) {
         return '0';
     } else {
-        return qvalue.toExponential(EXPONENTIAL_FRACTION_DIGITS)
+        return qvalue.toExponential(EXPONENTIAL_FRACTION_DIGITS);
     }
 }
 
-export function pickClinicalAttrFixedColors(data: ClinicalDataCount[]): {[attribute: string]: string}
-{
-    return _.reduce(data, (acc: { [id: string]: string }, slice) => {
-        // pick a fixed color if predefined
-        const fixed = isNAClinicalValue(slice.value) ? DEFAULT_NA_COLOR : getClinicalValueColor(slice.value);
+export function pickClinicalAttrFixedColors(
+    data: ClinicalDataCount[]
+): { [attribute: string]: string } {
+    return _.reduce(
+        data,
+        (acc: { [id: string]: string }, slice) => {
+            // pick a fixed color if predefined
+            const fixed = isNAClinicalValue(slice.value)
+                ? DEFAULT_NA_COLOR
+                : getClinicalValueColor(slice.value);
 
-        if (fixed) {
-            // update the map
-            acc[slice.value] = fixed;
-        }
+            if (fixed) {
+                // update the map
+                acc[slice.value] = fixed;
+            }
 
-        return acc;
-    }, {});
+            return acc;
+        },
+        {}
+    );
 }
 
-export type ClinicalDataCountSummary = ClinicalDataCount & { color: string , percentage: number, freq: string}
+export type ClinicalDataCountSummary = ClinicalDataCount & {
+    color: string;
+    percentage: number;
+    freq: string;
+};
 
-export function getClinicalDataCountWithColorByClinicalDataCount(counts:ClinicalDataCount[]):ClinicalDataCountSummary[] {
+export function getClinicalDataCountWithColorByClinicalDataCount(
+    counts: ClinicalDataCount[]
+): ClinicalDataCountSummary[] {
     counts.sort(clinicalDataCountComparator);
     const colors = pickClinicalDataColors(counts);
     const sum = _.sumBy(counts, count => count.count);
@@ -1278,50 +1751,72 @@ export function getClinicalDataCountWithColorByClinicalDataCount(counts:Clinical
             ...slice,
             color: colors[slice.value],
             percentage: percentage,
-            freq: getFrequencyStr(percentage * 100)
+            freq: getFrequencyStr(percentage * 100),
         };
     });
 }
 
-export function pickClinicalAttrColorsByIndex(data: ClinicalDataCount[],
-                                              availableColors: string[]): {[attribute: string]: string}
-{
+export function pickClinicalAttrColorsByIndex(
+    data: ClinicalDataCount[],
+    availableColors: string[]
+): { [attribute: string]: string } {
     let colorIndex = 0;
 
-    return _.reduce(data, (acc: { [id: string]: string }, slice) => {
-        if (!isNAClinicalValue(slice.value) && !getClinicalValueColor(slice.value)) {
-            acc[slice.value] = availableColors[colorIndex % availableColors.length];
-            colorIndex++;
-        }
-        return acc;
-    }, {});
+    return _.reduce(
+        data,
+        (acc: { [id: string]: string }, slice) => {
+            if (
+                !isNAClinicalValue(slice.value) &&
+                !getClinicalValueColor(slice.value)
+            ) {
+                acc[slice.value] =
+                    availableColors[colorIndex % availableColors.length];
+                colorIndex++;
+            }
+            return acc;
+        },
+        {}
+    );
 }
 
-export function calculateClinicalDataCountFrequency(data: ClinicalDataCountSet, numOfSelectedSamples: number): ClinicalDataCountSet {
-    return _.reduce(data, (acc, next, key) => {
-        acc[key] = next * 100 / numOfSelectedSamples;
-        return acc;
-    }, {} as { [attrId: string]: number });
+export function calculateClinicalDataCountFrequency(
+    data: ClinicalDataCountSet,
+    numOfSelectedSamples: number
+): ClinicalDataCountSet {
+    return _.reduce(
+        data,
+        (acc, next, key) => {
+            acc[key] = (next * 100) / numOfSelectedSamples;
+            return acc;
+        },
+        {} as { [attrId: string]: number }
+    );
 }
 
-
-export function getOptionsByChartMetaDataType(type: ChartMetaDataType, allCharts: { [id: string]: ChartMeta }, selectedAttrs: string[], allChartTypes:{[id:string]:ChartType}) {
-    return _.filter(allCharts, chartMeta => chartMeta.dataType === type)
-        .map(chartMeta => {
+export function getOptionsByChartMetaDataType(
+    type: ChartMetaDataType,
+    allCharts: { [id: string]: ChartMeta },
+    selectedAttrs: string[],
+    allChartTypes: { [id: string]: ChartType }
+) {
+    return _.filter(allCharts, chartMeta => chartMeta.dataType === type).map(
+        chartMeta => {
             return {
                 label: chartMeta.displayName,
                 key: chartMeta.uniqueKey,
                 chartType: allChartTypes[chartMeta.uniqueKey],
                 disabled: false,
                 selected: selectedAttrs.includes(chartMeta.uniqueKey),
-                freq: 100
-            }
-        });
+                freq: 100,
+            };
+        }
+    );
 }
 
-export function pickClinicalDataColors(data: ClinicalDataCount[],
-                                       colors: string[] = COLORS): {[attribute: string]: string}
-{
+export function pickClinicalDataColors(
+    data: ClinicalDataCount[],
+    colors: string[] = COLORS
+): { [attribute: string]: string } {
     let availableColors = _.cloneDeep(colors);
 
     // pick colors for the fixed clinical attribute values first
@@ -1332,23 +1827,33 @@ export function pickClinicalDataColors(data: ClinicalDataCount[],
     availableColors = _.difference(availableColors, _.values(fixedColors));
 
     // then pick colors for the remaining attributes
-    return {...pickClinicalAttrColorsByIndex(data, availableColors), ...fixedColors};
+    return {
+        ...pickClinicalAttrColorsByIndex(data, availableColors),
+        ...fixedColors,
+    };
 }
 
-export function isNAClinicalValue(value:string) {
+export function isNAClinicalValue(value: string) {
     return value.toLowerCase().trim() === 'na';
 }
 
-export function getFilteredSampleIdentifiers(samples:Sample[], isFiltered?:(sample:Sample)=>boolean){
-    return _.reduce(samples, (acc, sample) => {
-        if (isFiltered === undefined || isFiltered(sample)) {
-            acc.push({
-                sampleId: sample.sampleId,
-                studyId: sample.studyId
-            });
-        }
-        return acc;
-    }, [] as SampleIdentifier[])
+export function getFilteredSampleIdentifiers(
+    samples: Sample[],
+    isFiltered?: (sample: Sample) => boolean
+) {
+    return _.reduce(
+        samples,
+        (acc, sample) => {
+            if (isFiltered === undefined || isFiltered(sample)) {
+                acc.push({
+                    sampleId: sample.sampleId,
+                    studyId: sample.studyId,
+                });
+            }
+            return acc;
+        },
+        [] as SampleIdentifier[]
+    );
 }
 
 /**
@@ -1359,25 +1864,33 @@ export function getSamplesByExcludingFiltersOnChart(
     filter: StudyViewFilter,
     sampleIdentiferFilterSet: { [id: string]: SampleIdentifier[] },
     queriedSampleIdentifiers: SampleIdentifier[],
-    queriedStudyIds: string[]): Promise<Sample[]> {
-
+    queriedStudyIds: string[]
+): Promise<Sample[]> {
     //create filter without study/sample identifiers
     let updatedFilter: StudyViewFilter = {
         clinicalDataFilters: filter.clinicalDataFilters,
-        geneFilters: filter.geneFilters
+        geneFilters: filter.geneFilters,
     } as any;
 
-    let _sampleIdentifiers = _.reduce(sampleIdentiferFilterSet, (acc, sampleIdentifiers, key) => {
-        //exclude chart filters
-        if (chartKey !== key) {
-            if (acc.length === 0) {
-                acc = sampleIdentifiers;
-            } else {
-                acc = _.intersectionWith(acc, sampleIdentifiers, _.isEqual) as SampleIdentifier[];
+    let _sampleIdentifiers = _.reduce(
+        sampleIdentiferFilterSet,
+        (acc, sampleIdentifiers, key) => {
+            //exclude chart filters
+            if (chartKey !== key) {
+                if (acc.length === 0) {
+                    acc = sampleIdentifiers;
+                } else {
+                    acc = _.intersectionWith(
+                        acc,
+                        sampleIdentifiers,
+                        _.isEqual
+                    ) as SampleIdentifier[];
+                }
             }
-        }
-        return acc
-    }, [] as SampleIdentifier[]);
+            return acc;
+        },
+        [] as SampleIdentifier[]
+    );
 
     if (_sampleIdentifiers && _sampleIdentifiers.length > 0) {
         updatedFilter.sampleIdentifiers = _sampleIdentifiers;
@@ -1389,11 +1902,19 @@ export function getSamplesByExcludingFiltersOnChart(
         }
     }
     return internalClient.fetchFilteredSamplesUsingPOST({
-        studyViewFilter: updatedFilter
+        studyViewFilter: updatedFilter,
     });
 }
 
-export function getRequestedAwaitPromisesForClinicalData(isDefaultVisibleAttribute:boolean, isInitialFilterState: boolean, chartsAreFiltered: boolean, chartIsFiltered: boolean, unfilteredPromise: MobxPromise<any>, newlyAddedUnfilteredPromise: MobxPromise<any>, initialVisibleAttributesPromise: MobxPromise<any>): MobxPromise<any>[] {
+export function getRequestedAwaitPromisesForClinicalData(
+    isDefaultVisibleAttribute: boolean,
+    isInitialFilterState: boolean,
+    chartsAreFiltered: boolean,
+    chartIsFiltered: boolean,
+    unfilteredPromise: MobxPromise<any>,
+    newlyAddedUnfilteredPromise: MobxPromise<any>,
+    initialVisibleAttributesPromise: MobxPromise<any>
+): MobxPromise<any>[] {
     if (isInitialFilterState && isDefaultVisibleAttribute && !chartIsFiltered) {
         return [initialVisibleAttributesPromise];
     } else if (!isDefaultVisibleAttribute && !chartsAreFiltered) {
@@ -1415,107 +1936,147 @@ export function customBinsAreValid(newBins: string[]): boolean {
     });
 }
 
-export async function getHugoSymbolByEntrezGeneId(entrezGeneId: number): Promise<string> {
+export async function getHugoSymbolByEntrezGeneId(
+    entrezGeneId: number
+): Promise<string> {
     const gene: Gene = await defaultClient.getGeneUsingGET({
-        geneId: entrezGeneId.toString()
+        geneId: entrezGeneId.toString(),
     });
     return gene.hugoGeneSymbol;
 }
 
 // returns true when there is only one virtual study and no physical studies
-export function showOriginStudiesInSummaryDescription(physicalStudies: CancerStudy[], virtualStudies: VirtualStudy[]) {
+export function showOriginStudiesInSummaryDescription(
+    physicalStudies: CancerStudy[],
+    virtualStudies: VirtualStudy[]
+) {
     return physicalStudies.length === 0 && virtualStudies.length === 1;
 }
 
 export function getFilteredStudiesWithSamples(
     samples: Sample[],
     physicalStudies: CancerStudy[],
-    virtualStudies: VirtualStudy[]) {
-
+    virtualStudies: VirtualStudy[]
+) {
     let queriedStudiesWithSamples: StudyWithSamples[] = [];
     const selectedStudySampleSet = _.groupBy(samples, sample => sample.studyId);
 
     _.each(physicalStudies, study => {
         const samples = selectedStudySampleSet[study.studyId];
         if (samples && samples.length > 0) {
-            queriedStudiesWithSamples.push({ ...study, uniqueSampleKeys: _.map(samples, sample => sample.uniqueSampleKey) });
+            queriedStudiesWithSamples.push({
+                ...study,
+                uniqueSampleKeys: _.map(
+                    samples,
+                    sample => sample.uniqueSampleKey
+                ),
+            });
         }
-    })
+    });
 
     _.each(virtualStudies, virtualStudy => {
-        let selectedSamples: Sample[] = []
+        let selectedSamples: Sample[] = [];
         virtualStudy.data.studies.forEach(study => {
             let samples = selectedStudySampleSet[study.id];
             if (samples && samples.length > 0) {
                 selectedSamples = selectedSamples.concat(samples);
             }
-        })
+        });
 
         if (selectedSamples.length > 0) {
             let study = {
                 name: virtualStudy.data.name,
                 description: virtualStudy.data.description,
                 studyId: virtualStudy.id,
-            } as CancerStudy
-            queriedStudiesWithSamples.push({ ...study, uniqueSampleKeys: _.map(selectedSamples, sample => sample.uniqueSampleKey) });
+            } as CancerStudy;
+            queriedStudiesWithSamples.push({
+                ...study,
+                uniqueSampleKeys: _.map(
+                    selectedSamples,
+                    sample => sample.uniqueSampleKey
+                ),
+            });
         }
     });
     return queriedStudiesWithSamples;
 }
 
-export function clinicalDataCountComparator(a: ClinicalDataCount, b: ClinicalDataCount): number
-{
+export function clinicalDataCountComparator(
+    a: ClinicalDataCount,
+    b: ClinicalDataCount
+): number {
     if (isNAClinicalValue(a.value)) {
         return isNAClinicalValue(b.value) ? 0 : 1;
-    }
-    else if (isNAClinicalValue(b.value)) {
+    } else if (isNAClinicalValue(b.value)) {
         return -1;
-    }
-    else {
+    } else {
         return b.count - a.count;
     }
 }
 
 type ClinicalAttributeSorting = {
-    priority: number,
-    displayName: string
+    priority: number;
+    displayName: string;
+};
+
+export function clinicalAttributeSortingComparator(
+    a: ClinicalAttributeSorting,
+    b: ClinicalAttributeSorting
+): number {
+    return (
+        b.priority - a.priority || a.displayName.localeCompare(b.displayName)
+    );
 }
 
-export function clinicalAttributeSortingComparator(a: ClinicalAttributeSorting, b: ClinicalAttributeSorting): number {
-    return b.priority - a.priority || a.displayName.localeCompare(b.displayName);
-}
-
-export function clinicalAttributeComparator(a: ClinicalAttribute, b: ClinicalAttribute): number {
-    return clinicalAttributeSortingComparator({
-        priority: Number(a.priority),
-        displayName: a.displayName
-    }, {
-        priority: Number(b.priority),
-        displayName: b.displayName
-    });
+export function clinicalAttributeComparator(
+    a: ClinicalAttribute,
+    b: ClinicalAttribute
+): number {
+    return clinicalAttributeSortingComparator(
+        {
+            priority: Number(a.priority),
+            displayName: a.displayName,
+        },
+        {
+            priority: Number(b.priority),
+            displayName: b.displayName,
+        }
+    );
 }
 
 // Descent sort priority then ascent sort by display name
 export function chartMetaComparator(a: ChartMeta, b: ChartMeta): number {
-    return clinicalAttributeSortingComparator({
-        priority: a.priority,
-        displayName: a.displayName
-    }, {
-        priority: b.priority,
-        displayName: b.displayName
-    });
+    return clinicalAttributeSortingComparator(
+        {
+            priority: a.priority,
+            displayName: a.displayName,
+        },
+        {
+            priority: b.priority,
+            displayName: b.displayName,
+        }
+    );
 }
 
-
-export function submitToPage(url:string, params: { [id: string]: string }, target?: string) {
+export function submitToPage(
+    url: string,
+    params: { [id: string]: string },
+    target?: string
+) {
     try {
-        window.localStorage.setItem("legacyStudySubmission", JSON.stringify(params))
+        window.localStorage.setItem(
+            'legacyStudySubmission',
+            JSON.stringify(params)
+        );
         window.open(buildCBioPortalPageUrl(url), target);
     } catch (e) {
         // try clearing localStorage
         window.localStorage.clear();
         try {
-            window.localStorage.setItem("legacyStudySubmission", JSON.stringify(params));
+            window.localStorage.setItem(
+                'legacyStudySubmission',
+                JSON.stringify(params)
+            );
             window.open(buildCBioPortalPageUrl(url), target);
         } catch (e) {
             // TODO - currenlty alerting user with message until we have a proper solution
@@ -1524,29 +2085,38 @@ export function submitToPage(url:string, params: { [id: string]: string }, targe
     }
 }
 
-export function getClinicalEqualityFilterValuesByString(filterValues: string):string[] {
-    return filterValues.replace(/\\,/g,'$@$').split(",").map(val=>val.trim().replace(/\$@\$/g,','));
+export function getClinicalEqualityFilterValuesByString(
+    filterValues: string
+): string[] {
+    return filterValues
+        .replace(/\\,/g, '$@$')
+        .split(',')
+        .map(val => val.trim().replace(/\$@\$/g, ','));
 }
 
-export function getClinicalDataCountWithColorByCategoryCounts(yesCount:number, noCount: number):ClinicalDataCountSummary[] {
-
+export function getClinicalDataCountWithColorByCategoryCounts(
+    yesCount: number,
+    noCount: number
+): ClinicalDataCountSummary[] {
     let dataCountSet: { [id: string]: ClinicalDataCount } = {};
     if (yesCount > 0) {
         dataCountSet[Datalabel.YES] = {
-            'count': yesCount,
-            'value': Datalabel.YES
-        }
+            count: yesCount,
+            value: Datalabel.YES,
+        };
     }
     if (noCount > 0) {
         dataCountSet[Datalabel.NO] = {
-            'count': noCount,
-            'value': Datalabel.NO
-        }
+            count: noCount,
+            value: Datalabel.NO,
+        };
     }
-    return getClinicalDataCountWithColorByClinicalDataCount(_.values(dataCountSet));
+    return getClinicalDataCountWithColorByClinicalDataCount(
+        _.values(dataCountSet)
+    );
 }
 
-export function getStudyViewTabId(pathname:string) {
+export function getStudyViewTabId(pathname: string) {
     const match = pathname.match(/study\/([^\/]+)/);
     if (match) {
         return match[1] as StudyViewPageTabKeyEnum;
@@ -1556,37 +2126,44 @@ export function getStudyViewTabId(pathname:string) {
 }
 
 export function getSelectedGroupNames(
-    groups:Pick<StudyViewComparisonGroup, "name">[]
+    groups: Pick<StudyViewComparisonGroup, 'name'>[]
 ) {
     if (groups.length <= 2) {
-        return groups.map(group=>group.name).join(" and ");
+        return groups.map(group => group.name).join(' and ');
     } else {
-        return `${groups[0].name} and ${groups.length-1} other groups`;
+        return `${groups[0].name} and ${groups.length - 1} other groups`;
     }
 }
 
 export function getPatientIdentifiers(
-    groups:Pick<StudyViewComparisonGroup, "studies">[]
+    groups: Pick<StudyViewComparisonGroup, 'studies'>[]
 ) {
     return _.uniqWith(
         _.flattenDeep<PatientIdentifier>(
-            groups.map(group=>group.studies.map(study=>{
-                const studyId = study.id;
-                return study.patients.map(patientId=>({ studyId, patientId }));
-            }))
+            groups.map(group =>
+                group.studies.map(study => {
+                    const studyId = study.id;
+                    return study.patients.map(patientId => ({
+                        studyId,
+                        patientId,
+                    }));
+                })
+            )
         ),
-        (id1, id2)=>((id1.patientId === id2.patientId) && (id1.studyId === id2.studyId))
+        (id1, id2) =>
+            id1.patientId === id2.patientId && id1.studyId === id2.studyId
     );
 }
 
 export function isSpecialChart(chartMeta: ChartMeta) {
-    return SPECIAL_CHARTS.findIndex(
-        cm => cm.uniqueKey === chartMeta.uniqueKey
-    ) > -1;
+    return (
+        SPECIAL_CHARTS.findIndex(cm => cm.uniqueKey === chartMeta.uniqueKey) >
+        -1
+    );
 }
 
-
-export function getChartSettingsMap(visibleAttributes: ChartMeta[],
+export function getChartSettingsMap(
+    visibleAttributes: ChartMeta[],
     columns: number,
     chartDimensionSet: { [uniqueId: string]: ChartDimension },
     chartTypeSet: { [uniqueId: string]: ChartType },
@@ -1595,30 +2172,42 @@ export function getChartSettingsMap(visibleAttributes: ChartMeta[],
     filterMutatedGenesTableByCancerGenes: boolean = true,
     filterFusionGenesTableByCancerGenes: boolean = true,
     filterCNAGenesTableByCancerGenes: boolean = true,
-    gridLayout?: ReactGridLayout.Layout[]) {
-
+    gridLayout?: ReactGridLayout.Layout[]
+) {
     if (!gridLayout) {
-        gridLayout = calculateLayout(visibleAttributes, columns, chartDimensionSet, []);
+        gridLayout = calculateLayout(
+            visibleAttributes,
+            columns,
+            chartDimensionSet,
+            []
+        );
     }
 
     let chartSettingsMap: { [chartId: string]: ChartUserSetting } = {};
     visibleAttributes.forEach(attribute => {
-        const id = attribute.uniqueKey
+        const id = attribute.uniqueKey;
         const chartType = chartTypeSet[id] || 'NONE';
         chartSettingsMap[attribute.uniqueKey] = {
             id: attribute.uniqueKey,
             chartType,
-            patientAttribute: attribute.patientAttribute // add chart attribute type
-        }
+            patientAttribute: attribute.patientAttribute, // add chart attribute type
+        };
         if (chartType === UniqueKey.MUTATED_GENES_TABLE) {
-            chartSettingsMap[attribute.uniqueKey].filterByCancerGenes = filterMutatedGenesTableByCancerGenes;
+            chartSettingsMap[
+                attribute.uniqueKey
+            ].filterByCancerGenes = filterMutatedGenesTableByCancerGenes;
         } else if (chartType === UniqueKey.FUSION_GENES_TABLE) {
-            chartSettingsMap[attribute.uniqueKey].filterByCancerGenes = filterFusionGenesTableByCancerGenes;
+            chartSettingsMap[
+                attribute.uniqueKey
+            ].filterByCancerGenes = filterFusionGenesTableByCancerGenes;
         } else if (chartType === UniqueKey.CNA_GENES_TABLE) {
-            chartSettingsMap[attribute.uniqueKey].filterByCancerGenes = filterCNAGenesTableByCancerGenes;
+            chartSettingsMap[
+                attribute.uniqueKey
+            ].filterByCancerGenes = filterCNAGenesTableByCancerGenes;
         }
         const customChart = customChartSet[id];
-        if (customChart) { // if its custom chart add groups and name
+        if (customChart) {
+            // if its custom chart add groups and name
             chartSettingsMap[id].groups = customChart.groups;
             chartSettingsMap[id].name = attribute.displayName;
         }
@@ -1627,7 +2216,8 @@ export function getChartSettingsMap(visibleAttributes: ChartMeta[],
                 chartSettingsMap[id].disableLogScale = true;
             }
             if (!_.isEmpty(clinicalDataBinFilter[id].customBins)) {
-                chartSettingsMap[id].customBins = clinicalDataBinFilter[id].customBins;
+                chartSettingsMap[id].customBins =
+                    clinicalDataBinFilter[id].customBins;
             }
         }
     });
@@ -1638,14 +2228,16 @@ export function getChartSettingsMap(visibleAttributes: ChartMeta[],
                 x: layout.x,
                 y: layout.y,
                 w: layout.w,
-                h: layout.h
+                h: layout.h,
             };
         }
     });
     return chartSettingsMap;
 }
 
-export function getBinName(dataBin: Pick<DataBin, "specialValue"|"start"|"end">) {
+export function getBinName(
+    dataBin: Pick<DataBin, 'specialValue' | 'start' | 'end'>
+) {
     // specialValue can be any non-numeric character. ex: "=<", ">", "NA"
     if (dataBin.specialValue !== undefined) {
         if (dataBin.start !== undefined) {
@@ -1659,83 +2251,120 @@ export function getBinName(dataBin: Pick<DataBin, "specialValue"|"start"|"end">)
     if (dataBin.start !== undefined && dataBin.end !== undefined) {
         return `${dataBin.start}-${dataBin.end}`;
     }
-    return ''
+    return '';
 }
 
-export function getGroupedClinicalDataByBins(data: ClinicalData[], dataBins: DataBin[]) {
-    const numericDataBins = dataBins.filter(dataBin => dataBin.specialValue === undefined);
-    const specialDataBins = dataBins.filter(dataBin => dataBin.specialValue !== undefined);
-    return _.reduce(data, (acc, datum) => {
-        let dataBin: DataBin | undefined;
-        // Check if the ClinicalData value is number
-        if (!isNaN(datum.value as any)) {
-            //find if it belongs to any of numeric bins.
-            dataBin = _.find(numericDataBins, dataBin => parseFloat(datum.value) > dataBin.start && parseFloat(datum.value) <= dataBin.end);
-        }
-
-        //If ClinicalData value is not a number of does not belong to any number bins
-        if (dataBin === undefined) {
-            //find if it belongs to any of sepcial bins.
-            dataBin = _.find(specialDataBins, dataBin => {
-                if (!isNaN(datum.value as any)) {
-                    if (dataBin.end !== undefined) {
-                        return parseFloat(datum.value) <= dataBin.end;
-                    }
-                    else if (dataBin.start !== undefined) {
-                        return parseFloat(datum.value) > dataBin.start;
-                    }
-                }
-                return dataBin.specialValue === datum.value;
-            });
-        }
-        if (dataBin) {
-            let name = getBinName(dataBin);
-            if (acc[name] === undefined) {
-                acc[name] = [];
+export function getGroupedClinicalDataByBins(
+    data: ClinicalData[],
+    dataBins: DataBin[]
+) {
+    const numericDataBins = dataBins.filter(
+        dataBin => dataBin.specialValue === undefined
+    );
+    const specialDataBins = dataBins.filter(
+        dataBin => dataBin.specialValue !== undefined
+    );
+    return _.reduce(
+        data,
+        (acc, datum) => {
+            let dataBin: DataBin | undefined;
+            // Check if the ClinicalData value is number
+            if (!isNaN(datum.value as any)) {
+                //find if it belongs to any of numeric bins.
+                dataBin = _.find(
+                    numericDataBins,
+                    dataBin =>
+                        parseFloat(datum.value) > dataBin.start &&
+                        parseFloat(datum.value) <= dataBin.end
+                );
             }
-            acc[name].push(datum);
+
+            //If ClinicalData value is not a number of does not belong to any number bins
+            if (dataBin === undefined) {
+                //find if it belongs to any of sepcial bins.
+                dataBin = _.find(specialDataBins, dataBin => {
+                    if (!isNaN(datum.value as any)) {
+                        if (dataBin.end !== undefined) {
+                            return parseFloat(datum.value) <= dataBin.end;
+                        } else if (dataBin.start !== undefined) {
+                            return parseFloat(datum.value) > dataBin.start;
+                        }
+                    }
+                    return dataBin.specialValue === datum.value;
+                });
+            }
+            if (dataBin) {
+                let name = getBinName(dataBin);
+                if (acc[name] === undefined) {
+                    acc[name] = [];
+                }
+                acc[name].push(datum);
+            }
+            return acc;
+        },
+        {} as {
+            [id: string]: ClinicalData[];
         }
-        return acc;
-    }, {} as {
-        [id: string]: ClinicalData[];
-    });
+    );
 }
 
-export function getGroupsFromBins(samples: Sample[], patientAttribute: boolean, data: ClinicalData[], dataBins: DataBin[], origin: string[]) {
-
-    let patientToSamples: { [uniquePatientKey: string]: SampleIdentifier[] } = {};
+export function getGroupsFromBins(
+    samples: Sample[],
+    patientAttribute: boolean,
+    data: ClinicalData[],
+    dataBins: DataBin[],
+    origin: string[]
+) {
+    let patientToSamples: {
+        [uniquePatientKey: string]: SampleIdentifier[];
+    } = {};
     if (patientAttribute) {
         patientToSamples = _.groupBy(samples, s => s.uniquePatientKey);
     }
 
     const clinicalDataByBins = getGroupedClinicalDataByBins(data, dataBins);
-    const binsOrder = dataBins.map(dataBin=>getBinName(dataBin))
-    const binsOrderSet = stringListToIndexSet(binsOrder)
+    const binsOrder = dataBins.map(dataBin => getBinName(dataBin));
+    const binsOrderSet = stringListToIndexSet(binsOrder);
 
-    return _.reduce(clinicalDataByBins, (acc, clinicalData, name) => {
-        if (clinicalData.length !== 0) {
-            let sampleIdentifiers: SampleIdentifier[] = []
+    return _.reduce(
+        clinicalDataByBins,
+        (acc, clinicalData, name) => {
+            if (clinicalData.length !== 0) {
+                let sampleIdentifiers: SampleIdentifier[] = [];
 
-            if (patientAttribute) {
-                sampleIdentifiers = _.flatMapDeep(clinicalData, (d: ClinicalData) => {
-                    return patientToSamples[d.uniquePatientKey].map(s => ({ studyId: s.studyId, sampleId: s.sampleId }));
-                });
-            } else {
-                sampleIdentifiers = clinicalData.map(d => ({ studyId: d.studyId, sampleId: d.sampleId }));
+                if (patientAttribute) {
+                    sampleIdentifiers = _.flatMapDeep(
+                        clinicalData,
+                        (d: ClinicalData) => {
+                            return patientToSamples[d.uniquePatientKey].map(
+                                s => ({
+                                    studyId: s.studyId,
+                                    sampleId: s.sampleId,
+                                })
+                            );
+                        }
+                    );
+                } else {
+                    sampleIdentifiers = clinicalData.map(d => ({
+                        studyId: d.studyId,
+                        sampleId: d.sampleId,
+                    }));
+                }
+
+                acc.push(getGroupParameters(name, sampleIdentifiers, origin));
             }
-
-            acc.push(getGroupParameters(
-                name,
-                sampleIdentifiers,
-                origin
-            ))
-        }
-        return acc;
-    }, [] as SessionGroupData[]).sort((a, b) => binsOrderSet[a.name] - binsOrderSet[b.name]);
+            return acc;
+        },
+        [] as SessionGroupData[]
+    ).sort((a, b) => binsOrderSet[a.name] - binsOrderSet[b.name]);
 }
 
-export function getGroupsFromQuartiles(samples: Sample[], patientAttribute: boolean, quartiles: ClinicalData[][], origin: string[]) {
-
+export function getGroupsFromQuartiles(
+    samples: Sample[],
+    patientAttribute: boolean,
+    quartiles: ClinicalData[][],
+    origin: string[]
+) {
     let patientToSamples: {
         [uniquePatientKey: string]: SampleIdentifier[];
     } = {};
@@ -1744,15 +2373,19 @@ export function getGroupsFromQuartiles(samples: Sample[], patientAttribute: bool
     }
     // create groups using data
     return quartiles.map(quartile => {
-
-        let sampleIdentifiers: SampleIdentifier[] = []
+        let sampleIdentifiers: SampleIdentifier[] = [];
         if (patientAttribute) {
             sampleIdentifiers = _.flatMapDeep(quartile, (d: ClinicalData) => {
-                return patientToSamples[d.uniquePatientKey].map(s => ({ studyId: s.studyId, sampleId: s.sampleId }));
+                return patientToSamples[d.uniquePatientKey].map(s => ({
+                    studyId: s.studyId,
+                    sampleId: s.sampleId,
+                }));
             });
-        }
-        else {
-            sampleIdentifiers = quartile.map(d => ({ studyId: d.studyId, sampleId: d.sampleId }));
+        } else {
+            sampleIdentifiers = quartile.map(d => ({
+                studyId: d.studyId,
+                sampleId: d.sampleId,
+            }));
         }
 
         return getGroupParameters(
@@ -1764,14 +2397,23 @@ export function getGroupsFromQuartiles(samples: Sample[], patientAttribute: bool
 }
 
 export function getButtonNameWithDownPointer(buttonName: string) {
-    return buttonName + " " + String.fromCharCode(9662);/*small solid down triangle*/
+    return (
+        buttonName + ' ' + String.fromCharCode(9662)
+    ); /*small solid down triangle*/
 }
 
-export function getFilteredAndCompressedDataIntervalFilters(values: ClinicalDataFilterValue[]): ClinicalDataFilterValue {
-    const numericals = values.filter(value => value.start !== undefined || value.end !== undefined);
+export function getFilteredAndCompressedDataIntervalFilters(
+    values: ClinicalDataFilterValue[]
+): ClinicalDataFilterValue {
+    const numericals = values.filter(
+        value => value.start !== undefined || value.end !== undefined
+    );
 
     // merge numericals into one interval
     const start = numericals.length > 0 ? numericals[0].start : undefined;
-    const end = numericals.length > 0 ? numericals[numericals.length - 1].end : undefined;
-    return { start, end } as any
+    const end =
+        numericals.length > 0
+            ? numericals[numericals.length - 1].end
+            : undefined;
+    return { start, end } as any;
 }

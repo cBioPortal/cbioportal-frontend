@@ -1,47 +1,49 @@
-import * as React from "react";
-import {observer} from "mobx-react";
-import {action, computed, observable} from "mobx";
-import autobind from "autobind-decorator";
-import {Popover} from "react-bootstrap";
-import classnames from "classnames";
-import styles from "../../pages/resultsView/survival/styles.module.scss";
-import {truncateWithEllipsisReport} from "cbioportal-frontend-commons";
-import {Portal} from "react-portal";
+import * as React from 'react';
+import { observer } from 'mobx-react';
+import { action, computed, observable } from 'mobx';
+import autobind from 'autobind-decorator';
+import { Popover } from 'react-bootstrap';
+import classnames from 'classnames';
+import styles from '../../pages/resultsView/survival/styles.module.scss';
+import { truncateWithEllipsisReport } from 'cbioportal-frontend-commons';
+import { Portal } from 'react-portal';
 
 export interface ITruncatedTextSVGProps {
-    x?:number;
-    y?:number;
-    text?:string;
-    prefixTspans?:any[]; // tspans. typescript doesn't play nice though so it has to be any
-    renderTruncatedText?:(truncatedText:string)=>any[]; // tspans. typescript doesn't play nice though so it has to be any
-    maxWidth?:number;
-    suffix?:string;
-    tooltip?:(datum?:any)=>JSX.Element;
-    tooltipPlacement?:string;
-    alwaysShowTooltip?:boolean;
-    dy?:any;
-    dx?:any;
-    textRef?:(elt:SVGTextElement|null)=>void;
+    x?: number;
+    y?: number;
+    text?: string;
+    prefixTspans?: any[]; // tspans. typescript doesn't play nice though so it has to be any
+    renderTruncatedText?: (truncatedText: string) => any[]; // tspans. typescript doesn't play nice though so it has to be any
+    maxWidth?: number;
+    suffix?: string;
+    tooltip?: (datum?: any) => JSX.Element;
+    tooltipPlacement?: string;
+    alwaysShowTooltip?: boolean;
+    dy?: any;
+    dx?: any;
+    textRef?: (elt: SVGTextElement | null) => void;
     //victory
-    datum?:any;
-    transform?:(x:number, y:number)=>string;
-    verticalAnchor?:string;
-    textAnchor?:string;
-    style?:{
-        fontSize:number;
-        fontFamily:string;
+    datum?: any;
+    transform?: (x: number, y: number) => string;
+    verticalAnchor?: string;
+    textAnchor?: string;
+    style?: {
+        fontSize: number;
+        fontFamily: string;
     };
 }
 
 @observer
-export default class TruncatedTextWithTooltipSVG extends React.Component<ITruncatedTextSVGProps, {}> {
-
-    static defaultProps:Partial<ITruncatedTextSVGProps> = {
-        maxWidth:100,
-        suffix:"..."
+export default class TruncatedTextWithTooltipSVG extends React.Component<
+    ITruncatedTextSVGProps,
+    {}
+> {
+    static defaultProps: Partial<ITruncatedTextSVGProps> = {
+        maxWidth: 100,
+        suffix: '...',
     };
 
-    @observable mousePosition = { x:0, y:0 };
+    @observable mousePosition = { x: 0, y: 0 };
     @observable tooltipOpen = false;
 
     @computed get tooltipElt() {
@@ -53,39 +55,41 @@ export default class TruncatedTextWithTooltipSVG extends React.Component<ITrunca
     }
 
     @autobind
-    @action private onMouseOver() {
+    @action
+    private onMouseOver() {
         this.tooltipOpen = true;
     }
 
     @autobind
-    @action private onMouseOut() {
+    @action
+    private onMouseOut() {
         this.tooltipOpen = false;
     }
 
-    @autobind private onMouseMove(e:React.MouseEvent<any>) {
+    @autobind private onMouseMove(e: React.MouseEvent<any>) {
         this.mousePosition.x = e.pageX;
         this.mousePosition.y = e.pageY;
     }
 
     @computed get fontFamily() {
-        let font = "Arial";
+        let font = 'Arial';
         if (this.props.style && this.props.style.fontFamily) {
-            font = this.props.style.fontFamily.split(", ")[0];
+            font = this.props.style.fontFamily.split(', ')[0];
         }
         return font;
     }
 
     @computed get fontSize() {
-        let size = "13px";
+        let size = '13px';
         if (this.props.style && this.props.style.fontSize) {
-            size = this.props.style.fontSize + "px";
+            size = this.props.style.fontSize + 'px';
         }
         return size;
     }
 
     @computed get textReport() {
         return truncateWithEllipsisReport(
-            this.props.text || "",
+            this.props.text || '',
             this.props.maxWidth!,
             this.fontFamily,
             this.fontSize
@@ -101,12 +105,27 @@ export default class TruncatedTextWithTooltipSVG extends React.Component<ITrunca
     }
 
     render() {
-        const {text, maxWidth, datum, suffix, tooltip,
-            prefixTspans, alwaysShowTooltip, renderTruncatedText,
-            transform, tooltipPlacement, textRef, ...rest} = this.props;
+        const {
+            text,
+            maxWidth,
+            datum,
+            suffix,
+            tooltip,
+            prefixTspans,
+            alwaysShowTooltip,
+            renderTruncatedText,
+            transform,
+            tooltipPlacement,
+            textRef,
+            ...rest
+        } = this.props;
 
         let transformApplied = undefined;
-        if (transform && this.props.x !== undefined && this.props.y !== undefined) {
+        if (
+            transform &&
+            this.props.x !== undefined &&
+            this.props.y !== undefined
+        ) {
             transformApplied = transform(this.props.x, this.props.y);
         }
 
@@ -123,23 +142,35 @@ export default class TruncatedTextWithTooltipSVG extends React.Component<ITrunca
                     {this.props.prefixTspans}
                     {this.truncatedText}
                 </text>
-                {(this.textReport.isTruncated || this.props.alwaysShowTooltip) && this.tooltipOpen && (
-                    <Portal isOpened={true} node={document.body}>
-                        <Popover
-                            arrowOffsetTop={17}
-                            className={classnames("cbioportal-frontend", "cbioTooltip", styles.Tooltip)}
-                            positionLeft={this.mousePosition.x+(tooltipPlacement === "left" ? -8 : 8)}
-                            positionTop={this.mousePosition.y-17}
-                            style={{
-                            transform: (tooltipPlacement === "left" ? "translate(-100%,0%)" : undefined)
-                        }}
-                            placement={tooltipPlacement}
-                        >
-                            {this.tooltipElt}
-                        </Popover>
-                    </Portal>
-                )}
+                {(this.textReport.isTruncated ||
+                    this.props.alwaysShowTooltip) &&
+                    this.tooltipOpen && (
+                        <Portal isOpened={true} node={document.body}>
+                            <Popover
+                                arrowOffsetTop={17}
+                                className={classnames(
+                                    'cbioportal-frontend',
+                                    'cbioTooltip',
+                                    styles.Tooltip
+                                )}
+                                positionLeft={
+                                    this.mousePosition.x +
+                                    (tooltipPlacement === 'left' ? -8 : 8)
+                                }
+                                positionTop={this.mousePosition.y - 17}
+                                style={{
+                                    transform:
+                                        tooltipPlacement === 'left'
+                                            ? 'translate(-100%,0%)'
+                                            : undefined,
+                                }}
+                                placement={tooltipPlacement}
+                            >
+                                {this.tooltipElt}
+                            </Popover>
+                        </Portal>
+                    )}
             </>
-        )
+        );
     }
 }

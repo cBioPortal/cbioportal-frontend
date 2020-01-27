@@ -1,7 +1,6 @@
 export type CopyDownloadControlsStyle = 'BUTTON' | 'LINK' | 'QUERY';
 
-export interface ICopyDownloadControlsProps
-{
+export interface ICopyDownloadControlsProps {
     className?: string;
     downloadFilename?: string;
     showCopy?: boolean;
@@ -12,8 +11,7 @@ export interface ICopyDownloadControlsProps
     controlsStyle?: CopyDownloadControlsStyle;
 }
 
-export interface ICopyDownloadInputsProps
-{
+export interface ICopyDownloadInputsProps {
     className?: string;
     showCopy?: boolean;
     showCopyMessage?: boolean;
@@ -23,4 +21,3 @@ export interface ICopyDownloadInputsProps
     handleDownload?: () => void;
     handleCopy?: () => void;
 }
-

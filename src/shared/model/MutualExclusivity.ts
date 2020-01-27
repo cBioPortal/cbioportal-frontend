@@ -7,6 +7,6 @@ export interface MutualExclusivity {
     bothCount: number;
     logOddsRatio: number;
     pValue: number;
-    qValue: number,
+    qValue: number;
     association: string;
 }
