@@ -1,33 +1,47 @@
-import * as React from "react";
-import LazyLoadedTableCell from "shared/lib/LazyLoadedTableCell";
-import {Mutation, ClinicalData} from "../../../api/generated/CBioPortalAPI";
-import MutationCountCache from "../../../cache/MutationCountCache";
-import MutationTable, {IMutationTableProps} from "../MutationTable";
-import generalStyles from "./styles.module.scss";
+import * as React from 'react';
+import LazyLoadedTableCell from 'shared/lib/LazyLoadedTableCell';
+import { Mutation, ClinicalData } from '../../../api/generated/CBioPortalAPI';
+import MutationCountCache from '../../../cache/MutationCountCache';
+import MutationTable, { IMutationTableProps } from '../MutationTable';
+import generalStyles from './styles.module.scss';
 
 export default class MutationCountColumnFormatter {
-    public static makeRenderFunction<P extends IMutationTableProps>(table:MutationTable<P>) {
+    public static makeRenderFunction<P extends IMutationTableProps>(
+        table: MutationTable<P>
+    ) {
         return LazyLoadedTableCell(
-            (d:Mutation[])=>{
-                const mutationCountCache:MutationCountCache|undefined = table.props.mutationCountCache;
+            (d: Mutation[]) => {
+                const mutationCountCache: MutationCountCache | undefined =
+                    table.props.mutationCountCache;
                 if (mutationCountCache) {
-                    return mutationCountCache.get({sampleId:d[0].sampleId, studyId:d[0].studyId});
+                    return mutationCountCache.get({
+                        sampleId: d[0].sampleId,
+                        studyId: d[0].studyId,
+                    });
                 } else {
                     return {
-                        status: "error",
-                        data: null
+                        status: 'error',
+                        data: null,
                     };
                 }
             },
-            (t:ClinicalData)=>(<div className={generalStyles["integer-data"]}>{t.value}</div>),
-            "Mutation count not available for this sample."
+            (t: ClinicalData) => (
+                <div className={generalStyles['integer-data']}>{t.value}</div>
+            ),
+            'Mutation count not available for this sample.'
         );
     }
 
-    public static sortBy(d:Mutation[], mutationCountCache?:MutationCountCache): number|null {
-        let ret:number|null = null;;
+    public static sortBy(
+        d: Mutation[],
+        mutationCountCache?: MutationCountCache
+    ): number | null {
+        let ret: number | null = null;
         if (mutationCountCache) {
-            const cacheDatum = mutationCountCache.get({sampleId:d[0].sampleId, studyId:d[0].studyId});
+            const cacheDatum = mutationCountCache.get({
+                sampleId: d[0].sampleId,
+                studyId: d[0].studyId,
+            });
             if (cacheDatum && cacheDatum.data) {
                 ret = parseInt(cacheDatum.data.value);
             } else {
@@ -39,9 +53,15 @@ export default class MutationCountColumnFormatter {
         return ret;
     }
 
-    public static download(d:Mutation[], mutationCountCache?:MutationCountCache) {
-        const sortValue = MutationCountColumnFormatter.sortBy(d, mutationCountCache);
+    public static download(
+        d: Mutation[],
+        mutationCountCache?: MutationCountCache
+    ) {
+        const sortValue = MutationCountColumnFormatter.sortBy(
+            d,
+            mutationCountCache
+        );
 
-        return sortValue ? `${sortValue}` : "";
+        return sortValue ? `${sortValue}` : '';
     }
 }

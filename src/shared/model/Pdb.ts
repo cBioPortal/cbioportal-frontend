@@ -1,4 +1,4 @@
-import {Alignment} from "cbioportal-frontend-commons";
+import { Alignment } from 'cbioportal-frontend-commons';
 
 export interface IPdbPosition {
     position: number;
@@ -12,8 +12,8 @@ export interface IPdbPositionRange {
 
 export type PdbAlignmentIndex = {
     [pdbId: string]: {
-        [chainId: string]: Alignment[]
-    }
+        [chainId: string]: Alignment[];
+    };
 };
 
 export interface IPdbChain {
@@ -26,7 +26,7 @@ export interface IPdbChain {
     identity: number;
 }
 
-export const ALIGNMENT_GAP = "*";
-export const ALIGNMENT_PLUS = "+";
-export const ALIGNMENT_MINUS = "-";
-export const ALIGNMENT_SPACE = " ";
+export const ALIGNMENT_GAP = '*';
+export const ALIGNMENT_PLUS = '+';
+export const ALIGNMENT_MINUS = '-';
+export const ALIGNMENT_SPACE = ' ';

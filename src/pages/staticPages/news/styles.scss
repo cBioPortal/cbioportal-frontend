@@ -1,26 +1,25 @@
 .newsPage {
-  #mainColumn {
-    li {
-      margin-bottom:5px;
-      img {
-        @extend .framedImage;
-      }
-      ul {
-        margin-top:5px;
-      }
+    #mainColumn {
+        li {
+            margin-bottom: 5px;
+            img {
+                @extend .framedImage;
+            }
+            ul {
+                margin-top: 5px;
+            }
+        }
+
+        #releasesLink {
+            position: absolute;
+            right: 20px;
+            top: 80px;
+        }
     }
 
-    #releasesLink {
-      position: absolute;
-      right: 20px;
-      top: 80px;
+    .markdown-body {
+        img {
+            max-width: 800px;
+        }
     }
-  }
-
-
-  .markdown-body {
-    img {
-      max-width: 800px;
-    }
-  }
 }

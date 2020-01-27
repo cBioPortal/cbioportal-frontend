@@ -2,7 +2,7 @@
 // Heavily dependent on OQL PEGjs specification
 import * as _ from 'lodash';
 import oql_parser from './oql-parser';
-import {annotateAlterationTypes} from "./annotateAlterationTypes";
+import { annotateAlterationTypes } from './annotateAlterationTypes';
 
 function isDatatypeStatement(line) {
     return line.gene !== undefined && line.gene.toUpperCase() === 'DATATYPES';
@@ -24,12 +24,12 @@ function parseMergedTrackOQLQuery(oql_query, opt_default_oql = '') {
      */
 
     /* In:
-    *     - oql_lines:
-    *         (DatatypeStatement | MergedTrackLine | SingleGeneLine)[]
-    *     - intial_dt: Alterations
-    * Out:
-    *     (SingleGeneLine|MergedTrackLine)[]
-    */
+     *     - oql_lines:
+     *         (DatatypeStatement | MergedTrackLine | SingleGeneLine)[]
+     *     - intial_dt: Alterations
+     * Out:
+     *     (SingleGeneLine|MergedTrackLine)[]
+     */
     function applyDatatypes(oql_lines, initial_dt) {
         /* In:
          *     - dt_state: Alterations
@@ -44,55 +44,67 @@ function parseMergedTrackOQLQuery(oql_query, opt_default_oql = '') {
             if (isDatatypeStatement(line)) {
                 return {
                     dt_state: line.alterations,
-                    query_line: []
+                    query_line: [],
                 };
             } else if (isMergedTrackLine(line)) {
                 const applied_list = applyDatatypes(line.list, dt_state);
                 return {
                     dt_state,
-                    query_line: [_.assign({}, line, { list: applied_list })]
+                    query_line: [_.assign({}, line, { list: applied_list })],
                 };
             } else {
                 const applied_alterations = line.alterations || dt_state;
                 return {
                     dt_state,
-                    query_line: [_.assign({}, line, { alterations: applied_alterations })]
+                    query_line: [
+                        _.assign({}, line, {
+                            alterations: applied_alterations,
+                        }),
+                    ],
                 };
             }
         }
 
         /* In:
-        *     - current_result:
-        *         {
-        *             dt_state: Alterations,
-        *             query: (SingleGeneLine|MergedTrackLine)[]
-        *         }
-        *     - line: OQLQueryLine
-        * Out:
-        *     {
-        *         dt_state: Alterations,
-        *         query: (SingleGeneLine|MergedTrackLine)[]
-        *     }
-        */
+         *     - current_result:
+         *         {
+         *             dt_state: Alterations,
+         *             query: (SingleGeneLine|MergedTrackLine)[]
+         *         }
+         *     - line: OQLQueryLine
+         * Out:
+         *     {
+         *         dt_state: Alterations,
+         *         query: (SingleGeneLine|MergedTrackLine)[]
+         *     }
+         */
         function appendDtResult({ dt_state, query }, line) {
-            const { dt_state: new_dt_state, query_line } = evaluateDt(dt_state, line);
+            const { dt_state: new_dt_state, query_line } = evaluateDt(
+                dt_state,
+                line
+            );
             return {
                 dt_state: new_dt_state,
-                query: query.concat(query_line)
+                query: query.concat(query_line),
             };
         }
 
-        return oql_lines.reduce(
-            appendDtResult,
-            { dt_state: initial_dt, query: [] }
-        ).query;
+        return oql_lines.reduce(appendDtResult, {
+            dt_state: initial_dt,
+            query: [],
+        }).query;
     }
 
     const parsed = oql_parser.parse(oql_query);
     let parsed_with_datatypes = applyDatatypes(parsed, false);
     if (opt_default_oql.length > 0) {
-        const default_alterations = oql_parser.parse(`DUMMYGENE:${opt_default_oql};`)[0].alterations;
-        parsed_with_datatypes = applyDatatypes(parsed_with_datatypes, default_alterations);
+        const default_alterations = oql_parser.parse(
+            `DUMMYGENE:${opt_default_oql};`
+        )[0].alterations;
+        parsed_with_datatypes = applyDatatypes(
+            parsed_with_datatypes,
+            default_alterations
+        );
     }
     return parsed_with_datatypes;
 }
@@ -108,13 +120,13 @@ export function parseOQLQuery(oql_query, opt_default_oql = '') {
      * Out: SingleGeneLine[]
      */
     function extractGeneLines(line) {
-        return (isMergedTrackLine(line)
-            ? line.list
-            : [line]
-        );
+        return isMergedTrackLine(line) ? line.list : [line];
     }
 
-    const parsed_with_datatypes = parseMergedTrackOQLQuery(oql_query, opt_default_oql);
+    const parsed_with_datatypes = parseMergedTrackOQLQuery(
+        oql_query,
+        opt_default_oql
+    );
     return _.flatMap(parsed_with_datatypes, extractGeneLines);
 }
 
@@ -144,14 +156,17 @@ export function doesQueryContainMutationOQL(oql_query) {
     for (const singleGeneQuery of parsedQuery) {
         if (singleGeneQuery.alterations !== false) {
             for (const alteration of singleGeneQuery.alterations) {
-                if (alteration.alteration_type === "mut" &&
-                    (alteration.constr_rel !== undefined || (alteration.modifiers.length > 0))) {
+                if (
+                    alteration.alteration_type === 'mut' &&
+                    (alteration.constr_rel !== undefined ||
+                        alteration.modifiers.length > 0)
+                ) {
                     // nontrivial mutation specification
                     ret = true;
                     break;
-                } else if (alteration.alteration_type === "any") {
+                } else if (alteration.alteration_type === 'any') {
                     // any DRIVER specification, which includes mutation
-                    if (alteration.modifiers.indexOf("DRIVER") > -1) {
+                    if (alteration.modifiers.indexOf('DRIVER') > -1) {
                         ret = true;
                         break;
                     }
@@ -167,59 +182,79 @@ export function doesQueryContainMutationOQL(oql_query) {
 
 export function parsedOQLAlterationToSourceOQL(alteration) {
     switch (alteration.alteration_type) {
-        case "cna":
+        case 'cna':
             var ret;
-            if (alteration.constr_rel === "=") {
+            if (alteration.constr_rel === '=') {
                 ret = alteration.constr_val;
             } else {
-                ret = ["CNA",alteration.constr_rel,alteration.constr_val].join("");
+                ret = [
+                    'CNA',
+                    alteration.constr_rel,
+                    alteration.constr_val,
+                ].join('');
             }
             if (alteration.modifiers.length > 0) {
-                ret += "_";
-                ret += alteration.modifiers.join("_");
+                ret += '_';
+                ret += alteration.modifiers.join('_');
             }
             return ret;
-        case "mut":
+        case 'mut':
             var ret;
             var underscoreBeforeModifiers = true;
             if (alteration.constr_rel) {
-                if (alteration.constr_type === "position") {
-                    ret = ["MUT",alteration.constr_rel,alteration.info.amino_acid,alteration.constr_val].join("");
+                if (alteration.constr_type === 'position') {
+                    ret = [
+                        'MUT',
+                        alteration.constr_rel,
+                        alteration.info.amino_acid,
+                        alteration.constr_val,
+                    ].join('');
                 } else {
-                    ret = ["MUT",alteration.constr_rel,alteration.constr_val].join("");
+                    ret = [
+                        'MUT',
+                        alteration.constr_rel,
+                        alteration.constr_val,
+                    ].join('');
                     if (!alteration.constr_val) {
                         underscoreBeforeModifiers = false;
                     }
                 }
             } else {
-                ret = "MUT";
+                ret = 'MUT';
             }
             if (underscoreBeforeModifiers && alteration.modifiers.length > 0) {
-                ret += "_";
+                ret += '_';
             }
-            ret += alteration.modifiers.join("_");
+            ret += alteration.modifiers.join('_');
             return ret;
-        case "exp":
-            return "EXP" + alteration.constr_rel + alteration.constr_val;
-        case "prot":
-            return "PROT" + alteration.constr_rel + alteration.constr_val;
-        case "fusion":
-            return "FUSION" + alteration.modifiers.map(function(modifier) { return "_"+modifier; }).join("");
-        case "any":
-            return alteration.modifiers.join("_");
+        case 'exp':
+            return 'EXP' + alteration.constr_rel + alteration.constr_val;
+        case 'prot':
+            return 'PROT' + alteration.constr_rel + alteration.constr_val;
+        case 'fusion':
+            return (
+                'FUSION' +
+                alteration.modifiers
+                    .map(function(modifier) {
+                        return '_' + modifier;
+                    })
+                    .join('')
+            );
+        case 'any':
+            return alteration.modifiers.join('_');
     }
-};
+}
 export function unparseOQLQueryLine(parsed_oql_query_line) {
-    var ret = "";
+    var ret = '';
     var gene = parsed_oql_query_line.gene;
     var alterations = parsed_oql_query_line.alterations;
     ret += gene;
     if (alterations.length > 0) {
-        ret += ": " + alterations.map(parsedOQLAlterationToSourceOQL).join(" ");
-        ret += ";";
+        ret += ': ' + alterations.map(parsedOQLAlterationToSourceOQL).join(' ');
+        ret += ';';
     }
     return ret;
-};
+}
 
 /* For the methods isDatumWantedByOQL, ..., the AccessorsForOqlFilter argument is as follows:
  * null always means the accessor does not apply to the given element. for example, `cna` applied to a mutation should give null
@@ -263,7 +298,7 @@ export function unparseOQLQueryLine(parsed_oql_query_line) {
  *  },
  * }
  */
-var isDatumWantedByOQL = function (parsed_oql_query, datum, accessors) {
+var isDatumWantedByOQL = function(parsed_oql_query, datum, accessors) {
     /*  In: - parsed_oql_query, the result of parseOQLQuery above
      *	- datum, a datum
      *	- AccessorsForOqlFilter, an object as described above with methods that apply to datum
@@ -284,7 +319,12 @@ var isDatumWantedByOQL = function (parsed_oql_query, datum, accessors) {
         }, false);
 };
 
-var isDatumWantedByOQLLine = function(query_line, datum, datum_gene, accessors) {
+var isDatumWantedByOQLLine = function(
+    query_line,
+    datum,
+    datum_gene,
+    accessors
+) {
     /*  Helper method for isDatumWantedByOQL
      *  In: - query_line, one element of a parseOQLQuery output array
      *	- datum, see isDatumWantedByOQL
@@ -300,28 +340,33 @@ var isDatumWantedByOQLLine = function(query_line, datum, datum_gene, accessors) 
     if (!query_line.alterations) {
         return 1;
     }
-    return (query_line.alterations
-        .map(function(alteration_cmd) {
-            return isDatumWantedByOQLAlterationCommand(alteration_cmd, datum, accessors);
-        })
-        .reduce(function(acc, next) {
-            if (next === 1) {
-                // if it's wanted by this command, its wanted
-                return 1;
-            } else if (next === 0) {
-                // if this command doesn't address it, go with what currently decided
-                return acc;
-            } else if (next === -1) {
-                // if this command addresses and rejects it, then if its
-                //  not already wanted, then for now its unwanted
-                if (acc === 1) {
+    return (
+        query_line.alterations
+            .map(function(alteration_cmd) {
+                return isDatumWantedByOQLAlterationCommand(
+                    alteration_cmd,
+                    datum,
+                    accessors
+                );
+            })
+            .reduce(function(acc, next) {
+                if (next === 1) {
+                    // if it's wanted by this command, its wanted
                     return 1;
-                } else {
-                    return -1;
+                } else if (next === 0) {
+                    // if this command doesn't address it, go with what currently decided
+                    return acc;
+                } else if (next === -1) {
+                    // if this command addresses and rejects it, then if its
+                    //  not already wanted, then for now its unwanted
+                    if (acc === 1) {
+                        return 1;
+                    } else {
+                        return -1;
+                    }
                 }
-            }
-        }, -1) // start off with unwanted
-    === 1);
+            }, -1) === 1 // start off with unwanted
+    );
 };
 
 var isDatumWantedByOQLAlterationCommand = function(alt_cmd, datum, accessors) {
@@ -334,35 +379,51 @@ var isDatumWantedByOQLAlterationCommand = function(alt_cmd, datum, accessors) {
      *	-1 if the datum is addressed by this command and rejected
      */
     switch (alt_cmd.alteration_type) {
-        case "cna":
+        case 'cna':
             return isDatumWantedByOQLCNACommand(alt_cmd, datum, accessors);
-        case "mut":
+        case 'mut':
             return isDatumWantedByOQLMUTCommand(alt_cmd, datum, accessors);
-        case "exp":
-        case "prot":
-            return isDatumWantedByOQLEXPOrPROTCommand(alt_cmd, datum, accessors);
-        case "fusion":
+        case 'exp':
+        case 'prot':
+            return isDatumWantedByOQLEXPOrPROTCommand(
+                alt_cmd,
+                datum,
+                accessors
+            );
+        case 'fusion':
             return isDatumWantedByFUSIONCommand(alt_cmd, datum, accessors);
-        case "any":
-            return isDatumWantedByAnyTypeWithModifiersCommand(alt_cmd, datum, accessors);
+        case 'any':
+            return isDatumWantedByAnyTypeWithModifiersCommand(
+                alt_cmd,
+                datum,
+                accessors
+            );
     }
     return 0;
 };
 
-var isDatumWantedByAnyTypeWithModifiersCommand = function(alt_cmd, datum, accessors) {
+var isDatumWantedByAnyTypeWithModifiersCommand = function(
+    alt_cmd,
+    datum,
+    accessors
+) {
     // if any modifier is false, its not wanted (-1)
     // else if any modifier is true, its wanted (1)
     // else its not addressed (0)
     var isWantedBySome = false;
     var isUnwantedBySome = false;
 
-    for (var i=0; i<alt_cmd.modifiers.length; i++) {
+    for (var i = 0; i < alt_cmd.modifiers.length; i++) {
         var modifier = alt_cmd.modifiers[i];
         var datumWanted = null;
         switch (modifier) {
-            case "DRIVER":
+            case 'DRIVER':
             default:
-                datumWanted = isDatumWantedByOQLAlterationModifier(modifier, datum, accessors);
+                datumWanted = isDatumWantedByOQLAlterationModifier(
+                    modifier,
+                    datum,
+                    accessors
+                );
         }
         if (datumWanted === true) {
             isWantedBySome = true;
@@ -370,7 +431,7 @@ var isDatumWantedByAnyTypeWithModifiersCommand = function(alt_cmd, datum, access
             isUnwantedBySome = true;
             break;
         }
-    };
+    }
 
     if (isUnwantedBySome) {
         return -1;
@@ -393,13 +454,17 @@ var isDatumWantedByFUSIONCommand = function(alt_cmd, datum, accessors) {
     } else {
         var match = true;
         // now filter by modifiers with AND logic
-        for (var i=0; i<alt_cmd.modifiers.length; i++) {
-            const datumWanted = isDatumWantedByOQLAlterationModifier(alt_cmd.modifiers[i], datum, accessors);
+        for (var i = 0; i < alt_cmd.modifiers.length; i++) {
+            const datumWanted = isDatumWantedByOQLAlterationModifier(
+                alt_cmd.modifiers[i],
+                datum,
+                accessors
+            );
             if (datumWanted !== null) {
                 match = match && datumWanted;
             }
         }
-        return 2 * (+match) - 1; // map 0,1 to -1,1
+        return 2 * +match - 1; // map 0,1 to -1,1
     }
 };
 
@@ -414,31 +479,41 @@ var isDatumWantedByOQLCNACommand = function(alt_cmd, datum, accessors) {
     } else {
         // Otherwise, return -1 if it doesnt match, 1 if it matches
         var match = true;
-        if (alt_cmd.constr_rel === "=") {
-            match = (d_cna === alt_cmd.constr_val.toLowerCase());
+        if (alt_cmd.constr_rel === '=') {
+            match = d_cna === alt_cmd.constr_val.toLowerCase();
         } else if (alt_cmd.constr_rel) {
-            var integer_copy_number = {"amp":2, "gain":1, "hetloss":-1, "homdel":-2};
+            var integer_copy_number = {
+                amp: 2,
+                gain: 1,
+                hetloss: -1,
+                homdel: -2,
+            };
             var d_int_cna = integer_copy_number[d_cna];
-            var alt_int_cna = integer_copy_number[alt_cmd.constr_val.toLowerCase()];
-            if (alt_cmd.constr_rel === ">") {
-                match = (d_int_cna > alt_int_cna);
-            } else if (alt_cmd.constr_rel === ">=") {
-                match = (d_int_cna >= alt_int_cna);
-            } else if (alt_cmd.constr_rel === "<") {
-                match = (d_int_cna < alt_int_cna);
-            } else if (alt_cmd.constr_rel === "<=") {
-                match = (d_int_cna <= alt_int_cna);
+            var alt_int_cna =
+                integer_copy_number[alt_cmd.constr_val.toLowerCase()];
+            if (alt_cmd.constr_rel === '>') {
+                match = d_int_cna > alt_int_cna;
+            } else if (alt_cmd.constr_rel === '>=') {
+                match = d_int_cna >= alt_int_cna;
+            } else if (alt_cmd.constr_rel === '<') {
+                match = d_int_cna < alt_int_cna;
+            } else if (alt_cmd.constr_rel === '<=') {
+                match = d_int_cna <= alt_int_cna;
             }
         }
 
         // now filter by modifiers with AND logic
-        for (var i=0; i<alt_cmd.modifiers.length; i++) {
-            const datumWanted = isDatumWantedByOQLAlterationModifier(alt_cmd.modifiers[i], datum, accessors);
+        for (var i = 0; i < alt_cmd.modifiers.length; i++) {
+            const datumWanted = isDatumWantedByOQLAlterationModifier(
+                alt_cmd.modifiers[i],
+                datum,
+                accessors
+            );
             if (datumWanted !== null) {
                 match = match && datumWanted;
             }
         }
-        return 2 * (+match) - 1; // map 0,1 to -1,1
+        return 2 * +match - 1; // map 0,1 to -1,1
     }
 };
 var isDatumWantedByOQLMUTCommand = function(alt_cmd, datum, accessors) {
@@ -450,7 +525,6 @@ var isDatumWantedByOQLMUTCommand = function(alt_cmd, datum, accessors) {
         // If no mut data on the datum, it's not addressed
         return 0;
     } else {
-
         d_mut_type = d_mut_type.toLowerCase();
 
         var matches = false;
@@ -465,8 +539,11 @@ var isDatumWantedByOQLMUTCommand = function(alt_cmd, datum, accessors) {
             var target_type = alt_cmd.constr_val.toLowerCase();
             // It matches if the type of mutation matches, or if
             //  the target is truncating and the mutation is anything but missense or inframe
-            matches = (d_mut_type === target_type) ||
-                (target_type === 'trunc' && d_mut_type !== 'missense' && d_mut_type !== 'inframe');
+            matches =
+                d_mut_type === target_type ||
+                (target_type === 'trunc' &&
+                    d_mut_type !== 'missense' &&
+                    d_mut_type !== 'inframe');
             if (alt_cmd.constr_rel === '!=') {
                 // If '!=', then we want 1 if it DOESNT match
                 matches = !matches;
@@ -479,50 +556,65 @@ var isDatumWantedByOQLMUTCommand = function(alt_cmd, datum, accessors) {
                 return -1;
             }
             var target_position = alt_cmd.constr_val;
-            matches = (target_position >= d_mut_range[0] && target_position <= d_mut_range[1]);
+            matches =
+                target_position >= d_mut_range[0] &&
+                target_position <= d_mut_range[1];
             if (alt_cmd.constr_rel === '!=') {
                 matches = !matches;
             }
         } else if (alt_cmd.constr_type === 'name') {
             // Matching on amino acid change code
-            var d_mut_name = accessors.mut_amino_acid_change(datum).toLowerCase();
+            var d_mut_name = accessors
+                .mut_amino_acid_change(datum)
+                .toLowerCase();
             if (!d_mut_name) {
                 // If no amino acid change data, reject
                 return -1;
             }
             var target_name = alt_cmd.constr_val.toLowerCase();
-            matches = (target_name === d_mut_name);
+            matches = target_name === d_mut_name;
             if (alt_cmd.constr_rel === '!=') {
                 matches = !matches;
             }
         }
 
         // now filter by modifiers with AND logic
-        for (var i=0; i<alt_cmd.modifiers.length; i++) {
-            const datumWanted = isDatumWantedByOQLMutationModifier(alt_cmd.modifiers[i], datum, accessors);
+        for (var i = 0; i < alt_cmd.modifiers.length; i++) {
+            const datumWanted = isDatumWantedByOQLMutationModifier(
+                alt_cmd.modifiers[i],
+                datum,
+                accessors
+            );
             if (datumWanted !== null) {
                 matches = matches && datumWanted;
             }
         }
 
-        return 2*(+matches) - 1; // return 1 if true, -1 if false
+        return 2 * +matches - 1; // return 1 if true, -1 if false
     }
-
 };
 
 var isDatumWantedByOQLMutationModifier = function(modifier, datum, accessors) {
     switch (modifier) {
-        case "GERMLINE":
-        case "SOMATIC":
+        case 'GERMLINE':
+        case 'SOMATIC':
             return accessors.mut_status(datum) === modifier.toLowerCase();
         default:
-            return isDatumWantedByOQLAlterationModifier(modifier, datum, accessors);
+            return isDatumWantedByOQLAlterationModifier(
+                modifier,
+                datum,
+                accessors
+            );
     }
 };
 
-var isDatumWantedByOQLAlterationModifier = function(modifier, datum, accessors) {
+var isDatumWantedByOQLAlterationModifier = function(
+    modifier,
+    datum,
+    accessors
+) {
     switch (modifier) {
-        case "DRIVER":
+        case 'DRIVER':
             return accessors.is_driver(datum);
         default:
             return false;
@@ -533,7 +625,9 @@ var isDatumWantedByOQLEXPOrPROTCommand = function(alt_cmd, datum, accessors) {
     /*  Helper method for isDatumWantedByOQLAlterationCommand
      *  In/Out: See isDatumWantedByOQLAlterationCommand
      */
-    var level = accessors[(alt_cmd.alteration_type === "exp" ? 'exp' : 'prot')](datum);
+    var level = accessors[alt_cmd.alteration_type === 'exp' ? 'exp' : 'prot'](
+        datum
+    );
     if (level === null) {
         // If no data, it's not addressed
         return 0;
@@ -543,10 +637,16 @@ var isDatumWantedByOQLEXPOrPROTCommand = function(alt_cmd, datum, accessors) {
         var target_rel = alt_cmd.constr_rel;
         var match;
         var direction = undefined;
-        if ((target_rel === '<' && level < target_level) || (target_rel === '<=' && level <= target_level)) {
+        if (
+            (target_rel === '<' && level < target_level) ||
+            (target_rel === '<=' && level <= target_level)
+        ) {
             match = 1;
             direction = -1;
-        } else if ((target_rel === '>' && level > target_level) || (target_rel === '>=' && level >= target_level)) {
+        } else if (
+            (target_rel === '>' && level > target_level) ||
+            (target_rel === '>=' && level >= target_level)
+        ) {
             match = 1;
             direction = 1;
         } else {
@@ -554,14 +654,21 @@ var isDatumWantedByOQLEXPOrPROTCommand = function(alt_cmd, datum, accessors) {
         }
 
         if (match > 0) {
-            datum.alterationSubType = (direction && (direction > 0)) ? 'high' : 'low';
+            datum.alterationSubType =
+                direction && direction > 0 ? 'high' : 'low';
         }
 
         return match;
     }
 };
 
-function filterData(oql_query, data, _accessors, opt_default_oql = '', opt_by_oql_line) {
+function filterData(
+    oql_query,
+    data,
+    _accessors,
+    opt_default_oql = '',
+    opt_by_oql_line
+) {
     /* In:	- oql_query, a string
      *	- data, a list of data
      *	- AccessorsForOqlFilter, AccessorsForOqlFilter as defined above,
@@ -583,7 +690,7 @@ function filterData(oql_query, data, _accessors, opt_default_oql = '', opt_by_oq
      *      a flat list of the data that is wanted by at least one oql line.
      */
     data = $.extend(true, [], data); // deep copy, because of any modifications it will make during filtration
-    var null_fn = function () {
+    var null_fn = function() {
         return null;
     };
 
@@ -595,17 +702,21 @@ function filterData(oql_query, data, _accessors, opt_default_oql = '', opt_by_oq
     //     AccessorsForOqlFilter[required_accessors[i]] = _accessors[required_accessors[i]] || null_fn;
     // }
 
-    for (var i=0; i<data.length; i++) {
-        data[i].molecularProfileAlterationType = accessors.molecularAlterationType(data[i].molecularProfileId);
+    for (var i = 0; i < data.length; i++) {
+        data[
+            i
+        ].molecularProfileAlterationType = accessors.molecularAlterationType(
+            data[i].molecularProfileId
+        );
         annotateAlterationTypes(data[i], accessors);
     }
 
     function applyToGeneLines(geneLineFunction) {
-        return (line) => {
+        return line => {
             if (isMergedTrackLine(line)) {
                 return {
                     ...line,
-                    list: line.list.map(applyToGeneLines(geneLineFunction))
+                    list: line.list.map(applyToGeneLines(geneLineFunction)),
                 };
             } else {
                 return geneLineFunction(line);
@@ -613,38 +724,46 @@ function filterData(oql_query, data, _accessors, opt_default_oql = '', opt_by_oq
         };
     }
 
-    const queryParsingFunction = (
+    const queryParsingFunction =
         opt_by_oql_line === 'mergedtrack'
-        ? parseMergedTrackOQLQuery
-        : parseOQLQuery
-    );
+            ? parseMergedTrackOQLQuery
+            : parseOQLQuery;
     const parsed_query = queryParsingFunction(oql_query, opt_default_oql).map(
-        applyToGeneLines(
-            q_line => ({ ...q_line, gene: q_line.gene.toUpperCase() })
-        )
+        applyToGeneLines(q_line => ({
+            ...q_line,
+            gene: q_line.gene.toUpperCase(),
+        }))
     );
 
     if (opt_by_oql_line) {
-        return parsed_query.map(applyToGeneLines(
-            query_line => ({
+        return parsed_query.map(
+            applyToGeneLines(query_line => ({
                 gene: query_line.gene,
                 parsed_oql_line: query_line,
                 oql_line: unparseOQLQueryLine(query_line),
                 data: data.filter(datum =>
-                    isDatumWantedByOQLLine(query_line, datum, accessors.gene(datum).toUpperCase(), accessors)
-                )
-            })
-        ));
+                    isDatumWantedByOQLLine(
+                        query_line,
+                        datum,
+                        accessors.gene(datum).toUpperCase(),
+                        accessors
+                    )
+                ),
+            }))
+        );
     } else {
-        return data.filter(function (datum) {
+        return data.filter(function(datum) {
             return isDatumWantedByOQL(parsed_query, datum, accessors);
         });
     }
-};
+}
 
-
-
-export function filterCBioPortalWebServiceData(oql_query, data, accessors, opt_default_oql) {
+export function filterCBioPortalWebServiceData(
+    oql_query,
+    data,
+    accessors,
+    opt_default_oql
+) {
     /* Wrapper method for filterData that has the cBioPortal default accessor functions
      * Note that for use, the input data must have the field 'genetic_alteration_type,' which
      * takes one of the following values:
@@ -657,7 +776,12 @@ export function filterCBioPortalWebServiceData(oql_query, data, accessors, opt_d
     return filterData(oql_query, data, accessors, opt_default_oql);
 }
 
-export function filterCBioPortalWebServiceDataByOQLLine(oql_query, data, accessors, opt_default_oql) {
+export function filterCBioPortalWebServiceDataByOQLLine(
+    oql_query,
+    data,
+    accessors,
+    opt_default_oql
+) {
     /* Wrapper method for filterData that has the cBioPortal default accessor functions
      * Note that for use, the input data must have the field 'genetic_alteration_type,' which
      * takes one of the following values:
@@ -670,7 +794,12 @@ export function filterCBioPortalWebServiceDataByOQLLine(oql_query, data, accesso
     return filterData(oql_query, data, accessors, opt_default_oql, 'gene');
 }
 
-export function filterCBioPortalWebServiceDataByUnflattenedOQLLine(oql_query, data, accessors, opt_default_oql) {
+export function filterCBioPortalWebServiceDataByUnflattenedOQLLine(
+    oql_query,
+    data,
+    accessors,
+    opt_default_oql
+) {
     /* Wrapper method for filterData that has the cBioPortal default accessor functions
      * Note that for use, the input data must have the field 'genetic_alteration_type,' which
      * takes one of the following values:
@@ -680,9 +809,14 @@ export function filterCBioPortalWebServiceDataByUnflattenedOQLLine(oql_query, da
      *	- PROTEIN_LEVEL
      */
 
-    return filterData(oql_query, data, accessors, opt_default_oql, 'mergedtrack');
+    return filterData(
+        oql_query,
+        data,
+        accessors,
+        opt_default_oql,
+        'mergedtrack'
+    );
 }
-
 
 // export function filterCBioPortalWebServiceData(oql_query, data, opt_default_oql, opt_by_oql_line, opt_mark_oql_regulation_direction) {
 //     /* Wrapper method for filterData that has the cBioPortal default accessor functions
@@ -767,22 +901,23 @@ export function filterCBioPortalWebServiceDataByUnflattenedOQLLine(oql_query, da
 //     return filterData(oql_query, data, AccessorsForOqlFilter, opt_default_oql, opt_by_oql_line, opt_mark_oql_regulation_direction);
 // }
 
-
 export function uniqueGenesInOQLQuery(oql_query) {
     var parse_result = parseOQLQuery(oql_query);
-    var genes = parse_result.filter(function (q_line) {
-        return q_line.gene.toLowerCase() !== "datatypes";
-    }).map(function (q_line) {
-        return q_line.gene.toUpperCase();
-    });
+    var genes = parse_result
+        .filter(function(q_line) {
+            return q_line.gene.toLowerCase() !== 'datatypes';
+        })
+        .map(function(q_line) {
+            return q_line.gene.toUpperCase();
+        });
     var unique_genes_set = {};
-    for (var i=0; i<genes.length; i++) {
+    for (var i = 0; i < genes.length; i++) {
         unique_genes_set[genes[i]] = true;
     }
     return Object.keys(unique_genes_set);
 }
 
-function isValid (oql_query) {
+function isValid(oql_query) {
     var ret = true;
     try {
         oql_parser.parse(oql_query);
@@ -791,4 +926,3 @@ function isValid (oql_query) {
     }
     return ret;
 }
-

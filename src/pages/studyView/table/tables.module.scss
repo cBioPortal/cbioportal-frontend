@@ -1,116 +1,120 @@
 $study-view-table-icon-size: 10px;
 
 .studyViewTablesTable {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
 }
 
 // The current portal is wrapped a class .cbioportal-frontend to overwrite the legacy styles
 // May need to come back to clean up the important statements after in SPA
 .tableSearchInput {
-  width: 150px !important;
-  height: 25px !important;
+    width: 150px !important;
+    height: 25px !important;
 }
 
 .labelContent {
-  overflow: hidden;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
+    overflow: hidden;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
 }
 
 .labelContentSVG {
-  flex-shrink: 0;
+    flex-shrink: 0;
 }
 
 .controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-grow: 1;
-  font-size: 13px !important;
-  padding: 0 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-grow: 1;
+    font-size: 13px !important;
+    padding: 0 5px;
 }
 
 .controlsBtn {
-  padding: 2px 5px;
+    padding: 2px 5px;
 }
 
 .geneSymbol:hover {
-  cursor: pointer;
+    cursor: pointer;
 }
 
 .cancerGene {
-  font-weight: bold
+    font-weight: bold;
 }
 
 .headerColumn {
-  text-transform: none;
-  font-size: 13px;
-  line-height: 15px;
+    text-transform: none;
+    font-size: 13px;
+    line-height: 15px;
 }
 
 .headerRow {
-  border-bottom: 1px solid #d1d1d1;
+    border-bottom: 1px solid #d1d1d1;
 }
 
 .row {
-  font-size: 13px;
+    font-size: 13px;
 }
 
 .oddRow {
-  background-color: #f9f9f9;
+    background-color: #f9f9f9;
 }
 
 .evenRow {
-  background-color: #ffffff;
+    background-color: #ffffff;
 }
 
-.highlightedEvenRow, .highlightedRow {
-  background-color: #d3d3d3;
+.highlightedEvenRow,
+.highlightedRow {
+    background-color: #d3d3d3;
 }
 
 .highlightedOddRow {
-  background-color: #e0e0e0;
+    background-color: #e0e0e0;
 }
 
 .cancerGeneIcon {
-  margin-right: 5px;
+    margin-right: 5px;
 }
 
 .cancerGeneIcon > img {
-  height: $study-view-table-icon-size;
+    height: $study-view-table-icon-size;
 }
 
-.gistic, .mutsig, .cancerGenesRow > img {
-  height: $study-view-table-icon-size;
-  margin-left: 2px;
-  vertical-align: inherit !important;
+.gistic,
+.mutsig,
+.cancerGenesRow > img {
+    height: $study-view-table-icon-size;
+    margin-left: 2px;
+    vertical-align: inherit !important;
 }
 
 .amp {
-  color: red;
+    color: red;
 }
 
 .del {
-  color: #0000ff;
+    color: #0000ff;
 }
 
-.amp, .del {
-  font-weight: bold;
+.amp,
+.del {
+    font-weight: bold;
 }
 
 .displayFlex {
-  display: flex;
-  align-items: center;
+    display: flex;
+    align-items: center;
 }
 
 .headerSortingIcon {
-  margin-left: 5px;
+    margin-left: 5px;
 }
 
 .autoMarginCheckbox {
-  margin-top: auto !important;
-  margin-bottom: auto !important;
+    margin-top: auto !important;
+    margin-bottom: auto !important;
 }

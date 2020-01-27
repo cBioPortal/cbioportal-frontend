@@ -1,116 +1,125 @@
-import {assert, expect} from 'chai';
-import {mount, shallow} from "enzyme";
-import * as React from "react";
-import GeneSymbolValidatorMessage, {GeneSymbolValidatorMessageProps} from "shared/components/GeneSelectionBox/GeneSymbolValidatorMessage";
+import { assert, expect } from 'chai';
+import { mount, shallow } from 'enzyme';
+import * as React from 'react';
+import GeneSymbolValidatorMessage, {
+    GeneSymbolValidatorMessageProps,
+} from 'shared/components/GeneSelectionBox/GeneSymbolValidatorMessage';
 
 describe('GeneSymbolValidatorMessage', () => {
-
     let props: GeneSymbolValidatorMessageProps;
 
     beforeEach(() => {
         props = {
             oql: {
-                query: []
+                query: [],
             },
             validatingGenes: false,
             genes: {
                 found: [],
-                suggestions: []
+                suggestions: [],
             },
-            replaceGene: ()=>null,
+            replaceGene: () => null,
         } as GeneSymbolValidatorMessageProps;
     });
-    afterEach(() => {
-    });
+    afterEach(() => {});
 
     it('Valid input', () => {
-
         props.oql = {
-            query: [{gene: 'TP53', alterations: false}]
+            query: [{ gene: 'TP53', alterations: false }],
         };
         props.genes = {
-            found: [{
-                geneticEntityId:5808,
-                entrezGeneId: 7157,
-                hugoGeneSymbol: "TP53",
-                type: "protein-coding",
-            }], suggestions: []
+            found: [
+                {
+                    geneticEntityId: 5808,
+                    entrezGeneId: 7157,
+                    hugoGeneSymbol: 'TP53',
+                    type: 'protein-coding',
+                },
+            ],
+            suggestions: [],
         };
         const wrapper = mount(<GeneSymbolValidatorMessage {...props} />);
         assert.equal(
             wrapper.find('#geneBoxValidationStatus').text(),
-            "All gene symbols are valid.");
+            'All gene symbols are valid.'
+        );
 
-        wrapper.setProps({errorMessageOnly: true});
+        wrapper.setProps({ errorMessageOnly: true });
 
-        assert.equal(wrapper.find('#geneBoxValidationStatus').text(), "");
+        assert.equal(wrapper.find('#geneBoxValidationStatus').text(), '');
     });
 
     it('invalid input', () => {
         const wrapper = mount(<GeneSymbolValidatorMessage {...props} />);
-        assert.equal(wrapper.find('#geneBoxValidationStatus').text(), "");
+        assert.equal(wrapper.find('#geneBoxValidationStatus').text(), '');
 
-        wrapper.setProps({oql: new Error("Error")})
+        wrapper.setProps({ oql: new Error('Error') });
         assert.equal(
             wrapper.find('#geneBoxValidationStatus').text(),
-            "Cannot validate gene symbols because of invalid OQL. Error");
-
+            'Cannot validate gene symbols because of invalid OQL. Error'
+        );
     });
 
     it('genes api error', async () => {
         props.oql = {
-            query: [{gene: 'TP53', alterations: false}]
+            query: [{ gene: 'TP53', alterations: false }],
         };
-        props.genes = new Error("Error");
+        props.genes = new Error('Error');
         const wrapper = mount(<GeneSymbolValidatorMessage {...props} />);
         assert.equal(
             wrapper.find('#geneBoxValidationStatus').text(),
-            "Unable to validate gene symbols.");
+            'Unable to validate gene symbols.'
+        );
     });
 
     it('genes api pending', () => {
         props.oql = {
-            query: [{gene: 'TP53', alterations: false}]
+            query: [{ gene: 'TP53', alterations: false }],
         };
         props.validatingGenes = true;
         const wrapper = mount(<GeneSymbolValidatorMessage {...props} />);
         assert.equal(
             wrapper.find('#geneBoxValidationStatus').text(),
-            "Validating gene symbols...");
-
+            'Validating gene symbols...'
+        );
     });
 
     it('invalid genes with no suggestions', () => {
         props.oql = {
-            query: [{gene: 'TP53', alterations: false}]
+            query: [{ gene: 'TP53', alterations: false }],
         };
-        props.genes = {found: [], suggestions: [{alias: 'TP5', genes: []}]}
+        props.genes = { found: [], suggestions: [{ alias: 'TP5', genes: [] }] };
         const wrapper = mount(<GeneSymbolValidatorMessage {...props} />);
         assert.equal(
             wrapper.find('#geneBoxValidationStatus').text(),
-            "Invalid gene symbols.TP5");
+            'Invalid gene symbols.TP5'
+        );
     });
 
     it('invalid genes with suggestions', () => {
         props.oql = {
-            query: [{gene: 'AAA', alterations: false}]
+            query: [{ gene: 'AAA', alterations: false }],
         };
         props.genes = {
-            found: [], suggestions: [{
-                alias: 'AAA',
-                genes: [
-                    {
-                        "geneticEntityId":296,
-                        "entrezGeneId": 351,
-                        "hugoGeneSymbol": "APP",
-                        "type": "protein-coding"
-                    }
-                ]
-            }]
+            found: [],
+            suggestions: [
+                {
+                    alias: 'AAA',
+                    genes: [
+                        {
+                            geneticEntityId: 296,
+                            entrezGeneId: 351,
+                            hugoGeneSymbol: 'APP',
+                            type: 'protein-coding',
+                        },
+                    ],
+                },
+            ],
         };
         const wrapper = mount(<GeneSymbolValidatorMessage {...props} />);
         assert.equal(
             wrapper.find('#geneBoxValidationStatus').text(),
-            "Invalid gene symbols.AAA: APP");
+            'Invalid gene symbols.AAA: APP'
+        );
     });
 });

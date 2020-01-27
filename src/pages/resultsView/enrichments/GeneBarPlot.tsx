@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { observable, action, computed } from 'mobx';
-import {DownloadControls, DefaultTooltip}from 'cbioportal-frontend-commons';
+import { DownloadControls, DefaultTooltip } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
 import MultipleCategoryBarPlot from 'shared/components/plots/MultipleCategoryBarPlot';
 import ReactSelect from 'react-select';
@@ -184,10 +184,14 @@ export default class GeneBarPlot extends React.Component<
                     <tbody>{groupRows}</tbody>
                 </table>
                 <strong>p-Value</strong>:{' '}
-                {geneData.pValue ? toConditionalPrecision(geneData.pValue, 3, 0.01) : '-'}
+                {geneData.pValue
+                    ? toConditionalPrecision(geneData.pValue, 3, 0.01)
+                    : '-'}
                 <br />
                 <strong>q-Value</strong>:{' '}
-                {geneData.qValue ? toConditionalPrecision(geneData.qValue, 3, 0.01) : '-'}
+                {geneData.qValue
+                    ? toConditionalPrecision(geneData.qValue, 3, 0.01)
+                    : '-'}
             </div>
         );
     }

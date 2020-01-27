@@ -1,4 +1,4 @@
-import {CancerGene, IndicatorQueryResp} from "cbioportal-frontend-commons";
+import { CancerGene, IndicatorQueryResp } from 'cbioportal-frontend-commons';
 
 export interface IEvidence {
     id: string;
@@ -19,22 +19,22 @@ export interface IEvidence {
         sensitivity: {
             current: any[];
             inOtherTumor: any[];
-        },
+        };
         resistance: any[];
     };
 }
 
 export interface IOncoKbData {
-    indicatorMap: {[id:string]: IndicatorQueryResp} | null;
-    uniqueSampleKeyToTumorType: {[sampleId:string]: string} | null;
+    indicatorMap: { [id: string]: IndicatorQueryResp } | null;
+    uniqueSampleKeyToTumorType: { [sampleId: string]: string } | null;
 }
 
 export interface IOncoKbDataWrapper {
-    status: "pending" | "error" | "complete";
-    result?: IOncoKbData|Error;
+    status: 'pending' | 'error' | 'complete';
+    result?: IOncoKbData | Error;
 }
 
 export interface IOncoKbCancerGenesWrapper {
-    status: "pending" | "error" | "complete";
+    status: 'pending' | 'error' | 'complete';
     result?: CancerGene[] | Error;
 }

@@ -1,5 +1,5 @@
-.axis path, .axis line
-{
+.axis path,
+.axis line {
     fill: none;
     stroke: black;
     shape-rendering: crispEdges;
@@ -16,47 +16,44 @@
 }
 
 #timeline .axis {
-    transform: translate(0px,20px);
-    -ms-transform: translate(0px,20px); /* IE 9 */
-    -webkit-transform: translate(0px,20px); /* Safari and Chrome */
-    -o-transform: translate(0px,20px); /* Opera */
-    -moz-transform: translate(0px,20px); /* Firefox */
+    transform: translate(0px, 20px);
+    -ms-transform: translate(0px, 20px); /* IE 9 */
+    -webkit-transform: translate(0px, 20px); /* Safari and Chrome */
+    -o-transform: translate(0px, 20px); /* Opera */
+    -moz-transform: translate(0px, 20px); /* Firefox */
 }
 
 #timeline circle {
-  cursor: pointer;
+    cursor: pointer;
 }
 
 #timeline g text {
-  cursor:pointer;
+    cursor: pointer;
 }
 
-
 .coloredDiv {
-    height:20px; width:20px; float:left;
+    height: 20px;
+    width: 20px;
+    float: left;
 }
 
 .timeline-qtip {
-  padding:5px;
-  table {
+    padding: 5px;
+    table {
+        tr {
+            td {
+                padding-top: 5px;
+                padding-left: 5px;
+                padding-right: 5px;
+            }
 
-    tr {
-
-      td {
-        padding-top:5px;
-        padding-left:5px;
-        padding-right:5px;
-      }
-
-      &:first-child {
-        td {
-          padding-top:0;
+            &:first-child {
+                td {
+                    padding-top: 0;
+                }
+            }
         }
-      }
-
     }
-  }
-
 }
 
 .timelineContainer {

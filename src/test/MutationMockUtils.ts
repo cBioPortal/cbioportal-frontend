@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import {Mutation} from "shared/api/generated/CBioPortalAPI";
+import { Mutation } from 'shared/api/generated/CBioPortalAPI';
 
 /**
  * Utility functions to generate mock data.
@@ -7,63 +7,61 @@ import {Mutation} from "shared/api/generated/CBioPortalAPI";
  * @author Selcuk Onur Sumer
  */
 
-
-export function emptyMutation(): Mutation
-{
+export function emptyMutation(): Mutation {
     return {
-        aminoAcidChange: "",
-        center: "",
+        aminoAcidChange: '',
+        center: '',
         endPosition: -1,
         entrezGeneId: -1,
         fisValue: -1,
-        functionalImpactScore: "",
+        functionalImpactScore: '',
         gene: {
             geneticEntityId: -1,
             entrezGeneId: -1,
-            hugoGeneSymbol: "",
-            type: ""
+            hugoGeneSymbol: '',
+            type: '',
         },
         alleleSpecificCopyNumber: {
             ascnIntegerCopyNumber: -1,
-            ascnMethod: "",
+            ascnMethod: '',
             ccfMCopies: -1,
             ccfMCopiesUpper: -1,
             clonal: false,
             minorCopyNumber: -1,
             mutantCopies: -1,
-            totalCopyNumber: -1
+            totalCopyNumber: -1,
         },
-        molecularProfileId: "",
-        keyword: "",
-        linkMsa: "",
-        linkPdb: "",
-        linkXvar: "",
-        mutationStatus: "",
-        mutationType: "",
-        ncbiBuild: "",
+        molecularProfileId: '',
+        keyword: '',
+        linkMsa: '',
+        linkPdb: '',
+        linkXvar: '',
+        mutationStatus: '',
+        mutationType: '',
+        ncbiBuild: '',
         normalAltCount: -1,
         normalRefCount: -1,
-        proteinChange: "",
+        proteinChange: '',
         proteinPosEnd: -1,
         proteinPosStart: -1,
-        referenceAllele: "",
-        refseqMrnaId: "",
-        sampleId: "",
-        patientId: "",
-        studyId: "",
-        uniqueSampleKey: "",
-        uniquePatientKey: "",
+        referenceAllele: '',
+        refseqMrnaId: '',
+        sampleId: '',
+        patientId: '',
+        studyId: '',
+        uniqueSampleKey: '',
+        uniquePatientKey: '',
         startPosition: -1,
         tumorAltCount: -1,
         tumorRefCount: -1,
-        validationStatus: "",
-        variantAllele: "",
-        variantType: "",
-        driverFilter: "",
-        driverFilterAnnotation: "",
-        driverTiersFilter: "",
-        driverTiersFilterAnnotation: "",
-        chr: ""
+        validationStatus: '',
+        variantAllele: '',
+        variantType: '',
+        driverFilter: '',
+        driverFilterAnnotation: '',
+        driverTiersFilter: '',
+        driverTiersFilterAnnotation: '',
+        chr: '',
         /*wildType:false,
         sequenced:true*/
     };
@@ -75,8 +73,7 @@ export function emptyMutation(): Mutation
  * @param props
  * @returns {Mutation}
  */
-export function initMutation(props:{[key:string]: any}): Mutation
-{
+export function initMutation(props: { [key: string]: any }): Mutation {
     const mutation = emptyMutation();
 
     // TODO this is not a type safe operation since the property values can be anything

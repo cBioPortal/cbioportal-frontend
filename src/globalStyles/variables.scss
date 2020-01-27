@@ -7,12 +7,12 @@ $font-size-base: 14px !default;
 
 $main-bg: #f5f5f5;
 
-$cream: #F6F4EF;
-$darkCream: #ECE7DB;
-$darkestCream: #DAD1BC;
+$cream: #f6f4ef;
+$darkCream: #ece7db;
+$darkestCream: #dad1bc;
 $darkBrown: #585755;
 
-$lightBlue: #F1F6FE;
+$lightBlue: #f1f6fe;
 $mediumBlue: #1982b8;
 
 $lightGrey: #ececec;
@@ -22,31 +22,29 @@ $darkGrey: #999;
 $redError: #a71111;
 $greenSuccess: #11a747;
 
-.portalWidth{
-  padding-left:20px;
-  padding-right:20px;
-  min-width:400px;
+.portalWidth {
+    padding-left: 20px;
+    padding-right: 20px;
+    min-width: 400px;
 }
 
 $gutterWidth: 20px;
 
-$brand-primary: #3786C2;
+$brand-primary: #3786c2;
 
-$borderColor:$mediumGrey;
+$borderColor: $mediumGrey;
 
-$headerColor: #3786C2;
+$headerColor: #3786c2;
 
 $cornerBorderRadius: 5px;
 
-$standardMargin:15px;
+$standardMargin: 15px;
 
 .framedImage {
-  margin:20px 0;
-  border:1px solid #eee !important;
-  border-radius:$cornerBorderRadius;
-  padding:10px;
-  display:block;
-  box-shadow: 1px 1px 1px 0px rgba(0,0,0,0.21);
+    margin: 20px 0;
+    border: 1px solid #eee !important;
+    border-radius: $cornerBorderRadius;
+    padding: 10px;
+    display: block;
+    box-shadow: 1px 1px 1px 0px rgba(0, 0, 0, 0.21);
 }
-
-

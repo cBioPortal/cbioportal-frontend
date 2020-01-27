@@ -1,43 +1,45 @@
 import * as React from 'react';
 import fileDownload from 'react-file-download';
-import {observer} from "mobx-react";
-import {observable} from "mobx";
-import {CopyDownloadLinks} from "./CopyDownloadLinks";
-import {CopyDownloadButtons} from "./CopyDownloadButtons";
-import {ICopyDownloadControlsProps} from "./ICopyDownloadControls";
+import { observer } from 'mobx-react';
+import { observable } from 'mobx';
+import { CopyDownloadLinks } from './CopyDownloadLinks';
+import { CopyDownloadButtons } from './CopyDownloadButtons';
+import { ICopyDownloadControlsProps } from './ICopyDownloadControls';
 import { CopyDownloadQueryLinks } from './CopyDownloadQueryLinks';
 const Clipboard = require('clipboard');
 
-export interface ISimpleCopyDownloadControlsProps extends ICopyDownloadControlsProps {
+export interface ISimpleCopyDownloadControlsProps
+    extends ICopyDownloadControlsProps {
     downloadData?: () => string;
     showQuery?: boolean;
     showVirtualStudy?: boolean;
     handleQuery?: () => void;
     virtualStudyParams?: any;
-    containerId?: string|undefined;
+    containerId?: string | undefined;
 }
 
 @observer
-export class SimpleCopyDownloadControls extends React.Component<ISimpleCopyDownloadControlsProps, {}>
-{
+export class SimpleCopyDownloadControls extends React.Component<
+    ISimpleCopyDownloadControlsProps,
+    {}
+> {
     public static defaultProps: ISimpleCopyDownloadControlsProps = {
-        className: "",
+        className: '',
         showCopy: true,
         copyMessageDuration: 3000,
         showDownload: true,
         showQuery: true,
         showVirtualStudy: true,
-        copyLabel: "Copy",
-        downloadLabel: "Download",
-        downloadFilename: "data.tsv",
-        controlsStyle: 'LINK'
+        copyLabel: 'Copy',
+        downloadLabel: 'Download',
+        downloadFilename: 'data.tsv',
+        controlsStyle: 'LINK',
     };
 
     @observable
     private showCopyMessage = false;
 
-    constructor(props: ISimpleCopyDownloadControlsProps)
-    {
+    constructor(props: ISimpleCopyDownloadControlsProps) {
         super(props);
 
         this.handleDownload = this.handleDownload.bind(this);
@@ -46,8 +48,7 @@ export class SimpleCopyDownloadControls extends React.Component<ISimpleCopyDownl
         this.handleAfterCopy = this.handleAfterCopy.bind(this);
     }
 
-    public render()
-    {
+    public render() {
         if (this.props.controlsStyle === 'LINK') {
             return (
                 <CopyDownloadLinks
@@ -60,8 +61,7 @@ export class SimpleCopyDownloadControls extends React.Component<ISimpleCopyDownl
                     showCopyMessage={this.showCopyMessage}
                 />
             );
-        }
-        else if (this.props.controlsStyle === 'QUERY') {
+        } else if (this.props.controlsStyle === 'QUERY') {
             return (
                 <CopyDownloadQueryLinks
                     className={this.props.className}
@@ -77,8 +77,7 @@ export class SimpleCopyDownloadControls extends React.Component<ISimpleCopyDownl
                     virtualStudyParams={this.props.virtualStudyParams}
                 />
             );
-        }
-        else {
+        } else {
             return (
                 <CopyDownloadButtons
                     className={this.props.className}
@@ -93,39 +92,39 @@ export class SimpleCopyDownloadControls extends React.Component<ISimpleCopyDownl
         }
     }
 
-    private handleDownload()
-    {
+    private handleDownload() {
         if (this.props.downloadData) {
-            fileDownload(this.props.downloadData(), this.props.downloadFilename);
+            fileDownload(
+                this.props.downloadData(),
+                this.props.downloadFilename
+            );
         }
     }
 
-    private copyLinkRef(el: HTMLAnchorElement|null)
-    {
+    private copyLinkRef(el: HTMLAnchorElement | null) {
         this.handleCopyRef(el);
     }
 
-    private copyButtonRef(el: HTMLButtonElement|null)
-    {
+    private copyButtonRef(el: HTMLButtonElement | null) {
         this.handleCopyRef(el);
     }
 
-    private handleCopyRef(el: HTMLElement|null)
-    {
+    private handleCopyRef(el: HTMLElement | null) {
         if (el) {
             const { downloadData, containerId } = this.props;
-            const options = containerId ? {
-                text: downloadData,
-                container: document.getElementById(containerId) // point to the exact container of copy control if it is inside a modal dialog
-            } : {
-                text: downloadData
-            }
+            const options = containerId
+                ? {
+                      text: downloadData,
+                      container: document.getElementById(containerId), // point to the exact container of copy control if it is inside a modal dialog
+                  }
+                : {
+                      text: downloadData,
+                  };
             new Clipboard(el, options);
         }
     }
 
-    private handleAfterCopy()
-    {
+    private handleAfterCopy() {
         this.showCopyMessage = true;
 
         setTimeout(() => {

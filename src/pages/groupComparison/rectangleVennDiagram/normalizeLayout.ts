@@ -1,24 +1,25 @@
-import _ from "lodash";
+import _ from 'lodash';
+import { Region, SetRectangles, Set } from './layout';
 import {
-    Region,
-    SetRectangles, Set
-} from "./layout";
-import {getBoundingBox, Rectangle, rectangleArea, rectangleIntersection} from "./geometry";
-
+    getBoundingBox,
+    Rectangle,
+    rectangleArea,
+    rectangleIntersection,
+} from './geometry';
 
 export function adjustSizesForMinimumSizeRegions(
-    regions:Region[],
-    sets:Set[]
+    regions: Region[],
+    sets: Set[]
 ) {
     // Adjust sizes in order to not have regions that are too tiny to interact with/see.
     // The minimum region size is a fraction of the biggest set size.
-    const biggestSetSize = Math.max(...sets.map(s=>s.size));
+    const biggestSetSize = Math.max(...sets.map(s => s.size));
     const minRegionSize = biggestSetSize / 30;
 
     sets = _.cloneDeep(sets);
     regions = _.cloneDeep(regions);
 
-    const setsMap = _.keyBy(sets, s=>s.uid);
+    const setsMap = _.keyBy(sets, s => s.uid);
     for (const region of regions) {
         // Adjust sizes of nonempty regions in a consistent way:
         //  When adding to a region in order to bring it to the minimum, it also implies
@@ -38,10 +39,8 @@ export function adjustSizesForMinimumSizeRegions(
     return { regions, sets };
 }
 
-export function getConnectedComponents(
-    setRectangles:SetRectangles
-) {
-    const components:{ rectangles:Rectangle[] }[] = [];
+export function getConnectedComponents(setRectangles: SetRectangles) {
+    const components: { rectangles: Rectangle[] }[] = [];
     const rectangles = _.values(setRectangles);
 
     for (const rect of rectangles) {
@@ -49,10 +48,15 @@ export function getConnectedComponents(
         // First we check if `rect` is intersecting with any connected component we've already tracked
         let added = false;
         for (const component of components) {
-            if (_.some(
-                component.rectangles,
-                componentRect=>(rectangleArea(rectangleIntersection(rect, componentRect)) > 0)
-            )) {
+            if (
+                _.some(
+                    component.rectangles,
+                    componentRect =>
+                        rectangleArea(
+                            rectangleIntersection(rect, componentRect)
+                        ) > 0
+                )
+            ) {
                 component.rectangles.push(rect);
                 added = true;
             }
@@ -60,16 +64,14 @@ export function getConnectedComponents(
         // If not, then add it to a new component
         if (!added) {
             components.push({
-                rectangles:[rect]
+                rectangles: [rect],
             });
         }
     }
     return components;
 }
 
-export function layoutConnectedComponents(
-    setRectangles:SetRectangles
-) {
+export function layoutConnectedComponents(setRectangles: SetRectangles) {
     // layout connected components by their bounding boxes
     let connectedComponents = getConnectedComponents(setRectangles);
 
@@ -86,31 +88,56 @@ export function layoutConnectedComponents(
         //   SMALLEST
 
         // First sort by size
-        connectedComponents = _.sortBy(connectedComponents, component=>-rectangleArea(getBoundingBox(component.rectangles)));
-        const boundingBoxes = connectedComponents.map(component=>getBoundingBox(component.rectangles));
-        const xPadding = Math.max(...boundingBoxes.map(box=>(box.xRange.max - box.xRange.min))) / 10;
-        const yPadding = Math.max(...boundingBoxes.map(box=>(box.yRange.max - box.yRange.min))) / 10;
+        connectedComponents = _.sortBy(
+            connectedComponents,
+            component => -rectangleArea(getBoundingBox(component.rectangles))
+        );
+        const boundingBoxes = connectedComponents.map(component =>
+            getBoundingBox(component.rectangles)
+        );
+        const xPadding =
+            Math.max(
+                ...boundingBoxes.map(box => box.xRange.max - box.xRange.min)
+            ) / 10;
+        const yPadding =
+            Math.max(
+                ...boundingBoxes.map(box => box.yRange.max - box.yRange.min)
+            ) / 10;
 
         // select the target coordinates for the layout
-        let targetCoordinates:{x:number, y:number}[] = [];
+        let targetCoordinates: { x: number; y: number }[] = [];
         switch (boundingBoxes.length) {
             case 2:
                 targetCoordinates = [
-                    { x:0, y:0 },
-                    { x:boundingBoxes[0].xLength + xPadding, y:0 }
+                    { x: 0, y: 0 },
+                    { x: boundingBoxes[0].xLength + xPadding, y: 0 },
                 ];
                 break;
             case 3:
                 targetCoordinates = [
-                    {x:0, y:0},
-                    {x:Math.max(boundingBoxes[0].xLength, boundingBoxes[2].xLength) + xPadding, y:0 },
-                    {x:0, y:Math.max(boundingBoxes[0].yLength, boundingBoxes[1].yLength) + yPadding }
+                    { x: 0, y: 0 },
+                    {
+                        x:
+                            Math.max(
+                                boundingBoxes[0].xLength,
+                                boundingBoxes[2].xLength
+                            ) + xPadding,
+                        y: 0,
+                    },
+                    {
+                        x: 0,
+                        y:
+                            Math.max(
+                                boundingBoxes[0].yLength,
+                                boundingBoxes[1].yLength
+                            ) + yPadding,
+                    },
                 ];
                 break;
         }
 
         // Calculate the offsets from the target coordinates and add those offsets to each rectangle in the connected component
-        for (let i=0; i<targetCoordinates.length; i++) {
+        for (let i = 0; i < targetCoordinates.length; i++) {
             const xDiff = targetCoordinates[i].x - boundingBoxes[i].xRange.min;
             const yDiff = targetCoordinates[i].y - boundingBoxes[i].yRange.min;
             for (const rectangle of connectedComponents[i].rectangles) {
@@ -121,34 +148,38 @@ export function layoutConnectedComponents(
     }
 }
 
-export function scaleAndCenterLayout(layout:SetRectangles, width:number, height:number, padding:number) {
+export function scaleAndCenterLayout(
+    layout: SetRectangles,
+    width: number,
+    height: number,
+    padding: number
+) {
     // Based on https://github.com/benfred/venn.js/blob/d5a47bd12140f95a17402c6356af4631f53a0723/src/layout.js#L635
 
     const rectangles = _.values(layout);
     const setIds = Object.keys(layout);
 
-    width -= 2*padding;
-    height -= 2*padding;
+    width -= 2 * padding;
+    height -= 2 * padding;
 
     const bounds = getBoundingBox(rectangles);
     const xRange = bounds.xRange;
     const yRange = bounds.yRange;
 
-    if ((xRange.max == xRange.min) ||
-        (yRange.max == yRange.min)) {
-        console.log("not scaling layout: zero size detected");
+    if (xRange.max == xRange.min || yRange.max == yRange.min) {
+        console.log('not scaling layout: zero size detected');
         return layout;
     }
 
-    const xScaling = width  / (xRange.max - xRange.min);
+    const xScaling = width / (xRange.max - xRange.min);
     const yScaling = height / (yRange.max - yRange.min);
     const scaling = Math.min(yScaling, xScaling);
 
     // while we're at it, center the diagram too
-    const xOffset = (width -  (xRange.max - xRange.min) * scaling) / 2;
+    const xOffset = (width - (xRange.max - xRange.min) * scaling) / 2;
     const yOffset = (height - (yRange.max - yRange.min) * scaling) / 2;
 
-    const scaled:SetRectangles = {};
+    const scaled: SetRectangles = {};
     for (let i = 0; i < rectangles.length; ++i) {
         const rect = rectangles[i];
         scaled[setIds[i]] = {

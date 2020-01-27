@@ -1,16 +1,16 @@
 .virtualStudy {
     width: 350px;
-    
-    .virtualStudyForm{
+
+    .virtualStudyForm {
         margin-bottom: 5px;
         textarea {
             resize: none;
         }
         .saveButton {
-            height:34px;
+            height: 34px;
         }
     }
-    
+
     .studiesSummaryInfo {
         margin-top: 5px;
         font-size: 12px;
@@ -18,13 +18,13 @@
         overflow-y: auto;
     }
 
-    .result{
+    .result {
         display: flex;
         align-items: center;
         .name {
             flex-grow: 1;
         }
-    
+
         .controls {
             flex-shrink: 0;
             float: right;
@@ -59,7 +59,8 @@
         .panel {
             margin-bottom: 5px;
         }
-        .panel-heading, .panel-body {
+        .panel-heading,
+        .panel-body {
             padding: 7px;
         }
     }

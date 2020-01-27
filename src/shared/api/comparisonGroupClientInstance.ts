@@ -1,4 +1,4 @@
-import ComparisonGroupClient from "./ComparisonGroupClient";
+import ComparisonGroupClient from './ComparisonGroupClient';
 
 const comparisonClient = new ComparisonGroupClient();
 

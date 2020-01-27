@@ -1,52 +1,62 @@
-import * as React from "react";
-import {TypeOfCancer as CancerType, CancerStudy} from "../../../api/generated/CBioPortalAPI";
-import * as styles_any from "./styles.module.scss";
-import classNames from "classnames";
-import FontAwesome from "react-fontawesome";
-import LabeledCheckbox from "../../labeledCheckbox/LabeledCheckbox";
-import {observer, Observer} from "mobx-react";
-import {computed} from "mobx";
-import _ from "lodash";
-import {getPubMedUrl, getStudySummaryUrl, redirectToStudyView} from "../../../api/urls";
-import {QueryStoreComponent} from "../QueryStore";
-import {DefaultTooltip} from "cbioportal-frontend-commons";
-import {FilteredCancerTreeView} from "../StudyListLogic";
-import {CancerTreeNode, CancerTypeWithVisibility} from "../CancerStudyTreeData";
-import {StudyLink} from "../../StudyLink/StudyLink";
+import * as React from 'react';
+import {
+    TypeOfCancer as CancerType,
+    CancerStudy,
+} from '../../../api/generated/CBioPortalAPI';
+import * as styles_any from './styles.module.scss';
+import classNames from 'classnames';
+import FontAwesome from 'react-fontawesome';
+import LabeledCheckbox from '../../labeledCheckbox/LabeledCheckbox';
+import { observer, Observer } from 'mobx-react';
+import { computed } from 'mobx';
+import _ from 'lodash';
+import {
+    getPubMedUrl,
+    getStudySummaryUrl,
+    redirectToStudyView,
+} from '../../../api/urls';
+import { QueryStoreComponent } from '../QueryStore';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { FilteredCancerTreeView } from '../StudyListLogic';
+import {
+    CancerTreeNode,
+    CancerTypeWithVisibility,
+} from '../CancerStudyTreeData';
+import { StudyLink } from '../../StudyLink/StudyLink';
 import StudyTagsTooltip from '../../studyTagsTooltip/StudyTagsTooltip';
 
 const styles = {
-    ...styles_any as {
-        StudyList: string,
-        SelectedStudyList: string,
+    ...(styles_any as {
+        StudyList: string;
+        SelectedStudyList: string;
 
-        CancerType: string,
-        CancerTypeName: string,
-        SelectAll: string,
+        CancerType: string;
+        CancerTypeName: string;
+        SelectAll: string;
 
-        Study: string,
-        StudyName: string,
-        DeletedStudy: string,
-        StudyMeta: string,
-        StudySamples: string,
-        StudyLinks: string,
+        Study: string;
+        StudyName: string;
+        DeletedStudy: string;
+        StudyMeta: string;
+        StudySamples: string;
+        StudyLinks: string;
 
-        icon: string,
-        iconWithTooltip: string,
-        trashIcon: string,
-        summaryIcon: string,
-        infoCircleIcon: string,
-        tooltip: string,
+        icon: string;
+        iconWithTooltip: string;
+        trashIcon: string;
+        summaryIcon: string;
+        infoCircleIcon: string;
+        tooltip: string;
 
-        disabled: string,
-        enabled: string,
-        indentArrow: string,
+        disabled: string;
+        enabled: string;
+        indentArrow: string;
 
-        closeSelected: string,
-        deselectAll: string,
-        highlighted: string,
-    },
-    Level: (level: number) => styles_any[`Level${level}`]
+        closeSelected: string;
+        deselectAll: string;
+        highlighted: string;
+    }),
+    Level: (level: number) => styles_any[`Level${level}`],
 };
 
 export interface IStudyListProps {
@@ -54,14 +64,18 @@ export interface IStudyListProps {
 }
 
 @observer
-export default class StudyList extends QueryStoreComponent<IStudyListProps, {}> {
+export default class StudyList extends QueryStoreComponent<
+    IStudyListProps,
+    {}
+> {
     private _view: FilteredCancerTreeView;
 
     get view() {
-        return this._view || (
-            this.props.showSelectedStudiesOnly
+        return (
+            this._view ||
+            (this.props.showSelectedStudiesOnly
                 ? this.logic.selectedStudiesView
-                : this.logic.mainView
+                : this.logic.mainView)
         );
     }
 
@@ -76,8 +90,7 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}> 
     componentDidMount() {
         // when rendering selected studies view,
         // cache the view object so studies do not disappear immediately when deselected.
-        if (this.props.showSelectedStudiesOnly)
-            this._view = this.view;
+        if (this.props.showSelectedStudiesOnly) this._view = this.view;
     }
 
     render() {
@@ -86,15 +99,18 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}> 
         if (this.props.showSelectedStudiesOnly) {
             return (
                 <div className={styles.SelectedStudyList}>
-					<span
+                    <span
                         className={styles.deselectAll}
                         onClick={() => {
-                            this.view.onCheck(this.store.treeData.rootCancerType, false);
+                            this.view.onCheck(
+                                this.store.treeData.rootCancerType,
+                                false
+                            );
                             this.store.showSelectedStudiesOnly = false;
                         }}
                     >
-						Deselect all
-					</span>
+                        Deselect all
+                    </span>
                     {studyList}
                 </div>
             );
@@ -103,11 +119,16 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}> 
         return studyList;
     }
 
-    renderCancerType = (cancerType: CancerTypeWithVisibility, arrayIndex: number = 0): JSX.Element | null => {
+    renderCancerType = (
+        cancerType: CancerTypeWithVisibility,
+        arrayIndex: number = 0
+    ): JSX.Element | null => {
         let currentLevel = this.logic.getDepth(cancerType);
         let childCancerTypes = this.view.getChildCancerTypes(cancerType);
         let childStudies = this.view.getChildCancerStudies(cancerType);
-        let childStudyIds = this.logic.cancerTypeListView.getDescendantCancerStudies(cancerType).map(study => study.studyId);
+        let childStudyIds = this.logic.cancerTypeListView
+            .getDescendantCancerStudies(cancerType)
+            .map(study => study.studyId);
 
         let heading: JSX.Element | undefined;
         let indentArrow: JSX.Element | undefined;
@@ -116,12 +137,15 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}> 
             let liClassName = classNames(
                 styles.CancerType,
                 styles.Level(currentLevel),
-                this.logic.isHighlighted(cancerType) && styles.highlighted,
+                this.logic.isHighlighted(cancerType) && styles.highlighted
             );
 
             if (currentLevel === 3)
                 indentArrow = (
-                    <FontAwesome className={styles.indentArrow} name="long-arrow-right"/>
+                    <FontAwesome
+                        className={styles.indentArrow}
+                        name="long-arrow-right"
+                    />
                 );
 
             heading = (
@@ -129,13 +153,17 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}> 
                     <CancerTreeCheckbox view={this.view} node={cancerType}>
                         {indentArrow}
                         <span className={styles.CancerTypeName}>
-							{cancerType.name}
-						</span>
-                        {!!(!this.store.forDownloadTab) && (
+                            {cancerType.name}
+                        </span>
+                        {!!!this.store.forDownloadTab && (
                             <span className={styles.SelectAll}>
-                                    {_.intersection(childStudyIds, this.store.selectableSelectedStudyIds).length ?
-                                        'Deselect All' : 'Select All'}
-                                </span>
+                                {_.intersection(
+                                    childStudyIds,
+                                    this.store.selectableSelectedStudyIds
+                                ).length
+                                    ? 'Deselect All'
+                                    : 'Select All'}
+                            </span>
                         )}
                     </CancerTreeCheckbox>
                 </li>
@@ -144,7 +172,7 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}> 
 
         let ulClassName = classNames(
             styles.StudyList,
-            styles.Level(currentLevel),
+            styles.Level(currentLevel)
         );
         return (
             <ul key={arrayIndex} className={ulClassName}>
@@ -158,37 +186,50 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}> 
     renderCancerStudy = (study: CancerStudy, arrayIndex: number) => {
         let liClassName = classNames(
             styles.Study,
-            this.logic.isHighlighted(study) && styles.highlighted,
+            this.logic.isHighlighted(study) && styles.highlighted
         );
 
         const isOverlap = study.studyId in this.store.getOverlappingStudiesMap;
-        const overlapWarning = isOverlap ?
+        const overlapWarning = isOverlap ? (
             <DefaultTooltip
                 mouseEnterDelay={0}
                 placement="top"
-                overlay={<div>This study has overlapping data with another selected study.</div>}
+                overlay={
+                    <div>
+                        This study has overlapping data with another selected
+                        study.
+                    </div>
+                }
             >
                 <i className="fa fa-exclamation-triangle"></i>
             </DefaultTooltip>
-            : null;
+        ) : null;
 
         return (
-            <li key={arrayIndex}
+            <li
+                key={arrayIndex}
                 className={liClassName}
-                data-test={this.store.isVirtualStudy(study.studyId) ? 'VirtualStudySelect' : 'StudySelect'}>
+                data-test={
+                    this.store.isVirtualStudy(study.studyId)
+                        ? 'VirtualStudySelect'
+                        : 'StudySelect'
+                }
+            >
                 <Observer>
                     {() => {
                         const classes = classNames({
-                                                       [styles.StudyName]: true,
-                                                       'overlappingStudy': isOverlap,
-                                                       [styles.DeletedStudy]: this.store.isDeletedVirtualStudy(study.studyId)
-                                                   });
+                            [styles.StudyName]: true,
+                            overlappingStudy: isOverlap,
+                            [styles.DeletedStudy]: this.store.isDeletedVirtualStudy(
+                                study.studyId
+                            ),
+                        });
                         return (
                             <CancerTreeCheckbox view={this.view} node={study}>
-                            <span className={classes}>
-                                {study.name}
-                                {overlapWarning}
-                            </span>
+                                <span className={classes}>
+                                    {study.name}
+                                    {overlapWarning}
+                                </span>
                             </CancerTreeCheckbox>
                         );
                     }}
@@ -198,7 +239,9 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}> 
                     {() => {
                         return (
                             <div className={styles.StudyMeta}>
-                                {!this.store.isDeletedVirtualStudy(study.studyId) && this.renderSamples(study)}
+                                {!this.store.isDeletedVirtualStudy(
+                                    study.studyId
+                                ) && this.renderSamples(study)}
                                 {this.renderStudyLinks(study)}
                             </div>
                         );
@@ -222,8 +265,8 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}> 
     renderSamples = (study: CancerStudy) => {
         return (
             <span className={styles.StudySamples}>
-				{`${study.allSampleCount} samples`}
-			</span>
+                {`${study.allSampleCount} samples`}
+            </span>
         );
     };
 
@@ -234,42 +277,48 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}> 
                     mouseEnterDelay={0}
                     placement="top"
                     overlay={
-                        <div className={styles.tooltip}
-                        >Restore study</div>
+                        <div className={styles.tooltip}>Restore study</div>
                     }
                     children={
                         <button
                             className={`btn btn-default btn-xs`}
-                            onClick={() => this.store.restoreVirtualStudy(study.studyId)}
+                            onClick={() =>
+                                this.store.restoreVirtualStudy(study.studyId)
+                            }
                             style={{
                                 lineHeight: '80%',
                             }}
-                            data-test='virtualStudyRestore'>
+                            data-test="virtualStudyRestore"
+                        >
                             Restore
                         </button>
                     }
                 />
             );
         } else {
-            const links: { icon: string, onClick?: string | (() => void), tooltip?: string }[] = [
+            const links: {
+                icon: string;
+                onClick?: string | (() => void);
+                tooltip?: string;
+            }[] = [
                 {
                     icon: 'info-circle',
-                    tooltip: ''
-                }
+                    tooltip: '',
+                },
             ];
 
             if (this.store.isVirtualStudy(study.studyId)) {
                 links.push({
-                               icon: 'trash',
-                               tooltip: "Delete this virtual study.",
-                               onClick: () => this.store.deleteVirtualStudy(study.studyId),
-                           });
+                    icon: 'trash',
+                    tooltip: 'Delete this virtual study.',
+                    onClick: () => this.store.deleteVirtualStudy(study.studyId),
+                });
             } else {
                 links.push({
-                               icon: 'book',
-                               onClick: study.pmid && getPubMedUrl(study.pmid),
-                               tooltip: study.pmid && "PubMed",
-                           });
+                    icon: 'book',
+                    onClick: study.pmid && getPubMedUrl(study.pmid),
+                    tooltip: study.pmid && 'PubMed',
+                });
             }
 
             return (
@@ -280,34 +329,36 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}> 
                                 key={i}
                                 name={link.icon}
                                 className={classNames({
-                                                          [styles.icon]: true,
-                                                          [styles.iconWithTooltip]: !!link.tooltip,
-                                                          [styles.trashIcon]: (link.icon === "trash"),
-                                                          [styles.infoCircleIcon]: (link.icon === "info-circle")
-                                                      })}
+                                    [styles.icon]: true,
+                                    [styles.iconWithTooltip]: !!link.tooltip,
+                                    [styles.trashIcon]: link.icon === 'trash',
+                                    [styles.infoCircleIcon]:
+                                        link.icon === 'info-circle',
+                                })}
                             />
                         );
 
                         if (link.onClick) {
                             let anchorProps: any = {
-                                key: i
+                                key: i,
                             };
-                            if (typeof link.onClick === "string") {
+                            if (typeof link.onClick === 'string') {
                                 anchorProps.href = link.onClick;
-                                anchorProps.target = "_blank";
+                                anchorProps.target = '_blank';
                             } else {
                                 anchorProps.onClick = link.onClick;
                             }
-                            content = (
-                                <a {...anchorProps}>
-                                    {content}
-                                </a>
-                            );
+                            content = <a {...anchorProps}>{content}</a>;
                         }
 
                         if (link.tooltip) {
                             let overlay = (
-                                <div className={styles.tooltip} dangerouslySetInnerHTML={{__html: link.tooltip}}/>
+                                <div
+                                    className={styles.tooltip}
+                                    dangerouslySetInnerHTML={{
+                                        __html: link.tooltip,
+                                    }}
+                                />
                             );
                             content = (
                                 <DefaultTooltip
@@ -323,9 +374,18 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}> 
                             content = (
                                 <StudyTagsTooltip
                                     key={i}
-                                    studyDescription={this.store.isVirtualStudy(study.studyId) ? study.description.replace(/\r?\n/g, '<br />') : study.description}
+                                    studyDescription={
+                                        this.store.isVirtualStudy(study.studyId)
+                                            ? study.description.replace(
+                                                  /\r?\n/g,
+                                                  '<br />'
+                                              )
+                                            : study.description
+                                    }
                                     studyId={study.studyId}
-                                    isVirtualStudy={this.store.isVirtualStudy(study.studyId)}
+                                    isVirtualStudy={this.store.isVirtualStudy(
+                                        study.studyId
+                                    )}
                                     mouseEnterDelay={0}
                                     placement="top"
                                 >
@@ -341,14 +401,20 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}> 
                             mouseEnterDelay={0}
                             placement="top"
                             overlay={
-                                <div className={styles.tooltip}
-                                >View clinical and genomic data of this study</div>
+                                <div className={styles.tooltip}>
+                                    View clinical and genomic data of this study
+                                </div>
                             }
                         >
-							<span>
-								<StudyLink studyId={study.studyId}
-                                           className={classNames(styles.summaryIcon, 'ci ci-pie-chart')}/>
-							</span>
+                            <span>
+                                <StudyLink
+                                    studyId={study.studyId}
+                                    className={classNames(
+                                        styles.summaryIcon,
+                                        'ci ci-pie-chart'
+                                    )}
+                                />
+                            </span>
                         </DefaultTooltip>
                     )}
                 </span>
@@ -363,7 +429,10 @@ export interface ICancerTreeCheckboxProps {
 }
 
 @observer
-export class CancerTreeCheckbox extends QueryStoreComponent<ICancerTreeCheckboxProps, {}> {
+export class CancerTreeCheckbox extends QueryStoreComponent<
+    ICancerTreeCheckboxProps,
+    {}
+> {
     @computed.struct get checkboxProps() {
         return this.props.view.getCheckboxProps(this.props.node);
     }
@@ -373,7 +442,10 @@ export class CancerTreeCheckbox extends QueryStoreComponent<ICancerTreeCheckboxP
             <LabeledCheckbox
                 {...this.checkboxProps}
                 onChange={event => {
-                    this.props.view.onCheck(this.props.node, (event.target as HTMLInputElement).checked);
+                    this.props.view.onCheck(
+                        this.props.node,
+                        (event.target as HTMLInputElement).checked
+                    );
                 }}
             >
                 {this.props.children}

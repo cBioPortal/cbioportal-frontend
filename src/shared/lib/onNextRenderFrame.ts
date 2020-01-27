@@ -8,8 +8,8 @@
 // all of that is done. So you need to wait until the call stack is cleared (setTimeout 0) and painting is done
 // (requestAnimationFrame)
 
-export default function onNextRenderFrame(callback:(...args:any[])=>void) {
-    setTimeout(()=>{
+export default function onNextRenderFrame(callback: (...args: any[]) => void) {
+    setTimeout(() => {
         window.requestAnimationFrame(callback);
     }, 0);
 }

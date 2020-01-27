@@ -1,10 +1,10 @@
-import ComplexKeyMap, {ComplexKey} from "./ComplexKeyMap";
+import ComplexKeyMap, { ComplexKey } from './ComplexKeyMap';
 
 export default class ComplexKeyGroupsMap<V> {
-    private map:ComplexKeyMap<V[]> = new ComplexKeyMap<V[]>();
+    private map: ComplexKeyMap<V[]> = new ComplexKeyMap<V[]>();
 
-    public add(key:ComplexKey, value:V) {
-        let array:V[] = [];
+    public add(key: ComplexKey, value: V) {
+        let array: V[] = [];
         if (this.map.has(key)) {
             array = this.map.get(key)!;
         } else {
@@ -13,7 +13,7 @@ export default class ComplexKeyGroupsMap<V> {
         array.push(value);
     }
 
-    public get(key:ComplexKey) {
+    public get(key: ComplexKey) {
         return this.map.get(key);
     }
 

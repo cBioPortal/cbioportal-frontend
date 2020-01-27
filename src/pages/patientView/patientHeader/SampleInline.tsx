@@ -1,67 +1,69 @@
-import * as React from "react";
-import {If, Else, Then} from 'react-if';
-import {DefaultTooltip, placeArrowBottomLeft} from "cbioportal-frontend-commons";
-import { ClinicalDataBySampleId } from "shared/api/api-types-extended";
-import ClinicalInformationPatientTable from "../clinicalInformation/ClinicalInformationPatientTable";
+import * as React from 'react';
+import { If, Else, Then } from 'react-if';
+import {
+    DefaultTooltip,
+    placeArrowBottomLeft,
+} from 'cbioportal-frontend-commons';
+import { ClinicalDataBySampleId } from 'shared/api/api-types-extended';
+import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import './styles.scss';
 
 interface ISampleInlineProps {
     sample: ClinicalDataBySampleId;
     tooltipEnabled?: boolean;
     extraTooltipText?: string;
-    additionalContent?: JSX.Element|null;
-    hideClinicalTable?:boolean;
-    onSelectGenePanel?:(name:string)=>void;
-    disableTooltip?:boolean;
+    additionalContent?: JSX.Element | null;
+    hideClinicalTable?: boolean;
+    onSelectGenePanel?: (name: string) => void;
+    disableTooltip?: boolean;
 }
 
-export default class SampleInline extends React.Component<ISampleInlineProps, {}> {
+export default class SampleInline extends React.Component<
+    ISampleInlineProps,
+    {}
+> {
     public static defaultProps = {
         tooltipEnabled: true,
         hideClinicalInfoTable: false,
-        disableTooltip: false
+        disableTooltip: false,
     };
 
     public render() {
         return (
             <If condition={this.props.tooltipEnabled === true}>
-                <Then>
-                    {this.contentWithTooltip()}
-                </Then>
-                <Else>
-                    {this.mainContent()}
-                </Else>
+                <Then>{this.contentWithTooltip()}</Then>
+                <Else>{this.mainContent()}</Else>
             </If>
         );
     }
 
-    public tooltipContent()
-    {
-        const {sample, extraTooltipText} = this.props;
+    public tooltipContent() {
+        const { sample, extraTooltipText } = this.props;
 
         return (
-            <div style={{ maxHeight:400, maxWidth:600, overflow:'auto' }}>
+            <div style={{ maxHeight: 400, maxWidth: 600, overflow: 'auto' }}>
                 <h5 style={{ marginBottom: 1 }}>
-                    <span className='sample-inline-tooltip-children' >
+                    <span className="sample-inline-tooltip-children">
                         {this.props.children}
                     </span>
                     {sample.id}
                 </h5>
                 {extraTooltipText && <h5>{extraTooltipText}</h5>}
-                {!this.props.hideClinicalTable && <ClinicalInformationPatientTable
-                    showFilter={false}
-                    showCopyDownload={false}
-                    showTitleBar={false}
-                    data={sample.clinicalData}
-                    onSelectGenePanel={this.props.onSelectGenePanel}
-                />}
+                {!this.props.hideClinicalTable && (
+                    <ClinicalInformationPatientTable
+                        showFilter={false}
+                        showCopyDownload={false}
+                        showTitleBar={false}
+                        data={sample.clinicalData}
+                        onSelectGenePanel={this.props.onSelectGenePanel}
+                    />
+                )}
             </div>
         );
     }
 
-    public mainContent()
-    {
-        const {additionalContent} = this.props;
+    public mainContent() {
+        const { additionalContent } = this.props;
 
         let content = (
             <svg height="12" width="12">
@@ -81,11 +83,10 @@ export default class SampleInline extends React.Component<ISampleInlineProps, {}
         return content;
     }
 
-    public contentWithTooltip()
-    {
+    public contentWithTooltip() {
         return (
             <DefaultTooltip
-                placement='bottomLeft'
+                placement="bottomLeft"
                 trigger={['hover', 'focus']}
                 overlay={this.tooltipContent()}
                 arrowContent={<div className="rc-tooltip-arrow-inner" />}

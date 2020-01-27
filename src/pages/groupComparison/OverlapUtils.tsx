@@ -1,7 +1,7 @@
-import * as React from "react";
-import * as d3 from "d3";
-import _ from "lodash";
-import {SessionGroupData} from "../../shared/api/ComparisonGroupClient";
+import * as React from 'react';
+import * as d3 from 'd3';
+import _ from 'lodash';
+import { SessionGroupData } from '../../shared/api/ComparisonGroupClient';
 import {
     ComparisonGroup,
     convertPatientsStudiesAttrToSamples,
@@ -10,23 +10,23 @@ import {
     intersectPatients,
     intersectSamples,
     unionPatients,
-    unionSamples
-} from "./GroupComparisonUtils";
-import ComplexKeyGroupsMap from "../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap";
-import {Sample} from "../../shared/api/generated/CBioPortalAPI";
+    unionSamples,
+} from './GroupComparisonUtils';
+import ComplexKeyGroupsMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap';
+import { Sample } from '../../shared/api/generated/CBioPortalAPI';
 
-export function regionIsSelected<T extends string|number>(
-    regionComb:T[],
-    selectedRegions:T[][]
+export function regionIsSelected<T extends string | number>(
+    regionComb: T[],
+    selectedRegions: T[][]
 ) {
-    return selectedRegions.find(r=>_.isEqual(r, regionComb));
+    return selectedRegions.find(r => _.isEqual(r, regionComb));
 }
 
-export function toggleRegionSelected<T extends string|number>(
-    regionComb:T[],
-    selectedRegions:T[][]
+export function toggleRegionSelected<T extends string | number>(
+    regionComb: T[],
+    selectedRegions: T[][]
 ) {
-    const withoutComb = selectedRegions.filter(r=>!_.isEqual(r, regionComb));
+    const withoutComb = selectedRegions.filter(r => !_.isEqual(r, regionComb));
     if (withoutComb.length === selectedRegions.length) {
         // combination currently not selected, so add it
         return selectedRegions.concat([regionComb]);
@@ -36,11 +36,14 @@ export function toggleRegionSelected<T extends string|number>(
     }
 }
 
-export function getExcludedIndexes(combination:number[], numGroupsTotal:number) {
+export function getExcludedIndexes(
+    combination: number[],
+    numGroupsTotal: number
+) {
     // get all indexes not in the given combination
 
     const excl = [];
-    for (let i=0; i<numGroupsTotal; i++) {
+    for (let i = 0; i < numGroupsTotal; i++) {
         if (!combination.includes(i)) {
             excl.push(i);
         }
@@ -48,7 +51,9 @@ export function getExcludedIndexes(combination:number[], numGroupsTotal:number) 
     return excl;
 }
 
-export function renderGroupNameWithOrdinal(group:Pick<ComparisonGroup, "name"|"ordinal">) {
+export function renderGroupNameWithOrdinal(
+    group: Pick<ComparisonGroup, 'name' | 'ordinal'>
+) {
     return (
         <span>
             (<strong>{group.ordinal}</strong>)&nbsp;{group.name}
@@ -56,7 +61,10 @@ export function renderGroupNameWithOrdinal(group:Pick<ComparisonGroup, "name"|"o
     );
 }
 
-export function joinGroupNames(groups:Pick<ComparisonGroup, "name"|"ordinal">[], conj:string) {
+export function joinGroupNames(
+    groups: Pick<ComparisonGroup, 'name' | 'ordinal'>[],
+    conj: string
+) {
     const names = groups.map(renderGroupNameWithOrdinal);
     switch (names.length) {
         case 0:
@@ -64,14 +72,23 @@ export function joinGroupNames(groups:Pick<ComparisonGroup, "name"|"ordinal">[],
         case 1:
             return names[0];
         case 2:
-            return <span>{names[0]} {conj} {names[1]}</span>;
+            return (
+                <span>
+                    {names[0]} {conj} {names[1]}
+                </span>
+            );
         default:
-            const beforeConj = names.slice(0, names.length-1);
-            return <span>{beforeConj.map(name=>[name,", "])}{conj} {names[names.length-1]}</span>;
+            const beforeConj = names.slice(0, names.length - 1);
+            return (
+                <span>
+                    {beforeConj.map(name => [name, ', '])}
+                    {conj} {names[names.length - 1]}
+                </span>
+            );
     }
 }
 
-export function blendColors(colors:string[]) {
+export function blendColors(colors: string[]) {
     // helper function for venn diagram drawing. In order to highlight set complements,
     //  we draw things from the bottom up - the visual exclusion simulates the complement,
     //  even though we don't explicitly draw the set complements in SVG. In order to make
@@ -80,24 +97,28 @@ export function blendColors(colors:string[]) {
 
     // TL;DR: We use this function to blend colors between groups, for the intersection regions.
 
-    if(colors.length == 1){
-        return colors[0]; 
+    if (colors.length == 1) {
+        return colors[0];
     }
-    // blend between the first two, 
+    // blend between the first two,
     // then iteratively blend the next one with the previously blended color
-    return _.reduce(colors.slice(2), (blendedColor, nextColor) => {
-        return d3.interpolateLab(blendedColor, nextColor)(0.5);
-    }, d3.interpolateLab(colors[0], colors[1])(0.5));
+    return _.reduce(
+        colors.slice(2),
+        (blendedColor, nextColor) => {
+            return d3.interpolateLab(blendedColor, nextColor)(0.5);
+        },
+        d3.interpolateLab(colors[0], colors[1])(0.5)
+    );
 }
 
 export function getTextColor(
-    backgroundColor:string,
-    inverse:boolean=false
+    backgroundColor: string,
+    inverse: boolean = false
 ) {
-    const colors = ["black", "white"];
+    const colors = ['black', 'white'];
     let colorIndex = 1;
     const rgb = d3.rgb(backgroundColor);
-    const luminance = 0.299*rgb.r + 0.587*rgb.g + 0.114*rgb.b;
+    const luminance = 0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b;
     if (luminance > 186) {
         // if luminance is high, use black text
         // https://stackoverflow.com/questions/3942878/how-to-decide-font-color-in-white-or-black-depending-on-background-color
@@ -110,23 +131,31 @@ export function getTextColor(
 }
 
 export function getStudiesAttrForSampleOverlapGroup(
-    availableGroups:(Pick<ComparisonGroup, "uid">&Pick<SessionGroupData,"studies">)[],
-    includedRegions:string[][], // uid[][],
-    allGroupsInPlot:string[] // uid[]
+    availableGroups: (Pick<ComparisonGroup, 'uid'> &
+        Pick<SessionGroupData, 'studies'>)[],
+    includedRegions: string[][], // uid[][],
+    allGroupsInPlot: string[] // uid[]
 ) {
     // compute set operations to find contents
-    const groups = _.keyBy(availableGroups, g=>g.uid);
-    let studiesAttr:SessionGroupData["studies"] = [];
+    const groups = _.keyBy(availableGroups, g => g.uid);
+    let studiesAttr: SessionGroupData['studies'] = [];
     for (const region of includedRegions) {
-        let regionStudiesAttr:SessionGroupData["studies"] = groups[region[0]].studies;
+        let regionStudiesAttr: SessionGroupData['studies'] =
+            groups[region[0]].studies;
         // intersect
-        for (let i=1; i<region.length; i++) {
-            regionStudiesAttr = intersectSamples(regionStudiesAttr, groups[region[i]].studies);
+        for (let i = 1; i < region.length; i++) {
+            regionStudiesAttr = intersectSamples(
+                regionStudiesAttr,
+                groups[region[i]].studies
+            );
         }
         // exclude
         for (const uid of allGroupsInPlot) {
             if (!region.includes(uid)) {
-                regionStudiesAttr = excludeSamples(regionStudiesAttr, groups[uid].studies);
+                regionStudiesAttr = excludeSamples(
+                    regionStudiesAttr,
+                    groups[uid].studies
+                );
             }
         }
         studiesAttr = unionSamples(studiesAttr, regionStudiesAttr);
@@ -135,27 +164,39 @@ export function getStudiesAttrForSampleOverlapGroup(
 }
 
 export function getStudiesAttrForPatientOverlapGroup(
-    availableGroups:(Pick<ComparisonGroup, "uid">&{ studies: {id:string, patients:string[]}[]})[],
-    includedRegions:string[][], // uid[][]
-    allGroupsInVenn:string[], // uid[]
-    patientToSamplesSet:ComplexKeyGroupsMap<Pick<Sample, "sampleId">>
+    availableGroups: (Pick<ComparisonGroup, 'uid'> & {
+        studies: { id: string; patients: string[] }[];
+    })[],
+    includedRegions: string[][], // uid[][]
+    allGroupsInVenn: string[], // uid[]
+    patientToSamplesSet: ComplexKeyGroupsMap<Pick<Sample, 'sampleId'>>
 ) {
     // compute set operations to find contents
-    const groups = _.keyBy(availableGroups, g=>g.uid);
-    let studiesAttr:{ id:string, patients:string[]}[] = [];
+    const groups = _.keyBy(availableGroups, g => g.uid);
+    let studiesAttr: { id: string; patients: string[] }[] = [];
     for (const region of includedRegions) {
-        let regionStudiesAttr:{ id:string, patients:string[]}[] = groups[region[0]].studies;
+        let regionStudiesAttr: { id: string; patients: string[] }[] =
+            groups[region[0]].studies;
         // intersect
-        for (let i=1; i<region.length; i++) {
-            regionStudiesAttr = intersectPatients(regionStudiesAttr, groups[region[i]].studies);
+        for (let i = 1; i < region.length; i++) {
+            regionStudiesAttr = intersectPatients(
+                regionStudiesAttr,
+                groups[region[i]].studies
+            );
         }
         // exclude
         for (const uid of allGroupsInVenn) {
             if (!region.includes(uid)) {
-                regionStudiesAttr = excludePatients(regionStudiesAttr, groups[uid].studies);
+                regionStudiesAttr = excludePatients(
+                    regionStudiesAttr,
+                    groups[uid].studies
+                );
             }
         }
         studiesAttr = unionPatients(studiesAttr, regionStudiesAttr);
     }
-    return convertPatientsStudiesAttrToSamples(studiesAttr, patientToSamplesSet);
+    return convertPatientsStudiesAttrToSamples(
+        studiesAttr,
+        patientToSamplesSet
+    );
 }
