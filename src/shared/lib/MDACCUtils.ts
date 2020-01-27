@@ -23,7 +23,7 @@ export async function getHeatmapMeta(url: string): Promise<string[]> {
         return [];
     }
     if (result === undefined) {
-        return []
+        return [];
     } else {
         return result;
     }

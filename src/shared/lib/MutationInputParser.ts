@@ -1,59 +1,63 @@
-import * as _ from "lodash";
-import {ClinicalData, Gene, Mutation} from "shared/api/generated/CBioPortalAPI";
+import * as _ from 'lodash';
+import {
+    ClinicalData,
+    Gene,
+    Mutation,
+} from 'shared/api/generated/CBioPortalAPI';
 
-const LITERAL_TO_HEADER: {[attrName: string]: string} = {
-    aminoAcidChange: "amino_acid_change",
-    center: "center",
-    driverFilter: "driver_filter",
-    driverFilterAnnotation: "driver_filter_annotation",
-    driverTiersFilter: "driver_tiers_filter",
-    driverTiersFilterAnnotation: "driver_tiers_filter_annotation",
-    entrezGeneId: "entrez_gene_id",
-    chr: "chromosome",
-    hugoGeneSymbol: "hugo_symbol",
-    molecularProfileId: "molecular_profile_id",
-    mutationStatus: "mutation_status",
-    mutationType: "mutation_type",
-    ncbiBuild: "ncbi_build",
-    patientId: "patient_id",
-    proteinChange: "protein_change",
-    referenceAllele: "reference_allele",
-    refseqMrnaId: "refseq_mrna_id",
-    sampleId: "sample_id",
-    studyId: "study_id",
-    uniquePatientKey: "unique_patient_key",
-    uniqueSampleKey: "unique_sample_key",
-    validationStatus: "validation_status",
-    variantAllele: "variant_allele",
-    variantType: "variant_type",
-    cancerType: "cancer_type"
+const LITERAL_TO_HEADER: { [attrName: string]: string } = {
+    aminoAcidChange: 'amino_acid_change',
+    center: 'center',
+    driverFilter: 'driver_filter',
+    driverFilterAnnotation: 'driver_filter_annotation',
+    driverTiersFilter: 'driver_tiers_filter',
+    driverTiersFilterAnnotation: 'driver_tiers_filter_annotation',
+    entrezGeneId: 'entrez_gene_id',
+    chr: 'chromosome',
+    hugoGeneSymbol: 'hugo_symbol',
+    molecularProfileId: 'molecular_profile_id',
+    mutationStatus: 'mutation_status',
+    mutationType: 'mutation_type',
+    ncbiBuild: 'ncbi_build',
+    patientId: 'patient_id',
+    proteinChange: 'protein_change',
+    referenceAllele: 'reference_allele',
+    refseqMrnaId: 'refseq_mrna_id',
+    sampleId: 'sample_id',
+    studyId: 'study_id',
+    uniquePatientKey: 'unique_patient_key',
+    uniqueSampleKey: 'unique_sample_key',
+    validationStatus: 'validation_status',
+    variantAllele: 'variant_allele',
+    variantType: 'variant_type',
+    cancerType: 'cancer_type',
 };
 
-const NUMERICAL_TO_HEADER: {[attrName: string]: string} = {
-    startPosition: "start_position",
-    endPosition: "end_position",
-    proteinPosEnd: "protein_position_end",
-    proteinPosStart: "protein_position_start",
-    tumorAltCount: "tumor_alt_count",
-    tumorRefCount: "tumor_ref_count",
-    normalAltCount: "normal_alt_count",
-    normalRefCount: "normal_ref_count",
+const NUMERICAL_TO_HEADER: { [attrName: string]: string } = {
+    startPosition: 'start_position',
+    endPosition: 'end_position',
+    proteinPosEnd: 'protein_position_end',
+    proteinPosStart: 'protein_position_start',
+    tumorAltCount: 'tumor_alt_count',
+    tumorRefCount: 'tumor_ref_count',
+    normalAltCount: 'normal_alt_count',
+    normalRefCount: 'normal_ref_count',
 };
 
 // TODO add column name aliases?
 // map of <mutation input model field name, input header name> pairs
-export const MODEL_TO_HEADER: {[attrName: string]: string} = {
-    ...LITERAL_TO_HEADER, ...NUMERICAL_TO_HEADER
+export const MODEL_TO_HEADER: { [attrName: string]: string } = {
+    ...LITERAL_TO_HEADER,
+    ...NUMERICAL_TO_HEADER,
 };
 
 // map of <mutation input model field name, clinical attr id> pairs
-export const CLINICAL_ATTR_ID_MAP: {[attrName: string]: string} = {
-    cancerType: "CANCER_TYPE"
+export const CLINICAL_ATTR_ID_MAP: { [attrName: string]: string } = {
+    cancerType: 'CANCER_TYPE',
 };
 
-type ClinicalInput =
-{
-    cancerType: string
+type ClinicalInput = {
+    cancerType: string;
 };
 
 export type MutationInput = Mutation & ClinicalInput;
@@ -65,10 +69,12 @@ export type MutationInput = Mutation & ClinicalInput;
  * @param header    header line (first line) of the input
  * @returns {object} map of <header name, index> pairs
  */
-export function buildIndexMap(header: string, separator: string): {[columnName:string]: number}
-{
+export function buildIndexMap(
+    header: string,
+    separator: string
+): { [columnName: string]: number } {
     const columns = header.split(separator);
-    const map:{[columnName:string]: number}  = {};
+    const map: { [columnName: string]: number } = {};
 
     columns.forEach((columnName: string, index: number) => {
         map[columnName.trim().toLowerCase()] = index;
@@ -86,11 +92,12 @@ export function buildIndexMap(header: string, separator: string): {[columnName:s
  *
  * @returns             a partial Mutation instance
  */
-export function parseLine(line: string,
-                          indexMap: {[columnName:string]: number},
-                          separator: string,
-                          headerMap: {[attrName:string]: string} = MODEL_TO_HEADER): Partial<MutationInput>
-{
+export function parseLine(
+    line: string,
+    indexMap: { [columnName: string]: number },
+    separator: string,
+    headerMap: { [attrName: string]: string } = MODEL_TO_HEADER
+): Partial<MutationInput> {
     const mutation: Partial<MutationInput> = {};
 
     const values = line.split(separator);
@@ -100,11 +107,10 @@ export function parseLine(line: string,
         const value = parseValue(key, values, indexMap);
 
         if (value) {
-            if (key === "hugoGeneSymbol") {
+            if (key === 'hugoGeneSymbol') {
                 mutation.gene = (mutation.gene || {}) as Gene;
                 mutation.gene[key] = value;
-            }
-            else {
+            } else {
                 mutation[key as keyof MutationInput] = value;
             }
         }
@@ -123,15 +129,16 @@ export function parseLine(line: string,
  *
  * @returns         data value for the given field name.
  */
-export function parseValue(field: string,
-                           values: string[],
-                           indexMap: {[columnName:string]: number},
-                           headerMap: {[attrName:string]: string} = MODEL_TO_HEADER): string|undefined
-{
+export function parseValue(
+    field: string,
+    values: string[],
+    indexMap: { [columnName: string]: number },
+    headerMap: { [attrName: string]: string } = MODEL_TO_HEADER
+): string | undefined {
     // get the column name for the given field name
     const column = headerMap[field];
     const index = indexMap[column];
-    let value: string|undefined;
+    let value: string | undefined;
 
     if (index >= 0 && values[index]) {
         value = values[index].trim();
@@ -146,17 +153,15 @@ export function parseValue(field: string,
  * @param input     tab delimited input string with a header line.
  * @returns         an array of partial Mutation instances.
  */
-export function parseInput(input: string): Partial<MutationInput>[]
-{
+export function parseInput(input: string): Partial<MutationInput>[] {
     const mutationData: Partial<MutationInput>[] = [];
 
     // use tab as column separator unless there are no tabs, then use space
-    const separator = (input.indexOf("\t") > 0)? "\t" : " ";
+    const separator = input.indexOf('\t') > 0 ? '\t' : ' ';
 
-    const lines = input.split("\n");
+    const lines = input.split('\n');
 
-    if (lines.length > 0)
-    {
+    if (lines.length > 0) {
         // assuming first line is a header
         // TODO allow comments?
         const indexMap = buildIndexMap(lines[0], separator);
@@ -173,8 +178,7 @@ export function parseInput(input: string): Partial<MutationInput>[]
     return generateMissingIds(mutationData);
 }
 
-export function generateMissingIds(mutations: Partial<MutationInput>[])
-{
+export function generateMissingIds(mutations: Partial<MutationInput>[]) {
     // generate unique sample keys
     // this is needed to construct tumor type map (which is used by OncoKB)
     generateUniqueSampleKeys(mutations);
@@ -186,28 +190,27 @@ export function generateMissingIds(mutations: Partial<MutationInput>[])
     return mutations;
 }
 
-export function generatePatientIds(mutations: Partial<Mutation>[])
-{
+export function generatePatientIds(mutations: Partial<Mutation>[]) {
     let idCounter = 0;
 
     mutations.forEach(mutation => {
         // if provided use patient id, else auto-generate
-        mutation.patientId = mutation.patientId || mutation.sampleId || `patient_${idCounter++}`;
+        mutation.patientId =
+            mutation.patientId || mutation.sampleId || `patient_${idCounter++}`;
     });
 }
 
-export function generateUniqueSampleKeys(mutations: Partial<Mutation>[])
-{
+export function generateUniqueSampleKeys(mutations: Partial<Mutation>[]) {
     let idCounter = 0;
 
     mutations.forEach(mutation => {
         // if provided use unique sample key, else auto-generate
-        mutation.uniqueSampleKey = mutation.uniqueSampleKey || `uniqueSampleKey_${idCounter++}`;
+        mutation.uniqueSampleKey =
+            mutation.uniqueSampleKey || `uniqueSampleKey_${idCounter++}`;
     });
 }
 
-export function getGeneList(data?: Partial<Mutation>[]): string[]
-{
+export function getGeneList(data?: Partial<Mutation>[]): string[] {
     if (data === undefined) {
         return [];
     }
@@ -215,8 +218,7 @@ export function getGeneList(data?: Partial<Mutation>[]): string[]
     const geneList = data.map(mutation => {
         if (mutation.gene && mutation.gene.hugoGeneSymbol) {
             return mutation.gene.hugoGeneSymbol;
-        }
-        else {
+        } else {
             return undefined;
         }
     });
@@ -225,37 +227,40 @@ export function getGeneList(data?: Partial<Mutation>[]): string[]
     return _.uniq(_.compact(geneList));
 }
 
-
-export function getClinicalData(mutationInputData?: Partial<MutationInput>[],
-                                clinicalAttrIdMap: {[attrName: string]: string} = CLINICAL_ATTR_ID_MAP): ClinicalData[]
-{
+export function getClinicalData(
+    mutationInputData?: Partial<MutationInput>[],
+    clinicalAttrIdMap: { [attrName: string]: string } = CLINICAL_ATTR_ID_MAP
+): ClinicalData[] {
     const clinicalData: Partial<ClinicalData>[] = [];
 
     if (mutationInputData) {
         mutationInputData.forEach(mutationInput => {
-            Object.keys(clinicalAttrIdMap).forEach((key: keyof ClinicalInput) => {
-                const value = mutationInput[key];
+            Object.keys(clinicalAttrIdMap).forEach(
+                (key: keyof ClinicalInput) => {
+                    const value = mutationInput[key];
 
-                if (value) {
-                    clinicalData.push({
-                        uniqueSampleKey: mutationInput.uniqueSampleKey,
-                        uniquePatientKey: mutationInput.uniquePatientKey,
-                        sampleId: mutationInput.sampleId,
-                        patientId: mutationInput.patientId,
-                        clinicalAttributeId: clinicalAttrIdMap[key],
-                        value
-                    });
+                    if (value) {
+                        clinicalData.push({
+                            uniqueSampleKey: mutationInput.uniqueSampleKey,
+                            uniquePatientKey: mutationInput.uniquePatientKey,
+                            sampleId: mutationInput.sampleId,
+                            patientId: mutationInput.patientId,
+                            clinicalAttributeId: clinicalAttrIdMap[key],
+                            value,
+                        });
+                    }
                 }
-            });
+            );
         });
     }
 
     return clinicalData as ClinicalData[];
 }
 
-export function mutationInputToMutation(mutationInputData?: Partial<MutationInput>[],
-                                        clinicalAttrIdMap: {[attrName: string]: string} = CLINICAL_ATTR_ID_MAP): Partial<Mutation>[]|undefined
-{
+export function mutationInputToMutation(
+    mutationInputData?: Partial<MutationInput>[],
+    clinicalAttrIdMap: { [attrName: string]: string } = CLINICAL_ATTR_ID_MAP
+): Partial<Mutation>[] | undefined {
     if (!mutationInputData) {
         return undefined;
     }
@@ -270,7 +275,10 @@ export function mutationInputToMutation(mutationInputData?: Partial<MutationInpu
         Object.keys(mutationInput).forEach((key: keyof MutationInput) => {
             // do NOT include ClinicalInput fields
             if (!clinicalAttrIdMap[key]) {
-                mutation[key as keyof Mutation] = parseField(mutationInput, key);
+                mutation[key as keyof Mutation] = parseField(
+                    mutationInput,
+                    key
+                );
             }
         });
 
@@ -280,8 +288,10 @@ export function mutationInputToMutation(mutationInputData?: Partial<MutationInpu
     return mutations;
 }
 
-function parseField(mutationInput: Partial<MutationInput>, key: keyof MutationInput)
-{
+function parseField(
+    mutationInput: Partial<MutationInput>,
+    key: keyof MutationInput
+) {
     let value = mutationInput[key];
 
     if (value && NUMERICAL_TO_HEADER[key]) {

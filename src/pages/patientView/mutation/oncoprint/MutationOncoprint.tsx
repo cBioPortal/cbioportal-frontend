@@ -1,73 +1,87 @@
-import * as React from "react";
-import {observer} from "mobx-react";
-import Oncoprint, {IOncoprintProps} from "../../../../shared/components/oncoprint/Oncoprint";
-import {MakeMobxView} from "../../../../shared/components/MobxView";
-import {PatientViewPageStore} from "../../clinicalInformation/PatientViewPageStore";
-import $ from "jquery";
+import * as React from 'react';
+import { observer } from 'mobx-react';
+import Oncoprint, {
+    IOncoprintProps,
+} from '../../../../shared/components/oncoprint/Oncoprint';
+import { MakeMobxView } from '../../../../shared/components/MobxView';
+import { PatientViewPageStore } from '../../clinicalInformation/PatientViewPageStore';
+import $ from 'jquery';
 import {
     getDownloadData,
     getMutationLabel,
     IMutationOncoprintTrackDatum,
     IMutationOncoprintTrackSpec,
     makeMutationHeatmapData,
-    MUTATION_ONCOPRINT_NA_SHAPES
-} from "./MutationOncoprintUtils";
-import LoadingIndicator from "../../../../shared/components/loadingIndicator/LoadingIndicator";
-import ErrorMessage from "../../../../shared/components/ErrorMessage";
-import {computed, IReactionDisposer, observable, reaction} from "mobx";
-import OncoprintJS, {ColumnId, ColumnLabel, InitParams, TrackId} from "oncoprintjs";
-import autobind from "autobind-decorator";
-import {DefaultTooltip, DownloadControls, remoteData} from "cbioportal-frontend-commons";
-import _ from "lodash";
-import SampleManager from "../../SampleManager";
-import WindowStore from "../../../../shared/components/window/WindowStore";
-import {generateMutationIdByGeneAndProteinChangeAndEvent} from "../../../../shared/lib/StoreUtils";
-import LabeledCheckbox from "../../../../shared/components/labeledCheckbox/LabeledCheckbox";
-import {mutationTooltip} from "../PatientViewMutationsTabUtils";
-import Slider from "react-rangeslider";
-import "react-rangeslider/lib/index.css";
-import styles from "./styles.module.scss";
-import PatientViewMutationsDataStore from "../PatientViewMutationsDataStore";
-import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
-import ReactDOM from "react-dom";
+    MUTATION_ONCOPRINT_NA_SHAPES,
+} from './MutationOncoprintUtils';
+import LoadingIndicator from '../../../../shared/components/loadingIndicator/LoadingIndicator';
+import ErrorMessage from '../../../../shared/components/ErrorMessage';
+import { computed, IReactionDisposer, observable, reaction } from 'mobx';
+import OncoprintJS, {
+    ColumnId,
+    ColumnLabel,
+    InitParams,
+    TrackId,
+} from 'oncoprintjs';
+import autobind from 'autobind-decorator';
+import {
+    DefaultTooltip,
+    DownloadControls,
+    remoteData,
+} from 'cbioportal-frontend-commons';
+import _ from 'lodash';
+import SampleManager from '../../SampleManager';
+import WindowStore from '../../../../shared/components/window/WindowStore';
+import { generateMutationIdByGeneAndProteinChangeAndEvent } from '../../../../shared/lib/StoreUtils';
+import LabeledCheckbox from '../../../../shared/components/labeledCheckbox/LabeledCheckbox';
+import { mutationTooltip } from '../PatientViewMutationsTabUtils';
+import Slider from 'react-rangeslider';
+import 'react-rangeslider/lib/index.css';
+import styles from './styles.module.scss';
+import PatientViewMutationsDataStore from '../PatientViewMutationsDataStore';
+import { Mutation } from '../../../../shared/api/generated/CBioPortalAPI';
+import ReactDOM from 'react-dom';
 import Timeout = NodeJS.Timeout;
 
 export interface IMutationOncoprintProps {
-    store:PatientViewPageStore;
-    dataStore:PatientViewMutationsDataStore;
-    sampleManager:SampleManager|null;
+    store: PatientViewPageStore;
+    dataStore: PatientViewMutationsDataStore;
+    sampleManager: SampleManager | null;
 }
 
 export enum MutationOncoprintMode {
     MUTATION_TRACKS,
-    SAMPLE_TRACKS
+    SAMPLE_TRACKS,
 }
 
 const TRACK_GROUP_INDEX = 2;
-const INIT_PARAMS:InitParams = {
-    init_cell_width:20,
-    init_cell_padding:1,
-    cell_padding_off_cell_width_threshold:10
+const INIT_PARAMS: InitParams = {
+    init_cell_width: 20,
+    init_cell_padding: 1,
+    cell_padding_off_cell_width_threshold: 10,
 };
 
 @observer
-export default class MutationOncoprint extends React.Component<IMutationOncoprintProps, {}> {
-
-    private oncoprint:OncoprintJS|null = null;
-    private oncoprintComponent:Oncoprint|null = null;
+export default class MutationOncoprint extends React.Component<
+    IMutationOncoprintProps,
+    {}
+> {
+    private oncoprint: OncoprintJS | null = null;
+    private oncoprintComponent: Oncoprint | null = null;
     @observable private showMutationLabels = true;
     @observable private horzZoomSliderState = 100;
     @observable clustered = true;
-    @observable private mode:MutationOncoprintMode = MutationOncoprintMode.SAMPLE_TRACKS;
+    @observable private mode: MutationOncoprintMode =
+        MutationOncoprintMode.SAMPLE_TRACKS;
     @observable minZoom = 0;
 
-    private minZoomUpdater:Timeout;
+    private minZoomUpdater: Timeout;
 
-    constructor(props:IMutationOncoprintProps) {
+    constructor(props: IMutationOncoprintProps) {
         super(props);
 
         (window as any).mutationOncoprint = this;
-        this.minZoomUpdater = setInterval(()=>{
+        this.minZoomUpdater = setInterval(() => {
             if (this.oncoprint) {
                 this.minZoom = this.oncoprint.model.getMinHorzZoom();
             }
@@ -79,74 +93,96 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
     }
 
     @autobind
-    private oncoprintComponentRef(oncoprint:Oncoprint|null) {
+    private oncoprintComponentRef(oncoprint: Oncoprint | null) {
         this.oncoprintComponent = oncoprint;
     }
 
     @autobind
-    private oncoprintRef(oncoprint:OncoprintJS) {
+    private oncoprintRef(oncoprint: OncoprintJS) {
         this.oncoprint = oncoprint;
-        this.oncoprint.onHorzZoom(z=>(this.horzZoomSliderState = z));
+        this.oncoprint.onHorzZoom(z => (this.horzZoomSliderState = z));
         this.horzZoomSliderState = this.oncoprint.getHorzZoom();
-        this.oncoprint.onCellMouseOver((uid:string|null, track_id?:TrackId)=>{
-            if (this.mode === MutationOncoprintMode.SAMPLE_TRACKS && uid !== null) {
-                const mutation = this.mutationKeyToMutation[uid];
-                if (mutation) {
-                    this.props.dataStore.setMouseOverMutation(mutation);
-                }
-            } else if (this.mode === MutationOncoprintMode.MUTATION_TRACKS && track_id !== undefined) {
-                // set mouseover mutation based on track
-                if (this.oncoprintComponent) {
-                    const key = this.oncoprintComponent.getTrackSpecKey(track_id);
-                    const mutation = key && this.mutationKeyToMutation[key];
+        this.oncoprint.onCellMouseOver(
+            (uid: string | null, track_id?: TrackId) => {
+                if (
+                    this.mode === MutationOncoprintMode.SAMPLE_TRACKS &&
+                    uid !== null
+                ) {
+                    const mutation = this.mutationKeyToMutation[uid];
                     if (mutation) {
                         this.props.dataStore.setMouseOverMutation(mutation);
                     }
+                } else if (
+                    this.mode === MutationOncoprintMode.MUTATION_TRACKS &&
+                    track_id !== undefined
+                ) {
+                    // set mouseover mutation based on track
+                    if (this.oncoprintComponent) {
+                        const key = this.oncoprintComponent.getTrackSpecKey(
+                            track_id
+                        );
+                        const mutation = key && this.mutationKeyToMutation[key];
+                        if (mutation) {
+                            this.props.dataStore.setMouseOverMutation(mutation);
+                        }
+                    }
+                } else {
+                    this.props.dataStore.setMouseOverMutation(null);
                 }
-            } else {
-                this.props.dataStore.setMouseOverMutation(null);
             }
-        });
-        this.oncoprint.onCellClick((uid:ColumnId|null, track_id?:TrackId)=>{
-            if (this.mode === MutationOncoprintMode.SAMPLE_TRACKS && uid!== null) {
-                const mutation = this.mutationKeyToMutation[uid];
-                if (mutation) {
-                    this.props.dataStore.toggleSelectedMutation(mutation);
-                }
-            } else if (this.mode === MutationOncoprintMode.MUTATION_TRACKS && track_id !== undefined) {
-                if (this.oncoprintComponent) {
-                    // toggle highlighted mutation based on track
-                    const key = this.oncoprintComponent.getTrackSpecKey(track_id);
-                    const mutation = key && this.mutationKeyToMutation[key];
+        );
+        this.oncoprint.onCellClick(
+            (uid: ColumnId | null, track_id?: TrackId) => {
+                if (
+                    this.mode === MutationOncoprintMode.SAMPLE_TRACKS &&
+                    uid !== null
+                ) {
+                    const mutation = this.mutationKeyToMutation[uid];
                     if (mutation) {
                         this.props.dataStore.toggleSelectedMutation(mutation);
                     }
+                } else if (
+                    this.mode === MutationOncoprintMode.MUTATION_TRACKS &&
+                    track_id !== undefined
+                ) {
+                    if (this.oncoprintComponent) {
+                        // toggle highlighted mutation based on track
+                        const key = this.oncoprintComponent.getTrackSpecKey(
+                            track_id
+                        );
+                        const mutation = key && this.mutationKeyToMutation[key];
+                        if (mutation) {
+                            this.props.dataStore.toggleSelectedMutation(
+                                mutation
+                            );
+                        }
+                    }
+                } else {
+                    this.props.dataStore.setSelectedMutations([]);
                 }
-            } else {
-                this.props.dataStore.setSelectedMutations([]);
             }
-        });
+        );
     }
 
     @computed get mutations() {
         return _.flatten(this.props.dataStore.allData);
     }
 
-    readonly sortConfig = remoteData<IOncoprintProps["sortConfig"]>({
-        await:()=>[this.sampleIdOrder],
-        invoke:()=>{
+    readonly sortConfig = remoteData<IOncoprintProps['sortConfig']>({
+        await: () => [this.sampleIdOrder],
+        invoke: () => {
             if (this.clustered) {
                 return Promise.resolve({
-                    clusterHeatmapTrackGroupIndex: TRACK_GROUP_INDEX
+                    clusterHeatmapTrackGroupIndex: TRACK_GROUP_INDEX,
                 });
             } else if (this.mode === MutationOncoprintMode.MUTATION_TRACKS) {
                 return Promise.resolve({
-                    order: this.sampleIdOrder.result!
+                    order: this.sampleIdOrder.result!,
                 });
             } else {
                 return Promise.resolve({});
             }
-        }
+        },
     });
 
     // TODO: be able to highlight a track in mutation track mode
@@ -156,7 +192,9 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
         if (mutation) {
             highlighted.push(mutation);
         }
-        return highlighted.map(generateMutationIdByGeneAndProteinChangeAndEvent);
+        return highlighted.map(
+            generateMutationIdByGeneAndProteinChangeAndEvent
+        );
     }
 
     @computed get highlightedIds() {
@@ -176,32 +214,37 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
     }
 
     readonly sampleIdOrder = remoteData({
-        await:()=>[this.props.store.samples],
-        invoke:()=>{
+        await: () => [this.props.store.samples],
+        invoke: () => {
             if (this.props.sampleManager) {
-                return Promise.resolve(this.props.sampleManager.getSampleIdsInOrder());
+                return Promise.resolve(
+                    this.props.sampleManager.getSampleIdsInOrder()
+                );
             } else {
-                return Promise.resolve(this.props.store.samples.result!.map(s=>s.sampleId));
+                return Promise.resolve(
+                    this.props.store.samples.result!.map(s => s.sampleId)
+                );
             }
-        }
+        },
     });
 
     readonly mutationWithIdOrder = remoteData({
-        invoke:()=>{
+        invoke: () => {
             // TODO: any specific order?
-            const mutations:{mutation:Mutation, id:string}[] = [];
+            const mutations: { mutation: Mutation; id: string }[] = [];
             for (const d of this.mutations) {
                 mutations.push({
                     mutation: d,
-                    id: generateMutationIdByGeneAndProteinChangeAndEvent(d)
+                    id: generateMutationIdByGeneAndProteinChangeAndEvent(d),
                 });
             }
             return Promise.resolve(
                 _.chain(mutations)
-                    .uniqBy(m=>m.id)
-                    .sortBy(m=>getMutationLabel(m.mutation)).value()
+                    .uniqBy(m => m.id)
+                    .sortBy(m => getMutationLabel(m.mutation))
+                    .value()
             );
-        }
+        },
     });
 
     @autobind
@@ -211,12 +254,14 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
 
     @autobind
     private onClickZoomIn() {
-        this.oncoprint && this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom()/0.7);
+        this.oncoprint &&
+            this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom() / 0.7);
     }
 
     @autobind
     private onClickZoomOut() {
-        this.oncoprint && this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom()*0.7);
+        this.oncoprint &&
+            this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom() * 0.7);
     }
 
     @computed get mutationKeyToMutation() {
@@ -230,34 +275,45 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
 
     //      Column labels
     private readonly mutationModeColumnLabels = remoteData({
-        await:()=>[this.sampleIdOrder],
-        invoke:()=>{
-            return Promise.resolve(this.sampleIdOrder.result!.reduce((labels, sampleId, index)=>{
-                const labelNumber = index+1;
-                labels[sampleId] = {
-                    text: labelNumber.toString(),
-                    angle_in_degrees: 0,
-                    text_color: "#ffffff",
-                    circle_color: this.props.sampleManager!.getColorForSample(sampleId),
-                    left_padding_percent: (labelNumber < 10 ? -15 : -34), // label padding depending on how many digits in number
-                };
-                return labels;
-            }, {} as {[sampleId:string]:ColumnLabel}));
-        }
+        await: () => [this.sampleIdOrder],
+        invoke: () => {
+            return Promise.resolve(
+                this.sampleIdOrder.result!.reduce(
+                    (labels, sampleId, index) => {
+                        const labelNumber = index + 1;
+                        labels[sampleId] = {
+                            text: labelNumber.toString(),
+                            angle_in_degrees: 0,
+                            text_color: '#ffffff',
+                            circle_color: this.props.sampleManager!.getColorForSample(
+                                sampleId
+                            ),
+                            left_padding_percent: labelNumber < 10 ? -15 : -34, // label padding depending on how many digits in number
+                        };
+                        return labels;
+                    },
+                    {} as { [sampleId: string]: ColumnLabel }
+                )
+            );
+        },
     });
 
     private readonly sampleModeColumnLabels = remoteData({
-        invoke:()=>{
-            const ret:{[uid:string]:ColumnLabel} = {};
+        invoke: () => {
+            const ret: { [uid: string]: ColumnLabel } = {};
             if (this.showMutationLabels) {
                 for (const mutation of this.mutations) {
-                    ret[generateMutationIdByGeneAndProteinChangeAndEvent(mutation)] = {
-                        text: getMutationLabel(mutation)
+                    ret[
+                        generateMutationIdByGeneAndProteinChangeAndEvent(
+                            mutation
+                        )
+                    ] = {
+                        text: getMutationLabel(mutation),
                     };
                 }
             }
             return Promise.resolve(ret);
-        }
+        },
     });
 
     @computed get columnLabels() {
@@ -272,25 +328,31 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
 
     //      Heatmap tracks order
     readonly sampleModeHeatmapTracksOrder = remoteData({
-        await:()=>[this.sampleIdOrder],
-        invoke:()=>{
+        await: () => [this.sampleIdOrder],
+        invoke: () => {
             if (this.clustered) {
                 return Promise.resolve(undefined);
             } else {
-                return Promise.resolve({[TRACK_GROUP_INDEX]:this.sampleIdOrder.result!});
+                return Promise.resolve({
+                    [TRACK_GROUP_INDEX]: this.sampleIdOrder.result!,
+                });
             }
-        }
+        },
     });
 
     readonly mutationModeHeatmapTracksOrder = remoteData({
-        await:()=>[this.mutationWithIdOrder],
-        invoke:()=>{
+        await: () => [this.mutationWithIdOrder],
+        invoke: () => {
             if (this.clustered) {
                 return Promise.resolve(undefined);
             } else {
-                return Promise.resolve({[TRACK_GROUP_INDEX]:this.mutationWithIdOrder.result!.map(m=>m.id)});
+                return Promise.resolve({
+                    [TRACK_GROUP_INDEX]: this.mutationWithIdOrder.result!.map(
+                        m => m.id
+                    ),
+                });
             }
-        }
+        },
     });
 
     @computed get heatmapTracksOrder() {
@@ -304,14 +366,16 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
     }
 
     //      Heatmap tracks
-    private readonly sampleModeHeatmapTracks = remoteData<IMutationOncoprintTrackSpec[]>({
-        await:()=>[
+    private readonly sampleModeHeatmapTracks = remoteData<
+        IMutationOncoprintTrackSpec[]
+    >({
+        await: () => [
             this.props.store.samples,
             this.sampleIdOrder,
             this.props.store.mutationMolecularProfile,
             this.props.store.coverageInformation,
         ],
-        invoke:()=>{
+        invoke: () => {
             if (this.mutations.length === 0) {
                 return Promise.resolve([]);
             }
@@ -322,13 +386,15 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                 this.props.store.coverageInformation.result!,
                 MutationOncoprintMode.SAMPLE_TRACKS
             );
-            const tracks:IMutationOncoprintTrackSpec[] = [];
-            this.sampleIdOrder.result!.forEach((sampleId, index)=>{
+            const tracks: IMutationOncoprintTrackSpec[] = [];
+            this.sampleIdOrder.result!.forEach((sampleId, index) => {
                 const data = trackData[sampleId];
                 if (!data || !data.length) {
                     return;
                 }
-                const circleColor = this.props.sampleManager ? this.props.sampleManager.getColorForSample(sampleId) : undefined;
+                const circleColor = this.props.sampleManager
+                    ? this.props.sampleManager.getColorForSample(sampleId)
+                    : undefined;
                 const labelNumber = index + 1;
                 tracks.push({
                     key: sampleId,
@@ -338,47 +404,46 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                     molecularAlterationType: profile.molecularAlterationType,
                     datatype: profile.datatype,
                     data,
-                    trackGroupIndex:TRACK_GROUP_INDEX,
-                    naLegendLabel:"Not sequenced",
-                    labelColor: circleColor ? "white" : "black",
+                    trackGroupIndex: TRACK_GROUP_INDEX,
+                    naLegendLabel: 'Not sequenced',
+                    labelColor: circleColor ? 'white' : 'black',
                     labelCircleColor: circleColor,
-                    labelFontWeight: "normal",
-                    labelLeftPadding:(labelNumber < 10 ? 21 : 17), // label padding depending on how many digits in number
-                    hasColumnSpacing:true,
-                    tooltip:(data:IMutationOncoprintTrackDatum[])=>{
+                    labelFontWeight: 'normal',
+                    labelLeftPadding: labelNumber < 10 ? 21 : 17, // label padding depending on how many digits in number
+                    hasColumnSpacing: true,
+                    tooltip: (data: IMutationOncoprintTrackDatum[]) => {
                         const d = data[0];
-                        const tooltipJSX = mutationTooltip(
-                            d.mutation,
-                            {
-                                sampleId:d.sample!,
-                                mutationStatus:d.mutationStatus,
-                                vaf:d.profile_data
-                            }
-                        );
+                        const tooltipJSX = mutationTooltip(d.mutation, {
+                            sampleId: d.sample!,
+                            mutationStatus: d.mutationStatus,
+                            vaf: d.profile_data,
+                        });
                         // convert JSX into HTML string by rendering to dummy element then using innerHTML
-                        const dummyElt = document.createElement("div");
+                        const dummyElt = document.createElement('div');
                         ReactDOM.render(tooltipJSX, dummyElt);
                         const html = dummyElt.innerHTML;
                         return $(html);
                     },
                     sortDirectionChangeable: false,
-                    initSortDirection:-1 as -1,
+                    initSortDirection: -1 as -1,
                     movable: false,
-                    customNaShapes:MUTATION_ONCOPRINT_NA_SHAPES
+                    customNaShapes: MUTATION_ONCOPRINT_NA_SHAPES,
                 });
             });
             return Promise.resolve(tracks);
-        }
+        },
     });
 
-    private readonly mutationModeHeatmapTracks = remoteData<IMutationOncoprintTrackSpec[]>({
-        await:()=>[
+    private readonly mutationModeHeatmapTracks = remoteData<
+        IMutationOncoprintTrackSpec[]
+    >({
+        await: () => [
             this.props.store.samples,
             this.mutationWithIdOrder,
             this.props.store.mutationMolecularProfile,
             this.props.store.coverageInformation,
         ],
-        invoke:()=>{
+        invoke: () => {
             if (this.mutations.length === 0) {
                 return Promise.resolve([]);
             }
@@ -389,8 +454,8 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                 this.props.store.coverageInformation.result!,
                 MutationOncoprintMode.MUTATION_TRACKS
             );
-            const tracks:IMutationOncoprintTrackSpec[] = [];
-            this.mutationWithIdOrder.result!.forEach((mutationWithId)=>{
+            const tracks: IMutationOncoprintTrackSpec[] = [];
+            this.mutationWithIdOrder.result!.forEach(mutationWithId => {
                 const data = trackData[mutationWithId.id];
                 if (!data || !data.length) {
                     return;
@@ -398,39 +463,38 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                 tracks.push({
                     key: mutationWithId.id,
                     label: getMutationLabel(mutationWithId.mutation),
-                    description: `${getMutationLabel(mutationWithId.mutation)} data from ${profile.molecularProfileId}`,
+                    description: `${getMutationLabel(
+                        mutationWithId.mutation
+                    )} data from ${profile.molecularProfileId}`,
                     molecularProfileId: profile.molecularProfileId,
                     molecularAlterationType: profile.molecularAlterationType,
                     datatype: profile.datatype,
                     data,
-                    trackGroupIndex:TRACK_GROUP_INDEX,
-                    naLegendLabel:"Not sequenced",
-                    labelFontWeight: "normal",
-                    hasColumnSpacing:true,
-                    tooltip:(data:IMutationOncoprintTrackDatum[])=>{
+                    trackGroupIndex: TRACK_GROUP_INDEX,
+                    naLegendLabel: 'Not sequenced',
+                    labelFontWeight: 'normal',
+                    hasColumnSpacing: true,
+                    tooltip: (data: IMutationOncoprintTrackDatum[]) => {
                         const d = data[0];
-                        const tooltipJSX = mutationTooltip(
-                            d.mutation,
-                            {
-                                sampleId:d.sample!,
-                                mutationStatus:d.mutationStatus,
-                                vaf:d.profile_data
-                            }
-                        );
+                        const tooltipJSX = mutationTooltip(d.mutation, {
+                            sampleId: d.sample!,
+                            mutationStatus: d.mutationStatus,
+                            vaf: d.profile_data,
+                        });
                         // convert JSX into HTML string by rendering to dummy element then using innerHTML
-                        const dummyElt = document.createElement("div");
+                        const dummyElt = document.createElement('div');
                         ReactDOM.render(tooltipJSX, dummyElt);
                         const html = dummyElt.innerHTML;
                         return $(html);
                     },
                     sortDirectionChangeable: false,
-                    initSortDirection:-1 as -1,
+                    initSortDirection: -1 as -1,
                     movable: false,
-                    customNaShapes:MUTATION_ONCOPRINT_NA_SHAPES
+                    customNaShapes: MUTATION_ONCOPRINT_NA_SHAPES,
                 });
             });
             return Promise.resolve(tracks);
-        }
+        },
     });
 
     @computed get heatmapTracks() {
@@ -463,10 +527,12 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                     overlay={<span>Zoom in/out of heatmap</span>}
                     placement="top"
                 >
-                    <div style={{width:"90px"}}>
+                    <div style={{ width: '90px' }}>
                         <Slider
                             value={this.horzZoomSliderState}
-                            onChange={(z:number)=>(this.horzZoomSliderState = z)}
+                            onChange={(z: number) =>
+                                (this.horzZoomSliderState = z)
+                            }
                             onChangeComplete={this.updateOncoprintHorzZoom}
                             step={0.01}
                             max={1}
@@ -492,46 +558,72 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
 
     @computed get header() {
         return (
-            <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:5}}>
-                <div style={{display:"inline-flex", alignItems:"center"}}>
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 5,
+                }}
+            >
+                <div style={{ display: 'inline-flex', alignItems: 'center' }}>
                     <LabeledCheckbox
                         checked={this.clustered}
-                        onChange={()=>{ this.clustered = !this.clustered; }}
-                        labelProps={{style:{ marginRight:10}}}
-                        inputProps={{"data-test":"HeatmapCluster"}}
+                        onChange={() => {
+                            this.clustered = !this.clustered;
+                        }}
+                        labelProps={{ style: { marginRight: 10 } }}
+                        inputProps={{ 'data-test': 'HeatmapCluster' }}
                     >
-                        <span style={{marginTop:-3}}>Cluster</span>
+                        <span style={{ marginTop: -3 }}>Cluster</span>
                     </LabeledCheckbox>
                     <LabeledCheckbox
-                        checked={this.mode === MutationOncoprintMode.MUTATION_TRACKS}
-                        onChange={()=>{ this.mode = (this.mode === MutationOncoprintMode.MUTATION_TRACKS ? MutationOncoprintMode.SAMPLE_TRACKS : MutationOncoprintMode.MUTATION_TRACKS); }}
-                        labelProps={{style:{ marginRight:10}}}
-                        inputProps={{"data-test":"HeatmapTranspose"}}
+                        checked={
+                            this.mode === MutationOncoprintMode.MUTATION_TRACKS
+                        }
+                        onChange={() => {
+                            this.mode =
+                                this.mode ===
+                                MutationOncoprintMode.MUTATION_TRACKS
+                                    ? MutationOncoprintMode.SAMPLE_TRACKS
+                                    : MutationOncoprintMode.MUTATION_TRACKS;
+                        }}
+                        labelProps={{ style: { marginRight: 10 } }}
+                        inputProps={{ 'data-test': 'HeatmapTranspose' }}
                     >
-                        <span style={{marginTop:-3}}>Transpose</span>
+                        <span style={{ marginTop: -3 }}>Transpose</span>
                     </LabeledCheckbox>
                     <LabeledCheckbox
                         checked={this.showMutationLabels}
-                        onChange={()=>{ this.showMutationLabels = !this.showMutationLabels; }}
-                        labelProps={{style:{ marginRight:10}}}
-                        inputProps={{"data-test":"HeatmapMutationLabels"}}
+                        onChange={() => {
+                            this.showMutationLabels = !this.showMutationLabels;
+                        }}
+                        labelProps={{ style: { marginRight: 10 } }}
+                        inputProps={{ 'data-test': 'HeatmapMutationLabels' }}
                     >
-                        <span style={{marginTop:-3}}>Show mutation labels</span>
+                        <span style={{ marginTop: -3 }}>
+                            Show mutation labels
+                        </span>
                     </LabeledCheckbox>
                     {this.zoomControls}
                 </div>
                 <DownloadControls
                     filename="vafHeatmap"
-                    getSvg={()=>(this.oncoprint ? this.oncoprint.toSVG(true) : null)}
-                    getData={()=>{
-                        const data = _.flatMap(this.heatmapTracks.result!, track=>track.data);
+                    getSvg={() =>
+                        this.oncoprint ? this.oncoprint.toSVG(true) : null
+                    }
+                    getData={() => {
+                        const data = _.flatMap(
+                            this.heatmapTracks.result!,
+                            track => track.data
+                        );
                         return getDownloadData(data);
                     }}
-                    buttons={["SVG", "PNG", "Data"]}
+                    buttons={['SVG', 'PNG', 'Data']}
                     type="button"
                     dontFade
                     style={{
-                        marginLeft:10
+                        marginLeft: 10,
                     }}
                 />
             </div>
@@ -539,20 +631,20 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
     }
 
     private readonly oncoprintUI = MakeMobxView({
-        await:()=>[
+        await: () => [
             this.heatmapTracks,
             this.heatmapTracksOrder,
             this.columnLabels,
-            this.sortConfig
+            this.sortConfig,
         ],
-        render:()=>{
+        render: () => {
             if (this.heatmapTracks.result!.length === 0) {
                 return null;
             } else {
                 return (
                     <div
                         className="borderedChart"
-                        style={{display:"inline-block"}}
+                        style={{ display: 'inline-block' }}
                     >
                         {this.header}
                         <Oncoprint
@@ -562,7 +654,13 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                             highlightedIds={this.highlightedIds}
                             highlightedTracks={this.highlightedTracks}
                             initParams={INIT_PARAMS}
-                            showTrackLabels={!(this.mode === MutationOncoprintMode.MUTATION_TRACKS && !this.showMutationLabels)}
+                            showTrackLabels={
+                                !(
+                                    this.mode ===
+                                        MutationOncoprintMode.MUTATION_TRACKS &&
+                                    !this.showMutationLabels
+                                )
+                            }
                             columnLabels={this.columnLabels.result!}
                             clinicalTracks={[]}
                             geneticTracks={[]}
@@ -578,9 +676,9 @@ export default class MutationOncoprint extends React.Component<IMutationOncoprin
                 );
             }
         },
-        renderPending:()=><LoadingIndicator isLoading={true}/>,
-        renderError:()=><ErrorMessage/>,
-        showLastRenderWhenPending: true
+        renderPending: () => <LoadingIndicator isLoading={true} />,
+        renderError: () => <ErrorMessage />,
+        showLastRenderWhenPending: true,
     });
 
     render() {

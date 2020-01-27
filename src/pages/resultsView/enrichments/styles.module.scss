@@ -1,33 +1,30 @@
 .Container {
-
 }
 
 .ChartsPanel {
-    display:flex;
+    display: flex;
     justify-content: flex-start;
 
     > div {
-        margin-right:$standardMargin;
+        margin-right: $standardMargin;
         &:last-child {
-            margin-right:0;
+            margin-right: 0;
         }
     }
 
-
     margin-bottom: $standardMargin;
-
 }
 
 .Checkboxes {
     display: flex;
     flex-direction: row;
-    align-items:center;
+    align-items: center;
     height: 30px;
-    float:left;
+    float: left;
 }
 
 .Checkboxes > * {
-    margin-right:10px !important;
+    margin-right: 10px !important;
 }
 
 .TableContainer {
@@ -81,41 +78,39 @@
 .Tendency {
     display: flex;
     flex-direction: column;
-    align-items:flex-start;
+    align-items: flex-start;
 
     &.Significant {
         font-weight: bold;
     }
 
     &.ColoredBackground {
-        border-radius:3px;
-        padding:1px 5px 1px 5px;
-        display:inline-block;
-        line-height:1.4;
+        border-radius: 3px;
+        padding: 1px 5px 1px 5px;
+        display: inline-block;
+        line-height: 1.4;
     }
 }
 
 .FlexCheckbox label {
-    font-weight:normal !important;
+    font-weight: normal !important;
     display: flex;
     align-items: center;
 }
 
 .FlexCheckbox label input {
-    margin-top:1px !important;
-    margin-right:5px !important;
+    margin-top: 1px !important;
+    margin-right: 5px !important;
 }
 
-
 .ChartLoader {
-    position:absolute;
-    top:50%;
-    left:50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
     transform: translate(-50%, -50%);
     > div {
-        margin-left:0px !important;
+        margin-left: 0px !important;
     }
-
 }
 
 .BoxEmpty {
@@ -123,7 +118,7 @@
     height: 350px;
     display: flex;
     justify-content: center;
-    align-items: center
+    align-items: center;
 }
 
 .BoxPlot {
@@ -131,5 +126,5 @@
     overflow-y: hidden;
     height: 350px;
     min-width: 350px;
-    display: flex
+    display: flex;
 }

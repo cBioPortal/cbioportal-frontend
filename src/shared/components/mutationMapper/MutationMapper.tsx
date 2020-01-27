@@ -1,9 +1,9 @@
 import * as React from 'react';
 import _ from 'lodash';
-import autobind from "autobind-decorator";
-import {observer} from "mobx-react";
-import {computed, action, observable} from "mobx";
-import classnames from "classnames";
+import autobind from 'autobind-decorator';
+import { observer } from 'mobx-react';
+import { computed, action, observable } from 'mobx';
+import classnames from 'classnames';
 import {
     LollipopMutationPlot,
     FilterResetPanel,
@@ -13,28 +13,34 @@ import {
     TrackVisibility,
     ProteinImpactTypeBadgeSelector,
     onFilterOptionSelect,
-    DataFilterType
-} from "react-mutation-mapper";
+    DataFilterType,
+} from 'react-mutation-mapper';
 
 import 'react-mutation-mapper/dist/styles.css';
 import 'cbioportal-frontend-commons/dist/styles.css';
 import 'react-table/react-table.css';
 
-import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import StructureViewerPanel from "shared/components/structureViewer/StructureViewerPanel";
-import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
-import PubMedCache from "shared/cache/PubMedCache";
-import GenomeNexusCache from "shared/cache/GenomeNexusCache";
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import StructureViewerPanel from 'shared/components/structureViewer/StructureViewerPanel';
+import OncoKbEvidenceCache from 'shared/cache/OncoKbEvidenceCache';
+import PubMedCache from 'shared/cache/PubMedCache';
+import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMyVariantInfoCache from 'shared/cache/GenomeNexusMyVariantInfoCache';
-import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
-import PdbHeaderCache from "shared/cache/PdbHeaderCache";
-import {DEFAULT_PROTEIN_IMPACT_TYPE_COLORS, getColorForProteinImpactType} from "shared/lib/MutationUtils";
-import ProteinChainPanel from "shared/components/proteinChainPanel/ProteinChainPanel";
-import MutationMapperStore from "./MutationMapperStore";
-import {findProteinImpactTypeFilter, PROTEIN_IMPACT_TYPE_FILTER_ID} from "./MutationMapperDataStore";
-import WindowStore from "../window/WindowStore";
+import { IMyCancerGenomeData } from 'shared/model/MyCancerGenome';
+import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
+import {
+    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
+    getColorForProteinImpactType,
+} from 'shared/lib/MutationUtils';
+import ProteinChainPanel from 'shared/components/proteinChainPanel/ProteinChainPanel';
+import MutationMapperStore from './MutationMapperStore';
+import {
+    findProteinImpactTypeFilter,
+    PROTEIN_IMPACT_TYPE_FILTER_ID,
+} from './MutationMapperDataStore';
+import WindowStore from '../window/WindowStore';
 
-import styles from "./mutationMapper.module.scss";
+import styles from './mutationMapper.module.scss';
 
 export interface IMutationMapperProps {
     store: MutationMapperStore;
@@ -52,9 +58,9 @@ export interface IMutationMapperProps {
     studyId?: string;
     myCancerGenomeData?: IMyCancerGenomeData;
     pdbHeaderCache?: PdbHeaderCache;
-    oncoKbEvidenceCache?:OncoKbEvidenceCache;
-    genomeNexusCache?:GenomeNexusCache;
-    genomeNexusMyVariantInfoCache?:GenomeNexusMyVariantInfoCache;
+    oncoKbEvidenceCache?: OncoKbEvidenceCache;
+    genomeNexusCache?: GenomeNexusCache;
+    genomeNexusMyVariantInfoCache?: GenomeNexusMyVariantInfoCache;
     // server config properties
     genomeNexusUrl?: string;
     oncoKbPublicApiUrl?: string;
@@ -70,32 +76,51 @@ export interface IMutationMapperProps {
 }
 
 @observer
-export default class MutationMapper<P extends IMutationMapperProps> extends DefaultMutationMapper<P>
-{
-    @computed get trackDataStatus(): TrackDataStatus
-    {
-        let oncoKbDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this.props.store.oncoKbData.status;
+export default class MutationMapper<
+    P extends IMutationMapperProps
+> extends DefaultMutationMapper<P> {
+    @computed get trackDataStatus(): TrackDataStatus {
+        let oncoKbDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this
+            .props.store.oncoKbData.status;
 
-        if (oncoKbDataStatus === 'complete' && _.isEmpty(this.props.store.oncoKbDataByProteinPosStart)) {
+        if (
+            oncoKbDataStatus === 'complete' &&
+            _.isEmpty(this.props.store.oncoKbDataByProteinPosStart)
+        ) {
             oncoKbDataStatus = 'empty';
         }
 
-        let hotspotDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this.props.store.indexedHotspotData.status;
+        let hotspotDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this
+            .props.store.indexedHotspotData.status;
 
-        if (hotspotDataStatus === 'complete' && _.isEmpty(this.props.store.hotspotsByPosition)) {
+        if (
+            hotspotDataStatus === 'complete' &&
+            _.isEmpty(this.props.store.hotspotsByPosition)
+        ) {
             hotspotDataStatus = 'empty';
         }
 
-        let alignmentDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this.props.store.alignmentData.status;
+        let alignmentDataStatus:
+            | 'pending'
+            | 'error'
+            | 'complete'
+            | 'empty' = this.props.store.alignmentData.status;
 
-        if (alignmentDataStatus === 'complete' && this.props.store.pdbChainDataStore.allData.length === 0) {
+        if (
+            alignmentDataStatus === 'complete' &&
+            this.props.store.pdbChainDataStore.allData.length === 0
+        ) {
             alignmentDataStatus = 'empty';
         }
 
-        let ptmDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this.props.store.ptmData.status;
+        let ptmDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this
+            .props.store.ptmData.status;
 
-        if (ptmDataStatus === 'complete' &&
-            (!this.props.store.ptmData.result || this.props.store.ptmData.result.length === 0)) {
+        if (
+            ptmDataStatus === 'complete' &&
+            (!this.props.store.ptmData.result ||
+                this.props.store.ptmData.result.length === 0)
+        ) {
             ptmDataStatus = 'empty';
         }
 
@@ -103,7 +128,7 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Defa
             [TrackName.OncoKB]: oncoKbDataStatus,
             [TrackName.CancerHotspots]: hotspotDataStatus,
             [TrackName.PTM]: ptmDataStatus,
-            [TrackName.PDB]: alignmentDataStatus
+            [TrackName.PDB]: alignmentDataStatus,
         };
     }
 
@@ -118,15 +143,18 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Defa
 
     // No default implementation, child classes should override this
     // TODO provide a generic version of this? See ResultsViewMutationMapper.mutationRateSummary
-    protected get mutationRateSummary():JSX.Element|null {
+    protected get mutationRateSummary(): JSX.Element | null {
         return null;
     }
 
     @computed get multipleMutationInfo(): string {
-        const count = this.props.store.dataStore.duplicateMutationCountInMultipleSamples;
-        const mutationsLabel = count === 1 ? "mutation" : "mutations";
+        const count = this.props.store.dataStore
+            .duplicateMutationCountInMultipleSamples;
+        const mutationsLabel = count === 1 ? 'mutation' : 'mutations';
 
-        return count > 0 ? `: includes ${count} duplicate ${mutationsLabel} in patients with multiple samples` : "";
+        return count > 0
+            ? `: includes ${count} duplicate ${mutationsLabel} in patients with multiple samples`
+            : '';
     }
 
     @computed get itemsLabelPlural(): string {
@@ -141,11 +169,10 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Defa
     /**
      * Overriding the parent method to have a customized filter panel.
      */
-    protected get mutationFilterPanel(): JSX.Element | null
-    {
+    protected get mutationFilterPanel(): JSX.Element | null {
         return (
             <div>
-                <div style={{paddingBottom: 15, paddingTop: 15}}>
+                <div style={{ paddingBottom: 15, paddingTop: 15 }}>
                     <ProteinImpactTypeBadgeSelector
                         filter={this.proteinImpactTypeFilter}
                         counts={this.store.mutationCountsByProteinImpactType}
@@ -156,8 +183,7 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Defa
         );
     }
 
-    protected get structureViewerPanel(): JSX.Element | null
-    {
+    protected get structureViewerPanel(): JSX.Element | null {
         return this.is3dPanelOpen ? (
             <StructureViewerPanel
                 mutationDataStore={this.props.store.dataStore}
@@ -169,11 +195,10 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Defa
                 onClose={this.close3dPanel}
                 {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
             />
-        ): null;
+        ) : null;
     }
 
-    protected get mutationPlot(): JSX.Element | null
-    {
+    protected get mutationPlot(): JSX.Element | null {
         return (
             <LollipopMutationPlot
                 store={this.props.store}
@@ -185,15 +210,16 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Defa
                 onTrackVisibilityChange={this.onTrackVisibilityChange}
                 getLollipopColor={getColorForProteinImpactType}
                 filterResetPanel={
-                    !this.props.store.dataStore.showingAllData && this.filterResetPanel !== null ?
-                        this.filterResetPanel: undefined
+                    !this.props.store.dataStore.showingAllData &&
+                    this.filterResetPanel !== null
+                        ? this.filterResetPanel
+                        : undefined
                 }
             />
         );
     }
 
-    protected get proteinChainPanel(): JSX.Element | null
-    {
+    protected get proteinChainPanel(): JSX.Element | null {
         return this.is3dPanelOpen ? (
             <ProteinChainPanel
                 store={this.props.store}
@@ -202,15 +228,16 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Defa
                 geneXOffset={this.lollipopPlotGeneX}
                 maxChainsHeight={200}
             />
-        ): null;
+        ) : null;
     }
 
-    protected get view3dButton(): JSX.Element | null
-    {
+    protected get view3dButton(): JSX.Element | null {
         return (
             <button
                 className="btn btn-default btn-sm"
-                disabled={this.props.store.pdbChainDataStore.allData.length === 0}
+                disabled={
+                    this.props.store.pdbChainDataStore.allData.length === 0
+                }
                 onClick={this.toggle3dPanel}
                 data-test="view3DStructure"
             >
@@ -219,15 +246,18 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Defa
         );
     }
 
-    protected get filterResetPanel(): JSX.Element | null
-    {
+    protected get filterResetPanel(): JSX.Element | null {
         const dataStore = this.props.store.dataStore;
 
         return (
             <FilterResetPanel
                 resetFilters={() => dataStore.resetFilters()}
                 filterInfo={`Showing ${dataStore.tableData.length} of ${dataStore.allData.length} mutations.`}
-                className={classnames("alert" , "alert-success", styles.filterResetPanel)}
+                className={classnames(
+                    'alert',
+                    'alert-success',
+                    styles.filterResetPanel
+                )}
                 buttonClass="btn btn-default btn-xs"
             />
         );
@@ -238,24 +268,28 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Defa
         return false;
     }
 
-    protected get mutationTableComponent(): JSX.Element|null
-    {
+    protected get mutationTableComponent(): JSX.Element | null {
         // Child classes should override this method to return an instance of MutationTable
         return null;
     }
 
-    public render()
-    {
+    public render() {
         return (
             <div>
                 {this.structureViewerPanel}
 
-                <LoadingIndicator center={true} size="big" isLoading={this.isLoading} />
-                {
-                    (!this.isLoading) && (
+                <LoadingIndicator
+                    center={true}
+                    size="big"
+                    isLoading={this.isLoading}
+                />
+                {!this.isLoading && (
                     <div>
-                        <div style={{ display:'flex' }}>
-                            <div className="borderedChart" style={{ marginRight:10 }}>
+                        <div style={{ display: 'flex' }}>
+                            <div
+                                className="borderedChart"
+                                style={{ marginRight: 10 }}
+                            >
                                 {this.mutationPlot}
                                 {this.proteinChainPanel}
                             </div>
@@ -267,11 +301,10 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Defa
                                 {this.view3dButton}
                             </div>
                         </div>
-                        <hr style={{ marginTop:20 }} />
+                        <hr style={{ marginTop: 20 }} />
                         {this.mutationTable}
                     </div>
-                    )
-                }
+                )}
             </div>
         );
     }
@@ -299,32 +332,45 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Defa
 
     @autobind
     @action
-    protected onTrackVisibilityChange(selectedTrackNames: string[])
-    {
+    protected onTrackVisibilityChange(selectedTrackNames: string[]) {
         // 3D panel is toggled to open
-        if (this.trackVisibility[TrackName.PDB] === 'hidden' && selectedTrackNames.includes(TrackName.PDB)) {
+        if (
+            this.trackVisibility[TrackName.PDB] === 'hidden' &&
+            selectedTrackNames.includes(TrackName.PDB)
+        ) {
             this.open3dPanel();
         }
         // 3D panel is toggled to close
-        else if (this.trackVisibility[TrackName.PDB] === 'visible' && !selectedTrackNames.includes(TrackName.PDB)) {
+        else if (
+            this.trackVisibility[TrackName.PDB] === 'visible' &&
+            !selectedTrackNames.includes(TrackName.PDB)
+        ) {
             this.close3dPanel();
         }
 
         // clear visibility
-        Object.keys(this.trackVisibility).forEach(trackName => this.trackVisibility[trackName] = 'hidden');
+        Object.keys(this.trackVisibility).forEach(
+            trackName => (this.trackVisibility[trackName] = 'hidden')
+        );
 
         // reset visibility values for the visible ones
-        selectedTrackNames.forEach(trackName => this.trackVisibility[trackName] = 'visible');
+        selectedTrackNames.forEach(
+            trackName => (this.trackVisibility[trackName] = 'visible')
+        );
     }
 
     @autobind
     @action
-    protected onProteinImpactTypeSelect(selectedMutationTypeIds: string[], allValuesSelected: boolean)
-    {
-        onFilterOptionSelect(selectedMutationTypeIds.map(v => v.toLowerCase()),
+    protected onProteinImpactTypeSelect(
+        selectedMutationTypeIds: string[],
+        allValuesSelected: boolean
+    ) {
+        onFilterOptionSelect(
+            selectedMutationTypeIds.map(v => v.toLowerCase()),
             allValuesSelected,
             this.store.dataStore,
             DataFilterType.PROTEIN_IMPACT_TYPE,
-            PROTEIN_IMPACT_TYPE_FILTER_ID);
+            PROTEIN_IMPACT_TYPE_FILTER_ID
+        );
     }
 }

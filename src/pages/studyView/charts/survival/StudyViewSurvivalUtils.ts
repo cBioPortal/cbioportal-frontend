@@ -1,20 +1,22 @@
-import {PatientSurvival} from "../../../../shared/model/PatientSurvival";
-import {IChartContainerProps} from "../ChartContainer";
-import {AnalysisGroup} from "../../StudyViewUtils";
-import _ from "lodash";
+import { PatientSurvival } from '../../../../shared/model/PatientSurvival';
+import { IChartContainerProps } from '../ChartContainer';
+import { AnalysisGroup } from '../../StudyViewUtils';
+import _ from 'lodash';
 
 export function makeSurvivalChartData(
     patientSurvivals: ReadonlyArray<PatientSurvival>,
     analysisGroups: ReadonlyArray<AnalysisGroup>,
-    patientToAnalysisGroup: {[uniquePatientKey:string]:string}
+    patientToAnalysisGroup: { [uniquePatientKey: string]: string }
 ) {
-    let patientToAnalysisGroups = _.mapValues(patientToAnalysisGroup, group => [group])
+    let patientToAnalysisGroups = _.mapValues(patientToAnalysisGroup, group => [
+        group,
+    ]);
 
     return {
-        patientToAnalysisGroups, patientSurvivals, analysisGroups
+        patientToAnalysisGroups,
+        patientSurvivals,
+        analysisGroups,
     };
 }
 
-export function makeScatterPlotData(
-) {
-}
+export function makeScatterPlotData() {}

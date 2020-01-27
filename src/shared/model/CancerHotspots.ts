@@ -1,6 +1,6 @@
-import {IHotspotIndex} from "react-mutation-mapper";
+import { IHotspotIndex } from 'react-mutation-mapper';
 
 export interface IHotspotDataWrapper {
-    status: "pending" | "error" | "complete";
+    status: 'pending' | 'error' | 'complete';
     result?: IHotspotIndex;
 }

@@ -1,4 +1,4 @@
-import {ONCOPRINTER_CLINICAL_VAL_NA} from "./OncoprinterClinicalUtils";
+import { ONCOPRINTER_CLINICAL_VAL_NA } from './OncoprinterClinicalUtils';
 
 export const exampleGeneticData = `TCGA-25-2392-01	TP53	FUSION	FUSION
 TCGA-04-1331-01	PTEN	HOMDEL	CNA
@@ -591,7 +591,6 @@ TCGA-25-2401-01
 TCGA-25-2392-01
 TCGA-25-2393-01
 `;
-
 
 export const exampleClinicalData = `sample\tAGE(number)\tCANCER_TYPE\tMUTATION_COUNT(lognumber)
 TCGA-25-2392-01\t24\tProstate\t63

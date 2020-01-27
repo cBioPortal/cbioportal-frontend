@@ -1,22 +1,24 @@
-import * as React from "react";
-import {observer} from "mobx-react";
-import {SortableElement} from "react-sortable-hoc";
-import GroupComparisonStore from "../GroupComparisonStore";
+import * as React from 'react';
+import { observer } from 'mobx-react';
+import { SortableElement } from 'react-sortable-hoc';
+import GroupComparisonStore from '../GroupComparisonStore';
 
 export interface ISelectionButtonProps {
-    store:GroupComparisonStore;
+    store: GroupComparisonStore;
 }
 
 @observer
 class SelectAllDeselectAll extends React.Component<ISelectionButtonProps, {}> {
     render() {
         return (
-            <div style={{
-                display:'inline-flex',
-                whiteSpace:'nowrap',
-                paddingLeft:7,
-                paddingRight:7
-            }} >
+            <div
+                style={{
+                    display: 'inline-flex',
+                    whiteSpace: 'nowrap',
+                    paddingLeft: 7,
+                    paddingRight: 7,
+                }}
+            >
                 <a onClick={this.props.store.selectAllGroups}>Select all</a>
                 &nbsp;|&nbsp;
                 <a onClick={this.props.store.deselectAllGroups}>Deselect all</a>

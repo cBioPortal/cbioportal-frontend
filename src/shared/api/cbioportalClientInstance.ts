@@ -1,4 +1,4 @@
-import CBioPortalAPI from "./generated/CBioPortalAPI";
+import CBioPortalAPI from './generated/CBioPortalAPI';
 
 const client = new CBioPortalAPI();
 

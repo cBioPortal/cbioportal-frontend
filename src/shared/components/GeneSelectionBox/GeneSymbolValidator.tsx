@@ -33,7 +33,7 @@ export interface IGeneSymbolValidatorProps {
         oql: OQL
     ) => void;
     wrap?: boolean;
-    replaceGene:(oldSymbol: string, newSymbol: string)=>void;
+    replaceGene: (oldSymbol: string, newSymbol: string) => void;
 }
 
 export type GeneValidationResult = {

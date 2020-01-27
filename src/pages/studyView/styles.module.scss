@@ -1,8 +1,7 @@
-
 .absolutePanel {
     position: absolute;
     top: 5px;
-    right:18px;
+    right: 18px;
     z-index: 2;
     display: flex;
 }
@@ -13,16 +12,16 @@
 }
 
 .selectedInfo {
-    display:flex;
-    align-items:center;
-    margin-right:10px;
+    display: flex;
+    align-items: center;
+    margin-right: 10px;
 }
 
 .selectedInfoCheckbox {
     margin: 2px 3px 0 0 !important;
 }
 
-.mainTabs{
+.mainTabs {
     position: relative;
 }
 
@@ -39,7 +38,7 @@
 }
 
 .studyViewSurvivalPlotBody {
-    position: relative
+    position: relative;
 }
 
 .studyViewAutoMargin {
@@ -58,12 +57,12 @@
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    margin-bottom:10px;
+    margin-bottom: 10px;
 }
 
 .parentGroupLogic {
     background-color: $lightGrey;
-    border:1px solid $borderColor;
+    border: 1px solid $borderColor;
     border-radius: 5px;
     margin: 2px 5px 2px 0;
     padding: 5px;
@@ -79,35 +78,34 @@
     font-weight: bold;
 }
 
-.summary{
+.summary {
     flex-grow: 1;
-    .description{
+    .description {
         font-size: 13px;
     }
 }
 
 .actionButtons {
-    display:flex;
+    display: flex;
     button {
-        margin-left:10px;
+        margin-left: 10px;
     }
 }
 
 .studyFilterResult {
     transition: all 500ms;
     transform: scale(0); /* Standard syntax */
-    display:flex;
-    z-index:2;
+    display: flex;
+    z-index: 2;
     > div {
         white-space: nowrap;
-        &:nth-child(n+2) {
-            margin-left:5px;
+        &:nth-child(n + 2) {
+            margin-left: 5px;
         }
     }
-
 }
 
 .titleMeta {
     font-size: smaller;
-    color: #A9A9A9;
+    color: #a9a9a9;
 }

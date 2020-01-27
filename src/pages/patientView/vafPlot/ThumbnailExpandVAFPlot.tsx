@@ -1,27 +1,29 @@
 import * as React from 'react';
 import 'rc-tooltip/assets/bootstrap_white.css';
-import {VAFPlot, IVAFPlotProps, MutationFrequenciesBySample} from './VAFPlot';
-import Tooltip, {RCTooltip} from "rc-tooltip";
+import { VAFPlot, IVAFPlotProps, MutationFrequenciesBySample } from './VAFPlot';
+import Tooltip, { RCTooltip } from 'rc-tooltip';
 import { IKeyedIconData } from '../genomicOverview/GenomicOverviewUtils';
 import { DefaultTooltip, isWebdriver } from 'cbioportal-frontend-commons';
 
 export type IThumbnailExpandVAFPlotProps = {
     data: MutationFrequenciesBySample;
-    order?: { [s:string]:number };
-    colors?: { [s: string]:string };
-    labels?: { [s:string]:string };
+    order?: { [s: string]: number };
+    colors?: { [s: string]: string };
+    labels?: { [s: string]: string };
     overlayPlacement?: RCTooltip.Placement;
     cssClass?: string;
-    genePanelIconData?:IKeyedIconData;
+    genePanelIconData?: IKeyedIconData;
 };
 
-export class ThumbnailExpandVAFPlot extends React.Component<IThumbnailExpandVAFPlotProps, {}> {
-
+export class ThumbnailExpandVAFPlot extends React.Component<
+    IThumbnailExpandVAFPlotProps,
+    {}
+> {
     public static defaultProps = {
         order: {},
         colors: {},
         labels: {},
-        overlayPlacement: "left",
+        overlayPlacement: 'left',
     };
 
     render() {
@@ -33,7 +35,7 @@ export class ThumbnailExpandVAFPlot extends React.Component<IThumbnailExpandVAFP
             nolegend: true,
             width: 64,
             height: 64,
-            label_font_size: "6.5px",
+            label_font_size: '6.5px',
             xticks: 0,
             yticks: 0,
             margin_bottom: 15,
@@ -47,22 +49,20 @@ export class ThumbnailExpandVAFPlot extends React.Component<IThumbnailExpandVAFP
             nolegend: false,
             init_show_histogram: true,
             init_show_curve: true,
-            genepanel_icon_data: this.props.genePanelIconData
+            genepanel_icon_data: this.props.genePanelIconData,
         };
 
         return (
             <DefaultTooltip
                 placement={this.props.overlayPlacement}
                 trigger={['hover', 'focus']}
-                overlay={<VAFPlot {...expandedProps}/>}
-                arrowContent={<div className="rc-tooltip-arrow-inner"/>}
+                overlay={<VAFPlot {...expandedProps} />}
+                arrowContent={<div className="rc-tooltip-arrow-inner" />}
                 destroyTooltipOnHide={false}
                 mouseLeaveDelay={isWebdriver ? 2 : 0.05}
             >
-                <div className={ this.props.cssClass || '' }>
-                    <VAFPlot
-                            {...thumbnailProps}
-                    />
+                <div className={this.props.cssClass || ''}>
+                    <VAFPlot {...thumbnailProps} />
                 </div>
             </DefaultTooltip>
         );

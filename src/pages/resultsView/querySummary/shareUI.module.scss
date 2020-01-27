@@ -1,29 +1,25 @@
 .shareModule {
+    margin-left: $standardMargin;
+    display: flex;
 
-  margin-left:$standardMargin;
-  display:flex;
+    a {
+        span {
+            font-size: 16px;
+            i {
+                color: #ffffff;
+            }
+            i:first-child {
+                color: $brand-primary;
+            }
+            i:last-child {
+                font-size: 0.8em;
+            }
+        }
 
-  a {
-    span {
-      font-size:16px;
-      i{
-        color:#ffffff;
-      }
-      i:first-child {
-        color: $brand-primary;
-      }
-      i:last-child {
-        font-size:.8em;
-      }
+        &:hover {
+            i:first-child {
+                color: darken($brand-primary, 10%);
+            }
+        }
     }
-
-    &:hover {
-      i:first-child {
-        color:darken( $brand-primary, 10% );
-      }
-    }
-
-  }
-
-
 }

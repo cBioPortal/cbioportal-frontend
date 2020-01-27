@@ -1,56 +1,63 @@
 import * as React from 'react';
-import {action, computed} from 'mobx';
-import {observer} from "mobx-react";
-import styles from "./styles.module.scss";
-import {ChartOption} from "../AddChartButton";
+import { action, computed } from 'mobx';
+import { observer } from 'mobx-react';
+import styles from './styles.module.scss';
+import { ChartOption } from '../AddChartButton';
 import * as _ from 'lodash';
-import LabeledCheckbox from "../../../../shared/components/labeledCheckbox/LabeledCheckbox";
-import {Column} from "../../../../shared/components/lazyMobXTable/LazyMobXTable";
-import {getFrequencyStr} from "../../StudyViewUtils";
-import LoadingIndicator from "../../../../shared/components/loadingIndicator/LoadingIndicator";
+import LabeledCheckbox from '../../../../shared/components/labeledCheckbox/LabeledCheckbox';
+import { Column } from '../../../../shared/components/lazyMobXTable/LazyMobXTable';
+import { getFrequencyStr } from '../../StudyViewUtils';
+import LoadingIndicator from '../../../../shared/components/loadingIndicator/LoadingIndicator';
 import MobxPromise from 'mobxpromise';
-import {ClinicalDataCountSet} from "../../StudyViewUtils";
-import FixedHeaderTable from "../../table/FixedHeaderTable";
+import { ClinicalDataCountSet } from '../../StudyViewUtils';
+import FixedHeaderTable from '../../table/FixedHeaderTable';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import {EllipsisTextTooltip} from "cbioportal-frontend-commons";
-import {Omit} from "../../../../shared/lib/TypeScriptUtils";
-import ifNotDefined from "../../../../shared/lib/ifNotDefined";
+import { EllipsisTextTooltip } from 'cbioportal-frontend-commons';
+import { Omit } from '../../../../shared/lib/TypeScriptUtils';
+import ifNotDefined from '../../../../shared/lib/ifNotDefined';
 
-export type AddChartOption = Omit<ChartOption, "chartType">;
+export type AddChartOption = Omit<ChartOption, 'chartType'>;
 export interface IAddChartByTypeProps {
-    options: Omit<AddChartOption, "freq">[];
+    options: Omit<AddChartOption, 'freq'>[];
     freqPromise: MobxPromise<ClinicalDataCountSet>;
     onAddAll: (keys: string[]) => void;
     onClearAll: (keys: string[]) => void;
     onToggleOption: (key: string) => void;
-    optionsGivenInSortedOrder?:boolean;
-    frequencyHeaderTooltip?:string;
+    optionsGivenInSortedOrder?: boolean;
+    frequencyHeaderTooltip?: string;
 }
 
-
-class AddChartTableComponent extends FixedHeaderTable<AddChartOption> {
-}
+class AddChartTableComponent extends FixedHeaderTable<AddChartOption> {}
 
 const NUM_ROWS_SHOWN = 15;
 
 @observer
-export default class AddChartByType extends React.Component<IAddChartByTypeProps, {}> {
-
+export default class AddChartByType extends React.Component<
+    IAddChartByTypeProps,
+    {}
+> {
     @computed
     get options() {
         if (this.props.freqPromise.isComplete) {
-            const options = _.reduce(this.props.options, (acc, next) => {
-                const disabled = this.props.freqPromise.result![next.key] === 0;
-                acc.push({
-                    label: next.label,
-                    key: next.key,
-                    disabled: disabled,
-                    selected: next.selected,
-                    freq: disabled ? 0 : this.props.freqPromise.result![next.key]
-                });
-                return acc;
-            }, [] as AddChartOption[]);
+            const options = _.reduce(
+                this.props.options,
+                (acc, next) => {
+                    const disabled =
+                        this.props.freqPromise.result![next.key] === 0;
+                    acc.push({
+                        label: next.label,
+                        key: next.key,
+                        disabled: disabled,
+                        selected: next.selected,
+                        freq: disabled
+                            ? 0
+                            : this.props.freqPromise.result![next.key],
+                    });
+                    return acc;
+                },
+                [] as AddChartOption[]
+            );
             if (this.props.optionsGivenInSortedOrder) {
                 return options;
             } else {
@@ -59,7 +66,9 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
                 });
             }
         } else {
-            const options = this.props.options.map(o=>Object.assign({freq:100}, o));
+            const options = this.props.options.map(o =>
+                Object.assign({ freq: 100 }, o)
+            );
             if (this.props.optionsGivenInSortedOrder) {
                 return options;
             } else {
@@ -68,55 +77,95 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
         }
     }
 
-    private _columns: Column<AddChartOption>[] = [{
-        name: 'Name',
-        render: (option: AddChartOption) => {
-            return (
-                <div className={classnames(styles.option, 'add-chart-option')}
-                     data-test={`add-chart-option-${option.label.toLowerCase().replace(/\s/g,'-')}`}>
-                    <LabeledCheckbox
-                        checked={option.selected}
-                        disabled={option.disabled}
-                        labelProps={{
-                            className: classnames(styles.label, option.disabled ? styles.labelDisabled : '')
-                        }}
-                        inputProps={{
-                            className: styles.input
-                        }}
-                        onChange={() => this.onOptionChange(option)}
+    private _columns: Column<AddChartOption>[] = [
+        {
+            name: 'Name',
+            render: (option: AddChartOption) => {
+                return (
+                    <div
+                        className={classnames(
+                            styles.option,
+                            'add-chart-option'
+                        )}
+                        data-test={`add-chart-option-${option.label
+                            .toLowerCase()
+                            .replace(/\s/g, '-')}`}
                     >
-                        <EllipsisTextTooltip text={option.label}/>
-                    </LabeledCheckbox>
-                </div>
-            )
+                        <LabeledCheckbox
+                            checked={option.selected}
+                            disabled={option.disabled}
+                            labelProps={{
+                                className: classnames(
+                                    styles.label,
+                                    option.disabled ? styles.labelDisabled : ''
+                                ),
+                            }}
+                            inputProps={{
+                                className: styles.input,
+                            }}
+                            onChange={() => this.onOptionChange(option)}
+                        >
+                            <EllipsisTextTooltip text={option.label} />
+                        </LabeledCheckbox>
+                    </div>
+                );
+            },
+            filter: (d: AddChartOption, f: string, filterStringUpper: string) =>
+                d.label.toUpperCase().includes(filterStringUpper),
+            sortBy: (d: AddChartOption) => d.label,
+            width: 320,
+            defaultSortDirection: 'asc' as 'asc',
         },
-        filter: (d: AddChartOption, f: string, filterStringUpper: string) => d.label.toUpperCase().includes(filterStringUpper),
-        sortBy: (d: AddChartOption) => d.label,
-        width: 320,
-        defaultSortDirection: 'asc' as 'asc'
-    }, {
-        name: 'Freq',
-        tooltip: <span>{ifNotDefined(this.props.frequencyHeaderTooltip, "% samples with data")}</span>,
-        render: (option: AddChartOption) =>
-            <span style={{display: 'flex', flexDirection: 'row-reverse'}}
-                  className={classnames(option.disabled ? styles.labelDisabled : '')}>
-                {this.props.freqPromise.isComplete ? getFrequencyStr(option.freq) : ''}
-            </span>,
-        sortBy: (d: AddChartOption) => d.freq,
-        headerRender: () => {
-            return <span style={{display: 'flex', flexDirection: 'row-reverse', flexGrow: 1}}>Freq</span>
+        {
+            name: 'Freq',
+            tooltip: (
+                <span>
+                    {ifNotDefined(
+                        this.props.frequencyHeaderTooltip,
+                        '% samples with data'
+                    )}
+                </span>
+            ),
+            render: (option: AddChartOption) => (
+                <span
+                    style={{ display: 'flex', flexDirection: 'row-reverse' }}
+                    className={classnames(
+                        option.disabled ? styles.labelDisabled : ''
+                    )}
+                >
+                    {this.props.freqPromise.isComplete
+                        ? getFrequencyStr(option.freq)
+                        : ''}
+                </span>
+            ),
+            sortBy: (d: AddChartOption) => d.freq,
+            headerRender: () => {
+                return (
+                    <span
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'row-reverse',
+                            flexGrow: 1,
+                        }}
+                    >
+                        Freq
+                    </span>
+                );
+            },
+            defaultSortDirection: 'desc' as 'desc',
+            width: 60,
         },
-        defaultSortDirection: 'desc' as 'desc',
-        width: 60
-    }];
+    ];
 
     @computed
     get tableHeight() {
-        return this.options.length > NUM_ROWS_SHOWN ? NUM_ROWS_SHOWN * 25 : (this.options.length + 1) * 25;
+        return this.options.length > NUM_ROWS_SHOWN
+            ? NUM_ROWS_SHOWN * 25
+            : (this.options.length + 1) * 25;
     }
 
     @autobind
-    getCurrentSelectedRows():AddChartOption[] {
+    getCurrentSelectedRows(): AddChartOption[] {
         return this.options.filter(option => option.selected);
     }
 
@@ -128,7 +177,11 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
     @autobind
     @action
     addAll(selectedOptions: AddChartOption[]) {
-        this.props.onAddAll(_.filter(selectedOptions, option => !option.disabled).map(option => option.key));
+        this.props.onAddAll(
+            _.filter(selectedOptions, option => !option.disabled).map(
+                option => option.key
+            )
+        );
     }
 
     @autobind
@@ -145,7 +198,10 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
 
     render() {
         return (
-            <div style={{display: 'flex', flexDirection: 'column'}} data-test='add-by-type'>
+            <div
+                style={{ display: 'flex', flexDirection: 'column' }}
+                data-test="add-by-type"
+            >
                 <AddChartTableComponent
                     width={380}
                     height={this.tableHeight}
@@ -157,17 +213,15 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
                     showSelectableNumber={true}
                     showAddRemoveAllButtons={true}
                     autoFocusSearchAfterRendering={true}
-                    removeAllDisabled={!_.some(this.options, o=>o.selected)}
+                    removeAllDisabled={!_.some(this.options, o => o.selected)}
                 />
-                {
-                    this.props.freqPromise.isPending && (
-                        <span>
-                            <LoadingIndicator isLoading={true}/>
-                            Calculating data availability...
-                        </span>
-                    )
-                }
+                {this.props.freqPromise.isPending && (
+                    <span>
+                        <LoadingIndicator isLoading={true} />
+                        Calculating data availability...
+                    </span>
+                )}
             </div>
-        )
+        );
     }
 }

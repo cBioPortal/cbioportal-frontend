@@ -1,32 +1,34 @@
 import * as React from 'react';
-import {observer} from "mobx-react";
-import {MSKTabs, MSKTab} from "shared/components/MSKTabs/MSKTabs";
-import {ResultsViewPageStore} from "../ResultsViewPageStore";
-import ResultsViewMutationMapper from "./ResultsViewMutationMapper";
-import {convertToMutationMapperProps} from "shared/components/mutationMapper/MutationMapperConfig";
-import MutationMapperUserSelectionStore from "shared/components/mutationMapper/MutationMapperUserSelectionStore";
-import {observable} from "mobx";
+import { observer } from 'mobx-react';
+import { MSKTabs, MSKTab } from 'shared/components/MSKTabs/MSKTabs';
+import { ResultsViewPageStore } from '../ResultsViewPageStore';
+import ResultsViewMutationMapper from './ResultsViewMutationMapper';
+import { convertToMutationMapperProps } from 'shared/components/mutationMapper/MutationMapperConfig';
+import MutationMapperUserSelectionStore from 'shared/components/mutationMapper/MutationMapperUserSelectionStore';
+import { observable } from 'mobx';
 import AppConfig from 'appConfig';
-import OqlStatusBanner from "../../../shared/components/banners/OqlStatusBanner";
-import autobind from "autobind-decorator";
-import {AppStore} from "../../../AppStore";
+import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
+import autobind from 'autobind-decorator';
+import { AppStore } from '../../../AppStore';
 
-import "./mutations.scss";
-import AlterationFilterWarning from "../../../shared/components/banners/AlterationFilterWarning";
-import {getOncoKbApiUrl} from "shared/api/urls";
+import './mutations.scss';
+import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
+import { getOncoKbApiUrl } from 'shared/api/urls';
 
 export interface IMutationsPageProps {
     routing?: any;
     store: ResultsViewPageStore;
-    appStore:AppStore;
+    appStore: AppStore;
 }
 
 @observer
-export default class Mutations extends React.Component<IMutationsPageProps, {}>
-{
+export default class Mutations extends React.Component<
+    IMutationsPageProps,
+    {}
+> {
     private userSelectionStore: MutationMapperUserSelectionStore;
 
-    @observable mutationsGeneTab:string;
+    @observable mutationsGeneTab: string;
 
     constructor(props: IMutationsPageProps) {
         super(props);
@@ -37,34 +39,38 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
 
     @autobind
     private onToggleOql() {
-        this.props.store.mutationsTabFilteringSettings.useOql = !this.props.store.mutationsTabFilteringSettings.useOql;
+        this.props.store.mutationsTabFilteringSettings.useOql = !this.props
+            .store.mutationsTabFilteringSettings.useOql;
     }
 
     @autobind
     private onToggleVUS() {
-        this.props.store.mutationsTabFilteringSettings.excludeVus = !this.props.store.mutationsTabFilteringSettings.excludeVus;
+        this.props.store.mutationsTabFilteringSettings.excludeVus = !this.props
+            .store.mutationsTabFilteringSettings.excludeVus;
     }
 
     @autobind
     private onToggleGermline() {
-        this.props.store.mutationsTabFilteringSettings.excludeGermline = !this.props.store.mutationsTabFilteringSettings.excludeGermline;
+        this.props.store.mutationsTabFilteringSettings.excludeGermline = !this
+            .props.store.mutationsTabFilteringSettings.excludeGermline;
     }
 
     public render() {
         // use routing if available, if not fall back to the observable variable
-        const activeTabId = this.props.routing ?
-            this.props.routing.location.query.mutationsGeneTab : this.mutationsGeneTab;
+        const activeTabId = this.props.routing
+            ? this.props.routing.location.query.mutationsGeneTab
+            : this.mutationsGeneTab;
 
         return (
             <div data-test="mutationsTabDiv">
-                {(this.props.store.mutationMapperStores.isComplete) && (
+                {this.props.store.mutationMapperStores.isComplete && (
                     <MSKTabs
                         id="mutationsPageTabs"
                         activeTabId={activeTabId}
-                        onTabClick={(id:string) => this.handleTabChange(id)}
+                        onTabClick={(id: string) => this.handleTabChange(id)}
                         className="pillTabs resultsPageMutationsGeneTabs"
                         enablePagination={false}
-                        arrowStyle={{'line-height': 0.8}}
+                        arrowStyle={{ 'line-height': 0.8 }}
                         tabButtonStyle="pills"
                         unmountOnHide={true}
                     >
@@ -75,54 +81,84 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
         );
     }
 
-    protected generateTabs(genes: string[])
-    {
+    protected generateTabs(genes: string[]) {
         const tabs: JSX.Element[] = [];
 
         genes.forEach((gene: string) => {
-            const mutationMapperStore = this.props.store.getMutationMapperStore(gene);
+            const mutationMapperStore = this.props.store.getMutationMapperStore(
+                gene
+            );
 
-            if (mutationMapperStore)
-            {
-                const tabHasMutations = mutationMapperStore.mutations.length > 0;
+            if (mutationMapperStore) {
+                const tabHasMutations =
+                    mutationMapperStore.mutations.length > 0;
                 // gray out tab if no mutations
-                const anchorStyle = tabHasMutations ? undefined : { color:'#bbb' };
+                const anchorStyle = tabHasMutations
+                    ? undefined
+                    : { color: '#bbb' };
 
                 tabs.push(
-                    <MSKTab key={gene} id={gene} linkText={gene} anchorStyle={anchorStyle}>
-                        <div className={"tabMessageContainer"}>
+                    <MSKTab
+                        key={gene}
+                        id={gene}
+                        linkText={gene}
+                        anchorStyle={anchorStyle}
+                    >
+                        <div className={'tabMessageContainer'}>
                             <OqlStatusBanner
                                 className="mutations-oql-status-banner"
                                 store={this.props.store}
-                                tabReflectsOql={this.props.store.mutationsTabFilteringSettings.useOql}
-                                isUnaffected={!this.props.store.queryContainsMutationOql}
+                                tabReflectsOql={
+                                    this.props.store
+                                        .mutationsTabFilteringSettings.useOql
+                                }
+                                isUnaffected={
+                                    !this.props.store.queryContainsMutationOql
+                                }
                                 onToggle={this.onToggleOql}
                             />
                             <AlterationFilterWarning
                                 store={this.props.store}
                                 mutationsTabModeSettings={{
-                                    excludeVUS: this.props.store.mutationsTabFilteringSettings.excludeVus,
-                                    excludeGermline: this.props.store.mutationsTabFilteringSettings.excludeGermline,
+                                    excludeVUS: this.props.store
+                                        .mutationsTabFilteringSettings
+                                        .excludeVus,
+                                    excludeGermline: this.props.store
+                                        .mutationsTabFilteringSettings
+                                        .excludeGermline,
                                     toggleExcludeVUS: this.onToggleVUS,
-                                    toggleExcludeGermline: this.onToggleGermline,
-                                    hugoGeneSymbol: gene
+                                    toggleExcludeGermline: this
+                                        .onToggleGermline,
+                                    hugoGeneSymbol: gene,
                                 }}
                             />
                         </div>
                         <ResultsViewMutationMapper
-                            {...convertToMutationMapperProps(AppConfig.serverConfig)}
+                            {...convertToMutationMapperProps(
+                                AppConfig.serverConfig
+                            )}
                             oncoKbPublicApiUrl={getOncoKbApiUrl()}
                             store={mutationMapperStore}
-                            trackVisibility={this.userSelectionStore.trackVisibility}
+                            trackVisibility={
+                                this.userSelectionStore.trackVisibility
+                            }
                             discreteCNACache={this.props.store.discreteCNACache}
-                            oncoKbEvidenceCache={this.props.store.oncoKbEvidenceCache}
+                            oncoKbEvidenceCache={
+                                this.props.store.oncoKbEvidenceCache
+                            }
                             pubMedCache={this.props.store.pubMedCache}
                             cancerTypeCache={this.props.store.cancerTypeCache}
-                            mutationCountCache={this.props.store.mutationCountCache}
+                            mutationCountCache={
+                                this.props.store.mutationCountCache
+                            }
                             genomeNexusCache={this.props.store.genomeNexusCache}
-                            genomeNexusMyVariantInfoCache={this.props.store.genomeNexusMyVariantInfoCache}
+                            genomeNexusMyVariantInfoCache={
+                                this.props.store.genomeNexusMyVariantInfoCache
+                            }
                             pdbHeaderCache={this.props.store.pdbHeaderCache}
-                            myCancerGenomeData={this.props.store.myCancerGenomeData}
+                            myCancerGenomeData={
+                                this.props.store.myCancerGenomeData
+                            }
                             userEmailAddress={this.props.appStore.userName!}
                         />
                     </MSKTab>

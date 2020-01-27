@@ -1,89 +1,102 @@
 import * as React from 'react';
-import {ThreeBounce} from 'better-react-spinkit';
-import {If, Else, Then} from 'react-if';
-import Spinner from "react-spinkit";
-import {Portal} from 'react-portal';
+import { ThreeBounce } from 'better-react-spinkit';
+import { If, Else, Then } from 'react-if';
+import Spinner from 'react-spinkit';
+import { Portal } from 'react-portal';
 import classNames from 'classnames';
 import styles from './styles.module.scss';
-import {computed} from "mobx";
-import {observer} from "mobx-react";
+import { computed } from 'mobx';
+import { observer } from 'mobx-react';
 
 export interface ILoader {
     isLoading: boolean;
     style?: any;
     inline?: boolean;
     center?: boolean;
-    centerRelativeToContainer?:boolean;
-    size?: "big" | "small"
-    small?:boolean;
-    big?:boolean;
-    className?:string;
+    centerRelativeToContainer?: boolean;
+    size?: 'big' | 'small';
+    small?: boolean;
+    big?: boolean;
+    className?: string;
 }
 
 @observer
 export default class LoadingIndicator extends React.Component<ILoader, {}> {
-
     public static defaultProps = {
         inline: true,
         center: false,
-        size: "small"
+        size: 'small',
     };
 
     @computed get size() {
         if (this.props.size) {
             return this.props.size;
         } else if (this.props.big) {
-            return "big";
+            return 'big';
         } else if (this.props.small) {
-            return "small";
+            return 'small';
         } else {
             return undefined;
         }
     }
 
     public render() {
-
         const spinnerStyles = {
-            [styles.small]: this.size === "small",
-            [styles.big]: this.size === "big",
-            inlineBlock: this.props.inline
-        }
+            [styles.small]: this.size === 'small',
+            [styles.big]: this.size === 'big',
+            inlineBlock: this.props.inline,
+        };
 
         const parentStyles = {
-            [styles.centered]:this.props.center,
-            [styles["centered-relative-to-container"]]:this.props.centerRelativeToContainer,
-            [styles["centered-with-children"]]:(this.props.center || this.props.centerRelativeToContainer) && (React.Children.count(this.props.children) > 0),
-            inlineBlock: this.props.inline
+            [styles.centered]: this.props.center,
+            [styles['centered-relative-to-container']]: this.props
+                .centerRelativeToContainer,
+            [styles['centered-with-children']]:
+                (this.props.center || this.props.centerRelativeToContainer) &&
+                React.Children.count(this.props.children) > 0,
+            inlineBlock: this.props.inline,
         };
 
         return (
             <If condition={this.props.isLoading}>
                 <Then>
-                    <div className={classNames(parentStyles, this.props.className)} style={this.props.style||{}}>
-                        <Spinner fadeIn="none"
-                                 className={classNames(styles.color, spinnerStyles)}
-                                 style={{display: 'inline-block'}}
-                                 name="line-scale-pulse-out"/>
+                    <div
+                        className={classNames(
+                            parentStyles,
+                            this.props.className
+                        )}
+                        style={this.props.style || {}}
+                    >
+                        <Spinner
+                            fadeIn="none"
+                            className={classNames(styles.color, spinnerStyles)}
+                            style={{ display: 'inline-block' }}
+                            name="line-scale-pulse-out"
+                        />
                         <div className={styles.progressUI}>
-                        {
-                            this.props.children
-                        }
+                            {this.props.children}
                         </div>
                     </div>
                 </Then>
             </If>
         );
-
     }
 }
 
-
 export class GlobalLoader extends React.Component<ILoader, {}> {
-
     public render() {
-        return <Portal isOpened={this.props.isLoading}>
-            <Spinner className={classNames(styles.color, styles.centered, styles.big)} fadeIn="none" name="line-scale-pulse-out" />
-        </Portal>
+        return (
+            <Portal isOpened={this.props.isLoading}>
+                <Spinner
+                    className={classNames(
+                        styles.color,
+                        styles.centered,
+                        styles.big
+                    )}
+                    fadeIn="none"
+                    name="line-scale-pulse-out"
+                />
+            </Portal>
+        );
     }
-
 }

@@ -1,15 +1,14 @@
 .messager {
-  padding:10px;
-  background:green;
-  color:#fff;
-  font-size:14px;
-  position:relative;
+    padding: 10px;
+    background: green;
+    color: #fff;
+    font-size: 14px;
+    position: relative;
 
-
-  i.close {
-    position:absolute;
-    right:10px;
-    top:10px;
-    cursor:pointer;
-  }
+    i.close {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        cursor: pointer;
+    }
 }

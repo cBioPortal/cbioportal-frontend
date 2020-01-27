@@ -1,15 +1,11 @@
 .cbioportal-frontend {
-
-  @import './global.scss';
-
+    @import './global.scss';
 }
 
 .legacy {
-  .cbioportal-frontend {
-    @import './legacy.scss';
-  }
+    .cbioportal-frontend {
+        @import './legacy.scss';
+    }
 }
-
-
 
 @import './e2etest.scss';

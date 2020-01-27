@@ -1,81 +1,121 @@
-import {getPatientViewUrl, getSampleViewUrl} from "../../api/urls";
-import $ from "jquery";
+import { getPatientViewUrl, getSampleViewUrl } from '../../api/urls';
+import $ from 'jquery';
 import {
-    NumericGeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
-    Mutation
-} from "../../api/generated/CBioPortalAPI";
-import client from "shared/api/cbioportalClientInstance";
-import {ClinicalTrackSpec, GeneticTrackDatum} from "./Oncoprint";
+    NumericGeneMolecularData,
+    GenePanel,
+    GenePanelData,
+    MolecularProfile,
+    Mutation,
+} from '../../api/generated/CBioPortalAPI';
+import client from 'shared/api/cbioportalClientInstance';
+import { ClinicalTrackSpec, GeneticTrackDatum } from './Oncoprint';
 import {
-    AnnotatedExtendedAlteration, AnnotatedMutation, AnnotatedNumericGeneMolecularData,
+    AnnotatedExtendedAlteration,
+    AnnotatedMutation,
+    AnnotatedNumericGeneMolecularData,
     ExtendedAlteration,
-    AlterationTypeConstants
-} from "../../../pages/resultsView/ResultsViewPageStore";
-import _ from "lodash";
-import {alterationTypeToProfiledForText} from "./ResultsViewOncoprintUtils";
-import {isNotGermlineMutation} from "../../lib/MutationUtils";
-import ListIndexedMap, {ListIndexedMapOfCounts} from "../../lib/ListIndexedMap";
+    AlterationTypeConstants,
+} from '../../../pages/resultsView/ResultsViewPageStore';
+import _ from 'lodash';
+import { alterationTypeToProfiledForText } from './ResultsViewOncoprintUtils';
+import { isNotGermlineMutation } from '../../lib/MutationUtils';
+import ListIndexedMap, {
+    ListIndexedMapOfCounts,
+} from '../../lib/ListIndexedMap';
 
-const hotspotsImg = require("../../../rootImages/cancer-hotspots.svg");
-const oncokbImg = require("../../../rootImages/oncokb-oncogenic-1.svg");
-const customDriverImg = require("../../../rootImages/driver.png");
-const customDriverTiersImg = require("../../../rootImages/driver_tiers.png");
+const hotspotsImg = require('../../../rootImages/cancer-hotspots.svg');
+const oncokbImg = require('../../../rootImages/oncokb-oncogenic-1.svg');
+const customDriverImg = require('../../../rootImages/driver.png');
+const customDriverTiersImg = require('../../../rootImages/driver_tiers.png');
 
-
-export const TOOLTIP_DIV_CLASS = "oncoprint__tooltip";
+export const TOOLTIP_DIV_CLASS = 'oncoprint__tooltip';
 
 const tooltipTextElementNaN = 'N/A';
 
-function sampleViewAnchorTag(study_id:string, sample_id:string) {
-    return `<a href="${getSampleViewUrl(study_id, sample_id)}" target="_blank">${sample_id}</a>`;
+function sampleViewAnchorTag(study_id: string, sample_id: string) {
+    return `<a href="${getSampleViewUrl(
+        study_id,
+        sample_id
+    )}" target="_blank">${sample_id}</a>`;
 }
-function patientViewAnchorTag(study_id:string, patient_id:string) {
-    return `<a href="${getPatientViewUrl(study_id, patient_id)}" target="_blank">${patient_id}</a>`;
-};
+function patientViewAnchorTag(study_id: string, patient_id: string) {
+    return `<a href="${getPatientViewUrl(
+        study_id,
+        patient_id
+    )}" target="_blank">${patient_id}</a>`;
+}
 
-function makeGenePanelPopupLink(gene_panel_id:string, profiled:boolean, numSamples?:number) {
-    let anchor = $(`<span style="white-space:nowrap; display:inline-block;"><a href="#" ${!profiled ? 'style="color:red;"': ""} oncontextmenu="return false;">${gene_panel_id}</a>${numSamples ? ` (${numSamples})` : ""}</span>`);
-    anchor.ready(()=>{
+function makeGenePanelPopupLink(
+    gene_panel_id: string,
+    profiled: boolean,
+    numSamples?: number
+) {
+    let anchor = $(
+        `<span style="white-space:nowrap; display:inline-block;"><a href="#" ${
+            !profiled ? 'style="color:red;"' : ''
+        } oncontextmenu="return false;">${gene_panel_id}</a>${
+            numSamples ? ` (${numSamples})` : ''
+        }</span>`
+    );
+    anchor.ready(() => {
         anchor.click(function() {
-            client.getGenePanelUsingGET({ genePanelId: gene_panel_id }).then((panel:GenePanel)=>{
-                const genes = panel.genes.map(function(g) { return g.hugoGeneSymbol; }).sort();
-                const popup = open("", "_blank", "width=500,height=500");
-                if (popup) {
-                    const div = popup.document.createElement("div");
-                    popup.document.body.appendChild(div);
+            client
+                .getGenePanelUsingGET({ genePanelId: gene_panel_id })
+                .then((panel: GenePanel) => {
+                    const genes = panel.genes
+                        .map(function(g) {
+                            return g.hugoGeneSymbol;
+                        })
+                        .sort();
+                    const popup = open('', '_blank', 'width=500,height=500');
+                    if (popup) {
+                        const div = popup.document.createElement('div');
+                        popup.document.body.appendChild(div);
 
-                    $(`<h3 style="text-align:center;">${gene_panel_id}</h3><br>`).appendTo(div);
-                    $(`<span>${genes.join("<br>")}</span>`).appendTo(div);
-                }
-            });
+                        $(
+                            `<h3 style="text-align:center;">${gene_panel_id}</h3><br>`
+                        ).appendTo(div);
+                        $(`<span>${genes.join('<br>')}</span>`).appendTo(div);
+                    }
+                });
         });
     });
     return anchor;
 }
 
-export function linebreakGenesetId(
-    genesetId: string
-): string {
+export function linebreakGenesetId(genesetId: string): string {
     return (
         // encode the string as the textual contents of an HTML element
-        $('<div>').text(genesetId).html()
-        // Include zero-width spaces to allow line breaks after punctuation in
-        // (typically long) gs names
-        .replace(/_/g, '_&#8203;')
-        .replace(/\./g, '.&#8203;')
+        $('<div>')
+            .text(genesetId)
+            .html()
+            // Include zero-width spaces to allow line breaks after punctuation in
+            // (typically long) gs names
+            .replace(/_/g, '_&#8203;')
+            .replace(/\./g, '.&#8203;')
     );
 }
 
-export function makeClinicalTrackTooltip(track:ClinicalTrackSpec, link_id?:boolean) {
-    return function(dataUnderMouse:any[]) {
+export function makeClinicalTrackTooltip(
+    track: ClinicalTrackSpec,
+    link_id?: boolean
+) {
+    return function(dataUnderMouse: any[]) {
         let ret = '';
-        if (track.datatype === "counts") {
+        if (track.datatype === 'counts') {
             const d = dataUnderMouse[0];
-            for (let i=0; i<track.countsCategoryLabels.length; i++) {
-                ret += '<span style="color:' + track.countsCategoryFills[i] + ';font-weight:bold;">'+track.countsCategoryLabels[i]+'</span>: '+d.attr_val_counts[track.countsCategoryLabels[i]]+'<br>';
+            for (let i = 0; i < track.countsCategoryLabels.length; i++) {
+                ret +=
+                    '<span style="color:' +
+                    track.countsCategoryFills[i] +
+                    ';font-weight:bold;">' +
+                    track.countsCategoryLabels[i] +
+                    '</span>: ' +
+                    d.attr_val_counts[track.countsCategoryLabels[i]] +
+                    '<br>';
             }
         } else {
-            let attr_val_counts:{[attr_val:string]:number} = {};
+            let attr_val_counts: { [attr_val: string]: number } = {};
             for (const d of dataUnderMouse) {
                 if (d.attr_val_counts) {
                     for (const key of Object.keys(d.attr_val_counts)) {
@@ -85,30 +125,51 @@ export function makeClinicalTrackTooltip(track:ClinicalTrackSpec, link_id?:boole
                 }
             }
             const attr_vals = Object.keys(attr_val_counts);
-            if (track.datatype === "number") {
+            if (track.datatype === 'number') {
                 // average
                 let sum = 0;
                 let count = 0;
                 for (const attr_val of attr_vals) {
                     const numSamplesWithVal = attr_val_counts[attr_val];
-                    sum += numSamplesWithVal*parseFloat(attr_val);
+                    sum += numSamplesWithVal * parseFloat(attr_val);
                     count += numSamplesWithVal;
                 }
-                let displayVal = (sum/count).toFixed(2);
-                if (displayVal.substring(displayVal.length-3) === ".00") {
-                    displayVal = displayVal.substring(0, displayVal.length-3);
+                let displayVal = (sum / count).toFixed(2);
+                if (displayVal.substring(displayVal.length - 3) === '.00') {
+                    displayVal = displayVal.substring(0, displayVal.length - 3);
                 }
-                ret += track.label+': <span style="white-space:nowrap; display:inline-block;"><b>' + displayVal + `${count > 1 ? ` (average of ${count} values)`:""}</b></span><br>`;
+                ret +=
+                    track.label +
+                    ': <span style="white-space:nowrap; display:inline-block;"><b>' +
+                    displayVal +
+                    `${
+                        count > 1 ? ` (average of ${count} values)` : ''
+                    }</b></span><br>`;
             } else {
                 if (attr_vals.length > 1) {
-                    ret += track.label+':<br>';
+                    ret += track.label + ':<br>';
                     for (let i = 0; i < attr_vals.length; i++) {
                         const val = attr_vals[i];
-                        ret += '<span style="white-space:nowrap; display:inline-block;"><b>' + val + '</b>: ' + attr_val_counts[val] + ` sample${attr_val_counts[val] === 1 ? "" : "s"}</span><br>`;
+                        ret +=
+                            '<span style="white-space:nowrap; display:inline-block;"><b>' +
+                            val +
+                            '</b>: ' +
+                            attr_val_counts[val] +
+                            ` sample${
+                                attr_val_counts[val] === 1 ? '' : 's'
+                            }</span><br>`;
                     }
                 } else if (attr_vals.length === 1) {
                     let displayVal = attr_vals[0];
-                    ret += track.label+': <span style="white-space:nowrap; display:inline-block;"><b>' + displayVal + `</b>${dataUnderMouse.length > 1 ? ` (${attr_val_counts[attr_vals[0]]} samples)` : ""}</span><br>`;
+                    ret +=
+                        track.label +
+                        ': <span style="white-space:nowrap; display:inline-block;"><b>' +
+                        displayVal +
+                        `</b>${
+                            dataUnderMouse.length > 1
+                                ? ` (${attr_val_counts[attr_vals[0]]} samples)`
+                                : ''
+                        }</span><br>`;
                 }
             }
         }
@@ -119,19 +180,27 @@ export function makeClinicalTrackTooltip(track:ClinicalTrackSpec, link_id?:boole
             }
         }
         if (naCount > 0 && track.na_tooltip_value) {
-            ret += `${track.label}: <b>${track.na_tooltip_value}</b>${dataUnderMouse.length > 1 ? ` (${naCount} samples)` : ""}<br/>`;
+            ret += `${track.label}: <b>${track.na_tooltip_value}</b>${
+                dataUnderMouse.length > 1 ? ` (${naCount} samples)` : ''
+            }<br/>`;
         }
-        return $('<div>').addClass(TOOLTIP_DIV_CLASS).append(getCaseViewElt(dataUnderMouse, !!link_id)).append("<br/>").append(ret);
+        return $('<div>')
+            .addClass(TOOLTIP_DIV_CLASS)
+            .append(getCaseViewElt(dataUnderMouse, !!link_id))
+            .append('<br/>')
+            .append(ret);
     };
 }
-export function makeHeatmapTrackTooltip(genetic_alteration_type:MolecularProfile["molecularAlterationType"], link_id?:boolean) {
-    return function (dataUnderMouse:any[]) {
-        
+export function makeHeatmapTrackTooltip(
+    genetic_alteration_type: MolecularProfile['molecularAlterationType'],
+    link_id?: boolean
+) {
+    return function(dataUnderMouse: any[]) {
         let data_header = '';
         let valueTextElement = tooltipTextElementNaN;
         let categoryTextElement = '';
 
-        switch(genetic_alteration_type) {
+        switch (genetic_alteration_type) {
             case AlterationTypeConstants.MRNA_EXPRESSION:
                 data_header = 'MRNA: ';
                 break;
@@ -147,12 +216,19 @@ export function makeHeatmapTrackTooltip(genetic_alteration_type:MolecularProfile
         }
 
         let profileDataSum = 0;
-        const profileCategories:string[] = [];
+        const profileCategories: string[] = [];
         let profileDataCount = 0;
         let categoryCount = 0;
         for (const d of dataUnderMouse) {
-            if ((d.profile_data !== null) && (typeof d.profile_data !== "undefined")) {
-                if (genetic_alteration_type === AlterationTypeConstants.GENERIC_ASSAY && d.category) {
+            if (
+                d.profile_data !== null &&
+                typeof d.profile_data !== 'undefined'
+            ) {
+                if (
+                    genetic_alteration_type ===
+                        AlterationTypeConstants.GENERIC_ASSAY &&
+                    d.category
+                ) {
                     profileCategories.push(d.category);
                     categoryCount += 1;
                 } else {
@@ -161,23 +237,27 @@ export function makeHeatmapTrackTooltip(genetic_alteration_type:MolecularProfile
                 }
             }
         }
-        
+
         if (profileDataCount > 0) {
-            const profileDisplayValue = (profileDataSum/profileDataCount).toFixed(2);
+            const profileDisplayValue = (
+                profileDataSum / profileDataCount
+            ).toFixed(2);
             if (profileDataCount === 1) {
                 valueTextElement = profileDisplayValue;
             } else {
                 valueTextElement = `${profileDisplayValue} (average of ${profileDataCount} values)`;
             }
         }
-        
+
         if (categoryCount > 0) {
             if (profileDataCount === 0 && categoryCount === 1) {
                 categoryTextElement = profileCategories[0];
             } else if (profileDataCount > 0 && categoryCount === 1) {
                 categoryTextElement = `${profileCategories[0]}`;
             } else {
-                categoryTextElement = `${_.uniq(profileCategories).join(", ")} (${categoryCount} data points)`;
+                categoryTextElement = `${_.uniq(profileCategories).join(
+                    ', '
+                )} (${categoryCount} data points)`;
             }
         }
 
@@ -192,190 +272,301 @@ export function makeHeatmapTrackTooltip(genetic_alteration_type:MolecularProfile
             ret += '<b>' + categoryTextElement + '</b>';
         }
         ret += '<br />';
-        return $('<div>').addClass(TOOLTIP_DIV_CLASS).append(getCaseViewElt(dataUnderMouse, !!link_id)).append("<br/>").append(ret);
+        return $('<div>')
+            .addClass(TOOLTIP_DIV_CLASS)
+            .append(getCaseViewElt(dataUnderMouse, !!link_id))
+            .append('<br/>')
+            .append(ret);
     };
-};
+}
 
 export function makeGeneticTrackTooltip_getCoverageInformation(
-    profiled_in: {genePanelId?:string, molecularProfileId:string}[]|undefined,
-    not_profiled_in: {genePanelId?:string, molecularProfileId:string}[]|undefined,
+    profiled_in:
+        | { genePanelId?: string; molecularProfileId: string }[]
+        | undefined,
+    not_profiled_in:
+        | { genePanelId?: string; molecularProfileId: string }[]
+        | undefined,
     alterationTypesInQuery?: string[],
-    molecularProfileIdToMolecularProfile?: {[molecularProfileId:string]:MolecularProfile}
-):{
+    molecularProfileIdToMolecularProfile?: {
+        [molecularProfileId: string]: MolecularProfile;
+    }
+): {
     dispProfiledGenePanelIds: string[];
     dispNotProfiledGenePanelIds: string[];
-    dispProfiledIn: string[]|undefined;
-    dispNotProfiledIn: string[]|undefined;
-    dispAllProfiled:boolean;
-    dispNotProfiled:boolean;
+    dispProfiledIn: string[] | undefined;
+    dispNotProfiledIn: string[] | undefined;
+    dispAllProfiled: boolean;
+    dispNotProfiled: boolean;
 } {
-    let dispProfiledGenePanelIds:string[] = [];
-    let dispProfiledGenePanelIdsMap:{[genePanelId:string]:string} = {};
-    let dispProfiledIn:string[]|undefined = undefined;
-    let dispProfiledInMap:{[molecularProfileId:string]:string} = {};
-    let dispNotProfiledIn:string[]|undefined = undefined;
-    let dispNotProfiledGenePanelIds:string[] = [];
-    let profiledInTypes:{[type:string]:string}|undefined = undefined;
+    let dispProfiledGenePanelIds: string[] = [];
+    let dispProfiledGenePanelIdsMap: { [genePanelId: string]: string } = {};
+    let dispProfiledIn: string[] | undefined = undefined;
+    let dispProfiledInMap: { [molecularProfileId: string]: string } = {};
+    let dispNotProfiledIn: string[] | undefined = undefined;
+    let dispNotProfiledGenePanelIds: string[] = [];
+    let profiledInTypes: { [type: string]: string } | undefined = undefined;
     if (profiled_in) {
-        dispProfiledGenePanelIds = _.uniq((profiled_in.map(x=>x.genePanelId) as (string|undefined)[]).filter(x=>!!x) as string[]);
-        dispProfiledIn = _.uniq(profiled_in.map(x=>x.molecularProfileId));
+        dispProfiledGenePanelIds = _.uniq((profiled_in.map(
+            x => x.genePanelId
+        ) as (string | undefined)[]).filter(x => !!x) as string[]);
+        dispProfiledIn = _.uniq(profiled_in.map(x => x.molecularProfileId));
         if (molecularProfileIdToMolecularProfile) {
-            profiledInTypes = _.keyBy(dispProfiledIn, molecularProfileId=>molecularProfileIdToMolecularProfile[molecularProfileId].molecularAlterationType);
+            profiledInTypes = _.keyBy(
+                dispProfiledIn,
+                molecularProfileId =>
+                    molecularProfileIdToMolecularProfile[molecularProfileId]
+                        .molecularAlterationType
+            );
         }
         dispProfiledInMap = _.keyBy(dispProfiledIn);
         dispProfiledGenePanelIdsMap = _.keyBy(dispProfiledGenePanelIds);
     }
     if (not_profiled_in) {
-        dispNotProfiledIn = _.uniq(not_profiled_in.map(x=>x.molecularProfileId)).filter(x=>!dispProfiledInMap[x]); // filter out profiles in profiled_in to avoid confusing tooltip (this occurs e.g. w multiple samples, one profiled one not)
-        if (profiledInTypes && alterationTypesInQuery && molecularProfileIdToMolecularProfile) {
-            let notProfiledInTypes = _.keyBy(dispNotProfiledIn, molecularProfileId=>molecularProfileIdToMolecularProfile[molecularProfileId].molecularAlterationType);
+        dispNotProfiledIn = _.uniq(
+            not_profiled_in.map(x => x.molecularProfileId)
+        ).filter(x => !dispProfiledInMap[x]); // filter out profiles in profiled_in to avoid confusing tooltip (this occurs e.g. w multiple samples, one profiled one not)
+        if (
+            profiledInTypes &&
+            alterationTypesInQuery &&
+            molecularProfileIdToMolecularProfile
+        ) {
+            let notProfiledInTypes = _.keyBy(
+                dispNotProfiledIn,
+                molecularProfileId =>
+                    molecularProfileIdToMolecularProfile[molecularProfileId]
+                        .molecularAlterationType
+            );
             // add an entry to 'not profiled in' for each alteration type in the query iff the sample is not profiled in a profile of that type, and that type is not already accounted for.
             // This is for the case of multiple study query - eg one study has CNA profile, the other doesnt, and we want to show in a tooltip from the other study that
             //      the sample is not profiled for CNA. If the study actually has a CNA profile, then we wont show "not profiled for copy number alterations" because
             //      that will be filtered out below because its in profiledInTypes or notProfiledInTypes. Otherwise, CNA will be in alterationTypesInQuery,
             //      and it wont be covered in profiledInTypes or notProfiledInTypes, so it will make sense to say "copy number alterations" in that generality.
-            dispNotProfiledIn = dispNotProfiledIn.concat(alterationTypesInQuery.filter(t=>(!profiledInTypes![t] && !notProfiledInTypes[t])).map(t=>alterationTypeToProfiledForText[t]));
+            dispNotProfiledIn = dispNotProfiledIn.concat(
+                alterationTypesInQuery
+                    .filter(t => !profiledInTypes![t] && !notProfiledInTypes[t])
+                    .map(t => alterationTypeToProfiledForText[t])
+            );
         }
-        dispNotProfiledGenePanelIds = _.uniq(not_profiled_in.map(x=>x.genePanelId)).filter(x=>(!!x && !dispProfiledGenePanelIdsMap[x])) as string[] ;
+        dispNotProfiledGenePanelIds = _.uniq(
+            not_profiled_in.map(x => x.genePanelId)
+        ).filter(x => !!x && !dispProfiledGenePanelIdsMap[x]) as string[];
     }
-    const dispAllProfiled = !!(dispProfiledIn && dispProfiledIn.length && dispNotProfiledIn && !dispNotProfiledIn.length);
-    const dispNotProfiled = !!(dispNotProfiledIn && dispNotProfiledIn.length && dispProfiledIn && !dispProfiledIn.length);
+    const dispAllProfiled = !!(
+        dispProfiledIn &&
+        dispProfiledIn.length &&
+        dispNotProfiledIn &&
+        !dispNotProfiledIn.length
+    );
+    const dispNotProfiled = !!(
+        dispNotProfiledIn &&
+        dispNotProfiledIn.length &&
+        dispProfiledIn &&
+        !dispProfiledIn.length
+    );
     return {
-        dispProfiledGenePanelIds, dispNotProfiledGenePanelIds, dispProfiledIn, dispNotProfiledIn, dispAllProfiled, dispNotProfiled
+        dispProfiledGenePanelIds,
+        dispNotProfiledGenePanelIds,
+        dispProfiledIn,
+        dispNotProfiledIn,
+        dispAllProfiled,
+        dispNotProfiled,
     };
 }
 
 export function getCaseViewElt(
-    dataUnderMouse:Pick<GeneticTrackDatum, "sample"|"patient"|"study_id">[],
-    caseViewLinkout:boolean
+    dataUnderMouse: Pick<
+        GeneticTrackDatum,
+        'sample' | 'patient' | 'study_id'
+    >[],
+    caseViewLinkout: boolean
 ) {
     if (!dataUnderMouse.length) {
-        return "";
+        return '';
     }
 
     let caseIdElt;
     if (dataUnderMouse[0].sample) {
         if (dataUnderMouse.length > 1) {
-            caseIdElt = (
-                caseViewLinkout ?
-                    `<a href=${
-                        getSampleViewUrl(dataUnderMouse[0].study_id, dataUnderMouse[0].sample, dataUnderMouse.map(d=>({studyId:d.study_id, patientId:d.patient})))
-                        } target="_blank">View these ${dataUnderMouse.length} samples<a/>` :
-                    `<span>${dataUnderMouse.length} samples</span>`
-            );
+            caseIdElt = caseViewLinkout
+                ? `<a href=${getSampleViewUrl(
+                      dataUnderMouse[0].study_id,
+                      dataUnderMouse[0].sample,
+                      dataUnderMouse.map(d => ({
+                          studyId: d.study_id,
+                          patientId: d.patient,
+                      }))
+                  )} target="_blank">View these ${
+                      dataUnderMouse.length
+                  } samples<a/>`
+                : `<span>${dataUnderMouse.length} samples</span>`;
         } else {
-            caseIdElt = (caseViewLinkout ? sampleViewAnchorTag(dataUnderMouse[0].study_id, dataUnderMouse[0].sample) : `<span>${dataUnderMouse[0].sample}</span>`);
+            caseIdElt = caseViewLinkout
+                ? sampleViewAnchorTag(
+                      dataUnderMouse[0].study_id,
+                      dataUnderMouse[0].sample
+                  )
+                : `<span>${dataUnderMouse[0].sample}</span>`;
         }
     } else if (dataUnderMouse[0].patient) {
         if (dataUnderMouse.length > 1) {
-            caseIdElt = (
-                caseViewLinkout ?
-                    `<a href=${
-                        getPatientViewUrl(dataUnderMouse[0].study_id, dataUnderMouse[0].patient, dataUnderMouse.map(d=>({studyId:d.study_id, patientId:d.patient!})))
-                        } target="_blank">View these ${dataUnderMouse.length} patients<a/>` :
-                    `<span>${dataUnderMouse.length} patients</span>`
-            );
+            caseIdElt = caseViewLinkout
+                ? `<a href=${getPatientViewUrl(
+                      dataUnderMouse[0].study_id,
+                      dataUnderMouse[0].patient,
+                      dataUnderMouse.map(d => ({
+                          studyId: d.study_id,
+                          patientId: d.patient!,
+                      }))
+                  )} target="_blank">View these ${
+                      dataUnderMouse.length
+                  } patients<a/>`
+                : `<span>${dataUnderMouse.length} patients</span>`;
         } else {
-            caseIdElt = (caseViewLinkout ? patientViewAnchorTag(dataUnderMouse[0].study_id, dataUnderMouse[0].patient) : `<span>${dataUnderMouse[0].patient}</span>`);
+            caseIdElt = caseViewLinkout
+                ? patientViewAnchorTag(
+                      dataUnderMouse[0].study_id,
+                      dataUnderMouse[0].patient
+                  )
+                : `<span>${dataUnderMouse[0].patient}</span>`;
         }
     } else {
-        caseIdElt = "";
+        caseIdElt = '';
     }
     return caseIdElt;
 }
 
 export function makeGeneticTrackTooltip(
-    caseViewLinkout:boolean,
-    getMolecularProfileMap?:()=>{[molecularProfileId:string]:MolecularProfile}|undefined,
-    alterationTypesInQuery?:string[],
+    caseViewLinkout: boolean,
+    getMolecularProfileMap?: () =>
+        | { [molecularProfileId: string]: MolecularProfile }
+        | undefined,
+    alterationTypesInQuery?: string[]
 ) {
     // TODO: all the data here is old API data
-    function listOfMutationOrFusionDataToHTML(data:any[], multipleSamplesUnderMouse:boolean) {
+    function listOfMutationOrFusionDataToHTML(
+        data: any[],
+        multipleSamplesUnderMouse: boolean
+    ) {
         const countsMap = new ListIndexedMapOfCounts();
         for (const d of data) {
             countsMap.increment(
-                d.hugo_gene_symbol, d.amino_acid_change, d.cancer_hotspots_hotspot,
-                d.oncokb_oncogenic, d.driver_filter, d.driver_filter_annotation,
-                d.driver_tiers_filter, d.driver_tiers_filter_annotation, d.germline
+                d.hugo_gene_symbol,
+                d.amino_acid_change,
+                d.cancer_hotspots_hotspot,
+                d.oncokb_oncogenic,
+                d.driver_filter,
+                d.driver_filter_annotation,
+                d.driver_tiers_filter,
+                d.driver_tiers_filter_annotation,
+                d.germline
             );
         }
-        return countsMap.entries().map((
-            {key:[hugo_gene_symbol, amino_acid_change, cancer_hotspots_hotspot,
-            oncokb_oncogenic, driver_filter, driver_filter_annotation,
-                driver_tiers_filter, driver_tiers_filter_annotation, germline],
-            value:count})=>{
-            var ret = $('<span>').css({
-                "white-space":"nowrap",
-                "display":"inline-block"
+        return countsMap
+            .entries()
+            .map(
+                ({
+                    key: [
+                        hugo_gene_symbol,
+                        amino_acid_change,
+                        cancer_hotspots_hotspot,
+                        oncokb_oncogenic,
+                        driver_filter,
+                        driver_filter_annotation,
+                        driver_tiers_filter,
+                        driver_tiers_filter_annotation,
+                        germline,
+                    ],
+                    value: count,
+                }) => {
+                    var ret = $('<span>').css({
+                        'white-space': 'nowrap',
+                        display: 'inline-block',
+                    });
+                    ret.append(
+                        `<b>${hugo_gene_symbol} ${amino_acid_change}</b>`
+                    );
+                    if (cancer_hotspots_hotspot) {
+                        ret.append(
+                            `<img src="${hotspotsImg}" title="Hotspot" style="height:11px; width:11px; margin-left:3px"/>`
+                        );
+                    }
+                    if (oncokb_oncogenic) {
+                        ret.append(
+                            `<img src="${oncokbImg}" title="${oncokb_oncogenic}" style="height:11px; width:11px;margin-left:3px"/>`
+                        );
+                    }
+                    //If we have data for the binary custom driver annotations, append an icon to the tooltip with the annotation information
+                    if (driver_filter && driver_filter === 'Putative_Driver') {
+                        ret.append(
+                            `<img src="${customDriverImg}" title="${driver_filter}: ${driver_filter_annotation}" alt="driver filter" style="height:11px; width:11px;margin-left:3px"/>`
+                        );
+                    }
+                    //If we have data for the class custom driver annotations, append an icon to the tooltip with the annotation information
+                    if (driver_tiers_filter) {
+                        ret.append(
+                            `<img src="${customDriverTiersImg}" title="${driver_tiers_filter}: ${driver_tiers_filter_annotation}" alt="driver tiers filter" style="height:11px; width:11px;margin-left:3px"/>`
+                        );
+                    }
+
+                    // AT THE END, append germline symbol if necessary
+                    if (germline) {
+                        ret.append(generateGermlineLabel());
+                    }
+                    // finally, add the number of samples with this, if multipleSamplesUnderMouse
+                    if (multipleSamplesUnderMouse) {
+                        ret.append(`&nbsp;(${count})`);
+                    }
+                    return ret;
+                }
+            );
+    }
+    function listOfCNAToHTML(data: any[], multipleSamplesUnderMouse: boolean) {
+        const countsMap = new ListIndexedMapOfCounts();
+        for (const d of data) {
+            countsMap.increment(d.hugo_gene_symbol, d.cna, d.oncokb_oncogenic);
+        }
+        return countsMap
+            .entries()
+            .map(
+                ({
+                    key: [hugo_gene_symbol, cna, oncokb_oncogenic],
+                    value: count,
+                }) => {
+                    var ret = $('<span>');
+                    ret.append(`<b>${hugo_gene_symbol} ${cna}</b>`);
+                    if (oncokb_oncogenic) {
+                        ret.append(
+                            `<img src=${oncokbImg} title="${oncokb_oncogenic}" style="height:11px; width:11px;margin-left:3px"/>`
+                        );
+                    }
+                    // finally, add the number of samples with this, if multipleSamplesUnderMouse
+                    if (multipleSamplesUnderMouse) {
+                        ret.append(`&nbsp;(${count})`);
+                    }
+                    return ret;
+                }
+            );
+    }
+    function listOfMRNAOrPROTToHTML(
+        data: any[],
+        multipleSamplesUnderMouse: boolean
+    ) {
+        const countsMap = new ListIndexedMapOfCounts();
+        for (const d of data) {
+            countsMap.increment(d.hugo_gene_symbol, d.direction);
+        }
+        return countsMap
+            .entries()
+            .map(({ key: [hugo_gene_symbol, direction], value: count }) => {
+                var ret = $('<span>');
+                ret.append(`<b>${hugo_gene_symbol} ${direction}</b>`);
+                // finally, add the number of samples with this, if multipleSamplesUnderMouse
+                if (multipleSamplesUnderMouse) {
+                    ret.append(`&nbsp;(${count})`);
+                }
+                return ret;
             });
-            ret.append(`<b>${hugo_gene_symbol} ${amino_acid_change}</b>`);
-            if (cancer_hotspots_hotspot) {
-                ret.append(`<img src="${hotspotsImg}" title="Hotspot" style="height:11px; width:11px; margin-left:3px"/>`);
-            }
-            if (oncokb_oncogenic) {
-                ret.append(`<img src="${oncokbImg}" title="${oncokb_oncogenic}" style="height:11px; width:11px;margin-left:3px"/>`);
-            }
-            //If we have data for the binary custom driver annotations, append an icon to the tooltip with the annotation information
-            if (driver_filter && driver_filter === "Putative_Driver") {
-                ret.append(`<img src="${customDriverImg}" title="${driver_filter}: ${driver_filter_annotation}" alt="driver filter" style="height:11px; width:11px;margin-left:3px"/>`);
-            }
-            //If we have data for the class custom driver annotations, append an icon to the tooltip with the annotation information
-            if (driver_tiers_filter) {
-                ret.append(`<img src="${customDriverTiersImg}" title="${driver_tiers_filter}: ${driver_tiers_filter_annotation}" alt="driver tiers filter" style="height:11px; width:11px;margin-left:3px"/>`);
-            }
-
-
-            // AT THE END, append germline symbol if necessary
-            if (germline) {
-                ret.append(generateGermlineLabel());
-            }
-            // finally, add the number of samples with this, if multipleSamplesUnderMouse
-            if (multipleSamplesUnderMouse) {
-                ret.append(`&nbsp;(${count})`);
-            }
-            return ret;
-        });
-    }
-    function listOfCNAToHTML(data:any[], multipleSamplesUnderMouse:boolean) {
-        const countsMap = new ListIndexedMapOfCounts();
-        for (const d of data) {
-            countsMap.increment(
-                d.hugo_gene_symbol, d.cna, d.oncokb_oncogenic
-            );
-        }
-        return countsMap.entries().map((
-            {key:[hugo_gene_symbol, cna, oncokb_oncogenic],
-            value:count})=>{
-            var ret = $('<span>');
-            ret.append(`<b>${hugo_gene_symbol} ${cna}</b>`);
-            if (oncokb_oncogenic) {
-                ret.append(`<img src=${oncokbImg} title="${oncokb_oncogenic}" style="height:11px; width:11px;margin-left:3px"/>`);
-            }
-            // finally, add the number of samples with this, if multipleSamplesUnderMouse
-            if (multipleSamplesUnderMouse) {
-                ret.append(`&nbsp;(${count})`);
-            }
-            return ret;
-        });
-    }
-    function listOfMRNAOrPROTToHTML(data:any[], multipleSamplesUnderMouse:boolean) {
-        const countsMap = new ListIndexedMapOfCounts();
-        for (const d of data) {
-            countsMap.increment(
-                d.hugo_gene_symbol, d.direction
-            );
-        }
-        return countsMap.entries().map((
-            {key:[hugo_gene_symbol, direction],
-                value:count})=>{
-            var ret = $('<span>');
-            ret.append(`<b>${hugo_gene_symbol} ${direction}</b>`);
-            // finally, add the number of samples with this, if multipleSamplesUnderMouse
-            if (multipleSamplesUnderMouse) {
-                ret.append(`&nbsp;(${count})`);
-            }
-            return ret;
-        });
     }
 
     function generateGermlineLabel() {
@@ -384,30 +575,53 @@ export function makeGeneticTrackTooltip(
         return ret;
     }
 
-    const disp_cna:{[integerCN:string]:string} = {'-2': 'HOMODELETED', '-1': 'HETLOSS', '1': 'GAIN', '2': 'AMPLIFIED'};
-    return function (dataUnderMouse:Pick<GeneticTrackDatum, "data"|"profiled_in"|"sample"|"patient"|"study_id"|"na"|"not_profiled_in"|"disp_germ">[]) {
+    const disp_cna: { [integerCN: string]: string } = {
+        '-2': 'HOMODELETED',
+        '-1': 'HETLOSS',
+        '1': 'GAIN',
+        '2': 'AMPLIFIED',
+    };
+    return function(
+        dataUnderMouse: Pick<
+            GeneticTrackDatum,
+            | 'data'
+            | 'profiled_in'
+            | 'sample'
+            | 'patient'
+            | 'study_id'
+            | 'na'
+            | 'not_profiled_in'
+            | 'disp_germ'
+        >[]
+    ) {
         const ret = $('<div>').addClass(TOOLTIP_DIV_CLASS);
-        ret.append(getCaseViewElt(dataUnderMouse, caseViewLinkout)).append("<br/>");
-        let mutations:any[] = [];
-        let cna:any[] = [];
-        let mrna:any[] = [];
-        let prot:any[] = [];
-        let fusions:any[] = [];
+        ret.append(getCaseViewElt(dataUnderMouse, caseViewLinkout)).append(
+            '<br/>'
+        );
+        let mutations: any[] = [];
+        let cna: any[] = [];
+        let mrna: any[] = [];
+        let prot: any[] = [];
+        let fusions: any[] = [];
         // collect all data under mouse
         for (const d of dataUnderMouse) {
             for (let i = 0; i < d.data.length; i++) {
                 const datum = d.data[i];
-                const molecularAlterationType = datum.molecularProfileAlterationType;
+                const molecularAlterationType =
+                    datum.molecularProfileAlterationType;
                 const hugoGeneSymbol = datum.hugoGeneSymbol;
                 switch (molecularAlterationType) {
-                    case "MUTATION_EXTENDED":
-                        const tooltip_datum:any = {};
+                    case 'MUTATION_EXTENDED':
+                        const tooltip_datum: any = {};
                         tooltip_datum.hugo_gene_symbol = hugoGeneSymbol;
                         tooltip_datum.amino_acid_change = datum.proteinChange;
                         tooltip_datum.driver_filter = datum.driverFilter;
-                        tooltip_datum.driver_filter_annotation = datum.driverFilterAnnotation;
-                        tooltip_datum.driver_tiers_filter = datum.driverTiersFilter;
-                        tooltip_datum.driver_tiers_filter_annotation = datum.driverTiersFilterAnnotation;
+                        tooltip_datum.driver_filter_annotation =
+                            datum.driverFilterAnnotation;
+                        tooltip_datum.driver_tiers_filter =
+                            datum.driverTiersFilter;
+                        tooltip_datum.driver_tiers_filter_annotation =
+                            datum.driverTiersFilterAnnotation;
                         if (datum.isHotspot) {
                             tooltip_datum.cancer_hotspots_hotspot = true;
                         }
@@ -418,13 +632,23 @@ export function makeGeneticTrackTooltip(
                         if (oncokb_oncogenic) {
                             tooltip_datum.oncokb_oncogenic = oncokb_oncogenic;
                         }
-                        (datum.alterationSubType === "fusion" ? fusions : mutations).push(tooltip_datum);
+                        (datum.alterationSubType === 'fusion'
+                            ? fusions
+                            : mutations
+                        ).push(tooltip_datum);
                         break;
-                    case "COPY_NUMBER_ALTERATION":
-                        if (disp_cna.hasOwnProperty(datum.value as AnnotatedNumericGeneMolecularData["value"])) {
-                            const tooltip_datum:any = {
-                                cna: disp_cna[datum.value as AnnotatedNumericGeneMolecularData["value"]],
-                                hugo_gene_symbol: hugoGeneSymbol
+                    case 'COPY_NUMBER_ALTERATION':
+                        if (
+                            disp_cna.hasOwnProperty(
+                                datum.value as AnnotatedNumericGeneMolecularData['value']
+                            )
+                        ) {
+                            const tooltip_datum: any = {
+                                cna:
+                                    disp_cna[
+                                        datum.value as AnnotatedNumericGeneMolecularData['value']
+                                    ],
+                                hugo_gene_symbol: hugoGeneSymbol,
                             };
                             const oncokb_oncogenic = datum.oncoKbOncogenic;
                             if (oncokb_oncogenic) {
@@ -433,14 +657,23 @@ export function makeGeneticTrackTooltip(
                             cna.push(tooltip_datum);
                         }
                         break;
-                    case "MRNA_EXPRESSION":
-                    case "PROTEIN_LEVEL":
+                    case 'MRNA_EXPRESSION':
+                    case 'PROTEIN_LEVEL':
                         let direction = datum.alterationSubType;
-                        let array = (molecularAlterationType === "MRNA_EXPRESSION" ? mrna : prot);
-                        if (direction === "high") {
-                            array.push({hugo_gene_symbol: hugoGeneSymbol, direction: "HIGH"});
-                        } else if (direction === "low") {
-                            array.push({hugo_gene_symbol: hugoGeneSymbol, direction: "LOW"});
+                        let array =
+                            molecularAlterationType === 'MRNA_EXPRESSION'
+                                ? mrna
+                                : prot;
+                        if (direction === 'high') {
+                            array.push({
+                                hugo_gene_symbol: hugoGeneSymbol,
+                                direction: 'HIGH',
+                            });
+                        } else if (direction === 'low') {
+                            array.push({
+                                hugo_gene_symbol: hugoGeneSymbol,
+                                direction: 'LOW',
+                            });
                         }
                         break;
                 }
@@ -448,10 +681,13 @@ export function makeGeneticTrackTooltip(
         }
         if (fusions.length > 0) {
             ret.append('Fusion: ');
-            fusions = listOfMutationOrFusionDataToHTML(fusions, dataUnderMouse.length > 1);
+            fusions = listOfMutationOrFusionDataToHTML(
+                fusions,
+                dataUnderMouse.length > 1
+            );
             for (var i = 0; i < fusions.length; i++) {
                 if (i > 0) {
-                    ret.append(",");
+                    ret.append(',');
                 }
                 ret.append(fusions[i]);
             }
@@ -459,10 +695,13 @@ export function makeGeneticTrackTooltip(
         }
         if (mutations.length > 0) {
             ret.append('Mutation: ');
-            mutations = listOfMutationOrFusionDataToHTML(mutations, dataUnderMouse.length > 1);
+            mutations = listOfMutationOrFusionDataToHTML(
+                mutations,
+                dataUnderMouse.length > 1
+            );
             for (var i = 0; i < mutations.length; i++) {
                 if (i > 0) {
-                    ret.append(", ");
+                    ret.append(', ');
                 }
                 ret.append(mutations[i]);
             }
@@ -473,7 +712,7 @@ export function makeGeneticTrackTooltip(
             cna = listOfCNAToHTML(cna, dataUnderMouse.length > 1);
             for (var i = 0; i < cna.length; i++) {
                 if (i > 0) {
-                    ret.append(", ");
+                    ret.append(', ');
                 }
                 ret.append(cna[i]);
             }
@@ -484,7 +723,7 @@ export function makeGeneticTrackTooltip(
             mrna = listOfMRNAOrPROTToHTML(mrna, dataUnderMouse.length > 1);
             for (var i = 0; i < mrna.length; i++) {
                 if (i > 0) {
-                    ret.append(", ");
+                    ret.append(', ');
                 }
                 ret.append(mrna[i]);
             }
@@ -495,23 +734,33 @@ export function makeGeneticTrackTooltip(
             prot = listOfMRNAOrPROTToHTML(prot, dataUnderMouse.length > 1);
             for (var i = 0; i < prot.length; i++) {
                 if (i > 0) {
-                    ret.append(", ");
+                    ret.append(', ');
                 }
                 ret.append(prot[i]);
             }
             ret.append('<br>');
         }
         // Gene panel coverage
-        const molecularProfileMap = getMolecularProfileMap && getMolecularProfileMap();
+        const molecularProfileMap =
+            getMolecularProfileMap && getMolecularProfileMap();
         const profiledGenePanelCounts = new ListIndexedMapOfCounts<string>();
         const notProfiledGenePanelCounts = new ListIndexedMapOfCounts<string>();
-        const profiledMolecularProfileCounts = new ListIndexedMapOfCounts<string>();
-        const notProfiledMolecularProfileCounts = new ListIndexedMapOfCounts<string>();
+        const profiledMolecularProfileCounts = new ListIndexedMapOfCounts<
+            string
+        >();
+        const notProfiledMolecularProfileCounts = new ListIndexedMapOfCounts<
+            string
+        >();
         let allProfiledCount = 0;
         let noneProfiledCount = 0;
 
         for (const d of dataUnderMouse) {
-            const coverageInformation = makeGeneticTrackTooltip_getCoverageInformation(d.profiled_in, d.not_profiled_in, alterationTypesInQuery, molecularProfileMap);
+            const coverageInformation = makeGeneticTrackTooltip_getCoverageInformation(
+                d.profiled_in,
+                d.not_profiled_in,
+                alterationTypesInQuery,
+                molecularProfileMap
+            );
             for (const genePanelId of coverageInformation.dispProfiledGenePanelIds) {
                 profiledGenePanelCounts.increment(genePanelId);
             }
@@ -520,12 +769,16 @@ export function makeGeneticTrackTooltip(
             }
             if (coverageInformation.dispProfiledIn) {
                 for (const molecularProfileId of coverageInformation.dispProfiledIn) {
-                    profiledMolecularProfileCounts.increment(molecularProfileId);
+                    profiledMolecularProfileCounts.increment(
+                        molecularProfileId
+                    );
                 }
             }
             if (coverageInformation.dispNotProfiledIn) {
                 for (const molecularProfileId of coverageInformation.dispNotProfiledIn) {
-                    notProfiledMolecularProfileCounts.increment(molecularProfileId);
+                    notProfiledMolecularProfileCounts.increment(
+                        molecularProfileId
+                    );
                 }
             }
             if (coverageInformation.dispAllProfiled) {
@@ -537,19 +790,24 @@ export function makeGeneticTrackTooltip(
         const profiledGenePanelEntries = profiledGenePanelCounts.entries();
         const notProfiledGenePanelEntries = notProfiledGenePanelCounts.entries();
 
-        if (profiledGenePanelEntries.length || notProfiledGenePanelEntries.length) {
-            ret.append("Gene Panels: ");
+        if (
+            profiledGenePanelEntries.length ||
+            notProfiledGenePanelEntries.length
+        ) {
+            ret.append('Gene Panels: ');
             let needsCommaFirst = false;
             for (const entry of profiledGenePanelEntries) {
                 if (needsCommaFirst) {
-                    ret.append(",&nbsp;");
+                    ret.append(',&nbsp;');
                 }
                 needsCommaFirst = true;
-                ret.append(makeGenePanelPopupLink(
-                    entry.key[0],
-            true,
-                    (dataUnderMouse.length > 1 ? entry.value : undefined)
-                ));
+                ret.append(
+                    makeGenePanelPopupLink(
+                        entry.key[0],
+                        true,
+                        dataUnderMouse.length > 1 ? entry.value : undefined
+                    )
+                );
             }
             for (const entry of notProfiledGenePanelEntries) {
                 if (profiledGenePanelCounts.has(...entry.key)) {
@@ -557,16 +815,18 @@ export function makeGeneticTrackTooltip(
                     continue;
                 }
                 if (needsCommaFirst) {
-                    ret.append(",&nbsp;");
+                    ret.append(',&nbsp;');
                 }
                 needsCommaFirst = true;
-                ret.append(makeGenePanelPopupLink(
-                    entry.key[0],
-                    false,
-                    (dataUnderMouse.length > 1 ? entry.value : undefined)
-                ));
+                ret.append(
+                    makeGenePanelPopupLink(
+                        entry.key[0],
+                        false,
+                        dataUnderMouse.length > 1 ? entry.value : undefined
+                    )
+                );
             }
-            ret.append("<br>");
+            ret.append('<br>');
         }
 
         // Molecular profile coverage
@@ -575,45 +835,86 @@ export function makeGeneticTrackTooltip(
 
         // only show specifics if not all profiled or all unprofiled
         if (allProfiledCount === dataUnderMouse.length) {
-            ret.append("Profiled in all selected molecular profiles." + (dataUnderMouse.length > 1 ? ` (${allProfiledCount})` : ""));
-            ret.append("<br>");
+            ret.append(
+                'Profiled in all selected molecular profiles.' +
+                    (dataUnderMouse.length > 1 ? ` (${allProfiledCount})` : '')
+            );
+            ret.append('<br>');
         } else if (noneProfiledCount === dataUnderMouse.length) {
-            ret.append("Not profiled in selected molecular profiles." + (dataUnderMouse.length > 1 ? ` (${noneProfiledCount})` : ""));
-            ret.append("<br>");
+            ret.append(
+                'Not profiled in selected molecular profiles.' +
+                    (dataUnderMouse.length > 1 ? ` (${noneProfiledCount})` : '')
+            );
+            ret.append('<br>');
         } else {
             if (profiledInEntries.length) {
-                ret.append("Profiled in: "+profiledInEntries.map(
-                e=>{
-                        const molecularProfileId = e.key[0];
-                        let displayName = molecularProfileId;
-                        if (molecularProfileMap && (molecularProfileId in molecularProfileMap)) {
-                            displayName = molecularProfileMap[molecularProfileId].name;
-                        }
-                        return `${displayName}${dataUnderMouse.length > 1 ? ` (${e.value})` : ""}`;
-                    }
-                ).join(", "));
-                ret.append("<br>");
+                ret.append(
+                    'Profiled in: ' +
+                        profiledInEntries
+                            .map(e => {
+                                const molecularProfileId = e.key[0];
+                                let displayName = molecularProfileId;
+                                if (
+                                    molecularProfileMap &&
+                                    molecularProfileId in molecularProfileMap
+                                ) {
+                                    displayName =
+                                        molecularProfileMap[molecularProfileId]
+                                            .name;
+                                }
+                                return `${displayName}${
+                                    dataUnderMouse.length > 1
+                                        ? ` (${e.value})`
+                                        : ''
+                                }`;
+                            })
+                            .join(', ')
+                );
+                ret.append('<br>');
             }
             if (notProfiledInEntries.length) {
-                ret.append("<span style='color:red; font-weight:bold'>Not profiled in: "+notProfiledInEntries.map(
-                    e=>{
-                        const molecularProfileId = e.key[0];
-                        let displayName = molecularProfileId;
-                        if (molecularProfileMap && (molecularProfileId in molecularProfileMap)) {
-                            displayName = molecularProfileMap[molecularProfileId].name;
-                        }
-                        return `${displayName}${dataUnderMouse.length > 1 ? ` (${e.value})` : ""}`;
-                    }
-                ).join(", ")+"</span>");
-                ret.append("<br>");
+                ret.append(
+                    "<span style='color:red; font-weight:bold'>Not profiled in: " +
+                        notProfiledInEntries
+                            .map(e => {
+                                const molecularProfileId = e.key[0];
+                                let displayName = molecularProfileId;
+                                if (
+                                    molecularProfileMap &&
+                                    molecularProfileId in molecularProfileMap
+                                ) {
+                                    displayName =
+                                        molecularProfileMap[molecularProfileId]
+                                            .name;
+                                }
+                                return `${displayName}${
+                                    dataUnderMouse.length > 1
+                                        ? ` (${e.value})`
+                                        : ''
+                                }`;
+                            })
+                            .join(', ') +
+                        '</span>'
+                );
+                ret.append('<br>');
             }
             if (allProfiledCount > 0) {
-                ret.append("Profiled in all selected molecular profiles." + (dataUnderMouse.length > 1 ? ` (${allProfiledCount})` : ""));
-                ret.append("<br>");
+                ret.append(
+                    'Profiled in all selected molecular profiles.' +
+                        (dataUnderMouse.length > 1
+                            ? ` (${allProfiledCount})`
+                            : '')
+                );
+                ret.append('<br>');
             }
             if (noneProfiledCount > 0) {
-                ret.append("Not profiled in selected molecular profiles." + (dataUnderMouse.length > 1 ? ` (${noneProfiledCount})` : ""));
-                ret.append("<br>");
+                ret.append(
+                    'Not profiled in selected molecular profiles.' +
+                        (dataUnderMouse.length > 1
+                            ? ` (${noneProfiledCount})`
+                            : '')
+                );
+                ret.append('<br>');
             }
         }
         return ret;

@@ -1,12 +1,18 @@
-import {buildCBioPortalPageUrl} from "../api/urls";
+import { buildCBioPortalPageUrl } from '../api/urls';
 
-export default function formSubmit(path:string, params:{[s:string]:any}, target?:string, method:"get"|"post"|"smart"="post") {
+export default function formSubmit(
+    path: string,
+    params: { [s: string]: any },
+    target?: string,
+    method: 'get' | 'post' | 'smart' = 'post'
+) {
     // method="smart" means submit with GET iff the URL wouldn't be too long
 
     const form = document.createElement('form');
     let computedMethod = method;
-    if (method === "smart") {
-        computedMethod = buildCBioPortalPageUrl(path, params).length > 1800 ? "post" : "get"; // use POST if URL will be too large for some browsers
+    if (method === 'smart') {
+        computedMethod =
+            buildCBioPortalPageUrl(path, params).length > 1800 ? 'post' : 'get'; // use POST if URL will be too large for some browsers
     }
     form.setAttribute('method', computedMethod);
     form.setAttribute('action', path);
