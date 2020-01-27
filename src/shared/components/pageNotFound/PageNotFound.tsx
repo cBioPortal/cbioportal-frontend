@@ -7,7 +7,9 @@ const PageNotFound = () => (
         <div className="contentWrapper">
             <ErrorScreen
                 title={"Sorry, this page doesn't exist."}
-                body={<a href={buildCBioPortalPageUrl("/")}>Return to homepage</a>}
+                body={
+                    <a href={buildCBioPortalPageUrl('/')}>Return to homepage</a>
+                }
             />
         </div>
     </div>

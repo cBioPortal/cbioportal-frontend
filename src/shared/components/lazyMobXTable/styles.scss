@@ -1,37 +1,37 @@
 th.sort-des:after {
-  content: ' \25BC';
+    content: ' \25BC';
 }
 
 th.sort-asc:after {
-  content: ' \25B2';
+    content: ' \25B2';
 }
 
 .cbioportal-frontend .table > thead > tr > th.multilineHeader {
-  vertical-align: top;
-  line-height: 1.1;
-  padding-bottom: 4px;
+    vertical-align: top;
+    line-height: 1.1;
+    padding-bottom: 4px;
 }
 
 .topPagination {
-  .textBetweenButtons {
-    opacity: 1.00 !important;
-  }
+    .textBetweenButtons {
+        opacity: 1 !important;
+    }
 
-  display:flex;
-  align-items:center;
-  justify-content:center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .tableMainToolbar {
-  .form-group {
-    margin-bottom: 5px;
-  }
+    .form-group {
+        margin-bottom: 5px;
+    }
 }
 
 .cbioportal-frontend .table > tbody > tr > td.columnResizer,
 .cbioportal-frontend .table > thead > tr > td.columnResizer {
-  width: 2px;
-  border-right: #CCC 1px solid;
-  border-left: #CCC 1px solid;
-  padding: 0 !important;
+    width: 2px;
+    border-right: #ccc 1px solid;
+    border-left: #ccc 1px solid;
+    padding: 0 !important;
 }

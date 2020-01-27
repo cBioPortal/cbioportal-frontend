@@ -60,20 +60,24 @@ To run unit/integration tests in watch mode (where specName is a fragment of the
 yarn run test:watch -- --grep=#specName#
 ```
 
-## Formatting Code with Prettier JS
-We are starting to format commits using Prettier JS. Right now this is optional, but you may run into formatting commits.  
-Things to remember:
-- Keep Prettier JS changes in a separate commit
-- Only run it on files you're changing or creating anyways
+## Formatting Code with PrettierJS
+When you make a git commit, PrettierJS will automatically run *in write mode* on all the files you changed, and make 
+formatting adjustments to those entire files as necessary, before passing them through to the commit (i.e. this is a 
+"pre-commit git hook"). No action from you is necessary for this. You may observe that your changes don't look exactly 
+the same as you wrote them due to formatting adjustments.
 
-To run Prettier JS: 
+When you make a pull request, CircleCI will run PrettierJS *in check mode* on all of the files that have changed between 
+your pull request and the base branch of your pull request. If all of the files are formatted correctly, then the
+CircleCI `prettier` job will pass and you'll see a green check on Github. But if, for whatever reason, this check *fails*, 
+you must run the following command in your cbioportal home directory:
 ```$bash
-yarn run prettier --write <files>
+yarn run prettierFixLocal
 ```
-
-To run Prettier JS on your last commit:
+This will make PrettierJS run through the same files that CircleCI checks (i.e. all files changed since the base branch)
+but *in write mode* and thus adjust those files to have correct formatting. When you make this update, the CircleCI 
+`prettier` job should pass. To check if it will pass, you can also run the same command that CircleCI will run:
 ```$bash
-yarn run prettierLastCommit
+yarn run prettierCheckCircleCI
 ```
 
 

@@ -23,11 +23,11 @@
 
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { observable } from "mobx";
+import { observable } from 'mobx';
 import { JsonToTable } from 'react-json-to-table';
 import './StudyTagsTooltip.scss';
 import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
-import client from "shared/api/cbioportalClientInstance";
+import client from 'shared/api/cbioportalClientInstance';
 import Loader from '../loadingIndicator/LoadingIndicator';
 
 export type StudyTagsTooltipProps = {
@@ -47,57 +47,89 @@ export type StudyInfoOverlayTooltipProps = {
 };
 
 @observer
-default class StudyInfoOverlay extends React.Component<StudyInfoOverlayTooltipProps, {}> {
+class StudyInfoOverlay extends React.Component<
+    StudyInfoOverlayTooltipProps,
+    {}
+> {
     @observable readonly studyMetadata = remoteData({
         invoke: async () => {
-            return client.getTagsUsingGET({studyId: this.props.studyId});
+            return client.getTagsUsingGET({ studyId: this.props.studyId });
         },
-        onError: (error) => {
-            console.error("Error on getting study tags.", error);
-        }
+        onError: error => {
+            console.error('Error on getting study tags.', error);
+        },
     });
 
-    addHTMLDescription(description:string) {
-        return {__html: description};
+    addHTMLDescription(description: string) {
+        return { __html: description };
     }
 
     render() {
-        let overlay:any = '';
+        let overlay: any = '';
         if (this.props.isVirtualStudy) {
-            overlay = <div dangerouslySetInnerHTML={this.addHTMLDescription(this.props.studyDescription)}/>;
+            overlay = (
+                <div
+                    dangerouslySetInnerHTML={this.addHTMLDescription(
+                        this.props.studyDescription
+                    )}
+                />
+            );
         } else {
             if (this.studyMetadata.isPending) {
-                overlay = <Loader isLoading={true}/>;
-            }
-            else if (this.studyMetadata.isComplete) {
-                const resultKeyLength = Object.keys(this.studyMetadata.result).length;
-                const description = <div dangerouslySetInnerHTML={this.addHTMLDescription(this.props.studyDescription)}/>;
-                overlay = resultKeyLength > 0 ? ([description, <br/>, <div className="studyTagsTooltip"> <JsonToTable json={this.studyMetadata.result}/></div>]) : description;
-            }
-            else if (this.studyMetadata.isError) {
+                overlay = <Loader isLoading={true} />;
+            } else if (this.studyMetadata.isComplete) {
+                const resultKeyLength = Object.keys(this.studyMetadata.result)
+                    .length;
+                const description = (
+                    <div
+                        dangerouslySetInnerHTML={this.addHTMLDescription(
+                            this.props.studyDescription
+                        )}
+                    />
+                );
+                overlay =
+                    resultKeyLength > 0
+                        ? [
+                              description,
+                              <br />,
+                              <div className="studyTagsTooltip">
+                                  {' '}
+                                  <JsonToTable
+                                      json={this.studyMetadata.result}
+                                  />
+                              </div>,
+                          ]
+                        : description;
+            } else if (this.studyMetadata.isError) {
                 overlay = 'error';
             }
         }
-        
+
         return overlay;
     }
 }
 
 @observer
-export default class StudyTagsTooltip extends React.Component<StudyTagsTooltipProps, {}> {
-
+export default class StudyTagsTooltip extends React.Component<
+    StudyTagsTooltipProps,
+    {}
+> {
     renderTooltip() {
-        return (<DefaultTooltip
-            key={this.props.key}
-            mouseEnterDelay={this.props.mouseEnterDelay}
-            placement={this.props.placement}
-            overlay={<StudyInfoOverlay
+        return (
+            <DefaultTooltip
+                key={this.props.key}
+                mouseEnterDelay={this.props.mouseEnterDelay}
+                placement={this.props.placement}
+                overlay={
+                    <StudyInfoOverlay
                         studyDescription={this.props.studyDescription}
                         studyId={this.props.studyId}
                         isVirtualStudy={this.props.isVirtualStudy}
-                    />}
-            children={this.props.children}
-        />);
+                    />
+                }
+                children={this.props.children}
+            />
+        );
     }
 
     render() {

@@ -1,4 +1,4 @@
-export function toggleIncluded<T>(elt:T, included:T[]):T[] {
+export function toggleIncluded<T>(elt: T, included: T[]): T[] {
     const index = included.indexOf(elt);
     if (index === -1) {
         return included.concat([elt]);
@@ -9,9 +9,9 @@ export function toggleIncluded<T>(elt:T, included:T[]):T[] {
     }
 }
 
-export function insertBetween<T>(elt:T, array:T[]):T[] {
+export function insertBetween<T>(elt: T, array: T[]): T[] {
     const newArray = [];
-    for (let i=0; i<array.length; i++) {
+    for (let i = 0; i < array.length; i++) {
         newArray.push(array[i]);
         if (i < array.length - 1) {
             newArray.push(elt);

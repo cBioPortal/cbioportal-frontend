@@ -1,74 +1,68 @@
-
 .patientPageHeader {
-
-  .cohortNav {
-    text-align:right;
-  }
-
-  position:relative;
-  padding-left:45px;
-  display:flex;
-
-  td {
-    vertical-align:top;
-    padding-left:10px;
-    padding-bottom:4px;
-  }
-
-  .studyMetaBar {
-    text-align:right;
-    flex-grow:1;
-
-    .studyMetaBar_studyName {
-      white-space: nowrap;
-      max-width:400px;
-      text-overflow: ellipsis;
-      display:inline-block;
-      overflow:hidden;
+    .cohortNav {
+        text-align: right;
     }
 
-  }
+    position: relative;
+    padding-left: 45px;
+    display: flex;
 
-  .patientDataTable {
-    flex-grow:1;
-  }
-
-  .patientIcon {
-    position:absolute;
-    left:0;
-    font-size:40px;
-  }
-
-  .patientSamples {
-
-    .patientSample {
-      display:inline-block;
-      background-color:#ddd;
-      padding:1px 2px;
-      margin-right:3px;
-      border-radius:3px;
-      margin-bottom:3px;
-      font-size:11px;
-      height: 20px;
-      line-height: 20px;
-      vertical-align: middle;
-
-      svg {
-        position:relative;
-        top:1px;
-      }
+    td {
+        vertical-align: top;
+        padding-left: 10px;
+        padding-bottom: 4px;
     }
 
-  }
+    .studyMetaBar {
+        text-align: right;
+        flex-grow: 1;
 
+        .studyMetaBar_studyName {
+            white-space: nowrap;
+            max-width: 400px;
+            text-overflow: ellipsis;
+            display: inline-block;
+            overflow: hidden;
+        }
+    }
+
+    .patientDataTable {
+        flex-grow: 1;
+    }
+
+    .patientIcon {
+        position: absolute;
+        left: 0;
+        font-size: 40px;
+    }
+
+    .patientSamples {
+        .patientSample {
+            display: inline-block;
+            background-color: #ddd;
+            padding: 1px 2px;
+            margin-right: 3px;
+            border-radius: 3px;
+            margin-bottom: 3px;
+            font-size: 11px;
+            height: 20px;
+            line-height: 20px;
+            vertical-align: middle;
+
+            svg {
+                position: relative;
+                top: 1px;
+            }
+        }
+    }
 }
 
 .vafPlot {
-  position:relative;
-  top:-10px;
+    position: relative;
+    top: -10px;
 }
 
 .cbioportal-frontend .secondaryNavigation.vafVizNavTabs li a.tabAnchor {
-  //font-size: 17px !important;
-  //margin-right:30px !important;
+    //font-size: 17px !important;
+    //margin-right:30px !important;
 }

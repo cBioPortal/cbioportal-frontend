@@ -23,7 +23,7 @@ export default class GenePanelModal extends React.Component<
         // passing of the event object to the parent component
         this.props.onHide();
     }
-    
+
     render() {
         return (
             <Modal

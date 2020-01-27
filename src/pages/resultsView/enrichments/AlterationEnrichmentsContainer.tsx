@@ -1,65 +1,75 @@
 import * as React from 'react';
-import * as _ from "lodash";
-import { observer } from "mobx-react";
+import * as _ from 'lodash';
+import { observer } from 'mobx-react';
 import numeral from 'numeral';
-import { ResultsViewPageStore } from "../ResultsViewPageStore";
-import {observable, computed, action} from 'mobx';
-import AlterationEnrichmentTable, {AlterationEnrichmentTableColumnType} from 'pages/resultsView/enrichments/AlterationEnrichmentsTable';
-import styles from "./styles.module.scss";
+import { ResultsViewPageStore } from '../ResultsViewPageStore';
+import { observable, computed, action } from 'mobx';
+import AlterationEnrichmentTable, {
+    AlterationEnrichmentTableColumnType,
+} from 'pages/resultsView/enrichments/AlterationEnrichmentsTable';
+import styles from './styles.module.scss';
 import {
     getAlterationScatterData,
     getAlterationRowData,
-    getAlterationFrequencyScatterData, AlterationEnrichmentWithQ, getAlterationEnrichmentColumns, AlterationContainerType, getFilteredData
+    getAlterationFrequencyScatterData,
+    AlterationEnrichmentWithQ,
+    getAlterationEnrichmentColumns,
+    AlterationContainerType,
+    getFilteredData,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import MiniScatterChart from 'pages/resultsView/enrichments/MiniScatterChart';
 import AddCheckedGenes from 'pages/resultsView/enrichments/AddCheckedGenes';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
-import MiniFrequencyScatterChart from "./MiniFrequencyScatterChart";
+import MiniFrequencyScatterChart from './MiniFrequencyScatterChart';
 import {
     CheckedSelect,
     DefaultTooltip,
-    Option
+    Option,
 } from 'cbioportal-frontend-commons';
-import {MiniOncoprint} from "shared/components/miniOncoprint/MiniOncoprint";
+import { MiniOncoprint } from 'shared/components/miniOncoprint/MiniOncoprint';
 import GeneBarPlot from './GeneBarPlot';
-import WindowStore from "shared/components/window/WindowStore";
+import WindowStore from 'shared/components/window/WindowStore';
 import './styles.scss';
-import ReactSelect from "react-select";
+import ReactSelect from 'react-select';
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
-    groups:{
-        name:string,
-        description:string,
-        nameOfEnrichmentDirection?:string,
-        count:number,
-        color?:string
-    }[]
-    alteredVsUnalteredMode?:boolean;
+    groups: {
+        name: string;
+        description: string;
+        nameOfEnrichmentDirection?: string;
+        count: number;
+        color?: string;
+    }[];
+    alteredVsUnalteredMode?: boolean;
     headerName: string;
     store?: ResultsViewPageStore;
-    showCNAInTable?:boolean;
-    containerType:AlterationContainerType;
-    patientLevelEnrichments:boolean;
-    onSetPatientLevelEnrichments:(patientLevel:boolean)=>void;
+    showCNAInTable?: boolean;
+    containerType: AlterationContainerType;
+    patientLevelEnrichments: boolean;
+    onSetPatientLevelEnrichments: (patientLevel: boolean) => void;
 }
 
 @observer
-export default class AlterationEnrichmentContainer extends React.Component<IAlterationEnrichmentContainerProps, {}> {
-
-    static defaultProps:Partial<IAlterationEnrichmentContainerProps> = {
+export default class AlterationEnrichmentContainer extends React.Component<
+    IAlterationEnrichmentContainerProps,
+    {}
+> {
+    static defaultProps: Partial<IAlterationEnrichmentContainerProps> = {
         showCNAInTable: false,
-        alteredVsUnalteredMode: true
+        alteredVsUnalteredMode: true,
     };
 
     @observable significanceFilter: boolean = false;
     @observable.shallow checkedGenes: string[] = [];
-    @observable.shallow selectedGenes: string[]|null;
-    @observable.ref highlightedRow:AlterationEnrichmentRow|undefined;
+    @observable.shallow selectedGenes: string[] | null;
+    @observable.ref highlightedRow: AlterationEnrichmentRow | undefined;
 
-    @observable.ref _enrichedGroups: string[] = this.props.groups.map(group=>group.name);
+    @observable.ref _enrichedGroups: string[] = this.props.groups.map(
+        group => group.name
+    );
 
     @computed get isTwoGroupAnalysis(): boolean {
         return this.props.groups.length == 2;
@@ -76,11 +86,20 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     }
 
     @computed get data(): AlterationEnrichmentRow[] {
-        return getAlterationRowData(this.props.data, this.props.store ? this.props.store.hugoGeneSymbols : [], this.props.groups);
+        return getAlterationRowData(
+            this.props.data,
+            this.props.store ? this.props.store.hugoGeneSymbols : [],
+            this.props.groups
+        );
     }
 
     @computed get filteredData(): AlterationEnrichmentRow[] {
-        return getFilteredData(this.data, this._enrichedGroups, this.significanceFilter, this.selectedGenes);
+        return getFilteredData(
+            this.data,
+            this._enrichedGroups,
+            this.significanceFilter,
+            this.selectedGenes
+        );
     }
 
     @autobind
@@ -90,7 +109,6 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
 
     @autobind
     private onCheckGene(hugoGeneSymbol: string) {
-
         const index = this.checkedGenes.indexOf(hugoGeneSymbol);
         if (index !== -1) {
             this.checkedGenes.splice(index, 1);
@@ -105,139 +123,226 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     }
 
     @autobind
-    @action private onSelection(hugoGeneSymbols: string[]) {
+    @action
+    private onSelection(hugoGeneSymbols: string[]) {
         this.selectedGenes = hugoGeneSymbols;
     }
 
     @autobind
-    @action private onSelectionCleared() {
+    @action
+    private onSelectionCleared() {
         this.selectedGenes = null;
     }
 
     private dataStore = new EnrichmentsTableDataStore(
-        ()=>{
+        () => {
             return this.filteredData;
         },
-        ()=>{
+        () => {
             return this.highlightedRow;
         },
-        (c:AlterationEnrichmentRow)=>{
+        (c: AlterationEnrichmentRow) => {
             this.highlightedRow = c;
         }
     );
 
     @computed get customColumns() {
-        const cols =  getAlterationEnrichmentColumns(this.props.groups, this.props.alteredVsUnalteredMode);
+        const cols = getAlterationEnrichmentColumns(
+            this.props.groups,
+            this.props.alteredVsUnalteredMode
+        );
         if (this.isTwoGroupAnalysis) {
             cols.push({
-            name: 'Alteration Overlap',
-            headerRender: () => <span>Co-occurrence Pattern</span>,
-            render: (data) => {
-                if (data.pValue === undefined) {
-                    return <span>-</span>
-                }
-                const groups = _.map(data.groupsSet);
-                const queriedGroup1 = this.props.groups[0];
-                const queriedGroup2 = this.props.groups[1];
-                  // we want to order groups according to order in prop.groups
-                  const group1 = groups.find((group)=>group.name===this.props.groups[0].name)!;
-                  const group2 = groups.find((group)=>group.name===this.props.groups[1].name)!;
+                name: 'Alteration Overlap',
+                headerRender: () => <span>Co-occurrence Pattern</span>,
+                render: data => {
+                    if (data.pValue === undefined) {
+                        return <span>-</span>;
+                    }
+                    const groups = _.map(data.groupsSet);
+                    const queriedGroup1 = this.props.groups[0];
+                    const queriedGroup2 = this.props.groups[1];
+                    // we want to order groups according to order in prop.groups
+                    const group1 = groups.find(
+                        group => group.name === this.props.groups[0].name
+                    )!;
+                    const group2 = groups.find(
+                        group => group.name === this.props.groups[1].name
+                    )!;
 
-                  if (!group1 || !group2) {
-                      throw("No matching groups in Alteration Overlap Cell");
-                  }
+                    if (!group1 || !group2) {
+                        throw 'No matching groups in Alteration Overlap Cell';
+                    }
 
-                const totalQueriedCases = queriedGroup1.count + queriedGroup2.count;
-                const group1Width = (queriedGroup1.count / totalQueriedCases) * 100;
-                const group2Width = 100 - group1Width;
-                const group1Unprofiled = ((queriedGroup1.count - group1.profiledCount) / totalQueriedCases) * 100;
-                const group1Unaltered = ((group1.profiledCount - group1.alteredCount) / totalQueriedCases) * 100;
-                const group2Unprofiled = ((queriedGroup2.count - group2.profiledCount) / totalQueriedCases) * 100;
-                const group1Altered = (group1.alteredCount / totalQueriedCases) * 100;
-                const group2Altered = (group2.alteredCount / totalQueriedCases) * 100;
+                    const totalQueriedCases =
+                        queriedGroup1.count + queriedGroup2.count;
+                    const group1Width =
+                        (queriedGroup1.count / totalQueriedCases) * 100;
+                    const group2Width = 100 - group1Width;
+                    const group1Unprofiled =
+                        ((queriedGroup1.count - group1.profiledCount) /
+                            totalQueriedCases) *
+                        100;
+                    const group1Unaltered =
+                        ((group1.profiledCount - group1.alteredCount) /
+                            totalQueriedCases) *
+                        100;
+                    const group2Unprofiled =
+                        ((queriedGroup2.count - group2.profiledCount) /
+                            totalQueriedCases) *
+                        100;
+                    const group1Altered =
+                        (group1.alteredCount / totalQueriedCases) * 100;
+                    const group2Altered =
+                        (group2.alteredCount / totalQueriedCases) * 100;
 
-                const alterationLanguage = this.props.showCNAInTable ? 'copy number alterations' : 'mutations'
+                    const alterationLanguage = this.props.showCNAInTable
+                        ? 'copy number alterations'
+                        : 'mutations';
 
-                const overlay = ()=>{
-                    return (<div>
-                        <h3>{data.hugoGeneSymbol} {alterationLanguage} in:</h3>
-                        <table className={'table table-striped'}>
-                            <tbody>
-                            <tr>
-                                <td><strong>{group1.name}: </strong></td>
-                                <td>{group1.alteredCount} of {group1.profiledCount} of profiled {this.props.patientLevelEnrichments ? "patients" : "samples"} ({numeral(group1.alteredPercentage).format('0.0')}%)</td>
-                            </tr>
-                            <tr>
-                                <td><strong>{group2.name}: </strong></td>
-                                <td>{group2.alteredCount} of {group2.profiledCount} of profiled {this.props.patientLevelEnrichments ? "patients" : "samples"} ({numeral(group2.alteredPercentage).format('0.0')}%)
-                                </td>
-                            </tr>
-                            </tbody>
+                    const overlay = () => {
+                        return (
+                            <div>
+                                <h3>
+                                    {data.hugoGeneSymbol} {alterationLanguage}{' '}
+                                    in:
+                                </h3>
+                                <table className={'table table-striped'}>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <strong>{group1.name}: </strong>
+                                            </td>
+                                            <td>
+                                                {group1.alteredCount} of{' '}
+                                                {group1.profiledCount} of
+                                                profiled{' '}
+                                                {this.props
+                                                    .patientLevelEnrichments
+                                                    ? 'patients'
+                                                    : 'samples'}{' '}
+                                                (
+                                                {numeral(
+                                                    group1.alteredPercentage
+                                                ).format('0.0')}
+                                                %)
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <strong>{group2.name}: </strong>
+                                            </td>
+                                            <td>
+                                                {group2.alteredCount} of{' '}
+                                                {group2.profiledCount} of
+                                                profiled{' '}
+                                                {this.props
+                                                    .patientLevelEnrichments
+                                                    ? 'patients'
+                                                    : 'samples'}{' '}
+                                                (
+                                                {numeral(
+                                                    group2.alteredPercentage
+                                                ).format('0.0')}
+                                                %)
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        );
+                    };
 
-                        </table>
-
-                    </div>);
-                };
-
-                  return <DefaultTooltip destroyTooltipOnHide={true}  trigger={['hover']} overlay={overlay}>
-                      <div className={'inlineBlock'} style={{padding:'3px 0'}}>
-                          <MiniOncoprint
-                              group1Width={group1Width}
-                              group2Width={group2Width}
-                              group1Unaltered={group1Unaltered}
-                              group1Altered={group1Altered}
-                              group2Altered={group2Altered}
-                              group1Unprofiled={group1Unprofiled}
-                              group2Unprofiled={group2Unprofiled}
-                              group1Color={this.props.groups[0].color}
-                              group2Color={this.props.groups[1].color}
-                              width={150}
-                          />
-                      </div>
-                  </DefaultTooltip>;
-            },
-            tooltip:
-                <table>
-                    <tr>
-                        <td>Upper row</td>
-                        <td>: {this.props.patientLevelEnrichments ? "Patients" : "Samples"} colored according to group.</td>
-                    </tr>
-                    <tr>
-                        <td>Lower row</td>
-                        <td>: {this.props.patientLevelEnrichments ? "Patients" : "Samples"} with {this.props.showCNAInTable ? 'the listed alteration' : 'a mutation'} in the listed gene are highlighted.</td>
-                    </tr>
-                </table>,
-          });
+                    return (
+                        <DefaultTooltip
+                            destroyTooltipOnHide={true}
+                            trigger={['hover']}
+                            overlay={overlay}
+                        >
+                            <div
+                                className={'inlineBlock'}
+                                style={{ padding: '3px 0' }}
+                            >
+                                <MiniOncoprint
+                                    group1Width={group1Width}
+                                    group2Width={group2Width}
+                                    group1Unaltered={group1Unaltered}
+                                    group1Altered={group1Altered}
+                                    group2Altered={group2Altered}
+                                    group1Unprofiled={group1Unprofiled}
+                                    group2Unprofiled={group2Unprofiled}
+                                    group1Color={this.props.groups[0].color}
+                                    group2Color={this.props.groups[1].color}
+                                    width={150}
+                                />
+                            </div>
+                        </DefaultTooltip>
+                    );
+                },
+                tooltip: (
+                    <table>
+                        <tr>
+                            <td>Upper row</td>
+                            <td>
+                                :{' '}
+                                {this.props.patientLevelEnrichments
+                                    ? 'Patients'
+                                    : 'Samples'}{' '}
+                                colored according to group.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Lower row</td>
+                            <td>
+                                :{' '}
+                                {this.props.patientLevelEnrichments
+                                    ? 'Patients'
+                                    : 'Samples'}{' '}
+                                with{' '}
+                                {this.props.showCNAInTable
+                                    ? 'the listed alteration'
+                                    : 'a mutation'}{' '}
+                                in the listed gene are highlighted.
+                            </td>
+                        </tr>
+                    </table>
+                ),
+            });
         }
 
-
         return cols;
-
     }
 
     @computed get visibleOrderedColumnNames() {
         const columns = [];
-        columns.push(AlterationEnrichmentTableColumnType.GENE,
-            AlterationEnrichmentTableColumnType.CYTOBAND);
+        columns.push(
+            AlterationEnrichmentTableColumnType.GENE,
+            AlterationEnrichmentTableColumnType.CYTOBAND
+        );
         if (this.props.showCNAInTable) {
             columns.push(AlterationEnrichmentTableColumnType.ALTERATION);
         }
-        this.props.groups.forEach(group=>{
+        this.props.groups.forEach(group => {
             columns.push(group.name);
-        })
-        if(this.isTwoGroupAnalysis) {
+        });
+        if (this.isTwoGroupAnalysis) {
             columns.push('Alteration Overlap');
             columns.push(AlterationEnrichmentTableColumnType.LOG_RATIO);
         }
 
         columns.push(
-        AlterationEnrichmentTableColumnType.P_VALUE,
-        AlterationEnrichmentTableColumnType.Q_VALUE);
+            AlterationEnrichmentTableColumnType.P_VALUE,
+            AlterationEnrichmentTableColumnType.Q_VALUE
+        );
 
-        if(this.isTwoGroupAnalysis) {
-            columns.push(this.props.alteredVsUnalteredMode ? AlterationEnrichmentTableColumnType.TENDENCY : AlterationEnrichmentTableColumnType.ENRICHED);
+        if (this.isTwoGroupAnalysis) {
+            columns.push(
+                this.props.alteredVsUnalteredMode
+                    ? AlterationEnrichmentTableColumnType.TENDENCY
+                    : AlterationEnrichmentTableColumnType.ENRICHED
+            );
         } else {
-            columns.push(AlterationEnrichmentTableColumnType.MOST_ENRICHED)
+            columns.push(AlterationEnrichmentTableColumnType.MOST_ENRICHED);
         }
 
         return columns;
@@ -248,7 +353,8 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     }
 
     @autobind
-    @action onChange(values: { value: string }[]) {
+    @action
+    onChange(values: { value: string }[]) {
         this._enrichedGroups = _.map(values, datum => datum.value);
     }
 
@@ -259,9 +365,11 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     @computed get options(): Option[] {
         return _.map(this.props.groups, group => {
             return {
-                label: group.nameOfEnrichmentDirection ? group.nameOfEnrichmentDirection : group.name,
-                value: group.name
-            }
+                label: group.nameOfEnrichmentDirection
+                    ? group.nameOfEnrichmentDirection
+                    : group.name,
+                value: group.name,
+            };
         });
     }
 
@@ -271,27 +379,49 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     }
 
     @computed private get categoryToColor() {
-        return _.reduce(this.props.groups, (acc, next) => {
-            if (next.color) {
-                acc[next.name] = next.color;
-            }
-            return acc;
-        }, {} as { [id: string]: string });
+        return _.reduce(
+            this.props.groups,
+            (acc, next) => {
+                if (next.color) {
+                    acc[next.name] = next.color;
+                }
+                return acc;
+            },
+            {} as { [id: string]: string }
+        );
     }
 
     public render() {
         if (this.props.data.length === 0) {
-            return <div className={'alert alert-info'}>No data/result available</div>;
+            return (
+                <div className={'alert alert-info'}>
+                    No data/result available
+                </div>
+            );
         }
 
         return (
             <div className={styles.Container}>
-                <div className={styles.ChartsPanel} style={{maxWidth:WindowStore.size.width-60}}>
-                    {this.isTwoGroupAnalysis &&
+                <div
+                    className={styles.ChartsPanel}
+                    style={{ maxWidth: WindowStore.size.width - 60 }}
+                >
+                    {this.isTwoGroupAnalysis && (
                         <MiniScatterChart
-                            data={getAlterationScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
-                            xAxisLeftLabel={this.group2.nameOfEnrichmentDirection || this.group2.name}
-                            xAxisRightLabel={this.group1.nameOfEnrichmentDirection || this.group1.name}
+                            data={getAlterationScatterData(
+                                this.data,
+                                this.props.store
+                                    ? this.props.store.hugoGeneSymbols
+                                    : []
+                            )}
+                            xAxisLeftLabel={
+                                this.group2.nameOfEnrichmentDirection ||
+                                this.group2.name
+                            }
+                            xAxisRightLabel={
+                                this.group1.nameOfEnrichmentDirection ||
+                                this.group1.name
+                            }
                             xAxisDomain={15}
                             xAxisTickValues={[-10, 0, 10]}
                             selectedGenesSet={this.selectedGenesSet}
@@ -299,11 +429,18 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                             onSelection={this.onSelection}
                             onSelectionCleared={this.onSelectionCleared}
                         />
-                    }
+                    )}
 
-                    {this.isTwoGroupAnalysis &&
+                    {this.isTwoGroupAnalysis && (
                         <MiniFrequencyScatterChart
-                            data={getAlterationFrequencyScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [], this.group1.name, this.group2.name)}
+                            data={getAlterationFrequencyScatterData(
+                                this.data,
+                                this.props.store
+                                    ? this.props.store.hugoGeneSymbols
+                                    : [],
+                                this.group1.name,
+                                this.group2.name
+                            )}
                             xGroupName={this.group1.name}
                             yGroupName={this.group2.name}
                             onGeneNameClick={this.onGeneNameClick}
@@ -311,13 +448,15 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                             onSelection={this.onSelection}
                             onSelectionCleared={this.onSelectionCleared}
                         />
-                    }
+                    )}
 
                     <div style={{ maxWidth: this.genePlotMaxWidth }}>
                         <GeneBarPlot
                             data={this.data}
                             isTwoGroupAnalysis={this.isTwoGroupAnalysis}
-                            groupOrder={this.props.groups.map(group => group.name)}
+                            groupOrder={this.props.groups.map(
+                                group => group.name
+                            )}
                             showCNAInTable={this.props.showCNAInTable}
                             containerType={this.props.containerType}
                             categoryToColor={this.categoryToColor}
@@ -329,68 +468,83 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                 <div>
                     <div>
                         <h3>{this.props.headerName}</h3>
-                        {this.props.store && <AddCheckedGenes checkedGenes={this.checkedGenes}/>}
+                        {this.props.store && (
+                            <AddCheckedGenes checkedGenes={this.checkedGenes} />
+                        )}
                     </div>
                     <div className={styles.Checkboxes}>
-                        <div style={{ width: 250, marginRight: 7 }} >
+                        <div style={{ width: 250, marginRight: 7 }}>
                             <ReactSelect
                                 name="select enrichments level: sample or patient"
-                                onChange={(option:any|null)=>{
+                                onChange={(option: any | null) => {
                                     if (option) {
-                                        this.props.onSetPatientLevelEnrichments(option.value);
+                                        this.props.onSetPatientLevelEnrichments(
+                                            option.value
+                                        );
                                     }
                                 }}
                                 options={[
-                                    { label: "Patient-level enrichments", value: true},
-                                    { label: "Sample-level enrichments", value: false}
+                                    {
+                                        label: 'Patient-level enrichments',
+                                        value: true,
+                                    },
+                                    {
+                                        label: 'Sample-level enrichments',
+                                        value: false,
+                                    },
                                 ]}
                                 clearable={false}
                                 searchable={false}
-                                value={{ label: this.props.patientLevelEnrichments ? "Patient-level enrichments" : "Sample-level enrichments", value: this.props.patientLevelEnrichments}}
+                                value={{
+                                    label: this.props.patientLevelEnrichments
+                                        ? 'Patient-level enrichments'
+                                        : 'Sample-level enrichments',
+                                    value: this.props.patientLevelEnrichments,
+                                }}
                                 styles={{
-                                    control: (provided:any)=>({
+                                    control: (provided: any) => ({
                                         ...provided,
-                                        height:36,
-                                        minHeight:36,
-                                        border: "1px solid rgb(204,204,204)"
+                                        height: 36,
+                                        minHeight: 36,
+                                        border: '1px solid rgb(204,204,204)',
                                     }),
-                                    menu: (provided:any)=>({
+                                    menu: (provided: any) => ({
                                         ...provided,
-                                        maxHeight: 400
+                                        maxHeight: 400,
                                     }),
-                                    menuList: (provided:any)=>({
+                                    menuList: (provided: any) => ({
                                         ...provided,
-                                        maxHeight:400
+                                        maxHeight: 400,
                                     }),
-                                    placeholder:(provided:any)=>({
+                                    placeholder: (provided: any) => ({
                                         ...provided,
-                                        color: "#000000"
+                                        color: '#000000',
                                     }),
-                                    dropdownIndicator:(provided:any)=>({
+                                    dropdownIndicator: (provided: any) => ({
                                         ...provided,
-                                        color:"#000000"
+                                        color: '#000000',
                                     }),
-                                    option:(provided:any, state:any)=>{
+                                    option: (provided: any, state: any) => {
                                         return {
                                             ...provided,
-                                            cursor:"pointer",
+                                            cursor: 'pointer',
                                         };
-                                    }
+                                    },
                                 }}
-                                theme={(theme:any)=>({
+                                theme={(theme: any) => ({
                                     ...theme,
                                     colors: {
                                         ...theme.colors,
-                                        neutral80:"black",
+                                        neutral80: 'black',
                                         //primary: theme.colors.primary50
                                     },
                                 })}
                             />
                         </div>
-                        <div style={{ width: 250, marginRight: 7 }} >
+                        <div style={{ width: 250, marginRight: 7 }}>
                             <CheckedSelect
-                                name={"enrichedGroupsSelector"}
-                                placeholder={"Select enriched groups"}
+                                name={'enrichedGroupsSelector'}
+                                placeholder={'Select enriched groups'}
                                 onChange={this.onChange}
                                 options={this.options}
                                 value={this.selectedValues}
@@ -403,16 +557,27 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                                 checked={this.significanceFilter}
                                 onClick={this.toggleSignificanceFilter}
                                 data-test="SwapAxes"
-                            />Significant only
+                            />
+                            Significant only
                         </label>
-
                     </div>
-                    <AlterationEnrichmentTable key={this.props.patientLevelEnrichments.toString()}
-                                                data={this.filteredData} onCheckGene={this.props.store ? this.onCheckGene : undefined}
-                                               checkedGenes={this.props.store ? this.checkedGenes : undefined}
-                                               dataStore={this.dataStore}
-                                               visibleOrderedColumnNames={this.visibleOrderedColumnNames}
-                                               customColumns={_.keyBy(this.customColumns,column=>column.name)}
+                    <AlterationEnrichmentTable
+                        key={this.props.patientLevelEnrichments.toString()}
+                        data={this.filteredData}
+                        onCheckGene={
+                            this.props.store ? this.onCheckGene : undefined
+                        }
+                        checkedGenes={
+                            this.props.store ? this.checkedGenes : undefined
+                        }
+                        dataStore={this.dataStore}
+                        visibleOrderedColumnNames={
+                            this.visibleOrderedColumnNames
+                        }
+                        customColumns={_.keyBy(
+                            this.customColumns,
+                            column => column.name
+                        )}
                     />
                 </div>
             </div>

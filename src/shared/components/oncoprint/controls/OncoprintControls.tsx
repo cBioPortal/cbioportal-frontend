@@ -1,32 +1,49 @@
 import * as React from 'react';
-import {observer, Observer} from 'mobx-react';
-import {Button, ButtonGroup, Modal} from 'react-bootstrap';
+import { observer, Observer } from 'mobx-react';
+import { Button, ButtonGroup, Modal } from 'react-bootstrap';
 import CustomDropdown from './CustomDropdown';
 import ConfirmNgchmModal from './ConfirmNgchmModal';
 import ReactSelect from 'react-select1';
-import {MobxPromise} from 'mobxpromise';
-import {action, computed, IObservableObject, observable, ObservableMap, reaction, toJS,} from 'mobx';
+import { MobxPromise } from 'mobxpromise';
+import {
+    action,
+    computed,
+    IObservableObject,
+    observable,
+    ObservableMap,
+    reaction,
+    toJS,
+} from 'mobx';
 import _ from 'lodash';
-import {SortMode} from '../ResultsViewOncoprint';
-import {Gene, MolecularProfile} from 'shared/api/generated/CBioPortalAPI';
+import { SortMode } from '../ResultsViewOncoprint';
+import { Gene, MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import {
     DefaultTooltip,
     EditableSpan,
-    CheckedSelect
+    CheckedSelect,
 } from 'cbioportal-frontend-commons';
 import Slider from 'react-rangeslider';
 import 'react-rangeslider/lib/index.css';
 import './styles.scss';
 import classNames from 'classnames';
-import {SpecialAttribute} from '../../../cache/ClinicalDataCache';
-import {AlterationTypeConstants, ResultsViewPageStore, GenericAssayTypeConstants,} from '../../../../pages/resultsView/ResultsViewPageStore';
-import {OncoprintAnalysisCaseType, ExtendedClinicalAttribute} from '../../../../pages/resultsView/ResultsViewPageStoreUtils';
-import OQLTextArea, {GeneBoxType} from '../../GeneSelectionBox/OQLTextArea';
+import { SpecialAttribute } from '../../../cache/ClinicalDataCache';
+import {
+    AlterationTypeConstants,
+    ResultsViewPageStore,
+    GenericAssayTypeConstants,
+} from '../../../../pages/resultsView/ResultsViewPageStore';
+import {
+    OncoprintAnalysisCaseType,
+    ExtendedClinicalAttribute,
+} from '../../../../pages/resultsView/ResultsViewPageStoreUtils';
+import OQLTextArea, { GeneBoxType } from '../../GeneSelectionBox/OQLTextArea';
 import autobind from 'autobind-decorator';
-import {SingleGeneQuery} from '../../../lib/oql/oql-parser';
+import { SingleGeneQuery } from '../../../lib/oql/oql-parser';
 import AddClinicalTracks from '../../../../pages/resultsView/oncoprint/AddClinicalTracks';
-import DriverAnnotationControls, {IDriverAnnotationControlsHandlers} from "../../../../pages/resultsView/settings/DriverAnnotationControls";
+import DriverAnnotationControls, {
+    IDriverAnnotationControlsHandlers,
+} from '../../../../pages/resultsView/settings/DriverAnnotationControls';
 import OncoprintDropdownCount from 'pages/resultsView/oncoprint/OncoprintDropdownCount';
 import TextIconArea, {
     ITextIconAreaItemProps,
@@ -126,7 +143,7 @@ export interface IOncoprintControlsState {
     selectedCustomDriverAnnotationTiers?: ObservableMap<boolean>;
     annotateCustomDriverBinary?: boolean;
 
-    columnMode?: OncoprintAnalysisCaseType
+    columnMode?: OncoprintAnalysisCaseType;
 
     horzZoom: number;
 }
@@ -193,7 +210,7 @@ export default class OncoprintControls extends React.Component<
     @observable private _selectedTreatmentIds: string[] = [];
     private textareaTreatmentText = '';
     @observable treatmentFilter = '';
-    @observable showConfirmNgchmModal:boolean = false;
+    @observable showConfirmNgchmModal: boolean = false;
 
     constructor(props: IOncoprintControlsProps) {
         super(props);
@@ -448,9 +465,12 @@ export default class OncoprintControls extends React.Component<
                     this.props.handlers.onClickDownload('tabular');
                 break;
             case EVENT_KEY.viewNGCHM:
-            	if (this.props.state.ngchmButtonActive && this.props.handlers.onClickNGCHM) {
+                if (
+                    this.props.state.ngchmButtonActive &&
+                    this.props.handlers.onClickNGCHM
+                ) {
                     this.showConfirmNgchmModal = true;
-            	}
+                }
                 break;
         }
     }
@@ -502,9 +522,19 @@ export default class OncoprintControls extends React.Component<
         _.remove(this._selectedTreatmentIds, v => v === treatmentId);
     }
 
-    private filterHeatmapProfilesByGenericAssayType(profiles: MolecularProfile[]) {
-        return _.filter(profiles, (profile) => profile.molecularAlterationType !== AlterationTypeConstants.GENERIC_ASSAY ||
-                                                                              profile.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY && profile.genericAssayType === GenericAssayTypeConstants.TREATMENT_RESPONSE)
+    private filterHeatmapProfilesByGenericAssayType(
+        profiles: MolecularProfile[]
+    ) {
+        return _.filter(
+            profiles,
+            profile =>
+                profile.molecularAlterationType !==
+                    AlterationTypeConstants.GENERIC_ASSAY ||
+                (profile.molecularAlterationType ===
+                    AlterationTypeConstants.GENERIC_ASSAY &&
+                    profile.genericAssayType ===
+                        GenericAssayTypeConstants.TREATMENT_RESPONSE)
+        );
     }
 
     @computed get heatmapProfileOptions() {
@@ -514,15 +544,14 @@ export default class OncoprintControls extends React.Component<
         ) {
             // only add GENERIC_ASSAY when generic_assay_type is TREATMENT_RESPONSE
             // TODO: apply to all generic assay profiles when front-end implementation finish
-            const filteredHeatmapProfiles = this.filterHeatmapProfilesByGenericAssayType(this.props.state.heatmapProfilesPromise.result);
-            return _.map(
-                filteredHeatmapProfiles,
-                profile => ({
-                    label: profile.name,
-                    value: profile.molecularProfileId,
-                    type: profile.molecularAlterationType,
-                })
+            const filteredHeatmapProfiles = this.filterHeatmapProfilesByGenericAssayType(
+                this.props.state.heatmapProfilesPromise.result
             );
+            return _.map(filteredHeatmapProfiles, profile => ({
+                label: profile.name,
+                value: profile.molecularProfileId,
+                type: profile.molecularAlterationType,
+            }));
         } else {
             return [];
         }
@@ -714,13 +743,31 @@ export default class OncoprintControls extends React.Component<
 
                         {this.props.state.ngchmButtonActive && [
                             <hr />,
-                            (<DefaultTooltip overlay={<span>Open a new tab to visualize this study as Next Generation Clustered Heatmaps from MD Anderson Cancer Center.</span>}>
-                             <button
-                                 className={classNames("btn", "btn-sm", "btn-default")}
-                                 name={EVENT_KEY.viewNGCHM}
-                                 onClick={this.onButtonClick}
-                             >Whole Study Heatmap (NG-CHM) <i className="fa fa-external-link" aria-hidden="true"></i></button>
-                             </DefaultTooltip>)
+                            <DefaultTooltip
+                                overlay={
+                                    <span>
+                                        Open a new tab to visualize this study
+                                        as Next Generation Clustered Heatmaps
+                                        from MD Anderson Cancer Center.
+                                    </span>
+                                }
+                            >
+                                <button
+                                    className={classNames(
+                                        'btn',
+                                        'btn-sm',
+                                        'btn-default'
+                                    )}
+                                    name={EVENT_KEY.viewNGCHM}
+                                    onClick={this.onButtonClick}
+                                >
+                                    Whole Study Heatmap (NG-CHM){' '}
+                                    <i
+                                        className="fa fa-external-link"
+                                        aria-hidden="true"
+                                    ></i>
+                                </button>
+                            </DefaultTooltip>,
                         ]}
                     </div>
                 );
@@ -734,15 +781,22 @@ export default class OncoprintControls extends React.Component<
                 title="Add Heatmap Tracks"
                 id="heatmapDropdown"
                 className="heatmap"
-                titleElement={<OncoprintDropdownCount
-                    // only add GENERIC_ASSAY when generic_assay_type is TREATMENT_RESPONSE
-                    // TODO: apply to all generic assay profiles when front-end implementation finish
-                    count={
-                        this.props.state.heatmapProfilesPromise.isComplete && this.props.state.heatmapProfilesPromise!.result ?
-                            this.filterHeatmapProfilesByGenericAssayType(this.props.state.heatmapProfilesPromise!.result!).length :
-                            undefined
-                    }
-                />}
+                titleElement={
+                    <OncoprintDropdownCount
+                        // only add GENERIC_ASSAY when generic_assay_type is TREATMENT_RESPONSE
+                        // TODO: apply to all generic assay profiles when front-end implementation finish
+                        count={
+                            this.props.state.heatmapProfilesPromise
+                                .isComplete &&
+                            this.props.state.heatmapProfilesPromise!.result
+                                ? this.filterHeatmapProfilesByGenericAssayType(
+                                      this.props.state.heatmapProfilesPromise!
+                                          .result!
+                                  ).length
+                                : undefined
+                        }
+                    />
+                }
             >
                 {menu}
             </CustomDropdown>
@@ -916,9 +970,13 @@ export default class OncoprintControls extends React.Component<
                     <div style={{ marginLeft: 10 }}>
                         <DriverAnnotationControls
                             state={this.props.state}
-                            handlers={Object.assign({
-                                onCustomDriverTierCheckboxClick: this.onCustomDriverTierCheckboxClick
-                            } as Partial<IDriverAnnotationControlsHandlers>, this.props.handlers)}
+                            handlers={Object.assign(
+                                {
+                                    onCustomDriverTierCheckboxClick: this
+                                        .onCustomDriverTierCheckboxClick,
+                                } as Partial<IDriverAnnotationControlsHandlers>,
+                                this.props.handlers
+                            )}
                         />
                     </div>
 
@@ -953,7 +1011,8 @@ export default class OncoprintControls extends React.Component<
                                     }
                                     onClick={this.onInputClick}
                                     disabled={
-                                        !this.props.state.distinguishGermlineMutations
+                                        !this.props.state
+                                            .distinguishGermlineMutations
                                     }
                                 />{' '}
                                 Hide germline mutations
@@ -967,25 +1026,34 @@ export default class OncoprintControls extends React.Component<
             return (
                 <>
                     <h5>Annotate and Filter</h5>
-                    <div style={{display:"flex", flexDirection:"row", alignItems:"center", marginLeft:10}}>
+                    <div
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            marginLeft: 10,
+                        }}
+                    >
                         Please see the
                         <button
                             style={{
-                                marginLeft:5,
-                                marginRight:5,
-                                marginBottom:0,
-                                width:"auto",
-                                padding:"1px 5px 1px 5px"
+                                marginLeft: 5,
+                                marginRight: 5,
+                                marginBottom: 0,
+                                width: 'auto',
+                                padding: '1px 5px 1px 5px',
                             }}
                             className="btn btn-primary"
-                            onClick={()=>{ store.resultsPageSettingsVisible = !store.resultsPageSettingsVisible }}
+                            onClick={() => {
+                                store.resultsPageSettingsVisible = !store.resultsPageSettingsVisible;
+                            }}
                         >
-                            <i className="fa fa-sliders"/>
+                            <i className="fa fa-sliders" />
                         </button>
                         menu.
                     </div>
                 </>
-            )
+            );
         }
     }
 
@@ -1105,7 +1173,8 @@ export default class OncoprintControls extends React.Component<
                             name="columnType"
                             value={EVENT_KEY.columnTypeSample}
                             checked={
-                                this.props.state.columnMode === OncoprintAnalysisCaseType.SAMPLE
+                                this.props.state.columnMode ===
+                                OncoprintAnalysisCaseType.SAMPLE
                             }
                             onClick={this.onInputClick}
                         />{' '}
@@ -1119,7 +1188,8 @@ export default class OncoprintControls extends React.Component<
                             name="columnType"
                             value={EVENT_KEY.columnTypePatient}
                             checked={
-                                this.props.state.columnMode === OncoprintAnalysisCaseType.PATIENT
+                                this.props.state.columnMode ===
+                                OncoprintAnalysisCaseType.PATIENT
                             }
                             onClick={this.onInputClick}
                         />{' '}
@@ -1184,7 +1254,8 @@ export default class OncoprintControls extends React.Component<
                             }
                         />{' '}
                         Only show clinical track legends for altered{' '}
-                        {this.props.state.columnMode === OncoprintAnalysisCaseType.PATIENT
+                        {this.props.state.columnMode ===
+                        OncoprintAnalysisCaseType.PATIENT
                             ? 'patients'
                             : 'samples'}
                         .
@@ -1264,9 +1335,7 @@ export default class OncoprintControls extends React.Component<
                     overlay={<span>Zoom out of oncoprint.</span>}
                     placement="top"
                 >
-                    <div
-                        onClick={this.onZoomOutClick}
-                    >
+                    <div onClick={this.onZoomOutClick}>
                         <i className="fa fa-search-minus"></i>
                     </div>
                 </DefaultTooltip>
@@ -1311,10 +1380,8 @@ export default class OncoprintControls extends React.Component<
                     overlay={<span>Zoom in to oncoprint.</span>}
                     placement="top"
                 >
-                    <div
-                        onClick={this.onZoomInClick}
-                    >
-                          <i className="fa fa-search-plus"></i>
+                    <div onClick={this.onZoomInClick}>
+                        <i className="fa fa-search-plus"></i>
                     </div>
                 </DefaultTooltip>
             </div>
@@ -1364,11 +1431,11 @@ export default class OncoprintControls extends React.Component<
                     <Observer>{this.getDownloadMenu}</Observer>
                     <Observer>{this.getHorzZoomControls}</Observer>
                     {this.minimapButton}
-                    <ConfirmNgchmModal 
+                    <ConfirmNgchmModal
                         show={this.showConfirmNgchmModal}
-                        onHide={()=>this.showConfirmNgchmModal=false}
+                        onHide={() => (this.showConfirmNgchmModal = false)}
                         openNgchmWindow={this.props.handlers.onClickNGCHM}
-                        />
+                    />
                 </ButtonGroup>
             </div>
         );

@@ -2,7 +2,6 @@
     position: relative;
 
     :global {
-
         .testimonial-blockquote {
             opacity: 1;
             position: absolute;
@@ -15,10 +14,9 @@
                 opacity: 0.01;
 
                 &.test-trans-enter-active {
-                   opacity: 1;
-                   transition: opacity 2000ms ease-in;
-                 }
-
+                    opacity: 1;
+                    transition: opacity 2000ms ease-in;
+                }
             }
 
             &.test-trans-leave {
@@ -28,25 +26,19 @@
                     opacity: 0.01;
                     transition: opacity 2000ms ease-in;
                 }
-
             }
-
         }
 
         .testimonial-links {
             margin-top: 10px;
 
-            a:first-child{
+            a:first-child {
                 float: left;
             }
 
             a:last-child {
                 float: right;
             }
-
         }
-
     }
-
 }
-

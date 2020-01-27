@@ -1,38 +1,70 @@
-import {observable} from "mobx";
-import AppConfig from "appConfig";
-import {default as OncoprinterStore} from "./OncoprinterStore";
-import _ from "lodash";
-import {GeneticTrackDatum, GeneticTrackDatum_Data,} from "../../../../shared/components/oncoprint/Oncoprint";
-import {percentAltered} from "../../../../shared/components/oncoprint/OncoprintUtils";
-import {AlterationTypeConstants} from "../../../resultsView/ResultsViewPageStore";
-import {cna_profile_data_to_string} from "../../../../shared/lib/oql/AccessorsForOqlFilter";
-import {fillGeneticTrackDatum, OncoprintMutationType} from "../../../../shared/components/oncoprint/DataUtils";
-import {Gene, Mutation, NumericGeneMolecularData} from "../../../../shared/api/generated/CBioPortalAPI";
+import { observable } from 'mobx';
+import AppConfig from 'appConfig';
+import { default as OncoprinterStore } from './OncoprinterStore';
+import _ from 'lodash';
+import {
+    GeneticTrackDatum,
+    GeneticTrackDatum_Data,
+} from '../../../../shared/components/oncoprint/Oncoprint';
+import { percentAltered } from '../../../../shared/components/oncoprint/OncoprintUtils';
+import { AlterationTypeConstants } from '../../../resultsView/ResultsViewPageStore';
+import { cna_profile_data_to_string } from '../../../../shared/lib/oql/AccessorsForOqlFilter';
+import {
+    fillGeneticTrackDatum,
+    OncoprintMutationType,
+} from '../../../../shared/components/oncoprint/DataUtils';
+import {
+    Gene,
+    Mutation,
+    NumericGeneMolecularData,
+} from '../../../../shared/api/generated/CBioPortalAPI';
 import {
     generateQueryVariantId,
     getProteinPositionFromProteinChange,
     OncoKbAPI,
     Query,
-} from "cbioportal-frontend-commons";
-import {ONCOKB_DEFAULT, queryOncoKbData} from "../../../../shared/lib/StoreUtils";
-import {generateQueryVariant} from "../../../../shared/lib/OncoKbUtils";
-import {default as oncokbClient} from "../../../../shared/api/oncokbClientInstance";
-import {IOncoKbData} from "../../../../shared/model/OncoKB";
-import MobxPromise from "mobxpromise";
-import {getOncoKbOncogenic} from "../../../resultsView/ResultsViewPageStoreUtils";
-import {mutationCountByPositionKey} from "../../../resultsView/mutationCountHelpers";
-import {getAlterationString} from "../../../../shared/lib/CopyNumberUtils";
-import {GERMLINE_REGEXP} from "../../../../shared/lib/MutationUtils";
-import {parseOQLQuery} from "../../../../shared/lib/oql/oqlfilter";
-import {Alteration, MUTCommand} from "../../../../shared/lib/oql/oql-parser";
-import {MUTATION_STATUS_GERMLINE, PUTATIVE_DRIVER} from "../../../../shared/constants";
+} from 'cbioportal-frontend-commons';
+import {
+    ONCOKB_DEFAULT,
+    queryOncoKbData,
+} from '../../../../shared/lib/StoreUtils';
+import { generateQueryVariant } from '../../../../shared/lib/OncoKbUtils';
+import { default as oncokbClient } from '../../../../shared/api/oncokbClientInstance';
+import { IOncoKbData } from '../../../../shared/model/OncoKB';
+import MobxPromise from 'mobxpromise';
+import { getOncoKbOncogenic } from '../../../resultsView/ResultsViewPageStoreUtils';
+import { mutationCountByPositionKey } from '../../../resultsView/mutationCountHelpers';
+import { getAlterationString } from '../../../../shared/lib/CopyNumberUtils';
+import { GERMLINE_REGEXP } from '../../../../shared/lib/MutationUtils';
+import { parseOQLQuery } from '../../../../shared/lib/oql/oqlfilter';
+import { Alteration, MUTCommand } from '../../../../shared/lib/oql/oql-parser';
+import {
+    MUTATION_STATUS_GERMLINE,
+    PUTATIVE_DRIVER,
+} from '../../../../shared/constants';
 
-export type OncoprinterGeneticTrackDatum =
-    Pick<GeneticTrackDatum, "trackLabel" | "study_id" | "uid" |
-                            "disp_mut" | "disp_cna" | "disp_mrna" | "disp_prot" | "disp_fusion" | "disp_germ"> & { sample:string, patient:string, data:OncoprinterGeneticTrackDatum_Data[]} ;
+export type OncoprinterGeneticTrackDatum = Pick<
+    GeneticTrackDatum,
+    | 'trackLabel'
+    | 'study_id'
+    | 'uid'
+    | 'disp_mut'
+    | 'disp_cna'
+    | 'disp_mrna'
+    | 'disp_prot'
+    | 'disp_fusion'
+    | 'disp_germ'
+> & {
+    sample: string;
+    patient: string;
+    data: OncoprinterGeneticTrackDatum_Data[];
+};
 
-export type OncoprinterGeneticTrackDatum_Data =
-    GeneticTrackDatum_Data & Pick<Partial<Mutation>, "proteinPosStart" | "proteinPosEnd" | "startPosition" | "endPosition">;
+export type OncoprinterGeneticTrackDatum_Data = GeneticTrackDatum_Data &
+    Pick<
+        Partial<Mutation>,
+        'proteinPosStart' | 'proteinPosEnd' | 'startPosition' | 'endPosition'
+    >;
 
 type OncoprinterGeneticTrackSpec = {
     key: string; // for efficient diffing, just like in React. must be unique
@@ -42,14 +74,23 @@ type OncoprinterGeneticTrackSpec = {
 };
 
 export type OncoprinterGeneticInputLineType1 = {
-    sampleId:string;
-}
+    sampleId: string;
+};
 export type OncoprinterGeneticInputLineType2 = OncoprinterGeneticInputLineType1 & {
-    hugoGeneSymbol:string;
-    alteration:OncoprintMutationType | "amp" | "homdel" | "gain" | "hetloss" | "mrnaHigh" | "mrnaLow" | "protHigh" | "protLow";
-    isGermline?:boolean;
-    isCustomDriver?:boolean;
-    proteinChange?:string;
+    hugoGeneSymbol: string;
+    alteration:
+        | OncoprintMutationType
+        | 'amp'
+        | 'homdel'
+        | 'gain'
+        | 'hetloss'
+        | 'mrnaHigh'
+        | 'mrnaLow'
+        | 'protHigh'
+        | 'protLow';
+    isGermline?: boolean;
+    isCustomDriver?: boolean;
+    proteinChange?: string;
 };
 /* Leaving commented only for reference, this will be replaced by unified input strategy
 export type OncoprinterInputLineType3_Incomplete = OncoprinterInputLineType1 & {
@@ -71,18 +112,22 @@ export type OncoprinterInputLineType3 = OncoprinterInputLineType3_Incomplete & {
 export type OncoprinterInputLineIncomplete = OncoprinterInputLineType1 | OncoprinterInputLineType2 | OncoprinterInputLineType3_Incomplete;
 */
 
-export type OncoprinterGeneticInputLine = OncoprinterGeneticInputLineType1 | OncoprinterGeneticInputLineType2;
+export type OncoprinterGeneticInputLine =
+    | OncoprinterGeneticInputLineType1
+    | OncoprinterGeneticInputLineType2;
 
-export function isType2(inputLine:OncoprinterGeneticInputLine):inputLine is OncoprinterGeneticInputLineType2 {
-    return inputLine.hasOwnProperty("alteration");
+export function isType2(
+    inputLine: OncoprinterGeneticInputLine
+): inputLine is OncoprinterGeneticInputLineType2 {
+    return inputLine.hasOwnProperty('alteration');
 }
 /* Leaving commented only for reference, this will be replaced by unified input strategy
 export function isType3NoGene(inputLine:OncoprinterInputLine):inputLine is OncoprinterInputLineType3_Incomplete {
     return inputLine.hasOwnProperty("chromosome");
 }*/
 
-export function initDriverAnnotationSettings(store:OncoprinterStore) {
-    let _oncoKb:boolean, _cbioportalCount:boolean, _customBinary:boolean;
+export function initDriverAnnotationSettings(store: OncoprinterStore) {
+    let _oncoKb: boolean, _cbioportalCount: boolean, _customBinary: boolean;
     if (store.existCustomDrivers) {
         // if custom drivers, start with only custom drivers annotated
         _oncoKb = false;
@@ -102,29 +147,32 @@ export function initDriverAnnotationSettings(store:OncoprinterStore) {
         _excludeVUS: false,
         hotspots: false, // for now
 
-
         get customBinary() {
             return this._customBinary;
         },
-        set customBinary(val:boolean) {
+        set customBinary(val: boolean) {
             this._customBinary = val;
             store.customDriverWarningHidden = true;
         },
         get cbioportalCount() {
             return this._cbioportalCount;
         },
-        set cbioportalCount(val:boolean) {
+        set cbioportalCount(val: boolean) {
             this._cbioportalCount = val;
             store.customDriverWarningHidden = true;
         },
-        set oncoKb(val:boolean) {
+        set oncoKb(val: boolean) {
             this._oncoKb = val;
             store.customDriverWarningHidden = true;
         },
         get oncoKb() {
-            return !!(AppConfig.serverConfig.show_oncokb && this._oncoKb && !store.didOncoKbFail);
+            return !!(
+                AppConfig.serverConfig.show_oncokb &&
+                this._oncoKb &&
+                !store.didOncoKbFail
+            );
         },
-        set excludeVUS(val:boolean) {
+        set excludeVUS(val: boolean) {
             this._excludeVUS = val;
         },
         get excludeVUS() {
@@ -138,73 +186,107 @@ export function initDriverAnnotationSettings(store:OncoprinterStore) {
                 (store.existCustomDrivers && this.customBinary);
 
             return anySelected;
-        }
+        },
     });
 }
 
-export function getSampleIds(oncoprinterInput:Pick<OncoprinterGeneticInputLine, "sampleId">[]):string[] {
-    return _.chain(oncoprinterInput).map(o=>o.sampleId).uniq().value();
-}
-
-export function getGeneSymbols(oncoprinterInput:OncoprinterGeneticInputLine[]):string[] {
-    return (_.chain(oncoprinterInput).filter(o=>isType2(o)) as any)
-        .map((o:OncoprinterGeneticInputLineType2)=>o.hugoGeneSymbol)
+export function getSampleIds(
+    oncoprinterInput: Pick<OncoprinterGeneticInputLine, 'sampleId'>[]
+): string[] {
+    return _.chain(oncoprinterInput)
+        .map(o => o.sampleId)
         .uniq()
         .value();
 }
 
-export async function fetchOncoKbDataForMutations(annotatedGenes:{[entrezGeneId:number]:boolean}|Error,
-                                                   data:OncoprinterGeneticTrackDatum_Data[],
-                                                   client: OncoKbAPI = oncokbClient)
-{
+export function getGeneSymbols(
+    oncoprinterInput: OncoprinterGeneticInputLine[]
+): string[] {
+    return (_.chain(oncoprinterInput).filter(o => isType2(o)) as any)
+        .map((o: OncoprinterGeneticInputLineType2) => o.hugoGeneSymbol)
+        .uniq()
+        .value();
+}
+
+export async function fetchOncoKbDataForMutations(
+    annotatedGenes: { [entrezGeneId: number]: boolean } | Error,
+    data: OncoprinterGeneticTrackDatum_Data[],
+    client: OncoKbAPI = oncokbClient
+) {
     if (annotatedGenes instanceof Error) {
         return new Error();
     }
 
-    const mutationsToQuery = _.chain(data).filter(m=>!!annotatedGenes[m.entrezGeneId])
-        .filter(d=>(d.proteinPosStart !== undefined && d.proteinPosEnd !== undefined))
+    const mutationsToQuery = _.chain(data)
+        .filter(m => !!annotatedGenes[m.entrezGeneId])
+        .filter(
+            d =>
+                d.proteinPosStart !== undefined && d.proteinPosEnd !== undefined
+        )
         .value();
 
     if (mutationsToQuery.length === 0) {
         return ONCOKB_DEFAULT;
     }
 
-    const queryVariants = _.uniqBy(_.map(mutationsToQuery, (mutation) => {
-        return generateQueryVariant(mutation.entrezGeneId,
-            null,
-            mutation.proteinChange,
-            mutation.mutationType,
-            mutation.proteinPosStart,
-            mutation.proteinPosEnd);
-    }), "id");
-    return queryOncoKbData(queryVariants, {}, client, "ONCOGENIC");
+    const queryVariants = _.uniqBy(
+        _.map(mutationsToQuery, mutation => {
+            return generateQueryVariant(
+                mutation.entrezGeneId,
+                null,
+                mutation.proteinChange,
+                mutation.mutationType,
+                mutation.proteinPosStart,
+                mutation.proteinPosEnd
+            );
+        }),
+        'id'
+    );
+    return queryOncoKbData(queryVariants, {}, client, 'ONCOGENIC');
 }
 
-export async function fetchOncoKbDataForCna(annotatedGenes:{[entrezGeneId:number]:boolean}|Error,
-                                            data:OncoprinterGeneticTrackDatum_Data[],
-                                            client: OncoKbAPI = oncokbClient)
-{
+export async function fetchOncoKbDataForCna(
+    annotatedGenes: { [entrezGeneId: number]: boolean } | Error,
+    data: OncoprinterGeneticTrackDatum_Data[],
+    client: OncoKbAPI = oncokbClient
+) {
     if (annotatedGenes instanceof Error) {
         return new Error();
     }
 
-    const alterationsToQuery = _.chain(data).filter(m=>!!annotatedGenes[m.entrezGeneId])
-                                .filter(d=>(d.molecularProfileAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION))
-                                .value();
+    const alterationsToQuery = _.chain(data)
+        .filter(m => !!annotatedGenes[m.entrezGeneId])
+        .filter(
+            d =>
+                d.molecularProfileAlterationType ===
+                AlterationTypeConstants.COPY_NUMBER_ALTERATION
+        )
+        .value();
 
     if (alterationsToQuery.length === 0) {
         return ONCOKB_DEFAULT;
     }
-    const queryVariants = _.chain(alterationsToQuery).map((datum: NumericGeneMolecularData) => {
-        return generateQueryVariant(datum.entrezGeneId,
-            null,
-            getAlterationString(datum.value));
-    }).uniqBy("id").value() as any as Query[]; // lodash typings not perfect
-    return queryOncoKbData(queryVariants, {}, client, "ONCOGENIC");
+    const queryVariants = (_.chain(alterationsToQuery)
+        .map((datum: NumericGeneMolecularData) => {
+            return generateQueryVariant(
+                datum.entrezGeneId,
+                null,
+                getAlterationString(datum.value)
+            );
+        })
+        .uniqBy('id')
+        .value() as any) as Query[]; // lodash typings not perfect
+    return queryOncoKbData(queryVariants, {}, client, 'ONCOGENIC');
 }
 
-function makeGeneticTrackDatum_Data(oncoprinterInputLine:OncoprinterGeneticInputLineType2, hugoGeneSymbolToGene:{[hugoGeneSymbol:string]:Gene}) {
-    return makeGeneticTrackDatum_Data_Type2(oncoprinterInputLine, hugoGeneSymbolToGene);
+function makeGeneticTrackDatum_Data(
+    oncoprinterInputLine: OncoprinterGeneticInputLineType2,
+    hugoGeneSymbolToGene: { [hugoGeneSymbol: string]: Gene }
+) {
+    return makeGeneticTrackDatum_Data_Type2(
+        oncoprinterInputLine,
+        hugoGeneSymbolToGene
+    );
 }
 /* Leaving commented only for reference, this will be replaced by unified input strategy
 function makeGeneticTrackDatum_Data_Type3(oncoprinterInputLine:OncoprinterInputLineType3, hugoGeneSymbolToGene:{[hugoGeneSymbol:string]:Gene}) {
@@ -252,32 +334,41 @@ function makeGeneticTrackDatum_Data_Type3(oncoprinterInputLine:OncoprinterInputL
     return ret as OncoprinterGeneticTrackDatum_Data;
 }*/
 
-export function makeGeneticTrackDatum_Data_Type2(oncoprinterInputLine:OncoprinterGeneticInputLineType2, hugoGeneSymbolToGene:{[hugoGeneSymbol:string]:Gene}) {
-    let ret:Partial<OncoprinterGeneticTrackDatum_Data> = {
+export function makeGeneticTrackDatum_Data_Type2(
+    oncoprinterInputLine: OncoprinterGeneticInputLineType2,
+    hugoGeneSymbolToGene: { [hugoGeneSymbol: string]: Gene }
+) {
+    let ret: Partial<OncoprinterGeneticTrackDatum_Data> = {
         // we'll never set these values - theyre not needed for oncoprinter
-        driverTiersFilter:"",
-        driverTiersFilterAnnotation:"",
+        driverTiersFilter: '',
+        driverTiersFilterAnnotation: '',
 
         // we'll update these values later, not in this function
-        oncoKbOncogenic: "",
-        isHotspot:false,
+        oncoKbOncogenic: '',
+        isHotspot: false,
         putativeDriver: false,
 
         // these are the same always or almost always
-        hugoGeneSymbol:oncoprinterInputLine.hugoGeneSymbol,
-        proteinChange:oncoprinterInputLine.proteinChange,
-        mutationStatus: oncoprinterInputLine.isGermline ? MUTATION_STATUS_GERMLINE : "",
-        driverFilter:oncoprinterInputLine.isCustomDriver ? PUTATIVE_DRIVER : "",
-        driverFilterAnnotation:oncoprinterInputLine.isCustomDriver ? "You indicated that this mutation is a driver." : "",
+        hugoGeneSymbol: oncoprinterInputLine.hugoGeneSymbol,
+        proteinChange: oncoprinterInputLine.proteinChange,
+        mutationStatus: oncoprinterInputLine.isGermline
+            ? MUTATION_STATUS_GERMLINE
+            : '',
+        driverFilter: oncoprinterInputLine.isCustomDriver
+            ? PUTATIVE_DRIVER
+            : '',
+        driverFilterAnnotation: oncoprinterInputLine.isCustomDriver
+            ? 'You indicated that this mutation is a driver.'
+            : '',
 
         // we'll update these later in this function
         molecularProfileAlterationType: undefined, // the profile type in AlterationTypeConstants
-        alterationSubType: "", // high or low or cna_profile_data_to_string[value] or SimplifiedMutationType,
-        value:undefined, // numeric cna
-        mutationType: "",
-        entrezGeneId:0,
-        proteinPosStart:undefined,
-        proteinPosEnd:undefined
+        alterationSubType: '', // high or low or cna_profile_data_to_string[value] or SimplifiedMutationType,
+        value: undefined, // numeric cna
+        mutationType: '',
+        entrezGeneId: 0,
+        proteinPosStart: undefined,
+        proteinPosEnd: undefined,
     };
 
     const gene = hugoGeneSymbolToGene[oncoprinterInputLine.hugoGeneSymbol];
@@ -287,125 +378,156 @@ export function makeGeneticTrackDatum_Data_Type2(oncoprinterInputLine:Oncoprinte
     }
     if (ret.proteinChange) {
         // add protein change information if it exists
-        const parsedInfo = getProteinPositionFromProteinChange(ret.proteinChange);
+        const parsedInfo = getProteinPositionFromProteinChange(
+            ret.proteinChange
+        );
         if (parsedInfo) {
             ret.proteinPosStart = parsedInfo.start;
             ret.proteinPosEnd = parsedInfo.end;
         }
     }
     switch (oncoprinterInputLine.alteration) {
-        case "missense":
+        case 'missense':
             ret = Object.assign(ret, {
-                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
-                alterationSubType:"missense",
-                mutationType: "missense_mutation"
+                molecularProfileAlterationType:
+                    AlterationTypeConstants.MUTATION_EXTENDED,
+                alterationSubType: 'missense',
+                mutationType: 'missense_mutation',
             });
             break;
-        case "inframe":
+        case 'inframe':
             ret = Object.assign(ret, {
-                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
-                alterationSubType:"inframe",
-                mutationType: "indel"
+                molecularProfileAlterationType:
+                    AlterationTypeConstants.MUTATION_EXTENDED,
+                alterationSubType: 'inframe',
+                mutationType: 'indel',
             });
             break;
-        case "fusion":
+        case 'fusion':
             ret = Object.assign(ret, {
-                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
-                mutationType: "fusion",
+                molecularProfileAlterationType:
+                    AlterationTypeConstants.MUTATION_EXTENDED,
+                mutationType: 'fusion',
             });
             break;
-        case "promoter":
+        case 'promoter':
             ret = Object.assign(ret, {
-                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
-                proteinChange: "promoter",
+                molecularProfileAlterationType:
+                    AlterationTypeConstants.MUTATION_EXTENDED,
+                proteinChange: 'promoter',
             });
             break;
-        case "trunc":
+        case 'trunc':
             ret = Object.assign(ret, {
-                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
-                alterationSubType: "nonsense",
-                mutationType: "nonsense"
+                molecularProfileAlterationType:
+                    AlterationTypeConstants.MUTATION_EXTENDED,
+                alterationSubType: 'nonsense',
+                mutationType: 'nonsense',
             });
             break;
-        case "other":
+        case 'other':
             ret = Object.assign(ret, {
-                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
-                alterationSubType: "other"
+                molecularProfileAlterationType:
+                    AlterationTypeConstants.MUTATION_EXTENDED,
+                alterationSubType: 'other',
             });
             break;
-        case "amp":
+        case 'amp':
             ret = Object.assign(ret, {
-                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
-                alterationSubType: cna_profile_data_to_string["2"],
-                value:2
+                molecularProfileAlterationType:
+                    AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                alterationSubType: cna_profile_data_to_string['2'],
+                value: 2,
             });
             break;
-        case "homdel":
+        case 'homdel':
             ret = Object.assign(ret, {
-                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
-                alterationSubType: cna_profile_data_to_string["-2"],
-                value:-2
+                molecularProfileAlterationType:
+                    AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                alterationSubType: cna_profile_data_to_string['-2'],
+                value: -2,
             });
             break;
-        case "gain":
+        case 'gain':
             ret = Object.assign(ret, {
-                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
-                alterationSubType: cna_profile_data_to_string["1"],
-                value:1
+                molecularProfileAlterationType:
+                    AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                alterationSubType: cna_profile_data_to_string['1'],
+                value: 1,
             });
             break;
-        case "hetloss":
+        case 'hetloss':
             ret = Object.assign(ret, {
-                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
-                alterationSubType: cna_profile_data_to_string["-1"],
-                value:-1
+                molecularProfileAlterationType:
+                    AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                alterationSubType: cna_profile_data_to_string['-1'],
+                value: -1,
             });
             break;
-        case "mrnaHigh":
+        case 'mrnaHigh':
             ret = Object.assign(ret, {
-                molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION,
-                alterationSubType: "high",
+                molecularProfileAlterationType:
+                    AlterationTypeConstants.MRNA_EXPRESSION,
+                alterationSubType: 'high',
             });
             break;
-        case "mrnaLow":
+        case 'mrnaLow':
             ret = Object.assign(ret, {
-                molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION,
-                alterationSubType: "low",
+                molecularProfileAlterationType:
+                    AlterationTypeConstants.MRNA_EXPRESSION,
+                alterationSubType: 'low',
             });
             break;
-        case "protHigh":
+        case 'protHigh':
             ret = Object.assign(ret, {
-                molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL,
-                alterationSubType: "high",
+                molecularProfileAlterationType:
+                    AlterationTypeConstants.PROTEIN_LEVEL,
+                alterationSubType: 'high',
             });
             break;
-        case "protLow":
+        case 'protLow':
             ret = Object.assign(ret, {
-                molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL,
-                alterationSubType: "low",
+                molecularProfileAlterationType:
+                    AlterationTypeConstants.PROTEIN_LEVEL,
+                alterationSubType: 'low',
             });
             break;
     }
     return ret as OncoprinterGeneticTrackDatum_Data;
 }
 
-export function isAltered(d:OncoprinterGeneticTrackDatum) {
-    return (d.disp_mut || d.disp_cna || d.disp_mrna || d.disp_prot || d.disp_fusion);
+export function isAltered(d: OncoprinterGeneticTrackDatum) {
+    return (
+        d.disp_mut || d.disp_cna || d.disp_mrna || d.disp_prot || d.disp_fusion
+    );
 }
-function getPercentAltered(data:OncoprinterGeneticTrackDatum[]) {
-    const numAltered = _.chain(data).filter(isAltered)
-        .size().value();
+function getPercentAltered(data: OncoprinterGeneticTrackDatum[]) {
+    const numAltered = _.chain(data)
+        .filter(isAltered)
+        .size()
+        .value();
     return percentAltered(numAltered, data.length);
 }
 
 export function getSampleGeneticTrackData(
-    oncoprinterInput:OncoprinterGeneticInputLine[],
-    hugoGeneSymbolToGene:{[hugoGeneSymbol:string]:Gene},
-    excludeGermlineMutations:boolean
-):{[hugoGeneSymbol:string]:{ sampleId:string, data:OncoprinterGeneticTrackDatum_Data[]}[]} {
-    const geneToSampleIdToData:{[hugoGeneSymbol:string]:{[sampleId:string]:OncoprinterGeneticTrackDatum["data"]}} = {};
+    oncoprinterInput: OncoprinterGeneticInputLine[],
+    hugoGeneSymbolToGene: { [hugoGeneSymbol: string]: Gene },
+    excludeGermlineMutations: boolean
+): {
+    [hugoGeneSymbol: string]: {
+        sampleId: string;
+        data: OncoprinterGeneticTrackDatum_Data[];
+    }[];
+} {
+    const geneToSampleIdToData: {
+        [hugoGeneSymbol: string]: {
+            [sampleId: string]: OncoprinterGeneticTrackDatum['data'];
+        };
+    } = {};
 
-    const type2Lines = oncoprinterInput.filter(d=>(isType2(d))) as OncoprinterGeneticInputLineType2[];
+    const type2Lines = oncoprinterInput.filter(d =>
+        isType2(d)
+    ) as OncoprinterGeneticInputLineType2[];
     // collect data by gene x sample
     for (const inputLine of type2Lines) {
         if (!(inputLine.hugoGeneSymbol in geneToSampleIdToData)) {
@@ -416,79 +538,117 @@ export function getSampleGeneticTrackData(
         if (!(inputLine.sampleId in sampleIdToData)) {
             sampleIdToData[inputLine.sampleId] = [];
         }
-        const newDatum = makeGeneticTrackDatum_Data(inputLine, hugoGeneSymbolToGene);
-        if (!excludeGermlineMutations || !GERMLINE_REGEXP.test(newDatum.mutationStatus)) {
+        const newDatum = makeGeneticTrackDatum_Data(
+            inputLine,
+            hugoGeneSymbolToGene
+        );
+        if (
+            !excludeGermlineMutations ||
+            !GERMLINE_REGEXP.test(newDatum.mutationStatus)
+        ) {
             sampleIdToData[inputLine.sampleId].push(newDatum);
         }
     }
     // add missing samples
     for (const inputLine of oncoprinterInput) {
-        _.forEach(geneToSampleIdToData, (sampleToData, gene)=>{
+        _.forEach(geneToSampleIdToData, (sampleToData, gene) => {
             if (!(inputLine.sampleId in sampleToData)) {
                 sampleToData[inputLine.sampleId] = [];
             }
         });
     }
 
-    return _.mapValues(geneToSampleIdToData, sampleIdToData=>_.chain(sampleIdToData).map((data, sampleId)=>({ sampleId, data })).value());
-}
-
-export function getGeneticOncoprintData(
-    geneToSampleData:{[hugoGeneSymbol:string]:{ sampleId:string, data:OncoprinterGeneticTrackDatum_Data[]}[]}
-):{[hugoGeneSymbol:string]:OncoprinterGeneticTrackDatum[]} {
-    return _.mapValues(
-        geneToSampleData,
-        (sampleData, gene)=>sampleData.map(o=>(
-            fillGeneticTrackDatum(
-                { sample: o.sampleId, patient: o.sampleId, study_id: "", uid: o.sampleId },
-                gene, o.data
-            ) as OncoprinterGeneticTrackDatum
-        ))
+    return _.mapValues(geneToSampleIdToData, sampleIdToData =>
+        _.chain(sampleIdToData)
+            .map((data, sampleId) => ({ sampleId, data }))
+            .value()
     );
 }
 
-export function getGeneticTrackKey(hugoGeneSymbol:string) {
+export function getGeneticOncoprintData(geneToSampleData: {
+    [hugoGeneSymbol: string]: {
+        sampleId: string;
+        data: OncoprinterGeneticTrackDatum_Data[];
+    }[];
+}): { [hugoGeneSymbol: string]: OncoprinterGeneticTrackDatum[] } {
+    return _.mapValues(geneToSampleData, (sampleData, gene) =>
+        sampleData.map(
+            o =>
+                fillGeneticTrackDatum(
+                    {
+                        sample: o.sampleId,
+                        patient: o.sampleId,
+                        study_id: '',
+                        uid: o.sampleId,
+                    },
+                    gene,
+                    o.data
+                ) as OncoprinterGeneticTrackDatum
+        )
+    );
+}
+
+export function getGeneticTrackKey(hugoGeneSymbol: string) {
     return `geneticTrack_${hugoGeneSymbol}`;
 }
 
 export function getGeneticTracks(
-    geneToOncoprintData:{[hugoGeneSymbol:string]:OncoprinterGeneticTrackDatum[]},
-    geneOrder?:string[],
-    excludedSampleIds?:string[]
-):OncoprinterGeneticTrackSpec[] {
+    geneToOncoprintData: {
+        [hugoGeneSymbol: string]: OncoprinterGeneticTrackDatum[];
+    },
+    geneOrder?: string[],
+    excludedSampleIds?: string[]
+): OncoprinterGeneticTrackSpec[] {
     // remove excluded sample data
     const excludedSampleIdsMap = _.keyBy(excludedSampleIds || []);
-    geneToOncoprintData = _.mapValues(geneToOncoprintData, data=>data.filter(d=>!(d.sample in excludedSampleIdsMap)));
+    geneToOncoprintData = _.mapValues(geneToOncoprintData, data =>
+        data.filter(d => !(d.sample in excludedSampleIdsMap))
+    );
 
-    const geneToPercentAltered:{[hugoGeneSymbol:string]:string} = _.mapValues(geneToOncoprintData, getPercentAltered);
-    const genes = geneOrder ? geneOrder.filter(gene=>(gene in geneToOncoprintData)) : Object.keys(geneToOncoprintData);
-    return genes.map(gene=>({
+    const geneToPercentAltered: {
+        [hugoGeneSymbol: string]: string;
+    } = _.mapValues(geneToOncoprintData, getPercentAltered);
+    const genes = geneOrder
+        ? geneOrder.filter(gene => gene in geneToOncoprintData)
+        : Object.keys(geneToOncoprintData);
+    return genes.map(gene => ({
         key: getGeneticTrackKey(gene),
         label: gene,
         info: geneToPercentAltered[gene],
-        data: geneToOncoprintData[gene]
+        data: geneToOncoprintData[gene],
     }));
 }
 
 export function annotateGeneticTrackData(
-    geneToSampleData:{[hugoGeneSymbol:string]:{ sampleId:string, data:OncoprinterGeneticTrackDatum_Data[]}[]},
-    promisesMap:{
-        oncoKbCna:MobxPromise<IOncoKbData|Error>,
-        oncoKb?:MobxPromise<IOncoKbData|Error>,
-        cbioportalCount?:MobxPromise<{[mutationPositionKey:string]:number}>,
+    geneToSampleData: {
+        [hugoGeneSymbol: string]: {
+            sampleId: string;
+            data: OncoprinterGeneticTrackDatum_Data[];
+        }[];
     },
-    params:{
-        cbioportalCountThreshold?:number;
-        useHotspots:boolean;
-        useCustomBinary:boolean;
+    promisesMap: {
+        oncoKbCna: MobxPromise<IOncoKbData | Error>;
+        oncoKb?: MobxPromise<IOncoKbData | Error>;
+        cbioportalCount?: MobxPromise<{
+            [mutationPositionKey: string]: number;
+        }>;
     },
-    excludeVUS:boolean
+    params: {
+        cbioportalCountThreshold?: number;
+        useHotspots: boolean;
+        useCustomBinary: boolean;
+    },
+    excludeVUS: boolean
 ) {
     // build annotater functions
-    let getOncoKbCnaAnnotation = (d:OncoprinterGeneticTrackDatum_Data)=>"";
-    if (promisesMap.oncoKbCna.isComplete && !(promisesMap.oncoKbCna.result instanceof Error)) {
-        const indicatorMap = (promisesMap.oncoKbCna!.result! as IOncoKbData).indicatorMap!;
-        getOncoKbCnaAnnotation = (d:OncoprinterGeneticTrackDatum_Data)=>{
+    let getOncoKbCnaAnnotation = (d: OncoprinterGeneticTrackDatum_Data) => '';
+    if (
+        promisesMap.oncoKbCna.isComplete &&
+        !(promisesMap.oncoKbCna.result instanceof Error)
+    ) {
+        const indicatorMap = (promisesMap.oncoKbCna!.result! as IOncoKbData)
+            .indicatorMap!;
+        getOncoKbCnaAnnotation = (d: OncoprinterGeneticTrackDatum_Data) => {
             const id = generateQueryVariantId(
                 d.entrezGeneId,
                 null,
@@ -498,15 +658,20 @@ export function annotateGeneticTrackData(
             if (indicator) {
                 return getOncoKbOncogenic(indicator);
             } else {
-                return "";
+                return '';
             }
         };
     }
 
-    let getOncoKbAnnotation = (d:OncoprinterGeneticTrackDatum_Data)=>"";
-    if (promisesMap.oncoKb && promisesMap.oncoKb.isComplete && !(promisesMap.oncoKb.result instanceof Error)) {
-        const indicatorMap = (promisesMap.oncoKb!.result! as IOncoKbData).indicatorMap!;
-        getOncoKbAnnotation = (d:OncoprinterGeneticTrackDatum_Data)=>{
+    let getOncoKbAnnotation = (d: OncoprinterGeneticTrackDatum_Data) => '';
+    if (
+        promisesMap.oncoKb &&
+        promisesMap.oncoKb.isComplete &&
+        !(promisesMap.oncoKb.result instanceof Error)
+    ) {
+        const indicatorMap = (promisesMap.oncoKb!.result! as IOncoKbData)
+            .indicatorMap!;
+        getOncoKbAnnotation = (d: OncoprinterGeneticTrackDatum_Data) => {
             const id = generateQueryVariantId(
                 d.entrezGeneId,
                 null,
@@ -517,35 +682,38 @@ export function annotateGeneticTrackData(
             if (oncoKbIndicator) {
                 return getOncoKbOncogenic(oncoKbIndicator);
             } else {
-                return "";
+                return '';
             }
         };
     }
 
-    let getCBioAnnotation = (d:OncoprinterGeneticTrackDatum_Data)=>false;
+    let getCBioAnnotation = (d: OncoprinterGeneticTrackDatum_Data) => false;
     if (promisesMap.cbioportalCount && promisesMap.cbioportalCount.isComplete) {
         const countMap = promisesMap.cbioportalCount!.result!;
         const threshold = params.cbioportalCountThreshold!;
-        getCBioAnnotation = (d:OncoprinterGeneticTrackDatum_Data)=>{
-            if (d.molecularProfileAlterationType === AlterationTypeConstants.MUTATION_EXTENDED) {
+        getCBioAnnotation = (d: OncoprinterGeneticTrackDatum_Data) => {
+            if (
+                d.molecularProfileAlterationType ===
+                AlterationTypeConstants.MUTATION_EXTENDED
+            ) {
                 const key = mutationCountByPositionKey(d as any);
                 const count = countMap[key];
-                return (threshold <= count);
+                return threshold <= count;
             } else {
                 return false;
             }
         };
     }
 
-    return _.mapValues(geneToSampleData, (sampleData, gene)=>{
-        return sampleData.map(object=>{
+    return _.mapValues(geneToSampleData, (sampleData, gene) => {
+        return sampleData.map(object => {
             const newObj = _.clone(object);
-            newObj.data = newObj.data.filter(d=>{
+            newObj.data = newObj.data.filter(d => {
                 // clear previous annotations
                 delete d.oncoKbOncogenic;
                 delete d.putativeDriver;
                 // annotate and filter out if necessary
-                switch(d.molecularProfileAlterationType) {
+                switch (d.molecularProfileAlterationType) {
                     case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
                         d.oncoKbOncogenic = getOncoKbCnaAnnotation(d);
                         break;
@@ -553,15 +721,19 @@ export function annotateGeneticTrackData(
                         d.oncoKbOncogenic = getOncoKbAnnotation(d);
                         break;
                 }
-                if (d.molecularProfileAlterationType === AlterationTypeConstants.MUTATION_EXTENDED) {
+                if (
+                    d.molecularProfileAlterationType ===
+                    AlterationTypeConstants.MUTATION_EXTENDED
+                ) {
                     // tag mutations as putative driver, and filter them
                     d.putativeDriver = !!(
                         d.oncoKbOncogenic ||
                         (params.useHotspots && d.isHotspot) ||
                         getCBioAnnotation(d) ||
-                        (params.useCustomBinary && d.driverFilter === "Putative_Driver")
+                        (params.useCustomBinary &&
+                            d.driverFilter === 'Putative_Driver')
                     );
-                    return (!excludeVUS || d.putativeDriver);
+                    return !excludeVUS || d.putativeDriver;
                 } else {
                     return true;
                 }
@@ -571,15 +743,34 @@ export function annotateGeneticTrackData(
     });
 }
 
-export function parseGeneticInput(input:string):{status:"complete", result:OncoprinterGeneticInputLine[], error:undefined}|{status:"error", result:undefined, error:string} {
-    const lines = input.trim().split("\n").map(line=>line.trim().split(/\s+/));
+export function parseGeneticInput(
+    input: string
+):
+    | {
+          status: 'complete';
+          result: OncoprinterGeneticInputLine[];
+          error: undefined;
+      }
+    | { status: 'error'; result: undefined; error: string } {
+    const lines = input
+        .trim()
+        .split('\n')
+        .map(line => line.trim().split(/\s+/));
     try {
-        const result = lines.map((line, lineIndex)=>{
-            if (lineIndex === 0 &&
-                _.isEqual(lines[0].map(s=>s.toLowerCase()), ["sample", "gene", "alteration", "type"])) {
+        const result = lines.map((line, lineIndex) => {
+            if (
+                lineIndex === 0 &&
+                _.isEqual(lines[0].map(s => s.toLowerCase()), [
+                    'sample',
+                    'gene',
+                    'alteration',
+                    'type',
+                ])
+            ) {
                 return null; // skip header line
             }
-            const errorPrefix = `Genetic data input error on line ${lineIndex+1}: \n${line.join("\t")}\n\n`;
+            const errorPrefix = `Genetic data input error on line ${lineIndex +
+                1}: \n${line.join('\t')}\n\n`;
             if (line.length === 1) {
                 // Type 1 line
                 return { sampleId: line[0] };
@@ -591,36 +782,55 @@ export function parseGeneticInput(input:string):{status:"complete", result:Oncop
                 const lcAlteration = alteration.toLowerCase();
                 const type = line[3];
                 const lcType = type.toLowerCase();
-                let ret:Partial<OncoprinterGeneticInputLineType2> = { sampleId, hugoGeneSymbol };
+                let ret: Partial<OncoprinterGeneticInputLineType2> = {
+                    sampleId,
+                    hugoGeneSymbol,
+                };
 
                 switch (lcType) {
-                    case "cna":
-                        if (["amp", "gain", "hetloss", "homdel"].indexOf(lcAlteration) === -1) {
-                            throw new Error(`${errorPrefix}Alteration "${alteration}" is not valid - it must be "AMP", "GAIN" ,"HETLOSS", or "HOMDEL" since Type is "CNA"`);
+                    case 'cna':
+                        if (
+                            ['amp', 'gain', 'hetloss', 'homdel'].indexOf(
+                                lcAlteration
+                            ) === -1
+                        ) {
+                            throw new Error(
+                                `${errorPrefix}Alteration "${alteration}" is not valid - it must be "AMP", "GAIN" ,"HETLOSS", or "HOMDEL" since Type is "CNA"`
+                            );
                         }
-                        ret.alteration = lcAlteration as "amp"|"gain"|"hetloss"|"homdel";
+                        ret.alteration = lcAlteration as
+                            | 'amp'
+                            | 'gain'
+                            | 'hetloss'
+                            | 'homdel';
                         break;
-                    case "exp":
-                        if (lcAlteration === "high") {
-                            ret.alteration = "mrnaHigh";
-                        } else if (lcAlteration === "low") {
-                            ret.alteration = "mrnaLow";
+                    case 'exp':
+                        if (lcAlteration === 'high') {
+                            ret.alteration = 'mrnaHigh';
+                        } else if (lcAlteration === 'low') {
+                            ret.alteration = 'mrnaLow';
                         } else {
-                            throw new Error(`${errorPrefix}Alteration "${alteration}" is not valid - it must be "HIGH" or "LOW" if Type is "EXP"`);
+                            throw new Error(
+                                `${errorPrefix}Alteration "${alteration}" is not valid - it must be "HIGH" or "LOW" if Type is "EXP"`
+                            );
                         }
                         break;
-                    case "prot":
-                        if (lcAlteration === "high") {
-                            ret.alteration = "protHigh";
-                        } else if (lcAlteration === "low") {
-                            ret.alteration = "protLow";
+                    case 'prot':
+                        if (lcAlteration === 'high') {
+                            ret.alteration = 'protHigh';
+                        } else if (lcAlteration === 'low') {
+                            ret.alteration = 'protLow';
                         } else {
-                            throw new Error(`${errorPrefix}Alteration "${alteration}" is not valid - it must be "HIGH" or "LOW" if Type is "PROT"`);
+                            throw new Error(
+                                `${errorPrefix}Alteration "${alteration}" is not valid - it must be "HIGH" or "LOW" if Type is "PROT"`
+                            );
                         }
                         break;
-                    case "fusion":
-                        if (lcType !== "fusion") {
-                            throw new Error(`${errorPrefix}Type "${type}" is not valid - it must be "FUSION" if Alteration is "FUSION"`);
+                    case 'fusion':
+                        if (lcType !== 'fusion') {
+                            throw new Error(
+                                `${errorPrefix}Type "${type}" is not valid - it must be "FUSION" if Alteration is "FUSION"`
+                            );
                         } else {
                             ret.alteration = lcType as OncoprintMutationType;
                             ret.proteinChange = alteration;
@@ -629,30 +839,48 @@ export function parseGeneticInput(input:string):{status:"complete", result:Oncop
                     default:
                         // everything else is a mutation
                         // use OQL parsing for handling mutation modifiers
-                        let parsedMutation:MUTCommand<any>;
+                        let parsedMutation: MUTCommand<any>;
                         try {
-                            parsedMutation = (parseOQLQuery(`GENE: ${lcType}`)[0].alterations as Alteration[])[0] as MUTCommand<any>;
+                            parsedMutation = (parseOQLQuery(
+                                `GENE: ${lcType}`
+                            )[0].alterations as Alteration[])[0] as MUTCommand<
+                                any
+                            >;
                         } catch (e) {
-                            throw new Error(`${errorPrefix}Mutation type ${type} is not valid.`);
+                            throw new Error(
+                                `${errorPrefix}Mutation type ${type} is not valid.`
+                            );
                         }
 
                         for (const modifier of parsedMutation.modifiers) {
                             switch (modifier) {
-                                case "GERMLINE":
+                                case 'GERMLINE':
                                     ret.isGermline = true;
                                     break;
-                                case "DRIVER":
+                                case 'DRIVER':
                                     ret.isCustomDriver = true;
                                     break;
                                 default:
-                                    throw new Error(`${errorPrefix}Only allowed mutation modifiers are GERMLINE and DRIVER`);
+                                    throw new Error(
+                                        `${errorPrefix}Only allowed mutation modifiers are GERMLINE and DRIVER`
+                                    );
                             }
                         }
 
                         const lcMutationType = parsedMutation.constr_val!.toLowerCase();
 
-                        if (["missense", "inframe", "promoter", "trunc", "other"].indexOf(lcMutationType) === -1) {
-                            throw new Error(`${errorPrefix}Type "${type}" is not valid - it must be "MISSENSE", "INFRAME", "TRUNC", "PROMOTER", or "OTHER" for a mutation alteration.`);
+                        if (
+                            [
+                                'missense',
+                                'inframe',
+                                'promoter',
+                                'trunc',
+                                'other',
+                            ].indexOf(lcMutationType) === -1
+                        ) {
+                            throw new Error(
+                                `${errorPrefix}Type "${type}" is not valid - it must be "MISSENSE", "INFRAME", "TRUNC", "PROMOTER", or "OTHER" for a mutation alteration.`
+                            );
                         }
                         ret.alteration = lcMutationType as OncoprintMutationType;
                         ret.proteinChange = alteration;
@@ -661,19 +889,21 @@ export function parseGeneticInput(input:string):{status:"complete", result:Oncop
                 }
                 return ret as OncoprinterGeneticInputLineType2;
             } else {
-                throw new Error(`${errorPrefix}input lines must have either 1 or 4 columns.`);
+                throw new Error(
+                    `${errorPrefix}input lines must have either 1 or 4 columns.`
+                );
             }
         });
         return {
-            status: "complete",
-            result: result.filter(x=>!!x) as OncoprinterGeneticInputLine[],
-            error:undefined
+            status: 'complete',
+            result: result.filter(x => !!x) as OncoprinterGeneticInputLine[],
+            error: undefined,
         };
     } catch (e) {
         return {
-            status:"error",
-            result:undefined,
-            error:e.message
+            status: 'error',
+            result: undefined,
+            error: e.message,
         };
     }
 }

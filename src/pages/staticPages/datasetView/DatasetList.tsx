@@ -1,14 +1,13 @@
-import * as React from "react";
+import * as React from 'react';
 import * as _ from 'lodash';
-import {CancerStudy} from 'shared/api/generated/CBioPortalAPI';
-import {ThreeBounce} from 'better-react-spinkit';
+import { CancerStudy } from 'shared/api/generated/CBioPortalAPI';
+import { ThreeBounce } from 'better-react-spinkit';
 import request from 'superagent';
-import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
-import {getStudyDownloadListUrl} from "../../../shared/api/urls";
-import {getNCBIlink} from "cbioportal-frontend-commons";
-import {StudyLink} from "../../../shared/components/StudyLink/StudyLink";
-import {StudyDataDownloadLink} from "../../../shared/components/StudyDataDownloadLink/StudyDataDownloadLink";
-
+import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
+import { getStudyDownloadListUrl } from '../../../shared/api/urls';
+import { getNCBIlink } from 'cbioportal-frontend-commons';
+import { StudyLink } from '../../../shared/components/StudyLink/StudyLink';
+import { StudyDataDownloadLink } from '../../../shared/components/StudyDataDownloadLink/StudyDataDownloadLink';
 
 interface IDataTableRow {
     name: string;
@@ -47,147 +46,200 @@ interface IReferenceCellProps {
     pmid: string;
 }
 
-class DataTable extends LazyMobXTable<IDataTableRow> {
-}
+class DataTable extends LazyMobXTable<IDataTableRow> {}
 
-class CancerStudyCell extends React.Component<ICancerStudyCellProps,{}> {
-
+class CancerStudyCell extends React.Component<ICancerStudyCellProps, {}> {
     render() {
         return (
-            <StudyLink studyId={this.props.studyId}>{this.props.name}</StudyLink>
+            <StudyLink studyId={this.props.studyId}>
+                {this.props.name}
+            </StudyLink>
         );
-
     }
-
 }
 
-class ReferenceCell extends React.Component<IReferenceCellProps ,{}> {
-
+class ReferenceCell extends React.Component<IReferenceCellProps, {}> {
     render() {
         return (
-            <a target='_blank'
-               href={getNCBIlink(`/pubmed/${this.props.pmid}`)}> {this.props.citation} </a>
+            <a target="_blank" href={getNCBIlink(`/pubmed/${this.props.pmid}`)}>
+                {' '}
+                {this.props.citation}{' '}
+            </a>
         );
-
     }
-
 }
 
-export default class DataSetsPageTable extends React.Component <IDataSetsTableProps, IDataSetsTableState> {
+export default class DataSetsPageTable extends React.Component<
+    IDataSetsTableProps,
+    IDataSetsTableState
+> {
+    chartTarget: HTMLElement;
 
-    chartTarget:HTMLElement;
-
-    constructor(props:IDataSetsTableProps) {
+    constructor(props: IDataSetsTableProps) {
         super(props);
 
         this.state = {
-            downloadable: []
+            downloadable: [],
         };
-
     }
 
     componentDidMount() {
-
-        request(getStudyDownloadListUrl()).then(
-            (response:any)=> this.setState({downloadable:response.body})
+        request(getStudyDownloadListUrl()).then((response: any) =>
+            this.setState({ downloadable: response.body })
         );
-
     }
 
-
-
     render() {
-
         if (this.props.datasets) {
-
-            const tableData: IDataTableRow[] = _.map(this.props.datasets, (study: CancerStudy) => ({
-                name: study.name,
-                reference: study.citation,
-                all: study.allSampleCount || "",
-                pmid: study.pmid,
-                studyId: study.studyId,
-                sequenced: study.sequencedSampleCount || "",
-                cna: study.cnaSampleCount,
-                citation: study.citation || "",
-                mrnaRnaSeq: study.mrnaRnaSeqSampleCount || "",
-                mrnaRnaSeqV2: study.mrnaRnaSeqV2SampleCount || "",
-                mrnaMicroarray: study.mrnaMicroarraySampleCount || "",
-                miRna: study.miRnaSampleCount || "",
-                methylation: study.methylationHm27SampleCount || "",
-                rppa: study.rppaSampleCount || "",
-                complete: study.completeSampleCount || ""
-            }));
+            const tableData: IDataTableRow[] = _.map(
+                this.props.datasets,
+                (study: CancerStudy) => ({
+                    name: study.name,
+                    reference: study.citation,
+                    all: study.allSampleCount || '',
+                    pmid: study.pmid,
+                    studyId: study.studyId,
+                    sequenced: study.sequencedSampleCount || '',
+                    cna: study.cnaSampleCount,
+                    citation: study.citation || '',
+                    mrnaRnaSeq: study.mrnaRnaSeqSampleCount || '',
+                    mrnaRnaSeqV2: study.mrnaRnaSeqV2SampleCount || '',
+                    mrnaMicroarray: study.mrnaMicroarraySampleCount || '',
+                    miRna: study.miRnaSampleCount || '',
+                    methylation: study.methylationHm27SampleCount || '',
+                    rppa: study.rppaSampleCount || '',
+                    complete: study.completeSampleCount || '',
+                })
+            );
             return (
-                <div ref={(el:HTMLDivElement) => this.chartTarget = el}>
+                <div ref={(el: HTMLDivElement) => (this.chartTarget = el)}>
                     <DataTable
                         data={tableData}
-                        columns={
-                            [
-                                {
-                                    name:'Name',
-                                    type: 'name',
-                                    render:(data:IDataTableRow)=> <CancerStudyCell studyId={data.studyId} name={data.name}/>,
-                                    filter:(data:any, filterString:string, filterStringUpper:string) => {
-                                        return data.name.toUpperCase().includes(filterStringUpper);
-                                     }
-
+                        columns={[
+                            {
+                                name: 'Name',
+                                type: 'name',
+                                render: (data: IDataTableRow) => (
+                                    <CancerStudyCell
+                                        studyId={data.studyId}
+                                        name={data.name}
+                                    />
+                                ),
+                                filter: (
+                                    data: any,
+                                    filterString: string,
+                                    filterStringUpper: string
+                                ) => {
+                                    return data.name
+                                        .toUpperCase()
+                                        .includes(filterStringUpper);
                                 },
-                                {
-                                    name: '', sortBy: false, togglable: false, download: false, type: 'download',
-                                    render: (data: IDataTableRow) => {
-                                        const studyIsDownloadable = this.state.downloadable.includes(data.studyId);
-                                        if (studyIsDownloadable) {
-                                            return <StudyDataDownloadLink studyId={data.studyId}/>;
-                                        } else {
-                                            return null;
-                                        }
+                            },
+                            {
+                                name: '',
+                                sortBy: false,
+                                togglable: false,
+                                download: false,
+                                type: 'download',
+                                render: (data: IDataTableRow) => {
+                                    const studyIsDownloadable = this.state.downloadable.includes(
+                                        data.studyId
+                                    );
+                                    if (studyIsDownloadable) {
+                                        return (
+                                            <StudyDataDownloadLink
+                                                studyId={data.studyId}
+                                            />
+                                        );
+                                    } else {
+                                        return null;
                                     }
                                 },
-                                {
-                                    name: 'Reference',
-                                    type: 'citation', render:(data:IDataTableRow)=><ReferenceCell pmid={data.pmid} citation={data.citation}/>,
-                                     filter:(data:any, filterString:string, filterStringUpper:string) => {
-                                        return data.citation.toUpperCase().includes(filterStringUpper);
-                                     }
-
+                            },
+                            {
+                                name: 'Reference',
+                                type: 'citation',
+                                render: (data: IDataTableRow) => (
+                                    <ReferenceCell
+                                        pmid={data.pmid}
+                                        citation={data.citation}
+                                    />
+                                ),
+                                filter: (
+                                    data: any,
+                                    filterString: string,
+                                    filterStringUpper: string
+                                ) => {
+                                    return data.citation
+                                        .toUpperCase()
+                                        .includes(filterStringUpper);
                                 },
-                                {name:'All', type: 'all'},
-                                {name:'Sequenced', type: 'sequenced'},
-                                {name:'CNA', type: 'cna'},
-                                {
-                                    name:'RNA-Seq',
-                                    type: 'mrnaRnaSeq',
-                                    render: (data:IDataTableRow) => {
-                                        return (
-                                            <span>
-                                                {Number(data.mrnaRnaSeqV2) || Number(data.mrnaRnaSeq) || 0}
-                                            </span>
-                                        );
-                                    },
-                                    sortBy: (data:IDataTableRow) =>
-                                        Number(data.mrnaRnaSeqV2) || Number(data.mrnaRnaSeq) || 0
+                            },
+                            { name: 'All', type: 'all' },
+                            { name: 'Sequenced', type: 'sequenced' },
+                            { name: 'CNA', type: 'cna' },
+                            {
+                                name: 'RNA-Seq',
+                                type: 'mrnaRnaSeq',
+                                render: (data: IDataTableRow) => {
+                                    return (
+                                        <span>
+                                            {Number(data.mrnaRnaSeqV2) ||
+                                                Number(data.mrnaRnaSeq) ||
+                                                0}
+                                        </span>
+                                    );
                                 },
-                                {name:'Tumor mRNA (microarray)', type: 'mrnaMicroarray', visible:false},
-                                {name:'Tumor miRNA', type: 'miRna', visible:false },
-                                {name:'Methylation (HM27)', type: 'methylation', visible:false },
-                                {name:'RPPA', type: 'rppa', visible:false },
-                                {name:'Complete', type: 'complete', visible:false },
-                            ].map((column:any) => (
-                                {
-                                    visible:(column.visible === false) ? false : true,
-                                    togglable:(column.togglable === false) ? false : true,
-                                    name: column.name,
-                                    defaultSortDirection:'asc' as 'asc',
-                                    sortBy: (column.hasOwnProperty('sortBy')) ? column.sortBy : ((data:any)=>(data[column.type])),
-                                    render: column.hasOwnProperty('render') ? column.render : (data:any) => {
-                                        const style = {};// {textAlign: 'center', width: '100%', display: 'block'}
-                                        return <span style={style}>{data[column.type] || 0}</span>;
-                                    },
-                                    download: column.hasOwnProperty('download') ? column.download : false,
-                                    filter: column.filter || undefined
-                                }
-                            ))
-                        }
+                                sortBy: (data: IDataTableRow) =>
+                                    Number(data.mrnaRnaSeqV2) ||
+                                    Number(data.mrnaRnaSeq) ||
+                                    0,
+                            },
+                            {
+                                name: 'Tumor mRNA (microarray)',
+                                type: 'mrnaMicroarray',
+                                visible: false,
+                            },
+                            {
+                                name: 'Tumor miRNA',
+                                type: 'miRna',
+                                visible: false,
+                            },
+                            {
+                                name: 'Methylation (HM27)',
+                                type: 'methylation',
+                                visible: false,
+                            },
+                            { name: 'RPPA', type: 'rppa', visible: false },
+                            {
+                                name: 'Complete',
+                                type: 'complete',
+                                visible: false,
+                            },
+                        ].map((column: any) => ({
+                            visible: column.visible === false ? false : true,
+                            togglable:
+                                column.togglable === false ? false : true,
+                            name: column.name,
+                            defaultSortDirection: 'asc' as 'asc',
+                            sortBy: column.hasOwnProperty('sortBy')
+                                ? column.sortBy
+                                : (data: any) => data[column.type],
+                            render: column.hasOwnProperty('render')
+                                ? column.render
+                                : (data: any) => {
+                                      const style = {}; // {textAlign: 'center', width: '100%', display: 'block'}
+                                      return (
+                                          <span style={style}>
+                                              {data[column.type] || 0}
+                                          </span>
+                                      );
+                                  },
+                            download: column.hasOwnProperty('download')
+                                ? column.download
+                                : false,
+                            filter: column.filter || undefined,
+                        }))}
                         initialSortColumn={'Name'}
                         initialSortDirection={'asc'}
                         showPagination={false}
@@ -198,12 +250,12 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
                     />
                 </div>
             );
-
         } else {
-            return <div><ThreeBounce/></div>;
+            return (
+                <div>
+                    <ThreeBounce />
+                </div>
+            );
         }
     }
-
 }
-
-
