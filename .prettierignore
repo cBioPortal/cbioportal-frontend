@@ -10,13 +10,16 @@
 *yml
 *json
 *md
+*bak
+*txt
+*gif
+*pegjs
 
-./src/shared/api/generated/**
-./packages/**/dist/**
+src/shared/api/generated/**
+packages/**/dist/**
 yarn.lock
 
 .prettierignore
-yarn.lock
 
 .DS_Store
 
