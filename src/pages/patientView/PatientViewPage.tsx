@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import GenomicOverview from './genomicOverview/GenomicOverview';
-import { CancerStudy, ClinicalData } from 'cbioportal-ts-api-client';
+import { CancerStudy, ClinicalData, ResourceData } from 'cbioportal-ts-api-client';
 import {
     ClinicalDataBySampleId,
     RequestStatus,
@@ -64,7 +64,15 @@ import { GeneFilterOption } from './mutation/GeneFilterMenu';
 import { checkNonProfiledGenesExist } from './PatientViewPageUtils';
 import PatientViewMutationsTab from './mutation/PatientViewMutationsTab';
 import PatientViewGenePanelModal from './PatientViewGenePanelModal/PatientViewGenePanelModal';
-import { PatientViewPageTabs } from './PatientViewPageTabs';
+import {
+    extractResourceIdFromTabId,
+    getPatientViewResourceTabId,
+    PatientViewPageTabs,
+    PatientViewResourceTabPrefix,
+} from './PatientViewPageTabs';
+import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
+import { MakeMobxView } from '../../shared/components/MobxView';
+import OpenResourceTab from '../../shared/components/resources/OpenResourceTab';
 
 export interface IPatientViewPageProps {
     params: any; // react route
@@ -111,6 +119,13 @@ export default class PatientViewPage extends React.Component<
             this.props.appStore
         );
         getBrowserWindow().patientViewPageStore = this.patientViewPageStore;
+
+        const openResourceId =
+            this.urlWrapper.tabId &&
+            extractResourceIdFromTabId(this.urlWrapper.tabId);
+        if (openResourceId) {
+            this.patientViewPageStore.setResourceTabOpen(openResourceId, true);
+        }
 
         reaction(
             () => [this.urlWrapper.query.caseId, this.urlWrapper.query.studyId],
@@ -257,6 +272,19 @@ export default class PatientViewPage extends React.Component<
         );
     }
 
+    private shouldShowResources(
+        patientViewPageStore: PatientViewPageStore
+    ): boolean {
+        if (patientViewPageStore.resourceIdToResourceData.isComplete) {
+            return _.some(
+                patientViewPageStore.resourceIdToResourceData.result,
+                data => data.length > 0
+            );
+        } else {
+            return false;
+        }
+    }
+
     private shouldShowPathologyReport(
         patientViewPageStore: PatientViewPageStore
     ): boolean {
@@ -401,6 +429,72 @@ export default class PatientViewPage extends React.Component<
             }
         } else {
             return null;
+        }
+    }
+
+    readonly openResourceTabs = MakeMobxView({
+        await: () => [
+            this.patientViewPageStore.resourceDefinitions,
+            this.patientViewPageStore.resourceIdToResourceData,
+        ],
+        render: () => {
+            const openDefinitions = this.patientViewPageStore.resourceDefinitions.result!.filter(
+                d => this.patientViewPageStore.isResourceTabOpen(d.resourceId)
+            );
+            const sorted = _.sortBy(openDefinitions, d => d.priority);
+            const resourceDataById = this.patientViewPageStore
+                .resourceIdToResourceData.result!;
+
+            const tabs: JSX.Element[] = [];
+            sorted.forEach(def => {
+                const data = resourceDataById[def.resourceId];
+                if (data && data.length > 0) {
+                    tabs.push(
+                        <MSKTab
+                            key={getPatientViewResourceTabId(def.resourceId)}
+                            id={getPatientViewResourceTabId(def.resourceId)}
+                            linkText={def.displayName}
+                            onClickClose={this.closeResourceTab}
+                        >
+                            <OpenResourceTab
+                                resourceData={resourceDataById[def.resourceId]}
+                                urlWrapper={this.urlWrapper}
+                            />
+                        </MSKTab>
+                    );
+                }
+            });
+            return tabs;
+        },
+    });
+
+    @autobind
+    @action
+    private openResource(resource: ResourceData) {
+        // open tab
+        this.patientViewPageStore.setResourceTabOpen(resource.resourceId, true);
+        // go to tab
+        this.urlWrapper.setTab(
+            getPatientViewResourceTabId(resource.resourceId)
+        );
+        // deep link
+        this.urlWrapper.setResourceUrl(resource.url);
+    }
+
+    @autobind
+    @action
+    private closeResourceTab(tabId: string) {
+        // close tab
+        const resourceId = extractResourceIdFromTabId(tabId);
+        if (resourceId) {
+            this.patientViewPageStore.setResourceTabOpen(resourceId, false);
+            // go to resources tab if we're currently on that tab
+            if (
+                this.urlWrapper.tabId ===
+                getPatientViewResourceTabId(resourceId)
+            ) {
+                this.urlWrapper.setTab(PatientViewPageTabs.FilesAndLinks);
+            }
         }
     }
 
@@ -739,9 +833,7 @@ export default class PatientViewPage extends React.Component<
                         <Then>
                             <MSKTabs
                                 id="patientViewPageTabs"
-                                activeTabId={
-                                    this.props.params.tab || 'summaryTab'
-                                }
+                                activeTabId={this.urlWrapper.tabId}
                                 onTabClick={(id: string) =>
                                     this.urlWrapper.setTab(id)
                                 }
@@ -1338,6 +1430,25 @@ export default class PatientViewPage extends React.Component<
                                 </MSKTab>
 
                                 <MSKTab
+                                    key={4}
+                                    id={PatientViewPageTabs.FilesAndLinks}
+                                    linkText={RESOURCES_TAB_NAME}
+                                    hide={
+                                        !this.shouldShowResources(
+                                            this.patientViewPageStore
+                                        )
+                                    }
+                                >
+                                    <div>
+                                        <ResourcesTab
+                                            store={this.patientViewPageStore}
+                                            sampleManager={this.sampleManager}
+                                            openResource={this.openResource}
+                                        />
+                                    </div>
+                                </MSKTab>
+
+                                <MSKTab
                                     key={3}
                                     id={PatientViewPageTabs.PathologyReport}
                                     linkText="Pathology Report"
@@ -1437,6 +1548,8 @@ export default class PatientViewPage extends React.Component<
                                 {/*</div>*/}
 
                                 {/*</MSKTab>*/}
+
+                                {this.openResourceTabs.component}
 
                                 {AppConfig.serverConfig.custom_tabs &&
                                     AppConfig.serverConfig.custom_tabs
