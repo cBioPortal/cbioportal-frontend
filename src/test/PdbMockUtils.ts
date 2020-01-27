@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import {Alignment} from "cbioportal-frontend-commons";
+import { Alignment } from 'cbioportal-frontend-commons';
 
 /**
  * Utility functions to generate mock data.
@@ -7,45 +7,47 @@ import {Alignment} from "cbioportal-frontend-commons";
  * @author Selcuk Onur Sumer
  */
 
-export function initPdbAlignment(alignmentString: string, uniprotFrom: number): Alignment
-{
+export function initPdbAlignment(
+    alignmentString: string,
+    uniprotFrom: number
+): Alignment {
     return initPdbAlignmentWithPartialProps({
         midlineAlign: alignmentString,
         pdbAlign: alignmentString,
         seqAlign: alignmentString,
         seqFrom: uniprotFrom,
-        seqTo: uniprotFrom + alignmentString.length - 1
+        seqTo: uniprotFrom + alignmentString.length - 1,
     });
 }
 
-export function emptyPdbAlignment(): Alignment
-{
+export function emptyPdbAlignment(): Alignment {
     return {
         alignmentId: -1,
         bitscore: 0,
-        chain: "",
-        evalue: "",
+        chain: '',
+        evalue: '',
         identity: -1,
         identityPositive: -1,
-        midlineAlign: "",
-        pdbAlign: "",
-        seqAlign: "",
+        midlineAlign: '',
+        pdbAlign: '',
+        seqAlign: '',
         pdbFrom: 0,
-        pdbId: "",
-        pdbNo: "",
-        pdbSeg: "",
+        pdbId: '',
+        pdbNo: '',
+        pdbSeg: '',
         pdbTo: 0,
         seqFrom: -1,
-        seqId: "",
+        seqId: '',
         seqTo: -1,
-        segStart: "",
+        segStart: '',
         residueMapping: [],
-        updateDate: ""
+        updateDate: '',
     };
 }
 
-function initPdbAlignmentWithPartialProps(props:{[key:string]: any}): Alignment
-{
+function initPdbAlignmentWithPartialProps(props: {
+    [key: string]: any;
+}): Alignment {
     const alignment = emptyPdbAlignment();
 
     _.merge(alignment, props);

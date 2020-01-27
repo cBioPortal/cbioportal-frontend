@@ -1,22 +1,25 @@
-import * as React from "react";
-import styles from "./styles.module.scss";
-import {If} from 'react-if';
-import {ChartType, NumericalGroupComparisonType} from "pages/studyView/StudyViewUtils";
+import * as React from 'react';
+import styles from './styles.module.scss';
+import { If } from 'react-if';
+import {
+    ChartType,
+    NumericalGroupComparisonType,
+} from 'pages/studyView/StudyViewUtils';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import {action, computed, observable} from "mobx";
-import {observer} from "mobx-react";
-import {ChartTypeEnum} from "../StudyViewConfig";
-import {ChartMeta, getClinicalAttributeOverlay} from "../StudyViewUtils";
+import { action, computed, observable } from 'mobx';
+import { observer } from 'mobx-react';
+import { ChartTypeEnum } from '../StudyViewConfig';
+import { ChartMeta, getClinicalAttributeOverlay } from '../StudyViewUtils';
 import {
     DataType,
     DefaultTooltip,
     DownloadControls,
-    DownloadControlsButton
-} from "cbioportal-frontend-commons";
-import FlexAlignedCheckbox from "../../../shared/components/FlexAlignedCheckbox";
-import CustomBinsModal from "pages/studyView/charts/barChart/CustomBinsModal";
-import {StudyViewPageStore} from "pages/studyView/StudyViewPageStore";
+    DownloadControlsButton,
+} from 'cbioportal-frontend-commons';
+import FlexAlignedCheckbox from '../../../shared/components/FlexAlignedCheckbox';
+import CustomBinsModal from 'pages/studyView/charts/barChart/CustomBinsModal';
+import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 
 export interface IChartHeaderProps {
     chartMeta: ChartMeta;
@@ -24,37 +27,40 @@ export interface IChartHeaderProps {
     store: StudyViewPageStore;
     title: string;
     height: number;
-    placement: 'left' | 'right',
-    active           : boolean;
-    resetChart       : () => void;
-    deleteChart      : () => void;
-    toggleLogScale?  : () => void;
-    hideLabel?       : boolean;
-    chartControls?   : ChartControls;
-    changeChartType  : (chartType: ChartType) => void;
-    getSVG?          : ()=>Promise<SVGElement | null>;
-    getData?         : ((dataType?:DataType)=>Promise<string | null>) | ((dataType?:DataType)=>string);
-    downloadTypes?   : DownloadControlsButton[];
-    openComparisonPage: (categorizationType?: NumericalGroupComparisonType) => void;
+    placement: 'left' | 'right';
+    active: boolean;
+    resetChart: () => void;
+    deleteChart: () => void;
+    toggleLogScale?: () => void;
+    hideLabel?: boolean;
+    chartControls?: ChartControls;
+    changeChartType: (chartType: ChartType) => void;
+    getSVG?: () => Promise<SVGElement | null>;
+    getData?:
+        | ((dataType?: DataType) => Promise<string | null>)
+        | ((dataType?: DataType) => string);
+    downloadTypes?: DownloadControlsButton[];
+    openComparisonPage: (
+        categorizationType?: NumericalGroupComparisonType
+    ) => void;
 }
 
 export interface ChartControls {
-    showResetIcon?      : boolean;
-    showTableIcon?      : boolean;
-    showPieIcon?        : boolean;
-    showComparisonPageIcon?   : boolean;
-    showLogScaleToggle? : boolean;
-    logScaleChecked?    : boolean;
+    showResetIcon?: boolean;
+    showTableIcon?: boolean;
+    showPieIcon?: boolean;
+    showComparisonPageIcon?: boolean;
+    showLogScaleToggle?: boolean;
+    logScaleChecked?: boolean;
 }
 
 @observer
 export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
-
     @observable menuOpen = false;
     @observable downloadSubmenuOpen = false;
     @observable comparisonSubmenuOpen = false;
-    @observable showCustomBinModal:boolean = false;
-    private closeMenuTimeout:number|undefined = undefined;
+    @observable showCustomBinModal: boolean = false;
+    private closeMenuTimeout: number | undefined = undefined;
 
     @computed
     get fileName() {
@@ -73,7 +79,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
     @action
     private closeMenu() {
         if (!this.closeMenuTimeout) {
-            this.closeMenuTimeout = window.setTimeout(()=>{
+            this.closeMenuTimeout = window.setTimeout(() => {
                 this.menuOpen = false;
                 this.closeMenuTimeout = undefined;
             }, 125);
@@ -88,91 +94,156 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
         const submenuWidth = 120;
         if (this.props.chartType === ChartTypeEnum.BAR_CHART) {
             return (
-                <div className={classnames('dropdown-item', styles.dropdownHoverEffect)}
-                    style={{ 'display': 'flex', justifyContent: 'space-between', padding: '3px 20px' }}
-                    onMouseEnter={() => this.comparisonSubmenuOpen = true}
-                    onMouseLeave={() => this.comparisonSubmenuOpen = false}
+                <div
+                    className={classnames(
+                        'dropdown-item',
+                        styles.dropdownHoverEffect
+                    )}
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        padding: '3px 20px',
+                    }}
+                    onMouseEnter={() => (this.comparisonSubmenuOpen = true)}
+                    onMouseLeave={() => (this.comparisonSubmenuOpen = false)}
                 >
                     <div>
-                        <img src={require("../../../rootImages/compare_vs.svg")}
-                            className={classnames('fa fa-fw', styles.menuItemIcon)}
+                        <img
+                            src={require('../../../rootImages/compare_vs.svg')}
+                            className={classnames(
+                                'fa fa-fw',
+                                styles.menuItemIcon
+                            )}
                         />
                         <span>Compare Groups</span>
                     </div>
-                    <i className={"fa fa-xs fa-fw fa-caret-right"}
-                        style={{ lineHeight: 'inherit' }} />
+                    <i
+                        className={'fa fa-xs fa-fw fa-caret-right'}
+                        style={{ lineHeight: 'inherit' }}
+                    />
 
-                    {this.comparisonSubmenuOpen &&
-                        <ul className={classnames("dropdown-menu", { show: this.comparisonSubmenuOpen })}
-                        style={{
-                            top: 0,
-                            margin: '-6px 0',
-                            left: this.props.placement === 'left' ? -submenuWidth : '100%',
-                            minWidth: submenuWidth
-                        }}>
-                        <li>
-                            <a className="dropdown-item"
-                                onClick={() => {
-                                    console.log('here')
-                                    this.props.openComparisonPage(NumericalGroupComparisonType.QUARTILES)}
-                                }
-                            >Quartiles</a>
-                        </li>
-                        <li>
-                            <a className="dropdown-item"
-                                onClick={() => {
-                                    console.log('here')
-                                    this.props.openComparisonPage(NumericalGroupComparisonType.MEDIAN)}
-                                }
-                            >Median</a>
-                        </li>
-                        <li>
-                            <a className="dropdown-item"
-                                onClick={() => this.props.openComparisonPage(NumericalGroupComparisonType.BINS)}
-                            >Current bins</a>
-                        </li>
-                    </ul>
-                    }
+                    {this.comparisonSubmenuOpen && (
+                        <ul
+                            className={classnames('dropdown-menu', {
+                                show: this.comparisonSubmenuOpen,
+                            })}
+                            style={{
+                                top: 0,
+                                margin: '-6px 0',
+                                left:
+                                    this.props.placement === 'left'
+                                        ? -submenuWidth
+                                        : '100%',
+                                minWidth: submenuWidth,
+                            }}
+                        >
+                            <li>
+                                <a
+                                    className="dropdown-item"
+                                    onClick={() => {
+                                        console.log('here');
+                                        this.props.openComparisonPage(
+                                            NumericalGroupComparisonType.QUARTILES
+                                        );
+                                    }}
+                                >
+                                    Quartiles
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    className="dropdown-item"
+                                    onClick={() => {
+                                        console.log('here');
+                                        this.props.openComparisonPage(
+                                            NumericalGroupComparisonType.MEDIAN
+                                        );
+                                    }}
+                                >
+                                    Median
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    className="dropdown-item"
+                                    onClick={() =>
+                                        this.props.openComparisonPage(
+                                            NumericalGroupComparisonType.BINS
+                                        )
+                                    }
+                                >
+                                    Current bins
+                                </a>
+                            </li>
+                        </ul>
+                    )}
                 </div>
-            )
+            );
         }
 
         return (
-            <a className="dropdown-item"
-                onClick={() => this.props.openComparisonPage()} >
-                <img src={require("../../../rootImages/compare_vs.svg")}
+            <a
+                className="dropdown-item"
+                onClick={() => this.props.openComparisonPage()}
+            >
+                <img
+                    src={require('../../../rootImages/compare_vs.svg')}
                     className={classnames('fa fa-fw', styles.menuItemIcon)}
                 />
                 Compare Groups
             </a>
-        )
+        );
     }
 
     @computed get menuItems() {
         const items = [];
-        if (this.props.chartControls && !!this.props.chartControls.showLogScaleToggle) {
+        if (
+            this.props.chartControls &&
+            !!this.props.chartControls.showLogScaleToggle
+        ) {
             items.push(
                 <li>
-                    <a className="dropdown-item logScaleCheckbox"  onClick={this.props.toggleLogScale}>
+                    <a
+                        className="dropdown-item logScaleCheckbox"
+                        onClick={this.props.toggleLogScale}
+                    >
                         <FlexAlignedCheckbox
-                            checked={!!(this.props.chartControls && this.props.chartControls.logScaleChecked)}
+                            checked={
+                                !!(
+                                    this.props.chartControls &&
+                                    this.props.chartControls.logScaleChecked
+                                )
+                            }
                             onClick={this.props.toggleLogScale}
-                            label={<span style={{marginTop:-3}}>Log Scale</span>}
-                            style={{ marginTop:1, marginBottom:-3 }}
+                            label={
+                                <span style={{ marginTop: -3 }}>Log Scale</span>
+                            }
+                            style={{ marginTop: 1, marginBottom: -3 }}
                         />
                     </a>
                 </li>
             );
         }
 
-        if (this.props.chartControls && !!this.props.chartControls.showTableIcon) {
+        if (
+            this.props.chartControls &&
+            !!this.props.chartControls.showTableIcon
+        ) {
             items.push(
                 <li>
-                    <a className="dropdown-item"
-                        onClick={() => this.props.changeChartType(ChartTypeEnum.TABLE)}
+                    <a
+                        className="dropdown-item"
+                        onClick={() =>
+                            this.props.changeChartType(ChartTypeEnum.TABLE)
+                        }
                     >
-                        <i className={classnames("fa fa-xs fa-fw", "fa-table", styles.menuItemIcon)}
-                           aria-hidden="true"
+                        <i
+                            className={classnames(
+                                'fa fa-xs fa-fw',
+                                'fa-table',
+                                styles.menuItemIcon
+                            )}
+                            aria-hidden="true"
                         />
                         Show Table
                     </a>
@@ -180,14 +251,25 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
             );
         }
 
-        if (this.props.chartControls && !!this.props.chartControls.showPieIcon) {
+        if (
+            this.props.chartControls &&
+            !!this.props.chartControls.showPieIcon
+        ) {
             items.push(
                 <li>
-                    <a className="dropdown-item"
-                        onClick={() => this.props.changeChartType(ChartTypeEnum.PIE_CHART)}
+                    <a
+                        className="dropdown-item"
+                        onClick={() =>
+                            this.props.changeChartType(ChartTypeEnum.PIE_CHART)
+                        }
                     >
-                        <i className={classnames("fa fa-xs fa-fw", "fa-pie-chart", styles.menuItemIcon)}
-                           aria-hidden="true"
+                        <i
+                            className={classnames(
+                                'fa fa-xs fa-fw',
+                                'fa-pie-chart',
+                                styles.menuItemIcon
+                            )}
+                            aria-hidden="true"
                         />
                         Show Pie
                     </a>
@@ -195,7 +277,10 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
             );
         }
 
-        if (this.props.chartControls && this.props.chartControls.showComparisonPageIcon) {
+        if (
+            this.props.chartControls &&
+            this.props.chartControls.showComparisonPageIcon
+        ) {
             items.push(
                 <li style={{ position: 'relative' }}>
                     {this.comparisonButton}
@@ -206,58 +291,92 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
         if (this.props.chartType === ChartTypeEnum.BAR_CHART) {
             items.push(
                 <li>
-                    <a className="dropdown-item" onClick={()=>this.showCustomBinModal=true}>
-                        <i className={classnames("fa fa-xs fa-fw", "fa-bar-chart", styles.menuItemIcon)}
-                           aria-hidden="true"
+                    <a
+                        className="dropdown-item"
+                        onClick={() => (this.showCustomBinModal = true)}
+                    >
+                        <i
+                            className={classnames(
+                                'fa fa-xs fa-fw',
+                                'fa-bar-chart',
+                                styles.menuItemIcon
+                            )}
+                            aria-hidden="true"
                         />
                         Custom Bins
                     </a>
                     <CustomBinsModal
                         show={this.showCustomBinModal}
-                        onHide={() => this.showCustomBinModal = false}
+                        onHide={() => (this.showCustomBinModal = false)}
                         chartMeta={this.props.chartMeta}
-                        currentBins={this.props.store.geCurrentBins(this.props.chartMeta)}
+                        currentBins={this.props.store.geCurrentBins(
+                            this.props.chartMeta
+                        )}
                         updateCustomBins={this.props.store.updateCustomBins}
                     />
                 </li>
             );
         }
 
-        if (this.props.chartControls && this.props.downloadTypes && this.props.downloadTypes.length > 0) {
+        if (
+            this.props.chartControls &&
+            this.props.downloadTypes &&
+            this.props.downloadTypes.length > 0
+        ) {
             const downloadSubmenuWidth = 70;
             items.push(
-                <li style={{position: 'relative'}}>
-                    <div className={classnames('dropdown-item', styles.dropdownHoverEffect)}
-                         style={{'display': 'flex', justifyContent: 'space-between', padding: '3px 20px'}}
-                         onMouseEnter={() => this.downloadSubmenuOpen = true}
-                         onMouseLeave={() => this.downloadSubmenuOpen = false}
+                <li style={{ position: 'relative' }}>
+                    <div
+                        className={classnames(
+                            'dropdown-item',
+                            styles.dropdownHoverEffect
+                        )}
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            padding: '3px 20px',
+                        }}
+                        onMouseEnter={() => (this.downloadSubmenuOpen = true)}
+                        onMouseLeave={() => (this.downloadSubmenuOpen = false)}
                     >
                         <div>
-                            <i className={classnames("fa fa-xs", "fa-download", styles.menuItemIcon)}
-                               aria-hidden="true"
+                            <i
+                                className={classnames(
+                                    'fa fa-xs',
+                                    'fa-download',
+                                    styles.menuItemIcon
+                                )}
+                                aria-hidden="true"
                             />
                             <span>Download</span>
                         </div>
-                        <i className={"fa fa-xs fa-fw fa-caret-right"}
-                           style={{lineHeight: 'inherit'}}/>
-
-                        {this.downloadSubmenuOpen &&
-                        <DownloadControls
-                            filename={this.fileName}
-                            buttons={this.props.downloadTypes}
-                            getSvg={this.props.getSVG}
-                            getData={this.props.getData}
-                            type='dropdown'
-                            className={classnames({show: this.downloadSubmenuOpen})}
-                            style={{
-                                top: 0,
-                                margin: '-6px 0',
-                                left: this.props.placement === 'left' ? -downloadSubmenuWidth : '100%',
-                                minWidth: downloadSubmenuWidth
-                            }}
-                            dontFade={true}
+                        <i
+                            className={'fa fa-xs fa-fw fa-caret-right'}
+                            style={{ lineHeight: 'inherit' }}
                         />
-                        }
+
+                        {this.downloadSubmenuOpen && (
+                            <DownloadControls
+                                filename={this.fileName}
+                                buttons={this.props.downloadTypes}
+                                getSvg={this.props.getSVG}
+                                getData={this.props.getData}
+                                type="dropdown"
+                                className={classnames({
+                                    show: this.downloadSubmenuOpen,
+                                })}
+                                style={{
+                                    top: 0,
+                                    margin: '-6px 0',
+                                    left:
+                                        this.props.placement === 'left'
+                                            ? -downloadSubmenuWidth
+                                            : '100%',
+                                    minWidth: downloadSubmenuWidth,
+                                }}
+                                dontFade={true}
+                            />
+                        )}
                     </div>
                 </li>
             );
@@ -270,56 +389,98 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
     // were breaking at far right of page
     @computed
     get tooltipPosition() {
-        return  this.props.placement == 'left' ? 'topRight' : 'top';
+        return this.props.placement == 'left' ? 'topRight' : 'top';
     }
 
     @computed
     get tooltipAlign() {
-        return this.props.placement == 'left' ? { offset:[0,-6] } : undefined;
+        return this.props.placement == 'left' ? { offset: [0, -6] } : undefined;
     }
 
     public render() {
         return (
-            <div className={classnames(styles.header, 'chartHeader')}
-                 style={{position:"relative", height: `${this.props.height}px`, lineHeight: `${this.props.height}px`}}>
+            <div
+                className={classnames(styles.header, 'chartHeader')}
+                style={{
+                    position: 'relative',
+                    height: `${this.props.height}px`,
+                    lineHeight: `${this.props.height}px`,
+                }}
+            >
                 <div className={classnames(styles.name, styles.draggable)}>
-                    {!this.props.hideLabel && <span className='chartTitle'>{this.props.title}</span>}
+                    {!this.props.hideLabel && (
+                        <span className="chartTitle">{this.props.title}</span>
+                    )}
                 </div>
                 {this.active && (
                     <div className={classnames(styles.controls, 'controls')}>
                         <div className="btn-group">
-                            <If condition={!!this.props.chartMeta.clinicalAttribute || !!this.props.chartMeta.description}>
+                            <If
+                                condition={
+                                    !!this.props.chartMeta.clinicalAttribute ||
+                                    !!this.props.chartMeta.description
+                                }
+                            >
                                 <DefaultTooltip
                                     mouseEnterDelay={0}
-                                    trigger={["hover"]}
+                                    trigger={['hover']}
                                     placement={this.tooltipPosition}
                                     align={this.tooltipAlign}
-                                    overlay={getClinicalAttributeOverlay(this.props.chartMeta.displayName, this.props.chartMeta.description, this.props.chartMeta.clinicalAttribute ? this.props.chartMeta.clinicalAttribute.clinicalAttributeId : undefined)}
+                                    overlay={getClinicalAttributeOverlay(
+                                        this.props.chartMeta.displayName,
+                                        this.props.chartMeta.description,
+                                        this.props.chartMeta.clinicalAttribute
+                                            ? this.props.chartMeta
+                                                  .clinicalAttribute
+                                                  .clinicalAttributeId
+                                            : undefined
+                                    )}
                                     destroyTooltipOnHide={true}
                                 >
                                     <div
-                                        className={classnames("btn btn-xs btn-default", styles.item)}
+                                        className={classnames(
+                                            'btn btn-xs btn-default',
+                                            styles.item
+                                        )}
                                     >
                                         <i
-                                            className={classnames("fa fa-xs fa-fw", "fa-info-circle")}
+                                            className={classnames(
+                                                'fa fa-xs fa-fw',
+                                                'fa-info-circle'
+                                            )}
                                             aria-hidden="true"
                                         />
                                     </div>
                                 </DefaultTooltip>
                             </If>
-                            <If condition={this.props.chartControls && !!this.props.chartControls.showResetIcon}>
+                            <If
+                                condition={
+                                    this.props.chartControls &&
+                                    !!this.props.chartControls.showResetIcon
+                                }
+                            >
                                 <DefaultTooltip
                                     placement={this.tooltipPosition}
                                     align={this.tooltipAlign}
-                                    overlay={<span>Reset filters in chart</span>}
+                                    overlay={
+                                        <span>Reset filters in chart</span>
+                                    }
                                     destroyTooltipOnHide={true}
                                 >
                                     <button
-                                        className={classnames("btn btn-xs btn-default", styles.item)}
+                                        className={classnames(
+                                            'btn btn-xs btn-default',
+                                            styles.item
+                                        )}
                                         onClick={this.props.resetChart}
                                     >
                                         <i
-                                            className={classnames("fa fa-xs fa-fw", "fa-undo", styles.undo, styles.clickable)}
+                                            className={classnames(
+                                                'fa fa-xs fa-fw',
+                                                'fa-undo',
+                                                styles.undo,
+                                                styles.clickable
+                                            )}
                                             aria-hidden="true"
                                         />
                                     </button>
@@ -331,28 +492,53 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                 overlay={<span>Delete chart</span>}
                             >
                                 <button
-                                    className={classnames("btn btn-xs btn-default", styles.item)}
+                                    className={classnames(
+                                        'btn btn-xs btn-default',
+                                        styles.item
+                                    )}
                                     onClick={this.props.deleteChart}
                                 >
-                                    <i className={classnames("fa fa-xs fa-fw", "fa-times", styles.clickable)}
-                                       aria-hidden="true"></i>
+                                    <i
+                                        className={classnames(
+                                            'fa fa-xs fa-fw',
+                                            'fa-times',
+                                            styles.clickable
+                                        )}
+                                        aria-hidden="true"
+                                    ></i>
                                 </button>
                             </DefaultTooltip>
-                            {(this.menuItems.length > 0) && (
+                            {this.menuItems.length > 0 && (
                                 <div
                                     onMouseEnter={this.openMenu}
                                     onMouseLeave={this.closeMenu}
-                                    data-test='chart-header-hamburger-icon'
-                                    className={classnames("dropdown btn-group", styles.chartMenu, {show:this.menuOpen})}
+                                    data-test="chart-header-hamburger-icon"
+                                    className={classnames(
+                                        'dropdown btn-group',
+                                        styles.chartMenu,
+                                        { show: this.menuOpen }
+                                    )}
                                 >
-                                    <button className={classnames("btn btn-xs btn-default dropdown-toggle", {active:this.menuOpen})}>
+                                    <button
+                                        className={classnames(
+                                            'btn btn-xs btn-default dropdown-toggle',
+                                            { active: this.menuOpen }
+                                        )}
+                                    >
                                         <i
-                                            className={classnames("fa fa-xs fa-fw fa-bars")}
+                                            className={classnames(
+                                                'fa fa-xs fa-fw fa-bars'
+                                            )}
                                         />
                                     </button>
-                                    <ul data-test='chart-header-hamburger-icon-menu'
-                                        className={classnames("dropdown-menu pull-right", {show:this.menuOpen})}
-                                        style={{width:'190px'}}>
+                                    <ul
+                                        data-test="chart-header-hamburger-icon-menu"
+                                        className={classnames(
+                                            'dropdown-menu pull-right',
+                                            { show: this.menuOpen }
+                                        )}
+                                        style={{ width: '190px' }}
+                                    >
                                         {this.menuItems}
                                     </ul>
                                 </div>
@@ -363,16 +549,13 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                 {this.active && (
                     <div
                         style={{
-                            position:"absolute",
-                            top:2,
-                            right:2
+                            position: 'absolute',
+                            top: 2,
+                            right: 2,
                         }}
-                    >
-
-                    </div>
+                    ></div>
                 )}
             </div>
         );
     }
-
 }

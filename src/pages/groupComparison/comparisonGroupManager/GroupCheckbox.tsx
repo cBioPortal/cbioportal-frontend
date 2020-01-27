@@ -1,38 +1,42 @@
-import * as React from "react";
-import {observer} from "mobx-react";
+import * as React from 'react';
+import { observer } from 'mobx-react';
 import {
-    caseCounts, DUPLICATE_GROUP_NAME_MSG,
+    caseCounts,
+    DUPLICATE_GROUP_NAME_MSG,
     getNumPatients,
     getNumSamples,
     MissingSamplesMessage,
-    StudyViewComparisonGroup
-} from "../GroupComparisonUtils";
-import {StudyViewPageStore} from "../../studyView/StudyViewPageStore";
-import autobind from "autobind-decorator";
-import {computed, observable} from "mobx";
-import ErrorIcon from "../../../shared/components/ErrorIcon";
-import styles from "../styles.module.scss"
-import {SyntheticEvent} from "react";
-import {DefaultTooltip, EllipsisTextTooltip} from "cbioportal-frontend-commons";
-
-
+    StudyViewComparisonGroup,
+} from '../GroupComparisonUtils';
+import { StudyViewPageStore } from '../../studyView/StudyViewPageStore';
+import autobind from 'autobind-decorator';
+import { computed, observable } from 'mobx';
+import ErrorIcon from '../../../shared/components/ErrorIcon';
+import styles from '../styles.module.scss';
+import { SyntheticEvent } from 'react';
+import {
+    DefaultTooltip,
+    EllipsisTextTooltip,
+} from 'cbioportal-frontend-commons';
 
 export interface IGroupCheckboxProps {
-    group:StudyViewComparisonGroup;
-    store:StudyViewPageStore;
-    markedForDeletion:boolean;
-    restore:(group:StudyViewComparisonGroup)=>void;
-    rename:(newName:string, currentGroup:StudyViewComparisonGroup)=>void;
-    delete:(group:StudyViewComparisonGroup)=>void;
-    addSelectedSamples:(group:StudyViewComparisonGroup)=>void;
-    allGroupNames:string[];
+    group: StudyViewComparisonGroup;
+    store: StudyViewPageStore;
+    markedForDeletion: boolean;
+    restore: (group: StudyViewComparisonGroup) => void;
+    rename: (newName: string, currentGroup: StudyViewComparisonGroup) => void;
+    delete: (group: StudyViewComparisonGroup) => void;
+    addSelectedSamples: (group: StudyViewComparisonGroup) => void;
+    allGroupNames: string[];
 }
 
 @observer
-export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, {}> {
-
+export default class GroupCheckbox extends React.Component<
+    IGroupCheckboxProps,
+    {}
+> {
     @observable _editingName = false;
-    @observable nameInput = "";
+    @observable nameInput = '';
 
     @computed get editingName() {
         return this._editingName && !this.props.markedForDeletion;
@@ -40,7 +44,7 @@ export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, 
 
     @autobind
     private onCheckboxClick() {
-        this.props.store.toggleComparisonGroupSelected(this.props.group.uid)
+        this.props.store.toggleComparisonGroupSelected(this.props.group.uid);
     }
 
     @autobind
@@ -81,17 +85,20 @@ export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, 
     }
 
     @autobind
-    private handleNameInputChange(evt:SyntheticEvent<HTMLInputElement>) {
+    private handleNameInputChange(evt: SyntheticEvent<HTMLInputElement>) {
         this.nameInput = (evt.target as HTMLInputElement).value;
     }
 
     @computed get label() {
         return (
-            <span style={{display:"flex", alignItems:"center"}}>
-                <EllipsisTextTooltip
-                    text={this.props.group.name}
-                />
-                &nbsp;({caseCounts(getNumSamples(this.props.group), getNumPatients(this.props.group))})
+            <span style={{ display: 'flex', alignItems: 'center' }}>
+                <EllipsisTextTooltip text={this.props.group.name} />
+                &nbsp;(
+                {caseCounts(
+                    getNumSamples(this.props.group),
+                    getNumPatients(this.props.group)
+                )}
+                )
             </span>
         );
     }
@@ -99,19 +106,22 @@ export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, 
     @computed get editingNameUI() {
         return (
             <DefaultTooltip
-                visible={!!(this.editSubmitError && this.editSubmitError.message)}
+                visible={
+                    !!(this.editSubmitError && this.editSubmitError.message)
+                }
                 overlay={
                     <div>
                         <i
                             className="fa fa-md fa-exclamation-triangle"
                             style={{
-                                color: "#BB1700",
-                                marginRight: 5
+                                color: '#BB1700',
+                                marginRight: 5,
                             }}
                         />
                         <span>
-                                    {this.editSubmitError && this.editSubmitError.message}
-                                </span>
+                            {this.editSubmitError &&
+                                this.editSubmitError.message}
+                        </span>
                     </div>
                 }
             >
@@ -119,7 +129,7 @@ export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, 
                     type="text"
                     value={this.nameInput}
                     onChange={this.handleNameInputChange}
-                    style={{width:174}}
+                    style={{ width: 174 }}
                 />
             </DefaultTooltip>
         );
@@ -127,12 +137,12 @@ export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, 
 
     @computed get editSubmitError() {
         if (this.nameInput.length === 0) {
-            return { message: "Please enter a name."};
+            return { message: 'Please enter a name.' };
         } else if (this.nameInput === this.props.group.name) {
             // Non-null object signifies that submit should be disabled, but no message specified means no tooltip.
             return {};
         } else if (this.props.allGroupNames.indexOf(this.nameInput) > -1) {
-            return { message: DUPLICATE_GROUP_NAME_MSG};
+            return { message: DUPLICATE_GROUP_NAME_MSG };
         } else {
             return null;
         }
@@ -142,20 +152,24 @@ export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, 
         const group = this.props.group;
         let checkboxAndLabel;
         if (this.props.markedForDeletion) {
-            checkboxAndLabel = <span className={styles.markedForDeletion}>{this.label}</span>;
+            checkboxAndLabel = (
+                <span className={styles.markedForDeletion}>{this.label}</span>
+            );
         } else {
             checkboxAndLabel = (
-                <div className={styles.groupItem} style={{display:"flex", alignItems:"center"}}>
+                <div
+                    className={styles.groupItem}
+                    style={{ display: 'flex', alignItems: 'center' }}
+                >
                     <input
                         type="checkbox"
                         value={group.uid}
-                        checked={this.props.store.isComparisonGroupSelected(group.uid)}
+                        checked={this.props.store.isComparisonGroupSelected(
+                            group.uid
+                        )}
                         onClick={this.onCheckboxClick}
                     />
-                    { this.editingName ?
-                        this.editingNameUI :
-                        this.label
-                    }
+                    {this.editingName ? this.editingNameUI : this.label}
                 </div>
             );
         }
@@ -167,7 +181,7 @@ export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, 
                     className="btn btn-xs btn-primary"
                     onClick={this.onEditSubmit}
                     disabled={!!this.editSubmitError}
-                    style={{marginRight:3}}
+                    style={{ marginRight: 3 }}
                 >
                     Save
                 </button>,
@@ -176,64 +190,88 @@ export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, 
                     onClick={this.onEditCancel}
                 >
                     Cancel
-                </button>
+                </button>,
             ];
         } else if (!this.props.markedForDeletion) {
             editingRelatedIcons = [
-                <DefaultTooltip overlay={"Edit Name"}>
-                <span
-                    onClick={this.onEditClick}
-                >
-                    <i
-                        className="fa fa-md fa-pencil"
-                        style={{
-                            cursor:"pointer"
-                        }}
-                    />
-                </span></DefaultTooltip>,
-                <DefaultTooltip overlay={"Delete Group"}>
-                <span
-                    onClick={this.onDeleteClick}
-                >
-                    <i
-                        className="fa fa-md fa-trash"
-                        style={{
-                            cursor:"pointer"
-                        }}
-                    />
-                </span></DefaultTooltip>,
-                <DefaultTooltip overlay={<span>{`Add currently selected samples (${getNumSamples(group)}) to `}<strong>{group.name}</strong></span>}>
-                    <span
-                        onClick={this.onAddSelectedSamplesClick}
-                    >
+                <DefaultTooltip overlay={'Edit Name'}>
+                    <span onClick={this.onEditClick}>
                         <i
-                            className="fa fa-md fa-plus"
+                            className="fa fa-md fa-pencil"
                             style={{
-                                cursor:"pointer"
+                                cursor: 'pointer',
                             }}
                         />
                     </span>
-                </DefaultTooltip>
+                </DefaultTooltip>,
+                <DefaultTooltip overlay={'Delete Group'}>
+                    <span onClick={this.onDeleteClick}>
+                        <i
+                            className="fa fa-md fa-trash"
+                            style={{
+                                cursor: 'pointer',
+                            }}
+                        />
+                    </span>
+                </DefaultTooltip>,
+                <DefaultTooltip
+                    overlay={
+                        <span>
+                            {`Add currently selected samples (${getNumSamples(
+                                group
+                            )}) to `}
+                            <strong>{group.name}</strong>
+                        </span>
+                    }
+                >
+                    <span onClick={this.onAddSelectedSamplesClick}>
+                        <i
+                            className="fa fa-md fa-plus"
+                            style={{
+                                cursor: 'pointer',
+                            }}
+                        />
+                    </span>
+                </DefaultTooltip>,
             ];
         }
-        
+
         return (
-            <div key={group.uid}
+            <div
+                key={group.uid}
                 className={styles.groupRow}
                 style={{
-                    display:"flex",
-                    flexDirection:"row",
-                    justifyContent:"space-between",
-                    alignItems:"center",
-                    paddingBottom:4,
-                    paddingTop:4
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    paddingBottom: 4,
+                    paddingTop: 4,
                 }}
             >
                 {checkboxAndLabel}
                 <div className={styles.groupLineItemActionButtons}>
                     {editingRelatedIcons}
-                    {this.props.group.nonExistentSamples.length > 0 && <ErrorIcon tooltip={<MissingSamplesMessage samples={this.props.group.nonExistentSamples}/>} />}
-                    {this.props.markedForDeletion && (<button style={{marginLeft:10}} className="btn btn-xs btn-default" onClick={this.onRestoreClick}>Restore</button>)}
+                    {this.props.group.nonExistentSamples.length > 0 && (
+                        <ErrorIcon
+                            tooltip={
+                                <MissingSamplesMessage
+                                    samples={
+                                        this.props.group.nonExistentSamples
+                                    }
+                                />
+                            }
+                        />
+                    )}
+                    {this.props.markedForDeletion && (
+                        <button
+                            style={{ marginLeft: 10 }}
+                            className="btn btn-xs btn-default"
+                            onClick={this.onRestoreClick}
+                        >
+                            Restore
+                        </button>
+                    )}
                 </div>
             </div>
         );

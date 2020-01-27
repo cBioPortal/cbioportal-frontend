@@ -1,1 +1,1 @@
-export const NOT_APPLICABLE_VALUE = "NA";
+export const NOT_APPLICABLE_VALUE = 'NA';

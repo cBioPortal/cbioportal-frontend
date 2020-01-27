@@ -1,23 +1,24 @@
 import * as React from 'react';
-import {Modal, Button} from 'react-bootstrap';
-import {ThreeBounce} from 'better-react-spinkit';
-import {If} from 'react-if';
+import { Modal, Button } from 'react-bootstrap';
+import { ThreeBounce } from 'better-react-spinkit';
+import { If } from 'react-if';
 import fileDownload from 'react-file-download';
-import {action, observable} from "mobx";
-import {observer} from "mobx-react";
+import { action, observable } from 'mobx';
+import { observer } from 'mobx-react';
 const Clipboard = require('clipboard');
 
-import copyDownloadStyles from "./copyDownloadControls.module.scss";
-import {CopyDownloadButtons} from "./CopyDownloadButtons";
-import {ICopyDownloadControlsProps} from "./ICopyDownloadControls";
-import autobind from "autobind-decorator";
+import copyDownloadStyles from './copyDownloadControls.module.scss';
+import { CopyDownloadButtons } from './CopyDownloadButtons';
+import { ICopyDownloadControlsProps } from './ICopyDownloadControls';
+import autobind from 'autobind-decorator';
 
-export interface IAsyncCopyDownloadControlsProps extends ICopyDownloadControlsProps {
+export interface IAsyncCopyDownloadControlsProps
+    extends ICopyDownloadControlsProps {
     downloadData?: () => Promise<ICopyDownloadData>;
 }
 
 export interface ICopyDownloadData {
-    status: 'complete'|'incomplete';
+    status: 'complete' | 'incomplete';
     text: string;
 }
 
@@ -26,29 +27,30 @@ export interface ICopyDownloadData {
  * @author Aaron Lisman
  */
 @observer
-export class CopyDownloadControls extends React.Component<IAsyncCopyDownloadControlsProps, {}>
-{
+export class CopyDownloadControls extends React.Component<
+    IAsyncCopyDownloadControlsProps,
+    {}
+> {
     @observable downloadingData = false;
     @observable copyingData = false;
     @observable showErrorMessage = false;
     @observable showTooltipCopyMessage = false;
 
-    private _copyButton: HTMLButtonElement|null = null;
-    private _modalCopyButton: HTMLButtonElement|null = null;
-    private _modalCopyButtonContainer: HTMLElement|null = null;
+    private _copyButton: HTMLButtonElement | null = null;
+    private _modalCopyButton: HTMLButtonElement | null = null;
+    private _modalCopyButtonContainer: HTMLElement | null = null;
 
-    private _copyText: string|null = null;
+    private _copyText: string | null = null;
 
-    public static defaultProps:IAsyncCopyDownloadControlsProps = {
-        className: "",
+    public static defaultProps: IAsyncCopyDownloadControlsProps = {
+        className: '',
         copyMessageDuration: 3000,
         showCopy: true,
         showDownload: true,
-        downloadFilename: "data.tsv"
+        downloadFilename: 'data.tsv',
     };
 
-    constructor(props:IAsyncCopyDownloadControlsProps)
-    {
+    constructor(props: IAsyncCopyDownloadControlsProps) {
         super(props);
         this.handleDownload = this.handleDownload.bind(this);
         this.handleCopy = this.handleCopy.bind(this);
@@ -63,20 +65,21 @@ export class CopyDownloadControls extends React.Component<IAsyncCopyDownloadCont
         }
     }
 
-    public bindCopyButton(button: HTMLButtonElement|null, container?: HTMLElement|null)
-    {
+    public bindCopyButton(
+        button: HTMLButtonElement | null,
+        container?: HTMLElement | null
+    ) {
         if (button) {
             new Clipboard(button, {
                 text: this.getText.bind(this),
                 // we need to pass a container to the clipboard when we use it in a Modal element
                 // see https://stackoverflow.com/questions/38398070/bootstrap-modal-does-not-work-with-clipboard-js-on-firefox
-                container: container
+                container: container,
             });
         }
     }
 
-    public render()
-    {
+    public render() {
         return (
             <span>
                 <CopyDownloadButtons
@@ -88,7 +91,9 @@ export class CopyDownloadControls extends React.Component<IAsyncCopyDownloadCont
                     downloadLabel={this.props.downloadLabel}
                     handleDownload={this.handleDownload}
                     handleCopy={this.handleCopy}
-                    copyButtonRef={(el:HTMLButtonElement) => {this._copyButton = el;}}
+                    copyButtonRef={(el: HTMLButtonElement) => {
+                        this._copyButton = el;
+                    }}
                 />
                 {this.downloadIndicatorModal()}
                 {this.copyIndicatorModal()}
@@ -97,46 +102,56 @@ export class CopyDownloadControls extends React.Component<IAsyncCopyDownloadCont
         );
     }
 
-    public downloadIndicatorModal(): JSX.Element
-    {
+    public downloadIndicatorModal(): JSX.Element {
         return (
             <Modal
                 show={this.downloadingData}
                 onHide={() => undefined}
                 bsSize="sm"
-                className={`${copyDownloadStyles["centered-modal-dialog"]}`}
+                className={`${copyDownloadStyles['centered-modal-dialog']}`}
             >
                 <Modal.Body>
-                    <ThreeBounce style={{ display:'inline-block', marginRight:10 }} />
+                    <ThreeBounce
+                        style={{ display: 'inline-block', marginRight: 10 }}
+                    />
                     <span>Downloading Table Data...</span>
                 </Modal.Body>
             </Modal>
         );
     }
 
-    public copyIndicatorModal(): JSX.Element
-    {
+    public copyIndicatorModal(): JSX.Element {
         return (
             <Modal
                 show={this.copyingData}
                 onHide={() => undefined}
-                onEntered={() => {this.bindCopyButton(this._modalCopyButton, this._modalCopyButtonContainer);}}
+                onEntered={() => {
+                    this.bindCopyButton(
+                        this._modalCopyButton,
+                        this._modalCopyButtonContainer
+                    );
+                }}
                 bsSize="sm"
-                className={`${copyDownloadStyles["centered-modal-dialog"]}`}
+                className={`${copyDownloadStyles['centered-modal-dialog']}`}
             >
                 <Modal.Header>
-                    {this.showErrorMessage ? "Copy Error!" : "Copy Ready!"}
+                    {this.showErrorMessage ? 'Copy Error!' : 'Copy Ready!'}
                 </Modal.Header>
                 <Modal.Body>
-                    {this.showErrorMessage && "An error occurred while copying the data. Data may be incomplete."}
+                    {this.showErrorMessage &&
+                        'An error occurred while copying the data. Data may be incomplete.'}
                     Please click on Copy to copy the data to clipboard.
                 </Modal.Body>
                 <Modal.Footer>
                     <span
-                        ref={(el: HTMLElement|null) => {this._modalCopyButtonContainer = el;}}
+                        ref={(el: HTMLElement | null) => {
+                            this._modalCopyButtonContainer = el;
+                        }}
                     >
                         <button
-                            ref={(el:HTMLButtonElement) => {this._modalCopyButton = el;}}
+                            ref={(el: HTMLButtonElement) => {
+                                this._modalCopyButton = el;
+                            }}
                             onClick={this.handleModalClose}
                             className="btn btn-primary"
                             data-clipboard-text="NA"
@@ -150,20 +165,18 @@ export class CopyDownloadControls extends React.Component<IAsyncCopyDownloadCont
         );
     }
 
-    public downloadErrorModal(): JSX.Element
-    {
+    public downloadErrorModal(): JSX.Element {
         return (
             <Modal
                 show={!this.copyingData && this.showErrorMessage}
                 onHide={this.handleModalClose}
                 bsSize="sm"
-                className={`${copyDownloadStyles["centered-modal-dialog"]}`}
+                className={`${copyDownloadStyles['centered-modal-dialog']}`}
             >
-                <Modal.Header>
-                    Download Error!
-                </Modal.Header>
+                <Modal.Header>Download Error!</Modal.Header>
                 <Modal.Body>
-                    An error occurred while downloading the data. Downloaded file may contain incomplete data.
+                    An error occurred while downloading the data. Downloaded
+                    file may contain incomplete data.
                 </Modal.Body>
                 <Modal.Footer>
                     <Button
@@ -177,18 +190,15 @@ export class CopyDownloadControls extends React.Component<IAsyncCopyDownloadCont
         );
     }
 
-    public getText(): string
-    {
-        return this._copyText || "";
+    public getText(): string {
+        return this._copyText || '';
     }
 
-    public handleCopy()
-    {
+    public handleCopy() {
         this.initCopyProcess();
     }
-    
-    public initCopyProcess()
-    {
+
+    public initCopyProcess() {
         // this makes sure that copy data and the download data are the same/consistent
         this.initDownloadProcess(text => {
             // do not update if the copy text is not updated since the last copy request
@@ -196,15 +206,13 @@ export class CopyDownloadControls extends React.Component<IAsyncCopyDownloadCont
             if (this._copyText !== text) {
                 this._copyText = text;
                 this.copyingData = true;
-            }
-            else {
+            } else {
                 this.showSimpleCopyMessage();
             }
         });
     }
 
-    public handleDownload()
-    {
+    public handleDownload() {
         this.initDownloadProcess(text => {
             // save the text so that we won't prompt it again for copy action
             this._copyText = text;
@@ -214,36 +222,35 @@ export class CopyDownloadControls extends React.Component<IAsyncCopyDownloadCont
         });
     }
 
-    public initDownloadProcess(callback: (text: string) => void)
-    {
+    public initDownloadProcess(callback: (text: string) => void) {
         if (this.props.downloadData) {
             // mark downloading data true, so that we can show a loading message
             this.downloadingData = true;
 
-            this.props.downloadData().then(copyDownloadData => {
-                if (copyDownloadData.status === "complete") {
-                    // promise is resolved, we need to hide the download indicator
-                    this.downloadingData = false;
-                }
-                else {
-                    this.triggerDownloadError();
-                }
+            this.props
+                .downloadData()
+                .then(copyDownloadData => {
+                    if (copyDownloadData.status === 'complete') {
+                        // promise is resolved, we need to hide the download indicator
+                        this.downloadingData = false;
+                    } else {
+                        this.triggerDownloadError();
+                    }
 
-                callback(copyDownloadData.text);
-            }).catch(() => {
-                this.triggerDownloadError();
-            });
+                    callback(copyDownloadData.text);
+                })
+                .catch(() => {
+                    this.triggerDownloadError();
+                });
         }
     }
 
-    public download(text: string)
-    {
+    public download(text: string) {
         fileDownload(text, this.props.downloadFilename);
     }
 
     @action
-    private handleModalClose()
-    {
+    private handleModalClose() {
         // need to set both flags to false,
         // in order to not show multiple modals in case of a download error during copy action
         this.copyingData = false;
@@ -251,16 +258,14 @@ export class CopyDownloadControls extends React.Component<IAsyncCopyDownloadCont
     }
 
     @action
-    private triggerDownloadError()
-    {
+    private triggerDownloadError() {
         // promise is rejected: we need to hide the download indicator and show an error message
         this.downloadingData = false;
         this.showErrorMessage = true;
     }
 
     @action
-    private showSimpleCopyMessage()
-    {
+    private showSimpleCopyMessage() {
         this.showTooltipCopyMessage = true;
 
         // we only want to show the notification for a limited time

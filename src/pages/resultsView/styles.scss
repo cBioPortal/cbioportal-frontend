@@ -70,9 +70,10 @@
 
     #oncoprintDiv {
         .oncoprintjs__track_options__toggle_btn_img {
-            top:4px;
+            top: 4px;
         }
-        .oncoprintjs__track_options__toggle_btn_img, .oncoprintjs__header__toggle_btn_img {
+        .oncoprintjs__track_options__toggle_btn_img,
+        .oncoprintjs__header__toggle_btn_img {
             border-width: 0px !important;
             border-radius: $cornerBorderRadius;
             position: relative;
@@ -81,15 +82,17 @@
             }
         }
 
-        .oncoprintjs__track_options__dropdown, .oncoprintjs__header__dropdown {
+        .oncoprintjs__track_options__dropdown,
+        .oncoprintjs__header__dropdown {
             border: 1px solid rgba(0, 0, 0, 0.15) !important;
             margin: 0 !important;
             padding: 0 !important;
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
             border-radius: $cornerBorderRadius;
-            z-index:10000;
+            z-index: 10000;
             li {
-                &.oncoprintjs__track_options__separator, &.oncoprintjs__header__separator {
+                &.oncoprintjs__track_options__separator,
+                &.oncoprintjs__header__separator {
                     border-top: 1px solid #dddddd !important;
                 }
                 &:not(.oncoprintjs__track_options__separator, .oncoprintjs__header__separator) {
@@ -127,12 +130,11 @@
 }
 
 .quick_oql_edit {
-    display:flex;
-    margin-top:10px;
+    display: flex;
+    margin-top: 10px;
     align-items: flex-start;
 
     .oqlValidationContainer {
-        min-height:27px;
+        min-height: 27px;
     }
-
 }

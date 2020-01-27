@@ -5,17 +5,9 @@ import { shallow, mount } from 'enzyme';
 import sinon from 'sinon';
 
 describe('ThumbnailExpandVAFPlot', () => {
+    before(() => {});
 
-    before(()=>{
+    after(() => {});
 
-    });
-
-    after(()=>{
-
-    });
-
-    it('what does it do?', ()=>{
-
-    });
-
+    it('what does it do?', () => {});
 });

@@ -1,6 +1,6 @@
-import {observer} from "mobx-react";
+import { observer } from 'mobx-react';
 import * as React from 'react';
-import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
+import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
 
 export interface ISurvivalDescription {
     studyName: string;
@@ -11,29 +11,36 @@ export interface ISurvivalDescriptionTableProps {
     survivalDescriptionData: ISurvivalDescription[];
 }
 
-class SurvivalDescriptionTableComponent extends LazyMobXTable<ISurvivalDescription> {}
+class SurvivalDescriptionTableComponent extends LazyMobXTable<
+    ISurvivalDescription
+> {}
 
 @observer
-export default class SurvivalDescriptionTable extends React.Component<ISurvivalDescriptionTableProps, {}> {
-    public render()
-    {
+export default class SurvivalDescriptionTable extends React.Component<
+    ISurvivalDescriptionTableProps,
+    {}
+> {
+    public render() {
         return (
             <SurvivalDescriptionTableComponent
                 data={this.props.survivalDescriptionData}
-                columns={
-                    [
-                        {
-                            name: 'Study',
-                            render: (data: ISurvivalDescription) => <span>{data.studyName}</span>,
-                            sortBy: (data: ISurvivalDescription) => data.studyName
-                        },
-                        {
-                            name: 'Description',
-                            render: (data: ISurvivalDescription) => <span>{data.description}</span>,
-                            sortBy: (data: ISurvivalDescription) => data.description
-                        }
-                    ]
-                }
+                columns={[
+                    {
+                        name: 'Study',
+                        render: (data: ISurvivalDescription) => (
+                            <span>{data.studyName}</span>
+                        ),
+                        sortBy: (data: ISurvivalDescription) => data.studyName,
+                    },
+                    {
+                        name: 'Description',
+                        render: (data: ISurvivalDescription) => (
+                            <span>{data.description}</span>
+                        ),
+                        sortBy: (data: ISurvivalDescription) =>
+                            data.description,
+                    },
+                ]}
                 initialSortColumn="Description"
                 initialSortDirection={'desc'}
                 showPagination={true}

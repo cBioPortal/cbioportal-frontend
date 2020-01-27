@@ -1,43 +1,46 @@
-import {observer} from "mobx-react";
-import * as React from "react";
+import { observer } from 'mobx-react';
+import * as React from 'react';
 import {
     VictoryAxis,
     VictoryChart,
     VictoryLabel,
     VictoryScatter,
-    VictorySelectionContainer
-} from "victory";
-import CBIOPORTAL_VICTORY_THEME from "../../../../shared/theme/cBioPoralTheme";
-import {computed, observable} from "mobx";
-import autobind from "autobind-decorator";
-import {tickFormatNumeral} from "../../../../shared/components/plots/TickUtils";
-import {makeMouseEvents} from "../../../../shared/components/plots/PlotUtils";
-import _ from "lodash";
-import ScatterPlotTooltip from "../../../../shared/components/plots/ScatterPlotTooltip";
-import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import {AbstractChart} from "../ChartContainer";
-import {interpolatePlasma} from "d3-scale-chromatic";
-import {DensityPlotBin} from "../../../../shared/api/generated/CBioPortalAPIInternal";
-import { RectangleBounds } from "pages/studyView/StudyViewUtils";
+    VictorySelectionContainer,
+} from 'victory';
+import CBIOPORTAL_VICTORY_THEME from '../../../../shared/theme/cBioPoralTheme';
+import { computed, observable } from 'mobx';
+import autobind from 'autobind-decorator';
+import { tickFormatNumeral } from '../../../../shared/components/plots/TickUtils';
+import { makeMouseEvents } from '../../../../shared/components/plots/PlotUtils';
+import _ from 'lodash';
+import ScatterPlotTooltip from '../../../../shared/components/plots/ScatterPlotTooltip';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import { AbstractChart } from '../ChartContainer';
+import { interpolatePlasma } from 'd3-scale-chromatic';
+import { DensityPlotBin } from '../../../../shared/api/generated/CBioPortalAPIInternal';
+import { RectangleBounds } from 'pages/studyView/StudyViewUtils';
 
-export type IStudyViewDensityScatterPlotDatum = DensityPlotBin & {x:number, y:number};
+export type IStudyViewDensityScatterPlotDatum = DensityPlotBin & {
+    x: number;
+    y: number;
+};
 
 export interface IStudyViewDensityScatterPlotProps {
-    width:number;
-    height:number;
-    yBinsMin:number;
-    data:DensityPlotBin[]
-    xBinSize:number;
-    yBinSize:number;
-    onSelection:(bounds:RectangleBounds)=>void;
-    selectionBounds?:RectangleBounds;
+    width: number;
+    height: number;
+    yBinsMin: number;
+    data: DensityPlotBin[];
+    xBinSize: number;
+    yBinSize: number;
+    onSelection: (bounds: RectangleBounds) => void;
+    selectionBounds?: RectangleBounds;
 
-    isLoading?:boolean;
-    svgRef?:(svg:SVGElement|null)=>void;
-    tooltip?:(d:DensityPlotBin)=>JSX.Element;
+    isLoading?: boolean;
+    svgRef?: (svg: SVGElement | null) => void;
+    tooltip?: (d: DensityPlotBin) => JSX.Element;
     axisLabelX?: string;
     axisLabelY?: string;
-    title?:string;
+    title?: string;
 }
 
 const NUM_AXIS_TICKS = 8;
@@ -48,16 +51,26 @@ class _VictorySelectionContainerWithLegend extends VictorySelectionContainer {
     //  VictoryChart layout system
 
     render() {
-        const {activateSelectedData, onSelection, containerRef, gradient, legend, children, ...rest} = this.props as any;
+        const {
+            activateSelectedData,
+            onSelection,
+            containerRef,
+            gradient,
+            legend,
+            children,
+            ...rest
+        } = this.props as any;
         return (
             <VictorySelectionContainer
                 activateSelectedData={false}
                 onSelection={onSelection}
                 containerRef={containerRef}
-                children={children.concat(legend).concat(<defs>{gradient}</defs>)}
+                children={children
+                    .concat(legend)
+                    .concat(<defs>{gradient}</defs>)}
                 {...rest}
             />
-        )
+        );
     }
 }
 
@@ -65,25 +78,27 @@ class _VictorySelectionContainerWithLegend extends VictorySelectionContainer {
 const VictorySelectionContainerWithLegend = _VictorySelectionContainerWithLegend as any;
 
 @observer
-export default class StudyViewDensityScatterPlot extends React.Component<IStudyViewDensityScatterPlotProps, {}> implements AbstractChart {
-    @observable tooltipModel:any|null = null;
-    @observable pointHovered:boolean = false;
-    @observable mouseIsDown:boolean = false;
-    public mouseEvents:any = makeMouseEvents(this);
+export default class StudyViewDensityScatterPlot
+    extends React.Component<IStudyViewDensityScatterPlotProps, {}>
+    implements AbstractChart {
+    @observable tooltipModel: any | null = null;
+    @observable pointHovered: boolean = false;
+    @observable mouseIsDown: boolean = false;
+    public mouseEvents: any = makeMouseEvents(this);
 
-    private xAxis:any | null = null;
-    private yAxis:any | null = null;
+    private xAxis: any | null = null;
+    private yAxis: any | null = null;
 
-    @observable.ref private container:HTMLDivElement;
-    private svg:SVGElement|null;
+    @observable.ref private container: HTMLDivElement;
+    private svg: SVGElement | null;
 
     @autobind
-    private containerRef(container:HTMLDivElement) {
+    private containerRef(container: HTMLDivElement) {
         this.container = container;
     }
 
     @autobind
-    private svgRef(svg:SVGElement|null) {
+    private svgRef(svg: SVGElement | null) {
         this.svg = svg;
         if (this.props.svgRef) {
             this.props.svgRef(this.svg);
@@ -99,10 +114,10 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
             return (
                 <VictoryLabel
                     style={{
-                        fontWeight:"bold",
-                        textAnchor: "middle"
+                        fontWeight: 'bold',
+                        textAnchor: 'middle',
                     }}
-                    x={this.props.width/2}
+                    x={this.props.width / 2}
                     y="1.2em"
                     text={this.props.title}
                 />
@@ -116,15 +131,21 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         // enforce plot constraints - because of dot size and wanting them to be
         //  right up against each other, we cant have less than yBinsMin on the y axis
         return {
-            x: [0,1] as [number, number],
-            y: [0, Math.max(this.props.yBinsMin, this.dataDomain.y[1])]
+            x: [0, 1] as [number, number],
+            y: [0, Math.max(this.props.yBinsMin, this.dataDomain.y[1])],
         };
     }
 
     @computed get dataDomain() {
         // get data extremes
-        const max = {x:Number.NEGATIVE_INFINITY, y:Number.NEGATIVE_INFINITY};
-        const min = {x:Number.POSITIVE_INFINITY, y:Number.POSITIVE_INFINITY};
+        const max = {
+            x: Number.NEGATIVE_INFINITY,
+            y: Number.NEGATIVE_INFINITY,
+        };
+        const min = {
+            x: Number.POSITIVE_INFINITY,
+            y: Number.POSITIVE_INFINITY,
+        };
         for (const d of this.data) {
             max.x = Math.max(d.x + this.props.xBinSize, max.x);
             max.y = Math.max(d.y + this.props.yBinSize, max.y);
@@ -134,13 +155,13 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         return {
             //x: [min.x, max.x],
             //y: [min.y, max.y]
-            x: [0, 1] as [number,number],
-            y:[0, max.y] as [number,number]
+            x: [0, 1] as [number, number],
+            y: [0, max.y] as [number, number],
         };
     }
 
     @autobind
-    private tickFormat(t:number, index:number, ticks:number[]) {
+    private tickFormat(t: number, index: number, ticks: number[]) {
         return tickFormatNumeral(t, ticks);
     }
 
@@ -155,7 +176,7 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
     }
 
     @autobind
-    private onSelection(scatters:any, bounds:any) {
+    private onSelection(scatters: any, bounds: any) {
         if (this.xAxis && this.yAxis) {
             let xStart = Number.POSITIVE_INFINITY;
             let yStart = Number.POSITIVE_INFINITY;
@@ -191,29 +212,31 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
             if (Math.abs(xEnd - 1) < 0.00005) {
                 // same reasoning as above, in case a sample has 1.0 FGA
                 // but we don't have to check the data because we know the bin range ends at 1
-                
+
                 xEnd += 1;
             }
 
-            xStart = + (xStart.toFixed(2));
-            xEnd = + (xEnd.toFixed(2));
-            yStart = + (yStart.toFixed(2));
-            yEnd = + (yEnd.toFixed(2));
+            xStart = +xStart.toFixed(2);
+            xEnd = +xEnd.toFixed(2);
+            yStart = +yStart.toFixed(2);
+            yEnd = +yEnd.toFixed(2);
             this.props.onSelection({ xStart, xEnd, yStart, yEnd });
         }
     }
 
-    @computed get data():IStudyViewDensityScatterPlotDatum[] {
-        return this.props.data.map(d=>Object.assign({}, d, { x: d.binX, y: d.binY }));
+    @computed get data(): IStudyViewDensityScatterPlotDatum[] {
+        return this.props.data.map(d =>
+            Object.assign({}, d, { x: d.binX, y: d.binY })
+        );
     }
 
-    private isSelected(d:IStudyViewDensityScatterPlotDatum) {
+    private isSelected(d: IStudyViewDensityScatterPlotDatum) {
         if (!this.props.selectionBounds) {
             return true;
         } else {
             const bounds = this.props.selectionBounds;
             let xFiltered = true;
-            let yFiltered = true
+            let yFiltered = true;
 
             if (bounds.xStart !== undefined && bounds.xEnd !== undefined) {
                 xFiltered = d.binX >= bounds.xStart && d.binX < bounds.xEnd;
@@ -251,13 +274,13 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
             }
         }
 
-        const selectedDataByAreaCount = _.groupBy(selectedData, d=>{
+        const selectedDataByAreaCount = _.groupBy(selectedData, d => {
             const areaCount = d.count;
             max = Math.max(areaCount, max);
             min = Math.min(areaCount, min);
             return areaCount;
         });
-        const unselectedDataByAreaCount = _.groupBy(unselectedData, d=>{
+        const unselectedDataByAreaCount = _.groupBy(unselectedData, d => {
             const areaCount = d.count;
             max = Math.max(areaCount, max);
             min = Math.min(areaCount, min);
@@ -275,20 +298,23 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         const logMax = Math.log(max);
         const logMin = Math.log(min);
 
-        let countToColorCoord:(count:number)=>number;
-        let colorCoordToCount:((colorCoord:number)=>number) | null;
-        let colorCoordToColor:((colorCoord:number)=>string);
+        let countToColorCoord: (count: number) => number;
+        let colorCoordToCount: ((colorCoord: number) => number) | null;
+        let colorCoordToColor: (colorCoord: number) => string;
         const colorCoordMax = 0.75;
         if (min === max) {
             // this means min = max = 1;
-            countToColorCoord = ()=>0;
-            colorCoordToColor = ()=>interpolatePlasma(0);
+            countToColorCoord = () => 0;
+            colorCoordToColor = () => interpolatePlasma(0);
             colorCoordToCount = null;
         } else {
             // scale between 0 and some limit, to avoid lighter colors on top which are not visible against white bg
-            countToColorCoord = count=>((Math.log(count) - logMin) / (logMax - logMin));
-            colorCoordToCount = coord=>Math.exp((coord*(logMax-logMin)/colorCoordMax) + logMin);
-            colorCoordToColor = coord=>interpolatePlasma(colorCoordMax*coord);
+            countToColorCoord = count =>
+                (Math.log(count) - logMin) / (logMax - logMin);
+            colorCoordToCount = coord =>
+                Math.exp((coord * (logMax - logMin)) / colorCoordMax + logMin);
+            colorCoordToColor = coord =>
+                interpolatePlasma(colorCoordMax * coord);
         }
 
         return {
@@ -296,15 +322,16 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
             unselectedDataByAreaCount,
             colorCoordToCount,
             colorCoordMax,
-            countToSelectedColor:(count:number)=>colorCoordToColor(countToColorCoord(count)),
-            countToUnselectedColor:(count:number)=>{
-                return "rgb(200,200,200)";
+            countToSelectedColor: (count: number) =>
+                colorCoordToColor(countToColorCoord(count)),
+            countToUnselectedColor: (count: number) => {
+                return 'rgb(200,200,200)';
                 /*const val = Math.round(countToColorCoord(count)*255);
                 return `rgba(${val},${val},${val},0.3)`;&*/
             },
             colorCoordToColor,
-            countMax:max,
-            countMin:min
+            countMax: max,
+            countMin: min,
         };
     }
 
@@ -313,32 +340,35 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
             return [];
         }
 
-        const scatters:JSX.Element[] = [];
+        const scatters: JSX.Element[] = [];
         const scatterCategories = [
             {
                 dataByAreaCount: this.plotComputations.selectedDataByAreaCount,
                 countToColor: this.plotComputations.countToSelectedColor,
-                size: 3
+                size: 3,
             },
             {
-                dataByAreaCount: this.plotComputations.unselectedDataByAreaCount,
+                dataByAreaCount: this.plotComputations
+                    .unselectedDataByAreaCount,
                 countToColor: this.plotComputations.countToUnselectedColor,
-                size: 2.5
-            }
+                size: 2.5,
+            },
         ];
         for (const scatterCategory of scatterCategories) {
-            _.forEach(scatterCategory.dataByAreaCount, (data, areaCount)=>{
-                const color = scatterCategory.countToColor(parseInt(areaCount, 10));
+            _.forEach(scatterCategory.dataByAreaCount, (data, areaCount) => {
+                const color = scatterCategory.countToColor(
+                    parseInt(areaCount, 10)
+                );
                 scatters.push(
                     <VictoryScatter
                         key={`${areaCount}`}
                         style={{
                             data: {
                                 fill: color,
-                                stroke: "black",
+                                stroke: 'black',
                                 strokeWidth: 1,
-                                strokeOpacity: 0
-                            }
+                                strokeOpacity: 0,
+                            },
                         }}
                         size={scatterCategory.size}
                         symbol="circle"
@@ -356,19 +386,30 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         if (!colorCoordToCount) {
             return null;
         } else {
-            const gradientId = "legendGradient";
+            const gradientId = 'legendGradient';
             const GRADIENTMESH = 30;
             const gradientStopPoints = [];
-            for (let i=0; i<GRADIENTMESH; i++) {
+            for (let i = 0; i < GRADIENTMESH; i++) {
                 gradientStopPoints.push(
                     <stop
-                        offset={`${((i/GRADIENTMESH)*100).toFixed(0)}%`}
-                        style={{stopColor:this.plotComputations.colorCoordToColor(i/GRADIENTMESH)}}
+                        offset={`${((i / GRADIENTMESH) * 100).toFixed(0)}%`}
+                        style={{
+                            stopColor: this.plotComputations.colorCoordToColor(
+                                i / GRADIENTMESH
+                            ),
+                        }}
                     />
                 );
             }
             const gradientElt = (
-                <linearGradient id={gradientId} key={gradientId} x1="0%" y1="100%" x2="0%" y2="0%">
+                <linearGradient
+                    id={gradientId}
+                    key={gradientId}
+                    x1="0%"
+                    y1="100%"
+                    x2="0%"
+                    y2="0%"
+                >
                     {gradientStopPoints}
                 </linearGradient>
             );
@@ -376,42 +417,80 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
             const rectX = this.props.width - 45;
             const rectY = 70;
             const rectWidth = 10;
-            const largeRange = (this.plotComputations.countMax - this.plotComputations.countMin) >= 2;
+            const largeRange =
+                this.plotComputations.countMax -
+                    this.plotComputations.countMin >=
+                2;
             const rectHeight = largeRange ? 68 : 38;
 
             const rect = (
-                <rect fill={`url(#${gradientId})`} x={rectX} y={rectY} width={rectWidth} height={rectHeight}/>
+                <rect
+                    fill={`url(#${gradientId})`}
+                    x={rectX}
+                    y={rectY}
+                    width={rectWidth}
+                    height={rectHeight}
+                />
             );
 
             const labels = [
-                <text fontSize={11} x={rectX+rectWidth+4} y={rectY} dy="1em">{this.plotComputations.countMax.toLocaleString()}</text>,
-                <text fontSize={11} x={rectX+rectWidth+4} y={rectY+rectHeight} dy="-0.3em">{this.plotComputations.countMin.toLocaleString()}</text>
+                <text
+                    fontSize={11}
+                    x={rectX + rectWidth + 4}
+                    y={rectY}
+                    dy="1em"
+                >
+                    {this.plotComputations.countMax.toLocaleString()}
+                </text>,
+                <text
+                    fontSize={11}
+                    x={rectX + rectWidth + 4}
+                    y={rectY + rectHeight}
+                    dy="-0.3em"
+                >
+                    {this.plotComputations.countMin.toLocaleString()}
+                </text>,
             ];
             if (largeRange) {
                 // only add a middle label if theres room for another whole number in between
-                labels.push(<text fontSize={11} x={rectX+rectWidth+4} y={rectY+(rectHeight/2)} dy="0.3em">{Math.round(colorCoordToCount(0.5)).toLocaleString()}</text>);
+                labels.push(
+                    <text
+                        fontSize={11}
+                        x={rectX + rectWidth + 4}
+                        y={rectY + rectHeight / 2}
+                        dy="0.3em"
+                    >
+                        {Math.round(colorCoordToCount(0.5)).toLocaleString()}
+                    </text>
+                );
             }
 
-            const title = <text fontSize={11} x={rectX} y={rectY} dy="-0.5em" dx="-12px"># samples</text>;
+            const title = (
+                <text fontSize={11} x={rectX} y={rectY} dy="-0.5em" dx="-12px">
+                    # samples
+                </text>
+            );
 
             return {
-                gradient:gradientElt,
-                legend: (<g>
-                    {title}
-                    {rect}
-                    {labels}
-                </g>)
+                gradient: gradientElt,
+                legend: (
+                    <g>
+                        {title}
+                        {rect}
+                        {labels}
+                    </g>
+                ),
             };
         }
     }
 
     @autobind
-    private xAxisRef(axis:any|null) {
+    private xAxisRef(axis: any | null) {
         this.xAxis = axis;
     }
 
     @autobind
-    private yAxisRef(axis:any|null) {
+    private yAxisRef(axis: any | null) {
         this.yAxis = axis;
     }
 
@@ -419,7 +498,11 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         return (
             <div>
                 <div
-                    style={{width:this.props.width, height:this.props.height, position:"relative"}}
+                    style={{
+                        width: this.props.width,
+                        height: this.props.height,
+                        position: 'relative',
+                    }}
                     ref={this.containerRef}
                     onMouseDown={this.onMouseDown}
                     onMouseUp={this.onMouseUp}
@@ -453,7 +536,7 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
                             crossAxis={false}
                             tickCount={NUM_AXIS_TICKS}
                             tickFormat={this.tickFormat}
-                            axisLabelComponent={<VictoryLabel dy={20}/>}
+                            axisLabelComponent={<VictoryLabel dy={20} />}
                             label={this.props.axisLabelX}
                         />
                         <VictoryAxis
@@ -465,32 +548,40 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
                             tickCount={NUM_AXIS_TICKS}
                             tickFormat={this.tickFormat}
                             dependentAxis={true}
-                            axisLabelComponent={<VictoryLabel dy={-27}/>}
+                            axisLabelComponent={<VictoryLabel dy={-27} />}
                             label={this.props.axisLabelY}
                         />
                         {this.scatters}
                     </VictoryChart>
                     <span
                         style={{
-                            position:"absolute",
-                            top:0,
-                            left:0,
-                            width:"100%",
-                            height:"100%",
-                            backgroundColor:"rgba(255,255,255,0.8)",
-                            display:this.props.isLoading ? "block" : "none"
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            backgroundColor: 'rgba(255,255,255,0.8)',
+                            display: this.props.isLoading ? 'block' : 'none',
                         }}
                     />
                     <LoadingIndicator
                         isLoading={!!this.props.isLoading}
-                        style={{position:"absolute", top:"50%", left:"50%", marginLeft:-10}}
+                        style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            marginLeft: -10,
+                        }}
                     />
                 </div>
-                { this.tooltipModel && this.props.tooltip && !this.mouseIsDown && (
+                {this.tooltipModel && this.props.tooltip && !this.mouseIsDown && (
                     <ScatterPlotTooltip
                         container={this.container}
                         targetHovered={this.pointHovered}
-                        targetCoords={{x: this.tooltipModel.x, y: this.tooltipModel.y}}
+                        targetCoords={{
+                            x: this.tooltipModel.x,
+                            y: this.tooltipModel.y,
+                        }}
                         overlay={this.props.tooltip(this.tooltipModel.datum)}
                     />
                 )}

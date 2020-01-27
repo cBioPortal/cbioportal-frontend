@@ -1,11 +1,17 @@
-import * as React from "react";
-import {If, Then, Else} from 'react-if';
+import * as React from 'react';
+import { If, Then, Else } from 'react-if';
 
-const oncoKbImg = require("shared/components/annotation/images/oncogenic-only.svg");
+const oncoKbImg = require('shared/components/annotation/images/oncogenic-only.svg');
 
-const ONCOKB_URL = "https://oncokb.org";
+const ONCOKB_URL = 'https://oncokb.org';
 
-export function getOncoKBReferenceInfo(hugoGeneSymbol: string, isCancerGene: boolean, oncokbAnnotated: boolean, isOncogene: boolean, isTumorSuppressorGene: boolean): JSX.Element | undefined {
+export function getOncoKBReferenceInfo(
+    hugoGeneSymbol: string,
+    isCancerGene: boolean,
+    oncokbAnnotated: boolean,
+    isOncogene: boolean,
+    isTumorSuppressorGene: boolean
+): JSX.Element | undefined {
     if (isCancerGene) {
         let content = '';
 
@@ -20,32 +26,41 @@ export function getOncoKBReferenceInfo(hugoGeneSymbol: string, isCancerGene: boo
             }
             content = `${content} ${subContent.join(' and ')}`;
         }
-        return <span>
-            <If condition={oncokbAnnotated}>
-                <Then>
-                    <a href={`${ONCOKB_URL}/gene/${hugoGeneSymbol}`} target="_blank">
-                        {hugoGeneSymbol}
-                    </a>
-                </Then>
-                <Else>
-                    <span>{hugoGeneSymbol}</span>
-                </Else>
-            </If>
-            <span> is included in the </span>
-            {getOncoKBCancerGeneListLinkout()}
-            {(isOncogene || isTumorSuppressorGene) && (
-                <span>{content}</span>
-            )}
-            .
-        </span>
+        return (
+            <span>
+                <If condition={oncokbAnnotated}>
+                    <Then>
+                        <a
+                            href={`${ONCOKB_URL}/gene/${hugoGeneSymbol}`}
+                            target="_blank"
+                        >
+                            {hugoGeneSymbol}
+                        </a>
+                    </Then>
+                    <Else>
+                        <span>{hugoGeneSymbol}</span>
+                    </Else>
+                </If>
+                <span> is included in the </span>
+                {getOncoKBCancerGeneListLinkout()}
+                {(isOncogene || isTumorSuppressorGene) && (
+                    <span>{content}</span>
+                )}
+                .
+            </span>
+        );
     }
     return undefined;
 }
 
 export function getOncoKBCancerGeneListLinkout() {
-    return <a href={`${ONCOKB_URL}/cancerGenes`} target="_blank">OncoKB Cancer Gene List</a>;
+    return (
+        <a href={`${ONCOKB_URL}/cancerGenes`} target="_blank">
+            OncoKB Cancer Gene List
+        </a>
+    );
 }
 
 export function getOncoKbImage() {
-    return <img src={oncoKbImg} alt='OncoKB Oncogenic Symbol' />;
+    return <img src={oncoKbImg} alt="OncoKB Oncogenic Symbol" />;
 }

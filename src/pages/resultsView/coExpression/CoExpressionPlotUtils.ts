@@ -1,12 +1,19 @@
-import _ from "lodash";
+import _ from 'lodash';
 import { IAxisLogScaleParams } from 'pages/resultsView/plots/PlotsTabUtils';
 
-export function getUniquePrecision(value:number, allValues:number[], maxPrecision:number=3) {
-    if (!allValues.length)
-        return 0;
+export function getUniquePrecision(
+    value: number,
+    allValues: number[],
+    maxPrecision: number = 3
+) {
+    if (!allValues.length) return 0;
 
     let precision = 0;
-    while (_.countBy(allValues, val=>val.toFixed(precision))[value.toFixed(precision)] > 1) {
+    while (
+        _.countBy(allValues, val => val.toFixed(precision))[
+            value.toFixed(precision)
+        ] > 1
+    ) {
         precision++;
 
         if (precision >= maxPrecision) {
@@ -16,10 +23,16 @@ export function getUniquePrecision(value:number, allValues:number[], maxPrecisio
     return precision;
 }
 
-export function axisLabel(geneticEntity:{geneticEntityName:string}, logScale:IAxisLogScaleParams|undefined, profileName:string) {
-    return `${profileName}: ${geneticEntity.geneticEntityName} ${logScale ? `(${logScale.label}) ` : ""}`;
+export function axisLabel(
+    geneticEntity: { geneticEntityName: string },
+    logScale: IAxisLogScaleParams | undefined,
+    profileName: string
+) {
+    return `${profileName}: ${geneticEntity.geneticEntityName} ${
+        logScale ? `(${logScale.label}) ` : ''
+    }`;
 }
 
-export function isNotProfiled(d:{profiledX:boolean, profiledY:boolean}) {
+export function isNotProfiled(d: { profiledX: boolean; profiledY: boolean }) {
     return !d.profiledX && !d.profiledY;
 }

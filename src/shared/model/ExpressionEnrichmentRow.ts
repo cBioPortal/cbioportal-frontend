@@ -1,4 +1,4 @@
-import { GroupStatistics } from "shared/api/generated/CBioPortalAPIInternal";
+import { GroupStatistics } from 'shared/api/generated/CBioPortalAPIInternal';
 
 export interface ExpressionEnrichmentRow {
     checked: boolean;
@@ -9,6 +9,6 @@ export interface ExpressionEnrichmentRow {
     logRatio?: number;
     pValue: number;
     qValue: number;
-    groupsSet:{[id:string]:GroupStatistics};    
-    enrichedGroup:string;
+    groupsSet: { [id: string]: GroupStatistics };
+    enrichedGroup: string;
 }

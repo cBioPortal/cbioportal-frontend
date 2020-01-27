@@ -241,11 +241,23 @@ jobs:
         FRONTEND_TEST_USE_LOCAL_DIST: true
         NO_PARALLEL: true
 
+  prettier:
+    <<: *defaults
+    steps:
+    - attach_workspace:
+        at: /tmp/
+    - run:
+        name: 'Check code style with Prettier'
+        command: cd /tmp/repo/ && yarn run prettierCheckCircleCI
+
 workflows:
     version: 2
     install_and_test:
         jobs:
             - install
+            - prettier:
+                requires:
+                    - install
             - unit_tests:
                 requires:
                     - install

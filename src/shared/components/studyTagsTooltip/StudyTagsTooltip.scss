@@ -14,43 +14,42 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
- .studyTagsTooltip{
+.studyTagsTooltip {
     max-height: 45vh;
-    overflow: auto; 
-  
+    overflow: auto;
+
     .json-to-table table {
         width: 100%;
         border-collapse: collapse;
         font-family: sans-serif;
         font-size: 0.7rem;
         background-color: #fff;
-      }
-      
-      .json-to-table td,
-      .json-to-table th {
+    }
+
+    .json-to-table td,
+    .json-to-table th {
         padding: 5px;
-        border: 1px solid #E2E2E2;
-      }
-      
-      .json-to-table td {
+        border: 1px solid #e2e2e2;
+    }
+
+    .json-to-table td {
         text-align: left;
-      }
-      
-      .json-to-table tr:nth-child(even) {
+    }
+
+    .json-to-table tr:nth-child(even) {
         background-color: #fff;
-      }
-      
-      .json-to-table th[scope="col"] {
+    }
+
+    .json-to-table th[scope='col'] {
         background-color: #fff;
         color: #fff;
-      }
-      
-      .json-to-table th[scope="row"] {
+    }
+
+    .json-to-table th[scope='row'] {
         background-color: #d7d9f2;
-      }
-      
-      .json-to-table caption {
+    }
+
+    .json-to-table caption {
         caption-side: bottom;
-      }
- }
- 
+    }
+}
