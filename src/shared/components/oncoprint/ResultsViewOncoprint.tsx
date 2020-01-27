@@ -44,17 +44,13 @@ import {
     makeGenesetHeatmapTracksMobxPromise,
     makeGeneticTracksMobxPromise,
     makeHeatmapTracksMobxPromise,
-    makeTreatmentProfileHeatmapTracksMobxPromise,
-} from './OncoprintUtils';
-import _ from 'lodash';
-import onMobxPromise from 'shared/lib/onMobxPromise';
-import AppConfig from 'appConfig';
-import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import OncoprintJS, {
-    TrackGroupHeader,
-    TrackGroupIndex,
-    TrackId,
-} from 'oncoprintjs';
+    makeGenericAssayProfileHeatmapTracksMobxPromise
+} from "./OncoprintUtils";
+import _ from "lodash";
+import onMobxPromise from "shared/lib/onMobxPromise";
+import AppConfig from "appConfig";
+import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
+import OncoprintJS, {TrackGroupHeader, TrackGroupIndex, TrackId} from "oncoprintjs";
 import fileDownload from 'react-file-download';
 import tabularDownload from './tabularDownload';
 import classNames from 'classnames';
@@ -102,15 +98,15 @@ export interface IGenesetExpansionRecord {
 const CLINICAL_TRACK_KEY_PREFIX = 'CLINICALTRACK_';
 
 /*  Each heatmap track group can hold tracks of a single entity type.
-    Implemented entity types are genes and treatments. In the
+    Implemented entity types are genes and generic assay entites. In the
     HeatmapTrackGroupRecord type the `entities` member refers to
-    hugo_gene_symbols (for genes) or to treatment_id's (for treatments). */
+    hugo_gene_symbols (for genes) or to entity_id's (for generic assay entities). */
 export type HeatmapTrackGroupRecord = {
-    trackGroupIndex: number;
-    molecularAlterationType: string;
-    entities: { [entity: string]: boolean }; // map of hugo_gene_symbols or treatment_id's
-    molecularProfileId: string;
-};
+    trackGroupIndex:number,
+    molecularAlterationType:string,
+    entities: { [entity:string]:boolean }, // map of hugo_gene_symbols or entity_id's
+    molecularProfileId:string
+}
 
 /* fields and methods in the class below are ordered based on roughly
 /* chronological setup concerns, rather than on encapsulation and public API */
@@ -176,8 +172,6 @@ export default class ResultsViewOncoprint extends React.Component<
     @observable showClinicalTrackLegends: boolean = true;
     @observable _onlyShowClinicalLegendForAlteredCases = false;
     @observable showOqlInLabels = false;
-
-    //private selectedTreatmentsFromUrl:string[] = [];
 
     @computed get onlyShowClinicalLegendForAlteredCases() {
         return (
@@ -850,7 +844,7 @@ export default class ResultsViewOncoprint extends React.Component<
                                     this.geneticTracks.result,
                                     this.clinicalTracks.result,
                                     this.heatmapTracks.result,
-                                    this.treatmentHeatmapTracks.result,
+                                    this.genericAssayHeatmapTracks.result,
                                     this.genesetHeatmapTracks.result,
                                     this.oncoprint.getIdOrder(),
                                     this.oncoprintAnalysisCaseType ===
@@ -967,7 +961,7 @@ export default class ResultsViewOncoprint extends React.Component<
             }
         ).join(';');
 
-        // derive treaments from heatmap tracks since the only way to add treatments right now
+        // derive generic assay from heatmap tracks since the only way to add generic assay entities right now
         // is to use heatmap UI in oncoprint
         const generic_assay_groups = _.filter(tracksMap, (x:HeatmapTrackGroupRecord)=> x.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY)
             .map((track)=>{
@@ -1184,34 +1178,18 @@ export default class ResultsViewOncoprint extends React.Component<
             : this.patientHeatmapTracks;
     }
 
-    readonly sampleTreatmentHeatmapTracks = makeTreatmentProfileHeatmapTracksMobxPromise(
-        this,
-        true
-    );
-    readonly patientTreatmentHeatmapTracks = makeTreatmentProfileHeatmapTracksMobxPromise(
-        this,
-        false
-    );
-    @computed get treatmentHeatmapTracks() {
-        return this.oncoprintAnalysisCaseType ===
-            OncoprintAnalysisCaseType.SAMPLE
-            ? this.sampleTreatmentHeatmapTracks
-            : this.patientTreatmentHeatmapTracks;
+    readonly samplegGenericAssayHeatmapTracks = makeGenericAssayProfileHeatmapTracksMobxPromise(this, true);
+    readonly patientGenericAssayHeatmapTracks = makeGenericAssayProfileHeatmapTracksMobxPromise(this, false);
+    @computed get genericAssayHeatmapTracks() {
+        return (this.oncoprintAnalysisCaseType === OncoprintAnalysisCaseType.SAMPLE ? this.samplegGenericAssayHeatmapTracks : this.patientGenericAssayHeatmapTracks);
     }
 
     @computed get genesetHeatmapTrackGroup(): number {
-        return (
-            1 +
-            Math.max(
-                GENETIC_TRACK_GROUP_INDEX,
-                // observe the heatmap tracks to render in the very next group
-                ...this.heatmapTracks.result.map(
-                    hmTrack => hmTrack.trackGroupIndex
-                ),
-                ...this.treatmentHeatmapTracks.result.map(
-                    hmTrack => hmTrack.trackGroupIndex
-                )
-            )
+        return 1 + Math.max(
+            GENETIC_TRACK_GROUP_INDEX,
+            // observe the heatmap tracks to render in the very next group
+            ...(this.heatmapTracks.result.map(hmTrack => hmTrack.trackGroupIndex)),
+            ...(this.genericAssayHeatmapTracks.result.map(hmTrack => hmTrack.trackGroupIndex))
         );
     }
 
@@ -1412,19 +1390,17 @@ export default class ResultsViewOncoprint extends React.Component<
     }*/
 
     @computed get isLoading() {
-        return (
-            getMobxPromiseGroupStatus(
-                this.clinicalTracks,
-                this.geneticTracks,
-                this.genesetHeatmapTracks,
-                this.treatmentHeatmapTracks,
-                this.heatmapTracks,
-                this.props.store.molecularProfileIdToMolecularProfile,
-                this.alterationTypesInQuery,
-                this.alteredKeys,
-                this.heatmapTrackHeaders
-            ) === 'pending'
-        );
+        return getMobxPromiseGroupStatus(
+            this.clinicalTracks,
+            this.geneticTracks,
+            this.genesetHeatmapTracks,
+            this.genericAssayHeatmapTracks,
+            this.heatmapTracks,
+            this.props.store.molecularProfileIdToMolecularProfile,
+            this.alterationTypesInQuery,
+            this.alteredKeys,
+            this.heatmapTrackHeaders
+        ) === "pending";
     }
 
     @computed get isHidden() {
@@ -1607,12 +1583,8 @@ export default class ResultsViewOncoprint extends React.Component<
                                 oncoprintRef={this.oncoprintRef}
                                 clinicalTracks={this.clinicalTracks.result}
                                 geneticTracks={this.geneticTracks.result}
-                                genesetHeatmapTracks={
-                                    this.genesetHeatmapTracks.result
-                                }
-                                heatmapTracks={([] as IHeatmapTrackSpec[])
-                                    .concat(this.treatmentHeatmapTracks.result)
-                                    .concat(this.heatmapTracks.result)}
+                                genesetHeatmapTracks={this.genesetHeatmapTracks.result}
+                                heatmapTracks={([] as IHeatmapTrackSpec[]).concat(this.genericAssayHeatmapTracks.result).concat(this.heatmapTracks.result)}
                                 divId={this.props.divId}
                                 width={this.width}
                                 caseLinkOutInTooltips={true}

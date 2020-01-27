@@ -976,8 +976,9 @@ describe('Oncoprint DeltaUtils', () => {
         });
     });
 
-    describe('transitionHeatmapTrack() for treatment response profile', () => {
-        const molecularAlterationType = 'GENERIC_ASSAY';
+    describe('transitionHeatmapTrack() for generic assay response profile', () => {
+
+        const molecularAlterationType = "GENERIC_ASSAY";
 
         const makeMinimalOncoprintProps = (): IOncoprintProps => ({
             caseLinkOutInTooltips: false,
@@ -1023,8 +1024,8 @@ describe('Oncoprint DeltaUtils', () => {
 
         const trackspec2trackId = () => {
             return {
-                TREATMENT_TRACK_1: 1,
-                TREATMENT_TRACK_2: 2,
+                'GENERIC_ASSAY_TRACK_1': 1,
+                'GENERIC_ASSAY_TRACK_2': 2
             };
         };
 
@@ -1038,9 +1039,8 @@ describe('Oncoprint DeltaUtils', () => {
         });
 
         it('when is new track and ruleSetId is undefined, the new trackId is set as ruleSetId', () => {
-            const trackIdForRuleSetSharing = {
-                treatment: {} as { [m: string]: number },
-            };
+            
+            const trackIdForRuleSetSharing = {genericAssay: {} as {[m:string]:number}};
 
             (oncoprint.addTracks as SinonStub).returns([1]);
 
@@ -1056,11 +1056,12 @@ describe('Oncoprint DeltaUtils', () => {
             );
 
             assert.isFalse((oncoprint.shareRuleSet as SinonStub).called);
-            assert.equal(trackIdForRuleSetSharing.treatment['profile_1'], 1);
+            assert.equal(trackIdForRuleSetSharing.genericAssay['profile_1'], 1);
         });
 
         it('when is new track and ruleSetId is defined, the new trackId is set as ruleSetId', () => {
-            const trackIdForRuleSetSharing = { treatment: { profile_1: 1 } };
+            
+            const trackIdForRuleSetSharing = {genericAssay: { profile_1: 1 }};
 
             (oncoprint.addTracks as SinonStub).returns([2]);
 
@@ -1076,11 +1077,12 @@ describe('Oncoprint DeltaUtils', () => {
             );
 
             assert.isFalse((oncoprint.shareRuleSet as SinonStub).called);
-            assert.equal(trackIdForRuleSetSharing.treatment['profile_1'], 2);
+            assert.equal(trackIdForRuleSetSharing.genericAssay['profile_1'], 2);
         });
 
         it('when is existing track and ruleSetId is defined, the ruleset of existing track is updated to ruleSetId', () => {
-            const trackIdForRuleSetSharing = { treatment: { profile_1: 2 } };
+            
+            const trackIdForRuleSetSharing = {genericAssay: { profile_1: 2 }};
             const prevSpec = nextSpec;
 
             transitionHeatmapTrack(
@@ -1095,7 +1097,7 @@ describe('Oncoprint DeltaUtils', () => {
             );
 
             assert.isTrue((oncoprint.shareRuleSet as SinonStub).called);
-            assert.equal(trackIdForRuleSetSharing.treatment['profile_1'], 2);
+            assert.equal(trackIdForRuleSetSharing.genericAssay['profile_1'], 2);
         });
     });
 });

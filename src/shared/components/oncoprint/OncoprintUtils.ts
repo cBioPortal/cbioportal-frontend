@@ -168,7 +168,7 @@ export function getHeatmapTrackRuleSetParams(
     let na_legend_label = '';
     switch (trackSpec.molecularAlterationType) {
         case AlterationTypeConstants.GENERIC_ASSAY:
-            return getTreatmentTrackRuleSetParams(trackSpec);
+            return getGenericAssayTrackRuleSetParams(trackSpec);
             break;
         case AlterationTypeConstants.METHYLATION:
             value_range = [0, 1];
@@ -206,16 +206,15 @@ export function getHeatmapTrackRuleSetParams(
     };
 }
 
-export function getTreatmentTrackRuleSetParams(
-    trackSpec: IHeatmapTrackSpec
-): RuleSetParams {
-    let value_range: [number, number];
-    let legend_label: string;
-    let colors: [number, number, number, number][];
-    let value_stop_points: number[];
-    let category_to_color: { [d: string]: string } | undefined;
+export function getGenericAssayTrackRuleSetParams(trackSpec: IHeatmapTrackSpec):RuleSetParams {
 
-    // - Legends for treatments can be configured in two ways:
+    let value_range:[number, number];
+    let legend_label:string;
+    let colors:[number, number, number, number][];
+    let value_stop_points:number[];
+    let category_to_color:{[d:string]: string} | undefined;
+
+    // - Legends for generic assay entities can be configured in two ways:
     //      1. Larger values are `better` and appear at the right side of the legend (a.k.a. ASC sort order)
     //      2. Smaller values are `better` and appeat at the right side of the legend (a.k.a. DESC sort order)
     // - The pivot threshold denotes the compound concentration that is the arbitrary boundary between effective (in red)
@@ -976,10 +975,7 @@ export function makeHeatmapTracksMobxPromise(
     });
 }
 
-export function makeTreatmentProfileHeatmapTracksMobxPromise(
-    oncoprint: ResultsViewOncoprint,
-    sampleMode: boolean
-) {
+export function makeGenericAssayProfileHeatmapTracksMobxPromise(oncoprint:ResultsViewOncoprint, sampleMode:boolean) {
     return remoteData<IHeatmapTrackSpec[]>({
         await: () => [
             oncoprint.props.store.samples,
@@ -994,18 +990,18 @@ export function makeTreatmentProfileHeatmapTracksMobxPromise(
             const molecularProfileIdToMolecularProfile = oncoprint.props.store.molecularProfileIdToMolecularProfile.result!;
             const molecularProfileIdToHeatmapTracks = oncoprint.molecularProfileIdToHeatmapTracks;
 
-            const treatmentProfiles = _.filter(molecularProfileIdToHeatmapTracks, d => d.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY);
+            const genericAssayProfiles = _.filter(molecularProfileIdToHeatmapTracks, d => d.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY);
 
-            const cacheQueries = _.flatten(treatmentProfiles.map(entry=>
+            const cacheQueries = _.flatten(genericAssayProfiles.map(entry=>
                 {
                     const type = molecularProfileIdToMolecularProfile[entry.molecularProfileId].genericAssayType;
-                    const treatmentsById = _.keyBy(oncoprint.props.store.genericAssayEntitiesGroupByGenericAssayType.result![type], t=>t.stableId);
+                    const genericAssayEntitiesByEntityId = _.keyBy(oncoprint.props.store.genericAssayEntitiesGroupByGenericAssayType.result![type], t=>t.stableId);
                     return _.keys(entry.entities).map(entityId=>{
-                        const entity = treatmentsById[entityId];
+                        const entity = genericAssayEntitiesByEntityId[entityId];
                         return {
                             molecularProfileId: entry.molecularProfileId,
                             stableId: entityId,
-                            treatmentName: "NAME" in entity.genericEntityMetaProperties ? entity.genericEntityMetaProperties["NAME"] : NOT_APPLICABLE_VALUE
+                            entityName: "NAME" in entity.genericEntityMetaProperties ? entity.genericEntityMetaProperties["NAME"] : NOT_APPLICABLE_VALUE
                         }
                     })
                 }
@@ -1027,8 +1023,8 @@ export function makeTreatmentProfileHeatmapTracksMobxPromise(
                 const entityLinkMap = oncoprint.props.store.genericAssayEntitiesGroupByGenericAssayTypeLinkMap.result![profile.genericAssayType];
 
                 return {
-                    key: `TREATMENTHEATMAPTRACK_${molecularProfileId},${entityId}`,
-                    label: query.treatmentName,
+                    key: `GENERICASSAYHEATMAPTRACK_${molecularProfileId},${entityId}`,
+                    label: query.entityName,
                     molecularProfileId: query.molecularProfileId,
                     molecularProfileName: molecularProfileIdToMolecularProfile[molecularProfileId].name,
                     molecularAlterationType: molecularProfileIdToMolecularProfile[molecularProfileId].molecularAlterationType,

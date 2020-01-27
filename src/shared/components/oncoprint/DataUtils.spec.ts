@@ -1651,13 +1651,13 @@ describe('DataUtils', () => {
            fillHeatmapTrackDatum<IGenericAssayHeatmapTrackDatum, "entityId">(
             partialTrackDatum,
             "entityId",
-            "TREATMENT_ID_1",
+            "GENERIC_ASSAY_ID_1",
             {patientId:"patient", studyId:"study"} as Sample,
             data
            )
            assert.deepEqual(
             partialTrackDatum,
-            {entityId: "TREATMENT_ID_1", study_id:"study", profile_data:8, thresholdType: '>', category: '>8.00'}
+            {entityId: "GENERIC_ASSAY_ID_1", study_id:"study", profile_data:8, thresholdType: '>', category: '>8.00'}
            );
        });
 
@@ -1671,14 +1671,14 @@ describe('DataUtils', () => {
            fillHeatmapTrackDatum<IGenericAssayHeatmapTrackDatum, "entityId">(
             partialTrackDatum,
             "entityId",
-            "TREATMENT_ID_1",
+            "GENERIC_ASSAY_ID_1",
             {patientId:"patient", studyId:"study"} as Sample,
             data,
             "ASC"
            )
            assert.deepEqual(
             partialTrackDatum,
-            {entityId: "TREATMENT_ID_1", study_id:"study", profile_data:1}
+            {entityId: "GENERIC_ASSAY_ID_1", study_id:"study", profile_data:1}
            );
        });
 
@@ -1692,14 +1692,14 @@ describe('DataUtils', () => {
            fillHeatmapTrackDatum<IGenericAssayHeatmapTrackDatum, "entityId">(
             partialTrackDatum,
             "entityId",
-            "TREATMENT_ID_1",
+            "GENERIC_ASSAY_ID_1",
             {patientId:"patient", studyId:"study"} as Sample,
             data,
             "DESC"
            )
            assert.deepEqual(
             partialTrackDatum,
-            {entityId: "TREATMENT_ID_1", study_id:"study", profile_data:3}
+            {entityId: "GENERIC_ASSAY_ID_1", study_id:"study", profile_data:3}
            );
        });
 
@@ -1712,13 +1712,13 @@ describe('DataUtils', () => {
         fillHeatmapTrackDatum<IGenericAssayHeatmapTrackDatum, "entityId">(
          partialTrackDatum,
          "entityId",
-         "TREATMENT_ID_1",
+         "GENERIC_ASSAY_ID_1",
          {patientId:"patient", studyId:"study"} as Sample,
          data
         )
         assert.deepEqual(
          partialTrackDatum,
-         {entityId: "TREATMENT_ID_1", study_id:"study", profile_data:1}
+         {entityId: "GENERIC_ASSAY_ID_1", study_id:"study", profile_data:1}
         );
        });
 
@@ -1731,7 +1731,7 @@ describe('DataUtils', () => {
            fillHeatmapTrackDatum<IGenericAssayHeatmapTrackDatum, "entityId">(
             partialTrackDatum,
             "entityId",
-            "TREATMENT_ID_1",
+            "GENERIC_ASSAY_ID_1",
             {patientId:"patient", studyId:"study"} as Sample,
             data,
             "DESC"
@@ -1748,13 +1748,13 @@ describe('DataUtils', () => {
            fillHeatmapTrackDatum<IGenericAssayHeatmapTrackDatum, "entityId">(
             partialTrackDatum,
             "entityId",
-            "TREATMENT_ID_1",
+            "GENERIC_ASSAY_ID_1",
             {patientId:"patient", studyId:"study"} as Sample,
             data
            )
            assert.deepEqual(
             partialTrackDatum,
-            {entityId: "TREATMENT_ID_1", study_id:"study", profile_data:-10}
+            {entityId: "GENERIC_ASSAY_ID_1", study_id:"study", profile_data:-10}
            );
        });
    });
