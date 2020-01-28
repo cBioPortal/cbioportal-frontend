@@ -1,18 +1,18 @@
-import {ICache} from "cbioportal-frontend-commons";
+import { ICache } from 'cbioportal-frontend-commons';
 import * as React from 'react';
 import * as _ from 'lodash';
 
-import {ArticleAbstract} from "../../model/OncoKb";
-import ArticleAbstractItem from "./ArticleAbstractItem";
-import PmidItem from "./PmidItem";
+import { ArticleAbstract } from '../../model/OncoKb';
+import ArticleAbstractItem from './ArticleAbstractItem';
+import PmidItem from './PmidItem';
 
-import styles from "./listGroupItem.module.scss";
+import styles from './listGroupItem.module.scss';
 
 type ReferenceListProps = {
     pmids: number[];
     pmidData?: ICache<any>;
     abstracts: ArticleAbstract[];
-}
+};
 
 export default class ReferenceList extends React.Component<ReferenceListProps> {
     render() {
@@ -27,10 +27,16 @@ export default class ReferenceList extends React.Component<ReferenceListProps> {
                     list.push(
                         <PmidItem
                             title={articleContent.title}
-                            author={(_.isArray(articleContent.authors) && articleContent.authors.length > 0) ?
-                                (articleContent.authors[0].name + ' et al.') : 'Unknown'}
+                            author={
+                                _.isArray(articleContent.authors) &&
+                                articleContent.authors.length > 0
+                                    ? articleContent.authors[0].name + ' et al.'
+                                    : 'Unknown'
+                            }
                             source={articleContent.source}
-                            date={(new Date(articleContent.pubdate)).getFullYear().toString()}
+                            date={new Date(articleContent.pubdate)
+                                .getFullYear()
+                                .toString()}
                             pmid={articleContent.uid}
                         />
                     );
@@ -39,9 +45,12 @@ export default class ReferenceList extends React.Component<ReferenceListProps> {
         }
         this.props.abstracts.forEach(abstract => {
             list.push(
-                <ArticleAbstractItem abstract={abstract.abstract} link={abstract.link}/>
-            )
+                <ArticleAbstractItem
+                    abstract={abstract.abstract}
+                    link={abstract.link}
+                />
+            );
         });
-        return <ul className={styles["no-style-ul"]}>{list}</ul>
+        return <ul className={styles['no-style-ul']}>{list}</ul>;
     }
 }

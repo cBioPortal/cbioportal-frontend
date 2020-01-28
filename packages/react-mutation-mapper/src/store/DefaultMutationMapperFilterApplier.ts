@@ -1,106 +1,112 @@
-import autobind from "autobind-decorator";
-import MobxPromise from "mobxpromise";
+import autobind from 'autobind-decorator';
+import MobxPromise from 'mobxpromise';
 
-import {HotspotFilter} from "../filter/HotspotFilter";
-import {MutationFilter} from "../filter/MutationFilter";
-import {MutationStatusFilter} from "../filter/MutationStatusFilter";
-import {OncoKbFilter} from "../filter/OncoKbFilter";
-import {PositionFilter} from "../filter/PositionFilter";
-import {ProteinImpactTypeFilter} from "../filter/ProteinImpactTypeFilter";
-import {IHotspotIndex} from "../model/CancerHotspot";
-import {DataFilter, DataFilterType} from "../model/DataFilter";
-import {ApplyFilterFn, FilterApplier} from "../model/FilterApplier";
-import {Mutation} from "../model/Mutation";
-import {IOncoKbData} from "../model/OncoKb";
-import {defaultHotspotFilter, isHotspot} from "../util/CancerHotspotsUtils";
+import { HotspotFilter } from '../filter/HotspotFilter';
+import { MutationFilter } from '../filter/MutationFilter';
+import { MutationStatusFilter } from '../filter/MutationStatusFilter';
+import { OncoKbFilter } from '../filter/OncoKbFilter';
+import { PositionFilter } from '../filter/PositionFilter';
+import { ProteinImpactTypeFilter } from '../filter/ProteinImpactTypeFilter';
+import { IHotspotIndex } from '../model/CancerHotspot';
+import { DataFilter, DataFilterType } from '../model/DataFilter';
+import { ApplyFilterFn, FilterApplier } from '../model/FilterApplier';
+import { Mutation } from '../model/Mutation';
+import { IOncoKbData } from '../model/OncoKb';
+import { defaultHotspotFilter, isHotspot } from '../util/CancerHotspotsUtils';
 import {
     applyDefaultMutationFilter,
     applyDefaultMutationStatusFilter,
     applyDefaultPositionFilter,
-    applyDefaultProteinImpactTypeFilter
-} from "../util/FilterUtils";
-import {defaultOncoKbFilter} from "../util/OncoKbUtils";
+    applyDefaultProteinImpactTypeFilter,
+} from '../util/FilterUtils';
+import { defaultOncoKbFilter } from '../util/OncoKbUtils';
 
-export class DefaultMutationMapperFilterApplier implements FilterApplier
-{
-    protected get customFilterAppliers(): {[filterType: string]: ApplyFilterFn}
-    {
+export class DefaultMutationMapperFilterApplier implements FilterApplier {
+    protected get customFilterAppliers(): {
+        [filterType: string]: ApplyFilterFn;
+    } {
         return {
             [DataFilterType.POSITION]: this.applyPositionFilter,
             [DataFilterType.ONCOKB]: this.applyOncoKbFilter,
             [DataFilterType.HOTSPOT]: this.applyHostpotFilter,
             [DataFilterType.MUTATION]: this.applyMutationFilter,
-            [DataFilterType.PROTEIN_IMPACT_TYPE]: this.applyProteinImpactTypeFilter,
+            [DataFilterType.PROTEIN_IMPACT_TYPE]: this
+                .applyProteinImpactTypeFilter,
             [DataFilterType.MUTATION_STATUS]: this.applyMutationStatusFilter,
-            ...this.filterAppliersOverride
+            ...this.filterAppliersOverride,
         };
-    };
+    }
 
     constructor(
         protected indexedHotspotData: MobxPromise<IHotspotIndex | undefined>,
         protected oncoKbData: MobxPromise<IOncoKbData | Error>,
         protected getDefaultTumorType: (mutation: Mutation) => string,
         protected getDefaultEntrezGeneId: (mutation: Mutation) => number,
-        protected filterAppliersOverride?: {[filterType: string]: ApplyFilterFn}
-    ) {
-
-    }
+        protected filterAppliersOverride?: {
+            [filterType: string]: ApplyFilterFn;
+        }
+    ) {}
 
     @autobind
-    public applyFilter(filter: DataFilter, mutation: Mutation)
-    {
+    public applyFilter(filter: DataFilter, mutation: Mutation) {
         const applyFilter = this.customFilterAppliers[filter.type];
 
         return !applyFilter || applyFilter(filter, mutation);
     }
 
     @autobind
-    protected applyMutationFilter(filter: MutationFilter, mutation: Mutation)
-    {
+    protected applyMutationFilter(filter: MutationFilter, mutation: Mutation) {
         return applyDefaultMutationFilter(filter, mutation);
     }
 
     @autobind
-    protected applyOncoKbFilter(filter: OncoKbFilter, mutation: Mutation)
-    {
+    protected applyOncoKbFilter(filter: OncoKbFilter, mutation: Mutation) {
         // TODO for now ignoring the actual filter value and treating as a boolean
         return (
             !filter.values ||
             !this.oncoKbData.result ||
             this.oncoKbData.result instanceof Error ||
-            defaultOncoKbFilter(mutation,
+            defaultOncoKbFilter(
+                mutation,
                 this.oncoKbData.result,
                 this.getDefaultTumorType,
-                this.getDefaultEntrezGeneId)
+                this.getDefaultEntrezGeneId
+            )
         );
     }
 
     @autobind
-    protected applyHostpotFilter(filter: HotspotFilter, mutation: Mutation)
-    {
+    protected applyHostpotFilter(filter: HotspotFilter, mutation: Mutation) {
         // TODO for now ignoring the actual filter value and treating as a boolean
         return (
             !filter.values ||
             !this.indexedHotspotData.result ||
-            isHotspot(mutation, this.indexedHotspotData.result, defaultHotspotFilter)
+            isHotspot(
+                mutation,
+                this.indexedHotspotData.result,
+                defaultHotspotFilter
+            )
         );
     }
 
     @autobind
-    protected applyPositionFilter(filter: PositionFilter, mutation: Mutation)
-    {
+    protected applyPositionFilter(filter: PositionFilter, mutation: Mutation) {
         return applyDefaultPositionFilter(filter, mutation);
     }
 
     @autobind
-    protected applyProteinImpactTypeFilter(filter: ProteinImpactTypeFilter, mutation: Mutation)
-    {
+    protected applyProteinImpactTypeFilter(
+        filter: ProteinImpactTypeFilter,
+        mutation: Mutation
+    ) {
         return applyDefaultProteinImpactTypeFilter(filter, mutation);
     }
 
     @autobind
-    protected applyMutationStatusFilter(filter: MutationStatusFilter, mutation: Mutation)
-    {
+    protected applyMutationStatusFilter(
+        filter: MutationStatusFilter,
+        mutation: Mutation
+    ) {
         return applyDefaultMutationStatusFilter(filter, mutation);
     }
 }

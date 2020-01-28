@@ -1,13 +1,13 @@
-import * as React from "react";
-import {observer} from "mobx-react";
-import {computed} from "mobx";
+import * as React from 'react';
+import { observer } from 'mobx-react';
+import { computed } from 'mobx';
 
-import {MobxCache} from "../../model/MobxCache";
-import MutationMapperStore from "../../model/MutationMapperStore";
-import {TrackName, TrackVisibility} from "./TrackSelector";
-import HotspotTrack from "./HotspotTrack";
-import OncoKbTrack from "./OncoKbTrack";
-import PtmTrack from "./PtmTrack";
+import { MobxCache } from '../../model/MobxCache';
+import MutationMapperStore from '../../model/MutationMapperStore';
+import { TrackName, TrackVisibility } from './TrackSelector';
+import HotspotTrack from './HotspotTrack';
+import OncoKbTrack from './OncoKbTrack';
+import PtmTrack from './PtmTrack';
 
 import './defaultTrackTooltipTable.scss';
 
@@ -23,14 +23,9 @@ type TrackPanelProps = {
 };
 
 @observer
-export default class TrackPanel extends React.Component<TrackPanelProps, {}>
-{
-    public static defaultProps:Partial<TrackPanelProps> = {
-        tracks: [
-            TrackName.CancerHotspots,
-            TrackName.OncoKB,
-            TrackName.PTM
-        ]
+export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
+    public static defaultProps: Partial<TrackPanelProps> = {
+        tracks: [TrackName.CancerHotspots, TrackName.OncoKB, TrackName.PTM],
     };
 
     constructor(props: TrackPanelProps) {
@@ -45,54 +40,59 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}>
     get availableTracks() {
         return {
             [TrackName.CancerHotspots]:
-                !this.props.trackVisibility || this.props.trackVisibility[TrackName.CancerHotspots] === 'visible' ?
-                <HotspotTrack
-                    store={this.props.store}
-                    dataStore={this.props.store.dataStore}
-                    hotspotIndex={this.props.store.indexedHotspotData.result || {}}
-                    width={this.props.geneWidth}
-                    xOffset={this.props.geneXOffset}
-                    proteinLength={this.proteinLength}
-                /> : null,
-            [TrackName.OncoKB]: (
-                !this.props.trackVisibility || this.props.trackVisibility[TrackName.OncoKB] === 'visible' ?
-                <OncoKbTrack
-                    store={this.props.store}
-                    dataStore={this.props.store.dataStore}
-                    width={this.props.geneWidth}
-                    xOffset={this.props.geneXOffset}
-                    proteinLength={this.proteinLength}
-                /> : null
-            ),
-            [TrackName.PTM]: (
-                !this.props.trackVisibility || this.props.trackVisibility[TrackName.PTM] === 'visible' ?
-                <PtmTrack
-                    store={this.props.store}
-                    pubMedCache={this.props.pubMedCache}
-                    ensemblTranscriptId={this.props.store.activeTranscript}
-                    dataStore={this.props.store.dataStore}
-                    width={this.props.geneWidth}
-                    xOffset={this.props.geneXOffset}
-                    proteinLength={this.proteinLength}
-                /> : null
-            )
-        }
+                !this.props.trackVisibility ||
+                this.props.trackVisibility[TrackName.CancerHotspots] ===
+                    'visible' ? (
+                    <HotspotTrack
+                        store={this.props.store}
+                        dataStore={this.props.store.dataStore}
+                        hotspotIndex={
+                            this.props.store.indexedHotspotData.result || {}
+                        }
+                        width={this.props.geneWidth}
+                        xOffset={this.props.geneXOffset}
+                        proteinLength={this.proteinLength}
+                    />
+                ) : null,
+            [TrackName.OncoKB]:
+                !this.props.trackVisibility ||
+                this.props.trackVisibility[TrackName.OncoKB] === 'visible' ? (
+                    <OncoKbTrack
+                        store={this.props.store}
+                        dataStore={this.props.store.dataStore}
+                        width={this.props.geneWidth}
+                        xOffset={this.props.geneXOffset}
+                        proteinLength={this.proteinLength}
+                    />
+                ) : null,
+            [TrackName.PTM]:
+                !this.props.trackVisibility ||
+                this.props.trackVisibility[TrackName.PTM] === 'visible' ? (
+                    <PtmTrack
+                        store={this.props.store}
+                        pubMedCache={this.props.pubMedCache}
+                        ensemblTranscriptId={this.props.store.activeTranscript}
+                        dataStore={this.props.store.dataStore}
+                        width={this.props.geneWidth}
+                        xOffset={this.props.geneXOffset}
+                        proteinLength={this.proteinLength}
+                    />
+                ) : null,
+        };
     }
 
     public render() {
         return (
             <div
                 style={{
-                    overflowY: "hidden",
+                    overflowY: 'hidden',
                     maxHeight: this.props.maxHeight,
-                    position: "relative"
+                    position: 'relative',
                 }}
             >
-                {
-                    this.props.tracks!
-                        .map(t => this.availableTracks[t])
-                        .filter(e => e !== undefined && e !== null)
-                }
+                {this.props
+                    .tracks!.map(t => this.availableTracks[t])
+                    .filter(e => e !== undefined && e !== null)}
             </div>
         );
     }

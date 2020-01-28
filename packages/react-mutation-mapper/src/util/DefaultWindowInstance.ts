@@ -1,9 +1,8 @@
-import {WindowWrapper} from "cbioportal-frontend-commons";
+import { WindowWrapper } from 'cbioportal-frontend-commons';
 
 let windowInstance: WindowWrapper | undefined;
 
-export function getDefaultWindowInstance()
-{
+export function getDefaultWindowInstance() {
     if (!windowInstance) {
         windowInstance = new WindowWrapper();
     }

@@ -1,7 +1,7 @@
-import autobind from "autobind-decorator";
-import {CheckedSelect, Option} from "cbioportal-frontend-commons";
-import {action, computed} from "mobx";
-import {observer} from "mobx-react";
+import autobind from 'autobind-decorator';
+import { CheckedSelect, Option } from 'cbioportal-frontend-commons';
+import { action, computed } from 'mobx';
+import { observer } from 'mobx-react';
 import * as React from 'react';
 
 export type ColumnVisibilityDef = {
@@ -20,16 +20,14 @@ export type ColumnSelectorProps = {
 };
 
 @observer
-export class ColumnSelector extends React.Component<ColumnSelectorProps, {}>
-{
+export class ColumnSelector extends React.Component<ColumnSelectorProps, {}> {
     public static defaultProps: Partial<ColumnSelectorProps> = {
-        name: "dataTableColumns",
-        placeholder: "Columns",
-        showControls: false
+        name: 'dataTableColumns',
+        placeholder: 'Columns',
+        showControls: false,
     };
 
-    constructor(props: ColumnSelectorProps)
-    {
+    constructor(props: ColumnSelectorProps) {
         super(props);
     }
 
@@ -37,17 +35,18 @@ export class ColumnSelector extends React.Component<ColumnSelectorProps, {}>
     public get selectedValues() {
         return (this.props.columnVisibility || [])
             .filter(c => c.visible)
-            .map(c => ({value: c.id}));
+            .map(c => ({ value: c.id }));
     }
 
     @computed
     public get options(): Option[] {
-        return (this.props.columnVisibility || [])
-            .map(c => ({label: <span>{c.name}</span>, value: c.id}));
+        return (this.props.columnVisibility || []).map(c => ({
+            label: <span>{c.name}</span>,
+            value: c.id,
+        }));
     }
 
-    public render()
-    {
+    public render() {
         return (
             <CheckedSelect
                 name={this.props.name}
@@ -62,7 +61,7 @@ export class ColumnSelector extends React.Component<ColumnSelectorProps, {}>
 
     @autobind
     @action
-    private onChange(values: {value: string}[]) {
+    private onChange(values: { value: string }[]) {
         if (this.props.onColumnToggled) {
             this.props.onColumnToggled(values.map(o => o.value));
         }

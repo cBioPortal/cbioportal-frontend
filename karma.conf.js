@@ -24,20 +24,25 @@ var path = require('path');
 // });
 
 //this will be used by in test context to load corresponding spec files if there is a grep passed (or all if not)
-webpackConfig.plugins.push(new webpack.DefinePlugin({
-    'SPEC_REGEXP': ('grep' in argv) ? `/(global|(${argv.grep}[a-z]*))\.spec\./i` : '/\.spec\.(jsx?|tsx?)$/'
-}));
+webpackConfig.plugins.push(
+    new webpack.DefinePlugin({
+        SPEC_REGEXP:
+            'grep' in argv
+                ? `/(global|(${argv.grep}[a-z]*))\.spec\./i`
+                : '/.spec.(jsx?|tsx?)$/',
+    })
+);
 
-webpackConfig.entry = "";
+webpackConfig.entry = '';
 
-webpackConfig.mode = "development";
+webpackConfig.mode = 'development';
 
 if (argv.debug) {
-    console.log("argv: ",argv);
-    webpackConfig.devtool = "inline-source-map";
+    console.log('argv: ', argv);
+    webpackConfig.devtool = 'inline-source-map';
 }
 
-module.exports = function (config) {
+module.exports = function(config) {
     config.set({
         basePath: '',
         frameworks: ['mocha', 'chai'],
@@ -45,30 +50,31 @@ module.exports = function (config) {
             {
                 pattern: './common-dist/common.bundle.js',
                 watched: false,
-                served: true
+                served: true,
             },
-            { pattern: "src/**/*.json",
+            {
+                pattern: 'src/**/*.json',
                 included: false,
-                watched:false,
-                served:true
+                watched: false,
+                served: true,
             },
-            'tests.webpack.js'
+            'tests.webpack.js',
         ],
         preprocessors: {
             // add webpack as preprocessor
             'tests.webpack.js': ['webpack', 'sourcemap'],
         },
 
-        pattern:".spec.",
+        pattern: '.spec.',
 
         webpack: webpackConfig,
         webpackServer: {
-            noInfo: true
+            noInfo: true,
         },
         webpackMiddleware: {
             // webpack-dev-middleware configuration
             // i. e.
-            stats: 'errors-only'
+            stats: 'errors-only',
         },
 
         plugins: [
@@ -80,15 +86,15 @@ module.exports = function (config) {
             'karma-chrome-launcher',
             'karma-sourcemap-loader',
             //'karma-coverage',
-            'karma-junit-reporter'
+            'karma-junit-reporter',
         ],
 
         customLaunchers: {
             Chrome_with_debugging: {
                 base: 'Chrome',
                 chromeDataDir: path.resolve(__dirname, '.chrome'),
-                flags: [ '--remote-debugging-port=9333' ]
-            }
+                flags: ['--remote-debugging-port=9333'],
+            },
         },
 
         // coverageIstanbulReporter: {
@@ -99,14 +105,14 @@ module.exports = function (config) {
         junitReporter: {
             outputDir: process.env.JUNIT_REPORT_PATH,
             outputFile: process.env.JUNIT_REPORT_NAME,
-            useBrowserName: false
+            useBrowserName: false,
         },
 
         mochaReporter: {
-            showDiff: true
+            showDiff: true,
         },
 
-        reporters: ['mocha','junit'],
+        reporters: ['mocha', 'junit'],
         port: 9876,
         colors: true,
         logLevel: config.LOG_DISABLE,
