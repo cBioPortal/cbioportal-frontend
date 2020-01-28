@@ -1,62 +1,62 @@
-import {computed} from "mobx";
-import {observer} from "mobx-react";
+import { computed } from 'mobx';
+import { observer } from 'mobx-react';
 import * as React from 'react';
 
-import {formatPercentValue} from "../../util/FormatUtils";
-import BadgeSelector, {BadgeSelectorOption, BadgeSelectorProps} from "./BadgeSelector";
+import { formatPercentValue } from '../../util/FormatUtils';
+import BadgeSelector, {
+    BadgeSelectorOption,
+    BadgeSelectorProps,
+} from './BadgeSelector';
 
-export type MutationStatusBadgeSelectorProps = BadgeSelectorProps &
-{
-    rates?: {[mutationStatus: string]: number};
+export type MutationStatusBadgeSelectorProps = BadgeSelectorProps & {
+    rates?: { [mutationStatus: string]: number };
     badgeSelectorOptions?: BadgeSelectorOption[];
 };
 
 export const MUTATION_STATUS_BADGE_STYLE_OVERRIDE = {
-    color: "#000",
-    backgroundColor: "#FFF",
-    borderColor: "#FFF"
+    color: '#000',
+    backgroundColor: '#FFF',
+    borderColor: '#FFF',
 };
 
-export function getMutationStatusFilterOptions()
-{
+export function getMutationStatusFilterOptions() {
     return [
         {
-            value: "somatic",
-            label: "Somatic Mutation Frequency",
+            value: 'somatic',
+            label: 'Somatic Mutation Frequency',
             badgeStyleOverride: MUTATION_STATUS_BADGE_STYLE_OVERRIDE,
-            badgeStyleSelectedOverride: MUTATION_STATUS_BADGE_STYLE_OVERRIDE
+            badgeStyleSelectedOverride: MUTATION_STATUS_BADGE_STYLE_OVERRIDE,
         },
         {
-            value: "germline",
-            label: "Germline Mutation Frequency",
+            value: 'germline',
+            label: 'Germline Mutation Frequency',
             badgeStyleOverride: MUTATION_STATUS_BADGE_STYLE_OVERRIDE,
-            badgeStyleSelectedOverride: MUTATION_STATUS_BADGE_STYLE_OVERRIDE
-        }
+            badgeStyleSelectedOverride: MUTATION_STATUS_BADGE_STYLE_OVERRIDE,
+        },
     ];
 }
 
 @observer
-export class MutationStatusBadgeSelector extends React.Component<MutationStatusBadgeSelectorProps, {}>
-{
+export class MutationStatusBadgeSelector extends React.Component<
+    MutationStatusBadgeSelectorProps,
+    {}
+> {
     public static defaultProps: Partial<MutationStatusBadgeSelectorProps> = {
-        badgeSelectorOptions: getMutationStatusFilterOptions()
+        badgeSelectorOptions: getMutationStatusFilterOptions(),
     };
 
     @computed
     public get options() {
         return this.props.badgeSelectorOptions!.map(option => ({
             ...option,
-            badgeContent: this.props.rates ? `${formatPercentValue(this.props.rates[option.value])}%`: undefined
+            badgeContent: this.props.rates
+                ? `${formatPercentValue(this.props.rates[option.value])}%`
+                : undefined,
         }));
     }
 
     public render() {
-        return (
-            <BadgeSelector
-                options={this.options}
-                {...this.props}
-            />
-        );
+        return <BadgeSelector options={this.options} {...this.props} />;
     }
 }
 

@@ -1,3 +1,3 @@
-import {DataFilter} from "../model/DataFilter";
+import { DataFilter } from '../model/DataFilter';
 
 export type CancerTypeFilter = DataFilter<string>;

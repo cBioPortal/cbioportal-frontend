@@ -4,9 +4,9 @@ declare module '*.json';
 
 // these packages are missing typings
 declare module 'fmin';
-declare module "deep-equal-in-any-order";
+declare module 'deep-equal-in-any-order';
 declare module 'object-sizeof';
-declare module 'save-svg-as-png'
+declare module 'save-svg-as-png';
 declare module 'react-file-download';
 declare module 'react-zeroclipboard';
 declare module 'reactableMSK';

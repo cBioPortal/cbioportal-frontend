@@ -1,4 +1,4 @@
-import {RemoteDataStatus} from "./RemoteData";
+import { RemoteDataStatus } from './RemoteData';
 
 export interface ICacheData<T = any> {
     status: RemoteDataStatus;
