@@ -1,4 +1,4 @@
-import {PfamDomainRange} from "./Pfam";
+import { PfamDomainRange } from './Pfam';
 
 export type EnsemblTranscript = {
     transcriptId: string;

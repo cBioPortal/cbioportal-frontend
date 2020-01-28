@@ -53,6 +53,7 @@
     "prettierFixCurrentChanges": "STAGED_AND_CHANGED_FILES=$(git diff HEAD --name-only --cached) && yarn run prettier --write $(echo $STAGED_AND_CHANGED_FILES) && git add -f $(echo $STAGED_AND_CHANGED_FILES)",
     "prettierCheckCircleCI": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && yarn run prettier -c $(git diff origin/$(echo $BRANCH_ENV) --name-only)",
     "prettierFixLocal": "yarn run prettier --write $(git diff $(echo $BRANCH_ENV) --name-only)",
+    "prettierAll": "yarn run prettier --write $(git ls-files | grep '\\(.js\\|.ts\\|.scss\\|.css\\)')",
     "syncmock": "node src/test/fetchMockData.js --diff"
   },
   "engines": {

@@ -1,3 +1,3 @@
 export type SequenceSpec = {
-    tooltip?:JSX.Element;
+    tooltip?: JSX.Element;
 };

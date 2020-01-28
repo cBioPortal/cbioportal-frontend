@@ -4,7 +4,7 @@ var path = require('path');
 var VisualRegressionCompare = require('wdio-visual-regression-service/compare');
 
 var getScreenshotName = require('./getScreenshotName');
-const localIdentifier = `foobar_${Date.now()}`
+const localIdentifier = `foobar_${Date.now()}`;
 
 exports.config = {
     //
@@ -17,7 +17,7 @@ exports.config = {
     // directory is where your package.json resides, so `wdio` will be called from there.
     //
     specs: [
-        './specs/**/*.js' //'./specs/**/screenshot.spec.js'
+        './specs/**/*.js', //'./specs/**/screenshot.spec.js'
     ],
     // Patterns to exclude.
     exclude: [
@@ -45,21 +45,23 @@ exports.config = {
     // Sauce Labs platform configurator - a great tool to configure your capabilities:
     // https://docs.saucelabs.com/reference/platforms-configurator
     //
-    capabilities: [{
-        // maxInstances can get overwritten per capability. So if you have an in-house Selenium
-        // grid with only 5 firefox instances available you can make sure that not more than
-        // 5 instances get started at a time.
-        maxInstances: 5,
-        'os': 'OS X',
-        'os_version': 'Sierra',
-        'browser': 'Chrome',
-        'browser_version': '63.0',
-        'resolution': '1600x1200',
-        build: 'webdriver-browserstack',
-        'browserstack.local': true,
-        'browserstack.localIdentifier': localIdentifier,
-        'browserstack.networkLogs':true
-    }],
+    capabilities: [
+        {
+            // maxInstances can get overwritten per capability. So if you have an in-house Selenium
+            // grid with only 5 firefox instances available you can make sure that not more than
+            // 5 instances get started at a time.
+            maxInstances: 5,
+            os: 'OS X',
+            os_version: 'Sierra',
+            browser: 'Chrome',
+            browser_version: '63.0',
+            resolution: '1600x1200',
+            build: 'webdriver-browserstack',
+            'browserstack.local': true,
+            'browserstack.localIdentifier': localIdentifier,
+            'browserstack.networkLogs': true,
+        },
+    ],
     //
     // ===================
     // Test Configurations
@@ -124,10 +126,16 @@ exports.config = {
 
     visualRegression: {
         compare: new VisualRegressionCompare.LocalCompare({
-            referenceName: getScreenshotName(path.join(process.cwd(), 'screenshots/reference')),
-            screenshotName: getScreenshotName(path.join(process.cwd(), 'screenshots/screen')),
-            diffName: getScreenshotName(path.join(process.cwd(), 'screenshots/diff')),
-            misMatchTolerance:0.1
+            referenceName: getScreenshotName(
+                path.join(process.cwd(), 'screenshots/reference')
+            ),
+            screenshotName: getScreenshotName(
+                path.join(process.cwd(), 'screenshots/screen')
+            ),
+            diffName: getScreenshotName(
+                path.join(process.cwd(), 'screenshots/diff')
+            ),
+            misMatchTolerance: 0.1,
         }),
         viewportChangePause: 300,
         viewports: [{ width: 1600, height: 1000 }],
@@ -151,17 +159,18 @@ exports.config = {
     reporterOptions: {
         junit: {
             outputDir: process.env.JUNIT_REPORT_PATH,
-            outputFileFormat: function(opts) { // optional
-                return `results-${opts.cid}.${opts.capabilities}.xml`
-            }
-        }
+            outputFileFormat: function(opts) {
+                // optional
+                return `results-${opts.cid}.${opts.capabilities}.xml`;
+            },
+        },
     },
     //
     // Options to be passed to Mocha.
     // See the full list at http://mochajs.org/
     mochaOpts: {
         ui: 'bdd',
-        timeout: 60000
+        timeout: 60000,
     },
     //
     // =====
@@ -273,21 +282,24 @@ exports.config = {
     // onComplete: function(exitCode) {
     // }
     // Code to start browserstack local before start of test
-    onPrepare: function (config, capabilities) {
-        console.log("Connecting local");
-        return new Promise(function(resolve, reject){
+    onPrepare: function(config, capabilities) {
+        console.log('Connecting local');
+        return new Promise(function(resolve, reject) {
             exports.bs_local = new browserstack.Local();
-            exports.bs_local.start({'key': exports.config.key, localIdentifier }, function(error) {
-                if (error) return reject(error);
-                console.log('Connected. Now testing...');
+            exports.bs_local.start(
+                { key: exports.config.key, localIdentifier },
+                function(error) {
+                    if (error) return reject(error);
+                    console.log('Connected. Now testing...');
 
-                resolve();
-            });
+                    resolve();
+                }
+            );
         });
     },
 
     // Code to stop browserstack local after end of test
-    onComplete: function (capabilties, specs) {
+    onComplete: function(capabilties, specs) {
         exports.bs_local.stop(function() {});
-    }
-}
+    },
+};

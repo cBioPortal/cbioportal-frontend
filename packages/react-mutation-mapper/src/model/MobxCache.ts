@@ -4,10 +4,10 @@ export interface MobxCache<D = any, Query = any> {
 }
 
 export interface CacheData<D = any> {
-    status: "pending" | "complete" | "error";
+    status: 'pending' | 'complete' | 'error';
     data?: D;
 }
 
 export interface Cache<D = any> {
-    [queryId:string]: CacheData<D>;
+    [queryId: string]: CacheData<D>;
 }

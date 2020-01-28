@@ -1,13 +1,11 @@
-
 var CustomReporter = require('./customReporter');
-
 
 var path = require('path');
 var VisualRegressionCompare = require('wdio-visual-regression-service/compare');
 var getScreenshotName = require('./getScreenshotName');
 // enable require text files for testing
 var fs = require('fs');
-require.extensions['.txt'] = function (module, filename) {
+require.extensions['.txt'] = function(module, filename) {
     module.exports = fs.readFileSync(filename, 'utf8');
 };
 
@@ -16,8 +14,10 @@ const defaultTimeoutInterval = 180000;
 var defaultMaxInstances = 3;
 
 var diffDir = process.env.SCREENSHOT_DIRECTORY + '/diff' || 'screenshots/diff/';
-var refDir = process.env.SCREENSHOT_DIRECTORY + '/reference' || 'screenshots/reference/';
-var screenDir = process.env.SCREENSHOT_DIRECTORY + '/screen' || 'screenshots/screen/';
+var refDir =
+    process.env.SCREENSHOT_DIRECTORY + '/reference' || 'screenshots/reference/';
+var screenDir =
+    process.env.SCREENSHOT_DIRECTORY + '/screen' || 'screenshots/screen/';
 var errorDir = process.env.SCREENSHOT_DIRECTORY + '/error' || './errorShots/';
 
 var config = {
@@ -34,7 +34,7 @@ var config = {
     //     './specs/**/results.logic.spec.js'
     // ],
     specs: [
-        process.env.SPEC_FILE_PATTERN || './specs/**/*.spec.js'  // './specs/**/screenshot.spec.js'
+        process.env.SPEC_FILE_PATTERN || './specs/**/*.spec.js', // './specs/**/screenshot.spec.js'
     ],
 
     // Patterns to exclude.
@@ -57,26 +57,29 @@ var config = {
     // and 30 processes will get spawned. The property handles how many capabilities
     // from the same test should run tests.
     //
-    maxInstances: debug? 1 : defaultMaxInstances,
+    maxInstances: debug ? 1 : defaultMaxInstances,
     //
     // If you have trouble getting all important capabilities together, check out the
     // Sauce Labs platform configurator - a great tool to configure your capabilities:
     // https://docs.saucelabs.com/reference/platforms-configurator
     //
-    capabilities: [{
+    capabilities: [
+        {
+            //browserName: 'chrome',
+            chromeOptions: {
+                args: [
+                    '--disable-composited-antialiasing',
+                    '--allow-insecure-localhost',
+                ],
+            },
 
-        //browserName: 'chrome',
-        chromeOptions: {
-            args: ['--disable-composited-antialiasing','--allow-insecure-localhost']
+            os: 'OS X',
+            os_version: 'High Sierra',
+            browser: 'Chrome',
+            browser_version: '74.0 beta',
+            resolution: '1600x1200',
         },
-
-        'os': 'OS X',
-        'os_version': 'High Sierra',
-        'browser': 'Chrome',
-        'browser_version': '74.0 beta',
-        'resolution': '1600x1200'
-
-    }],
+    ],
     //
     // ===================
     // Test Configurations
@@ -139,20 +142,17 @@ var config = {
     // your test setup with almost no effort. Unlike plugins, they don't add new
     // commands. Instead, they hook themselves up into the test process.
 
-
-
-    services: [
-        'visual-regression'
-    ],
-
+    services: ['visual-regression'],
 
     visualRegression: {
         compare: new VisualRegressionCompare.LocalCompare({
             referenceName: getScreenshotName(path.join(process.cwd(), refDir)),
-            screenshotName: getScreenshotName(path.join(process.cwd(), screenDir)),
+            screenshotName: getScreenshotName(
+                path.join(process.cwd(), screenDir)
+            ),
             diffName: getScreenshotName(path.join(process.cwd(), diffDir)),
-            misMatchTolerance:0.01,
-            ignoreComparison: "antialiasing"
+            misMatchTolerance: 0.01,
+            ignoreComparison: 'antialiasing',
         }),
         viewportChangePause: 300,
         viewports: [{ width: 1600, height: 1000 }],
@@ -172,24 +172,26 @@ var config = {
     reporters: ['spec', 'junit', CustomReporter],
     reporterOptions: {
         junit: {
-            outputDir: process.env.JUNIT_REPORT_PATH || "./",
-            outputFileFormat: function(opts) { // optional
-                return `results-${opts.cid}.${opts.capabilities}.xml`
-            }
+            outputDir: process.env.JUNIT_REPORT_PATH || './',
+            outputFileFormat: function(opts) {
+                // optional
+                return `results-${opts.cid}.${opts.capabilities}.xml`;
+            },
         },
         custom: {
-            outputDir: process.env.JUNIT_REPORT_PATH ||  "./",
-            outputFileFormat: function(opts) { // optional
-                return `custom-results-${opts.cid}.${opts.capabilities}.xml`
-            }
-        }
+            outputDir: process.env.JUNIT_REPORT_PATH || './',
+            outputFileFormat: function(opts) {
+                // optional
+                return `custom-results-${opts.cid}.${opts.capabilities}.xml`;
+            },
+        },
     },
     //
     // Options to be passed to Mocha.
     // See the full list at http://mochajs.org/
     mochaOpts: {
         ui: 'bdd',
-        timeout: debug ? 20000000 : defaultTimeoutInterval // make big when using browser.debug()
+        timeout: debug ? 20000000 : defaultTimeoutInterval, // make big when using browser.debug()
     },
     //
     // =====
@@ -268,25 +270,22 @@ var config = {
      * Function to be executed after a test (in Mocha/Jasmine) or a step (in Cucumber) starts.
      * @param {Object} test test details
      */
-    afterTest: function (test) {
-
+    afterTest: function(test) {
         var networkLog = browser.execute(function() {
-
-            Object.keys(window.ajaxRequests).forEach((key)=>{
+            Object.keys(window.ajaxRequests).forEach(key => {
                 window.ajaxRequests[key].end = Date.now();
-                window.ajaxRequests[key].duration = window.ajaxRequests[key].end - window.ajaxRequests[key].started;
+                window.ajaxRequests[key].duration =
+                    window.ajaxRequests[key].end -
+                    window.ajaxRequests[key].started;
             });
 
             return JSON.stringify(window.ajaxRequests);
-
         }).value;
 
         process.send({
             event: 'custom-report',
-            data: { test:test, network:JSON.parse(networkLog) }
+            data: { test: test, network: JSON.parse(networkLog) },
         });
-
-
     },
     /**
      * Hook that gets executed after the suite has ended
@@ -325,7 +324,7 @@ const doBrowserstack = false;
 if (doBrowserstack) {
     config.capabilities[0]['browserstack.local'] = true;
 
-    config.services =  ['visual-regression','browserstack'];
+    config.services = ['visual-regression', 'browserstack'];
 
     config.browserstackLocal = true;
 
@@ -337,5 +336,4 @@ if (doBrowserstack) {
 //     './remote/specs/**/mutationTable.spec.js'
 // ];
 
-exports.config  = config;
-
+exports.config = config;

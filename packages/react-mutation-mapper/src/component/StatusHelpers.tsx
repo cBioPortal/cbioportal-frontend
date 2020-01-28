@@ -1,26 +1,24 @@
-import {DefaultTooltip} from "cbioportal-frontend-commons";
-import classNames from "classnames";
-import * as React from "react";
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import classNames from 'classnames';
+import * as React from 'react';
 
-import annotationStyles from "./column/annotation.module.scss";
+import annotationStyles from './column/annotation.module.scss';
 
-export function loaderIcon(className?: string)
-{
+export function loaderIcon(className?: string) {
     return (
         <span
-            className={
-                classNames(`${annotationStyles["annotation-item"]}`,
-                    `${annotationStyles["annotation-item-load"]}`,
-                    className)
-            }
+            className={classNames(
+                `${annotationStyles['annotation-item']}`,
+                `${annotationStyles['annotation-item-load']}`,
+                className
+            )}
         >
             <i className="fa fa-spinner fa-pulse" />
         </span>
     );
 }
 
-export function errorIcon(errorMessage: string)
-{
+export function errorIcon(errorMessage: string) {
     return (
         <DefaultTooltip
             overlay={<span>{errorMessage}</span>}
@@ -28,9 +26,9 @@ export function errorIcon(errorMessage: string)
             trigger={['hover', 'focus']}
             destroyTooltipOnHide={true}
         >
-                <span className={`${annotationStyles["annotation-item-error"]}`}>
-                    <i className="fa fa-exclamation-triangle text-danger" />
-                </span>
+            <span className={`${annotationStyles['annotation-item-error']}`}>
+                <i className="fa fa-exclamation-triangle text-danger" />
+            </span>
         </DefaultTooltip>
     );
 }
