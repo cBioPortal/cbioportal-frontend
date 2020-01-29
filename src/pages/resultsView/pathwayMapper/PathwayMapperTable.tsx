@@ -47,12 +47,7 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
     constructor(props: IPathwayMapperTableProps) {
         super(props);
         this._columns = {};
-        this.selectedPathway = this.props.data[0].name;
         this.generateColumns();
-    }
-
-    componentDidMount(){
-        this.selectedPathway = this.props.data[0].name;
     }
 
     generateColumns() {
@@ -68,8 +63,8 @@ export default class PathwayMapperTable extends React.Component<IPathwayMapperTa
                 return (
                         <Radio 
                             style={{marginTop: 0, marginBottom: 0}}
-                            checked={this.selectedPathway === d.name} 
-                            onChange={(e: any) => {this.props.changePathway(d.name); this.selectedPathway = d.name;}}>
+                            checked={this.props.selectedPathway === d.name} 
+                            onChange={(e: any) => {this.props.changePathway(d.name);}}>
                             <DefaultTooltip overlay={pwName} disabled={isPwNameShort}>
                                 <b>{(isPwNameShort ? pwName : pwName.substring(0, lengthThreshold) + "...")}</b>
                             </DefaultTooltip>
