@@ -14,7 +14,9 @@ Note: you can always check the version of the live instance by checking the vari
 
 ## Run
 
-Make sure you have installed the node version specified in [package.json](https://github.com/cBioPortal/cbioportal-frontend/blob/master/package.json). You might want to use NVM to install the particular version.
+Make sure you have installed the node version and yarn version specified in
+[package.json](https://github.com/cBioPortal/cbioportal-frontend/blob/master/package.json)
+under `engines`. You might want to use Node Version Manager and Yarn Version Manager to switch between versions more easily.
 
 Remove old compiled `node_modules` if exists
 
