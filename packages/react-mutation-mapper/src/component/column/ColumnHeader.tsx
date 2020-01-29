@@ -1,5 +1,5 @@
-import {DefaultTooltip} from "cbioportal-frontend-commons";
-import * as React from "react";
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import * as React from 'react';
 
 export type ColumnHeaderProps = {
     headerContent: string | JSX.Element;
@@ -7,17 +7,15 @@ export type ColumnHeaderProps = {
     className?: string;
 };
 
-class ColumnHeader extends React.Component<ColumnHeaderProps>
-{
+class ColumnHeader extends React.Component<ColumnHeaderProps> {
     public static defaultProps = {
-        className: "text-wrap"
+        className: 'text-wrap',
     };
 
     public render() {
-        let content= this.props.headerContent;
+        let content = this.props.headerContent;
 
-        if (this.props.overlay)
-        {
+        if (this.props.overlay) {
             content = (
                 <DefaultTooltip
                     mouseEnterDelay={0.5}
@@ -32,7 +30,9 @@ class ColumnHeader extends React.Component<ColumnHeaderProps>
 
         return (
             <span
-                className={this.props.className || ColumnHeader.defaultProps.className}
+                className={
+                    this.props.className || ColumnHeader.defaultProps.className
+                }
             >
                 {content}
             </span>

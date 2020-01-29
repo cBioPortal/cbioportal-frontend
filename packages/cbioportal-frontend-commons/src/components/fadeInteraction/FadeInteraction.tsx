@@ -1,6 +1,6 @@
-import * as React from "react";
-import {observer} from "mobx-react";
-import {action, computed, observable, reaction} from "mobx";
+import * as React from 'react';
+import { observer } from 'mobx-react';
+import { action, computed, observable, reaction } from 'mobx';
 
 export interface IFadeInteractionProps {
     fadeInSeconds?: number;
@@ -10,11 +10,13 @@ export interface IFadeInteractionProps {
 }
 
 @observer
-export default class FadeInteraction extends React.Component<IFadeInteractionProps, {}> {
-
+export default class FadeInteraction extends React.Component<
+    IFadeInteractionProps,
+    {}
+> {
     static defaultProps = {
         fadeInSeconds: 0.2,
-        fadeOutSeconds: 0.6
+        fadeOutSeconds: 0.6,
     };
 
     constructor(props: IFadeInteractionProps) {
@@ -30,7 +32,7 @@ export default class FadeInteraction extends React.Component<IFadeInteractionPro
     @observable mouseInside = false;
     public initialShow = false;
 
-    componentWillUpdate(nextProps:IFadeInteractionProps){
+    componentWillUpdate(nextProps: IFadeInteractionProps) {
         if (nextProps.show !== this.props.show) {
             this.initialShow = false;
         }
@@ -53,7 +55,7 @@ export default class FadeInteraction extends React.Component<IFadeInteractionPro
             OTransition: `opacity ${this.props.fadeOutSeconds}s`,
             transition: `opacity ${this.props.fadeOutSeconds}s`,
             opacity: 0,
-        }
+        };
     }
 
     @computed get style() {
@@ -65,7 +67,12 @@ export default class FadeInteraction extends React.Component<IFadeInteractionPro
     }
 
     @computed get show() {
-        return this.props.show || this.focused || this.mouseInside || this.initialShow;
+        return (
+            this.props.show ||
+            this.focused ||
+            this.mouseInside ||
+            this.initialShow
+        );
     }
 
     private onFocus() {
@@ -89,7 +96,6 @@ export default class FadeInteraction extends React.Component<IFadeInteractionPro
     }
 
     render() {
-
         return (
             <div
                 style={this.style}

@@ -1,18 +1,21 @@
-import {DownloadControls, EditableSpan} from "cbioportal-frontend-commons";
-import classnames from "classnames";
-import _ from "lodash";
-import * as React from "react";
-import Slider from 'react-rangeslider'
-import {computed} from "mobx";
-import {observer} from "mobx-react";
+import { DownloadControls, EditableSpan } from 'cbioportal-frontend-commons';
+import classnames from 'classnames';
+import _ from 'lodash';
+import * as React from 'react';
+import Slider from 'react-rangeslider';
+import { computed } from 'mobx';
+import { observer } from 'mobx-react';
 
-import {numberOfLeadingDecimalZeros} from "../../util/FormatUtils";
-import {calcYMaxInput} from "../../util/LollipopPlotUtils";
-import TrackSelector, {TrackDataStatus, TrackName, TrackVisibility} from "../track/TrackSelector";
+import { numberOfLeadingDecimalZeros } from '../../util/FormatUtils';
+import { calcYMaxInput } from '../../util/LollipopPlotUtils';
+import TrackSelector, {
+    TrackDataStatus,
+    TrackName,
+    TrackVisibility,
+} from '../track/TrackSelector';
 
-import "react-rangeslider/lib/index.css";
-import styles from "./lollipopMutationPlot.module.scss";
-
+import 'react-rangeslider/lib/index.css';
+import styles from './lollipopMutationPlot.module.scss';
 
 type LollipopMutationPlotControlsProps = {
     showControls: boolean;
@@ -47,23 +50,24 @@ type LollipopMutationPlotControlsProps = {
     getSVG: () => SVGElement;
 };
 
-function formatInputValue(value: number, step: number = 1)
-{
+function formatInputValue(value: number, step: number = 1) {
     const decimalZeros = numberOfLeadingDecimalZeros(step);
-    const fixed = decimalZeros < 0 ? 0: decimalZeros + 1;
+    const fixed = decimalZeros < 0 ? 0 : decimalZeros + 1;
 
     return value.toFixed(fixed);
 }
 
 @observer
-export default class LollipopMutationPlotControls extends React.Component<LollipopMutationPlotControlsProps, {}>
-{
+export default class LollipopMutationPlotControls extends React.Component<
+    LollipopMutationPlotControlsProps,
+    {}
+> {
     public static defaultProps: Partial<LollipopMutationPlotControlsProps> = {
         showTrackSelector: true,
         showYMaxSlider: true,
         showLegendToggle: true,
         showDownloadControls: true,
-        yMaxSliderWidth: 100
+        yMaxSliderWidth: 100,
     };
 
     @computed
@@ -78,30 +82,44 @@ export default class LollipopMutationPlotControls extends React.Component<Lollip
         );
     }
 
-    protected maxValueSlider(countRange: [number, number],
-                             oppositeCountRange: [number, number],
-                             onYAxisMaxSliderChange: (event: any) => void,
-                             onYAxisMaxChange: (inputValue: string) => void,
-                             yMaxSlider: number,
-                             yMaxInput: number,
-                             yAxisSameScale: boolean = false,
-                             label: string = "Y-Axis Max",
-                             width: number = 100,
-                             yMaxSliderStep: number = 1)
-    {
+    protected maxValueSlider(
+        countRange: [number, number],
+        oppositeCountRange: [number, number],
+        onYAxisMaxSliderChange: (event: any) => void,
+        onYAxisMaxChange: (inputValue: string) => void,
+        yMaxSlider: number,
+        yMaxInput: number,
+        yAxisSameScale: boolean = false,
+        label: string = 'Y-Axis Max',
+        width: number = 100,
+        yMaxSliderStep: number = 1
+    ) {
         return (
-            <div className="small" style={{display: "flex", alignItems: "center", marginLeft: 10}}>
+            <div
+                className="small"
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    marginLeft: 10,
+                }}
+            >
                 <span>{label}:</span>
                 <div
                     style={{
                         width: width,
                         marginLeft: 10,
-                        marginRight: 10
+                        marginRight: 10,
                     }}
                 >
                     <Slider
                         min={yMaxSliderStep}
-                        max={calcYMaxInput(undefined, yMaxSliderStep, countRange, oppositeCountRange, yAxisSameScale)}
+                        max={calcYMaxInput(
+                            undefined,
+                            yMaxSliderStep,
+                            countRange,
+                            oppositeCountRange,
+                            yAxisSameScale
+                        )}
                         tooltip={false}
                         step={yMaxSliderStep}
                         onChange={onYAxisMaxSliderChange}
@@ -109,7 +127,7 @@ export default class LollipopMutationPlotControls extends React.Component<Lollip
                     />
                 </div>
                 <EditableSpan
-                    className={styles["ymax-number-input"]}
+                    className={styles['ymax-number-input']}
                     value={formatInputValue(yMaxInput, yMaxSliderStep)}
                     setValue={onYAxisMaxChange}
                     numericOnly={yMaxSliderStep >= 1}
@@ -120,8 +138,7 @@ export default class LollipopMutationPlotControls extends React.Component<Lollip
         );
     }
 
-    protected get yMaxSlider()
-    {
+    protected get yMaxSlider() {
         return this.maxValueSlider(
             this.props.countRange,
             this.props.bottomCountRange!,
@@ -130,15 +147,14 @@ export default class LollipopMutationPlotControls extends React.Component<Lollip
             this.props.yMaxSlider,
             this.props.yMaxInput,
             this.props.yAxisSameScale,
-            this.showBottomYAxisSlider ? "Top Y-Axis Max" : "Y-Axis Max",
+            this.showBottomYAxisSlider ? 'Top Y-Axis Max' : 'Y-Axis Max',
             this.props.yMaxSliderWidth,
-            this.props.yMaxSliderStep);
+            this.props.yMaxSliderStep
+        );
     }
 
-    protected get bottomYMaxSlider()
-    {
-        if (this.showBottomYAxisSlider)
-        {
+    protected get bottomYMaxSlider() {
+        if (this.showBottomYAxisSlider) {
             return this.maxValueSlider(
                 this.props.bottomCountRange!,
                 this.props.countRange,
@@ -147,21 +163,20 @@ export default class LollipopMutationPlotControls extends React.Component<Lollip
                 this.props.bottomYMaxSlider!,
                 this.props.bottomYMaxInput!,
                 this.props.yAxisSameScale,
-                "Bottom Y-Axis Max",
+                'Bottom Y-Axis Max',
                 100,
-                this.props.bottomYMaxSliderStep);
-        }
-        else {
+                this.props.bottomYMaxSliderStep
+            );
+        } else {
             return null;
         }
     }
 
-    protected get trackSelector()
-    {
+    protected get trackSelector() {
         return (
             <div
-                className={classnames("annotation-track-selector", "small")}
-                style={{width: 180, marginRight: 7}}
+                className={classnames('annotation-track-selector', 'small')}
+                style={{ width: 180, marginRight: 7 }}
             >
                 <TrackSelector
                     tracks={this.props.tracks}
@@ -173,21 +188,19 @@ export default class LollipopMutationPlotControls extends React.Component<Lollip
         );
     }
 
-    protected get legendToggle()
-    {
+    protected get legendToggle() {
         return (
             <button
                 className="btn btn-default btn-xs"
                 onClick={this.props.onToggleLegend}
-                style={{marginRight: 7}}
+                style={{ marginRight: 7 }}
             >
                 Legend <i className="fa fa-eye" aria-hidden="true" />
             </button>
         );
     }
 
-    protected get downloadControls()
-    {
+    protected get downloadControls() {
         return (
             <DownloadControls
                 getSvg={this.props.getSVG}
@@ -198,22 +211,29 @@ export default class LollipopMutationPlotControls extends React.Component<Lollip
         );
     }
 
-    public render()
-    {
+    public render() {
         return (
             <div
-                className={classnames("lollipop_mutation_plot__controls",
-                    this.props.showControls ? styles["fade-in"] : styles["fade-out"])}
+                className={classnames(
+                    'lollipop_mutation_plot__controls',
+                    this.props.showControls
+                        ? styles['fade-in']
+                        : styles['fade-out']
+                )}
             >
-                <div style={{display:"flex", alignItems:"center"}}>
-                    {this.props.trackVisibility && this.props.onTrackVisibilityChange && this.props.showTrackSelector && this.trackSelector}
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                    {this.props.trackVisibility &&
+                        this.props.onTrackVisibilityChange &&
+                        this.props.showTrackSelector &&
+                        this.trackSelector}
                     {this.props.showYMaxSlider && this.yMaxSlider}
                     {this.props.showYMaxSlider && this.bottomYMaxSlider}
                     {this.props.filterResetPanel}
                     {this.props.customControls}
-                    <div style={{display: "flex", marginLeft: "auto"}}>
+                    <div style={{ display: 'flex', marginLeft: 'auto' }}>
                         {this.props.showLegendToggle && this.legendToggle}
-                        {this.props.showDownloadControls && this.downloadControls}
+                        {this.props.showDownloadControls &&
+                            this.downloadControls}
                     </div>
                 </div>
                 {'  '}

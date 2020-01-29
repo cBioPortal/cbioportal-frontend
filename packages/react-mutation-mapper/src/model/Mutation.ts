@@ -1,4 +1,4 @@
-import {Gene} from "./Gene";
+import { Gene } from './Gene';
 
 export type Mutation = {
     gene?: Gene;

@@ -1,10 +1,10 @@
-@import "vars.module";
+@import 'vars.module';
 
 .oncokb-tooltip {
-  background: none;
+    background: none;
 
-  .rc-tooltip-inner {
-    padding: 0;
-    border-color: $oncokb-border-color;
-  }
+    .rc-tooltip-inner {
+        padding: 0;
+        border-color: $oncokb-border-color;
+    }
 }

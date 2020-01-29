@@ -1,19 +1,26 @@
-import * as React from "react";
-import ReactSelect from "react-select";
-import autobind from "autobind-decorator";
-import {computed, observable, action} from "mobx";
-import {observer} from "mobx-react";
+import * as React from 'react';
+import ReactSelect from 'react-select';
+import autobind from 'autobind-decorator';
+import { computed, observable, action } from 'mobx';
+import { observer } from 'mobx-react';
 
-import {CheckBoxType, getOptionLabel, getSelectedValuesMap, Option} from "./CheckedSelectUtils";
+import {
+    CheckBoxType,
+    getOptionLabel,
+    getSelectedValuesMap,
+    Option,
+} from './CheckedSelectUtils';
 
 type CheckedSelectProps = {
     name?: string;
-    onChange: (values: {value: string}[]) => void;
-    value: {value: string}[];
+    onChange: (values: { value: string }[]) => void;
+    value: { value: string }[];
     options: Option[];
     checkBoxType?: CheckBoxType;
     placeholder?: string | JSX.Element;
-    reactSelectComponents?: {[componentType: string]: (props: any) => JSX.Element};
+    reactSelectComponents?: {
+        [componentType: string]: (props: any) => JSX.Element;
+    };
     isClearable?: boolean;
     isDisabled?: boolean;
     onAddAll?: () => void;
@@ -22,24 +29,26 @@ type CheckedSelectProps = {
     addAllLabel?: string | JSX.Element;
     clearAllLabel?: string | JSX.Element;
     showControls?: boolean;
-    height?:number;
-    onInputChange?: (input:string) => void;
-    inputValue?:string;
+    height?: number;
+    onInputChange?: (input: string) => void;
+    inputValue?: string;
 };
 
 @observer
-export default class CheckedSelect extends React.Component<CheckedSelectProps, {}>
-{
+export default class CheckedSelect extends React.Component<
+    CheckedSelectProps,
+    {}
+> {
     public static defaultProps: Partial<CheckedSelectProps> = {
         isClearable: false,
         isDisabled: false,
         isAddAllDisabled: false,
         showControls: true,
-        checkBoxType: CheckBoxType.STRING
+        checkBoxType: CheckBoxType.STRING,
     };
-    
+
     @observable defaultInputValue = '';
-    
+
     @computed
     get selectedValues() {
         return getSelectedValuesMap(this.props.value);
@@ -49,8 +58,7 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
     get addAllLabel() {
         if (this.props.addAllLabel) {
             return this.props.addAllLabel;
-        }
-        else {
+        } else {
             return `Add all (${this.props.options.length})`;
         }
     }
@@ -59,20 +67,19 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
     get clearAllLabel() {
         if (this.props.clearAllLabel) {
             return this.props.clearAllLabel;
-        }
-        else {
-            return "Clear";
+        } else {
+            return 'Clear';
         }
     }
 
     @computed
     get components() {
-        return this.props.showControls ?
-            {
-                GroupHeading: this.buttonsSection,
-                ...this.props.reactSelectComponents
-            }:
-            this.props.reactSelectComponents;
+        return this.props.showControls
+            ? {
+                  GroupHeading: this.buttonsSection,
+                  ...this.props.reactSelectComponents,
+              }
+            : this.props.reactSelectComponents;
     }
 
     @autobind
@@ -86,21 +93,25 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
     }
 
     @autobind
-    private getOptionLabel(option: Option): JSX.Element
-    {
-        return getOptionLabel(option, this.selectedValues, this.props.checkBoxType);
+    private getOptionLabel(option: Option): JSX.Element {
+        return getOptionLabel(
+            option,
+            this.selectedValues,
+            this.props.checkBoxType
+        );
     }
-    
+
     @computed get inputValue() {
         return this.props.inputValue || this.defaultInputValue;
     }
-    
+
     @autobind
-    @action defaultOnInputChange(input:string, options:{action:string}) {
+    @action
+    defaultOnInputChange(input: string, options: { action: string }) {
         // The input value (which is a blank string in the case of action === 'set-value')
         // will be passed to `this.props.onInputChange` by default without the `if` condition.
         // This leads to undesirable behaviour so adding the if condition will prevent that.
-        if (options.action !== "set-value") {
+        if (options.action !== 'set-value') {
             if (this.props.onInputChange) this.props.onInputChange(input);
             this.defaultInputValue = input;
         }
@@ -109,18 +120,20 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
     @autobind
     private buttonsSection() {
         return (
-            <div style={{
-                marginTop:-7,
-                paddingBottom:5,
-                display:"flex",
-                justifyContent:"center",
-                alignItems:"center",
-                borderBottom:"1px solid #ccc"
-            }}>
+            <div
+                style={{
+                    marginTop: -7,
+                    paddingBottom: 5,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    borderBottom: '1px solid #ccc',
+                }}
+            >
                 <button
                     className="btn btn-sm btn-default"
                     onClick={this.props.onAddAll || this.defaultOnAddAll}
-                    style={{marginRight:5}}
+                    style={{ marginRight: 5 }}
                     disabled={this.props.isAddAllDisabled}
                 >
                     {this.addAllLabel}
@@ -141,38 +154,38 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
             <div className="default-checked-select">
                 <ReactSelect
                     styles={{
-                        control: (provided:any)=>({
+                        control: (provided: any) => ({
                             ...provided,
-                            height:this.props.height || 33.5,
-                            minHeight:this.props.height || 33.5,
-                            border: "1px solid rgb(204,204,204)"
+                            height: this.props.height || 33.5,
+                            minHeight: this.props.height || 33.5,
+                            border: '1px solid rgb(204,204,204)',
                         }),
-                        menu: (provided:any)=>({
+                        menu: (provided: any) => ({
                             ...provided,
-                            maxHeight: 400
+                            maxHeight: 400,
                         }),
-                        menuList: (provided:any)=>({
+                        menuList: (provided: any) => ({
                             ...provided,
-                            maxHeight:400
+                            maxHeight: 400,
                         }),
-                        placeholder:(provided:any)=>({
+                        placeholder: (provided: any) => ({
                             ...provided,
-                            color: "#000000"
+                            color: '#000000',
                         }),
-                        dropdownIndicator:(provided:any)=>({
+                        dropdownIndicator: (provided: any) => ({
                             ...provided,
                             // make the dropdown y axis padding a bit small for shorter dropdown.
                             padding: '4px 8px',
-                            color:"#000000"
+                            color: '#000000',
                         }),
-                        option:(provided:any, state:any)=>{
+                        option: (provided: any, state: any) => {
                             return {
                                 ...provided,
-                                cursor:"pointer"
+                                cursor: 'pointer',
                             };
-                        }
+                        },
                     }}
-                    theme={(theme:any)=>({
+                    theme={(theme: any) => ({
                         ...theme,
                         colors: {
                             ...theme.colors,
@@ -189,12 +202,14 @@ export default class CheckedSelect extends React.Component<CheckedSelectProps, {
                     controlShouldRenderValue={false}
                     placeholder={this.props.placeholder}
                     onChange={this.props.onChange}
-                    options={[{
-                        label: this.props.showControls ?
-                            "dummy label, this is only here to create group so we can add the buttons section as the group label component" :
-                            undefined,
-                        options: this.props.options
-                    }]}
+                    options={[
+                        {
+                            label: this.props.showControls
+                                ? 'dummy label, this is only here to create group so we can add the buttons section as the group label component'
+                                : undefined,
+                            options: this.props.options,
+                        },
+                    ]}
                     getOptionLabel={this.getOptionLabel}
                     value={this.props.value}
                     labelKey="label"

@@ -1,21 +1,21 @@
-import * as React from "react";
-import {observer} from "mobx-react";
+import * as React from 'react';
+import { observer } from 'mobx-react';
 
 type HitZoneProps = {
-    x:number;
-    y:number;
-    width:number;
-    height:number;
-    cursor?:string;
-    onMouseOver?:()=>void;
-    onClick?:()=>void;
-    onMouseOut?:()=>void;
-    onMouseEnter?:()=>void;
-    onMouseLeave?:()=>void;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    cursor?: string;
+    onMouseOver?: () => void;
+    onClick?: () => void;
+    onMouseOut?: () => void;
+    onMouseEnter?: () => void;
+    onMouseLeave?: () => void;
 };
 
 export type HitZoneConfig = {
-    hitRect: {x:number, y:number, width:number, height:number};
+    hitRect: { x: number; y: number; width: number; height: number };
     content?: JSX.Element;
     tooltipPlacement?: string;
     cursor?: string;
@@ -24,18 +24,20 @@ export type HitZoneConfig = {
     onMouseOut?: () => void;
 };
 
-export function defaultHitzoneConfig(): HitZoneConfig
-{
+export function defaultHitzoneConfig(): HitZoneConfig {
     return {
         hitRect: {
-            x:0, y:0, width:0, height:0
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
         },
-        content:(<span/>),
-        tooltipPlacement: "top",
-        cursor: "pointer",
-        onMouseOver:()=>0,
-        onClick:()=>0,
-        onMouseOut:()=>0
+        content: <span />,
+        tooltipPlacement: 'top',
+        cursor: 'pointer',
+        onMouseOver: () => 0,
+        onClick: () => 0,
+        onMouseOut: () => 0,
     };
 }
 
@@ -56,19 +58,19 @@ export function initHitZoneFromConfig(config: HitZoneConfig) {
 
 //@observer
 export class HitZone extends React.Component<HitZoneProps, {}> {
-    private handlers:any;
+    private handlers: any;
 
-    constructor(props:HitZoneProps) {
+    constructor(props: HitZoneProps) {
         super(props);
         this.handlers = {
-            onMouseOver: ()=>{
+            onMouseOver: () => {
                 this.props.onMouseOver && this.props.onMouseOver();
                 this.props.onMouseEnter && this.props.onMouseEnter();
             },
-            onMouseOut: ()=>{
+            onMouseOut: () => {
                 this.props.onMouseOut && this.props.onMouseOut();
                 this.props.onMouseLeave && this.props.onMouseLeave();
-            }
+            },
         };
     }
 
@@ -78,11 +80,11 @@ export class HitZone extends React.Component<HitZoneProps, {}> {
                 width={this.props.width}
                 height={this.props.height}
                 style={{
-                     position: "absolute",
-                     top: this.props.y,
-                     left: this.props.x,
-                     cursor: this.props.cursor,
-                 }}
+                    position: 'absolute',
+                    top: this.props.y,
+                    left: this.props.x,
+                    cursor: this.props.cursor,
+                }}
                 onMouseOver={this.handlers.onMouseOver}
                 onClick={this.props.onClick}
                 onMouseOut={this.handlers.onMouseOut}

@@ -1,80 +1,80 @@
-@import "vars.module";
+@import 'vars.module';
 
 .oncokb-card {
-  margin: auto;
-  width: 600px;
-  font-size: 14px;
-  line-height: 18px;
+    margin: auto;
+    width: 600px;
+    font-size: 14px;
+    line-height: 18px;
 }
 
 .tooltip-refs {
-  max-width: 400px;
-  max-height: 400px;
-  overflow-y: auto
+    max-width: 400px;
+    max-height: 400px;
+    overflow-y: auto;
 }
 
 .disclaimer {
-  color: grey;
-  font-style: italic;
-  padding: 5px 10px;
+    color: grey;
+    font-style: italic;
+    padding: 5px 10px;
 }
 
 .orange-icon {
-  color: $oncokb-orange;
+    color: $oncokb-orange;
 }
 
 .footer {
-  width: 100%;
-  line-height: 32px;
-  height: 32px;
+    width: 100%;
+    line-height: 32px;
+    height: 32px;
 }
 
 .feedback {
-  margin-right: 10px;
-  font-size: 12px;
+    margin-right: 10px;
+    font-size: 12px;
 }
 
 .oncokb-logo {
-  height: 19px;
-  margin-left: 10px;
-  margin-top: -4px;
+    height: 19px;
+    margin-left: 10px;
+    margin-top: -4px;
 }
 
 .enable-hover-a:hover {
-  opacity: 0.7;
-  cursor: pointer;
+    opacity: 0.7;
+    cursor: pointer;
 }
 
 .enable-hover-active {
-  border-bottom: 3px solid $oncokb-orange;
+    border-bottom: 3px solid $oncokb-orange;
 }
 
 .title {
-  line-height: 22px;
-  font-size: 22px;
-  background-color: $oncokb-dark-blue;
-  color: #fff;
-  text-align: center;
-  padding: 5px 10px;
+    line-height: 22px;
+    font-size: 22px;
+    background-color: $oncokb-dark-blue;
+    color: #fff;
+    text-align: center;
+    padding: 5px 10px;
 }
 
 .additional-info {
-  padding: 5px 10px;
-  line-height: 20px;
-  border-bottom: 1px solid lightgrey;
+    padding: 5px 10px;
+    line-height: 20px;
+    border-bottom: 1px solid lightgrey;
 }
 
 .ellipsis-text-wrapper {
-  overflow: hidden;
-  white-space: nowrap;
-  display: flex;
-  align-items: center
+    overflow: hidden;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
 }
 
 .indicator {
-  position: absolute;
-  bottom: 0;
-  height: 2px;
-  background-color: $oncokb-orange;
-  will-change: left, right;
+    position: absolute;
+    bottom: 0;
+    height: 2px;
+    background-color: $oncokb-orange;
+    will-change: left, right;
 }

@@ -1,9 +1,9 @@
-declare module 'url'
-{
-    export type QueryParams = { [key:string]: undefined | null | string | string[] };
+declare module 'url' {
+    export type QueryParams = {
+        [key: string]: undefined | null | string | string[];
+    };
 
-    export interface URLParts
-    {
+    export interface URLParts {
         auth: string | null;
         hash: string | null;
         host: string | null;
@@ -23,16 +23,21 @@ declare module 'url'
         hash?: string;
         pathname?: string;
         protocol?: string;
-    } & (
-        {host?: string} | {hostname?: string, port?: string}
-    ) & (
-        {search?: string} | {query?: QueryParams}
-    );
+    } & ({ host?: string } | { hostname?: string; port?: string }) &
+        ({ search?: string } | { query?: QueryParams });
 
-    export function parse(urlStr:string, parseQueryString:true, slashesDenoteHost?:boolean):URLParts & {query: QueryParams, search: string};
-    export function parse(urlStr:string, parseQueryString?:false, slashesDenoteHost?:boolean):URLParts & {query: string | null};
+    export function parse(
+        urlStr: string,
+        parseQueryString: true,
+        slashesDenoteHost?: boolean
+    ): URLParts & { query: QueryParams; search: string };
+    export function parse(
+        urlStr: string,
+        parseQueryString?: false,
+        slashesDenoteHost?: boolean
+    ): URLParts & { query: string | null };
 
-    export function format(urlObj:URLFormatParams):string;
+    export function format(urlObj: URLFormatParams): string;
 
-    export function resolve(from:string, to:string):string;
+    export function resolve(from: string, to: string): string;
 }

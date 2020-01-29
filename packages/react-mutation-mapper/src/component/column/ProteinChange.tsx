@@ -1,8 +1,8 @@
-import {calcProteinChangeSortValue} from "cbioportal-frontend-commons";
-import * as React from "react";
+import { calcProteinChangeSortValue } from 'cbioportal-frontend-commons';
+import * as React from 'react';
 
-import {Mutation} from "../../model/Mutation";
-import {defaultSortMethod} from "../../util/ReactTableUtils";
+import { Mutation } from '../../model/Mutation';
+import { defaultSortMethod } from '../../util/ReactTableUtils';
 import styles from './proteinChange.module.scss';
 
 type ProteinChangeProps = {
@@ -10,18 +10,19 @@ type ProteinChangeProps = {
     enableMutationStatusIndicator?: boolean;
 };
 
-export function proteinChangeSortMethod(a: string, b: string)
-{
+export function proteinChangeSortMethod(a: string, b: string) {
     return defaultSortMethod(
         a ? calcProteinChangeSortValue(a) : null,
         b ? calcProteinChangeSortValue(b) : null
     );
 }
 
-export default class ProteinChange extends React.Component<ProteinChangeProps, {}>
-{
+export default class ProteinChange extends React.Component<
+    ProteinChangeProps,
+    {}
+> {
     public static defaultProps: Partial<ProteinChangeProps> = {
-        enableMutationStatusIndicator: true
+        enableMutationStatusIndicator: true,
     };
 
     public render() {
@@ -40,13 +41,16 @@ export default class ProteinChange extends React.Component<ProteinChangeProps, {
         //     />
         // );
 
-        let content = <span className={styles.proteinChange}>{proteinChange}</span>;
+        let content = (
+            <span className={styles.proteinChange}>{proteinChange}</span>
+        );
 
         // add a germline indicator next to protein change if it is a germline mutation!
-        if (this.props.enableMutationStatusIndicator &&
+        if (
+            this.props.enableMutationStatusIndicator &&
             mutationStatus &&
-            mutationStatus.toLowerCase().includes("germline"))
-        {
+            mutationStatus.toLowerCase().includes('germline')
+        ) {
             content = (
                 <React.Fragment>
                     {content}

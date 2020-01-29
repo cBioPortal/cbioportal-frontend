@@ -1,12 +1,19 @@
-import {DefaultTooltip, getNCBIlink, ICache} from "cbioportal-frontend-commons";
+import {
+    DefaultTooltip,
+    getNCBIlink,
+    ICache,
+} from 'cbioportal-frontend-commons';
 import * as React from 'react';
 
-import ReferenceList from "./ReferenceList";
+import ReferenceList from './ReferenceList';
 
-import mainStyles from "./main.module.scss";
+import mainStyles from './main.module.scss';
 
-
-export default class RefComponent extends React.Component<{ content: string, componentType: 'tooltip' | 'linkout', pmidData:ICache<any>}> {
+export default class RefComponent extends React.Component<{
+    content: string;
+    componentType: 'tooltip' | 'linkout';
+    pmidData: ICache<any>;
+}> {
     render() {
         const parts = this.props.content.split(/pmid|nct/i);
 
@@ -22,10 +29,10 @@ export default class RefComponent extends React.Component<{ content: string, com
 
         let prefix: string | undefined;
 
-        if (this.props.content.toLowerCase().indexOf("pmid") >= 0) {
-            prefix = "PMID: ";
-        } else if (this.props.content.toLowerCase().indexOf("nct") >= 0) {
-            prefix = "NCT";
+        if (this.props.content.toLowerCase().indexOf('pmid') >= 0) {
+            prefix = 'PMID: ';
+        } else if (this.props.content.toLowerCase().indexOf('nct') >= 0) {
+            prefix = 'NCT';
         }
 
         let link: JSX.Element | undefined;
@@ -34,16 +41,16 @@ export default class RefComponent extends React.Component<{ content: string, com
             link = (
                 <a
                     target="_blank"
-                    href={getNCBIlink(`/pubmed/${ids.join(",")}`)}
+                    href={getNCBIlink(`/pubmed/${ids.join(',')}`)}
                 >
-                    {`${prefix}${ids.join(",")}`}
+                    {`${prefix}${ids.join(',')}`}
                 </a>
             );
         }
 
         if (this.props.componentType === 'tooltip') {
             const tooltipContent = () => (
-                <div className={mainStyles["tooltip-refs"]}>
+                <div className={mainStyles['tooltip-refs']}>
                     <ReferenceList
                         pmids={ids.map((id: string) => parseInt(id))}
                         pmidData={this.props.pmidData}
@@ -61,7 +68,7 @@ export default class RefComponent extends React.Component<{ content: string, com
                         trigger={['hover', 'focus']}
                         destroyTooltipOnHide={true}
                     >
-                        <i className="fa fa-book" style={{color: "black"}}/>
+                        <i className="fa fa-book" style={{ color: 'black' }} />
                     </DefaultTooltip>
                     {`)`}
                 </span>
@@ -77,6 +84,5 @@ export default class RefComponent extends React.Component<{ content: string, com
         } else {
             return <span>{this.props.content}</span>;
         }
-
     }
 }
