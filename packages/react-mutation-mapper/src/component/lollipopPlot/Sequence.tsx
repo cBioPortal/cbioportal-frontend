@@ -1,22 +1,22 @@
 import * as React from 'react';
-import {observer} from "mobx-react";
-import {observable} from "mobx";
+import { observer } from 'mobx-react';
+import { observable } from 'mobx';
 
-import {SequenceSpec} from "../../model/SequenceSpec";
+import { SequenceSpec } from '../../model/SequenceSpec';
 
 type SequenceProps = {
-    x:number;
-    y:number;
-    width:number;
-    height:number;
-    color?:string;
-    hitzoneClassName?:string;
-    spec?:SequenceSpec;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    color?: string;
+    hitzoneClassName?: string;
+    spec?: SequenceSpec;
 };
 
 @observer
 export default class Sequence extends React.Component<SequenceProps, {}> {
-    @observable isMounted:boolean = false;
+    @observable isMounted: boolean = false;
 
     constructor(props: SequenceProps) {
         super(props);
@@ -27,7 +27,7 @@ export default class Sequence extends React.Component<SequenceProps, {}> {
             x: this.props.x,
             y: this.props.y,
             width: this.props.width,
-            height: this.props.height
+            height: this.props.height,
         };
     }
 
@@ -51,7 +51,7 @@ export default class Sequence extends React.Component<SequenceProps, {}> {
                     y={this.props.y}
                     width={this.props.width}
                     height={this.props.height}
-                    style={{opacity:0}}
+                    style={{ opacity: 0 }}
                 />
             </g>
         );
