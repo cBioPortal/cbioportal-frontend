@@ -17,6 +17,7 @@
 *.template
 *.ejs
 **/generated/**
+src/shared/lib/oql/oql-parser.js
 packages/**/dist/**
 yarn.lock
 .prettierignore
