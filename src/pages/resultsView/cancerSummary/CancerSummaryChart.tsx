@@ -125,6 +125,8 @@ export class CancerSummaryChart extends React.Component<
     @autobind
     @action
     private tooltipMouseEnter(): void {
+        console.log('mooo');
+
         this.isBarPlotTooltipHovered = true;
     }
 

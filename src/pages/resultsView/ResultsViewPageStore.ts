@@ -4877,6 +4877,7 @@ export class ResultsViewPageStore {
     }
 
     @cached get genomeNexusMyVariantInfoCache() {
+        console.log('SEE HERE');
         return new GenomeNexusMyVariantInfoCache();
     }
 
