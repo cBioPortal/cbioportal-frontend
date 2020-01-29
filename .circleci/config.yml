@@ -258,6 +258,12 @@ workflows:
             - prettier:
                 requires:
                     - install
+                filters:
+                    branches:
+                       ignore:
+                           - master
+                           - release-*
+                           - rc
             - unit_tests:
                 requires:
                     - install
