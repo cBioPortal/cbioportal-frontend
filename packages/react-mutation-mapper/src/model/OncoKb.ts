@@ -1,4 +1,4 @@
-import {LevelOfEvidenceType} from "cbioportal-frontend-commons";
+import { LevelOfEvidenceType } from 'cbioportal-frontend-commons';
 
 export type IndicatorQueryTreatment = {
     level: LevelOfEvidenceType;
@@ -42,13 +42,13 @@ export type IndicatorQueryResp = {
 };
 
 export type OncoKbTreatment = {
-    level: string,
-    variant: string[],
-    cancerType: string,
-    pmids: number[],
-    abstracts: ArticleAbstract[],
-    description: string,
-    treatment: string
+    level: string;
+    variant: string[];
+    cancerType: string;
+    pmids: number[];
+    abstracts: ArticleAbstract[];
+    description: string;
+    treatment: string;
 };
 
 export type CancerGene = {
@@ -57,7 +57,7 @@ export type CancerGene = {
 };
 
 export interface IOncoKbData {
-    indicatorMap: {[id:string]: IndicatorQueryResp} | null;
+    indicatorMap: { [id: string]: IndicatorQueryResp } | null;
 }
 
 export interface IEvidence {
@@ -79,7 +79,7 @@ export interface IEvidence {
         sensitivity: {
             current: any[];
             inOtherTumor: any[];
-        },
+        };
         resistance: any[];
     };
 }

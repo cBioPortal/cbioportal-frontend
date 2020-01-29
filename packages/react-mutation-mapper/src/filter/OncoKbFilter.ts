@@ -1,7 +1,7 @@
-import {DataFilter} from "../model/DataFilter";
+import { DataFilter } from '../model/DataFilter';
 
 export enum OncoKbFilterValue {
-    Oncogenic = "ONCOGENIC"
+    Oncogenic = 'ONCOGENIC',
 }
 
 export type OncoKbFilter = DataFilter<OncoKbFilterValue>;

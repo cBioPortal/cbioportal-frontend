@@ -85,8 +85,8 @@ jobs:
           command: "cat yarn.lock $(find src/ -type f | sort) $(find packages/ -type f | sort) webpack.config.js vendor-bundles.webpack.config.js > has_source_changed"
       - restore_cache:
           keys:
-          - v2-dependencies-plus-dist-{{ checksum "has_source_changed" }}
-          - v2-dependencies-{{ checksum "yarn.lock" }}
+          - v3-dependencies-plus-dist-{{ checksum "has_source_changed" }}
+          - v3-dependencies-{{ checksum "yarn.lock" }}
       # Download and cache dependencies
       - run: yarn
       - run: yarn buildModules
@@ -96,7 +96,7 @@ jobs:
       - save_cache:
           paths:
             - node_modules
-          key: v2-dependencies-{{ checksum "yarn.lock" }}
+          key: v3-dependencies-{{ checksum "yarn.lock" }}
       - run:
           name: "Run build if no dist folder"
           command: 'ls dist || yarn run build'
@@ -108,7 +108,7 @@ jobs:
             - node_modules
             - dist
             - common-dist
-          key: v2-dependencies-plus-dist-{{ checksum "has_source_changed" }}
+          key: v3-dependencies-plus-dist-{{ checksum "has_source_changed" }}
       - persist_to_workspace:
           root: /tmp
           paths:

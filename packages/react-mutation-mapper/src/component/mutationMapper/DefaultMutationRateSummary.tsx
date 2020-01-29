@@ -1,9 +1,9 @@
-import {DefaultTooltip} from "cbioportal-frontend-commons";
-import * as React from "react";
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import * as React from 'react';
 
-import {formatPercentValue} from "../../util/FormatUtils";
+import { formatPercentValue } from '../../util/FormatUtils';
 
-import styles from "./defaultMutationRateSummary.module.scss"
+import styles from './defaultMutationRateSummary.module.scss';
 
 export type MutationRate = {
     rate: number;
@@ -16,26 +16,35 @@ export type DefaultMutationRateSummaryProps = {
     fractionDigits?: number;
 };
 
-export default class DefaultMutationRateSummary extends React.Component<DefaultMutationRateSummaryProps>
-{
+export default class DefaultMutationRateSummary extends React.Component<
+    DefaultMutationRateSummaryProps
+> {
     public render() {
         return (
             <React.Fragment>
                 {this.props.rates.map(r => (
                     <div key={r.title} className={styles.mutationRateSummary}>
                         <span>{r.title}: </span>
-                        <span>{formatPercentValue(r.rate, this.props.fractionDigits)}%</span>
-                        {r.description &&
+                        <span>
+                            {formatPercentValue(
+                                r.rate,
+                                this.props.fractionDigits
+                            )}
+                            %
+                        </span>
+                        {r.description && (
                             <DefaultTooltip
                                 placement="right"
                                 overlay={<span>{r.description}</span>}
                             >
-                                <i className="fa fa-info-circle" style={{marginLeft: "0.2rem"}} />
+                                <i
+                                    className="fa fa-info-circle"
+                                    style={{ marginLeft: '0.2rem' }}
+                                />
                             </DefaultTooltip>
-                        }
+                        )}
                     </div>
-                ))
-                }
+                ))}
             </React.Fragment>
         );
     }

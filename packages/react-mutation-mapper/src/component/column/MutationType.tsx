@@ -1,8 +1,11 @@
-import {DefaultTooltip, getCanonicalMutationType} from "cbioportal-frontend-commons";
+import {
+    DefaultTooltip,
+    getCanonicalMutationType,
+} from 'cbioportal-frontend-commons';
 import * as React from 'react';
 
-import {Mutation} from "../../model/Mutation";
-import styles from "./mutationType.module.scss";
+import { Mutation } from '../../model/Mutation';
+import styles from './mutationType.module.scss';
 
 type MutationTypeProps = {
     mutation: Mutation;
@@ -11,70 +14,69 @@ type MutationTypeProps = {
 type MutationTypeFormat = {
     label?: string;
     className: string;
-}
+};
 
-export const MAIN_MUTATION_TYPE_MAP: {[key: string]: MutationTypeFormat} =
-{
+export const MAIN_MUTATION_TYPE_MAP: { [key: string]: MutationTypeFormat } = {
     missense: {
-        label: "Missense",
-        className: "missense-mutation",
+        label: 'Missense',
+        className: 'missense-mutation',
     },
     inframe: {
-        label: "IF",
-        className: "inframe-mutation",
+        label: 'IF',
+        className: 'inframe-mutation',
     },
     truncating: {
-        label: "Truncating",
-        className: "trunc-mutation",
+        label: 'Truncating',
+        className: 'trunc-mutation',
     },
     nonsense: {
-        label: "Nonsense",
-        className: "trunc-mutation",
+        label: 'Nonsense',
+        className: 'trunc-mutation',
     },
     nonstop: {
-        label: "Nonstop",
-        className: "trunc-mutation",
+        label: 'Nonstop',
+        className: 'trunc-mutation',
     },
     nonstart: {
-        label: "Nonstart",
-        className: "trunc-mutation",
+        label: 'Nonstart',
+        className: 'trunc-mutation',
     },
     frameshift: {
-        label: "FS",
-        className: "trunc-mutation",
+        label: 'FS',
+        className: 'trunc-mutation',
     },
     frame_shift_del: {
-        label: "FS del",
-        className: "trunc-mutation",
+        label: 'FS del',
+        className: 'trunc-mutation',
     },
     frame_shift_ins: {
-        label: "FS ins",
-        className: "trunc-mutation",
+        label: 'FS ins',
+        className: 'trunc-mutation',
     },
     in_frame_ins: {
-        label: "IF ins",
-        className: "inframe-mutation",
+        label: 'IF ins',
+        className: 'inframe-mutation',
     },
     in_frame_del: {
-        label: "IF del",
-        className: "inframe-mutation",
+        label: 'IF del',
+        className: 'inframe-mutation',
     },
     splice_site: {
-        label: "Splice",
-        className: "trunc-mutation",
+        label: 'Splice',
+        className: 'trunc-mutation',
     },
     fusion: {
-        label: "Fusion",
-        className: "fusion",
+        label: 'Fusion',
+        className: 'fusion',
     },
     silent: {
-        label: "Silent",
-        className: "other-mutation",
+        label: 'Silent',
+        className: 'other-mutation',
     },
     other: {
-        label: "Other",
-        className: "other-mutation",
-    }
+        label: 'Other',
+        className: 'other-mutation',
+    },
 };
 
 /**
@@ -83,9 +85,8 @@ export const MAIN_MUTATION_TYPE_MAP: {[key: string]: MutationTypeFormat} =
  * @param data  column formatter data
  * @returns {string}    mutation assessor text value
  */
-function getDisplayValue(mutation: Mutation): string
-{
-    const entry: MutationTypeFormat|undefined = getMapEntry(mutation);
+function getDisplayValue(mutation: Mutation): string {
+    const entry: MutationTypeFormat | undefined = getMapEntry(mutation);
 
     // first, try to find a mapped value
     if (entry && entry.label) {
@@ -93,40 +94,37 @@ function getDisplayValue(mutation: Mutation): string
     }
     // if no mapped value, then return the text value as is
     else {
-        return mutation.mutationType || "";
+        return mutation.mutationType || '';
     }
 }
 
-function getClassName(mutation: Mutation): string
-{
-    const value: MutationTypeFormat|undefined = getMapEntry(mutation);
+function getClassName(mutation: Mutation): string {
+    const value: MutationTypeFormat | undefined = getMapEntry(mutation);
 
     if (value && value.className) {
         return value.className;
     }
     // for unmapped values, use the "other" style
     else {
-        return MAIN_MUTATION_TYPE_MAP["other"].className;
+        return MAIN_MUTATION_TYPE_MAP['other'].className;
     }
 }
 
-function getMapEntry(mutation: Mutation)
-{
+function getMapEntry(mutation: Mutation) {
     const mutationType = mutation.mutationType;
 
     if (mutationType) {
         return MAIN_MUTATION_TYPE_MAP[getCanonicalMutationType(mutationType)];
-    }
-    else {
+    } else {
         return undefined;
     }
 }
 
-
-export default class MutationType extends React.Component<MutationTypeProps, {}>
-{
-    public render()
-    {
+export default class MutationType extends React.Component<
+    MutationTypeProps,
+    {}
+> {
+    public render() {
         // use text for all purposes (display, sort, filter)
         const text = getDisplayValue(this.props.mutation);
         const className = getClassName(this.props.mutation);
@@ -137,8 +135,7 @@ export default class MutationType extends React.Component<MutationTypeProps, {}>
         let content = <span className={styles[className]}>{text}</span>;
 
         // add tooltip only if the display value differs from the actual text value!
-        if (toolTip && toolTip.toLowerCase() !== text.toLowerCase())
-        {
+        if (toolTip && toolTip.toLowerCase() !== text.toLowerCase()) {
             content = (
                 <DefaultTooltip
                     overlay={<span>{toolTip}</span>}

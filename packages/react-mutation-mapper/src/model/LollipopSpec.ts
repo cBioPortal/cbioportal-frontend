@@ -1,5 +1,6 @@
 export enum LollipopPlacement {
-    TOP, BOTTOM
+    TOP,
+    BOTTOM,
 }
 
 export type LollipopSpec = {

@@ -1,5 +1,5 @@
-import * as React from "react";
-import {CSSProperties} from "react";
+import * as React from 'react';
+import { CSSProperties } from 'react';
 
 export type BadgeLabelProps = {
     label: JSX.Element | string;
@@ -10,30 +10,32 @@ export type BadgeLabelProps = {
 };
 
 export const DEFAULT_BADGE_STYLE = {
-    color: "#FFF",
-    backgroundColor: "#000",
-    borderStyle: "solid",
-    borderWidth: "thin"
+    color: '#FFF',
+    backgroundColor: '#000',
+    borderStyle: 'solid',
+    borderWidth: 'thin',
 };
 
-export class BadgeLabel extends React.Component<BadgeLabelProps, {}>
-{
+export class BadgeLabel extends React.Component<BadgeLabelProps, {}> {
     public static defaultProps: Partial<BadgeLabelProps> = {
-        badgeClassName: "badge",
-        badgeFirst: false
+        badgeClassName: 'badge',
+        badgeFirst: false,
     };
 
-    protected get badge(): JSX.Element
-    {
+    protected get badge(): JSX.Element {
         return (
             <span
-                style={this.props.badgeFirst ? {marginRight: 5}: {marginLeft: 5}}
+                style={
+                    this.props.badgeFirst
+                        ? { marginRight: 5 }
+                        : { marginLeft: 5 }
+                }
             >
                 <span
                     className={this.props.badgeClassName}
                     style={{
                         ...DEFAULT_BADGE_STYLE,
-                        ...this.props.badgeStyleOverride
+                        ...this.props.badgeStyleOverride,
                     }}
                 >
                     {this.props.badgeContent}
@@ -42,8 +44,7 @@ export class BadgeLabel extends React.Component<BadgeLabelProps, {}>
         );
     }
 
-    protected get badgeFirst(): JSX.Element
-    {
+    protected get badgeFirst(): JSX.Element {
         return (
             <React.Fragment>
                 {this.badge}
@@ -52,8 +53,7 @@ export class BadgeLabel extends React.Component<BadgeLabelProps, {}>
         );
     }
 
-    protected get badgeLast(): JSX.Element
-    {
+    protected get badgeLast(): JSX.Element {
         return (
             <React.Fragment>
                 {this.props.label}
@@ -62,9 +62,8 @@ export class BadgeLabel extends React.Component<BadgeLabelProps, {}>
         );
     }
 
-    public render(): JSX.Element
-    {
-        return this.props.badgeFirst ? this.badgeFirst: this.badgeLast;
+    public render(): JSX.Element {
+        return this.props.badgeFirst ? this.badgeFirst : this.badgeLast;
     }
 }
 

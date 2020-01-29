@@ -1,20 +1,21 @@
-import {action, observable} from "mobx";
-import request from "superagent";
+import { action, observable } from 'mobx';
+import request from 'superagent';
 
-import {MobxCache} from "../model/MobxCache";
+import { MobxCache } from '../model/MobxCache';
 
-export class DefaultPubMedCache implements MobxCache<any, string>
-{
+export class DefaultPubMedCache implements MobxCache<any, string> {
     protected _cache = observable.shallowMap();
 
-    public async fetch(query: string)
-    {
+    public async fetch(query: string) {
         const pubMedRecords = await new Promise<any>((resolve, reject) => {
             // TODO duplicate code from cbioportal-frontend
-            request.post('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json')
-                .type("form")
-                .send({id: query})
-                .end((err, res)=>{
+            request
+                .post(
+                    'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json'
+                )
+                .type('form')
+                .send({ id: query })
+                .end((err, res) => {
                     if (!err && res.ok) {
                         const response = JSON.parse(res.text);
                         const result = response.result;
@@ -34,14 +35,15 @@ export class DefaultPubMedCache implements MobxCache<any, string>
     }
 
     @action
-    public get(query: string)
-    {
+    public get(query: string) {
         if (!this._cache[query]) {
-            this._cache[query] = {status: "pending"};
+            this._cache[query] = { status: 'pending' };
 
             this.fetch(query)
-                .then(d => this._cache[query] = {status: "complete", data: d})
-                .catch(() => this._cache[query] = {status: "error"});
+                .then(
+                    d => (this._cache[query] = { status: 'complete', data: d })
+                )
+                .catch(() => (this._cache[query] = { status: 'error' }));
         }
 
         return this._cache[query];

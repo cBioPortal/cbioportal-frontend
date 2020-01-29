@@ -1,9 +1,9 @@
-import {DefaultTooltip} from "cbioportal-frontend-commons";
-import {observer} from "mobx-react";
-import * as React from "react";
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { observer } from 'mobx-react';
+import * as React from 'react';
 
-import ReferenceList from "../oncokb/ReferenceList";
-import {Cache} from "../../model/MobxCache";
+import ReferenceList from '../oncokb/ReferenceList';
+import { Cache } from '../../model/MobxCache';
 
 type PtmReferenceListProps = {
     pubmedIds: string[];
@@ -15,21 +15,28 @@ function extractNumericalPart(pmid: string) {
 
     if (matched) {
         return Number(matched[0]);
-    }
-    else {
+    } else {
         return undefined;
     }
 }
 
 @observer
-export default class PtmReferenceList extends React.Component<PtmReferenceListProps, {}>
-{
+export default class PtmReferenceList extends React.Component<
+    PtmReferenceListProps,
+    {}
+> {
     public render() {
         return (
             <DefaultTooltip
                 placement="right"
                 overlay={
-                    <div style={{maxWidth: 400, maxHeight: 400, overflowY: "auto"}}>
+                    <div
+                        style={{
+                            maxWidth: 400,
+                            maxHeight: 400,
+                            overflowY: 'auto',
+                        }}
+                    >
                         <ReferenceList
                             pmids={
                                 this.props.pubmedIds
@@ -43,8 +50,8 @@ export default class PtmReferenceList extends React.Component<PtmReferenceListPr
                 }
                 destroyTooltipOnHide={true}
             >
-                <div style={{textAlign: "right"}}>
-                    <i className="fa fa-book" style={{color: "black"}}/>
+                <div style={{ textAlign: 'right' }}>
+                    <i className="fa fa-book" style={{ color: 'black' }} />
                 </div>
             </DefaultTooltip>
         );

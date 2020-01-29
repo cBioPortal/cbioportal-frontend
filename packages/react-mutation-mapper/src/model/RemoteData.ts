@@ -1,7 +1,6 @@
-export type RemoteDataStatus = "pending" | "error" | "complete";
+export type RemoteDataStatus = 'pending' | 'error' | 'complete';
 
-export interface RemoteData<T>
-{
+export interface RemoteData<T> {
     status: RemoteDataStatus;
     result: T;
     isComplete: boolean;

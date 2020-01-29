@@ -1,48 +1,62 @@
-import * as React from "react";
+import * as React from 'react';
 
 export type Tick = {
-    position:number;
-    label?:string;
+    position: number;
+    label?: string;
 };
 
 type SVGAxisProps = {
-    x:number;
-    y:number;
-    length:number;
-    ticks:Tick[];
-    tickLength:number;
-    rangeLower:number;
-    rangeUpper:number;
-    vertical?:boolean;
-    reverse?:boolean;
-    invertTicks?:boolean;
-    label?:string;
-    verticalLabelPadding?:number;
-    horizontalLabelPadding?:number;
-    tickLabelPadding?:number;
+    x: number;
+    y: number;
+    length: number;
+    ticks: Tick[];
+    tickLength: number;
+    rangeLower: number;
+    rangeUpper: number;
+    vertical?: boolean;
+    reverse?: boolean;
+    invertTicks?: boolean;
+    label?: string;
+    verticalLabelPadding?: number;
+    horizontalLabelPadding?: number;
+    tickLabelPadding?: number;
 };
 
-export default class SVGAxis extends React.Component<SVGAxisProps, {}>
-{
+export default class SVGAxis extends React.Component<SVGAxisProps, {}> {
     public static defaultProps: Partial<SVGAxisProps> = {
         verticalLabelPadding: 30,
         horizontalLabelPadding: 5,
-        tickLabelPadding: 3
+        tickLabelPadding: 3,
     };
 
     private positionToAxisPosition(position: number) {
-        const pos = this.props.reverse ? this.props.rangeUpper - position : position;
-        return (pos / (this.props.rangeUpper - this.props.rangeLower)) * this.props.length;
+        const pos = this.props.reverse
+            ? this.props.rangeUpper - position
+            : position;
+        return (
+            (pos / (this.props.rangeUpper - this.props.rangeLower)) *
+            this.props.length
+        );
     }
 
     private get ticks() {
         return this.props.ticks.map(tick => {
-            const tickLength = this.props.invertTicks ? -this.props.tickLength : this.props.tickLength;
+            const tickLength = this.props.invertTicks
+                ? -this.props.tickLength
+                : this.props.tickLength;
             const axisPosition = this.positionToAxisPosition(tick.position);
-            const x1 = this.props.vertical ? this.props.x : (this.props.x + axisPosition);
-            const y1 = this.props.vertical ? (this.props.y + this.props.length - axisPosition) : this.props.y;
-            const x2 = this.props.vertical ? (this.props.x - tickLength) : (this.props.x + axisPosition);
-            const y2 = this.props.vertical ? (this.props.y + this.props.length - axisPosition) : (this.props.y + tickLength);
+            const x1 = this.props.vertical
+                ? this.props.x
+                : this.props.x + axisPosition;
+            const y1 = this.props.vertical
+                ? this.props.y + this.props.length - axisPosition
+                : this.props.y;
+            const x2 = this.props.vertical
+                ? this.props.x - tickLength
+                : this.props.x + axisPosition;
+            const y2 = this.props.vertical
+                ? this.props.y + this.props.length - axisPosition
+                : this.props.y + tickLength;
             const labelPadding = this.props.tickLabelPadding!;
 
             let label = null;
@@ -50,12 +64,16 @@ export default class SVGAxis extends React.Component<SVGAxisProps, {}>
                 if (this.props.vertical) {
                     label = (
                         <text
-                            textAnchor={this.props.invertTicks ? "start" : "end"}
+                            textAnchor={
+                                this.props.invertTicks ? 'start' : 'end'
+                            }
                             style={{
-                                fontSize:"10px",
-                                fontFamily:"arial"
+                                fontSize: '10px',
+                                fontFamily: 'arial',
                             }}
-                            dx={(this.props.invertTicks ? 1 : -1) * labelPadding}
+                            dx={
+                                (this.props.invertTicks ? 1 : -1) * labelPadding
+                            }
                             dy="0.4em"
                             x={x2}
                             y={y2}
@@ -68,11 +86,14 @@ export default class SVGAxis extends React.Component<SVGAxisProps, {}>
                         <text
                             textAnchor="middle"
                             style={{
-                                fontSize:"10px",
-                                fontFamily:"arial"
+                                fontSize: '10px',
+                                fontFamily: 'arial',
                             }}
                             x={x2}
-                            y={y2 + (this.props.invertTicks ? tickLength - 5 : 0)}
+                            y={
+                                y2 +
+                                (this.props.invertTicks ? tickLength - 5 : 0)
+                            }
                             dy="1em"
                         >
                             {tick.label}
@@ -98,28 +119,40 @@ export default class SVGAxis extends React.Component<SVGAxisProps, {}>
 
     private get label() {
         if (this.props.label) {
-            const tickLength = this.props.invertTicks ? -this.props.tickLength : this.props.tickLength;
+            const tickLength = this.props.invertTicks
+                ? -this.props.tickLength
+                : this.props.tickLength;
             const verticalPadding = this.props.verticalLabelPadding!;
             const horizontalPadding = this.props.horizontalLabelPadding!;
-            let x:number;
-            let y:number;
-            let transform:string;
+            let x: number;
+            let y: number;
+            let transform: string;
             if (this.props.vertical) {
-                x = this.props.x - tickLength + (this.props.invertTicks ? verticalPadding : -verticalPadding);
-                y = this.props.y + (this.props.length / 2);
+                x =
+                    this.props.x -
+                    tickLength +
+                    (this.props.invertTicks
+                        ? verticalPadding
+                        : -verticalPadding);
+                y = this.props.y + this.props.length / 2;
                 transform = `rotate(270,${x},${y})`;
             } else {
-                x = this.props.x + (this.props.length / 2);
-                y = this.props.y + tickLength + (this.props.invertTicks ? -horizontalPadding : horizontalPadding) ;
-                transform = "";
+                x = this.props.x + this.props.length / 2;
+                y =
+                    this.props.y +
+                    tickLength +
+                    (this.props.invertTicks
+                        ? -horizontalPadding
+                        : horizontalPadding);
+                transform = '';
             }
             return (
                 <text
                     textAnchor="middle"
                     style={{
-                        fontFamily: "arial",
-                        fontSize: "12px",
-                        fontWeight: "normal"
+                        fontFamily: 'arial',
+                        fontSize: '12px',
+                        fontWeight: 'normal',
                     }}
                     fill="#2E3436"
                     x={x}
@@ -135,8 +168,12 @@ export default class SVGAxis extends React.Component<SVGAxisProps, {}>
     }
 
     render() {
-        const x2 = this.props.vertical ? this.props.x : (this.props.x + this.props.length);
-        const y2 = this.props.vertical ? (this.props.y + this.props.length) : this.props.y;
+        const x2 = this.props.vertical
+            ? this.props.x
+            : this.props.x + this.props.length;
+        const y2 = this.props.vertical
+            ? this.props.y + this.props.length
+            : this.props.y;
         return (
             <g>
                 <line

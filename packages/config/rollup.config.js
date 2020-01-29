@@ -10,8 +10,12 @@ import postcssUrl from 'postcss-url';
 import svgr from '@svgr/rollup';
 
 // common rollup config options for all libraries under packages
-export default function getRollupOptions(input, mainOutput, moduleOutput, styles)
-{
+export default function getRollupOptions(
+    input,
+    mainOutput,
+    moduleOutput,
+    styles
+) {
     return {
         input: input,
         output: [
@@ -19,14 +23,14 @@ export default function getRollupOptions(input, mainOutput, moduleOutput, styles
                 file: mainOutput,
                 format: 'cjs',
                 exports: 'named',
-                sourcemap: true
+                sourcemap: true,
             },
             {
                 file: moduleOutput,
                 format: 'es',
                 exports: 'named',
-                sourcemap: true
-            }
+                sourcemap: true,
+            },
         ],
         plugins: [
             autoExternal(),
@@ -35,24 +39,24 @@ export default function getRollupOptions(input, mainOutput, moduleOutput, styles
                 extract: styles,
                 plugins: [
                     postcssUrl({
-                        url: 'inline'
-                    })
-                ]
+                        url: 'inline',
+                    }),
+                ],
             }),
             url(),
             svgr(),
             typescript({
                 rollupCommonJSResolveHack: true,
-                clean: true
+                clean: true,
             }),
             commonjs(),
             resolve(),
-            sourcemaps()
+            sourcemaps(),
         ],
         watch: {
             chokidar: {
-                usePolling: true
-            }
-        }
+                usePolling: true,
+            },
+        },
     };
 }

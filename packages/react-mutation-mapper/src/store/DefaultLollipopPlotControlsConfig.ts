@@ -1,9 +1,9 @@
-import {observable} from "mobx";
+import { observable } from 'mobx';
 
-import LollipopPlotControlsConfig from "../model/LollipopPlotControlsConfig";
+import LollipopPlotControlsConfig from '../model/LollipopPlotControlsConfig';
 
-export class DefaultLollipopPlotControlsConfig implements LollipopPlotControlsConfig
-{
+export class DefaultLollipopPlotControlsConfig
+    implements LollipopPlotControlsConfig {
     @observable
     public bottomYMaxInput: number | undefined;
 

@@ -1,14 +1,16 @@
-import {ICache} from "cbioportal-frontend-commons";
+import { ICache } from 'cbioportal-frontend-commons';
 import * as React from 'react';
-import RefComponent from "./RefComponent";
+import RefComponent from './RefComponent';
 
 type SummaryWithRefsProps = {
     content: string | undefined;
     type: 'tooltip' | 'linkout';
-    pmidData: ICache<any>
-}
+    pmidData: ICache<any>;
+};
 
-export default class SummaryWithRefs extends React.Component<SummaryWithRefsProps> {
+export default class SummaryWithRefs extends React.Component<
+    SummaryWithRefsProps
+> {
     render() {
         if (!this.props.content) {
             return <span />;
@@ -29,7 +31,13 @@ export default class SummaryWithRefs extends React.Component<SummaryWithRefsProp
         parts.forEach((part: string) => {
             // if delimiter convert to a JSX component
             if (part.match(regex)) {
-                content.push(<RefComponent pmidData={this.props.pmidData} componentType={this.props.type} content={part}/>)
+                content.push(
+                    <RefComponent
+                        pmidData={this.props.pmidData}
+                        componentType={this.props.type}
+                        content={part}
+                    />
+                );
             } else {
                 content.push(<span>{part}</span>);
             }

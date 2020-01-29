@@ -1,18 +1,18 @@
-@import "vars.module";
+@import 'vars.module';
 
 $oncokb-collapsible-height: 30px;
 $oncokb-collapsible-header-color: white;
 
 .collapsible-header {
-  cursor: pointer;
-  min-height: $oncokb-collapsible-height;
-  line-height: $oncokb-collapsible-height;
-  padding: 0 16px;
-  background-color: $oncokb-collapsible-header-color;
-  border-bottom: 1px solid $oncokb-border-color;
-  border-top: 1px solid $oncokb-border-color;
+    cursor: pointer;
+    min-height: $oncokb-collapsible-height;
+    line-height: $oncokb-collapsible-height;
+    padding: 0 16px;
+    background-color: $oncokb-collapsible-header-color;
+    border-bottom: 1px solid $oncokb-border-color;
+    border-top: 1px solid $oncokb-border-color;
 }
 
 .levels-collapse {
-  border-bottom: 1px solid $oncokb-border-color;
+    border-bottom: 1px solid $oncokb-border-color;
 }

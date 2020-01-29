@@ -1,5 +1,4 @@
-export function formatPercentValue(rate: number, fractionDigits: number = 1)
-{
+export function formatPercentValue(rate: number, fractionDigits: number = 1) {
     const fixed = rate.toFixed(fractionDigits);
 
     let displayValue = fixed;
@@ -13,5 +12,5 @@ export function formatPercentValue(rate: number, fractionDigits: number = 1)
 }
 
 export function numberOfLeadingDecimalZeros(value: number) {
-    return -Math.floor( (Math.log10(value) / Math.log10(10)) + 1);
+    return -Math.floor(Math.log10(value) / Math.log10(10) + 1);
 }

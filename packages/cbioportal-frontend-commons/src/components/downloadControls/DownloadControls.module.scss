@@ -1,18 +1,18 @@
 .downloadControls {
     .menuItem {
-        color:#000000;
-        margin:3px;
-        padding:5px;
-        user-select:none;
+        color: #000000;
+        margin: 3px;
+        padding: 5px;
+        user-select: none;
     }
 
     .menuItemEnabled:hover {
-        cursor:pointer;
-        text-decoration:underline;
+        cursor: pointer;
+        text-decoration: underline;
     }
 
     .menuItemDisabled {
         color: #b3b3b3;
-        font-style:italic;
+        font-style: italic;
     }
 }
