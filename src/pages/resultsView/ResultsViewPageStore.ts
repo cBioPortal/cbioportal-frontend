@@ -3876,12 +3876,15 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly selectedTreatments = remoteData<Treatment[]>({
+    readonly selectedGenericAssayEntitiesGroupByGenericAssayType = remoteData<{ [genericAssayType: string]: GenericAssayMeta[] }>({
         await: () => [this.genericAssayEntitiesGroupByGenericAssayType],
         invoke: () => {
-            const treatmentIdFromUrl = this.treatmentList;
+            const selectedGenericAssayEntitiesFromUrl: { [molecularProfileId: string]: string[] } = this.parsedGenericAssayGroups;
             return Promise.resolve(
-                [] as Treatment[]
+                _.mapValues(this.genericAssayEntitiesGroupByGenericAssayType.result, (value, key) => {
+                    const selectedEntityIds = selectedGenericAssayEntitiesFromUrl[key];
+                    return value.filter((entity) => selectedEntityIds.includes(entity.stableId));
+                })
             );
         },
     });

@@ -51,9 +51,11 @@ import {
     IAxisLogScaleParams,
     makeAxisLogScaleFunction,
     axisHasNegativeNumbers,
-    getLimitValues,
-} from './PlotsTabUtils';
-import { ClinicalAttribute } from '../../../shared/api/generated/CBioPortalAPI';
+    getLimitValues
+} from "./PlotsTabUtils";
+import {
+    ClinicalAttribute, GenericAssayMeta,
+} from '../../../shared/api/generated/CBioPortalAPI';
 import Timer = NodeJS.Timer;
 import ScatterPlot from 'shared/components/plots/ScatterPlot';
 import WaterfallPlot from 'shared/components/plots/WaterfallPlot';
@@ -1122,17 +1124,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     }
 
     @observable readonly horzTreatmentOptions = remoteData({
-        await: () => [this.props.store.selectedTreatments],
-        invoke: () => {
-            return Promise.resolve(
-                this.props.store.selectedTreatments.result!.map(
-                    (treatment: Treatment) => ({
-                        value: treatment.treatmentId,
-                        label: treatment.name,
-                    })
-                )
-            );
-        },
+        await:()=>[this.props.store.genericAssayEntitiesGroupByGenericAssayType],
+        invoke:()=>{
+            if (this.horzSelection.dataType && this.props.store.genericAssayEntitiesGroupByGenericAssayType.result && this.props.store.genericAssayEntitiesGroupByGenericAssayType.result[this.horzSelection.dataType]) {
+                return Promise.resolve(
+                    this.props.store.genericAssayEntitiesGroupByGenericAssayType.result[this.horzSelection.dataType].map((meta:GenericAssayMeta)=>({ value: meta.stableId, label: "NAME" in meta.genericEntityMetaProperties ? meta.genericEntityMetaProperties["NAME"] : ""}))
+                );
+            }
+            return Promise.resolve([] as  any[]);
+        }
     });
 
     @computed get vertTreatmentOptions() {

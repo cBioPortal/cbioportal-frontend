@@ -127,7 +127,7 @@ export interface IOncoprintControlsState {
     selectedClinicalAttributeIds?: string[];
     heatmapProfilesPromise?: MobxPromise<MolecularProfile[]>;
     genericAssayEntitiesGroupByGenericAssayTypePromise?: MobxPromise<{ [genericAssayType: string]: GenericAssayMeta[] }>;
-    selectedHeatmapProfile?: string;
+    selectedHeatmapProfileId?: string;
     selectedHeatmapProfileAlterationType?: string;
     selectedHeatmapProfileGenericAssayType?: string;
     heatmapIsDynamicallyQueried?: boolean;
@@ -151,8 +151,9 @@ export interface IOncoprintControlsProps {
     handlers: IOncoprintControlsHandlers;
     state: IOncoprintControlsState & IObservableObject;
     oncoprinterMode?: boolean;
+    molecularProfileIdToMolecularProfile?: { [molecularProfileId: string]: MolecularProfile };
     genericAssayEntitiesSelectOptionsGroupByGenericAssayType?: { [genericAssayType: string]: ISelectOption[] };
-    parsedGenericAssayGroupsFromUrl?: { [molecularProfileId: string]: string[] };
+    selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl?: { [genericAssayType: string]: string[] };
 }
 
 export interface ISelectOption {
@@ -205,7 +206,7 @@ export default class OncoprintControls extends React.Component<
 > {
     @observable horzZoomSliderState: number;
     @observable heatmapGenesReady = false;
-    @observable private _selectedGenericAssayEntityIds: string[] = this.props.parsedGenericAssayGroupsFromUrl && this.props.state.selectedHeatmapProfile && this.props.parsedGenericAssayGroupsFromUrl[this.props.state.selectedHeatmapProfile] ? this.props.parsedGenericAssayGroupsFromUrl[this.props.state.selectedHeatmapProfile] : [];
+    @observable private _selectedGenericAssayEntityIds: string[] = this.props.selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl && this.props.state.selectedHeatmapProfileGenericAssayType && this.props.selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[this.props.state.selectedHeatmapProfileGenericAssayType] ? this.props.selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[this.props.state.selectedHeatmapProfileGenericAssayType] : [];
     private textareaGenericAssayEntityText = '';
     @observable genericAssayEntityFilter = '';
     @observable showConfirmNgchmModal:boolean = false;
@@ -267,8 +268,9 @@ export default class OncoprintControls extends React.Component<
     private onHeatmapProfileSelect(option: { label: string; value: string }) {
         this.props.handlers.onSelectHeatmapProfile &&
             this.props.handlers.onSelectHeatmapProfile(option.value);
-        if (this.props.parsedGenericAssayGroupsFromUrl && this.props.parsedGenericAssayGroupsFromUrl[option.value]) {
-            this._selectedGenericAssayEntityIds = this.props.parsedGenericAssayGroupsFromUrl[option.value];
+        const genericAssayType = this.props.molecularProfileIdToMolecularProfile && this.props.molecularProfileIdToMolecularProfile[option.value] ? this.props.molecularProfileIdToMolecularProfile[option.value].genericAssayType : undefined;
+        if (this.props.selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl && genericAssayType && this.props.selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[genericAssayType]) {
+            this._selectedGenericAssayEntityIds = this.props.selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[genericAssayType];
         }
         else {
             this._selectedGenericAssayEntityIds = [];
@@ -561,7 +563,8 @@ export default class OncoprintControls extends React.Component<
     }
 
     @computed get selectedGenericAssayEntities(): ISelectOption[] {
-        return this._selectedGenericAssayEntityIds.map(
+        const filteredSelectedGenericAssayEntityIds = _.intersection(this._selectedGenericAssayEntityIds, _.keys(this.genericAssayEntitiesOptionsByValueMap));
+        return filteredSelectedGenericAssayEntityIds.map(
             o => this.genericAssayEntitiesOptionsByValueMap[o]
         );
     }
@@ -674,7 +677,7 @@ export default class OncoprintControls extends React.Component<
                                     .isPending
                             }
                             onChange={this.onHeatmapProfileSelect}
-                            value={this.props.state.selectedHeatmapProfile}
+                            value={this.props.state.selectedHeatmapProfileId}
                             options={this.heatmapProfileOptions}
                         />
                         {showGenesTextArea && [
