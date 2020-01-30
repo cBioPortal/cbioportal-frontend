@@ -88,6 +88,8 @@ import {
     getFilteredAndCompressedDataIntervalFilters,
     getUniqueKeyFromMolecularProfileIds,
     getMolecularProfileIdsFromUniqueKey,
+    getClinicalDataBySamples,
+    updateSavedUserPreferenceChartIds,
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -2198,62 +2200,6 @@ export class StudyViewPageStore {
         return this.clinicalDataBinPromises[uniqueKey];
     }
 
-    private async getClinicalDataBySamples(samples: Sample[]) {
-        let clinicalData: {
-            [sampleId: string]: { [attributeId: string]: string };
-        } = {};
-
-        let sampleClinicalData = await defaultClient.fetchClinicalDataUsingPOST(
-            {
-                clinicalDataType: 'SAMPLE',
-                clinicalDataMultiStudyFilter: {
-                    identifiers: _.map(samples, sample => {
-                        return {
-                            entityId: sample.sampleId,
-                            studyId: sample.studyId,
-                        };
-                    }),
-                } as ClinicalDataMultiStudyFilter,
-            }
-        );
-
-        _.forEach(sampleClinicalData, item => {
-            clinicalData[item.uniqueSampleKey] = {
-                ...(clinicalData[item.uniqueSampleKey] || {}),
-                [item.clinicalAttributeId]: item.value,
-            };
-        });
-
-        let patientClinicalData = await defaultClient.fetchClinicalDataUsingPOST(
-            {
-                clinicalDataType: ClinicalDataTypeEnum.PATIENT,
-                clinicalDataMultiStudyFilter: {
-                    identifiers: _.map(samples, sample => {
-                        return {
-                            entityId: sample.patientId,
-                            studyId: sample.studyId,
-                        };
-                    }),
-                } as ClinicalDataMultiStudyFilter,
-            }
-        );
-
-        const patientSamplesMap = _.groupBy(
-            samples,
-            sample => sample.uniquePatientKey
-        );
-
-        _.forEach(patientClinicalData, item => {
-            (patientSamplesMap[item.uniquePatientKey] || []).forEach(sample => {
-                clinicalData[sample.uniqueSampleKey] = {
-                    ...(clinicalData[sample.uniqueSampleKey] || {}),
-                    [item.clinicalAttributeId]: item.value,
-                };
-            });
-        });
-        return clinicalData;
-    }
-
     readonly molecularProfiles = remoteData<MolecularProfile[]>({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: async () => {
@@ -3198,7 +3144,9 @@ export class StudyViewPageStore {
                     toJS(this.studyIds)
                 );
                 if (userSettings) {
-                    return userSettings.chartSettings || [];
+                    return updateSavedUserPreferenceChartIds(
+                        userSettings.chartSettings
+                    );
                 }
             }
             return [];
@@ -4734,9 +4682,7 @@ export class StudyViewPageStore {
         invoke: async () => {
             let sampleClinicalDataMap: {
                 [attributeId: string]: { [attributeId: string]: string };
-            } = await this.getClinicalDataBySamples(
-                this.selectedSamples.result
-            );
+            } = await getClinicalDataBySamples(this.selectedSamples.result);
             return _.reduce(
                 this.selectedSamples.result,
                 (acc, next) => {
@@ -4998,7 +4944,7 @@ export class StudyViewPageStore {
 
     @autobind
     public async getDownloadDataPromise() {
-        let sampleClinicalDataMap = await this.getClinicalDataBySamples(
+        let sampleClinicalDataMap = await getClinicalDataBySamples(
             this.selectedSamples.result
         );
 
