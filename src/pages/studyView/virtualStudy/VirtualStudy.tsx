@@ -150,7 +150,7 @@ export default class VirtualStudy extends React.Component<
 
                     let parameters = {
                         name: this.name || this.namePlaceHolder,
-                        description: '',
+                        description: this.description,
                         studyViewFilter: studyViewFilter,
                         origin: this.props.studyWithSamples.map(
                             study => study.studyId
