@@ -20,7 +20,6 @@ export enum ResultsViewURLQueryEnum {
     Z_SCORE_THRESHOLD = "Z_SCORE_THRESHOLD",
     geneset_list = "geneset_list",
     generic_assay_groups = "generic_assay_groups",
-    treatment_list = "treatment_list",
     show_samples = "show_samples",
     heatmap_track_groups = "heatmap_track_groups",
     oncoprint_sortby = "oncoprint_sortby",
@@ -60,7 +59,6 @@ export default class ResultsViewURLWrapper extends URLWrapper<
                 oncoprint_sort_by_mutation_type: { isSessionProp:false },
                 oncoprint_sort_by_drivers: { isSessionProp:false},
                 generic_assay_groups: { isSessionProp:false },
-                treatment_list: { isSessionProp:false },
                 exclude_germline_mutations: { isSessionProp:false },
                 patient_enrichments: { isSessionProp:false },
 

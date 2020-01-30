@@ -552,13 +552,6 @@ export class ResultsViewPageStore {
             : [];
     }
 
-    @computed get treatmentList() {
-        return this.urlWrapper.query.treatment_list &&
-            this.urlWrapper.query.treatment_list.trim().length
-            ? this.urlWrapper.query.treatment_list.trim().split(/;/)
-            : [];
-    }
-
     @computed get parsedGenericAssayGroups() {
         // empty if no heatmap tracks param
         const groups = this.urlWrapper.query.generic_assay_groups ?
