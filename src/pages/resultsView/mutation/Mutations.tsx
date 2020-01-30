@@ -152,6 +152,10 @@ export default class Mutations extends React.Component<
                                 this.props.store.mutationCountCache
                             }
                             genomeNexusCache={this.props.store.genomeNexusCache}
+                            genomeNexusMutationAssessorCache={
+                                this.props.store
+                                    .genomeNexusMutationAssessorCache
+                            }
                             genomeNexusMyVariantInfoCache={
                                 this.props.store.genomeNexusMyVariantInfoCache
                             }
