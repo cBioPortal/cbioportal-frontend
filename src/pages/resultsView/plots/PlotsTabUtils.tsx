@@ -904,7 +904,7 @@ function makeAxisDataPromise_Geneset(
     });
 }
 
-function makeAxisDataPromise_Treatment(
+function makeAxisDataPromise_GenericAssay(
     entityId:string,
     molecularProfileId:string,
     genericAssayMolecularDataCachePromise:MobxPromise<GenericAssayMolecularDataCache>,
@@ -930,7 +930,7 @@ function makeAxisDataPromise_Treatment(
                     };
                 }),
                 datatype: "number",
-                treatmentId: entityId
+                genericAssayEntityId: entityId
             });
         },
     });
@@ -963,16 +963,10 @@ export function makeAxisDataPromise(
 
     let ret:MobxPromise<IAxisData> = remoteData(()=>new Promise<IAxisData>(()=>0));
 
-    if (
-        selection.dataType &&
-        _.keys(GenericAssayTypeConstants).includes(selection.dataType)
-    ) {
-        if (
-            selection.treatmentId !== undefined &&
-            selection.dataSourceId !== undefined
-        ) {
-            ret = makeAxisDataPromise_Treatment(
-                selection.treatmentId, selection.dataSourceId, genericAssayMolecularDataCachePromise,
+    if (selection.dataType && _.keys(GenericAssayTypeConstants).includes(selection.dataType)) {
+        if (selection.genericAssayEntityId !== undefined && selection.dataSourceId !== undefined) {
+            ret = makeAxisDataPromise_GenericAssay(
+                selection.genericAssayEntityId, selection.dataSourceId, genericAssayMolecularDataCachePromise,
                 molecularProfileIdToMolecularProfile);
             return ret;
         }
@@ -1095,19 +1089,10 @@ export function getAxisLabel(
             }
             break;
     }
-    if (
-        selection.dataType &&
-        _.keys(GenericAssayTypeConstants).includes(selection.dataType)
-    ) {
-        if (
-            !!(
-                profile &&
-                selection.selectedTreatmentOption &&
-                selection.selectedTreatmentOption.label
-            )
-        ) {
-            const treatmentName = selection.selectedTreatmentOption.label;
-            label = `${treatmentName}: ${profile.name}`;
+    if (selection.dataType && _.keys(GenericAssayTypeConstants).includes(selection.dataType)) {
+        if (!!(profile && selection.selectedGenericAssayOption && selection.selectedGenericAssayOption.label)) {
+            const genericAssayEntityName = selection.selectedGenericAssayOption.label;
+            label = `${genericAssayEntityName}: ${profile.name}`;
         }
     }
 
@@ -2595,20 +2580,17 @@ export function makeAxisLogScaleFunction(
     let fLogScale; // function for (log-)transforming a value
     let fInvLogScale; // function for back-transforming a value transformed with fLogScale
 
-    if (
-        axisSelection.dataType === undefined ||
-        !_.keys(GenericAssayTypeConstants).includes(axisSelection.dataType)
-    ) {
-        // log-transformation parameters for non-treatment reponse
+    if(axisSelection.dataType === undefined || !_.keys(GenericAssayTypeConstants).includes(axisSelection.dataType)) {
+        // log-transformation parameters for non-genericAssay reponse 
         // profile data. Note: log2-transformation is used by default
         label = 'log2';
         fLogScale = (x: number) => Math.log2(Math.max(x, MIN_LOG_ARGUMENT));
         fInvLogScale = (x: number) => Math.pow(2, x);
     } else {
-        // log-transformation parameters for treatment reponse profile
-        // data. Note: log10-transformation is used for treatments
-        label = 'log10';
-        fLogScale = (x: number, offset?: number) => {
+        // log-transformation parameters for generic assay reponse profile
+        // data. Note: log10-transformation is used for generic assays
+        label = "log10";
+        fLogScale = (x:number, offset?:number) => {
             // for log transformation one should be able to handle negative values;
             // this is done by pre-application of a externally provided offset.
             if (!offset) {

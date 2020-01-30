@@ -202,7 +202,6 @@ import {
 import { IVirtualStudyProps } from 'pages/studyView/virtualStudy/VirtualStudy';
 import { decideMolecularProfileSortingOrder } from './download/DownloadUtils';
 import ResultsViewURLWrapper from "pages/resultsView/ResultsViewURLWrapper";
-import { Treatment } from 'shared/lib/GenericAssayUtils/TreatmentUtils';
 import { fetchGenericAssayMetaByMolecularProfileIds } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 type Optional<T> =
