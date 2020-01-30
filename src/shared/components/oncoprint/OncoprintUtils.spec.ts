@@ -680,19 +680,18 @@ describe('getGenericAssayTrackRuleSetParams', () => {
 });
 
 describe('extractGenericAssaySelections', () => {
-
     const selectedEntities:string[] = [];
     const entityMap = {
-        'treatmentA': {id: 'treatmentA', value: 'valueA', label: 'labelA'}
+        'genericAssayA': {id: 'genericAssayA', value: 'valueA', label: 'labelA'}
     };
 
-    it('Adds recognized treatments to selection', () => {
-        extractGenericAssaySelections("treatmentA treatmentB", selectedEntities, entityMap);
-        assert.deepEqual(selectedEntities, ['treatmentA']);
+    it('Adds recognized generic assay entities to selection', () => {
+        extractGenericAssaySelections("genericAssayA genericAssayB", selectedEntities, entityMap);
+        assert.deepEqual(selectedEntities, ['genericAssayA']);
     });
 
-    it('Removed recognized treatments from text field', () => {
-        const text = extractGenericAssaySelections('treatmentC treatmentA treatmentB', selectedEntities, entityMap);
-        assert.equal(text, 'treatmentC  treatmentB');
+    it('Removed recognized generic assay entities from text field', () => {
+        const text = extractGenericAssaySelections('genericAssayC genericAssayA genericAssayB', selectedEntities, entityMap);
+        assert.equal(text, 'genericAssayC  genericAssayB');
     });
 });

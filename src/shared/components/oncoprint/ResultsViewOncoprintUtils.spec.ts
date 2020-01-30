@@ -1,9 +1,8 @@
 import {assert} from "chai";
-import {GenePanelData, MolecularProfile} from "../../api/generated/CBioPortalAPI";
-import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
+import {GenePanelData, MolecularProfile, GenericAssayMeta} from "../../api/generated/CBioPortalAPI";
+import {AlterationTypeConstants, GenericAssayTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
 import {alterationTypeToProfiledForText, makeProfiledInClinicalAttributes, genericAssayEntitiesToSelectOptionsGroupByGenericAssayType} from "./ResultsViewOncoprintUtils";
 import {SpecialAttribute} from "../../cache/ClinicalDataCache";
-import { Treatment } from "shared/lib/GenericAssayUtils/TreatmentUtils";
 
 describe('ResultsViewOncoprintUtils', () => {
     describe('makeProfiledInClinicalAttributes', () => {
@@ -363,96 +362,124 @@ describe('ResultsViewOncoprintUtils', () => {
 
     // TODO: should implement tests for the new genericAssayEntitiesToSelectOptionsGroupByGenericAssayType method
 
-    // describe('treatmentSelectOptions()', () => {
+    describe('genericAssayEntitiesToSelectOptionsGroupByGenericAssayType()', () => {
         
-    //     it('Includes entity_stable_id and description when present and unique', () => {
+        it('Includes entity_stable_id and description when present and unique', () => {
+            // create a genericAssayEntitiesGroupByGenericAssayType object and cast the data as GenericAssayMeta[]
+            const genericAssayEntitiesGroupByGenericAssayType: { [genericAssayType: string]: GenericAssayMeta[] } = {};
+            genericAssayEntitiesGroupByGenericAssayType[GenericAssayTypeConstants.TREATMENT_RESPONSE] = [
+                {
+                    stableId: 'id_1',
+                    entityType: 'GENERIC_ASSAY',
+                    genericEntityMetaProperties: {
+                        NAME: 'name_1',
+                        DESCRIPTION: 'desc_1'
+                    }
+                },
+                {
+                    stableId: 'id_2',
+                    entityType: 'GENERIC_ASSAY',
+                    genericEntityMetaProperties: {
+                        NAME: 'name_2',
+                        DESCRIPTION: 'desc_2'
+                    }
+                }
+            ] as GenericAssayMeta[];
             
-    //         const treatments = [
-    //             {
-    //                 treatmentId: 'id_1',
-    //                 name: 'name_1',
-    //                 description: 'desc_1'
-    //             },
-    //             {
-    //                 treatmentId: 'id_2',
-    //                 name: 'name_2',
-    //                 description: 'desc_2'
-    //             }
-    //         ] as Treatment[];
-            
-    //         const expect = [
-    //             {id: 'id_1', value: 'name_1 (id_1): desc_1', label: 'name_1 (id_1): desc_1'},
-    //             {id: 'id_2', value: 'name_2 (id_2): desc_2', label: 'name_2 (id_2): desc_2'}
-    //         ];
-    //         assert.deepEqual(treatmentsToSelectOptions(treatments), expect);
-    //     });
+            const expect = [
+                {id: 'id_1', value: 'name_1 (id_1): desc_1', label: 'name_1 (id_1): desc_1'},
+                {id: 'id_2', value: 'name_2 (id_2): desc_2', label: 'name_2 (id_2): desc_2'}
+            ];
+            assert.deepEqual(genericAssayEntitiesToSelectOptionsGroupByGenericAssayType(genericAssayEntitiesGroupByGenericAssayType)[GenericAssayTypeConstants.TREATMENT_RESPONSE], expect);
+        });
 
-    //     it('Hides description when same as entity_stable_id', () => {
-        
-    //         const treatments = [
-    //             {
-    //                 treatmentId: 'id_1',
-    //                 name: 'name_1',
-    //                 description: 'id_1'
-    //             },
-    //             {
-    //                 treatmentId: 'id_2',
-    //                 name: 'name_2',
-    //                 description: 'id_2'
-    //             }
-    //         ] as Treatment[];
+        it('Hides description when same as entity_stable_id', () => {
+            // create a genericAssayEntitiesGroupByGenericAssayType object and cast the data as GenericAssayMeta[]
+            const genericAssayEntitiesGroupByGenericAssayType: { [genericAssayType: string]: GenericAssayMeta[] } = {};
+            genericAssayEntitiesGroupByGenericAssayType[GenericAssayTypeConstants.TREATMENT_RESPONSE] = [
+                {
+                    stableId: 'id_1',
+                    entityType: 'GENERIC_ASSAY',
+                    genericEntityMetaProperties: {
+                        NAME: 'name_1',
+                        DESCRIPTION: 'id_1'
+                    }
+                },
+                {
+                    stableId: 'id_2',
+                    entityType: 'GENERIC_ASSAY',
+                    genericEntityMetaProperties: {
+                        NAME: 'name_2',
+                        DESCRIPTION: 'id_2'
+                    }
+                }
+            ] as GenericAssayMeta[];
             
-    //         const expect = [
-    //             {id: 'id_1', value: 'name_1 (id_1)', label: 'name_1 (id_1)'},
-    //             {id: 'id_2', value: 'name_2 (id_2)', label: 'name_2 (id_2)'}
-    //         ];
-    //         assert.deepEqual(treatmentsToSelectOptions(treatments), expect);
-    //     });
+            const expect = [
+                {id: 'id_1', value: 'name_1 (id_1)', label: 'name_1 (id_1)'},
+                {id: 'id_2', value: 'name_2 (id_2)', label: 'name_2 (id_2)'}
+            ];
+            assert.deepEqual(genericAssayEntitiesToSelectOptionsGroupByGenericAssayType(genericAssayEntitiesGroupByGenericAssayType)[GenericAssayTypeConstants.TREATMENT_RESPONSE], expect);
+        });
     
-    //     it('Hides entity_stable_id when same as name', () => {
+        it('Hides entity_stable_id when same as name', () => {
+            // create a genericAssayEntitiesGroupByGenericAssayType object and cast the data as GenericAssayMeta[]
+            const genericAssayEntitiesGroupByGenericAssayType: { [genericAssayType: string]: GenericAssayMeta[] } = {};
+            genericAssayEntitiesGroupByGenericAssayType[GenericAssayTypeConstants.TREATMENT_RESPONSE] = [
+                {
+                    stableId: 'id_1',
+                    entityType: 'GENERIC_ASSAY',
+                    genericEntityMetaProperties: {
+                        NAME: 'id_1',
+                        DESCRIPTION: 'desc_1'
+                    }
+                },
+                {
+                    stableId: 'id_2',
+                    entityType: 'GENERIC_ASSAY',
+                    genericEntityMetaProperties: {
+                        NAME: 'id_2',
+                        DESCRIPTION: 'desc_2'
+                    }
+                }
+            ] as GenericAssayMeta[];
             
-    //         const treatments = [
-    //             {
-    //                 treatmentId: 'id_1',
-    //                 name: 'name_1',
-    //                 description: 'id_1'
-    //             },
-    //             {
-    //                 treatmentId: 'id_2',
-    //                 name: 'name_2',
-    //                 description: 'id_2'
-    //             }
-    //         ] as Treatment[];
-            
-    //         const expect = [
-    //             {id: 'id_1', value: 'name_1 (id_1)', label: 'name_1 (id_1)'},
-    //             {id: 'id_2', value: 'name_2 (id_2)', label: 'name_2 (id_2)'}
-    //         ];
-    //         assert.deepEqual(treatmentsToSelectOptions(treatments), expect);
-    //     });
+            const expect = [
+                {id: 'id_1', value: 'id_1: desc_1', label: 'id_1: desc_1'},
+                {id: 'id_2', value: 'id_2: desc_2', label: 'id_2: desc_2'}
+            ];
+            assert.deepEqual(genericAssayEntitiesToSelectOptionsGroupByGenericAssayType(genericAssayEntitiesGroupByGenericAssayType)[GenericAssayTypeConstants.TREATMENT_RESPONSE], expect);
+        });
         
-    //     it('Hides name and description when same as entity_stable_id', () => {
+        it('Hides name and description when same as entity_stable_id', () => {
+            // create a genericAssayEntitiesGroupByGenericAssayType object and cast the data as GenericAssayMeta[]
+            const genericAssayEntitiesGroupByGenericAssayType: { [genericAssayType: string]: GenericAssayMeta[] } = {};
+            genericAssayEntitiesGroupByGenericAssayType[GenericAssayTypeConstants.TREATMENT_RESPONSE] = [
+                {
+                    stableId: 'id_1',
+                    entityType: 'GENERIC_ASSAY',
+                    genericEntityMetaProperties: {
+                        NAME: 'id_1',
+                        DESCRIPTION: 'id_1'
+                    }
+                },
+                {
+                    stableId: 'id_2',
+                    entityType: 'GENERIC_ASSAY',
+                    genericEntityMetaProperties: {
+                        NAME: 'id_2',
+                        DESCRIPTION: 'id_2'
+                    }
+                }
+            ] as GenericAssayMeta[];
             
-    //         const treatments = [
-    //             {
-    //                 treatmentId: 'id_1',
-    //                 name: 'id_1',
-    //                 description: 'id_1'
-    //             },
-    //             {
-    //                 treatmentId: 'id_2',
-    //                 name: 'id_2',
-    //                 description: 'id_2'
-    //             }
-    //         ] as Treatment[];
-            
-    //         const expect = [
-    //             {id: 'id_1', value: 'id_1', label: 'id_1'},
-    //             {id: 'id_2', value: 'id_2', label: 'id_2'}
-    //         ];
-    //         assert.deepEqual(treatmentsToSelectOptions(treatments), expect);
-    //     });
+            const expect = [
+                {id: 'id_1', value: 'id_1', label: 'id_1'},
+                {id: 'id_2', value: 'id_2', label: 'id_2'}
+            ];
+            assert.deepEqual(genericAssayEntitiesToSelectOptionsGroupByGenericAssayType(genericAssayEntitiesGroupByGenericAssayType)[GenericAssayTypeConstants.TREATMENT_RESPONSE], expect);
+        });
         
-    // });
+    });
 
 });

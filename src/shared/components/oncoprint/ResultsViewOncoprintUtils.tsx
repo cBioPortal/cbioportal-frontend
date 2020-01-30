@@ -236,7 +236,7 @@ export function genericAssayEntitiesToSelectOptionsGroupByGenericAssayType(gener
             const name = "NAME" in d.genericEntityMetaProperties ? d.genericEntityMetaProperties["NAME"] : NOT_APPLICABLE_VALUE;
             const description = "DESCRIPTION" in d.genericEntityMetaProperties ? d.genericEntityMetaProperties["DESCRIPTION"] : NOT_APPLICABLE_VALUE;
             const uniqueName = name !== d.stableId;
-            const uniqueDesc = description !== d.stableId && d.stableId !== name;
+            const uniqueDesc = description !== d.stableId && description !== name;
             let label = "";
             if (!uniqueName && !uniqueDesc) {
                 label = d.stableId;
