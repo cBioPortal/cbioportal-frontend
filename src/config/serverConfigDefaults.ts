@@ -89,8 +89,8 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
             cancer genomics studies.  The table below lists the number of available samples per data type and tumor.`,
 
     skin_example_study_queries: `tcga pancancer atlas\n
-                                     tcga provisional\n
-                                     tcga -provisional -pancancer\n
+                                     tcga legacy\n
+                                     tcga -legacy -pancancer\n
                                      tcga or icgc\n
                                      msk-impact\n
                                      -\"cell line\"\n
