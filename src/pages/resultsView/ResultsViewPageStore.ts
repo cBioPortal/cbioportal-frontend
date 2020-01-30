@@ -3863,7 +3863,6 @@ export class ResultsViewPageStore {
     readonly genericAssayEntitiesGroupByGenericAssayType = remoteData<{ [genericAssayType: string]: GenericAssayMeta[] }>({
         await: () => [this.molecularProfilesInStudies],
         invoke: async () => {
-            console.log(this.molecularProfilesInStudies.result);
             return await fetchGenericAssayMetaByMolecularProfileIds(this.molecularProfilesInStudies.result);
         }
     });
