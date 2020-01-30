@@ -149,7 +149,7 @@ export interface IBaseHeatmapTrackSpec {
 }
 export interface IHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     data: IBaseHeatmapTrackDatum[]; // can be IGeneHeatmapTrackDatum or IGenericAssayHeatmapTrackDatum
-    naLegendLabel?:string;
+    naLegendLabel?: string;
     info?: string;
     labelColor?: string;
     labelCircleColor?: string;

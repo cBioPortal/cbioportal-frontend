@@ -167,7 +167,9 @@ export default function tabularDownload(
     }
 
     //Add heatmap data
-    const exportedHeatmapTracks = (heatmapTracks as IBaseHeatmapTrackSpec[]).concat(genericAssayHeatmapTracks as IBaseHeatmapTrackSpec[]).concat(genesetTracks as IBaseHeatmapTrackSpec[]);
+    const exportedHeatmapTracks = (heatmapTracks as IBaseHeatmapTrackSpec[])
+        .concat(genericAssayHeatmapTracks as IBaseHeatmapTrackSpec[])
+        .concat(genesetTracks as IBaseHeatmapTrackSpec[]);
     for (const heatmapTrack of exportedHeatmapTracks) {
         const currentHeatmapGene = heatmapTrack.label;
         const currentHeatmapType =

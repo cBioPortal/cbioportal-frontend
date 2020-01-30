@@ -1,18 +1,25 @@
-import {CoverageInformation} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
-import {ClinicalAttribute, MolecularProfile, Sample, GenericAssayMeta} from "../../api/generated/CBioPortalAPI";
-import {SpecialAttribute} from "../../cache/ClinicalDataCache";
-import _ from "lodash";
-import naturalSort from "javascript-natural-sort";
-import {Group} from "../../api/ComparisonGroupClient";
-import * as React from "react";
-import { ISelectOption } from "./controls/OncoprintControls";
-import { NOT_APPLICABLE_VALUE } from "shared/lib/GenericAssayUtils/GenericAssayCommonUtils";
+import { CoverageInformation } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
+import {
+    ClinicalAttribute,
+    MolecularProfile,
+    Sample,
+    GenericAssayMeta,
+} from '../../api/generated/CBioPortalAPI';
+import { SpecialAttribute } from '../../cache/ClinicalDataCache';
+import _ from 'lodash';
+import naturalSort from 'javascript-natural-sort';
+import { Group } from '../../api/ComparisonGroupClient';
+import * as React from 'react';
+import { ISelectOption } from './controls/OncoprintControls';
+import { NOT_APPLICABLE_VALUE } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
-export const alterationTypeToProfiledForText:{[alterationType:string]:string} = {
-    "MUTATION_EXTENDED": "mutations",
-    "COPY_NUMBER_ALTERATION": "copy number alterations",
-    "MRNA_EXPRESSION": "mRNA expression",
-    "PROTEIN_LEVEL": "protein expression"
+export const alterationTypeToProfiledForText: {
+    [alterationType: string]: string;
+} = {
+    MUTATION_EXTENDED: 'mutations',
+    COPY_NUMBER_ALTERATION: 'copy number alterations',
+    MRNA_EXPRESSION: 'mRNA expression',
+    PROTEIN_LEVEL: 'protein expression',
 };
 
 export function getAnnotatingProgressMessage(
@@ -223,21 +230,33 @@ export function makeProfiledInClinicalAttributes(
     return attributes;
 }
 
-export function genericAssayEntitiesToSelectOptionsGroupByGenericAssayType(genericAssayEntitiesGroupByGenericAssayType: { [genericAssayType: string]: GenericAssayMeta[] }): { [genericAssayType: string]: ISelectOption[] } {
+export function genericAssayEntitiesToSelectOptionsGroupByGenericAssayType(genericAssayEntitiesGroupByGenericAssayType: {
+    [genericAssayType: string]: GenericAssayMeta[];
+}): { [genericAssayType: string]: ISelectOption[] } {
     // Note: name and desc are optional fields for generic assay entities
     // When not provided in the data file, these fields are assigned the
     // value of the entity_stable_id. The code below hides fields when
     // indentical to the entity_stable_id.
-    const genericAssayTypes = _.keys(genericAssayEntitiesGroupByGenericAssayType);
+    const genericAssayTypes = _.keys(
+        genericAssayEntitiesGroupByGenericAssayType
+    );
     const result: { [genericAssayType: string]: ISelectOption[] } = {};
     genericAssayTypes.map(genericAssayType => {
-        const entities = genericAssayEntitiesGroupByGenericAssayType[genericAssayType];
-        result[genericAssayType] = _.map(entities, (d:GenericAssayMeta) => {
-            const name = "NAME" in d.genericEntityMetaProperties ? d.genericEntityMetaProperties["NAME"] : NOT_APPLICABLE_VALUE;
-            const description = "DESCRIPTION" in d.genericEntityMetaProperties ? d.genericEntityMetaProperties["DESCRIPTION"] : NOT_APPLICABLE_VALUE;
+        const entities =
+            genericAssayEntitiesGroupByGenericAssayType[genericAssayType];
+        result[genericAssayType] = _.map(entities, (d: GenericAssayMeta) => {
+            const name =
+                'NAME' in d.genericEntityMetaProperties
+                    ? d.genericEntityMetaProperties['NAME']
+                    : NOT_APPLICABLE_VALUE;
+            const description =
+                'DESCRIPTION' in d.genericEntityMetaProperties
+                    ? d.genericEntityMetaProperties['DESCRIPTION']
+                    : NOT_APPLICABLE_VALUE;
             const uniqueName = name !== d.stableId;
-            const uniqueDesc = description !== d.stableId && description !== name;
-            let label = "";
+            const uniqueDesc =
+                description !== d.stableId && description !== name;
+            let label = '';
             if (!uniqueName && !uniqueDesc) {
                 label = d.stableId;
             } else if (!uniqueName) {
@@ -255,7 +274,7 @@ export function genericAssayEntitiesToSelectOptionsGroupByGenericAssayType(gener
             return {
                 id: d.stableId,
                 value: label,
-                label: label
+                label: label,
             };
         });
     });

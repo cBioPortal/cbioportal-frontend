@@ -31,35 +31,50 @@ import {
     CNA_COLOR_AMP,
     CNA_COLOR_HOMDEL,
     DEFAULT_GREY,
-    MUT_COLOR_FUSION, MUT_COLOR_INFRAME, MUT_COLOR_INFRAME_PASSENGER,
-    MUT_COLOR_MISSENSE, MUT_COLOR_MISSENSE_PASSENGER, MUT_COLOR_OTHER, MUT_COLOR_PROMOTER, MUT_COLOR_TRUNC,
-    MUT_COLOR_TRUNC_PASSENGER
-} from "shared/lib/Colors";
-import {CoverageInformation} from "../ResultsViewPageStoreUtils";
-import {IBoxScatterPlotData} from "../../../shared/components/plots/BoxScatterPlot";
-import {AlterationTypeConstants, GenericAssayTypeConstants, AnnotatedMutation, AnnotatedNumericGeneMolecularData} from "../ResultsViewPageStore";
-import numeral from "numeral";
-import GenesetMolecularDataCache from "../../../shared/cache/GenesetMolecularDataCache";
-import { GenesetMolecularData } from "../../../shared/api/generated/CBioPortalAPIInternal";
-import {MUTATION_COUNT} from "../../studyView/StudyViewPageStore";
-import ClinicalDataCache from "../../../shared/cache/ClinicalDataCache";
-import GenericAssayMolecularDataCache, { GenericAssayDataEnhanced } from "../../../shared/cache/GenericAssayMolecularDataCache";
-import { getJitterForCase, dataPointIsLimited } from "../../../shared/components/plots/PlotUtils";
-import { isSampleProfiled } from "../../../shared/lib/isSampleProfiled";
+    MUT_COLOR_FUSION,
+    MUT_COLOR_INFRAME,
+    MUT_COLOR_INFRAME_PASSENGER,
+    MUT_COLOR_MISSENSE,
+    MUT_COLOR_MISSENSE_PASSENGER,
+    MUT_COLOR_OTHER,
+    MUT_COLOR_PROMOTER,
+    MUT_COLOR_TRUNC,
+    MUT_COLOR_TRUNC_PASSENGER,
+} from 'shared/lib/Colors';
+import { CoverageInformation } from '../ResultsViewPageStoreUtils';
+import { IBoxScatterPlotData } from '../../../shared/components/plots/BoxScatterPlot';
+import {
+    AlterationTypeConstants,
+    GenericAssayTypeConstants,
+    AnnotatedMutation,
+    AnnotatedNumericGeneMolecularData,
+} from '../ResultsViewPageStore';
+import numeral from 'numeral';
+import GenesetMolecularDataCache from '../../../shared/cache/GenesetMolecularDataCache';
+import { GenesetMolecularData } from '../../../shared/api/generated/CBioPortalAPIInternal';
+import { MUTATION_COUNT } from '../../studyView/StudyViewPageStore';
+import ClinicalDataCache from '../../../shared/cache/ClinicalDataCache';
+import GenericAssayMolecularDataCache, {
+    GenericAssayDataEnhanced,
+} from '../../../shared/cache/GenericAssayMolecularDataCache';
+import {
+    getJitterForCase,
+    dataPointIsLimited,
+} from '../../../shared/components/plots/PlotUtils';
+import { isSampleProfiled } from '../../../shared/lib/isSampleProfiled';
 
-
-export const CLIN_ATTR_DATA_TYPE = "clinical_attribute";
-export const GENESET_DATA_TYPE = "GENESET_SCORE";
-export const dataTypeToDisplayType:{[s:string]:string} = {
-    [AlterationTypeConstants.MUTATION_EXTENDED]: "Mutation",
-    [AlterationTypeConstants.COPY_NUMBER_ALTERATION]: "Copy Number",
-    [AlterationTypeConstants.MRNA_EXPRESSION]: "mRNA",
-    [AlterationTypeConstants.PROTEIN_LEVEL]: "Protein Level",
-    [AlterationTypeConstants.METHYLATION]: "DNA Methylation",
-    [CLIN_ATTR_DATA_TYPE]:"Clinical Attribute",
-    [GENESET_DATA_TYPE]:"Gene Sets",
-    [GenericAssayTypeConstants.TREATMENT_RESPONSE]: "Treatment Response",
-    [GenericAssayTypeConstants.MUTATIONAL_SIGNATURE]: "Mutational Signature"
+export const CLIN_ATTR_DATA_TYPE = 'clinical_attribute';
+export const GENESET_DATA_TYPE = 'GENESET_SCORE';
+export const dataTypeToDisplayType: { [s: string]: string } = {
+    [AlterationTypeConstants.MUTATION_EXTENDED]: 'Mutation',
+    [AlterationTypeConstants.COPY_NUMBER_ALTERATION]: 'Copy Number',
+    [AlterationTypeConstants.MRNA_EXPRESSION]: 'mRNA',
+    [AlterationTypeConstants.PROTEIN_LEVEL]: 'Protein Level',
+    [AlterationTypeConstants.METHYLATION]: 'DNA Methylation',
+    [CLIN_ATTR_DATA_TYPE]: 'Clinical Attribute',
+    [GENESET_DATA_TYPE]: 'Gene Sets',
+    [GenericAssayTypeConstants.TREATMENT_RESPONSE]: 'Treatment Response',
+    [GenericAssayTypeConstants.MUTATIONAL_SIGNATURE]: 'Mutational Signature',
 };
 
 export const mutationTypeToDisplayName: {
@@ -905,22 +920,32 @@ function makeAxisDataPromise_Geneset(
 }
 
 function makeAxisDataPromise_GenericAssay(
-    entityId:string,
-    molecularProfileId:string,
-    genericAssayMolecularDataCachePromise:MobxPromise<GenericAssayMolecularDataCache>,
-    molecularProfileIdToMolecularProfile:MobxPromise<{[molecularProfileId:string]:MolecularProfile}>
-):MobxPromise<IAxisData> {
-
+    entityId: string,
+    molecularProfileId: string,
+    genericAssayMolecularDataCachePromise: MobxPromise<
+        GenericAssayMolecularDataCache
+    >,
+    molecularProfileIdToMolecularProfile: MobxPromise<{
+        [molecularProfileId: string]: MolecularProfile;
+    }>
+): MobxPromise<IAxisData> {
     return remoteData({
-        await:()=>[genericAssayMolecularDataCachePromise, molecularProfileIdToMolecularProfile],
+        await: () => [
+            genericAssayMolecularDataCachePromise,
+            molecularProfileIdToMolecularProfile,
+        ],
         invoke: async () => {
             const profile = molecularProfileIdToMolecularProfile.result![
                 molecularProfileId
             ];
             const makeRequest = true;
             await genericAssayMolecularDataCachePromise.result!.getPromise(
-                 {stableId: entityId, molecularProfileId}, makeRequest);
-            const data:GenericAssayDataEnhanced[] = genericAssayMolecularDataCachePromise.result!.get({molecularProfileId, stableId: entityId})!.data!;
+                { stableId: entityId, molecularProfileId },
+                makeRequest
+            );
+            const data: GenericAssayDataEnhanced[] = genericAssayMolecularDataCachePromise.result!.get(
+                { molecularProfileId, stableId: entityId }
+            )!.data!;
             return Promise.resolve({
                 data: data.map(d => {
                     return {
@@ -929,8 +954,8 @@ function makeAxisDataPromise_GenericAssay(
                         thresholdType: d.thresholdType,
                     };
                 }),
-                datatype: "number",
-                genericAssayEntityId: entityId
+                datatype: 'number',
+                genericAssayEntityId: entityId,
             });
         },
     });
@@ -958,16 +983,28 @@ export function makeAxisDataPromise(
     coverageInformation: MobxPromise<CoverageInformation>,
     samples: MobxPromise<Sample[]>,
     genesetMolecularDataCachePromise: MobxPromise<GenesetMolecularDataCache>,
-    genericAssayMolecularDataCachePromise: MobxPromise<GenericAssayMolecularDataCache>
-):MobxPromise<IAxisData> {
+    genericAssayMolecularDataCachePromise: MobxPromise<
+        GenericAssayMolecularDataCache
+    >
+): MobxPromise<IAxisData> {
+    let ret: MobxPromise<IAxisData> = remoteData(
+        () => new Promise<IAxisData>(() => 0)
+    );
 
-    let ret:MobxPromise<IAxisData> = remoteData(()=>new Promise<IAxisData>(()=>0));
-
-    if (selection.dataType && _.keys(GenericAssayTypeConstants).includes(selection.dataType)) {
-        if (selection.genericAssayEntityId !== undefined && selection.dataSourceId !== undefined) {
+    if (
+        selection.dataType &&
+        _.keys(GenericAssayTypeConstants).includes(selection.dataType)
+    ) {
+        if (
+            selection.genericAssayEntityId !== undefined &&
+            selection.dataSourceId !== undefined
+        ) {
             ret = makeAxisDataPromise_GenericAssay(
-                selection.genericAssayEntityId, selection.dataSourceId, genericAssayMolecularDataCachePromise,
-                molecularProfileIdToMolecularProfile);
+                selection.genericAssayEntityId,
+                selection.dataSourceId,
+                genericAssayMolecularDataCachePromise,
+                molecularProfileIdToMolecularProfile
+            );
             return ret;
         }
     }
@@ -1089,9 +1126,19 @@ export function getAxisLabel(
             }
             break;
     }
-    if (selection.dataType && _.keys(GenericAssayTypeConstants).includes(selection.dataType)) {
-        if (!!(profile && selection.selectedGenericAssayOption && selection.selectedGenericAssayOption.label)) {
-            const genericAssayEntityName = selection.selectedGenericAssayOption.label;
+    if (
+        selection.dataType &&
+        _.keys(GenericAssayTypeConstants).includes(selection.dataType)
+    ) {
+        if (
+            !!(
+                profile &&
+                selection.selectedGenericAssayOption &&
+                selection.selectedGenericAssayOption.label
+            )
+        ) {
+            const genericAssayEntityName =
+                selection.selectedGenericAssayOption.label;
             label = `${genericAssayEntityName}: ${profile.name}`;
         }
     }
@@ -2580,8 +2627,11 @@ export function makeAxisLogScaleFunction(
     let fLogScale; // function for (log-)transforming a value
     let fInvLogScale; // function for back-transforming a value transformed with fLogScale
 
-    if(axisSelection.dataType === undefined || !_.keys(GenericAssayTypeConstants).includes(axisSelection.dataType)) {
-        // log-transformation parameters for non-genericAssay reponse 
+    if (
+        axisSelection.dataType === undefined ||
+        !_.keys(GenericAssayTypeConstants).includes(axisSelection.dataType)
+    ) {
+        // log-transformation parameters for non-genericAssay reponse
         // profile data. Note: log2-transformation is used by default
         label = 'log2';
         fLogScale = (x: number) => Math.log2(Math.max(x, MIN_LOG_ARGUMENT));
@@ -2589,8 +2639,8 @@ export function makeAxisLogScaleFunction(
     } else {
         // log-transformation parameters for generic assay reponse profile
         // data. Note: log10-transformation is used for generic assays
-        label = "log10";
-        fLogScale = (x:number, offset?:number) => {
+        label = 'log10';
+        fLogScale = (x: number, offset?: number) => {
             // for log transformation one should be able to handle negative values;
             // this is done by pre-application of a externally provided offset.
             if (!offset) {

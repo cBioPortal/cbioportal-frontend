@@ -1,11 +1,11 @@
-import LazyMobXCache, {AugmentedData} from "../lib/LazyMobXCache";
-import _ from "lodash";
-import {IDataQueryFilter} from "../lib/StoreUtils";
+import LazyMobXCache, { AugmentedData } from '../lib/LazyMobXCache';
+import _ from 'lodash';
+import { IDataQueryFilter } from '../lib/StoreUtils';
 import { GenericAssayData } from 'shared/api/generated/CBioPortalAPI';
-import { fetchGenericAssayData } from "shared/lib/GenericAssayUtils/GenericAssayCommonUtils";
+import { fetchGenericAssayData } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 export type GenericAssayDataEnhanced = GenericAssayData & {
-    thresholdType?: ">"|"<";
+    thresholdType?: '>' | '<';
 };
 
 interface IQuery {
@@ -21,7 +21,7 @@ function queryToKey(q: IQuery) {
     return `${q.molecularProfileId}~${q.stableId}`;
 }
 
-function dataToKey(d:GenericAssayData[], q:IQuery) {
+function dataToKey(d: GenericAssayData[], q: IQuery) {
     return `${q.molecularProfileId}~${q.stableId}`;
 }
 
@@ -29,7 +29,9 @@ function dataToKey(d:GenericAssayData[], q:IQuery) {
 /* Pairs each IQuery with an (array-wrapped) array of any matching data.
 */
 function augmentQueryResults(queries: IQuery[], results: GenericAssayData[][]) {
-    const keyedAugments: {[key: string]: AugmentedData<GenericAssayDataEnhanced[], IQuery>} = {};
+    const keyedAugments: {
+        [key: string]: AugmentedData<GenericAssayDataEnhanced[], IQuery>;
+    } = {};
     for (const query of queries) {
         keyedAugments[queryToKey(query)] = {
             data: [[]],
@@ -42,7 +44,7 @@ function augmentQueryResults(queries: IQuery[], results: GenericAssayData[][]) {
             keyedAugments[
                 queryToKey({
                     molecularProfileId: datum.molecularProfileId,
-                    stableId: datum.stableId
+                    stableId: datum.stableId,
                 })
             ].data[0].push(datum);
         }
@@ -53,9 +55,11 @@ function augmentQueryResults(queries: IQuery[], results: GenericAssayData[][]) {
 // Values are passed as strings from the REST facility
 // check for value threshold indicators ('>' or '<') to appear in front of values
 // and convert to a numeric value and a separate value threshold indicator
-function handleValueThreshold(datum:GenericAssayDataEnhanced):GenericAssayDataEnhanced {
-
-    if (! datum.thresholdType) { // this is to prevent repeated extraction of '>' and '<' symbols
+function handleValueThreshold(
+    datum: GenericAssayDataEnhanced
+): GenericAssayDataEnhanced {
+    if (!datum.thresholdType) {
+        // this is to prevent repeated extraction of '>' and '<' symbols
         const matches = /([><]?)(.+)/.exec(datum.value);
         datum.thresholdType = undefined;
         if (matches) {
@@ -81,11 +85,18 @@ async function fetch(
         _.groupBy(queries, q => q.molecularProfileId),
         profileQueries => profileQueries.map(q => q.stableId)
     );
-    const genericAssayDataResult = await fetchGenericAssayData(stableIdsByProfile, sampleFilterByProfile);
+    const genericAssayDataResult = await fetchGenericAssayData(
+        stableIdsByProfile,
+        sampleFilterByProfile
+    );
     return augmentQueryResults(queries, genericAssayDataResult);
 }
 
-export default class GenericAssayMolecularDataCache extends LazyMobXCache<GenericAssayData[], IQuery, IQuery>{
+export default class GenericAssayMolecularDataCache extends LazyMobXCache<
+    GenericAssayData[],
+    IQuery,
+    IQuery
+> {
     constructor(molecularProfileIdToSampleFilter: SampleFilterByProfile) {
         super(queryToKey, dataToKey, fetch, molecularProfileIdToSampleFilter);
     }

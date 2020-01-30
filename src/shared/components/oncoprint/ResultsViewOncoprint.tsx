@@ -44,29 +44,41 @@ import {
     makeGenesetHeatmapTracksMobxPromise,
     makeGeneticTracksMobxPromise,
     makeHeatmapTracksMobxPromise,
-    makeGenericAssayProfileHeatmapTracksMobxPromise
-} from "./OncoprintUtils";
-import _ from "lodash";
-import onMobxPromise from "shared/lib/onMobxPromise";
-import AppConfig from "appConfig";
-import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import OncoprintJS, {TrackGroupHeader, TrackGroupIndex, TrackId} from "oncoprintjs";
+    makeGenericAssayProfileHeatmapTracksMobxPromise,
+} from './OncoprintUtils';
+import _ from 'lodash';
+import onMobxPromise from 'shared/lib/onMobxPromise';
+import AppConfig from 'appConfig';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import OncoprintJS, {
+    TrackGroupHeader,
+    TrackGroupIndex,
+    TrackId,
+} from 'oncoprintjs';
 import fileDownload from 'react-file-download';
 import tabularDownload from './tabularDownload';
 import classNames from 'classnames';
-import {clinicalAttributeIsLocallyComputed, SpecialAttribute} from "../../cache/ClinicalDataCache";
-import OqlStatusBanner from "../banners/OqlStatusBanner";
-import {getAnnotatingProgressMessage, genericAssayEntitiesToSelectOptionsGroupByGenericAssayType} from "./ResultsViewOncoprintUtils";
-import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/ProgressIndicator";
-import autobind from "autobind-decorator";
-import {parseOQLQuery} from "../../lib/oql/oqlfilter";
-import AlterationFilterWarning from "../banners/AlterationFilterWarning";
-import { selectDisplayValue } from "./DataUtils";
-import WindowStore from "../window/WindowStore";
-import {OncoprintAnalysisCaseType} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
-import {MakeMobxView} from "../MobxView";
-import ResultsViewURLWrapper from "pages/resultsView/ResultsViewURLWrapper";
-import {getMobxPromiseGroupStatus} from "../../lib/getMobxPromiseGroupStatus";
+import {
+    clinicalAttributeIsLocallyComputed,
+    SpecialAttribute,
+} from '../../cache/ClinicalDataCache';
+import OqlStatusBanner from '../banners/OqlStatusBanner';
+import {
+    getAnnotatingProgressMessage,
+    genericAssayEntitiesToSelectOptionsGroupByGenericAssayType,
+} from './ResultsViewOncoprintUtils';
+import ProgressIndicator, {
+    IProgressIndicatorItem,
+} from '../progressIndicator/ProgressIndicator';
+import autobind from 'autobind-decorator';
+import { parseOQLQuery } from '../../lib/oql/oqlfilter';
+import AlterationFilterWarning from '../banners/AlterationFilterWarning';
+import { selectDisplayValue } from './DataUtils';
+import WindowStore from '../window/WindowStore';
+import { OncoprintAnalysisCaseType } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
+import { MakeMobxView } from '../MobxView';
+import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
+import { getMobxPromiseGroupStatus } from '../../lib/getMobxPromiseGroupStatus';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -102,11 +114,11 @@ const CLINICAL_TRACK_KEY_PREFIX = 'CLINICALTRACK_';
     HeatmapTrackGroupRecord type the `entities` member refers to
     hugo_gene_symbols (for genes) or to entity_id's (for generic assay entities). */
 export type HeatmapTrackGroupRecord = {
-    trackGroupIndex:number,
-    molecularAlterationType:string,
-    entities: { [entity:string]:boolean }, // map of hugo_gene_symbols or entity_id's
-    molecularProfileId:string
-}
+    trackGroupIndex: number;
+    molecularAlterationType: string;
+    entities: { [entity: string]: boolean }; // map of hugo_gene_symbols or entity_id's
+    molecularProfileId: string;
+};
 
 /* fields and methods in the class below are ordered based on roughly
 /* chronological setup concerns, rather than on encapsulation and public API */
@@ -161,12 +173,18 @@ export default class ResultsViewOncoprint extends React.Component<
         );
     }
 
-    @computed get selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl(){
-        const result = _.reduce(this.props.store.parsedGenericAssayGroups, (acc, value, key) => {
-            const type = this.props.store.molecularProfileIdToMolecularProfile.result[key].genericAssayType;
-            acc[type] = acc[type] ? _.union(value, acc[type]) : value;
-            return acc;
-        }, {} as {[genericAssayType: string]: string[]})
+    @computed get selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl() {
+        const result = _.reduce(
+            this.props.store.parsedGenericAssayGroups,
+            (acc, value, key) => {
+                const type = this.props.store
+                    .molecularProfileIdToMolecularProfile.result[key]
+                    .genericAssayType;
+                acc[type] = acc[type] ? _.union(value, acc[type]) : value;
+                return acc;
+            },
+            {} as { [genericAssayType: string]: string[] }
+        );
         return result;
     }
 
@@ -187,8 +205,8 @@ export default class ResultsViewOncoprint extends React.Component<
 
     @observable showMinimap: boolean = false;
 
-    @observable selectedHeatmapProfileId = "";
-    @observable heatmapGeneInputValue = "";
+    @observable selectedHeatmapProfileId = '';
+    @observable heatmapGeneInputValue = '';
 
     @observable horzZoom: number = 0.5;
 
@@ -241,10 +259,11 @@ export default class ResultsViewOncoprint extends React.Component<
     }
 
     public expansionsByGeneticTrackKey = observable.map<number[]>();
-    public expansionsByGenesetHeatmapTrackKey =
-        observable.map<IGenesetExpansionRecord[]>();
+    public expansionsByGenesetHeatmapTrackKey = observable.map<
+        IGenesetExpansionRecord[]
+    >();
 
-    @computed get molecularProfileIdToHeatmapTracks(){
+    @computed get molecularProfileIdToHeatmapTracks() {
         // empty if no heatmap tracks param
         const groups = this.urlWrapper.query.heatmap_track_groups
             ? this.urlWrapper.query.heatmap_track_groups
@@ -338,10 +357,14 @@ export default class ResultsViewOncoprint extends React.Component<
         this.onSuppressRendering = this.onSuppressRendering.bind(this);
         this.onReleaseRendering = this.onReleaseRendering.bind(this);
 
-        onMobxPromise(this.props.store.heatmapMolecularProfiles, (profiles:MolecularProfile[])=>{
-            // select first initially
-            if (profiles.length) {
-                this.selectedHeatmapProfileId = profiles[0].molecularProfileId;
+        onMobxPromise(
+            this.props.store.heatmapMolecularProfiles,
+            (profiles: MolecularProfile[]) => {
+                // select first initially
+                if (profiles.length) {
+                    this.selectedHeatmapProfileId =
+                        profiles[0].molecularProfileId;
+                }
             }
         );
 
@@ -456,7 +479,8 @@ export default class ResultsViewOncoprint extends React.Component<
                 return self.props.store.heatmapMolecularProfiles;
             },
             get genericAssayEntitiesGroupByGenericAssayTypePromise() {
-                return self.props.store.genericAssayEntitiesGroupByGenericAssayType;
+                return self.props.store
+                    .genericAssayEntitiesGroupByGenericAssayType;
             },
             get selectedHeatmapProfileId() {
                 return self.selectedHeatmapProfileId;
@@ -467,7 +491,7 @@ export default class ResultsViewOncoprint extends React.Component<
             get selectedHeatmapProfileGenericAssayType() {
                 return self.selectedHeatmapProfileGenericAssayType;
             },
-            get heatmapIsDynamicallyQueried () {
+            get heatmapIsDynamicallyQueried() {
                 return self.heatmapIsDynamicallyQueried;
             },
             get ngchmButtonActive() {
@@ -536,7 +560,7 @@ export default class ResultsViewOncoprint extends React.Component<
                 } else {
                     return self.horzZoom;
                 }
-            }
+            },
         });
     }
 
@@ -564,10 +588,15 @@ export default class ResultsViewOncoprint extends React.Component<
     }
 
     @action
-    public selectHeatmapProfile(index:number) {
-        onMobxPromise(this.props.store.heatmapMolecularProfiles, (profiles:MolecularProfile[])=>{
-            this.selectedHeatmapProfileId = this.props.store.heatmapMolecularProfiles.result![index].molecularProfileId;
-        });
+    public selectHeatmapProfile(index: number) {
+        onMobxPromise(
+            this.props.store.heatmapMolecularProfiles,
+            (profiles: MolecularProfile[]) => {
+                this.selectedHeatmapProfileId = this.props.store.heatmapMolecularProfiles.result![
+                    index
+                ].molecularProfileId;
+            }
+        );
     }
 
     @action
@@ -731,12 +760,16 @@ export default class ResultsViewOncoprint extends React.Component<
                 this.heatmapGeneInputValue = s;
                 this.heatmapGeneInputValueUpdater(); // stop updating heatmap input if user has typed
             }),
-            onSelectHeatmapProfile:(id:string)=>{this.selectedHeatmapProfileId = id;},
-            onClickAddGenesToHeatmap:()=>{
-                const genes = parseOQLQuery(this.heatmapGeneInputValue.toUpperCase().trim()).map(q=>q.gene);
+            onSelectHeatmapProfile: (id: string) => {
+                this.selectedHeatmapProfileId = id;
+            },
+            onClickAddGenesToHeatmap: () => {
+                const genes = parseOQLQuery(
+                    this.heatmapGeneInputValue.toUpperCase().trim()
+                ).map(q => q.gene);
                 this.addHeatmapTracks(this.selectedHeatmapProfileId, genes);
             },
-            onClickAddGenericAssaysToHeatmap:(entityIds:string[])=>{
+            onClickAddGenericAssaysToHeatmap: (entityIds: string[]) => {
                 this.addHeatmapTracks(this.selectedHeatmapProfileId, entityIds);
             },
             onClickNGCHM: () => {
@@ -877,7 +910,8 @@ export default class ResultsViewOncoprint extends React.Component<
             .result;
         return (
             profileMap.hasOwnProperty(this.selectedHeatmapProfileId) &&
-            profileMap[this.selectedHeatmapProfileId].molecularAlterationType !== 'GENESET_SCORE'
+            profileMap[this.selectedHeatmapProfileId]
+                .molecularAlterationType !== 'GENESET_SCORE'
         );
     }
 
@@ -897,26 +931,54 @@ export default class ResultsViewOncoprint extends React.Component<
         invoke: async () => getUnalteredUids(this.geneticTracks.result!),
     });
 
-    readonly genericAssayEntitiesSelectOptionsGroupByGenericAssayType = remoteData<{ [genericAssayType: string]: ISelectOption[] }>({
-        await:() => [this.props.store.genericAssayEntitiesGroupByGenericAssayType],
-        invoke:async() => {
-            return Promise.resolve(genericAssayEntitiesToSelectOptionsGroupByGenericAssayType(this.props.store.genericAssayEntitiesGroupByGenericAssayType.result || {}));
-        }
+    readonly genericAssayEntitiesSelectOptionsGroupByGenericAssayType = remoteData<{
+        [genericAssayType: string]: ISelectOption[];
+    }>({
+        await: () => [
+            this.props.store.genericAssayEntitiesGroupByGenericAssayType,
+        ],
+        invoke: async () => {
+            return Promise.resolve(
+                genericAssayEntitiesToSelectOptionsGroupByGenericAssayType(
+                    this.props.store.genericAssayEntitiesGroupByGenericAssayType
+                        .result || {}
+                )
+            );
+        },
     });
 
-    @computed get selectedHeatmapProfileAlterationType():string {
-        let molecularProfile = this.props.store.molecularProfileIdToMolecularProfile.result[this.selectedHeatmapProfileId];
-        return molecularProfile.molecularAlterationType;
+    @computed get selectedHeatmapProfileAlterationType(): string | undefined {
+        let molecularProfile = this.props.store
+            .molecularProfileIdToMolecularProfile.result[
+            this.selectedHeatmapProfileId
+        ];
+        return molecularProfile
+            ? molecularProfile.molecularAlterationType
+            : undefined;
     }
 
-    @computed get selectedHeatmapProfileGenericAssayType():string {
-        let molecularProfile = this.props.store.molecularProfileIdToMolecularProfile.result[this.selectedHeatmapProfileId];
-        return molecularProfile.genericAssayType;
+    @computed get selectedHeatmapProfileGenericAssayType(): string | undefined {
+        if (
+            this.props.store.molecularProfileIdToMolecularProfile.result &&
+            this.selectedHeatmapProfileAlterationType ===
+                AlterationTypeConstants.GENERIC_ASSAY
+        ) {
+            return this.props.store.molecularProfileIdToMolecularProfile.result[
+                this.selectedHeatmapProfileId
+            ].genericAssayType;
+        }
+        return undefined;
     }
 
-    public addHeatmapTracks(molecularProfileId:string, entities:string[]) {
-
-        const tracksMap = _.cloneDeep(this.molecularProfileIdToHeatmapTracks) as {[molecularProfileId:string]:Pick<HeatmapTrackGroupRecord, "entities"|"molecularProfileId"|"molecularAlterationType">};
+    public addHeatmapTracks(molecularProfileId: string, entities: string[]) {
+        const tracksMap = _.cloneDeep(
+            this.molecularProfileIdToHeatmapTracks
+        ) as {
+            [molecularProfileId: string]: Pick<
+                HeatmapTrackGroupRecord,
+                'entities' | 'molecularProfileId' | 'molecularAlterationType'
+            >;
+        };
 
         const entitiesMap = _.chain(entities)
             .keyBy(entity => entity)
@@ -951,12 +1013,23 @@ export default class ResultsViewOncoprint extends React.Component<
 
         // derive generic assay from heatmap tracks since the only way to add generic assay entities right now
         // is to use heatmap UI in oncoprint
-        const generic_assay_groups = _.filter(tracksMap, (x:HeatmapTrackGroupRecord)=> x.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY)
-            .map((track)=>{
-                return `${track.molecularProfileId},${_.keys(track.entities).join(",")}`;
-            }).join(";");
+        const generic_assay_groups = _.filter(
+            tracksMap,
+            (x: HeatmapTrackGroupRecord) =>
+                x.molecularAlterationType ===
+                AlterationTypeConstants.GENERIC_ASSAY
+        )
+            .map(track => {
+                return `${track.molecularProfileId},${_.keys(
+                    track.entities
+                ).join(',')}`;
+            })
+            .join(';');
 
-        this.urlWrapper.updateURL({ heatmap_track_groups, generic_assay_groups });
+        this.urlWrapper.updateURL({
+            heatmap_track_groups,
+            generic_assay_groups,
+        });
     }
 
     removeHeatmapTracksByProfileId(molecularProfileId: string) {
@@ -1166,18 +1239,34 @@ export default class ResultsViewOncoprint extends React.Component<
             : this.patientHeatmapTracks;
     }
 
-    readonly samplegGenericAssayHeatmapTracks = makeGenericAssayProfileHeatmapTracksMobxPromise(this, true);
-    readonly patientGenericAssayHeatmapTracks = makeGenericAssayProfileHeatmapTracksMobxPromise(this, false);
+    readonly samplegGenericAssayHeatmapTracks = makeGenericAssayProfileHeatmapTracksMobxPromise(
+        this,
+        true
+    );
+    readonly patientGenericAssayHeatmapTracks = makeGenericAssayProfileHeatmapTracksMobxPromise(
+        this,
+        false
+    );
     @computed get genericAssayHeatmapTracks() {
-        return (this.oncoprintAnalysisCaseType === OncoprintAnalysisCaseType.SAMPLE ? this.samplegGenericAssayHeatmapTracks : this.patientGenericAssayHeatmapTracks);
+        return this.oncoprintAnalysisCaseType ===
+            OncoprintAnalysisCaseType.SAMPLE
+            ? this.samplegGenericAssayHeatmapTracks
+            : this.patientGenericAssayHeatmapTracks;
     }
 
     @computed get genesetHeatmapTrackGroup(): number {
-        return 1 + Math.max(
-            GENETIC_TRACK_GROUP_INDEX,
-            // observe the heatmap tracks to render in the very next group
-            ...(this.heatmapTracks.result.map(hmTrack => hmTrack.trackGroupIndex)),
-            ...(this.genericAssayHeatmapTracks.result.map(hmTrack => hmTrack.trackGroupIndex))
+        return (
+            1 +
+            Math.max(
+                GENETIC_TRACK_GROUP_INDEX,
+                // observe the heatmap tracks to render in the very next group
+                ...this.heatmapTracks.result.map(
+                    hmTrack => hmTrack.trackGroupIndex
+                ),
+                ...this.genericAssayHeatmapTracks.result.map(
+                    hmTrack => hmTrack.trackGroupIndex
+                )
+            )
         );
     }
 
@@ -1378,17 +1467,19 @@ export default class ResultsViewOncoprint extends React.Component<
     }*/
 
     @computed get isLoading() {
-        return getMobxPromiseGroupStatus(
-            this.clinicalTracks,
-            this.geneticTracks,
-            this.genesetHeatmapTracks,
-            this.genericAssayHeatmapTracks,
-            this.heatmapTracks,
-            this.props.store.molecularProfileIdToMolecularProfile,
-            this.alterationTypesInQuery,
-            this.alteredKeys,
-            this.heatmapTrackHeaders
-        ) === "pending";
+        return (
+            getMobxPromiseGroupStatus(
+                this.clinicalTracks,
+                this.geneticTracks,
+                this.genesetHeatmapTracks,
+                this.genericAssayHeatmapTracks,
+                this.heatmapTracks,
+                this.props.store.molecularProfileIdToMolecularProfile,
+                this.alterationTypesInQuery,
+                this.alteredKeys,
+                this.heatmapTrackHeaders
+            ) === 'pending'
+        );
     }
 
     @computed get isHidden() {
@@ -1422,17 +1513,37 @@ export default class ResultsViewOncoprint extends React.Component<
 
     @autobind
     private getControls() {
-        if (this.oncoprint && !this.oncoprint.webgl_unavailable && (this.genericAssayEntitiesSelectOptionsGroupByGenericAssayType.isComplete || this.genericAssayEntitiesSelectOptionsGroupByGenericAssayType.isError) && this.props.store.molecularProfileIdToMolecularProfile.result)  {
-            return (<FadeInteraction showByDefault={true} show={true}>
-                <OncoprintControls
-                    handlers={this.controlsHandlers}
-                    state={this.controlsState}
-                    store={this.props.store}
-                    molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
-                    genericAssayEntitiesSelectOptionsGroupByGenericAssayType={this.genericAssayEntitiesSelectOptionsGroupByGenericAssayType.result}
-                    selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl={this.selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl}
-                />
-            </FadeInteraction>);
+        if (
+            this.oncoprint &&
+            !this.oncoprint.webgl_unavailable &&
+            (this.genericAssayEntitiesSelectOptionsGroupByGenericAssayType
+                .isComplete ||
+                this.genericAssayEntitiesSelectOptionsGroupByGenericAssayType
+                    .isError) &&
+            this.props.store.molecularProfileIdToMolecularProfile.result
+        ) {
+            return (
+                <FadeInteraction showByDefault={true} show={true}>
+                    <OncoprintControls
+                        handlers={this.controlsHandlers}
+                        state={this.controlsState}
+                        store={this.props.store}
+                        molecularProfileIdToMolecularProfile={
+                            this.props.store
+                                .molecularProfileIdToMolecularProfile.result
+                        }
+                        genericAssayEntitiesSelectOptionsGroupByGenericAssayType={
+                            this
+                                .genericAssayEntitiesSelectOptionsGroupByGenericAssayType
+                                .result
+                        }
+                        selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl={
+                            this
+                                .selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl
+                        }
+                    />
+                </FadeInteraction>
+            );
         } else {
             return <span />;
         }
@@ -1572,8 +1683,14 @@ export default class ResultsViewOncoprint extends React.Component<
                                 oncoprintRef={this.oncoprintRef}
                                 clinicalTracks={this.clinicalTracks.result}
                                 geneticTracks={this.geneticTracks.result}
-                                genesetHeatmapTracks={this.genesetHeatmapTracks.result}
-                                heatmapTracks={([] as IHeatmapTrackSpec[]).concat(this.genericAssayHeatmapTracks.result).concat(this.heatmapTracks.result)}
+                                genesetHeatmapTracks={
+                                    this.genesetHeatmapTracks.result
+                                }
+                                heatmapTracks={([] as IHeatmapTrackSpec[])
+                                    .concat(
+                                        this.genericAssayHeatmapTracks.result
+                                    )
+                                    .concat(this.heatmapTracks.result)}
                                 divId={this.props.divId}
                                 width={this.width}
                                 caseLinkOutInTooltips={true}

@@ -12,8 +12,8 @@ import {
     IGenesetHeatmapTrackDatum,
     IGenesetHeatmapTrackSpec,
     IHeatmapTrackSpec,
-    IGenericAssayHeatmapTrackDatum
-} from "./Oncoprint";
+    IGenericAssayHeatmapTrackDatum,
+} from './Oncoprint';
 import {
     genetic_rule_set_different_colors_no_recurrence,
     genetic_rule_set_different_colors_recurrence,
@@ -26,22 +26,37 @@ import {
     AnnotatedExtendedAlteration,
     CaseAggregatedData,
     IQueriedCaseData,
-    IQueriedMergedTrackCaseData
-} from "../../../pages/resultsView/ResultsViewPageStore";
-import {CoverageInformation} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
-import {remoteData} from "cbioportal-frontend-commons";
-import {makeClinicalTrackData, makeGeneticTrackData, makeHeatmapTrackData} from "./DataUtils";
-import ResultsViewOncoprint from "./ResultsViewOncoprint";
-import _ from "lodash";
-import {action, IObservableArray, ObservableMap, runInAction} from "mobx";
-import {MobxPromise} from "mobxpromise";
-import GenesetCorrelatedGeneCache from "shared/cache/GenesetCorrelatedGeneCache";
-import {isMergedTrackFilter, UnflattenedOQLLineFilterOutput} from "../../lib/oql/oqlfilter";
-import {ClinicalAttribute, MolecularProfile, Patient, Sample} from "../../api/generated/CBioPortalAPI";
-import {clinicalAttributeIsPROFILEDIN, SpecialAttribute} from "../../cache/ClinicalDataCache";
-import {RESERVED_CLINICAL_VALUE_COLORS} from "shared/lib/Colors";
-import {ISelectOption} from "./controls/OncoprintControls";
-import { NOT_APPLICABLE_VALUE } from "shared/lib/GenericAssayUtils/GenericAssayCommonUtils";
+    IQueriedMergedTrackCaseData,
+} from '../../../pages/resultsView/ResultsViewPageStore';
+import { CoverageInformation } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
+import { remoteData } from 'cbioportal-frontend-commons';
+import {
+    makeClinicalTrackData,
+    makeGeneticTrackData,
+    makeHeatmapTrackData,
+} from './DataUtils';
+import ResultsViewOncoprint from './ResultsViewOncoprint';
+import _ from 'lodash';
+import { action, IObservableArray, ObservableMap, runInAction } from 'mobx';
+import { MobxPromise } from 'mobxpromise';
+import GenesetCorrelatedGeneCache from 'shared/cache/GenesetCorrelatedGeneCache';
+import {
+    isMergedTrackFilter,
+    UnflattenedOQLLineFilterOutput,
+} from '../../lib/oql/oqlfilter';
+import {
+    ClinicalAttribute,
+    MolecularProfile,
+    Patient,
+    Sample,
+} from '../../api/generated/CBioPortalAPI';
+import {
+    clinicalAttributeIsPROFILEDIN,
+    SpecialAttribute,
+} from '../../cache/ClinicalDataCache';
+import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
+import { ISelectOption } from './controls/OncoprintControls';
+import { NOT_APPLICABLE_VALUE } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 interface IGenesetExpansionMap {
     [genesetTrackKey: string]: IHeatmapTrackSpec[];
@@ -206,13 +221,14 @@ export function getHeatmapTrackRuleSetParams(
     };
 }
 
-export function getGenericAssayTrackRuleSetParams(trackSpec: IHeatmapTrackSpec):RuleSetParams {
-
-    let value_range:[number, number];
-    let legend_label:string;
-    let colors:[number, number, number, number][];
-    let value_stop_points:number[];
-    let category_to_color:{[d:string]: string} | undefined;
+export function getGenericAssayTrackRuleSetParams(
+    trackSpec: IHeatmapTrackSpec
+): RuleSetParams {
+    let value_range: [number, number];
+    let legend_label: string;
+    let colors: [number, number, number, number][];
+    let value_stop_points: number[];
+    let category_to_color: { [d: string]: string } | undefined;
 
     // - Legends for generic assay entities can be configured in two ways:
     //      1. Larger values are `better` and appear at the right side of the legend (a.k.a. ASC sort order)
@@ -315,8 +331,12 @@ export function getGenericAssayTrackRuleSetParams(trackSpec: IHeatmapTrackSpec):
     }
 
     let counter = 0;
-    const categories = _(dataPoints as IGenericAssayHeatmapTrackDatum[]).filter((d:IGenericAssayHeatmapTrackDatum) => !!d.category).map((d)=>d.category).uniq().value();
-    categories.forEach( (d:string) => {
+    const categories = _(dataPoints as IGenericAssayHeatmapTrackDatum[])
+        .filter((d: IGenericAssayHeatmapTrackDatum) => !!d.category)
+        .map(d => d.category)
+        .uniq()
+        .value();
+    categories.forEach((d: string) => {
         if (category_to_color === undefined) {
             category_to_color = {};
         }
@@ -975,79 +995,134 @@ export function makeHeatmapTracksMobxPromise(
     });
 }
 
-export function makeGenericAssayProfileHeatmapTracksMobxPromise(oncoprint:ResultsViewOncoprint, sampleMode:boolean) {
+export function makeGenericAssayProfileHeatmapTracksMobxPromise(
+    oncoprint: ResultsViewOncoprint,
+    sampleMode: boolean
+) {
     return remoteData<IHeatmapTrackSpec[]>({
         await: () => [
             oncoprint.props.store.samples,
             oncoprint.props.store.patients,
             oncoprint.props.store.molecularProfileIdToMolecularProfile,
             oncoprint.props.store.genericAssayMolecularDataCache,
-            oncoprint.props.store.genericAssayEntitiesGroupByGenericAssayTypeLinkMap,
-            oncoprint.props.store.genericAssayEntitiesGroupByGenericAssayType
+            oncoprint.props.store
+                .genericAssayEntitiesGroupByGenericAssayTypeLinkMap,
+            oncoprint.props.store.genericAssayEntitiesGroupByGenericAssayType,
         ],
-        invoke:async()=>{
+        invoke: async () => {
+            const molecularProfileIdToMolecularProfile = oncoprint.props.store
+                .molecularProfileIdToMolecularProfile.result!;
+            const molecularProfileIdToHeatmapTracks =
+                oncoprint.molecularProfileIdToHeatmapTracks;
 
-            const molecularProfileIdToMolecularProfile = oncoprint.props.store.molecularProfileIdToMolecularProfile.result!;
-            const molecularProfileIdToHeatmapTracks = oncoprint.molecularProfileIdToHeatmapTracks;
+            const genericAssayProfiles = _.filter(
+                molecularProfileIdToHeatmapTracks,
+                d =>
+                    d.molecularAlterationType ===
+                    AlterationTypeConstants.GENERIC_ASSAY
+            );
 
-            const genericAssayProfiles = _.filter(molecularProfileIdToHeatmapTracks, d => d.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY);
-
-            const cacheQueries = _.flatten(genericAssayProfiles.map(entry=>
-                {
-                    const type = molecularProfileIdToMolecularProfile[entry.molecularProfileId].genericAssayType;
-                    const genericAssayEntitiesByEntityId = _.keyBy(oncoprint.props.store.genericAssayEntitiesGroupByGenericAssayType.result![type], t=>t.stableId);
-                    return _.keys(entry.entities).map(entityId=>{
+            const cacheQueries = _.flatten(
+                genericAssayProfiles.map(entry => {
+                    const type =
+                        molecularProfileIdToMolecularProfile[
+                            entry.molecularProfileId
+                        ].genericAssayType;
+                    const genericAssayEntitiesByEntityId = _.keyBy(
+                        oncoprint.props.store
+                            .genericAssayEntitiesGroupByGenericAssayType
+                            .result![type],
+                        t => t.stableId
+                    );
+                    return _.keys(entry.entities).map(entityId => {
                         const entity = genericAssayEntitiesByEntityId[entityId];
                         return {
                             molecularProfileId: entry.molecularProfileId,
                             stableId: entityId,
-                            entityName: "NAME" in entity.genericEntityMetaProperties ? entity.genericEntityMetaProperties["NAME"] : NOT_APPLICABLE_VALUE
-                        }
-                    })
-                }
-            ));
+                            entityName:
+                                'NAME' in entity.genericEntityMetaProperties
+                                    ? entity.genericEntityMetaProperties['NAME']
+                                    : NOT_APPLICABLE_VALUE,
+                        };
+                    });
+                })
+            );
 
-            await oncoprint.props.store.genericAssayMolecularDataCache.result!.getPromise(cacheQueries.map(query => {return {molecularProfileId: query.molecularProfileId, stableId: query.stableId}}), true);
+            await oncoprint.props.store.genericAssayMolecularDataCache.result!.getPromise(
+                cacheQueries.map(query => {
+                    return {
+                        molecularProfileId: query.molecularProfileId,
+                        stableId: query.stableId,
+                    };
+                }),
+                true
+            );
 
             const samples = oncoprint.props.store.samples.result!;
             const patients = oncoprint.props.store.patients.result!;
 
             const tracks = cacheQueries.map(query => {
                 const molecularProfileId = query.molecularProfileId;
-                const profile = molecularProfileIdToMolecularProfile[molecularProfileId];
-                const dataCache = oncoprint.props.store.genericAssayMolecularDataCache.result!;
+                const profile =
+                    molecularProfileIdToMolecularProfile[molecularProfileId];
+                const dataCache = oncoprint.props.store
+                    .genericAssayMolecularDataCache.result!;
 
                 const entityId = query.stableId;
                 const pivotThreshold = profile.pivotThreshold;
                 const sortOrder = profile.sortOrder;
-                const entityLinkMap = oncoprint.props.store.genericAssayEntitiesGroupByGenericAssayTypeLinkMap.result![profile.genericAssayType];
+                const entityLinkMap = oncoprint.props.store
+                    .genericAssayEntitiesGroupByGenericAssayTypeLinkMap.result![
+                    profile.genericAssayType
+                ];
 
                 return {
                     key: `GENERICASSAYHEATMAPTRACK_${molecularProfileId},${entityId}`,
                     label: query.entityName,
                     molecularProfileId: query.molecularProfileId,
-                    molecularProfileName: molecularProfileIdToMolecularProfile[molecularProfileId].name,
-                    molecularAlterationType: molecularProfileIdToMolecularProfile[molecularProfileId].molecularAlterationType,
-                    datatype: molecularProfileIdToMolecularProfile[molecularProfileId].datatype,
-                    data: makeHeatmapTrackData<IGenericAssayHeatmapTrackDatum, 'entityId'>(
+                    molecularProfileName:
+                        molecularProfileIdToMolecularProfile[molecularProfileId]
+                            .name,
+                    molecularAlterationType:
+                        molecularProfileIdToMolecularProfile[molecularProfileId]
+                            .molecularAlterationType,
+                    datatype:
+                        molecularProfileIdToMolecularProfile[molecularProfileId]
+                            .datatype,
+                    data: makeHeatmapTrackData<
+                        IGenericAssayHeatmapTrackDatum,
+                        'entityId'
+                    >(
                         'entityId',
                         entityId,
                         sampleMode ? samples : patients,
-                        dataCache.get(query)!.data!.map(d => ({
-                            ...d,
-                            value: parseFloat(d.value),
-                        })),
+                        dataCache
+                            .get(query)!
+                            .data!.map(d => ({
+                                ...d,
+                                value: parseFloat(d.value),
+                            })),
                         sortOrder
                     ),
                     pivotThreshold: pivotThreshold,
                     sortOrder: sortOrder,
                     trackLinkUrl: entityLinkMap[entityId],
-                    trackGroupIndex: molecularProfileIdToHeatmapTracks[molecularProfileId]!.trackGroupIndex,
-                    onClickRemoveInTrackMenu:action(()=>{
-                        const trackGroup = oncoprint.molecularProfileIdToHeatmapTracks[molecularProfileId]!;
-                        if (trackGroup){
-                            const newEntities = _.keys(trackGroup.entities).filter((entity)=>entity!==entityId);
-                            oncoprint.addHeatmapTracks(molecularProfileId, newEntities);
+                    trackGroupIndex: molecularProfileIdToHeatmapTracks[
+                        molecularProfileId
+                    ]!.trackGroupIndex,
+                    onClickRemoveInTrackMenu: action(() => {
+                        const trackGroup = oncoprint
+                            .molecularProfileIdToHeatmapTracks[
+                            molecularProfileId
+                        ]!;
+                        if (trackGroup) {
+                            const newEntities = _.keys(
+                                trackGroup.entities
+                            ).filter(entity => entity !== entityId);
+                            oncoprint.addHeatmapTracks(
+                                molecularProfileId,
+                                newEntities
+                            );
                         }
                         if (
                             trackGroup === undefined &&
@@ -1059,7 +1134,7 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(oncoprint:Result
                         }
                     }),
                 };
-            });                
+            });
             return tracks;
         },
         default: [],
@@ -1249,17 +1324,20 @@ export function makeGenesetHeatmapTracksMobxPromise(
     });
 }
 
-export function extractGenericAssaySelections(text:string, selectedGenericAssayEntityIds:string[], genericAssayEntitiesOptionsByValueMap:{[entityId:string]:ISelectOption}):string {
-
+export function extractGenericAssaySelections(
+    text: string,
+    selectedGenericAssayEntityIds: string[],
+    genericAssayEntitiesOptionsByValueMap: { [entityId: string]: ISelectOption }
+): string {
     // get values from input string
     const elements = splitHeatmapTextField(text);
 
     // check values for valid entity ids
-    const detectedGenericAssayEntityIds:string[] = [];
-    _.each(elements, (d:string)=> {
+    const detectedGenericAssayEntityIds: string[] = [];
+    _.each(elements, (d: string) => {
         if (d in genericAssayEntitiesOptionsByValueMap) {
             detectedGenericAssayEntityIds.push(d);
-            if (! selectedGenericAssayEntityIds.includes(d)) {
+            if (!selectedGenericAssayEntityIds.includes(d)) {
                 selectedGenericAssayEntityIds.push(d);
             }
         }
@@ -1267,8 +1345,8 @@ export function extractGenericAssaySelections(text:string, selectedGenericAssayE
 
     // remove valid entity ids from the input string
     if (detectedGenericAssayEntityIds.length > 0) {
-        _.each(detectedGenericAssayEntityIds, (d:string) => {
-            text = text.replace(d, "");
+        _.each(detectedGenericAssayEntityIds, (d: string) => {
+            text = text.replace(d, '');
         });
     }
 

@@ -576,11 +576,17 @@ describe('Quick Plot Links in the Plots Tab', () => {
 
         it('should make sample order vs treatment IC50 quickplot', () => {
             const dataTypes: PlotsTabOption[] = [
-                {value: "TREATMENT_RESPONSE", label: "Treatments"},
+                { value: 'TREATMENT_RESPONSE', label: 'Treatments' },
             ];
             const dataSources: PlotsTabDataSource = {};
-            const horizontal: TypeSourcePair = {type: "none", source: undefined};
-            const vertical: TypeSourcePair = {type: "TREATMENT_RESPONSE", source: undefined};
+            const horizontal: TypeSourcePair = {
+                type: 'none',
+                source: undefined,
+            };
+            const vertical: TypeSourcePair = {
+                type: 'TREATMENT_RESPONSE',
+                source: undefined,
+            };
 
             const actual = generateQuickPlots(
                 dataTypes,
@@ -597,8 +603,8 @@ describe('Quick Plot Links in the Plots Tab', () => {
                     plotModel: {
                         vertical: {
                             dataType: {
-                                value: "TREATMENT_RESPONSE",
-                                label: "Treatments"
+                                value: 'TREATMENT_RESPONSE',
+                                label: 'Treatments',
                             },
                             dataSource: undefined,
                         },

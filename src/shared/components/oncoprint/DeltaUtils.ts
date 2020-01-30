@@ -181,7 +181,9 @@ type TrackSpecsWithDynamicGroups = {
     genesetHeatmapTracks: { trackGroupIndex: number }[];
 };
 
-type GenericAssayProfileToTrackIdMap = {[molecularProfileId:string]: undefined|TrackId};
+type GenericAssayProfileToTrackIdMap = {
+    [molecularProfileId: string]: undefined | TrackId;
+};
 
 export function transitionTrackGroupSortPriority(
     nextProps: TrackSpecsWithDynamicGroups,
@@ -562,11 +564,11 @@ function transitionTracks(
 ) {
     // Initialize tracks for rule set sharing
     const trackIdForRuleSetSharing = {
-        genetic: undefined as undefined|TrackId,
-        genesetHeatmap: undefined as undefined|TrackId,
-        heatmap: undefined as undefined|TrackId,
-        heatmap01:undefined as undefined|TrackId,
-        genericAssay: {} as any as GenericAssayProfileToTrackIdMap
+        genetic: undefined as undefined | TrackId,
+        genesetHeatmap: undefined as undefined | TrackId,
+        heatmap: undefined as undefined | TrackId,
+        heatmap01: undefined as undefined | TrackId,
+        genericAssay: ({} as any) as GenericAssayProfileToTrackIdMap,
     };
     const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
     if (
@@ -629,22 +631,46 @@ function transitionTracks(
     // Note: the resolution of `trackIds for ruleset sharing` is different from
     // the section above because different formatting is applied to each generic assay profile (molecularProfileId)
     trackIdForRuleSetSharing.genericAssay = _.chain(prevProps.heatmapTracks)
-                                    .filter((s:IHeatmapTrackSpec) => s.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY)
-                                    .groupBy((track:IHeatmapTrackSpec) => track.molecularProfileId)
-                                    .mapValues( (o:IHeatmapTrackSpec[]) => _.last(o) )
-                                    .mapValues( (o:IHeatmapTrackSpec) => trackSpecKeyToTrackId[o.key] )
-                                    .value();
+        .filter(
+            (s: IHeatmapTrackSpec) =>
+                s.molecularAlterationType ===
+                AlterationTypeConstants.GENERIC_ASSAY
+        )
+        .groupBy((track: IHeatmapTrackSpec) => track.molecularProfileId)
+        .mapValues((o: IHeatmapTrackSpec[]) => _.last(o))
+        .mapValues((o: IHeatmapTrackSpec) => trackSpecKeyToTrackId[o.key])
+        .value();
 
     const genericAssayProfilesMap = _.chain(nextProps.heatmapTracks)
-                                    .filter((s:IHeatmapTrackSpec) => s.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY)
-                                    .groupBy((track:IHeatmapTrackSpec) => track.molecularProfileId)
-                                    .mapValues( (o:IHeatmapTrackSpec[]) => _(o).flatMap((d)=>d.data).filter((d:IBaseHeatmapTrackDatum) => ! d.category).map((d)=>d.profile_data).value() )
-                                    .value();
+        .filter(
+            (s: IHeatmapTrackSpec) =>
+                s.molecularAlterationType ===
+                AlterationTypeConstants.GENERIC_ASSAY
+        )
+        .groupBy((track: IHeatmapTrackSpec) => track.molecularProfileId)
+        .mapValues((o: IHeatmapTrackSpec[]) =>
+            _(o)
+                .flatMap(d => d.data)
+                .filter((d: IBaseHeatmapTrackDatum) => !d.category)
+                .map(d => d.profile_data)
+                .value()
+        )
+        .value();
 
     // find the max and min generic assay profile value in the next heatmap track group
     // max and min value is used to create a custom legend for the track group
-    const genericAssayProfileMaxValues = _.mapValues(genericAssayProfilesMap, (profile_data:number[]) => { return _.max(profile_data) });
-    const genericAssayProfileMinValues = _.mapValues(genericAssayProfilesMap, (profile_data:number[]) => { return _.min(profile_data) });
+    const genericAssayProfileMaxValues = _.mapValues(
+        genericAssayProfilesMap,
+        (profile_data: number[]) => {
+            return _.max(profile_data);
+        }
+    );
+    const genericAssayProfileMinValues = _.mapValues(
+        genericAssayProfilesMap,
+        (profile_data: number[]) => {
+            return _.min(profile_data);
+        }
+    );
 
     // Transition genetic tracks
     const prevGeneticTracks = _.keyBy(
@@ -751,28 +777,46 @@ function transitionTracks(
         (track: IHeatmapTrackSpec) => track.key
     );
     for (let track of nextProps.heatmapTracks) {
-
         // add generic assay layout/formatting information to the track specs
-        track.maxProfileValue = genericAssayProfileMaxValues[track.molecularProfileId];
-        track.minProfileValue = genericAssayProfileMinValues[track.molecularProfileId];
+        track.maxProfileValue =
+            genericAssayProfileMaxValues[track.molecularProfileId];
+        track.minProfileValue =
+            genericAssayProfileMinValues[track.molecularProfileId];
 
-        transitionHeatmapTrack(track, prevHeatmapTracks[track.key], getTrackSpecKeyToTrackId,
-            () => undefined, oncoprint, nextProps, {}, trackIdForRuleSetSharing,
-            undefined);
+        transitionHeatmapTrack(
+            track,
+            prevHeatmapTracks[track.key],
+            getTrackSpecKeyToTrackId,
+            () => undefined,
+            oncoprint,
+            nextProps,
+            {},
+            trackIdForRuleSetSharing,
+            undefined
+        );
         delete prevHeatmapTracks[track.key];
     }
 
     for (const track of prevProps.heatmapTracks || []) {
         // if its still there, then this track no longer exists
         if (prevHeatmapTracks.hasOwnProperty(track.key)) {
-
             // add generic assay layout/formatting information to the track specs
-            track.maxProfileValue = genericAssayProfileMaxValues[track.molecularProfileId];
-            track.minProfileValue = genericAssayProfileMinValues[track.molecularProfileId];
+            track.maxProfileValue =
+                genericAssayProfileMaxValues[track.molecularProfileId];
+            track.minProfileValue =
+                genericAssayProfileMinValues[track.molecularProfileId];
 
-            transitionHeatmapTrack(undefined, prevHeatmapTracks[track.key], getTrackSpecKeyToTrackId,
-                                () => undefined, oncoprint, nextProps, {}, trackIdForRuleSetSharing,
-                                undefined);
+            transitionHeatmapTrack(
+                undefined,
+                prevHeatmapTracks[track.key],
+                getTrackSpecKeyToTrackId,
+                () => undefined,
+                oncoprint,
+                nextProps,
+                {},
+                trackIdForRuleSetSharing,
+                undefined
+            );
         }
     }
     // Oncce tracks have been added and deleted, transition order
@@ -1276,15 +1320,19 @@ function transitionGenesetHeatmapTrack(
 }
 
 export function transitionHeatmapTrack(
-    nextSpec:IHeatmapTrackSpec|undefined,
-    prevSpec:IHeatmapTrackSpec|undefined,
-    getTrackSpecKeyToTrackId:()=>{[key:string]:TrackId},
-    getMolecularProfileMap: () => (object | undefined),
-    oncoprint:OncoprintJS,
-    nextProps:IOncoprintProps,
-    prevProps:object,
-    trackIdForRuleSetSharing:{heatmap?:TrackId, heatmap01?:TrackId, genericAssay?: GenericAssayProfileToTrackIdMap},
-    expansionParentKey?:string
+    nextSpec: IHeatmapTrackSpec | undefined,
+    prevSpec: IHeatmapTrackSpec | undefined,
+    getTrackSpecKeyToTrackId: () => { [key: string]: TrackId },
+    getMolecularProfileMap: () => object | undefined,
+    oncoprint: OncoprintJS,
+    nextProps: IOncoprintProps,
+    prevProps: object,
+    trackIdForRuleSetSharing: {
+        heatmap?: TrackId;
+        heatmap01?: TrackId;
+        genericAssay?: GenericAssayProfileToTrackIdMap;
+    },
+    expansionParentKey?: string
 ) {
     const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
     if (tryRemoveTrack(nextSpec, prevSpec, trackSpecKeyToTrackId, oncoprint)) {
@@ -1365,7 +1413,9 @@ export function transitionHeatmapTrack(
         } else {
             // if the track is a generic assay profile, add to trackIdForRuleSetSharing under its `molecularProfileId`
             // this makes the trackId available for existing tracks of the same mol.profile for ruleset sharing
-            trackIdForRuleSetSharing.genericAssay![nextSpec.molecularProfileId] = newTrackId;
+            trackIdForRuleSetSharing.genericAssay![
+                nextSpec.molecularProfileId
+            ] = newTrackId;
         }
     } else if (nextSpec && prevSpec) {
         // Transition track
@@ -1386,10 +1436,17 @@ export function transitionHeatmapTrack(
             oncoprint.setTrackMovable(trackId, nextSpec.movable);
         }
         // generic assay profile tracks always are associated with the last added added track id
-        if (nextSpec.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY
-             && trackIdForRuleSetSharing.genericAssay![nextSpec.molecularProfileId] !== undefined) {
-                 const rulesetTrackId = trackIdForRuleSetSharing.genericAssay![nextSpec.molecularProfileId];
-                 oncoprint.shareRuleSet(rulesetTrackId!, trackId);
+        if (
+            nextSpec.molecularAlterationType ===
+                AlterationTypeConstants.GENERIC_ASSAY &&
+            trackIdForRuleSetSharing.genericAssay![
+                nextSpec.molecularProfileId
+            ] !== undefined
+        ) {
+            const rulesetTrackId = trackIdForRuleSetSharing.genericAssay![
+                nextSpec.molecularProfileId
+            ];
+            oncoprint.shareRuleSet(rulesetTrackId!, trackId);
         }
         // set tooltip, its cheap
         oncoprint.setTrackTooltipFn(
