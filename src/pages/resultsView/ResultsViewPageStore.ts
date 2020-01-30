@@ -4861,6 +4861,7 @@ export class ResultsViewPageStore {
 
     @cached get oncoKbEvidenceCache() {
         return new OncoKbEvidenceCache();
+        console.log("aaron");
     }
 
     /*
