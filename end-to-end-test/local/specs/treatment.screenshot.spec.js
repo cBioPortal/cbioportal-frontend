@@ -30,7 +30,7 @@ describe('treatment feature', () => {
             );
             $('.oncoprint__controls__heatmap_menu textarea').setValue('17-AAG');
             $('div.icon-area div.icon').waitForExist();
-            $('button=Add Treatment Response to Heatmap').click();
+            $('button=Add entity to Heatmap').click();
             openHeatmapMenu();
             waitForOncoprint();
             var res = browser.checkElement('[id=oncoprintDiv]');
@@ -45,7 +45,7 @@ describe('treatment feature', () => {
             );
             $('.oncoprint__controls__heatmap_menu textarea').setValue('17-AAG');
             $('div.icon-area div.icon').waitForExist();
-            $('.treatment-selector .default-checked-select').click();
+            $('.generic-assay-selector .default-checked-select').click();
             var res = browser.checkElement('.checked-select-option*=17-AAG');
             assertScreenShotMatch(res);
         });
