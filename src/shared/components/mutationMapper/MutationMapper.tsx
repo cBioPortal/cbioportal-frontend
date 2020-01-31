@@ -2,18 +2,19 @@ import * as React from 'react';
 import _ from 'lodash';
 import autobind from 'autobind-decorator';
 import { observer } from 'mobx-react';
-import { computed, action, observable } from 'mobx';
+import { action, computed } from 'mobx';
 import classnames from 'classnames';
 import {
-    LollipopMutationPlot,
+    DataFilterType,
     FilterResetPanel,
+    LollipopMutationPlot,
     MutationMapper as DefaultMutationMapper,
+    onFilterOptionSelect,
+    ProteinImpactTypeBadgeSelector,
     TrackDataStatus,
     TrackName,
+    TrackSelector,
     TrackVisibility,
-    ProteinImpactTypeBadgeSelector,
-    onFilterOptionSelect,
-    DataFilterType,
 } from 'react-mutation-mapper';
 
 import 'react-mutation-mapper/dist/styles.css';
@@ -207,6 +208,7 @@ export default class MutationMapper<
                 pubMedCache={this.props.pubMedCache}
                 onXAxisOffset={this.onXAxisOffset}
                 geneWidth={this.geneWidth}
+                tracks={this.tracks}
                 trackVisibility={this.trackVisibility}
                 trackDataStatus={this.trackDataStatus}
                 onTrackVisibilityChange={this.onTrackVisibilityChange}
@@ -218,6 +220,25 @@ export default class MutationMapper<
                         : undefined
                 }
             />
+        );
+    }
+
+    @computed
+    protected get tracks(): TrackName[] {
+        const defaultTracks: TrackName[] = TrackSelector.defaultProps.tracks!;
+
+        const conditionalTracks = [
+            { name: TrackName.OncoKB, enabled: this.props.enableOncoKb },
+            {
+                name: TrackName.CancerHotspots,
+                enabled: this.props.enableHotspot,
+            },
+        ];
+
+        // default tracks minus the disabled ones
+        return _.without(
+            defaultTracks,
+            ...conditionalTracks.filter(t => !t.enabled).map(t => t.name)
         );
     }
 
