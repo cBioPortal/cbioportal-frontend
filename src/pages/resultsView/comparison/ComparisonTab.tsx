@@ -22,6 +22,9 @@ import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import { ResultsViewComparisonSubTab } from '../ResultsViewPageHelpers';
 import { GroupComparisonTab } from '../../groupComparison/GroupComparisonTabs';
 import Survival from '../../groupComparison/Survival';
+import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
+import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
+import NotUsingGenePanelWarning from '../NotUsingGenePanelWarning';
 
 export interface IComparisonTabProps {
     urlWrapper: ResultsViewURLWrapper;
@@ -145,6 +148,11 @@ export default class ComparisonTab extends React.Component<
                                     : ''
                             }
                         >
+                            <div className="tabMessageContainer">
+                                <NotUsingGenePanelWarning
+                                    store={this.props.store}
+                                />
+                            </div>
                             <Survival store={this.store} />
                         </MSKTab>
                     )}
@@ -233,6 +241,21 @@ export default class ComparisonTab extends React.Component<
             return null;
         }
 
-        return this.tabs.component;
+        return (
+            <div data-test="ComparisonTabDiv">
+                <div
+                    className={'tabMessageContainer'}
+                    style={{ marginBottom: 10 }}
+                >
+                    <OqlStatusBanner
+                        className="comparison-oql-status-banner"
+                        store={this.props.store}
+                        tabReflectsOql={true}
+                    />
+                    <AlterationFilterWarning store={this.props.store} />
+                </div>
+                {this.tabs.component}
+            </div>
+        );
     }
 }

@@ -82,7 +82,7 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
                         }))
                     ),
                     origin: studyIds,
-                    color: this.alteredColor,
+                    color: '#ff0000',
                     uid: 'altered',
                     ordinal: '',
                     nameWithOrdinal: 'Altered group',
@@ -109,7 +109,7 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
                         )
                     ),
                     origin: studyIds,
-                    color: this.unalteredColor,
+                    color: '#0000ff',
                     uid: 'unaltered',
                     ordinal: '',
                     nameWithOrdinal: 'Unaltered group',

@@ -157,11 +157,17 @@ function runResultsTestSuite(prefix) {
     });
 
     it(`${prefix} survival tab`, function() {
-        browser.click('a.tabAnchor_survival');
-        browser.waitForVisible('[data-test=SurvivalChart] svg', 10000);
-        var res = browser.checkElement('[data-test="survivalTabDiv"]', {
-            hide: ['.qtip'],
-        });
+        browser.click('.comparisonTabSubTabs a.tabAnchor_survival');
+        browser.waitForVisible(
+            '[data-test="ComparisonPageSurvivalTabDiv"] svg',
+            10000
+        );
+        var res = browser.checkElement(
+            '[data-test="ComparisonPageSurvivalTabDiv"]',
+            {
+                hide: ['.qtip'],
+            }
+        );
         assertScreenShotMatch(res);
     });
 
@@ -336,19 +342,24 @@ describe('enrichments tab screenshot tests', function() {
         goToUrlAndSetLocalStorage(url);
     });
     it('enrichments tab coadread_tcga_pub mRNA profile', function() {
+        browser.waitForVisible('.comparisonTabSubTabs .tabAnchor_mrna');
+        browser.click('.comparisonTabSubTabs .tabAnchor_mrna');
         browser.waitForVisible(
-            'div[data-test="MutationEnrichmentsTab"]',
-            10000
+            'div[data-test="GroupComparisonMRNAEnrichments"]'
         );
         browser.waitForVisible('a=mRNA', 10000);
         browser.click('a=mRNA');
-        browser.waitForVisible('div[data-test="MRNAEnrichmentsTab"]', 20000);
+        browser.waitForVisible(
+            'div[data-test="GroupComparisonMRNAEnrichments"]',
+            20000
+        );
         browser.waitForVisible('b=MERTK', 10000);
         browser.click('b=MERTK');
         browser.waitForVisible('div[data-test="MiniBoxPlot"]', 20000);
-        var res = browser.checkElement('[data-test="enrichmentsTabDiv"]', {
-            hide: ['.qtip'],
-        });
+        var res = browser.checkElement(
+            'div[data-test="GroupComparisonMRNAEnrichments"]',
+            { hide: ['.qtip'] }
+        );
         assertScreenShotMatch(res);
     });
 });
