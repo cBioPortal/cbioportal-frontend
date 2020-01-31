@@ -84,7 +84,9 @@ describe('treatment feature', function() {
                     'IC50 values of compounds on cellular phenotype readout'
                 );
                 assert(
-                    $('.oncoprint__controls__heatmap_menu.generic-assay-selector')
+                    $(
+                        '.oncoprint__controls__heatmap_menu.generic-assay-selector'
+                    )
                 );
             });
 
@@ -139,7 +141,9 @@ describe('treatment feature', function() {
                     'IC50 values of compounds on cellular phenotype readout'
                 );
                 var treatments = getSelectCheckedOptions(
-                    $('.oncoprint__controls__heatmap_menu .generic-assay-selector')
+                    $(
+                        '.oncoprint__controls__heatmap_menu .generic-assay-selector'
+                    )
                 );
                 assert.equal(treatments.length, 10);
             });
@@ -151,7 +155,9 @@ describe('treatment feature', function() {
                     'IC50 values of compounds on cellular phenotype readout'
                 );
                 var treatments = getSelectCheckedOptions(
-                    $('.oncoprint__controls__heatmap_menu .generic-assay-selector')
+                    $(
+                        '.oncoprint__controls__heatmap_menu .generic-assay-selector'
+                    )
                 );
                 var treatment = treatments[0];
                 var treatmentName = treatment.getText();
@@ -184,9 +190,9 @@ describe('treatment feature', function() {
 
                 // test if add all button only adds filtered treatments
                 addAllButton.click();
-                var selectedTreatments = $('.icon-area.generic-assay-textarea').$$(
-                    'div.icon'
-                );
+                var selectedTreatments = $(
+                    '.icon-area.generic-assay-textarea'
+                ).$$('div.icon');
                 assert.equal(selectedTreatments.length, 1);
             });
 
@@ -217,7 +223,9 @@ describe('treatment feature', function() {
 
             it('initializes from `generic_assay_groups` URL parameter', () => {
                 goToUrlAndSetLocalStorage(
-                    oncoprintTabUrl.concat('&generic_assay_groups=study_es_0_treatment_ic50,17-AAG')
+                    oncoprintTabUrl.concat(
+                        '&generic_assay_groups=study_es_0_treatment_ic50,17-AAG'
+                    )
                 );
                 waitForOncoprint();
                 openHeatmapMenu();
@@ -227,7 +235,9 @@ describe('treatment feature', function() {
                 );
                 assert($('div.icon*=17-AAG').isExisting());
                 var selectMenuEntry = selectCheckedOption(
-                    $('.oncoprint__controls__heatmap_menu .generic-assay-selector'),
+                    $(
+                        '.oncoprint__controls__heatmap_menu .generic-assay-selector'
+                    ),
                     'Name of 17-AAG',
                     true
                 );
@@ -332,7 +342,9 @@ describe('treatment feature', function() {
                     'IC50 values of compounds on cellular phenotype readout'
                 );
 
-                var horzEntitySelect = $('[name=h-generic-assay-selector]').$('..');
+                var horzEntitySelect = $('[name=h-generic-assay-selector]').$(
+                    '..'
+                );
                 assert(reactSelectOption(horzEntitySelect, 'Name of 17-AAG'));
                 assert(reactSelectOption(horzEntitySelect, 'Name of AEW541'));
             });
@@ -351,7 +363,9 @@ describe('treatment feature', function() {
                     'IC50 values of compounds on cellular phenotype readout'
                 );
 
-                var vertEntitySelect = $('[name=v-generic-assay-selector]').$('..');
+                var vertEntitySelect = $('[name=v-generic-assay-selector]').$(
+                    '..'
+                );
                 assert(reactSelectOption(vertEntitySelect, 'Name of 17-AAG'));
                 assert(reactSelectOption(vertEntitySelect, 'Name of AEW541'));
             });
@@ -370,7 +384,9 @@ describe('treatment feature', function() {
                     'IC50 values of compounds on cellular phenotype readout'
                 );
 
-                var vertEntitySelect = $('[name=v-generic-assay-selector]').$('..');
+                var vertEntitySelect = $('[name=v-generic-assay-selector]').$(
+                    '..'
+                );
                 selectReactSelectOption(vertEntitySelect, 'Name of AEW541');
 
                 var horzDataSelect = $('[name=h-profile-type-selector]').$(
@@ -393,7 +409,9 @@ describe('treatment feature', function() {
                     'IC50 values of compounds on cellular phenotype readout'
                 );
 
-                var horzEntitySelect = $('[name=h-generic-assay-selector]').$('..');
+                var horzEntitySelect = $('[name=h-generic-assay-selector]').$(
+                    '..'
+                );
                 selectReactSelectOption(horzEntitySelect, 'Name of AEW541');
 
                 var vertDataSelect = $('[name=v-profile-type-selector]').$(
@@ -432,7 +450,9 @@ describe('treatment feature', function() {
                     'EC50 values of compounds on cellular phenotype readout'
                 );
 
-                var horzEntitySelect = $('[name=h-generic-assay-selector]').$('..');
+                var horzEntitySelect = $('[name=h-generic-assay-selector]').$(
+                    '..'
+                );
                 selectReactSelectOption(horzEntitySelect, 'Name of AEW541');
 
                 assert($('[data-test=ViewLimitValues]').isVisible());
@@ -452,7 +472,9 @@ describe('treatment feature', function() {
                     'EC50 values of compounds on cellular phenotype readout'
                 );
 
-                var vertEntitySelect = $('[name=v-generic-assay-selector]').$('..');
+                var vertEntitySelect = $('[name=v-generic-assay-selector]').$(
+                    '..'
+                );
                 selectReactSelectOption(vertEntitySelect, 'Name of AEW541');
 
                 assert($('[data-test=ViewLimitValues]').isVisible());

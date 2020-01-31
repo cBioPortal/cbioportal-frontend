@@ -39,7 +39,7 @@ export enum ResultsViewURLQueryEnum {
 }
 
 export type ResultsViewURLQuery = {
-    [key in keyof typeof ResultsViewURLQueryEnum]: string
+    [key in keyof typeof ResultsViewURLQueryEnum]: string;
 };
 
 export default class ResultsViewURLWrapper extends URLWrapper<

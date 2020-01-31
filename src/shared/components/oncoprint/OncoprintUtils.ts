@@ -1096,12 +1096,10 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                         'entityId',
                         entityId,
                         sampleMode ? samples : patients,
-                        dataCache
-                            .get(query)!
-                            .data!.map(d => ({
-                                ...d,
-                                value: parseFloat(d.value),
-                            })),
+                        dataCache.get(query)!.data!.map(d => ({
+                            ...d,
+                            value: parseFloat(d.value),
+                        })),
                         sortOrder
                     ),
                     pivotThreshold: pivotThreshold,
