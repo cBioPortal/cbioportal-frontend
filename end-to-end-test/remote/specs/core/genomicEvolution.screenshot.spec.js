@@ -92,6 +92,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
         browser.click(
             'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(1)'
         );
+        browser.moveToObject('#cbioportal-logo');
         const res = browser.checkElement(
             'div[data-test="GenomicEvolutionTab"]',
             { hide: ['.qtip'] }
