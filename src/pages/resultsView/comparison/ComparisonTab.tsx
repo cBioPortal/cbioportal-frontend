@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { action, observable } from 'mobx';
+import { action, computed, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import { MakeMobxView } from '../../../shared/components/MobxView';
 import { MSKTab, MSKTabs } from '../../../shared/components/MSKTabs/MSKTabs';
@@ -25,6 +25,10 @@ import Survival from '../../groupComparison/Survival';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
 import NotUsingGenePanelWarning from '../NotUsingGenePanelWarning';
+import _ from 'lodash';
+import groupComparisonStyles from '../../../pages/groupComparison/styles.module.scss';
+import styles from '../../groupComparison/styles.module.scss';
+import GroupSelector from '../../groupComparison/groupSelector/GroupSelector';
 
 export interface IComparisonTabProps {
     urlWrapper: ResultsViewURLWrapper;
@@ -133,10 +137,7 @@ export default class ComparisonTab extends React.Component<
                         id={ResultsViewComparisonSubTab.OVERLAP}
                         linkText="Overlap"
                     >
-                        <div style={{ marginBottom: 10 }}>
-                            {this.overlapStrategySelector.component}
-                        </div>
-                        <Overlap store={this.store} resultsViewMode={true} />
+                        <Overlap store={this.store} />
                     </MSKTab>
                     {this.store.showSurvivalTab && (
                         <MSKTab
@@ -243,6 +244,26 @@ export default class ComparisonTab extends React.Component<
 
         return (
             <div data-test="ComparisonTabDiv">
+                <LoadingIndicator
+                    center={true}
+                    isLoading={this.store.newSessionPending}
+                    size={'big'}
+                />
+                <div
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        paddingBottom: 25,
+                    }}
+                >
+                    <div className={groupComparisonStyles.headerControls}>
+                        <GroupSelector
+                            store={this.store}
+                            groupCollapseThreshold={40}
+                        />
+                    </div>
+                    <div>{this.overlapStrategySelector.component}</div>
+                </div>
                 <div
                     className={'tabMessageContainer'}
                     style={{ marginBottom: 10 }}
