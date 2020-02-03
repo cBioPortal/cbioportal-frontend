@@ -78,6 +78,7 @@ export enum OverlapStrategy {
 export default class ComparisonStore {
     private tabHasBeenShown = observable.map<boolean>();
     private tabHasBeenShownReactionDisposer: IReactionDisposer;
+    @observable public newSessionPending = false;
 
     constructor(
         protected appStore: AppStore,
@@ -121,18 +122,81 @@ export default class ComparisonStore {
 
     // < To be implemented in subclasses: >
     public isGroupSelected(name: string): boolean {
-        throw 'isGroupSelected must be implemented in subclass';
+        throw new Error('isGroupSelected must be implemented in subclass');
     }
     public setUsePatientLevelEnrichments(s: boolean) {
-        throw 'setUsePatientLevelEnrichments must be implemented in subclass';
+        throw new Error(
+            'setUsePatientLevelEnrichments must be implemented in subclass'
+        );
+    }
+    public toggleGroupSelected(groupName: string) {
+        throw new Error(`toggleGroupSelected must be implemented in subclass`);
+    }
+    public updateGroupOrder(oldIndex: number, newIndex: number) {
+        throw new Error(`updateGroupOrder must be implemented in subclass`);
+    }
+    public selectAllGroups() {
+        throw new Error(`selectAllGroups must be implemented in subclass`);
+    }
+    public deselectAllGroups() {
+        throw new Error(`deselectAllGroups must be implemented in subclass`);
+    }
+    protected async saveAndGoToSession(newSession: Session) {
+        throw new Error(`saveAndGoToSession must be implemented in subclass`);
     }
 
+    public get isLoggedIn() {
+        return this.appStore.isLoggedIn;
+    }
+
+    public async addGroup(group: SessionGroupData, saveToUser: boolean) {
+        this.newSessionPending = true;
+        if (saveToUser && this.isLoggedIn) {
+            await comparisonClient.addGroup(group);
+        }
+        const newSession = _.cloneDeep(this._session.result!);
+        newSession.groups.push(group);
+
+        this.saveAndGoToSession(newSession);
+    }
+
+    public async deleteGroup(name: string) {
+        this.newSessionPending = true;
+        const newSession = _.cloneDeep(this._session.result!);
+        newSession.groups = newSession.groups.filter(g => g.name !== name);
+
+        this.saveAndGoToSession(newSession);
+    }
+
+    readonly _session: MobxPromise<Session>; // must be implemented in subclasses
     readonly _originalGroups: MobxPromise<ComparisonGroup[]>; // must be implemented in subclasses
     public overlapStrategy: OverlapStrategy; // must be implemented in subclasses
     public usePatientLevelEnrichments: boolean; // must be implemented in subclasses
     readonly samples: MobxPromise<Sample[]>; // must be implemented in subclass
     readonly studies: MobxPromise<CancerStudy[]>; // must be implemented in subclass
     // < / >
+
+    readonly origin = remoteData({
+        await: () => [this._session],
+        invoke: () => Promise.resolve(this._session.result!.origin),
+    });
+
+    readonly existingGroupNames = remoteData({
+        await: () => [this._originalGroups, this.origin],
+        invoke: async () => {
+            const ret = {
+                session: this._originalGroups.result!.map(g => g.name),
+                user: [] as string[],
+            };
+            if (this.isLoggedIn) {
+                // need to add all groups belonging to this user for this origin
+                ret.user = (await comparisonClient.getGroupsForStudies(
+                    this.origin.result!
+                )).map(g => g.data.name);
+            }
+            return ret;
+        },
+    });
 
     readonly overlapComputations = remoteData<
         IOverlapComputations<ComparisonGroup>
@@ -171,7 +235,7 @@ export default class ComparisonStore {
             Promise.resolve(
                 this.availableGroups.result!.filter(
                     group =>
-                        this.isGroupSelected(group.uid) && !isGroupEmpty(group)
+                        this.isGroupSelected(group.name) && !isGroupEmpty(group)
                 )
             ),
     });
@@ -219,7 +283,7 @@ export default class ComparisonStore {
             Promise.resolve(
                 this._originalGroupsOverlapRemoved.result!.filter(
                     group =>
-                        this.isGroupSelected(group.uid) && !isGroupEmpty(group)
+                        this.isGroupSelected(group.name) && !isGroupEmpty(group)
                 )
             ),
     });
@@ -235,7 +299,7 @@ export default class ComparisonStore {
             return Promise.resolve(
                 this._originalGroups.result!.filter(
                     group =>
-                        this.isGroupSelected(group.uid) &&
+                        this.isGroupSelected(group.name) &&
                         !(group.uid in excludedGroups)
                 )
             );
@@ -247,7 +311,7 @@ export default class ComparisonStore {
         invoke: () =>
             Promise.resolve(
                 this._originalGroups.result!.filter(group =>
-                    this.isGroupSelected(group.uid)
+                    this.isGroupSelected(group.name)
                 )
             ),
     });

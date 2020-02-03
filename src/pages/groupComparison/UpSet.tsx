@@ -44,7 +44,7 @@ export interface IUpSetProps {
         value: string[];
     }[];
     uidToGroup: { [uid: string]: ComparisonGroup };
-    onChangeSelectedCombinations?: (selectedCombinations: string[][]) => void;
+    onChangeSelectedCombinations: (selectedCombinations: string[][]) => void;
     selectedCombinations: string[][]; // we do it like this so that updating it doesn't update all props
     svgId?: string;
     title?: string;
@@ -129,15 +129,12 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                                         !props.datum ||
                                         !props.datum.notClickable
                                     ) {
-                                        this.props
-                                            .onChangeSelectedCombinations &&
-                                            this.props.onChangeSelectedCombinations(
-                                                toggleRegionSelected(
-                                                    groups,
-                                                    this.props
-                                                        .selectedCombinations
-                                                )
-                                            );
+                                        this.props.onChangeSelectedCombinations(
+                                            toggleRegionSelected(
+                                                groups,
+                                                this.props.selectedCombinations
+                                            )
+                                        );
                                     }
                                     return null;
                                 },
@@ -150,8 +147,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
     }
 
     @autobind private resetSelection() {
-        this.props.onChangeSelectedCombinations &&
-            this.props.onChangeSelectedCombinations([]);
+        this.props.onChangeSelectedCombinations([]);
     }
 
     @computed get usedGroups() {
@@ -347,10 +343,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                     y: this.categoryCoord(i),
                     fill: included ? '#000000' : DEFAULT_SCATTER_DOT_COLOR,
                     dontShowTooltip: !included,
-                    cursor:
-                        included && this.props.onChangeSelectedCombinations
-                            ? 'pointer'
-                            : 'default',
+                    cursor: included ? 'pointer' : 'default',
                     notClickable: !included,
                     ...set,
                 };
@@ -401,9 +394,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                             strokeOpacity: 0,
                             strokeWidth: this.barWidth(),
                             strokeLinecap: 'round',
-                            cursor: this.props.onChangeSelectedCombinations
-                                ? 'pointer'
-                                : '',
+                            cursor: 'pointer',
                         },
                     }}
                     data={data}
@@ -628,10 +619,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                                         data: {
                                             fillOpacity: 0,
                                             width: this.barWidth(),
-                                            cursor: this.props
-                                                .onChangeSelectedCombinations
-                                                ? 'pointer'
-                                                : '',
+                                            cursor: 'pointer',
                                         },
                                     }}
                                     data={this.barPlotHitzoneData}

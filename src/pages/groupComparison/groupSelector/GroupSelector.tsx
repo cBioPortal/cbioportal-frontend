@@ -3,15 +3,20 @@ import { observer } from 'mobx-react';
 import { MakeMobxView } from 'shared/components/MobxView';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from 'shared/components/ErrorMessage';
-import GroupComparisonStore from '../GroupComparisonStore';
 import autobind from 'autobind-decorator';
 import GroupSelectorButton from './GroupSelectorButton';
 import GroupSelectorButtonList from './GroupSelectorButtonList';
 import SelectAllDeselectAll from './SelectAllDeselectAll';
-import { OverlapStrategy } from '../../../shared/lib/comparison/ComparisonStore';
+import ComparisonStore, {
+    OverlapStrategy,
+} from '../../../shared/lib/comparison/ComparisonStore';
+import { computed, observable } from 'mobx';
+import { ComparisonGroup } from '../GroupComparisonUtils';
+import CollapsedGroupsButton from './CollapsedGroupsButton';
 
 export interface IGroupSelectorProps {
-    store: GroupComparisonStore;
+    store: ComparisonStore;
+    groupCollapseThreshold?: number;
 }
 
 @observer
@@ -19,7 +24,13 @@ export default class GroupSelector extends React.Component<
     IGroupSelectorProps,
     {}
 > {
+    @observable collapsedGroupsShown = false;
     private dragging = false;
+
+    @autobind
+    private toggleCollapsedGroups() {
+        this.collapsedGroupsShown = !this.collapsedGroupsShown;
+    }
 
     @autobind
     private isSelected(groupName: string) {
@@ -53,6 +64,35 @@ export default class GroupSelector extends React.Component<
         this.dragging = true;
     }
 
+    @computed get groupsDeletable() {
+        return (
+            this.props.store._originalGroups.isComplete &&
+            this.props.store._originalGroups.result!.length > 2
+        );
+    }
+
+    @autobind
+    private makeGroupButton(group: ComparisonGroup, index: number) {
+        const excludedFromAnalysis =
+            this.props.store.overlapStrategy === OverlapStrategy.EXCLUDE &&
+            group.uid in
+                this.props.store.overlapComputations.result!
+                    .excludedFromAnalysis;
+
+        return (
+            <GroupSelectorButton
+                isSelected={this.isSelected}
+                deletable={this.groupsDeletable}
+                onClick={this.onClick}
+                onClickDelete={this.onClickDelete}
+                sampleSet={this.props.store.sampleSet.result!}
+                group={group}
+                index={index}
+                excludedFromAnalysis={excludedFromAnalysis}
+            />
+        );
+    }
+
     readonly tabUI = MakeMobxView({
         await: () => [
             this.props.store._originalGroups,
@@ -60,34 +100,49 @@ export default class GroupSelector extends React.Component<
             this.props.store.overlapComputations,
         ],
         render: () => {
-            if (this.props.store._originalGroups.result!.length === 0) {
+            const numGroups = this.props.store._originalGroups.result!.length;
+            if (numGroups === 0) {
                 return null;
             } else {
-                const deletable =
-                    this.props.store._originalGroups.result!.length > 2;
-                const buttons = this.props.store._originalGroups.result!.map(
-                    (group, index) => {
-                        const excludedFromAnalysis =
-                            this.props.store.overlapStrategy ===
-                                OverlapStrategy.EXCLUDE &&
-                            group.uid in
-                                this.props.store.overlapComputations.result!
-                                    .excludedFromAnalysis;
+                let buttons: any[] = [];
+                if (
+                    this.props.groupCollapseThreshold === undefined ||
+                    numGroups <= this.props.groupCollapseThreshold ||
+                    this.collapsedGroupsShown
+                ) {
+                    // don't collapse, show all buttons
+                    buttons = this.props.store._originalGroups.result!.map(
+                        this.makeGroupButton
+                    );
+                } else {
+                    buttons.push(
+                        ...this.props.store._originalGroups
+                            .result!.slice(
+                                0,
+                                this.props.groupCollapseThreshold - 1
+                            )
+                            .map(this.makeGroupButton)
+                    );
+                }
 
-                        return (
-                            <GroupSelectorButton
-                                isSelected={this.isSelected}
-                                deletable={deletable}
-                                onClick={this.onClick}
-                                onClickDelete={this.onClickDelete}
-                                sampleSet={this.props.store.sampleSet.result!}
-                                group={group}
-                                index={index}
-                                excludedFromAnalysis={excludedFromAnalysis}
-                            />
-                        );
-                    }
-                );
+                if (
+                    this.props.groupCollapseThreshold !== undefined &&
+                    numGroups > this.props.groupCollapseThreshold
+                ) {
+                    // show the collapse/decollapse button if there are more than threshold groups
+                    const collapsedGroups =
+                        numGroups - this.props.groupCollapseThreshold + 1;
+                    buttons.push(
+                        <CollapsedGroupsButton
+                            numCollapsedGroups={collapsedGroups}
+                            toggleCollapsedGroups={this.toggleCollapsedGroups}
+                            collapsed={!this.collapsedGroupsShown}
+                            disabled={true} // cant drag
+                            index={buttons.length}
+                        />
+                    );
+                }
+
                 buttons.push(
                     <SelectAllDeselectAll
                         store={this.props.store}

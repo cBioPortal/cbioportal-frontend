@@ -31,7 +31,12 @@ export function createQueryStore(
         const wrapper =
             urlWrapper || new ResultsViewURLWrapper(win.routingStore);
 
-        wrapper.updateURL(query, `results/${tab}`, clearUrl, false);
+        wrapper.updateURL(
+            Object.assign({}, query, { comparison_sessionId: undefined }),
+            `results/${tab}`,
+            clearUrl,
+            false
+        );
 
         // we only want to destroy the urlwrapper if we just created it for submission purpose
         // i.e. it was NOT passed to us
