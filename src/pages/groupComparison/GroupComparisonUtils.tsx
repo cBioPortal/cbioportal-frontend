@@ -478,7 +478,7 @@ export function getDefaultGroupName(
                 ] === DataType.STRING
         )
         .sortBy(filter => filter.attributeId) // sort clinical data equality filters into a canonical order - lets just do alphabetical by attribute id
-        .map(filter => filter.values.join('+')) // get each attributes selected values, joined by +
+        .map(filter => _.flatMap(filter.values, datum => datum.value).join('+')) // get each attributes selected values, joined by +
         .value();
 
     const customChartValues = _(customChartFilterSet)
