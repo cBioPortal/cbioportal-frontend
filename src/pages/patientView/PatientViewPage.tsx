@@ -1399,6 +1399,15 @@ export default class PatientViewPage extends React.Component<
                                         id={PatientViewPageTabs.TrialMatchTab}
                                         linkText="Matched Trials"
                                     >
+                                        <p style={{ marginBottom: '0' }}>
+                                            Curated genomic and clinical
+                                            criteria from open clinical trials
+                                            at Memorial Sloan Kettering. Please{' '}
+                                            <a href="mailto:team@oncokb.org">
+                                                contact us
+                                            </a>{' '}
+                                            if you have any questions.
+                                        </p>
                                         <TrialMatchTable
                                             sampleManager={sampleManager}
                                             detailedTrialMatches={

@@ -77,6 +77,7 @@ import {
     MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX,
 } from 'shared/constants';
 import {
+    EnsemblFilter,
     GenomeNexusAPI,
     stringListToIndexSet,
 } from 'cbioportal-frontend-commons';
@@ -227,6 +228,15 @@ export async function fetchPdbAlignmentData(
     }
 }
 
+export async function fetchPfamDomainData(
+    pfamAccessions: string[],
+    client: GenomeNexusAPI = genomeNexusClient
+) {
+    return await client.fetchPfamDomainsByPfamAccessionPOST({
+        pfamAccessions: pfamAccessions,
+    });
+}
+
 export async function fetchCanonicalTranscripts(
     hugoSymbols: string[],
     isoformOverrideSource: string,
@@ -259,6 +269,24 @@ export async function fetchCanonicalEnsemblGeneIds(
     // TODO: this endpoint should accept isoformOverrideSource
     return await client.fetchCanonicalEnsemblGeneIdByHugoSymbolsPOST({
         hugoSymbols,
+    });
+}
+
+export async function fetchEnsemblTranscriptsByEnsemblFilter(
+    ensemblFilter: Partial<EnsemblFilter>,
+    client: GenomeNexusAPI = genomeNexusClient
+) {
+    return await client.fetchEnsemblTranscriptsByEnsemblFilterPOST({
+        ensemblFilter: Object.assign(
+            // set default to empty array
+            {
+                geneIds: [],
+                hugoSymbols: [],
+                proteinIds: [],
+                transcriptIds: [],
+            },
+            ensemblFilter
+        ),
     });
 }
 

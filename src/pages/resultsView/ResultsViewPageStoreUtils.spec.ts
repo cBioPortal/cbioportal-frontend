@@ -8,6 +8,7 @@ import {
     Patient,
     Sample,
     CancerStudy,
+    StructuralVariantFilter,
 } from '../../shared/api/generated/CBioPortalAPI';
 import {
     annotateMolecularDatum,
@@ -27,6 +28,7 @@ import {
     getSampleAlteredMap,
     getSingleGeneResultKey,
     getMultipleGeneResultKey,
+    getParamsForStructuralVariants,
 } from './ResultsViewPageStoreUtils';
 import {
     IQueriedMergedTrackCaseData,
@@ -48,6 +50,7 @@ import AccessorsForOqlFilter, {
     getSimplifiedMutationType,
 } from '../../shared/lib/oql/AccessorsForOqlFilter';
 import { AlteredStatus } from './mutualExclusivity/MutualExclusivityUtil';
+import { StructuralVariantFilterExt } from '../../shared/model/Fusion';
 
 describe('ResultsViewPageStoreUtils', () => {
     describe('computeCustomDriverAnnotationReport', () => {
@@ -3333,5 +3336,127 @@ describe('getMultipleGeneResultKey', () => {
             expectedResult,
             'get gene group result key(without name)'
         );
+    });
+});
+
+describe('getParamsForStructuralVariants', () => {
+    let genes: Gene[] = [];
+    genes.push({
+        entrezGeneId: 0,
+        hugoGeneSymbol: 'GENE1',
+    } as Gene);
+    genes.push({
+        entrezGeneId: 1,
+        hugoGeneSymbol: 'GENE2',
+    } as Gene);
+    genes.push({
+        entrezGeneId: 2,
+        hugoGeneSymbol: 'GENE3',
+    } as Gene);
+    let selectedMolecularProfiles: MolecularProfile[] = [
+        {
+            molecularProfileId: 'PROFILE1',
+            studyId: 'STUDY1',
+            study: {
+                groups: '',
+                name: 'STUDY1',
+                publicStudy: true,
+                shortName: 'STUDY1',
+                status: 1,
+                studyId: 'STUDY1',
+            } as CancerStudy,
+            name: 'PROFILE1',
+            description: '',
+            molecularAlterationType: 'STRUCTURAL_VARIANT',
+            datatype: 'DISCRETE',
+            showProfileInAnalysisTab: true,
+            pivotThreshold: 0,
+            sortOrder: '',
+            genericAssayType: '',
+        },
+    ];
+    let samples: Sample[] = [
+        {
+            uniqueSampleKey: 'QjA4NTpjaG9sX251c18yMDEy',
+            uniquePatientKey: 'QjA4NTpjaG9sX251c18yMDEy',
+            sampleType: 'Primary Solid Tumor',
+            profiledForFusions: true,
+            sequenced: true,
+            copyNumberSegmentPresent: false,
+            sampleId: 'B085',
+            patientId: 'B085',
+            studyId: 'chol_nus_2012',
+        },
+        {
+            uniqueSampleKey: 'QjA5OTpjaG9sX251c18yMDEy',
+            uniquePatientKey: 'QjA5OTpjaG9sX251c18yMDEy',
+            sampleType: 'Primary Solid Tumor',
+            profiledForFusions: true,
+            sequenced: true,
+            copyNumberSegmentPresent: false,
+            sampleId: 'B099',
+            patientId: 'B099',
+            studyId: 'chol_nus_2012',
+        },
+        {
+            uniqueSampleKey: 'UjEwNDpjaG9sX251c18yMDEy',
+            uniquePatientKey: 'UjEwNDpjaG9sX251c18yMDEy',
+            sampleType: 'Primary Solid Tumor',
+            profiledForFusions: true,
+            sequenced: true,
+            copyNumberSegmentPresent: false,
+            sampleId: 'R104',
+            patientId: 'R104',
+            studyId: 'chol_nus_2012',
+        },
+    ];
+    it('Returns empty Params if no data is present', () => {
+        let result = getParamsForStructuralVariants(
+            undefined,
+            undefined,
+            undefined
+        );
+        let expectedResult: StructuralVariantFilterExt = { entrezGeneIds: [] };
+        assert.deepEqual(result, expectedResult as StructuralVariantFilter);
+    });
+    it('Returns expected params with Samples', () => {
+        let result = getParamsForStructuralVariants(genes, undefined, samples);
+        let expectedResult: StructuralVariantFilterExt = {
+            entrezGeneIds: [0, 1, 2],
+            sampleMolecularIdentifiers: [
+                {
+                    molecularProfileId: 'chol_nus_2012_structural_variants',
+                    sampleId: 'B085',
+                },
+                {
+                    molecularProfileId: 'chol_nus_2012_structural_variants',
+                    sampleId: 'B099',
+                },
+                {
+                    molecularProfileId: 'chol_nus_2012_structural_variants',
+                    sampleId: 'R104',
+                },
+            ],
+        };
+        assert.deepEqual(result, expectedResult as StructuralVariantFilter);
+    });
+    it('Returns expected params with MolecularProfiles', () => {
+        let result = getParamsForStructuralVariants(
+            genes,
+            selectedMolecularProfiles,
+            undefined
+        );
+        let expectedResult: StructuralVariantFilterExt = {
+            entrezGeneIds: [0, 1, 2],
+            molecularProfileIds: ['PROFILE1'],
+        };
+        assert.deepEqual(result, expectedResult as StructuralVariantFilter);
+    });
+});
+describe('getStructuralVariantProfile', () => {
+    it('Returns the correct structural profile name given the study id', () => {
+        let studyId: 'test';
+        let expectedResult = 'test_structural_variants';
+        assert.equal('test_structural_variants', expectedResult);
     });
 });
