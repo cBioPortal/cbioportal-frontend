@@ -358,21 +358,25 @@ describe('Results Page', function() {
             );
         });
         it('should not be present in enrichments tab with simple query', function() {
-            browser.click('a.tabAnchor_enrichments');
+            browser.click('a.tabAnchor_comparison');
+            browser.waitForVisible(
+                '.comparisonTabSubTabs .tabAnchor_mutations'
+            );
+            browser.click('.comparisonTabSubTabs .tabAnchor_mutations');
             browser.pause(500);
             assert(
                 !browser.isVisible(
-                    `${yesBannerSelector}.enrichments-oql-status-banner`
+                    `${yesBannerSelector}.comparison-oql-status-banner`
                 )
             );
             assert(
                 !browser.isVisible(
-                    `${noBannerSelector}.enrichments-oql-status-banner`
+                    `${noBannerSelector}.comparison-oql-status-banner`
                 )
             );
         });
         it('should not be present in survival tab with simple query', function() {
-            browser.click('a.tabAnchor_survival');
+            browser.click('.comparisonTabSubTabs a.tabAnchor_survival');
             browser.pause(500);
             assert(
                 !browser.isVisible(
@@ -517,36 +521,40 @@ describe('Results Page', function() {
             );
         });
         it('should be present in enrichments tab with explicit query', function() {
-            browser.click('a.tabAnchor_enrichments');
+            browser.click('a.tabAnchor_comparison');
             browser.waitForVisible(
-                `${yesBannerSelector}.enrichments-oql-status-banner`,
+                '.comparisonTabSubTabs .tabAnchor_mutations'
+            );
+            browser.click('.comparisonTabSubTabs .tabAnchor_mutations');
+            browser.waitForVisible(
+                `${yesBannerSelector}.comparison-oql-status-banner`,
                 10000
             );
             assert(
                 browser.isVisible(
-                    `${yesBannerSelector}.enrichments-oql-status-banner`
+                    `${yesBannerSelector}.comparison-oql-status-banner`
                 )
             );
             assert(
                 !browser.isVisible(
-                    `${noBannerSelector}.enrichments-oql-status-banner`
+                    `${noBannerSelector}.comparison-oql-status-banner`
                 )
             );
         });
         it('should be present in survival tab with explicit query', function() {
-            browser.click('a.tabAnchor_survival');
+            browser.click('.comparisonTabSubTabs a.tabAnchor_survival');
             browser.waitForVisible(
-                `${yesBannerSelector}.survival-oql-status-banner`,
+                `${yesBannerSelector}.comparison-oql-status-banner`,
                 10000
             );
             assert(
                 browser.isVisible(
-                    `${yesBannerSelector}.survival-oql-status-banner`
+                    `${yesBannerSelector}.comparison-oql-status-banner`
                 )
             );
             assert(
                 !browser.isVisible(
-                    `${noBannerSelector}.survival-oql-status-banner`
+                    `${noBannerSelector}.comparison-oql-status-banner`
                 )
             );
         });

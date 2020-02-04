@@ -44,10 +44,12 @@ export function getStudiesAttr(
     return studies.map(studyId => {
         const ret: { id: string; samples: string[]; patients?: string[] } = {
             id: studyId,
-            samples: (samples[studyId] || []).map(id => id.sampleId),
+            samples: _.uniq((samples[studyId] || []).map(id => id.sampleId)),
         };
         if (patientIdentifiers) {
-            ret.patients = (patients[studyId] || []).map(id => id.patientId);
+            ret.patients = _.uniq(
+                (patients[studyId] || []).map(id => id.patientId)
+            );
         }
         return ret;
     });

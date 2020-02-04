@@ -5,7 +5,11 @@ import URLWrapper, {
 import ExtendedRouterStore from '../../shared/lib/ExtendedRouterStore';
 import { computed } from 'mobx';
 import autobind from 'autobind-decorator';
-import { ResultsViewTab } from 'pages/resultsView/ResultsViewPageHelpers';
+import {
+    oldTabToNewTabRoute,
+    ResultsViewComparisonSubTab,
+    ResultsViewTab,
+} from 'pages/resultsView/ResultsViewPageHelpers';
 import AppConfig from 'appConfig';
 
 export enum ResultsViewURLQueryEnum {
@@ -28,6 +32,8 @@ export enum ResultsViewURLQueryEnum {
     oncoprint_sort_by_drivers = 'oncoprint_sort_by_drivers',
     exclude_germline_mutations = 'exclude_germline_mutations',
     patient_enrichments = 'patient_enrichments',
+    comparison_subtab = 'comparison_subtab',
+    comparison_overlapStrategy = 'comparison_overlapStrategy',
 
     genetic_profile_ids_PROFILE_MUTATION_EXTENDED = 'genetic_profile_ids_PROFILE_MUTATION_EXTENDED',
     genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION = 'genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION',
@@ -61,6 +67,8 @@ export default class ResultsViewURLWrapper extends URLWrapper<
                 treatment_list: { isSessionProp: false },
                 exclude_germline_mutations: { isSessionProp: false },
                 patient_enrichments: { isSessionProp: false },
+                comparison_subtab: { isSessionProp: false },
+                comparison_overlapStrategy: { isSessionProp: false },
 
                 // session props here
                 gene_list: { isSessionProp: true },
@@ -106,11 +114,28 @@ export default class ResultsViewURLWrapper extends URLWrapper<
     pathContext = '/results';
 
     @computed public get tabId() {
-        return this.pathName.split('/').pop();
+        const tabInPath = this.pathName.split('/').pop();
+        if (tabInPath && tabInPath in oldTabToNewTabRoute) {
+            // map legacy tab ids
+            return oldTabToNewTabRoute[tabInPath];
+        } else {
+            return tabInPath;
+        }
+    }
+
+    @computed public get comparisonSubTabId() {
+        return (
+            this.query.comparison_subtab || ResultsViewComparisonSubTab.OVERLAP
+        );
     }
 
     @autobind
     public setTabId(tabId: ResultsViewTab, replace?: boolean) {
-        this.updateURL({}, `comparison/${tabId}`, false, replace);
+        this.updateURL({}, `results/${tabId}`, false, replace);
+    }
+
+    @autobind
+    public setComparisonSubTabId(tabId: ResultsViewComparisonSubTab) {
+        this.updateURL({ comparison_subtab: tabId });
     }
 }

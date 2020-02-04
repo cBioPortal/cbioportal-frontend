@@ -3,11 +3,12 @@ import { observer } from 'mobx-react';
 import { MakeMobxView } from 'shared/components/MobxView';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from 'shared/components/ErrorMessage';
-import GroupComparisonStore, { OverlapStrategy } from '../GroupComparisonStore';
+import GroupComparisonStore from '../GroupComparisonStore';
 import autobind from 'autobind-decorator';
 import GroupSelectorButton from './GroupSelectorButton';
 import GroupSelectorButtonList from './GroupSelectorButtonList';
 import SelectAllDeselectAll from './SelectAllDeselectAll';
+import { OverlapStrategy } from '../../../shared/lib/comparison/ComparisonStore';
 
 export interface IGroupSelectorProps {
     store: GroupComparisonStore;
