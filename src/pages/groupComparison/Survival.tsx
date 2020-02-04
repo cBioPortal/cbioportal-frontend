@@ -3,7 +3,6 @@ import SurvivalChart from '../resultsView/survival/SurvivalChart';
 import 'react-rangeslider/lib/index.css';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { observer } from 'mobx-react';
-import GroupComparisonStore, { OverlapStrategy } from './GroupComparisonStore';
 import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
 import { MakeMobxView } from '../../shared/components/MobxView';
 import {
@@ -20,9 +19,12 @@ import {
     GroupLegendLabelComponent,
     SurvivalTabGroupLegendLabelComponent,
 } from './labelComponents/GroupLegendLabelComponent';
+import ComparisonStore, {
+    OverlapStrategy,
+} from '../../shared/lib/comparison/ComparisonStore';
 
 export interface ISurvivalProps {
-    store: GroupComparisonStore;
+    store: ComparisonStore;
 }
 
 @observer
@@ -321,6 +323,9 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                         />
                                     )
                                 }
+                                styleOpts={{
+                                    tooltipYOffset: -28,
+                                }}
                             />
                         </div>
                     </div>
@@ -427,6 +432,9 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                         />
                                     )
                                 }
+                                styleOpts={{
+                                    tooltipYOffset: -28,
+                                }}
                             />
                         </div>
                     </div>

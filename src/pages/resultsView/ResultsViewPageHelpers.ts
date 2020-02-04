@@ -9,13 +9,24 @@ export enum ResultsViewTab {
     MUTUAL_EXCLUSIVITY = 'mutualExclusivity',
     PLOTS = 'plots',
     MUTATIONS = 'mutations',
-    COEXPRESSION = 'coexpression',
     ENRICHMENTS = 'enrichments',
+    COEXPRESSION = 'coexpression',
+    COMPARISON = 'comparison',
     SURVIVAL = 'survival',
     CN_SEGMENTS = 'cnSegments',
     NETWORK = 'network',
     EXPRESSION = 'expression',
     DOWNLOAD = 'download',
+}
+
+export enum ResultsViewComparisonSubTab {
+    OVERLAP = 'overlap',
+    SURVIVAL = 'survival',
+    CLINICAL = 'clinical',
+    MUTATIONS = 'mutations',
+    CNA = 'cna',
+    MRNA = 'mrna',
+    PROTEIN = 'protein',
 }
 
 export function getTabId(pathname: string) {
@@ -27,21 +38,22 @@ export function getTabId(pathname: string) {
     }
 }
 
+export const oldTabToNewTabRoute: { [legacyTabId: string]: ResultsViewTab } = {
+    oncoprint: ResultsViewTab.ONCOPRINT,
+    cancer_types_summary: ResultsViewTab.CANCER_TYPES_SUMMARY,
+    mutual_exclusivity: ResultsViewTab.MUTUAL_EXCLUSIVITY,
+    plots: ResultsViewTab.PLOTS,
+    mutations: ResultsViewTab.MUTATIONS,
+    co_expression: ResultsViewTab.COEXPRESSION,
+    enrichments: ResultsViewTab.COMPARISON,
+    survival: ResultsViewTab.SURVIVAL,
+    IGV: ResultsViewTab.CN_SEGMENTS,
+    network: ResultsViewTab.NETWORK,
+    expression: ResultsViewTab.EXPRESSION,
+    download: ResultsViewTab.DOWNLOAD,
+};
+
 export function parseConfigDisabledTabs(configDisabledTabsParam: string) {
-    const oldTabToNewTabRoute: { [legacyTabId: string]: ResultsViewTab } = {
-        oncoprint: ResultsViewTab.ONCOPRINT,
-        cancer_types_summary: ResultsViewTab.CANCER_TYPES_SUMMARY,
-        mutual_exclusivity: ResultsViewTab.MUTUAL_EXCLUSIVITY,
-        plots: ResultsViewTab.PLOTS,
-        mutations: ResultsViewTab.MUTATIONS,
-        co_expression: ResultsViewTab.COEXPRESSION,
-        enrichments: ResultsViewTab.ENRICHMENTS,
-        survival: ResultsViewTab.SURVIVAL,
-        IGV: ResultsViewTab.CN_SEGMENTS,
-        network: ResultsViewTab.NETWORK,
-        expression: ResultsViewTab.EXPRESSION,
-        download: ResultsViewTab.DOWNLOAD,
-    };
     return configDisabledTabsParam
         .split(',')
         .map(s => s.trim())

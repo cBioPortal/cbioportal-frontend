@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { observer, Observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
-import GroupComparisonStore from './GroupComparisonStore';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { action, autorun, computed, IReactionDisposer, observable } from 'mobx';
 import { SimpleGetterLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
@@ -12,6 +11,7 @@ import client from 'shared/api/cbioportalClientInstance';
 import {
     boxPlotTooltip,
     IAxisData,
+    IAxisLogScaleParams,
     IBoxScatterPlotPoint,
     INumberAxisData,
     isNumberData,
@@ -20,7 +20,6 @@ import {
     makeBoxScatterPlotData,
     MutationSummary,
     mutationSummaryToAppearance,
-    IAxisLogScaleParams,
 } from 'pages/resultsView/plots/PlotsTabUtils';
 import ScrollBar from 'shared/components/Scrollbar/ScrollBar';
 import BoxScatterPlot, {
@@ -40,9 +39,10 @@ import { RESERVED_CLINICAL_VALUE_COLORS } from '../../shared/lib/Colors';
 import ErrorMessage from '../../shared/components/ErrorMessage';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { Sample } from 'shared/api/generated/CBioPortalAPI';
+import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 
 export interface IClinicalDataProps {
-    store: GroupComparisonStore;
+    store: ComparisonStore;
 }
 
 const SVG_ID = 'clinical-plot-svg';

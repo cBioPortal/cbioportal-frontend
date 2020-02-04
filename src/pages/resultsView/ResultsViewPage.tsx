@@ -8,7 +8,6 @@ import { ResultsViewPageStore } from './ResultsViewPageStore';
 import CancerSummaryContainer from 'pages/resultsView/cancerSummary/CancerSummaryContainer';
 import Mutations from './mutation/Mutations';
 import MutualExclusivityTab from './mutualExclusivity/MutualExclusivityTab';
-import SurvivalTab from './survival/SurvivalTab';
 import DownloadTab from './download/DownloadTab';
 import AppConfig from 'appConfig';
 import CNSegments from './cnSegments/CNSegments';
@@ -16,7 +15,6 @@ import './styles.scss';
 import ResultsViewOncoprint from 'shared/components/oncoprint/ResultsViewOncoprint';
 import QuerySummary from './querySummary/QuerySummary';
 import ExpressionWrapper from './expression/ExpressionWrapper';
-import EnrichmentsTab from 'pages/resultsView/enrichments/EnrichmentsTab';
 import PlotsTab from './plots/PlotsTab';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
@@ -27,9 +25,7 @@ import CoExpressionTab from './coExpression/CoExpressionTab';
 import Helmet from 'react-helmet';
 import { showCustomTab } from '../../shared/lib/customTabs';
 import {
-    getTabId,
     parseConfigDisabledTabs,
-    parseSamplesSpecifications,
     ResultsViewTab,
 } from './ResultsViewPageHelpers';
 import {
@@ -50,9 +46,11 @@ import {
     handleLegacySubmission,
     handlePostedSubmission,
 } from 'shared/lib/redirectHelpers';
+import ComparisonTab from './comparison/ComparisonTab';
 import OQLTextArea, {
     GeneBoxType,
 } from 'shared/components/GeneSelectionBox/OQLTextArea';
+import SurvivalTransitionTab from './survival/SurvivalTransitionTab';
 
 function initStore(appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
     const resultsViewPageStore = new ResultsViewPageStore(appStore, urlWrapper);
@@ -299,7 +297,7 @@ export default class ResultsViewPage extends React.Component<
             },
 
             {
-                id: ResultsViewTab.ENRICHMENTS,
+                id: ResultsViewTab.COMPARISON,
                 hide: () => {
                     return !this.resultsViewPageStore.studies.isComplete;
                 },
@@ -307,10 +305,14 @@ export default class ResultsViewPage extends React.Component<
                     return (
                         <MSKTab
                             key={10}
-                            id={ResultsViewTab.ENRICHMENTS}
-                            linkText={'Enrichments'}
+                            id={ResultsViewTab.COMPARISON}
+                            linkText={'Comparison'}
                         >
-                            <EnrichmentsTab store={store} />
+                            <ComparisonTab
+                                urlWrapper={this.urlWrapper}
+                                appStore={this.props.appStore}
+                                store={this.resultsViewPageStore}
+                            />
                         </MSKTab>
                     );
                 },
@@ -333,7 +335,7 @@ export default class ResultsViewPage extends React.Component<
                             id={ResultsViewTab.SURVIVAL}
                             linkText="Survival"
                         >
-                            <SurvivalTab store={store} />
+                            <SurvivalTransitionTab store={store} />
                         </MSKTab>
                     );
                 },

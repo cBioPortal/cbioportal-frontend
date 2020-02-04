@@ -1,13 +1,16 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import GroupComparisonStore, { OverlapStrategy } from './GroupComparisonStore';
+import GroupComparisonStore from './GroupComparisonStore';
 import { ComparisonGroup, IOverlapComputations } from './GroupComparisonUtils';
 import { joinGroupNames } from './OverlapUtils';
 import { computed } from 'mobx';
 import { MakeMobxView } from '../../shared/components/MobxView';
+import ComparisonStore, {
+    OverlapStrategy,
+} from '../../shared/lib/comparison/ComparisonStore';
 
 export interface IOverlapExclusionIndicatorProps {
-    store: GroupComparisonStore;
+    store: ComparisonStore;
     only?: 'sample' | 'patient';
     overlapTabMode?: boolean;
     survivalTabMode?: boolean;
