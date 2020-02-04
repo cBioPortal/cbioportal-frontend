@@ -6,10 +6,11 @@ import { action, computed, observable } from 'mobx';
 import { ComparisonGroup } from './GroupComparisonUtils';
 import RectangleVennDiagram from './rectangleVennDiagram/RectangleVennDiagram';
 import CreateGroupFromOverlap from './CreateGroupFromOverlap';
-import GroupComparisonStore from './GroupComparisonStore';
 import autobind from 'autobind-decorator';
 import { SessionGroupData } from '../../shared/api/ComparisonGroupClient';
 import { GroupLegendLabelComponent } from './labelComponents/GroupLegendLabelComponent';
+import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
+import GroupComparisonStore from './GroupComparisonStore';
 
 export interface IVennProps {
     svgId?: string;
@@ -22,7 +23,8 @@ export interface IVennProps {
         cases: string[];
     }[];
     uidToGroup: { [uid: string]: ComparisonGroup };
-    store: GroupComparisonStore;
+    store: ComparisonStore;
+    disableGroupCreation?: boolean;
     onLayoutFailure: () => void;
 }
 
@@ -57,7 +59,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
         group: SessionGroupData,
         saveToUser: boolean
     ) {
-        this.props.store.addGroup(group, saveToUser);
+        (this.props.store as GroupComparisonStore).addGroup(group, saveToUser);
         this.sampleSelection.regions = [];
     }
 
@@ -67,7 +69,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
         group: SessionGroupData,
         saveToUser: boolean
     ) {
-        this.props.store.addGroup(group, saveToUser);
+        (this.props.store as GroupComparisonStore).addGroup(group, saveToUser);
         this.patientSelection.regions = [];
     }
 
@@ -164,7 +166,9 @@ export default class Venn extends React.Component<IVennProps, {}> {
                         height={VENN_PLOT_HEIGHT}
                         selection={this.sampleSelection}
                         onChangeSelectedRegions={
-                            this.changeSelectedSampleRegions
+                            !this.props.disableGroupCreation
+                                ? this.changeSelectedSampleRegions
+                                : undefined
                         }
                         caseType="sample"
                         onLayoutFailure={this.props.onLayoutFailure}
@@ -193,7 +197,9 @@ export default class Venn extends React.Component<IVennProps, {}> {
                         height={VENN_PLOT_HEIGHT}
                         selection={this.patientSelection}
                         onChangeSelectedRegions={
-                            this.changeSelectedPatientRegions
+                            !this.props.disableGroupCreation
+                                ? this.changeSelectedPatientRegions
+                                : undefined
                         }
                         caseType="patient"
                         onLayoutFailure={this.props.onLayoutFailure}
@@ -219,32 +225,36 @@ export default class Venn extends React.Component<IVennProps, {}> {
                         />
                     )}
                 </svg>
-                <CreateGroupFromOverlap
-                    store={this.props.store}
-                    includedRegions={this.sampleSelectedRegionsUids}
-                    style={{
-                        position: 'absolute',
-                        left: 0,
-                        top: VENN_PLOT_HEIGHT + 20,
-                    }}
-                    submitGroup={this.submitSampleOverlapGroup}
-                    allGroupsInPlot={this.sampleGroupUids}
-                    caseType="sample"
-                    width={VENN_PLOT_WIDTH}
-                />
-                <CreateGroupFromOverlap
-                    store={this.props.store}
-                    includedRegions={this.patientSelectedRegionsUids}
-                    style={{
-                        position: 'absolute',
-                        left: VENN_PLOT_WIDTH + PADDING_BTWN_SAMPLE_AND_PATIENT,
-                        top: VENN_PLOT_HEIGHT + 20,
-                    }}
-                    submitGroup={this.submitPatientOverlapGroup}
-                    allGroupsInPlot={this.patientGroupUids}
-                    caseType="patient"
-                    width={VENN_PLOT_WIDTH}
-                />
+                {!this.props.disableGroupCreation && [
+                    <CreateGroupFromOverlap
+                        store={this.props.store as GroupComparisonStore}
+                        includedRegions={this.sampleSelectedRegionsUids}
+                        style={{
+                            position: 'absolute',
+                            left: 0,
+                            top: VENN_PLOT_HEIGHT + 20,
+                        }}
+                        submitGroup={this.submitSampleOverlapGroup}
+                        allGroupsInPlot={this.sampleGroupUids}
+                        caseType="sample"
+                        width={VENN_PLOT_WIDTH}
+                    />,
+                    <CreateGroupFromOverlap
+                        store={this.props.store as GroupComparisonStore}
+                        includedRegions={this.patientSelectedRegionsUids}
+                        style={{
+                            position: 'absolute',
+                            left:
+                                VENN_PLOT_WIDTH +
+                                PADDING_BTWN_SAMPLE_AND_PATIENT,
+                            top: VENN_PLOT_HEIGHT + 20,
+                        }}
+                        submitGroup={this.submitPatientOverlapGroup}
+                        allGroupsInPlot={this.patientGroupUids}
+                        caseType="patient"
+                        width={VENN_PLOT_WIDTH}
+                    />,
+                ]}
             </div>
         );
     }

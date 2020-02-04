@@ -4,7 +4,7 @@ import { computed } from 'mobx';
 import { getTabId } from './GroupComparisonUtils';
 import { GroupComparisonTab } from './GroupComparisonTabs';
 import autobind from 'autobind-decorator';
-import { OverlapStrategy } from './GroupComparisonStore';
+import { OverlapStrategy } from '../../shared/lib/comparison/ComparisonStore';
 
 export type GroupComparisonURLQuery = {
     sessionId: string;

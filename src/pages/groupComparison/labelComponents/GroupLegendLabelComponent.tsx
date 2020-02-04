@@ -2,7 +2,6 @@ import * as React from 'react';
 import TruncatedTextWithTooltipSVG from '../../../shared/components/TruncatedTextWithTooltipSVG';
 import { ComparisonGroup } from '../GroupComparisonUtils';
 import { renderGroupNameWithOrdinal } from '../OverlapUtils';
-import { OverlapStrategy } from '../GroupComparisonStore';
 import { insertBetween } from '../../../shared/lib/ArrayUtils';
 
 export interface IGroupLegendLabelComponentProps {
@@ -27,11 +26,17 @@ export const GroupLegendLabelComponent: React.FunctionComponent<
     return (
         <TruncatedTextWithTooltipSVG
             text={group!.name}
-            prefixTspans={[
-                <tspan>(</tspan>,
-                <tspan style={{ fontWeight: 'bold' }}>{group!.ordinal}</tspan>,
-                <tspan>) </tspan>,
-            ]}
+            prefixTspans={
+                group!.ordinal.length > 0
+                    ? [
+                          <tspan>(</tspan>,
+                          <tspan style={{ fontWeight: 'bold' }}>
+                              {group!.ordinal}
+                          </tspan>,
+                          <tspan>) </tspan>,
+                      ]
+                    : undefined
+            }
             tooltip={() => {
                 return <div>{renderGroupNameWithOrdinal(group)}</div>;
             }}

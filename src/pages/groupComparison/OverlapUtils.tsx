@@ -56,7 +56,12 @@ export function renderGroupNameWithOrdinal(
 ) {
     return (
         <span>
-            (<strong>{group.ordinal}</strong>)&nbsp;{group.name}
+            {group.ordinal.length > 0 && (
+                <>
+                    (<strong>{group.ordinal}</strong>)&nbsp;
+                </>
+            )}
+            {group.name}
         </span>
     );
 }
