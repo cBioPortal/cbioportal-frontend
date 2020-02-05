@@ -184,17 +184,22 @@ export default class DownloadTab extends React.Component<
         [profileName: string]: { [key: string]: ExtendedAlteration[] };
     }>({
         await: () => [
-            this.props.store.nonQueriedMolecularData,
-            this.props.store.nonSelectedMolecularProfilesGroupByName,
+            this.props.store.nonSelectedDownloadableMolecularData,
+            this.props.store
+                .nonSelectedDownloadableMolecularProfilesGroupByName,
         ],
         invoke: () => {
             const profileNames = _.keys(
-                this.props.store.nonSelectedMolecularProfilesGroupByName.result
+                this.props.store
+                    .nonSelectedDownloadableMolecularProfilesGroupByName.result
             );
-            if (this.props.store.doNonSelectedMolecularProfilesExist) {
+            if (
+                this.props.store.doNonSelectedDownloadableMolecularProfilesExist
+            ) {
                 const data = {
                     samples: _.groupBy(
-                        this.props.store.nonQueriedMolecularData.result!,
+                        this.props.store.nonSelectedDownloadableMolecularData
+                            .result!,
                         data => data.uniqueSampleKey
                     ),
                 } as CaseAggregatedData<ExtendedAlteration>;
@@ -211,7 +216,7 @@ export default class DownloadTab extends React.Component<
                         allOtherMolecularProfileDataGroupByProfileName[
                             profileName
                         ] = generateOtherMolecularProfileData(
-                            this.props.store.nonSelectedMolecularProfilesGroupByName.result[
+                            this.props.store.nonSelectedDownloadableMolecularProfilesGroupByName.result[
                                 profileName
                             ].map(profile => profile.molecularProfileId),
                             data
@@ -576,7 +581,8 @@ export default class DownloadTab extends React.Component<
             this.alteredCaseAlterationData,
             this.props.store.virtualStudyParams,
             this.sampleMatrixText,
-            this.props.store.nonSelectedMolecularProfilesGroupByName,
+            this.props.store
+                .nonSelectedDownloadableMolecularProfilesGroupByName,
             this.props.store.studies,
             this.props.store.selectedMolecularProfiles
         );
@@ -654,10 +660,10 @@ export default class DownloadTab extends React.Component<
                                         this.sampleMatrixText.result!
                                     )}
                                     {this.props.store
-                                        .doNonSelectedMolecularProfilesExist &&
+                                        .doNonSelectedDownloadableMolecularProfilesExist &&
                                         this.nonSelectedProfileDownloadRow(
                                             this.props.store
-                                                .nonSelectedMolecularProfilesGroupByName
+                                                .nonSelectedDownloadableMolecularProfilesGroupByName
                                                 .result!
                                         )}
                                 </tbody>
@@ -777,12 +783,12 @@ export default class DownloadTab extends React.Component<
     }
 
     private nonSelectedProfileDownloadRow(
-        nonSelectedMolecularProfilesGroupByName: _.Dictionary<
+        nonSelectedDownloadableMolecularProfilesGroupByName: _.Dictionary<
             MolecularProfile[]
         >
     ) {
         const allProfileOptions = _.map(
-            nonSelectedMolecularProfilesGroupByName,
+            nonSelectedDownloadableMolecularProfilesGroupByName,
             (profiles: MolecularProfile[], profileName: string) => {
                 if (this.props.store.studies.result!.length === 1) {
                     const singleStudyProfile = profiles[0];
