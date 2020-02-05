@@ -224,6 +224,7 @@ export const AlterationTypeConstants = {
     METHYLATION: 'METHYLATION',
     GENERIC_ASSAY: 'GENERIC_ASSAY',
     STRUCTURAL_VARIANT: 'STRUCTURAL_VARIANT',
+    MUTATION_UNCALLED: 'MUTATION_UNCALLED',
 };
 
 // only show TREATMENT_RESPONSE in the plots tab for now
@@ -613,11 +614,12 @@ export class ResultsViewPageStore {
 
     @observable queryFormVisible: boolean = false;
 
-    @computed get doNonSelectedMolecularProfilesExist() {
+    @computed get doNonSelectedDownloadableMolecularProfilesExist() {
         return (
-            this.nonSelectedMolecularProfilesGroupByName.result &&
-            _.keys(this.nonSelectedMolecularProfilesGroupByName.result).length >
-                0
+            this.nonSelectedDownloadableMolecularProfilesGroupByName.result &&
+            _.keys(
+                this.nonSelectedDownloadableMolecularProfilesGroupByName.result
+            ).length > 0
         );
     }
 
@@ -1277,18 +1279,20 @@ export class ResultsViewPageStore {
     });
 
     // other molecular profiles data download needs the data from non queried molecular profiles
-    readonly nonQueriedMolecularData = remoteData<NumericGeneMolecularData[]>({
+    readonly nonSelectedDownloadableMolecularData = remoteData<
+        NumericGeneMolecularData[]
+    >({
         await: () => [
             this.studyToDataQueryFilter,
             this.genes,
-            this.nonSelectedMolecularProfiles,
+            this.nonSelectedDownloadableMolecularProfiles,
             this.samples,
         ],
         invoke: () => {
             // we get mutations with mutations endpoint, structural variants and fusions with structural variant endpoint.
             // filter out mutation genetic profile and structural variant profiles
             const profilesWithoutMutationProfile = excludeMutationAndSVProfiles(
-                this.nonSelectedMolecularProfiles.result
+                this.nonSelectedDownloadableMolecularProfiles.result
             );
             const genes = this.genes.result;
 
@@ -1510,6 +1514,11 @@ export class ResultsViewPageStore {
                                 }
                             })
                     );
+                } else if (
+                    profile.molecularAlterationType ===
+                    AlterationTypeConstants.MUTATION_UNCALLED
+                ) {
+                    // exclude the MUTATION_UNCALLED profile, this profile should only be used in patient view
                 } else if (
                     profile.molecularAlterationType ===
                         AlterationTypeConstants.GENESET_SCORE ||
@@ -3457,7 +3466,10 @@ export class ResultsViewPageStore {
         []
     );
 
-    readonly nonSelectedMolecularProfiles = remoteData<MolecularProfile[]>(
+    // need to support fusion data later
+    readonly nonSelectedDownloadableMolecularProfiles = remoteData<
+        MolecularProfile[]
+    >(
         {
             await: () => [
                 this.molecularProfilesInStudies,
@@ -3465,9 +3477,11 @@ export class ResultsViewPageStore {
             ],
             invoke: () => {
                 return Promise.resolve(
-                    _.difference(
-                        this.molecularProfilesInStudies.result!,
-                        this.selectedMolecularProfiles.result!
+                    excludeMutationAndSVProfiles(
+                        _.difference(
+                            this.molecularProfilesInStudies.result!,
+                            this.selectedMolecularProfiles.result!
+                        )
                     )
                 );
             },
@@ -3501,14 +3515,14 @@ export class ResultsViewPageStore {
     );
 
     // If we have same profile accros multiple studies, they should have the same name, so we can group them by name to get all related molecular profiles in multiple studies.
-    readonly nonSelectedMolecularProfilesGroupByName = remoteData<{
+    readonly nonSelectedDownloadableMolecularProfilesGroupByName = remoteData<{
         [profileName: string]: MolecularProfile[];
     }>(
         {
-            await: () => [this.nonSelectedMolecularProfiles],
+            await: () => [this.nonSelectedDownloadableMolecularProfiles],
             invoke: () => {
                 const sortedProfiles = _.sortBy(
-                    this.nonSelectedMolecularProfiles.result,
+                    this.nonSelectedDownloadableMolecularProfiles.result,
                     profile =>
                         decideMolecularProfileSortingOrder(
                             profile.molecularAlterationType
