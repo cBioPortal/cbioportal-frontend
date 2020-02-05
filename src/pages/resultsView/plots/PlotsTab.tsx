@@ -8,6 +8,7 @@ import {
 } from '../ResultsViewPageStore';
 import { FormControl, Button } from 'react-bootstrap';
 import ReactSelect from 'react-select1';
+import Select from 'react-select';
 import _ from 'lodash';
 import {
     getAxisLabel,
@@ -2495,13 +2496,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         ]
                                     }
                                 </label>
-                                <div
-                                    style={{
-                                        display: 'flex',
-                                        flexDirection: 'row',
-                                    }}
-                                >
-                                    <ReactSelect
+                                <div>
+                                    <Select
                                         name={`${
                                             vertical ? 'v' : 'h'
                                         }-generic-assay-selector`}
@@ -2509,7 +2505,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                             axisSelection.selectedGenericAssayOption
                                                 ? axisSelection
                                                       .selectedGenericAssayOption
-                                                      .value
                                                 : undefined
                                         }
                                         onChange={
@@ -2530,15 +2525,20 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                             this.vertGenericAssayOptions ||
                                             this.horzGenericAssayOptions
                                                 ? vertical
-                                                    ? this
-                                                          .vertGenericAssayOptions
-                                                    : this
+                                                    ? this.makeGenericAssayGroupOptions(this
+                                                          .vertGenericAssayOptions, this.selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl && this.selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[axisSelection.dataType] ? this.selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[axisSelection.dataType] : [])
+                                                    : this.makeGenericAssayGroupOptions(this
                                                           .horzGenericAssayOptions
-                                                          .result
+                                                          .result!, this.selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl && this.selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[axisSelection.dataType] ? this.selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[axisSelection.dataType] : [])
                                                 : []
                                         }
+                                        formatGroupLabel={(data: any) => {
+                                            return (<div>
+                                                <span>{data.label}</span>
+                                            </div>);
+                                        }}
                                         clearable={false}
-                                        searchable={false}
+                                        searchable={true}
                                         disabled={
                                             axisSelection.dataType ===
                                                 undefined ||
@@ -2555,6 +2555,52 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 </div>
             </form>
         );
+    }
+
+    @computed get selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl() {
+        const result = _.reduce(
+            this.props.store.parsedGenericAssayGroups,
+            (acc, value, key) => {
+                if (this.props.store
+                    .molecularProfileIdToMolecularProfile.result[key]) {
+                        const type = this.props.store
+                        .molecularProfileIdToMolecularProfile.result[key]
+                        .genericAssayType;
+                        acc[type] = acc[type] ? _.union(value, acc[type]) : value;
+                        return acc;
+                    }
+            },
+            {} as { [genericAssayType: string]: string[] }
+        );
+        return result;
+    }
+
+    private makeGenericAssayGroupOptions(alloptions: {
+        value: string;
+        label: string;
+    }[], selectedEntities: string[]) {
+        if (alloptions) {
+            const entities = alloptions.filter((option) => selectedEntities.includes(option.value));
+            const otherEntities = _.difference(alloptions, entities);
+            if (entities.length === 0) {
+                return alloptions;
+            }
+            else {
+                return [
+                    {
+                      label: 'Selected entities',
+                      options: entities,
+                    },
+                    {
+                      label: 'Other entities',
+                      options: otherEntities,
+                    },
+                ];
+            }
+        }
+        else {
+            return undefined;
+        }
     }
 
     @autobind

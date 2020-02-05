@@ -177,11 +177,14 @@ export default class ResultsViewOncoprint extends React.Component<
         const result = _.reduce(
             this.props.store.parsedGenericAssayGroups,
             (acc, value, key) => {
-                const type = this.props.store
-                    .molecularProfileIdToMolecularProfile.result[key]
-                    .genericAssayType;
-                acc[type] = acc[type] ? _.union(value, acc[type]) : value;
-                return acc;
+                if (this.props.store
+                    .molecularProfileIdToMolecularProfile.result[key]) {
+                        const type = this.props.store
+                        .molecularProfileIdToMolecularProfile.result[key]
+                        .genericAssayType;
+                        acc[type] = acc[type] ? _.union(value, acc[type]) : value;
+                        return acc;
+                    }
             },
             {} as { [genericAssayType: string]: string[] }
         );
