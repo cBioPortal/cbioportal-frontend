@@ -202,7 +202,10 @@ import {
 import { IVirtualStudyProps } from 'pages/studyView/virtualStudy/VirtualStudy';
 import { decideMolecularProfileSortingOrder } from './download/DownloadUtils';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
-import { fetchGenericAssayMetaByMolecularProfileIds } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import {
+    fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAssayType,
+    fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
+} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -3871,7 +3874,18 @@ export class ResultsViewPageStore {
     }>({
         await: () => [this.molecularProfilesInStudies],
         invoke: async () => {
-            return await fetchGenericAssayMetaByMolecularProfileIds(
+            return await fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAssayType(
+                this.molecularProfilesInStudies.result
+            );
+        },
+    });
+
+    readonly genericAssayEntitiesGroupByMolecularProfileId = remoteData<{
+        [genericAssayType: string]: GenericAssayMeta[];
+    }>({
+        await: () => [this.molecularProfilesInStudies],
+        invoke: async () => {
+            return await fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId(
                 this.molecularProfilesInStudies.result
             );
         },

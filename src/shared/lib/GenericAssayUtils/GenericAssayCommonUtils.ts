@@ -9,10 +9,11 @@ import {
 import { MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
 import _ from 'lodash';
 import { IDataQueryFilter } from '../StoreUtils';
+import { GenericAssayDataMultipleStudyFilter } from 'shared/api/generated/CBioPortalAPI';
 
 export const NOT_APPLICABLE_VALUE = 'NA';
 
-export async function fetchGenericAssayMetaByMolecularProfileIds(
+export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAssayType(
     molecularProfiles: MolecularProfile[]
 ) {
     const genericAssayProfiles = molecularProfiles.filter(profile => {
@@ -43,17 +44,55 @@ export async function fetchGenericAssayMetaByMolecularProfileIds(
             );
             GenericAssayMetaGroupByGenericAssayType[
                 genericAssayType
-            ] = await client.fetchGenericAssayMetaDataUsingPOST({
-                genericAssayMetaFilter: {
-                    molecularProfileIds: genericAssayProfileIds,
-                    // the Swagger-generated type expected by the client method below
-                    // incorrectly requires both molecularProfileIds and genericAssayStableIds;
-                    // use 'as' to tell TypeScript that this object really does fit.
-                } as GenericAssayMetaFilter,
-            });
+            ] = await fetchGenericAssayMetaByProfileIds(genericAssayProfileIds);
         })
     );
     return GenericAssayMetaGroupByGenericAssayType;
+}
+
+export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId(
+    molecularProfiles: MolecularProfile[]
+) {
+    const genericAssayProfiles = molecularProfiles.filter(profile => {
+        return (
+            profile.molecularAlterationType ===
+            AlterationTypeConstants.GENERIC_ASSAY
+        );
+    });
+
+    const genericAssayMetaGroupByMolecularProfileId: {
+        [molecularProfileId: string]: GenericAssayMeta[];
+    } = {};
+
+    await Promise.all(
+        genericAssayProfiles.map(async genericAssayProfile => {
+            const genericAssayProfileId =
+                genericAssayProfile.molecularProfileId;
+            genericAssayMetaGroupByMolecularProfileId[
+                genericAssayProfileId
+            ] = await fetchGenericAssayMetaByProfileIds([
+                genericAssayProfileId,
+            ]);
+        })
+    );
+    return genericAssayMetaGroupByMolecularProfileId;
+}
+
+export async function fetchGenericAssayMetaByProfileIds(
+    genericAssayProfileIds: string[]
+) {
+    let genericAssayMeta: GenericAssayMeta[] = [];
+    if (genericAssayProfileIds.length > 0) {
+        genericAssayMeta = await client.fetchGenericAssayMetaDataUsingPOST({
+            genericAssayMetaFilter: {
+                molecularProfileIds: genericAssayProfileIds,
+                // the Swagger-generated type expected by the client method below
+                // incorrectly requires both molecularProfileIds and genericAssayStableIds;
+                // use 'as' to tell TypeScript that this object really does fit.
+            } as GenericAssayMetaFilter,
+        });
+    }
+    return genericAssayMeta;
 }
 
 export async function fetchGenericAssayMetaByEntityIds(entityIds: string[]) {

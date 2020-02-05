@@ -163,6 +163,9 @@ export interface IOncoprintControlsProps {
     genericAssayEntitiesSelectOptionsGroupByGenericAssayType?: {
         [genericAssayType: string]: ISelectOption[];
     };
+    genericAssayEntitiesSelectOptionsGroupByMolecularProfileId?: {
+        [molecularProfileId: string]: ISelectOption[];
+    };
     selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl?: {
         [genericAssayType: string]: string[];
     };
@@ -223,11 +226,25 @@ export default class OncoprintControls extends React.Component<
         this.props.state.selectedHeatmapProfileGenericAssayType &&
         this.props.selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[
             this.props.state.selectedHeatmapProfileGenericAssayType
+        ] &&
+        this.props.state.selectedHeatmapProfileId &&
+        this.props.genericAssayEntitiesSelectOptionsGroupByMolecularProfileId &&
+        this.props.genericAssayEntitiesSelectOptionsGroupByMolecularProfileId[
+            this.props.state.selectedHeatmapProfileId
         ]
-            ? this.props
-                  .selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[
-                  this.props.state.selectedHeatmapProfileGenericAssayType
-              ]
+            ? _.intersectionBy(
+                  this.props
+                      .selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[
+                      this.props.state.selectedHeatmapProfileGenericAssayType
+                  ],
+                  _.map(
+                      this.props
+                          .genericAssayEntitiesSelectOptionsGroupByMolecularProfileId[
+                          this.props.state.selectedHeatmapProfileId
+                      ],
+                      option => option.id
+                  )
+              )
             : [];
     private textareaGenericAssayEntityText = '';
     @observable genericAssayEntityFilter = '';
@@ -296,6 +313,7 @@ export default class OncoprintControls extends React.Component<
                 ? this.props.molecularProfileIdToMolecularProfile[option.value]
                       .genericAssayType
                 : undefined;
+
         if (
             this.props
                 .selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl &&
@@ -303,11 +321,28 @@ export default class OncoprintControls extends React.Component<
             this.props
                 .selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[
                 genericAssayType
+            ] &&
+            this.props.state.selectedHeatmapProfileId &&
+            this.props
+                .genericAssayEntitiesSelectOptionsGroupByMolecularProfileId &&
+            this.props
+                .genericAssayEntitiesSelectOptionsGroupByMolecularProfileId[
+                this.props.state.selectedHeatmapProfileId
             ]
         ) {
-            this._selectedGenericAssayEntityIds = this.props.selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[
-                genericAssayType
-            ];
+            this._selectedGenericAssayEntityIds = _.intersectionBy(
+                this.props
+                    .selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[
+                    genericAssayType
+                ],
+                _.map(
+                    this.props
+                        .genericAssayEntitiesSelectOptionsGroupByMolecularProfileId[
+                        this.props.state.selectedHeatmapProfileId
+                    ],
+                    option => option.id
+                )
+            );
         } else {
             this._selectedGenericAssayEntityIds = [];
         }
@@ -628,21 +663,22 @@ export default class OncoprintControls extends React.Component<
     }
 
     @computed get filteredGenericAssayOptions() {
-        const options: ISelectOption[] =
-            this.props.state.selectedHeatmapProfileGenericAssayType &&
-            this.props.genericAssayEntitiesSelectOptionsGroupByGenericAssayType
+        const allOptionsInSelectedProfile =
+            this.props.state.selectedHeatmapProfileId &&
+            this.props
+                .genericAssayEntitiesSelectOptionsGroupByMolecularProfileId
                 ? this.props
-                      .genericAssayEntitiesSelectOptionsGroupByGenericAssayType[
-                      this.props.state.selectedHeatmapProfileGenericAssayType
+                      .genericAssayEntitiesSelectOptionsGroupByMolecularProfileId[
+                      this.props.state.selectedHeatmapProfileId
                   ]
                 : [];
         if (this.genericAssayEntityFilter) {
             const regex = new RegExp(this.genericAssayEntityFilter, 'i');
-            return options.filter(
+            return allOptionsInSelectedProfile.filter(
                 option => regex.test(option.label) || regex.test(option.value)
             );
         }
-        return options;
+        return allOptionsInSelectedProfile;
     }
 
     @autobind

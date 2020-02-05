@@ -177,14 +177,16 @@ export default class ResultsViewOncoprint extends React.Component<
         const result = _.reduce(
             this.props.store.parsedGenericAssayGroups,
             (acc, value, key) => {
-                if (this.props.store
-                    .molecularProfileIdToMolecularProfile.result[key]) {
-                        const type = this.props.store
+                if (
+                    this.props.store.molecularProfileIdToMolecularProfile
+                        .result[key]
+                ) {
+                    const type = this.props.store
                         .molecularProfileIdToMolecularProfile.result[key]
                         .genericAssayType;
-                        acc[type] = acc[type] ? _.union(value, acc[type]) : value;
-                        return acc;
-                    }
+                    acc[type] = acc[type] ? _.union(value, acc[type]) : value;
+                    return acc;
+                }
             },
             {} as { [genericAssayType: string]: string[] }
         );
@@ -950,6 +952,23 @@ export default class ResultsViewOncoprint extends React.Component<
         },
     });
 
+    readonly genericAssayEntitiesSelectOptionsGroupByMolecularProfileId = remoteData<{
+        [genericAssayType: string]: ISelectOption[];
+    }>({
+        await: () => [
+            this.props.store.genericAssayEntitiesGroupByMolecularProfileId,
+        ],
+        invoke: async () => {
+            return Promise.resolve(
+                genericAssayEntitiesToSelectOptionsGroupByGenericAssayType(
+                    this.props.store
+                        .genericAssayEntitiesGroupByMolecularProfileId.result ||
+                        {}
+                )
+            );
+        },
+    });
+
     @computed get selectedHeatmapProfileAlterationType(): string | undefined {
         let molecularProfile = this.props.store
             .molecularProfileIdToMolecularProfile.result[
@@ -1523,6 +1542,10 @@ export default class ResultsViewOncoprint extends React.Component<
                 .isComplete ||
                 this.genericAssayEntitiesSelectOptionsGroupByGenericAssayType
                     .isError) &&
+            (this.genericAssayEntitiesSelectOptionsGroupByMolecularProfileId
+                .isComplete ||
+                this.genericAssayEntitiesSelectOptionsGroupByMolecularProfileId
+                    .isError) &&
             this.props.store.molecularProfileIdToMolecularProfile.result
         ) {
             return (
@@ -1538,6 +1561,11 @@ export default class ResultsViewOncoprint extends React.Component<
                         genericAssayEntitiesSelectOptionsGroupByGenericAssayType={
                             this
                                 .genericAssayEntitiesSelectOptionsGroupByGenericAssayType
+                                .result
+                        }
+                        genericAssayEntitiesSelectOptionsGroupByMolecularProfileId={
+                            this
+                                .genericAssayEntitiesSelectOptionsGroupByMolecularProfileId
                                 .result
                         }
                         selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl={

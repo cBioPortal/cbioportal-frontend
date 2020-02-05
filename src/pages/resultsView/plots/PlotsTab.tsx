@@ -1126,19 +1126,20 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @observable readonly horzGenericAssayOptions = remoteData({
         await: () => [
-            this.props.store.genericAssayEntitiesGroupByGenericAssayType,
+            this.props.store.genericAssayEntitiesGroupByMolecularProfileId,
         ],
         invoke: () => {
+            // different generic assay profile can holds different entities, use entites in selected profile
             if (
-                this.horzSelection.dataType &&
-                this.props.store.genericAssayEntitiesGroupByGenericAssayType
+                this.horzSelection.dataSourceId &&
+                this.props.store.genericAssayEntitiesGroupByMolecularProfileId
                     .result &&
-                this.props.store.genericAssayEntitiesGroupByGenericAssayType
-                    .result[this.horzSelection.dataType]
+                this.props.store.genericAssayEntitiesGroupByMolecularProfileId
+                    .result[this.horzSelection.dataSourceId]
             ) {
                 return Promise.resolve(
-                    this.props.store.genericAssayEntitiesGroupByGenericAssayType.result[
-                        this.horzSelection.dataType
+                    this.props.store.genericAssayEntitiesGroupByMolecularProfileId.result[
+                        this.horzSelection.dataSourceId
                     ].map((meta: GenericAssayMeta) => ({
                         value: meta.stableId,
                         label:
@@ -1159,15 +1160,24 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.vertSelection.dataType &&
             this.showGenericAssaySelectBox(this.vertSelection.dataType)
         ) {
-            verticalOptions = this.props.store.genericAssayEntitiesGroupByGenericAssayType.result![
-                this.vertSelection.dataType
-            ].map((meta: GenericAssayMeta) => ({
-                value: meta.stableId,
-                label:
-                    'NAME' in meta.genericEntityMetaProperties
-                        ? meta.genericEntityMetaProperties['NAME']
-                        : '',
-            }));
+            // different generic assay profile can hold different entities, use entites in selected profile
+            if (
+                this.vertSelection.dataSourceId &&
+                this.props.store.genericAssayEntitiesGroupByMolecularProfileId
+                    .result &&
+                this.props.store.genericAssayEntitiesGroupByMolecularProfileId
+                    .result[this.vertSelection.dataSourceId]
+            ) {
+                verticalOptions = this.props.store.genericAssayEntitiesGroupByMolecularProfileId.result[
+                    this.vertSelection.dataSourceId
+                ].map((meta: GenericAssayMeta) => ({
+                    value: meta.stableId,
+                    label:
+                        'NAME' in meta.genericEntityMetaProperties
+                            ? meta.genericEntityMetaProperties['NAME']
+                            : '',
+                }));
+            }
             if (
                 this.horzSelection.dataType &&
                 this.horzSelection.dataType === this.vertSelection.dataType &&
@@ -1613,7 +1623,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 this.horzSelection.dataType
             )
         ) {
-            console.log(this.horzAxisDataPromise.result);
             return getLimitValues(this.horzAxisDataPromise.result.data);
         }
         return [] as string[];
@@ -2503,8 +2512,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         }-generic-assay-selector`}
                                         value={
                                             axisSelection.selectedGenericAssayOption
-                                                ? axisSelection
-                                                      .selectedGenericAssayOption
+                                                ? axisSelection.selectedGenericAssayOption
                                                 : undefined
                                         }
                                         onChange={
@@ -2518,24 +2526,56 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                             this.horzGenericAssayOptions
                                                 .isPending ||
                                             this.props.store
-                                                .genericAssayEntitiesGroupByGenericAssayType
+                                                .genericAssayEntitiesGroupByMolecularProfileId
                                                 .isPending
                                         }
                                         options={
                                             this.vertGenericAssayOptions ||
                                             this.horzGenericAssayOptions
                                                 ? vertical
-                                                    ? this.makeGenericAssayGroupOptions(this
-                                                          .vertGenericAssayOptions, this.selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl && this.selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[axisSelection.dataType] ? this.selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[axisSelection.dataType] : [])
-                                                    : this.makeGenericAssayGroupOptions(this
-                                                          .horzGenericAssayOptions
-                                                          .result!, this.selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl && this.selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[axisSelection.dataType] ? this.selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[axisSelection.dataType] : [])
+                                                    ? this.makeGenericAssayGroupOptions(
+                                                          this
+                                                              .vertGenericAssayOptions,
+                                                          this
+                                                              .selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl &&
+                                                              this
+                                                                  .selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[
+                                                                  axisSelection
+                                                                      .dataType
+                                                              ]
+                                                              ? this
+                                                                    .selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[
+                                                                    axisSelection
+                                                                        .dataType
+                                                                ]
+                                                              : []
+                                                      )
+                                                    : this.makeGenericAssayGroupOptions(
+                                                          this
+                                                              .horzGenericAssayOptions
+                                                              .result!,
+                                                          this
+                                                              .selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl &&
+                                                              this
+                                                                  .selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[
+                                                                  axisSelection
+                                                                      .dataType
+                                                              ]
+                                                              ? this
+                                                                    .selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[
+                                                                    axisSelection
+                                                                        .dataType
+                                                                ]
+                                                              : []
+                                                      )
                                                 : []
                                         }
                                         formatGroupLabel={(data: any) => {
-                                            return (<div>
-                                                <span>{data.label}</span>
-                                            </div>);
+                                            return (
+                                                <div>
+                                                    <span>{data.label}</span>
+                                                </div>
+                                            );
                                         }}
                                         clearable={false}
                                         searchable={true}
@@ -2561,44 +2601,49 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         const result = _.reduce(
             this.props.store.parsedGenericAssayGroups,
             (acc, value, key) => {
-                if (this.props.store
-                    .molecularProfileIdToMolecularProfile.result[key]) {
-                        const type = this.props.store
+                if (
+                    this.props.store.molecularProfileIdToMolecularProfile
+                        .result[key]
+                ) {
+                    const type = this.props.store
                         .molecularProfileIdToMolecularProfile.result[key]
                         .genericAssayType;
-                        acc[type] = acc[type] ? _.union(value, acc[type]) : value;
-                        return acc;
-                    }
+                    acc[type] = acc[type] ? _.union(value, acc[type]) : value;
+                    return acc;
+                }
             },
             {} as { [genericAssayType: string]: string[] }
         );
         return result;
     }
 
-    private makeGenericAssayGroupOptions(alloptions: {
-        value: string;
-        label: string;
-    }[], selectedEntities: string[]) {
+    private makeGenericAssayGroupOptions(
+        alloptions: {
+            value: string;
+            label: string;
+        }[],
+        selectedEntities: string[]
+    ) {
         if (alloptions) {
-            const entities = alloptions.filter((option) => selectedEntities.includes(option.value));
+            const entities = alloptions.filter(option =>
+                selectedEntities.includes(option.value)
+            );
             const otherEntities = _.difference(alloptions, entities);
             if (entities.length === 0) {
                 return alloptions;
-            }
-            else {
+            } else {
                 return [
                     {
-                      label: 'Selected entities',
-                      options: entities,
+                        label: 'Selected entities',
+                        options: entities,
                     },
                     {
-                      label: 'Other entities',
-                      options: otherEntities,
+                        label: 'Other entities',
+                        options: otherEntities,
                     },
                 ];
             }
-        }
-        else {
+        } else {
             return undefined;
         }
     }
