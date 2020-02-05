@@ -86,9 +86,6 @@ export type ChartType =
     | 'NONE';
 
 export enum UniqueKey {
-    MUTATED_GENES_TABLE = 'MUTATED_GENES_TABLE',
-    FUSION_GENES_TABLE = 'FUSION_GENES_TABLE',
-    CNA_GENES_TABLE = 'CNA_GENES_TABLE',
     CUSTOM_SELECT = 'CUSTOM_SELECT',
     SELECTED_COMPARISON_GROUPS = 'SELECTED_COMPARISON_GROUPS',
     MUTATION_COUNT_CNA_FRACTION = 'MUTATION_COUNT_CNA_FRACTION',
@@ -1258,14 +1255,11 @@ export function toFixedDigit(value: number, fractionDigits: number = 2) {
 export function getChartMetaDataType(uniqueKey: string): ChartMetaDataType {
     const GENOMIC_DATA_TYPES = [
         UniqueKey.MUTATION_COUNT_CNA_FRACTION,
-        UniqueKey.CNA_GENES_TABLE,
-        UniqueKey.MUTATED_GENES_TABLE,
         UniqueKey.MUTATION_COUNT,
         UniqueKey.FRACTION_GENOME_ALTERED,
         UniqueKey.WITH_MUTATION_DATA,
         UniqueKey.WITH_CNA_DATA,
         UniqueKey.WITH_FUSION_DATA,
-        UniqueKey.FUSION_GENES_TABLE,
     ];
     return _.includes(GENOMIC_DATA_TYPES, uniqueKey)
         ? ChartMetaDataTypeEnum.GENOMIC
@@ -2193,15 +2187,15 @@ export function getChartSettingsMap(
             chartType,
             patientAttribute: attribute.patientAttribute, // add chart attribute type
         };
-        if (chartType === UniqueKey.MUTATED_GENES_TABLE) {
+        if (chartType === ChartTypeEnum.MUTATED_GENES_TABLE) {
             chartSettingsMap[
                 attribute.uniqueKey
             ].filterByCancerGenes = filterMutatedGenesTableByCancerGenes;
-        } else if (chartType === UniqueKey.FUSION_GENES_TABLE) {
+        } else if (chartType === ChartTypeEnum.FUSION_GENES_TABLE) {
             chartSettingsMap[
                 attribute.uniqueKey
             ].filterByCancerGenes = filterFusionGenesTableByCancerGenes;
-        } else if (chartType === UniqueKey.CNA_GENES_TABLE) {
+        } else if (chartType === ChartTypeEnum.CNA_GENES_TABLE) {
             chartSettingsMap[
                 attribute.uniqueKey
             ].filterByCancerGenes = filterCNAGenesTableByCancerGenes;

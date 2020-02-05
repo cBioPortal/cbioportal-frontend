@@ -194,6 +194,8 @@ import {
     getUniqueKey,
     StudyWithSamples,
     UniqueKey,
+    getUniqueKeyFromMolecularProfileIds,
+    ChartMetaDataTypeEnum,
 } from 'pages/studyView/StudyViewUtils';
 import {
     FRACTION_GENOME_ALTERED,
@@ -206,6 +208,7 @@ import {
     fetchTreatmentByMolecularProfileIds,
     Treatment,
 } from 'shared/lib/GenericAssayUtils/TreatmentUtils';
+import { ChartTypeEnum } from 'pages/studyView/StudyViewConfig';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -2378,13 +2381,18 @@ export class ResultsViewPageStore {
         );
 
         if (!_.isEmpty(this.mutationProfiles.result!)) {
-            _chartMetaSet[UniqueKey.MUTATED_GENES_TABLE] = {
-                uniqueKey: UniqueKey.MUTATED_GENES_TABLE,
-                dataType: getChartMetaDataType(UniqueKey.MUTATED_GENES_TABLE),
+            const uniqueKey = getUniqueKeyFromMolecularProfileIds(
+                this.mutationProfiles.result.map(
+                    profile => profile.molecularProfileId
+                )
+            );
+            _chartMetaSet[uniqueKey] = {
+                uniqueKey: uniqueKey,
+                dataType: ChartMetaDataTypeEnum.GENOMIC,
                 patientAttribute: false,
                 displayName: 'Mutated Genes',
                 priority: getDefaultPriorityByUniqueKey(
-                    UniqueKey.MUTATED_GENES_TABLE
+                    ChartTypeEnum.MUTATED_GENES_TABLE
                 ),
                 renderWhenDataChange: false,
                 description: '',
@@ -2392,14 +2400,19 @@ export class ResultsViewPageStore {
         }
 
         if (!_.isEmpty(this.cnaProfiles.result)) {
-            _chartMetaSet[UniqueKey.CNA_GENES_TABLE] = {
-                uniqueKey: UniqueKey.CNA_GENES_TABLE,
-                dataType: getChartMetaDataType(UniqueKey.CNA_GENES_TABLE),
+            const uniqueKey = getUniqueKeyFromMolecularProfileIds(
+                this.cnaProfiles.result.map(
+                    profile => profile.molecularProfileId
+                )
+            );
+            _chartMetaSet[uniqueKey] = {
+                uniqueKey: uniqueKey,
+                dataType: ChartMetaDataTypeEnum.GENOMIC,
                 patientAttribute: false,
                 displayName: 'CNA Genes',
                 renderWhenDataChange: false,
                 priority: getDefaultPriorityByUniqueKey(
-                    UniqueKey.CNA_GENES_TABLE
+                    ChartTypeEnum.CNA_GENES_TABLE
                 ),
                 description: '',
             };
@@ -2424,9 +2437,7 @@ export class ResultsViewPageStore {
             scatterRequiredParams[FRACTION_GENOME_ALTERED]
         ) {
             _chartMetaSet[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = {
-                dataType: getChartMetaDataType(
-                    UniqueKey.MUTATION_COUNT_CNA_FRACTION
-                ),
+                dataType: ChartMetaDataTypeEnum.GENOMIC,
                 patientAttribute: false,
                 uniqueKey: UniqueKey.MUTATION_COUNT_CNA_FRACTION,
                 displayName: 'Mutation Count vs Fraction of Genome Altered',
