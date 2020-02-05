@@ -262,7 +262,9 @@ export default class ResultsViewPage extends React.Component<
                             <Mutations
                                 store={store}
                                 appStore={this.props.appStore}
-                                sampleIdToClinicalDataMap={store.clinicalDataGroupedBySampleMap.result}
+                                sampleIdToClinicalDataMap={
+                                    store.clinicalDataGroupedBySampleMap.result
+                                }
                             />
                         </MSKTab>
                     );

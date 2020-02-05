@@ -1237,12 +1237,24 @@ export function groupBySampleId(
     }));
 }
 
-export function mapSampleIdToClinicalData<T extends {[key:string]:any}>(clinicalDataGroupedBySampleId: Array<T>, indexKey: keyof T, clinicalDataKey: keyof T) {
-    const sampleIdToClinicalDataMap: { [key: string]: Array<ClinicalData> } = {};
+export function mapSampleIdToClinicalData<T extends { [key: string]: any }>(
+    clinicalDataGroupedBySampleId: Array<T>,
+    indexKey: keyof T,
+    clinicalDataKey: keyof T
+) {
+    const sampleIdToClinicalDataMap: {
+        [key: string]: Array<ClinicalData>;
+    } = {};
     for (let i = 0; i < clinicalDataGroupedBySampleId.length; i++) {
-            const sampleIdKey:string = clinicalDataGroupedBySampleId[i][indexKey] as string;
-            const clinicalAttributeArray:Array<ClinicalData> = clinicalDataGroupedBySampleId[i][clinicalDataKey] as Array<ClinicalData>;
-            sampleIdToClinicalDataMap[sampleIdKey] = clinicalAttributeArray;
+        const sampleIdKey: string = clinicalDataGroupedBySampleId[i][
+            indexKey
+        ] as string;
+        const clinicalAttributeArray: Array<
+            ClinicalData
+        > = clinicalDataGroupedBySampleId[i][clinicalDataKey] as Array<
+            ClinicalData
+        >;
+        sampleIdToClinicalDataMap[sampleIdKey] = clinicalAttributeArray;
     }
     return sampleIdToClinicalDataMap;
 }

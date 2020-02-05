@@ -137,7 +137,10 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 enableMyCancerGenome={this.props.enableMyCancerGenome}
                 enableCivic={this.props.enableCivic}
                 totalNumberOfExons={this.totalExonNumber}
-                sampleIdToClinicalDataMap={this.props.clinicalDataStore.clinicalDataGroupedBySampleMap.result}
+                sampleIdToClinicalDataMap={
+                    this.props.clinicalDataStore.clinicalDataGroupedBySampleMap
+                        .result
+                }
             />
         );
     }

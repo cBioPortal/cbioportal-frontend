@@ -20,9 +20,7 @@ import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledC
 import PatientViewMutationTable from './PatientViewMutationTable';
 import { GeneFilterOption } from './GeneFilterMenu';
 import { isFusion } from '../../../shared/lib/MutationUtils';
-import {
-    ClinicalDataBySampleId,
-} from '../../../shared/api/api-types-extended';
+import { ClinicalDataBySampleId } from '../../../shared/api/api-types-extended';
 
 export interface IPatientViewMutationsTabProps {
     store: PatientViewPageStore;
@@ -333,9 +331,7 @@ export default class PatientViewMutationsTab extends React.Component<
                         this.props.store.genePanelIdToEntrezGeneIds.result!
                     }
                     sampleIdToClinicalDataMap={
-                        this.props.store
-                            .clinicalDataGroupedBySampleMap
-                            .result
+                        this.props.store.clinicalDataGroupedBySampleMap.result
                     }
                 />
             </div>

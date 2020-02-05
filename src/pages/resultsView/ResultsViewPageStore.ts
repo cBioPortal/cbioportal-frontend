@@ -65,7 +65,7 @@ import {
     IDataQueryFilter,
     isMutationProfile,
     groupBySampleId,
-    mapSampleIdToClinicalData,    
+    mapSampleIdToClinicalData,
     ONCOKB_DEFAULT,
 } from 'shared/lib/StoreUtils';
 import { IHotspotIndex, indexHotspotsData } from 'react-mutation-mapper';
@@ -3046,15 +3046,21 @@ export class ResultsViewPageStore {
         },
         []
     );
-    
-    readonly facetsClinicalDataForSamples = remoteData<ClinicalData[]>({
-        await: () => [
-            this.studies,
-            this.samples
-        ],
-        invoke: () => this.getClinicalData("SAMPLE", this.studies.result!, this.samples.result, ["FACETS_WGD", "FACETS_PURITY"])
-    }, []);
-    
+
+    readonly facetsClinicalDataForSamples = remoteData<ClinicalData[]>(
+        {
+            await: () => [this.studies, this.samples],
+            invoke: () =>
+                this.getClinicalData(
+                    'SAMPLE',
+                    this.studies.result!,
+                    this.samples.result,
+                    ['FACETS_WGD', 'FACETS_PURITY']
+                ),
+        },
+        []
+    );
+
     @computed get sampleIds(): string[] {
         if (this.samples.result) {
             return this.samples.result.map(sample => sample.sampleId);
@@ -3062,15 +3068,30 @@ export class ResultsViewPageStore {
         return [];
     }
 
-    readonly facetsClinicalDataGroupedBySample = remoteData({
-        await: () => [this.facetsClinicalDataForSamples],
-        invoke: async() => groupBySampleId(this.sampleIds, this.facetsClinicalDataForSamples.result)
-    }, []);
+    readonly facetsClinicalDataGroupedBySample = remoteData(
+        {
+            await: () => [this.facetsClinicalDataForSamples],
+            invoke: async () =>
+                groupBySampleId(
+                    this.sampleIds,
+                    this.facetsClinicalDataForSamples.result
+                ),
+        },
+        []
+    );
 
-    readonly clinicalDataGroupedBySampleMap = remoteData({
-        await: () => [this.facetsClinicalDataGroupedBySample],
-        invoke: async() => mapSampleIdToClinicalData(this.facetsClinicalDataGroupedBySample.result, 'id', 'clinicalData')
-    }, {});
+    readonly clinicalDataGroupedBySampleMap = remoteData(
+        {
+            await: () => [this.facetsClinicalDataGroupedBySample],
+            invoke: async () =>
+                mapSampleIdToClinicalData(
+                    this.facetsClinicalDataGroupedBySample.result,
+                    'id',
+                    'clinicalData'
+                ),
+        },
+        {}
+    );
 
     private getClinicalData(
         clinicalDataType: 'SAMPLE' | 'PATIENT',

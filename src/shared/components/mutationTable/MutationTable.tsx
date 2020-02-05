@@ -129,7 +129,7 @@ export interface IMutationTableProps {
     onRowClick?: (d: Mutation[]) => void;
     onRowMouseEnter?: (d: Mutation[]) => void;
     onRowMouseLeave?: (d: Mutation[]) => void;
-    sampleIdToClinicalDataMap?: {[key:string]: ClinicalData[]};
+    sampleIdToClinicalDataMap?: { [key: string]: ClinicalData[] };
 }
 
 export enum MutationTableColumnType {
@@ -674,15 +674,28 @@ export default class MutationTable<
                     .indexOf(filterStringUpper) > -1,
         };
 
-        this._columns[MutationTableColumnType.ASCN_METHOD] = getDefaultASCNMethodColumnDefinition();
+        this._columns[
+            MutationTableColumnType.ASCN_METHOD
+        ] = getDefaultASCNMethodColumnDefinition();
 
-        this._columns[MutationTableColumnType.CANCER_CELL_FRACTION] = getDefaultCancerCellFractionColumnDefinition();
+        this._columns[
+            MutationTableColumnType.CANCER_CELL_FRACTION
+        ] = getDefaultCancerCellFractionColumnDefinition();
 
-        this._columns[MutationTableColumnType.CLONAL] = getDefaultClonalColumnDefinition();
+        this._columns[
+            MutationTableColumnType.CLONAL
+        ] = getDefaultClonalColumnDefinition();
 
-        this._columns[MutationTableColumnType.ASCN_COPY_NUM] = getDefaultASCNCopyNumberColumnDefinition(undefined, this.props.sampleIdToClinicalDataMap);
+        this._columns[
+            MutationTableColumnType.ASCN_COPY_NUM
+        ] = getDefaultASCNCopyNumberColumnDefinition(
+            undefined,
+            this.props.sampleIdToClinicalDataMap
+        );
 
-        this._columns[MutationTableColumnType.MUTANT_COPIES] = getDefaultMutantCopiesColumnDefinition();
+        this._columns[
+            MutationTableColumnType.MUTANT_COPIES
+        ] = getDefaultMutantCopiesColumnDefinition();
 
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT] = {
             name: 'Functional Impact',
@@ -1062,7 +1075,7 @@ export default class MutationTable<
     }
 
     protected getMutations() {
-        let data:Mutation[][]|undefined = [];
+        let data: Mutation[][] | undefined = [];
         if (this.props.dataStore) {
             data = this.props.dataStore.allData;
         } else if (this.props.data) {
@@ -1071,12 +1084,16 @@ export default class MutationTable<
         return data;
     }
 
-    protected hasRequiredASCNProperty(property:string):boolean {
+    protected hasRequiredASCNProperty(property: string): boolean {
         let data = this.getMutations();
         if (data) {
-            return data.some((row:Mutation[]) => {
-                return row.some((m:Mutation) => {
-                    return (m.alleleSpecificCopyNumber !== undefined && (m.alleleSpecificCopyNumber as any)[property] !== undefined);
+            return data.some((row: Mutation[]) => {
+                return row.some((m: Mutation) => {
+                    return (
+                        m.alleleSpecificCopyNumber !== undefined &&
+                        (m.alleleSpecificCopyNumber as any)[property] !==
+                            undefined
+                    );
                 });
             });
         }

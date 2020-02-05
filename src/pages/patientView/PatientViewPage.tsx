@@ -1081,7 +1081,8 @@ export default class PatientViewPage extends React.Component<
                                                             .isOpen
                                                     }
                                                     sampleIdToClinicalDataMap={
-                                                        this.patientViewPageStore
+                                                        this
+                                                            .patientViewPageStore
                                                             .clinicalDataGroupedBySampleMap
                                                             .result
                                                     }

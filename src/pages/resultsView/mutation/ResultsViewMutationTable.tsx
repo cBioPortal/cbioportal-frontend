@@ -137,23 +137,31 @@ export default class ResultsViewMutationTable extends MutationTable<
             return !this.props.uniqueSampleKeyToTumorType;
         };
 
-        this._columns[MutationTableColumnType.CLONAL].shouldExclude = ()=> {
-            return !this.hasRequiredASCNProperty("ccfMCopies"); 
+        this._columns[MutationTableColumnType.CLONAL].shouldExclude = () => {
+            return !this.hasRequiredASCNProperty('ccfMCopies');
         };
 
-        this._columns[MutationTableColumnType.ASCN_METHOD].shouldExclude = ()=> {
-            return !this.hasRequiredASCNProperty("ascnMethod");
-        }
-
-        this._columns[MutationTableColumnType.CANCER_CELL_FRACTION].shouldExclude = ()=> {
-            return !this.hasRequiredASCNProperty("ccfMCopies"); 
+        this._columns[
+            MutationTableColumnType.ASCN_METHOD
+        ].shouldExclude = () => {
+            return !this.hasRequiredASCNProperty('ascnMethod');
         };
 
-        this._columns[MutationTableColumnType.MUTANT_COPIES].shouldExclude = ()=> {
-            return !this.hasRequiredASCNProperty("mutantCopies");
+        this._columns[
+            MutationTableColumnType.CANCER_CELL_FRACTION
+        ].shouldExclude = () => {
+            return !this.hasRequiredASCNProperty('ccfMCopies');
         };
 
-        this._columns[MutationTableColumnType.NUM_MUTATIONS].shouldExclude = ()=>{
+        this._columns[
+            MutationTableColumnType.MUTANT_COPIES
+        ].shouldExclude = () => {
+            return !this.hasRequiredASCNProperty('mutantCopies');
+        };
+
+        this._columns[
+            MutationTableColumnType.NUM_MUTATIONS
+        ].shouldExclude = () => {
             return !this.props.mutationCountCache;
         };
 

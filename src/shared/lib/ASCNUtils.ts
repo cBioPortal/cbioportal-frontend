@@ -5,10 +5,10 @@ import {
     ASCN_LIGHTGREY,
     ASCN_HETLOSS,
     ASCN_HOMDEL,
-    ASCN_BLACK
-} from "shared/lib/Colors";
+    ASCN_BLACK,
+} from 'shared/lib/Colors';
 
-export function getASCNCopyNumberColor(ASCNCopyNumberValue: string): string{
+export function getASCNCopyNumberColor(ASCNCopyNumberValue: string): string {
     switch (ASCNCopyNumberValue) {
         case '2':
             return ASCN_AMP;
