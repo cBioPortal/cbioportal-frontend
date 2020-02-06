@@ -53,6 +53,8 @@ To run unit/integration tests
 yarn run test
 ```
 
+**Tip:** There is a known solved hiccup running the tests on Ubuntu via Windows Subsystem for Linux (WSL): [#7096](https://github.com/cBioPortal/cbioportal/issues/7096)
+
 To run unit/integration tests in watch mode
 ```
 yarn run test:watch
