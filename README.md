@@ -66,7 +66,7 @@ yarn run test:watch -- --grep=#specName#
 ```
 
 ### Run on Windows
-We recommend to use Ubuntu WSL. There is one known minor hiccup:
+We recommend you use Ubuntu within the Windows Subsystem for Linux (WSL). There is one known minor hiccup with running front end tests via WSL:
 
 - Running test on Ubuntu WSL: https://github.com/cBioPortal/cbioportal/issues/7096
 
