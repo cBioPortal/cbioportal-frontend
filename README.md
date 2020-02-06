@@ -19,7 +19,7 @@ Make sure you have installed the node version and yarn version specified in
 
 **Tip:**  You might want to use [nvm:  Node Version Manager](https://github.com/nvm-sh/nvm) and [yvm:  Yarn Version Manager](https://yvm.js.org/docs/overview) to switch between versions more easily.
 
-**Tip:** There are some known hiccups running the frontend on Windows see [run on Windows section](#run-on-windows)
+**Tip:** There are some known hiccups [running the frontend on Windows](#run-on-windows)
 
 Remove old compiled `node_modules` if exists
 
