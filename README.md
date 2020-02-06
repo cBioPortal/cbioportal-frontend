@@ -49,7 +49,6 @@ Example pages:
  - http://localhost:3000/patient?studyId=lgg_ucsf_2014&caseId=P04
 
 To run unit/integration tests
-
 ```
 yarn run test
 ```
