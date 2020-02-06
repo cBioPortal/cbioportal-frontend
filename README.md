@@ -19,8 +19,6 @@ Make sure you have installed the node version and yarn version specified in
 
 **Tip:**  You might want to use [nvm:  Node Version Manager](https://github.com/nvm-sh/nvm) and [yvm:  Yarn Version Manager](https://yvm.js.org/docs/overview) to switch between versions more easily.
 
-**Tip:** There are some known hiccups [running the frontend on Windows](#run-on-windows)
-
 Remove old compiled `node_modules` if exists
 
 ```
@@ -51,9 +49,12 @@ Example pages:
  - http://localhost:3000/patient?studyId=lgg_ucsf_2014&caseId=P04
 
 To run unit/integration tests
+
 ```
 yarn run test
 ```
+
+**Tip:** There is a known solved hiccup running the tests on Ubuntu via Windows Subsystem for Linux (WSL): [#7096](https://github.com/cBioPortal/cbioportal/issues/7096)
 
 To run unit/integration tests in watch mode
 ```
@@ -64,13 +65,6 @@ To run unit/integration tests in watch mode (where specName is a fragment of the
 ```
 yarn run test:watch -- --grep=#specName#
 ```
-
-### Run on Windows
-We recommend you use Ubuntu within the Windows Subsystem for Linux (WSL). There is one known minor hiccup with running front end tests via WSL:
-
-- Running test on Ubuntu WSL: https://github.com/cBioPortal/cbioportal/issues/7096
-
-Let use know you run into other issues on the [cBioPortal issue tracker](https://github.com/cBioPortal/cbioportal/issues/new).
 
 ## Formatting Code with PrettierJS
 When you make a git commit, PrettierJS will automatically run *in write mode* on all the files you changed, and make 
