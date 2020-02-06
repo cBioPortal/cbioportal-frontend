@@ -90,6 +90,7 @@ import {
     getMolecularProfileIdsFromUniqueKey,
     getClinicalDataBySamples,
     updateSavedUserPreferenceChartIds,
+    ChartMetaDataTypeEnum,
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -2936,11 +2937,11 @@ export class StudyViewPageStore {
             );
             _chartMetaSet[uniqueKey] = {
                 uniqueKey: uniqueKey,
-                dataType: getChartMetaDataType(UniqueKey.MUTATED_GENES_TABLE),
+                dataType: ChartMetaDataTypeEnum.GENOMIC,
                 patientAttribute: false,
                 displayName: 'Mutated Genes',
                 priority: getDefaultPriorityByUniqueKey(
-                    UniqueKey.MUTATED_GENES_TABLE
+                    ChartTypeEnum.MUTATED_GENES_TABLE
                 ),
                 renderWhenDataChange: false,
                 description: '',
@@ -2955,11 +2956,11 @@ export class StudyViewPageStore {
             );
             _chartMetaSet[uniqueKey] = {
                 uniqueKey: uniqueKey,
-                dataType: getChartMetaDataType(UniqueKey.FUSION_GENES_TABLE),
+                dataType: ChartMetaDataTypeEnum.GENOMIC,
                 patientAttribute: false,
                 displayName: 'Fusion Genes',
                 priority: getDefaultPriorityByUniqueKey(
-                    UniqueKey.FUSION_GENES_TABLE
+                    ChartTypeEnum.FUSION_GENES_TABLE
                 ),
                 renderWhenDataChange: true,
                 description: '',
@@ -2974,12 +2975,12 @@ export class StudyViewPageStore {
             );
             _chartMetaSet[uniqueKey] = {
                 uniqueKey: uniqueKey,
-                dataType: getChartMetaDataType(UniqueKey.CNA_GENES_TABLE),
+                dataType: ChartMetaDataTypeEnum.GENOMIC,
                 patientAttribute: false,
                 displayName: 'CNA Genes',
                 renderWhenDataChange: false,
                 priority: getDefaultPriorityByUniqueKey(
-                    UniqueKey.CNA_GENES_TABLE
+                    ChartTypeEnum.CNA_GENES_TABLE
                 ),
                 description: '',
             };
@@ -3004,9 +3005,7 @@ export class StudyViewPageStore {
             scatterRequiredParams[FRACTION_GENOME_ALTERED]
         ) {
             _chartMetaSet[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = {
-                dataType: getChartMetaDataType(
-                    UniqueKey.MUTATION_COUNT_CNA_FRACTION
-                ),
+                dataType: ChartMetaDataTypeEnum.GENOMIC,
                 patientAttribute: false,
                 uniqueKey: UniqueKey.MUTATION_COUNT_CNA_FRACTION,
                 displayName: 'Mutation Count vs Fraction of Genome Altered',
@@ -3273,19 +3272,19 @@ export class StudyViewPageStore {
             }
 
             switch (chartUserSettings.chartType) {
-                case UniqueKey.MUTATED_GENES_TABLE:
+                case ChartTypeEnum.MUTATED_GENES_TABLE:
                     this._filterMutatedGenesTableByCancerGenes =
                         chartUserSettings.filterByCancerGenes === undefined
                             ? true
                             : chartUserSettings.filterByCancerGenes;
                     break;
-                case UniqueKey.FUSION_GENES_TABLE:
+                case ChartTypeEnum.FUSION_GENES_TABLE:
                     this._filterFusionGenesTableByCancerGenes =
                         chartUserSettings.filterByCancerGenes === undefined
                             ? true
                             : chartUserSettings.filterByCancerGenes;
                     break;
-                case UniqueKey.CNA_GENES_TABLE:
+                case ChartTypeEnum.CNA_GENES_TABLE:
                     this._filterCNAGenesTableByCancerGenes =
                         chartUserSettings.filterByCancerGenes === undefined
                             ? true
@@ -4843,9 +4842,14 @@ export class StudyViewPageStore {
                     {}
                 );
 
-                if (UniqueKey.MUTATED_GENES_TABLE in this.chartMetaSet) {
-                    ret[UniqueKey.MUTATED_GENES_TABLE] = this
-                        .molecularProfileSampleCounts.result
+                if (!_.isEmpty(this.mutationProfiles.result)) {
+                    const uniqueKey = getUniqueKeyFromMolecularProfileIds(
+                        this.mutationProfiles.result.map(
+                            profile => profile.molecularProfileId
+                        )
+                    );
+
+                    ret[uniqueKey] = this.molecularProfileSampleCounts.result
                         ? this.molecularProfileSampleCounts.result
                               .numberOfMutationProfiledSamples
                         : 0;
@@ -4856,9 +4860,14 @@ export class StudyViewPageStore {
                         : 0;
                 }
 
-                if (UniqueKey.FUSION_GENES_TABLE in this.chartMetaSet) {
-                    ret[UniqueKey.FUSION_GENES_TABLE] = this
-                        .molecularProfileSampleCounts.result
+                if (!_.isEmpty(this.structuralVariantProfiles.result)) {
+                    const uniqueKey = getUniqueKeyFromMolecularProfileIds(
+                        this.structuralVariantProfiles.result.map(
+                            profile => profile.molecularProfileId
+                        )
+                    );
+
+                    ret[uniqueKey] = this.molecularProfileSampleCounts.result
                         ? this.molecularProfileSampleCounts.result
                               .numberOfFusionProfiledSamples
                         : 0;
@@ -4869,9 +4878,14 @@ export class StudyViewPageStore {
                         : 0;
                 }
 
-                if (UniqueKey.CNA_GENES_TABLE in this.chartMetaSet) {
-                    ret[UniqueKey.CNA_GENES_TABLE] = this
-                        .molecularProfileSampleCounts.result
+                if (!_.isEmpty(this.cnaProfiles.result)) {
+                    const uniqueKey = getUniqueKeyFromMolecularProfileIds(
+                        this.cnaProfiles.result.map(
+                            profile => profile.molecularProfileId
+                        )
+                    );
+
+                    ret[uniqueKey] = this.molecularProfileSampleCounts.result
                         ? this.molecularProfileSampleCounts.result
                               .numberOfCNAProfiledSamples
                         : 0;

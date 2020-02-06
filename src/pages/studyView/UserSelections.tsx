@@ -21,7 +21,7 @@ import {
 import { PillTag } from '../../shared/components/PillTag/PillTag';
 import { GroupLogic } from './filters/groupLogic/GroupLogic';
 import classnames from 'classnames';
-import { STUDY_VIEW_CONFIG } from './StudyViewConfig';
+import { STUDY_VIEW_CONFIG, ChartTypeEnum } from './StudyViewConfig';
 import {
     DEFAULT_NA_COLOR,
     MUT_COLOR_FUSION,
@@ -319,13 +319,13 @@ export default class UserSelections extends React.Component<
                                                         switch (
                                                             chartMeta.chartType
                                                         ) {
-                                                            case UniqueKey.MUTATED_GENES_TABLE:
+                                                            case ChartTypeEnum.MUTATED_GENES_TABLE:
                                                                 color = MUT_COLOR_MISSENSE;
                                                                 break;
-                                                            case UniqueKey.FUSION_GENES_TABLE:
+                                                            case ChartTypeEnum.FUSION_GENES_TABLE:
                                                                 color = MUT_COLOR_FUSION;
                                                                 break;
-                                                            case UniqueKey.CNA_GENES_TABLE: {
+                                                            case ChartTypeEnum.CNA_GENES_TABLE: {
                                                                 const oqlParts = oql
                                                                     .trim()
                                                                     .split(':');
