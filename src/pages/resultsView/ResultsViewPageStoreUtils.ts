@@ -841,6 +841,7 @@ export function excludeMutationAndSVProfiles(
 ): MolecularProfile[] {
     const mutationAlterationTypes = [
         AlterationTypeConstants.MUTATION_EXTENDED,
+        AlterationTypeConstants.MUTATION_UNCALLED,
         AlterationTypeConstants.FUSION,
         AlterationTypeConstants.STRUCTURAL_VARIANT,
     ];
