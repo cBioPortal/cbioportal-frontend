@@ -6,7 +6,10 @@ import {
     DefaultTooltip,
     EllipsisTextTooltip,
 } from 'cbioportal-frontend-commons';
-import { getGeneColumnCellOverlaySimple } from '../TableUtils';
+import {
+    getGeneColumnCellOverlaySimple,
+    FreqColumnTypeEnum,
+} from '../TableUtils';
 import { getQValue } from '../StudyViewUtils';
 import { action, observable } from 'mobx';
 import { observer } from 'mobx-react';
@@ -16,7 +19,7 @@ import GisticAnnotation from 'shared/components/annotation/Gistic';
 import MutSigAnnotation from 'shared/components/annotation/MutSig';
 
 export type IGeneCellProps = {
-    tableType: 'mutation' | 'fusion' | 'cna';
+    tableType: FreqColumnTypeEnum;
     selectedGenes: string[];
     hugoGeneSymbol: string;
     qValue: number;
@@ -90,7 +93,12 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                     </span>
                     <If condition={!_.isUndefined(this.props.qValue)}>
                         <span style={iconStyle}>
-                            <If condition={this.props.tableType === 'mutation'}>
+                            <If
+                                condition={
+                                    this.props.tableType ===
+                                    FreqColumnTypeEnum.MUTATION
+                                }
+                            >
                                 <Then>
                                     <MutSigAnnotation
                                         qValue={this.props.qValue}

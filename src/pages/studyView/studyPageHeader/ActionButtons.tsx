@@ -110,6 +110,9 @@ export default class ActionButtons extends React.Component<
                     selectedSamples={this.props.store.selectedSamples.result}
                     filter={this.props.store.userSelections}
                     attributesMetaSet={this.props.store.chartMetaSet}
+                    molecularProfileNameSet={
+                        this.props.store.molecularProfileNameSet.result || {}
+                    }
                 />
             );
         }

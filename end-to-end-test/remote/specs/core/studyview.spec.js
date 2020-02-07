@@ -35,7 +35,7 @@ const ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON =
 const ADD_CHART_CUSTOM_GROUPS_TEXTAREA = "[data-test='CustomCaseSetInput']";
 const STUDY_SUMMARY_RAW_DATA_DOWNLOAD =
     "[data-test='studySummaryRawDataDownloadIcon']";
-const CNA_GENES_TABLE = "[data-test='cna-genes-table']";
+const CNA_GENES_TABLE = "[data-test='copy number alterations-table']";
 const CANCER_GENE_FILTER_ICON = "[data-test='cancer-gene-filter']";
 
 const WAIT_FOR_VISIBLE_TIMEOUT = 30000;
@@ -73,28 +73,9 @@ describe('study laml_tcga tests', () => {
         assert(browser.isExisting(STUDY_SUMMARY_RAW_DATA_DOWNLOAD));
     });
 
-    it('with mutation data only check box should work', () => {
+    it('when quickly adding charts, each chart should get proper data.', () => {
         toStudyViewSummaryTab();
         waitForStudyViewSelectedInfo();
-        browser.click("[data-test='with-mutation-data'] input");
-        waitForStudyViewSelectedInfo();
-        assert.equal(getTextFromElement(SELECTED_PATIENTS), '197');
-        assert.equal(getTextFromElement(SELECTED_SAMPLES), '197');
-        browser.waitForVisible("[data-test='clear-all-filters']");
-        browser.click("[data-test='clear-all-filters']");
-    });
-
-    it('with cna data only check box should work', () => {
-        waitForStudyViewSelectedInfo();
-        browser.click("[data-test='with-cna-data'] input");
-        waitForStudyViewSelectedInfo();
-        assert(getTextFromElement(SELECTED_PATIENTS) === '191');
-        assert(getTextFromElement(SELECTED_SAMPLES) === '191');
-        browser.waitForVisible("[data-test='clear-all-filters']");
-        browser.click("[data-test='clear-all-filters']");
-    });
-
-    it('when quickly adding charts, each chart should get proper data.', () => {
         browser.click(ADD_CHART_BUTTON);
         // Wait for the data frequency is calculated
         waitForNetworkQuiet();
@@ -244,7 +225,7 @@ describe('study laml_tcga tests', () => {
                 browser.click(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON);
 
                 browser.waitForVisible(
-                    "[data-test='chart-container-CUSTOM_FILTERS_4']"
+                    "[data-test='chart-container-CUSTOM_FILTERS_2']"
                 );
 
                 // it should not impact any other charts
@@ -253,7 +234,7 @@ describe('study laml_tcga tests', () => {
                 // make sure the title is reflected
                 assert(
                     getTextFromElement(
-                        "[data-test='chart-container-CUSTOM_FILTERS_4'] .chartTitle"
+                        "[data-test='chart-container-CUSTOM_FILTERS_2'] .chartTitle"
                     ) === 'Custom Chart 1'
                 );
 
