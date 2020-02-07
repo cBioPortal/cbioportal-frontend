@@ -48,42 +48,51 @@ export default class StudyPageHeader extends React.Component<
                     <RightPanel store={this.props.store} />
                 </div>
 
-                {this.props.store.clinicalAttributeIdToDataType.isComplete && (
-                    <UserSelections
-                        filter={this.props.store.userSelections}
-                        comparisonGroupSelection={
-                            this.props.store.filterComparisonGroups
-                        }
-                        numberOfSelectedSamplesInCustomSelection={
-                            this.props.store
-                                .numberOfSelectedSamplesInCustomSelection
-                        }
-                        customChartsFilter={this.props.store.customChartFilterSet.toJS()}
-                        attributesMetaSet={
-                            this.props.store.chartMetaSetWithChartType
-                        }
-                        clinicalAttributeIdToDataType={
-                            this.props.store.clinicalAttributeIdToDataType
-                                .result!
-                        }
-                        updateClinicalDataFilterByValues={
-                            this.props.store.updateClinicalDataFilterByValues
-                        }
-                        updateCustomChartFilter={
-                            this.props.store.setCustomChartFilters
-                        }
-                        removeGeneFilter={this.props.store.removeGeneFilter}
-                        removeCustomSelectionFilter={
-                            this.props.store.removeCustomSelectFilter
-                        }
-                        removeComparisonGroupSelectionFilter={
-                            this.props.store
-                                .removeComparisonGroupSelectionFilter
-                        }
-                        onBookmarkClick={this.props.onBookmarkClick}
-                        clearAllFilters={this.props.store.clearAllFilters}
-                    />
-                )}
+                {this.props.store.clinicalAttributeIdToDataType.isComplete &&
+                    this.props.store.molecularProfileNameSet.isComplete && (
+                        <UserSelections
+                            filter={this.props.store.userSelections}
+                            comparisonGroupSelection={
+                                this.props.store.filterComparisonGroups
+                            }
+                            numberOfSelectedSamplesInCustomSelection={
+                                this.props.store
+                                    .numberOfSelectedSamplesInCustomSelection
+                            }
+                            customChartsFilter={this.props.store.customChartFilterSet.toJS()}
+                            attributesMetaSet={
+                                this.props.store.chartMetaSetWithChartType
+                            }
+                            clinicalAttributeIdToDataType={
+                                this.props.store.clinicalAttributeIdToDataType
+                                    .result!
+                            }
+                            updateClinicalDataFilterByValues={
+                                this.props.store
+                                    .updateClinicalDataFilterByValues
+                            }
+                            updateCustomChartFilter={
+                                this.props.store.setCustomChartFilters
+                            }
+                            removeGeneFilter={this.props.store.removeGeneFilter}
+                            removeCustomSelectionFilter={
+                                this.props.store.removeCustomSelectFilter
+                            }
+                            removeComparisonGroupSelectionFilter={
+                                this.props.store
+                                    .removeComparisonGroupSelectionFilter
+                            }
+                            onBookmarkClick={this.props.onBookmarkClick}
+                            clearAllFilters={this.props.store.clearAllFilters}
+                            molecularProfileNameSet={
+                                this.props.store.molecularProfileNameSet
+                                    .result || {}
+                            }
+                            removeGenomicProfileFilter={
+                                this.props.store.removeGenomicProfileFilter
+                            }
+                        />
+                    )}
             </div>
         );
     }
