@@ -15,7 +15,7 @@
     "dist"
   ],
   "author": "cBioPortal",
-  "license": "GNU Affero General Public License v3.0",
+  "license": "AGPL-3.0-or-later",
   "repository": "cBioPortal/cbioportal-frontend",
   "scripts": {
     "build": "cross-env NODE_ENV=production NODE_OPTIONS=--max-old-space-size=2048 yarn run rollup",
