@@ -448,16 +448,9 @@ export default class StudyViewPage extends React.Component<
                                             StudyViewPageTabDescriptions.CN_SEGMENTS
                                         }
                                         hide={
-                                            !this.store
-                                                .initialMolecularProfileSampleCounts
-                                                .result ||
-                                            !(
-                                                this.store
-                                                    .initialMolecularProfileSampleCounts
-                                                    .result
-                                                    .numberOfCNSegmentSamples >
-                                                0
-                                            )
+                                            this.store.hasCNSegmentData
+                                                .isPending ||
+                                            !this.store.hasCNSegmentData.result
                                         }
                                     >
                                         <CNSegments store={this.store} />
