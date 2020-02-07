@@ -59,7 +59,7 @@ export function getMedian(
     let median: string = 'NA';
     for (let i = 0; i < estimates.length; i++) {
         if (estimates[i] <= 0.5) {
-            median = patientSurvivals[i].months.toString();
+            median = patientSurvivals[i].months.toFixed(2);
             break;
         }
     }
