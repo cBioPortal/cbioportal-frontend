@@ -15,6 +15,8 @@ import './mutations.scss';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 import { getOncoKbApiUrl } from 'shared/api/urls';
 
+import axios from 'axios';
+
 export interface IMutationsPageProps {
     routing?: any;
     store: ResultsViewPageStore;
@@ -60,6 +62,9 @@ export default class Mutations extends React.Component<
         const activeTabId = this.props.routing
             ? this.props.routing.location.query.mutationsGeneTab
             : this.mutationsGeneTab;
+
+        // Send a GET request
+        axios.get('https://www.genomenexus.org/version');
 
         return (
             <div data-test="mutationsTabDiv">
