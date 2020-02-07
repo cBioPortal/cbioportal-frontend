@@ -13,6 +13,11 @@ import {
     GenePanelData,
     GenePanel,
     ReferenceGenomeGene,
+    GenericAssayDataFilter,
+    GenericAssayData,
+    GenericAssayMeta,
+    GenericAssayDataMultipleStudyFilter,
+    GenericAssayMetaFilter,
 } from '../../../shared/api/generated/CBioPortalAPI';
 import client from '../../../shared/api/cbioportalClientInstance';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
@@ -112,6 +117,12 @@ import { getVariantAlleleFrequency } from '../../../shared/lib/MutationUtils';
 import { AppStore, SiteError } from 'AppStore';
 import { getGeneFilterDefault } from './PatientViewPageStoreUtil';
 import { checkNonProfiledGenesExist } from '../PatientViewPageUtils';
+import {
+    IMutationalSignature,
+    IMutationalSignatureMeta,
+} from 'shared/model/MutationalSignature';
+import { MutationalSignatureStableIdKeyWord } from 'shared/lib/GenericAssayUtils/MutationalSignatureUtils';
+import { GenericAssayTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
 
 type PageMode = 'patient' | 'sample';
 
@@ -318,17 +329,252 @@ export class PatientViewPageStore {
         return fetchMyCancerGenomeData();
     }
 
-    readonly mutationalSignatureData = remoteData({
-        invoke: async () => fetchMutationalSignatureData(),
+    // get mutational signature molecular profile Ids (exposure and confidence)
+    readonly mutationalSignatureMolecularProfileIds = remoteData<String[]>({
+        await: () => [this.molecularProfilesInStudy],
+        invoke: () => {
+            if (!this.molecularProfilesInStudy.result) {
+                return Promise.resolve([]);
+            }
+
+            const mutationalSignatureMolecularProfileIds = this.molecularProfilesInStudy.result
+                .filter((profile: MolecularProfile) => {
+                    if (profile.genericAssayType) {
+                        return (
+                            profile.genericAssayType ===
+                            GenericAssayTypeConstants.MUTATIONAL_SIGNATURE
+                        );
+                    }
+                    return false;
+                })
+                .map(profile => profile.molecularProfileId);
+
+            return Promise.resolve(mutationalSignatureMolecularProfileIds);
+        },
     });
 
-    readonly mutationalSignatureMetaData = remoteData({
-        invoke: async () => fetchMutationalSignatureMetaData(),
+    readonly fetchAllMutationalSignatureData = remoteData({
+        await: () => [
+            this.samples,
+            this.mutationalSignatureMolecularProfileIds,
+        ],
+        invoke: () => {
+            let sampleMolecularIdentifiers: SampleMolecularIdentifier[] = [];
+            _.forEach(
+                this.mutationalSignatureMolecularProfileIds.result,
+                mutationalSignatureMolecularProfileId => {
+                    const filters = _.map(this.samples.result, sample => {
+                        return {
+                            molecularProfileId: mutationalSignatureMolecularProfileId,
+                            sampleId: sample.sampleId,
+                        } as SampleMolecularIdentifier;
+                    });
+                    sampleMolecularIdentifiers.push(...filters);
+                }
+            );
+            return client.fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST(
+                {
+                    genericAssayDataMultipleStudyFilter: {
+                        sampleMolecularIdentifiers,
+                    } as GenericAssayDataMultipleStudyFilter,
+                } as any
+            );
+        },
+    });
+
+    // three categories: mean, confidence
+    readonly mutationalSignatureCategoryToDataMap = remoteData({
+        await: () => [this.fetchAllMutationalSignatureData],
+        invoke: () => {
+            const map: { [key: string]: GenericAssayData[] } = {};
+            _.forEach(this.fetchAllMutationalSignatureData.result, data => {
+                if (
+                    data.genericAssayStableId.includes(
+                        MutationalSignatureStableIdKeyWord.MutationalSignatureExposureKeyWord
+                    )
+                ) {
+                    if (
+                        MutationalSignatureStableIdKeyWord.MutationalSignatureExposureKeyWord in
+                        map
+                    ) {
+                        map[
+                            MutationalSignatureStableIdKeyWord
+                                .MutationalSignatureExposureKeyWord
+                        ].push(data);
+                    } else {
+                        const dataList = [];
+                        dataList.push(data);
+                        map[
+                            MutationalSignatureStableIdKeyWord.MutationalSignatureExposureKeyWord
+                        ] = dataList;
+                    }
+                } else if (
+                    data.genericAssayStableId.includes(
+                        MutationalSignatureStableIdKeyWord.MutationalSignatureConfidenceKeyWord
+                    )
+                ) {
+                    if (
+                        MutationalSignatureStableIdKeyWord.MutationalSignatureConfidenceKeyWord in
+                        map
+                    ) {
+                        map[
+                            MutationalSignatureStableIdKeyWord
+                                .MutationalSignatureConfidenceKeyWord
+                        ].push(data);
+                    } else {
+                        const dataList = [];
+                        dataList.push(data);
+                        map[
+                            MutationalSignatureStableIdKeyWord.MutationalSignatureConfidenceKeyWord
+                        ] = dataList;
+                    }
+                }
+            });
+            return Promise.resolve(map);
+        },
+    });
+
+    readonly mutationalSignatureData = remoteData(
+        {
+            await: () => [
+                this.mutationalSignatureCategoryToDataMap,
+                this.mutationData,
+            ],
+            invoke: () => {
+                const meanData = this.mutationalSignatureCategoryToDataMap
+                    .result![
+                    MutationalSignatureStableIdKeyWord
+                        .MutationalSignatureExposureKeyWord
+                ];
+                const confidenceData = this.mutationalSignatureCategoryToDataMap
+                    .result![
+                    MutationalSignatureStableIdKeyWord
+                        .MutationalSignatureConfidenceKeyWord
+                ];
+                const numMutationData = this.mutationData.result.length;
+                const result: IMutationalSignature[] = [];
+                if (meanData && meanData.length > 0) {
+                    for (let i = 0; i < meanData.length; i++) {
+                        let mutationalSignatureTableData: IMutationalSignature = {} as IMutationalSignature;
+                        mutationalSignatureTableData.mutationalSignatureId =
+                            meanData[i].genericAssayStableId;
+                        mutationalSignatureTableData.patientId =
+                            meanData[i].patientId;
+                        mutationalSignatureTableData.sampleId =
+                            meanData[i].sampleId;
+                        mutationalSignatureTableData.studyId =
+                            meanData[i].studyId;
+                        mutationalSignatureTableData.uniquePatientKey =
+                            meanData[i].uniquePatientKey;
+                        mutationalSignatureTableData.uniqueSampleKey =
+                            meanData[i].uniqueSampleKey;
+                        mutationalSignatureTableData.value = parseFloat(
+                            meanData[i].value
+                        );
+                        mutationalSignatureTableData.confidence = parseFloat(
+                            confidenceData[i].value
+                        );
+                        mutationalSignatureTableData.numberOfMutationsForSample = numMutationData;
+                        result.push(mutationalSignatureTableData);
+                    }
+                }
+                return Promise.resolve(result);
+            },
+        },
+        []
+    );
+
+    //only fetch meta data for mean stableIds
+    readonly mutationalSignatureMeanStableIds = remoteData({
+        await: () => [this.fetchAllMutationalSignatureData],
+        invoke: () => {
+            const result: string[] = _.chain(
+                this.fetchAllMutationalSignatureData.result
+            )
+                .map((data: GenericAssayData) => data.stableId)
+                .uniq()
+                .filter(stableId =>
+                    stableId.includes(
+                        MutationalSignatureStableIdKeyWord.MutationalSignatureExposureKeyWord
+                    )
+                )
+                .value();
+            return Promise.resolve(result);
+        },
+    });
+
+    readonly mutationalSignatureMetaData = remoteData<
+        IMutationalSignatureMeta[]
+    >({
+        await: () => [this.fetchAllMutationalSignatureMeanMetaData],
+        invoke: () => {
+            const result: IMutationalSignatureMeta[] = [];
+
+            this.fetchAllMutationalSignatureMeanMetaData.result!.forEach(
+                (metaData: GenericAssayMeta) => {
+                    let meta = {} as IMutationalSignatureMeta;
+                    let description = 'No description';
+                    let confidenceStatement = 'No confidence statement';
+
+                    if ('DESCRIPTION' in metaData.genericEntityMetaProperties) {
+                        description = metaData.genericEntityMetaProperties[
+                            'DESCRIPTION'
+                        ]
+                            ? metaData.genericEntityMetaProperties[
+                                  'DESCRIPTION'
+                              ]
+                            : 'No description';
+                    }
+                    if (
+                        'CONFIDENCE_STATEMENT' in
+                        metaData.genericEntityMetaProperties
+                    ) {
+                        confidenceStatement = metaData
+                            .genericEntityMetaProperties['CONFIDENCE_STATEMENT']
+                            ? metaData.genericEntityMetaProperties[
+                                  'CONFIDENCE_STATEMENT'
+                              ]
+                            : 'No confidence statement';
+                    }
+                    meta.mutationalSignatureId = metaData.stableId;
+                    meta.description = description;
+                    meta.confidenceStatement = confidenceStatement;
+                    result.push(meta);
+                }
+            );
+            return Promise.resolve(result);
+        },
+    });
+
+    //only fetch meta data for mean value
+    readonly fetchAllMutationalSignatureMeanMetaData = remoteData({
+        await: () => [this.mutationalSignatureMeanStableIds],
+        invoke: async () => {
+            if (
+                this.mutationalSignatureMeanStableIds.result &&
+                this.mutationalSignatureMeanStableIds.result.length !== 0
+            ) {
+                return client.fetchGenericAssayMetaDataUsingPOST({
+                    genericAssayMetaFilter: {
+                        genericAssayStableIds: this
+                            .mutationalSignatureMeanStableIds.result
+                            ? this.mutationalSignatureMeanStableIds.result
+                            : [],
+                    } as GenericAssayMetaFilter,
+                } as any);
+            }
+            return Promise.resolve([]);
+        },
     });
 
     readonly hasMutationalSignatureData = remoteData({
-        invoke: async () => false,
-        default: false,
+        await: () => [this.fetchAllMutationalSignatureData],
+        invoke: async () => {
+            return Promise.resolve(
+                this.fetchAllMutationalSignatureData.result &&
+                    this.fetchAllMutationalSignatureData.result.length > 0
+            );
+        },
     });
 
     readonly derivedPatientId = remoteData<string>({

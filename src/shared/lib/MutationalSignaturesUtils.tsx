@@ -5,6 +5,7 @@ import {
     IMutationalSignatureMeta,
     ISignificantMutationalSignaturesForSample,
 } from '../model/MutationalSignature';
+import { convertMutationalSignatureStableIdToDisplayName } from './GenericAssayUtils/MutationalSignatureUtils';
 
 const MIN_NUMBER_OF_MUTATIONS_THRESHOLD = 5;
 const MIN_NUMBER_OF_MUTATIONS_STATEMENT =
@@ -62,7 +63,7 @@ export function prepareMutationalSignaturesForHeader(
     let mutationalSignatureDataForUniqueSample: Array<any> = _(
         mutationalSignatureData
     )
-        .filter(['uniqueSampleKey', uniqueSampleKey])
+        .filter(['sampleId', uniqueSampleKey])
         .value();
 
     let significantMutationalSignatureForSample: ISignificantMutationalSignaturesForSample = {
@@ -80,7 +81,9 @@ export function prepareMutationalSignaturesForHeader(
             //make a variable called confidence threshold
             // add significant mutational signatures
             significantMutationalSignatureForSample.significantSignatures[
-                mutationalSignatureSample.mutationalSignatureId
+                convertMutationalSignatureStableIdToDisplayName(
+                    mutationalSignatureSample.mutationalSignatureId
+                )
             ] = mutationalSignatureSample.value;
 
             //build confidence statement
