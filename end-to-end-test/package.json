@@ -11,7 +11,7 @@
     "clear": "rm -rf remote/screenshots/screen/; rm -rf remote/screenshots/error/; rm -rf remote/screenshots/diff/; rm -rf remote/screenshots/junit/; rm -rf local/screenshots/screen/; rm -rf local/screenshots/diff/; rm -rf local/screenshots/error/; rm -rf local/screenshots/junit/;"
   },
   "author": "",
-  "license": "",
+  "license": "AGPL-3.0-or-later",
   "dependencies": {
     "browserstack-local": "1.3.0",
     "clipboardy": "^2.0.0",
