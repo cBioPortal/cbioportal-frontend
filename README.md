@@ -152,7 +152,7 @@ In a second terminal, run the frontend
 # set the environment variables for your branch
 export BRANCH_ENV=master # or rc if branching from rc
 # export any custom external API URLs by editing env/custom.sh
-yarn run start
+yarn run startSSL
 ```
 > **Tip:** Before going to the next step, verify that your front end code is running by going to: https://localhost:3000/.
 
