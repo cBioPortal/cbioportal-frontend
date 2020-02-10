@@ -7,6 +7,7 @@ import LazyMobXTable, {
 import { observable } from 'mobx';
 import { Radio } from 'react-bootstrap';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { SimpleGetterLazyMobXTableApplicationDataStore } from '../../../shared/lib/ILazyMobXTableApplicationDataStore';
 import { truncateGeneList } from './PathwayMapperHelpers';
 
 export interface IPathwayMapperTable {
@@ -136,12 +137,16 @@ export default class PathwayMapperTable extends React.Component<
         };
     }
 
+    private dataStore = new SimpleGetterLazyMobXTableApplicationDataStore(
+        () => this.props.data
+    );
+
     render() {
         const columns = _.sortBy(this._columns);
         return (
             <PathwayMapperTableComponent
                 columns={columns}
-                data={this.props.data}
+                dataStore={this.dataStore}
                 initialItemsPerPage={10}
                 initialSortColumn={this.props.initialSortColumn}
                 paginationProps={{ itemsPerPageOptions: [10] }}
