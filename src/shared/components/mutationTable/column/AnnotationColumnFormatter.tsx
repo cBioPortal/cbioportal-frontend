@@ -8,15 +8,9 @@ import {
     oncoKbAnnotationDownload,
     oncoKbAnnotationSortValue,
 } from 'react-mutation-mapper';
-import OncoKbEvidenceCache from 'shared/cache/OncoKbEvidenceCache';
 import OncokbPubMedCache from 'shared/cache/PubMedCache';
 import MyCancerGenome from 'shared/components/annotation/MyCancerGenome';
 import Civic from 'shared/components/annotation/Civic';
-import {
-    IOncoKbCancerGenesWrapper,
-    IOncoKbData,
-    IOncoKbDataWrapper,
-} from 'shared/model/OncoKB';
 import {
     IMyCancerGenomeData,
     IMyCancerGenome,
@@ -29,7 +23,6 @@ import {
     IndicatorQueryResp,
     Query,
 } from 'cbioportal-frontend-commons';
-import { getEvidenceQuery } from 'shared/lib/OncoKbUtils';
 import { is3dHotspot, isRecurrentHotspot } from 'shared/lib/AnnotationUtils';
 import {
     ICivicVariant,
@@ -41,6 +34,11 @@ import {
     ICivicVariantDataWrapper,
 } from 'shared/model/Civic.ts';
 import { buildCivicEntry } from 'shared/lib/CivicUtils';
+import {
+    IOncoKbCancerGenesWrapper,
+    IOncoKbData,
+    IOncoKbDataWrapper,
+} from 'cbioportal-frontend-commons';
 
 export interface IAnnotationColumnProps {
     enableOncoKb: boolean;
@@ -50,7 +48,6 @@ export interface IAnnotationColumnProps {
     hotspotData?: IHotspotDataWrapper;
     myCancerGenomeData?: IMyCancerGenomeData;
     oncoKbData?: IOncoKbDataWrapper;
-    oncoKbEvidenceCache?: OncoKbEvidenceCache;
     oncoKbCancerGenes?: IOncoKbCancerGenesWrapper;
     pubMedCache?: OncokbPubMedCache;
     userEmailAddress?: string;
@@ -276,7 +273,7 @@ export default class AnnotationColumnFormatter {
 
         const id = generateQueryVariantId(
             mutation.gene.entrezGeneId,
-            oncoKbData.uniqueSampleKeyToTumorType[mutation.uniqueSampleKey],
+            oncoKbData.uniqueSampleKeyToTumorType![mutation.uniqueSampleKey],
             mutation.proteinChange,
             mutation.mutationType
         );
@@ -291,13 +288,6 @@ export default class AnnotationColumnFormatter {
         }
 
         return indicator;
-    }
-
-    public static getEvidenceQuery(
-        mutation: Mutation,
-        oncoKbData: IOncoKbData
-    ): Query | undefined {
-        return getEvidenceQuery(mutation, oncoKbData);
     }
 
     public static getMyCancerGenomeLinks(
@@ -429,24 +419,9 @@ export default class AnnotationColumnFormatter {
             columnProps.studyIdToStudy
         );
 
-        let evidenceQuery: Query | undefined;
-
-        if (
-            columnProps.oncoKbData &&
-            columnProps.oncoKbData.result &&
-            !(columnProps.oncoKbData.result instanceof Error)
-        ) {
-            evidenceQuery = this.getEvidenceQuery(
-                data[0],
-                columnProps.oncoKbData.result
-            );
-        }
-
         return AnnotationColumnFormatter.mainContent(
             annotation,
             columnProps,
-            columnProps.oncoKbEvidenceCache,
-            evidenceQuery,
             columnProps.pubMedCache
         );
     }
@@ -454,8 +429,6 @@ export default class AnnotationColumnFormatter {
     public static mainContent(
         annotation: IAnnotation,
         columnProps: IAnnotationColumnProps,
-        evidenceCache?: OncoKbEvidenceCache,
-        evidenceQuery?: Query,
         pubMedCache?: OncokbPubMedCache
     ) {
         return (
@@ -467,8 +440,6 @@ export default class AnnotationColumnFormatter {
                         isCancerGene={annotation.isOncoKbCancerGene}
                         status={annotation.oncoKbStatus}
                         indicator={annotation.oncoKbIndicator}
-                        evidenceCache={evidenceCache}
-                        evidenceQuery={evidenceQuery}
                         pubMedCache={pubMedCache}
                         userEmailAddress={columnProps.userEmailAddress}
                     />

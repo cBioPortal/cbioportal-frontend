@@ -109,7 +109,6 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 molecularProfileIdToMolecularProfile={
                     this.props.store.molecularProfileIdToMolecularProfile.result
                 }
-                oncoKbEvidenceCache={this.props.oncoKbEvidenceCache}
                 pubMedCache={this.props.pubMedCache}
                 mutationCountCache={this.props.mutationCountCache}
                 genomeNexusCache={this.props.genomeNexusCache}

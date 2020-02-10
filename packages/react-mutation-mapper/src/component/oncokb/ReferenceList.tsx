@@ -1,8 +1,7 @@
-import { ICache } from 'cbioportal-frontend-commons';
+import { ICache, ArticleAbstract } from 'cbioportal-frontend-commons';
 import * as React from 'react';
 import * as _ from 'lodash';
 
-import { ArticleAbstract } from '../../model/OncoKb';
 import ArticleAbstractItem from './ArticleAbstractItem';
 import PmidItem from './PmidItem';
 

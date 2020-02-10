@@ -946,11 +946,6 @@ export default class PatientViewPage extends React.Component<
                                                             .patientViewPageStore
                                                             .mrnaExprRankCache
                                                     }
-                                                    oncoKbEvidenceCache={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .oncoKbEvidenceCache
-                                                    }
                                                     pubMedCache={
                                                         this
                                                             .patientViewPageStore
@@ -1148,11 +1143,6 @@ export default class PatientViewPage extends React.Component<
                                                         this
                                                             .patientViewPageStore
                                                             .cnaCivicVariants
-                                                    }
-                                                    oncoKbEvidenceCache={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .oncoKbEvidenceCache
                                                     }
                                                     oncoKbCancerGenes={
                                                         this

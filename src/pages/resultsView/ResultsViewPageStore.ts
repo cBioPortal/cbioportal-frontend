@@ -39,7 +39,6 @@ import {
     VariantAnnotation,
 } from 'cbioportal-frontend-commons';
 import { cached, labelMobxPromises, MobxPromise } from 'mobxpromise';
-import OncoKbEvidenceCache from 'shared/cache/OncoKbEvidenceCache';
 import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
@@ -94,7 +93,8 @@ import GenesetCorrelatedGeneCache from '../../shared/cache/GenesetCorrelatedGene
 import TreatmentMolecularDataCache from '../../shared/cache/TreatmentMolecularDataCache';
 import GeneCache from '../../shared/cache/GeneCache';
 import GenesetCache from '../../shared/cache/GenesetCache';
-import { IOncoKbData } from '../../shared/model/OncoKB';
+import { IOncoKbData } from 'cbioportal-frontend-commons';
+
 import {
     AlterationEnrichment,
     CosmicMutation,
@@ -4886,10 +4886,6 @@ export class ResultsViewPageStore {
             return Promise.resolve(ret);
         },
     });
-
-    @cached get oncoKbEvidenceCache() {
-        return new OncoKbEvidenceCache();
-    }
 
     /*
      * For annotations of Genome Nexus we want to fetch lazily

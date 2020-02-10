@@ -1,7 +1,7 @@
 import * as React from 'react';
 
-import { ArticleAbstract } from '../../model/OncoKb';
 import styles from './listGroupItem.module.scss';
+import { ArticleAbstract } from 'cbioportal-frontend-commons';
 
 export default class ArticleAbstractItem extends React.Component<
     ArticleAbstract

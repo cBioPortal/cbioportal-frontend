@@ -6,22 +6,22 @@ import { IHotspotIndex } from '../../model/CancerHotspot';
 import { MobxCache } from '../../model/MobxCache';
 import { Mutation } from '../../model/Mutation';
 import { RemoteData } from '../../model/RemoteData';
-import {
-    CancerGene,
-    IndicatorQueryResp,
-    IOncoKbData,
-} from '../../model/OncoKb';
 import { SimpleCache } from '../../model/SimpleCache';
 import {
     is3dHotspot,
     isRecurrentHotspot,
 } from '../../util/CancerHotspotsUtils';
-import { getEvidenceQuery, getIndicatorData } from '../../util/OncoKbUtils';
+import { getIndicatorData } from '../../util/OncoKbUtils';
 import { defaultArraySortMethod } from '../../util/ReactTableUtils';
 import OncoKB, { sortValue as oncoKbSortValue } from '../oncokb/OncoKB';
 import HotspotAnnotation, {
     sortValue as hotspotSortValue,
 } from './HotspotAnnotation';
+import {
+    CancerGene,
+    IndicatorQueryResp,
+    IOncoKbData,
+} from 'cbioportal-frontend-commons';
 
 export type AnnotationProps = {
     mutation: Mutation;
@@ -32,7 +32,6 @@ export type AnnotationProps = {
     hotspotData?: RemoteData<IHotspotIndex | undefined>;
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>;
-    oncoKbEvidenceCache?: SimpleCache;
     pubMedCache?: MobxCache;
     resolveEntrezGeneId?: (mutation: Mutation) => number;
     resolveTumorType?: (mutation: Mutation) => string;
@@ -77,16 +76,6 @@ function getDefaultEntrezGeneId(mutation: Mutation): number {
 
 function getDefaultTumorType(): string {
     return 'Unknown';
-}
-
-function getDefaultEvidenceQuery(
-    mutation: Mutation,
-    resolveEntrezGeneId: (
-        mutation: Mutation
-    ) => number = getDefaultEntrezGeneId,
-    resolveTumorType: (mutation: Mutation) => string = getDefaultTumorType
-) {
-    return getEvidenceQuery(mutation, resolveEntrezGeneId, resolveTumorType);
 }
 
 export function getAnnotationData(
@@ -223,11 +212,6 @@ export function sortValue(annotation: IAnnotation): number[] {
 export default class Annotation extends React.Component<AnnotationProps, {}> {
     public render() {
         const annotation = this.getAnnotationData(this.props);
-        const evidenceQuery = getDefaultEvidenceQuery(
-            this.props.mutation,
-            this.props.resolveEntrezGeneId,
-            this.props.resolveTumorType
-        );
 
         return (
             <span style={{ display: 'flex', minWidth: 100 }}>
@@ -238,8 +222,6 @@ export default class Annotation extends React.Component<AnnotationProps, {}> {
                         isCancerGene={annotation.isOncoKbCancerGene}
                         status={annotation.oncoKbStatus}
                         indicator={annotation.oncoKbIndicator}
-                        evidenceCache={this.props.oncoKbEvidenceCache}
-                        evidenceQuery={evidenceQuery as any} // TODO as Query
                         pubMedCache={this.props.pubMedCache}
                         userEmailAddress={this.props.userEmailAddress}
                     />
