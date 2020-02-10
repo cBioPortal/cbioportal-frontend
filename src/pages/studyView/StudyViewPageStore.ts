@@ -133,7 +133,6 @@ import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import {
     DataType as DownloadDataType,
     CancerGene,
-    OncoKbGene,
     remoteData,
     stringListToSet,
 } from 'cbioportal-frontend-commons';
@@ -2714,16 +2713,18 @@ export class StudyViewPageStore {
     readonly oncokbCancerGenes = remoteData<CancerGene[]>({
         await: () => [],
         invoke: async () => {
-            return oncoKBClient.utilsCancerGeneListGetUsingGET({});
+            return oncoKBClient.utilsCancerGeneListGetUsingGET_1({});
         },
         onError: error => {},
         default: [],
     });
 
-    readonly oncokbGenes = remoteData<OncoKbGene[]>({
-        await: () => [],
+    readonly oncokbGenes = remoteData<CancerGene[]>({
+        await: () => [this.oncokbCancerGenes],
         invoke: async () => {
-            return oncoKBClient.genesGetUsingGET({});
+            return this.oncokbCancerGenes.result.filter(
+                cancerGene => cancerGene.oncokbAnnotated
+            );
         },
         onError: error => {},
         default: [],

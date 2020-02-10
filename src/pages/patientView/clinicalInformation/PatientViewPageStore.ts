@@ -28,12 +28,12 @@ import {
     getDarwinUrl,
     getDigitalSlideArchiveMetaUrl,
 } from '../../../shared/api/urls';
-import OncoKbEvidenceCache from 'shared/cache/OncoKbEvidenceCache';
 import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
 import GenomeNexusMyVariantInfoCache from 'shared/cache/GenomeNexusMyVariantInfoCache';
-import { IOncoKbData } from 'shared/model/OncoKB';
+import { IOncoKbData } from 'cbioportal-frontend-commons';
+
 import { IHotspotIndex, indexHotspotsData } from 'react-mutation-mapper';
 import { ICivicVariant, ICivicGene } from 'shared/model/Civic.ts';
 import { ClinicalInformationData } from 'shared/model/ClinicalInformation';
@@ -1378,10 +1378,6 @@ export class PatientViewPageStore {
         return new DiscreteCNACache(
             this.studyToMolecularProfileDiscrete.result
         );
-    }
-
-    @cached get oncoKbEvidenceCache() {
-        return new OncoKbEvidenceCache();
     }
 
     @cached get genomeNexusCache() {

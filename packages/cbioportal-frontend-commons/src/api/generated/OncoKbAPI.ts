@@ -1,6 +1,16 @@
 import * as request from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
+export type Drug = {
+    'drugName': string
+
+        'ncitCode': string
+
+        'synonyms': Array < string >
+
+        'uuid': string
+
+};
 export type AnnotateMutationByGenomicChangeQuery = {
     'evidenceTypes': Array < "GENE_SUMMARY" | "MUTATION_SUMMARY" | "TUMOR_TYPE_SUMMARY" | "GENE_TUMOR_TYPE_SUMMARY" | "PROGNOSTIC_SUMMARY" | "DIAGNOSTIC_SUMMARY" | "GENE_BACKGROUND" | "ONCOGENIC" | "MUTATION_EFFECT" | "VUS" | "PROGNOSTIC_IMPLICATION" | "DIAGNOSTIC_IMPLICATION" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE" >
 
@@ -9,12 +19,6 @@ export type AnnotateMutationByGenomicChangeQuery = {
         'id': string
 
         'tumorType': string
-
-};
-export type TreatmentDrug = {
-    'priority': number
-
-        'treatmentDrugId': TreatmentDrugId
 
 };
 export type Query = {
@@ -43,70 +47,54 @@ export type Query = {
         'type': string
 
 };
-export type Article = {
-    'abstract': string
+export type QueryGene = {
+    'entrezGeneId': number
 
-        'authors': string
-
-        'elocationId': string
-
-        'issue': string
-
-        'journal': string
-
-        'link': string
-
-        'pages': string
-
-        'pmid': string
-
-        'pubDate': string
-
-        'reference': string
-
-        'title': string
-
-        'volume': string
+        'hugoSymbol': string
 
 };
-export type Alteration = {
-    'alteration': string
+export type CancerGene = {
+    'entrezGeneId': number
 
-        'consequence': VariantConsequence
+        'foundation': boolean
 
-        'gene': Gene
+        'foundationHeme': boolean
+
+        'hugoSymbol': string
+
+        'mSKHeme': boolean
+
+        'mSKImpact': boolean
+
+        'occurrenceCount': number
+
+        'oncogene': boolean
+
+        'oncokbAnnotated': boolean
+
+        'sangerCGC': boolean
+
+        'tsg': boolean
+
+        'vogelstein': boolean
+
+};
+export type MainType = {
+    'id': number
 
         'name': string
 
-        'proteinEnd': number
-
-        'proteinStart': number
-
-        'refResidues': string
-
-        'variantResidues': string
+        'tumorForm': "SOLID" | "LIQUID"
 
 };
-export type AnnotatedVariant = {
-    'entrezGeneId': number
+export type OncoKBInfo = {
+    'dataVersion': Version
 
-        'gene': string
+        'levels': Array < InfoLevel >
 
-        'isoform': string
+        'ncitVersion': string
 
-        'mutationEffect': string
-
-        'mutationEffectAbstracts': string
-
-        'mutationEffectPmids': string
-
-        'oncogenicity': string
-
-        'proteinChange': string
-
-        'refSeq': string
-
-        'variant': string
+        'oncoTreeVersion': string
 
 };
 export type Implication = {
@@ -117,6 +105,44 @@ export type Implication = {
         'levelOfEvidence': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
 
         'tumorType': TumorType
+
+};
+export type AnnotateMutationByProteinChangeQuery = {
+    'alteration': string
+
+        'consequence': string
+
+        'evidenceTypes': Array < "GENE_SUMMARY" | "MUTATION_SUMMARY" | "TUMOR_TYPE_SUMMARY" | "GENE_TUMOR_TYPE_SUMMARY" | "PROGNOSTIC_SUMMARY" | "DIAGNOSTIC_SUMMARY" | "GENE_BACKGROUND" | "ONCOGENIC" | "MUTATION_EFFECT" | "VUS" | "PROGNOSTIC_IMPLICATION" | "DIAGNOSTIC_IMPLICATION" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE" >
+
+        'gene': QueryGene
+
+        'id': string
+
+        'proteinEnd': number
+
+        'proteinStart': number
+
+        'tumorType': string
+
+};
+export type IndicatorQueryTreatment = {
+    'abstracts': Array < ArticleAbstract >
+
+        'alterations': Array < string >
+
+        'approvedIndications': Array < string >
+
+        'description': string
+
+        'drugs': Array < Drug >
+
+        'fdaApproved': boolean
+
+        'level': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
+
+        'levelAssociatedCancerType': TumorType
+
+        'pmids': Array < string >
 
 };
 export type TumorType = {
@@ -141,24 +167,24 @@ export type TumorType = {
         'tumorForm': "SOLID" | "LIQUID"
 
 };
-export type Gene = {
-    'curatedIsoform': string
+export type MutationEffectResp = {
+    'citations': Citations
 
-        'curatedRefSeq': string
+        'description': string
 
-        'entrezGeneId': number
+        'knownEffect': string
 
-        'geneAliases': Array < string >
+};
+export type AnnotateCopyNumberAlterationQuery = {
+    'copyNameAlterationType': "AMPLIFICATION" | "DELETION" | "GAIN" | "LOSS"
 
-        'genesets': Array < Geneset >
+        'evidenceTypes': Array < "GENE_SUMMARY" | "MUTATION_SUMMARY" | "TUMOR_TYPE_SUMMARY" | "GENE_TUMOR_TYPE_SUMMARY" | "PROGNOSTIC_SUMMARY" | "DIAGNOSTIC_SUMMARY" | "GENE_BACKGROUND" | "ONCOGENIC" | "MUTATION_EFFECT" | "VUS" | "PROGNOSTIC_IMPLICATION" | "DIAGNOSTIC_IMPLICATION" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE" >
 
-        'hugoSymbol': string
+        'gene': QueryGene
 
-        'name': string
+        'id': string
 
-        'oncogene': boolean
-
-        'tsg': boolean
+        'tumorType': string
 
 };
 export type Version = {
@@ -167,66 +193,14 @@ export type Version = {
         'version': string
 
 };
-export type TreatmentDrugId = {
-    'drug': Drug
+export type AnnotateMutationByHGVSgQuery = {
+    'evidenceTypes': Array < "GENE_SUMMARY" | "MUTATION_SUMMARY" | "TUMOR_TYPE_SUMMARY" | "GENE_TUMOR_TYPE_SUMMARY" | "PROGNOSTIC_SUMMARY" | "DIAGNOSTIC_SUMMARY" | "GENE_BACKGROUND" | "ONCOGENIC" | "MUTATION_EFFECT" | "VUS" | "PROGNOSTIC_IMPLICATION" | "DIAGNOSTIC_IMPLICATION" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE" >
 
-};
-export type GeneEvidence = {
-    'articles': Array < Article >
-
-        'desc': string
-
-        'evidenceId': number
-
-        'evidenceType': "GENE_SUMMARY" | "MUTATION_SUMMARY" | "TUMOR_TYPE_SUMMARY" | "GENE_TUMOR_TYPE_SUMMARY" | "PROGNOSTIC_SUMMARY" | "DIAGNOSTIC_SUMMARY" | "GENE_BACKGROUND" | "ONCOGENIC" | "MUTATION_EFFECT" | "VUS" | "PROGNOSTIC_IMPLICATION" | "DIAGNOSTIC_IMPLICATION" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE"
-
-        'gene': Gene
+        'hgvsg': string
 
         'id': string
 
-        'lastEdit': string
-
-        'shortDesc': string
-
-        'status': string
-
-};
-export type Evidence = {
-    'additionalInfo': string
-
-        'alterations': Array < Alteration >
-
-        'articles': Array < Article >
-
-        'cancerType': string
-
-        'description': string
-
-        'evidenceType': "GENE_SUMMARY" | "MUTATION_SUMMARY" | "TUMOR_TYPE_SUMMARY" | "GENE_TUMOR_TYPE_SUMMARY" | "PROGNOSTIC_SUMMARY" | "DIAGNOSTIC_SUMMARY" | "GENE_BACKGROUND" | "ONCOGENIC" | "MUTATION_EFFECT" | "VUS" | "PROGNOSTIC_IMPLICATION" | "DIAGNOSTIC_IMPLICATION" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE"
-
-        'gene': Gene
-
-        'id': number
-
-        'knownEffect': string
-
-        'lastEdit': string
-
-        'lastReview': string
-
-        'levelOfEvidence': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
-
-        'liquidPropagationLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
-
-        'oncoTreeType': TumorType
-
-        'solidPropagationLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
-
-        'subtype': string
-
-        'treatments': Array < Treatment >
-
-        'uuid': string
+        'tumorType': string
 
 };
 export type AnnotateStructuralVariantQuery = {
@@ -295,28 +269,10 @@ export type IndicatorQueryResp = {
         'vus': boolean
 
 };
-export type ActionableGene = {
-    'abstracts': string
+export type Citations = {
+    'abstracts': Array < ArticleAbstract >
 
-        'cancerType': string
-
-        'drugs': string
-
-        'entrezGeneId': number
-
-        'gene': string
-
-        'isoform': string
-
-        'level': string
-
-        'pmids': string
-
-        'proteinChange': string
-
-        'refSeq': string
-
-        'variant': string
+        'pmids': Array < string >
 
 };
 export type ArticleAbstract = {
@@ -335,245 +291,9 @@ export type InfoLevel = {
         'levelOfEvidence': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
 
 };
-export type Drug = {
-    'drugName': string
-
-        'ncitCode': string
-
-        'synonyms': Array < string >
-
-        'uuid': string
-
-};
-export type CuratedGene = {
-    'entrezGeneId': number
-
-        'highestResistancLevel': string
-
-        'highestSensitiveLevel': string
-
-        'hugoSymbol': string
-
-        'isoform': string
-
-        'oncogene': boolean
-
-        'refSeq': string
-
-        'summary': string
-
-        'tsg': boolean
-
-};
-export type EvidenceQueryRes = {
-    'alleles': Array < Alteration >
-
-        'alterations': Array < Alteration >
-
-        'evidences': Array < Evidence >
-
-        'exactMatchedAlteration': Alteration
-
-        'gene': Gene
-
-        'id': string
-
-        'levelOfEvidences': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO" >
-
-        'oncoTreeTypes': Array < TumorType >
-
-        'query': Query
-
-};
-export type QueryGene = {
-    'entrezGeneId': number
-
-        'hugoSymbol': string
-
-};
-export type CancerGene = {
-    'entrezGeneId': number
-
-        'foundation': boolean
-
-        'foundationHeme': boolean
-
-        'hugoSymbol': string
-
-        'mSKHeme': boolean
-
-        'mSKImpact': boolean
-
-        'occurrenceCount': number
-
-        'oncogene': boolean
-
-        'oncokbAnnotated': boolean
-
-        'sangerCGC': boolean
-
-        'tsg': boolean
-
-        'vogelstein': boolean
-
-};
-export type MainType = {
-    'id': number
-
-        'name': string
-
-        'tumorForm': "SOLID" | "LIQUID"
-
-};
-export type OncoKBInfo = {
-    'dataVersion': Version
-
-        'levels': Array < InfoLevel >
-
-        'ncitVersion': string
-
-        'oncoTreeVersion': string
-
-};
-export type VariantConsequence = {
-    'description': string
-
-        'isGenerallyTruncating': boolean
-
-        'term': string
-
-};
-export type AnnotateMutationByProteinChangeQuery = {
-    'alteration': string
-
-        'consequence': string
-
-        'evidenceTypes': Array < "GENE_SUMMARY" | "MUTATION_SUMMARY" | "TUMOR_TYPE_SUMMARY" | "GENE_TUMOR_TYPE_SUMMARY" | "PROGNOSTIC_SUMMARY" | "DIAGNOSTIC_SUMMARY" | "GENE_BACKGROUND" | "ONCOGENIC" | "MUTATION_EFFECT" | "VUS" | "PROGNOSTIC_IMPLICATION" | "DIAGNOSTIC_IMPLICATION" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE" >
-
-        'gene': QueryGene
-
-        'id': string
-
-        'proteinEnd': number
-
-        'proteinStart': number
-
-        'tumorType': string
-
-};
-export type IndicatorQueryTreatment = {
-    'abstracts': Array < ArticleAbstract >
-
-        'alterations': Array < string >
-
-        'approvedIndications': Array < string >
-
-        'description': string
-
-        'drugs': Array < Drug >
-
-        'fdaApproved': boolean
-
-        'level': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
-
-        'levelAssociatedCancerType': TumorType
-
-        'pmids': Array < string >
-
-};
-export type ResponseEntity = {
-    'body': {}
-
-    'statusCode': "100" | "101" | "102" | "103" | "200" | "201" | "202" | "203" | "204" | "205" | "206" | "207" | "208" | "226" | "300" | "301" | "302" | "302" | "303" | "304" | "305" | "307" | "308" | "400" | "401" | "402" | "403" | "404" | "405" | "406" | "407" | "408" | "409" | "410" | "411" | "412" | "413" | "413" | "414" | "414" | "415" | "416" | "417" | "418" | "419" | "420" | "421" | "422" | "423" | "424" | "426" | "428" | "429" | "431" | "500" | "501" | "502" | "503" | "504" | "505" | "506" | "507" | "508" | "509" | "510" | "511"
-
-};
-export type Treatment = {
-    'approvedIndications': Array < string >
-
-        'drugs': Array < TreatmentDrug >
-
-        'priority': number
-
-};
-export type EvidenceQueries = {
-    'evidenceTypes': string
-
-        'highestLevelOnly': boolean
-
-        'levels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO" >
-
-        'queries': Array < Query >
-
-        'source': string
-
-};
-export type VariantSearchQuery = {
-    'consequence': string
-
-        'entrezGeneId': number
-
-        'hgvs': string
-
-        'hugoSymbol': string
-
-        'proteinEnd': number
-
-        'proteinStart': number
-
-        'variant': string
-
-        'variantType': string
-
-};
-export type MutationEffectResp = {
-    'citations': Citations
-
-        'description': string
-
-        'knownEffect': string
-
-};
-export type AnnotateCopyNumberAlterationQuery = {
-    'copyNameAlterationType': "AMPLIFICATION" | "DELETION" | "GAIN" | "LOSS"
-
-        'evidenceTypes': Array < "GENE_SUMMARY" | "MUTATION_SUMMARY" | "TUMOR_TYPE_SUMMARY" | "GENE_TUMOR_TYPE_SUMMARY" | "PROGNOSTIC_SUMMARY" | "DIAGNOSTIC_SUMMARY" | "GENE_BACKGROUND" | "ONCOGENIC" | "MUTATION_EFFECT" | "VUS" | "PROGNOSTIC_IMPLICATION" | "DIAGNOSTIC_IMPLICATION" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE" >
-
-        'gene': QueryGene
-
-        'id': string
-
-        'tumorType': string
-
-};
-export type AnnotateMutationByHGVSgQuery = {
-    'evidenceTypes': Array < "GENE_SUMMARY" | "MUTATION_SUMMARY" | "TUMOR_TYPE_SUMMARY" | "GENE_TUMOR_TYPE_SUMMARY" | "PROGNOSTIC_SUMMARY" | "DIAGNOSTIC_SUMMARY" | "GENE_BACKGROUND" | "ONCOGENIC" | "MUTATION_EFFECT" | "VUS" | "PROGNOSTIC_IMPLICATION" | "DIAGNOSTIC_IMPLICATION" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY" | "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY" | "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE" >
-
-        'hgvsg': string
-
-        'id': string
-
-        'tumorType': string
-
-};
-export type Geneset = {
-    'genes': Array < Gene >
-
-        'id': number
-
-        'name': string
-
-        'uuid': string
-
-};
-export type Citations = {
-    'abstracts': Array < ArticleAbstract >
-
-        'pmids': Array < string >
-
-};
 
 /**
- * These endpoints are for private use only.
+ * OncoKB, a comprehensive and curated precision oncology knowledge base, offers oncologists detailed, evidence-based information about individual somatic mutations and structural alterations present in patient tumors with the goal of supporting optimal treatment decisions.
  * @class OncoKbAPI
  * @param {(string)} [domainOrOptions] - The project domain.
  */
@@ -626,7 +346,7 @@ export default class OncoKbAPI {
         });
     }
 
-    annotateCopyNumberAlterationsGetUsingGETURL(parameters: {
+    annotateCopyNumberAlterationsGetUsingGET_1URL(parameters: {
         'hugoSymbol' ? : string,
         'entrezGeneId' ? : number,
         'copyNameAlterationType': "AMPLIFICATION" | "DELETION" | "GAIN" | "LOSS",
@@ -669,14 +389,14 @@ export default class OncoKbAPI {
     /**
      * Annotate copy number alteration.
      * @method
-     * @name OncoKbAPI#annotateCopyNumberAlterationsGetUsingGET
+     * @name OncoKbAPI#annotateCopyNumberAlterationsGetUsingGET_1
      * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation. Example: BRAF
      * @param {integer} entrezGeneId - The entrez gene ID. (Higher priority than hugoSymbol). Example: 673
      * @param {string} copyNameAlterationType - Copy number alteration type
      * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
      * @param {string} evidenceType - Evidence type to compute. This could help to improve the performance if you only look for sub-content. Example: ONCOGENIC. All available evidence type are GENE_SUMMARY, MUTATION_SUMMARY, TUMOR_TYPE_SUMMARY, PROGNOSTIC_SUMMARY, DIAGNOSTIC_SUMMARY, ONCOGENIC, MUTATION_EFFECT, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE. For multiple evidence types query, use ',' as separator.
      */
-    annotateCopyNumberAlterationsGetUsingGETWithHttpInfo(parameters: {
+    annotateCopyNumberAlterationsGetUsingGET_1WithHttpInfo(parameters: {
         'hugoSymbol' ? : string,
         'entrezGeneId' ? : number,
         'copyNameAlterationType': "AMPLIFICATION" | "DELETION" | "GAIN" | "LOSS",
@@ -737,14 +457,14 @@ export default class OncoKbAPI {
     /**
      * Annotate copy number alteration.
      * @method
-     * @name OncoKbAPI#annotateCopyNumberAlterationsGetUsingGET
+     * @name OncoKbAPI#annotateCopyNumberAlterationsGetUsingGET_1
      * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation. Example: BRAF
      * @param {integer} entrezGeneId - The entrez gene ID. (Higher priority than hugoSymbol). Example: 673
      * @param {string} copyNameAlterationType - Copy number alteration type
      * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
      * @param {string} evidenceType - Evidence type to compute. This could help to improve the performance if you only look for sub-content. Example: ONCOGENIC. All available evidence type are GENE_SUMMARY, MUTATION_SUMMARY, TUMOR_TYPE_SUMMARY, PROGNOSTIC_SUMMARY, DIAGNOSTIC_SUMMARY, ONCOGENIC, MUTATION_EFFECT, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE. For multiple evidence types query, use ',' as separator.
      */
-    annotateCopyNumberAlterationsGetUsingGET(parameters: {
+    annotateCopyNumberAlterationsGetUsingGET_1(parameters: {
         'hugoSymbol' ? : string,
         'entrezGeneId' ? : number,
         'copyNameAlterationType': "AMPLIFICATION" | "DELETION" | "GAIN" | "LOSS",
@@ -753,11 +473,11 @@ export default class OncoKbAPI {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < IndicatorQueryResp > {
-        return this.annotateCopyNumberAlterationsGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.annotateCopyNumberAlterationsGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
-    annotateCopyNumberAlterationsPostUsingPOSTURL(parameters: {
+    annotateCopyNumberAlterationsPostUsingPOST_1URL(parameters: {
         'body': Array < AnnotateCopyNumberAlterationQuery > ,
         $queryParameters ? : any
     }): string {
@@ -777,10 +497,10 @@ export default class OncoKbAPI {
     /**
      * Annotate copy number alterations.
      * @method
-     * @name OncoKbAPI#annotateCopyNumberAlterationsPostUsingPOST
+     * @name OncoKbAPI#annotateCopyNumberAlterationsPostUsingPOST_1
      * @param {} body - List of queries. Please see swagger.json for request body format.
      */
-    annotateCopyNumberAlterationsPostUsingPOSTWithHttpInfo(parameters: {
+    annotateCopyNumberAlterationsPostUsingPOST_1WithHttpInfo(parameters: {
         'body': Array < AnnotateCopyNumberAlterationQuery > ,
         $queryParameters ? : any,
         $domain ? : string
@@ -821,20 +541,20 @@ export default class OncoKbAPI {
     /**
      * Annotate copy number alterations.
      * @method
-     * @name OncoKbAPI#annotateCopyNumberAlterationsPostUsingPOST
+     * @name OncoKbAPI#annotateCopyNumberAlterationsPostUsingPOST_1
      * @param {} body - List of queries. Please see swagger.json for request body format.
      */
-    annotateCopyNumberAlterationsPostUsingPOST(parameters: {
+    annotateCopyNumberAlterationsPostUsingPOST_1(parameters: {
             'body': Array < AnnotateCopyNumberAlterationQuery > ,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < IndicatorQueryResp >
         > {
-            return this.annotateCopyNumberAlterationsPostUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.annotateCopyNumberAlterationsPostUsingPOST_1WithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-    annotateMutationsByGenomicChangeGetUsingGETURL(parameters: {
+    annotateMutationsByGenomicChangeGetUsingGET_1URL(parameters: {
         'genomicLocation': string,
         'tumorType' ? : string,
         'evidenceType' ? : string,
@@ -867,12 +587,12 @@ export default class OncoKbAPI {
     /**
      * Annotate mutation by genomic change.
      * @method
-     * @name OncoKbAPI#annotateMutationsByGenomicChangeGetUsingGET
+     * @name OncoKbAPI#annotateMutationsByGenomicChangeGetUsingGET_1
      * @param {string} genomicLocation - Genomic location. Example: 7,140453136,140453136,A,T
      * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
      * @param {string} evidenceType - Evidence type to compute. This could help to improve the performance if you only look for sub-content. Example: ONCOGENIC. All available evidence type are GENE_SUMMARY, MUTATION_SUMMARY, TUMOR_TYPE_SUMMARY, PROGNOSTIC_SUMMARY, DIAGNOSTIC_SUMMARY, ONCOGENIC, MUTATION_EFFECT, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE. For multiple evidence types query, use ',' as separator.
      */
-    annotateMutationsByGenomicChangeGetUsingGETWithHttpInfo(parameters: {
+    annotateMutationsByGenomicChangeGetUsingGET_1WithHttpInfo(parameters: {
         'genomicLocation': string,
         'tumorType' ? : string,
         'evidenceType' ? : string,
@@ -923,23 +643,23 @@ export default class OncoKbAPI {
     /**
      * Annotate mutation by genomic change.
      * @method
-     * @name OncoKbAPI#annotateMutationsByGenomicChangeGetUsingGET
+     * @name OncoKbAPI#annotateMutationsByGenomicChangeGetUsingGET_1
      * @param {string} genomicLocation - Genomic location. Example: 7,140453136,140453136,A,T
      * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
      * @param {string} evidenceType - Evidence type to compute. This could help to improve the performance if you only look for sub-content. Example: ONCOGENIC. All available evidence type are GENE_SUMMARY, MUTATION_SUMMARY, TUMOR_TYPE_SUMMARY, PROGNOSTIC_SUMMARY, DIAGNOSTIC_SUMMARY, ONCOGENIC, MUTATION_EFFECT, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE. For multiple evidence types query, use ',' as separator.
      */
-    annotateMutationsByGenomicChangeGetUsingGET(parameters: {
+    annotateMutationsByGenomicChangeGetUsingGET_1(parameters: {
         'genomicLocation': string,
         'tumorType' ? : string,
         'evidenceType' ? : string,
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < IndicatorQueryResp > {
-        return this.annotateMutationsByGenomicChangeGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.annotateMutationsByGenomicChangeGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
-    annotateMutationsByGenomicChangePostUsingPOSTURL(parameters: {
+    annotateMutationsByGenomicChangePostUsingPOST_1URL(parameters: {
         'body': Array < AnnotateMutationByGenomicChangeQuery > ,
         $queryParameters ? : any
     }): string {
@@ -959,10 +679,10 @@ export default class OncoKbAPI {
     /**
      * Annotate mutations by genomic change.
      * @method
-     * @name OncoKbAPI#annotateMutationsByGenomicChangePostUsingPOST
+     * @name OncoKbAPI#annotateMutationsByGenomicChangePostUsingPOST_1
      * @param {} body - List of queries. Please see swagger.json for request body format.
      */
-    annotateMutationsByGenomicChangePostUsingPOSTWithHttpInfo(parameters: {
+    annotateMutationsByGenomicChangePostUsingPOST_1WithHttpInfo(parameters: {
         'body': Array < AnnotateMutationByGenomicChangeQuery > ,
         $queryParameters ? : any,
         $domain ? : string
@@ -1003,20 +723,20 @@ export default class OncoKbAPI {
     /**
      * Annotate mutations by genomic change.
      * @method
-     * @name OncoKbAPI#annotateMutationsByGenomicChangePostUsingPOST
+     * @name OncoKbAPI#annotateMutationsByGenomicChangePostUsingPOST_1
      * @param {} body - List of queries. Please see swagger.json for request body format.
      */
-    annotateMutationsByGenomicChangePostUsingPOST(parameters: {
+    annotateMutationsByGenomicChangePostUsingPOST_1(parameters: {
             'body': Array < AnnotateMutationByGenomicChangeQuery > ,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < IndicatorQueryResp >
         > {
-            return this.annotateMutationsByGenomicChangePostUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.annotateMutationsByGenomicChangePostUsingPOST_1WithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-    annotateMutationsByHGVSgGetUsingGETURL(parameters: {
+    annotateMutationsByHGVSgGetUsingGET_1URL(parameters: {
         'hgvsg': string,
         'tumorType' ? : string,
         'evidenceType' ? : string,
@@ -1049,12 +769,12 @@ export default class OncoKbAPI {
     /**
      * Annotate mutation by HGVSg.
      * @method
-     * @name OncoKbAPI#annotateMutationsByHGVSgGetUsingGET
+     * @name OncoKbAPI#annotateMutationsByHGVSgGetUsingGET_1
      * @param {string} hgvsg - HGVS genomic format. Example: 7:g.140453136A>T
      * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
      * @param {string} evidenceType - Evidence type to compute. This could help to improve the performance if you only look for sub-content. Example: ONCOGENIC. All available evidence type are GENE_SUMMARY, MUTATION_SUMMARY, TUMOR_TYPE_SUMMARY, PROGNOSTIC_SUMMARY, DIAGNOSTIC_SUMMARY, ONCOGENIC, MUTATION_EFFECT, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE. For multiple evidence types query, use ',' as separator.
      */
-    annotateMutationsByHGVSgGetUsingGETWithHttpInfo(parameters: {
+    annotateMutationsByHGVSgGetUsingGET_1WithHttpInfo(parameters: {
         'hgvsg': string,
         'tumorType' ? : string,
         'evidenceType' ? : string,
@@ -1105,23 +825,23 @@ export default class OncoKbAPI {
     /**
      * Annotate mutation by HGVSg.
      * @method
-     * @name OncoKbAPI#annotateMutationsByHGVSgGetUsingGET
+     * @name OncoKbAPI#annotateMutationsByHGVSgGetUsingGET_1
      * @param {string} hgvsg - HGVS genomic format. Example: 7:g.140453136A>T
      * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
      * @param {string} evidenceType - Evidence type to compute. This could help to improve the performance if you only look for sub-content. Example: ONCOGENIC. All available evidence type are GENE_SUMMARY, MUTATION_SUMMARY, TUMOR_TYPE_SUMMARY, PROGNOSTIC_SUMMARY, DIAGNOSTIC_SUMMARY, ONCOGENIC, MUTATION_EFFECT, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE. For multiple evidence types query, use ',' as separator.
      */
-    annotateMutationsByHGVSgGetUsingGET(parameters: {
+    annotateMutationsByHGVSgGetUsingGET_1(parameters: {
         'hgvsg': string,
         'tumorType' ? : string,
         'evidenceType' ? : string,
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < IndicatorQueryResp > {
-        return this.annotateMutationsByHGVSgGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.annotateMutationsByHGVSgGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
-    annotateMutationsByHGVSgPostUsingPOSTURL(parameters: {
+    annotateMutationsByHGVSgPostUsingPOST_1URL(parameters: {
         'body': Array < AnnotateMutationByHGVSgQuery > ,
         $queryParameters ? : any
     }): string {
@@ -1141,10 +861,10 @@ export default class OncoKbAPI {
     /**
      * Annotate mutations by genomic change.
      * @method
-     * @name OncoKbAPI#annotateMutationsByHGVSgPostUsingPOST
+     * @name OncoKbAPI#annotateMutationsByHGVSgPostUsingPOST_1
      * @param {} body - List of queries. Please see swagger.json for request body format.
      */
-    annotateMutationsByHGVSgPostUsingPOSTWithHttpInfo(parameters: {
+    annotateMutationsByHGVSgPostUsingPOST_1WithHttpInfo(parameters: {
         'body': Array < AnnotateMutationByHGVSgQuery > ,
         $queryParameters ? : any,
         $domain ? : string
@@ -1185,20 +905,20 @@ export default class OncoKbAPI {
     /**
      * Annotate mutations by genomic change.
      * @method
-     * @name OncoKbAPI#annotateMutationsByHGVSgPostUsingPOST
+     * @name OncoKbAPI#annotateMutationsByHGVSgPostUsingPOST_1
      * @param {} body - List of queries. Please see swagger.json for request body format.
      */
-    annotateMutationsByHGVSgPostUsingPOST(parameters: {
+    annotateMutationsByHGVSgPostUsingPOST_1(parameters: {
             'body': Array < AnnotateMutationByHGVSgQuery > ,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < IndicatorQueryResp >
         > {
-            return this.annotateMutationsByHGVSgPostUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.annotateMutationsByHGVSgPostUsingPOST_1WithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-    annotateMutationsByProteinChangeGetUsingGETURL(parameters: {
+    annotateMutationsByProteinChangeGetUsingGET_1URL(parameters: {
         'hugoSymbol' ? : string,
         'entrezGeneId' ? : number,
         'alteration' ? : string,
@@ -1256,7 +976,7 @@ export default class OncoKbAPI {
     /**
      * Annotate mutation by protein change.
      * @method
-     * @name OncoKbAPI#annotateMutationsByProteinChangeGetUsingGET
+     * @name OncoKbAPI#annotateMutationsByProteinChangeGetUsingGET_1
      * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation. Example: BRAF
      * @param {integer} entrezGeneId - The entrez gene ID. (Higher priority than hugoSymbol). Example: 673
      * @param {string} alteration - Protein Change. Example: V600E
@@ -1266,7 +986,7 @@ export default class OncoKbAPI {
      * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
      * @param {string} evidenceType - Evidence type to compute. This could help to improve the performance if you only look for sub-content. Example: ONCOGENIC. All available evidence type are GENE_SUMMARY, MUTATION_SUMMARY, TUMOR_TYPE_SUMMARY, PROGNOSTIC_SUMMARY, DIAGNOSTIC_SUMMARY, ONCOGENIC, MUTATION_EFFECT, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE. For multiple evidence types query, use ',' as separator.
      */
-    annotateMutationsByProteinChangeGetUsingGETWithHttpInfo(parameters: {
+    annotateMutationsByProteinChangeGetUsingGET_1WithHttpInfo(parameters: {
         'hugoSymbol' ? : string,
         'entrezGeneId' ? : number,
         'alteration' ? : string,
@@ -1337,7 +1057,7 @@ export default class OncoKbAPI {
     /**
      * Annotate mutation by protein change.
      * @method
-     * @name OncoKbAPI#annotateMutationsByProteinChangeGetUsingGET
+     * @name OncoKbAPI#annotateMutationsByProteinChangeGetUsingGET_1
      * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation. Example: BRAF
      * @param {integer} entrezGeneId - The entrez gene ID. (Higher priority than hugoSymbol). Example: 673
      * @param {string} alteration - Protein Change. Example: V600E
@@ -1347,7 +1067,7 @@ export default class OncoKbAPI {
      * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
      * @param {string} evidenceType - Evidence type to compute. This could help to improve the performance if you only look for sub-content. Example: ONCOGENIC. All available evidence type are GENE_SUMMARY, MUTATION_SUMMARY, TUMOR_TYPE_SUMMARY, PROGNOSTIC_SUMMARY, DIAGNOSTIC_SUMMARY, ONCOGENIC, MUTATION_EFFECT, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE. For multiple evidence types query, use ',' as separator.
      */
-    annotateMutationsByProteinChangeGetUsingGET(parameters: {
+    annotateMutationsByProteinChangeGetUsingGET_1(parameters: {
         'hugoSymbol' ? : string,
         'entrezGeneId' ? : number,
         'alteration' ? : string,
@@ -1359,11 +1079,11 @@ export default class OncoKbAPI {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < IndicatorQueryResp > {
-        return this.annotateMutationsByProteinChangeGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.annotateMutationsByProteinChangeGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
-    annotateMutationsByProteinChangePostUsingPOSTURL(parameters: {
+    annotateMutationsByProteinChangePostUsingPOST_1URL(parameters: {
         'body': Array < AnnotateMutationByProteinChangeQuery > ,
         $queryParameters ? : any
     }): string {
@@ -1383,10 +1103,10 @@ export default class OncoKbAPI {
     /**
      * Annotate mutations by protein change.
      * @method
-     * @name OncoKbAPI#annotateMutationsByProteinChangePostUsingPOST
+     * @name OncoKbAPI#annotateMutationsByProteinChangePostUsingPOST_1
      * @param {} body - List of queries. Please see swagger.json for request body format.
      */
-    annotateMutationsByProteinChangePostUsingPOSTWithHttpInfo(parameters: {
+    annotateMutationsByProteinChangePostUsingPOST_1WithHttpInfo(parameters: {
         'body': Array < AnnotateMutationByProteinChangeQuery > ,
         $queryParameters ? : any,
         $domain ? : string
@@ -1427,20 +1147,20 @@ export default class OncoKbAPI {
     /**
      * Annotate mutations by protein change.
      * @method
-     * @name OncoKbAPI#annotateMutationsByProteinChangePostUsingPOST
+     * @name OncoKbAPI#annotateMutationsByProteinChangePostUsingPOST_1
      * @param {} body - List of queries. Please see swagger.json for request body format.
      */
-    annotateMutationsByProteinChangePostUsingPOST(parameters: {
+    annotateMutationsByProteinChangePostUsingPOST_1(parameters: {
             'body': Array < AnnotateMutationByProteinChangeQuery > ,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < IndicatorQueryResp >
         > {
-            return this.annotateMutationsByProteinChangePostUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.annotateMutationsByProteinChangePostUsingPOST_1WithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-    annotateStructuralVariantsGetUsingGETURL(parameters: {
+    annotateStructuralVariantsGetUsingGET_1URL(parameters: {
         'hugoSymbolA' ? : string,
         'entrezGeneIdA' ? : number,
         'hugoSymbolB' ? : string,
@@ -1498,7 +1218,7 @@ export default class OncoKbAPI {
     /**
      * Annotate structural variant.
      * @method
-     * @name OncoKbAPI#annotateStructuralVariantsGetUsingGET
+     * @name OncoKbAPI#annotateStructuralVariantsGetUsingGET_1
      * @param {string} hugoSymbolA - The gene symbol A used in Human Genome Organisation. Example: ABL1
      * @param {integer} entrezGeneIdA - The entrez gene ID A. (Higher priority than hugoSymbolA) Example: 25
      * @param {string} hugoSymbolB - The gene symbol B used in Human Genome Organisation.Example: BCR 
@@ -1508,7 +1228,7 @@ export default class OncoKbAPI {
      * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
      * @param {string} evidenceType - Evidence type to compute. This could help to improve the performance if you only look for sub-content. Example: ONCOGENIC. All available evidence type are GENE_SUMMARY, MUTATION_SUMMARY, TUMOR_TYPE_SUMMARY, PROGNOSTIC_SUMMARY, DIAGNOSTIC_SUMMARY, ONCOGENIC, MUTATION_EFFECT, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE. For multiple evidence types query, use ',' as separator.
      */
-    annotateStructuralVariantsGetUsingGETWithHttpInfo(parameters: {
+    annotateStructuralVariantsGetUsingGET_1WithHttpInfo(parameters: {
         'hugoSymbolA' ? : string,
         'entrezGeneIdA' ? : number,
         'hugoSymbolB' ? : string,
@@ -1589,7 +1309,7 @@ export default class OncoKbAPI {
     /**
      * Annotate structural variant.
      * @method
-     * @name OncoKbAPI#annotateStructuralVariantsGetUsingGET
+     * @name OncoKbAPI#annotateStructuralVariantsGetUsingGET_1
      * @param {string} hugoSymbolA - The gene symbol A used in Human Genome Organisation. Example: ABL1
      * @param {integer} entrezGeneIdA - The entrez gene ID A. (Higher priority than hugoSymbolA) Example: 25
      * @param {string} hugoSymbolB - The gene symbol B used in Human Genome Organisation.Example: BCR 
@@ -1599,7 +1319,7 @@ export default class OncoKbAPI {
      * @param {string} tumorType - OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma
      * @param {string} evidenceType - Evidence type to compute. This could help to improve the performance if you only look for sub-content. Example: ONCOGENIC. All available evidence type are GENE_SUMMARY, MUTATION_SUMMARY, TUMOR_TYPE_SUMMARY, PROGNOSTIC_SUMMARY, DIAGNOSTIC_SUMMARY, ONCOGENIC, MUTATION_EFFECT, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE. For multiple evidence types query, use ',' as separator.
      */
-    annotateStructuralVariantsGetUsingGET(parameters: {
+    annotateStructuralVariantsGetUsingGET_1(parameters: {
         'hugoSymbolA' ? : string,
         'entrezGeneIdA' ? : number,
         'hugoSymbolB' ? : string,
@@ -1611,11 +1331,11 @@ export default class OncoKbAPI {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < IndicatorQueryResp > {
-        return this.annotateStructuralVariantsGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.annotateStructuralVariantsGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
-    annotateStructuralVariantsPostUsingPOSTURL(parameters: {
+    annotateStructuralVariantsPostUsingPOST_1URL(parameters: {
         'body': Array < AnnotateStructuralVariantQuery > ,
         $queryParameters ? : any
     }): string {
@@ -1635,10 +1355,10 @@ export default class OncoKbAPI {
     /**
      * Annotate structural variants.
      * @method
-     * @name OncoKbAPI#annotateStructuralVariantsPostUsingPOST
+     * @name OncoKbAPI#annotateStructuralVariantsPostUsingPOST_1
      * @param {} body - List of queries. Please see swagger.json for request body format.
      */
-    annotateStructuralVariantsPostUsingPOSTWithHttpInfo(parameters: {
+    annotateStructuralVariantsPostUsingPOST_1WithHttpInfo(parameters: {
         'body': Array < AnnotateStructuralVariantQuery > ,
         $queryParameters ? : any,
         $domain ? : string
@@ -1679,1344 +1399,20 @@ export default class OncoKbAPI {
     /**
      * Annotate structural variants.
      * @method
-     * @name OncoKbAPI#annotateStructuralVariantsPostUsingPOST
+     * @name OncoKbAPI#annotateStructuralVariantsPostUsingPOST_1
      * @param {} body - List of queries. Please see swagger.json for request body format.
      */
-    annotateStructuralVariantsPostUsingPOST(parameters: {
+    annotateStructuralVariantsPostUsingPOST_1(parameters: {
             'body': Array < AnnotateStructuralVariantQuery > ,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < IndicatorQueryResp >
         > {
-            return this.annotateStructuralVariantsPostUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.annotateStructuralVariantsPostUsingPOST_1WithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-    classificationVariantsGetUsingGETURL(parameters: {
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/classification/variants';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Get All OncoKB Variant Classification.
-     * @method
-     * @name OncoKbAPI#classificationVariantsGetUsingGET
-     */
-    classificationVariantsGetUsingGETWithHttpInfo(parameters: {
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/classification/variants';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Get All OncoKB Variant Classification.
-     * @method
-     * @name OncoKbAPI#classificationVariantsGetUsingGET
-     */
-    classificationVariantsGetUsingGET(parameters: {
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < string >
-        > {
-            return this.classificationVariantsGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    drugsGetUsingGETURL(parameters: {
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/drugs';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Get all curated drugs.
-     * @method
-     * @name OncoKbAPI#drugsGetUsingGET
-     */
-    drugsGetUsingGETWithHttpInfo(parameters: {
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/drugs';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Get all curated drugs.
-     * @method
-     * @name OncoKbAPI#drugsGetUsingGET
-     */
-    drugsGetUsingGET(parameters: {
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < Drug >
-        > {
-            return this.drugsGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    drugsLookupGetUsingGETURL(parameters: {
-        'name' ? : string,
-        'ncitCode' ? : string,
-        'synonym' ? : string,
-        'exactMatch': boolean,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/drugs/lookup';
-        if (parameters['name'] !== undefined) {
-            queryParameters['name'] = parameters['name'];
-        }
-
-        if (parameters['ncitCode'] !== undefined) {
-            queryParameters['ncitCode'] = parameters['ncitCode'];
-        }
-
-        if (parameters['synonym'] !== undefined) {
-            queryParameters['synonym'] = parameters['synonym'];
-        }
-
-        if (parameters['exactMatch'] !== undefined) {
-            queryParameters['exactMatch'] = parameters['exactMatch'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Search drugs.
-     * @method
-     * @name OncoKbAPI#drugsLookupGetUsingGET
-     * @param {string} name - Drug Name
-     * @param {string} ncitCode - NCI Thesaurus Code
-     * @param {string} synonym - Drug Synonyms
-     * @param {boolean} exactMatch - Exactly Match
-     */
-    drugsLookupGetUsingGETWithHttpInfo(parameters: {
-        'name' ? : string,
-        'ncitCode' ? : string,
-        'synonym' ? : string,
-        'exactMatch': boolean,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/drugs/lookup';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['name'] !== undefined) {
-                queryParameters['name'] = parameters['name'];
-            }
-
-            if (parameters['ncitCode'] !== undefined) {
-                queryParameters['ncitCode'] = parameters['ncitCode'];
-            }
-
-            if (parameters['synonym'] !== undefined) {
-                queryParameters['synonym'] = parameters['synonym'];
-            }
-
-            if (parameters['exactMatch'] !== undefined) {
-                queryParameters['exactMatch'] = parameters['exactMatch'];
-            }
-
-            if (parameters['exactMatch'] === undefined) {
-                reject(new Error('Missing required  parameter: exactMatch'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Search drugs.
-     * @method
-     * @name OncoKbAPI#drugsLookupGetUsingGET
-     * @param {string} name - Drug Name
-     * @param {string} ncitCode - NCI Thesaurus Code
-     * @param {string} synonym - Drug Synonyms
-     * @param {boolean} exactMatch - Exactly Match
-     */
-    drugsLookupGetUsingGET(parameters: {
-            'name' ? : string,
-            'ncitCode' ? : string,
-            'synonym' ? : string,
-            'exactMatch': boolean,
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < Drug >
-        > {
-            return this.drugsLookupGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    evidencesUUIDsGetUsingPOSTURL(parameters: {
-        'uuids': Array < string > ,
-        'fields' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/evidences';
-
-        if (parameters['fields'] !== undefined) {
-            queryParameters['fields'] = parameters['fields'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Get specific evidences.
-     * @method
-     * @name OncoKbAPI#evidencesUUIDsGetUsingPOST
-     * @param {} uuids - Unique identifier list.
-     * @param {string} fields - The fields to be returned.
-     */
-    evidencesUUIDsGetUsingPOSTWithHttpInfo(parameters: {
-        'uuids': Array < string > ,
-        'fields' ? : string,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/evidences';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['uuids'] !== undefined) {
-                body = parameters['uuids'];
-            }
-
-            if (parameters['uuids'] === undefined) {
-                reject(new Error('Missing required  parameter: uuids'));
-                return;
-            }
-
-            if (parameters['fields'] !== undefined) {
-                queryParameters['fields'] = parameters['fields'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Get specific evidences.
-     * @method
-     * @name OncoKbAPI#evidencesUUIDsGetUsingPOST
-     * @param {} uuids - Unique identifier list.
-     * @param {string} fields - The fields to be returned.
-     */
-    evidencesUUIDsGetUsingPOST(parameters: {
-        'uuids': Array < string > ,
-        'fields' ? : string,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < Evidence > {
-        return this.evidencesUUIDsGetUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-    evidencesLookupGetUsingGETURL(parameters: {
-        'entrezGeneId' ? : number,
-        'hugoSymbol' ? : string,
-        'variant' ? : string,
-        'tumorType' ? : string,
-        'consequence' ? : string,
-        'proteinStart' ? : string,
-        'proteinEnd' ? : string,
-        'source' ? : string,
-        'highestLevelOnly' ? : boolean,
-        'levelOfEvidence' ? : string,
-        'evidenceTypes' ? : string,
-        'fields' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/evidences/lookup';
-        if (parameters['entrezGeneId'] !== undefined) {
-            queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
-        }
-
-        if (parameters['hugoSymbol'] !== undefined) {
-            queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
-        }
-
-        if (parameters['variant'] !== undefined) {
-            queryParameters['variant'] = parameters['variant'];
-        }
-
-        if (parameters['tumorType'] !== undefined) {
-            queryParameters['tumorType'] = parameters['tumorType'];
-        }
-
-        if (parameters['consequence'] !== undefined) {
-            queryParameters['consequence'] = parameters['consequence'];
-        }
-
-        if (parameters['proteinStart'] !== undefined) {
-            queryParameters['proteinStart'] = parameters['proteinStart'];
-        }
-
-        if (parameters['proteinEnd'] !== undefined) {
-            queryParameters['proteinEnd'] = parameters['proteinEnd'];
-        }
-
-        if (parameters['source'] !== undefined) {
-            queryParameters['source'] = parameters['source'];
-        }
-
-        if (parameters['highestLevelOnly'] !== undefined) {
-            queryParameters['highestLevelOnly'] = parameters['highestLevelOnly'];
-        }
-
-        if (parameters['levelOfEvidence'] !== undefined) {
-            queryParameters['levelOfEvidence'] = parameters['levelOfEvidence'];
-        }
-
-        if (parameters['evidenceTypes'] !== undefined) {
-            queryParameters['evidenceTypes'] = parameters['evidenceTypes'];
-        }
-
-        if (parameters['fields'] !== undefined) {
-            queryParameters['fields'] = parameters['fields'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Search evidences. Multi-queries are supported.
-     * @method
-     * @name OncoKbAPI#evidencesLookupGetUsingGET
-     * @param {integer} entrezGeneId - The entrez gene ID.
-     * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation.
-     * @param {string} variant - Variant name.
-     * @param {string} tumorType - Tumor type name. OncoTree code is supported.
-     * @param {string} consequence - Consequence. Possible value: feature_truncation, frameshift_variant, inframe_deletion, inframe_insertion, start_lost, missense_variant, splice_region_variant, stop_gained, synonymous_variant
-     * @param {string} proteinStart - Protein Start.
-     * @param {string} proteinEnd - Protein End.
-     * @param {string} source - Tumor type source. OncoTree tumor types are the default setting. We may have customized version, like Quest.
-     * @param {boolean} highestLevelOnly - Only show highest level evidences
-     * @param {string} levelOfEvidence - Separate by comma. LEVEL_1, LEVEL_2A, LEVEL_2B, LEVEL_3A, LEVEL_3B, LEVEL_4, LEVEL_R1, LEVEL_R2, LEVEL_R3
-     * @param {string} evidenceTypes - Separate by comma. Evidence type includes GENE_SUMMARY, GENE_BACKGROUND, MUTATION_SUMMARY, ONCOGENIC, MUTATION_EFFECT, VUS, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, TUMOR_TYPE_SUMMARY, DIAGNOSTIC_SUMMARY, PROGNOSTIC_SUMMARY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE
-     * @param {string} fields - The fields to be returned.
-     */
-    evidencesLookupGetUsingGETWithHttpInfo(parameters: {
-        'entrezGeneId' ? : number,
-        'hugoSymbol' ? : string,
-        'variant' ? : string,
-        'tumorType' ? : string,
-        'consequence' ? : string,
-        'proteinStart' ? : string,
-        'proteinEnd' ? : string,
-        'source' ? : string,
-        'highestLevelOnly' ? : boolean,
-        'levelOfEvidence' ? : string,
-        'evidenceTypes' ? : string,
-        'fields' ? : string,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/evidences/lookup';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['entrezGeneId'] !== undefined) {
-                queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
-            }
-
-            if (parameters['hugoSymbol'] !== undefined) {
-                queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
-            }
-
-            if (parameters['variant'] !== undefined) {
-                queryParameters['variant'] = parameters['variant'];
-            }
-
-            if (parameters['tumorType'] !== undefined) {
-                queryParameters['tumorType'] = parameters['tumorType'];
-            }
-
-            if (parameters['consequence'] !== undefined) {
-                queryParameters['consequence'] = parameters['consequence'];
-            }
-
-            if (parameters['proteinStart'] !== undefined) {
-                queryParameters['proteinStart'] = parameters['proteinStart'];
-            }
-
-            if (parameters['proteinEnd'] !== undefined) {
-                queryParameters['proteinEnd'] = parameters['proteinEnd'];
-            }
-
-            if (parameters['source'] !== undefined) {
-                queryParameters['source'] = parameters['source'];
-            }
-
-            if (parameters['highestLevelOnly'] !== undefined) {
-                queryParameters['highestLevelOnly'] = parameters['highestLevelOnly'];
-            }
-
-            if (parameters['levelOfEvidence'] !== undefined) {
-                queryParameters['levelOfEvidence'] = parameters['levelOfEvidence'];
-            }
-
-            if (parameters['evidenceTypes'] !== undefined) {
-                queryParameters['evidenceTypes'] = parameters['evidenceTypes'];
-            }
-
-            if (parameters['fields'] !== undefined) {
-                queryParameters['fields'] = parameters['fields'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Search evidences. Multi-queries are supported.
-     * @method
-     * @name OncoKbAPI#evidencesLookupGetUsingGET
-     * @param {integer} entrezGeneId - The entrez gene ID.
-     * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation.
-     * @param {string} variant - Variant name.
-     * @param {string} tumorType - Tumor type name. OncoTree code is supported.
-     * @param {string} consequence - Consequence. Possible value: feature_truncation, frameshift_variant, inframe_deletion, inframe_insertion, start_lost, missense_variant, splice_region_variant, stop_gained, synonymous_variant
-     * @param {string} proteinStart - Protein Start.
-     * @param {string} proteinEnd - Protein End.
-     * @param {string} source - Tumor type source. OncoTree tumor types are the default setting. We may have customized version, like Quest.
-     * @param {boolean} highestLevelOnly - Only show highest level evidences
-     * @param {string} levelOfEvidence - Separate by comma. LEVEL_1, LEVEL_2A, LEVEL_2B, LEVEL_3A, LEVEL_3B, LEVEL_4, LEVEL_R1, LEVEL_R2, LEVEL_R3
-     * @param {string} evidenceTypes - Separate by comma. Evidence type includes GENE_SUMMARY, GENE_BACKGROUND, MUTATION_SUMMARY, ONCOGENIC, MUTATION_EFFECT, VUS, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, TUMOR_TYPE_SUMMARY, DIAGNOSTIC_SUMMARY, PROGNOSTIC_SUMMARY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE
-     * @param {string} fields - The fields to be returned.
-     */
-    evidencesLookupGetUsingGET(parameters: {
-            'entrezGeneId' ? : number,
-            'hugoSymbol' ? : string,
-            'variant' ? : string,
-            'tumorType' ? : string,
-            'consequence' ? : string,
-            'proteinStart' ? : string,
-            'proteinEnd' ? : string,
-            'source' ? : string,
-            'highestLevelOnly' ? : boolean,
-            'levelOfEvidence' ? : string,
-            'evidenceTypes' ? : string,
-            'fields' ? : string,
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < Evidence >
-        > {
-            return this.evidencesLookupGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    evidencesLookupPostUsingPOSTURL(parameters: {
-        'body': EvidenceQueries,
-        'fields' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/evidences/lookup';
-
-        if (parameters['fields'] !== undefined) {
-            queryParameters['fields'] = parameters['fields'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Search evidences.
-     * @method
-     * @name OncoKbAPI#evidencesLookupPostUsingPOST
-     * @param {} body - List of queries. Please see swagger.json for request body format. Please use JSON string.
-     * @param {string} fields - The fields to be returned.
-     */
-    evidencesLookupPostUsingPOSTWithHttpInfo(parameters: {
-        'body': EvidenceQueries,
-        'fields' ? : string,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/evidences/lookup';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['body'] !== undefined) {
-                body = parameters['body'];
-            }
-
-            if (parameters['body'] === undefined) {
-                reject(new Error('Missing required  parameter: body'));
-                return;
-            }
-
-            if (parameters['fields'] !== undefined) {
-                queryParameters['fields'] = parameters['fields'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Search evidences.
-     * @method
-     * @name OncoKbAPI#evidencesLookupPostUsingPOST
-     * @param {} body - List of queries. Please see swagger.json for request body format. Please use JSON string.
-     * @param {string} fields - The fields to be returned.
-     */
-    evidencesLookupPostUsingPOST(parameters: {
-            'body': EvidenceQueries,
-            'fields' ? : string,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < EvidenceQueryRes >
-        > {
-            return this.evidencesLookupPostUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    evidencesUUIDGetUsingGETURL(parameters: {
-        'uuid': string,
-        'fields' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/evidences/{uuid}';
-
-        path = path.replace('{uuid}', parameters['uuid'] + '');
-        if (parameters['fields'] !== undefined) {
-            queryParameters['fields'] = parameters['fields'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Get specific evidence.
-     * @method
-     * @name OncoKbAPI#evidencesUUIDGetUsingGET
-     * @param {string} uuid - Unique identifier.
-     * @param {string} fields - The fields to be returned.
-     */
-    evidencesUUIDGetUsingGETWithHttpInfo(parameters: {
-        'uuid': string,
-        'fields' ? : string,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/evidences/{uuid}';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            path = path.replace('{uuid}', parameters['uuid'] + '');
-
-            if (parameters['uuid'] === undefined) {
-                reject(new Error('Missing required  parameter: uuid'));
-                return;
-            }
-
-            if (parameters['fields'] !== undefined) {
-                queryParameters['fields'] = parameters['fields'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Get specific evidence.
-     * @method
-     * @name OncoKbAPI#evidencesUUIDGetUsingGET
-     * @param {string} uuid - Unique identifier.
-     * @param {string} fields - The fields to be returned.
-     */
-    evidencesUUIDGetUsingGET(parameters: {
-        'uuid': string,
-        'fields' ? : string,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < Evidence > {
-        return this.evidencesUUIDGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-    genesGetUsingGETURL(parameters: {
-        'fields' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/genes';
-        if (parameters['fields'] !== undefined) {
-            queryParameters['fields'] = parameters['fields'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Get list of currently curated genes.
-     * @method
-     * @name OncoKbAPI#genesGetUsingGET
-     * @param {string} fields - The fields to be returned.
-     */
-    genesGetUsingGETWithHttpInfo(parameters: {
-        'fields' ? : string,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/genes';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['fields'] !== undefined) {
-                queryParameters['fields'] = parameters['fields'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Get list of currently curated genes.
-     * @method
-     * @name OncoKbAPI#genesGetUsingGET
-     * @param {string} fields - The fields to be returned.
-     */
-    genesGetUsingGET(parameters: {
-            'fields' ? : string,
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < Gene >
-        > {
-            return this.genesGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    genesLookupGetUsingGETURL(parameters: {
-        'hugoSymbol' ? : string,
-        'entrezGeneId' ? : number,
-        'query' ? : string,
-        'fields' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/genes/lookup';
-        if (parameters['hugoSymbol'] !== undefined) {
-            queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
-        }
-
-        if (parameters['entrezGeneId'] !== undefined) {
-            queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
-        }
-
-        if (parameters['query'] !== undefined) {
-            queryParameters['query'] = parameters['query'];
-        }
-
-        if (parameters['fields'] !== undefined) {
-            queryParameters['fields'] = parameters['fields'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Search gene.
-     * @method
-     * @name OncoKbAPI#genesLookupGetUsingGET
-     * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation. (Deprecated, use query instead)
-     * @param {integer} entrezGeneId - The entrez gene ID. (Deprecated, use query instead)
-     * @param {string} query - The search query, it could be hugoSymbol or entrezGeneId.
-     * @param {string} fields - The fields to be returned.
-     */
-    genesLookupGetUsingGETWithHttpInfo(parameters: {
-        'hugoSymbol' ? : string,
-        'entrezGeneId' ? : number,
-        'query' ? : string,
-        'fields' ? : string,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/genes/lookup';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['hugoSymbol'] !== undefined) {
-                queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
-            }
-
-            if (parameters['entrezGeneId'] !== undefined) {
-                queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
-            }
-
-            if (parameters['query'] !== undefined) {
-                queryParameters['query'] = parameters['query'];
-            }
-
-            if (parameters['fields'] !== undefined) {
-                queryParameters['fields'] = parameters['fields'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Search gene.
-     * @method
-     * @name OncoKbAPI#genesLookupGetUsingGET
-     * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation. (Deprecated, use query instead)
-     * @param {integer} entrezGeneId - The entrez gene ID. (Deprecated, use query instead)
-     * @param {string} query - The search query, it could be hugoSymbol or entrezGeneId.
-     * @param {string} fields - The fields to be returned.
-     */
-    genesLookupGetUsingGET(parameters: {
-            'hugoSymbol' ? : string,
-            'entrezGeneId' ? : number,
-            'query' ? : string,
-            'fields' ? : string,
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < Gene >
-        > {
-            return this.genesLookupGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    genesEntrezGeneIdGetUsingGETURL(parameters: {
-        'entrezGeneId': number,
-        'fields' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/genes/{entrezGeneId}';
-
-        path = path.replace('{entrezGeneId}', parameters['entrezGeneId'] + '');
-        if (parameters['fields'] !== undefined) {
-            queryParameters['fields'] = parameters['fields'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Get specific gene information.
-     * @method
-     * @name OncoKbAPI#genesEntrezGeneIdGetUsingGET
-     * @param {integer} entrezGeneId - The entrez gene ID.
-     * @param {string} fields - The fields to be returned.
-     */
-    genesEntrezGeneIdGetUsingGETWithHttpInfo(parameters: {
-        'entrezGeneId': number,
-        'fields' ? : string,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/genes/{entrezGeneId}';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            path = path.replace('{entrezGeneId}', parameters['entrezGeneId'] + '');
-
-            if (parameters['entrezGeneId'] === undefined) {
-                reject(new Error('Missing required  parameter: entrezGeneId'));
-                return;
-            }
-
-            if (parameters['fields'] !== undefined) {
-                queryParameters['fields'] = parameters['fields'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Get specific gene information.
-     * @method
-     * @name OncoKbAPI#genesEntrezGeneIdGetUsingGET
-     * @param {integer} entrezGeneId - The entrez gene ID.
-     * @param {string} fields - The fields to be returned.
-     */
-    genesEntrezGeneIdGetUsingGET(parameters: {
-        'entrezGeneId': number,
-        'fields' ? : string,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < Gene > {
-        return this.genesEntrezGeneIdGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-    genesEntrezGeneIdEvidencesGetUsingGETURL(parameters: {
-        'entrezGeneId': number,
-        'evidenceTypes' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/genes/{entrezGeneId}/evidences';
-
-        path = path.replace('{entrezGeneId}', parameters['entrezGeneId'] + '');
-        if (parameters['evidenceTypes'] !== undefined) {
-            queryParameters['evidenceTypes'] = parameters['evidenceTypes'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Get list of evidences for specific gene.
-     * @method
-     * @name OncoKbAPI#genesEntrezGeneIdEvidencesGetUsingGET
-     * @param {integer} entrezGeneId - The entrez gene ID.
-     * @param {string} evidenceTypes - Separate by comma. Evidence type includes GENE_SUMMARY, GENE_BACKGROUND
-     */
-    genesEntrezGeneIdEvidencesGetUsingGETWithHttpInfo(parameters: {
-        'entrezGeneId': number,
-        'evidenceTypes' ? : string,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/genes/{entrezGeneId}/evidences';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            path = path.replace('{entrezGeneId}', parameters['entrezGeneId'] + '');
-
-            if (parameters['entrezGeneId'] === undefined) {
-                reject(new Error('Missing required  parameter: entrezGeneId'));
-                return;
-            }
-
-            if (parameters['evidenceTypes'] !== undefined) {
-                queryParameters['evidenceTypes'] = parameters['evidenceTypes'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Get list of evidences for specific gene.
-     * @method
-     * @name OncoKbAPI#genesEntrezGeneIdEvidencesGetUsingGET
-     * @param {integer} entrezGeneId - The entrez gene ID.
-     * @param {string} evidenceTypes - Separate by comma. Evidence type includes GENE_SUMMARY, GENE_BACKGROUND
-     */
-    genesEntrezGeneIdEvidencesGetUsingGET(parameters: {
-            'entrezGeneId': number,
-            'evidenceTypes' ? : string,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < GeneEvidence >
-        > {
-            return this.genesEntrezGeneIdEvidencesGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    genesEntrezGeneIdVariantsGetUsingGETURL(parameters: {
-        'entrezGeneId': number,
-        'fields' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/genes/{entrezGeneId}/variants';
-
-        path = path.replace('{entrezGeneId}', parameters['entrezGeneId'] + '');
-        if (parameters['fields'] !== undefined) {
-            queryParameters['fields'] = parameters['fields'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Get list of variants for specific gene.
-     * @method
-     * @name OncoKbAPI#genesEntrezGeneIdVariantsGetUsingGET
-     * @param {integer} entrezGeneId - The entrez gene ID.
-     * @param {string} fields - The fields to be returned.
-     */
-    genesEntrezGeneIdVariantsGetUsingGETWithHttpInfo(parameters: {
-        'entrezGeneId': number,
-        'fields' ? : string,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/genes/{entrezGeneId}/variants';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            path = path.replace('{entrezGeneId}', parameters['entrezGeneId'] + '');
-
-            if (parameters['entrezGeneId'] === undefined) {
-                reject(new Error('Missing required  parameter: entrezGeneId'));
-                return;
-            }
-
-            if (parameters['fields'] !== undefined) {
-                queryParameters['fields'] = parameters['fields'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Get list of variants for specific gene.
-     * @method
-     * @name OncoKbAPI#genesEntrezGeneIdVariantsGetUsingGET
-     * @param {integer} entrezGeneId - The entrez gene ID.
-     * @param {string} fields - The fields to be returned.
-     */
-    genesEntrezGeneIdVariantsGetUsingGET(parameters: {
-            'entrezGeneId': number,
-            'fields' ? : string,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < Alteration >
-        > {
-            return this.genesEntrezGeneIdVariantsGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    genesetsGetUsingGETURL(parameters: {
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/genesets';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Get list of currently curated genesets.
-     * @method
-     * @name OncoKbAPI#genesetsGetUsingGET
-     */
-    genesetsGetUsingGETWithHttpInfo(parameters: {
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/genesets';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Get list of currently curated genesets.
-     * @method
-     * @name OncoKbAPI#genesetsGetUsingGET
-     */
-    genesetsGetUsingGET(parameters: {
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < Geneset >
-        > {
-            return this.genesetsGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    genesetsUuidGetUsingGETURL(parameters: {
-        'uuid': string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/genesets/{uuid}';
-
-        path = path.replace('{uuid}', parameters['uuid'] + '');
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Find geneset by uuid
-     * @method
-     * @name OncoKbAPI#genesetsUuidGetUsingGET
-     * @param {string} uuid - Geneset UUID
-     */
-    genesetsUuidGetUsingGETWithHttpInfo(parameters: {
-        'uuid': string,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/genesets/{uuid}';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            path = path.replace('{uuid}', parameters['uuid'] + '');
-
-            if (parameters['uuid'] === undefined) {
-                reject(new Error('Missing required  parameter: uuid'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Find geneset by uuid
-     * @method
-     * @name OncoKbAPI#genesetsUuidGetUsingGET
-     * @param {string} uuid - Geneset UUID
-     */
-    genesetsUuidGetUsingGET(parameters: {
-        'uuid': string,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < Geneset > {
-        return this.genesetsUuidGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-    infoGetUsingGETURL(parameters: {
+    infoGetUsingGET_1URL(parameters: {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -3035,9 +1431,9 @@ export default class OncoKbAPI {
     /**
      * infoGet
      * @method
-     * @name OncoKbAPI#infoGetUsingGET
+     * @name OncoKbAPI#infoGetUsingGET_1
      */
-    infoGetUsingGETWithHttpInfo(parameters: {
+    infoGetUsingGET_1WithHttpInfo(parameters: {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -3068,17 +1464,17 @@ export default class OncoKbAPI {
     /**
      * infoGet
      * @method
-     * @name OncoKbAPI#infoGetUsingGET
+     * @name OncoKbAPI#infoGetUsingGET_1
      */
-    infoGetUsingGET(parameters: {
+    infoGetUsingGET_1(parameters: {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < OncoKBInfo > {
-        return this.infoGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.infoGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
-    levelsGetUsingGETURL(parameters: {
+    levelsGetUsingGET_1URL(parameters: {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -3097,9 +1493,9 @@ export default class OncoKbAPI {
     /**
      * Get all levels.
      * @method
-     * @name OncoKbAPI#levelsGetUsingGET
+     * @name OncoKbAPI#levelsGetUsingGET_1
      */
-    levelsGetUsingGETWithHttpInfo(parameters: {
+    levelsGetUsingGET_1WithHttpInfo(parameters: {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -3130,17 +1526,17 @@ export default class OncoKbAPI {
     /**
      * Get all levels.
      * @method
-     * @name OncoKbAPI#levelsGetUsingGET
+     * @name OncoKbAPI#levelsGetUsingGET_1
      */
-    levelsGetUsingGET(parameters: {
+    levelsGetUsingGET_1(parameters: {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < {} > {
-        return this.levelsGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.levelsGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
-    levelsResistanceGetUsingGETURL(parameters: {
+    levelsResistanceGetUsingGET_1URL(parameters: {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -3159,9 +1555,9 @@ export default class OncoKbAPI {
     /**
      * Get all resistance levels.
      * @method
-     * @name OncoKbAPI#levelsResistanceGetUsingGET
+     * @name OncoKbAPI#levelsResistanceGetUsingGET_1
      */
-    levelsResistanceGetUsingGETWithHttpInfo(parameters: {
+    levelsResistanceGetUsingGET_1WithHttpInfo(parameters: {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -3192,17 +1588,17 @@ export default class OncoKbAPI {
     /**
      * Get all resistance levels.
      * @method
-     * @name OncoKbAPI#levelsResistanceGetUsingGET
+     * @name OncoKbAPI#levelsResistanceGetUsingGET_1
      */
-    levelsResistanceGetUsingGET(parameters: {
+    levelsResistanceGetUsingGET_1(parameters: {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < {} > {
-        return this.levelsResistanceGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.levelsResistanceGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
-    levelsSensitiveGetUsingGETURL(parameters: {
+    levelsSensitiveGetUsingGET_1URL(parameters: {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -3221,9 +1617,9 @@ export default class OncoKbAPI {
     /**
      * Get all sensitive levels.
      * @method
-     * @name OncoKbAPI#levelsSensitiveGetUsingGET
+     * @name OncoKbAPI#levelsSensitiveGetUsingGET_1
      */
-    levelsSensitiveGetUsingGETWithHttpInfo(parameters: {
+    levelsSensitiveGetUsingGET_1WithHttpInfo(parameters: {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -3254,836 +1650,17 @@ export default class OncoKbAPI {
     /**
      * Get all sensitive levels.
      * @method
-     * @name OncoKbAPI#levelsSensitiveGetUsingGET
+     * @name OncoKbAPI#levelsSensitiveGetUsingGET_1
      */
-    levelsSensitiveGetUsingGET(parameters: {
+    levelsSensitiveGetUsingGET_1(parameters: {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < {} > {
-        return this.levelsSensitiveGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.levelsSensitiveGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
-    searchGetUsingGETURL(parameters: {
-        'id' ? : string,
-        'hugoSymbol' ? : string,
-        'entrezGeneId' ? : number,
-        'variant' ? : string,
-        'variantType' ? : string,
-        'svType' ? : "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION" | "UNKNOWN",
-        'consequence' ? : string,
-        'proteinStart' ? : number,
-        'proteinEnd' ? : number,
-        'tumorType' ? : string,
-        'source' ? : string,
-        'levels' ? : string,
-        'highestLevelOnly' ? : boolean,
-        'queryType' ? : string,
-        'evidenceType' ? : string,
-        'hgvs' ? : string,
-        'fields' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/search';
-        if (parameters['id'] !== undefined) {
-            queryParameters['id'] = parameters['id'];
-        }
-
-        if (parameters['hugoSymbol'] !== undefined) {
-            queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
-        }
-
-        if (parameters['entrezGeneId'] !== undefined) {
-            queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
-        }
-
-        if (parameters['variant'] !== undefined) {
-            queryParameters['variant'] = parameters['variant'];
-        }
-
-        if (parameters['variantType'] !== undefined) {
-            queryParameters['variantType'] = parameters['variantType'];
-        }
-
-        if (parameters['svType'] !== undefined) {
-            queryParameters['svType'] = parameters['svType'];
-        }
-
-        if (parameters['consequence'] !== undefined) {
-            queryParameters['consequence'] = parameters['consequence'];
-        }
-
-        if (parameters['proteinStart'] !== undefined) {
-            queryParameters['proteinStart'] = parameters['proteinStart'];
-        }
-
-        if (parameters['proteinEnd'] !== undefined) {
-            queryParameters['proteinEnd'] = parameters['proteinEnd'];
-        }
-
-        if (parameters['tumorType'] !== undefined) {
-            queryParameters['tumorType'] = parameters['tumorType'];
-        }
-
-        if (parameters['source'] !== undefined) {
-            queryParameters['source'] = parameters['source'];
-        }
-
-        if (parameters['levels'] !== undefined) {
-            queryParameters['levels'] = parameters['levels'];
-        }
-
-        if (parameters['highestLevelOnly'] !== undefined) {
-            queryParameters['highestLevelOnly'] = parameters['highestLevelOnly'];
-        }
-
-        if (parameters['queryType'] !== undefined) {
-            queryParameters['queryType'] = parameters['queryType'];
-        }
-
-        if (parameters['evidenceType'] !== undefined) {
-            queryParameters['evidenceType'] = parameters['evidenceType'];
-        }
-
-        if (parameters['hgvs'] !== undefined) {
-            queryParameters['hgvs'] = parameters['hgvs'];
-        }
-
-        if (parameters['fields'] !== undefined) {
-            queryParameters['fields'] = parameters['fields'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * General search for possible combinations.
-     * @method
-     * @name OncoKbAPI#searchGetUsingGET
-     * @param {string} id - The query ID
-     * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation.
-     * @param {integer} entrezGeneId - The entrez gene ID.
-     * @param {string} variant - Variant name.
-     * @param {string} variantType - Variant type.
-     * @param {string} svType - Structural Variant Type.
-     * @param {string} consequence - Consequence
-     * @param {integer} proteinStart - Protein Start
-     * @param {integer} proteinEnd - Protein End
-     * @param {string} tumorType - Tumor type name. OncoTree code is supported.
-     * @param {string} source - Tumor type source. OncoTree tumor types are the default setting. We may have customized version, like Quest.
-     * @param {string} levels - Level of evidences.
-     * @param {boolean} highestLevelOnly - Only show treatments of highest level
-     * @param {string} queryType - Query type. There maybe slight differences between different query types. Currently support web or regular.
-     * @param {string} evidenceType - Evidence type.
-     * @param {string} hgvs - HGVS varaint. Its priority is higher than entrezGeneId/hugoSymbol + variant combination
-     * @param {string} fields - The fields to be returned.
-     */
-    searchGetUsingGETWithHttpInfo(parameters: {
-        'id' ? : string,
-        'hugoSymbol' ? : string,
-        'entrezGeneId' ? : number,
-        'variant' ? : string,
-        'variantType' ? : string,
-        'svType' ? : "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION" | "UNKNOWN",
-        'consequence' ? : string,
-        'proteinStart' ? : number,
-        'proteinEnd' ? : number,
-        'tumorType' ? : string,
-        'source' ? : string,
-        'levels' ? : string,
-        'highestLevelOnly' ? : boolean,
-        'queryType' ? : string,
-        'evidenceType' ? : string,
-        'hgvs' ? : string,
-        'fields' ? : string,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/search';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['id'] !== undefined) {
-                queryParameters['id'] = parameters['id'];
-            }
-
-            if (parameters['hugoSymbol'] !== undefined) {
-                queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
-            }
-
-            if (parameters['entrezGeneId'] !== undefined) {
-                queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
-            }
-
-            if (parameters['variant'] !== undefined) {
-                queryParameters['variant'] = parameters['variant'];
-            }
-
-            if (parameters['variantType'] !== undefined) {
-                queryParameters['variantType'] = parameters['variantType'];
-            }
-
-            if (parameters['svType'] !== undefined) {
-                queryParameters['svType'] = parameters['svType'];
-            }
-
-            if (parameters['consequence'] !== undefined) {
-                queryParameters['consequence'] = parameters['consequence'];
-            }
-
-            if (parameters['proteinStart'] !== undefined) {
-                queryParameters['proteinStart'] = parameters['proteinStart'];
-            }
-
-            if (parameters['proteinEnd'] !== undefined) {
-                queryParameters['proteinEnd'] = parameters['proteinEnd'];
-            }
-
-            if (parameters['tumorType'] !== undefined) {
-                queryParameters['tumorType'] = parameters['tumorType'];
-            }
-
-            if (parameters['source'] !== undefined) {
-                queryParameters['source'] = parameters['source'];
-            }
-
-            if (parameters['levels'] !== undefined) {
-                queryParameters['levels'] = parameters['levels'];
-            }
-
-            if (parameters['highestLevelOnly'] !== undefined) {
-                queryParameters['highestLevelOnly'] = parameters['highestLevelOnly'];
-            }
-
-            if (parameters['queryType'] !== undefined) {
-                queryParameters['queryType'] = parameters['queryType'];
-            }
-
-            if (parameters['evidenceType'] !== undefined) {
-                queryParameters['evidenceType'] = parameters['evidenceType'];
-            }
-
-            if (parameters['hgvs'] !== undefined) {
-                queryParameters['hgvs'] = parameters['hgvs'];
-            }
-
-            if (parameters['fields'] !== undefined) {
-                queryParameters['fields'] = parameters['fields'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * General search for possible combinations.
-     * @method
-     * @name OncoKbAPI#searchGetUsingGET
-     * @param {string} id - The query ID
-     * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation.
-     * @param {integer} entrezGeneId - The entrez gene ID.
-     * @param {string} variant - Variant name.
-     * @param {string} variantType - Variant type.
-     * @param {string} svType - Structural Variant Type.
-     * @param {string} consequence - Consequence
-     * @param {integer} proteinStart - Protein Start
-     * @param {integer} proteinEnd - Protein End
-     * @param {string} tumorType - Tumor type name. OncoTree code is supported.
-     * @param {string} source - Tumor type source. OncoTree tumor types are the default setting. We may have customized version, like Quest.
-     * @param {string} levels - Level of evidences.
-     * @param {boolean} highestLevelOnly - Only show treatments of highest level
-     * @param {string} queryType - Query type. There maybe slight differences between different query types. Currently support web or regular.
-     * @param {string} evidenceType - Evidence type.
-     * @param {string} hgvs - HGVS varaint. Its priority is higher than entrezGeneId/hugoSymbol + variant combination
-     * @param {string} fields - The fields to be returned.
-     */
-    searchGetUsingGET(parameters: {
-        'id' ? : string,
-        'hugoSymbol' ? : string,
-        'entrezGeneId' ? : number,
-        'variant' ? : string,
-        'variantType' ? : string,
-        'svType' ? : "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION" | "UNKNOWN",
-        'consequence' ? : string,
-        'proteinStart' ? : number,
-        'proteinEnd' ? : number,
-        'tumorType' ? : string,
-        'source' ? : string,
-        'levels' ? : string,
-        'highestLevelOnly' ? : boolean,
-        'queryType' ? : string,
-        'evidenceType' ? : string,
-        'hgvs' ? : string,
-        'fields' ? : string,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < IndicatorQueryResp > {
-        return this.searchGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-    searchPostUsingPOSTURL(parameters: {
-        'body': EvidenceQueries,
-        'fields' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/search';
-
-        if (parameters['fields'] !== undefined) {
-            queryParameters['fields'] = parameters['fields'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * General search for possible combinations.
-     * @method
-     * @name OncoKbAPI#searchPostUsingPOST
-     * @param {} body - List of queries. Please see swagger.json for request body format.
-     * @param {string} fields - The fields to be returned.
-     */
-    searchPostUsingPOSTWithHttpInfo(parameters: {
-        'body': EvidenceQueries,
-        'fields' ? : string,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/search';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['body'] !== undefined) {
-                body = parameters['body'];
-            }
-
-            if (parameters['body'] === undefined) {
-                reject(new Error('Missing required  parameter: body'));
-                return;
-            }
-
-            if (parameters['fields'] !== undefined) {
-                queryParameters['fields'] = parameters['fields'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * General search for possible combinations.
-     * @method
-     * @name OncoKbAPI#searchPostUsingPOST
-     * @param {} body - List of queries. Please see swagger.json for request body format.
-     * @param {string} fields - The fields to be returned.
-     */
-    searchPostUsingPOST(parameters: {
-            'body': EvidenceQueries,
-            'fields' ? : string,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < IndicatorQueryResp >
-        > {
-            return this.searchPostUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    utilsAllActionableVariantsGetUsingGETURL(parameters: {
-        'version' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/utils/allActionableVariants';
-        if (parameters['version'] !== undefined) {
-            queryParameters['version'] = parameters['version'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Get All Actionable Variants.
-     * @method
-     * @name OncoKbAPI#utilsAllActionableVariantsGetUsingGET
-     * @param {string} version - version
-     */
-    utilsAllActionableVariantsGetUsingGETWithHttpInfo(parameters: {
-        'version' ? : string,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/utils/allActionableVariants';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['version'] !== undefined) {
-                queryParameters['version'] = parameters['version'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Get All Actionable Variants.
-     * @method
-     * @name OncoKbAPI#utilsAllActionableVariantsGetUsingGET
-     * @param {string} version - version
-     */
-    utilsAllActionableVariantsGetUsingGET(parameters: {
-            'version' ? : string,
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < ActionableGene >
-        > {
-            return this.utilsAllActionableVariantsGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    utilsAllActionableVariantsTxtGetUsingGETURL(parameters: {
-        'version' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/utils/allActionableVariants.txt';
-        if (parameters['version'] !== undefined) {
-            queryParameters['version'] = parameters['version'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Get All Actionable Variants in text file.
-     * @method
-     * @name OncoKbAPI#utilsAllActionableVariantsTxtGetUsingGET
-     * @param {string} version - version
-     */
-    utilsAllActionableVariantsTxtGetUsingGETWithHttpInfo(parameters: {
-        'version' ? : string,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/utils/allActionableVariants.txt';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'text/plain';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['version'] !== undefined) {
-                queryParameters['version'] = parameters['version'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Get All Actionable Variants in text file.
-     * @method
-     * @name OncoKbAPI#utilsAllActionableVariantsTxtGetUsingGET
-     * @param {string} version - version
-     */
-    utilsAllActionableVariantsTxtGetUsingGET(parameters: {
-        'version' ? : string,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < string > {
-        return this.utilsAllActionableVariantsTxtGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-    utilsAllAnnotatedVariantsGetUsingGETURL(parameters: {
-        'version' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/utils/allAnnotatedVariants';
-        if (parameters['version'] !== undefined) {
-            queryParameters['version'] = parameters['version'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Get All Annotated Variants.
-     * @method
-     * @name OncoKbAPI#utilsAllAnnotatedVariantsGetUsingGET
-     * @param {string} version - version
-     */
-    utilsAllAnnotatedVariantsGetUsingGETWithHttpInfo(parameters: {
-        'version' ? : string,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/utils/allAnnotatedVariants';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['version'] !== undefined) {
-                queryParameters['version'] = parameters['version'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Get All Annotated Variants.
-     * @method
-     * @name OncoKbAPI#utilsAllAnnotatedVariantsGetUsingGET
-     * @param {string} version - version
-     */
-    utilsAllAnnotatedVariantsGetUsingGET(parameters: {
-            'version' ? : string,
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < AnnotatedVariant >
-        > {
-            return this.utilsAllAnnotatedVariantsGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    utilsAllAnnotatedVariantsTxtGetUsingGETURL(parameters: {
-        'version' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/utils/allAnnotatedVariants.txt';
-        if (parameters['version'] !== undefined) {
-            queryParameters['version'] = parameters['version'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Get All Annotated Variants in text file.
-     * @method
-     * @name OncoKbAPI#utilsAllAnnotatedVariantsTxtGetUsingGET
-     * @param {string} version - version
-     */
-    utilsAllAnnotatedVariantsTxtGetUsingGETWithHttpInfo(parameters: {
-        'version' ? : string,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/utils/allAnnotatedVariants.txt';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'text/plain';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['version'] !== undefined) {
-                queryParameters['version'] = parameters['version'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Get All Annotated Variants in text file.
-     * @method
-     * @name OncoKbAPI#utilsAllAnnotatedVariantsTxtGetUsingGET
-     * @param {string} version - version
-     */
-    utilsAllAnnotatedVariantsTxtGetUsingGET(parameters: {
-        'version' ? : string,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < string > {
-        return this.utilsAllAnnotatedVariantsTxtGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-    utilsAllCuratedGenesGetUsingGETURL(parameters: {
-        'version' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/utils/allCuratedGenes';
-        if (parameters['version'] !== undefined) {
-            queryParameters['version'] = parameters['version'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Get list of genes OncoKB curated
-     * @method
-     * @name OncoKbAPI#utilsAllCuratedGenesGetUsingGET
-     * @param {string} version - version
-     */
-    utilsAllCuratedGenesGetUsingGETWithHttpInfo(parameters: {
-        'version' ? : string,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/utils/allCuratedGenes';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['version'] !== undefined) {
-                queryParameters['version'] = parameters['version'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Get list of genes OncoKB curated
-     * @method
-     * @name OncoKbAPI#utilsAllCuratedGenesGetUsingGET
-     * @param {string} version - version
-     */
-    utilsAllCuratedGenesGetUsingGET(parameters: {
-            'version' ? : string,
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < CuratedGene >
-        > {
-            return this.utilsAllCuratedGenesGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    utilsAllCuratedGenesTxtGetUsingGETURL(parameters: {
-        'version' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/utils/allCuratedGenes.txt';
-        if (parameters['version'] !== undefined) {
-            queryParameters['version'] = parameters['version'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Get list of genes OncoKB curated in text file.
-     * @method
-     * @name OncoKbAPI#utilsAllCuratedGenesTxtGetUsingGET
-     * @param {string} version - version
-     */
-    utilsAllCuratedGenesTxtGetUsingGETWithHttpInfo(parameters: {
-        'version' ? : string,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/utils/allCuratedGenes.txt';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'text/plain';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['version'] !== undefined) {
-                queryParameters['version'] = parameters['version'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Get list of genes OncoKB curated in text file.
-     * @method
-     * @name OncoKbAPI#utilsAllCuratedGenesTxtGetUsingGET
-     * @param {string} version - version
-     */
-    utilsAllCuratedGenesTxtGetUsingGET(parameters: {
-        'version' ? : string,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < string > {
-        return this.utilsAllCuratedGenesTxtGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-    utilsCancerGeneListGetUsingGETURL(parameters: {
+    utilsCancerGeneListGetUsingGET_1URL(parameters: {
         'version' ? : string,
         $queryParameters ? : any
     }): string {
@@ -4106,10 +1683,10 @@ export default class OncoKbAPI {
     /**
      * Get cancer gene list
      * @method
-     * @name OncoKbAPI#utilsCancerGeneListGetUsingGET
+     * @name OncoKbAPI#utilsCancerGeneListGetUsingGET_1
      * @param {string} version - version
      */
-    utilsCancerGeneListGetUsingGETWithHttpInfo(parameters: {
+    utilsCancerGeneListGetUsingGET_1WithHttpInfo(parameters: {
         'version' ? : string,
         $queryParameters ? : any,
             $domain ? : string
@@ -4145,20 +1722,20 @@ export default class OncoKbAPI {
     /**
      * Get cancer gene list
      * @method
-     * @name OncoKbAPI#utilsCancerGeneListGetUsingGET
+     * @name OncoKbAPI#utilsCancerGeneListGetUsingGET_1
      * @param {string} version - version
      */
-    utilsCancerGeneListGetUsingGET(parameters: {
+    utilsCancerGeneListGetUsingGET_1(parameters: {
             'version' ? : string,
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < CancerGene >
         > {
-            return this.utilsCancerGeneListGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.utilsCancerGeneListGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-    utilsCancerGeneListTxtGetUsingGETURL(parameters: {
+    utilsCancerGeneListTxtGetUsingGET_1URL(parameters: {
         'version' ? : string,
         $queryParameters ? : any
     }): string {
@@ -4181,10 +1758,10 @@ export default class OncoKbAPI {
     /**
      * Get cancer gene list in text file.
      * @method
-     * @name OncoKbAPI#utilsCancerGeneListTxtGetUsingGET
+     * @name OncoKbAPI#utilsCancerGeneListTxtGetUsingGET_1
      * @param {string} version - version
      */
-    utilsCancerGeneListTxtGetUsingGETWithHttpInfo(parameters: {
+    utilsCancerGeneListTxtGetUsingGET_1WithHttpInfo(parameters: {
         'version' ? : string,
         $queryParameters ? : any,
             $domain ? : string
@@ -4220,361 +1797,16 @@ export default class OncoKbAPI {
     /**
      * Get cancer gene list in text file.
      * @method
-     * @name OncoKbAPI#utilsCancerGeneListTxtGetUsingGET
+     * @name OncoKbAPI#utilsCancerGeneListTxtGetUsingGET_1
      * @param {string} version - version
      */
-    utilsCancerGeneListTxtGetUsingGET(parameters: {
+    utilsCancerGeneListTxtGetUsingGET_1(parameters: {
         'version' ? : string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < string > {
-        return this.utilsCancerGeneListTxtGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.utilsCancerGeneListTxtGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
-    variantsGetUsingGETURL(parameters: {
-        'fields' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/variants';
-        if (parameters['fields'] !== undefined) {
-            queryParameters['fields'] = parameters['fields'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Get all annotated variants.
-     * @method
-     * @name OncoKbAPI#variantsGetUsingGET
-     * @param {string} fields - The fields to be returned.
-     */
-    variantsGetUsingGETWithHttpInfo(parameters: {
-        'fields' ? : string,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/variants';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['fields'] !== undefined) {
-                queryParameters['fields'] = parameters['fields'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Get all annotated variants.
-     * @method
-     * @name OncoKbAPI#variantsGetUsingGET
-     * @param {string} fields - The fields to be returned.
-     */
-    variantsGetUsingGET(parameters: {
-            'fields' ? : string,
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < Alteration >
-        > {
-            return this.variantsGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    variantsLookupGetUsingGETURL(parameters: {
-        'entrezGeneId' ? : number,
-        'hugoSymbol' ? : string,
-        'variant' ? : string,
-        'variantType' ? : string,
-        'consequence' ? : string,
-        'proteinStart' ? : number,
-        'proteinEnd' ? : number,
-        'hgvs' ? : string,
-        'fields' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/variants/lookup';
-        if (parameters['entrezGeneId'] !== undefined) {
-            queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
-        }
-
-        if (parameters['hugoSymbol'] !== undefined) {
-            queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
-        }
-
-        if (parameters['variant'] !== undefined) {
-            queryParameters['variant'] = parameters['variant'];
-        }
-
-        if (parameters['variantType'] !== undefined) {
-            queryParameters['variantType'] = parameters['variantType'];
-        }
-
-        if (parameters['consequence'] !== undefined) {
-            queryParameters['consequence'] = parameters['consequence'];
-        }
-
-        if (parameters['proteinStart'] !== undefined) {
-            queryParameters['proteinStart'] = parameters['proteinStart'];
-        }
-
-        if (parameters['proteinEnd'] !== undefined) {
-            queryParameters['proteinEnd'] = parameters['proteinEnd'];
-        }
-
-        if (parameters['hgvs'] !== undefined) {
-            queryParameters['hgvs'] = parameters['hgvs'];
-        }
-
-        if (parameters['fields'] !== undefined) {
-            queryParameters['fields'] = parameters['fields'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Search for variants.
-     * @method
-     * @name OncoKbAPI#variantsLookupGetUsingGET
-     * @param {integer} entrezGeneId - The entrez gene ID. entrezGeneId is prioritize than hugoSymbol if both parameters have been defined
-     * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation.
-     * @param {string} variant - variant name.
-     * @param {string} variantType - variantType
-     * @param {string} consequence - consequence
-     * @param {integer} proteinStart - proteinStart
-     * @param {integer} proteinEnd - proteinEnd
-     * @param {string} hgvs - HGVS varaint. Its priority is higher than entrezGeneId/hugoSymbol + variant combination
-     * @param {string} fields - The fields to be returned.
-     */
-    variantsLookupGetUsingGETWithHttpInfo(parameters: {
-        'entrezGeneId' ? : number,
-        'hugoSymbol' ? : string,
-        'variant' ? : string,
-        'variantType' ? : string,
-        'consequence' ? : string,
-        'proteinStart' ? : number,
-        'proteinEnd' ? : number,
-        'hgvs' ? : string,
-        'fields' ? : string,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/variants/lookup';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['entrezGeneId'] !== undefined) {
-                queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
-            }
-
-            if (parameters['hugoSymbol'] !== undefined) {
-                queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
-            }
-
-            if (parameters['variant'] !== undefined) {
-                queryParameters['variant'] = parameters['variant'];
-            }
-
-            if (parameters['variantType'] !== undefined) {
-                queryParameters['variantType'] = parameters['variantType'];
-            }
-
-            if (parameters['consequence'] !== undefined) {
-                queryParameters['consequence'] = parameters['consequence'];
-            }
-
-            if (parameters['proteinStart'] !== undefined) {
-                queryParameters['proteinStart'] = parameters['proteinStart'];
-            }
-
-            if (parameters['proteinEnd'] !== undefined) {
-                queryParameters['proteinEnd'] = parameters['proteinEnd'];
-            }
-
-            if (parameters['hgvs'] !== undefined) {
-                queryParameters['hgvs'] = parameters['hgvs'];
-            }
-
-            if (parameters['fields'] !== undefined) {
-                queryParameters['fields'] = parameters['fields'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Search for variants.
-     * @method
-     * @name OncoKbAPI#variantsLookupGetUsingGET
-     * @param {integer} entrezGeneId - The entrez gene ID. entrezGeneId is prioritize than hugoSymbol if both parameters have been defined
-     * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation.
-     * @param {string} variant - variant name.
-     * @param {string} variantType - variantType
-     * @param {string} consequence - consequence
-     * @param {integer} proteinStart - proteinStart
-     * @param {integer} proteinEnd - proteinEnd
-     * @param {string} hgvs - HGVS varaint. Its priority is higher than entrezGeneId/hugoSymbol + variant combination
-     * @param {string} fields - The fields to be returned.
-     */
-    variantsLookupGetUsingGET(parameters: {
-            'entrezGeneId' ? : number,
-            'hugoSymbol' ? : string,
-            'variant' ? : string,
-            'variantType' ? : string,
-            'consequence' ? : string,
-            'proteinStart' ? : number,
-            'proteinEnd' ? : number,
-            'hgvs' ? : string,
-            'fields' ? : string,
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < Alteration >
-        > {
-            return this.variantsLookupGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    variantsLookupPostUsingPOSTURL(parameters: {
-        'body': Array < VariantSearchQuery > ,
-        'fields' ? : string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/variants/lookup';
-
-        if (parameters['fields'] !== undefined) {
-            queryParameters['fields'] = parameters['fields'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Search for variants.
-     * @method
-     * @name OncoKbAPI#variantsLookupPostUsingPOST
-     * @param {} body - List of queries.
-     * @param {string} fields - The fields to be returned.
-     */
-    variantsLookupPostUsingPOSTWithHttpInfo(parameters: {
-        'body': Array < VariantSearchQuery > ,
-        'fields' ? : string,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/variants/lookup';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['body'] !== undefined) {
-                body = parameters['body'];
-            }
-
-            if (parameters['body'] === undefined) {
-                reject(new Error('Missing required  parameter: body'));
-                return;
-            }
-
-            if (parameters['fields'] !== undefined) {
-                queryParameters['fields'] = parameters['fields'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Search for variants.
-     * @method
-     * @name OncoKbAPI#variantsLookupPostUsingPOST
-     * @param {} body - List of queries.
-     * @param {string} fields - The fields to be returned.
-     */
-    variantsLookupPostUsingPOST(parameters: {
-            'body': Array < VariantSearchQuery > ,
-            'fields' ? : string,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < Array < {} >
-        >
-        > {
-            return this.variantsLookupPostUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
 }

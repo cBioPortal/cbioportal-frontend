@@ -143,9 +143,6 @@ export default class Mutations extends React.Component<
                                 this.userSelectionStore.trackVisibility
                             }
                             discreteCNACache={this.props.store.discreteCNACache}
-                            oncoKbEvidenceCache={
-                                this.props.store.oncoKbEvidenceCache
-                            }
                             pubMedCache={this.props.store.pubMedCache}
                             cancerTypeCache={this.props.store.cancerTypeCache}
                             mutationCountCache={

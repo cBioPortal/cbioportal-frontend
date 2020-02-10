@@ -1,12 +1,17 @@
-// TODO do not use generated models
-import { MyVariantInfo, VariantAnnotation } from 'cbioportal-frontend-commons';
+// TODO use generated genome nexus models as well
+import {
+    CancerGene,
+    MyVariantInfo,
+    VariantAnnotation,
+    IndicatorQueryResp,
+    IOncoKbData,
+} from 'cbioportal-frontend-commons';
 
 import { Hotspot, IHotspotIndex } from './CancerHotspot';
 import DataStore from './DataStore';
 import { Gene } from './Gene';
 import { EnsemblTranscript } from './EnsemblTranscript';
 import { Mutation } from './Mutation';
-import { CancerGene, IndicatorQueryResp, IOncoKbData } from './OncoKb';
 import { PfamDomain } from './Pfam';
 import { PostTranslationalModification } from './PostTranslationalModification';
 import { RemoteData } from './RemoteData';
@@ -52,7 +57,6 @@ export interface MutationMapperStore {
     oncoKbCancerGenes: RemoteData<CancerGene[] | Error | undefined>;
     oncoKbData: RemoteData<IOncoKbData | Error | undefined>;
     oncoKbDataByPosition: { [pos: number]: IndicatorQueryResp[] };
-    oncoKbEvidenceCache?: SimpleCache;
     indexedVariantAnnotations: RemoteData<
         { [genomicLocation: string]: VariantAnnotation } | undefined
     >;

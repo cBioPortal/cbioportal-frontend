@@ -38,16 +38,11 @@ import ExonColumnFormatter from './column/ExonColumnFormatter';
 import { IMyCancerGenomeData } from 'shared/model/MyCancerGenome';
 import { IHotspotDataWrapper } from 'shared/model/CancerHotspots';
 import {
-    IOncoKbCancerGenesWrapper,
-    IOncoKbDataWrapper,
-} from 'shared/model/OncoKB';
-import {
     ICivicVariantDataWrapper,
     ICivicGeneDataWrapper,
 } from 'shared/model/Civic';
 import { IMutSigData } from 'shared/model/MutSig';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
-import OncoKbEvidenceCache from 'shared/cache/OncoKbEvidenceCache';
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
 import VariantCountCache from 'shared/cache/VariantCountCache';
 import PubMedCache from 'shared/cache/PubMedCache';
@@ -63,9 +58,10 @@ import { IPaginationControlsProps } from '../paginationControls/PaginationContro
 import { IColumnVisibilityControlsProps } from '../columnVisibilityControls/ColumnVisibilityControls';
 import MobxPromise from 'mobxpromise';
 import {
-    CancerGene,
     VariantAnnotation,
-    Query,
+    generateQueryVariantId,
+    IOncoKbCancerGenesWrapper,
+    IOncoKbDataWrapper,
 } from 'cbioportal-frontend-commons';
 import HgvscColumnFormatter from './column/HgvscColumnFormatter';
 import HgvsgColumnFormatter from './column/HgvsgColumnFormatter';
@@ -73,7 +69,6 @@ import GnomadColumnFormatter from './column/GnomadColumnFormatter';
 import ClinVarColumnFormatter from './column/ClinVarColumnFormatter';
 import autobind from 'autobind-decorator';
 import DbsnpColumnFormatter from './column/DbsnpColumnFormatter';
-import { getEvidenceQuery } from '../../lib/OncoKbUtils';
 
 export interface IMutationTableProps {
     studyIdToStudy?: { [studyId: string]: CancerStudy };
@@ -82,7 +77,6 @@ export interface IMutationTableProps {
         [molecularProfileId: string]: MolecularProfile;
     };
     discreteCNACache?: DiscreteCNACache;
-    oncoKbEvidenceCache?: OncoKbEvidenceCache;
     oncoKbCancerGenes?: IOncoKbCancerGenesWrapper;
     mrnaExprRankCache?: MrnaExprRankCache;
     variantCountCache?: VariantCountCache;
@@ -715,7 +709,6 @@ export default class MutationTable<
                     hotspotData: this.props.hotspotData,
                     myCancerGenomeData: this.props.myCancerGenomeData,
                     oncoKbData: this.props.oncoKbData,
-                    oncoKbEvidenceCache: this.props.oncoKbEvidenceCache,
                     oncoKbCancerGenes: this.props.oncoKbCancerGenes,
                     pubMedCache: this.props.pubMedCache,
                     civicGenes: this.props.civicGenes,
@@ -756,19 +749,19 @@ export default class MutationTable<
                             !(this.props.oncoKbData.result instanceof Error) &&
                             this.props.oncoKbData.result.indicatorMap
                         ) {
-                            const evidenceQuery = getEvidenceQuery(
-                                d[0],
-                                this.props.oncoKbData.result
+                            const queryId = generateQueryVariantId(
+                                d[0].entrezGeneId,
+                                null,
+                                d[0].proteinChange,
+                                d[0].mutationType
                             );
-                            if (evidenceQuery) {
-                                const indicator = this.props.oncoKbData.result
-                                    .indicatorMap[evidenceQuery.id];
-                                if (indicator) {
-                                    ret = indicator.oncogenic
-                                        .toLowerCase()
-                                        .trim()
-                                        .includes('oncogenic');
-                                }
+                            const indicator = this.props.oncoKbData.result
+                                .indicatorMap[queryId];
+                            if (indicator) {
+                                ret = indicator.oncogenic
+                                    .toLowerCase()
+                                    .trim()
+                                    .includes('oncogenic');
                             }
                         }
                         break;

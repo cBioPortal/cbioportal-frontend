@@ -3,11 +3,11 @@ import {
     GenomeNexusAPIInternal,
     OncoKbAPI,
     cachePostMethodsOnClient,
+    IOncoKbData,
 } from 'cbioportal-frontend-commons';
 import _ from 'lodash';
 
 import { Mutation } from '../model/Mutation';
-import { IOncoKbData } from '../model/OncoKb';
 import { uniqueGenomicLocations } from './MutationUtils';
 import { indexAnnotationsByGenomicLocation } from './MutationAnnotator';
 
