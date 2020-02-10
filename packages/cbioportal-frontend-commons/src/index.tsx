@@ -65,14 +65,16 @@ export {
 export {
     default as OncoKbAPI,
     CancerGene,
-    Evidence,
-    EvidenceQueries,
-    EvidenceQueryRes,
-    Gene as OncoKbGene,
     IndicatorQueryResp,
     Query,
+    ArticleAbstract,
+    Citations,
+    IndicatorQueryTreatment,
+    AnnotateCopyNumberAlterationQuery,
+    AnnotateMutationByProteinChangeQuery,
+    AnnotateStructuralVariantQuery,
+    TumorType,
 } from './api/generated/OncoKbAPI';
-
 export * from './api/model/oncokb';
 export * from './api/remoteData';
 
@@ -80,7 +82,6 @@ export * from './lib/ColumnVisibilityResolver';
 export * from './lib/findFirstMostCommonElt';
 export { default as getBrowserWindow } from './lib/getBrowserWindow';
 export * from './lib/getCanonicalMutationType';
-export * from './lib/OncoKbUtils';
 export * from './lib/ProteinChangeUtils';
 export * from './lib/apiClientCache';
 export { default as SimpleCache, ICache, ICacheData } from './lib/SimpleCache';
@@ -90,3 +91,5 @@ export * from './lib/StringUtils';
 export * from './lib/TextTruncationUtils';
 export * from './lib/urls';
 export * from './lib/webdriverUtils';
+export * from './lib/oncokb/OncoKbUtils';
+export * from './lib/oncokb/OncoKB';

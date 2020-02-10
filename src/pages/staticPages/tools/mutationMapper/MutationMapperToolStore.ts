@@ -37,9 +37,7 @@ import {
     MutationInput,
 } from 'shared/lib/MutationInputParser';
 import { updateMissingGeneInfo } from 'shared/lib/MutationUtils';
-import { IOncoKbData } from 'shared/model/OncoKB';
 import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
-import OncoKbEvidenceCache from 'shared/cache/OncoKbEvidenceCache';
 import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
@@ -48,6 +46,7 @@ import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
 import MutationMapperStore from 'shared/components/mutationMapper/MutationMapperStore';
 import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownloadDataFetcher';
 import { normalizeMutations } from '../../../../shared/components/mutationMapper/MutationMapperUtils';
+import { IOncoKbData } from 'cbioportal-frontend-commons';
 
 export default class MutationMapperToolStore {
     @observable mutationData: Partial<MutationInput>[] | undefined;
@@ -367,10 +366,6 @@ export default class MutationMapperToolStore {
             this.clinicalDataForSamples.result,
             (clinicalData: ClinicalData) => clinicalData.uniqueSampleKey
         );
-    }
-
-    @cached get oncoKbEvidenceCache() {
-        return new OncoKbEvidenceCache();
     }
 
     @cached get pubMedCache() {

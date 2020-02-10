@@ -17,11 +17,6 @@ import CnaColumnFormatter from './column/CnaColumnFormatter';
 import AnnotationColumnFormatter from './column/AnnotationColumnFormatter';
 import TumorColumnFormatter from '../mutation/column/TumorColumnFormatter';
 import SampleManager from '../SampleManager';
-import {
-    IOncoKbCancerGenesWrapper,
-    IOncoKbDataWrapper,
-} from 'shared/model/OncoKB';
-import OncoKbEvidenceCache from 'shared/cache/OncoKbEvidenceCache';
 import PubMedCache from 'shared/cache/PubMedCache';
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
 import { IGisticData } from 'shared/model/Gistic';
@@ -33,6 +28,10 @@ import {
 import HeaderIconMenu from '../mutation/HeaderIconMenu';
 import GeneFilterMenu, { GeneFilterOption } from '../mutation/GeneFilterMenu';
 import PanelColumnFormatter from 'shared/components/mutationTable/column/PanelColumnFormatter';
+import {
+    IOncoKbCancerGenesWrapper,
+    IOncoKbDataWrapper,
+} from 'cbioportal-frontend-commons';
 
 class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {}
 
@@ -47,7 +46,6 @@ type ICopyNumberTableWrapperProps = {
     cnaOncoKbData?: IOncoKbDataWrapper;
     cnaCivicGenes?: ICivicGeneDataWrapper;
     cnaCivicVariants?: ICivicVariantDataWrapper;
-    oncoKbEvidenceCache?: OncoKbEvidenceCache;
     oncoKbCancerGenes?: IOncoKbCancerGenesWrapper;
     enableOncoKb?: boolean;
     enableCivic?: boolean;
@@ -208,7 +206,6 @@ export default class CopyNumberTableWrapper extends React.Component<
             render: (d: DiscreteCopyNumberData[]) =>
                 AnnotationColumnFormatter.renderFunction(d, {
                     oncoKbData: this.props.cnaOncoKbData,
-                    oncoKbEvidenceCache: this.props.oncoKbEvidenceCache,
                     oncoKbCancerGenes: this.props.oncoKbCancerGenes,
                     enableOncoKb: this.props.enableOncoKb as boolean,
                     pubMedCache: this.props.pubMedCache,

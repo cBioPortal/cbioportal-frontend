@@ -285,7 +285,6 @@ export default class PatientViewMutationsTab extends React.Component<
                     }
                     discreteCNACache={this.props.store.discreteCNACache}
                     mrnaExprRankCache={this.props.store.mrnaExprRankCache}
-                    oncoKbEvidenceCache={this.props.store.oncoKbEvidenceCache}
                     pubMedCache={this.props.store.pubMedCache}
                     genomeNexusCache={this.props.store.genomeNexusCache}
                     genomeNexusMyVariantInfoCache={

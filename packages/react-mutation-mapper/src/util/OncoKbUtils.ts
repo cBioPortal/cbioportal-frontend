@@ -1,19 +1,13 @@
 import _ from 'lodash';
-// TODO define models in OncoKb.ts
 import {
-    Evidence,
-    EvidenceQueryRes,
-    generateQueryVariant,
     generateQueryVariantId,
+    IndicatorQueryResp,
+    IOncoKbData,
     LEVELS,
+    TumorType,
 } from 'cbioportal-frontend-commons';
 
 import { Mutation } from '../model/Mutation';
-import {
-    IndicatorQueryResp,
-    IOncoKbData,
-    OncoKbTreatment,
-} from '../model/OncoKb';
 
 // oncogenic value => oncogenic class name
 const ONCOGENIC_CLASS_NAMES: { [oncogenic: string]: string } = {
@@ -170,151 +164,12 @@ export function calcResistanceLevelScore(level: string) {
     return RESISTANCE_LEVEL_SCORE[normalizeLevel(level) || ''] || 0;
 }
 
-// TODO evidence:IEvidence
-export function extractPmids(evidence: any) {
-    let refs: number[] = [];
-
-    if (evidence.treatments && _.isArray(evidence.treatments.sensitivity)) {
-        evidence.treatments.sensitivity.forEach((item: any) => {
-            if (_.isArray(item.articles)) {
-                refs = refs.concat(
-                    item.articles.map((article: any) => {
-                        return Number(article.pmid);
-                    })
-                );
-            }
-        });
-    }
-
-    if (evidence.treatments && _.isArray(evidence.treatments.resistance)) {
-        evidence.treatments.resistance.forEach((item: any) => {
-            if (_.isArray(item.articles)) {
-                refs = refs.concat(
-                    item.articles.map((article: any) => {
-                        return Number(article.pmid);
-                    })
-                );
-            }
-        });
-    }
-
-    return refs;
-}
-
 export function generateOncogenicCitations(oncogenicRefs: any): number[] {
     return _.isArray(oncogenicRefs)
         ? _.map(oncogenicRefs, (article: any) => {
               return Number(article.pmid);
           }).sort()
         : [];
-}
-
-export function generateTreatments(evidenceTreatments: any) {
-    var treatments: any = {};
-    var result: OncoKbTreatment[] = [];
-
-    _.each(evidenceTreatments, function(content) {
-        _.each(content, function(item) {
-            var _level = getLevel(item.level);
-            var _treatment = treatmentsToStr(item.content);
-            var _tumorType = item.tumorType;
-            var _alterations = item.alterations
-                .map(function(alt: any) {
-                    return alt.name;
-                })
-                .join(',');
-            if (!treatments.hasOwnProperty(_level)) {
-                treatments[_level] = {};
-            }
-            if (!treatments[_level].hasOwnProperty(_alterations)) {
-                treatments[_level][_alterations] = {};
-            }
-
-            if (!treatments[_level][_alterations].hasOwnProperty(_treatment)) {
-                treatments[_level][_alterations][_treatment] = {};
-            }
-
-            if (
-                !treatments[_level][_alterations][_treatment].hasOwnProperty(
-                    _tumorType
-                )
-            ) {
-                treatments[_level][_alterations][_treatment][_tumorType] = {
-                    articles: [],
-                    tumorType: _tumorType,
-                    alterations: item.alterations,
-                    level: _level,
-                    description: item.description,
-                    treatment: _treatment,
-                };
-            } else {
-                treatments[_level][_alterations][_treatment][
-                    _tumorType
-                ].description = [
-                    treatments[_level][_alterations][_treatment][_tumorType]
-                        .description,
-                    '<br/>',
-                    item.description,
-                ].join();
-            }
-            treatments[_level][_alterations][_treatment][
-                _tumorType
-            ].articles = _.union(
-                treatments[_level][_alterations][_treatment][_tumorType]
-                    .articles,
-                item.articles
-            );
-        });
-    });
-
-    _.each(_.keys(treatments).sort(levelComparator), function(level) {
-        _.each(_.keys(treatments[level]).sort(), function(_alteration) {
-            _.each(_.keys(treatments[level][_alteration]).sort(), function(
-                _treatment
-            ) {
-                _.each(
-                    _.keys(treatments[level][_alteration][_treatment]).sort(),
-                    function(_tumorType) {
-                        var content =
-                            treatments[level][_alteration][_treatment][
-                                _tumorType
-                            ];
-                        result.push({
-                            level: content.level,
-                            variant: content.alterations.map(function(
-                                alteration: any
-                            ) {
-                                return alteration.name;
-                            }),
-                            treatment: _treatment,
-                            pmids: content.articles
-                                .filter(function(article: any) {
-                                    return !isNaN(article.pmid);
-                                })
-                                .map(function(article: any) {
-                                    return Number(article.pmid);
-                                })
-                                .sort(),
-                            abstracts: content.articles
-                                .filter(function(article: any) {
-                                    return _.isString(article.abstract);
-                                })
-                                .map(function(article: any) {
-                                    return {
-                                        abstract: article.abstract,
-                                        link: article.link,
-                                    };
-                                }),
-                            description: content.description,
-                            cancerType: content.tumorType,
-                        });
-                    }
-                );
-            });
-        });
-    });
-
-    return result;
 }
 
 export function levelComparator(a: string, b: string) {
@@ -411,141 +266,16 @@ export function mergeAlterations(alterations: string | string[]) {
     return regular.join(', ');
 }
 
-export function processEvidence(evidences: EvidenceQueryRes[]) {
-    var result: any = {}; //id based.
-    if (evidences && evidences.length > 0) {
-        evidences.forEach(function(record) {
-            var id = record.query.id;
-            let datum: any = initEvidence(); // TODO define an extended evidence model?
-            var sensitivityTreatments: any = [];
-            var resistanceTreatments: any = [];
-
-            let evidenceArr: Evidence[] = [];
-            evidenceArr = evidenceArr.concat(record.evidences);
-
-            evidenceArr.forEach(function(evidence: any) {
-                var description = '';
-                if (evidence.shortDescription) {
-                    description = evidence.shortDescription;
-                } else {
-                    description = evidence.description;
-                }
-                if (evidence.evidenceType === 'GENE_SUMMARY') {
-                    datum.gene.summary = description;
-                } else if (evidence.evidenceType === 'GENE_BACKGROUND') {
-                    datum.gene.background = description;
-                } else if (evidence.evidenceType === 'ONCOGENIC') {
-                    if (evidence.articles) {
-                        datum.oncogenicRefs = evidence.articles;
-                    }
-                } else if (evidence.evidenceType === 'MUTATION_EFFECT') {
-                    let _datum: any = {};
-                    if (evidence.knownEffect) {
-                        _datum.knownEffect = evidence.knownEffect;
-                    }
-                    if (evidence.articles) {
-                        _datum.refs = evidence.articles;
-                    }
-                    if (description) {
-                        _datum.description = description;
-                    }
-                    datum.alteration.push(_datum);
-                } else if (evidence.levelOfEvidence) {
-                    //if evidence has level information, that means this is treatment evidence.
-                    if (['LEVEL_0'].indexOf(evidence.levelOfEvidence) === -1) {
-                        var _treatment: any = {};
-                        _treatment.alterations = evidence.alterations;
-                        _treatment.articles = evidence.articles;
-                        _treatment.tumorType = getTumorTypeFromEvidence(
-                            evidence
-                        );
-                        _treatment.level = evidence.levelOfEvidence;
-                        _treatment.content = evidence.treatments;
-                        _treatment.description = description || '';
-
-                        if (
-                            LEVELS.sensitivity.indexOf(
-                                getLevel(evidence.levelOfEvidence)
-                            ) !== -1
-                        ) {
-                            sensitivityTreatments.push(_treatment);
-                        } else {
-                            resistanceTreatments.push(_treatment);
-                        }
-                    }
-                }
-            });
-
-            if (datum.alteration.length > 0) {
-                datum.mutationEffect = datum.alteration[0];
-            }
-
-            datum.treatments.sensitivity = sensitivityTreatments;
-            datum.treatments.resistance = resistanceTreatments;
-            // id.split('*ONCOKB*').forEach(function(_id) {
-            //     result[_id] = datum;
-            // })
-            result[id] = datum;
-        });
+export function getTumorTypeName(tumorType?: TumorType) {
+    if (!tumorType) {
+        return '';
+    } else if (tumorType.name) {
+        return tumorType.name;
+    } else if (tumorType.mainType) {
+        return tumorType.mainType.name;
+    } else {
+        return '';
     }
-
-    return result;
-}
-
-export function initEvidence() {
-    return {
-        id: '',
-        gene: {},
-        alteration: [],
-        prevalence: [],
-        progImp: [],
-        treatments: {
-            sensitivity: [],
-            resistance: [],
-        }, //separated by level type
-        trials: [],
-        oncogenic: '',
-        oncogenicRefs: [],
-        mutationEffect: {},
-        mutationEffectRefs: [],
-        summary: '',
-    };
-}
-
-export function getEvidenceQuery(
-    mutation: Mutation,
-    resolveEntrezGeneId: (mutation: Mutation) => number,
-    resolveTumorType: (mutation: Mutation) => string
-) {
-    return generateQueryVariant(
-        resolveEntrezGeneId(mutation),
-        resolveTumorType(mutation),
-        mutation.proteinChange,
-        mutation.mutationType,
-        mutation.proteinPosStart,
-        mutation.proteinPosEnd
-    );
-}
-
-export function getTumorTypeFromEvidence(evidence: any) {
-    var tumorType = _.isObject(evidence.tumorType)
-        ? evidence.tumorType.name
-        : evidence.subtype || evidence.cancerType;
-    var oncoTreeTumorType = '';
-
-    if (_.isObject(evidence.oncoTreeType)) {
-        oncoTreeTumorType = evidence.oncoTreeType.name
-            ? evidence.oncoTreeType.name
-            : evidence.oncoTreeType.mainType
-            ? evidence.oncoTreeType.mainType.name
-            : '';
-    }
-
-    if (oncoTreeTumorType) {
-        tumorType = oncoTreeTumorType;
-    }
-
-    return tumorType;
 }
 
 export function groupOncoKbIndicatorDataByMutations(

@@ -18,7 +18,8 @@ import {
     parseGeneticInput,
 } from './OncoprinterGeneticUtils';
 import { CancerGene, remoteData } from 'cbioportal-frontend-commons';
-import { IOncoKbData } from '../../../../shared/model/OncoKB';
+import { IOncoKbData } from 'cbioportal-frontend-commons';
+
 import {
     fetchOncoKbCancerGenes,
     ONCOKB_DEFAULT,
@@ -85,10 +86,7 @@ export default class OncoprinterStore {
     }
 
     @computed get didOncoKbFail() {
-        return (
-            this.oncoKbData.peekStatus === 'complete' &&
-            this.oncoKbData.result instanceof Error
-        );
+        return this.oncoKbData.status === 'complete' && this.oncoKbData.isError;
     }
 
     @computed get sampleIds() {
@@ -321,16 +319,10 @@ export default class OncoprinterStore {
             ],
             invoke: async () => {
                 if (AppConfig.serverConfig.show_oncokb) {
-                    let result;
-                    try {
-                        result = await fetchOncoKbDataForMutations(
-                            this.oncoKbAnnotatedGenes.result!,
-                            this.nonAnnotatedGeneticData.result!
-                        );
-                    } catch (e) {
-                        result = new Error();
-                    }
-                    return result;
+                    return fetchOncoKbDataForMutations(
+                        this.oncoKbAnnotatedGenes.result!,
+                        this.nonAnnotatedGeneticData.result!
+                    );
                 } else {
                     return ONCOKB_DEFAULT;
                 }

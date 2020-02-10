@@ -13,7 +13,8 @@ import {
     VariantAnnotation,
 } from 'cbioportal-frontend-commons';
 import { labelMobxPromises, MobxPromise, cached } from 'mobxpromise';
-import { IOncoKbData } from 'shared/model/OncoKB';
+import { IOncoKbData } from 'cbioportal-frontend-commons';
+
 import { ICivicGene, ICivicVariant } from 'shared/model/Civic';
 import {
     fetchCosmicData,

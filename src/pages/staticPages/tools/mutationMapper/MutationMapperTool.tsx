@@ -475,7 +475,6 @@ export default class MutationMapperTool extends React.Component<
                             genomeNexusMyVariantInfoCache={
                                 this.store.genomeNexusMyVariantInfoCache
                             }
-                            oncoKbEvidenceCache={this.store.oncoKbEvidenceCache}
                             pubMedCache={this.store.pubMedCache}
                             pdbHeaderCache={this.store.pdbHeaderCache}
                             myCancerGenomeData={this.store.myCancerGenomeData}

@@ -10,17 +10,15 @@ import {
     IAnnotationColumnProps,
     default as DefaultAnnotationColumnFormatter,
 } from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
+import Civic from 'shared/components/annotation/Civic';
 import {
+    CancerGene,
+    generateQueryVariant,
+    generateQueryVariantId,
+    IndicatorQueryResp,
     IOncoKbCancerGenesWrapper,
     IOncoKbData,
     IOncoKbDataWrapper,
-} from 'shared/model/OncoKB';
-import Civic from 'shared/components/annotation/Civic';
-import { generateQueryVariant } from 'shared/lib/OncoKbUtils';
-import {
-    CancerGene,
-    generateQueryVariantId,
-    IndicatorQueryResp,
     Query,
 } from 'cbioportal-frontend-commons';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
@@ -218,7 +216,7 @@ export default class AnnotationColumnFormatter {
 
         const id = generateQueryVariantId(
             copyNumberData[0].gene.entrezGeneId,
-            oncoKbData.uniqueSampleKeyToTumorType[
+            oncoKbData.uniqueSampleKeyToTumorType![
                 copyNumberData[0].uniqueSampleKey
             ],
             getAlterationString(copyNumberData[0].alteration)
@@ -236,22 +234,6 @@ export default class AnnotationColumnFormatter {
         } else {
             return undefined;
         }
-    }
-
-    public static getEvidenceQuery(
-        copyNumberData: DiscreteCopyNumberData[],
-        oncoKbData: IOncoKbData
-    ): Query | undefined {
-        // return null in case sampleToTumorMap is null
-        return oncoKbData.uniqueSampleKeyToTumorType
-            ? generateQueryVariant(
-                  copyNumberData[0].gene.entrezGeneId,
-                  oncoKbData.uniqueSampleKeyToTumorType[
-                      copyNumberData[0].uniqueSampleKey
-                  ],
-                  getAlterationString(copyNumberData[0].alteration)
-              )
-            : undefined;
     }
 
     public static sortValue(
@@ -289,24 +271,9 @@ export default class AnnotationColumnFormatter {
             columnProps.studyIdToStudy
         );
 
-        let evidenceQuery: Query | undefined;
-
-        if (
-            columnProps.oncoKbData &&
-            columnProps.oncoKbData.result &&
-            !(columnProps.oncoKbData.result instanceof Error)
-        ) {
-            evidenceQuery = this.getEvidenceQuery(
-                data,
-                columnProps.oncoKbData.result
-            );
-        }
-
         return DefaultAnnotationColumnFormatter.mainContent(
             annotation,
             columnProps,
-            columnProps.oncoKbEvidenceCache,
-            evidenceQuery,
             columnProps.pubMedCache
         );
     }
