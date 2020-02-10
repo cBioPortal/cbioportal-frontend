@@ -883,9 +883,10 @@ export default class PatientViewPage extends React.Component<
                                         this.patientViewPageStore
                                             .sampleToMutationGenePanelId
                                             .isComplete &&
-                                        this.patientViewPageStore
-                                            .genePanelIdToEntrezGeneIds
-                                            .isComplete &&
+                                        // TODO re-enable after fixing PatientViewPageStore issues
+                                        // this.patientViewPageStore
+                                        //     .genePanelIdToEntrezGeneIds
+                                        //     .isComplete &&
                                         !!sampleManager && (
                                             <div data-test="patientview-mutation-table">
                                                 <PatientViewMutationTable
@@ -1101,9 +1102,10 @@ export default class PatientViewPage extends React.Component<
 
                                     {this.patientViewPageStore.studyIdToStudy
                                         .isComplete &&
-                                        this.patientViewPageStore
-                                            .genePanelIdToEntrezGeneIds
-                                            .isComplete &&
+                                        // TODO re-enable after fixing PatientViewPageStore issues
+                                        // this.patientViewPageStore
+                                        //     .genePanelIdToEntrezGeneIds
+                                        //     .isComplete &&
                                         this.patientViewPageStore.referenceGenes
                                             .isComplete && (
                                             <div data-test="patientview-copynumber-table">
