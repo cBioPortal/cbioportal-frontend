@@ -54,7 +54,7 @@ export enum ResultsViewURLQueryEnum {
     comparison_overlapStrategy = 'comparison_overlapStrategy',
     comparison_selectedGroups = 'comparison_selectedGroups',
     comparison_groupOrder = 'comparison_groupOrder',
-    comparison_sessionId = 'comparison_sessionId',
+    comparison_createdGroupsSessionId = 'comparison_createdGroupsSessionId',
 
     plots_horz_selection = 'plots_horz_selection',
     plots_vert_selection = 'plots_vert_selection',
@@ -148,7 +148,7 @@ export default class ResultsViewURLWrapper extends URLWrapper<
                 },
                 genetic_profile_ids_GENERIC_ASSAY: { isSessionProp: true },
                 genetic_profile_ids: { isSessionProp: true },
-                comparison_sessionId: { isSessionProp: true },
+                comparison_createdGroupsSessionId: { isSessionProp: true },
             },
             true,
             AppConfig.serverConfig.session_url_length_threshold

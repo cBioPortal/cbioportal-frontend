@@ -63,7 +63,7 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
         this.urlWrapper.updateURL({ patient_enrichments: e.toString() });
     }
 
-    readonly _session = remoteData<Session>({
+    readonly _queryDerivedGroups = remoteData<SessionGroupData[]>({
         await: () => [
             this.resultsViewStore.studyIds,
             this.resultsViewStore.alteredSamples,
@@ -76,35 +76,47 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
             this.resultsViewStore.defaultOQLQuery,
         ],
         invoke: () => {
-            const sessionId = this.urlWrapper.query.comparison_sessionId;
+            const groups: SessionGroupData[] = [];
+
+            // altered/unaltered groups
+            groups.push(
+                ...getAlteredVsUnalteredGroups(
+                    this.usePatientLevelEnrichments,
+                    this.resultsViewStore.studyIds.result!,
+                    this.resultsViewStore.alteredSamples.result!,
+                    this.resultsViewStore.unalteredSamples.result!
+                )
+            );
+
+            // altered per oncoprint track groups
+            groups.push(
+                ...getAlteredByOncoprintTrackGroups(
+                    this.usePatientLevelEnrichments,
+                    this.resultsViewStore.studyIds.result!,
+                    this.resultsViewStore.samples.result!,
+                    this.resultsViewStore
+                        .oqlFilteredCaseAggregatedDataByUnflattenedOQLLine
+                        .result!,
+                    this.resultsViewStore.defaultOQLQuery.result!
+                )
+            );
+            return Promise.resolve(groups);
+        },
+    });
+
+    readonly _session = remoteData<Session>({
+        await: () => [this.resultsViewStore.studyIds],
+        invoke: () => {
+            const sessionId = this.urlWrapper.query
+                .comparison_createdGroupsSessionId;
+
             if (sessionId) {
-                // if theres a session, load groups from there
+                // if theres a session holding onto user-created groups, add groups from there
                 return comparisonClient.getComparisonSession(sessionId);
             } else {
-                // otherwise, populate with all the types of groups
-                let groups: SessionGroupData[] = [];
-                groups.push(
-                    ...getAlteredVsUnalteredGroups(
-                        this.usePatientLevelEnrichments,
-                        this.resultsViewStore.studyIds.result!,
-                        this.resultsViewStore.alteredSamples.result!,
-                        this.resultsViewStore.unalteredSamples.result!
-                    )
-                );
-                groups.push(
-                    ...getAlteredByOncoprintTrackGroups(
-                        this.usePatientLevelEnrichments,
-                        this.resultsViewStore.studyIds.result!,
-                        this.resultsViewStore.samples.result!,
-                        this.resultsViewStore
-                            .oqlFilteredCaseAggregatedDataByUnflattenedOQLLine
-                            .result!,
-                        this.resultsViewStore.defaultOQLQuery.result!
-                    )
-                );
                 return Promise.resolve({
                     id: '',
-                    groups,
+                    groups: [],
                     origin: this.resultsViewStore.studyIds.result!,
                 });
             }
@@ -112,15 +124,18 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
     });
 
     readonly _originalGroups = remoteData<ResultsViewComparisonGroup[]>({
-        await: () => [this._session, this.sampleSet],
+        await: () => [this._queryDerivedGroups, this._session, this.sampleSet],
         invoke: () => {
             const uniqueColorGetter = makeUniqueColorGetter([
                 ALTERED_COLOR,
                 UNALTERED_COLOR,
             ]);
+            const groups = this._queryDerivedGroups.result!.concat(
+                this._session.result!.groups
+            );
             const defaultOrderGroups = completeSessionGroups(
                 this.usePatientLevelEnrichments,
-                this._session.result!.groups,
+                groups,
                 this.sampleSet.result!,
                 uniqueColorGetter
             );
@@ -218,7 +233,7 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
     @action
     protected async saveAndGoToSession(newSession: Session) {
         const { id } = await comparisonClient.addComparisonSession(newSession);
-        this.urlWrapper.updateURL({ comparison_sessionId: id });
+        this.urlWrapper.updateURL({ comparison_createdGroupsSessionId: id });
     }
     //</session>
 
