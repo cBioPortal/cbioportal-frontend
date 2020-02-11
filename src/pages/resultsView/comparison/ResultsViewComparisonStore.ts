@@ -40,6 +40,7 @@ import {
     parseOQLQueryFlat,
     unparseOQLQueryLine,
 } from '../../../shared/lib/oql/oqlfilter';
+import { ComparisonGroup } from '../../groupComparison/GroupComparisonUtils';
 
 export default class ResultsViewComparisonStore extends ComparisonStore {
     @observable private _currentTabId:
@@ -228,15 +229,38 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
         },
     });
 
+    @autobind
+    public isGroupDeletable(group: ComparisonGroup) {
+        // a group can be deleted if its user-created
+        if (this.nameToUserCreatedGroup.isComplete) {
+            return group.name in this.nameToUserCreatedGroup.result!;
+        } else {
+            return false;
+        }
+    }
+
+    readonly nameToUserCreatedGroup = remoteData({
+        await: () => [this._session],
+        invoke: () => {
+            return Promise.resolve(
+                _.keyBy(this._session.result!.groups, g => g.name)
+            );
+        },
+    });
+
     @action
     public async addGroup(
         group: SessionGroupData,
         originGroups: string[],
         saveToUser: boolean
     ) {
-        const groupsByUid = _.keyBy(this._originalGroups.result!, g => g.uid);
         const originTracksOql = _.uniq(
-            _.flatMap(originGroups, uid => groupsByUid[uid]!.originTracksOql)
+            _.flatMap(
+                originGroups,
+                uid =>
+                    (this.uidToGroup.result![uid] as ResultsViewComparisonGroup)
+                        .originTracksOql
+            )
         );
         super.addGroup(
             Object.assign({ originTracksOql }, group),

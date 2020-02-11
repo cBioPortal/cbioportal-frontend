@@ -17,6 +17,7 @@ import CollapsedGroupsButton from './CollapsedGroupsButton';
 export interface IGroupSelectorProps {
     store: ComparisonStore;
     groupCollapseThreshold?: number;
+    isGroupDeletable: (group: ComparisonGroup) => boolean;
 }
 
 @observer
@@ -64,13 +65,6 @@ export default class GroupSelector extends React.Component<
         this.dragging = true;
     }
 
-    @computed get groupsDeletable() {
-        return (
-            this.props.store._originalGroups.isComplete &&
-            this.props.store._originalGroups.result!.length > 2
-        );
-    }
-
     @autobind
     private makeGroupButton(group: ComparisonGroup, index: number) {
         const excludedFromAnalysis =
@@ -82,7 +76,7 @@ export default class GroupSelector extends React.Component<
         return (
             <GroupSelectorButton
                 isSelected={this.isSelected}
-                deletable={this.groupsDeletable}
+                deletable={this.props.isGroupDeletable(group)}
                 onClick={this.onClick}
                 onClickDelete={this.onClickDelete}
                 sampleSet={this.props.store.sampleSet.result!}

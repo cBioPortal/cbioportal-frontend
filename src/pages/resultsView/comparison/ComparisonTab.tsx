@@ -260,6 +260,7 @@ export default class ComparisonTab extends React.Component<
                         <GroupSelector
                             store={this.store}
                             groupCollapseThreshold={40}
+                            isGroupDeletable={this.store.isGroupDeletable}
                         />
                     </div>
                     <div>{this.overlapStrategySelector.component}</div>
