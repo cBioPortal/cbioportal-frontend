@@ -61,9 +61,10 @@ export default class OverlapUpset extends React.Component<
     @action
     private submitSampleOverlapGroup(
         group: SessionGroupData,
+        originGroups: string[],
         saveToUser: boolean
     ) {
-        this.props.store.addGroup(group, saveToUser);
+        this.props.store.addGroup(group, originGroups, saveToUser);
         this.sampleSelection = [];
     }
 
@@ -71,9 +72,10 @@ export default class OverlapUpset extends React.Component<
     @action
     private submitPatientOverlapGroup(
         group: SessionGroupData,
+        originGroups: string[],
         saveToUser: boolean
     ) {
-        this.props.store.addGroup(group, saveToUser);
+        this.props.store.addGroup(group, originGroups, saveToUser);
         this.patientSelection = [];
     }
 

@@ -72,7 +72,7 @@ import ProgressIndicator, {
     IProgressIndicatorItem,
 } from '../progressIndicator/ProgressIndicator';
 import autobind from 'autobind-decorator';
-import { parseOQLQuery } from '../../lib/oql/oqlfilter';
+import { parseOQLQueryFlat } from '../../lib/oql/oqlfilter';
 import AlterationFilterWarning from '../banners/AlterationFilterWarning';
 import { selectDisplayValue } from './DataUtils';
 import WindowStore from '../window/WindowStore';
@@ -769,7 +769,7 @@ export default class ResultsViewOncoprint extends React.Component<
                 this.selectedHeatmapProfileId = id;
             },
             onClickAddGenesToHeatmap: () => {
-                const genes = parseOQLQuery(
+                const genes = parseOQLQueryFlat(
                     this.heatmapGeneInputValue.toUpperCase().trim()
                 ).map(q => q.gene);
                 this.addHeatmapTracks(this.selectedHeatmapProfileId, genes);

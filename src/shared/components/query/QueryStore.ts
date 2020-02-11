@@ -33,7 +33,7 @@ import {
     SingleGeneQuery,
     SyntaxError,
 } from '../../lib/oql/oql-parser';
-import { parseOQLQuery } from '../../lib/oql/oqlfilter';
+import { parseOQLQueryFlat } from '../../lib/oql/oqlfilter';
 import memoize from 'memoize-weak-decorator';
 import AppConfig from 'appConfig';
 import { ComponentGetsStoreContext } from '../../lib/ContextUtils';
@@ -1620,7 +1620,7 @@ export class QueryStore {
         try {
             return {
                 query: this.geneQuery
-                    ? parseOQLQuery(this.geneQuery.trim().toUpperCase())
+                    ? parseOQLQueryFlat(this.geneQuery.trim().toUpperCase())
                     : [],
                 error: undefined,
             };

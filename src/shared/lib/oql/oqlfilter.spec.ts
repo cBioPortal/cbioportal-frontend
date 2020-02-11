@@ -3,7 +3,7 @@ import {
     OQLLineFilterOutput,
     MergedTrackLineFilterOutput,
     filterCBioPortalWebServiceData,
-    parseOQLQuery,
+    parseOQLQueryFlat,
     unparseOQLQueryLine,
     doesQueryContainMutationOQL,
     doesQueryContainOQL,
@@ -246,26 +246,28 @@ describe('doesQueryContainMutationOQL', () => {
 
 describe('unparseOQLQueryLine', () => {
     it('unparses query with no alterations', () => {
-        const parsedLine = parseOQLQuery('TP53;')[0];
+        const parsedLine = parseOQLQueryFlat('TP53;')[0];
         assert.equal(unparseOQLQueryLine(parsedLine), 'TP53');
     });
     it('unparses query with MUT keyword', () => {
-        const parsedLine = parseOQLQuery('TP53: MUT;')[0];
+        const parsedLine = parseOQLQueryFlat('TP53: MUT;')[0];
         assert.equal(unparseOQLQueryLine(parsedLine), 'TP53: MUT;');
     });
     it('unparses query with complex mutation specifications', () => {
-        const parsedLine = parseOQLQuery('TP53: MISSENSE proteinchange;')[0];
+        const parsedLine = parseOQLQueryFlat(
+            'TP53: MISSENSE proteinchange;'
+        )[0];
         assert.equal(
             unparseOQLQueryLine(parsedLine),
             'TP53: MUT=MISSENSE MUT=proteinchange;'
         );
     });
     it('unparses query with EXP and PROT', () => {
-        const parsedLine = parseOQLQuery('TP53: EXP > 0 PROT < -2')[0];
+        const parsedLine = parseOQLQueryFlat('TP53: EXP > 0 PROT < -2')[0];
         assert.equal(unparseOQLQueryLine(parsedLine), 'TP53: EXP>0 PROT<-2;');
     });
     it('unparses query with many alteration types', () => {
-        const parsedLine = parseOQLQuery(
+        const parsedLine = parseOQLQueryFlat(
             'TP53: MISSENSE proteinchange HOMDEL EXP<-4 PROT>1 FUSION;'
         )[0];
         assert.equal(
@@ -274,7 +276,7 @@ describe('unparseOQLQueryLine', () => {
         );
     });
     it('unparses queries with germline and somatic mutation modifiers', () => {
-        const parsedLine = parseOQLQuery(
+        const parsedLine = parseOQLQueryFlat(
             'TP53: GERMLINE SOMATIC_MISSENSE proteinchange_GERMLINE;'
         )[0];
         assert.equal(
@@ -283,7 +285,7 @@ describe('unparseOQLQueryLine', () => {
         );
     });
     it('unparses queries with driver modifier', () => {
-        const parsedLine = parseOQLQuery(
+        const parsedLine = parseOQLQueryFlat(
             'TP53: DRIVER MUT=DRIVER CNA_DRIVER DRIVER_CNA FUSION_DRIVER DRIVER_FUSION TRUNC_DRIVER DRIVER_TRUNC AMP_DRIVER DRIVER_HOMDEL GERMLINE SOMATIC_MISSENSE proteinchange_GERMLINE;'
         )[0];
         assert.equal(

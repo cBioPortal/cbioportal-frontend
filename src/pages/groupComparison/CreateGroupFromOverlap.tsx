@@ -21,12 +21,17 @@ import InfoIcon from '../../shared/components/InfoIcon';
 import FlexAlignedCheckbox from '../../shared/components/FlexAlignedCheckbox';
 import { serializeEvent } from 'shared/lib/tracking';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
+import _ from 'lodash';
 
 export interface ICreateGroupFromOverlapProps {
     store: ComparisonStore;
     includedRegions: string[][]; // group.uid[][]
     allGroupsInPlot: string[]; // uid[]
-    submitGroup: (group: SessionGroupData, saveToUser: boolean) => void;
+    submitGroup: (
+        group: SessionGroupData,
+        originGroups: string[],
+        saveToUser: boolean
+    ) => void;
     caseType: 'sample' | 'patient';
     width: number;
     style?: any;
@@ -98,6 +103,7 @@ export default class CreateGroupFromOverlap extends React.Component<
                 studies: studiesAttr,
                 origin: this.props.store.origin.result!,
             },
+            _.uniq<string>(_.flattenDeep<string>(this.props.includedRegions)),
             this.saveGroupToUser
         );
     }
