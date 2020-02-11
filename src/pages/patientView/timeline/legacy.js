@@ -70,14 +70,16 @@ function plotCaseLabelsInTimeline(
                     'http://www.w3.org/2000/svg',
                     'g'
                 );
-                $(g).attr(
-                    'transform',
-                    'translate(' +
-                        circle.attr('cx') +
-                        ',' +
-                        circle.attr('cy') +
-                        ')'
-                );
+                if (circle.attr('cx') !== null && circle.attr('cy') !== null) {
+                    $(g).attr(
+                        'transform',
+                        'translate(' +
+                            circle.attr('cx') +
+                            ',' +
+                            circle.attr('cy') +
+                            ')'
+                    );
+                }
                 $(circle[0]).removeAttr('cx');
                 $(circle[0]).removeAttr('cy');
                 $(circle[0]).removeAttr('style');
@@ -326,6 +328,12 @@ export function buildTimeline(
                     ),
                     enabled: true,
                 },
+                {
+                    obj: new clinicalTimelineExports.clinicalTimelineZoom(
+                        'Zoom'
+                    ),
+                    enabled: true,
+                },
             ])
             .addPostTimelineHook(addMoreGenieTimelineStylingHacks.bind(this));
     } else {
@@ -342,6 +350,12 @@ export function buildTimeline(
                 {
                     obj: new clinicalTimelineExports.trimClinicalTimeline(
                         'Trim Timeline'
+                    ),
+                    enabled: true,
+                },
+                {
+                    obj: new clinicalTimelineExports.clinicalTimelineZoom(
+                        'Zoom Timeline'
                     ),
                     enabled: true,
                 },
