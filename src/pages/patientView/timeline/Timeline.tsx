@@ -14,12 +14,21 @@ import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStor
 import { ClinicalEvent, ClinicalEventData } from 'cbioportal-ts-api-client';
 import { DownloadControls } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
+import { toTSV } from './timelineTSV';
 
 interface ITimelineProps {
     sampleManager: SampleManager;
     store: PatientViewPageStore;
     width: number;
 }
+
+type TimelineDataPoint = {
+    eventType: string;
+    patientId: string;
+    startDate: number | null;
+    stopDate: number | null;
+    eventData: any;
+};
 
 export default class Timeline extends React.Component<ITimelineProps, {}> {
     private currentWidth: number;
@@ -38,6 +47,11 @@ export default class Timeline extends React.Component<ITimelineProps, {}> {
         /*var debouncedResize =  _.debounce(()=>this.drawTimeline(),500);
 
         $(window).resize(debouncedResize);*/
+    }
+
+    @autobind
+    getData(): string {
+        return toTSV(this.props.store.clinicalEvents.result);
     }
 
     drawTimeline(width: number) {
@@ -131,7 +145,10 @@ export default class Timeline extends React.Component<ITimelineProps, {}> {
                     }}
                 ></div>
                 <DownloadControls
+                    buttons={['PDF', 'PNG', 'SVG', 'Data']}
+                    dataExtension={'tsv'}
                     getSvg={this.getSvg}
+                    getData={this.getData}
                     filename="timeline"
                     dontFade={true}
                     type="button"
