@@ -126,7 +126,6 @@ import {
     StudyViewComparisonGroup,
     splitData,
 } from '../groupComparison/GroupComparisonUtils';
-import client from '../../shared/api/cbioportalClientInstance';
 import { LoadingPhase } from '../groupComparison/GroupComparisonLoading';
 import { sleepUntil } from '../../shared/lib/TimeUtils';
 import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
@@ -502,7 +501,7 @@ export class StudyViewPageStore {
                     const entityIdKey = clinicalAttribute.patientAttribute
                         ? 'patientId'
                         : 'sampleId';
-                    let data = await client.fetchClinicalDataUsingPOST({
+                    let data = await defaultClient.fetchClinicalDataUsingPOST({
                         clinicalDataType: clinicalAttribute.patientAttribute
                             ? ClinicalDataTypeEnum.PATIENT
                             : ClinicalDataTypeEnum.SAMPLE,
@@ -631,7 +630,7 @@ export class StudyViewPageStore {
                         const entityIdKey = isPatientAttribute
                             ? 'patientId'
                             : 'sampleId';
-                        data = await client.fetchClinicalDataUsingPOST({
+                        data = await defaultClient.fetchClinicalDataUsingPOST({
                             clinicalDataType: isPatientAttribute
                                 ? 'PATIENT'
                                 : 'SAMPLE',
@@ -1933,11 +1932,13 @@ export class StudyViewPageStore {
     }
 
     readonly unfilteredClinicalDataCount = remoteData<ClinicalDataCountItem[]>({
+        await: () => [this.studyViewFilterWithFilteredSampleIdentifiers],
         invoke: () => {
             return internalClient.fetchClinicalDataCountsUsingPOST({
                 clinicalDataCountFilter: {
                     attributes: this.unfilteredAttrsForNonNumerical,
-                    studyViewFilter: this.filters,
+                    studyViewFilter: this
+                        .studyViewFilterWithFilteredSampleIdentifiers.result!,
                 } as ClinicalDataCountFilter,
             });
         },
@@ -1957,11 +1958,13 @@ export class StudyViewPageStore {
     readonly newlyAddedUnfilteredClinicalDataCount = remoteData<
         ClinicalDataCountItem[]
     >({
+        await: () => [this.studyViewFilterWithFilteredSampleIdentifiers],
         invoke: () => {
             return internalClient.fetchClinicalDataCountsUsingPOST({
                 clinicalDataCountFilter: {
                     attributes: this.newlyAddedUnfilteredAttrsForNonNumerical,
-                    studyViewFilter: this.filters,
+                    studyViewFilter: this
+                        .studyViewFilterWithFilteredSampleIdentifiers.result!,
                 } as ClinicalDataCountFilter,
             });
         },
@@ -3821,6 +3824,24 @@ export class StudyViewPageStore {
         default: [],
     });
 
+    readonly studyViewFilterWithFilteredSampleIdentifiers = remoteData<
+        StudyViewFilter
+    >({
+        await: () => [this.selectedSamples],
+        invoke: () => {
+            const sampleIdentifiers = this.selectedSamples.result.map(
+                sample => {
+                    return {
+                        sampleId: sample.sampleId,
+                        studyId: sample.studyId,
+                    } as SampleIdentifier;
+                }
+            );
+            return Promise.resolve({ sampleIdentifiers } as any);
+        },
+        onError: error => {},
+    });
+
     @computed
     get selectedSamplesMap() {
         return _.keyBy(this.selectedSamples.result!, s => s.uniqueSampleKey);
@@ -3907,13 +3928,19 @@ export class StudyViewPageStore {
                       this.oncokbOncogeneEntrezGeneIds,
                       this.oncokbTumorSuppressorGeneEntrezGeneIds,
                       this.oncokbCancerGeneEntrezGeneIds,
+                      this.studyViewFilterWithFilteredSampleIdentifiers,
                   ]
-                : [this.mutationProfiles],
+                : [
+                      this.mutationProfiles,
+                      this.studyViewFilterWithFilteredSampleIdentifiers,
+                  ],
         invoke: async () => {
             if (!_.isEmpty(this.mutationProfiles.result)) {
                 let mutatedGenes = await internalClient.fetchMutatedGenesUsingPOST(
                     {
-                        studyViewFilter: this.filters,
+                        studyViewFilter: this
+                            .studyViewFilterWithFilteredSampleIdentifiers
+                            .result!,
                     }
                 );
                 return mutatedGenes.map(item => {
@@ -3960,13 +3987,19 @@ export class StudyViewPageStore {
                       this.oncokbOncogeneEntrezGeneIds,
                       this.oncokbTumorSuppressorGeneEntrezGeneIds,
                       this.oncokbCancerGeneEntrezGeneIds,
+                      this.studyViewFilterWithFilteredSampleIdentifiers,
                   ]
-                : [this.mutationProfiles],
+                : [
+                      this.mutationProfiles,
+                      this.studyViewFilterWithFilteredSampleIdentifiers,
+                  ],
         invoke: async () => {
             if (!_.isEmpty(this.structuralVariantProfiles.result)) {
                 const fusionGenes = await internalClient.fetchFusionGenesUsingPOST(
                     {
-                        studyViewFilter: this.filters,
+                        studyViewFilter: this
+                            .studyViewFilterWithFilteredSampleIdentifiers
+                            .result!,
                     }
                 );
                 return fusionGenes.map(item => {
@@ -4013,12 +4046,17 @@ export class StudyViewPageStore {
                       this.oncokbOncogeneEntrezGeneIds,
                       this.oncokbTumorSuppressorGeneEntrezGeneIds,
                       this.oncokbCancerGeneEntrezGeneIds,
+                      this.studyViewFilterWithFilteredSampleIdentifiers,
                   ]
-                : [this.mutationProfiles],
+                : [
+                      this.mutationProfiles,
+                      this.studyViewFilterWithFilteredSampleIdentifiers,
+                  ],
         invoke: async () => {
             if (!_.isEmpty(this.cnaProfiles.result)) {
                 let cnaGenes = await internalClient.fetchCNAGenesUsingPOST({
-                    studyViewFilter: this.filters,
+                    studyViewFilter: this
+                        .studyViewFilterWithFilteredSampleIdentifiers.result!,
                 });
                 return cnaGenes.map(item => {
                     return {
@@ -4550,7 +4588,10 @@ export class StudyViewPageStore {
         xBinSize: number;
         yBinSize: number;
     }>({
-        await: () => [this.clinicalAttributes],
+        await: () => [
+            this.clinicalAttributes,
+            this.studyViewFilterWithFilteredSampleIdentifiers,
+        ],
         invoke: async () => {
             if (
                 !!this.clinicalAttributes.result!.find(
@@ -4571,7 +4612,9 @@ export class StudyViewPageStore {
                         yAxisStart: 0, // mutation always starts at 0
                         xAxisBinCount,
                         yAxisBinCount,
-                        studyViewFilter: this.filters,
+                        studyViewFilter: this
+                            .studyViewFilterWithFilteredSampleIdentifiers
+                            .result!,
                     }
                 )).filter(bin => bin.count > 0); // only show points for bins with stuff in them
                 const xBinSize = 1 / xAxisBinCount;
@@ -4705,9 +4748,11 @@ export class StudyViewPageStore {
         MolecularProfileSampleCount
     >({
         onError: error => {},
+        await: () => [this.studyViewFilterWithFilteredSampleIdentifiers],
         invoke: async () => {
             return internalClient.fetchMolecularProfileSampleCountsUsingPOST({
-                studyViewFilter: this.filters,
+                studyViewFilter: this
+                    .studyViewFilterWithFilteredSampleIdentifiers.result!,
             });
         },
     });
