@@ -56,9 +56,10 @@ export default class Venn extends React.Component<IVennProps, {}> {
     @action
     private submitSampleOverlapGroup(
         group: SessionGroupData,
+        originGroups: string[],
         saveToUser: boolean
     ) {
-        this.props.store.addGroup(group, saveToUser);
+        this.props.store.addGroup(group, originGroups, saveToUser);
         this.sampleSelection.regions = [];
     }
 
@@ -66,9 +67,10 @@ export default class Venn extends React.Component<IVennProps, {}> {
     @action
     private submitPatientOverlapGroup(
         group: SessionGroupData,
+        originGroups: string[],
         saveToUser: boolean
     ) {
-        this.props.store.addGroup(group, saveToUser);
+        this.props.store.addGroup(group, originGroups, saveToUser);
         this.patientSelection.regions = [];
     }
 

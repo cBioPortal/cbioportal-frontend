@@ -13,9 +13,17 @@ export type SessionGroupData = Omit<VirtualStudyData, 'studyViewFilter'> & {
     uid?: string;
     color?: string; // for charts
 };
-export type Session = {
+
+export type ResultsViewComparisonSessionGroupData = SessionGroupData & {
+    // only for created groups, so we can remove them from the working session when an origin track
+    // records the tracks that were involved in creating this group
+    // TODO: make sure to *replace* sessionId in URL when group is removed
+    originTracksOql: string[];
+};
+
+export type Session<GroupType extends SessionGroupData = SessionGroupData> = {
     id: string;
-    groups: SessionGroupData[];
+    groups: GroupType[];
     origin: string[];
     clinicalAttributeName?: string;
     groupNameOrder?: string[];
@@ -88,8 +96,8 @@ export default class ComparisonGroupClient {
     }
 
     // Group Comparison Sessions
-    public addComparisonSession(
-        session: Omit<Session, 'id'>
+    public addComparisonSession<T extends SessionGroupData>(
+        session: Omit<Session<T>, 'id'>
     ): Promise<{ id: string }> {
         return request
             .post(getComparisonSessionServiceUrl())
@@ -102,10 +110,10 @@ export default class ComparisonGroupClient {
             });
     }
 
-    public async getComparisonSession(id: string): Promise<Session> {
+    public async getComparisonSession(id: string): Promise<Session<any>> {
         const storedValue: {
             id: string;
-            data: Omit<Session, 'id'>;
+            data: Omit<Session<any>, 'id'>;
         } = await request
             .get(`${getComparisonSessionServiceUrl()}/${id}`)
             .then((res: any) => res.body);

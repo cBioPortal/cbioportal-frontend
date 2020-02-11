@@ -7,7 +7,7 @@ import { annotateAlterationTypes } from './annotateAlterationTypes';
 function isDatatypeStatement(line) {
     return line.gene !== undefined && line.gene.toUpperCase() === 'DATATYPES';
 }
-function isMergedTrackLine(line) {
+export function isMergedGeneQuery(line) {
     return line.list !== undefined;
 }
 
@@ -46,7 +46,7 @@ function parseMergedTrackOQLQuery(oql_query, opt_default_oql = '') {
                     dt_state: line.alterations,
                     query_line: [],
                 };
-            } else if (isMergedTrackLine(line)) {
+            } else if (isMergedGeneQuery(line)) {
                 const applied_list = applyDatatypes(line.list, dt_state);
                 return {
                     dt_state,
@@ -110,6 +110,14 @@ function parseMergedTrackOQLQuery(oql_query, opt_default_oql = '') {
 }
 
 export function parseOQLQuery(oql_query, opt_default_oql = '') {
+    const parsed_with_datatypes = parseMergedTrackOQLQuery(
+        oql_query,
+        opt_default_oql
+    );
+    return parsed_with_datatypes;
+}
+
+export function parseOQLQueryFlat(oql_query, opt_default_oql = '') {
     /* In: - oql_query, a string, an OQL query
      - opt_default_oql, a string, default OQL to add to any empty line
      Out: An array, with each element being a parsed single-gene OQL line,
@@ -120,14 +128,13 @@ export function parseOQLQuery(oql_query, opt_default_oql = '') {
      * Out: SingleGeneLine[]
      */
     function extractGeneLines(line) {
-        return isMergedTrackLine(line) ? line.list : [line];
+        return isMergedGeneQuery(line) ? line.list : [line];
     }
 
-    const parsed_with_datatypes = parseMergedTrackOQLQuery(
-        oql_query,
-        opt_default_oql
+    return _.flatMap(
+        parseOQLQuery(oql_query, opt_default_oql),
+        extractGeneLines
     );
-    return _.flatMap(parsed_with_datatypes, extractGeneLines);
 }
 
 export function doesQueryContainOQL(oql_query) {
@@ -135,7 +142,7 @@ export function doesQueryContainOQL(oql_query) {
         Out: boolean, true iff the query has explicit OQL (e.g. `BRCA1: MUT` as opposed to just `BRCA1`)
      */
 
-    const parsedQuery = parseOQLQuery(oql_query);
+    const parsedQuery = parseOQLQueryFlat(oql_query);
     let ret = false;
     for (const singleGeneQuery of parsedQuery) {
         if (singleGeneQuery.alterations !== false) {
@@ -151,7 +158,7 @@ export function doesQueryContainMutationOQL(oql_query) {
      Out: boolean, true iff the query has explicit mutation OQL (e.g. `BRCA1: MISSENSE` or `BRCA: _GERMLINE` as opposed to just `BRCA1` or `BRCA1: MUT`)
      */
 
-    const parsedQuery = parseOQLQuery(oql_query);
+    const parsedQuery = parseOQLQueryFlat(oql_query);
     let ret = false;
     for (const singleGeneQuery of parsedQuery) {
         if (singleGeneQuery.alterations !== false) {
@@ -713,7 +720,7 @@ function filterData(
 
     function applyToGeneLines(geneLineFunction) {
         return line => {
-            if (isMergedTrackLine(line)) {
+            if (isMergedGeneQuery(line)) {
                 return {
                     ...line,
                     list: line.list.map(applyToGeneLines(geneLineFunction)),
@@ -727,7 +734,7 @@ function filterData(
     const queryParsingFunction =
         opt_by_oql_line === 'mergedtrack'
             ? parseMergedTrackOQLQuery
-            : parseOQLQuery;
+            : parseOQLQueryFlat;
     const parsed_query = queryParsingFunction(oql_query, opt_default_oql).map(
         applyToGeneLines(q_line => ({
             ...q_line,
@@ -902,7 +909,7 @@ export function filterCBioPortalWebServiceDataByUnflattenedOQLLine(
 // }
 
 export function uniqueGenesInOQLQuery(oql_query) {
-    var parse_result = parseOQLQuery(oql_query);
+    var parse_result = parseOQLQueryFlat(oql_query);
     var genes = parse_result
         .filter(function(q_line) {
             return q_line.gene.toLowerCase() !== 'datatypes';

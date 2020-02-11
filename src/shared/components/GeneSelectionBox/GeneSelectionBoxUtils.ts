@@ -1,4 +1,4 @@
-import { parseOQLQuery } from 'shared/lib/oql/oqlfilter';
+import { parseOQLQueryFlat } from 'shared/lib/oql/oqlfilter';
 import { SyntaxError } from 'shared/lib/oql/oql-parser';
 import { OQL } from 'shared/components/GeneSelectionBox/OQLTextArea';
 
@@ -23,7 +23,7 @@ export function getFocusOutText(genes: string[]): string {
 export function getOQL(query: string): OQL {
     try {
         return {
-            query: query ? parseOQLQuery(query.trim().toUpperCase()) : [],
+            query: query ? parseOQLQueryFlat(query.trim().toUpperCase()) : [],
             error: undefined,
         };
     } catch (error) {

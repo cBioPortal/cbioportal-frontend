@@ -36,10 +36,19 @@ export declare function isMergedTrackFilter<T>(
     oqlFilter: UnflattenedOQLLineFilterOutput<T>
 ): oqlFilter is MergedTrackLineFilterOutput<T>;
 
+export declare function isMergedGeneQuery(
+    query: SingleGeneQuery | MergedGeneQuery
+): query is MergedGeneQuery;
+
 export declare function uniqueGenesInOQLQuery(oql_query: string): string[];
 
-/* Interprets datatypes statements and flattens out merged track queries. */
 export declare function parseOQLQuery(
+    oql_query: string,
+    opt_default_oql?: OQLAlterationFilterString
+): (SingleGeneQuery | MergedGeneQuery)[];
+
+/* Interprets datatypes statements and flattens out merged track queries. */
+export declare function parseOQLQueryFlat(
     oql_query: string,
     opt_default_oql?: OQLAlterationFilterString
 ): SingleGeneQuery[];

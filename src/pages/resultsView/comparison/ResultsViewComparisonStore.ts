@@ -1,4 +1,10 @@
-import { action, computed, observable } from 'mobx';
+import {
+    action,
+    computed,
+    IReactionDisposer,
+    observable,
+    reaction,
+} from 'mobx';
 import { ResultsViewComparisonSubTab } from '../ResultsViewPageHelpers';
 import ComparisonStore, {
     OverlapStrategy,
@@ -18,19 +24,29 @@ import {
     ResultsViewComparisonGroup,
     UNALTERED_COLOR,
     UNALTERED_GROUP_NAME,
+    getNormalizedTrackOql,
 } from './ResultsViewComparisonUtils';
 import _ from 'lodash';
 import ifNotDefined from '../../../shared/lib/ifNotDefined';
 import {
+    ResultsViewComparisonSessionGroupData,
     Session,
     SessionGroupData,
 } from '../../../shared/api/ComparisonGroupClient';
 import comparisonClient from '../../../shared/api/comparisonGroupClientInstance';
+import {
+    isMergedGeneQuery,
+    parseOQLQuery,
+    parseOQLQueryFlat,
+    unparseOQLQueryLine,
+} from '../../../shared/lib/oql/oqlfilter';
 
 export default class ResultsViewComparisonStore extends ComparisonStore {
     @observable private _currentTabId:
         | ResultsViewComparisonSubTab
         | undefined = undefined;
+
+    private removeStaleGroupsReaction: IReactionDisposer;
 
     constructor(
         appStore: AppStore,
@@ -38,6 +54,57 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
         protected resultsViewStore: ResultsViewPageStore
     ) {
         super(appStore, resultsViewStore);
+
+        this.removeStaleGroupsReaction = reaction(
+            () => [
+                this.urlWrapper.query.gene_list,
+                this._session.status,
+                this.resultsViewStore.defaultOQLQuery.status,
+            ],
+            args => {
+                if (
+                    this._session.isComplete &&
+                    this.resultsViewStore.defaultOQLQuery.isComplete
+                ) {
+                    // if we have user-created groups, then filter out any
+                    //  whose constituent tracks no longer exist
+                    const parsedOql = parseOQLQuery(
+                        args[0],
+                        this.resultsViewStore.defaultOQLQuery.result!
+                    );
+
+                    const existingTracksOql = _.keyBy(
+                        parsedOql,
+                        getNormalizedTrackOql
+                    );
+
+                    const filteredGroups = this._session.result!.groups.filter(
+                        group => {
+                            // check if all constituent tracks still exist
+                            return _.every(
+                                group.originTracksOql,
+                                trackOql => trackOql in existingTracksOql
+                            );
+                        }
+                    );
+
+                    if (
+                        filteredGroups.length <
+                        this._session.result!.groups.length
+                    ) {
+                        this.saveAndGoToSession(
+                            Object.assign({}, this._session.result!, {
+                                groups: filteredGroups,
+                            })
+                        );
+                    }
+                }
+            }
+        );
+    }
+
+    public destroy() {
+        this.removeStaleGroupsReaction();
     }
 
     @action public updateOverlapStrategy(strategy: OverlapStrategy) {
@@ -63,7 +130,9 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
         this.urlWrapper.updateURL({ patient_enrichments: e.toString() });
     }
 
-    readonly _queryDerivedGroups = remoteData<SessionGroupData[]>({
+    readonly _queryDerivedGroups = remoteData<
+        ResultsViewComparisonSessionGroupData[]
+    >({
         await: () => [
             this.resultsViewStore.studyIds,
             this.resultsViewStore.alteredSamples,
@@ -76,7 +145,7 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
             this.resultsViewStore.defaultOQLQuery,
         ],
         invoke: () => {
-            const groups: SessionGroupData[] = [];
+            const groups: ResultsViewComparisonSessionGroupData[] = [];
 
             // altered/unaltered groups
             groups.push(
@@ -104,7 +173,9 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
         },
     });
 
-    readonly _session = remoteData<Session>({
+    readonly _session = remoteData<
+        Session<ResultsViewComparisonSessionGroupData>
+    >({
         await: () => [this.resultsViewStore.studyIds],
         invoke: () => {
             const sessionId = this.urlWrapper.query
@@ -156,6 +227,23 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
             }
         },
     });
+
+    @action
+    public async addGroup(
+        group: SessionGroupData,
+        originGroups: string[],
+        saveToUser: boolean
+    ) {
+        const groupsByUid = _.keyBy(this._originalGroups.result!, g => g.uid);
+        const originTracksOql = _.uniq(
+            _.flatMap(originGroups, uid => groupsByUid[uid]!.originTracksOql)
+        );
+        super.addGroup(
+            Object.assign({ originTracksOql }, group),
+            originGroups,
+            saveToUser
+        );
+    }
 
     // <group selection>
     @computed get selectedGroups() {
@@ -231,7 +319,9 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
 
     // <session>
     @action
-    protected async saveAndGoToSession(newSession: Session) {
+    protected async saveAndGoToSession(
+        newSession: Session<ResultsViewComparisonSessionGroupData>
+    ) {
         const { id } = await comparisonClient.addComparisonSession(newSession);
         this.urlWrapper.updateURL({ comparison_createdGroupsSessionId: id });
     }
