@@ -23,7 +23,7 @@ function waitForCoExpressionTab(timeout) {
 }
 
 function waitForPatientView(timeout) {
-    $('#patientViewPageTabs').waitForExist(timeout || 30000);
+    $('#patientViewPageTabs').waitForExist(timeout || 40000);
     $('[data-test=patientview-copynumber-table]').waitForVisible(
         timeout || 20000
     );
