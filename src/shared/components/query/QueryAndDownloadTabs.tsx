@@ -90,7 +90,6 @@ export default class QueryAndDownloadTabs extends React.Component<
     @action
     onSelectTab(tabId: string) {
         this.store.forDownloadTab = tabId === DOWNLOAD;
-        this.store.selectableSelectedStudyIds = [];
         this.activeTabId = tabId;
     }
 
