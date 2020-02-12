@@ -3930,31 +3930,25 @@ export class ResultsViewPageStore {
     }>({
         await: () => [this.genericAssayEntitiesGroupByGenericAssayType],
         invoke: async () => {
-            const linkMapGroupByGenericAssayType: {
-                [genericAssayType: string]: { [stableId: string]: string };
-            } = {};
             if (
                 !_.isEmpty(
                     this.genericAssayEntitiesGroupByGenericAssayType.result
                 )
             ) {
-                const genericAssayTypes = _.keys(
-                    this.genericAssayEntitiesGroupByGenericAssayType.result
+                return _.mapValues(
+                    this.genericAssayEntitiesGroupByGenericAssayType.result,
+                    genericAssayEntities => {
+                        const linkMap: { [stableId: string]: string } = {};
+                        genericAssayEntities.forEach(entity => {
+                            // if entity meta contains reference url, add the link into map
+                            linkMap[entity.stableId] =
+                                'URL' in entity.genericEntityMetaProperties
+                                    ? entity.genericEntityMetaProperties['URL']
+                                    : '';
+                        });
+                        return linkMap;
+                    }
                 );
-                genericAssayTypes.map(genericAssayType => {
-                    const linkMap: { [stableId: string]: string } = {};
-                    this.genericAssayEntitiesGroupByGenericAssayType.result![
-                        genericAssayType
-                    ].forEach(entity => {
-                        // if entity meta contains reference url, add the link into map
-                        linkMap[entity.stableId] =
-                            'URL' in entity.genericEntityMetaProperties
-                                ? entity.genericEntityMetaProperties['URL']
-                                : '';
-                    });
-                    linkMapGroupByGenericAssayType[genericAssayType] = linkMap;
-                });
-                return linkMapGroupByGenericAssayType;
             } else {
                 return {};
             }

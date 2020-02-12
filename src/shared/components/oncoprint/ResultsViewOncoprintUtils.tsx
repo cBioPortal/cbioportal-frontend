@@ -237,46 +237,42 @@ export function genericAssayEntitiesToSelectOptionsGroupByGenericAssayType(gener
     // When not provided in the data file, these fields are assigned the
     // value of the entity_stable_id. The code below hides fields when
     // indentical to the entity_stable_id.
-    const genericAssayTypes = _.keys(
-        genericAssayEntitiesGroupByGenericAssayType
+    return _.mapValues(
+        genericAssayEntitiesGroupByGenericAssayType,
+        genericAssayEntities => {
+            return _.map(genericAssayEntities, (d: GenericAssayMeta) => {
+                const name =
+                    'NAME' in d.genericEntityMetaProperties
+                        ? d.genericEntityMetaProperties['NAME']
+                        : NOT_APPLICABLE_VALUE;
+                const description =
+                    'DESCRIPTION' in d.genericEntityMetaProperties
+                        ? d.genericEntityMetaProperties['DESCRIPTION']
+                        : NOT_APPLICABLE_VALUE;
+                const uniqueName = name !== d.stableId;
+                const uniqueDesc =
+                    description !== d.stableId && description !== name;
+                let label = '';
+                if (!uniqueName && !uniqueDesc) {
+                    label = d.stableId;
+                } else if (!uniqueName) {
+                    label = `${d.stableId}: ${description}`;
+                } else if (!uniqueDesc) {
+                    label = `${name} (${d.stableId})`;
+                } else {
+                    label = `${name} (${d.stableId}): ${description}`;
+                }
+                // For searching, react-select-checked performs a search in the value
+                // field and displays the label field. To allow searching in all words
+                // that appear in the label field, the value field is made identical to
+                // the label field. The id field is added to track the unique identifier
+                // of the generic assay.
+                return {
+                    id: d.stableId,
+                    value: label,
+                    label: label,
+                };
+            });
+        }
     );
-    const result: { [genericAssayType: string]: ISelectOption[] } = {};
-    genericAssayTypes.map(genericAssayType => {
-        const entities =
-            genericAssayEntitiesGroupByGenericAssayType[genericAssayType];
-        result[genericAssayType] = _.map(entities, (d: GenericAssayMeta) => {
-            const name =
-                'NAME' in d.genericEntityMetaProperties
-                    ? d.genericEntityMetaProperties['NAME']
-                    : NOT_APPLICABLE_VALUE;
-            const description =
-                'DESCRIPTION' in d.genericEntityMetaProperties
-                    ? d.genericEntityMetaProperties['DESCRIPTION']
-                    : NOT_APPLICABLE_VALUE;
-            const uniqueName = name !== d.stableId;
-            const uniqueDesc =
-                description !== d.stableId && description !== name;
-            let label = '';
-            if (!uniqueName && !uniqueDesc) {
-                label = d.stableId;
-            } else if (!uniqueName) {
-                label = `${d.stableId}: ${description}`;
-            } else if (!uniqueDesc) {
-                label = `${name} (${d.stableId})`;
-            } else {
-                label = `${name} (${d.stableId}): ${description}`;
-            }
-            // For searching, react-select-checked performs a search in the value
-            // field and displays the label field. To allow searching in all words
-            // that appear in the label field, the value field is made identical to
-            // the label field. The id field is added to track the unique identifier
-            // of the generic assay.
-            return {
-                id: d.stableId,
-                value: label,
-                label: label,
-            };
-        });
-    });
-    return result;
 }
