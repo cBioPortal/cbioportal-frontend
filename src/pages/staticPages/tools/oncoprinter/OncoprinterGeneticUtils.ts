@@ -40,7 +40,7 @@ import { getOncoKbOncogenic } from '../../../resultsView/ResultsViewPageStoreUti
 import { mutationCountByPositionKey } from '../../../resultsView/mutationCountHelpers';
 import { getAlterationString } from '../../../../shared/lib/CopyNumberUtils';
 import { GERMLINE_REGEXP } from '../../../../shared/lib/MutationUtils';
-import { parseOQLQueryFlat } from '../../../../shared/lib/oql/oqlfilter';
+import { parseOQLQuery } from '../../../../shared/lib/oql/oqlfilter';
 import { Alteration, MUTCommand } from '../../../../shared/lib/oql/oql-parser';
 import {
     MUTATION_STATUS_GERMLINE,
@@ -846,7 +846,7 @@ export function parseGeneticInput(
                         // use OQL parsing for handling mutation modifiers
                         let parsedMutation: MUTCommand<any>;
                         try {
-                            parsedMutation = (parseOQLQueryFlat(
+                            parsedMutation = (parseOQLQuery(
                                 `GENE: ${lcType}`
                             )[0].alterations as Alteration[])[0] as MUTCommand<
                                 any

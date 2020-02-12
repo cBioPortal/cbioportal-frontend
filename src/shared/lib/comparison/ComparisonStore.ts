@@ -149,12 +149,7 @@ export default class ComparisonStore {
         return this.appStore.isLoggedIn;
     }
 
-    @action
-    public async addGroup(
-        group: SessionGroupData,
-        originGroups: string[],
-        saveToUser: boolean
-    ) {
+    public async addGroup(group: SessionGroupData, saveToUser: boolean) {
         this.newSessionPending = true;
         if (saveToUser && this.isLoggedIn) {
             await comparisonClient.addGroup(group);
