@@ -53,7 +53,10 @@ import OQLTextArea, {
 } from 'shared/components/GeneSelectionBox/OQLTextArea';
 import SurvivalTransitionTab from './survival/SurvivalTransitionTab';
 
-function initStore(appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
+export function initStore(
+    appStore: AppStore,
+    urlWrapper: ResultsViewURLWrapper
+) {
     const resultsViewPageStore = new ResultsViewPageStore(appStore, urlWrapper);
 
     setWindowVariable('resultsViewPageStore', resultsViewPageStore);
@@ -423,8 +426,7 @@ export default class ResultsViewPage extends React.Component<
                                 <ResultsViewPathwayMapper
                                     store={store}
                                     appStore={this.props.appStore}
-                                    routerStore={this.props.routing}
-                                    initStore={initStore}
+                                    urlWrapper={this.urlWrapper}
                                 />
                             ) : (
                                 <LoadingIndicator
