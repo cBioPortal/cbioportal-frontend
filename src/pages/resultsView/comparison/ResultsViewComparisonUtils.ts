@@ -5,44 +5,21 @@ import {
     getNumSamples,
 } from '../../groupComparison/GroupComparisonUtils';
 import { getStudiesAttr } from '../../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
+import { Sample } from '../../../shared/api/generated/CBioPortalAPI';
+import { IQueriedMergedTrackCaseData } from '../ResultsViewPageStore';
 import {
-    Sample,
-    SampleIdentifier,
-} from '../../../shared/api/generated/CBioPortalAPI';
-import {
-    AnnotatedExtendedAlteration,
-    IQueriedMergedTrackCaseData,
-} from '../ResultsViewPageStore';
-import {
-    isMergedGeneQuery,
     isMergedTrackFilter,
-    parseOQLQueryFlat,
+    parseOQLQuery,
     UnflattenedOQLLineFilterOutput,
-    unparseOQLQueryLine,
 } from '../../../shared/lib/oql/oqlfilter';
-import {
-    ResultsViewComparisonSessionGroupData,
-    SessionGroupData,
-} from '../../../shared/api/ComparisonGroupClient';
+import { SessionGroupData } from '../../../shared/api/ComparisonGroupClient';
 import ComplexKeyMap from '../../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
-import {
-    MergedGeneQuery,
-    SingleGeneQuery,
-} from '../../../shared/lib/oql/oql-parser';
+import { SingleGeneQuery } from '../../../shared/lib/oql/oql-parser';
 import oql_parser from '../../../shared/lib/oql/oql-parser';
 import _ from 'lodash';
-import { Omit } from '../../../shared/lib/TypeScriptUtils';
 
-export type ResultsViewComparisonGroup = Omit<
-    ResultsViewComparisonSessionGroupData,
-    'studies' | 'color'
-> & {
-    color: string; // color mandatory here, bc we'll assign one if its missing
-    uid: string; // unique in the session
-    nameWithOrdinal: string; // for easy disambiguation when groups are abbreviated
-    ordinal: string;
-    studies: { id: string; samples: string[]; patients: string[] }[]; // include patients, filter out nonexistent samples
-    nonExistentSamples: SampleIdentifier[]; // samples specified in the group which no longer exist in our DB
+export type ResultsViewComparisonGroup = ComparisonGroup & {
+    nameOfEnrichmentDirection: string;
     count: number;
 };
 
@@ -51,22 +28,12 @@ export const UNALTERED_COLOR = '#3366cc';
 export const ALTERED_GROUP_NAME = 'Altered group';
 export const UNALTERED_GROUP_NAME = 'Unaltered group';
 
-export function getNormalizedTrackOql(line: SingleGeneQuery | MergedGeneQuery) {
-    if (isMergedGeneQuery(line)) {
-        return line.list
-            .map(singleGeneQuery => unparseOQLQueryLine(singleGeneQuery))
-            .join(' / ');
-    } else {
-        return unparseOQLQueryLine(line);
-    }
-}
-
 export function completeSessionGroups(
     patientLevel: boolean,
-    groups: ResultsViewComparisonSessionGroupData[],
+    groups: SessionGroupData[],
     sampleSet: ComplexKeyMap<Sample>,
     getColor: () => string
-): ResultsViewComparisonGroup[] {
+) {
     // (1) ensure color and other required members
     // (2) filter out, and add list of, nonexistent samples
     // (3) add patients
@@ -87,6 +54,7 @@ export function completeSessionGroups(
             uid: groupData.name,
             nameWithOrdinal: groupData.name,
             ordinal: '',
+            nameOfEnrichmentDirection: '',
             count: patientLevel
                 ? getNumPatients({ studies })
                 : getNumSamples({ studies }),
@@ -99,7 +67,7 @@ export function getAlteredVsUnalteredGroups(
     studyIds: string[],
     alteredSamples: Sample[],
     unalteredSamples: Sample[]
-): ResultsViewComparisonSessionGroupData[] {
+): SessionGroupData[] {
     return [
         {
             name: ALTERED_GROUP_NAME,
@@ -109,7 +77,6 @@ export function getAlteredVsUnalteredGroups(
             studies: getStudiesAttr(alteredSamples, alteredSamples),
             origin: studyIds,
             color: ALTERED_COLOR,
-            originTracksOql: [],
         },
         {
             name: UNALTERED_GROUP_NAME,
@@ -119,7 +86,6 @@ export function getAlteredVsUnalteredGroups(
             studies: getStudiesAttr(unalteredSamples, unalteredSamples),
             origin: studyIds,
             color: UNALTERED_COLOR,
-            originTracksOql: [],
         },
     ];
 }
@@ -130,11 +96,11 @@ export function getAlteredByOncoprintTrackGroups(
     allSamples: Sample[],
     oqlFilteredCaseAggregatedDataByUnflattenedOQLLine: IQueriedMergedTrackCaseData[],
     defaultOql: string
-): ResultsViewComparisonSessionGroupData[] {
+): SessionGroupData[] {
     const parsedDefaultOqlAlterations = (oql_parser.parse(
         `DUMMYGENE:${defaultOql};`
     )![0] as SingleGeneQuery).alterations;
-    const groups: ResultsViewComparisonSessionGroupData[] = oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.map(
+    const groups = oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.map(
         (dataForLine, index) => {
             const label = getOncoprintTrackGroupName(
                 dataForLine.oql,
@@ -152,17 +118,6 @@ export function getAlteredByOncoprintTrackGroups(
                 } in the following track: ${label}`,
                 studies,
                 origin: studyIds,
-                originTracksOql: [
-                    getNormalizedTrackOql(
-                        isMergedTrackFilter(dataForLine.oql)
-                            ? {
-                                  list: dataForLine.oql.list.map(
-                                      q => q.parsed_oql_line
-                                  ),
-                              }
-                            : dataForLine.oql.parsed_oql_line
-                    ),
-                ],
             };
         }
     );
