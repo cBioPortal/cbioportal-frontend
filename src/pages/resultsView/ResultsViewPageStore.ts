@@ -137,6 +137,7 @@ import {
     makeEnrichmentDataPromise,
     getMolecularProfiles,
     excludeMutationAndSVProfiles,
+    parseGenericAssayGroups,
 } from './ResultsViewPageStoreUtils';
 import MobxPromiseCache from '../../shared/lib/MobxPromiseCache';
 import { isSampleProfiledInMultiple } from '../../shared/lib/isSampleProfiled';
@@ -556,21 +557,9 @@ export class ResultsViewPageStore {
     }
 
     @computed get parsedGenericAssayGroups() {
-        // empty if no heatmap tracks param
-        const groups = this.urlWrapper.query.generic_assay_groups
-            ? this.urlWrapper.query.generic_assay_groups
-                  .split(';')
-                  .map((x: string) => x.split(','))
-            : [];
-
-        const parsedGroups = groups.reduce(
-            (acc: { [molecularProfileId: string]: string[] }, group) => {
-                acc[group[0] as string] = group.slice(1);
-                return acc;
-            },
-            {}
+        return parseGenericAssayGroups(
+            this.urlWrapper.query.generic_assay_groups
         );
-        return parsedGroups;
     }
 
     @computed
