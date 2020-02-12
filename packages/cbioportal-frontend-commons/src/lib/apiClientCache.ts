@@ -1,6 +1,15 @@
 import getBrowserWindow from './getBrowserWindow';
 import sizeof from 'object-sizeof';
+import localForage from 'localforage';
 
+// ------------- STORE OBJECT --------------
+const postCacheStore: any = {};
+getBrowserWindow().postCacheStore = postCacheStore;
+
+// Testing mode: use IndexedDB to persist across sessions in same browser window
+const isTestingMode = !!window.navigator.webdriver;
+
+// ------------- UTILS -------------
 function hash(str: string) {
     var hash = 0,
         i,
@@ -22,9 +31,35 @@ function megabytes(n: number) {
     return n * Math.pow(10, 6);
 }
 
-const postCacheStore: any = {};
+// ------------- ADD/GET/CONTAINS - these are only methods need to abstract because they're the ones also used in testing mode -------------
+function addToCache(methodName: string, hash: number, result: Promise<any>) {
+    if (isTestingMode) {
+        return localForage.setItem(`${methodName}_${hash}`, result);
+    } else {
+        postCacheStore[methodName][hash] = result;
+        return Promise.resolve();
+    }
+}
 
-getBrowserWindow().postCacheStore = postCacheStore;
+function getPromiseFromCache(methodName: string, hash: number) {
+    if (isTestingMode) {
+        return localForage.getItem(`${methodName}_${hash}`);
+    } else {
+        return postCacheStore[methodName][hash];
+    }
+}
+
+function doesCacheContainEntry(methodName: string, hash: number) {
+    if (isTestingMode) {
+        return localForage.getItem(`${methodName}_${hash}`).then(x => {
+            return !!x;
+        });
+    } else {
+        return hash in postCacheStore[methodName];
+    }
+}
+
+// ------------- MEMORY MANAGEMENT - PROD MODE ONLY -------------
 
 // Cache clearing for memory management
 type SizeQueueElt = { methodName: string; storeKey: number; size: number };
@@ -37,6 +72,11 @@ function tryFreeCache(
     log?: (message: string) => void,
     sentryLog?: (message: string) => void
 ) {
+    if (isTestingMode) {
+        // we're not using this system when in testing mode
+        return;
+    }
+
     const maxCacheSize = megabytes(apiCacheLimit);
 
     // delete data to free up memory, starting from the front of the line (least recently used)
@@ -81,6 +121,7 @@ function tryFreeCache(
     }
 }
 
+// ------------- CONNECT CACHE TO CLIENT -------------
 export function cachePostMethod(
     targetObj: any,
     methodName: string,
@@ -94,7 +135,7 @@ export function cachePostMethod(
     postCacheStore[methodName] = {};
     const storeNode = postCacheStore[methodName];
 
-    targetObj[methodName] = function(arg: any) {
+    targetObj[methodName] = async function(arg: any) {
         //console.log('posted data',arg);
         const hash = getHash(arg);
         // remove this from sizeQueue, if it exists, because we just used it so it should get bumped back in line,
@@ -111,10 +152,22 @@ export function cachePostMethod(
         // add element to back of size queue- push it here so that its place in line depends on when it was called, not
         //  when the call completes. We'll update its size when the call completes
         sizeQueue.push(sizeQueueElement);
-        if (!(hash in storeNode)) {
+
+        const cacheEntryExists = isTestingMode
+            ? await doesCacheContainEntry(methodName, hash)
+            : doesCacheContainEntry(methodName, hash);
+        if (!cacheEntryExists) {
             // make call and add handler to update size, if we dont already have this data
-            storeNode[hash] = oldMethod.apply(this, arguments);
-            storeNode[hash].then((result: any) => {
+            const addResult = addToCache(
+                methodName,
+                hash,
+                oldMethod.call(this, arg)
+            );
+            if (isTestingMode) {
+                // async so we need to await before continuing
+                await addResult;
+            }
+            getPromiseFromCache(methodName, hash).then((result: any) => {
                 // if the hash doesnt exist, then this is the data being fetched for first time
                 // update sizeQueueElement size and cacheSize
                 sizeQueueElement.size = sizeof(result);
@@ -124,7 +177,7 @@ export function cachePostMethod(
                 tryFreeCache(apiCacheLimit, log, sentryLog);
             });
         }
-        return storeNode[hash];
+        return getPromiseFromCache(methodName, hash);
     };
 }
 
