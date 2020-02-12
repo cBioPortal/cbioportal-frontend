@@ -1,25 +1,24 @@
 import * as React from 'react';
 import _ from 'lodash';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
-import { ResultsViewTab } from '../ResultsViewPageHelpers';
+import { addGenesToQuery, ResultsViewTab } from '../ResultsViewPageHelpers';
 import PathwayMapper, { ICBioData } from 'pathway-mapper';
 import 'pathway-mapper/dist/base.css';
 import PathwayMapperTable from './PathwayMapperTable';
 import { observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
-import { observable, computed } from 'mobx';
+import { observable, computed, action } from 'mobx';
 import { Row } from 'react-bootstrap';
 
 import { AppStore } from 'AppStore';
 import { remoteData } from 'cbioportal-frontend-commons';
-import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { fetchGenes } from 'shared/lib/StoreUtils';
 import OqlStatusBanner from 'shared/components/banners/OqlStatusBanner';
 import { getAlterationData } from 'shared/components/oncoprint/OncoprintUtils';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer, toast } from 'react-toastify';
+import { initStore } from '../ResultsViewPage';
 import ResultsViewURLWrapper from '../ResultsViewURLWrapper';
-import ExtendedRouterStore from '../../../shared/lib/ExtendedRouterStore';
 
 import 'cytoscape-panzoom/cytoscape.js-panzoom.css';
 import 'cytoscape-navigator/cytoscape.js-navigator.css';
@@ -27,36 +26,29 @@ import 'react-toastify/dist/ReactToastify.css';
 
 interface IResultsViewPathwayMapperProps {
     store: ResultsViewPageStore;
-    initStore: (
-        appStore: AppStore,
-        urlWrapper: ResultsViewURLWrapper
-    ) => ResultsViewPageStore;
     appStore: AppStore;
-    routerStore: ExtendedRouterStore;
+    urlWrapper: ResultsViewURLWrapper;
 }
 
 @observer
 export default class ResultsViewPathwayMapper extends React.Component<
     IResultsViewPathwayMapperProps
 > {
-    @observable selectedPathway = '';
+    private accumulatedAlterationFrequencyDataForNonQueryGenes: ICBioData[];
+    private readonly accumulatedValidGenes: { [gene: string]: boolean };
 
     @observable
-    isLoading: boolean;
+    private selectedPathway = '';
 
     @observable
-    currentGenes: string[];
+    private newGenesFromPathway: string[];
 
     @observable
-    activeToasts: React.ReactText[];
+    private activeToasts: React.ReactText[];
 
-    // This accumulates valid genes
-    validGenesAccumulator: { [gene: string]: boolean };
-
-    @observable
-    validNonQueryGenes = remoteData<string[]>({
+    private readonly validNonQueryGenes = remoteData<string[]>({
         invoke: async () => {
-            const genes = await fetchGenes(this.currentGenes);
+            const genes = await fetchGenes(this.newGenesFromPathway);
 
             return genes.map(gene => gene.hugoGeneSymbol);
         },
@@ -65,13 +57,11 @@ export default class ResultsViewPathwayMapper extends React.Component<
     @observable
     private addGenomicData: (alterationData: ICBioData[]) => void;
 
-    pathwayHandler: Function;
-
     constructor(props: IResultsViewPathwayMapperProps) {
         super(props);
-        this.isLoading = false;
         this.activeToasts = [];
-        this.validGenesAccumulator = {};
+        this.accumulatedValidGenes = {};
+        this.accumulatedAlterationFrequencyDataForNonQueryGenes = [];
     }
 
     @computed get alterationFrequencyData(): ICBioData[] {
@@ -107,7 +97,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
     }
 
     @computed get alterationFrequencyDataForNonQueryGenes() {
-        const alterationFrequencyData: ICBioData[] = [];
+        const alterationFrequencyDataForNewGenes: ICBioData[] = [];
 
         if (this.isNewStoreReady) {
             this.storeForAllData!.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach(
@@ -126,13 +116,20 @@ export default class ResultsViewPathwayMapper extends React.Component<
                     );
 
                     if (data) {
-                        alterationFrequencyData.push(data);
+                        alterationFrequencyDataForNewGenes.push(data);
                     }
                 }
             );
         }
 
-        return alterationFrequencyData;
+        // on pathway change PathwayMapper returns only the genes that are new (i.e genes for which we haven't
+        // calculated the alteration data yet), so we need to accumulate the alteration frequency data after each
+        // query
+        this.accumulatedAlterationFrequencyDataForNonQueryGenes = this.accumulatedAlterationFrequencyDataForNonQueryGenes.concat(
+            alterationFrequencyDataForNewGenes
+        );
+
+        return this.accumulatedAlterationFrequencyDataForNonQueryGenes;
     }
 
     @computed get isNewStoreReady() {
@@ -149,7 +146,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
         );
     }
 
-    render() {
+    public render() {
         // Alteration data of non-query genes are loaded.
         if (this.isNewStoreReady) {
             this.addGenomicData(this.alterationFrequencyData);
@@ -169,47 +166,40 @@ export default class ResultsViewPathwayMapper extends React.Component<
                     style={{ width: '99%' }}
                 >
                     <Row>
-                        {!this.isLoading ? (
-                            <React.Fragment>
-                                <OqlStatusBanner
-                                    className="coexp-oql-status-banner"
-                                    store={this.props.store}
-                                    tabReflectsOql={true}
-                                />
-
-                                <PathwayMapper
-                                    isCBioPortal={true}
-                                    isCollaborative={false}
-                                    genes={this.props.store.genes.result as any}
-                                    cBioAlterationData={
-                                        this.alterationFrequencyData
-                                    }
-                                    onAddGenes={this.handleAddGenes}
-                                    changePathwayHandler={
-                                        this.changePathwayHandler
-                                    }
-                                    addGenomicDataHandler={
-                                        this.addGenomicDataHandler
-                                    }
-                                    tableComponent={PathwayMapperTable}
-                                    validGenes={this.validGenes}
-                                    toast={toast}
-                                />
-                                <ToastContainer />
-                            </React.Fragment>
-                        ) : (
-                            <LoadingIndicator
-                                isLoading={true}
-                                size={'big'}
-                                center={true}
+                        <React.Fragment>
+                            <OqlStatusBanner
+                                className="coexp-oql-status-banner"
+                                store={this.props.store}
+                                tabReflectsOql={true}
                             />
-                        )}
+
+                            <PathwayMapper
+                                isCBioPortal={true}
+                                isCollaborative={false}
+                                genes={this.props.store.genes.result as any}
+                                cBioAlterationData={
+                                    this.alterationFrequencyData
+                                }
+                                onAddGenes={this.handleAddGenes}
+                                changePathwayHandler={this.handlePathwayChange}
+                                addGenomicDataHandler={
+                                    this.addGenomicDataHandler
+                                }
+                                tableComponent={PathwayMapperTable}
+                                validGenes={this.validGenes}
+                                toast={toast}
+                            />
+                            <ToastContainer />
+                        </React.Fragment>
                     </Row>
                 </div>
             </div>
         );
     }
 
+    /**
+     * We need to initialize a separate ResultsViewStore to be able to fetch alteration data for non-query genes.
+     */
     @computed get storeForAllData(): ResultsViewPageStore | undefined {
         // Currently Pathways (PathwayMapper) tab must be active, otherwise; all toasts must be closed.
         if (this.props.store.tabId !== ResultsViewTab.PATHWAY_MAPPER) {
@@ -219,19 +209,28 @@ export default class ResultsViewPathwayMapper extends React.Component<
         }
 
         if (this.urlWrapperForAllGenes) {
+            if (
+                this.urlWrapperForAllGenes.hasSessionId &&
+                this.urlWrapperForAllGenes.remoteSessionData.isPending
+            ) {
+                return undefined;
+            }
+
             const tId = toast(
                 'Alteration data of genes not listed in gene list might take a while to load!',
                 { autoClose: false, position: 'bottom-left' }
             );
             this.activeToasts.push(tId);
 
-            return this.props.initStore(
-                this.props.appStore,
-                this.urlWrapperForAllGenes
-            );
+            return initStore(this.props.appStore, this.urlWrapperForAllGenes);
         }
     }
 
+    /**
+     * Here we clone the "query" field of the main store's URL Wrapper and enhance the cloned query
+     * with additional non-query genes. This new query object is used to fake a new URL Wrapper instance
+     * which is required to initialize a separate ResultsViewStore for the non-query genes.
+     */
     @computed get urlWrapperForAllGenes(): ResultsViewURLWrapper | undefined {
         let urlWrapper: ResultsViewURLWrapper | undefined;
 
@@ -239,54 +238,57 @@ export default class ResultsViewPathwayMapper extends React.Component<
             this.validNonQueryGenes.isComplete &&
             this.validNonQueryGenes.result.length > 0
         ) {
-            const routing = _.cloneDeep(this.props.routerStore);
-            routing.location.query.gene_list = this.validNonQueryGenes.result.join(
-                ' '
+            // fake the URL wrapper, we only need the query parameters with additional genes
+            const query: { [key: string]: string | undefined } = _.cloneDeep(
+                this.props.urlWrapper.query
             );
-            urlWrapper = new ResultsViewURLWrapper(routing);
+            query.gene_list = this.validNonQueryGenes.result.join(' ');
+
+            // we don't need a proper URL Wrapper here, just assign an object with a valid query field
+            urlWrapper = { query } as ResultsViewURLWrapper;
         }
 
         return urlWrapper;
     }
 
+    /**
+     * Valid non-query genes accumulated from currently selected pathway
+     * and previously selected pathways in a single query session.
+     */
     @computed get validGenes() {
         if (this.validNonQueryGenes.isComplete) {
             // Valid genes are accumulated.
             this.validNonQueryGenes.result.forEach(gene => {
-                this.validGenesAccumulator[gene] = true;
+                this.accumulatedValidGenes[gene] = true;
             });
         }
-        return this.validGenesAccumulator;
+        return this.accumulatedValidGenes;
     }
 
-    // addGenomicData function is implemented in PathwayMapper component and overlays
-    // alteration data onto genes. Through this function callback, the function implemented
-    // in PathwayMapper is copied here.
+    /**
+     * addGenomicData function is implemented in PathwayMapper component and overlays
+     * alteration data onto genes. Through this function callback, the function implemented
+     * in PathwayMapper is copied here.
+     */
     @autobind
-    addGenomicDataHandler(
+    @action
+    private addGenomicDataHandler(
         addGenomicData: (alterationData: ICBioData[]) => void
     ) {
         this.addGenomicData = addGenomicData;
     }
 
-    // When pathway changes in PathwayMapper this callback gets called
     @autobind
-    changePathwayHandler(pathwayGenes: string[]) {
+    @action
+    private handlePathwayChange(pathwayGenes: string[]) {
         // Pathway genes here are the genes that are in the pathway and valid whose alteration data is not calculated yet.
-        // Hence it does not necessarily mean
-        this.currentGenes = pathwayGenes;
+        // Pathway genes does NOT always include all of the non-query genes
+        this.newGenesFromPathway = pathwayGenes;
     }
 
     @autobind
-    handleAddGenes(selectedGenes: string[]) {
-        // add new genes and go to oncoprint tab
-        const geneList = this.props.routerStore.location.query.gene_list;
-
-        this.props.routerStore.updateRoute(
-            {
-                gene_list: `${geneList}\n${selectedGenes.join(' ')}`,
-            },
-            `results/${ResultsViewTab.ONCOPRINT}`
-        );
+    @action
+    private handleAddGenes(selectedGenes: string[]) {
+        addGenesToQuery(this.props.urlWrapper, selectedGenes);
     }
 }
