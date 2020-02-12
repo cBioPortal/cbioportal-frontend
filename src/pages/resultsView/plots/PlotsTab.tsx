@@ -2601,7 +2601,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @computed get selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl() {
         const result = _.reduce(
-            this.props.store.parsedGenericAssayGroups,
+            this.props.store.selectedGenericAssayEntities,
             (acc, value, key) => {
                 if (
                     this.props.store.molecularProfileIdToMolecularProfile
