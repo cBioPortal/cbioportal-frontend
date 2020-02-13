@@ -37,6 +37,7 @@ import RMATLAB from 'bundle-loader?lazy!babel-loader!./pages/staticPages/rmatlab
 import Tutorials from 'bundle-loader?lazy!babel-loader!./pages/staticPages/tutorials/Tutorials';
 import Visualize from 'bundle-loader?lazy!babel-loader!./pages/staticPages/visualize/Visualize';
 import AboutUs from 'bundle-loader?lazy!babel-loader!./pages/staticPages/aboutus/AboutUs';
+import Software from 'bundle-loader?lazy!babel-loader!./pages/staticPages/software/Software';
 import News from 'bundle-loader?lazy!babel-loader!./pages/staticPages/news/News';
 import FAQ from 'bundle-loader?lazy!babel-loader!./pages/staticPages/faq/FAQ';
 import OQL from 'bundle-loader?lazy!babel-loader!./pages/staticPages/oql/OQL';
@@ -248,6 +249,13 @@ export const makeRoutes = routing => {
                     $(document).scrollTop(0);
                 }}
                 getComponent={lazyLoadComponent(AboutUs)}
+            />
+            <Route
+                path="/software"
+                onEnter={() => {
+                    $(document).scrollTop(0);
+                }}
+                getComponent={lazyLoadComponent(Software)}
             />
             <Route
                 path="/news"
