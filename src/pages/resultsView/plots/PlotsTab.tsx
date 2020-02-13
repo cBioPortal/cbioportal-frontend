@@ -1178,6 +1178,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             : '',
                 }));
             }
+            // if horzSelection has the same dataType selected, add a SAME_SELECTED_OPTION option
             if (
                 this.horzSelection.dataType &&
                 this.horzSelection.dataType === this.vertSelection.dataType &&
@@ -1198,17 +1199,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 ];
             }
         }
-        // // listen to updates of `horzGenericAssayOptions` or the selected data type for the horzontal axis
-        // if (this.horzGenericAssayOptions || this.horzSelection.dataType) {
-        //     if (this.horzSelection.dataType && _.keys(GenericAssayTypeConstants).includes(this.horzSelection.dataType)) {
-        //         // when the data type on the horizontal axis is a generic assay profile
-        //         // add an option to select the same generic assay
-        //         if (this.horzSelection.dataType && this.showGenericAssaySelectBox(this.horzSelection.dataType)
-        //             && this.horzSelection.selectedGenericAssayOption && this.horzSelection.selectedGenericAssayOption.value !== NONE_SELECTED_OPTION_STRING_VALUE) {
-        //             sameGenericAssayOption = [{ value: SAME_SELECTED_OPTION_STRING_VALUE, label: `Same ${dataTypeToDisplayType[this.horzSelection.dataType]} (${this.horzSelection.selectedGenericAssayOption.label})`}];
-        //         }
-        //     }
-        // }
         return (sameGenericAssayOption || []).concat((verticalOptions ||
             []) as { value: string; label: string }[]);
     }
@@ -3121,7 +3111,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return makeAxisLogScaleFunction(this.vertSelection);
     }
 
-    @computed get showNoTreamentsSelectedWarning() {
+    @computed get showNoGenericAssaySelectedWarning() {
         return (
             (this.vertSelection.dataType &&
                 _.keys(GenericAssayTypeConstants).includes(
@@ -3155,14 +3145,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.discreteVsDiscretePlotType ===
                 DiscreteVsDiscretePlotType.StackedBar;
 
-        if (this.showNoTreamentsSelectedWarning) {
+        if (this.showNoGenericAssaySelectedWarning) {
             return (
                 <div>
                     <i className="fa fa-exclamation-triangle text-danger" />
                     &nbsp;
                     <span>
                         To visualize selected generic assay data, you must
-                        ensure you have already imported related data.
+                        ensure you have already imported related data and select
+                        an entity.
                     </span>
                 </div>
             );

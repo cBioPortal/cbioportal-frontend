@@ -371,8 +371,6 @@ describe('ResultsViewOncoprintUtils', () => {
         });
     });
 
-    // TODO: should implement tests for the new genericAssayEntitiesToSelectOptionsGroupByGenericAssayType method
-
     describe('genericAssayEntitiesToSelectOptionsGroupByGenericAssayType()', () => {
         it('Includes entity_stable_id and description when present and unique', () => {
             // create a genericAssayEntitiesGroupByGenericAssayType object and cast the data as GenericAssayMeta[]
