@@ -159,7 +159,7 @@ export class ServerConfigHelpers {
 function cachePostMethods(
     obj: any,
     excluded: string[] = [],
-    regex: RegExp = /UsingPOST$/
+    regex: RegExp = /(UsingPOST|UsingGET)$/
 ) {
     cachePostMethodsOnClient(
         obj,
