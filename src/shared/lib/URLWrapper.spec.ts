@@ -572,7 +572,7 @@ describe('URLWrapper', () => {
             assert.equal(wrapper.query.gene_list, '54321');
             assert.equal(routingStore.location.query.session_id, 'sessionId2');
             done();
-        }, 20);
+        }, 1000);
     });
 
     it('#needToLoadSession obeys rules', () => {
