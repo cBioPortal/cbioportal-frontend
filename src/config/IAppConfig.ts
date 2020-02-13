@@ -57,6 +57,7 @@ export interface IServerConfig {
     show_civic: boolean;
     show_genomenexus: boolean;
     skin_documentation_about: string | null;
+    skin_documentation_software: string | null;
     skin_documentation_baseurl: string | null;
     skin_blurb: string | null;
     skin_custom_header_tabs: string | null;
