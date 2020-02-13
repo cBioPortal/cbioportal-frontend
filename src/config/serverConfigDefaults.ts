@@ -44,6 +44,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_authorization_message:
         'Access to this portal is only available to authorized users.',
     skin_documentation_about: 'About-Us.md',
+    skin_documentation_software: 'Software-Acknowledgments.md',
     skin_documentation_baseurl:
         'https://raw.githubusercontent.com/cBioPortal/cbioportal/master/docs/',
     skin_documentation_markdown: true,
