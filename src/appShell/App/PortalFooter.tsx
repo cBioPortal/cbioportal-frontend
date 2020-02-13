@@ -182,6 +182,9 @@ export default class PortalFooter extends React.Component<
                                 <h3>DEV</h3>
                                 <ul>
                                     <li>
+                                        <Link to="/software">Software</Link>
+                                    </li>
+                                    <li>
                                         <a
                                             target="_blank"
                                             href="https://github.com/cBioPortal/"
