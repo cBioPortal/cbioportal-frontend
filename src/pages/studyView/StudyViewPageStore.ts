@@ -255,6 +255,8 @@ export type OncokbCancerGene = {
 export class StudyViewPageStore {
     private reactionDisposers: IReactionDisposer[] = [];
 
+    public studyViewQueryFilter: StudyViewURLQuery;
+
     constructor(
         private appStore: AppStore,
         private sessionServiceIsEnabled: boolean
