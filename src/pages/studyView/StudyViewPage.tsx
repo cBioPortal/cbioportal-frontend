@@ -200,8 +200,8 @@ export default class StudyViewPage extends React.Component<
 
     @observable showBookmarkModal = false;
 
-    @action
     @autobind
+    @action
     toggleBookmarkModal() {
         this.showBookmarkModal = !this.showBookmarkModal;
     }
