@@ -80,6 +80,7 @@ export class ShareUI extends React.Component<IShareUI, {}> {
                     <BookmarkModal
                         onHide={this.toggleBookmarkDialog}
                         urlPromise={this.getUrls()}
+                        title={'Bookmark Query'}
                     />
                 )}
             </div>
