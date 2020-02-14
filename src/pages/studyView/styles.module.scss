@@ -109,3 +109,13 @@
     font-size: smaller;
     color: #a9a9a9;
 }
+
+.bookmarkButton {
+    margin-left: 10px;
+    :global(.fa-stack) {
+        font-size: 16px;
+    }
+    :global(.fa-link) {
+        color: #fff !important;
+    }
+}

@@ -5,9 +5,11 @@ import RightPanel from './rightPanel/RightPanel';
 import StudySummary from './studySummary/StudySummary';
 import UserSelections from '../UserSelections';
 import * as _ from 'lodash';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 
 export interface IStudyPageHeaderProps {
     store: StudyViewPageStore;
+    onBookmarkClick: () => void;
 }
 
 @observer
@@ -78,6 +80,7 @@ export default class StudyPageHeader extends React.Component<
                             this.props.store
                                 .removeComparisonGroupSelectionFilter
                         }
+                        onBookmarkClick={this.props.onBookmarkClick}
                         clearAllFilters={this.props.store.clearAllFilters}
                     />
                 )}

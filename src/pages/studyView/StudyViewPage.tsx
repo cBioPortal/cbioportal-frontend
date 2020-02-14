@@ -2,7 +2,13 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import { inject, Observer, observer } from 'mobx-react';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
-import { computed, IReactionDisposer, reaction, observable } from 'mobx';
+import {
+    computed,
+    IReactionDisposer,
+    reaction,
+    observable,
+    action,
+} from 'mobx';
 import {
     CustomChart,
     StudyViewPageStore,
@@ -52,6 +58,9 @@ import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import styles from './styles.module.scss';
 import './styles.scss';
+import autobind from 'autobind-decorator';
+import { BookmarkModal } from 'pages/resultsView/bookmark/BookmarkModal';
+import { ShareUrls } from 'pages/resultsView/querySummary/ShareUI';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -100,7 +109,6 @@ export default class StudyViewPage extends React.Component<
     @observable showCustomSelectTooltip = false;
     @observable showGroupsTooltip = false;
     @observable private showReturnToDefaultChartListModal: boolean = false;
-    private studyViewQueryFilter: StudyViewURLQuery;
 
     constructor(props: IStudyViewPageProps) {
         super(props);
@@ -108,6 +116,8 @@ export default class StudyViewPage extends React.Component<
             this.props.appStore,
             ServerConfigHelpers.sessionServiceIsEnabled()
         );
+
+        getBrowserWindow().studyPage = this;
 
         this.queryReaction = reaction(
             () => [props.routing.location.query, props.routing.location.hash],
@@ -144,9 +154,14 @@ export default class StudyViewPage extends React.Component<
                         newStudyViewFilter.filters = filters[1];
                     }
                 }
-                if (!_.isEqual(newStudyViewFilter, this.studyViewQueryFilter)) {
+                if (
+                    !_.isEqual(
+                        newStudyViewFilter,
+                        this.store.studyViewQueryFilter
+                    )
+                ) {
                     this.store.updateStoreFromURL(newStudyViewFilter);
-                    this.studyViewQueryFilter = newStudyViewFilter;
+                    this.store.studyViewQueryFilter = newStudyViewFilter;
                 }
             },
             { fireImmediately: true }
@@ -181,6 +196,27 @@ export default class StudyViewPage extends React.Component<
 
     private handleTabChange(id: string) {
         this.props.routing.updateRoute({}, `study/${id}`);
+    }
+
+    @observable showBookmarkModal = false;
+
+    @autobind
+    @action
+    toggleBookmarkModal() {
+        this.showBookmarkModal = !this.showBookmarkModal;
+    }
+
+    @autobind
+    onBookmarkClick() {
+        this.toggleBookmarkModal();
+    }
+
+    @computed get bookmarkUrl() {
+        return `${window.location.protocol}//${window.location.host}${
+            window.location.pathname
+        }${window.location.search}#filterJson=${JSON.stringify(
+            this.store.filters
+        )}`;
     }
 
     private chartDataPromises = remoteData({
@@ -306,6 +342,16 @@ export default class StudyViewPage extends React.Component<
     content() {
         return (
             <div className="studyView">
+                {this.showBookmarkModal && (
+                    <BookmarkModal
+                        onHide={this.toggleBookmarkModal}
+                        title={'Bookmark this filter'}
+                        urlPromise={Promise.resolve({
+                            fullUrl: this.bookmarkUrl,
+                        } as ShareUrls)}
+                    />
+                )}
+
                 {this.store.comparisonConfirmationModal}
                 {this.store.unknownQueriedIds.isComplete &&
                     this.store.unknownQueriedIds.result.length > 0 && (
@@ -329,7 +375,10 @@ export default class StudyViewPage extends React.Component<
                     this.store.unknownQueriedIds.isComplete &&
                     this.store.displayedStudies.isComplete && (
                         <div>
-                            <StudyPageHeader store={this.store} />
+                            <StudyPageHeader
+                                store={this.store}
+                                onBookmarkClick={this.onBookmarkClick}
+                            />
 
                             <div className={styles.mainTabs}>
                                 <MSKTabs

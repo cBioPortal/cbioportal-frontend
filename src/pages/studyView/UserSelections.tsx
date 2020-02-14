@@ -32,6 +32,7 @@ import {
     getSampleIdentifiers,
     StudyViewComparisonGroup,
 } from '../groupComparison/GroupComparisonUtils';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 
 export interface IUserSelectionsProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;
@@ -49,6 +50,7 @@ export interface IUserSelectionsProps {
     removeComparisonGroupSelectionFilter: () => void;
     clearAllFilters: () => void;
     clinicalAttributeIdToDataType: { [key: string]: string };
+    onBookmarkClick: () => void;
 }
 
 @observer
@@ -406,6 +408,21 @@ export default class UserSelections extends React.Component<
                     >
                         Clear All Filters
                     </button>
+
+                    <DefaultTooltip
+                        placement={'topLeft'}
+                        overlay={<div>Get bookmark link for this filter</div>}
+                    >
+                        <a
+                            onClick={this.props.onBookmarkClick}
+                            className={styles.bookmarkButton}
+                        >
+                            <span className="fa-stack fa-4x">
+                                <i className="fa fa-circle fa-stack-2x"></i>
+                                <i className="fa fa-link fa-stack-1x"></i>
+                            </span>
+                        </a>
+                    </DefaultTooltip>
                 </div>
             );
         } else {
