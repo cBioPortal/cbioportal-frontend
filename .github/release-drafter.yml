@@ -8,7 +8,7 @@ categories:
   - title: '✨ Enhancements'
     labels:
       - 'enhancement'
-      - 'cli-enhancement'
+      - 'cl-enhancement'
   - title: '🐛 Bug Fixes'
     labels:
       - 'fix'
