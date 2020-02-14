@@ -11,7 +11,7 @@ var Clipboard = require('clipboard');
 
 @observer
 export class BookmarkModal extends React.Component<
-    { onHide: () => void; urlPromise: Promise<any> },
+    { onHide: () => void; urlPromise: Promise<any>; title: string },
     {}
 > {
     @observable
@@ -76,7 +76,7 @@ export class BookmarkModal extends React.Component<
         return (
             <Modal show={true} onHide={this.props.onHide}>
                 <Modal.Header closeButton>
-                    <Modal.Title>Bookmark Query</Modal.Title>
+                    <Modal.Title>{this.props.title}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body style={{ minHeight: 70 }}>
                     <LoadingIndicator
