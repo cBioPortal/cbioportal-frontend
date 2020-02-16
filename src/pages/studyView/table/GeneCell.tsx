@@ -12,6 +12,8 @@ import { action, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
 import { If, Then, Else } from 'react-if';
+import GisticAnnotation from 'shared/components/annotation/Gistic';
+import MutSigAnnotation from 'shared/components/annotation/MutSig';
 
 export type IGeneCellProps = {
     tableType: 'mutation' | 'fusion' | 'cna';
@@ -40,17 +42,10 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
             this.props.selectedGenes,
             this.props.hugoGeneSymbol
         );
-        const qvalTypeName =
-            this.props.tableType === 'mutation' ? 'MutSig' : 'Gistic';
-        const qvalType = qvalTypeName.toLowerCase();
-        const qvalOverlay = () => (
-            <div>
-                <b>{qvalTypeName}</b>
-                <br />
-                <i>Q-value: </i>
-                <span>{getQValue(this.props.qValue)}</span>
-            </div>
-        );
+        let iconStyle = {
+            marginLeft: 2,
+            marginTop: 2,
+        };
 
         return (
             <DefaultTooltip
@@ -94,18 +89,20 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                         </If>
                     </span>
                     <If condition={!_.isUndefined(this.props.qValue)}>
-                        <DefaultTooltip
-                            placement="right"
-                            overlay={qvalOverlay}
-                            destroyTooltipOnHide={true}
-                        >
-                            <span>
-                                <img
-                                    src={require(`./images/${qvalType}.png`)}
-                                    className={styles[qvalType]}
-                                ></img>
-                            </span>
-                        </DefaultTooltip>
+                        <span style={iconStyle}>
+                            <If condition={this.props.tableType === 'mutation'}>
+                                <Then>
+                                    <MutSigAnnotation
+                                        qValue={this.props.qValue}
+                                    />
+                                </Then>
+                                <Else>
+                                    <GisticAnnotation
+                                        qValue={this.props.qValue}
+                                    />
+                                </Else>
+                            </If>
+                        </span>
                     </If>
                 </div>
             </DefaultTooltip>
