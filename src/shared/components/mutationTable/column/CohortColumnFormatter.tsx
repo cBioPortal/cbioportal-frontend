@@ -3,7 +3,6 @@ import 'rc-tooltip/assets/bootstrap_white.css';
 import { Mutation } from 'shared/api/generated/CBioPortalAPI';
 import VariantCountCache from 'shared/cache/VariantCountCache';
 import FrequencyBar from 'shared/components/cohort/FrequencyBar';
-import Icon from 'shared/components/cohort/LetterIcon';
 import { IMutSigData as MutSigData } from 'shared/model/MutSig';
 import { VariantCount } from 'shared/api/generated/CBioPortalAPIInternal';
 import { CacheData } from 'shared/lib/LazyMobXCache';
@@ -12,6 +11,7 @@ import {
     TableCellStatusIndicator,
     TableCellStatus,
 } from 'cbioportal-frontend-commons';
+import { makeMutSigIcon } from 'shared/components/annotation/MutSig';
 
 type AugVariantCountOutput = CacheData<VariantCount> & {
     hugoGeneSymbol: string;
@@ -36,8 +36,7 @@ export default class CohortColumnFormatter {
         return (
             <div>
                 {freqViz !== null && freqViz}
-                {mutSigQValue !== null &&
-                    CohortColumnFormatter.makeMutSigIcon(mutSigQValue)}
+                {mutSigQValue !== null && makeMutSigIcon(mutSigQValue)}
             </div>
         );
     }
@@ -126,13 +125,6 @@ export default class CohortColumnFormatter {
         }
     }
 
-    private static makeMutSigIcon(qValue: number) {
-        const tooltipCallback = () =>
-            CohortColumnFormatter.getMutSigTooltip(qValue);
-
-        return <Icon text="M" tooltip={tooltipCallback} />;
-    }
-
     private static getBoldPercentage(proportion: number) {
         return <b>{getPercentage(proportion)}</b>;
     }
@@ -177,15 +169,5 @@ export default class CohortColumnFormatter {
                 </div>
             );
         }
-    }
-
-    private static getMutSigTooltip(qValue: number) {
-        return (
-            <div>
-                <b>MutSig</b>
-                <br />
-                <span> Q-value: {(qValue || 0).toExponential(3)}</span>
-            </div>
-        );
     }
 }
