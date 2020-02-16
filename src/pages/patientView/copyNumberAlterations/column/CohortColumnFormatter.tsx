@@ -4,13 +4,13 @@ import {
     CopyNumberCount,
 } from 'shared/api/generated/CBioPortalAPI';
 import FrequencyBar from 'shared/components/cohort/FrequencyBar';
-import Icon from 'shared/components/cohort/LetterIcon';
 import { IGisticData, IGisticSummary } from 'shared/model/Gistic';
 import { getPercentage } from 'shared/lib/FormatUtils';
 
 import CopyNumberCountCache from '../../clinicalInformation/CopyNumberCountCache';
 import { CacheData } from '../../../../shared/lib/LazyMobXCache';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { makeGisticIcon } from 'shared/components/annotation/Gistic';
 
 export default class CohortColumnFormatter {
     public static renderFunction(
@@ -33,13 +33,10 @@ export default class CohortColumnFormatter {
         let gisticIcon: JSX.Element | null = null;
 
         if (gisticValue !== null) {
-            const tooltipCallback = () =>
-                CohortColumnFormatter.getGisticTooltip(
-                    gisticValue.qValue,
-                    gisticValue.peakGeneCount
-                );
-
-            gisticIcon = <Icon text="G" tooltip={tooltipCallback} />;
+            gisticIcon = makeGisticIcon(
+                gisticValue.qValue,
+                gisticValue.peakGeneCount
+            );
         }
 
         return (
@@ -199,17 +196,5 @@ export default class CohortColumnFormatter {
         }
 
         return summary === undefined ? null : summary;
-    }
-
-    private static getGisticTooltip(qValue: number, peakGeneCount: number) {
-        return (
-            <div>
-                <b>Gistic</b>
-                <br />
-                <span> Q-value: {(qValue || 0).toExponential(3)}</span>
-                <br />
-                <span> Number of genes in the peak: {peakGeneCount}</span>
-            </div>
-        );
     }
 }
