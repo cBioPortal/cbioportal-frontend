@@ -87,6 +87,15 @@ export default class PortalHeader extends React.Component<
                 hide: () =>
                     AppConfig.serverConfig.skin_show_about_tab === false,
             },
+
+            {
+                id: 'version',
+                text: 'Version',
+                address: '/version',
+                internal: true,
+                hide: () =>
+                    AppConfig.serverConfig.skin_show_version_tab === false,
+            },
         ];
     }
 

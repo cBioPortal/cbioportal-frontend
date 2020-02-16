@@ -67,6 +67,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_show_r_matlab_tab: true,
     skin_show_tools_tab: true,
     skin_show_web_api_tab: true,
+    skin_show_version_tab: true,
     skin_show_tweet_button: false,
     skin_show_tissue_image_tab: true,
     quick_search_enabled: false,
@@ -83,10 +84,10 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     default_cross_cancer_study_list_name: 'TCGA PanCancer Atlas studies',
     skin_title: 'cBioPortal for Cancer Genomics',
 
-    skin_data_sets_footer: `Data sets of TCGA studies were downloaded from Broad 
-            Firehose (http://gdac.broadinstitute.org) and updated monthly. In some studies, data sets were from the 
+    skin_data_sets_footer: `Data sets of TCGA studies were downloaded from Broad
+            Firehose (http://gdac.broadinstitute.org) and updated monthly. In some studies, data sets were from the
             TCGA working groups directly.`,
-    skin_data_sets_header: `The portal currently contains data from the following 
+    skin_data_sets_header: `The portal currently contains data from the following
             cancer genomics studies.  The table below lists the number of available samples per data type and tumor.`,
 
     skin_example_study_queries: `tcga pancancer atlas\n

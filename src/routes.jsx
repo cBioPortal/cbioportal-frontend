@@ -40,6 +40,7 @@ import AboutUs from 'bundle-loader?lazy!babel-loader!./pages/staticPages/aboutus
 import Software from 'bundle-loader?lazy!babel-loader!./pages/staticPages/software/Software';
 import News from 'bundle-loader?lazy!babel-loader!./pages/staticPages/news/News';
 import FAQ from 'bundle-loader?lazy!babel-loader!./pages/staticPages/faq/FAQ';
+import Version from 'bundle-loader?lazy!babel-loader!./pages/staticPages/version/Version';
 import OQL from 'bundle-loader?lazy!babel-loader!./pages/staticPages/oql/OQL';
 import GroupComparisonPage from 'bundle-loader?lazy!babel-loader!./pages/groupComparison/GroupComparisonPage';
 import ErrorPage from 'bundle-loader?lazy!babel-loader!./pages/resultsView/ErrorPage';
@@ -266,6 +267,11 @@ export const makeRoutes = routing => {
                 path="/faq"
                 onEnter={handleEnter}
                 getComponent={lazyLoadComponent(FAQ)}
+            />
+            <Route
+                path="/version"
+                onEnter={handleEnter}
+                getComponent={lazyLoadComponent(Version)}
             />
             <Route
                 path="/oql"
