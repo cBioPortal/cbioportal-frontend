@@ -12,6 +12,8 @@ import { action, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
 import { If, Then, Else } from 'react-if';
+import { getGisticTooltip } from 'shared/components/annotation/Gistic';
+import { getMutSigTooltip } from 'shared/components/annotation/MutSig';
 
 export type IGeneCellProps = {
     tableType: 'mutation' | 'fusion' | 'cna';
@@ -43,14 +45,12 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
         const qvalTypeName =
             this.props.tableType === 'mutation' ? 'MutSig' : 'Gistic';
         const qvalType = qvalTypeName.toLowerCase();
-        const qvalOverlay = () => (
-            <div>
-                <b>{qvalTypeName}</b>
-                <br />
-                <i>Q-value: </i>
-                <span>{getQValue(this.props.qValue)}</span>
-            </div>
-        );
+        let qvalOverlay;
+        if (this.props.tableType === 'mutation') {
+            qvalOverlay = () => getMutSigTooltip(this.props.qValue);
+        } else {
+            qvalOverlay = () => getGisticTooltip(this.props.qValue);
+        }
 
         return (
             <DefaultTooltip
