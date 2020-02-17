@@ -1124,6 +1124,27 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             .result || []) as any[]);
     }
 
+    // group entites by stableId, each stableId should only have on
+    readonly genericEntitiesGroupByEntityId = remoteData<{
+        [entityId: string]: GenericAssayMeta;
+    }>({
+        await: () => [
+            this.props.store.genericAssayEntitiesGroupByMolecularProfileId,
+        ],
+        invoke: () => {
+            const result: { [entityId: string]: GenericAssayMeta } = _.chain(
+                this.props.store.genericAssayEntitiesGroupByMolecularProfileId
+                    .result
+            )
+                .values()
+                .flatten()
+                .groupBy(entity => entity.stableId)
+                .mapValues(entites => entites[0])
+                .value();
+            return Promise.resolve(result);
+        },
+    });
+
     @observable readonly horzGenericAssayOptions = remoteData({
         await: () => [
             this.props.store.genericAssayEntitiesGroupByMolecularProfileId,
@@ -1356,8 +1377,18 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         invoke: () => {
             const profiles = this.props.store.molecularProfilesInStudies
                 .result!;
+            // filter out generic assay profile which showProfileInAnalysisTab is not TRUE
+            const filteredProfiles = _.filter(profiles, profile => {
+                return (
+                    profile.molecularAlterationType !==
+                        AlterationTypeConstants.GENERIC_ASSAY ||
+                    (profile.molecularAlterationType ===
+                        AlterationTypeConstants.GENERIC_ASSAY &&
+                        profile.showProfileInAnalysisTab)
+                );
+            });
             const map = _.mapValues(
-                _.groupBy(profiles, profile => {
+                _.groupBy(filteredProfiles, profile => {
                     if (
                         profile.molecularAlterationType ===
                         AlterationTypeConstants.GENERIC_ASSAY
@@ -2167,7 +2198,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 axisSelection.dataType !==
                     AlterationTypeConstants.MUTATION_EXTENDED &&
                 !this.props.store.molecularProfileIdToMolecularProfile
-                    .isComplete)
+                    .isComplete) ||
+            (axisSelection.dataType &&
+                _.keys(GenericAssayTypeConstants).includes(
+                    axisSelection.dataType
+                ) &&
+                !this.genericEntitiesGroupByEntityId.isComplete)
         ) {
             return <LoadingIndicator isLoading={true} />;
         }
@@ -2233,6 +2269,32 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 otherDataSourceId!
             ].name;
             dataTypeDescription = `Sample order determined by values on the '${otherProfileName}' axis`;
+        }
+
+        // generic assay description
+        let genericAssayDescription: string = '';
+        let genericAssayUrl: string = '';
+        const selectedGenericAssayEntityId = vertical
+            ? this.vertSelection.genericAssayEntityId
+            : this.horzSelection.genericAssayEntityId;
+        if (
+            axisSelection.dataType &&
+            _.keys(GenericAssayTypeConstants).includes(
+                axisSelection.dataType
+            ) &&
+            selectedGenericAssayEntityId
+        ) {
+            const entity = this.genericEntitiesGroupByEntityId.result![
+                selectedGenericAssayEntityId
+            ];
+            genericAssayDescription =
+                'DESCRIPTION' in entity.genericEntityMetaProperties
+                    ? entity.genericEntityMetaProperties['DESCRIPTION']
+                    : '';
+            genericAssayUrl =
+                'URL' in entity.genericEntityMetaProperties
+                    ? entity.genericEntityMetaProperties['URL']
+                    : '';
         }
 
         return (
@@ -2497,11 +2559,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         ]
                                     }
                                 </label>
-                                <div>
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                    }}
+                                >
                                     <Select
                                         name={`${
                                             vertical ? 'v' : 'h'
                                         }-generic-assay-selector`}
+                                        className="genericAssaySelectBox"
                                         value={
                                             axisSelection.selectedGenericAssayOption
                                                 ? axisSelection.selectedGenericAssayOption
@@ -2581,6 +2649,38 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                             ).includes(axisSelection.dataType)
                                         }
                                     />
+                                    {genericAssayDescription && (
+                                        <InfoIcon
+                                            tooltip={
+                                                <div>
+                                                    {genericAssayUrl &&
+                                                        axisSelection.selectedGenericAssayOption && (
+                                                            <a
+                                                                target="_blank"
+                                                                href={
+                                                                    genericAssayUrl
+                                                                }
+                                                            >
+                                                                <b>
+                                                                    {
+                                                                        axisSelection
+                                                                            .selectedGenericAssayOption
+                                                                            .value
+                                                                    }
+                                                                </b>
+                                                            </a>
+                                                        )}
+                                                    <div>
+                                                        {
+                                                            genericAssayDescription
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                            tooltipPlacement="right"
+                                            style={{ marginLeft: 7 }}
+                                        />
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -3135,6 +3235,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.vertAxisDataPromise,
             this.horzLabel,
             this.vertLabel,
+            this.genericEntitiesGroupByEntityId,
         ];
         const groupStatus = getMobxPromiseGroupStatus(...promises);
         const isPercentage =

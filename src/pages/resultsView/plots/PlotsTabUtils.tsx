@@ -74,7 +74,7 @@ export const dataTypeToDisplayType: { [s: string]: string } = {
     [CLIN_ATTR_DATA_TYPE]: 'Clinical Attribute',
     [GENESET_DATA_TYPE]: 'Gene Sets',
     [GenericAssayTypeConstants.TREATMENT_RESPONSE]: 'Treatment Response',
-    [GenericAssayTypeConstants.MUTATIONAL_SIGNATURE]: 'Mutational Signature',
+    [GenericAssayTypeConstants.MUTATIONAL_SIGNATURE]: 'Mutational Signatures',
 };
 
 export const mutationTypeToDisplayName: {
