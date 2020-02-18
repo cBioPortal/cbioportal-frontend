@@ -7,7 +7,13 @@ import 'pathway-mapper/dist/base.css';
 import PathwayMapperTable from './PathwayMapperTable';
 import { observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
-import { observable, computed, action } from 'mobx';
+import {
+    observable,
+    computed,
+    action,
+    reaction,
+    IReactionDisposer,
+} from 'mobx';
 import { Row } from 'react-bootstrap';
 
 import { AppStore } from 'AppStore';
@@ -23,6 +29,7 @@ import ResultsViewURLWrapper from '../ResultsViewURLWrapper';
 import 'cytoscape-panzoom/cytoscape.js-panzoom.css';
 import 'cytoscape-navigator/cytoscape.js-navigator.css';
 import 'react-toastify/dist/ReactToastify.css';
+import styles from './pathwayMapper.module.scss';
 
 interface IResultsViewPathwayMapperProps {
     store: ResultsViewPageStore;
@@ -46,11 +53,26 @@ export default class ResultsViewPathwayMapper extends React.Component<
     @observable
     private activeToasts: React.ReactText[];
 
+    private toastReaction: IReactionDisposer;
+
     private readonly validNonQueryGenes = remoteData<string[]>({
         invoke: async () => {
             const genes = await fetchGenes(this.newGenesFromPathway);
 
             return genes.map(gene => gene.hugoGeneSymbol);
+        },
+        onResult: (genes: string[]) => {
+            // show loading text only if there are actually new genes to load
+            if (genes.length > 0) {
+                const tId = toast('Loading alteration data...', {
+                    autoClose: false,
+                    draggable: false,
+                    position: 'bottom-left',
+                    className: styles.toast,
+                });
+
+                this.activeToasts.push(tId);
+            }
         },
     });
 
@@ -62,6 +84,18 @@ export default class ResultsViewPathwayMapper extends React.Component<
         this.activeToasts = [];
         this.accumulatedValidGenes = {};
         this.accumulatedAlterationFrequencyDataForNonQueryGenes = [];
+
+        this.toastReaction = reaction(
+            () => [props.store.tabId],
+            ([tabId]) => {
+                // Close all toasts when the Pathway Mapper tab is not visible.
+                if (tabId !== ResultsViewTab.PATHWAY_MAPPER) {
+                    this.activeToasts.length = 0;
+                    toast.dismiss();
+                }
+            },
+            { fireImmediately: true }
+        );
     }
 
     @computed get alterationFrequencyData(): ICBioData[] {
@@ -150,12 +184,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
         // Alteration data of non-query genes are loaded.
         if (this.isNewStoreReady) {
             this.addGenomicData(this.alterationFrequencyData);
-            // Toasts are removed with delay
-            setTimeout(() => {
-                this.activeToasts.forEach(tId => {
-                    toast.dismiss(tId);
-                });
-            }, 2000);
+            this.dismissActiveToasts();
         }
 
         return (
@@ -189,7 +218,9 @@ export default class ResultsViewPathwayMapper extends React.Component<
                                 validGenes={this.validGenes}
                                 toast={toast}
                             />
-                            <ToastContainer />
+                            <ToastContainer
+                                closeButton={<i className="fa fa-times" />}
+                            />
                         </React.Fragment>
                     </Row>
                 </div>
@@ -197,32 +228,22 @@ export default class ResultsViewPathwayMapper extends React.Component<
         );
     }
 
+    componentWillUnmount(): void {
+        this.toastReaction();
+    }
+
     /**
      * We need to initialize a separate ResultsViewStore to be able to fetch alteration data for non-query genes.
      */
     @computed get storeForAllData(): ResultsViewPageStore | undefined {
-        // Currently Pathways (PathwayMapper) tab must be active, otherwise; all toasts must be closed.
-        if (this.props.store.tabId !== ResultsViewTab.PATHWAY_MAPPER) {
-            this.activeToasts.length = 0;
-            toast.dismiss();
-            return undefined;
-        }
-
-        if (this.urlWrapperForAllGenes) {
-            if (
-                this.urlWrapperForAllGenes.hasSessionId &&
-                this.urlWrapperForAllGenes.remoteSessionData.isPending
-            ) {
-                return undefined;
-            }
-
-            const tId = toast(
-                'Alteration data of genes not listed in gene list might take a while to load!',
-                { autoClose: false, position: 'bottom-left' }
-            );
-            this.activeToasts.push(tId);
-
+        if (
+            this.urlWrapperForAllGenes &&
+            (!this.urlWrapperForAllGenes.hasSessionId ||
+                !this.urlWrapperForAllGenes.remoteSessionData.isPending)
+        ) {
             return initStore(this.props.appStore, this.urlWrapperForAllGenes);
+        } else {
+            return undefined;
         }
     }
 
@@ -283,6 +304,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
     private handlePathwayChange(pathwayGenes: string[]) {
         // Pathway genes here are the genes that are in the pathway and valid whose alteration data is not calculated yet.
         // Pathway genes does NOT always include all of the non-query genes
+        // Some of the pathway genes may be invalid/unknown gene symbols
         this.newGenesFromPathway = pathwayGenes;
     }
 
@@ -290,5 +312,15 @@ export default class ResultsViewPathwayMapper extends React.Component<
     @action
     private handleAddGenes(selectedGenes: string[]) {
         addGenesToQuery(this.props.urlWrapper, selectedGenes);
+    }
+
+    @autobind
+    private dismissActiveToasts() {
+        // Toasts are removed with delay
+        setTimeout(() => {
+            this.activeToasts.forEach(tId => {
+                toast.dismiss(tId);
+            });
+        }, 2000);
     }
 }
