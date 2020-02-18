@@ -253,7 +253,7 @@ export class DefaultMutationMapperDataFetcher {
     public fetchOncoKbCancerGenes(
         client: OncoKbAPI = this.oncoKbClient
     ): Promise<CancerGene[]> {
-        return client.utilsCancerGeneListGetUsingGET_1({});
+        return client.utilsCancerGeneListGetUsingGET({});
     }
 
     public async fetchOncoKbData(
