@@ -15,6 +15,7 @@ import convertSamplesData, {
 import { getMutationalSignaturePercentage } from '../../../shared/lib/FormatUtils';
 import _ from 'lodash';
 import { labelMobxPromises } from 'mobxpromise';
+import { convertMutationalSignatureStableIdToDisplayName } from 'shared/lib/GenericAssayUtils/MutationalSignatureUtils';
 
 export interface IClinicalInformationMutationalSignatureTableProps {
     data: IMutationalSignature[];
@@ -29,7 +30,7 @@ class MutationalSignatureTable extends LazyMobXTable<IMutationalSignatureRow> {}
 interface IMutationalSignatureRow {
     mutationalSignatureId: string;
     sampleValues: {
-        [uniqueSampleKey: string]: {
+        [sampleId: string]: {
             //each element in the row will contain data about exposure and confidence
             value: number;
             confidence: number;
@@ -62,12 +63,14 @@ export function prepareMutationalSignatureDataForTable(
             mutationalSignatureId: '',
             sampleValues: {},
         };
-        mutationalSignatureRowForTable.mutationalSignatureId =
-            mutationalSignature.id;
+        mutationalSignatureRowForTable.mutationalSignatureId = convertMutationalSignatureStableIdToDisplayName(
+            mutationalSignature.id
+        );
         for (const sample of mutationalSignature.samples) {
-            mutationalSignatureRowForTable.sampleValues[
-                sample.uniqueSampleKey
-            ] = { value: sample.value, confidence: sample.confidence };
+            mutationalSignatureRowForTable.sampleValues[sample.sampleId] = {
+                value: sample.value,
+                confidence: sample.confidence,
+            };
         }
         tableData.push(mutationalSignatureRowForTable);
     }
@@ -79,8 +82,8 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
     {}
 > {
     readonly uniqueSamples = _.map(
-        _.uniqBy(this.props.data, 'uniqueSampleKey'),
-        uniqSample => ({ id: uniqSample.uniqueSampleKey })
+        _.uniqBy(this.props.data, 'sampleId'),
+        uniqSample => ({ id: uniqSample.sampleId })
     );
 
     readonly tableData = prepareMutationalSignatureDataForTable(
@@ -150,7 +153,7 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
                 showPagination={false}
                 initialItemsPerPage={SHOW_ALL_PAGE_SIZE}
                 showColumnVisibility={false}
-                initialSortColumn="attribute"
+                initialSortColumn="Mutational Signature"
                 initialSortDirection="asc"
             />
         );

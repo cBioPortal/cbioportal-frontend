@@ -65,6 +65,7 @@ import { checkNonProfiledGenesExist } from './PatientViewPageUtils';
 import PatientViewMutationsTab from './mutation/PatientViewMutationsTab';
 import PatientViewGenePanelModal from './PatientViewGenePanelModal/PatientViewGenePanelModal';
 import { PatientViewPageTabs } from './PatientViewPageTabs';
+import ClinicalInformationMutationalSignatureTable from './clinicalInformation/ClinicalInformationMutationalSignatureTable';
 
 export interface IPatientViewPageProps {
     params: any; // react route
@@ -1412,18 +1413,65 @@ export default class PatientViewPage extends React.Component<
                                     </MSKTab>
                                 )}
 
-                                {/*<MSKTab key={5} id={{PatientViewPageTabs.MutationalSignatures}} linkText="Mutational Signature Data" hide={true}>*/}
-                                {/*<div className="clearfix">*/}
-                                {/*<FeatureTitle title="Mutational Signatures" isLoading={ this.patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />*/}
-                                {/*<LoadingIndicator isLoading={this.patientViewPageStore.mutationalSignatureData.isPending}/>*/}
-                                {/*{*/}
-                                {/*(this.patientViewPageStore.clinicalDataGroupedBySample.isComplete && this.patientViewPageStore.mutationalSignatureData.isComplete) && (*/}
-                                {/*<ClinicalInformationMutationalSignatureTable data={this.patientViewPageStore.mutationalSignatureData.result} showTitleBar={true}/>*/}
-                                {/*)*/}
-                                {/*}*/}
-                                {/*</div>*/}
-
-                                {/*</MSKTab>*/}
+                                {this.patientViewPageStore
+                                    .mutationalSignatureMolecularProfileIds
+                                    .isComplete &&
+                                    this.patientViewPageStore
+                                        .mutationalSignatureData.isComplete && (
+                                        <MSKTab
+                                            key={7}
+                                            id="mutationalSignatures"
+                                            linkText="Mutational Signature Data"
+                                            hide={
+                                                !this.patientViewPageStore
+                                                    .mutationalSignatureMolecularProfileIds
+                                                    .result ||
+                                                this.patientViewPageStore
+                                                    .mutationalSignatureData
+                                                    .result.length === 0
+                                            }
+                                        >
+                                            <div className="clearfix">
+                                                <FeatureTitle
+                                                    title="Mutational Signatures"
+                                                    isLoading={
+                                                        this
+                                                            .patientViewPageStore
+                                                            .clinicalDataGroupedBySample
+                                                            .isPending
+                                                    }
+                                                    className="pull-left"
+                                                />
+                                                <LoadingIndicator
+                                                    isLoading={
+                                                        this
+                                                            .patientViewPageStore
+                                                            .mutationalSignatureData
+                                                            .isPending
+                                                    }
+                                                />
+                                                {this.patientViewPageStore
+                                                    .clinicalDataGroupedBySample
+                                                    .isComplete &&
+                                                    this.patientViewPageStore
+                                                        .mutationalSignatureData
+                                                        .isComplete &&
+                                                    this.patientViewPageStore
+                                                        .mutationalSignatureData
+                                                        .result && (
+                                                        <ClinicalInformationMutationalSignatureTable
+                                                            data={
+                                                                this
+                                                                    .patientViewPageStore
+                                                                    .mutationalSignatureData
+                                                                    .result
+                                                            }
+                                                            showTitleBar={true}
+                                                        />
+                                                    )}
+                                            </div>
+                                        </MSKTab>
+                                    )}
 
                                 {AppConfig.serverConfig.custom_tabs &&
                                     AppConfig.serverConfig.custom_tabs
