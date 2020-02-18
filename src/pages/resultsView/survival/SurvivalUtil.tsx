@@ -52,10 +52,7 @@ export function getEstimates(patientSurvivals: PatientSurvival[]): number[] {
     return estimates;
 }
 
-export function getMedian(
-    patientSurvivals: PatientSurvival[],
-    estimates: number[]
-): string {
+export function getMedian(patientSurvivals: PatientSurvival[], estimates: number[]): string {
     let median: string = 'NA';
     for (let i = 0; i < estimates.length; i++) {
         if (estimates[i] <= 0.5) {
@@ -66,10 +63,7 @@ export function getMedian(
     return median;
 }
 
-export function getLineData(
-    patientSurvivals: PatientSurvival[],
-    estimates: number[]
-): any[] {
+export function getLineData(patientSurvivals: PatientSurvival[], estimates: number[]): any[] {
     let chartData: any[] = [];
 
     chartData.push({ x: 0, y: 100 });
@@ -133,9 +127,7 @@ export function getStats(
     if (patientSurvivals && estimates) {
         return [
             patientSurvivals.length,
-            patientSurvivals.filter(
-                patientSurvival => patientSurvival.status === true
-            ).length,
+            patientSurvivals.filter(patientSurvival => patientSurvival.status === true).length,
             getMedian(patientSurvivals, estimates),
         ];
     } else {
@@ -160,11 +152,9 @@ export function calculateLogRank(
         let alteredNumberOfFailure = 0;
         let unalteredNumberOfFailure = 0;
         const alteredAtRisk = alteredPatientSurvivals.length - alteredIndex;
-        const unalteredAtRisk =
-            unalteredPatientSurvivals.length - unalteredIndex;
+        const unalteredAtRisk = unalteredPatientSurvivals.length - unalteredIndex;
         const alteredPatientSurvival = alteredPatientSurvivals[alteredIndex];
-        const unalteredPatientSurvival =
-            unalteredPatientSurvivals[unalteredIndex];
+        const unalteredPatientSurvival = unalteredPatientSurvivals[unalteredIndex];
 
         if (
             alteredPatientSurvival.months < unalteredPatientSurvival.months ||
@@ -186,15 +176,11 @@ export function calculateLogRank(
             unalteredIndex += 1;
         }
 
-        const numberOfFailures =
-            alteredNumberOfFailure + unalteredNumberOfFailure;
+        const numberOfFailures = alteredNumberOfFailure + unalteredNumberOfFailure;
         const atRisk = alteredAtRisk + unalteredAtRisk;
         const expectation = (alteredAtRisk / atRisk) * numberOfFailures;
         const variance =
-            (numberOfFailures *
-                (atRisk - numberOfFailures) *
-                alteredAtRisk *
-                unalteredAtRisk) /
+            (numberOfFailures * (atRisk - numberOfFailures) * alteredAtRisk * unalteredAtRisk) /
             (atRisk * atRisk * (atRisk - 1));
 
         totalAlteredNumberOfFailure += alteredNumberOfFailure;
@@ -247,10 +233,7 @@ export function convertScatterDataToDownloadData(patientData: any[]): any[] {
  * @param {DownSampling} opts
  * @returns {ScatterData[]}
  */
-export function downSampling(
-    data: ScatterData[],
-    opts: DownSamplingOpts
-): ScatterData[] {
+export function downSampling(data: ScatterData[], opts: DownSamplingOpts): ScatterData[] {
     let xMax = _.maxBy(data, 'x');
     let xMin = _.minBy(data, 'x');
 
@@ -259,10 +242,8 @@ export function downSampling(
 
     if (opts.xDenominator <= 0 || opts.yDenominator <= 0) return data;
 
-    let timeThreshold =
-        ((xMax ? xMax.x : 0) - (xMin ? xMin.x : 0)) / opts.xDenominator;
-    let survivalRateThreshold =
-        ((yMax ? yMax.y : 0) - (yMin ? yMin.y : 0)) / opts.yDenominator;
+    let timeThreshold = ((xMax ? xMax.x : 0) - (xMin ? xMin.x : 0)) / opts.xDenominator;
+    let survivalRateThreshold = ((yMax ? yMax.y : 0) - (yMin ? yMin.y : 0)) / opts.yDenominator;
     let averageThreshold = Math.hypot(timeThreshold, survivalRateThreshold);
     let lastVisibleDataPoint = {
         x: 0,
@@ -274,8 +255,7 @@ export function downSampling(
     };
 
     return data.filter(function(dataItem, index) {
-        let isVisibleDot =
-            _.isUndefined(dataItem.opacity) || dataItem.opacity > 0;
+        let isVisibleDot = _.isUndefined(dataItem.opacity) || dataItem.opacity > 0;
         if (index == 0) {
             lastDataPoint.x = dataItem.x;
             lastDataPoint.y = dataItem.y;
@@ -290,10 +270,7 @@ export function downSampling(
                 dataItem.y - lastVisibleDataPoint.y
             );
         } else {
-            distance = Math.hypot(
-                dataItem.x - lastDataPoint.x,
-                dataItem.y - lastDataPoint.y
-            );
+            distance = Math.hypot(dataItem.x - lastDataPoint.x, dataItem.y - lastDataPoint.y);
         }
         if (distance > averageThreshold) {
             lastDataPoint.x = dataItem.x;
@@ -321,25 +298,19 @@ export function filterScatterData(
                 value.scatter = value.scatter.filter(_val =>
                     filterBasedOnCoordinates(filters, _val)
                 );
-                value.scatterWithOpacity = value.scatterWithOpacity.filter(
-                    _val => filterBasedOnCoordinates(filters, _val)
+                value.scatterWithOpacity = value.scatterWithOpacity.filter(_val =>
+                    filterBasedOnCoordinates(filters, _val)
                 );
             }
             value.scatter = downSampling(value.scatter, downSamplingOpts);
-            value.scatterWithOpacity = downSampling(
-                value.scatterWithOpacity,
-                downSamplingOpts
-            );
+            value.scatterWithOpacity = downSampling(value.scatterWithOpacity, downSamplingOpts);
             value.numOfCases = value.scatter.length;
         }
     });
     return filteredData;
 }
 
-function filterBasedOnCoordinates(
-    filters: SurvivalPlotFilters,
-    _val: ScatterData
-) {
+function filterBasedOnCoordinates(filters: SurvivalPlotFilters, _val: ScatterData) {
     if (
         _val.x <= filters.x[1] &&
         _val.x >= filters.x[0] &&

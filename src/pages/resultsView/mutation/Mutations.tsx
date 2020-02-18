@@ -22,10 +22,7 @@ export interface IMutationsPageProps {
 }
 
 @observer
-export default class Mutations extends React.Component<
-    IMutationsPageProps,
-    {}
-> {
+export default class Mutations extends React.Component<IMutationsPageProps, {}> {
     private userSelectionStore: MutationMapperUserSelectionStore;
 
     @observable mutationsGeneTab: string;
@@ -39,20 +36,20 @@ export default class Mutations extends React.Component<
 
     @autobind
     private onToggleOql() {
-        this.props.store.mutationsTabFilteringSettings.useOql = !this.props
-            .store.mutationsTabFilteringSettings.useOql;
+        this.props.store.mutationsTabFilteringSettings.useOql = !this.props.store
+            .mutationsTabFilteringSettings.useOql;
     }
 
     @autobind
     private onToggleVUS() {
-        this.props.store.mutationsTabFilteringSettings.excludeVus = !this.props
-            .store.mutationsTabFilteringSettings.excludeVus;
+        this.props.store.mutationsTabFilteringSettings.excludeVus = !this.props.store
+            .mutationsTabFilteringSettings.excludeVus;
     }
 
     @autobind
     private onToggleGermline() {
-        this.props.store.mutationsTabFilteringSettings.excludeGermline = !this
-            .props.store.mutationsTabFilteringSettings.excludeGermline;
+        this.props.store.mutationsTabFilteringSettings.excludeGermline = !this.props.store
+            .mutationsTabFilteringSettings.excludeGermline;
     }
 
     public render() {
@@ -85,84 +82,57 @@ export default class Mutations extends React.Component<
         const tabs: JSX.Element[] = [];
 
         genes.forEach((gene: string) => {
-            const mutationMapperStore = this.props.store.getMutationMapperStore(
-                gene
-            );
+            const mutationMapperStore = this.props.store.getMutationMapperStore(gene);
 
             if (mutationMapperStore) {
-                const tabHasMutations =
-                    mutationMapperStore.mutations.length > 0;
+                const tabHasMutations = mutationMapperStore.mutations.length > 0;
                 // gray out tab if no mutations
-                const anchorStyle = tabHasMutations
-                    ? undefined
-                    : { color: '#bbb' };
+                const anchorStyle = tabHasMutations ? undefined : { color: '#bbb' };
 
                 tabs.push(
-                    <MSKTab
-                        key={gene}
-                        id={gene}
-                        linkText={gene}
-                        anchorStyle={anchorStyle}
-                    >
+                    <MSKTab key={gene} id={gene} linkText={gene} anchorStyle={anchorStyle}>
                         <div className={'tabMessageContainer'}>
                             <OqlStatusBanner
                                 className="mutations-oql-status-banner"
                                 store={this.props.store}
                                 tabReflectsOql={
-                                    this.props.store
-                                        .mutationsTabFilteringSettings.useOql
+                                    this.props.store.mutationsTabFilteringSettings.useOql
                                 }
-                                isUnaffected={
-                                    !this.props.store.queryContainsMutationOql
-                                }
+                                isUnaffected={!this.props.store.queryContainsMutationOql}
                                 onToggle={this.onToggleOql}
                             />
                             <AlterationFilterWarning
                                 store={this.props.store}
                                 mutationsTabModeSettings={{
-                                    excludeVUS: this.props.store
-                                        .mutationsTabFilteringSettings
+                                    excludeVUS: this.props.store.mutationsTabFilteringSettings
                                         .excludeVus,
-                                    excludeGermline: this.props.store
-                                        .mutationsTabFilteringSettings
+                                    excludeGermline: this.props.store.mutationsTabFilteringSettings
                                         .excludeGermline,
                                     toggleExcludeVUS: this.onToggleVUS,
-                                    toggleExcludeGermline: this
-                                        .onToggleGermline,
+                                    toggleExcludeGermline: this.onToggleGermline,
                                     hugoGeneSymbol: gene,
                                 }}
                             />
                         </div>
                         <ResultsViewMutationMapper
-                            {...convertToMutationMapperProps(
-                                AppConfig.serverConfig
-                            )}
+                            {...convertToMutationMapperProps(AppConfig.serverConfig)}
                             oncoKbPublicApiUrl={getOncoKbApiUrl()}
                             store={mutationMapperStore}
-                            trackVisibility={
-                                this.userSelectionStore.trackVisibility
-                            }
+                            trackVisibility={this.userSelectionStore.trackVisibility}
                             discreteCNACache={this.props.store.discreteCNACache}
-                            oncoKbEvidenceCache={
-                                this.props.store.oncoKbEvidenceCache
-                            }
+                            oncoKbEvidenceCache={this.props.store.oncoKbEvidenceCache}
                             pubMedCache={this.props.store.pubMedCache}
                             cancerTypeCache={this.props.store.cancerTypeCache}
-                            mutationCountCache={
-                                this.props.store.mutationCountCache
-                            }
+                            mutationCountCache={this.props.store.mutationCountCache}
                             genomeNexusCache={this.props.store.genomeNexusCache}
                             genomeNexusMutationAssessorCache={
-                                this.props.store
-                                    .genomeNexusMutationAssessorCache
+                                this.props.store.genomeNexusMutationAssessorCache
                             }
                             genomeNexusMyVariantInfoCache={
                                 this.props.store.genomeNexusMyVariantInfoCache
                             }
                             pdbHeaderCache={this.props.store.pdbHeaderCache}
-                            myCancerGenomeData={
-                                this.props.store.myCancerGenomeData
-                            }
+                            myCancerGenomeData={this.props.store.myCancerGenomeData}
                             userEmailAddress={this.props.appStore.userName!}
                         />
                     </MSKTab>

@@ -1,8 +1,6 @@
 var assert = require('assert');
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var useExternalFrontend = require('../../../shared/specUtils')
-    .useExternalFrontend;
+var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
+var useExternalFrontend = require('../../../shared/specUtils').useExternalFrontend;
 var waitForPlotsTab = require('../../../shared/specUtils').waitForPlotsTab;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');

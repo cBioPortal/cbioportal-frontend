@@ -3,17 +3,12 @@ var expect = require('chai').expect;
 var waitForOncoprint = require('../../../shared/specUtils').waitForOncoprint;
 var setOncoprintMutationsMenuOpen = require('../../../shared/specUtils')
     .setOncoprintMutationsMenuOpen;
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var waitForNetworkQuiet = require('../../../shared/specUtils')
-    .waitForNetworkQuiet;
-var sessionServiceIsEnabled = require('../../../shared/specUtils')
-    .sessionServiceIsEnabled;
-var assertScreenShotMatch = require('../../../shared/lib/testUtils')
-    .assertScreenShotMatch;
+var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
+var waitForNetworkQuiet = require('../../../shared/specUtils').waitForNetworkQuiet;
+var sessionServiceIsEnabled = require('../../../shared/specUtils').sessionServiceIsEnabled;
+var assertScreenShotMatch = require('../../../shared/lib/testUtils').assertScreenShotMatch;
 var pasteToElement = require('../../../shared/specUtils').pasteToElement;
-var checkOncoprintElement = require('../../../shared/specUtils')
-    .checkOncoprintElement;
+var checkOncoprintElement = require('../../../shared/specUtils').checkOncoprintElement;
 
 const TIMEOUT = 6000;
 

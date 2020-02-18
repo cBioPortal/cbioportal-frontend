@@ -1,8 +1,5 @@
 import * as React from 'react';
-import {
-    DiscreteCopyNumberData,
-    CopyNumberCount,
-} from 'shared/api/generated/CBioPortalAPI';
+import { DiscreteCopyNumberData, CopyNumberCount } from 'shared/api/generated/CBioPortalAPI';
 import FrequencyBar from 'shared/components/cohort/FrequencyBar';
 import Icon from 'shared/components/cohort/LetterIcon';
 import { IGisticData, IGisticSummary } from 'shared/model/Gistic';
@@ -22,14 +19,8 @@ export default class CohortColumnFormatter {
             data,
             copyNumberCountCache
         );
-        const freqViz = CohortColumnFormatter.makeCohortFrequencyViz(
-            data,
-            copyNumberCount
-        );
-        const gisticValue = CohortColumnFormatter.getGisticValue(
-            data,
-            gisticData
-        );
+        const freqViz = CohortColumnFormatter.makeCohortFrequencyViz(data, copyNumberCount);
+        const gisticValue = CohortColumnFormatter.getGisticValue(data, gisticData);
         let gisticIcon: JSX.Element | null = null;
 
         if (gisticValue !== null) {
@@ -57,9 +48,7 @@ export default class CohortColumnFormatter {
         if (cacheDatum !== null) {
             const copyNumberCount = cacheDatum.data;
             if (cacheDatum.status === 'complete' && copyNumberCount) {
-                const counts = [
-                    copyNumberCount.numberOfSamplesWithAlterationInGene,
-                ];
+                const counts = [copyNumberCount.numberOfSamplesWithAlterationInGene];
                 const colors = data[0].alteration > 0 ? ['red'] : ['blue'];
 
                 return (
@@ -67,21 +56,14 @@ export default class CohortColumnFormatter {
                         counts={counts}
                         freqColors={colors}
                         totalCount={copyNumberCount.numberOfSamples}
-                        tooltip={CohortColumnFormatter.tooltipContent(
-                            data,
-                            copyNumberCount
-                        )}
+                        tooltip={CohortColumnFormatter.tooltipContent(data, copyNumberCount)}
                     />
                 );
             } else if (cacheDatum.status === 'complete') {
                 return (
                     <DefaultTooltip
                         placement="left"
-                        overlay={
-                            <span>
-                                Data not available for this gene and alteration.
-                            </span>
-                        }
+                        overlay={<span>Data not available for this gene and alteration.</span>}
                     >
                         <span
                             style={{
@@ -96,10 +78,7 @@ export default class CohortColumnFormatter {
                 );
             } else {
                 return (
-                    <DefaultTooltip
-                        placement="left"
-                        overlay={<span>Error retrieving data.</span>}
-                    >
+                    <DefaultTooltip placement="left" overlay={<span>Error retrieving data.</span>}>
                         <span
                             style={{
                                 color: 'gray',
@@ -114,10 +93,7 @@ export default class CohortColumnFormatter {
             }
         } else {
             return (
-                <DefaultTooltip
-                    placement="left"
-                    overlay={<span>Querying server for data.</span>}
-                >
+                <DefaultTooltip placement="left" overlay={<span>Querying server for data.</span>}>
                     <span
                         style={{
                             color: 'gray',
@@ -132,14 +108,10 @@ export default class CohortColumnFormatter {
         }
     }
 
-    public static tooltipContent(
-        data: DiscreteCopyNumberData[],
-        copyNumberCount: CopyNumberCount
-    ) {
+    public static tooltipContent(data: DiscreteCopyNumberData[], copyNumberCount: CopyNumberCount) {
         const count = copyNumberCount.numberOfSamplesWithAlterationInGene;
         const proportion =
-            copyNumberCount.numberOfSamplesWithAlterationInGene /
-            copyNumberCount.numberOfSamples;
+            copyNumberCount.numberOfSamplesWithAlterationInGene / copyNumberCount.numberOfSamples;
         const boldPercentage = <b>{getPercentage(proportion)}</b>;
         const gene = data[0].gene.hugoGeneSymbol;
         const cna = data[0].alteration === -2 ? 'deleted' : 'amplified';
@@ -148,8 +120,7 @@ export default class CohortColumnFormatter {
 
         return (
             <span>
-                {count} {samples} ({boldPercentage}) in this study {have} {cna}{' '}
-                {gene}
+                {count} {samples} ({boldPercentage}) in this study {have} {cna} {gene}
             </span>
         );
     }

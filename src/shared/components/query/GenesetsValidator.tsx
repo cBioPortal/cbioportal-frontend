@@ -25,8 +25,7 @@ export default class GenesetsValidator extends QueryStoreComponent<{}, {}> {
                 <div className={styles.GeneSymbolValidator}>
                     <span className={styles.errorMessage}>
                         {`Cannot validate gene sets because of invalid OQL. ${
-                            this.store.genesetQueryErrorDisplayStatus ===
-                            Focus.Focused
+                            this.store.genesetQueryErrorDisplayStatus === Focus.Focused
                                 ? "Please click 'Submit' to see location of error."
                                 : this.store.genesetIdsQuery.error.message
                         }`}
@@ -42,22 +41,15 @@ export default class GenesetsValidator extends QueryStoreComponent<{}, {}> {
         if (this.store.genesets.isError) {
             return (
                 <div className={styles.GeneSymbolValidator}>
-                    <span className={styles.pendingMessage}>
-                        Unable to validate gene sets.
-                    </span>
+                    <span className={styles.pendingMessage}>Unable to validate gene sets.</span>
                 </div>
             );
         }
 
-        if (
-            this.store.genesets.isPending &&
-            this.store.genesets.result.invalid.length === 0
-        ) {
+        if (this.store.genesets.isPending && this.store.genesets.result.invalid.length === 0) {
             return (
                 <div className={styles.GeneSymbolValidator}>
-                    <span className={styles.pendingMessage}>
-                        Validating gene sets...
-                    </span>
+                    <span className={styles.pendingMessage}>Validating gene sets...</span>
                 </div>
             );
         }
@@ -65,31 +57,19 @@ export default class GenesetsValidator extends QueryStoreComponent<{}, {}> {
         if (this.store.genesets.result.invalid.length) {
             return (
                 <div className={styles.GeneSymbolValidator}>
-                    <div
-                        className={styles.invalidBubble}
-                        title="Please edit the gene sets."
-                    >
-                        <FontAwesome
-                            className={styles.icon}
-                            name="exclamation-circle"
-                        />
+                    <div className={styles.invalidBubble} title="Please edit the gene sets.">
+                        <FontAwesome className={styles.icon} name="exclamation-circle" />
                         <span>Invalid gene sets.</span>
                     </div>
 
-                    {this.store.genesets.result.invalid.map(
-                        this.renderSuggestion,
-                        this
-                    )}
+                    {this.store.genesets.result.invalid.map(this.renderSuggestion, this)}
                 </div>
             );
         }
 
         return (
             <div className={styles.GeneSymbolValidator}>
-                <div
-                    className={styles.validBubble}
-                    title="You can now submit the list."
-                >
+                <div className={styles.validBubble} title="You can now submit the list.">
                     <FontAwesome className={styles.icon} name="check-circle" />
                     <span>All gene sets are valid.</span>
                 </div>
@@ -98,16 +78,10 @@ export default class GenesetsValidator extends QueryStoreComponent<{}, {}> {
     }
 
     renderSuggestion(name: string, key: number) {
-        const title =
-            'Could not find gene set. Click to remove it from the gene list.';
+        const title = 'Could not find gene set. Click to remove it from the gene list.';
         const onClick = () => this.store.replaceGeneset(name, '');
         return (
-            <div
-                key={key}
-                className={styles.suggestionBubble}
-                title={title}
-                onClick={onClick}
-            >
+            <div key={key} className={styles.suggestionBubble} title={title} onClick={onClick}>
                 <FontAwesome className={styles.icon} name="times-circle" />
                 <span className={styles.noChoiceLabel}>{name}</span>
             </div>

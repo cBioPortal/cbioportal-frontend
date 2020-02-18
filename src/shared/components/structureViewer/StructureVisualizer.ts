@@ -101,16 +101,8 @@ abstract class StructureVisualizer {
     // abstract methods
     protected abstract selectAll(): any;
     protected abstract setScheme(scheme: ProteinScheme, selector?: any): any;
-    protected abstract setColor(
-        color: string,
-        selector?: any,
-        style?: any
-    ): any;
-    protected abstract setTransparency(
-        transparency: number,
-        selector?: any,
-        style?: any
-    ): any;
+    protected abstract setColor(color: string, selector?: any, style?: any): any;
+    protected abstract setTransparency(transparency: number, selector?: any, style?: any): any;
     protected abstract selectChain(chainId: string): any;
     protected abstract cpkColor(selector?: any, style?: any): any;
     protected abstract selectAlphaHelix(chainId: string): any;
@@ -147,10 +139,7 @@ abstract class StructureVisualizer {
         return this.setScheme(props.proteinScheme, selector);
     }
 
-    protected updateBaseVisualStyle(
-        style: any,
-        props: IStructureVisualizerProps
-    ) {
+    protected updateBaseVisualStyle(style: any, props: IStructureVisualizerProps) {
         const defaultProps = StructureVisualizer.defaultProps;
 
         // do the initial (uniform) coloring
@@ -158,11 +147,7 @@ abstract class StructureVisualizer {
         let selector = this.selectAll();
 
         // set base structure color
-        this.setColor(
-            props.baseColor || defaultProps.baseColor,
-            selector,
-            style
-        );
+        this.setColor(props.baseColor || defaultProps.baseColor, selector, style);
 
         // set base color
         this.setTransparency(
@@ -181,11 +166,7 @@ abstract class StructureVisualizer {
 
         let selector = this.selectChain(chainId);
 
-        this.setColor(
-            props.chainColor || defaultProps.chainColor,
-            selector,
-            style
-        ); // set chain color
+        this.setColor(props.chainColor || defaultProps.chainColor, selector, style); // set chain color
         this.setTransparency(
             props.chainTranslucency || defaultProps.chainTranslucency,
             selector,
@@ -201,15 +182,13 @@ abstract class StructureVisualizer {
             // color secondary structure (for the selected chain)
             selector = this.selectAlphaHelix(chainId); // select alpha helices
             this.setColor(
-                (props.structureColors || defaultProps.structureColors)
-                    .alphaHelix,
+                (props.structureColors || defaultProps.structureColors).alphaHelix,
                 selector,
                 style
             );
             selector = this.selectBetaSheet(chainId); // select beta sheets
             this.setColor(
-                (props.structureColors || defaultProps.structureColors)
-                    .betaSheet,
+                (props.structureColors || defaultProps.structureColors).betaSheet,
                 selector,
                 style
             );

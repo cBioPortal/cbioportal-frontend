@@ -11,10 +11,7 @@ import './styles.scss';
 import SampleManager from '../SampleManager';
 
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
-import {
-    ClinicalEvent,
-    ClinicalEventData,
-} from '../../../shared/api/generated/CBioPortalAPI';
+import { ClinicalEvent, ClinicalEventData } from '../../../shared/api/generated/CBioPortalAPI';
 import { DownloadControls } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
 
@@ -46,14 +43,10 @@ export default class Timeline extends React.Component<ITimelineProps, {}> {
     drawTimeline(width: number) {
         let clinicalDataMap = this.props.store.patientViewData.result.samples!.reduce(
             (memo: any, item) => {
-                memo[item.id] = item.clinicalData.reduce(
-                    (innerMemo: any, innerItem) => {
-                        innerMemo[innerItem.clinicalAttributeId] =
-                            innerItem.value;
-                        return innerMemo;
-                    },
-                    {}
-                );
+                memo[item.id] = item.clinicalData.reduce((innerMemo: any, innerItem) => {
+                    innerMemo[innerItem.clinicalAttributeId] = innerItem.value;
+                    return innerMemo;
+                }, {});
                 return memo;
             },
             {}
@@ -85,14 +78,10 @@ export default class Timeline extends React.Component<ITimelineProps, {}> {
                 return {
                     eventType: eventData.eventType,
                     patientId: eventData.patientId,
-                    startDate: _.isUndefined(
-                        eventData.startNumberOfDaysSinceDiagnosis
-                    )
+                    startDate: _.isUndefined(eventData.startNumberOfDaysSinceDiagnosis)
                         ? null
                         : eventData.startNumberOfDaysSinceDiagnosis,
-                    stopDate: _.isUndefined(
-                        eventData.endNumberOfDaysSinceDiagnosis
-                    )
+                    stopDate: _.isUndefined(eventData.endNumberOfDaysSinceDiagnosis)
                         ? null
                         : eventData.endNumberOfDaysSinceDiagnosis,
                     eventData: eventData.attributes.reduce(

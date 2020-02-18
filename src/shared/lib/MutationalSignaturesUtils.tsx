@@ -22,10 +22,7 @@ export function progressBar(confidence: string, determineColor: boolean) {
     };
 
     return (
-        <div
-            className="progress"
-            style={{ position: 'relative', width: 100, marginBottom: 0 }}
-        >
+        <div className="progress" style={{ position: 'relative', width: 100, marginBottom: 0 }}>
             <div
                 data-test="progress-bar"
                 className={`progress-bar ${progressBarClassName}`}
@@ -40,8 +37,7 @@ export function progressBar(confidence: string, determineColor: boolean) {
             <div
                 style={{
                     position: 'absolute',
-                    textShadow:
-                        '-1px 0 white, 0 1px white, 1px 0 white, 0 -1px white',
+                    textShadow: '-1px 0 white, 0 1px white, 1px 0 white, 0 -1px white',
                     width: 100,
                     marginTop: 2,
                     textAlign: 'center',
@@ -59,9 +55,7 @@ export function prepareMutationalSignaturesForHeader(
     uniqueSampleKey: string
 ): ISignificantMutationalSignaturesForSample {
     //group data by uniquesamples for now -> this processing will need to be done in patientpageviewstore in the future
-    let mutationalSignatureDataForUniqueSample: Array<any> = _(
-        mutationalSignatureData
-    )
+    let mutationalSignatureDataForUniqueSample: Array<any> = _(mutationalSignatureData)
         .filter(['uniqueSampleKey', uniqueSampleKey])
         .value();
 
@@ -111,9 +105,7 @@ export function prepareMutationalSignaturesForHeader(
     }
 
     //check if any significant signatures were added using lodash
-    if (
-        _.isEmpty(significantMutationalSignatureForSample.significantSignatures)
-    ) {
+    if (_.isEmpty(significantMutationalSignatureForSample.significantSignatures)) {
         significantMutationalSignatureForSample.confidenceStatement +=
             'No signatures confidently detected.';
     }

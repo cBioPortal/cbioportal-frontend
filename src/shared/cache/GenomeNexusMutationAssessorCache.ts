@@ -1,9 +1,6 @@
 import * as _ from 'lodash';
 import { fetchVariantAnnotationsByMutation } from 'shared/lib/StoreUtils';
-import {
-    extractGenomicLocation,
-    genomicLocationString,
-} from 'shared/lib/MutationUtils';
+import { extractGenomicLocation, genomicLocationString } from 'shared/lib/MutationUtils';
 import { Mutation } from 'shared/api/generated/CBioPortalAPI';
 import LazyMobXCache, { CacheData } from 'shared/lib/LazyMobXCache';
 import AppConfig from 'appConfig';
@@ -41,8 +38,7 @@ export default class GenomeNexusMutationAssessorCache extends LazyMobXCache<
     constructor() {
         super(
             (m: Mutation) => queryToKey(m), // queryToKey
-            (v: VariantAnnotation) =>
-                genomicLocationString(v.annotation_summary.genomicLocation), // dataToKey
+            (v: VariantAnnotation) => genomicLocationString(v.annotation_summary.genomicLocation), // dataToKey
             fetch
         );
     }

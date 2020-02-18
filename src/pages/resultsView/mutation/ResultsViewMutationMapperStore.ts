@@ -7,19 +7,11 @@ import {
     MolecularProfile,
     SampleIdentifier,
 } from 'shared/api/generated/CBioPortalAPI';
-import {
-    CancerGene,
-    remoteData,
-    VariantAnnotation,
-} from 'cbioportal-frontend-commons';
+import { CancerGene, remoteData, VariantAnnotation } from 'cbioportal-frontend-commons';
 import { labelMobxPromises, MobxPromise, cached } from 'mobxpromise';
 import { IOncoKbData } from 'shared/model/OncoKB';
 import { ICivicGene, ICivicVariant } from 'shared/model/Civic';
-import {
-    fetchCosmicData,
-    fetchCivicGenes,
-    fetchCivicVariants,
-} from 'shared/lib/StoreUtils';
+import { fetchCosmicData, fetchCivicGenes, fetchCivicVariants } from 'shared/lib/StoreUtils';
 import MutationCountCache from 'shared/cache/MutationCountCache';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
@@ -59,9 +51,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
             [molecularProfileId: string]: MolecularProfile;
         }>,
         public clinicalDataForSamples: MobxPromise<ClinicalData[]>,
-        public studiesForSamplesWithoutCancerTypeClinicalData: MobxPromise<
-            CancerStudy[]
-        >,
+        public studiesForSamplesWithoutCancerTypeClinicalData: MobxPromise<CancerStudy[]>,
         public germlineConsentedSamples: MobxPromise<SampleIdentifier[]>,
         public indexedHotspotData: MobxPromise<IHotspotIndex | undefined>,
         public indexedVariantAnnotations: MobxPromise<
@@ -96,9 +86,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
         {
             await: () => [this.mutationData, this.clinicalDataForSamples],
             invoke: async () =>
-                this.mutationMapperConfig.show_civic
-                    ? fetchCivicGenes(this.mutationData)
-                    : {},
+                this.mutationMapperConfig.show_civic ? fetchCivicGenes(this.mutationData) : {},
             onError: (err: Error) => {
                 // fail silently
             },
@@ -110,10 +98,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
         {
             await: () => [this.civicGenes, this.mutationData],
             invoke: async () => {
-                if (
-                    this.mutationMapperConfig.show_civic &&
-                    this.civicGenes.result
-                ) {
+                if (this.mutationMapperConfig.show_civic && this.civicGenes.result) {
                     return fetchCivicVariants(
                         this.civicGenes.result as ICivicGene,
                         this.mutationData

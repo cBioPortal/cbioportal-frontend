@@ -1,10 +1,6 @@
 import { assert } from 'chai';
 import { SiteError } from '../../AppStore';
-import {
-    formatErrorLog,
-    formatErrorTitle,
-    formatErrorMessages,
-} from './errorFormatter';
+import { formatErrorLog, formatErrorTitle, formatErrorMessages } from './errorFormatter';
 
 const RESPONSE_BODY_MESSAGE = 'RESPONSE_BODY_MESSAGE';
 const REQUEST_ERROR_MESSAGE = 'REQUEST_ERROR_MESSAGE';
@@ -43,10 +39,7 @@ describe('ErrorFormatter', () => {
                 formatErrorLog(siteErrors.slice(0, 1)),
                 '{"body":{"message":"RESPONSE_BODY_MESSAGE"}}'
             );
-            assert.deepEqual(
-                formatErrorLog(siteErrors.slice(1, 2)),
-                REQUEST_ERROR_MESSAGE
-            );
+            assert.deepEqual(formatErrorLog(siteErrors.slice(1, 2)), REQUEST_ERROR_MESSAGE);
             assert.deepEqual(
                 formatErrorLog(siteErrors.slice(-1)),
                 siteErrors[2].errorObj.toString()
@@ -65,35 +58,19 @@ describe('ErrorFormatter', () => {
             assert.isUndefined(formatErrorTitle(siteErrors.slice(0, 1)));
         });
         it('formatErrorTitle has one title', () => {
-            assert.equal(
-                formatErrorTitle(siteErrors.slice(1, 2)),
-                EXAMPLE_TITLE_1
-            );
-            assert.equal(
-                formatErrorTitle(siteErrors.slice(-1)),
-                EXAMPLE_TITLE_2
-            );
+            assert.equal(formatErrorTitle(siteErrors.slice(1, 2)), EXAMPLE_TITLE_1);
+            assert.equal(formatErrorTitle(siteErrors.slice(-1)), EXAMPLE_TITLE_2);
         });
         it('formatErrorTitle has multiple titles', () => {
-            assert.equal(
-                formatErrorTitle(siteErrors),
-                `${EXAMPLE_TITLE_1} ${EXAMPLE_TITLE_2}`
-            );
+            assert.equal(formatErrorTitle(siteErrors), `${EXAMPLE_TITLE_1} ${EXAMPLE_TITLE_2}`);
         });
     });
 
     describe('formatErrorMessages', () => {
         it('formatErrorMessages one error', () => {
-            assert.deepEqual(formatErrorMessages(siteErrors.slice(0, 1))!, [
-                RESPONSE_BODY_MESSAGE,
-            ]);
-            assert.deepEqual(formatErrorMessages(siteErrors.slice(1, 2))!, [
-                REQUEST_ERROR_MESSAGE,
-            ]);
-            assert.deepEqual(
-                formatErrorMessages(siteErrors.slice(-1)),
-                undefined
-            );
+            assert.deepEqual(formatErrorMessages(siteErrors.slice(0, 1))!, [RESPONSE_BODY_MESSAGE]);
+            assert.deepEqual(formatErrorMessages(siteErrors.slice(1, 2))!, [REQUEST_ERROR_MESSAGE]);
+            assert.deepEqual(formatErrorMessages(siteErrors.slice(-1)), undefined);
         });
         it('formatErrorMessages multiple errors', () => {
             assert.deepEqual(formatErrorMessages(siteErrors), [

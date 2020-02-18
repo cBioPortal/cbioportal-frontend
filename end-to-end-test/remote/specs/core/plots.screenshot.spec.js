@@ -1,9 +1,6 @@
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var waitForNetworkQuiet = require('../../../shared/specUtils')
-    .waitForNetworkQuiet;
-var assertScreenShotMatch = require('../../../shared/lib/testUtils')
-    .assertScreenShotMatch;
+var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
+var waitForNetworkQuiet = require('../../../shared/specUtils').waitForNetworkQuiet;
+var assertScreenShotMatch = require('../../../shared/lib/testUtils').assertScreenShotMatch;
 var checkElementWithElementHidden = require('../../../shared/specUtils')
     .checkElementWithElementHidden;
 
@@ -12,11 +9,9 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 function waitForAndCheckPlotsTab() {
     browser.moveToObject('body', 0, 0);
     browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]', 10000);
-    var res = checkElementWithElementHidden(
-        'div[data-test="PlotsTabEntireDiv"]',
-        '.popover',
-        { hide: ['.qtip'] }
-    );
+    var res = checkElementWithElementHidden('div[data-test="PlotsTabEntireDiv"]', '.popover', {
+        hide: ['.qtip'],
+    });
     assertScreenShotMatch(res);
 }
 
@@ -92,9 +87,7 @@ describe('plots tab screenshot tests', function() {
     });
     it('plots tab search case id and mutation', function() {
         browser.execute(function() {
-            resultsViewPlotsTab.executeSearchMutation(
-                'I195T H179R apsdoifjapsoid'
-            );
+            resultsViewPlotsTab.executeSearchMutation('I195T H179R apsdoifjapsoid');
         });
         waitForAndCheckPlotsTab();
     });
@@ -185,9 +178,7 @@ describe('plots tab screenshot tests', function() {
     });
     it('plots tab search case id in clinical vs clinical boxplot', function() {
         browser.execute(function() {
-            resultsViewPlotsTab.executeSearchCase(
-                'kjpoij12     TCGA-B6 asdfas TCGA-A7-A13'
-            );
+            resultsViewPlotsTab.executeSearchCase('kjpoij12     TCGA-B6 asdfas TCGA-A7-A13');
         });
         waitForAndCheckPlotsTab();
     });

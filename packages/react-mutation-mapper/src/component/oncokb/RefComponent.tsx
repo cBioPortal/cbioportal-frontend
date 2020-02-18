@@ -1,8 +1,4 @@
-import {
-    DefaultTooltip,
-    getNCBIlink,
-    ICache,
-} from 'cbioportal-frontend-commons';
+import { DefaultTooltip, getNCBIlink, ICache } from 'cbioportal-frontend-commons';
 import * as React from 'react';
 
 import ReferenceList from './ReferenceList';
@@ -39,10 +35,7 @@ export default class RefComponent extends React.Component<{
 
         if (prefix) {
             link = (
-                <a
-                    target="_blank"
-                    href={getNCBIlink(`/pubmed/${ids.join(',')}`)}
-                >
+                <a target="_blank" href={getNCBIlink(`/pubmed/${ids.join(',')}`)}>
                     {`${prefix}${ids.join(',')}`}
                 </a>
             );

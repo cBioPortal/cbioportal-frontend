@@ -3,9 +3,7 @@ if (!HTMLCanvasElement.prototype.toBlob) {
         value: function(callback, type, quality) {
             var canvas = this;
             setTimeout(function() {
-                var binStr = atob(
-                        canvas.toDataURL(type, quality).split(',')[1]
-                    ),
+                var binStr = atob(canvas.toDataURL(type, quality).split(',')[1]),
                     len = binStr.length,
                     arr = new Uint8Array(len);
 

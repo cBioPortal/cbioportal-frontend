@@ -18,12 +18,7 @@ import * as _ from 'lodash';
 import { assert } from 'chai';
 import sinon from 'sinon';
 import { MobxPromise } from 'mobxpromise';
-import {
-    CancerStudy,
-    Mutation,
-    ClinicalData,
-    Sample,
-} from '../api/generated/CBioPortalAPI';
+import { CancerStudy, Mutation, ClinicalData, Sample } from '../api/generated/CBioPortalAPI';
 import { initMutation } from 'test/MutationMockUtils';
 
 describe('StoreUtils', () => {
@@ -290,14 +285,15 @@ describe('StoreUtils', () => {
             });
         });
         it('handles more than one study properly', () => {
-            assert.deepEqual(
-                makeStudyToCancerTypeMap([studies[1], studies[2]]),
-                { 1: 'ONE', 2: 'TWO' }
-            );
-            assert.deepEqual(
-                makeStudyToCancerTypeMap([studies[2], studies[1], studies[3]]),
-                { 1: 'ONE', 2: 'TWO', 3: 'three' }
-            );
+            assert.deepEqual(makeStudyToCancerTypeMap([studies[1], studies[2]]), {
+                1: 'ONE',
+                2: 'TWO',
+            });
+            assert.deepEqual(makeStudyToCancerTypeMap([studies[2], studies[1], studies[3]]), {
+                1: 'ONE',
+                2: 'TWO',
+                3: 'three',
+            });
             assert.deepEqual(makeStudyToCancerTypeMap(studies), {
                 0: 'ZERO',
                 1: 'ONE',
@@ -331,12 +327,8 @@ describe('StoreUtils', () => {
             assert.equal(sortedMutations[1].length, 2);
 
             assert.equal(
-                generateMutationIdByGeneAndProteinChangeAndEvent(
-                    sortedMutations[1][0]
-                ),
-                generateMutationIdByGeneAndProteinChangeAndEvent(
-                    sortedMutations[1][1]
-                ),
+                generateMutationIdByGeneAndProteinChangeAndEvent(sortedMutations[1][0]),
+                generateMutationIdByGeneAndProteinChangeAndEvent(sortedMutations[1][1]),
                 'mutation ids of merged mutations should be same'
             );
 
@@ -475,23 +467,19 @@ describe('StoreUtils', () => {
 
     describe('fetchCivicData', () => {
         it("won't fetch civic genes if there are no mutations", done => {
-            fetchCivicGenes(emptyMutationData, emptyUncalledMutationData).then(
+            fetchCivicGenes(emptyMutationData, emptyUncalledMutationData).then((data: any) => {
+                assert.deepEqual(data, {});
+                done();
+            });
+        });
+
+        it("won't fetch civic variants if there are no mutations", done => {
+            fetchCivicVariants({}, emptyMutationData, emptyUncalledMutationData).then(
                 (data: any) => {
                     assert.deepEqual(data, {});
                     done();
                 }
             );
-        });
-
-        it("won't fetch civic variants if there are no mutations", done => {
-            fetchCivicVariants(
-                {},
-                emptyMutationData,
-                emptyUncalledMutationData
-            ).then((data: any) => {
-                assert.deepEqual(data, {});
-                done();
-            });
         });
         it("won't fetch civic variants if there are no civic genes", done => {
             fetchCivicVariants({}).then((data: any) => {
@@ -586,9 +574,7 @@ describe('StoreUtils', () => {
             );
 
             assert.deepEqual(samplesWithoutCancerType, [
-                { sampleId: 'Sample4', uniqueSampleKey: 'Sample4' } as Partial<
-                    Sample
-                >,
+                { sampleId: 'Sample4', uniqueSampleKey: 'Sample4' } as Partial<Sample>,
             ]);
         });
 
@@ -608,16 +594,11 @@ describe('StoreUtils', () => {
                 client as any
             );
 
-            assert.isTrue(
-                fetchSamplesStub.called,
-                'fetchSamples should be called'
-            );
+            assert.isTrue(fetchSamplesStub.called, 'fetchSamples should be called');
             assert.isTrue(
                 fetchSamplesStub.calledWith({
                     sampleFilter: {
-                        sampleIdentifiers: [
-                            { sampleId: 'Sample4', studyId: 'study' },
-                        ],
+                        sampleIdentifiers: [{ sampleId: 'Sample4', studyId: 'study' }],
                     },
                 }),
                 'fetchSamples should be called with the correct sample id (Sample4)'
@@ -630,10 +611,7 @@ describe('StoreUtils', () => {
                 client as any
             );
 
-            assert.isTrue(
-                fetchStudiesStub.calledOnce,
-                'fetchStudies should be called only once'
-            );
+            assert.isTrue(fetchStudiesStub.calledOnce, 'fetchStudies should be called only once');
             assert.isTrue(
                 fetchStudiesStub.calledWith({
                     studyIds: ['study4'],

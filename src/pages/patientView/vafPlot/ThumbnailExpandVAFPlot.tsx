@@ -15,10 +15,7 @@ export type IThumbnailExpandVAFPlotProps = {
     genePanelIconData?: IKeyedIconData;
 };
 
-export class ThumbnailExpandVAFPlot extends React.Component<
-    IThumbnailExpandVAFPlotProps,
-    {}
-> {
+export class ThumbnailExpandVAFPlot extends React.Component<IThumbnailExpandVAFPlotProps, {}> {
     public static defaultProps = {
         order: {},
         colors: {},

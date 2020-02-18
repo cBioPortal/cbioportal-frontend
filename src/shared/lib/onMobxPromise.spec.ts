@@ -43,11 +43,7 @@ describe('onMobxPromise', () => {
         onMobxPromise(
             [promise1, promise2, promise3],
             (result1: number, result2: number, result3: number) => {
-                assert.equal(
-                    promiseInvokeCount,
-                    3,
-                    'promises each invoked once'
-                );
+                assert.equal(promiseInvokeCount, 3, 'promises each invoked once');
                 assert.equal(result1, 5, 'promise invoked with right result');
                 assert.equal(result2, 6, 'promise invoked with right result');
                 assert.equal(result3, 7, 'promise invoked with right result');
@@ -82,11 +78,7 @@ describe('onMobxPromise', () => {
                 promiseResultIncrementerDisposer = onMobxPromise(
                     promise,
                     () => {
-                        assert.equal(
-                            handlerInvokeCount,
-                            5,
-                            'never invoked again'
-                        );
+                        assert.equal(handlerInvokeCount, 5, 'never invoked again');
                         promiseResult.set(promiseResult.get() + 1);
                     },
                     10,
@@ -122,11 +114,7 @@ describe('onMobxPromise', () => {
                     promiseResultIncrementerDisposer = onMobxPromise(
                         promise,
                         () => {
-                            assert.equal(
-                                handlerInvokeCount,
-                                1,
-                                'never invoked again'
-                            );
+                            assert.equal(handlerInvokeCount, 1, 'never invoked again');
                             promiseResult.set(promiseResult.get() + 1);
                         },
                         10,

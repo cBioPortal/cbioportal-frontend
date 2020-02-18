@@ -13,10 +13,7 @@ type ProteinChainProps = ProteinChainSpec & {
 };
 
 @observer
-export default class ProteinChain extends React.Component<
-    ProteinChainProps,
-    {}
-> {
+export default class ProteinChain extends React.Component<ProteinChainProps, {}> {
     @computed get segmentsAndGaps(): {
         gap: boolean;
         start: number;

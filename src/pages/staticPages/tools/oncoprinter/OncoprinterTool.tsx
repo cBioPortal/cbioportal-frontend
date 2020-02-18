@@ -8,10 +8,7 @@ import { action, observable } from 'mobx';
 import { Button, ControlLabel, FormControl, FormGroup } from 'react-bootstrap';
 import { Collapse } from 'react-collapse';
 import autobind from 'autobind-decorator';
-import {
-    exampleClinicalData,
-    exampleGeneticData,
-} from './OncoprinterConstants';
+import { exampleClinicalData, exampleGeneticData } from './OncoprinterConstants';
 import { MSKTab, MSKTabs } from '../../../../shared/components/MSKTabs/MSKTabs';
 import MutualExclusivityTab from '../../../resultsView/mutualExclusivity/MutualExclusivityTab';
 import { getDataForSubmission } from './OncoprinterToolUtils';
@@ -29,12 +26,10 @@ const helpSection = (
     <div className={styles.dataFormatHelp}>
         <div className={styles.dataFormatHelpSection}>
             <h4>Genomic data format</h4>
-            Each row of the data can take one of two formats, with tab- or
-            space-delimited columns:
+            Each row of the data can take one of two formats, with tab- or space-delimited columns:
             <br />
-            <strong>(1)</strong> <code>Sample</code> only (e.g. so that percent
-            altered in your data can be properly calculated by including
-            unaltered samples).
+            <strong>(1)</strong> <code>Sample</code> only (e.g. so that percent altered in your data
+            can be properly calculated by including unaltered samples).
             <br />
             <strong>(2)</strong> <code>Sample</code>&#9;<code>Gene</code>&#9;
             <code>Alteration (defined below)</code>&#9;
@@ -55,13 +50,12 @@ const helpSection = (
                     <code>Alteration</code>: Definition of the alteration event
                     <ul>
                         <li>
-                            Mutation event: amino acid change or any other
-                            information about the mutation
+                            Mutation event: amino acid change or any other information about the
+                            mutation
                         </li>
                         <li>Fusion event: fusion information</li>
                         <li>
-                            Copy number alteration (CNA) - please use one of the
-                            four events below:
+                            Copy number alteration (CNA) - please use one of the four events below:
                             <ul>
                                 <li>
                                     <code>AMP</code>: high level amplification
@@ -78,8 +72,7 @@ const helpSection = (
                             </ul>
                         </li>
                         <li>
-                            mRNA expression - please use one of the two events
-                            below:
+                            mRNA expression - please use one of the two events below:
                             <ul>
                                 <li>
                                     <code>HIGH</code>: expression high
@@ -90,8 +83,7 @@ const helpSection = (
                             </ul>
                         </li>
                         <li>
-                            Protein expression - please use one of the two
-                            events below:
+                            Protein expression - please use one of the two events below:
                             <ul>
                                 <li>
                                     <code>HIGH</code>: Protein high
@@ -104,12 +96,11 @@ const helpSection = (
                     </ul>
                 </li>
                 <li>
-                    <code>Type</code>: Definition of the alteration type. It has
-                    to be one of the following.
+                    <code>Type</code>: Definition of the alteration type. It has to be one of the
+                    following.
                     <ul>
                         <li>
-                            For a mutation event, please use one of the five
-                            mutation types below:
+                            For a mutation event, please use one of the five mutation types below:
                             <ul>
                                 <li>
                                     <code>MISSENSE</code>: a missense mutation
@@ -124,22 +115,18 @@ const helpSection = (
                                     <code>PROMOTER</code>: a promoter mutation
                                 </li>
                                 <li>
-                                    <code>OTHER</code>: any other kind of
-                                    mutation
+                                    <code>OTHER</code>: any other kind of mutation
                                 </li>
                             </ul>
                             <br />
-                            In addition, mutation types can be augmented with
-                            the modifiers{' '}
+                            In addition, mutation types can be augmented with the modifiers{' '}
                             <span style={{ whiteSpace: 'nowrap' }}>
                                 <code>_GERMLINE</code> and <code>_DRIVER</code>
                             </span>
-                            to indicate that they are, respectively, germline
-                            and driver mutations.
+                            to indicate that they are, respectively, germline and driver mutations.
                             <br />
                             For example: <code>INFRAME_GERMLINE</code> or{' '}
-                            <code>MISSENSE_GERMLINE_DRIVER</code> or{' '}
-                            <code>TRUNC_DRIVER</code>.
+                            <code>MISSENSE_GERMLINE_DRIVER</code> or <code>TRUNC_DRIVER</code>.
                             <br />
                         </li>
                         <li>
@@ -163,17 +150,15 @@ const helpSection = (
             <h4>Clinical data format</h4>
             All rows are tab- or space-delimited.
             <br />
-            The first (header) row gives the names of the clinical attributes,
-            as well as their data type (number, lognumber, or string, default is
-            string). An example first row is:
+            The first (header) row gives the names of the clinical attributes, as well as their data
+            type (number, lognumber, or string, default is string). An example first row is:
             <br />
             <code>Sample</code>&#9;<code>Age(number)</code>&#9;
             <code>Cancer_Type(string)</code>&#9;
             <code>Mutation_Count(lognumber)</code>
             <br />
-            Each following row gives the sample id, then the value for each
-            clinical attribute, or the special value{' '}
-            {ONCOPRINTER_CLINICAL_VAL_NA} which indicates that there's no data.
+            Each following row gives the sample id, then the value for each clinical attribute, or
+            the special value {ONCOPRINTER_CLINICAL_VAL_NA} which indicates that there's no data.
             <br />
             Some example data rows would then be:
             <br />
@@ -192,10 +177,7 @@ const helpSection = (
 );
 
 @observer
-export default class OncoprinterTool extends React.Component<
-    IOncoprinterToolProps,
-    {}
-> {
+export default class OncoprinterTool extends React.Component<IOncoprinterToolProps, {}> {
     private store = new OncoprinterStore();
     private oncoprinter: Oncoprinter | null;
     private geneticFileInput: HTMLInputElement | null;
@@ -253,10 +235,7 @@ export default class OncoprinterTool extends React.Component<
         this.sampleOrderInput = e.currentTarget.value;
     }
 
-    @action private doSubmit(
-        geneticDataInput: string,
-        clinicalDataInput: string
-    ) {
+    @action private doSubmit(geneticDataInput: string, clinicalDataInput: string) {
         this.store.setInput(
             geneticDataInput,
             clinicalDataInput,
@@ -279,18 +258,12 @@ export default class OncoprinterTool extends React.Component<
 
     @autobind
     private getGeneticDataForSubmission() {
-        return getDataForSubmission(
-            this.geneticFileInput,
-            this.geneticDataInput
-        );
+        return getDataForSubmission(this.geneticFileInput, this.geneticDataInput);
     }
 
     @autobind
     private getClinicalDataForSubmission() {
-        return getDataForSubmission(
-            this.clinicalFileInput,
-            this.clinicalDataInput
-        );
+        return getDataForSubmission(this.clinicalFileInput, this.clinicalDataInput);
     }
 
     @autobind
@@ -307,17 +280,14 @@ export default class OncoprinterTool extends React.Component<
         return (
             <div style={{ marginBottom: 7 }}>
                 <span>
-                    Please input{' '}
-                    <strong>tab-delimited or space-delimited</strong> data.
+                    Please input <strong>tab-delimited or space-delimited</strong> data.
                 </span>
                 <Button
                     style={{ marginLeft: 7 }}
                     bsStyle="primary"
                     bsSize="small"
                     onClick={this.toggleHelpOpened}
-                >{`${
-                    this.helpOpened ? 'Close' : 'Open'
-                } data format help`}</Button>
+                >{`${this.helpOpened ? 'Close' : 'Open'} data format help`}</Button>
                 <Collapse isOpened={this.helpOpened}>{helpSection}</Collapse>
             </div>
         );
@@ -326,12 +296,8 @@ export default class OncoprinterTool extends React.Component<
     @autobind
     private getInputSection() {
         return (
-            <FormGroup
-                style={{ display: this.dataInputOpened ? undefined : 'none' }}
-            >
-                <div
-                    style={{ display: 'flex', justifyContent: 'space-between' }}
-                >
+            <FormGroup style={{ display: this.dataInputOpened ? undefined : 'none' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <div style={{ width: '45%' }}>
                         <ControlLabel style={{ marginBottom: 7 }}>
                             Input genomic alteration data (optional):
@@ -382,9 +348,7 @@ export default class OncoprinterTool extends React.Component<
                     </div>
                 </div>
                 <br />
-                <ControlLabel>
-                    Please define the order of genes (optional):
-                </ControlLabel>
+                <ControlLabel>Please define the order of genes (optional):</ControlLabel>
                 <FormControl
                     className="oncoprinterGenesInput"
                     componentClass="textarea"
@@ -394,9 +358,7 @@ export default class OncoprinterTool extends React.Component<
                     style={{ height: 35, width: 475 }}
                 />
                 <br />
-                <ControlLabel>
-                    Please define the order of samples (optional):
-                </ControlLabel>
+                <ControlLabel>Please define the order of samples (optional):</ControlLabel>
                 <FormControl
                     className="oncoprinterSamplesInput"
                     componentClass="textarea"
@@ -434,21 +396,15 @@ export default class OncoprinterTool extends React.Component<
     }
 
     render() {
-        const numCells =
-            this.store.hugoGeneSymbols.length * this.store.sampleIds.length;
+        const numCells = this.store.hugoGeneSymbols.length * this.store.sampleIds.length;
         return (
             <PageLayout className={'whiteBackground staticPage'}>
                 <Helmet>
-                    <title>
-                        {'cBioPortal for Cancer Genomics::Oncoprinter'}
-                    </title>
+                    <title>{'cBioPortal for Cancer Genomics::Oncoprinter'}</title>
                 </Helmet>
                 <div className="cbioportal-frontend">
-                    <h1 style={{ display: 'inline', marginRight: 10 }}>
-                        Oncoprinter
-                    </h1>{' '}
-                    Generate Oncoprints and perform mutual exclusivity analysis
-                    from your own data.
+                    <h1 style={{ display: 'inline', marginRight: 10 }}>Oncoprinter</h1> Generate
+                    Oncoprints and perform mutual exclusivity analysis from your own data.
                     <br />
                     <br />
                     <Observer>{this.getHelpSection}</Observer>
@@ -471,8 +427,7 @@ export default class OncoprinterTool extends React.Component<
                     <div
                         style={{
                             display:
-                                this.store.hasData() &&
-                                !this.store.parseErrors.length
+                                this.store.hasData() && !this.store.parseErrors.length
                                     ? 'block'
                                     : 'none',
                         }}
@@ -485,18 +440,13 @@ export default class OncoprinterTool extends React.Component<
                             }}
                             className="mainTabs"
                         >
-                            <MSKTab
-                                key={0}
-                                id={OncoprinterTab.ONCOPRINT}
-                                linkText="Oncoprint"
-                            >
+                            <MSKTab key={0} id={OncoprinterTab.ONCOPRINT} linkText="Oncoprint">
                                 {numCells > 100000 && (
                                     <div className="alert alert-warning">
-                                        Warning: Because your inputted data is
-                                        very large, the Oncoprinter may be slow,
-                                        and downloaded PDF, SVG, and PNG may be
-                                        huge and unresponsive. We recommend
-                                        plotting data for fewer genes at a time.
+                                        Warning: Because your inputted data is very large, the
+                                        Oncoprinter may be slow, and downloaded PDF, SVG, and PNG
+                                        may be huge and unresponsive. We recommend plotting data for
+                                        fewer genes at a time.
                                     </div>
                                 )}
                                 <div style={{ marginTop: 10 }}>
@@ -513,9 +463,7 @@ export default class OncoprinterTool extends React.Component<
                                 linkText="Mutual Exclusivity"
                             >
                                 <MutualExclusivityTab
-                                    isSampleAlteredMap={
-                                        this.store.isSampleAlteredMap
-                                    }
+                                    isSampleAlteredMap={this.store.isSampleAlteredMap}
                                 />
                             </MSKTab>
                         </MSKTabs>

@@ -19,10 +19,7 @@ export interface IPdbChainTableProps {
 }
 
 @observer
-export default class PdbChainTable extends React.Component<
-    IPdbChainTableProps,
-    {}
-> {
+export default class PdbChainTable extends React.Component<IPdbChainTableProps, {}> {
     @computed private get columns(): Column<IPdbChain>[] {
         const ret: Column<IPdbChain>[] = [];
 
@@ -41,11 +38,7 @@ export default class PdbChainTable extends React.Component<
             sortBy: (d: IPdbChain) => {
                 return d.pdbId;
             },
-            filter: (
-                d: IPdbChain,
-                filterString: string,
-                filterStringUpper: string
-            ) => {
+            filter: (d: IPdbChain, filterString: string, filterStringUpper: string) => {
                 return d.pdbId.toUpperCase().indexOf(filterStringUpper) > -1;
             },
         });
@@ -71,9 +64,7 @@ export default class PdbChainTable extends React.Component<
                                 cursor: 'pointer',
                             }}
                             onClick={() => {
-                                this.props.dataStore.selectUid(
-                                    this.props.dataStore.getChainUid(d)
-                                );
+                                this.props.dataStore.selectUid(this.props.dataStore.getChainUid(d));
                             }}
                         >
                             3D
@@ -84,11 +75,7 @@ export default class PdbChainTable extends React.Component<
             sortBy: (d: IPdbChain) => {
                 return d.chain;
             },
-            filter: (
-                d: IPdbChain,
-                filterString: string,
-                filterStringUpper: string
-            ) => {
+            filter: (d: IPdbChain, filterString: string, filterStringUpper: string) => {
                 return d.chain.toUpperCase().indexOf(filterStringUpper) > -1;
             },
         });
@@ -113,34 +100,18 @@ export default class PdbChainTable extends React.Component<
             name: 'Organism',
             render: LazyLoadedTableCell(
                 (d: IPdbChain) => {
-                    return this.props.cache
-                        ? this.props.cache.get(d.pdbId)
-                        : null;
+                    return this.props.cache ? this.props.cache.get(d.pdbId) : null;
                 },
                 (h: PdbHeader, d: IPdbChain) => {
-                    return (
-                        <span>
-                            {OrganismColumnFormatter.getOrganism(h, d.chain)}
-                        </span>
-                    );
+                    return <span>{OrganismColumnFormatter.getOrganism(h, d.chain)}</span>;
                 }
             ),
             sortBy: (d: IPdbChain) => {
-                return OrganismColumnFormatter.getOrganismFromCache(
-                    this.props.cache,
-                    d
-                );
+                return OrganismColumnFormatter.getOrganismFromCache(this.props.cache, d);
             },
-            filter: (
-                d: IPdbChain,
-                filterString: string,
-                filterStringUpper: string
-            ) => {
+            filter: (d: IPdbChain, filterString: string, filterStringUpper: string) => {
                 const organism =
-                    OrganismColumnFormatter.getOrganismFromCache(
-                        this.props.cache,
-                        d
-                    ) || '';
+                    OrganismColumnFormatter.getOrganismFromCache(this.props.cache, d) || '';
                 return organism.toUpperCase().indexOf(filterStringUpper) > -1;
             },
             visible: !!this.props.cache,
@@ -159,27 +130,17 @@ export default class PdbChainTable extends React.Component<
                     />
                 );
             },
-            filter: (
-                d: IPdbChain,
-                filterString: string,
-                filterStringUpper: string
-            ) => {
+            filter: (d: IPdbChain, filterString: string, filterStringUpper: string) => {
                 if (!this.props.cache) {
                     return false;
                 }
                 const cacheData = this.props.cache.get(d.pdbId);
                 if (cacheData && cacheData.data) {
-                    const infoSummary = generatePdbInfoSummary(
-                        cacheData.data,
-                        d.chain
-                    );
+                    const infoSummary = generatePdbInfoSummary(cacheData.data, d.chain);
                     return (
-                        infoSummary.pdbInfo
-                            .toUpperCase()
-                            .indexOf(filterStringUpper) > -1 ||
-                        (infoSummary.moleculeInfo || '')
-                            .toUpperCase()
-                            .indexOf(filterStringUpper) > -1
+                        infoSummary.pdbInfo.toUpperCase().indexOf(filterStringUpper) > -1 ||
+                        (infoSummary.moleculeInfo || '').toUpperCase().indexOf(filterStringUpper) >
+                            -1
                     );
                 } else {
                     return false;

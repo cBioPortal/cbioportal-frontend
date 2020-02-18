@@ -1,9 +1,5 @@
 import { CoverageInformation } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
-import {
-    ClinicalAttribute,
-    MolecularProfile,
-    Sample,
-} from '../../api/generated/CBioPortalAPI';
+import { ClinicalAttribute, MolecularProfile, Sample } from '../../api/generated/CBioPortalAPI';
 import { SpecialAttribute } from '../../cache/ClinicalDataCache';
 import _ from 'lodash';
 import naturalSort from 'javascript-natural-sort';
@@ -22,10 +18,7 @@ export const alterationTypeToProfiledForText: {
     PROTEIN_LEVEL: 'protein expression',
 };
 
-export function getAnnotatingProgressMessage(
-    usingOncokb: boolean,
-    usingHotspot: boolean
-) {
+export function getAnnotatingProgressMessage(usingOncokb: boolean, usingHotspot: boolean) {
     let message;
     if (usingOncokb && usingHotspot) {
         message = 'Annotating with OncoKB and Cancer Hotspots';
@@ -39,10 +32,7 @@ export function getAnnotatingProgressMessage(
     return <span style={{ whiteSpace: 'nowrap' }}>{message}</span>;
 }
 
-export function convertComparisonGroupClinicalAttribute(
-    id: string,
-    groupIdToAttributeId: boolean
-) {
+export function convertComparisonGroupClinicalAttribute(id: string, groupIdToAttributeId: boolean) {
     if (groupIdToAttributeId) {
         return `${SpecialAttribute.ComparisonGroupPrefix}_${id}`;
     } else {
@@ -56,10 +46,7 @@ export function makeComparisonGroupClinicalAttributes(
     return comparisonGroups.map(
         group =>
             ({
-                clinicalAttributeId: convertComparisonGroupClinicalAttribute(
-                    group.id,
-                    true
-                ),
+                clinicalAttributeId: convertComparisonGroupClinicalAttribute(group.id, true),
                 datatype: 'STRING',
                 description: `Membership in ${group.data.name}`,
                 displayName: `In group: ${group.data.name}`,
@@ -101,19 +88,14 @@ export function makeProfiledInClinicalAttributes(
     //  we keep track of the fact that there is a queried copy number profile for SOME
     //  study, then we'll never see that there are unprofiled samples for copy number,
     //  and thus we should show a "Profiled In Copy Number" track.
-    const initIsUnprofiled = _.mapValues(
-        groupedSelectedMolecularProfiles,
-        p => true
-    );
+    const initIsUnprofiled = _.mapValues(groupedSelectedMolecularProfiles, p => true);
 
     const existsUnprofiledCount: {
         [alterationType: string]: number;
     } = _.reduce(
         coverageInformation,
         (map, sampleCoverage) => {
-            const isUnprofiled: { [alterationType: string]: boolean } = _.clone(
-                initIsUnprofiled
-            );
+            const isUnprofiled: { [alterationType: string]: boolean } = _.clone(initIsUnprofiled);
 
             // if a sample is not profiled in all genes, its certainly unprofiled for this profile
             for (const gpData of sampleCoverage.notProfiledAllGenes) {
@@ -130,10 +112,7 @@ export function makeProfiledInClinicalAttributes(
             // if a sample is not profiled in some gene, then it is maybe unprofiled
             _.forEach(sampleCoverage.notProfiledByGene, geneInfo => {
                 for (const gpData of geneInfo) {
-                    if (
-                        gpData.molecularProfileId in
-                        selectedMolecularProfilesMap
-                    ) {
+                    if (gpData.molecularProfileId in selectedMolecularProfilesMap) {
                         // mark isUnprofiled for this type because this is a selected profile
                         isUnprofiled[
                             molecularProfileIdToMolecularProfile[
@@ -159,10 +138,7 @@ export function makeProfiledInClinicalAttributes(
             // if a sample is profiled in some gene, then it is not unprofiled
             _.forEach(sampleCoverage.byGene, geneInfo => {
                 for (const gpData of geneInfo) {
-                    if (
-                        gpData.molecularProfileId in
-                        selectedMolecularProfilesMap
-                    ) {
+                    if (gpData.molecularProfileId in selectedMolecularProfilesMap) {
                         // unmark isUnprofiled
                         isUnprofiled[
                             molecularProfileIdToMolecularProfile[
@@ -186,11 +162,9 @@ export function makeProfiledInClinicalAttributes(
     );
 
     // make a clinical attribute for each profile type which not every sample is profiled in
-    const existsUnprofiled = Object.keys(existsUnprofiledCount).filter(
-        alterationType => {
-            return existsUnprofiledCount[alterationType] > 0;
-        }
-    );
+    const existsUnprofiled = Object.keys(existsUnprofiledCount).filter(alterationType => {
+        return existsUnprofiledCount[alterationType] > 0;
+    });
     const attributes: (ClinicalAttribute & {
         molecularProfileIds: string[];
     })[] = existsUnprofiled
@@ -230,17 +204,14 @@ export function makeProfiledInClinicalAttributes(
     return attributes;
 }
 
-export function treatmentsToSelectOptions(
-    treatments: Treatment[]
-): ISelectOption[] {
+export function treatmentsToSelectOptions(treatments: Treatment[]): ISelectOption[] {
     // Note: name and desc are optional fields for treatment entities
     // When not provided in the data file, these fields are assigned the
     // value of the entity_stable_id. The code below hides fields when
     // indentical to the entity_stable_id.
     return _.map(treatments, (d: Treatment) => {
         const uniqueName = d.name !== d.treatmentId;
-        const uniqueDesc =
-            d.description !== d.treatmentId && d.description !== d.name;
+        const uniqueDesc = d.description !== d.treatmentId && d.description !== d.name;
         let label = '';
         if (!uniqueName && !uniqueDesc) {
             label = d.treatmentId;

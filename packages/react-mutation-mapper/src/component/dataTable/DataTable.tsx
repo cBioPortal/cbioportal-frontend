@@ -5,14 +5,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import classnames from 'classnames';
 import _ from 'lodash';
-import {
-    action,
-    computed,
-    IReactionDisposer,
-    IReactionPublic,
-    observable,
-    reaction,
-} from 'mobx';
+import { action, computed, IReactionDisposer, IReactionPublic, observable, reaction } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import ReactTable, { Column, RowInfo, TableProps } from 'react-table';
@@ -53,10 +46,7 @@ export type DataTableProps<T> = {
 
     showColumnVisibility?: boolean;
     showSearchBox?: boolean;
-    onSearch?: (
-        input: string,
-        visibleSearchableColumns: DataTableColumn<T>[]
-    ) => void;
+    onSearch?: (input: string, visibleSearchableColumns: DataTableColumn<T>[]) => void;
     searchDelay?: number;
     searchPlaceholder?: string;
     info?: JSX.Element;
@@ -85,8 +75,7 @@ function getColumnVisibilityDef<T>(
                 id: column.id!,
                 name: column.name || column.id!,
                 visible: columnVisibility[column.id!],
-                togglable:
-                    column.togglable !== undefined ? column.togglable : true,
+                togglable: column.togglable !== undefined ? column.togglable : true,
             })
         );
 
@@ -94,10 +83,7 @@ function getColumnVisibilityDef<T>(
 }
 
 @observer
-export default class DataTable<T> extends React.Component<
-    DataTableProps<T>,
-    {}
-> {
+export default class DataTable<T> extends React.Component<DataTableProps<T>, {}> {
     public static defaultProps = {
         data: [],
         initialSortDirection: ColumnSortDirection.DESC,
@@ -111,9 +97,7 @@ export default class DataTable<T> extends React.Component<
 
     // this keeps the state of the latest action (latest user selection)
     @observable
-    private _columnVisibilityOverride:
-        | { [columnId: string]: boolean }
-        | undefined;
+    private _columnVisibilityOverride: { [columnId: string]: boolean } | undefined;
 
     @observable
     private expanded: { [index: number]: boolean } = {};
@@ -157,10 +141,7 @@ export default class DataTable<T> extends React.Component<
     get showPagination() {
         const initialItemsPerPage = this.props.initialItemsPerPage;
 
-        return (
-            this.tableData !== undefined &&
-            this.tableData.length > initialItemsPerPage!
-        );
+        return this.tableData !== undefined && this.tableData.length > initialItemsPerPage!;
     }
 
     @computed
@@ -183,10 +164,7 @@ export default class DataTable<T> extends React.Component<
     get defaultSorted() {
         const { initialSortColumn, initialSortDirection } = this.props;
 
-        if (
-            initialSortColumn === undefined ||
-            this.initialColumnDataStatus === 'pending'
-        ) {
+        if (initialSortColumn === undefined || this.initialColumnDataStatus === 'pending') {
             return undefined;
         } else {
             return [
@@ -209,10 +187,7 @@ export default class DataTable<T> extends React.Component<
 
     @computed
     public get columnVisibilityDef(): ColumnVisibilityDef[] {
-        return getColumnVisibilityDef(
-            this.props.columns || [],
-            this.columnVisibility
-        );
+        return getColumnVisibilityDef(this.props.columns || [], this.columnVisibility);
     }
 
     @computed
@@ -253,11 +228,7 @@ export default class DataTable<T> extends React.Component<
                     <ReactTable
                         data={this.tableData}
                         columns={this.columns}
-                        getTrProps={
-                            this.needToCustomizeRowStyle
-                                ? this.getTrProps
-                                : undefined
-                        }
+                        getTrProps={this.needToCustomizeRowStyle ? this.getTrProps : undefined}
                         defaultSorted={this.defaultSorted}
                         defaultPageSize={this.defaultPageSize}
                         showPagination={this.showPagination}
@@ -315,9 +286,7 @@ export default class DataTable<T> extends React.Component<
             () => dataStore.dataFilters,
             dataFilters => {
                 if (this.filterInput) {
-                    const inputFilter = dataFilters.find(
-                        f => f.id === TEXT_INPUT_FILTER_ID
-                    );
+                    const inputFilter = dataFilters.find(f => f.id === TEXT_INPUT_FILTER_ID);
 
                     // reset the input text value in case of no text input filter
                     if (!inputFilter) {
@@ -345,10 +314,7 @@ export default class DataTable<T> extends React.Component<
     @action.bound
     protected onSearch(searchText: string) {
         if (this.props.onSearch) {
-            this.props.onSearch(
-                searchText,
-                this.columns.filter(c => c.searchable && c.show)
-            );
+            this.props.onSearch(searchText, this.columns.filter(c => c.searchable && c.show));
         }
     }
 
@@ -360,9 +326,7 @@ export default class DataTable<T> extends React.Component<
         );
 
         // make selected columns visible
-        selectedColumnIds.forEach(columnId =>
-            this.updateColumnVisibility(columnId, true)
-        );
+        selectedColumnIds.forEach(columnId => this.updateColumnVisibility(columnId, true));
     }
 
     @action.bound
@@ -376,10 +340,7 @@ export default class DataTable<T> extends React.Component<
         }
 
         // update visibility
-        if (
-            this._columnVisibilityOverride &&
-            this._columnVisibilityOverride[id] !== undefined
-        ) {
+        if (this._columnVisibilityOverride && this._columnVisibilityOverride[id] !== undefined) {
             this._columnVisibilityOverride[id] = visible;
         }
     }
@@ -395,10 +356,7 @@ export default class DataTable<T> extends React.Component<
     }
 
     protected isRowHighlighted(datum: T) {
-        return (
-            this.props.dataStore &&
-            this.props.dataStore.dataHighlightFilter(datum)
-        );
+        return this.props.dataStore && this.props.dataStore.dataHighlightFilter(datum);
     }
 
     protected getRowBackground(row: RowInfo) {

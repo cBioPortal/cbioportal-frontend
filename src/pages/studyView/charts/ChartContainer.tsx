@@ -3,25 +3,14 @@ import styles from './styles.module.scss';
 import { observer } from 'mobx-react';
 import { action, computed, observable } from 'mobx';
 import _ from 'lodash';
-import {
-    ChartControls,
-    ChartHeader,
-} from 'pages/studyView/chartHeader/ChartHeader';
-import {
-    StudyViewPageStore,
-    SurvivalType,
-} from 'pages/studyView/StudyViewPageStore';
-import {
-    DataBin,
-    StudyViewFilter,
-} from 'shared/api/generated/CBioPortalAPIInternal';
+import { ChartControls, ChartHeader } from 'pages/studyView/chartHeader/ChartHeader';
+import { StudyViewPageStore, SurvivalType } from 'pages/studyView/StudyViewPageStore';
+import { DataBin, StudyViewFilter } from 'shared/api/generated/CBioPortalAPIInternal';
 import PieChart from 'pages/studyView/charts/pieChart/PieChart';
 import classnames from 'classnames';
 import ClinicalTable from 'pages/studyView/table/ClinicalTable';
 import MobxPromise from 'mobxpromise';
-import SurvivalChart, {
-    LegendLocation,
-} from '../../resultsView/survival/SurvivalChart';
+import SurvivalChart, { LegendLocation } from '../../resultsView/survival/SurvivalChart';
 
 import autobind from 'autobind-decorator';
 import BarChart from './barChart/BarChart';
@@ -40,11 +29,7 @@ import {
 import { GenePanel } from '../../../shared/api/generated/CBioPortalAPI';
 import { makeSurvivalChartData } from './survival/StudyViewSurvivalUtils';
 import StudyViewDensityScatterPlot from './scatterPlot/StudyViewDensityScatterPlot';
-import {
-    ChartDimension,
-    ChartTypeEnum,
-    STUDY_VIEW_CONFIG,
-} from '../StudyViewConfig';
+import { ChartDimension, ChartTypeEnum, STUDY_VIEW_CONFIG } from '../StudyViewConfig';
 import LoadingIndicator from '../../../shared/components/loadingIndicator/LoadingIndicator';
 import { DataType, DownloadControlsButton } from 'cbioportal-frontend-commons';
 import { MAX_GROUPS_IN_SESSION } from '../../groupComparison/GroupComparisonUtils';
@@ -83,9 +68,7 @@ export interface IChartContainerProps {
     setComparisonConfirmationModal: StudyViewPageStore['setComparisonConfirmationModal'];
     onValueSelection?: any;
     onDataBinSelection?: any;
-    getData?:
-        | ((dataType?: DataType) => Promise<string | null>)
-        | ((dataType?: DataType) => string);
+    getData?: ((dataType?: DataType) => Promise<string | null>) | ((dataType?: DataType) => string);
     downloadTypes?: DownloadControlsButton[];
     onResetSelection?: any;
     onDeleteChart: (chartMeta: ChartMeta) => void;
@@ -156,9 +139,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     clearTimeout(this.mouseLeaveTimeout);
                 }
                 this.placement =
-                    event.nativeEvent.x > WindowStore.size.width - 400
-                        ? 'left'
-                        : 'right';
+                    event.nativeEvent.x > WindowStore.size.width - 400 ? 'left' : 'right';
                 this.mouseInChart = true;
             }),
             onMouseLeaveChart: action(() => {
@@ -169,20 +150,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             }),
             defaultDownload: {
                 SVG: () =>
-                    Promise.resolve(
-                        new XMLSerializer().serializeToString(
-                            this.toSVGDOMNode()
-                        )
-                    ),
+                    Promise.resolve(new XMLSerializer().serializeToString(this.toSVGDOMNode())),
                 PNG: () => Promise.resolve(this.toSVGDOMNode()),
                 PDF: () => Promise.resolve(this.toSVGDOMNode()),
             },
             onChangeChartType: (newChartType: ChartType) => {
                 this.mouseInChart = false;
-                this.props.onChangeChartType(
-                    this.props.chartMeta,
-                    newChartType
-                );
+                this.props.onChangeChartType(this.props.chartMeta, newChartType);
             },
             onDeleteChart: () => {
                 this.props.onDeleteChart(this.props.chartMeta);
@@ -195,10 +169,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             // Get result of plot
             return this.plot.toSVGDOMNode() as SVGElement;
         } else {
-            return document.createElementNS(
-                'http://www.w3.org/2000/svg',
-                'svg'
-            );
+            return document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         }
     }
 
@@ -260,22 +231,15 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             clinicalAttributeValues: this.props.promise
                                 .result! as ClinicalDataCountSummary[],
                         });
-                    const values = this.props.promise
-                        .result! as ClinicalDataCountSummary[];
+                    const values = this.props.promise.result! as ClinicalDataCountSummary[];
                     if (values.length > MAX_GROUPS_IN_SESSION) {
                         this.props.setComparisonConfirmationModal(hideModal => {
                             return (
-                                <Modal
-                                    show={true}
-                                    onHide={() => {}}
-                                    backdrop="static"
-                                >
+                                <Modal show={true} onHide={() => {}} backdrop="static">
                                     <Modal.Body>
-                                        Group comparisons are limited to 20
-                                        groups. Click OK to compare the 20
-                                        largest groups in this chart. Or, select
-                                        up to 20 specific groups in the chart to
-                                        compare.
+                                        Group comparisons are limited to 20 groups. Click OK to
+                                        compare the 20 largest groups in this chart. Or, select up
+                                        to 20 specific groups in the chart to compare.
                                     </Modal.Body>
                                     <Modal.Footer>
                                         <button
@@ -319,12 +283,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             this.props.patientToAnalysisGroup &&
             this.props.patientToAnalysisGroup.isComplete
         ) {
-            const survival: SurvivalType = _.find(
-                this.props.promise.result!,
-                survivalPlot => {
-                    return survivalPlot.id === this.props.chartMeta.uniqueKey;
-                }
-            );
+            const survival: SurvivalType = _.find(this.props.promise.result!, survivalPlot => {
+                return survivalPlot.id === this.props.chartMeta.uniqueKey;
+            });
             return makeSurvivalChartData(
                 survival.survivalData,
                 this.props.analysisGroupsSettings.groups,
@@ -337,9 +298,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     // Scatter plot has a weird height setting.
     getScatterPlotHeight() {
-        return (
-            STUDY_VIEW_CONFIG.layout.grid.h * 2 - this.chartHeaderHeight + 33
-        );
+        return STUDY_VIEW_CONFIG.layout.grid.h * 2 - this.chartHeaderHeight + 33;
     }
 
     @computed
@@ -363,14 +322,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             case PIE_CHART: {
                 return () => (
                     <PieChart
-                        width={getWidthByDimension(
-                            this.props.dimension,
-                            this.borderWidth
-                        )}
-                        height={getHeightByDimension(
-                            this.props.dimension,
-                            this.chartHeaderHeight
-                        )}
+                        width={getWidthByDimension(this.props.dimension, this.borderWidth)}
+                        height={getHeightByDimension(this.props.dimension, this.chartHeaderHeight)}
                         ref={this.handlers.ref}
                         onUserSelection={this.handlers.onValueSelection}
                         filters={this.props.filters}
@@ -385,14 +338,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             case BAR_CHART: {
                 return () => (
                     <BarChart
-                        width={getWidthByDimension(
-                            this.props.dimension,
-                            this.borderWidth
-                        )}
-                        height={getHeightByDimension(
-                            this.props.dimension,
-                            this.chartHeaderHeight
-                        )}
+                        width={getWidthByDimension(this.props.dimension, this.borderWidth)}
+                        height={getHeightByDimension(this.props.dimension, this.chartHeaderHeight)}
                         ref={this.handlers.ref}
                         onUserSelection={this.handlers.onDataBinSelection}
                         filters={this.props.filters}
@@ -404,10 +351,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 return () => (
                     <ClinicalTable
                         data={this.props.promise.result}
-                        width={getWidthByDimension(
-                            this.props.dimension,
-                            this.borderWidth
-                        )}
+                        width={getWidthByDimension(this.props.dimension, this.borderWidth)}
                         height={getTableHeightByDimension(
                             this.props.dimension,
                             this.chartHeaderHeight
@@ -425,10 +369,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     <GeneTable
                         tableType={'mutation'}
                         promise={this.props.promise}
-                        width={getWidthByDimension(
-                            this.props.dimension,
-                            this.borderWidth
-                        )}
+                        width={getWidthByDimension(this.props.dimension, this.borderWidth)}
                         height={getTableHeightByDimension(
                             this.props.dimension,
                             this.chartHeaderHeight
@@ -439,13 +380,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
                         genePanelCache={this.props.genePanelCache}
-                        cancerGeneFilterEnabled={
-                            this.props.cancerGeneFilterEnabled
-                        }
+                        cancerGeneFilterEnabled={this.props.cancerGeneFilterEnabled}
                         filterByCancerGenes={this.props.filterByCancerGenes!}
-                        onChangeCancerGeneFilter={
-                            this.props.onChangeCancerGeneFilter!
-                        }
+                        onChangeCancerGeneFilter={this.props.onChangeCancerGeneFilter!}
                         columns={[
                             { columnKey: GeneTableColumnKey.GENE },
                             { columnKey: GeneTableColumnKey.NUMBER_MUTATIONS },
@@ -461,10 +398,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     <GeneTable
                         tableType={'fusion'}
                         promise={this.props.promise}
-                        width={getWidthByDimension(
-                            this.props.dimension,
-                            this.borderWidth
-                        )}
+                        width={getWidthByDimension(this.props.dimension, this.borderWidth)}
                         height={getTableHeightByDimension(
                             this.props.dimension,
                             this.chartHeaderHeight
@@ -475,13 +409,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
                         genePanelCache={this.props.genePanelCache}
-                        cancerGeneFilterEnabled={
-                            this.props.cancerGeneFilterEnabled
-                        }
+                        cancerGeneFilterEnabled={this.props.cancerGeneFilterEnabled}
                         filterByCancerGenes={this.props.filterByCancerGenes!}
-                        onChangeCancerGeneFilter={
-                            this.props.onChangeCancerGeneFilter!
-                        }
+                        onChangeCancerGeneFilter={this.props.onChangeCancerGeneFilter!}
                         columns={[
                             { columnKey: GeneTableColumnKey.GENE },
                             { columnKey: GeneTableColumnKey.NUMBER_FUSIONS },
@@ -497,10 +427,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     <GeneTable
                         tableType={'cna'}
                         promise={this.props.promise}
-                        width={getWidthByDimension(
-                            this.props.dimension,
-                            this.borderWidth
-                        )}
+                        width={getWidthByDimension(this.props.dimension, this.borderWidth)}
                         height={getTableHeightByDimension(
                             this.props.dimension,
                             this.chartHeaderHeight
@@ -511,13 +438,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
                         genePanelCache={this.props.genePanelCache}
-                        cancerGeneFilterEnabled={
-                            this.props.cancerGeneFilterEnabled
-                        }
+                        cancerGeneFilterEnabled={this.props.cancerGeneFilterEnabled}
                         filterByCancerGenes={this.props.filterByCancerGenes!}
-                        onChangeCancerGeneFilter={
-                            this.props.onChangeCancerGeneFilter!
-                        }
+                        onChangeCancerGeneFilter={this.props.onChangeCancerGeneFilter!}
                         columns={[
                             {
                                 columnKey: GeneTableColumnKey.GENE,
@@ -551,9 +474,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         <SurvivalChart
                             ref={this.handlers.ref}
                             patientSurvivals={data.patientSurvivals}
-                            patientToAnalysisGroups={
-                                data.patientToAnalysisGroups
-                            }
+                            patientToAnalysisGroups={data.patientToAnalysisGroups}
                             analysisGroups={data.analysisGroups}
                             legendLocation={LegendLocation.TOOLTIP}
                             title={this.props.title}
@@ -569,10 +490,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             showSlider={false}
                             showTable={false}
                             styleOpts={{
-                                width: getWidthByDimension(
-                                    this.props.dimension,
-                                    this.borderWidth
-                                ),
+                                width: getWidthByDimension(this.props.dimension, this.borderWidth),
                                 height: getHeightByDimension(
                                     this.props.dimension,
                                     this.chartHeaderHeight
@@ -620,16 +538,12 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         <div style={{ marginTop: -33 }}>
                             <StudyViewDensityScatterPlot
                                 ref={this.handlers.ref}
-                                width={getWidthByDimension(
-                                    this.props.dimension,
-                                    this.borderWidth
-                                )}
+                                width={getWidthByDimension(this.props.dimension, this.borderWidth)}
                                 height={this.getScatterPlotHeight()}
                                 yBinsMin={MutationCountVsCnaYBinsMin}
                                 onSelection={this.props.onValueSelection}
                                 selectionBounds={
-                                    this.props.filters &&
-                                    this.props.filters.length > 0
+                                    this.props.filters && this.props.filters.length > 0
                                         ? this.props.filters[0]
                                         : undefined
                                 }
@@ -665,10 +579,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         }
     }
 
-    componentWillReceiveProps(
-        nextProps: Readonly<IChartContainerProps>,
-        nextContext: any
-    ): void {
+    componentWillReceiveProps(nextProps: Readonly<IChartContainerProps>, nextContext: any): void {
         if (nextProps.chartType !== this.chartType) {
             this.chartType = nextProps.chartType;
         }
@@ -711,22 +622,15 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     }}
                 >
                     {this.props.promise.isPending && (
-                        <LoadingIndicator
-                            isLoading={true}
-                            className={styles.chartLoader}
-                        />
+                        <LoadingIndicator isLoading={true} className={styles.chartLoader} />
                     )}
-                    {this.props.promise.isError && (
-                        <div>Error when loading data.</div>
-                    )}
+                    {this.props.promise.isError && <div>Error when loading data.</div>}
 
                     {(!this.props.chartMeta.renderWhenDataChange ||
                         this.props.promise.isComplete) && (
                         <div
                             style={{
-                                visibility: this.props.promise.isPending
-                                    ? 'hidden'
-                                    : 'visible',
+                                visibility: this.props.promise.isPending ? 'hidden' : 'visible',
                                 display: 'flex',
                             }}
                         >

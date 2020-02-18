@@ -9,9 +9,7 @@ import SampleInline from 'pages/patientView/patientHeader/SampleInline';
 import SampleLabelNotProfiled from 'shared/components/sampleLabel/SampleLabelNotProfiled';
 
 export default class TumorColumnFormatter {
-    public static renderFunction<
-        T extends { sampleId: string; entrezGeneId: number }
-    >(
+    public static renderFunction<T extends { sampleId: string; entrezGeneId: number }>(
         mutations: T[],
         sampleManager: SampleManager | null,
         sampleToGenePanelId: { [sampleId: string]: string | undefined },
@@ -28,14 +26,9 @@ export default class TumorColumnFormatter {
         // - when sample->gene has no mutation (absent from _mutatedSamples_) and was profiled, show `no mutation` icon
         // - when sample->gene has no mutation (absent from _mutatedSamples_) and was not profiled, show `not profiled` icon
         const samples = sampleManager.samples;
-        const sampleIds = _.map(
-            samples,
-            (sample: ClinicalDataBySampleId) => sample.id
-        );
+        const sampleIds = _.map(samples, (sample: ClinicalDataBySampleId) => sample.id);
         const entrezGeneId = mutations[0].entrezGeneId;
-        const mutatedSamples = TumorColumnFormatter.getPresentSamples(
-            mutations
-        );
+        const mutatedSamples = TumorColumnFormatter.getPresentSamples(mutations);
         const profiledSamples = TumorColumnFormatter.getProfiledSamplesForGene(
             entrezGeneId,
             sampleIds,
@@ -50,8 +43,7 @@ export default class TumorColumnFormatter {
             // decreased opacity for uncalled mutations
             // show not-profiled icon when gene was not analyzed
             const isMutated = sample.id in mutatedSamples;
-            const isProfiled =
-                sample.id in profiledSamples && profiledSamples[sample.id];
+            const isProfiled = sample.id in profiledSamples && profiledSamples[sample.id];
 
             let extraTooltipText = '';
 
@@ -59,8 +51,7 @@ export default class TumorColumnFormatter {
             // therefore a sample can still have mutations even if the gene was not profiled
             if (isMutated) {
                 if (!mutatedSamples[sample.id]) {
-                    extraTooltipText =
-                        "Mutation has supporting reads, but wasn't called. ";
+                    extraTooltipText = "Mutation has supporting reads, but wasn't called. ";
                 }
                 if (!isProfiled) {
                     extraTooltipText = `${extraTooltipText}${notProfiledText}`;
@@ -102,10 +93,7 @@ export default class TumorColumnFormatter {
 
         return (
             <div style={{ position: 'relative' }} data-test="samples-cell">
-                <ul
-                    style={{ marginBottom: 0 }}
-                    className="list-inline list-unstyled"
-                >
+                <ul style={{ marginBottom: 0 }} className="list-inline list-unstyled">
                     {tdValue}
                 </ul>
             </div>
@@ -122,10 +110,7 @@ export default class TumorColumnFormatter {
             const presentSamples = TumorColumnFormatter.getPresentSamples(d);
             const ret = [];
             // First, we sort by the number of present and called samples
-            ret.push(
-                Object.keys(presentSamples).filter(s => presentSamples[s])
-                    .length
-            );
+            ret.push(Object.keys(presentSamples).filter(s => presentSamples[s]).length);
             // Then, we sort by the particular ones present
             for (const sampleId of sampleManager.getSampleIdsInOrder()) {
                 ret.push(+!!presentSamples[sampleId]);
@@ -146,10 +131,7 @@ export default class TumorColumnFormatter {
                 // Indicate called mutations with true,
                 // uncalled mutations with supporting reads as false
                 // exclude uncalled mutations without supporting reads completely
-                if (
-                    next.molecularProfileId &&
-                    isUncalled(next.molecularProfileId)
-                ) {
+                if (next.molecularProfileId && isUncalled(next.molecularProfileId)) {
                     if (next.tumorAltCount && next.tumorAltCount > 0) {
                         map[next.sampleId] = false;
                     }
@@ -178,9 +160,7 @@ export default class TumorColumnFormatter {
                     !wholeGenome &&
                     !!genePanelId &&
                     genePanelId in genePanelIdToEntrezGeneIds &&
-                    genePanelIdToEntrezGeneIds[genePanelId].includes(
-                        entrezGeneId
-                    );
+                    genePanelIdToEntrezGeneIds[genePanelId].includes(entrezGeneId);
 
                 sampleIsProfiled[nextSampleId] = wholeGenome || isInGenePanel;
 
@@ -190,9 +170,7 @@ export default class TumorColumnFormatter {
         );
     }
 
-    public static getSample(
-        data: Array<{ sampleId: string }>
-    ): string | string[] {
+    public static getSample(data: Array<{ sampleId: string }>): string | string[] {
         let result: string[] = [];
         if (data) {
             data.forEach((datum: { sampleId: string }) => {

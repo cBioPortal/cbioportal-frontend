@@ -61,8 +61,7 @@ describe('PaginationControls', () => {
                     itemsPerPageOptions={[1, 2, 3, 4]}
                 />
             );
-            expect(paginationControls.find(Button), 'no buttons exist').to.not
-                .exist;
+            expect(paginationControls.find(Button), 'no buttons exist').to.not.exist;
 
             paginationControls = mount(
                 <PaginationControls

@@ -1,8 +1,4 @@
-import {
-    Genome2StructureAPI,
-    Alignment,
-    ResidueMapping,
-} from 'cbioportal-frontend-commons';
+import { Genome2StructureAPI, Alignment, ResidueMapping } from 'cbioportal-frontend-commons';
 import g2sClient from 'shared/api/g2sClientInstance';
 import { CacheData } from 'shared/lib/LazyMobXCache';
 import { remoteData } from 'cbioportal-frontend-commons';
@@ -47,14 +43,10 @@ export default class ResidueMappingCache {
         const key = this.generateQueryKey(query);
 
         if (!this.queries[key]) {
-            this.queries[key] = remoteData<
-                Array<CacheData<ResidueMapping> | null>
-            >(
+            this.queries[key] = remoteData<Array<CacheData<ResidueMapping> | null>>(
                 {
                     invoke: async () => {
-                        let residueMappingCacheData: Array<CacheData<
-                            ResidueMapping
-                        > | null> = [];
+                        let residueMappingCacheData: Array<CacheData<ResidueMapping> | null> = [];
                         let residueMappings: ResidueMapping[] = [];
 
                         const alignments = await fetchAlignments(
@@ -66,9 +58,7 @@ export default class ResidueMappingCache {
 
                         if (alignments.length > 0) {
                             alignments.forEach((alignment: Alignment) => {
-                                residueMappings = residueMappings.concat(
-                                    alignment.residueMapping
-                                );
+                                residueMappings = residueMappings.concat(alignment.residueMapping);
                             });
 
                             residueMappingCacheData = residueMappings.map(
@@ -94,14 +84,12 @@ export default class ResidueMappingCache {
     }
 
     private generateQueryKey(query: ResidueMappingQuery): string {
-        return `${query.uniprotId}_${query.pdbId}_${
-            query.chainId
-        }_${query.uniprotPositions.join(',')}`;
+        return `${query.uniprotId}_${query.pdbId}_${query.chainId}_${query.uniprotPositions.join(
+            ','
+        )}`;
     }
 
-    private defaultData(
-        query: ResidueMappingQuery
-    ): Array<CacheData<ResidueMapping> | null> {
+    private defaultData(query: ResidueMappingQuery): Array<CacheData<ResidueMapping> | null> {
         return [null];
     }
 }

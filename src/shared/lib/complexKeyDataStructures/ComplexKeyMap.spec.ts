@@ -13,58 +13,25 @@ describe('ComplexKeyMap', () => {
         assert.equal(map.get({ word1: '', word2: '', word3: '' }), undefined);
         map.set({ word1: '', word2: '', word3: '' }, 'test');
         assert.equal(map.get({ word1: '', word2: '', word3: '' }), 'test');
-        assert.equal(
-            map.get({ word1: 'asdf', word2: '', word3: '' }),
-            undefined
-        );
+        assert.equal(map.get({ word1: 'asdf', word2: '', word3: '' }), undefined);
         map.set({ word1: 'asdf', word2: '', word3: '' }, 'blah');
         assert.equal(map.get({ word1: 'asdf', word2: '', word3: '' }), 'blah');
-        assert.equal(
-            map.get({ word1: 'yo', word2: 'whatsup', word3: '' }),
-            undefined
-        );
+        assert.equal(map.get({ word1: 'yo', word2: 'whatsup', word3: '' }), undefined);
         map.set({ word1: 'yo', word2: 'whatsup', word3: '' }, 'apsoidjfa');
-        assert.equal(
-            map.get({ word1: 'yo', word2: 'whatsup', word3: '' }),
-            'apsoidjfa'
-        );
-        assert.equal(
-            map.get({ word1: 'whatsup', word2: 'yo', word3: '' }),
-            undefined
-        );
+        assert.equal(map.get({ word1: 'yo', word2: 'whatsup', word3: '' }), 'apsoidjfa');
+        assert.equal(map.get({ word1: 'whatsup', word2: 'yo', word3: '' }), undefined);
         map.set({ word1: 'whatsup', word2: 'yo', word3: '' }, 'foobar');
-        assert.equal(
-            map.get({ word1: 'whatsup', word2: 'yo', word3: '' }),
-            'foobar'
-        );
-        assert.equal(
-            map.get({ word1: 'whatsup', word2: 'yo', word3: 'bye' }),
-            undefined
-        );
+        assert.equal(map.get({ word1: 'whatsup', word2: 'yo', word3: '' }), 'foobar');
+        assert.equal(map.get({ word1: 'whatsup', word2: 'yo', word3: 'bye' }), undefined);
         map.set({ word1: 'whatsup', word2: 'yo', word3: 'bye' }, 'fubar');
-        assert.equal(
-            map.get({ word1: 'whatsup', word2: 'yo', word3: 'bye' }),
-            'fubar'
-        );
+        assert.equal(map.get({ word1: 'whatsup', word2: 'yo', word3: 'bye' }), 'fubar');
 
         map.clear();
         assert.equal(map.get({ word1: '', word2: '', word3: '' }), undefined);
-        assert.equal(
-            map.get({ word1: 'asdf', word2: '', word3: '' }),
-            undefined
-        );
-        assert.equal(
-            map.get({ word1: 'yo', word2: 'whatsup', word3: '' }),
-            undefined
-        );
-        assert.equal(
-            map.get({ word1: 'whatsup', word2: 'yo', word3: '' }),
-            undefined
-        );
-        assert.equal(
-            map.get({ word1: 'whatsup', word2: 'yo', word3: 'bye' }),
-            undefined
-        );
+        assert.equal(map.get({ word1: 'asdf', word2: '', word3: '' }), undefined);
+        assert.equal(map.get({ word1: 'yo', word2: 'whatsup', word3: '' }), undefined);
+        assert.equal(map.get({ word1: 'whatsup', word2: 'yo', word3: '' }), undefined);
+        assert.equal(map.get({ word1: 'whatsup', word2: 'yo', word3: 'bye' }), undefined);
     });
     it('`get` returns the most recently-set value for a key', () => {
         const map = new ComplexKeyMap<string>();
@@ -80,35 +47,17 @@ describe('ComplexKeyMap', () => {
         map.set({ word1: 'yo', word2: '', word3: '' }, 'test2');
         assert.equal(map.get({ word1: 'yo', word2: '', word3: '' }), 'test2');
 
-        assert.equal(
-            map.get({ word1: 'yo', word2: 'whatsup', word3: '' }),
-            undefined
-        );
+        assert.equal(map.get({ word1: 'yo', word2: 'whatsup', word3: '' }), undefined);
         map.set({ word1: 'yo', word2: 'whatsup', word3: '' }, 'test');
-        assert.equal(
-            map.get({ word1: 'yo', word2: 'whatsup', word3: '' }),
-            'test'
-        );
+        assert.equal(map.get({ word1: 'yo', word2: 'whatsup', word3: '' }), 'test');
         map.set({ word1: 'yo', word2: 'whatsup', word3: '' }, 'test2');
-        assert.equal(
-            map.get({ word1: 'yo', word2: 'whatsup', word3: '' }),
-            'test2'
-        );
+        assert.equal(map.get({ word1: 'yo', word2: 'whatsup', word3: '' }), 'test2');
 
-        assert.equal(
-            map.get({ word1: 'whatsup', word2: 'yo', word3: 'bye' }),
-            undefined
-        );
+        assert.equal(map.get({ word1: 'whatsup', word2: 'yo', word3: 'bye' }), undefined);
         map.set({ word1: 'whatsup', word2: 'yo', word3: 'bye' }, 'test');
-        assert.equal(
-            map.get({ word1: 'whatsup', word2: 'yo', word3: 'bye' }),
-            'test'
-        );
+        assert.equal(map.get({ word1: 'whatsup', word2: 'yo', word3: 'bye' }), 'test');
         map.set({ word1: 'whatsup', word2: 'yo', word3: 'bye' }, 'test2');
-        assert.equal(
-            map.get({ word1: 'whatsup', word2: 'yo', word3: 'bye' }),
-            'test2'
-        );
+        assert.equal(map.get({ word1: 'whatsup', word2: 'yo', word3: 'bye' }), 'test2');
     });
     it('`entries` returns the entries in insertion order', () => {
         const map = new ComplexKeyMap<string>();
@@ -165,18 +114,17 @@ describe('ComplexKeyMap', () => {
         assert.isTrue(map.has(crazyKey));
     });
     it('`from` creates a ListIndexedMap from a given list', () => {
-        const map = ComplexKeyMap.from(
-            [{ id: 'obj1' }, { id: 'obj2' }, { id: 'obj3' }],
-            o => ({ '234ijdfapso#': o.id })
-        );
+        const map = ComplexKeyMap.from([{ id: 'obj1' }, { id: 'obj2' }, { id: 'obj3' }], o => ({
+            '234ijdfapso#': o.id,
+        }));
         assert.deepEqual(map.get({ '234ijdfapso#': 'obj1' }), { id: 'obj1' });
         assert.deepEqual(map.get({ '234ijdfapso#': 'obj2' }), { id: 'obj2' });
         assert.deepEqual(map.get({ '234ijdfapso#': 'obj3' }), { id: 'obj3' });
 
-        const map2 = ComplexKeyMap.from(
-            [{ id: 'obj1' }, { id: 'obj2' }, { id: 'obj3' }],
-            o => ({ '234ijdfapso#': o.id, whatever: 'yo' })
-        );
+        const map2 = ComplexKeyMap.from([{ id: 'obj1' }, { id: 'obj2' }, { id: 'obj3' }], o => ({
+            '234ijdfapso#': o.id,
+            whatever: 'yo',
+        }));
         assert.isUndefined(map2.get({ '234ijdfapso#': 'obj1' }));
         assert.isUndefined(map2.get({ '234ijdfapso#': 'obj2' }));
         assert.isUndefined(map2.get({ '234ijdfapso#': 'obj3' }));

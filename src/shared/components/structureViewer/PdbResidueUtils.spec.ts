@@ -106,51 +106,35 @@ describe('PdbResidueUtils', () => {
 
     it('converts pdb positions to residue codes', () => {
         assert.deepEqual(convertPdbPosToResCode(pointPositionRange), ['666']);
-        assert.deepEqual(convertPdbPosToResCode(multiPositionRange), [
-            '666',
+        assert.deepEqual(convertPdbPosToResCode(multiPositionRange), ['666', '667', '668']);
+        assert.deepEqual(convertPdbPosToResCode(pointPositionRangeWithInsertion), ['666^D']);
+        assert.deepEqual(convertPdbPosToResCode(multiPositionRangeWithInsertion), [
+            '666^D',
             '667',
-            '668',
+            '668^D',
         ]);
-        assert.deepEqual(
-            convertPdbPosToResCode(pointPositionRangeWithInsertion),
-            ['666^D']
-        );
-        assert.deepEqual(
-            convertPdbPosToResCode(multiPositionRangeWithInsertion),
-            ['666^D', '667', '668^D']
-        );
     });
 
     it('converts pdb positions to residue and insertion code pairs', () => {
-        assert.deepEqual(convertPdbPosToResAndInsCode(pointPositionRange), [
-            { resi: 666 },
-        ]);
+        assert.deepEqual(convertPdbPosToResAndInsCode(pointPositionRange), [{ resi: 666 }]);
         assert.deepEqual(convertPdbPosToResAndInsCode(multiPositionRange), [
             { resi: 666 },
             { resi: 667 },
             { resi: 668 },
         ]);
-        assert.deepEqual(
-            convertPdbPosToResAndInsCode(pointPositionRangeWithInsertion),
-            [{ resi: 666, icode: 'D' }]
-        );
-        assert.deepEqual(
-            convertPdbPosToResAndInsCode(multiPositionRangeWithInsertion),
-            [
-                { resi: 666, icode: 'D' },
-                { resi: 667 },
-                { resi: 668, icode: 'D' },
-            ]
-        );
+        assert.deepEqual(convertPdbPosToResAndInsCode(pointPositionRangeWithInsertion), [
+            { resi: 666, icode: 'D' },
+        ]);
+        assert.deepEqual(convertPdbPosToResAndInsCode(multiPositionRangeWithInsertion), [
+            { resi: 666, icode: 'D' },
+            { resi: 667 },
+            { resi: 668, icode: 'D' },
+        ]);
     });
 
     it('converts pdb residue specs to residue helper map', () => {
         assert.deepEqual(
-            generateResiduePosToSelectorMap([
-                residueSpec666,
-                residueSpec765,
-                residueSpec1961,
-            ]),
+            generateResiduePosToSelectorMap([residueSpec666, residueSpec765, residueSpec1961]),
             initMockMap()
         );
     });

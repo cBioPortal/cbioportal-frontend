@@ -1,16 +1,12 @@
 var assert = require('assert');
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var useExternalFrontend = require('../../../shared/specUtils')
-    .useExternalFrontend;
-var waitForPatientView = require('../../../shared/specUtils')
-    .waitForPatientView;
+var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
+var useExternalFrontend = require('../../../shared/specUtils').useExternalFrontend;
+var waitForPatientView = require('../../../shared/specUtils').waitForPatientView;
 
 var _ = require('lodash');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
-const patienViewUrl =
-    CBIOPORTAL_URL + '/patient?studyId=teststudy_genepanels&caseId=patientA';
+const patienViewUrl = CBIOPORTAL_URL + '/patient?studyId=teststudy_genepanels&caseId=patientA';
 
 describe('patient view page', function() {
     if (useExternalFrontend) {
@@ -100,9 +96,7 @@ describe('patient view page', function() {
             it('removes genes profiles profiled in some samples then `all genes` option selected', () => {
                 const allGenesRadio = selectMenu.$('input[value=allSamples]');
                 allGenesRadio.click();
-                const geneEntries = $$(
-                    '[data-test=mutation-table-gene-column]'
-                );
+                const geneEntries = $$('[data-test=mutation-table-gene-column]');
                 assert.equal(geneEntries.length, 1);
                 const geneName = geneEntries[0].getText();
                 assert.equal(geneName, 'CADM2');
@@ -111,9 +105,7 @@ describe('patient view page', function() {
             it('re-adds genes when `any genes` option selected', () => {
                 const anyGenesRadio = selectMenu.$('input[value=anySample]');
                 anyGenesRadio.click();
-                const geneEntries = $$(
-                    '[data-test=mutation-table-gene-column]'
-                );
+                const geneEntries = $$('[data-test=mutation-table-gene-column]');
                 assert.equal(geneEntries.length, 4);
             });
 
@@ -125,13 +117,12 @@ describe('patient view page', function() {
 
             it('filter menu icon is not shown when gene panels are not used', () => {
                 goToUrlAndSetLocalStorage(
-                    CBIOPORTAL_URL +
-                        '/patient?studyId=study_es_0&caseId=TCGA-A1-A0SK'
+                    CBIOPORTAL_URL + '/patient?studyId=study_es_0&caseId=TCGA-A1-A0SK'
                 );
                 waitForPatientView();
-                var filterIcon = $(
-                    'div[data-test=patientview-mutation-table]'
-                ).$('i[data-test=gene-filter-icon]');
+                var filterIcon = $('div[data-test=patientview-mutation-table]').$(
+                    'i[data-test=gene-filter-icon]'
+                );
                 assert(!filterIcon.isVisible());
             });
         });
@@ -182,13 +173,12 @@ describe('patient view page', function() {
 
             it('filter menu icon is not shown when gene panels are not used', () => {
                 goToUrlAndSetLocalStorage(
-                    CBIOPORTAL_URL +
-                        '/patient?studyId=study_es_0&caseId=TCGA-A2-A04U'
+                    CBIOPORTAL_URL + '/patient?studyId=study_es_0&caseId=TCGA-A2-A04U'
                 );
                 waitForPatientView();
-                var filterIcon = $(
-                    'div[data-test=patientview-copynumber-table]'
-                ).$('i[data-test=gene-filter-icon]');
+                var filterIcon = $('div[data-test=patientview-copynumber-table]').$(
+                    'i[data-test=gene-filter-icon]'
+                );
                 assert(!filterIcon.isVisible());
             });
         });
@@ -200,12 +190,8 @@ describe('patient view page', function() {
             });
 
             it('shows gene panel icon when gene panels are used for patient samples', () => {
-                assert(
-                    $('[data-test=cna-track-genepanel-icon-0]').isExisting()
-                );
-                assert(
-                    $('[data-test=mut-track-genepanel-icon-5]').isExisting()
-                );
+                assert($('[data-test=cna-track-genepanel-icon-0]').isExisting());
+                assert($('[data-test=mut-track-genepanel-icon-5]').isExisting());
             });
 
             it('shows mouse-over tooltip for gene panel icons with gene panel id', () => {
@@ -214,9 +200,7 @@ describe('patient view page', function() {
                 // was created.
                 var curNumToolTips = $$('div.qtip-content').length;
                 browser.moveToObject('[data-test=cna-track-genepanel-icon-1]');
-                browser.waitUntil(
-                    () => $$('div.qtip-content').length > curNumToolTips
-                );
+                browser.waitUntil(() => $$('div.qtip-content').length > curNumToolTips);
                 var toolTips = $$('div.qtip-content');
                 var text = toolTips[toolTips.length - 1].getText();
                 assert.equal(text, 'Gene panel: TESTPANEL1');
@@ -228,9 +212,7 @@ describe('patient view page', function() {
                 // was created.
                 var curNumToolTips = $$('div.qtip-content').length;
                 browser.moveToObject('[data-test=cna-track-genepanel-icon-4]');
-                browser.waitUntil(
-                    () => $$('div.qtip-content').length > curNumToolTips
-                );
+                browser.waitUntil(() => $$('div.qtip-content').length > curNumToolTips);
                 var toolTips = $$('div.qtip-content');
                 var text = toolTips[toolTips.length - 1].getText();
                 assert.equal(
@@ -241,13 +223,10 @@ describe('patient view page', function() {
 
             it('hides gene panel icons when no gene panels are used for patient samples', () => {
                 goToUrlAndSetLocalStorage(
-                    CBIOPORTAL_URL +
-                        '/patient?studyId=study_es_0&caseId=TCGA-A1-A0SK'
+                    CBIOPORTAL_URL + '/patient?studyId=study_es_0&caseId=TCGA-A1-A0SK'
                 );
                 waitForPatientView();
-                assert(
-                    !$('[data-test=mut-track-genepanel-icon-0]').isExisting()
-                );
+                assert(!$('[data-test=mut-track-genepanel-icon-0]').isExisting());
             });
         });
 
@@ -260,9 +239,7 @@ describe('patient view page', function() {
             it('shows gene panel icons when gene panels are used', () => {
                 browser.moveToObject('svg[data-test=vaf-plot]'); // moves pointer to plot thumbnail
                 $('div[role=tooltip] svg[data-test=vaf-plot]').waitForVisible();
-                var genePanelIcon = $(
-                    'svg[data-test=vaf-plot] rect.genepanel-icon'
-                );
+                var genePanelIcon = $('svg[data-test=vaf-plot] rect.genepanel-icon');
                 assert(genePanelIcon.isExisting());
             });
         });
@@ -279,18 +256,14 @@ describe('patient view page', function() {
             });
 
             it('toggles gene panel modal from patient header', () => {
-                browser
-                    .moveToObject('.patientSamples .clinical-spans svg')
-                    .pause(500);
+                browser.moveToObject('.patientSamples .clinical-spans svg').pause(500);
                 clickOnGenePanelLinks();
                 assert($('#patient-view-gene-panel').isExisting());
             });
 
             it('toggles gene panel modal from sample icon in genomic tracks', () => {
                 browser
-                    .moveToObject(
-                        '.genomicOverviewTracksContainer svg[data-test=sample-icon]'
-                    )
+                    .moveToObject('.genomicOverviewTracksContainer svg[data-test=sample-icon]')
                     .pause(500);
                 clickOnGenePanelLinks();
                 assert($('#patient-view-gene-panel').isExisting());
@@ -309,9 +282,7 @@ describe('patient view page', function() {
             it('toggles gene panel modal from sample icon in mutations table', () => {
                 const mutationsTable = '[data-test=patientview-mutation-table]';
                 browser
-                    .moveToObject(
-                        `${mutationsTable} table td [data-test=not-profiled-icon]`
-                    )
+                    .moveToObject(`${mutationsTable} table td [data-test=not-profiled-icon]`)
                     .pause(500);
                 clickOnGenePanelLinks();
                 assert($('#patient-view-gene-panel').isExisting());
@@ -332,20 +303,16 @@ describe('patient view page', function() {
             });
 
             it('toggles gene panel modal from sample icon in copy number table', () => {
-                const copyNumberTable =
-                    '[data-test=patientview-copynumber-table]';
+                const copyNumberTable = '[data-test=patientview-copynumber-table]';
                 browser
-                    .moveToObject(
-                        `${copyNumberTable} table td [data-test=not-profiled-icon]`
-                    )
+                    .moveToObject(`${copyNumberTable} table td [data-test=not-profiled-icon]`)
                     .pause(500);
                 clickOnGenePanelLinks();
                 assert($('#patient-view-gene-panel').isExisting());
             });
 
             it('toggles gene panel modal from gene panel id in copy number table', () => {
-                const copyNumberTable =
-                    '[data-test=patientview-copynumber-table]';
+                const copyNumberTable = '[data-test=patientview-copynumber-table]';
 
                 // select option to show "Gene Panel" column
                 $(`${copyNumberTable} button#dropdown-custom-1`).click();
@@ -361,15 +328,8 @@ describe('patient view page', function() {
     }
 });
 
-function testSampleIcon(
-    geneSymbol,
-    tableTag,
-    sampleIconTypes,
-    sampleVisibilities
-) {
-    const geneCell = $('div[data-test=' + tableTag + '] table').$(
-        'span=' + geneSymbol
-    );
+function testSampleIcon(geneSymbol, tableTag, sampleIconTypes, sampleVisibilities) {
+    const geneCell = $('div[data-test=' + tableTag + '] table').$('span=' + geneSymbol);
     const samplesCell = geneCell
         .$('..')
         .$('..')
@@ -377,9 +337,7 @@ function testSampleIcon(
     const icons = samplesCell.$$('li');
 
     sampleIconTypes.forEach((desiredDataType, i) => {
-        const isExpectedIcon = icons[i]
-            .$('svg[data-test=' + desiredDataType + ']')
-            .isExisting();
+        const isExpectedIcon = icons[i].$('svg[data-test=' + desiredDataType + ']').isExisting();
         assert.equal(
             isExpectedIcon,
             true,

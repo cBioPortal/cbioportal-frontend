@@ -10,10 +10,7 @@ const styles = styles_any as {
 };
 
 interface ISectionHeaderProps
-    extends React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLDivElement>,
-        HTMLDivElement
-    > {
+    extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
     error: Error;
 }
 
@@ -23,10 +20,7 @@ export default class ErrorBox extends React.Component<ISectionHeaderProps, {}> {
         return (
             <div className={classNames(className, styles.error)} {...divProps}>
                 <span className={styles.message}>
-                    <FontAwesome
-                        className={styles.icon}
-                        name="exclamation-circle"
-                    />
+                    <FontAwesome className={styles.icon} name="exclamation-circle" />
                     {error.message + ''}
                 </span>
                 {children}

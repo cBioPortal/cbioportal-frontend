@@ -17,10 +17,7 @@ export function proteinChangeSortMethod(a: string, b: string) {
     );
 }
 
-export default class ProteinChange extends React.Component<
-    ProteinChangeProps,
-    {}
-> {
+export default class ProteinChange extends React.Component<ProteinChangeProps, {}> {
     public static defaultProps: Partial<ProteinChangeProps> = {
         enableMutationStatusIndicator: true,
     };
@@ -41,9 +38,7 @@ export default class ProteinChange extends React.Component<
         //     />
         // );
 
-        let content = (
-            <span className={styles.proteinChange}>{proteinChange}</span>
-        );
+        let content = <span className={styles.proteinChange}>{proteinChange}</span>;
 
         // add a germline indicator next to protein change if it is a germline mutation!
         if (

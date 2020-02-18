@@ -7,11 +7,7 @@ import {
     Column,
     SortDirection,
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
-import {
-    CancerStudy,
-    MolecularProfile,
-    Mutation,
-} from 'shared/api/generated/CBioPortalAPI';
+import { CancerStudy, MolecularProfile, Mutation } from 'shared/api/generated/CBioPortalAPI';
 import SampleColumnFormatter from './column/SampleColumnFormatter';
 import TumorAlleleFreqColumnFormatter from './column/TumorAlleleFreqColumnFormatter';
 import NormalAlleleFreqColumnFormatter from './column/NormalAlleleFreqColumnFormatter';
@@ -31,20 +27,12 @@ import MutationStatusColumnFormatter from './column/MutationStatusColumnFormatte
 import ValidationStatusColumnFormatter from './column/ValidationStatusColumnFormatter';
 import StudyColumnFormatter from './column/StudyColumnFormatter';
 import { ICosmicData } from 'shared/model/Cosmic';
-import AnnotationColumnFormatter, {
-    IAnnotation,
-} from './column/AnnotationColumnFormatter';
+import AnnotationColumnFormatter, { IAnnotation } from './column/AnnotationColumnFormatter';
 import ExonColumnFormatter from './column/ExonColumnFormatter';
 import { IMyCancerGenomeData } from 'shared/model/MyCancerGenome';
 import { IHotspotDataWrapper } from 'shared/model/CancerHotspots';
-import {
-    IOncoKbCancerGenesWrapper,
-    IOncoKbDataWrapper,
-} from 'shared/model/OncoKB';
-import {
-    ICivicVariantDataWrapper,
-    ICivicGeneDataWrapper,
-} from 'shared/model/Civic';
+import { IOncoKbCancerGenesWrapper, IOncoKbDataWrapper } from 'shared/model/OncoKB';
+import { ICivicVariantDataWrapper, ICivicGeneDataWrapper } from 'shared/model/Civic';
 import { IMutSigData } from 'shared/model/MutSig';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import OncoKbEvidenceCache from 'shared/cache/OncoKbEvidenceCache';
@@ -62,11 +50,7 @@ import classnames from 'classnames';
 import { IPaginationControlsProps } from '../paginationControls/PaginationControls';
 import { IColumnVisibilityControlsProps } from '../columnVisibilityControls/ColumnVisibilityControls';
 import MobxPromise from 'mobxpromise';
-import {
-    CancerGene,
-    VariantAnnotation,
-    Query,
-} from 'cbioportal-frontend-commons';
+import { CancerGene, VariantAnnotation, Query } from 'cbioportal-frontend-commons';
 import HgvscColumnFormatter from './column/HgvscColumnFormatter';
 import HgvsgColumnFormatter from './column/HgvsgColumnFormatter';
 import GnomadColumnFormatter from './column/GnomadColumnFormatter';
@@ -173,18 +157,10 @@ type MutationTableColumn = Column<Mutation[]> & {
 
 export class MutationTableComponent extends LazyMobXTable<Mutation[]> {}
 
-export function getDivForDataField(
-    data: Mutation[],
-    dataField: string,
-    isInteger?: boolean
-) {
+export function getDivForDataField(data: Mutation[], dataField: string, isInteger?: boolean) {
     let contents = getTextForDataField(data, dataField);
     return (
-        <div
-            className={classnames(
-                isInteger ? generalStyles['integer-data'] : undefined
-            )}
-        >
+        <div className={classnames(isInteger ? generalStyles['integer-data'] : undefined)}>
             {contents}
         </div>
     );
@@ -207,9 +183,7 @@ export function defaultFilter(
         return data.reduce((match: boolean, next: Mutation) => {
             const val = (next as any)[dataField];
             if (val) {
-                return (
-                    match || val.toUpperCase().indexOf(filterStringUpper) > -1
-                );
+                return match || val.toUpperCase().indexOf(filterStringUpper) > -1;
             } else {
                 return match;
             }
@@ -220,9 +194,7 @@ export function defaultFilter(
 }
 
 @observer
-export default class MutationTable<
-    P extends IMutationTableProps
-> extends React.Component<P, {}> {
+export default class MutationTable<P extends IMutationTableProps> extends React.Component<P, {}> {
     @observable protected _columns: {
         [columnEnum: number]: MutationTableColumn;
     };
@@ -276,11 +248,7 @@ export default class MutationTable<
                     this.props.molecularProfileIdToMolecularProfile,
                     this.props.studyIdToStudy
                 ),
-            filter: (
-                d: Mutation[],
-                filterString: string,
-                filterStringUpper: string
-            ) => {
+            filter: (d: Mutation[], filterString: string, filterStringUpper: string) => {
                 return StudyColumnFormatter.filter(
                     d,
                     filterStringUpper,
@@ -300,11 +268,8 @@ export default class MutationTable<
                 ),
             download: SampleColumnFormatter.getTextValue,
             sortBy: SampleColumnFormatter.getTextValue,
-            filter: (
-                d: Mutation[],
-                filterString: string,
-                filterStringUpper: string
-            ) => defaultFilter(d, 'sampleId', filterStringUpper),
+            filter: (d: Mutation[], filterString: string, filterStringUpper: string) =>
+                defaultFilter(d, 'sampleId', filterStringUpper),
             visible: true,
         };
 
@@ -312,9 +277,7 @@ export default class MutationTable<
             name: 'Allele Freq (T)',
             render: TumorAlleleFreqColumnFormatter.renderFunction,
             headerRender: (name: string) => (
-                <span style={{ display: 'inline-block', maxWidth: 55 }}>
-                    {name}
-                </span>
+                <span style={{ display: 'inline-block', maxWidth: 55 }}>{name}</span>
             ),
             download: TumorAlleleFreqColumnFormatter.getTextValue,
             sortBy: TumorAlleleFreqColumnFormatter.getSortValue,
@@ -326,9 +289,7 @@ export default class MutationTable<
             name: 'Allele Freq (N)',
             render: NormalAlleleFreqColumnFormatter.renderFunction,
             headerRender: (name: string) => (
-                <span style={{ display: 'inline-block', maxWidth: 55 }}>
-                    {name}
-                </span>
+                <span style={{ display: 'inline-block', maxWidth: 55 }}>{name}</span>
             ),
             download: NormalAlleleFreqColumnFormatter.getTextValue,
             sortBy: NormalAlleleFreqColumnFormatter.getSortValue,
@@ -351,21 +312,15 @@ export default class MutationTable<
             name: 'Cohort',
             render: (d: Mutation[]) =>
                 this.props.variantCountCache ? (
-                    CohortColumnFormatter.renderFunction(
-                        d,
-                        this.props.mutSigData,
-                        this.props.variantCountCache as VariantCountCache
-                    )
+                    CohortColumnFormatter.renderFunction(d, this.props.mutSigData, this.props
+                        .variantCountCache as VariantCountCache)
                 ) : (
                     <span></span>
                 ),
             sortBy: (d: Mutation[]) => {
                 const cache = this.props.variantCountCache;
                 if (cache) {
-                    return CohortColumnFormatter.getSortValue(
-                        d,
-                        cache as VariantCountCache
-                    );
+                    return CohortColumnFormatter.getSortValue(d, cache as VariantCountCache);
                 } else {
                     return 0;
                 }
@@ -448,17 +403,9 @@ export default class MutationTable<
         this._columns[MutationTableColumnType.REF_READS_N] = {
             name: 'Ref Reads (Normal)',
             render: (d: Mutation[]) =>
-                AlleleCountColumnFormatter.renderFunction(
-                    d,
-                    [d[0].sampleId],
-                    'normalRefCount'
-                ),
+                AlleleCountColumnFormatter.renderFunction(d, [d[0].sampleId], 'normalRefCount'),
             download: (d: Mutation[]) =>
-                AlleleCountColumnFormatter.getTextValue(
-                    d,
-                    [d[0].sampleId],
-                    'normalRefCount'
-                ),
+                AlleleCountColumnFormatter.getTextValue(d, [d[0].sampleId], 'normalRefCount'),
             sortBy: (d: Mutation[]) => d.map(m => m.normalRefCount),
             visible: false,
             align: 'right',
@@ -467,17 +414,9 @@ export default class MutationTable<
         this._columns[MutationTableColumnType.VAR_READS_N] = {
             name: 'Variant Reads (Normal)',
             render: (d: Mutation[]) =>
-                AlleleCountColumnFormatter.renderFunction(
-                    d,
-                    [d[0].sampleId],
-                    'normalAltCount'
-                ),
+                AlleleCountColumnFormatter.renderFunction(d, [d[0].sampleId], 'normalAltCount'),
             download: (d: Mutation[]) =>
-                AlleleCountColumnFormatter.getTextValue(
-                    d,
-                    [d[0].sampleId],
-                    'normalAltCount'
-                ),
+                AlleleCountColumnFormatter.getTextValue(d, [d[0].sampleId], 'normalAltCount'),
             sortBy: (d: Mutation[]) => d.map(m => m.normalAltCount),
             visible: false,
             align: 'right',
@@ -486,17 +425,9 @@ export default class MutationTable<
         this._columns[MutationTableColumnType.REF_READS] = {
             name: 'Ref Reads',
             render: (d: Mutation[]) =>
-                AlleleCountColumnFormatter.renderFunction(
-                    d,
-                    [d[0].sampleId],
-                    'tumorRefCount'
-                ),
+                AlleleCountColumnFormatter.renderFunction(d, [d[0].sampleId], 'tumorRefCount'),
             download: (d: Mutation[]) =>
-                AlleleCountColumnFormatter.getTextValue(
-                    d,
-                    [d[0].sampleId],
-                    'tumorRefCount'
-                ),
+                AlleleCountColumnFormatter.getTextValue(d, [d[0].sampleId], 'tumorRefCount'),
             sortBy: (d: Mutation[]) => d.map(m => m.tumorRefCount),
             visible: false,
             align: 'right',
@@ -505,17 +436,9 @@ export default class MutationTable<
         this._columns[MutationTableColumnType.VAR_READS] = {
             name: 'Variant Reads',
             render: (d: Mutation[]) =>
-                AlleleCountColumnFormatter.renderFunction(
-                    d,
-                    [d[0].sampleId],
-                    'tumorAltCount'
-                ),
+                AlleleCountColumnFormatter.renderFunction(d, [d[0].sampleId], 'tumorAltCount'),
             download: (d: Mutation[]) =>
-                AlleleCountColumnFormatter.getTextValue(
-                    d,
-                    [d[0].sampleId],
-                    'tumorAltCount'
-                ),
+                AlleleCountColumnFormatter.getTextValue(d, [d[0].sampleId], 'tumorAltCount'),
             sortBy: (d: Mutation[]) => d.map(m => m.tumorAltCount),
             visible: false,
             align: 'right',
@@ -523,10 +446,8 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.START_POS] = {
             name: 'Start Pos',
-            render: (d: Mutation[]) =>
-                getDivForDataField(d, 'startPosition', true),
-            download: (d: Mutation[]) =>
-                getTextForDataField(d, 'startPosition'),
+            render: (d: Mutation[]) => getDivForDataField(d, 'startPosition', true),
+            download: (d: Mutation[]) => getTextForDataField(d, 'startPosition'),
             sortBy: (d: Mutation[]) => d.map(m => m.startPosition),
             visible: false,
             align: 'right',
@@ -534,8 +455,7 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.END_POS] = {
             name: 'End Pos',
-            render: (d: Mutation[]) =>
-                getDivForDataField(d, 'endPosition', true),
+            render: (d: Mutation[]) => getDivForDataField(d, 'endPosition', true),
             download: (d: Mutation[]) => getTextForDataField(d, 'endPosition'),
             sortBy: (d: Mutation[]) => d.map(m => m.endPosition),
             visible: false,
@@ -545,8 +465,7 @@ export default class MutationTable<
         this._columns[MutationTableColumnType.REF_ALLELE] = {
             name: 'Ref',
             render: (d: Mutation[]) => getDivForDataField(d, 'referenceAllele'),
-            download: (d: Mutation[]) =>
-                getTextForDataField(d, 'referenceAllele'),
+            download: (d: Mutation[]) => getTextForDataField(d, 'referenceAllele'),
             sortBy: (d: Mutation[]) => d.map(m => m.referenceAllele),
             visible: false,
         };
@@ -554,8 +473,7 @@ export default class MutationTable<
         this._columns[MutationTableColumnType.VAR_ALLELE] = {
             name: 'Var',
             render: (d: Mutation[]) => getDivForDataField(d, 'variantAllele'),
-            download: (d: Mutation[]) =>
-                getTextForDataField(d, 'variantAllele'),
+            download: (d: Mutation[]) => getTextForDataField(d, 'variantAllele'),
             sortBy: (d: Mutation[]) => d.map(m => m.variantAllele),
             visible: false,
         };
@@ -566,11 +484,8 @@ export default class MutationTable<
             render: MutationStatusColumnFormatter.renderFunction,
             download: MutationStatusColumnFormatter.download,
             sortBy: MutationStatusColumnFormatter.sortValue,
-            filter: (
-                d: Mutation[],
-                filterString: string,
-                filterStringUpper: string
-            ) => defaultFilter(d, 'mutationStatus', filterStringUpper),
+            filter: (d: Mutation[], filterString: string, filterStringUpper: string) =>
+                defaultFilter(d, 'mutationStatus', filterStringUpper),
             visible: false,
         };
 
@@ -580,11 +495,8 @@ export default class MutationTable<
             render: ValidationStatusColumnFormatter.renderFunction,
             download: ValidationStatusColumnFormatter.download,
             sortBy: ValidationStatusColumnFormatter.sortValue,
-            filter: (
-                d: Mutation[],
-                filterString: string,
-                filterStringUpper: string
-            ) => defaultFilter(d, 'validationStatus', filterStringUpper),
+            filter: (d: Mutation[], filterString: string, filterStringUpper: string) =>
+                defaultFilter(d, 'validationStatus', filterStringUpper),
             visible: false,
         };
 
@@ -593,11 +505,8 @@ export default class MutationTable<
             render: (d: Mutation[]) => getDivForDataField(d, 'center'),
             download: (d: Mutation[]) => getTextForDataField(d, 'center'),
             sortBy: (d: Mutation[]) => d.map(m => m.center),
-            filter: (
-                d: Mutation[],
-                filterString: string,
-                filterStringUpper: string
-            ) => defaultFilter(d, 'center', filterStringUpper),
+            filter: (d: Mutation[], filterString: string, filterStringUpper: string) =>
+                defaultFilter(d, 'center', filterStringUpper),
             visible: false,
         };
 
@@ -606,11 +515,7 @@ export default class MutationTable<
             render: (d: Mutation[]) => GeneColumnFormatter.renderFunction(d),
             download: (d: Mutation[]) => GeneColumnFormatter.getTextValue(d),
             sortBy: (d: Mutation[]) => GeneColumnFormatter.getSortValue(d),
-            filter: (
-                d: Mutation[],
-                filterString: string,
-                filterStringUpper: string
-            ) =>
+            filter: (d: Mutation[], filterString: string, filterStringUpper: string) =>
                 GeneColumnFormatter.getTextValue(d)
                     .toUpperCase()
                     .indexOf(filterStringUpper) > -1,
@@ -623,15 +528,9 @@ export default class MutationTable<
                     {ChromosomeColumnFormatter.getData(d)}
                 </div>
             ),
-            download: (d: Mutation[]) =>
-                ChromosomeColumnFormatter.getData(d) || '',
-            sortBy: (d: Mutation[]) =>
-                ChromosomeColumnFormatter.getSortValue(d),
-            filter: (
-                d: Mutation[],
-                filterString: string,
-                filterStringUpper: string
-            ) =>
+            download: (d: Mutation[]) => ChromosomeColumnFormatter.getData(d) || '',
+            sortBy: (d: Mutation[]) => ChromosomeColumnFormatter.getSortValue(d),
+            filter: (d: Mutation[], filterString: string, filterStringUpper: string) =>
                 (ChromosomeColumnFormatter.getData(d) + '')
                     .toUpperCase()
                     .indexOf(filterStringUpper) > -1,
@@ -643,8 +542,7 @@ export default class MutationTable<
             name: 'Protein Change',
             render: ProteinChangeColumnFormatter.renderWithMutationStatus,
             download: ProteinChangeColumnFormatter.getTextValue,
-            sortBy: (d: Mutation[]) =>
-                ProteinChangeColumnFormatter.getSortValue(d),
+            sortBy: (d: Mutation[]) => ProteinChangeColumnFormatter.getSortValue(d),
             filter: ProteinChangeColumnFormatter.getFilterValue,
         };
 
@@ -652,13 +550,8 @@ export default class MutationTable<
             name: 'Mutation Type',
             render: MutationTypeColumnFormatter.renderFunction,
             download: MutationTypeColumnFormatter.getTextValue,
-            sortBy: (d: Mutation[]) =>
-                MutationTypeColumnFormatter.getDisplayValue(d),
-            filter: (
-                d: Mutation[],
-                filterString: string,
-                filterStringUpper: string
-            ) =>
+            sortBy: (d: Mutation[]) => MutationTypeColumnFormatter.getDisplayValue(d),
+            filter: (d: Mutation[], filterString: string, filterStringUpper: string) =>
                 MutationTypeColumnFormatter.getDisplayValue(d)
                     .toUpperCase()
                     .indexOf(filterStringUpper) > -1,
@@ -667,10 +560,7 @@ export default class MutationTable<
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT] = {
             name: 'Functional Impact',
             render: (d: Mutation[]) => {
-                if (
-                    this.props.genomeNexusCache ||
-                    this.props.genomeNexusMutationAssessorCache
-                ) {
+                if (this.props.genomeNexusCache || this.props.genomeNexusMutationAssessorCache) {
                     return FunctionalImpactColumnFormatter.renderFunction(
                         d,
                         this.props.genomeNexusCache,
@@ -684,8 +574,7 @@ export default class MutationTable<
                 FunctionalImpactColumnFormatter.download(
                     d,
                     this.props.genomeNexusCache as GenomeNexusCache,
-                    this.props
-                        .genomeNexusMutationAssessorCache as GenomeNexusMutationAssessorCache
+                    this.props.genomeNexusMutationAssessorCache as GenomeNexusMutationAssessorCache
                 ),
             headerRender: FunctionalImpactColumnFormatter.headerRender,
             visible: false,
@@ -696,13 +585,9 @@ export default class MutationTable<
             name: 'COSMIC',
             render: (d: Mutation[]) =>
                 CosmicColumnFormatter.renderFunction(d, this.props.cosmicData),
-            sortBy: (d: Mutation[]) =>
-                CosmicColumnFormatter.getSortValue(d, this.props.cosmicData),
+            sortBy: (d: Mutation[]) => CosmicColumnFormatter.getSortValue(d, this.props.cosmicData),
             download: (d: Mutation[]) =>
-                CosmicColumnFormatter.getDownloadValue(
-                    d,
-                    this.props.cosmicData
-                ),
+                CosmicColumnFormatter.getDownloadValue(d, this.props.cosmicData),
             tooltip: <span>COSMIC occurrences</span>,
             defaultSortDirection: 'desc',
             align: 'right',
@@ -722,17 +607,12 @@ export default class MutationTable<
                     civicVariants: this.props.civicVariants,
                     enableCivic: this.props.enableCivic as boolean,
                     enableOncoKb: this.props.enableOncoKb as boolean,
-                    enableMyCancerGenome: this.props
-                        .enableMyCancerGenome as boolean,
+                    enableMyCancerGenome: this.props.enableMyCancerGenome as boolean,
                     enableHotspot: this.props.enableHotspot as boolean,
                     userEmailAddress: this.props.userEmailAddress,
                     studyIdToStudy: this.props.studyIdToStudy,
                 }),
-            filter: (
-                d: Mutation[],
-                filterString: string,
-                filterStringUpper: string
-            ) => {
+            filter: (d: Mutation[], filterString: string, filterStringUpper: string) => {
                 let ret = false;
                 switch (filterStringUpper) {
                     case 'HOTSPOT':
@@ -761,8 +641,9 @@ export default class MutationTable<
                                 this.props.oncoKbData.result
                             );
                             if (evidenceQuery) {
-                                const indicator = this.props.oncoKbData.result
-                                    .indicatorMap[evidenceQuery.id];
+                                const indicator = this.props.oncoKbData.result.indicatorMap[
+                                    evidenceQuery.id
+                                ];
                                 if (indicator) {
                                     ret = indicator.oncogenic
                                         .toLowerCase()
@@ -811,25 +692,12 @@ export default class MutationTable<
         this._columns[MutationTableColumnType.CANCER_TYPE] = {
             name: 'Cancer Type',
             render: (d: Mutation[]) =>
-                CancerTypeColumnFormatter.render(
-                    d,
-                    this.props.uniqueSampleKeyToTumorType
-                ),
+                CancerTypeColumnFormatter.render(d, this.props.uniqueSampleKeyToTumorType),
             download: (d: Mutation[]) =>
-                CancerTypeColumnFormatter.download(
-                    d,
-                    this.props.uniqueSampleKeyToTumorType
-                ),
+                CancerTypeColumnFormatter.download(d, this.props.uniqueSampleKeyToTumorType),
             sortBy: (d: Mutation[]) =>
-                CancerTypeColumnFormatter.sortBy(
-                    d,
-                    this.props.uniqueSampleKeyToTumorType
-                ),
-            filter: (
-                d: Mutation[],
-                filterString: string,
-                filterStringUpper: string
-            ) =>
+                CancerTypeColumnFormatter.sortBy(d, this.props.uniqueSampleKeyToTumorType),
+            filter: (d: Mutation[], filterString: string, filterStringUpper: string) =>
                 CancerTypeColumnFormatter.filter(
                     d,
                     filterStringUpper,
@@ -842,25 +710,13 @@ export default class MutationTable<
             name: '# Mut in Sample',
             render: MutationCountColumnFormatter.makeRenderFunction(this),
             headerRender: (name: string) => (
-                <span style={{ display: 'inline-block', maxWidth: 55 }}>
-                    {name}
-                </span>
+                <span style={{ display: 'inline-block', maxWidth: 55 }}>{name}</span>
             ),
             sortBy: (d: Mutation[]) =>
-                MutationCountColumnFormatter.sortBy(
-                    d,
-                    this.props.mutationCountCache
-                ),
+                MutationCountColumnFormatter.sortBy(d, this.props.mutationCountCache),
             download: (d: Mutation[]) =>
-                MutationCountColumnFormatter.download(
-                    d,
-                    this.props.mutationCountCache
-                ),
-            tooltip: (
-                <span>
-                    Total number of nonsynonymous mutations in the sample
-                </span>
-            ),
+                MutationCountColumnFormatter.download(d, this.props.mutationCountCache),
+            tooltip: <span>Total number of nonsynonymous mutations in the sample</span>,
             align: 'right',
         };
 
@@ -868,16 +724,12 @@ export default class MutationTable<
             name: 'Exon',
             render: (d: Mutation[]) =>
                 this.props.genomeNexusCache ? (
-                    ExonColumnFormatter.renderFunction(
-                        d,
-                        this.props.genomeNexusCache
-                    )
+                    ExonColumnFormatter.renderFunction(d, this.props.genomeNexusCache)
                 ) : (
                     <span></span>
                 ),
             download: (d: Mutation[]) =>
-                ExonColumnFormatter.download(d, this.props
-                    .genomeNexusCache as GenomeNexusCache),
+                ExonColumnFormatter.download(d, this.props.genomeNexusCache as GenomeNexusCache),
             sortBy: (d: Mutation[]) =>
                 ExonColumnFormatter.getSortValue(d, this.props
                     .genomeNexusCache as GenomeNexusCache),
@@ -889,16 +741,12 @@ export default class MutationTable<
             name: 'HGVSc',
             render: (d: Mutation[]) =>
                 this.props.genomeNexusCache ? (
-                    HgvscColumnFormatter.renderFunction(
-                        d,
-                        this.props.genomeNexusCache
-                    )
+                    HgvscColumnFormatter.renderFunction(d, this.props.genomeNexusCache)
                 ) : (
                     <span></span>
                 ),
             download: (d: Mutation[]) =>
-                HgvscColumnFormatter.download(d, this.props
-                    .genomeNexusCache as GenomeNexusCache),
+                HgvscColumnFormatter.download(d, this.props.genomeNexusCache as GenomeNexusCache),
             sortBy: (d: Mutation[]) =>
                 HgvscColumnFormatter.getSortValue(d, this.props
                     .genomeNexusCache as GenomeNexusCache),
@@ -919,10 +767,9 @@ export default class MutationTable<
                     .genomeNexusMyVariantInfoCache as GenomeNexusMyVariantInfoCache),
             tooltip: (
                 <span>
-                    <a href="https://gnomad.broadinstitute.org/">gnomAD</a>{' '}
-                    population allele frequencies. Overall population allele
-                    frequency is shown. Hover over a frequency to see the
-                    frequency for each specific population.
+                    <a href="https://gnomad.broadinstitute.org/">gnomAD</a> population allele
+                    frequencies. Overall population allele frequency is shown. Hover over a
+                    frequency to see the frequency for each specific population.
                 </span>
             ),
             defaultSortDirection: 'desc',
@@ -943,14 +790,11 @@ export default class MutationTable<
                     .genomeNexusMyVariantInfoCache as GenomeNexusMyVariantInfoCache),
             tooltip: (
                 <span>
-                    <a
-                        href="https://www.ncbi.nlm.nih.gov/clinvar/"
-                        target="_blank"
-                    >
+                    <a href="https://www.ncbi.nlm.nih.gov/clinvar/" target="_blank">
                         ClinVar
                     </a>
-                    &nbsp;aggregates information about genomic variation and its
-                    relationship to human health.
+                    &nbsp;aggregates information about genomic variation and its relationship to
+                    human health.
                 </span>
             ),
             defaultSortDirection: 'desc',
@@ -981,11 +825,10 @@ export default class MutationTable<
                     <a href="https://www.ncbi.nlm.nih.gov/snp/" target="_blank">
                         dbSNP
                     </a>
-                    ) is a free public archive for genetic variation within and
-                    across different species.
+                    ) is a free public archive for genetic variation within and across different
+                    species.
                     <br />
-                    NOTE: Currently only SNPs, single base deletions and
-                    insertions are supported.
+                    NOTE: Currently only SNPs, single base deletions and insertions are supported.
                 </span>
             ),
             defaultSortDirection: 'desc',

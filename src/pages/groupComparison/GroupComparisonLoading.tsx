@@ -70,8 +70,8 @@ export default class GroupComparisonLoading extends React.Component<
                             className="fa fa-md fa-exclamation-triangle"
                             style={{ marginRight: 7 }}
                         />
-                        Sorry - please don't close the Study Summary window
-                        until the comparison page has finished loading.
+                        Sorry - please don't close the Study Summary window until the comparison
+                        page has finished loading.
                         <br />
                         <br />
                         <a href={getStudySummaryUrl(query.origin!.split(','))}>
@@ -102,9 +102,7 @@ export default class GroupComparisonLoading extends React.Component<
                     ret.push(<div>Creating comparison session...</div>);
                     break;
                 default:
-                    ret.push(
-                        <div>Redirecting you to the Comparison page...</div>
-                    );
+                    ret.push(<div>Redirecting you to the Comparison page...</div>);
             }
             return (
                 <LoadingIndicator center={true} isLoading={true} size="big">

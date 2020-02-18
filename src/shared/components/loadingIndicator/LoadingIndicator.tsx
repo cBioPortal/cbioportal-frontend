@@ -49,8 +49,7 @@ export default class LoadingIndicator extends React.Component<ILoader, {}> {
 
         const parentStyles = {
             [styles.centered]: this.props.center,
-            [styles['centered-relative-to-container']]: this.props
-                .centerRelativeToContainer,
+            [styles['centered-relative-to-container']]: this.props.centerRelativeToContainer,
             [styles['centered-with-children']]:
                 (this.props.center || this.props.centerRelativeToContainer) &&
                 React.Children.count(this.props.children) > 0,
@@ -61,10 +60,7 @@ export default class LoadingIndicator extends React.Component<ILoader, {}> {
             <If condition={this.props.isLoading}>
                 <Then>
                     <div
-                        className={classNames(
-                            parentStyles,
-                            this.props.className
-                        )}
+                        className={classNames(parentStyles, this.props.className)}
                         style={this.props.style || {}}
                     >
                         <Spinner
@@ -73,9 +69,7 @@ export default class LoadingIndicator extends React.Component<ILoader, {}> {
                             style={{ display: 'inline-block' }}
                             name="line-scale-pulse-out"
                         />
-                        <div className={styles.progressUI}>
-                            {this.props.children}
-                        </div>
+                        <div className={styles.progressUI}>{this.props.children}</div>
                     </div>
                 </Then>
             </If>
@@ -88,11 +82,7 @@ export class GlobalLoader extends React.Component<ILoader, {}> {
         return (
             <Portal isOpened={this.props.isLoading}>
                 <Spinner
-                    className={classNames(
-                        styles.color,
-                        styles.centered,
-                        styles.big
-                    )}
+                    className={classNames(styles.color, styles.centered, styles.big)}
                     fadeIn="none"
                     name="line-scale-pulse-out"
                 />

@@ -25,25 +25,15 @@ export default class HgvsgColumnFormatter {
                             {hgvsg}
                             <br />
                             Click to see this variant on &nbsp;
-                            <a
-                                href={genomeNexusUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
+                            <a href={genomeNexusUrl} target="_blank" rel="noopener noreferrer">
                                 Genome Nexus
-                                <div
-                                    className={hgvsgStyles['genome-nexus-logo']}
-                                />
+                                <div className={hgvsgStyles['genome-nexus-logo']} />
                             </a>
                         </div>
                     }
                 >
                     <span className={hgvsgStyles['hgvsg-data']}>
-                        <a
-                            href={genomeNexusUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
+                        <a href={genomeNexusUrl} target="_blank" rel="noopener noreferrer">
                             {hgvsg}&nbsp;
                             <i className="fa fa-external-link" />
                         </a>

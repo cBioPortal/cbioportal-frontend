@@ -1,17 +1,11 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import LazyMobXTable, {
-    Column,
-} from '../../../shared/components/lazyMobXTable/LazyMobXTable';
+import LazyMobXTable, { Column } from '../../../shared/components/lazyMobXTable/LazyMobXTable';
 import { MutualExclusivity } from '../../../shared/model/MutualExclusivity';
 import { observer } from 'mobx-react';
 import { observable } from 'mobx';
 import { Badge } from 'react-bootstrap';
-import {
-    formatPValue,
-    formatQValueWithStyle,
-    formatLogOddsRatio,
-} from './MutualExclusivityUtil';
+import { formatPValue, formatQValueWithStyle, formatLogOddsRatio } from './MutualExclusivityUtil';
 import styles from './styles.module.scss';
 import classNames from 'classnames';
 
@@ -39,9 +33,7 @@ type MutualExclusivityTableColumn = Column<MutualExclusivity> & {
     shouldExclude?: () => boolean;
 };
 
-export class MutualExclusivityTableComponent extends LazyMobXTable<
-    MutualExclusivity
-> {}
+export class MutualExclusivityTableComponent extends LazyMobXTable<MutualExclusivity> {}
 
 @observer
 export default class MutualExclusivityTable extends React.Component<
@@ -85,11 +77,8 @@ export default class MutualExclusivityTable extends React.Component<
                 </span>
             ),
             tooltip: <span>A</span>,
-            filter: (
-                d: MutualExclusivity,
-                filterString: string,
-                filterStringUpper: string
-            ) => d.trackA.toUpperCase().includes(filterStringUpper),
+            filter: (d: MutualExclusivity, filterString: string, filterStringUpper: string) =>
+                d.trackA.toUpperCase().includes(filterStringUpper),
             sortBy: (d: MutualExclusivity) => d.trackA,
             download: (d: MutualExclusivity) => d.trackA,
         };
@@ -102,11 +91,8 @@ export default class MutualExclusivityTable extends React.Component<
                 </span>
             ),
             tooltip: <span>B</span>,
-            filter: (
-                d: MutualExclusivity,
-                filterString: string,
-                filterStringUpper: string
-            ) => d.trackB.toUpperCase().includes(filterStringUpper),
+            filter: (d: MutualExclusivity, filterString: string, filterStringUpper: string) =>
+                d.trackB.toUpperCase().includes(filterStringUpper),
             sortBy: (d: MutualExclusivity) => d.trackB,
             download: (d: MutualExclusivity) => d.trackB,
         };
@@ -114,11 +100,7 @@ export default class MutualExclusivityTable extends React.Component<
         this._columns[MutualExclusivityTableColumnType.NEITHER] = {
             name: 'Neither',
             render: (d: MutualExclusivity) => <span>{d.neitherCount}</span>,
-            tooltip: (
-                <span>
-                    Number of samples with alterations in neither A nor B
-                </span>
-            ),
+            tooltip: <span>Number of samples with alterations in neither A nor B</span>,
             sortBy: (d: MutualExclusivity) => d.neitherCount,
             download: (d: MutualExclusivity) => d.neitherCount.toString(),
         };
@@ -126,11 +108,7 @@ export default class MutualExclusivityTable extends React.Component<
         this._columns[MutualExclusivityTableColumnType.A_NOT_B] = {
             name: 'A Not B',
             render: (d: MutualExclusivity) => <span>{d.aNotBCount}</span>,
-            tooltip: (
-                <span>
-                    Number of samples with alterations in A but not in B
-                </span>
-            ),
+            tooltip: <span>Number of samples with alterations in A but not in B</span>,
             sortBy: (d: MutualExclusivity) => d.aNotBCount,
             download: (d: MutualExclusivity) => d.aNotBCount.toString(),
         };
@@ -138,11 +116,7 @@ export default class MutualExclusivityTable extends React.Component<
         this._columns[MutualExclusivityTableColumnType.B_NOT_A] = {
             name: 'B Not A',
             render: (d: MutualExclusivity) => <span>{d.bNotACount}</span>,
-            tooltip: (
-                <span>
-                    Number of samples with alterations in B but not in A
-                </span>
-            ),
+            tooltip: <span>Number of samples with alterations in B but not in A</span>,
             sortBy: (d: MutualExclusivity) => d.bNotACount,
             download: (d: MutualExclusivity) => d.bNotACount.toString(),
         };
@@ -150,36 +124,28 @@ export default class MutualExclusivityTable extends React.Component<
         this._columns[MutualExclusivityTableColumnType.BOTH] = {
             name: 'Both',
             render: (d: MutualExclusivity) => <span>{d.bothCount}</span>,
-            tooltip: (
-                <span>Number of samples with alterations in both A and B</span>
-            ),
+            tooltip: <span>Number of samples with alterations in both A and B</span>,
             sortBy: (d: MutualExclusivity) => d.bothCount,
             download: (d: MutualExclusivity) => d.bothCount.toString(),
         };
 
         this._columns[MutualExclusivityTableColumnType.LOG_ODDS_RATIO] = {
             name: 'Log2 Odds Ratio',
-            render: (d: MutualExclusivity) => (
-                <span>{formatLogOddsRatio(d.logOddsRatio)}</span>
-            ),
+            render: (d: MutualExclusivity) => <span>{formatLogOddsRatio(d.logOddsRatio)}</span>,
             tooltip: (
                 <span style={{ display: 'inline-block', maxWidth: 300 }}>
-                    Quantifies how strongly the presence or absence of
-                    alterations in A are associated with the presence or absence
-                    of alterations in B in the selected samples. OR = (Neither *
-                    Both) / (A Not B * B Not A)
+                    Quantifies how strongly the presence or absence of alterations in A are
+                    associated with the presence or absence of alterations in B in the selected
+                    samples. OR = (Neither * Both) / (A Not B * B Not A)
                 </span>
             ),
             sortBy: (d: MutualExclusivity) => d.logOddsRatio,
-            download: (d: MutualExclusivity) =>
-                formatLogOddsRatio(d.logOddsRatio),
+            download: (d: MutualExclusivity) => formatLogOddsRatio(d.logOddsRatio),
         };
 
         this._columns[MutualExclusivityTableColumnType.P_VALUE] = {
             name: 'p-Value',
-            render: (d: MutualExclusivity) => (
-                <span>{formatPValue(d.pValue)}</span>
-            ),
+            render: (d: MutualExclusivity) => <span>{formatPValue(d.pValue)}</span>,
             tooltip: <span>Derived from one-sided Fisher Exact Test</span>,
             sortBy: (d: MutualExclusivity) => d.pValue,
             download: (d: MutualExclusivity) => formatPValue(d.pValue),
@@ -188,11 +154,7 @@ export default class MutualExclusivityTable extends React.Component<
         this._columns[MutualExclusivityTableColumnType.Q_VALUE] = {
             name: 'q-Value',
             render: (d: MutualExclusivity) => formatQValueWithStyle(d.qValue),
-            tooltip: (
-                <span>
-                    Derived from Benjamini-Hochberg FDR correction procedure
-                </span>
-            ),
+            tooltip: <span>Derived from Benjamini-Hochberg FDR correction procedure</span>,
             sortBy: (d: MutualExclusivity) => d.qValue,
             download: (d: MutualExclusivity) => formatPValue(d.qValue),
         };
@@ -224,11 +186,8 @@ export default class MutualExclusivityTable extends React.Component<
                     </tr>
                 </table>
             ),
-            filter: (
-                d: MutualExclusivity,
-                filterString: string,
-                filterStringUpper: string
-            ) => d.association.toUpperCase().includes(filterStringUpper),
+            filter: (d: MutualExclusivity, filterString: string, filterStringUpper: string) =>
+                d.association.toUpperCase().includes(filterStringUpper),
             sortBy: (d: MutualExclusivity) => d.association,
             download: (d: MutualExclusivity) => d.association,
         };

@@ -9,29 +9,20 @@ import { formatErrorTitle } from 'shared/lib/errorFormatter';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 
 @inject('appStore')
-export default class ErrorPage extends React.Component<
-    { appStore?: AppStore },
-    {}
-> {
+export default class ErrorPage extends React.Component<{ appStore?: AppStore }, {}> {
     render() {
         return (
             <div>
                 <div className="pageTopContainer">
                     <UserMessager />
                     <div className="contentWidth">
-                        <PortalHeader
-                            appStore={this.props.appStore as AppStore}
-                        />
+                        <PortalHeader appStore={this.props.appStore as AppStore} />
                     </div>
                 </div>
                 <div className="contentWrapper">
                     <ErrorScreen
                         title={"Sorry, this page doesn't exist."}
-                        body={
-                            <a href={buildCBioPortalPageUrl('/')}>
-                                Return to homepage
-                            </a>
-                        }
+                        body={<a href={buildCBioPortalPageUrl('/')}>Return to homepage</a>}
                     />
                 </div>
             </div>

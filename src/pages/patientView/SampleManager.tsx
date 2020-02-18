@@ -6,10 +6,7 @@ import { ClinicalData } from 'shared/api/generated/CBioPortalAPI';
 import { cleanAndDerive } from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import styles from './patientHeader/style/clinicalAttributes.scss';
 import naturalSort from 'javascript-natural-sort';
-import {
-    ClinicalEvent,
-    ClinicalEventData,
-} from '../../shared/api/generated/CBioPortalAPI';
+import { ClinicalEvent, ClinicalEventData } from '../../shared/api/generated/CBioPortalAPI';
 import { SampleLabelHTML } from 'shared/components/sampleLabel/SampleLabel';
 
 // sort samples based on event, clinical data and id
@@ -37,27 +34,22 @@ export function sortSamples(
         // should probably have some config to allow people to choose what
         // timeline tracks get labels
         const specimenEvents = events.filter(
-            (e: ClinicalEvent) =>
-                e.eventType === 'SPECIMEN' || 'SAMPLE_ACQUISITION'
+            (e: ClinicalEvent) => e.eventType === 'SPECIMEN' || 'SAMPLE_ACQUISITION'
         );
 
         collectionDayMap = specimenEvents.reduce(
             (map: { [s: string]: number }, specimenEvent: ClinicalEvent) => {
-                let sampleAttr = _.find(
-                    specimenEvent.attributes,
-                    (attr: ClinicalEventData) => {
-                        // TODO: This is legacy support for old timeline data that does not use SAMPLE_ID, but one of the specrefnum
-                        return (
-                            (attr.key === 'SAMPLE_ID' ||
-                                attr.key === 'SpecimenReferenceNumber' ||
-                                attr.key === 'SPECIMEN_REFERENCE_NUMBER') &&
-                            naturalSortedSampleIDs.indexOf(attr.value) !== -1
-                        );
-                    }
-                );
+                let sampleAttr = _.find(specimenEvent.attributes, (attr: ClinicalEventData) => {
+                    // TODO: This is legacy support for old timeline data that does not use SAMPLE_ID, but one of the specrefnum
+                    return (
+                        (attr.key === 'SAMPLE_ID' ||
+                            attr.key === 'SpecimenReferenceNumber' ||
+                            attr.key === 'SPECIMEN_REFERENCE_NUMBER') &&
+                        naturalSortedSampleIDs.indexOf(attr.value) !== -1
+                    );
+                });
                 if (sampleAttr) {
-                    map[sampleAttr.value] =
-                        specimenEvent.startNumberOfDaysSinceDiagnosis;
+                    map[sampleAttr.value] = specimenEvent.startNumberOfDaysSinceDiagnosis;
                 }
                 return map;
             },
@@ -83,11 +75,8 @@ export function sortSamples(
         let eventOrdering = collectionDayMap[id];
 
         // 2. if cases have derived normalized case types, put primary first
-        const caseType =
-            clinicalDataLegacyCleanAndDerived[id].DERIVED_NORMALIZED_CASE_TYPE;
-        let sampleTypeIndex = caseType
-            ? sampleTypeOrdering.indexOf(caseType.toLowerCase())
-            : -1;
+        const caseType = clinicalDataLegacyCleanAndDerived[id].DERIVED_NORMALIZED_CASE_TYPE;
+        let sampleTypeIndex = caseType ? sampleTypeOrdering.indexOf(caseType.toLowerCase()) : -1;
         if (sampleTypeIndex === -1) {
             sampleTypeIndex = sampleTypeOrdering.length;
         }
@@ -134,12 +123,7 @@ class SampleManager {
         samples.forEach((sample, i) => {
             // add legacy clinical data
             this.clinicalDataLegacyCleanAndDerived[sample.id] = cleanAndDerive(
-                _.fromPairs(
-                    sample.clinicalData.map(x => [
-                        x.clinicalAttributeId,
-                        x.value,
-                    ])
-                )
+                _.fromPairs(sample.clinicalData.map(x => [x.clinicalAttributeId, x.value]))
             );
 
             // determine color based on DERIVED_NORMALIZED_CASE_TYPE
@@ -151,25 +135,25 @@ class SampleManager {
             ) {
                 color = styles.sampleColorPrimary;
             } else if (
-                this.clinicalDataLegacyCleanAndDerived[sample.id]
-                    .DERIVED_NORMALIZED_CASE_TYPE === 'Recurrence' ||
-                this.clinicalDataLegacyCleanAndDerived[sample.id]
-                    .DERIVED_NORMALIZED_CASE_TYPE === 'Progressed'
+                this.clinicalDataLegacyCleanAndDerived[sample.id].DERIVED_NORMALIZED_CASE_TYPE ===
+                    'Recurrence' ||
+                this.clinicalDataLegacyCleanAndDerived[sample.id].DERIVED_NORMALIZED_CASE_TYPE ===
+                    'Progressed'
             ) {
                 color = styles.sampleColorRecurrence;
             } else if (
-                this.clinicalDataLegacyCleanAndDerived[sample.id]
-                    .DERIVED_NORMALIZED_CASE_TYPE === 'Metastasis'
+                this.clinicalDataLegacyCleanAndDerived[sample.id].DERIVED_NORMALIZED_CASE_TYPE ===
+                'Metastasis'
             ) {
                 color = styles.sampleColorMetastasis;
             } else if (
-                this.clinicalDataLegacyCleanAndDerived[sample.id]
-                    .DERIVED_NORMALIZED_CASE_TYPE === 'cfDNA'
+                this.clinicalDataLegacyCleanAndDerived[sample.id].DERIVED_NORMALIZED_CASE_TYPE ===
+                'cfDNA'
             ) {
                 color = styles.sampleColorCfdna;
             } else if (
-                this.clinicalDataLegacyCleanAndDerived[sample.id]
-                    .DERIVED_NORMALIZED_CASE_TYPE === 'Xenograft'
+                this.clinicalDataLegacyCleanAndDerived[sample.id].DERIVED_NORMALIZED_CASE_TYPE ===
+                'Xenograft'
             ) {
                 color = styles.sampleColorXenograft;
             }
@@ -180,34 +164,23 @@ class SampleManager {
         // remove common CANCER_TYPE/CANCER_TYPE_DETAILED in top bar (display on
         // patient)
         ['CANCER_TYPE', 'CANCER_TYPE_DETAILED'].forEach(attr => {
-            if (
-                SampleManager.isSameClinicalAttributeInAllSamples(samples, attr)
-            ) {
+            if (SampleManager.isSameClinicalAttributeInAllSamples(samples, attr)) {
                 this.commonClinicalDataLegacyCleanAndDerived[
                     attr
                 ] = this.clinicalDataLegacyCleanAndDerived[samples[0].id][attr];
                 samples.forEach(sample => {
-                    delete this.clinicalDataLegacyCleanAndDerived[sample.id][
-                        attr
-                    ];
+                    delete this.clinicalDataLegacyCleanAndDerived[sample.id][attr];
                 });
             }
         });
 
-        this.samples = sortSamples(
-            samples,
-            this.clinicalDataLegacyCleanAndDerived,
-            events
-        );
+        this.samples = sortSamples(samples, this.clinicalDataLegacyCleanAndDerived, events);
         this.samples.forEach((sample, i) => {
             this.sampleIndex[sample.id] = i;
             this.sampleLabels[sample.id] = String(i + 1);
         });
         // order as array of sample ids (used further downstream)
-        this.sampleOrder = _.sortBy(
-            Object.keys(this.sampleIndex),
-            k => this.sampleIndex[k]
-        );
+        this.sampleOrder = _.sortBy(Object.keys(this.sampleIndex), k => this.sampleIndex[k]);
     }
 
     static isSameClinicalAttributeInAllSamples(

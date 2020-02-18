@@ -2,8 +2,7 @@ import svg2pdf from 'svg2pdf.js';
 import { jsPDF } from 'jspdf-yworks';
 import request from 'superagent';
 
-export const FREE_SANS_PUBLIC_URL =
-    'https://frontend.cbioportal.org/common/FreeSans.json';
+export const FREE_SANS_PUBLIC_URL = 'https://frontend.cbioportal.org/common/FreeSans.json';
 
 function base64ToArrayBuffer(base64: string) {
     const binaryString = window.atob(base64);
@@ -22,13 +21,10 @@ export default async function svgToPdfDownload(
     fontUrl: string = FREE_SANS_PUBLIC_URL
 ) {
     const width =
-            svg.scrollWidth ||
-            parseInt((svg.attributes.getNamedItem('width') as Attr).nodeValue!),
+            svg.scrollWidth || parseInt((svg.attributes.getNamedItem('width') as Attr).nodeValue!),
         height =
             svg.scrollHeight ||
-            parseInt(
-                (svg.attributes.getNamedItem('height') as Attr).nodeValue!
-            );
+            parseInt((svg.attributes.getNamedItem('height') as Attr).nodeValue!);
 
     // create a new jsPDF instance
     let direction = 'l';

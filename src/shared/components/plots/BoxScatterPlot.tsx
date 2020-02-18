@@ -2,9 +2,7 @@ import * as React from 'react';
 import { observer, Observer } from 'mobx-react';
 import { computed, observable, action } from 'mobx';
 import { bind } from 'bind-decorator';
-import CBIOPORTAL_VICTORY_THEME, {
-    axisTickLabelStyles,
-} from '../../theme/cBioPoralTheme';
+import CBIOPORTAL_VICTORY_THEME, { axisTickLabelStyles } from '../../theme/cBioPoralTheme';
 import ifNotDefined from '../../lib/ifNotDefined';
 import { BoxPlotModel, calculateBoxPlotModel } from '../../lib/boxPlotUtils';
 import ScatterPlotTooltip from './ScatterPlotTooltip';
@@ -18,24 +16,15 @@ import {
     VictoryLabel,
 } from 'victory';
 import { IBaseScatterPlotData } from './ScatterPlot';
-import {
-    getDeterministicRandomNumber,
-    separateScatterDataByAppearance,
-} from './PlotUtils';
+import { getDeterministicRandomNumber, separateScatterDataByAppearance } from './PlotUtils';
 import { logicalAnd } from '../../lib/LogicUtils';
 import { tickFormatNumeral, wrapTick } from './TickUtils';
 import { makeScatterPlotSizeFunction } from './PlotUtils';
-import {
-    getTextWidth,
-    truncateWithEllipsis,
-} from 'cbioportal-frontend-commons';
+import { getTextWidth, truncateWithEllipsis } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
 import { dataPointIsLimited } from 'shared/components/plots/PlotUtils';
 import _ from 'lodash';
-import {
-    IAxisLogScaleParams,
-    IBoxScatterPlotPoint,
-} from 'pages/resultsView/plots/PlotsTabUtils';
+import { IAxisLogScaleParams, IBoxScatterPlotPoint } from 'pages/resultsView/plots/PlotsTabUtils';
 import { Popover } from 'react-bootstrap';
 import * as ReactDOM from 'react-dom';
 import classnames from 'classnames';
@@ -60,9 +49,7 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     startDataAxisAtZero?: boolean;
     domainPadding?: number; // see https://formidable.com/open-source/victory/docs/victory-chart/#domainpadding
     highlight?: (d: D) => boolean;
-    size?:
-        | number
-        | ((d: D, active: boolean, isHighlighted?: boolean) => number);
+    size?: number | ((d: D, active: boolean, isHighlighted?: boolean) => number);
     fill?: string | ((d: D) => string);
     stroke?: string | ((d: D) => string);
     fillOpacity?: number | ((d: D) => number);
@@ -118,9 +105,10 @@ const BOX_STYLES = {
 };
 
 @observer
-export default class BoxScatterPlot<
-    D extends IBaseBoxScatterPlotPoint
-> extends React.Component<IBoxScatterPlotProps<D>, {}> {
+export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends React.Component<
+    IBoxScatterPlotProps<D>,
+    {}
+> {
     @observable.ref private scatterPlotTooltipModel: any | null = null;
     @observable private pointHovered: boolean = false;
     private mouseEvents: any = this.makeMouseEvents();
@@ -269,9 +257,7 @@ export default class BoxScatterPlot<
         if (!this.props.legendData) {
             return 0;
         } else {
-            const numRows = Math.ceil(
-                this.props.legendData.length / LEGEND_ITEMS_PER_ROW
-            );
+            const numRows = Math.ceil(this.props.legendData.length / LEGEND_ITEMS_PER_ROW);
             return 23.7 * numRows;
         }
     }
@@ -294,16 +280,8 @@ export default class BoxScatterPlot<
             }
             return (
                 <VictoryLegend
-                    orientation={
-                        this.legendLocation === 'right'
-                            ? 'vertical'
-                            : 'horizontal'
-                    }
-                    itemsPerRow={
-                        this.legendLocation === 'right'
-                            ? undefined
-                            : LEGEND_ITEMS_PER_ROW
-                    }
+                    orientation={this.legendLocation === 'right' ? 'vertical' : 'horizontal'}
+                    itemsPerRow={this.legendLocation === 'right' ? undefined : LEGEND_ITEMS_PER_ROW}
                     rowGutter={this.legendLocation === 'right' ? undefined : -5}
                     data={legendData}
                     x={this.legendLocation === 'right' ? this.sideLegendX : 0}
@@ -396,11 +374,7 @@ export default class BoxScatterPlot<
     @computed get chartExtent() {
         const miscPadding = 100; // specifying chart width in victory doesnt translate directly to the actual graph size
         const numBoxes = this.props.data.length;
-        return (
-            this.categoryCoord(numBoxes - 1) +
-            2 * this.categoryAxisDomainPadding +
-            miscPadding
-        );
+        return this.categoryCoord(numBoxes - 1) + 2 * this.categoryAxisDomainPadding + miscPadding;
         //return 2*this.domainPadding + numBoxes*this.boxWidth + (numBoxes-1)*this.boxSeparation;
         //const ret = Math.max(computedExtent, this.props.chartBase);
         //return ret;
@@ -436,10 +410,7 @@ export default class BoxScatterPlot<
             if (!this.props.horizontal) {
                 let jitterRandomNumber = d.jitter;
                 if (jitterRandomNumber === undefined) {
-                    jitterRandomNumber = getDeterministicRandomNumber(d.y, [
-                        -1,
-                        1,
-                    ]);
+                    jitterRandomNumber = getDeterministicRandomNumber(d.y, [-1, 1]);
                 }
                 jitter = this.jitter(d, jitterRandomNumber);
             }
@@ -456,10 +427,7 @@ export default class BoxScatterPlot<
             if (this.props.horizontal) {
                 let jitterRandomNumber = d.jitter;
                 if (jitterRandomNumber === undefined) {
-                    jitterRandomNumber = getDeterministicRandomNumber(d.x, [
-                        -1,
-                        1,
-                    ]);
+                    jitterRandomNumber = getDeterministicRandomNumber(d.x, [-1, 1]);
                 }
                 jitter = this.jitter(d, jitterRandomNumber);
             }
@@ -517,14 +485,10 @@ export default class BoxScatterPlot<
                 offsetY={50}
                 crossAxis={false}
                 label={this.props.axisLabelX}
-                tickValues={
-                    this.props.horizontal ? undefined : this.categoryTickValues
-                }
+                tickValues={this.props.horizontal ? undefined : this.categoryTickValues}
                 tickCount={this.props.horizontal ? NUM_AXIS_TICKS : undefined}
                 tickFormat={
-                    this.props.horizontal
-                        ? this.formatNumericalTick
-                        : this.formatCategoryTick
+                    this.props.horizontal ? this.formatNumericalTick : this.formatCategoryTick
                 }
                 tickLabelComponent={
                     <VictoryLabel
@@ -587,18 +551,12 @@ export default class BoxScatterPlot<
                 crossAxis={false}
                 label={this.yAxisLabel}
                 dependentAxis={true}
-                tickValues={
-                    this.props.horizontal ? this.categoryTickValues : undefined
-                }
+                tickValues={this.props.horizontal ? this.categoryTickValues : undefined}
                 tickCount={this.props.horizontal ? undefined : NUM_AXIS_TICKS}
                 tickFormat={
-                    this.props.horizontal
-                        ? this.formatCategoryTick
-                        : this.formatNumericalTick
+                    this.props.horizontal ? this.formatCategoryTick : this.formatNumericalTick
                 }
-                axisLabelComponent={
-                    <VictoryLabel dy={this.yAxisLabelVertOffset} />
-                }
+                axisLabelComponent={<VictoryLabel dy={this.yAxisLabelVertOffset} />}
             />
         );
     }
@@ -663,9 +621,7 @@ export default class BoxScatterPlot<
         if (!this.props.horizontal) {
             // more padding if vertical, because category labels extend to bottom
             // more padding if axis is not compressed
-            paddingForLabels = !!this.props.compressXAxis
-                ? 20
-                : this.biggestCategoryLabelSize;
+            paddingForLabels = !!this.props.compressXAxis ? 20 : this.biggestCategoryLabelSize;
         }
         if (this.legendLocation === 'bottom') {
             // more padding if legend location is "bottom", to make room for legend
@@ -678,11 +634,7 @@ export default class BoxScatterPlot<
     @computed get biggestCategoryLabelSize() {
         const maxSize = Math.max(
             ...this.labels.map(x =>
-                getTextWidth(
-                    x,
-                    axisTickLabelStyles.fontFamily,
-                    axisTickLabelStyles.fontSize + 'px'
-                )
+                getTextWidth(x, axisTickLabelStyles.fontFamily, axisTickLabelStyles.fontSize + 'px')
             )
         );
         if (!!this.props.compressXAxis || this.props.horizontal) {
@@ -690,10 +642,7 @@ export default class BoxScatterPlot<
             return maxSize;
         } else {
             // if vertical mode, its label height when rotated
-            return (
-                maxSize *
-                Math.abs(Math.sin((Math.PI / 180) * CATEGORY_LABEL_HORZ_ANGLE))
-            );
+            return maxSize * Math.abs(Math.sin((Math.PI / 180) * CATEGORY_LABEL_HORZ_ANGLE));
         }
     }
 
@@ -713,10 +662,7 @@ export default class BoxScatterPlot<
         let boxData = _.cloneDeep(this.props.data);
         if (this.props.excludeLimitValuesFromBoxPlot) {
             _.each(boxData, (o: IBoxScatterPlotData<D>) => {
-                o.data = _.filter(
-                    o.data,
-                    (p: IBoxScatterPlotPoint) => !dataPointIsLimited(p)
-                );
+                o.data = _.filter(o.data, (p: IBoxScatterPlotPoint) => !dataPointIsLimited(p));
             });
         }
 
@@ -727,17 +673,11 @@ export default class BoxScatterPlot<
                         (data, next) => {
                             if (
                                 !boxCalculationFilter ||
-                                (boxCalculationFilter &&
-                                    boxCalculationFilter(next))
+                                (boxCalculationFilter && boxCalculationFilter(next))
                             ) {
                                 // filter out values in calculating boxes, if a filter is specified ^^
                                 if (this.props.logScale) {
-                                    data.push(
-                                        this.props.logScale.fLogScale(
-                                            next.value,
-                                            0
-                                        )
-                                    );
+                                    data.push(this.props.logScale.fLogScale(next.value, 0));
                                 } else {
                                     data.push(next.value);
                                 }
@@ -788,10 +728,7 @@ export default class BoxScatterPlot<
     @autobind
     private getChart() {
         return (
-            <div
-                ref={this.containerRef}
-                style={{ width: this.svgWidth, height: this.svgHeight }}
-            >
+            <div ref={this.containerRef} style={{ width: this.svgWidth, height: this.svgHeight }}>
                 <svg
                     id={this.props.svgId || ''}
                     style={{
@@ -810,9 +747,7 @@ export default class BoxScatterPlot<
                         }
                     }}
                 >
-                    <g
-                        transform={`translate(${this.leftPadding}, ${this.topPadding})`}
-                    >
+                    <g transform={`translate(${this.leftPadding}, ${this.topPadding})`}>
                         <VictoryChart
                             theme={CBIOPORTAL_VICTORY_THEME}
                             width={this.chartWidth}
@@ -821,8 +756,7 @@ export default class BoxScatterPlot<
                             domainPadding={this.chartDomainPadding}
                             domain={this.plotDomain}
                             singleQuadrantDomainPadding={{
-                                [this.dataAxis]: !!this.props
-                                    .startDataAxisAtZero,
+                                [this.dataAxis]: !!this.props.startDataAxisAtZero,
                                 [this.categoryAxis]: false,
                             }}
                         >
@@ -844,12 +778,9 @@ export default class BoxScatterPlot<
                                         data: {
                                             fill: dataWithAppearance.fill,
                                             stroke: dataWithAppearance.stroke,
-                                            strokeWidth:
-                                                dataWithAppearance.strokeWidth,
-                                            strokeOpacity:
-                                                dataWithAppearance.strokeOpacity,
-                                            fillOpacity:
-                                                dataWithAppearance.fillOpacity,
+                                            strokeWidth: dataWithAppearance.strokeWidth,
+                                            strokeOpacity: dataWithAppearance.strokeOpacity,
+                                            fillOpacity: dataWithAppearance.fillOpacity,
                                         },
                                     }}
                                     size={this.scatterPlotSize}
@@ -869,11 +800,7 @@ export default class BoxScatterPlot<
 
     @autobind
     private getScatterPlotTooltip() {
-        if (
-            this.container &&
-            this.scatterPlotTooltipModel &&
-            this.props.scatterPlotTooltip
-        ) {
+        if (this.container && this.scatterPlotTooltipModel && this.props.scatterPlotTooltip) {
             return (
                 <ScatterPlotTooltip
                     placement={this.props.horizontal ? 'bottom' : 'right'}
@@ -883,9 +810,7 @@ export default class BoxScatterPlot<
                         x: this.scatterPlotTooltipModel.x + this.leftPadding,
                         y: this.scatterPlotTooltipModel.y + this.topPadding,
                     }}
-                    overlay={this.props.scatterPlotTooltip(
-                        this.scatterPlotTooltipModel.datum
-                    )}
+                    overlay={this.props.scatterPlotTooltip(this.scatterPlotTooltipModel.datum)}
                 />
             );
         } else {
@@ -895,41 +820,26 @@ export default class BoxScatterPlot<
 
     @autobind
     private getBoxPlotTooltipComponent() {
-        if (
-            this.container &&
-            this.boxPlotTooltipModel &&
-            this.props.boxPlotTooltip
-        ) {
+        if (this.container && this.boxPlotTooltipModel && this.props.boxPlotTooltip) {
             const maxWidth = 400;
             let tooltipPlacement =
-                this.mousePosition.x > WindowStore.size.width - maxWidth
-                    ? 'left'
-                    : 'right';
+                this.mousePosition.x > WindowStore.size.width - maxWidth ? 'left' : 'right';
             return (ReactDOM as any).createPortal(
                 <Popover
                     arrowOffsetTop={VERTICAL_OFFSET}
                     className={classnames('cbioportal-frontend', 'cbioTooltip')}
                     positionLeft={
                         this.mousePosition.x +
-                        (tooltipPlacement === 'left'
-                            ? -HORIZONTAL_OFFSET
-                            : HORIZONTAL_OFFSET)
+                        (tooltipPlacement === 'left' ? -HORIZONTAL_OFFSET : HORIZONTAL_OFFSET)
                     }
                     positionTop={this.mousePosition.y - VERTICAL_OFFSET}
                     style={{
-                        transform:
-                            tooltipPlacement === 'left'
-                                ? 'translate(-100%,0%)'
-                                : undefined,
+                        transform: tooltipPlacement === 'left' ? 'translate(-100%,0%)' : undefined,
                         maxWidth,
                     }}
                     placement={tooltipPlacement}
                 >
-                    <div>
-                        {this.props.boxPlotTooltip(
-                            this.boxPlotTooltipModel.datum
-                        )}
-                    </div>
+                    <div>{this.props.boxPlotTooltip(this.boxPlotTooltipModel.datum)}</div>
                 </Popover>,
                 document.body
             );

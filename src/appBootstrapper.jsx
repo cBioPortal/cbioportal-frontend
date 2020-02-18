@@ -111,9 +111,7 @@ superagent.Request.prototype.end = function(callback) {
             return;
         }
         if (response && response.statusCode === 401) {
-            var storageKey = `redirect${Math.floor(
-                Math.random() * 1000000000000
-            )}`;
+            var storageKey = `redirect${Math.floor(Math.random() * 1000000000000)}`;
             localStorage.setItem(storageKey, window.location.href);
 
             // build URL with a reference to storage key so that /restore route can restore it after login

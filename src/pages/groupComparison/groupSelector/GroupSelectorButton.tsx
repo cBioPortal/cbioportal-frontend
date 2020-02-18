@@ -33,10 +33,7 @@ export interface IGroupSelectorButtonProps {
 }
 
 @observer
-class GroupSelectorButton extends React.Component<
-    IGroupSelectorButtonProps,
-    {}
-> {
+class GroupSelectorButton extends React.Component<IGroupSelectorButtonProps, {}> {
     @observable hovered = false;
     @observable.ref button: HTMLButtonElement | null;
     private hoverTimeout: any = null;
@@ -79,18 +76,14 @@ class GroupSelectorButton extends React.Component<
         const group = this.props.group;
         const selected = this.props.isSelected(group.name);
         const sampleIdentifiers = getSampleIdentifiers([group]);
-        const patientIdentifiers = getPatientIdentifiers(
-            sampleIdentifiers,
-            this.props.sampleSet
-        );
+        const patientIdentifiers = getPatientIdentifiers(sampleIdentifiers, this.props.sampleSet);
 
         const button = (
             <button
                 ref={this.buttonRef}
                 className={classNames('btn btn-xs', {
                     [styles.buttonUnselected]: !selected,
-                    [styles.buttonExcludedFromAnalysis]: this.props
-                        .excludedFromAnalysis,
+                    [styles.buttonExcludedFromAnalysis]: this.props.excludedFromAnalysis,
                 })}
                 onClick={this.onMouseClick}
                 onMouseEnter={this.onMouseEnter}
@@ -119,8 +112,7 @@ class GroupSelectorButton extends React.Component<
                         &nbsp;
                         <span style={{ color: getTextColor(group.color) }}>
                             (
-                            {sampleIdentifiers.length ===
-                            patientIdentifiers.length
+                            {sampleIdentifiers.length === patientIdentifiers.length
                                 ? sampleIdentifiers.length
                                 : `${sampleIdentifiers.length}/${patientIdentifiers.length}`}
                             )
@@ -129,11 +121,7 @@ class GroupSelectorButton extends React.Component<
                     {group.nonExistentSamples.length > 0 && (
                         <ErrorIcon
                             style={{ marginLeft: 7 }}
-                            tooltip={
-                                <MissingSamplesMessage
-                                    samples={group.nonExistentSamples}
-                                />
-                            }
+                            tooltip={<MissingSamplesMessage samples={group.nonExistentSamples} />}
                         />
                     )}
                     {this.props.deletable && (
@@ -154,12 +142,7 @@ class GroupSelectorButton extends React.Component<
                 </span>
                 {this.button &&
                     (ReactDOM as any).createPortal(
-                        <Overlay
-                            rootClose
-                            placement="top"
-                            show={this.hovered}
-                            target={this.button}
-                        >
+                        <Overlay rootClose placement="top" show={this.hovered} target={this.button}>
                             <Popover
                                 arrowOffsetTop={17}
                                 className={classnames(
@@ -170,10 +153,7 @@ class GroupSelectorButton extends React.Component<
                             >
                                 <div>
                                     {renderGroupNameWithOrdinal(group)}&nbsp;
-                                    {caseCountsInParens(
-                                        sampleIdentifiers,
-                                        patientIdentifiers
-                                    )}
+                                    {caseCountsInParens(sampleIdentifiers, patientIdentifiers)}
                                 </div>
                                 {this.props.excludedFromAnalysis && (
                                     <div
@@ -183,9 +163,8 @@ class GroupSelectorButton extends React.Component<
                                             marginTop: 5,
                                         }}
                                     >
-                                        This group is a subset of the other
-                                        selected groups, so it's excluded from
-                                        analysis, and not considered in overlap
+                                        This group is a subset of the other selected groups, so it's
+                                        excluded from analysis, and not considered in overlap
                                         calculations.
                                     </div>
                                 )}

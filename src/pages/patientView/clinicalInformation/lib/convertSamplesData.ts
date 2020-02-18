@@ -22,9 +22,7 @@ export interface IConvertedSamplesData {
     items: IAttrData;
 }
 
-export default function(
-    data?: Array<ClinicalDataBySampleId>
-): IConvertedSamplesData {
+export default function(data?: Array<ClinicalDataBySampleId>): IConvertedSamplesData {
     const output: IConvertedSamplesData = { columns: [], items: {} };
 
     if (data)
@@ -39,9 +37,8 @@ export default function(
                 output.items[clinicalData.clinicalAttributeId][
                     sampleId
                 ] = clinicalData.value.toString();
-                output.items[
-                    clinicalData.clinicalAttributeId
-                ].clinicalAttribute = clinicalData.clinicalAttribute;
+                output.items[clinicalData.clinicalAttributeId].clinicalAttribute =
+                    clinicalData.clinicalAttribute;
                 output.items[clinicalData.clinicalAttributeId].id =
                     clinicalData.clinicalAttributeId;
             });

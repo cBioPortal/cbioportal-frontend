@@ -2,10 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import GenomicOverview from './genomicOverview/GenomicOverview';
 import { CancerStudy, ClinicalData } from 'shared/api/generated/CBioPortalAPI';
-import {
-    ClinicalDataBySampleId,
-    RequestStatus,
-} from '../../shared/api/api-types-extended';
+import { ClinicalDataBySampleId, RequestStatus } from '../../shared/api/api-types-extended';
 import FeatureTitle from '../../shared/components/featureTitle/FeatureTitle';
 import { Else, If, Then } from 'react-if';
 import SampleManager from './SampleManager';
@@ -14,10 +11,7 @@ import SignificantMutationalSignatures from './patientHeader/SignificantMutation
 import { PaginationControls } from '../../shared/components/paginationControls/PaginationControls';
 import { IColumnVisibilityDef } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
 import { toggleColumnVisibility } from 'cbioportal-frontend-commons';
-import {
-    parseCohortIds,
-    PatientViewPageStore,
-} from './clinicalInformation/PatientViewPageStore';
+import { parseCohortIds, PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';
 import ClinicalInformationPatientTable from './clinicalInformation/ClinicalInformationPatientTable';
 import ClinicalInformationSamples from './clinicalInformation/ClinicalInformationSamplesTable';
 import { inject, observer } from 'mobx-react';
@@ -87,16 +81,9 @@ export interface PatientViewUrlParams extends QueryParams {
 
 @inject('routing', 'appStore')
 @observer
-export default class PatientViewPage extends React.Component<
-    IPatientViewPageProps,
-    {}
-> {
-    @observable private mutationTableColumnVisibility:
-        | { [columnId: string]: boolean }
-        | undefined;
-    @observable private cnaTableColumnVisibility:
-        | { [columnId: string]: boolean }
-        | undefined;
+export default class PatientViewPage extends React.Component<IPatientViewPageProps, {}> {
+    @observable private mutationTableColumnVisibility: { [columnId: string]: boolean } | undefined;
+    @observable private cnaTableColumnVisibility: { [columnId: string]: boolean } | undefined;
     @observable genePanelModal = { genePanelId: '', isOpen: false };
 
     // use this wrapper rather than interacting with the url directly
@@ -107,9 +94,7 @@ export default class PatientViewPage extends React.Component<
     constructor(props: IPatientViewPageProps) {
         super(props);
         this.urlWrapper = new PatientViewUrlWrapper(props.routing);
-        this.patientViewPageStore = new PatientViewPageStore(
-            this.props.appStore
-        );
+        this.patientViewPageStore = new PatientViewPageStore(this.props.appStore);
         getBrowserWindow().patientViewPageStore = this.patientViewPageStore;
 
         reaction(
@@ -117,9 +102,7 @@ export default class PatientViewPage extends React.Component<
             ([_, studyId]) => {
                 if (
                     studyId &&
-                    this.props.routing.location.pathname.includes(
-                        '/' + PagePath.Patient
-                    )
+                    this.props.routing.location.pathname.includes('/' + PagePath.Patient)
                 ) {
                     trackPatient(studyId);
                 }
@@ -149,13 +132,9 @@ export default class PatientViewPage extends React.Component<
                         this.patientViewPageStore.studyId = query.studyId;
                     }
                     if ('caseId' in query) {
-                        this.patientViewPageStore.setPatientId(
-                            query.caseId as string
-                        );
+                        this.patientViewPageStore.setPatientId(query.caseId as string);
                     } else if ('sampleId' in query) {
-                        this.patientViewPageStore.setSampleId(
-                            query.sampleId as string
-                        );
+                        this.patientViewPageStore.setSampleId(query.sampleId as string);
                     }
 
                     // if there is a navCaseId list in url
@@ -166,8 +145,7 @@ export default class PatientViewPage extends React.Component<
                         );
                     }
                 } else {
-                    this.patientViewPageStore.urlValidationError =
-                        validationResult.message;
+                    this.patientViewPageStore.urlValidationError = validationResult.message;
                 }
             },
             { fireImmediately: true }
@@ -176,15 +154,10 @@ export default class PatientViewPage extends React.Component<
         this.onMutationTableColumnVisibilityToggled = this.onMutationTableColumnVisibilityToggled.bind(
             this
         );
-        this.onCnaTableColumnVisibilityToggled = this.onCnaTableColumnVisibilityToggled.bind(
-            this
-        );
+        this.onCnaTableColumnVisibilityToggled = this.onCnaTableColumnVisibilityToggled.bind(this);
     }
 
-    public handleSampleClick(
-        id: string,
-        e: React.MouseEvent<HTMLAnchorElement>
-    ) {
+    public handleSampleClick(id: string, e: React.MouseEvent<HTMLAnchorElement>) {
         if (!e.shiftKey && !e.altKey && !e.metaKey) {
             e.preventDefault();
             this.urlWrapper.updateURL({ caseId: undefined, sampleId: id });
@@ -208,10 +181,7 @@ export default class PatientViewPage extends React.Component<
 
     @computed get cnaTableStatus() {
         if (this.patientViewPageStore.molecularProfileIdDiscrete.isComplete) {
-            if (
-                this.patientViewPageStore.molecularProfileIdDiscrete.result ===
-                undefined
-            ) {
+            if (this.patientViewPageStore.molecularProfileIdDiscrete.result === undefined) {
                 return 'unavailable';
             } else if (this.patientViewPageStore.discreteCNAData.isComplete) {
                 return 'available';
@@ -245,9 +215,7 @@ export default class PatientViewPage extends React.Component<
         );
     }
 
-    private shouldShowPathologyReport(
-        patientViewPageStore: PatientViewPageStore
-    ): boolean {
+    private shouldShowPathologyReport(patientViewPageStore: PatientViewPageStore): boolean {
         return (
             patientViewPageStore.pathologyReport.isComplete &&
             patientViewPageStore.pathologyReport.result.length > 0
@@ -263,9 +231,7 @@ export default class PatientViewPage extends React.Component<
         );
     }
 
-    private shouldShowTrialMatch(
-        patientViewPageStore: PatientViewPageStore
-    ): boolean {
+    private shouldShowTrialMatch(patientViewPageStore: PatientViewPageStore): boolean {
         return (
             getBrowserWindow().localStorage.trialmatch === 'true' &&
             patientViewPageStore.detailedTrialMatches.isComplete &&
@@ -275,22 +241,13 @@ export default class PatientViewPage extends React.Component<
 
     @autobind
     private customTabMountCallback(div: HTMLDivElement, tab: any) {
-        showCustomTab(
-            div,
-            tab,
-            this.props.routing.location,
-            this.patientViewPageStore
-        );
+        showCustomTab(div, tab, this.props.routing.location, this.patientViewPageStore);
     }
 
     private wholeSlideViewerUrl = remoteData<string | undefined>({
         await: () => [this.patientViewPageStore.getWholeSlideViewerIds],
         invoke: async () => {
-            if (
-                !_.isEmpty(
-                    this.patientViewPageStore.getWholeSlideViewerIds.result
-                )
-            ) {
+            if (!_.isEmpty(this.patientViewPageStore.getWholeSlideViewerIds.result)) {
                 const url = getWholeSlideViewerUrl(
                     this.patientViewPageStore.getWholeSlideViewerIds.result!,
                     this.props.appStore.userName!
@@ -364,17 +321,14 @@ export default class PatientViewPage extends React.Component<
     }
 
     @computed get modalSelectedGenePanel() {
-        return this.patientViewPageStore.genePanelIdToPanel.result[
-            this.genePanelModal.genePanelId
-        ];
+        return this.patientViewPageStore.genePanelIdToPanel.result[this.genePanelModal.genePanelId];
     }
     @computed get sampleManager() {
         if (
             this.patientViewPageStore.patientViewData.isComplete &&
             this.patientViewPageStore.studyMetaData.isComplete
         ) {
-            const patientData = this.patientViewPageStore.patientViewData
-                .result;
+            const patientData = this.patientViewPageStore.patientViewData.result;
 
             if (
                 this.patientViewPageStore.clinicalEvents.isComplete &&
@@ -401,19 +355,14 @@ export default class PatientViewPage extends React.Component<
         if (this.patientViewPageStore.urlValidationError) {
             return (
                 <ValidationAlert
-                    urlValidationError={
-                        this.patientViewPageStore.urlValidationError
-                    }
+                    urlValidationError={this.patientViewPageStore.urlValidationError}
                 />
             );
         }
 
         if (this.patientViewPageStore.studyMetaData.isComplete) {
-            let study: CancerStudy = this.patientViewPageStore.studyMetaData
-                .result;
-            studyName = (
-                <StudyLink studyId={study.studyId}>{study.name}</StudyLink>
-            );
+            let study: CancerStudy = this.patientViewPageStore.studyMetaData.result;
+            studyName = <StudyLink studyId={study.studyId}>{study.name}</StudyLink>;
         }
 
         if (
@@ -422,118 +371,86 @@ export default class PatientViewPage extends React.Component<
             this.patientViewPageStore.clinicalEvents.isComplete &&
             sampleManager !== null
         ) {
-            sampleHeader = _.map(
-                sampleManager!.samples,
-                (sample: ClinicalDataBySampleId) => {
-                    const isPDX: boolean =
-                        sampleManager &&
-                        sampleManager.clinicalDataLegacyCleanAndDerived &&
-                        sampleManager.clinicalDataLegacyCleanAndDerived[
-                            sample.id
-                        ] &&
-                        sampleManager.clinicalDataLegacyCleanAndDerived[
-                            sample.id
-                        ].DERIVED_NORMALIZED_CASE_TYPE === 'Xenograft';
+            sampleHeader = _.map(sampleManager!.samples, (sample: ClinicalDataBySampleId) => {
+                const isPDX: boolean =
+                    sampleManager &&
+                    sampleManager.clinicalDataLegacyCleanAndDerived &&
+                    sampleManager.clinicalDataLegacyCleanAndDerived[sample.id] &&
+                    sampleManager.clinicalDataLegacyCleanAndDerived[sample.id]
+                        .DERIVED_NORMALIZED_CASE_TYPE === 'Xenograft';
 
-                    return (
-                        <div className="patientSample">
-                            <span className="clinical-spans">
-                                {sampleManager!.getComponentForSample(
-                                    sample.id,
-                                    1,
-                                    '',
-                                    <span style={{ display: 'inline-flex' }}>
-                                        {'\u00A0'}
-                                        {isPDX && getMouseIcon()}
-                                        {isPDX && '\u00A0'}
-                                        <a
-                                            href={getSampleViewUrl(
-                                                this.patientViewPageStore
-                                                    .studyMetaData.result!
-                                                    .studyId,
+                return (
+                    <div className="patientSample">
+                        <span className="clinical-spans">
+                            {sampleManager!.getComponentForSample(
+                                sample.id,
+                                1,
+                                '',
+                                <span style={{ display: 'inline-flex' }}>
+                                    {'\u00A0'}
+                                    {isPDX && getMouseIcon()}
+                                    {isPDX && '\u00A0'}
+                                    <a
+                                        href={getSampleViewUrl(
+                                            this.patientViewPageStore.studyMetaData.result!.studyId,
+                                            sample.id
+                                        )}
+                                        target="_blank"
+                                        onClick={(e: React.MouseEvent<HTMLAnchorElement>) =>
+                                            this.handleSampleClick(sample.id, e)
+                                        }
+                                    >
+                                        {SampleManager.getClinicalAttributeInSample(
+                                            sample,
+                                            'DISPLAY_SAMPLE_NAME'
+                                        )
+                                            ? `${
+                                                  SampleManager.getClinicalAttributeInSample(
+                                                      sample,
+                                                      'DISPLAY_SAMPLE_NAME'
+                                                  )!.value
+                                              } (${sample.id})`
+                                            : sample.id}
+                                    </a>
+                                    {sampleManager &&
+                                        sampleManager.clinicalDataLegacyCleanAndDerived[
+                                            sample.id
+                                        ] &&
+                                        getSpanElementsFromCleanData(
+                                            sampleManager.clinicalDataLegacyCleanAndDerived[
                                                 sample.id
-                                            )}
-                                            target="_blank"
-                                            onClick={(
-                                                e: React.MouseEvent<
-                                                    HTMLAnchorElement
-                                                >
-                                            ) =>
-                                                this.handleSampleClick(
-                                                    sample.id,
-                                                    e
-                                                )
-                                            }
-                                        >
-                                            {SampleManager.getClinicalAttributeInSample(
-                                                sample,
-                                                'DISPLAY_SAMPLE_NAME'
-                                            )
-                                                ? `${
-                                                      SampleManager.getClinicalAttributeInSample(
-                                                          sample,
-                                                          'DISPLAY_SAMPLE_NAME'
-                                                      )!.value
-                                                  } (${sample.id})`
-                                                : sample.id}
-                                        </a>
-                                        {sampleManager &&
-                                            sampleManager
-                                                .clinicalDataLegacyCleanAndDerived[
-                                                sample.id
-                                            ] &&
-                                            getSpanElementsFromCleanData(
-                                                sampleManager
-                                                    .clinicalDataLegacyCleanAndDerived[
-                                                    sample.id
-                                                ],
-                                                this.patientViewPageStore
-                                                    .studyId
-                                            )}
-                                    </span>,
-                                    this.toggleGenePanelModal,
-                                    this.genePanelModal.isOpen
-                                )}
-                            </span>
-                            {this.patientViewPageStore
-                                .hasMutationalSignatureData.result === true && (
-                                <LoadingIndicator
-                                    isLoading={
-                                        this.patientViewPageStore
-                                            .mutationalSignatureData
-                                            .isPending &&
-                                        this.patientViewPageStore
-                                            .mutationalSignatureMetaData
-                                            .isPending
+                                            ],
+                                            this.patientViewPageStore.studyId
+                                        )}
+                                </span>,
+                                this.toggleGenePanelModal,
+                                this.genePanelModal.isOpen
+                            )}
+                        </span>
+                        {this.patientViewPageStore.hasMutationalSignatureData.result === true && (
+                            <LoadingIndicator
+                                isLoading={
+                                    this.patientViewPageStore.mutationalSignatureData.isPending &&
+                                    this.patientViewPageStore.mutationalSignatureMetaData.isPending
+                                }
+                            />
+                        )}
+
+                        {this.patientViewPageStore.hasMutationalSignatureData.result === true &&
+                            this.patientViewPageStore.clinicalDataGroupedBySample.isComplete &&
+                            this.patientViewPageStore.mutationalSignatureData.isComplete &&
+                            this.patientViewPageStore.mutationalSignatureMetaData.isComplete && (
+                                <SignificantMutationalSignatures
+                                    data={this.patientViewPageStore.mutationalSignatureData.result}
+                                    metadata={
+                                        this.patientViewPageStore.mutationalSignatureMetaData.result
                                     }
+                                    uniqueSampleKey={sample.id}
                                 />
                             )}
-
-                            {this.patientViewPageStore
-                                .hasMutationalSignatureData.result === true &&
-                                this.patientViewPageStore
-                                    .clinicalDataGroupedBySample.isComplete &&
-                                this.patientViewPageStore
-                                    .mutationalSignatureData.isComplete &&
-                                this.patientViewPageStore
-                                    .mutationalSignatureMetaData.isComplete && (
-                                    <SignificantMutationalSignatures
-                                        data={
-                                            this.patientViewPageStore
-                                                .mutationalSignatureData.result
-                                        }
-                                        metadata={
-                                            this.patientViewPageStore
-                                                .mutationalSignatureMetaData
-                                                .result
-                                        }
-                                        uniqueSampleKey={sample.id}
-                                    />
-                                )}
-                        </div>
-                    );
-                }
-            );
+                    </div>
+                );
+            });
 
             if (
                 sampleHeader &&
@@ -546,17 +463,9 @@ export default class PatientViewPage extends React.Component<
                 sampleHeader.push(
                     <button
                         className="btn btn-default btn-xs"
-                        onClick={() =>
-                            this.handlePatientClick(
-                                this.patientViewPageStore.patientId
-                            )
-                        }
+                        onClick={() => this.handlePatientClick(this.patientViewPageStore.patientId)}
                     >
-                        Show all{' '}
-                        {
-                            this.patientViewPageStore.allSamplesForPatient
-                                .result.length
-                        }{' '}
+                        Show all {this.patientViewPageStore.allSamplesForPatient.result.length}{' '}
                         samples
                     </button>
                 );
@@ -568,9 +477,7 @@ export default class PatientViewPage extends React.Component<
             this.patientViewPageStore.patientIdsInCohort.length > 0
         ) {
             const indexInCohort = this.patientViewPageStore.patientIdsInCohort.indexOf(
-                this.patientViewPageStore.studyId +
-                    ':' +
-                    this.patientViewPageStore.patientId
+                this.patientViewPageStore.studyId + ':' + this.patientViewPageStore.patientId
             );
             cohortNav = (
                 <PaginationControls
@@ -583,51 +490,38 @@ export default class PatientViewPage extends React.Component<
                     firstPageDisabled={indexInCohort === 0}
                     previousPageDisabled={indexInCohort === 0}
                     nextPageDisabled={
-                        indexInCohort ===
-                        this.patientViewPageStore.patientIdsInCohort.length - 1
+                        indexInCohort === this.patientViewPageStore.patientIdsInCohort.length - 1
                     }
                     lastPageDisabled={
-                        indexInCohort ===
-                        this.patientViewPageStore.patientIdsInCohort.length - 1
+                        indexInCohort === this.patientViewPageStore.patientIdsInCohort.length - 1
                     }
                     onFirstPageClick={() =>
-                        this.handlePatientClick(
-                            this.patientViewPageStore.patientIdsInCohort[0]
-                        )
+                        this.handlePatientClick(this.patientViewPageStore.patientIdsInCohort[0])
                     }
                     onPreviousPageClick={() =>
                         this.handlePatientClick(
-                            this.patientViewPageStore.patientIdsInCohort[
-                                indexInCohort - 1
-                            ]
+                            this.patientViewPageStore.patientIdsInCohort[indexInCohort - 1]
                         )
                     }
                     onNextPageClick={() =>
                         this.handlePatientClick(
-                            this.patientViewPageStore.patientIdsInCohort[
-                                indexInCohort + 1
-                            ]
+                            this.patientViewPageStore.patientIdsInCohort[indexInCohort + 1]
                         )
                     }
                     onLastPageClick={() =>
                         this.handlePatientClick(
                             this.patientViewPageStore.patientIdsInCohort[
-                                this.patientViewPageStore.patientIdsInCohort
-                                    .length - 1
+                                this.patientViewPageStore.patientIdsInCohort.length - 1
                             ]
                         )
                     }
                     onChangeCurrentPage={newPage => {
                         if (
                             newPage > 0 &&
-                            newPage <=
-                                this.patientViewPageStore.patientIdsInCohort
-                                    .length
+                            newPage <= this.patientViewPageStore.patientIdsInCohort.length
                         ) {
                             this.handlePatientClick(
-                                this.patientViewPageStore.patientIdsInCohort[
-                                    newPage - 1
-                                ]
+                                this.patientViewPageStore.patientIdsInCohort[newPage - 1]
                             );
                         }
                     }}
@@ -658,8 +552,7 @@ export default class PatientViewPage extends React.Component<
                         />
                     )}
                     <div className="headBlock">
-                        {this.patientViewPageStore.patientViewData
-                            .isComplete && (
+                        {this.patientViewPageStore.patientViewData.isComplete && (
                             <div className="patientPageHeader">
                                 <i
                                     className="fa fa-user-circle-o patientIcon"
@@ -671,100 +564,59 @@ export default class PatientViewPage extends React.Component<
                                             <td>Patient:</td>
                                             <td>
                                                 <PatientHeader
-                                                    handlePatientClick={(
-                                                        id: string
-                                                    ) =>
-                                                        this.handlePatientClick(
-                                                            id
-                                                        )
+                                                    handlePatientClick={(id: string) =>
+                                                        this.handlePatientClick(id)
                                                     }
                                                     patient={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .patientViewData
+                                                        this.patientViewPageStore.patientViewData
                                                             .result.patient
                                                     }
-                                                    studyId={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .studyId
-                                                    }
+                                                    studyId={this.patientViewPageStore.studyId}
                                                     darwinUrl={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .darwinUrl.result
+                                                        this.patientViewPageStore.darwinUrl.result
                                                     }
-                                                    sampleManager={
-                                                        sampleManager
-                                                    }
+                                                    sampleManager={sampleManager}
                                                 />
                                             </td>
                                         </tr>
                                         <tr>
                                             <td>Samples:</td>
                                             <td>
-                                                <div className="patientSamples">
-                                                    {sampleHeader}
-                                                </div>
+                                                <div className="patientSamples">{sampleHeader}</div>
                                             </td>
                                         </tr>
                                     </table>
                                 </div>
                                 <div className="studyMetaBar">
-                                    {studyName}{' '}
-                                    <If condition={cohortNav != null}>
-                                        {cohortNav}
-                                    </If>
+                                    {studyName} <If condition={cohortNav != null}>{cohortNav}</If>
                                 </div>
                             </div>
                         )}
                     </div>
-                    <If
-                        condition={
-                            this.patientViewPageStore.patientViewData.isComplete
-                        }
-                    >
+                    <If condition={this.patientViewPageStore.patientViewData.isComplete}>
                         <Then>
                             <MSKTabs
                                 id="patientViewPageTabs"
-                                activeTabId={
-                                    this.props.params.tab || 'summaryTab'
-                                }
-                                onTabClick={(id: string) =>
-                                    this.urlWrapper.setTab(id)
-                                }
+                                activeTabId={this.props.params.tab || 'summaryTab'}
+                                onTabClick={(id: string) => this.urlWrapper.setTab(id)}
                                 className="mainTabs"
                             >
-                                <MSKTab
-                                    key={0}
-                                    id={PatientViewPageTabs.Summary}
-                                    linkText="Summary"
-                                >
+                                <MSKTab key={0} id={PatientViewPageTabs.Summary} linkText="Summary">
                                     <LoadingIndicator
                                         isLoading={
-                                            this.patientViewPageStore
-                                                .clinicalEvents.isPending
+                                            this.patientViewPageStore.clinicalEvents.isPending
                                         }
                                     />
 
                                     {!!sampleManager &&
-                                        this.patientViewPageStore.clinicalEvents
-                                            .isComplete &&
-                                        this.patientViewPageStore.clinicalEvents
-                                            .result.length > 0 && (
+                                        this.patientViewPageStore.clinicalEvents.isComplete &&
+                                        this.patientViewPageStore.clinicalEvents.result.length >
+                                            0 && (
                                             <div>
                                                 <Timeline
-                                                    store={
-                                                        this
-                                                            .patientViewPageStore
-                                                    }
-                                                    width={
-                                                        WindowStore.size.width -
-                                                        60
-                                                    }
-                                                    sampleManager={
-                                                        sampleManager
-                                                    }
+                                                    store={this.patientViewPageStore}
+                                                    width={WindowStore.size.width - 60}
+                                                    sampleManager={sampleManager}
                                                 />
                                                 <hr />
                                             </div>
@@ -772,86 +624,51 @@ export default class PatientViewPage extends React.Component<
 
                                     <LoadingIndicator
                                         isLoading={
-                                            this.patientViewPageStore
-                                                .mutationData.isPending ||
-                                            this.patientViewPageStore
-                                                .cnaSegments.isPending
+                                            this.patientViewPageStore.mutationData.isPending ||
+                                            this.patientViewPageStore.cnaSegments.isPending
                                         }
                                     />
 
-                                    {this.patientViewPageStore.mutationData
-                                        .isComplete &&
-                                        this.patientViewPageStore.cnaSegments
+                                    {this.patientViewPageStore.mutationData.isComplete &&
+                                        this.patientViewPageStore.cnaSegments.isComplete &&
+                                        this.patientViewPageStore.sequencedSampleIdsInStudy
                                             .isComplete &&
-                                        this.patientViewPageStore
-                                            .sequencedSampleIdsInStudy
+                                        this.patientViewPageStore.sampleToMutationGenePanelId
                                             .isComplete &&
-                                        this.patientViewPageStore
-                                            .sampleToMutationGenePanelId
+                                        this.patientViewPageStore.sampleToDiscreteGenePanelId
                                             .isComplete &&
-                                        this.patientViewPageStore
-                                            .sampleToDiscreteGenePanelId
-                                            .isComplete &&
-                                        (this.patientViewPageStore
-                                            .mergedMutationDataFilteredByGene
+                                        (this.patientViewPageStore.mergedMutationDataFilteredByGene
                                             .length > 0 ||
-                                            this.patientViewPageStore
-                                                .cnaSegments.result.length >
+                                            this.patientViewPageStore.cnaSegments.result.length >
                                                 0) &&
                                         sampleManager && (
                                             <div>
                                                 <GenomicOverview
                                                     mergedMutations={
-                                                        this
-                                                            .patientViewPageStore
+                                                        this.patientViewPageStore
                                                             .mergedMutationDataFilteredByGene
                                                     }
                                                     samples={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .samples.result
+                                                        this.patientViewPageStore.samples.result
                                                     }
                                                     cnaSegments={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .cnaSegments.result
+                                                        this.patientViewPageStore.cnaSegments.result
                                                     }
-                                                    sampleOrder={
-                                                        sampleManager.sampleIndex
-                                                    }
-                                                    sampleLabels={
-                                                        sampleManager.sampleLabels
-                                                    }
-                                                    sampleColors={
-                                                        sampleManager.sampleColors
-                                                    }
-                                                    sampleManager={
-                                                        sampleManager
-                                                    }
-                                                    containerWidth={
-                                                        WindowStore.size.width -
-                                                        20
-                                                    }
+                                                    sampleOrder={sampleManager.sampleIndex}
+                                                    sampleLabels={sampleManager.sampleLabels}
+                                                    sampleColors={sampleManager.sampleColors}
+                                                    sampleManager={sampleManager}
+                                                    containerWidth={WindowStore.size.width - 20}
                                                     sampleIdToMutationGenePanelId={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .sampleToMutationGenePanelId
-                                                            .result
+                                                        this.patientViewPageStore
+                                                            .sampleToMutationGenePanelId.result
                                                     }
                                                     sampleIdToCopyNumberGenePanelId={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .sampleToDiscreteGenePanelId
-                                                            .result
+                                                        this.patientViewPageStore
+                                                            .sampleToDiscreteGenePanelId.result
                                                     }
-                                                    onSelectGenePanel={
-                                                        this
-                                                            .toggleGenePanelModal
-                                                    }
-                                                    disableTooltip={
-                                                        this.genePanelModal
-                                                            .isOpen
-                                                    }
+                                                    onSelectGenePanel={this.toggleGenePanelModal}
+                                                    disableTooltip={this.genePanelModal.isOpen}
                                                 />
                                                 <hr />
                                             </div>
@@ -859,56 +676,38 @@ export default class PatientViewPage extends React.Component<
 
                                     <LoadingIndicator
                                         isLoading={
-                                            this.patientViewPageStore
-                                                .mutationData.isPending ||
-                                            this.patientViewPageStore
-                                                .uncalledMutationData
+                                            this.patientViewPageStore.mutationData.isPending ||
+                                            this.patientViewPageStore.uncalledMutationData
                                                 .isPending ||
-                                            this.patientViewPageStore
-                                                .oncoKbAnnotatedGenes
+                                            this.patientViewPageStore.oncoKbAnnotatedGenes
                                                 .isPending ||
-                                            this.patientViewPageStore
-                                                .studyIdToStudy.isPending
+                                            this.patientViewPageStore.studyIdToStudy.isPending
                                         }
                                     />
 
-                                    {this.patientViewPageStore
-                                        .oncoKbAnnotatedGenes.isComplete &&
-                                        this.patientViewPageStore.mutationData
+                                    {this.patientViewPageStore.oncoKbAnnotatedGenes.isComplete &&
+                                        this.patientViewPageStore.mutationData.isComplete &&
+                                        this.patientViewPageStore.uncalledMutationData.isComplete &&
+                                        this.patientViewPageStore.studyIdToStudy.isComplete &&
+                                        this.patientViewPageStore.sampleToMutationGenePanelId
                                             .isComplete &&
-                                        this.patientViewPageStore
-                                            .uncalledMutationData.isComplete &&
-                                        this.patientViewPageStore.studyIdToStudy
-                                            .isComplete &&
-                                        this.patientViewPageStore
-                                            .sampleToMutationGenePanelId
-                                            .isComplete &&
-                                        this.patientViewPageStore
-                                            .genePanelIdToEntrezGeneIds
+                                        this.patientViewPageStore.genePanelIdToEntrezGeneIds
                                             .isComplete &&
                                         !!sampleManager && (
                                             <div data-test="patientview-mutation-table">
                                                 <PatientViewMutationTable
                                                     studyIdToStudy={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .studyIdToStudy
+                                                        this.patientViewPageStore.studyIdToStudy
                                                             .result
                                                     }
-                                                    sampleManager={
-                                                        sampleManager
-                                                    }
+                                                    sampleManager={sampleManager}
                                                     sampleToGenePanelId={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .sampleToMutationGenePanelId
-                                                            .result
+                                                        this.patientViewPageStore
+                                                            .sampleToMutationGenePanelId.result
                                                     }
                                                     genePanelIdToEntrezGeneIds={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .genePanelIdToEntrezGeneIds
-                                                            .result
+                                                        this.patientViewPageStore
+                                                            .genePanelIdToEntrezGeneIds.result
                                                     }
                                                     sampleIds={
                                                         sampleManager
@@ -916,175 +715,118 @@ export default class PatientViewPage extends React.Component<
                                                             : []
                                                     }
                                                     uniqueSampleKeyToTumorType={
-                                                        this
-                                                            .patientViewPageStore
+                                                        this.patientViewPageStore
                                                             .uniqueSampleKeyToTumorType
                                                     }
                                                     molecularProfileIdToMolecularProfile={
-                                                        this
-                                                            .patientViewPageStore
+                                                        this.patientViewPageStore
                                                             .molecularProfileIdToMolecularProfile
                                                             .result
                                                     }
                                                     variantCountCache={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .variantCountCache
+                                                        this.patientViewPageStore.variantCountCache
                                                     }
                                                     indexedVariantAnnotations={
-                                                        this
-                                                            .patientViewPageStore
+                                                        this.patientViewPageStore
                                                             .indexedVariantAnnotations
                                                     }
                                                     discreteCNACache={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .discreteCNACache
+                                                        this.patientViewPageStore.discreteCNACache
                                                     }
                                                     mrnaExprRankCache={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .mrnaExprRankCache
+                                                        this.patientViewPageStore.mrnaExprRankCache
                                                     }
                                                     oncoKbEvidenceCache={
-                                                        this
-                                                            .patientViewPageStore
+                                                        this.patientViewPageStore
                                                             .oncoKbEvidenceCache
                                                     }
                                                     pubMedCache={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .pubMedCache
+                                                        this.patientViewPageStore.pubMedCache
                                                     }
                                                     genomeNexusCache={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .genomeNexusCache
+                                                        this.patientViewPageStore.genomeNexusCache
                                                     }
                                                     genomeNexusMutationAssessorCache={
-                                                        this
-                                                            .patientViewPageStore
+                                                        this.patientViewPageStore
                                                             .genomeNexusMutationAssessorCache
                                                     }
                                                     genomeNexusMyVariantInfoCache={
-                                                        this
-                                                            .patientViewPageStore
+                                                        this.patientViewPageStore
                                                             .genomeNexusMyVariantInfoCache
                                                     }
                                                     mrnaExprRankMolecularProfileId={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .mrnaRankMolecularProfileId
-                                                            .result || undefined
+                                                        this.patientViewPageStore
+                                                            .mrnaRankMolecularProfileId.result ||
+                                                        undefined
                                                     }
                                                     discreteCNAMolecularProfileId={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .molecularProfileIdDiscrete
-                                                            .result
+                                                        this.patientViewPageStore
+                                                            .molecularProfileIdDiscrete.result
                                                     }
                                                     data={
-                                                        this
-                                                            .patientViewPageStore
+                                                        this.patientViewPageStore
                                                             .mergedMutationDataIncludingUncalledFilteredByGene
                                                     }
                                                     downloadDataFetcher={
-                                                        this
-                                                            .patientViewPageStore
+                                                        this.patientViewPageStore
                                                             .downloadDataFetcher
                                                     }
                                                     mutSigData={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .mutSigData.result
+                                                        this.patientViewPageStore.mutSigData.result
                                                     }
                                                     myCancerGenomeData={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .myCancerGenomeData
+                                                        this.patientViewPageStore.myCancerGenomeData
                                                     }
                                                     hotspotData={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .indexedHotspotData
+                                                        this.patientViewPageStore.indexedHotspotData
                                                     }
                                                     cosmicData={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .cosmicData.result
+                                                        this.patientViewPageStore.cosmicData.result
                                                     }
                                                     oncoKbData={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .oncoKbData
+                                                        this.patientViewPageStore.oncoKbData
                                                     }
                                                     oncoKbCancerGenes={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .oncoKbCancerGenes
+                                                        this.patientViewPageStore.oncoKbCancerGenes
                                                     }
                                                     civicGenes={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .civicGenes
+                                                        this.patientViewPageStore.civicGenes
                                                     }
                                                     civicVariants={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .civicVariants
+                                                        this.patientViewPageStore.civicVariants
                                                     }
                                                     userEmailAddress={ServerConfigHelpers.getUserEmailAddress()}
                                                     enableOncoKb={
-                                                        AppConfig.serverConfig
-                                                            .show_oncokb
+                                                        AppConfig.serverConfig.show_oncokb
                                                     }
                                                     enableFunctionalImpact={
-                                                        AppConfig.serverConfig
-                                                            .show_genomenexus
+                                                        AppConfig.serverConfig.show_genomenexus
                                                     }
                                                     enableHotspot={
-                                                        AppConfig.serverConfig
-                                                            .show_hotspot
+                                                        AppConfig.serverConfig.show_hotspot
                                                     }
                                                     enableMyCancerGenome={
-                                                        AppConfig.serverConfig
-                                                            .mycancergenome_show
+                                                        AppConfig.serverConfig.mycancergenome_show
                                                     }
-                                                    enableCivic={
-                                                        AppConfig.serverConfig
-                                                            .show_civic
-                                                    }
+                                                    enableCivic={AppConfig.serverConfig.show_civic}
                                                     columnVisibility={
-                                                        this
-                                                            .mutationTableColumnVisibility
+                                                        this.mutationTableColumnVisibility
                                                     }
                                                     showGeneFilterMenu={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .mutationTableShowGeneFilterMenu
-                                                            .result
+                                                        this.patientViewPageStore
+                                                            .mutationTableShowGeneFilterMenu.result
                                                     }
                                                     currentGeneFilter={
-                                                        this
-                                                            .patientViewPageStore
+                                                        this.patientViewPageStore
                                                             .mutationTableGeneFilterOption
                                                     }
-                                                    onFilterGenes={
-                                                        this
-                                                            .onFilterGenesMutationTable
-                                                    }
+                                                    onFilterGenes={this.onFilterGenesMutationTable}
                                                     columnVisibilityProps={{
                                                         onColumnToggled: this
                                                             .onMutationTableColumnVisibilityToggled,
                                                     }}
-                                                    onSelectGenePanel={
-                                                        this
-                                                            .toggleGenePanelModal
-                                                    }
-                                                    disableTooltip={
-                                                        this.genePanelModal
-                                                            .isOpen
-                                                    }
+                                                    onSelectGenePanel={this.toggleGenePanelModal}
+                                                    disableTooltip={this.genePanelModal.isOpen}
                                                 />
                                             </div>
                                         )}
@@ -1094,24 +836,18 @@ export default class PatientViewPage extends React.Component<
                                     <LoadingIndicator
                                         isLoading={
                                             this.cnaTableStatus === 'loading' ||
-                                            this.patientViewPageStore
-                                                .studyIdToStudy.isPending
+                                            this.patientViewPageStore.studyIdToStudy.isPending
                                         }
                                     />
 
-                                    {this.patientViewPageStore.studyIdToStudy
-                                        .isComplete &&
-                                        this.patientViewPageStore
-                                            .genePanelIdToEntrezGeneIds
+                                    {this.patientViewPageStore.studyIdToStudy.isComplete &&
+                                        this.patientViewPageStore.genePanelIdToEntrezGeneIds
                                             .isComplete &&
-                                        this.patientViewPageStore.referenceGenes
-                                            .isComplete && (
+                                        this.patientViewPageStore.referenceGenes.isComplete && (
                                             <div data-test="patientview-copynumber-table">
                                                 <CopyNumberTableWrapper
                                                     studyIdToStudy={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .studyIdToStudy
+                                                        this.patientViewPageStore.studyIdToStudy
                                                             .result
                                                     }
                                                     sampleIds={
@@ -1119,156 +855,105 @@ export default class PatientViewPage extends React.Component<
                                                             ? sampleManager.getSampleIdsInOrder()
                                                             : []
                                                     }
-                                                    sampleManager={
-                                                        sampleManager
-                                                    }
+                                                    sampleManager={sampleManager}
                                                     sampleToGenePanelId={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .sampleToDiscreteGenePanelId
-                                                            .result
+                                                        this.patientViewPageStore
+                                                            .sampleToDiscreteGenePanelId.result
                                                     }
                                                     genePanelIdToEntrezGeneIds={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .genePanelIdToEntrezGeneIds
-                                                            .result
+                                                        this.patientViewPageStore
+                                                            .genePanelIdToEntrezGeneIds.result
                                                     }
                                                     cnaOncoKbData={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .cnaOncoKbData
+                                                        this.patientViewPageStore.cnaOncoKbData
                                                     }
                                                     cnaCivicGenes={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .cnaCivicGenes
+                                                        this.patientViewPageStore.cnaCivicGenes
                                                     }
                                                     cnaCivicVariants={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .cnaCivicVariants
+                                                        this.patientViewPageStore.cnaCivicVariants
                                                     }
                                                     oncoKbEvidenceCache={
-                                                        this
-                                                            .patientViewPageStore
+                                                        this.patientViewPageStore
                                                             .oncoKbEvidenceCache
                                                     }
                                                     oncoKbCancerGenes={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .oncoKbCancerGenes
+                                                        this.patientViewPageStore.oncoKbCancerGenes
                                                     }
                                                     enableOncoKb={
-                                                        AppConfig.serverConfig
-                                                            .show_oncokb
+                                                        AppConfig.serverConfig.show_oncokb
                                                     }
-                                                    enableCivic={
-                                                        AppConfig.serverConfig
-                                                            .show_civic
-                                                    }
+                                                    enableCivic={AppConfig.serverConfig.show_civic}
                                                     userEmailAddress={
-                                                        AppConfig.serverConfig
-                                                            .user_email_address
+                                                        AppConfig.serverConfig.user_email_address
                                                     }
                                                     pubMedCache={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .pubMedCache
+                                                        this.patientViewPageStore.pubMedCache
                                                     }
                                                     referenceGenes={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .referenceGenes
+                                                        this.patientViewPageStore.referenceGenes
                                                             .result
                                                     }
                                                     data={
-                                                        this
-                                                            .patientViewPageStore
+                                                        this.patientViewPageStore
                                                             .mergedDiscreteCNADataFilteredByGene
                                                     }
                                                     copyNumberCountCache={
-                                                        this
-                                                            .patientViewPageStore
+                                                        this.patientViewPageStore
                                                             .copyNumberCountCache
                                                     }
                                                     mrnaExprRankCache={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .mrnaExprRankCache
+                                                        this.patientViewPageStore.mrnaExprRankCache
                                                     }
                                                     gisticData={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .gisticData.result
+                                                        this.patientViewPageStore.gisticData.result
                                                     }
                                                     mrnaExprRankMolecularProfileId={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .mrnaRankMolecularProfileId
-                                                            .result || undefined
+                                                        this.patientViewPageStore
+                                                            .mrnaRankMolecularProfileId.result ||
+                                                        undefined
                                                     }
                                                     status={this.cnaTableStatus}
-                                                    columnVisibility={
-                                                        this
-                                                            .cnaTableColumnVisibility
-                                                    }
+                                                    columnVisibility={this.cnaTableColumnVisibility}
                                                     showGeneFilterMenu={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .cnaTableShowGeneFilterMenu
-                                                            .result
+                                                        this.patientViewPageStore
+                                                            .cnaTableShowGeneFilterMenu.result
                                                     }
                                                     currentGeneFilter={
-                                                        this
-                                                            .patientViewPageStore
+                                                        this.patientViewPageStore
                                                             .copyNumberTableGeneFilterOption
                                                     }
                                                     onFilterGenes={
-                                                        this
-                                                            .onFilterGenesCopyNumberTable
+                                                        this.onFilterGenesCopyNumberTable
                                                     }
                                                     columnVisibilityProps={{
                                                         onColumnToggled: this
                                                             .onCnaTableColumnVisibilityToggled,
                                                     }}
                                                     sampleToMutationGenePanelId={
-                                                        this
-                                                            .patientViewPageStore
+                                                        this.patientViewPageStore
                                                             .sampleToMutationGenePanelId
                                                     }
-                                                    onSelectGenePanel={
-                                                        this
-                                                            .toggleGenePanelModal
-                                                    }
-                                                    disableTooltip={
-                                                        this.genePanelModal
-                                                            .isOpen
-                                                    }
+                                                    onSelectGenePanel={this.toggleGenePanelModal}
+                                                    disableTooltip={this.genePanelModal.isOpen}
                                                 />
                                             </div>
                                         )}
                                 </MSKTab>
-                                {this.patientViewPageStore.sampleIds.length >
-                                    1 &&
-                                    this.patientViewPageStore
-                                        .existsSomeMutationWithVAFData && (
+                                {this.patientViewPageStore.sampleIds.length > 1 &&
+                                    this.patientViewPageStore.existsSomeMutationWithVAFData && (
                                         <MSKTab
                                             key={1}
                                             id="genomicEvolution"
                                             linkText="Genomic Evolution"
                                         >
                                             <PatientViewMutationsTab
-                                                store={
-                                                    this.patientViewPageStore
-                                                }
+                                                store={this.patientViewPageStore}
                                                 mutationTableColumnVisibility={
-                                                    this
-                                                        .mutationTableColumnVisibility
+                                                    this.mutationTableColumnVisibility
                                                 }
                                                 onMutationTableColumnVisibilityToggled={
-                                                    this
-                                                        .onMutationTableColumnVisibilityToggled
+                                                    this.onMutationTableColumnVisibilityToggled
                                                 }
                                                 sampleManager={sampleManager}
                                             />
@@ -1284,19 +969,17 @@ export default class PatientViewPage extends React.Component<
                                         <FeatureTitle
                                             title="Patient"
                                             isLoading={
-                                                this.patientViewPageStore
-                                                    .clinicalDataPatient
+                                                this.patientViewPageStore.clinicalDataPatient
                                                     .isPending
                                             }
                                             className="pull-left"
                                         />
-                                        {this.patientViewPageStore
-                                            .clinicalDataPatient.isComplete && (
+                                        {this.patientViewPageStore.clinicalDataPatient
+                                            .isComplete && (
                                             <ClinicalInformationPatientTable
                                                 showTitleBar={true}
                                                 data={
-                                                    this.patientViewPageStore
-                                                        .clinicalDataPatient
+                                                    this.patientViewPageStore.clinicalDataPatient
                                                         .result
                                                 }
                                             />
@@ -1310,19 +993,16 @@ export default class PatientViewPage extends React.Component<
                                             title="Samples"
                                             isLoading={
                                                 this.patientViewPageStore
-                                                    .clinicalDataGroupedBySample
-                                                    .isPending
+                                                    .clinicalDataGroupedBySample.isPending
                                             }
                                             className="pull-left"
                                         />
-                                        {this.patientViewPageStore
-                                            .clinicalDataGroupedBySample
+                                        {this.patientViewPageStore.clinicalDataGroupedBySample
                                             .isComplete && (
                                             <ClinicalInformationSamples
                                                 samples={
                                                     this.patientViewPageStore
-                                                        .clinicalDataGroupedBySample
-                                                        .result!
+                                                        .clinicalDataGroupedBySample.result!
                                                 }
                                             />
                                         )}
@@ -1334,20 +1014,13 @@ export default class PatientViewPage extends React.Component<
                                     id={PatientViewPageTabs.PathologyReport}
                                     linkText="Pathology Report"
                                     hide={
-                                        !this.shouldShowPathologyReport(
-                                            this.patientViewPageStore
-                                        )
+                                        !this.shouldShowPathologyReport(this.patientViewPageStore)
                                     }
                                 >
                                     <div>
                                         <PathologyReport
-                                            iframeHeight={
-                                                WindowStore.size.height - 220
-                                            }
-                                            pdfs={
-                                                this.patientViewPageStore
-                                                    .pathologyReport.result
-                                            }
+                                            iframeHeight={WindowStore.size.height - 220}
+                                            pdfs={this.patientViewPageStore.pathologyReport.result}
                                         />
                                     </div>
                                 </MSKTab>
@@ -1360,46 +1033,32 @@ export default class PatientViewPage extends React.Component<
                                 >
                                     <div>
                                         <IFrameLoader
-                                            height={
-                                                WindowStore.size.height - 220
-                                            }
+                                            height={WindowStore.size.height - 220}
                                             url={getDigitalSlideArchiveIFrameUrl(
-                                                this.patientViewPageStore
-                                                    .patientId
+                                                this.patientViewPageStore.patientId
                                             )}
                                         />
                                     </div>
                                 </MSKTab>
 
-                                {this.patientViewPageStore.studyId ===
-                                    'mskimpact' &&
+                                {this.patientViewPageStore.studyId === 'mskimpact' &&
                                     this.wholeSlideViewerUrl.result && (
                                         <MSKTab
                                             key={6}
-                                            id={
-                                                PatientViewPageTabs.MSKTissueImage
-                                            }
+                                            id={PatientViewPageTabs.MSKTissueImage}
                                             linkText="Tissue Image"
                                             unmountOnHide={false}
                                         >
                                             <div>
                                                 <IFrameLoader
-                                                    height={
-                                                        WindowStore.size
-                                                            .height - 220
-                                                    }
-                                                    url={
-                                                        this.wholeSlideViewerUrl
-                                                            .result!
-                                                    }
+                                                    height={WindowStore.size.height - 220}
+                                                    url={this.wholeSlideViewerUrl.result!}
                                                 />
                                             </div>
                                         </MSKTab>
                                     )}
 
-                                {this.shouldShowTrialMatch(
-                                    this.patientViewPageStore
-                                ) && (
+                                {this.shouldShowTrialMatch(this.patientViewPageStore) && (
                                     <MSKTab
                                         key={7}
                                         id={PatientViewPageTabs.TrialMatchTab}
@@ -1408,12 +1067,10 @@ export default class PatientViewPage extends React.Component<
                                         <TrialMatchTable
                                             sampleManager={sampleManager}
                                             detailedTrialMatches={
-                                                this.patientViewPageStore
-                                                    .detailedTrialMatches.result
+                                                this.patientViewPageStore.detailedTrialMatches
+                                                    .result
                                             }
-                                            containerWidth={
-                                                WindowStore.size.width - 20
-                                            }
+                                            containerWidth={WindowStore.size.width - 20}
                                         />
                                     </MSKTab>
                                 )}
@@ -1433,24 +1090,15 @@ export default class PatientViewPage extends React.Component<
 
                                 {AppConfig.serverConfig.custom_tabs &&
                                     AppConfig.serverConfig.custom_tabs
-                                        .filter(
-                                            (tab: any) =>
-                                                tab.location === 'PATIENT_PAGE'
-                                        )
+                                        .filter((tab: any) => tab.location === 'PATIENT_PAGE')
                                         .map((tab: any, i: number) => {
                                             return (
                                                 <MSKTab
                                                     key={100 + i}
                                                     id={'customTab' + 1}
-                                                    unmountOnHide={
-                                                        tab.unmountOnHide ===
-                                                        true
-                                                    }
+                                                    unmountOnHide={tab.unmountOnHide === true}
                                                     onTabDidMount={div => {
-                                                        this.customTabMountCallback(
-                                                            div,
-                                                            tab
-                                                        );
+                                                        this.customTabMountCallback(div, tab);
                                                     }}
                                                     linkText={tab.title}
                                                 ></MSKTab>
@@ -1459,11 +1107,7 @@ export default class PatientViewPage extends React.Component<
                             </MSKTabs>
                         </Then>
                         <Else>
-                            <LoadingIndicator
-                                isLoading={true}
-                                center={true}
-                                size={'big'}
-                            />
+                            <LoadingIndicator isLoading={true} center={true} size={'big'} />
                         </Else>
                     </If>
                 </div>

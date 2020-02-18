@@ -1,10 +1,7 @@
 import * as React from 'react';
 import PdbHeaderCache from '../cache/PdbHeaderCache';
 import { observer } from 'mobx-react';
-import {
-    TableCellStatusIndicator,
-    TableCellStatus,
-} from 'cbioportal-frontend-commons';
+import { TableCellStatusIndicator, TableCellStatus } from 'cbioportal-frontend-commons';
 import { generatePdbInfoSummary } from '../lib/PdbUtils';
 import TextExpander from './TextExpander';
 
@@ -17,10 +14,7 @@ export interface IPdbChainInfoProps {
 }
 
 @observer
-export default class PdbChainInfo extends React.Component<
-    IPdbChainInfoProps,
-    {}
-> {
+export default class PdbChainInfo extends React.Component<IPdbChainInfoProps, {}> {
     render() {
         let pdbInfo = null;
         let moleculeInfo = null;
@@ -29,35 +23,16 @@ export default class PdbChainInfo extends React.Component<
             const cacheData = this.props.cache.get(this.props.pdbId);
 
             if (cacheData === null) {
-                pdbInfo = (
-                    <TableCellStatusIndicator
-                        status={TableCellStatus.LOADING}
-                    />
-                );
-                moleculeInfo = (
-                    <TableCellStatusIndicator
-                        status={TableCellStatus.LOADING}
-                    />
-                );
+                pdbInfo = <TableCellStatusIndicator status={TableCellStatus.LOADING} />;
+                moleculeInfo = <TableCellStatusIndicator status={TableCellStatus.LOADING} />;
             } else if (cacheData.status === 'error') {
-                pdbInfo = (
-                    <TableCellStatusIndicator status={TableCellStatus.ERROR} />
-                );
-                moleculeInfo = (
-                    <TableCellStatusIndicator status={TableCellStatus.ERROR} />
-                );
+                pdbInfo = <TableCellStatusIndicator status={TableCellStatus.ERROR} />;
+                moleculeInfo = <TableCellStatusIndicator status={TableCellStatus.ERROR} />;
             } else if (cacheData.data === null) {
-                pdbInfo = (
-                    <TableCellStatusIndicator status={TableCellStatus.NA} />
-                );
-                moleculeInfo = (
-                    <TableCellStatusIndicator status={TableCellStatus.NA} />
-                );
+                pdbInfo = <TableCellStatusIndicator status={TableCellStatus.NA} />;
+                moleculeInfo = <TableCellStatusIndicator status={TableCellStatus.NA} />;
             } else {
-                const summary = generatePdbInfoSummary(
-                    cacheData.data,
-                    this.props.chainId
-                );
+                const summary = generatePdbInfoSummary(cacheData.data, this.props.chainId);
 
                 pdbInfo = summary.pdbInfo;
                 moleculeInfo = summary.moleculeInfo;
@@ -70,14 +45,10 @@ export default class PdbChainInfo extends React.Component<
                     <div className="pull-left" style={{ paddingRight: 5 }}>
                         <span
                             style={{
-                                fontWeight: this.props.summaryFormat
-                                    ? 'bold'
-                                    : 'normal',
+                                fontWeight: this.props.summaryFormat ? 'bold' : 'normal',
                             }}
                         >
-                            <span>
-                                {this.props.summaryFormat ? 'pdb' : 'PDB'}
-                            </span>
+                            <span>{this.props.summaryFormat ? 'pdb' : 'PDB'}</span>
                             {!this.props.summaryFormat && (
                                 <span style={{ paddingLeft: 5 }}>
                                     <a
@@ -103,14 +74,10 @@ export default class PdbChainInfo extends React.Component<
                     <div className="pull-left" style={{ paddingRight: 5 }}>
                         <span
                             style={{
-                                fontWeight: this.props.summaryFormat
-                                    ? 'bold'
-                                    : 'normal',
+                                fontWeight: this.props.summaryFormat ? 'bold' : 'normal',
                             }}
                         >
-                            <span>
-                                {this.props.summaryFormat ? 'chain' : 'Chain'}
-                            </span>
+                            <span>{this.props.summaryFormat ? 'chain' : 'Chain'}</span>
                             {!this.props.summaryFormat && (
                                 <span style={{ paddingLeft: 3 }}>
                                     <b>{this.props.chainId}</b>

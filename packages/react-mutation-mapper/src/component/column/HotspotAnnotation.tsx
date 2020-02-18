@@ -33,10 +33,7 @@ export function placeArrow(tooltipEl: any) {
     arrowEl.style.left = '10px';
 }
 
-export default class HotspotAnnotation extends React.Component<
-    ICancerHotspotsProps,
-    {}
-> {
+export default class HotspotAnnotation extends React.Component<ICancerHotspotsProps, {}> {
     constructor(props: ICancerHotspotsProps) {
         super(props);
         this.state = {};
@@ -45,9 +42,7 @@ export default class HotspotAnnotation extends React.Component<
     public render() {
         const { isHotspot, is3dHotspot } = this.props;
 
-        let hotspotContent = (
-            <span className={`${annotationStyles['annotation-item']}`} />
-        );
+        let hotspotContent = <span className={`${annotationStyles['annotation-item']}`} />;
 
         if (this.props.status === 'pending') {
             hotspotContent = loaderIcon('pull-left');
@@ -63,9 +58,7 @@ export default class HotspotAnnotation extends React.Component<
             }
 
             const arrowContent = <div className="rc-tooltip-arrow-inner" />;
-            const tooltipContent = (
-                <HotspotInfo isHotspot={isHotspot} is3dHotspot={is3dHotspot} />
-            );
+            const tooltipContent = <HotspotInfo isHotspot={isHotspot} is3dHotspot={is3dHotspot} />;
 
             hotspotContent = (
                 <DefaultTooltip
@@ -75,9 +68,7 @@ export default class HotspotAnnotation extends React.Component<
                     arrowContent={arrowContent}
                     onPopupAlign={placeArrow}
                 >
-                    <span
-                        className={`${annotationStyles['annotation-item']} chang_hotspot`}
-                    >
+                    <span className={`${annotationStyles['annotation-item']} chang_hotspot`}>
                         <img
                             width={hotspotsImgWidth}
                             height={hotspotsImgHeight}

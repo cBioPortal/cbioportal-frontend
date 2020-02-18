@@ -29,9 +29,7 @@ describe('FrequencyBar', () => {
         rootSvg = component.find('svg');
         barRect = rootSvg.find('rect').find('[width=50]');
         mainFreqRect = rootSvg.find('rect').find(`[width=${(43 / 100) * 50}]`);
-        secondaryFreqRect = rootSvg
-            .find('rect')
-            .find(`[width=${(6 / 100) * 50}]`);
+        secondaryFreqRect = rootSvg.find('rect').find(`[width=${(6 / 100) * 50}]`);
     });
 
     it('renders the components with correct dimensions', () => {
@@ -41,10 +39,7 @@ describe('FrequencyBar', () => {
             'total width should respect bar width and text margin'
         );
 
-        assert.isTrue(
-            barRect.exists(),
-            'main bar rectangle should exist with correct width'
-        );
+        assert.isTrue(barRect.exists(), 'main bar rectangle should exist with correct width');
 
         assert.isTrue(
             mainFreqRect.exists(),
@@ -90,10 +85,7 @@ describe('FrequencyBar', () => {
             'percentage text should reflect only the first value in the count array'
         );
 
-        assert.isTrue(
-            component.find(DefaultTooltip).exists(),
-            'component should have a tooltip'
-        );
+        assert.isTrue(component.find(DefaultTooltip).exists(), 'component should have a tooltip');
     });
 
     after(() => {});

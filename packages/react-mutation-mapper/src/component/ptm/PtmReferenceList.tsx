@@ -21,10 +21,7 @@ function extractNumericalPart(pmid: string) {
 }
 
 @observer
-export default class PtmReferenceList extends React.Component<
-    PtmReferenceListProps,
-    {}
-> {
+export default class PtmReferenceList extends React.Component<PtmReferenceListProps, {}> {
     public render() {
         return (
             <DefaultTooltip

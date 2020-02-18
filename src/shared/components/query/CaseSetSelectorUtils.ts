@@ -36,8 +36,7 @@ export const CustomCaseSets: CustomCaseSet[] = [
     },
     {
         name: 'Cases with both mutations and copy number alterations data',
-        description:
-            'All cases with both mutations and copy number alterations data',
+        description: 'All cases with both mutations and copy number alterations data',
         value: CaseSetId.mutation_cna,
         isdefault: false,
     },
@@ -67,9 +66,7 @@ export function getFilteredCustomCaseSets(
             } else if (isMultipleNonVirtualStudies && !isVirtualStudy) {
                 // add all non-zero CustomCaseSets options for multiple studies without virtual study
                 let count =
-                    profiledSamplesCount[
-                        next.value as 'w_mut_cna' | 'w_mut' | 'w_cna' | 'all'
-                    ];
+                    profiledSamplesCount[next.value as 'w_mut_cna' | 'w_mut' | 'w_cna' | 'all'];
                 //add profile only if it has samples
                 if (count > 0) {
                     acc.push(
@@ -81,9 +78,7 @@ export function getFilteredCustomCaseSets(
             } else if (isVirtualStudy && next.value === CaseSetId.all) {
                 // only add 'all' option for virtual study
                 let count =
-                    profiledSamplesCount[
-                        next.value as 'w_mut_cna' | 'w_mut' | 'w_cna' | 'all'
-                    ];
+                    profiledSamplesCount[next.value as 'w_mut_cna' | 'w_mut' | 'w_cna' | 'all'];
                 //add profile only if it has samples
                 if (count > 0) {
                     acc.push(

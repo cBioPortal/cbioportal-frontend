@@ -23,9 +23,7 @@ import OncoprintDropdownCount from './OncoprintDropdownCount';
 export interface IAddClinicalTrackProps {
     store: ResultsViewPageStore;
     selectedClinicalAttributeIds: (string | SpecialAttribute)[];
-    onChangeSelectedClinicalTracks: (
-        ids: (string | SpecialAttribute)[]
-    ) => void;
+    onChangeSelectedClinicalTracks: (ids: (string | SpecialAttribute)[]) => void;
 }
 
 enum Tab {
@@ -34,10 +32,7 @@ enum Tab {
 }
 
 @observer
-export default class AddClinicalTracks extends React.Component<
-    IAddClinicalTrackProps,
-    {}
-> {
+export default class AddClinicalTracks extends React.Component<IAddClinicalTrackProps, {}> {
     @observable open = false;
     @observable tabId = Tab.CLINICAL;
 
@@ -51,10 +46,7 @@ export default class AddClinicalTracks extends React.Component<
     @action
     private addAll(clinicalAttributeIds: string[]) {
         this.props.onChangeSelectedClinicalTracks(
-            _.union(
-                this.props.selectedClinicalAttributeIds,
-                clinicalAttributeIds
-            )
+            _.union(this.props.selectedClinicalAttributeIds, clinicalAttributeIds)
         );
     }
 
@@ -62,10 +54,7 @@ export default class AddClinicalTracks extends React.Component<
     @action
     private clear(clinicalAttributeIds: string[]) {
         this.props.onChangeSelectedClinicalTracks(
-            _.difference(
-                this.props.selectedClinicalAttributeIds,
-                clinicalAttributeIds
-            )
+            _.difference(this.props.selectedClinicalAttributeIds, clinicalAttributeIds)
         );
     }
 
@@ -73,10 +62,7 @@ export default class AddClinicalTracks extends React.Component<
     @action
     private toggleClinicalTrack(clinicalAttributeId: string) {
         this.props.onChangeSelectedClinicalTracks(
-            toggleIncluded(
-                clinicalAttributeId,
-                this.props.selectedClinicalAttributeIds
-            )
+            toggleIncluded(clinicalAttributeId, this.props.selectedClinicalAttributeIds)
         );
     }
 
@@ -94,8 +80,7 @@ export default class AddClinicalTracks extends React.Component<
                 this.props.store.clinicalAttributes.result!,
                 a => a.clinicalAttributeId
             );
-            const availableFrequency = this
-                .clinicalAttributeIdToAvailableFrequency.result!;
+            const availableFrequency = this.clinicalAttributeIdToAvailableFrequency.result!;
             const sortedAttributes = {
                 clinical: [] as ClinicalAttribute[],
                 groups: [] as ClinicalAttribute[],
@@ -107,41 +92,31 @@ export default class AddClinicalTracks extends React.Component<
                     sortedAttributes.clinical.push(attr);
                 }
             }
-            sortedAttributes.clinical = _.sortBy<ClinicalAttribute>(
-                sortedAttributes.clinical,
-                [
-                    (x: ClinicalAttribute) => {
-                        if (
-                            x.clinicalAttributeId ===
-                            SpecialAttribute.StudyOfOrigin
-                        ) {
-                            return 0;
-                        } else if (
-                            x.clinicalAttributeId ===
-                            SpecialAttribute.MutationSpectrum
-                        ) {
-                            return 1;
-                        } else if (clinicalAttributeIsPROFILEDIN(x)) {
-                            return 2;
-                        } else {
-                            return 3;
-                        }
-                    },
-                    (x: ClinicalAttribute) => {
-                        let freq = availableFrequency[x.clinicalAttributeId];
-                        if (freq === undefined) {
-                            freq = 0;
-                        }
-                        return -freq;
-                    },
-                    (x: ClinicalAttribute) => -x.priority,
-                    (x: ClinicalAttribute) => x.displayName.toLowerCase(),
-                ]
-            );
+            sortedAttributes.clinical = _.sortBy<ClinicalAttribute>(sortedAttributes.clinical, [
+                (x: ClinicalAttribute) => {
+                    if (x.clinicalAttributeId === SpecialAttribute.StudyOfOrigin) {
+                        return 0;
+                    } else if (x.clinicalAttributeId === SpecialAttribute.MutationSpectrum) {
+                        return 1;
+                    } else if (clinicalAttributeIsPROFILEDIN(x)) {
+                        return 2;
+                    } else {
+                        return 3;
+                    }
+                },
+                (x: ClinicalAttribute) => {
+                    let freq = availableFrequency[x.clinicalAttributeId];
+                    if (freq === undefined) {
+                        freq = 0;
+                    }
+                    return -freq;
+                },
+                (x: ClinicalAttribute) => -x.priority,
+                (x: ClinicalAttribute) => x.displayName.toLowerCase(),
+            ]);
 
-            sortedAttributes.groups = _.sortBy<ClinicalAttribute>(
-                sortedAttributes.groups,
-                x => x.displayName.toLowerCase()
+            sortedAttributes.groups = _.sortBy<ClinicalAttribute>(sortedAttributes.groups, x =>
+                x.displayName.toLowerCase()
             );
 
             return Promise.resolve(
@@ -149,9 +124,7 @@ export default class AddClinicalTracks extends React.Component<
                     return attrs.map(attr => ({
                         label: attr.displayName,
                         key: attr.clinicalAttributeId,
-                        selected:
-                            attr.clinicalAttributeId in
-                            this.selectedClinicalAttributeIds,
+                        selected: attr.clinicalAttributeId in this.selectedClinicalAttributeIds,
                     }));
                 })
             );
@@ -167,8 +140,7 @@ export default class AddClinicalTracks extends React.Component<
             const numSamples = this.props.store.samples.result!.length;
             return Promise.resolve(
                 _.mapValues(
-                    this.props.store.clinicalAttributeIdToAvailableSampleCount
-                        .result!,
+                    this.props.store.clinicalAttributeIdToAvailableSampleCount.result!,
                     count => (100 * count) / numSamples
                 )
             );
@@ -228,8 +200,7 @@ export default class AddClinicalTracks extends React.Component<
                         linkText={Tab.GROUPS}
                         hide={
                             !this.props.store.comparisonGroups.isComplete ||
-                            this.props.store.comparisonGroups.result!.length ===
-                                0
+                            this.props.store.comparisonGroups.result!.length === 0
                         }
                     >
                         {this.addGroupTracksMenu.component}
@@ -239,9 +210,7 @@ export default class AddClinicalTracks extends React.Component<
         } else {
             return (
                 <div className="tab-content">
-                    <div className="msk-tab">
-                        {this.addClinicalTracksMenu.component}
-                    </div>
+                    <div className="msk-tab">{this.addClinicalTracksMenu.component}</div>
                 </div>
             );
         }

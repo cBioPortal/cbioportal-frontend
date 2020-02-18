@@ -1,19 +1,11 @@
 import _ from 'lodash';
 import { IAxisLogScaleParams } from 'pages/resultsView/plots/PlotsTabUtils';
 
-export function getUniquePrecision(
-    value: number,
-    allValues: number[],
-    maxPrecision: number = 3
-) {
+export function getUniquePrecision(value: number, allValues: number[], maxPrecision: number = 3) {
     if (!allValues.length) return 0;
 
     let precision = 0;
-    while (
-        _.countBy(allValues, val => val.toFixed(precision))[
-            value.toFixed(precision)
-        ] > 1
-    ) {
+    while (_.countBy(allValues, val => val.toFixed(precision))[value.toFixed(precision)] > 1) {
         precision++;
 
         if (precision >= maxPrecision) {

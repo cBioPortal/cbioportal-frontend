@@ -1,20 +1,13 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import { oncoKbAnnotationSortValue } from 'react-mutation-mapper';
-import {
-    CancerStudy,
-    DiscreteCopyNumberData,
-} from 'shared/api/generated/CBioPortalAPI';
+import { CancerStudy, DiscreteCopyNumberData } from 'shared/api/generated/CBioPortalAPI';
 import {
     IAnnotation,
     IAnnotationColumnProps,
     default as DefaultAnnotationColumnFormatter,
 } from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
-import {
-    IOncoKbCancerGenesWrapper,
-    IOncoKbData,
-    IOncoKbDataWrapper,
-} from 'shared/model/OncoKB';
+import { IOncoKbCancerGenesWrapper, IOncoKbData, IOncoKbDataWrapper } from 'shared/model/OncoKB';
 import Civic from 'shared/components/annotation/Civic';
 import { generateQueryVariant } from 'shared/lib/OncoKbUtils';
 import {
@@ -67,8 +60,7 @@ export default class AnnotationColumnFormatter {
                 isOncoKbCancerGene =
                     _.find(
                         oncoKbCancerGenes.result,
-                        (gene: CancerGene) =>
-                            gene.entrezGeneId === copyNumberData[0].entrezGeneId
+                        (gene: CancerGene) => gene.entrezGeneId === copyNumberData[0].entrezGeneId
                     ) !== undefined;
             }
 
@@ -100,10 +92,7 @@ export default class AnnotationColumnFormatter {
                 oncoKbGeneExist,
                 isOncoKbCancerGene,
                 civicEntry:
-                    civicGenes &&
-                    civicGenes.result &&
-                    civicVariants &&
-                    civicVariants.result
+                    civicGenes && civicGenes.result && civicVariants && civicVariants.result
                         ? AnnotationColumnFormatter.getCivicEntry(
                               copyNumberData,
                               civicGenes.result,
@@ -111,20 +100,14 @@ export default class AnnotationColumnFormatter {
                           )
                         : undefined,
                 civicStatus:
-                    civicGenes &&
-                    civicGenes.status &&
-                    civicVariants &&
-                    civicVariants.status
+                    civicGenes && civicGenes.status && civicVariants && civicVariants.status
                         ? AnnotationColumnFormatter.getCivicStatus(
                               civicGenes.status,
                               civicVariants.status
                           )
                         : 'pending',
                 hasCivicVariants:
-                    civicGenes &&
-                    civicGenes.result &&
-                    civicVariants &&
-                    civicVariants.result
+                    civicGenes && civicGenes.result && civicVariants && civicVariants.result
                         ? AnnotationColumnFormatter.hasCivicVariants(
                               copyNumberData,
                               civicGenes.result,
@@ -159,10 +142,7 @@ export default class AnnotationColumnFormatter {
         } = getCivicCNAVariants(copyNumberData, geneSymbol, civicVariants);
         let geneEntry: ICivicGeneData = civicGenes[geneSymbol];
         //geneEntry must exists, and only return data for genes with variants or it has a description provided by the Civic API
-        if (
-            geneEntry &&
-            (!_.isEmpty(geneVariants) || geneEntry.description !== '')
-        ) {
+        if (geneEntry && (!_.isEmpty(geneVariants) || geneEntry.description !== '')) {
             civicEntry = buildCivicEntry(geneEntry, geneVariants);
         }
 
@@ -176,10 +156,7 @@ export default class AnnotationColumnFormatter {
         if (civicGenesStatus === 'error' || civicVariantsStatus === 'error') {
             return 'error';
         }
-        if (
-            civicGenesStatus === 'complete' &&
-            civicVariantsStatus === 'complete'
-        ) {
+        if (civicGenesStatus === 'complete' && civicVariantsStatus === 'complete') {
             return 'complete';
         }
 
@@ -209,18 +186,13 @@ export default class AnnotationColumnFormatter {
         oncoKbData: IOncoKbData,
         studyIdToStudy?: { [studyId: string]: CancerStudy }
     ): IndicatorQueryResp | undefined {
-        if (
-            oncoKbData.uniqueSampleKeyToTumorType === null ||
-            oncoKbData.indicatorMap === null
-        ) {
+        if (oncoKbData.uniqueSampleKeyToTumorType === null || oncoKbData.indicatorMap === null) {
             return undefined;
         }
 
         const id = generateQueryVariantId(
             copyNumberData[0].gene.entrezGeneId,
-            oncoKbData.uniqueSampleKeyToTumorType[
-                copyNumberData[0].uniqueSampleKey
-            ],
+            oncoKbData.uniqueSampleKeyToTumorType[copyNumberData[0].uniqueSampleKey],
             getAlterationString(copyNumberData[0].alteration)
         );
 
@@ -246,9 +218,7 @@ export default class AnnotationColumnFormatter {
         return oncoKbData.uniqueSampleKeyToTumorType
             ? generateQueryVariant(
                   copyNumberData[0].gene.entrezGeneId,
-                  oncoKbData.uniqueSampleKeyToTumorType[
-                      copyNumberData[0].uniqueSampleKey
-                  ],
+                  oncoKbData.uniqueSampleKeyToTumorType[copyNumberData[0].uniqueSampleKey],
                   getAlterationString(copyNumberData[0].alteration)
               )
             : undefined;
@@ -296,10 +266,7 @@ export default class AnnotationColumnFormatter {
             columnProps.oncoKbData.result &&
             !(columnProps.oncoKbData.result instanceof Error)
         ) {
-            evidenceQuery = this.getEvidenceQuery(
-                data,
-                columnProps.oncoKbData.result
-            );
+            evidenceQuery = this.getEvidenceQuery(data, columnProps.oncoKbData.result);
         }
 
         return DefaultAnnotationColumnFormatter.mainContent(

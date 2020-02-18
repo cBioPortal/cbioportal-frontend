@@ -1,8 +1,6 @@
 import { action, computed, observable } from 'mobx';
 import { ResultsViewComparisonSubTab } from '../ResultsViewPageHelpers';
-import ComparisonStore, {
-    OverlapStrategy,
-} from '../../../shared/lib/comparison/ComparisonStore';
+import ComparisonStore, { OverlapStrategy } from '../../../shared/lib/comparison/ComparisonStore';
 import ResultsViewURLWrapper from '../ResultsViewURLWrapper';
 import { AppStore } from '../../../AppStore';
 import autobind from 'autobind-decorator';
@@ -17,9 +15,7 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
     private alteredColor = this.uniqueColorGetter();
     private unalteredColor = this.uniqueColorGetter();
 
-    @observable private _currentTabId:
-        | ResultsViewComparisonSubTab
-        | undefined = undefined;
+    @observable private _currentTabId: ResultsViewComparisonSubTab | undefined = undefined;
 
     constructor(
         appStore: AppStore,
@@ -35,8 +31,7 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
 
     @computed get overlapStrategy() {
         return (
-            (this.urlWrapper.query
-                .comparison_overlapStrategy as OverlapStrategy) ||
+            (this.urlWrapper.query.comparison_overlapStrategy as OverlapStrategy) ||
             OverlapStrategy.EXCLUDE
         );
     }
@@ -88,10 +83,8 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
                     nameWithOrdinal: 'Altered group',
                     nameOfEnrichmentDirection: '', //nameOfEnrichmentDirection: "Co-occurrence",
                     count: patientLevel
-                        ? this.resultsViewStore.alteredPatientKeys.result!
-                              .length
-                        : this.resultsViewStore.alteredSampleKeys.result!
-                              .length,
+                        ? this.resultsViewStore.alteredPatientKeys.result!.length
+                        : this.resultsViewStore.alteredSampleKeys.result!.length,
                     nonExistentSamples: [],
                 },
                 {
@@ -101,12 +94,10 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
                     } that do not have alterations in the query gene(s) that have a deep deletion in the listed gene.`,
                     studies: getStudiesAttr(
                         this.resultsViewStore.unalteredSamples.result!,
-                        this.resultsViewStore.unalteredSamples.result!.map(
-                            s => ({
-                                studyId: s.studyId,
-                                patientId: s.patientId,
-                            })
-                        )
+                        this.resultsViewStore.unalteredSamples.result!.map(s => ({
+                            studyId: s.studyId,
+                            patientId: s.patientId,
+                        }))
                     ),
                     origin: studyIds,
                     color: '#0000ff',
@@ -115,10 +106,8 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
                     nameWithOrdinal: 'Unaltered group',
                     nameOfEnrichmentDirection: '', //nameOfEnrichmentDirection: "Mutual exclusivity",
                     count: patientLevel
-                        ? this.resultsViewStore.unalteredPatientKeys.result!
-                              .length
-                        : this.resultsViewStore.unalteredSampleKeys.result!
-                              .length,
+                        ? this.resultsViewStore.unalteredPatientKeys.result!.length
+                        : this.resultsViewStore.unalteredSampleKeys.result!.length,
                     nonExistentSamples: [],
                 },
             ]);

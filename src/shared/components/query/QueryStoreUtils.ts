@@ -1,12 +1,5 @@
-import {
-    CancerStudyQueryUrlParams,
-    normalizeQuery,
-    QueryStore,
-} from './QueryStore';
-import {
-    MolecularProfile,
-    SampleList,
-} from 'shared/api/generated/CBioPortalAPI';
+import { CancerStudyQueryUrlParams, normalizeQuery, QueryStore } from './QueryStore';
+import { MolecularProfile, SampleList } from 'shared/api/generated/CBioPortalAPI';
 import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
 import * as _ from 'lodash';
 import { VirtualStudy } from 'shared/model/VirtualStudy';
@@ -73,9 +66,7 @@ export function nonMolecularProfileParams(
 
     let ret: NonMolecularProfileQueryParams = {
         cancer_study_id:
-            selectableSelectedStudyIds.length === 1
-                ? selectableSelectedStudyIds[0]
-                : 'all',
+            selectableSelectedStudyIds.length === 1 ? selectableSelectedStudyIds[0] : 'all',
         Z_SCORE_THRESHOLD: store.zScoreThreshold,
         RPPA_SCORE_THRESHOLD: store.rppaScoreThreshold,
         data_priority: store.dataTypePriorityCode,
@@ -84,9 +75,7 @@ export function nonMolecularProfileParams(
         case_ids,
         gene_list: encodeURIComponent(normalizeQuery(store.geneQuery) || ' '), // empty string won't work
         geneset_list: normalizeQuery(store.genesetQuery) || ' ', //empty string won't work
-        tab_index: store.forDownloadTab
-            ? 'tab_download'
-            : ('tab_visualize' as any),
+        tab_index: store.forDownloadTab ? 'tab_download' : ('tab_visualize' as any),
         transpose_matrix: store.transposeDataMatrix ? 'on' : undefined,
         Action: 'Submit',
     };
@@ -192,14 +181,10 @@ export function categorizedSamplesCount(
     _.each(sampleLists, sampleList => {
         switch (sampleList.category) {
             case 'all_cases_with_mutation_and_cna_data':
-                mutationCnaSamples[sampleList.studyId] = _.keyBy(
-                    sampleList.sampleIds
-                );
+                mutationCnaSamples[sampleList.studyId] = _.keyBy(sampleList.sampleIds);
                 break;
             case 'all_cases_with_mutation_data':
-                mutationSamples[sampleList.studyId] = _.keyBy(
-                    sampleList.sampleIds
-                );
+                mutationSamples[sampleList.studyId] = _.keyBy(sampleList.sampleIds);
                 break;
             case 'all_cases_with_cna_data':
                 cnaSamples[sampleList.studyId] = _.keyBy(sampleList.sampleIds);
@@ -210,18 +195,13 @@ export function categorizedSamplesCount(
             default: {
                 // this in case if the all cases list is tagged under other category
                 if (sampleList.sampleListId === sampleList.studyId + '_all') {
-                    allSamples[sampleList.studyId] = _.keyBy(
-                        sampleList.sampleIds
-                    );
+                    allSamples[sampleList.studyId] = _.keyBy(sampleList.sampleIds);
                 }
             }
         }
     });
 
-    const selectedVirtualStudyIds = _.map(
-        selectedVirtualStudies,
-        virtualStudy => virtualStudy.id
-    );
+    const selectedVirtualStudyIds = _.map(selectedVirtualStudies, virtualStudy => virtualStudy.id);
     const selectedPhysicalStudyIds = selectedStudies.filter(
         id => !_.includes(selectedVirtualStudyIds, id)
     );
@@ -239,40 +219,22 @@ export function categorizedSamplesCount(
             // check if the study in this virtual study is already in the selected studies list
             // and only add the samples if its not already present
             if (!_.includes(selectedPhysicalStudyIds, study.id)) {
-                filteredMutationSamples[study.id] =
-                    filteredMutationSamples[study.id] || {};
-                filteredCnaSamples[study.id] =
-                    filteredCnaSamples[study.id] || {};
-                filteredMutationCnaSamples[study.id] =
-                    filteredMutationCnaSamples[study.id] || {};
-                filteredallSamples[study.id] =
-                    filteredallSamples[study.id] || {};
+                filteredMutationSamples[study.id] = filteredMutationSamples[study.id] || {};
+                filteredCnaSamples[study.id] = filteredCnaSamples[study.id] || {};
+                filteredMutationCnaSamples[study.id] = filteredMutationCnaSamples[study.id] || {};
+                filteredallSamples[study.id] = filteredallSamples[study.id] || {};
 
                 _.forEach(study.samples, sampleId => {
-                    if (
-                        mutationSamples[study.id] &&
-                        mutationSamples[study.id][sampleId]
-                    ) {
+                    if (mutationSamples[study.id] && mutationSamples[study.id][sampleId]) {
                         filteredMutationSamples[study.id][sampleId] = sampleId;
                     }
-                    if (
-                        cnaSamples[study.id] &&
-                        cnaSamples[study.id][sampleId]
-                    ) {
+                    if (cnaSamples[study.id] && cnaSamples[study.id][sampleId]) {
                         filteredCnaSamples[study.id][sampleId] = sampleId;
                     }
-                    if (
-                        mutationCnaSamples[study.id] &&
-                        mutationCnaSamples[study.id][sampleId]
-                    ) {
-                        filteredMutationCnaSamples[study.id][
-                            sampleId
-                        ] = sampleId;
+                    if (mutationCnaSamples[study.id] && mutationCnaSamples[study.id][sampleId]) {
+                        filteredMutationCnaSamples[study.id][sampleId] = sampleId;
                     }
-                    if (
-                        allSamples[study.id] &&
-                        allSamples[study.id][sampleId]
-                    ) {
+                    if (allSamples[study.id] && allSamples[study.id][sampleId]) {
                         filteredallSamples[study.id][sampleId] = sampleId;
                     }
                 });
@@ -296,10 +258,6 @@ export function categorizedSamplesCount(
             (acc: number, next) => acc + Object.keys(next).length,
             0
         ),
-        all: _.reduce(
-            filteredallSamples,
-            (acc: number, next) => acc + Object.keys(next).length,
-            0
-        ),
+        all: _.reduce(filteredallSamples, (acc: number, next) => acc + Object.keys(next).length, 0),
     };
 }

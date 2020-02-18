@@ -232,12 +232,9 @@ export const mockPropsForCancerSummaryContainer = {
                     mutationType: 'Missense_Mutation',
                     functionalImpactScore: 'M',
                     fisValue: 3.375,
-                    linkXvar:
-                        'getma.org/?cm=var&var=hg19,12,25398281,C,T&fts=all',
-                    linkPdb:
-                        'getma.org/pdb.php?prot=RASK_HUMAN&from=5&to=165&var=G13D',
-                    linkMsa:
-                        'getma.org/?cm=msa&ty=f&p=RASK_HUMAN&rb=5&re=165&var=G13D',
+                    linkXvar: 'getma.org/?cm=var&var=hg19,12,25398281,C,T&fts=all',
+                    linkPdb: 'getma.org/pdb.php?prot=RASK_HUMAN&from=5&to=165&var=G13D',
+                    linkMsa: 'getma.org/?cm=msa&ty=f&p=RASK_HUMAN&rb=5&re=165&var=G13D',
                     ncbiBuild: 'GRCh37',
                     variantType: 'SNP',
                     keyword: 'KRAS G13 missense',
@@ -391,12 +388,9 @@ export const mockPropsForCancerSummaryContainer = {
                     mutationType: 'Missense_Mutation',
                     functionalImpactScore: 'M',
                     fisValue: 3.315,
-                    linkXvar:
-                        'getma.org/?cm=var&var=hg19,17,7577539,G,A&fts=all',
-                    linkPdb:
-                        'getma.org/pdb.php?prot=P53_HUMAN&from=95&to=289&var=R248W',
-                    linkMsa:
-                        'getma.org/?cm=msa&ty=f&p=P53_HUMAN&rb=95&re=289&var=R248W',
+                    linkXvar: 'getma.org/?cm=var&var=hg19,17,7577539,G,A&fts=all',
+                    linkPdb: 'getma.org/pdb.php?prot=P53_HUMAN&from=95&to=289&var=R248W',
+                    linkMsa: 'getma.org/?cm=msa&ty=f&p=P53_HUMAN&rb=95&re=289&var=R248W',
                     ncbiBuild: 'GRCh37',
                     variantType: 'SNP',
                     keyword: 'TP53 R248 missense',
@@ -500,8 +494,7 @@ export const mockPropsForCancerSummaryContainer = {
                     mutationType: 'Nonsense_Mutation',
                     functionalImpactScore: 'NA',
                     fisValue: 0,
-                    linkXvar:
-                        'getma.org/?cm=var&var=hg19,17,7579377,G,A&fts=all',
+                    linkXvar: 'getma.org/?cm=var&var=hg19,17,7579377,G,A&fts=all',
                     linkPdb: 'NA',
                     linkMsa: 'NA',
                     ncbiBuild: 'GRCh37',
@@ -579,8 +572,7 @@ export const mockPropsForCancerSummaryContainer = {
     },
     studies: [
         {
-            name:
-                'Cholangiocarcinoma (National University of Singapore, Nat Genet 2012)',
+            name: 'Cholangiocarcinoma (National University of Singapore, Nat Genet 2012)',
             shortName: 'Cholangiocarcinoma (NUS)',
             description:
                 'Exome Sequencing for Opisthorchis viverrini-related cholangiocarcinoma in 8 O.viverrini-related tumors and matched normal tissue.',
@@ -612,8 +604,7 @@ export const mockPropsForCancerSummaryContainer = {
             },
         },
         {
-            name:
-                'Pancreatic Neuroendocrine Tumors (Johns Hopkins University, Science 2011)',
+            name: 'Pancreatic Neuroendocrine Tumors (Johns Hopkins University, Science 2011)',
             shortName: 'PANET(Johns Hopkins 2011)',
             description:
                 'Whole exome sequencing of 10 pancreatic neuroendocrine tumor patients. <A HREF="https://www.sciencemag.org/content/331/6021/1199/suppl/DC1">',
@@ -647,8 +638,7 @@ export const mockPropsForCancerSummaryContainer = {
     ],
     studyMap: {
         chol_nus_2012: {
-            name:
-                'Cholangiocarcinoma (National University of Singapore, Nat Genet 2012)',
+            name: 'Cholangiocarcinoma (National University of Singapore, Nat Genet 2012)',
             shortName: 'Cholangiocarcinoma (NUS)',
             description:
                 'Exome Sequencing for Opisthorchis viverrini-related cholangiocarcinoma in 8 O.viverrini-related tumors and matched normal tissue.',
@@ -680,8 +670,7 @@ export const mockPropsForCancerSummaryContainer = {
             },
         },
         panet_jhu_2011: {
-            name:
-                'Pancreatic Neuroendocrine Tumors (Johns Hopkins University, Science 2011)',
+            name: 'Pancreatic Neuroendocrine Tumors (Johns Hopkins University, Science 2011)',
             shortName: 'PANET(Johns Hopkins 2011)',
             description:
                 'Whole exome sequencing of 10 pancreatic neuroendocrine tumor patients. <A HREF="https://www.sciencemag.org/content/331/6021/1199/suppl/DC1">',

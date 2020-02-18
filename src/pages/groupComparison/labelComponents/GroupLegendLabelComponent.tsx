@@ -17,9 +17,9 @@ export interface IGroupLegendLabelComponentProps {
     datum?: any;
 }
 
-export const GroupLegendLabelComponent: React.FunctionComponent<
-    IGroupLegendLabelComponentProps
-> = (props: IGroupLegendLabelComponentProps) => {
+export const GroupLegendLabelComponent: React.FunctionComponent<IGroupLegendLabelComponentProps> = (
+    props: IGroupLegendLabelComponentProps
+) => {
     const { uidToGroup, dx, dy, datum, text, ...rest } = props;
 
     const group = uidToGroup[props.text!];
@@ -30,9 +30,7 @@ export const GroupLegendLabelComponent: React.FunctionComponent<
                 group!.ordinal.length > 0
                     ? [
                           <tspan>(</tspan>,
-                          <tspan style={{ fontWeight: 'bold' }}>
-                              {group!.ordinal}
-                          </tspan>,
+                          <tspan style={{ fontWeight: 'bold' }}>{group!.ordinal}</tspan>,
                           <tspan>) </tspan>,
                       ]
                     : undefined
@@ -56,9 +54,7 @@ export const SurvivalTabGroupLegendLabelComponent: React.FunctionComponent<
     const groupUids = JSON.parse(text!) as string[];
     const groups = groupUids.map(uid => uidToGroup[uid]);
     const groupOrdinals = groups.map(group => group.ordinal);
-    const textToTruncate = `Only ${groupOrdinals
-        .map(o => `(${o})`)
-        .join(', ')}`;
+    const textToTruncate = `Only ${groupOrdinals.map(o => `(${o})`).join(', ')}`;
     return (
         <TruncatedTextWithTooltipSVG
             text={textToTruncate}
@@ -71,11 +67,7 @@ export const SurvivalTabGroupLegendLabelComponent: React.FunctionComponent<
                         truncatedText[i - 1] === '(' &&
                         truncatedText[i + 1] === ')';
                     if (bold) {
-                        ret.push(
-                            <tspan style={{ fontWeight: 'bold' }}>
-                                {truncatedText[i]}
-                            </tspan>
-                        );
+                        ret.push(<tspan style={{ fontWeight: 'bold' }}>{truncatedText[i]}</tspan>);
                     } else {
                         ret.push(<tspan>{truncatedText[i]}</tspan>);
                     }
@@ -89,9 +81,7 @@ export const SurvivalTabGroupLegendLabelComponent: React.FunctionComponent<
                         Only{' '}
                         {insertBetween(
                             <span>,&nbsp;</span>,
-                            groups.map(group =>
-                                renderGroupNameWithOrdinal(group)
-                            )
+                            groups.map(group => renderGroupNameWithOrdinal(group))
                         )}
                     </div>
                 );

@@ -30,8 +30,7 @@ export class DefaultMutationMapperFilterApplier implements FilterApplier {
             [DataFilterType.ONCOKB]: this.applyOncoKbFilter,
             [DataFilterType.HOTSPOT]: this.applyHostpotFilter,
             [DataFilterType.MUTATION]: this.applyMutationFilter,
-            [DataFilterType.PROTEIN_IMPACT_TYPE]: this
-                .applyProteinImpactTypeFilter,
+            [DataFilterType.PROTEIN_IMPACT_TYPE]: this.applyProteinImpactTypeFilter,
             [DataFilterType.MUTATION_STATUS]: this.applyMutationStatusFilter,
             ...this.filterAppliersOverride,
         };
@@ -81,11 +80,7 @@ export class DefaultMutationMapperFilterApplier implements FilterApplier {
         return (
             !filter.values ||
             !this.indexedHotspotData.result ||
-            isHotspot(
-                mutation,
-                this.indexedHotspotData.result,
-                defaultHotspotFilter
-            )
+            isHotspot(mutation, this.indexedHotspotData.result, defaultHotspotFilter)
         );
     }
 
@@ -95,18 +90,12 @@ export class DefaultMutationMapperFilterApplier implements FilterApplier {
     }
 
     @autobind
-    protected applyProteinImpactTypeFilter(
-        filter: ProteinImpactTypeFilter,
-        mutation: Mutation
-    ) {
+    protected applyProteinImpactTypeFilter(filter: ProteinImpactTypeFilter, mutation: Mutation) {
         return applyDefaultProteinImpactTypeFilter(filter, mutation);
     }
 
     @autobind
-    protected applyMutationStatusFilter(
-        filter: MutationStatusFilter,
-        mutation: Mutation
-    ) {
+    protected applyMutationStatusFilter(filter: MutationStatusFilter, mutation: Mutation) {
         return applyDefaultMutationStatusFilter(filter, mutation);
     }
 }

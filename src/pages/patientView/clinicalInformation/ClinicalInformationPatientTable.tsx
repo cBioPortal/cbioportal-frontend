@@ -28,10 +28,7 @@ export default class ClinicalInformationPatientTable extends React.Component<
     IClinicalInformationPatientTableProps,
     {}
 > {
-    private getDisplayValue(data: {
-        attribute: string;
-        value: string;
-    }): string {
+    private getDisplayValue(data: { attribute: string; value: string }): string {
         let ret: string;
         switch (data.attribute) {
             case 'Overall Survival (Months)':
@@ -61,9 +58,7 @@ export default class ClinicalInformationPatientTable extends React.Component<
                 // split gene panel name from "TESTPANEL2 (mut)" to ["TESTPANEL2", "(mut)"]
                 const splitGenePanelName = panelName.split(' ');
                 links.push(
-                    <a onClick={() => this.handleClick(splitGenePanelName[0])}>
-                        {panelName}
-                    </a>
+                    <a onClick={() => this.handleClick(splitGenePanelName[0])}>{panelName}</a>
                 );
             }
             if (index < genePanelsArray.length - 1) {
@@ -138,9 +133,7 @@ export default class ClinicalInformationPatientTable extends React.Component<
                 className={styles.patientTable}
                 initialItemsPerPage={SHOW_ALL_PAGE_SIZE}
                 showFilter={this.props.showFilter === false ? false : true}
-                showCopyDownload={
-                    this.props.showCopyDownload === false ? false : true
-                }
+                showCopyDownload={this.props.showCopyDownload === false ? false : true}
             />
         );
     }

@@ -1,13 +1,5 @@
-import {
-    ICivicGene,
-    ICivicVariant,
-    ICivicEntry,
-    ICivicVariantData,
-} from 'shared/model/Civic';
-import {
-    DiscreteCopyNumberData,
-    Mutation,
-} from 'shared/api/generated/CBioPortalAPI';
+import { ICivicGene, ICivicVariant, ICivicEntry, ICivicVariantData } from 'shared/model/Civic';
+import { DiscreteCopyNumberData, Mutation } from 'shared/api/generated/CBioPortalAPI';
 import * as _ from 'lodash';
 
 export function getCivicVariantData(): ICivicVariantData {
@@ -75,8 +67,7 @@ export function getCnaCivicVariants(): ICivicVariant {
                 name: 'AMPLIFICATION',
                 geneId: 4767,
                 description: '',
-                url:
-                    'https://civicdb.org/#/events/genes/4767/summary/variants/591/summary#variant',
+                url: 'https://civicdb.org/#/events/genes/4767/summary/variants/591/summary#variant',
                 evidence: { Predictive: 1 },
             },
         },
@@ -96,8 +87,7 @@ export function getMutationCivicVariants(): ICivicVariant {
                 geneId: 37,
                 description:
                     'PIK3CA E545K/E542K are the second most recurrent PIK3CA mutations in breast cancer, and are highly recurrent mutations in many other cancer types. E545K, and possibly the other mutations in the E545 region, may present patients with a poorer prognosis than patients with either patients with other PIK3CA variant or wild-type PIK3CA. There is also data to suggest that E545/542 mutations may confer resistance to EGFR inhibitors like cetuximab. While very prevalent, targeted therapies for variants in PIK3CA are still in early clinical trial phases.',
-                url:
-                    'https://civicdb.org/#/events/genes/37/summary/variants/104/summary#variant',
+                url: 'https://civicdb.org/#/events/genes/37/summary/variants/104/summary#variant',
                 evidence: { Prognostic: 1, Predictive: 14 },
             },
         },
@@ -196,8 +186,7 @@ export function getExpectedCivicEntry(): ICivicEntry {
                 geneId: 37,
                 description:
                     'PIK3CA E545K/E542K are the second most recurrent PIK3CA mutations in breast cancer, and are highly recurrent mutations in many other cancer types. E545K, and possibly the other mutations in the E545 region, may present patients with a poorer prognosis than patients with either patients with other PIK3CA variant or wild-type PIK3CA. There is also data to suggest that E545/542 mutations may confer resistance to EGFR inhibitors like cetuximab. While very prevalent, targeted therapies for variants in PIK3CA are still in early clinical trial phases.',
-                url:
-                    'https://civicdb.org/#/events/genes/37/summary/variants/104/summary#variant',
+                url: 'https://civicdb.org/#/events/genes/37/summary/variants/104/summary#variant',
                 evidence: { Prognostic: 1, Predictive: 14 },
             },
         },
@@ -215,8 +204,7 @@ export function getExpectedCnaCivicEntry(): ICivicEntry {
                 name: 'AMPLIFICATION',
                 geneId: 4767,
                 description: '',
-                url:
-                    'https://civicdb.org/#/events/genes/4767/summary/variants/591/summary#variant',
+                url: 'https://civicdb.org/#/events/genes/4767/summary/variants/591/summary#variant',
                 evidence: { Predictive: 1 },
             },
         },

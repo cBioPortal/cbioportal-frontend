@@ -9,10 +9,7 @@ import { getDocsUrl } from '../../api/urls';
 import './gfm.css';
 
 function isMarkDown(url: string) {
-    return (
-        !AppConfig.serverConfig.skin_documentation_markdown === false &&
-        /\.md$/.test(url)
-    );
+    return !AppConfig.serverConfig.skin_documentation_markdown === false && /\.md$/.test(url);
 }
 
 function setImageRoot(path: string) {
@@ -55,14 +52,9 @@ export default class StaticContent extends React.Component<
             <div>
                 {this.props.title && <h1>{this.props.title}</h1>}
 
-                <LoadingIndicator
-                    isLoading={this.source.isPending}
-                    size={'big'}
-                    center={true}
-                />
+                <LoadingIndicator isLoading={this.source.isPending} size={'big'} center={true} />
 
-                {this.source.isComplete &&
-                    this.content(this.source.result!, this.url)}
+                {this.source.isComplete && this.content(this.source.result!, this.url)}
             </div>
         );
     }

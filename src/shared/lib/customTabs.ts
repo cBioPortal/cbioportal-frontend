@@ -6,9 +6,7 @@ import { autorun } from 'mobx';
 export function loadCustomTabDeps(tab: any) {
     if (tab.pathsToCSS) {
         tab.pathsToCSS.forEach((str: string) => {
-            $('head').append(
-                `<link rel="stylesheet" href=${str} type="text/css" />`
-            );
+            $('head').append(`<link rel="stylesheet" href=${str} type="text/css" />`);
         });
     }
     if (tab.pathsToJs) {
@@ -41,14 +39,7 @@ export function showCustomTab(
 
     const runCallback = (tab: ICustomTabConfiguration) => {
         if (getBrowserWindow()[tab.mountCallbackName]) {
-            getBrowserWindow()[tab.mountCallbackName](
-                div,
-                tab,
-                url,
-                store,
-                autorun,
-                isUnmount
-            );
+            getBrowserWindow()[tab.mountCallbackName](div, tab, url, store, autorun, isUnmount);
         } else {
             alert(`Callback for tab ${tab.title} not found`);
         }

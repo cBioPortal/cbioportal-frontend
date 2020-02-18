@@ -10,12 +10,7 @@ import postcssUrl from 'postcss-url';
 import svgr from '@svgr/rollup';
 
 // common rollup config options for all libraries under packages
-export default function getRollupOptions(
-    input,
-    mainOutput,
-    moduleOutput,
-    styles
-) {
+export default function getRollupOptions(input, mainOutput, moduleOutput, styles) {
     return {
         input: input,
         output: [

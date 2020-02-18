@@ -4,12 +4,7 @@ import { action, computed } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
-import {
-    CheckBoxType,
-    getOptionLabel,
-    getSelectedValuesMap,
-    Option,
-} from './CheckedSelectUtils';
+import { CheckBoxType, getOptionLabel, getSelectedValuesMap, Option } from './CheckedSelectUtils';
 
 type ChecklistProps = {
     onChange: (values: { value: string }[]) => void;
@@ -26,10 +21,7 @@ type ChecklistProps = {
     numberOfColumnsPerRow?: number;
 };
 
-function generateTableRows(
-    selectComponents: JSX.Element[],
-    numberOfColumnsPerRow: number = 1
-) {
+function generateTableRows(selectComponents: JSX.Element[], numberOfColumnsPerRow: number = 1) {
     return _.chunk(selectComponents, numberOfColumnsPerRow).map(components => (
         <tr>{components}</tr>
     ));
@@ -62,16 +54,8 @@ export default class Checklist extends React.Component<ChecklistProps, {}> {
     @autobind
     private getOptionLabel(option: Option): JSX.Element {
         return this.props.getOptionLabel
-            ? this.props.getOptionLabel(
-                  option,
-                  this.selectedValues,
-                  this.props.checkBoxType
-              )
-            : getOptionLabel(
-                  option,
-                  this.selectedValues,
-                  this.props.checkBoxType
-              );
+            ? this.props.getOptionLabel(option, this.selectedValues, this.props.checkBoxType)
+            : getOptionLabel(option, this.selectedValues, this.props.checkBoxType);
     }
 
     @autobind
@@ -108,9 +92,7 @@ export default class Checklist extends React.Component<ChecklistProps, {}> {
         }
         // unselect if selected
         else if (this.selectedValues[value]) {
-            this.props.onChange(
-                this.props.value.filter(v => v.value !== value)
-            );
+            this.props.onChange(this.props.value.filter(v => v.value !== value));
         }
         // select if not selected
         else {

@@ -7,10 +7,7 @@ import { Alignment } from 'cbioportal-frontend-commons';
  * @author Selcuk Onur Sumer
  */
 
-export function initPdbAlignment(
-    alignmentString: string,
-    uniprotFrom: number
-): Alignment {
+export function initPdbAlignment(alignmentString: string, uniprotFrom: number): Alignment {
     return initPdbAlignmentWithPartialProps({
         midlineAlign: alignmentString,
         pdbAlign: alignmentString,
@@ -45,9 +42,7 @@ export function emptyPdbAlignment(): Alignment {
     };
 }
 
-function initPdbAlignmentWithPartialProps(props: {
-    [key: string]: any;
-}): Alignment {
+function initPdbAlignmentWithPartialProps(props: { [key: string]: any }): Alignment {
     const alignment = emptyPdbAlignment();
 
     _.merge(alignment, props);

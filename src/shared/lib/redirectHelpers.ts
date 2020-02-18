@@ -5,9 +5,7 @@ import { PatientViewUrlParams } from '../../pages/patientView/PatientViewPage';
 import AppConfig from 'appConfig';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 
-export function restoreRouteAfterRedirect(injected: {
-    routing: ExtendedRouterStore;
-}) {
+export function restoreRouteAfterRedirect(injected: { routing: ExtendedRouterStore }) {
     const win = getBrowserWindow();
 
     const key = injected.routing.location.query.key;
@@ -30,12 +28,7 @@ export function restoreRouteAfterRedirect(injected: {
 // from external posts
 export function handlePostedSubmission(urlWrapper: ResultsViewURLWrapper) {
     if (getBrowserWindow().postData) {
-        urlWrapper.updateURL(
-            getBrowserWindow().postData,
-            'results',
-            true,
-            true
-        );
+        urlWrapper.updateURL(getBrowserWindow().postData, 'results', true, true);
         // we don't want this data to be around anymore once we've tranferred it to URL
         getBrowserWindow().postData = null;
     }
@@ -71,10 +64,7 @@ export function handleCaseDO() {
         newParams.sampleId = currentQuery.sample_id;
     }
 
-    if (
-        routingStore.location.hash &&
-        routingStore.location.hash.includes('nav_case_ids')
-    ) {
+    if (routingStore.location.hash && routingStore.location.hash.includes('nav_case_ids')) {
         routingStore.location.hash = routingStore.location.hash!.replace(
             /nav_case_ids/,
             'navCaseIds'
@@ -115,11 +105,7 @@ export function handleLinkOut() {
 }
 
 export function handleStudyDO() {
-    (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute(
-        {},
-        '/study',
-        false
-    );
+    (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute({}, '/study', false);
 }
 
 export function handleIndexDO() {
@@ -135,19 +121,10 @@ export function handleIndexDO() {
             data.cancer_study_id = undefined;
         }
 
-        (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute(
-            data,
-            '/results'
-        );
+        (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute(data, '/results');
     } else if (/session_id/.test(window.location.search)) {
-        (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute(
-            {},
-            '/results'
-        );
+        (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute({}, '/results');
     } else {
-        (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute(
-            {},
-            '/'
-        );
+        (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute({}, '/');
     }
 }

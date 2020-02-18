@@ -54,9 +54,7 @@ describe('CustomCaseSelectionUtils', () => {
                 false
             );
             assert.isTrue(groups.length === 1);
-            assert.isTrue(
-                groups[0].name === DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT
-            );
+            assert.isTrue(groups[0].name === DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT);
         });
 
         it("group name should be NA when it's specified by user", () => {
@@ -76,9 +74,7 @@ describe('CustomCaseSelectionUtils', () => {
                 true
             );
             assert.isTrue(groups.length === 2);
-            assert.isTrue(
-                groups[0].name === DEFAULT_GROUP_NAME_WITH_USER_INPUT
-            );
+            assert.isTrue(groups[0].name === DEFAULT_GROUP_NAME_WITH_USER_INPUT);
             assert.isTrue(groups[1].name === 'Group1');
         });
     });
@@ -196,10 +192,7 @@ describe('CustomCaseSelectionUtils', () => {
             );
 
             assert.isTrue(result.warning.length !== 0);
-            assert.isTrue(
-                _.keyBy(result.warning, 'code')[CodeEnum.INVALID_CASE_ID] !==
-                    undefined
-            );
+            assert.isTrue(_.keyBy(result.warning, 'code')[CodeEnum.INVALID_CASE_ID] !== undefined);
         });
 
         it('Give error for unknown study ids', () => {
@@ -228,10 +221,7 @@ describe('CustomCaseSelectionUtils', () => {
                 ['chol_nus_2012', 'lgg_tcga']
             );
             assert.isTrue(result.error.length !== 0);
-            assert.isTrue(
-                _.keyBy(result.error, 'code')[CodeEnum.STUDY_NOT_SELECTED] !==
-                    undefined
-            );
+            assert.isTrue(_.keyBy(result.error, 'code')[CodeEnum.STUDY_NOT_SELECTED] !== undefined);
         });
 
         it('In single study, study id does not need to be specified', () => {
@@ -349,10 +339,7 @@ describe('CustomCaseSelectionUtils', () => {
             );
             assert.isTrue(noGroupNameResult.warning.length === 1);
             assert.isTrue(noGroupNameResult.error.length === 0);
-            assert.equal(
-                noGroupNameResult.warning[0].code,
-                CodeEnum.POTENTIAL_OVERLAP
-            );
+            assert.equal(noGroupNameResult.warning[0].code, CodeEnum.POTENTIAL_OVERLAP);
         });
     });
 });

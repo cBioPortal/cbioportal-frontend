@@ -53,9 +53,7 @@ export default class DatasetPage extends React.Component<{}, {}> {
             <PageLayout className={'whiteBackground'}>
                 <div className={styles.dataSets}>
                     <Helmet>
-                        <title>
-                            {'cBioPortal for Cancer Genomics::Datasets'}
-                        </title>
+                        <title>{'cBioPortal for Cancer Genomics::Datasets'}</title>
                     </Helmet>
 
                     <h1>Datasets</h1>

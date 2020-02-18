@@ -2,13 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import { inject, Observer, observer } from 'mobx-react';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
-import {
-    computed,
-    IReactionDisposer,
-    reaction,
-    observable,
-    action,
-} from 'mobx';
+import { computed, IReactionDisposer, reaction, observable, action } from 'mobx';
 import {
     CustomChart,
     StudyViewPageStore,
@@ -38,20 +32,13 @@ import CustomCaseSelection from './addChartButton/customCaseSelection/CustomCase
 import { AppStore } from '../../AppStore';
 import ActionButtons from './studyPageHeader/ActionButtons';
 import onMobxPromise from '../../shared/lib/onMobxPromise';
-import {
-    GACustomFieldsEnum,
-    serializeEvent,
-    trackEvent,
-} from '../../shared/lib/tracking';
+import { GACustomFieldsEnum, serializeEvent, trackEvent } from '../../shared/lib/tracking';
 import ComparisonGroupManager from '../groupComparison/comparisonGroupManager/ComparisonGroupManager';
 import classNames from 'classnames';
 import AppConfig from 'appConfig';
 import SocialAuthButton from '../../shared/components/SocialAuthButton';
 import { ServerConfigHelpers } from '../../config/config';
-import {
-    getStudyViewTabId,
-    getButtonNameWithDownPointer,
-} from './StudyViewUtils';
+import { getStudyViewTabId, getButtonNameWithDownPointer } from './StudyViewUtils';
 import { Alert, Modal } from 'react-bootstrap';
 import 'cbioportal-frontend-commons/dist/styles.css';
 import 'react-grid-layout/css/styles.css';
@@ -91,10 +78,7 @@ export class StudyResultsSummary extends React.Component<
 
 @inject('routing', 'appStore')
 @observer
-export default class StudyViewPage extends React.Component<
-    IStudyViewPageProps,
-    {}
-> {
+export default class StudyViewPage extends React.Component<IStudyViewPageProps, {}> {
     private store: StudyViewPageStore;
     private enableCustomSelectionInTabs = [
         StudyViewPageTabKeyEnum.SUMMARY,
@@ -122,19 +106,12 @@ export default class StudyViewPage extends React.Component<
         this.queryReaction = reaction(
             () => [props.routing.location.query, props.routing.location.hash],
             ([query, hash]) => {
-                if (
-                    !getBrowserWindow().globalStores.routing.location.pathname.includes(
-                        '/study'
-                    )
-                ) {
+                if (!getBrowserWindow().globalStores.routing.location.pathname.includes('/study')) {
                     return;
                 }
 
                 this.store.updateCurrentTab(
-                    getStudyViewTabId(
-                        getBrowserWindow().globalStores.routing.location
-                            .pathname
-                    )
+                    getStudyViewTabId(getBrowserWindow().globalStores.routing.location.pathname)
                 );
                 const newStudyViewFilter: StudyViewURLQuery = _.pick(query, [
                     'id',
@@ -154,12 +131,7 @@ export default class StudyViewPage extends React.Component<
                         newStudyViewFilter.filters = filters[1];
                     }
                 }
-                if (
-                    !_.isEqual(
-                        newStudyViewFilter,
-                        this.store.studyViewQueryFilter
-                    )
-                ) {
+                if (!_.isEqual(newStudyViewFilter, this.store.studyViewQueryFilter)) {
                     this.store.updateStoreFromURL(newStudyViewFilter);
                     this.store.studyViewQueryFilter = newStudyViewFilter;
                 }
@@ -167,31 +139,23 @@ export default class StudyViewPage extends React.Component<
             { fireImmediately: true }
         );
 
-        onMobxPromise(
-            this.store.queriedPhysicalStudyIds,
-            (strArr: string[]) => {
-                trackEvent({
-                    category: 'studyPage',
-                    action: 'studyPageLoad',
-                    label: strArr.join(',') + ',',
-                    fieldsObject: {
-                        [GACustomFieldsEnum.VirtualStudy]: (
-                            this.store.filteredVirtualStudies.result!.length > 0
-                        ).toString(),
-                    },
-                });
-            }
-        );
+        onMobxPromise(this.store.queriedPhysicalStudyIds, (strArr: string[]) => {
+            trackEvent({
+                category: 'studyPage',
+                action: 'studyPageLoad',
+                label: strArr.join(',') + ',',
+                fieldsObject: {
+                    [GACustomFieldsEnum.VirtualStudy]: (
+                        this.store.filteredVirtualStudies.result!.length > 0
+                    ).toString(),
+                },
+            });
+        });
     }
 
     componentDidMount() {
         // make the route as the default tab value
-        this.props.routing.updateRoute(
-            {},
-            `study/${this.store.currentTab}`,
-            false,
-            true
-        );
+        this.props.routing.updateRoute({}, `study/${this.store.currentTab}`, false, true);
     }
 
     private handleTabChange(id: string) {
@@ -212,11 +176,9 @@ export default class StudyViewPage extends React.Component<
     }
 
     @computed get bookmarkUrl() {
-        return `${window.location.protocol}//${window.location.host}${
-            window.location.pathname
-        }${window.location.search}#filterJson=${JSON.stringify(
-            this.store.filters
-        )}`;
+        return `${window.location.protocol}//${window.location.host}${window.location.pathname}${
+            window.location.search
+        }#filterJson=${JSON.stringify(this.store.filters)}`;
     }
 
     private chartDataPromises = remoteData({
@@ -243,9 +205,7 @@ export default class StudyViewPage extends React.Component<
     get addChartButtonText() {
         if (this.store.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
             return getButtonNameWithDownPointer('Charts');
-        } else if (
-            this.store.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA
-        ) {
+        } else if (this.store.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
             return getButtonNameWithDownPointer('Columns');
         } else {
             return '';
@@ -274,18 +234,14 @@ export default class StudyViewPage extends React.Component<
                     placement="bottomLeft"
                     destroyTooltipOnHide={true}
                     onPopupAlign={(tooltipEl: any) => {
-                        const arrowEl = tooltipEl.querySelector(
-                            '.rc-tooltip-arrow'
-                        );
+                        const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
                         arrowEl.style.right = '10px';
                     }}
                     onVisibleChange={visible => {
                         this.showGroupsTooltip = !!visible;
                     }}
                     getTooltipContainer={() =>
-                        document.getElementById(
-                            'comparisonGroupManagerContainer'
-                        )!
+                        document.getElementById('comparisonGroupManagerContainer')!
                     }
                     overlay={
                         <div style={{ width: 350 }}>
@@ -293,24 +249,18 @@ export default class StudyViewPage extends React.Component<
                                 <ComparisonGroupManager store={this.store} />
                             ) : (
                                 <span>
-                                    Please log in to use the custom groups
-                                    feature to save and compare sub-cohorts.
+                                    Please log in to use the custom groups feature to save and
+                                    compare sub-cohorts.
                                     <If
                                         condition={
-                                            AppConfig.serverConfig
-                                                .authenticationMethod &&
+                                            AppConfig.serverConfig.authenticationMethod &&
                                             AppConfig.serverConfig.authenticationMethod.includes(
                                                 'social_auth'
                                             )
                                         }
                                     >
-                                        <div
-                                            className={'text-center'}
-                                            style={{ padding: 20 }}
-                                        >
-                                            <SocialAuthButton
-                                                appStore={this.props.appStore}
-                                            />
+                                        <div className={'text-center'} style={{ padding: 20 }}>
+                                            <SocialAuthButton appStore={this.props.appStore} />
                                         </div>
                                     </If>
                                 </span>
@@ -384,44 +334,29 @@ export default class StudyViewPage extends React.Component<
                                 <MSKTabs
                                     id="studyViewTabs"
                                     activeTabId={this.store.currentTab}
-                                    onTabClick={(id: string) =>
-                                        this.handleTabChange(id)
-                                    }
+                                    onTabClick={(id: string) => this.handleTabChange(id)}
                                     className="mainTabs"
                                     unmountOnHide={false}
                                 >
                                     <MSKTab
                                         key={0}
                                         id={StudyViewPageTabKeyEnum.SUMMARY}
-                                        linkText={
-                                            StudyViewPageTabDescriptions.SUMMARY
-                                        }
+                                        linkText={StudyViewPageTabDescriptions.SUMMARY}
                                     >
-                                        <StudySummaryTab
-                                            store={this.store}
-                                        ></StudySummaryTab>
+                                        <StudySummaryTab store={this.store}></StudySummaryTab>
                                     </MSKTab>
                                     <MSKTab
                                         key={1}
-                                        id={
-                                            StudyViewPageTabKeyEnum.CLINICAL_DATA
-                                        }
-                                        linkText={
-                                            StudyViewPageTabDescriptions.CLINICAL_DATA
-                                        }
+                                        id={StudyViewPageTabKeyEnum.CLINICAL_DATA}
+                                        linkText={StudyViewPageTabDescriptions.CLINICAL_DATA}
                                     >
                                         <ClinicalDataTab store={this.store} />
                                     </MSKTab>
                                     <MSKTab
                                         key={2}
                                         id={StudyViewPageTabKeyEnum.HEATMAPS}
-                                        linkText={
-                                            StudyViewPageTabDescriptions.HEATMAPS
-                                        }
-                                        hide={
-                                            this.store.MDACCHeatmapStudyMeta
-                                                .result.length === 0
-                                        }
+                                        linkText={StudyViewPageTabDescriptions.HEATMAPS}
+                                        hide={this.store.MDACCHeatmapStudyMeta.result.length === 0}
                                     >
                                         <IFrameLoader
                                             className="mdacc-heatmap-iframe"
@@ -431,19 +366,13 @@ export default class StudyViewPage extends React.Component<
                                     <MSKTab
                                         key={3}
                                         id={StudyViewPageTabKeyEnum.CN_SEGMENTS}
-                                        linkText={
-                                            StudyViewPageTabDescriptions.CN_SEGMENTS
-                                        }
+                                        linkText={StudyViewPageTabDescriptions.CN_SEGMENTS}
                                         hide={
-                                            !this.store
-                                                .initialMolecularProfileSampleCounts
+                                            !this.store.initialMolecularProfileSampleCounts
                                                 .result ||
                                             !(
-                                                this.store
-                                                    .initialMolecularProfileSampleCounts
-                                                    .result
-                                                    .numberOfCNSegmentSamples >
-                                                0
+                                                this.store.initialMolecularProfileSampleCounts
+                                                    .result.numberOfCNSegmentSamples > 0
                                             )
                                         }
                                     >
@@ -458,24 +387,18 @@ export default class StudyViewPage extends React.Component<
                                             const summary = (
                                                 <StudyResultsSummary
                                                     store={this.store}
-                                                    appStore={
-                                                        this.props.appStore
-                                                    }
+                                                    appStore={this.props.appStore}
                                                     loadingComplete={
-                                                        this.chartDataPromises
-                                                            .isComplete
+                                                        this.chartDataPromises.isComplete
                                                     }
                                                 />
                                             );
                                             const buttons = (
                                                 <ActionButtons
                                                     store={this.store}
-                                                    appStore={
-                                                        this.props.appStore
-                                                    }
+                                                    appStore={this.props.appStore}
                                                     loadingComplete={
-                                                        this.chartDataPromises
-                                                            .isComplete
+                                                        this.chartDataPromises.isComplete
                                                     }
                                                 />
                                             );
@@ -490,41 +413,27 @@ export default class StudyViewPage extends React.Component<
                                                     {() => {
                                                         return (
                                                             <div
-                                                                className={
-                                                                    styles.studyFilterResult
-                                                                }
+                                                                className={styles.studyFilterResult}
                                                             >
                                                                 <If
                                                                     condition={
-                                                                        this
-                                                                            .store
-                                                                            .selectedSamples
+                                                                        this.store.selectedSamples
                                                                             .isComplete
                                                                     }
                                                                 >
                                                                     <Then>
-                                                                        {
-                                                                            summary
-                                                                        }
-                                                                        {
-                                                                            buttons
-                                                                        }
+                                                                        {summary}
+                                                                        {buttons}
                                                                     </Then>
                                                                     <Else>
                                                                         <LoadingIndicator
-                                                                            isLoading={
-                                                                                true
-                                                                            }
-                                                                            size={
-                                                                                'small'
-                                                                            }
+                                                                            isLoading={true}
+                                                                            size={'small'}
                                                                             className={
                                                                                 styles.selectedInfoLoadingIndicator
                                                                             }
                                                                         />
-                                                                        {
-                                                                            buttons
-                                                                        }
+                                                                        {buttons}
                                                                     </Else>
                                                                 </If>
                                                             </div>
@@ -546,10 +455,7 @@ export default class StudyViewPage extends React.Component<
                                         ) && (
                                             <>
                                                 <DefaultTooltip
-                                                    visible={
-                                                        this
-                                                            .showCustomSelectTooltip
-                                                    }
+                                                    visible={this.showCustomSelectTooltip}
                                                     trigger={['click']}
                                                     placement={'bottomLeft'}
                                                     onVisibleChange={visible =>
@@ -564,26 +470,19 @@ export default class StudyViewPage extends React.Component<
                                                         >
                                                             <CustomCaseSelection
                                                                 allSamples={
-                                                                    this.store
-                                                                        .samples
-                                                                        .result
+                                                                    this.store.samples.result
                                                                 }
                                                                 selectedSamples={
-                                                                    this.store
-                                                                        .selectedSamples
+                                                                    this.store.selectedSamples
                                                                         .result
                                                                 }
-                                                                disableGrouping={
-                                                                    true
-                                                                }
+                                                                disableGrouping={true}
                                                                 queriedStudies={
                                                                     this.store
                                                                         .queriedPhysicalStudyIds
                                                                         .result
                                                                 }
-                                                                onSubmit={(
-                                                                    chart: CustomChart
-                                                                ) => {
+                                                                onSubmit={(chart: CustomChart) => {
                                                                     this.showCustomSelectTooltip = false;
                                                                     this.store.updateCustomSelect(
                                                                         chart
@@ -601,10 +500,7 @@ export default class StudyViewPage extends React.Component<
                                                                     .showCustomSelectTooltip,
                                                             }
                                                         )}
-                                                        aria-pressed={
-                                                            this
-                                                                .showCustomSelectTooltip
-                                                        }
+                                                        aria-pressed={this.showCustomSelectTooltip}
                                                         data-test="custom-selection-button"
                                                         style={{
                                                             marginLeft: '10px',
@@ -621,13 +517,9 @@ export default class StudyViewPage extends React.Component<
                                             this.store.currentTab
                                         ) && (
                                             <AddChartButton
-                                                buttonText={
-                                                    this.addChartButtonText
-                                                }
+                                                buttonText={this.addChartButtonText}
                                                 store={this.store}
-                                                currentTab={
-                                                    this.store.currentTab
-                                                }
+                                                currentTab={this.store.currentTab}
                                                 addChartOverlayClassName="studyViewAddChartOverlay"
                                                 disableCustomTab={
                                                     this.store.currentTab ===
@@ -641,26 +533,19 @@ export default class StudyViewPage extends React.Component<
 
                                         <Modal
                                             bsSize={'small'}
-                                            show={
-                                                this
-                                                    .showReturnToDefaultChartListModal
-                                            }
+                                            show={this.showReturnToDefaultChartListModal}
                                             onHide={() => {
                                                 this.showReturnToDefaultChartListModal = false;
                                             }}
                                             keyboard
                                         >
                                             <Modal.Header closeButton>
-                                                <Modal.Title>
-                                                    Reset charts
-                                                </Modal.Title>
+                                                <Modal.Title>Reset charts</Modal.Title>
                                             </Modal.Header>
                                             <Modal.Body>
                                                 <div>
-                                                    Please confirm that you
-                                                    would like to replace the
-                                                    current charts with the
-                                                    default list.
+                                                    Please confirm that you would like to replace
+                                                    the current charts with the default list.
                                                 </div>
                                             </Modal.Body>
                                             <Modal.Footer>
@@ -710,11 +595,7 @@ export default class StudyViewPage extends React.Component<
 
     render() {
         return (
-            <PageLayout
-                noMargin={true}
-                hideFooter={true}
-                className={'subhead-dark'}
-            >
+            <PageLayout noMargin={true} hideFooter={true} className={'subhead-dark'}>
                 {this.content()}
             </PageLayout>
         );

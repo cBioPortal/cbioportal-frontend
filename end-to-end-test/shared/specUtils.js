@@ -1,17 +1,13 @@
 const clipboardy = require('clipboardy');
 
 function waitForStudyQueryPage(timeout) {
-    $('div[data-test="cancerTypeListContainer"]').waitForExist(
-        timeout || 10000
-    );
+    $('div[data-test="cancerTypeListContainer"]').waitForExist(timeout || 10000);
 }
 
 function waitForGeneQueryPage(timeout) {
     // wait until fade effect on studyList has finished (if running in forkedMode)
     $('[data-test=studyList]').waitForExist(timeout, true);
-    $('div[data-test="molecularProfileSelector"]').waitForExist(
-        timeout || 10000
-    );
+    $('div[data-test="molecularProfileSelector"]').waitForExist(timeout || 10000);
 }
 
 function waitForPlotsTab(timeout) {
@@ -24,12 +20,8 @@ function waitForCoExpressionTab(timeout) {
 
 function waitForPatientView(timeout) {
     $('#patientViewPageTabs').waitForExist(timeout || 20000);
-    $('[data-test=patientview-copynumber-table]').waitForVisible(
-        timeout || 20000
-    );
-    $('[data-test=patientview-mutation-table]').waitForVisible(
-        timeout || 20000
-    );
+    $('[data-test=patientview-copynumber-table]').waitForVisible(timeout || 20000);
+    $('[data-test=patientview-mutation-table]').waitForVisible(timeout || 20000);
 }
 
 function waitForOncoprint(timeout) {
@@ -38,8 +30,7 @@ function waitForOncoprint(timeout) {
         return (
             !browser.isExisting('.oncoprintLoadingIndicator') && // wait for loading indicator to hide, and
             browser.isExisting('#oncoprintDiv svg rect') && // as a proxy for oncoprint being rendered, wait for an svg rectangle to appear in the legend
-            browser.getCssProperty('.oncoprintContainer', 'opacity').value ===
-                1 && // oncoprint has faded in
+            browser.getCssProperty('.oncoprintContainer', 'opacity').value === 1 && // oncoprint has faded in
             $('.oncoprint__controls').isExisting()
         ); // oncoprint controls are showing
     }, timeout);
@@ -70,8 +61,7 @@ function setResultsPageSettingsMenuOpen(open) {
 
 function setOncoprintMutationsMenuOpen(open) {
     const mutationColorMenuButton = '#mutationColorDropdown';
-    const mutationColorMenuDropdown =
-        'div.oncoprint__controls__mutation_color_menu';
+    const mutationColorMenuDropdown = 'div.oncoprint__controls__mutation_color_menu';
     browser.moveToObject('div.oncoprint__controls');
     browser.waitForVisible(mutationColorMenuButton);
     browser.waitUntil(
@@ -89,12 +79,7 @@ function setOncoprintMutationsMenuOpen(open) {
     );
 }
 
-function setDropdownOpen(
-    open,
-    button_selector,
-    dropdown_selector,
-    failure_message
-) {
+function setDropdownOpen(open, button_selector, dropdown_selector, failure_message) {
     browser.waitUntil(
         () => {
             if (open === browser.isVisible(dropdown_selector)) {
@@ -139,8 +124,8 @@ function showGsva() {
 function waitForNumberOfStudyCheckboxes(expectedNumber, text) {
     browser.waitUntil(() => {
         var ret =
-            browser.elements('[data-test="cancerTypeListContainer"] > ul > ul')
-                .value.length === expectedNumber;
+            browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length ===
+            expectedNumber;
         if (text && ret) {
             ret = browser.isExisting(
                 '[data-test="cancerTypeListContainer"] > ul > ul > ul > li:nth-child(2) > label > span'
@@ -159,10 +144,8 @@ function waitForNumberOfStudyCheckboxes(expectedNumber, text) {
 function getNthOncoprintTrackOptionsElements(n) {
     // n is one-indexed
 
-    const button_selector =
-        '#oncoprintDiv .oncoprintjs__track_options__toggle_btn_img.nth-' + n;
-    const dropdown_selector =
-        '#oncoprintDiv .oncoprintjs__track_options__dropdown.nth-' + n;
+    const button_selector = '#oncoprintDiv .oncoprintjs__track_options__toggle_btn_img.nth-' + n;
+    const dropdown_selector = '#oncoprintDiv .oncoprintjs__track_options__dropdown.nth-' + n;
 
     return {
         button: $(button_selector),
@@ -172,8 +155,7 @@ function getNthOncoprintTrackOptionsElements(n) {
     };
 }
 
-const useExternalFrontend = !process.env
-    .FRONTEND_TEST_DO_NOT_LOAD_EXTERNAL_FRONTEND;
+const useExternalFrontend = !process.env.FRONTEND_TEST_DO_NOT_LOAD_EXTERNAL_FRONTEND;
 
 const useLocalDist = process.env.FRONTEND_TEST_USE_LOCAL_DIST;
 
@@ -232,10 +214,7 @@ function getNumberOfStudyViewCharts() {
 }
 
 function setInputText(selector, text) {
-    browser.setValue(
-        selector,
-        '\uE003'.repeat(browser.getValue(selector).length) + text
-    );
+    browser.setValue(selector, '\uE003'.repeat(browser.getValue(selector).length) + text);
 }
 
 function getReactSelectOptions(parent) {
@@ -358,11 +337,9 @@ function getOncoprintGroupHeaderOptionsElements(trackGroupIndex) {
     //trackGroupIndex is 0-indexed
 
     const button_selector =
-        '#oncoprintDiv .oncoprintjs__header__toggle_btn_img.track-group-' +
-        trackGroupIndex;
+        '#oncoprintDiv .oncoprintjs__header__toggle_btn_img.track-group-' + trackGroupIndex;
     const dropdown_selector =
-        '#oncoprintDiv .oncoprintjs__header__dropdown.track-group-' +
-        trackGroupIndex;
+        '#oncoprintDiv .oncoprintjs__header__dropdown.track-group-' + trackGroupIndex;
 
     return {
         button: $(button_selector),

@@ -1,8 +1,5 @@
 import { assert, expect } from 'chai';
-import {
-    Geneset,
-    GenesetHierarchyInfo,
-} from 'shared/api/generated/CBioPortalAPIInternal';
+import { Geneset, GenesetHierarchyInfo } from 'shared/api/generated/CBioPortalAPIInternal';
 import { ObservableMap } from 'mobx';
 import {
     getGenesetsFromHierarchy,
@@ -49,9 +46,7 @@ describe('GenesetsSelectorStore', () => {
             },
         ];
         it('builds the data for the volcano plot table with the correct values', () => {
-            const volcanoPlotTableData = getGenesetsFromHierarchy(
-                hierarchyData
-            );
+            const volcanoPlotTableData = getGenesetsFromHierarchy(hierarchyData);
             assert.deepEqual(volcanoPlotTableData, [
                 {
                     description: 'AKT_UP.V1_DN',
@@ -78,25 +73,16 @@ describe('GenesetsSelectorStore', () => {
         it('builds the data for the volcano plot graph with the correct values', () => {
             const map_genesets_selected_volcano = new ObservableMap<boolean>();
             map_genesets_selected_volcano.set('AKT_UP.V1_DN', true);
-            const graphData = getVolcanoPlotData(
-                genesets,
-                map_genesets_selected_volcano
-            );
+            const graphData = getVolcanoPlotData(genesets, map_genesets_selected_volcano);
             assert.deepEqual(graphData, [
                 {
                     x: 0.1986,
-                    y: -(
-                        Math.log(genesets[0].representativePvalue) /
-                        Math.log(10)
-                    ),
+                    y: -(Math.log(genesets[0].representativePvalue) / Math.log(10)),
                     fill: 'tomato',
                 },
                 {
                     x: 0.3945,
-                    y: -(
-                        Math.log(genesets[1].representativePvalue) /
-                        Math.log(10)
-                    ),
+                    y: -(Math.log(genesets[1].representativePvalue) / Math.log(10)),
                     fill: '3786C2',
                 },
             ]);
@@ -114,10 +100,7 @@ describe('GenesetsSelectorStore', () => {
         it('returns undefined for volcano plot data graph if the table data is an empty array', () => {
             const map_genesets_selected_volcano = new ObservableMap<boolean>();
             map_genesets_selected_volcano.set('AKT_UP.V1_DN', true);
-            const graphDataUndefined = getVolcanoPlotData(
-                [],
-                map_genesets_selected_volcano
-            );
+            const graphDataUndefined = getVolcanoPlotData([], map_genesets_selected_volcano);
             assert.equal(graphDataUndefined, undefined);
         });
     });

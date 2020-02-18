@@ -6,11 +6,7 @@ import { MSKTabs, MSKTab } from 'shared/components/MSKTabs/MSKTabs';
 import { If, Then, Else } from 'react-if';
 import { ThreeBounce } from 'better-react-spinkit';
 import { CancerSummaryContent, IAlterationData } from './CancerSummaryContent';
-import {
-    ExtendedAlteration,
-    ExtendedSample,
-    ResultsViewPageStore,
-} from '../ResultsViewPageStore';
+import { ExtendedAlteration, ExtendedSample, ResultsViewPageStore } from '../ResultsViewPageStore';
 import Loader, {
     default as LoadingIndicator,
 } from '../../../shared/components/loadingIndicator/LoadingIndicator';
@@ -73,9 +69,7 @@ export default class CancerSummaryContainer extends React.Component<
                     .map((sample: ExtendedSample) => sample.cancerType)
                     .uniq()
                     .value();
-                return cancerTypes.length === 1
-                    ? 'cancerTypeDetailed'
-                    : 'cancerType';
+                return cancerTypes.length === 1 ? 'cancerTypeDetailed' : 'cancerType';
             }
         } else {
             return this.groupAlterationsBy_userSelection;
@@ -95,22 +89,18 @@ export default class CancerSummaryContainer extends React.Component<
     private get tabs() {
         // if we're grouping by cancer study, we need to use study shortName property instead of studyId
         const labelTransformer =
-            this.groupAlterationsBy === 'studyId'
-                ? this.mapStudyIdToShortName
-                : undefined;
+            this.groupAlterationsBy === 'studyId' ? this.mapStudyIdToShortName : undefined;
 
         const alterationCountsForCancerTypesByGene = getAlterationCountsForCancerTypesByGene(
             this.props.store.oqlFilteredAlterationsByGeneBySampleKey.result!,
             this.props.store.samplesExtendedWithClinicalData.result!,
             this.groupAlterationsBy,
-            this.props.store.selectedMolecularProfileIdsByAlterationType
-                .result!,
+            this.props.store.selectedMolecularProfileIdsByAlterationType.result!,
             this.props.store.coverageInformation.result!
         );
 
         const geneTabs = _.map(this.props.store.genes.result!, (gene: Gene) => {
-            const geneData =
-                alterationCountsForCancerTypesByGene[gene.hugoGeneSymbol];
+            const geneData = alterationCountsForCancerTypesByGene[gene.hugoGeneSymbol];
             // count how many alterations there are across all cancer types for this gene
             const alterationCountAcrossCancerType = _.reduce(
                 geneData,
@@ -122,9 +112,7 @@ export default class CancerSummaryContainer extends React.Component<
 
             // if there are no alterations for this gene, grey out text
             const anchorStyle =
-                alterationCountAcrossCancerType === 0
-                    ? { color: '#bbb' }
-                    : undefined;
+                alterationCountAcrossCancerType === 0 ? { color: '#bbb' } : undefined;
 
             return (
                 <MSKTab
@@ -135,9 +123,7 @@ export default class CancerSummaryContainer extends React.Component<
                 >
                     <CancerSummaryContent
                         groupedAlterationData={
-                            alterationCountsForCancerTypesByGene[
-                                gene.hugoGeneSymbol
-                            ]
+                            alterationCountsForCancerTypesByGene[gene.hugoGeneSymbol]
                         }
                         groupAlterationsBy={this.groupAlterationsBy}
                         gene={gene.hugoGeneSymbol}
@@ -152,20 +138,14 @@ export default class CancerSummaryContainer extends React.Component<
         // only add combined gene tab if there's more than one gene
         if (geneTabs.length > 1) {
             const groupedAlterationDataForAllGenes = getAlterationCountsForCancerTypesForAllGenes(
-                this.props.store.oqlFilteredAlterationsByGeneBySampleKey
-                    .result!,
+                this.props.store.oqlFilteredAlterationsByGeneBySampleKey.result!,
                 this.props.store.samplesExtendedWithClinicalData.result!,
                 this.groupAlterationsBy,
-                this.props.store.selectedMolecularProfileIdsByAlterationType
-                    .result!,
+                this.props.store.selectedMolecularProfileIdsByAlterationType.result!,
                 this.props.store.coverageInformation.result!
             );
             geneTabs.unshift(
-                <MSKTab
-                    key={CANCER_SUMMARY_ALL_GENES}
-                    id="allGenes"
-                    linkText="All Queried Genes"
-                >
+                <MSKTab key={CANCER_SUMMARY_ALL_GENES} id="allGenes" linkText="All Queried Genes">
                     <CancerSummaryContent
                         gene={CANCER_SUMMARY_ALL_GENES}
                         width={this.resultsViewPageWidth}
@@ -192,21 +172,13 @@ export default class CancerSummaryContainer extends React.Component<
 
         switch (status) {
             case 'pending':
-                return (
-                    <LoadingIndicator
-                        isLoading={true}
-                        center={true}
-                        size={'big'}
-                    />
-                );
+                return <LoadingIndicator isLoading={true} center={true} size={'big'} />;
             case 'error':
                 return null;
             case 'complete':
                 return (
                     <div
-                        ref={(el: HTMLDivElement) =>
-                            (this.resultsViewPageContent = el)
-                        }
+                        ref={(el: HTMLDivElement) => (this.resultsViewPageContent = el)}
                         data-test="cancerTypeSummaryWrapper"
                     >
                         <div className={'tabMessageContainer'}>

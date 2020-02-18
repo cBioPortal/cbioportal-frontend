@@ -19,10 +19,7 @@ import { StringListIndexedMap } from '../../lib/ListIndexedMap';
 import naturalSort from 'javascript-natural-sort';
 import * as d3Scale from 'd3-scale';
 import measureText from 'measure-text';
-import {
-    stringListToIndexSet,
-    stringListToMap,
-} from 'cbioportal-frontend-commons';
+import { stringListToIndexSet, stringListToMap } from 'cbioportal-frontend-commons';
 import { wrapTick } from './TickUtils';
 import { iterateOverEntries } from './TablePlotUtils';
 
@@ -135,13 +132,8 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
 
     @computed get tableData(): ITableData {
         // count by categories
-        const tableCounts: StringListIndexedMap<
-            number
-        > = new StringListIndexedMap();
-        for (const entry of iterateOverEntries(
-            this.props.horzData,
-            this.props.vertData
-        )) {
+        const tableCounts: StringListIndexedMap<number> = new StringListIndexedMap();
+        for (const entry of iterateOverEntries(this.props.horzData, this.props.vertData)) {
             if (entry.horz !== undefined && entry.vert !== undefined) {
                 tableCounts.set(
                     (tableCounts.get(entry.horz, entry.vert) || 0) + 1,
@@ -169,9 +161,7 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
         // sort categories
         let horzCategories: string[];
         if (this.props.horzCategoryOrder) {
-            horzCategories = this.props.horzCategoryOrder.filter(
-                c => !!horzCategoriesMap[c]
-            );
+            horzCategories = this.props.horzCategoryOrder.filter(c => !!horzCategoriesMap[c]);
         } else {
             horzCategories = Object.keys(horzCategoriesMap);
             horzCategories.sort(naturalSort);
@@ -179,9 +169,7 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
 
         let vertCategories: string[];
         if (this.props.vertCategoryOrder) {
-            vertCategories = this.props.vertCategoryOrder.filter(
-                c => !!vertCategoriesMap[c]
-            );
+            vertCategories = this.props.vertCategoryOrder.filter(c => !!vertCategoriesMap[c]);
         } else {
             vertCategories = Object.keys(vertCategoriesMap);
             vertCategories.sort(naturalSort);
@@ -233,8 +221,7 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
             return () => 'rgb(0,0,0)';
         }
         const dataRange = this.dataRange;
-        return (val: number) =>
-            tableCellTextColor(val, dataRange.min, dataRange.max);
+        return (val: number) => tableCellTextColor(val, dataRange.min, dataRange.max);
     }
 
     private getCellCoordinates(horzCategory: string, vertCategory: string) {
@@ -281,9 +268,7 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
     }
 
     private formatTickHelper(horzAxis: boolean, index: number) {
-        const labels = horzAxis
-            ? this.tableData.horzCategories
-            : this.tableData.vertCategories;
+        const labels = horzAxis ? this.tableData.horzCategories : this.tableData.vertCategories;
         return labels[index];
     }
 
@@ -305,9 +290,7 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
                     />
                 }
                 axisLabelComponent={
-                    <VictoryLabel
-                        dy={BOTTOM_GUTTER - 20 /* leave more room for labels */}
-                    />
+                    <VictoryLabel dy={BOTTOM_GUTTER - 20 /* leave more room for labels */} />
                 }
             />
         );
@@ -323,13 +306,9 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
                 dependentAxis={true}
                 tickValues={this.vertTickValues}
                 tickFormat={this.formatTickVert}
-                tickLabelComponent={
-                    <VictoryWrappingTick maxWidth={LABEL_GUTTER - 30} />
-                }
+                tickLabelComponent={<VictoryWrappingTick maxWidth={LABEL_GUTTER - 30} />}
                 axisLabelComponent={
-                    <VictoryLabel
-                        dy={-1 * LEFT_PADDING /* leave more room for labels */}
-                    />
+                    <VictoryLabel dy={-1 * LEFT_PADDING /* leave more room for labels */} />
                 }
             />
         );

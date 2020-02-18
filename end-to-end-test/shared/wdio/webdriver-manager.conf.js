@@ -14,10 +14,8 @@ const defaultTimeoutInterval = 180000;
 var defaultMaxInstances = 3;
 
 var diffDir = process.env.SCREENSHOT_DIRECTORY + '/diff' || 'screenshots/diff/';
-var refDir =
-    process.env.SCREENSHOT_DIRECTORY + '/reference' || 'screenshots/reference/';
-var screenDir =
-    process.env.SCREENSHOT_DIRECTORY + '/screen' || 'screenshots/screen/';
+var refDir = process.env.SCREENSHOT_DIRECTORY + '/reference' || 'screenshots/reference/';
+var screenDir = process.env.SCREENSHOT_DIRECTORY + '/screen' || 'screenshots/screen/';
 var errorDir = process.env.SCREENSHOT_DIRECTORY + '/error' || './errorShots/';
 
 var config = {
@@ -67,10 +65,7 @@ var config = {
         {
             //browserName: 'chrome',
             chromeOptions: {
-                args: [
-                    '--disable-composited-antialiasing',
-                    '--allow-insecure-localhost',
-                ],
+                args: ['--disable-composited-antialiasing', '--allow-insecure-localhost'],
             },
 
             os: 'OS X',
@@ -147,9 +142,7 @@ var config = {
     visualRegression: {
         compare: new VisualRegressionCompare.LocalCompare({
             referenceName: getScreenshotName(path.join(process.cwd(), refDir)),
-            screenshotName: getScreenshotName(
-                path.join(process.cwd(), screenDir)
-            ),
+            screenshotName: getScreenshotName(path.join(process.cwd(), screenDir)),
             diffName: getScreenshotName(path.join(process.cwd(), diffDir)),
             misMatchTolerance: 0.01,
             ignoreComparison: 'antialiasing',
@@ -275,8 +268,7 @@ var config = {
             Object.keys(window.ajaxRequests).forEach(key => {
                 window.ajaxRequests[key].end = Date.now();
                 window.ajaxRequests[key].duration =
-                    window.ajaxRequests[key].end -
-                    window.ajaxRequests[key].started;
+                    window.ajaxRequests[key].end - window.ajaxRequests[key].started;
             });
 
             return JSON.stringify(window.ajaxRequests);

@@ -30,10 +30,7 @@ const MESSAGE_DATA: IUserMessage[] = [
 ];
 
 @observer
-export default class UserMessager extends React.Component<
-    { dataUrl?: string },
-    {}
-> {
+export default class UserMessager extends React.Component<{ dataUrl?: string }, {}> {
     messageData = remoteData<IUserMessage[]>(async () => {
         return Promise.resolve(MESSAGE_DATA);
     });
@@ -42,9 +39,7 @@ export default class UserMessager extends React.Component<
 
     get shownMessage() {
         const messageToShow = _.find(this.messageData.result, message => {
-            const notYetShown = !localStorage.getItem(
-                makeMessageKey(message.id)
-            );
+            const notYetShown = !localStorage.getItem(makeMessageKey(message.id));
             const expired = Date.now() > message.dateEnd;
             return notYetShown && !expired;
         });

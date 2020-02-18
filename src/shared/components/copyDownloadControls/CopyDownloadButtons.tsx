@@ -8,10 +8,7 @@ export interface ICopyDownloadButtonsProps extends ICopyDownloadInputsProps {
     copyButtonRef?: (el: HTMLButtonElement | null) => void;
 }
 
-export class CopyDownloadButtons extends React.Component<
-    ICopyDownloadButtonsProps,
-    {}
-> {
+export class CopyDownloadButtons extends React.Component<ICopyDownloadButtonsProps, {}> {
     public static defaultProps = {
         className: '',
         copyLabel: '',
@@ -71,8 +68,7 @@ export class CopyDownloadButtons extends React.Component<
                 overlayClassName={this.props.className}
             >
                 <Button className="btn-sm" onClick={this.props.handleDownload}>
-                    {this.props.downloadLabel}{' '}
-                    <i className="fa fa-cloud-download" />
+                    {this.props.downloadLabel} <i className="fa fa-cloud-download" />
                 </Button>
             </DefaultTooltip>
         );
@@ -83,9 +79,7 @@ export class CopyDownloadButtons extends React.Component<
             <span className={this.props.className}>
                 <ButtonGroup className={this.props.className}>
                     <If condition={this.props.showCopy}>{this.copyButton()}</If>
-                    <If condition={this.props.showDownload}>
-                        {this.downloadButton()}
-                    </If>
+                    <If condition={this.props.showDownload}>{this.downloadButton()}</If>
                 </ButtonGroup>
             </span>
         );

@@ -58,9 +58,7 @@ export function toggleColumnVisibility(
     // if not init yet: it means that no prior user action on column visibility
     // just copy the contents from the provided columnVisibility definition
     if (!colVis) {
-        colVis = resolveColumnVisibilityByColumnDefinition(
-            columnVisibilityDefs
-        );
+        colVis = resolveColumnVisibilityByColumnDefinition(columnVisibilityDefs);
     }
 
     // toggle column visibility

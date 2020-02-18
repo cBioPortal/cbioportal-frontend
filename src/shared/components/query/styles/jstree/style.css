@@ -369,9 +369,7 @@ li.jstree-node.jstree-leaf > a.jstree-clicked {
 .jstree-default.jstree-checkbox-no-clicked .jstree-clicked.jstree-hovered {
     background: #e7f4f9;
 }
-.jstree-default.jstree-checkbox-no-clicked
-    > .jstree-wholerow-ul
-    .jstree-wholerow-clicked {
+.jstree-default.jstree-checkbox-no-clicked > .jstree-wholerow-ul .jstree-wholerow-clicked {
     background: transparent;
 }
 .jstree-default.jstree-checkbox-no-clicked
@@ -493,9 +491,7 @@ li.jstree-node.jstree-leaf > a.jstree-clicked {
 .jstree-default .jstree-checked > .jstree-checkbox {
     background-position: -228px -4px;
 }
-.jstree-default.jstree-checkbox-selection
-    .jstree-clicked
-    > .jstree-checkbox:hover,
+.jstree-default.jstree-checkbox-selection .jstree-clicked > .jstree-checkbox:hover,
 .jstree-default .jstree-checked > .jstree-checkbox:hover {
     background-position: -228px -36px;
 }
@@ -655,15 +651,11 @@ li.jstree-node.jstree-leaf > a.jstree-clicked {
 .jstree-default-small .jstree-checkbox:hover {
     background-position: -167px -39px;
 }
-.jstree-default-small.jstree-checkbox-selection
-    .jstree-clicked
-    > .jstree-checkbox,
+.jstree-default-small.jstree-checkbox-selection .jstree-clicked > .jstree-checkbox,
 .jstree-default-small .jstree-checked > .jstree-checkbox {
     background-position: -231px -7px;
 }
-.jstree-default-small.jstree-checkbox-selection
-    .jstree-clicked
-    > .jstree-checkbox:hover,
+.jstree-default-small.jstree-checkbox-selection .jstree-clicked > .jstree-checkbox:hover,
 .jstree-default-small .jstree-checked > .jstree-checkbox:hover {
     background-position: -231px -39px;
 }
@@ -700,10 +692,7 @@ li.jstree-node.jstree-leaf > a.jstree-clicked {
 .jstree-default-small.jstree-rtl > .jstree-no-dots .jstree-open > .jstree-ocl {
     background-position: -39px -39px;
 }
-.jstree-default-small.jstree-rtl
-    > .jstree-no-dots
-    .jstree-closed
-    > .jstree-ocl {
+.jstree-default-small.jstree-rtl > .jstree-no-dots .jstree-closed > .jstree-ocl {
     background-position: -7px -39px;
 }
 .jstree-default-small .jstree-themeicon-custom {
@@ -826,15 +815,11 @@ li.jstree-node.jstree-leaf > a.jstree-clicked {
 .jstree-default-large .jstree-checkbox:hover {
     background-position: -160px -32px;
 }
-.jstree-default-large.jstree-checkbox-selection
-    .jstree-clicked
-    > .jstree-checkbox,
+.jstree-default-large.jstree-checkbox-selection .jstree-clicked > .jstree-checkbox,
 .jstree-default-large .jstree-checked > .jstree-checkbox {
     background-position: -224px 0px;
 }
-.jstree-default-large.jstree-checkbox-selection
-    .jstree-clicked
-    > .jstree-checkbox:hover,
+.jstree-default-large.jstree-checkbox-selection .jstree-clicked > .jstree-checkbox:hover,
 .jstree-default-large .jstree-checked > .jstree-checkbox:hover {
     background-position: -224px -32px;
 }
@@ -871,10 +856,7 @@ li.jstree-node.jstree-leaf > a.jstree-clicked {
 .jstree-default-large.jstree-rtl > .jstree-no-dots .jstree-open > .jstree-ocl {
     background-position: -32px -32px;
 }
-.jstree-default-large.jstree-rtl
-    > .jstree-no-dots
-    .jstree-closed
-    > .jstree-ocl {
+.jstree-default-large.jstree-rtl > .jstree-no-dots .jstree-closed > .jstree-ocl {
     background-position: 0px -32px;
 }
 .jstree-default-large .jstree-themeicon-custom {
@@ -1017,12 +999,8 @@ li.jstree-node.jstree-leaf > a.jstree-clicked {
     .jstree-default-responsive .jstree-checkbox:hover {
         background-position: -40px -80px;
     }
-    .jstree-default-responsive.jstree-checkbox-selection
-        .jstree-clicked
-        > .jstree-checkbox,
-    .jstree-default-responsive.jstree-checkbox-selection
-        .jstree-clicked
-        > .jstree-checkbox:hover,
+    .jstree-default-responsive.jstree-checkbox-selection .jstree-clicked > .jstree-checkbox,
+    .jstree-default-responsive.jstree-checkbox-selection .jstree-clicked > .jstree-checkbox:hover,
     .jstree-default-responsive .jstree-checked > .jstree-checkbox,
     .jstree-default-responsive .jstree-checked > .jstree-checkbox:hover {
         background-position: 0 -80px;
@@ -1051,16 +1029,10 @@ li.jstree-node.jstree-leaf > a.jstree-clicked {
     .jstree-default-responsive .jstree-wholerow-clicked {
         background: #beebff;
     }
-    .jstree-default-responsive
-        .jstree-children
-        .jstree-last
-        > .jstree-wholerow {
+    .jstree-default-responsive .jstree-children .jstree-last > .jstree-wholerow {
         box-shadow: inset 0 -6px 3px -5px #666666;
     }
-    .jstree-default-responsive
-        .jstree-children
-        .jstree-open
-        > .jstree-wholerow {
+    .jstree-default-responsive .jstree-children .jstree-open > .jstree-wholerow {
         box-shadow: inset 0 6px 3px -5px #666666;
         border-top: 0;
     }

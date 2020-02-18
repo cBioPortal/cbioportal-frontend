@@ -3,11 +3,7 @@ import { observer } from 'mobx-react';
 import ErrorIcon from '../../../shared/components/ErrorIcon';
 import { IObservableObject, ObservableMap } from 'mobx';
 import autobind from 'autobind-decorator';
-import {
-    EditableSpan,
-    DefaultTooltip,
-    getNCBIlink,
-} from 'cbioportal-frontend-commons';
+import { EditableSpan, DefaultTooltip, getNCBIlink } from 'cbioportal-frontend-commons';
 import 'rc-tooltip/assets/bootstrap_white.css';
 
 export interface IDriverAnnotationControlsState {
@@ -44,9 +40,7 @@ export interface IDriverAnnotationControlsHandlers {
     onChangeAnnotateCOSMICInputValue?: (value: string) => void;
     onSelectCustomDriverAnnotationBinary?: (s: boolean) => void;
     onSelectCustomDriverAnnotationTier?: (value: string, s: boolean) => void;
-    onCustomDriverTierCheckboxClick?: (
-        event: React.MouseEvent<HTMLInputElement>
-    ) => void;
+    onCustomDriverTierCheckboxClick?: (event: React.MouseEvent<HTMLInputElement>) => void;
 }
 
 export interface IDriverAnnotationControlsProps {
@@ -77,9 +71,7 @@ export default class DriverAnnotationControls extends React.Component<
                 );
                 break;
             case EVENT_KEY.annotateOncoKb:
-                this.props.handlers.onSelectAnnotateOncoKb(
-                    !this.props.state.annotateDriversOncoKb
-                );
+                this.props.handlers.onSelectAnnotateOncoKb(!this.props.state.annotateDriversOncoKb);
                 break;
             case EVENT_KEY.annotateHotspots:
                 this.props.handlers.onSelectAnnotateHotspots &&
@@ -129,33 +121,24 @@ export default class DriverAnnotationControls extends React.Component<
                                 <input
                                     type="checkbox"
                                     value={EVENT_KEY.annotateOncoKb}
-                                    checked={
-                                        this.props.state.annotateDriversOncoKb
-                                    }
+                                    checked={this.props.state.annotateDriversOncoKb}
                                     onClick={this.onInputClick}
                                     data-test="annotateOncoKb"
-                                    disabled={
-                                        this.props.state
-                                            .annotateDriversOncoKbError
-                                    }
+                                    disabled={this.props.state.annotateDriversOncoKbError}
                                 />
-                                {this.props.state
-                                    .annotateDriversOncoKbError && (
+                                {this.props.state.annotateDriversOncoKbError && (
                                     <ErrorIcon
                                         style={{ marginRight: 4 }}
                                         tooltip={
                                             <span>
-                                                Error loading OncoKb data.
-                                                Please refresh the page or try
-                                                again later.
+                                                Error loading OncoKb data. Please refresh the page
+                                                or try again later.
                                             </span>
                                         }
                                     />
                                 )}
                                 <DefaultTooltip
-                                    overlay={
-                                        <span>Oncogenicity from OncoKB</span>
-                                    }
+                                    overlay={<span>Oncogenicity from OncoKB</span>}
                                     placement="top"
                                 >
                                     <img
@@ -178,26 +161,18 @@ export default class DriverAnnotationControls extends React.Component<
                                     <input
                                         type="checkbox"
                                         value={EVENT_KEY.annotateHotspots}
-                                        checked={
-                                            this.props.state
-                                                .annotateDriversHotspots
-                                        }
+                                        checked={this.props.state.annotateDriversHotspots}
                                         onClick={this.onInputClick}
                                         data-test="annotateHotspots"
-                                        disabled={
-                                            this.props.state
-                                                .annotateDriversHotspotsError
-                                        }
+                                        disabled={this.props.state.annotateDriversHotspotsError}
                                     />
-                                    {this.props.state
-                                        .annotateDriversHotspotsError && (
+                                    {this.props.state.annotateDriversHotspotsError && (
                                         <ErrorIcon
                                             style={{ marginRight: 4 }}
                                             tooltip={
                                                 <span>
-                                                    Error loading Hotspots data.
-                                                    Please refresh the page or
-                                                    try again later.
+                                                    Error loading Hotspots data. Please refresh the
+                                                    page or try again later.
                                                 </span>
                                             }
                                         />
@@ -210,21 +185,15 @@ export default class DriverAnnotationControls extends React.Component<
                                                     maxWidth: '400px',
                                                 }}
                                             >
-                                                Identified as a recurrent
-                                                hotspot (statistically
-                                                significant) in a
-                                                population-scale cohort of tumor
-                                                samples of various cancer types
-                                                using methodology based in part
-                                                on{' '}
+                                                Identified as a recurrent hotspot (statistically
+                                                significant) in a population-scale cohort of tumor
+                                                samples of various cancer types using methodology
+                                                based in part on{' '}
                                                 <a
-                                                    href={getNCBIlink(
-                                                        '/pubmed/26619011'
-                                                    )}
+                                                    href={getNCBIlink('/pubmed/26619011')}
                                                     target="_blank"
                                                 >
-                                                    Chang et al., Nat
-                                                    Biotechnol, 2016.
+                                                    Chang et al., Nat Biotechnol, 2016.
                                                 </a>
                                                 Explore all mutations at{' '}
                                                 <a
@@ -250,31 +219,21 @@ export default class DriverAnnotationControls extends React.Component<
                                 </label>
                             </div>
                         )}
-                    {this.props.handlers
-                        .onChangeAnnotateCBioPortalInputValue && (
+                    {this.props.handlers.onChangeAnnotateCBioPortalInputValue && (
                         <div className="checkbox">
                             <label>
                                 <input
                                     type="checkbox"
                                     value={EVENT_KEY.annotateCBioPortal}
-                                    checked={
-                                        this.props.state
-                                            .annotateDriversCBioPortal
-                                    }
+                                    checked={this.props.state.annotateDriversCBioPortal}
                                     onClick={this.onInputClick}
                                     data-test="annotateCBioPortalCount"
                                 />
                                 cBioPortal >=
                             </label>
                             <EditableSpan
-                                value={
-                                    this.props.state
-                                        .annotateCBioPortalInputValue || ''
-                                }
-                                setValue={
-                                    this.props.handlers
-                                        .onChangeAnnotateCBioPortalInputValue
-                                }
+                                value={this.props.state.annotateCBioPortalInputValue || ''}
+                                setValue={this.props.handlers.onChangeAnnotateCBioPortalInputValue}
                                 numericOnly={true}
                                 textFieldAppearance={true}
                                 maxChars={10}
@@ -287,49 +246,32 @@ export default class DriverAnnotationControls extends React.Component<
                                 <input
                                     type="checkbox"
                                     value={EVENT_KEY.annotateCOSMIC}
-                                    checked={
-                                        this.props.state.annotateDriversCOSMIC
-                                    }
+                                    checked={this.props.state.annotateDriversCOSMIC}
                                     onClick={this.onInputClick}
                                     data-test="annotateCOSMICCount"
                                 />
                                 COSMIC >=
                             </label>
                             <EditableSpan
-                                value={
-                                    this.props.state.annotateCOSMICInputValue ||
-                                    ''
-                                }
-                                setValue={
-                                    this.props.handlers
-                                        .onChangeAnnotateCOSMICInputValue
-                                }
+                                value={this.props.state.annotateCOSMICInputValue || ''}
+                                setValue={this.props.handlers.onChangeAnnotateCOSMICInputValue}
                                 numericOnly={true}
                                 textFieldAppearance={true}
                                 maxChars={10}
                             />
                         </div>
                     )}
-                    {!!this.props.state
-                        .customDriverAnnotationBinaryMenuLabel && (
+                    {!!this.props.state.customDriverAnnotationBinaryMenuLabel && (
                         <div className="checkbox">
                             <label>
                                 <input
                                     type="checkbox"
-                                    checked={
-                                        this.props.state
-                                            .annotateCustomDriverBinary
-                                    }
-                                    value={
-                                        EVENT_KEY.customDriverBinaryAnnotation
-                                    }
+                                    checked={this.props.state.annotateCustomDriverBinary}
+                                    value={EVENT_KEY.customDriverBinaryAnnotation}
                                     onClick={this.onInputClick}
                                     data-test="annotateCustomBinary"
                                 />{' '}
-                                {
-                                    this.props.state
-                                        .customDriverAnnotationBinaryMenuLabel
-                                }
+                                {this.props.state.customDriverAnnotationBinaryMenuLabel}
                                 <img
                                     src={require('../../../rootImages/driver.png')}
                                     alt="driver filter"
@@ -343,17 +285,11 @@ export default class DriverAnnotationControls extends React.Component<
                             </label>
                         </div>
                     )}
-                    {!!this.props.state
-                        .customDriverAnnotationTiersMenuLabel && (
+                    {!!this.props.state.customDriverAnnotationTiersMenuLabel && (
                         <span>
                             <span className="caret" />
                             &nbsp;&nbsp;
-                            <span>
-                                {
-                                    this.props.state
-                                        .customDriverAnnotationTiersMenuLabel
-                                }
-                            </span>
+                            <span>{this.props.state.customDriverAnnotationTiersMenuLabel}</span>
                             &nbsp;
                             <img
                                 src={require('../../../rootImages/driver_tiers.png')}
@@ -366,10 +302,7 @@ export default class DriverAnnotationControls extends React.Component<
                                 }}
                             />
                             <div style={{ marginLeft: '30px' }}>
-                                {(
-                                    this.props.state
-                                        .customDriverAnnotationTiers || []
-                                ).map(tier => (
+                                {(this.props.state.customDriverAnnotationTiers || []).map(tier => (
                                     <div className="checkbox">
                                         <label>
                                             <input

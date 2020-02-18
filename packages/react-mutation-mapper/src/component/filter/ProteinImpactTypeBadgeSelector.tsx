@@ -43,11 +43,7 @@ export function getProteinImpactTypeBadgeLabel(
         <BadgeLabel
             label={option.label || option.value}
             badgeContent={option.badgeContent}
-            badgeStyleOverride={getBadgeStyleOverride(
-                option,
-                selectedValues,
-                badgeAlignmentStyle
-            )}
+            badgeStyleOverride={getBadgeStyleOverride(option, selectedValues, badgeAlignmentStyle)}
             badgeClassName={badgeClassName}
             badgeFirst={true}
         />
@@ -68,9 +64,7 @@ export class ProteinImpactTypeBadgeSelector extends React.Component<
 
     @computed
     protected get optionDisplayValueMap() {
-        return getProteinImpactTypeOptionDisplayValueMap(
-            this.proteinImpactTypeColors
-        );
+        return getProteinImpactTypeOptionDisplayValueMap(this.proteinImpactTypeColors);
     }
 
     @computed
@@ -83,9 +77,7 @@ export class ProteinImpactTypeBadgeSelector extends React.Component<
         return VALUES.map(value => ({
             value,
             label: this.optionDisplayValueMap[value],
-            badgeContent: this.props.counts
-                ? this.props.counts[value]
-                : undefined,
+            badgeContent: this.props.counts ? this.props.counts[value] : undefined,
             badgeStyleOverride: {
                 backgroundColor: this.proteinImpactTypeColors[value],
             },

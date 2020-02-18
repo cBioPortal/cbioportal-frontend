@@ -21,21 +21,15 @@ export const wholeGenomeIconData: IIconData = {
     genePanelId: undefined,
 };
 
-export function genePanelIdToIconData(
-    genePanelIds: (string | undefined)[]
-): IKeyedIconData {
+export function genePanelIdToIconData(genePanelIds: (string | undefined)[]): IKeyedIconData {
     // remove undef and get array of sorted unique elements
-    const gpIds = _.uniq(
-        _.filter(genePanelIds, genePanelId => genePanelId !== undefined)
-    ).sort();
+    const gpIds = _.uniq(_.filter(genePanelIds, genePanelId => genePanelId !== undefined)).sort();
 
     const lookupTable: IKeyedIconData = {};
 
     // create entries for whole-genome analyses
     _(gpIds)
-        .filter(genePanelId =>
-            _.values(GenePanelIdSpecialValue).includes(genePanelId)
-        )
+        .filter(genePanelId => _.values(GenePanelIdSpecialValue).includes(genePanelId))
         .each(genePanelId => {
             const i = Object.assign({}, wholeGenomeIconData);
             i.genePanelId = genePanelId;
@@ -44,9 +38,7 @@ export function genePanelIdToIconData(
 
     // create entries for gene panel analyses
     _(gpIds)
-        .reject(genePanelId =>
-            _.values(GenePanelIdSpecialValue).includes(genePanelId)
-        )
+        .reject(genePanelId => _.values(GenePanelIdSpecialValue).includes(genePanelId))
         .each((genePanelId, index) => {
             lookupTable[genePanelId!] = {
                 genePanelId: genePanelId,
@@ -59,19 +51,14 @@ export function genePanelIdToIconData(
 }
 
 export function sampleIdToIconData(
-    sampleIdToGenePanelId:
-        | { [sampleId: string]: string | undefined }
-        | undefined,
+    sampleIdToGenePanelId: { [sampleId: string]: string | undefined } | undefined,
     iconLookupTable: IKeyedIconData
 ): IKeyedIconData {
     // return undefined when all samples were analyzed with a whole genome approach
     const genePanelIds = _.values(sampleIdToGenePanelId);
     const wholeGenomeIndicators = _.values(GenePanelIdSpecialValue);
 
-    if (
-        !sampleIdToGenePanelId ||
-        _.difference(genePanelIds, wholeGenomeIndicators).length === 0
-    ) {
+    if (!sampleIdToGenePanelId || _.difference(genePanelIds, wholeGenomeIndicators).length === 0) {
         return {};
     }
 
@@ -85,10 +72,7 @@ export function sampleIdToIconData(
     // add icon data for samples with defined genePanelIds
     _(sampleIdToGenePanelId)
         .pickBy(genePanelId => genePanelId! in iconLookupTable) // keep samples with defined genePanelIds
-        .forIn(
-            (genePanelId, sampleId) =>
-                (lookupTable[sampleId] = iconLookupTable[genePanelId!])
-        );
+        .forIn((genePanelId, sampleId) => (lookupTable[sampleId] = iconLookupTable[genePanelId!]));
 
     return lookupTable;
 }

@@ -44,10 +44,7 @@ const DOMAIN_ID_CLASS_PREFIX = 'domain-';
 const SEQUENCE_ID_CLASS_PREFIX = 'sequence-';
 
 @observer
-export default class LollipopPlotNoTooltip extends React.Component<
-    LollipopPlotNoTooltipProps,
-    {}
-> {
+export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotNoTooltipProps, {}> {
     private lollipopComponents: { [lollipopIndex: string]: Lollipop } = {};
     private domainComponents: { [domainIndex: string]: Domain } = {};
     private sequenceComponents: Sequence[] = [];
@@ -57,18 +54,7 @@ export default class LollipopPlotNoTooltip extends React.Component<
 
     private lollipopLabelPadding = 20;
     private domainPadding = 5;
-    private xAxisCandidateTickIntervals = [
-        50,
-        100,
-        200,
-        250,
-        500,
-        1000,
-        2500,
-        5000,
-        10000,
-        25000,
-    ];
+    private xAxisCandidateTickIntervals = [50, 100, 200, 250, 500, 1000, 2500, 5000, 10000, 25000];
     private yAxisCandidateTickIntervals = [1, 2, 5, 10, 20, 50, 100, 200, 500];
     private xAxisHeight = 30;
     private yAxisWidth = 50;
@@ -105,11 +91,7 @@ export default class LollipopPlotNoTooltip extends React.Component<
     @action
     protected onLollipopClick(codon: number) {
         if (this.props.dataStore) {
-            updatePositionSelectionFilters(
-                this.props.dataStore,
-                codon,
-                this.shiftPressed
-            );
+            updatePositionSelectionFilters(this.props.dataStore, codon, this.shiftPressed);
         }
     }
 
@@ -158,11 +140,7 @@ export default class LollipopPlotNoTooltip extends React.Component<
                             }
                             lollipopComponent.isHovered = true;
                         }),
-                        action(() =>
-                            this.onLollipopClick(
-                                lollipopComponent.props.spec.codon
-                            )
-                        )
+                        action(() => this.onLollipopClick(lollipopComponent.props.spec.codon))
                     );
                 }
             }
@@ -249,15 +227,9 @@ export default class LollipopPlotNoTooltip extends React.Component<
         return zeroHeight + Math.min(1, count / yMax) * this.yAxisHeight;
     }
 
-    private calculateTickInterval(
-        candidates: number[],
-        rangeSize: number,
-        maxTickCount: number
-    ) {
+    private calculateTickInterval(candidates: number[], rangeSize: number, maxTickCount: number) {
         let ret: number;
-        const tickInterval = candidates.find(
-            c => rangeSize / c < maxTickCount - 1
-        );
+        const tickInterval = candidates.find(c => rangeSize / c < maxTickCount - 1);
         if (!tickInterval) {
             ret = 10;
             while (rangeSize / ret > maxTickCount - 1) {
@@ -269,11 +241,7 @@ export default class LollipopPlotNoTooltip extends React.Component<
         return ret;
     }
 
-    private calculateTicks(
-        tickInterval: number,
-        rangeSize: number,
-        labelEvenTicks: boolean
-    ) {
+    private calculateTicks(tickInterval: number, rangeSize: number, labelEvenTicks: boolean) {
         const ret: { position: number; label: string | undefined }[] = [];
         let nextTick = tickInterval;
         while (nextTick < rangeSize) {
@@ -298,27 +266,15 @@ export default class LollipopPlotNoTooltip extends React.Component<
     }
 
     @computed private get xAxisTickInterval() {
-        return this.calculateTickInterval(
-            this.xAxisCandidateTickIntervals,
-            this.props.xMax,
-            16
-        );
+        return this.calculateTickInterval(this.xAxisCandidateTickIntervals, this.props.xMax, 16);
     }
 
     @computed private get yAxisTickInterval() {
-        return this.calculateTickInterval(
-            this.yAxisCandidateTickIntervals,
-            this.yMax,
-            10
-        );
+        return this.calculateTickInterval(this.yAxisCandidateTickIntervals, this.yMax, 10);
     }
 
     @computed private get bottomYAxisTickInterval() {
-        return this.calculateTickInterval(
-            this.yAxisCandidateTickIntervals,
-            this.bottomYMax,
-            10
-        );
+        return this.calculateTickInterval(this.yAxisCandidateTickIntervals, this.bottomYMax, 10);
     }
 
     @computed private get xTicks() {
@@ -333,26 +289,16 @@ export default class LollipopPlotNoTooltip extends React.Component<
             label: this.props.xMax + 'aa',
         });
         // Intermediate ticks, every other one labeled
-        ret = ret.concat(
-            this.calculateTicks(this.xAxisTickInterval, this.props.xMax, true)
-        );
+        ret = ret.concat(this.calculateTicks(this.xAxisTickInterval, this.props.xMax, true));
         return ret;
     }
 
     @computed private get yTicks() {
-        return this.axisTicks(
-            this.yMax,
-            this.yMaxLabel,
-            this.yAxisTickInterval
-        );
+        return this.axisTicks(this.yMax, this.yMaxLabel, this.yAxisTickInterval);
     }
 
     @computed private get bottomYTicks() {
-        return this.axisTicks(
-            this.bottomYMax,
-            this.bottomYMaxLabel,
-            this.bottomYAxisTickInterval
-        );
+        return this.axisTicks(this.bottomYMax, this.bottomYMaxLabel, this.bottomYAxisTickInterval);
     }
 
     @computed private get yMax() {
@@ -360,11 +306,7 @@ export default class LollipopPlotNoTooltip extends React.Component<
             this.props.yMax ||
             this.props.lollipops
                 .filter(l => l.placement !== LollipopPlacement.BOTTOM)
-                .reduce(
-                    (max: number, next: LollipopSpec) =>
-                        Math.max(max, next.count),
-                    1
-                )
+                .reduce((max: number, next: LollipopSpec) => Math.max(max, next.count), 1)
         );
     }
 
@@ -383,11 +325,7 @@ export default class LollipopPlotNoTooltip extends React.Component<
             this.props.bottomYMax ||
             this.props.lollipops
                 .filter(l => l.placement === LollipopPlacement.BOTTOM)
-                .reduce(
-                    (max: number, next: LollipopSpec) =>
-                        Math.max(max, next.count),
-                    1
-                )
+                .reduce((max: number, next: LollipopSpec) => Math.max(max, next.count), 1)
         );
     }
 
@@ -451,10 +389,7 @@ export default class LollipopPlotNoTooltip extends React.Component<
 
     @computed private get combinedXAxisHeight() {
         // number of visible x-axes depends on the props
-        return (
-            ((this.xAxisOnTop ? 1 : 0) + (this.xAxisOnBottom ? 1 : 0)) *
-            this.xAxisHeight
-        );
+        return ((this.xAxisOnTop ? 1 : 0) + (this.xAxisOnBottom ? 1 : 0)) * this.xAxisHeight;
     }
 
     @computed private get yAxisHeight() {
@@ -493,11 +428,7 @@ export default class LollipopPlotNoTooltip extends React.Component<
     }
 
     @computed private get yAxisY() {
-        return (
-            this.geneCenterY -
-            this.plotAreaDistanceToGeneCenter -
-            this.yAxisHeight
-        );
+        return this.geneCenterY - this.plotAreaDistanceToGeneCenter - this.yAxisHeight;
     }
 
     @computed private get bottomYAxisY() {
@@ -550,49 +481,38 @@ export default class LollipopPlotNoTooltip extends React.Component<
         segments.push({ start, end });
 
         // sort segments by start position
-        segments.sort(
-            (
-                a: { start: number; end: number },
-                b: { start: number; end: number }
-            ) => {
-                return a.start - b.start;
-            }
-        );
+        segments.sort((a: { start: number; end: number }, b: { start: number; end: number }) => {
+            return a.start - b.start;
+        });
 
-        segments.forEach(
-            (segment: { start: number; end: number }, index: number) => {
-                sequenceComponents.push(
-                    <Sequence
-                        ref={sequenceComponent => {
-                            if (sequenceComponent !== null) {
-                                this.sequenceComponents[
-                                    index
-                                ] = sequenceComponent;
-                            }
-                        }}
-                        color="#BABDB6"
-                        x={this.geneX + segment.start}
-                        y={this.geneY}
-                        height={this.geneHeight}
-                        width={segment.end - segment.start}
-                        spec={this.props.sequence}
-                        hitzoneClassName={[
-                            DELETE_FOR_DOWNLOAD_CLASS,
-                            this.makeSequenceIndexClass(index),
-                        ].join(' ')}
-                    />
-                );
-            }
-        );
+        segments.forEach((segment: { start: number; end: number }, index: number) => {
+            sequenceComponents.push(
+                <Sequence
+                    ref={sequenceComponent => {
+                        if (sequenceComponent !== null) {
+                            this.sequenceComponents[index] = sequenceComponent;
+                        }
+                    }}
+                    color="#BABDB6"
+                    x={this.geneX + segment.start}
+                    y={this.geneY}
+                    height={this.geneHeight}
+                    width={segment.end - segment.start}
+                    spec={this.props.sequence}
+                    hitzoneClassName={[
+                        DELETE_FOR_DOWNLOAD_CLASS,
+                        this.makeSequenceIndexClass(index),
+                    ].join(' ')}
+                />
+            );
+        });
 
         return sequenceComponents;
     }
 
     @computed private get zeroHeight() {
         // we need to add a non-zero value if the stick needs to start from the gene center
-        return this.props.zeroStickBaseY
-            ? 0
-            : this.domainPadding + this.domainHeight / 2;
+        return this.props.zeroStickBaseY ? 0 : this.domainPadding + this.domainHeight / 2;
     }
 
     @computed private get lollipops() {
@@ -601,25 +521,15 @@ export default class LollipopPlotNoTooltip extends React.Component<
         return this.props.lollipops.map((lollipop: LollipopSpec, i: number) => {
             const stickHeight =
                 lollipop.placement === LollipopPlacement.BOTTOM
-                    ? -this.countToHeight(
-                          lollipop.count,
-                          this.bottomYMax,
-                          this.zeroHeight
-                      )
-                    : this.countToHeight(
-                          lollipop.count,
-                          this.yMax,
-                          this.zeroHeight
-                      );
+                    ? -this.countToHeight(lollipop.count, this.bottomYMax, this.zeroHeight)
+                    : this.countToHeight(lollipop.count, this.yMax, this.zeroHeight);
 
             const stickBaseY = this.calcStickBaseY(lollipop.placement);
 
             return (
                 <Lollipop
                     key={`${lollipop.codon}_${
-                        lollipop.placement === LollipopPlacement.BOTTOM
-                            ? 'bottom'
-                            : 'top'
+                        lollipop.placement === LollipopPlacement.BOTTOM ? 'bottom' : 'top'
                     }`}
                     ref={(lollipopComponent: Lollipop) => {
                         if (lollipopComponent !== null) {
@@ -631,12 +541,8 @@ export default class LollipopPlotNoTooltip extends React.Component<
                     stickHeight={stickHeight}
                     headRadius={
                         this.props.dataStore &&
-                        (this.props.dataStore.isPositionSelected(
-                            lollipop.codon
-                        ) ||
-                            this.props.dataStore.isPositionHighlighted(
-                                lollipop.codon
-                            ))
+                        (this.props.dataStore.isPositionSelected(lollipop.codon) ||
+                            this.props.dataStore.isPositionHighlighted(lollipop.codon))
                             ? 5
                             : 2.8
                     }
@@ -692,8 +598,7 @@ export default class LollipopPlotNoTooltip extends React.Component<
         symbol: string = '#'
     ) {
         const label = groupName
-            ? `${symbol} ${this.props.hugoGeneSymbol ||
-                  ''} ${groupName} Mutations`
+            ? `${symbol} ${this.props.hugoGeneSymbol || ''} ${groupName} Mutations`
             : `${symbol} ${this.props.hugoGeneSymbol || ''} Mutations`;
 
         const placeOnBottom = placement === LollipopPlacement.BOTTOM;
@@ -757,9 +662,7 @@ export default class LollipopPlotNoTooltip extends React.Component<
     }
 
     @computed public get svgHeight() {
-        return this.needBottomPlacement
-            ? 2 * this.props.vizHeight
-            : this.props.vizHeight;
+        return this.needBottomPlacement ? 2 * this.props.vizHeight : this.props.vizHeight;
     }
 
     private calcStickBaseY(placement?: LollipopPlacement) {
@@ -810,10 +713,7 @@ export default class LollipopPlotNoTooltip extends React.Component<
                 .remove();
             return svg;
         } else {
-            return document.createElementNS(
-                'http://www.w3.org/2000/svg',
-                'svg'
-            );
+            return document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         }
     }
 
@@ -857,8 +757,7 @@ export default class LollipopPlotNoTooltip extends React.Component<
                     {this.lollipops}
                     {this.domains}
                     {this.xAxisOnTop && this.xAxis(0, LollipopPlacement.TOP)}
-                    {this.xAxisOnBottom &&
-                        this.xAxis(this.xAxisY, LollipopPlacement.BOTTOM)}
+                    {this.xAxisOnBottom && this.xAxis(this.xAxisY, LollipopPlacement.BOTTOM)}
                     {this.props.showYAxis &&
                         this.yAxis(
                             this.yAxisY,

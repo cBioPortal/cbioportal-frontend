@@ -6,10 +6,7 @@ export function adjustedLongestLabelLength(labels: string[]): number {
         const undercaseLetters = label.match(/[a-z]/g) || [];
         const spaces = label.match(/\s/g) || [];
         const everythingelse =
-            label.length -
-            capitalizedLetters.length -
-            undercaseLetters.length -
-            spaces.length;
+            label.length - capitalizedLetters.length - undercaseLetters.length - spaces.length;
         return (
             capitalizedLetters.length * 2 +
             undercaseLetters.length * 1 +

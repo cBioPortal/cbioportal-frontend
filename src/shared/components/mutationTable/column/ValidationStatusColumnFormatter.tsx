@@ -59,16 +59,10 @@ export default class ValidationStatusColumnFormatter {
 
         if (value) {
             const format =
-                ValidationStatusColumnFormatter.VALIDATION_STATUS_FORMAT[
-                    value.toLowerCase()
-                ];
+                ValidationStatusColumnFormatter.VALIDATION_STATUS_FORMAT[value.toLowerCase()];
 
             if (format) {
-                content = (
-                    <span className={styles[format.className]}>
-                        {format.text}
-                    </span>
-                );
+                content = <span className={styles[format.className]}>{format.text}</span>;
                 needTooltip = true;
             } else {
                 content = <span className={styles.other}>{value}</span>;
@@ -79,10 +73,7 @@ export default class ValidationStatusColumnFormatter {
 
         if (needTooltip) {
             content = (
-                <DefaultTooltip
-                    overlay={<span>{value}</span>}
-                    placement="right"
-                >
+                <DefaultTooltip overlay={<span>{value}</span>} placement="right">
                     {content}
                 </DefaultTooltip>
             );

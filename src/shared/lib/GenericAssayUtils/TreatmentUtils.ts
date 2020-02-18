@@ -30,14 +30,9 @@ export type TreatmentMolecularData = {
     value: string;
 };
 
-export async function fetchTreatmentByMolecularProfileIds(
-    molecularProfiles: MolecularProfile[]
-) {
+export async function fetchTreatmentByMolecularProfileIds(molecularProfiles: MolecularProfile[]) {
     const treatmentResponseProfiles = molecularProfiles.filter(profile => {
-        return (
-            profile.genericAssayType ===
-            GenericAssayTypeConstants.TREATMENT_RESPONSE
-        );
+        return profile.genericAssayType === GenericAssayTypeConstants.TREATMENT_RESPONSE;
     });
     let treatments: Treatment[] = [];
     if (treatmentResponseProfiles.length > 0) {

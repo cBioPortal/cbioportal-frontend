@@ -19,10 +19,7 @@ export type CNSegmentsDownloaderProps = {
 };
 
 @observer
-export default class CNSegmentsDownloader extends React.Component<
-    CNSegmentsDownloaderProps,
-    {}
-> {
+export default class CNSegmentsDownloader extends React.Component<CNSegmentsDownloaderProps, {}> {
     public static defaultProps = {
         filename: 'segments.seg',
         buttonClassName: 'btn btn-sm pull-right',
@@ -34,12 +31,7 @@ export default class CNSegmentsDownloader extends React.Component<
     public render() {
         return (
             <DefaultTooltip
-                overlay={
-                    <span>
-                        Download a copy number segment file for the selected
-                        samples
-                    </span>
-                }
+                overlay={<span>Download a copy number segment file for the selected samples</span>}
                 placement={this.props.tooltipPlacement}
             >
                 <Button

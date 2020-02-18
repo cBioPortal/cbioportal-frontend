@@ -25,8 +25,7 @@ export function getOncoKbImage() {
 @observer
 export default class OncoKbTrack extends React.Component<OncoKbTrackProps, {}> {
     @computed get oncoKbSpecs(): TrackItemSpec[] {
-        const filteredOncoKbDataByProteinPosStart = this.props.store
-            .oncoKbDataByPosition;
+        const filteredOncoKbDataByProteinPosStart = this.props.store.oncoKbDataByPosition;
 
         if (!_.isEmpty(filteredOncoKbDataByProteinPosStart)) {
             return _.keys(filteredOncoKbDataByProteinPosStart)
@@ -36,19 +35,9 @@ export default class OncoKbTrack extends React.Component<OncoKbTrackProps, {}> {
                     color: '#007FFF',
                     tooltip: (
                         <OncoKbTrackTooltip
-                            mutations={
-                                this.props.store.mutationsByPosition[
-                                    Number(position)
-                                ]
-                            }
-                            indicatorData={
-                                filteredOncoKbDataByProteinPosStart[
-                                    Number(position)
-                                ]
-                            }
-                            hugoGeneSymbol={
-                                this.props.store.gene.hugoGeneSymbol
-                            }
+                            mutations={this.props.store.mutationsByPosition[Number(position)]}
+                            indicatorData={filteredOncoKbDataByProteinPosStart[Number(position)]}
+                            hugoGeneSymbol={this.props.store.gene.hugoGeneSymbol}
                         />
                     ),
                 }));

@@ -11,10 +11,7 @@ describe('PatientViewPageUtils', () => {
         const sampleIds = ['sampleA', 'sampleB'];
         const entrezGeneIds = [1, 2, 3];
 
-        const stub = sinon.stub(
-            TumorColumnFormatter,
-            'getProfiledSamplesForGene'
-        );
+        const stub = sinon.stub(TumorColumnFormatter, 'getProfiledSamplesForGene');
 
         after(() => {
             stub.restore();
@@ -28,12 +25,7 @@ describe('PatientViewPageUtils', () => {
 
             stub.returns(allSamplesProfiled);
             assert.isFalse(
-                checkNonProfiledGenesExist(
-                    sampleIds,
-                    entrezGeneIds,
-                    {} as any,
-                    {} as any
-                )
+                checkNonProfiledGenesExist(sampleIds, entrezGeneIds, {} as any, {} as any)
             );
         });
 
@@ -45,12 +37,7 @@ describe('PatientViewPageUtils', () => {
 
             stub.returns(oneSampleNotProfiled);
             assert.isTrue(
-                checkNonProfiledGenesExist(
-                    sampleIds,
-                    entrezGeneIds,
-                    {} as any,
-                    {} as any
-                )
+                checkNonProfiledGenesExist(sampleIds, entrezGeneIds, {} as any, {} as any)
             );
         });
     });

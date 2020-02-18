@@ -84,13 +84,7 @@ describe('SurvivalStoreHelper', () => {
     describe('#getPatientSurvivals()', () => {
         it('returns empty list for empty clinical data', () => {
             assert.deepEqual(
-                getPatientSurvivals(
-                    {},
-                    [],
-                    'OS_STATUS',
-                    'OS_MONTHS',
-                    s => s === 'DECEASED'
-                ),
+                getPatientSurvivals({}, [], 'OS_STATUS', 'OS_MONTHS', s => s === 'DECEASED'),
                 []
             );
         });

@@ -37,12 +37,7 @@ declare module 'reactable' {
         onFilter?: (filter?: string) => void;
         currentPage?: number;
         hideTableHeader?: boolean;
-        sortable?:
-            | true
-            | Array<
-                  | string
-                  | { column: string; sortFunction?: IColumnSortFunction }
-              >;
+        sortable?: true | Array<string | { column: string; sortFunction?: IColumnSortFunction }>;
         onPageChange?: (page: number) => void;
         onSort?: (currentSort: ICurrentSort) => void;
         columns?: Array<
@@ -53,9 +48,7 @@ declare module 'reactable' {
                   sortable?: true | IColumnSortFunction;
               }
         >;
-        filterable?: Array<
-            string | { column: string; filterFunction?: IColumnFilterFunction }
-        >;
+        filterable?: Array<string | { column: string; filterFunction?: IColumnFilterFunction }>;
         filterPlaceholder?: string;
         previousPageLabel?: React.ReactChild;
         nextPageLabel?: React.ReactChild;

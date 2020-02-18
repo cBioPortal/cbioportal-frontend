@@ -19,10 +19,7 @@ import oncoKBClient from 'shared/api/oncokbClientInstance';
 import { Gene, Mutation } from 'shared/api/generated/CBioPortalAPI';
 import { IOncoKbData } from 'shared/model/OncoKB';
 import ResidueMappingCache from 'shared/cache/ResidueMappingCache';
-import {
-    fetchPdbAlignmentData,
-    indexPdbAlignmentData,
-} from 'shared/lib/StoreUtils';
+import { fetchPdbAlignmentData, indexPdbAlignmentData } from 'shared/lib/StoreUtils';
 import {
     CancerGene,
     EnsemblTranscript,
@@ -40,10 +37,7 @@ import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownlo
 
 import PdbChainDataStore from './PdbChainDataStore';
 import MutationMapperDataStore from './MutationMapperDataStore';
-import {
-    groupMutationsByProteinStartPos,
-    countUniqueMutations,
-} from 'shared/lib/MutationUtils';
+import { groupMutationsByProteinStartPos, countUniqueMutations } from 'shared/lib/MutationUtils';
 import { defaultOncoKbIndicatorFilter } from 'shared/lib/OncoKbUtils';
 
 import { IMutationMapperConfig } from './MutationMapperConfig';
@@ -73,8 +67,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
         super(
             gene,
             {
-                isoformOverrideSource:
-                    mutationMapperConfig.isoformOverrideSource,
+                isoformOverrideSource: mutationMapperConfig.isoformOverrideSource,
                 filterMutationsBySelectedTranscript:
                     mutationMapperStoreConfig.filterMutationsBySelectedTranscript,
             },
@@ -82,8 +75,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
         );
 
         const unnormalizedGetMutations = this.getMutations;
-        this.getMutations = () =>
-            normalizeMutations(unnormalizedGetMutations());
+        this.getMutations = () => normalizeMutations(unnormalizedGetMutations());
         labelMobxPromises(this);
     }
 
@@ -91,12 +83,9 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
     public get dataFetcher(): DefaultMutationMapperDataFetcher {
         return new DefaultMutationMapperDataFetcher(
             {
-                myGeneUrlTemplate:
-                    this.mutationMapperConfig.mygene_info_url || undefined,
-                uniprotIdUrlTemplate:
-                    this.mutationMapperConfig.uniprot_id_url || undefined,
-                genomeNexusUrl:
-                    this.mutationMapperConfig.genomenexus_url || undefined,
+                myGeneUrlTemplate: this.mutationMapperConfig.mygene_info_url || undefined,
+                uniprotIdUrlTemplate: this.mutationMapperConfig.uniprot_id_url || undefined,
+                genomeNexusUrl: this.mutationMapperConfig.genomenexus_url || undefined,
                 oncoKbUrl: getOncoKbApiUrl() || undefined,
             },
             genomeNexusClient,
@@ -108,14 +97,8 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
     readonly mutationData = remoteData(
         {
             await: () => {
-                if (
-                    this.mutationMapperStoreConfig
-                        .filterMutationsBySelectedTranscript
-                ) {
-                    return [
-                        this.canonicalTranscript,
-                        this.indexedVariantAnnotations,
-                    ];
+                if (this.mutationMapperStoreConfig.filterMutationsBySelectedTranscript) {
+                    return [this.canonicalTranscript, this.indexedVariantAnnotations];
                 } else {
                     return [this.canonicalTranscript];
                 }
@@ -167,10 +150,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
 
     // TODO remove when done refactoring react-mutation-mapper
     @computed get oncoKbDataByProteinPosStart() {
-        if (
-            this.oncoKbData.result &&
-            !(this.oncoKbData.result instanceof Error)
-        ) {
+        if (this.oncoKbData.result && !(this.oncoKbData.result instanceof Error)) {
             return groupOncoKbIndicatorDataByMutations(
                 this.unfilteredMutationsByPosition,
                 this.oncoKbData.result,
@@ -243,10 +223,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
     @computed get mutationsByTranscriptId(): {
         [transcriptId: string]: Mutation[];
     } {
-        if (
-            this.indexedVariantAnnotations.result &&
-            this.transcriptsWithAnnotations.result
-        ) {
+        if (this.indexedVariantAnnotations.result && this.transcriptsWithAnnotations.result) {
             return _.fromPairs(
                 this.transcriptsWithAnnotations.result.map((t: string) => [
                     t,

@@ -1,24 +1,18 @@
 var assert = require('assert');
 var expect = require('chai').expect;
 var waitForOncoprint = require('../../../shared/specUtils').waitForOncoprint;
-var getTextInOncoprintLegend = require('../../../shared/specUtils')
-    .getTextInOncoprintLegend;
+var getTextInOncoprintLegend = require('../../../shared/specUtils').getTextInOncoprintLegend;
 var setOncoprintMutationsMenuOpen = require('../../../shared/specUtils')
     .setOncoprintMutationsMenuOpen;
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var useExternalFrontend = require('../../../shared/specUtils')
-    .useExternalFrontend;
+var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
+var useExternalFrontend = require('../../../shared/specUtils').useExternalFrontend;
 var waitForNumberOfStudyCheckboxes = require('../../../shared/specUtils')
     .waitForNumberOfStudyCheckboxes;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 function setInputText(selector, text) {
-    browser.setValue(
-        selector,
-        '\uE003'.repeat(browser.getValue(selector).length) + text
-    );
+    browser.setValue(selector, '\uE003'.repeat(browser.getValue(selector).length) + text);
 }
 
 var searchInputSelector = '.autosuggest input[type=text]';
@@ -37,8 +31,7 @@ describe('patient page', function() {
         browser.waitForExist('span=PPP2R1A');
 
         // find oncokb image
-        const oncokbIcon =
-            '[data-test2="PPP2R1A"][data-test="oncogenic-icon-image"]';
+        const oncokbIcon = '[data-test2="PPP2R1A"][data-test="oncogenic-icon-image"]';
         browser.waitForExist(oncokbIcon, 30000);
 
         // move over oncokb image (this is deprecated, but there is no new
@@ -63,9 +56,7 @@ describe('patient page', function() {
         browser.waitForExist('.//*[text()[contains(.,"Show all")]]');
 
         assert.equal(
-            browser
-                .getText('.//*[text()[contains(.,"Show all")]]')
-                .toLowerCase(),
+            browser.getText('.//*[text()[contains(.,"Show all")]]').toLowerCase(),
             'show all 4 samples'.toLowerCase()
         );
     });

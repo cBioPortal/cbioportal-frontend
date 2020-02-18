@@ -19,11 +19,7 @@ import MiniScatterChart from 'pages/resultsView/enrichments/MiniScatterChart';
 import * as _ from 'lodash';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
-import {
-    CheckedSelect,
-    EllipsisTextTooltip,
-    Option,
-} from 'cbioportal-frontend-commons';
+import { CheckedSelect, EllipsisTextTooltip, Option } from 'cbioportal-frontend-commons';
 import { ExtendedAlteration } from '../ResultsViewPageStore';
 import ExpressionEnrichmentsBoxPlot from './ExpressionEnrichmentsBoxPlot';
 
@@ -67,9 +63,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<
     @observable clickedGeneEntrez: number;
     @observable.ref selectedGenes: string[] | null;
     @observable.ref highlightedRow: ExpressionEnrichmentRow | undefined;
-    @observable.ref _expressedGroups: string[] = this.props.groups.map(
-        group => group.name
-    );
+    @observable.ref _expressedGroups: string[] = this.props.groups.map(group => group.name);
     @observable private svgContainer: SVGElement | null;
 
     @computed get data(): ExpressionEnrichmentRow[] {
@@ -177,10 +171,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<
     }
 
     @computed get customColumns() {
-        return getExpressionEnrichmentColumns(
-            this.props.groups,
-            this.props.alteredVsUnalteredMode
-        );
+        return getExpressionEnrichmentColumns(this.props.groups, this.props.alteredVsUnalteredMode);
     }
 
     @computed get visibleOrderedColumnNames() {
@@ -239,20 +230,14 @@ export default class ExpressionEnrichmentContainer extends React.Component<
 
     @computed get selectedRow() {
         if (this.clickedGeneHugo) {
-            return this.props.data.filter(
-                d => d.hugoGeneSymbol === this.clickedGeneHugo
-            )[0];
+            return this.props.data.filter(d => d.hugoGeneSymbol === this.clickedGeneHugo)[0];
         }
         return undefined;
     }
 
     public render() {
         if (this.props.data.length === 0) {
-            return (
-                <div className={'alert alert-info'}>
-                    No data/result available
-                </div>
-            );
+            return <div className={'alert alert-info'}>No data/result available</div>;
         }
 
         const data: any[] = getExpressionScatterData(
@@ -271,12 +256,10 @@ export default class ExpressionEnrichmentContainer extends React.Component<
                             data={data}
                             selectedGenesSet={this.selectedGenesSet}
                             xAxisLeftLabel={
-                                this.group2.nameOfEnrichmentDirection ||
-                                this.group2.name
+                                this.group2.nameOfEnrichmentDirection || this.group2.name
                             }
                             xAxisRightLabel={
-                                this.group1.nameOfEnrichmentDirection ||
-                                this.group1.name
+                                this.group1.nameOfEnrichmentDirection || this.group1.name
                             }
                             xAxisDomain={Math.ceil(Math.abs(maxData.x))}
                             xAxisTickValues={null}
@@ -289,12 +272,8 @@ export default class ExpressionEnrichmentContainer extends React.Component<
                         selectedProfile={this.props.selectedProfile}
                         groups={this.props.groups}
                         sampleKeyToSample={this.props.sampleKeyToSample}
-                        queriedHugoGeneSymbols={
-                            this.props.queriedHugoGeneSymbols
-                        }
-                        oqlFilteredCaseAggregatedData={
-                            this.props.oqlFilteredCaseAggregatedData
-                        }
+                        queriedHugoGeneSymbols={this.props.queriedHugoGeneSymbols}
+                        oqlFilteredCaseAggregatedData={this.props.oqlFilteredCaseAggregatedData}
                         selectedRow={this.selectedRow}
                     />
                 </div>
@@ -337,21 +316,15 @@ export default class ExpressionEnrichmentContainer extends React.Component<
                     <ExpressionEnrichmentTable
                         data={this.filteredData}
                         onCheckGene={
-                            !!this.props.isGeneCheckBoxEnabled
-                                ? this.onCheckGene
-                                : undefined
+                            !!this.props.isGeneCheckBoxEnabled ? this.onCheckGene : undefined
                         }
                         onGeneNameClick={this.onGeneNameClick}
                         dataStore={this.dataStore}
                         mutexTendency={this.props.alteredVsUnalteredMode}
                         checkedGenes={
-                            !!this.props.isGeneCheckBoxEnabled
-                                ? this.checkedGenes
-                                : undefined
+                            !!this.props.isGeneCheckBoxEnabled ? this.checkedGenes : undefined
                         }
-                        visibleOrderedColumnNames={
-                            this.visibleOrderedColumnNames
-                        }
+                        visibleOrderedColumnNames={this.visibleOrderedColumnNames}
                         customColumns={_.keyBy(
                             this.customColumns,
                             column => column.uniqueName || column.name

@@ -31,9 +31,7 @@ export type SimplifiedMutationType =
     | 'inframe'
     | 'other';
 
-export function getSimplifiedMutationType(
-    type: string
-): SimplifiedMutationType {
+export function getSimplifiedMutationType(type: string): SimplifiedMutationType {
     let ret: SimplifiedMutationType;
     type = typeof type === 'string' ? type.toLowerCase() : '';
     switch (type) {
@@ -112,17 +110,12 @@ export default class AccessorsForOqlFilter {
     }
 
     public molecularAlterationType(molecularProfileId: string) {
-        const profile = this.molecularProfileIdToMolecularProfile[
-            molecularProfileId
-        ];
+        const profile = this.molecularProfileIdToMolecularProfile[molecularProfileId];
         return profile && profile.molecularAlterationType;
     }
 
     public cna(d: NumericGeneMolecularData) {
-        if (
-            this.molecularAlterationType(d.molecularProfileId) ===
-            'COPY_NUMBER_ALTERATION'
-        ) {
+        if (this.molecularAlterationType(d.molecularProfileId) === 'COPY_NUMBER_ALTERATION') {
             return cna_profile_data_to_string[d.value];
         } else {
             return null;
@@ -130,16 +123,10 @@ export default class AccessorsForOqlFilter {
     }
 
     public mut_type(d: Mutation) {
-        if (
-            this.molecularAlterationType(d.molecularProfileId) ===
-            'MUTATION_EXTENDED'
-        ) {
+        if (this.molecularAlterationType(d.molecularProfileId) === 'MUTATION_EXTENDED') {
             if (d.mutationType && d.mutationType.toLowerCase() === 'fusion') {
                 return null;
-            } else if (
-                d.proteinChange &&
-                d.proteinChange.toLowerCase() === 'promoter'
-            ) {
+            } else if (d.proteinChange && d.proteinChange.toLowerCase() === 'promoter') {
                 return 'promoter';
             } else {
                 return getSimplifiedMutationType(d.mutationType);
@@ -165,10 +152,7 @@ export default class AccessorsForOqlFilter {
     }
 
     public mut_position(d: Mutation) {
-        if (
-            this.molecularAlterationType(d.molecularProfileId) ===
-            'MUTATION_EXTENDED'
-        ) {
+        if (this.molecularAlterationType(d.molecularProfileId) === 'MUTATION_EXTENDED') {
             var start = d.proteinPosStart;
             var end = d.proteinPosEnd;
             if (start !== null && end !== null) {
@@ -182,10 +166,7 @@ export default class AccessorsForOqlFilter {
     }
 
     public mut_amino_acid_change(d: Mutation) {
-        if (
-            this.molecularAlterationType(d.molecularProfileId) ===
-            'MUTATION_EXTENDED'
-        ) {
+        if (this.molecularAlterationType(d.molecularProfileId) === 'MUTATION_EXTENDED') {
             return d.proteinChange;
         } else {
             return null;
@@ -193,10 +174,7 @@ export default class AccessorsForOqlFilter {
     }
 
     public exp(d: NumericGeneMolecularData) {
-        if (
-            this.molecularAlterationType(d.molecularProfileId) ===
-            'MRNA_EXPRESSION'
-        ) {
+        if (this.molecularAlterationType(d.molecularProfileId) === 'MRNA_EXPRESSION') {
             return d.value;
         } else {
             return null;
@@ -204,10 +182,7 @@ export default class AccessorsForOqlFilter {
     }
 
     public prot(d: NumericGeneMolecularData) {
-        if (
-            this.molecularAlterationType(d.molecularProfileId) ===
-            'PROTEIN_LEVEL'
-        ) {
+        if (this.molecularAlterationType(d.molecularProfileId) === 'PROTEIN_LEVEL') {
             return d.value;
         } else {
             return null;
@@ -215,9 +190,7 @@ export default class AccessorsForOqlFilter {
     }
 
     public fusion(d: Mutation) {
-        return getSimplifiedMutationType(d.mutationType) === 'fusion'
-            ? true
-            : null;
+        return getSimplifiedMutationType(d.mutationType) === 'fusion' ? true : null;
     }
 
     public is_driver(d: AnnotatedMutation | AnnotatedNumericGeneMolecularData) {

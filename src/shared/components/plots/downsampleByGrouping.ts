@@ -58,8 +58,7 @@ export function downsampleByGrouping<D extends { x: number; y: number }>(
     for (const datum of data) {
         let currentNode = tree;
         while (
-            distanceSquared(currentNode.summaryPoint, datum, transform) >
-            squaredDistanceThreshold
+            distanceSquared(currentNode.summaryPoint, datum, transform) > squaredDistanceThreshold
         ) {
             const gtX = datum.x >= currentNode.summaryPoint.x;
             const gtY = datum.y >= currentNode.summaryPoint.y;
@@ -67,8 +66,7 @@ export function downsampleByGrouping<D extends { x: number; y: number }>(
                 currentNode.upRight = currentNode.upRight || makeTree(datum);
                 currentNode = currentNode.upRight!;
             } else if (gtX && !gtY) {
-                currentNode.downRight =
-                    currentNode.downRight || makeTree(datum);
+                currentNode.downRight = currentNode.downRight || makeTree(datum);
                 currentNode = currentNode.downRight!;
             } else if (!gtX && gtY) {
                 currentNode.upLeft = currentNode.upLeft || makeTree(datum);

@@ -14,10 +14,7 @@ interface IHoverablePointProps {
 }
 
 @observer
-export default class HoverablePoint extends React.Component<
-    IHoverablePointProps,
-    {}
-> {
+export default class HoverablePoint extends React.Component<IHoverablePointProps, {}> {
     @autobind private onMouseOver(e: any) {
         e.target.setAttribute('r', 10);
         this.props.onMouseOver(this.props.datum, this.props.x!, this.props.y!);

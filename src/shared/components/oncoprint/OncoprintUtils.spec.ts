@@ -344,10 +344,11 @@ describe('OncoprintUtils', () => {
             const track = trackFunction(queryData, MINIMAL_TRACK_INDEX);
             track.expansionCallback!();
             // then
-            assert.includeMembers(
-                storeProperties.expansionIndexMap.get(track.key)!.slice(),
-                [0, 1, 2]
-            );
+            assert.includeMembers(storeProperties.expansionIndexMap.get(track.key)!.slice(), [
+                0,
+                1,
+                2,
+            ]);
         });
 
         it('includes expansion tracks in the spec if the observable lists them', () => {
@@ -478,11 +479,7 @@ describe('OncoprintUtils', () => {
                 sampleMode: true,
                 ...storeProperties,
             });
-            const track = trackFunction(
-                queryData,
-                MINIMAL_TRACK_INDEX,
-                'PARENT_TRACK_1'
-            );
+            const track = trackFunction(queryData, MINIMAL_TRACK_INDEX, 'PARENT_TRACK_1');
             // then
             assert.equal(track.labelColor, 'grey');
             assert.equal(track.label, '  KRAS');
@@ -619,9 +616,7 @@ describe('getTreatmentTrackRuleSetParams', () => {
             colors,
             value_stop_points,
             category_to_color,
-        } = getTreatmentTrackRuleSetParams(
-            spec
-        ) as IGradientAndCategoricalRuleSetParams;
+        } = getTreatmentTrackRuleSetParams(spec) as IGradientAndCategoricalRuleSetParams;
 
         assert.deepEqual(value_range, [100, -100]);
     });
@@ -635,9 +630,7 @@ describe('getTreatmentTrackRuleSetParams', () => {
             colors,
             value_stop_points,
             category_to_color,
-        } = getTreatmentTrackRuleSetParams(
-            spec
-        ) as IGradientAndCategoricalRuleSetParams;
+        } = getTreatmentTrackRuleSetParams(spec) as IGradientAndCategoricalRuleSetParams;
 
         assert.deepEqual(value_range, [100, -100]);
         assert.deepEqual(value_stop_points, [100, -100]);
@@ -652,9 +645,7 @@ describe('getTreatmentTrackRuleSetParams', () => {
             colors,
             value_stop_points,
             category_to_color,
-        } = getTreatmentTrackRuleSetParams(
-            spec
-        ) as IGradientAndCategoricalRuleSetParams;
+        } = getTreatmentTrackRuleSetParams(spec) as IGradientAndCategoricalRuleSetParams;
 
         assert.equal(colors!.length, 4);
         assert.deepEqual(value_range, [-100, 100]);
@@ -670,9 +661,7 @@ describe('getTreatmentTrackRuleSetParams', () => {
             colors,
             value_stop_points,
             category_to_color,
-        } = getTreatmentTrackRuleSetParams(
-            spec
-        ) as IGradientAndCategoricalRuleSetParams;
+        } = getTreatmentTrackRuleSetParams(spec) as IGradientAndCategoricalRuleSetParams;
 
         assert.equal(colors!.length, 2);
         assert.deepEqual(value_range, [-200, 100]);
@@ -688,9 +677,7 @@ describe('getTreatmentTrackRuleSetParams', () => {
             colors,
             value_stop_points,
             category_to_color,
-        } = getTreatmentTrackRuleSetParams(
-            spec
-        ) as IGradientAndCategoricalRuleSetParams;
+        } = getTreatmentTrackRuleSetParams(spec) as IGradientAndCategoricalRuleSetParams;
 
         assert.equal(colors!.length, 2);
         assert.deepEqual(value_range, [-100, 200]);
@@ -708,9 +695,7 @@ describe('getTreatmentTrackRuleSetParams', () => {
             colors,
             value_stop_points,
             category_to_color,
-        } = getTreatmentTrackRuleSetParams(
-            spec
-        ) as IGradientAndCategoricalRuleSetParams;
+        } = getTreatmentTrackRuleSetParams(spec) as IGradientAndCategoricalRuleSetParams;
 
         assert.isDefined(category_to_color);
         assert.isString(category_to_color!['>8.00']);
@@ -724,11 +709,7 @@ describe('extractTreatmentSelections', () => {
     };
 
     it('Adds recognized treatments to selection', () => {
-        extractTreatmentSelections(
-            'treatmentA treatmentB',
-            selectedTreatments,
-            treatmentMap
-        );
+        extractTreatmentSelections('treatmentA treatmentB', selectedTreatments, treatmentMap);
         assert.deepEqual(selectedTreatments, ['treatmentA']);
     });
 

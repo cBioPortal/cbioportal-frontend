@@ -11,9 +11,7 @@ export interface ISurvivalDescriptionTableProps {
     survivalDescriptionData: ISurvivalDescription[];
 }
 
-class SurvivalDescriptionTableComponent extends LazyMobXTable<
-    ISurvivalDescription
-> {}
+class SurvivalDescriptionTableComponent extends LazyMobXTable<ISurvivalDescription> {}
 
 @observer
 export default class SurvivalDescriptionTable extends React.Component<
@@ -27,18 +25,13 @@ export default class SurvivalDescriptionTable extends React.Component<
                 columns={[
                     {
                         name: 'Study',
-                        render: (data: ISurvivalDescription) => (
-                            <span>{data.studyName}</span>
-                        ),
+                        render: (data: ISurvivalDescription) => <span>{data.studyName}</span>,
                         sortBy: (data: ISurvivalDescription) => data.studyName,
                     },
                     {
                         name: 'Description',
-                        render: (data: ISurvivalDescription) => (
-                            <span>{data.description}</span>
-                        ),
-                        sortBy: (data: ISurvivalDescription) =>
-                            data.description,
+                        render: (data: ISurvivalDescription) => <span>{data.description}</span>,
+                        sortBy: (data: ISurvivalDescription) => data.description,
                     },
                 ]}
                 initialSortColumn="Description"

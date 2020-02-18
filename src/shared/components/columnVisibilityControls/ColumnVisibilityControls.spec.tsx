@@ -2,10 +2,7 @@ import React from 'react';
 import { assert } from 'chai';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
-import {
-    IColumnVisibilityDef,
-    ColumnVisibilityControls,
-} from './ColumnVisibilityControls';
+import { IColumnVisibilityDef, ColumnVisibilityControls } from './ColumnVisibilityControls';
 
 describe('ColumnVisibilityControls', () => {
     beforeEach(() => {});
@@ -28,9 +25,7 @@ describe('ColumnVisibilityControls', () => {
             },
         ];
 
-        const controls = mount(
-            <ColumnVisibilityControls columnVisibility={cols} />
-        );
+        const controls = mount(<ColumnVisibilityControls columnVisibility={cols} />);
 
         assert.equal(controls.find('li').length, 2);
 
@@ -38,10 +33,6 @@ describe('ColumnVisibilityControls', () => {
 
         controls.setProps({ columnVisibility: cols });
 
-        assert.equal(
-            controls.find('li').length,
-            1,
-            'does NOT render togglable false cols'
-        );
+        assert.equal(controls.find('li').length, 1, 'does NOT render togglable false cols');
     });
 });

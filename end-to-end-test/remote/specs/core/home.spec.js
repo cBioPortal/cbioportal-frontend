@@ -37,8 +37,7 @@ describe('homepage', function() {
         studies.waitForExist(10000); // same as `browser.waitForExist('.notification', 10000)`
 
         expect([27, 29, 32]).to.include(
-            browser.elements('[data-test="cancerTypeListContainer"] > ul > ul')
-                .value.length
+            browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length
         );
     });
 
@@ -123,15 +122,11 @@ describe('homepage', function() {
     describe.skip('select all/deselect all functionality in study selector', function() {
         beforeEach(function() {
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
-            browser.waitForExist(
-                '[data-test="StudySelect"] input[type=checkbox]'
-            );
+            browser.waitForExist('[data-test="StudySelect"] input[type=checkbox]');
         });
 
         function getVisibleCheckboxes() {
-            return browser.elements(
-                '[data-test="StudySelect"] input[type=checkbox]'
-            ).value;
+            return browser.elements('[data-test="StudySelect"] input[type=checkbox]').value;
         }
 
         it('clicking select all studies checkbox selects all studies', function() {
@@ -151,11 +146,7 @@ describe('homepage', function() {
                 return el.isSelected();
             });
 
-            assert.equal(
-                selectedStudies.length,
-                allStudies,
-                'all studies are selected'
-            );
+            assert.equal(selectedStudies.length, allStudies, 'all studies are selected');
 
             browser.element('[data-test=selectAllStudies]').click();
 
@@ -205,11 +196,9 @@ describe('homepage', function() {
             browser.pause(500);
 
             // we have to reselect elements b/c react has re-rendered them
-            selectedStudies = checkboxes = getVisibleCheckboxes().filter(
-                function(el) {
-                    return el.isSelected();
-                }
-            );
+            selectedStudies = checkboxes = getVisibleCheckboxes().filter(function(el) {
+                return el.isSelected();
+            });
 
             assert.equal(
                 selectedStudies.length,
@@ -242,8 +231,7 @@ describe('case set selection in front page query form', function() {
         browser.waitForExist(selectedCaseSet_sel);
         browser.waitUntil(
             () =>
-                browser.getText(selectedCaseSet_sel) ===
-                'Samples with mutation and CNA data (316)',
+                browser.getText(selectedCaseSet_sel) === 'Samples with mutation and CNA data (316)',
             5000
         );
     });
@@ -261,9 +249,7 @@ describe('case set selection in front page query form', function() {
 
         browser.waitForExist(selectedCaseSet_sel);
         browser.waitUntil(
-            () =>
-                browser.getText(selectedCaseSet_sel) ===
-                'Samples with mutation data (160)',
+            () => browser.getText(selectedCaseSet_sel) === 'Samples with mutation data (160)',
             10000
         );
 
@@ -272,10 +258,7 @@ describe('case set selection in front page query form', function() {
         // select Adrenocortical Carcinoma
         browser.waitForExist(input, 10000);
         setInputText(input, 'adrenocortical carcinoma tcga firehose legacy');
-        waitForNumberOfStudyCheckboxes(
-            1,
-            'Adrenocortical Carcinoma (TCGA, Firehose Legacy)'
-        );
+        waitForNumberOfStudyCheckboxes(1, 'Adrenocortical Carcinoma (TCGA, Firehose Legacy)');
         checkBox = $('[data-test="StudySelect"]');
         checkBox.waitForExist(10000);
         browser.click('[data-test="StudySelect"] input');
@@ -288,10 +271,7 @@ describe('case set selection in front page query form', function() {
         );
 
         browser.waitForExist(selectedCaseSet_sel);
-        browser.waitUntil(
-            () => browser.getText(selectedCaseSet_sel) === 'All (252)',
-            10000
-        );
+        browser.waitUntil(() => browser.getText(selectedCaseSet_sel) === 'All (252)', 10000);
 
         clickModifyStudySelectionButton();
 
@@ -311,8 +291,7 @@ describe('case set selection in front page query form', function() {
         browser.waitForExist(selectedCaseSet_sel);
         browser.waitUntil(
             () =>
-                browser.getText(selectedCaseSet_sel) ===
-                'Samples with mutation and CNA data (88)',
+                browser.getText(selectedCaseSet_sel) === 'Samples with mutation and CNA data (88)',
             10000
         );
     });
@@ -330,9 +309,7 @@ describe('case set selection in front page query form', function() {
 
         browser.waitForExist(selectedCaseSet_sel);
         browser.waitUntil(
-            () =>
-                browser.getText(selectedCaseSet_sel) ===
-                'Samples with mutation data (160)',
+            () => browser.getText(selectedCaseSet_sel) === 'Samples with mutation data (160)',
             10000
         );
 
@@ -357,10 +334,7 @@ describe('case set selection in front page query form', function() {
             10000
         );
         browser.waitForExist(selectedCaseSet_sel, 10000);
-        browser.waitUntil(
-            () => /All \(\d+\)/.test(browser.getText(selectedCaseSet_sel)),
-            10000
-        ); // since sample #s change across studies, dont depend this test on specific number
+        browser.waitUntil(() => /All \(\d+\)/.test(browser.getText(selectedCaseSet_sel)), 10000); // since sample #s change across studies, dont depend this test on specific number
 
         clickModifyStudySelectionButton();
 
@@ -389,10 +363,7 @@ describe('case set selection in front page query form', function() {
             10000
         );
         browser.waitForExist(selectedCaseSet_sel, 10000);
-        browser.waitUntil(
-            () => browser.getText(selectedCaseSet_sel) === 'All (252)',
-            10000
-        );
+        browser.waitUntil(() => browser.getText(selectedCaseSet_sel) === 'All (252)', 10000);
 
         clickModifyStudySelectionButton();
 
@@ -412,8 +383,7 @@ describe('case set selection in front page query form', function() {
         browser.waitForExist(selectedCaseSet_sel);
         browser.waitUntil(
             () =>
-                browser.getText(selectedCaseSet_sel) ===
-                'Samples with mutation and CNA data (88)',
+                browser.getText(selectedCaseSet_sel) === 'Samples with mutation and CNA data (88)',
             10000
         );
     });

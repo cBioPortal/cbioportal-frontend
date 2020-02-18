@@ -24,8 +24,7 @@ export default class PmidItem extends React.Component<PmidItemProps> {
                 </a>
                 <div className={styles['list-group-item-content']}>
                     <span>
-                        {this.props.author} {this.props.source}.{' '}
-                        {this.props.date}
+                        {this.props.author} {this.props.source}. {this.props.date}
                     </span>
                     <span>PMID: {this.props.pmid}</span>
                 </div>

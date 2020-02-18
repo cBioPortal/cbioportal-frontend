@@ -1,10 +1,6 @@
 import { getPercentage } from '../../../shared/lib/FormatUtils';
 import * as React from 'react';
-import {
-    SampleList,
-    Sample,
-    CancerStudy,
-} from 'shared/api/generated/CBioPortalAPI';
+import { SampleList, Sample, CancerStudy } from 'shared/api/generated/CBioPortalAPI';
 import _ from 'lodash';
 import { buildCBioPortalPageUrl } from '../../../shared/api/urls';
 
@@ -12,8 +8,8 @@ export function getPatientSampleSummary(samples: any[], patients: any[]) {
     if (samples.length !== patients.length) {
         return (
             <span>
-                <strong>{patients.length}</strong> patients /{' '}
-                <strong>{samples.length}</strong> samples
+                <strong>{patients.length}</strong> patients / <strong>{samples.length}</strong>{' '}
+                samples
             </span>
         );
     } else {
@@ -35,9 +31,7 @@ export function getGeneSummary(hugoSymbols: string[]) {
             return hugoSymbols.join(' & ');
         default:
             return `${hugoSymbols[0]}, ${hugoSymbols[1]} & ${
-                hugoSymbols.length === 3
-                    ? hugoSymbols[2]
-                    : `${hugoSymbols.length - 2} other genes`
+                hugoSymbols.length === 3 ? hugoSymbols[2] : `${hugoSymbols.length - 2} other genes`
             }`;
     }
 }

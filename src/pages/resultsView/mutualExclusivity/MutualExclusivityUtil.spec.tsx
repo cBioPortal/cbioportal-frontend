@@ -290,17 +290,11 @@ describe('MutualExclusivityUtil', () => {
 
     describe('#calculateLogOddsRatio()', () => {
         it('returns -1.3923174227787605 for 4, 3, 7, 2', () => {
-            assert.equal(
-                calculateLogOddsRatio(4, 3, 7, 2),
-                -1.3923174227787605
-            );
+            assert.equal(calculateLogOddsRatio(4, 3, 7, 2), -1.3923174227787605);
         });
 
         it('returns 2.1154772174199357 for 13, 7, 3, 7', () => {
-            assert.equal(
-                calculateLogOddsRatio(13, 7, 3, 7),
-                2.1154772174199357
-            );
+            assert.equal(calculateLogOddsRatio(13, 7, 3, 7), 2.1154772174199357);
         });
 
         it('returns Infinity for 5, 0 ,1, 0', () => {
@@ -417,14 +411,10 @@ describe('MutualExclusivityUtil', () => {
 
     describe('#getCountsText()', () => {
         it('returns correct text', () => {
-            const result = getTrackPairsCountText(
-                exampleData,
-                _.size(isSampleAlteredMap)
-            );
+            const result = getTrackPairsCountText(exampleData, _.size(isSampleAlteredMap));
             expect(result).toEqualJSX(
                 <p>
-                    The analysis tested <b>6</b> pairs between the <b>4</b>{' '}
-                    tracks in the OncoPrint.
+                    The analysis tested <b>6</b> pairs between the <b>4</b> tracks in the OncoPrint.
                 </p>
             );
         });
@@ -542,24 +532,15 @@ describe('MutualExclusivityUtil', () => {
 
             const wrapper = mount(<MutualExclusivityTable data={data} />);
             let cells = wrapper.find('td');
-            assert.equal(
-                cells.at(0).html(),
-                '<td><span><b>TP53</b></span></td>'
-            );
-            assert.equal(
-                cells.at(1).html(),
-                '<td><span><b>BRAF</b></span></td>'
-            );
+            assert.equal(cells.at(0).html(), '<td><span><b>TP53</b></span></td>');
+            assert.equal(cells.at(1).html(), '<td><span><b>BRAF</b></span></td>');
             assert.equal(cells.at(2).html(), '<td><span>6</span></td>');
             assert.equal(cells.at(3).html(), '<td><span>0</span></td>');
             assert.equal(cells.at(4).html(), '<td><span>1</span></td>');
             assert.equal(cells.at(5).html(), '<td><span>3</span></td>');
             assert.equal(cells.at(6).html(), '<td><span>&gt;3</span></td>');
             assert.equal(cells.at(7).html(), '<td><span>0.004</span></td>');
-            assert.equal(
-                cells.at(8).html(),
-                '<td><b><span>0.024</span></b></td>'
-            );
+            assert.equal(cells.at(8).html(), '<td><b><span>0.024</span></b></td>');
             assert.equal(
                 cells
                     .at(9)

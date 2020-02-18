@@ -1,9 +1,7 @@
 import { SimpleLazyMobXTableApplicationDataStore } from '../../../shared/lib/ILazyMobXTableApplicationDataStore';
 import { IPdbChain } from '../../../shared/model/Pdb';
 import { action, computed, observable } from 'mobx';
-export default class PdbChainDataStore extends SimpleLazyMobXTableApplicationDataStore<
-    IPdbChain
-> {
+export default class PdbChainDataStore extends SimpleLazyMobXTableApplicationDataStore<IPdbChain> {
     @observable public selectedUid: string;
 
     public getChainUid(chain: IPdbChain) {
@@ -37,8 +35,7 @@ export default class PdbChainDataStore extends SimpleLazyMobXTableApplicationDat
     constructor(data: IPdbChain[]) {
         super(data);
         this.selectedUid = '';
-        this.dataSelector = (d: IPdbChain) =>
-            this.getChainUid(d) === this.selectedUid;
+        this.dataSelector = (d: IPdbChain) => this.getChainUid(d) === this.selectedUid;
         this.dataHighlighter = this.dataSelector;
     }
 }

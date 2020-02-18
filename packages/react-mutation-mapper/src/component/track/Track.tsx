@@ -213,10 +213,7 @@ export default class Track extends React.Component<TrackProps, {}> {
                     key={spec.codon}
                     hitZoneClassName={`${this.props.idClassPrefix}${index}`}
                     hitZoneXOffset={this.props.xOffset}
-                    x={
-                        (this.props.width / this.props.proteinLength) *
-                        spec.codon
-                    }
+                    x={(this.props.width / this.props.proteinLength) * spec.codon}
                     y={this.svgHeight / 2}
                     radius={
                         this.props.dataStore.isPositionSelected(spec.codon) ||
@@ -238,10 +235,7 @@ export default class Track extends React.Component<TrackProps, {}> {
     }
 
     private getComponentIndex(classes: string): number | null {
-        return getComponentIndex(
-            classes,
-            this.props.idClassPrefix || DEFAULT_ID_CLASS_PREFIX
-        );
+        return getComponentIndex(classes, this.props.idClassPrefix || DEFAULT_ID_CLASS_PREFIX);
     }
 
     @computed private get tooltipVisible() {
@@ -294,10 +288,7 @@ export default class Track extends React.Component<TrackProps, {}> {
                     >
                         {this.hitZone}
                     </DefaultTooltip>
-                    <span
-                        style={{ marginLeft: this.props.xOffset }}
-                        onMouseOver={this.onMouseOver}
-                    >
+                    <span style={{ marginLeft: this.props.xOffset }} onMouseOver={this.onMouseOver}>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width={this.props.width}

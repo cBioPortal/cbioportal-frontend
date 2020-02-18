@@ -1,17 +1,10 @@
 import * as React from 'react';
-import {
-    ClinicalAttribute,
-    ClinicalData,
-} from '../../../shared/api/generated/CBioPortalAPI';
-import LazyMobXTable, {
-    Column,
-} from 'shared/components/lazyMobXTable/LazyMobXTable';
+import { ClinicalAttribute, ClinicalData } from '../../../shared/api/generated/CBioPortalAPI';
+import LazyMobXTable, { Column } from 'shared/components/lazyMobXTable/LazyMobXTable';
 import styles from './style/mutationalSignatureTable.module.scss';
 import { SHOW_ALL_PAGE_SIZE } from '../../../shared/components/paginationControls/PaginationControls';
 import { IMutationalSignature } from '../../../shared/model/MutationalSignature';
-import convertSamplesData, {
-    IConvertedSamplesData,
-} from './lib/convertSamplesData';
+import convertSamplesData, { IConvertedSamplesData } from './lib/convertSamplesData';
 import { getMutationalSignaturePercentage } from '../../../shared/lib/FormatUtils';
 import _ from 'lodash';
 import { labelMobxPromises } from 'mobxpromise';
@@ -44,13 +37,8 @@ export function prepareMutationalSignatureDataForTable(
 
     //group data by mutational signature
     //[{id: mutationalsignatureid, samples: [{}, {}]}]
-    let sampleInvertedDataByMutationalSignature: Array<any> = _(
-        mutationalSignatureData
-    )
-        .groupBy(
-            mutationalSignatureSample =>
-                mutationalSignatureSample.mutationalSignatureId
-        )
+    let sampleInvertedDataByMutationalSignature: Array<any> = _(mutationalSignatureData)
+        .groupBy(mutationalSignatureSample => mutationalSignatureSample.mutationalSignatureId)
         .map((mutationalSignatureSampleData, mutationalSignatureId) => ({
             id: mutationalSignatureId,
             samples: mutationalSignatureSampleData,
@@ -62,12 +50,12 @@ export function prepareMutationalSignatureDataForTable(
             mutationalSignatureId: '',
             sampleValues: {},
         };
-        mutationalSignatureRowForTable.mutationalSignatureId =
-            mutationalSignature.id;
+        mutationalSignatureRowForTable.mutationalSignatureId = mutationalSignature.id;
         for (const sample of mutationalSignature.samples) {
-            mutationalSignatureRowForTable.sampleValues[
-                sample.uniqueSampleKey
-            ] = { value: sample.value, confidence: sample.confidence };
+            mutationalSignatureRowForTable.sampleValues[sample.uniqueSampleKey] = {
+                value: sample.value,
+                confidence: sample.confidence,
+            };
         }
         tableData.push(mutationalSignatureRowForTable);
     }
@@ -78,23 +66,17 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
     IClinicalInformationMutationalSignatureTableProps,
     {}
 > {
-    readonly uniqueSamples = _.map(
-        _.uniqBy(this.props.data, 'uniqueSampleKey'),
-        uniqSample => ({ id: uniqSample.uniqueSampleKey })
-    );
+    readonly uniqueSamples = _.map(_.uniqBy(this.props.data, 'uniqueSampleKey'), uniqSample => ({
+        id: uniqSample.uniqueSampleKey,
+    }));
 
-    readonly tableData = prepareMutationalSignatureDataForTable(
-        this.props.data
-    );
+    readonly tableData = prepareMutationalSignatureDataForTable(this.props.data);
     readonly firstCol = 'mutationalSignatureId';
     readonly columns: Column<IMutationalSignatureRow>[] = [
         {
             name: 'Mutational Signature',
-            render: (data: IMutationalSignatureRow) => (
-                <span>{data[this.firstCol]}</span>
-            ),
-            download: (data: IMutationalSignatureRow) =>
-                `${data[this.firstCol]}`,
+            render: (data: IMutationalSignatureRow) => <span>{data[this.firstCol]}</span>,
+            download: (data: IMutationalSignatureRow) => `${data[this.firstCol]}`,
             filter: (
                 data: IMutationalSignatureRow,
                 filterString: string,
@@ -111,33 +93,22 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
             render: (data: IMutationalSignatureRow) =>
                 data.sampleValues[col.id].confidence > 0.85 ? ( //if confidence of mutsig sample is greater than 0.85, bold the exposure
                     <span className={styles.mutationalSignatureValue}>
-                        {getMutationalSignaturePercentage(
-                            data.sampleValues[col.id].value
-                        )}
+                        {getMutationalSignaturePercentage(data.sampleValues[col.id].value)}
                     </span>
                 ) : (
-                    <span>
-                        {getMutationalSignaturePercentage(
-                            data.sampleValues[col.id].value
-                        )}
-                    </span>
+                    <span>{getMutationalSignaturePercentage(data.sampleValues[col.id].value)}</span>
                 ),
             download: (data: IMutationalSignatureRow) =>
-                `${getMutationalSignaturePercentage(
-                    data.sampleValues[col.id].value
-                )}`,
+                `${getMutationalSignaturePercentage(data.sampleValues[col.id].value)}`,
             filter: (
                 data: IMutationalSignatureRow,
                 filterString: string,
                 filterStringUpper: string
             ) =>
-                getMutationalSignaturePercentage(
-                    data.sampleValues[col.id].value
-                )
+                getMutationalSignaturePercentage(data.sampleValues[col.id].value)
                     .toUpperCase()
                     .indexOf(filterStringUpper) > -1,
-            sortBy: (data: IMutationalSignatureRow) =>
-                data.sampleValues[col.id].value, //Number(data.sampleValues[col.id].value.match(/\d+/g)) //extracts digits out of format like 5%
+            sortBy: (data: IMutationalSignatureRow) => data.sampleValues[col.id].value, //Number(data.sampleValues[col.id].value.match(/\d+/g)) //extracts digits out of format like 5%
         })),
     ];
 

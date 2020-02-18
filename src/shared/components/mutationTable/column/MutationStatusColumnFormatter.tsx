@@ -46,10 +46,7 @@ export default class MutationStatusColumnFormatter {
 
         if (needTooltip) {
             content = (
-                <DefaultTooltip
-                    overlay={<span>{value}</span>}
-                    placement="right"
-                >
+                <DefaultTooltip overlay={<span>{value}</span>} placement="right">
                     {content}
                 </DefaultTooltip>
             );

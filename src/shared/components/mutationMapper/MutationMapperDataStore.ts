@@ -19,8 +19,7 @@ import {
 
 type GroupedData = { group: string; data: Mutation[][] }[];
 
-export const PROTEIN_IMPACT_TYPE_FILTER_ID =
-    '_cBioPortalProteinImpactTypeFilter_';
+export const PROTEIN_IMPACT_TYPE_FILTER_ID = '_cBioPortalProteinImpactTypeFilter_';
 export const MUTATION_STATUS_FILTER_ID = '_cBioPortalMutationStatusFilter_';
 
 export function findProteinImpactTypeFilter(dataFilters: DataFilter[]) {
@@ -139,13 +138,7 @@ export default class MutationMapperDataStore
                 filterStringUpper?: string,
                 filterStringLower?: string
             ) =>
-                (!fn ||
-                    fn(
-                        d,
-                        filterString,
-                        filterStringUpper,
-                        filterStringLower
-                    )) &&
+                (!fn || fn(d, filterString, filterStringUpper, filterStringLower)) &&
                 (this.dataFilters.length === 0 || this.dataMainFilter(d))
         );
 
@@ -177,9 +170,7 @@ export default class MutationMapperDataStore
 
     @computed
     get tableDataGroupedByPatients() {
-        return groupMutationsByGeneAndPatientAndProteinChange(
-            _.flatten(this.tableData)
-        );
+        return groupMutationsByGeneAndPatientAndProteinChange(_.flatten(this.tableData));
     }
 
     @computed
@@ -215,20 +206,12 @@ export default class MutationMapperDataStore
 
     @autobind
     public dataSelectFilter(d: Mutation[]): boolean {
-        return applyDataFiltersOnDatum(
-            d,
-            this.selectionFilters,
-            this.applyFilter
-        );
+        return applyDataFiltersOnDatum(d, this.selectionFilters, this.applyFilter);
     }
 
     @autobind
     public dataHighlightFilter(d: Mutation[]): boolean {
-        return applyDataFiltersOnDatum(
-            d,
-            this.highlightFilters,
-            this.applyFilter
-        );
+        return applyDataFiltersOnDatum(d, this.highlightFilters, this.applyFilter);
     }
 
     @autobind

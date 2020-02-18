@@ -17,21 +17,13 @@ export class GroupLogic extends React.Component<IGroupLogicProps, {}> {
     get child() {
         let elements = [];
         if (this.props.group) {
-            elements.push(
-                <span className={classnames(styles.text, styles.mostLeft)}>
-                    (
-                </span>
-            );
+            elements.push(<span className={classnames(styles.text, styles.mostLeft)}>(</span>);
         }
         _.reduce(
             this.props.components,
             (acc, next, index): any => {
                 if (index > 0) {
-                    acc.push(
-                        <span className={styles.text}>
-                            {this.props.operation}
-                        </span>
-                    );
+                    acc.push(<span className={styles.text}>{this.props.operation}</span>);
                 }
                 acc.push(next);
                 return acc;
@@ -39,11 +31,7 @@ export class GroupLogic extends React.Component<IGroupLogicProps, {}> {
             elements
         );
         if (this.props.group) {
-            elements.push(
-                <span className={classnames(styles.text, styles.mostRight)}>
-                    )
-                </span>
-            );
+            elements.push(<span className={classnames(styles.text, styles.mostRight)}>)</span>);
         }
         return elements;
     }

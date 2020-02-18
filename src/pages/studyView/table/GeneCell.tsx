@@ -2,10 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import styles from './tables.module.scss';
 import classnames from 'classnames';
-import {
-    DefaultTooltip,
-    EllipsisTextTooltip,
-} from 'cbioportal-frontend-commons';
+import { DefaultTooltip, EllipsisTextTooltip } from 'cbioportal-frontend-commons';
 import { getGeneColumnCellOverlaySimple } from '../TableUtils';
 import { getQValue } from '../StudyViewUtils';
 import { action, observable } from 'mobx';
@@ -36,12 +33,8 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
     }
 
     render() {
-        const geneIsSelected = _.includes(
-            this.props.selectedGenes,
-            this.props.hugoGeneSymbol
-        );
-        const qvalTypeName =
-            this.props.tableType === 'mutation' ? 'MutSig' : 'Gistic';
+        const geneIsSelected = _.includes(this.props.selectedGenes, this.props.hugoGeneSymbol);
+        const qvalTypeName = this.props.tableType === 'mutation' ? 'MutSig' : 'Gistic';
         const qvalType = qvalTypeName.toLowerCase();
         const qvalOverlay = () => (
             <div>
@@ -67,15 +60,10 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                 destroyTooltipOnHide={true}
             >
                 <div
-                    className={classnames(
-                        styles.geneSymbol,
-                        styles.displayFlex
-                    )}
+                    className={classnames(styles.geneSymbol, styles.displayFlex)}
                     onMouseEnter={() => this.onVisibleChange(true)}
                     onMouseLeave={() => this.onVisibleChange(false)}
-                    onClick={() =>
-                        this.props.onGeneSelect(this.props.hugoGeneSymbol)
-                    }
+                    onClick={() => this.props.onGeneSelect(this.props.hugoGeneSymbol)}
                 >
                     <EllipsisTextTooltip
                         text={this.props.hugoGeneSymbol}

@@ -1,18 +1,9 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import {
-    Slice,
-    VictoryContainer,
-    VictoryLabel,
-    VictoryLegend,
-    VictoryPie,
-} from 'victory';
+import { Slice, VictoryContainer, VictoryLabel, VictoryLegend, VictoryPie } from 'victory';
 import { action, computed, observable, toJS } from 'mobx';
 import _ from 'lodash';
-import {
-    getFrequencyStr,
-    toSvgDomNodeWithLegend,
-} from 'pages/studyView/StudyViewUtils';
+import { getFrequencyStr, toSvgDomNodeWithLegend } from 'pages/studyView/StudyViewUtils';
 import CBIOPORTAL_VICTORY_THEME from 'shared/theme/cBioPoralTheme';
 import { AbstractChart } from 'pages/studyView/charts/ChartContainer';
 import autobind from 'autobind-decorator';
@@ -36,8 +27,7 @@ export interface IPieChartProps {
 }
 
 @observer
-export default class PieChart extends React.Component<IPieChartProps, {}>
-    implements AbstractChart {
+export default class PieChart extends React.Component<IPieChartProps, {}> implements AbstractChart {
     private svg: SVGElement;
 
     constructor(props: IPieChartProps) {
@@ -54,9 +44,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
             },
             {} as { [id: string]: string }
         );
-        return this.props.filters.map(
-            filter => mappedValueSet[filter.toLowerCase()] || filter
-        );
+        return this.props.filters.map(filter => mappedValueSet[filter.toLowerCase()] || filter);
     }
 
     @autobind
@@ -109,9 +97,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
     }
 
     public downloadData() {
-        return this.props.data
-            .map(obj => obj.value + '\t' + obj.count)
-            .join('\n');
+        return this.props.data.map(obj => obj.value + '\t' + obj.count).join('\n');
     }
 
     public toSVGDOMNode(): Element {
@@ -130,10 +116,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
     @computed
     get fill() {
         return (d: ClinicalDataCountSummary) => {
-            if (
-                !_.isEmpty(this.filters) &&
-                !_.includes(this.filters, d.value)
-            ) {
+            if (!_.isEmpty(this.filters) && !_.includes(this.filters, d.value)) {
                 return DEFAULT_NA_COLOR;
             }
             return d.color;
@@ -163,10 +146,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
     @computed
     get fillOpacity() {
         return (d: ClinicalDataCountSummary) => {
-            if (
-                !_.isEmpty(this.filters) &&
-                !_.includes(this.filters, d.value)
-            ) {
+            if (!_.isEmpty(this.filters) && !_.includes(this.filters, d.value)) {
                 return '0.5';
             }
             return 1;
@@ -187,10 +167,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
     private label(d: ClinicalDataCountSummary) {
         return d.count / this.totalCount > 0.5
             ? d.count.toLocaleString()
-            : this.maxLength(
-                  d.count / this.totalCount,
-                  this.pieSliceRadius / 3
-              ) <
+            : this.maxLength(d.count / this.totalCount, this.pieSliceRadius / 3) <
               getTextWidth(
                   d.count.toLocaleString(),
                   CBIOPORTAL_VICTORY_THEME.axis.style.tickLabels.fontFamily,
@@ -209,9 +186,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
     @computed
     get pieSliceRadius(): number {
         const chartWidth =
-            this.props.width > this.props.height
-                ? this.props.height
-                : this.props.width;
+            this.props.width > this.props.height ? this.props.height : this.props.width;
         return chartWidth / 2 - STUDY_VIEW_CONFIG.thresholds.piePadding;
     }
 
@@ -223,10 +198,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
                 theme={CBIOPORTAL_VICTORY_THEME}
                 containerComponent={<VictoryContainer responsive={false} />}
                 groupComponent={
-                    <g
-                        className="studyViewPieChartGroup"
-                        transform="translate(0, -12)"
-                    />
+                    <g className="studyViewPieChartGroup" transform="translate(0, -12)" />
                 }
                 width={this.props.width}
                 height={this.chartSize}

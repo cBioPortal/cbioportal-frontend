@@ -45,21 +45,12 @@ export class StudySummaryRecord extends React.Component<CancerStudy, {}> {
                                 className={`fa fa-${
                                     this.showDescription ? 'minus' : 'plus'
                                 }-circle`}
-                                onClick={() =>
-                                    (this.showDescription = !this
-                                        .showDescription)
-                                }
+                                onClick={() => (this.showDescription = !this.showDescription)}
                             />
                             {this.props.name}
                         </span>
-                        <a
-                            target="_blank"
-                            href={`study?id=${this.props.studyId}`}
-                        >
-                            <i
-                                className="fa fa-external-link"
-                                aria-hidden="true"
-                            ></i>
+                        <a target="_blank" href={`study?id=${this.props.studyId}`}>
+                            <i className="fa fa-external-link" aria-hidden="true"></i>
                         </a>
                     </div>
                     <div
@@ -70,10 +61,7 @@ export class StudySummaryRecord extends React.Component<CancerStudy, {}> {
                     >
                         <span
                             dangerouslySetInnerHTML={{
-                                __html: `${this.props.description.replace(
-                                    /\r?\n/g,
-                                    '<br/>'
-                                )}`,
+                                __html: `${this.props.description.replace(/\r?\n/g, '<br/>')}`,
                             }}
                         />
                     </div>
@@ -84,10 +72,7 @@ export class StudySummaryRecord extends React.Component<CancerStudy, {}> {
 }
 
 @observer
-export default class VirtualStudy extends React.Component<
-    IVirtualStudyProps,
-    {}
-> {
+export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}> {
     @observable private name: string;
     @observable private description: string;
 
@@ -129,11 +114,7 @@ export default class VirtualStudy extends React.Component<
                     );
                     let studies = _.reduce(
                         selectedSampleSet,
-                        (
-                            acc: { id: string; samples: string[] }[],
-                            samples,
-                            studyId
-                        ) => {
+                        (acc: { id: string; samples: string[] }[], samples, studyId) => {
                             acc.push({
                                 id: studyId,
                                 samples: samples.map(sample => sample.sampleId),
@@ -143,24 +124,16 @@ export default class VirtualStudy extends React.Component<
                         []
                     );
 
-                    let {
-                        sampleIdentifiersSet,
-                        ...studyViewFilter
-                    } = this.props.filter;
+                    let { sampleIdentifiersSet, ...studyViewFilter } = this.props.filter;
 
                     let parameters = {
                         name: this.name || this.namePlaceHolder,
                         description: this.description,
                         studyViewFilter: studyViewFilter,
-                        origin: this.props.studyWithSamples.map(
-                            study => study.studyId
-                        ),
+                        origin: this.props.studyWithSamples.map(study => study.studyId),
                         studies: studies,
                     };
-                    return await sessionServiceClient.saveVirtualStudy(
-                        parameters,
-                        this.saving
-                    );
+                    return await sessionServiceClient.saveVirtualStudy(parameters, this.saving);
                 }
                 return undefined;
             },
@@ -258,12 +231,10 @@ export default class VirtualStudy extends React.Component<
                                                 className="form-control"
                                                 value={this.name}
                                                 placeholder={
-                                                    this.namePlaceHolder ||
-                                                    'Virtual study name'
+                                                    this.namePlaceHolder || 'Virtual study name'
                                                 }
                                                 onInput={event =>
-                                                    (this.name =
-                                                        event.currentTarget.value)
+                                                    (this.name = event.currentTarget.value)
                                                 }
                                             />
                                             <div className="input-group-btn">
@@ -273,18 +244,12 @@ export default class VirtualStudy extends React.Component<
                                                             'btn btn-default',
                                                             styles.saveButton
                                                         )}
-                                                        data-event={serializeEvent(
-                                                            {
-                                                                category:
-                                                                    'studyPage',
-                                                                action:
-                                                                    'saveVirtualStudy',
-                                                            }
-                                                        )}
+                                                        data-event={serializeEvent({
+                                                            category: 'studyPage',
+                                                            action: 'saveVirtualStudy',
+                                                        })}
                                                         type="button"
-                                                        disabled={
-                                                            this.buttonsDisabled
-                                                        }
+                                                        disabled={this.buttonsDisabled}
                                                         onClick={event => {
                                                             this.saving = true;
                                                         }}
@@ -305,13 +270,10 @@ export default class VirtualStudy extends React.Component<
                                                         styles.saveButton
                                                     )}
                                                     type="button"
-                                                    disabled={
-                                                        this.buttonsDisabled
-                                                    }
+                                                    disabled={this.buttonsDisabled}
                                                     data-event={serializeEvent({
                                                         category: 'studyPage',
-                                                        action:
-                                                            'shareVirtualStudy',
+                                                        action: 'shareVirtualStudy',
                                                     })}
                                                     onClick={event => {
                                                         this.sharing = true;
@@ -334,8 +296,7 @@ export default class VirtualStudy extends React.Component<
                                             placeholder="Virtual study description (Optional)"
                                             value={this.description}
                                             onChange={event =>
-                                                (this.description =
-                                                    event.currentTarget.value)
+                                                (this.description = event.currentTarget.value)
                                             }
                                         />
                                     </div>
@@ -348,13 +309,9 @@ export default class VirtualStudy extends React.Component<
                                         This virtual study was derived from:
                                     </span>
                                     <div className={styles.studiesSummaryInfo}>
-                                        {this.props.studyWithSamples.map(
-                                            study => (
-                                                <StudySummaryRecord
-                                                    {...study}
-                                                />
-                                            )
-                                        )}
+                                        {this.props.studyWithSamples.map(study => (
+                                            <StudySummaryRecord {...study} />
+                                        ))}
                                     </div>
                                 </div>
                             </Then>
@@ -389,9 +346,7 @@ export default class VirtualStudy extends React.Component<
                                                 </If>
                                             }
                                             placement="top"
-                                            onVisibleChange={
-                                                this.onTooltipVisibleChange
-                                            }
+                                            onVisibleChange={this.onTooltipVisibleChange}
                                         >
                                             <span
                                                 className="btn btn-default"
@@ -404,10 +359,7 @@ export default class VirtualStudy extends React.Component<
                                         <span
                                             className="btn btn-default"
                                             onClick={event =>
-                                                window.open(
-                                                    this.virtualStudyUrl,
-                                                    '_blank'
-                                                )
+                                                window.open(this.virtualStudyUrl, '_blank')
                                             }
                                         >
                                             View
@@ -416,19 +368,12 @@ export default class VirtualStudy extends React.Component<
                                             <span
                                                 className="btn btn-default"
                                                 onClick={event => {
-                                                    if (
-                                                        this.virtualStudy.result
-                                                    ) {
+                                                    if (this.virtualStudy.result) {
                                                         window.open(
-                                                            buildCBioPortalPageUrl(
-                                                                'results',
-                                                                {
-                                                                    cancer_study_id: this
-                                                                        .virtualStudy
-                                                                        .result
-                                                                        .id,
-                                                                }
-                                                            ),
+                                                            buildCBioPortalPageUrl('results', {
+                                                                cancer_study_id: this.virtualStudy
+                                                                    .result.id,
+                                                            }),
                                                             '_blank'
                                                         );
                                                     }

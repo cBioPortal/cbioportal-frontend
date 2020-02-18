@@ -10,8 +10,7 @@ export function getProteinImpactTypeOptionDisplayValueMap(proteinImpactTypeColor
         [ProteinImpactType.MISSENSE]: (
             <strong
                 style={{
-                    color:
-                        proteinImpactTypeColorMap[ProteinImpactType.MISSENSE],
+                    color: proteinImpactTypeColorMap[ProteinImpactType.MISSENSE],
                 }}
             >
                 Missense
@@ -20,8 +19,7 @@ export function getProteinImpactTypeOptionDisplayValueMap(proteinImpactTypeColor
         [ProteinImpactType.TRUNCATING]: (
             <strong
                 style={{
-                    color:
-                        proteinImpactTypeColorMap[ProteinImpactType.TRUNCATING],
+                    color: proteinImpactTypeColorMap[ProteinImpactType.TRUNCATING],
                 }}
             >
                 Truncating

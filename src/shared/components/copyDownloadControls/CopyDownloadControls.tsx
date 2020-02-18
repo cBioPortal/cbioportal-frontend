@@ -12,8 +12,7 @@ import { CopyDownloadButtons } from './CopyDownloadButtons';
 import { ICopyDownloadControlsProps } from './ICopyDownloadControls';
 import autobind from 'autobind-decorator';
 
-export interface IAsyncCopyDownloadControlsProps
-    extends ICopyDownloadControlsProps {
+export interface IAsyncCopyDownloadControlsProps extends ICopyDownloadControlsProps {
     downloadData?: () => Promise<ICopyDownloadData>;
 }
 
@@ -27,10 +26,7 @@ export interface ICopyDownloadData {
  * @author Aaron Lisman
  */
 @observer
-export class CopyDownloadControls extends React.Component<
-    IAsyncCopyDownloadControlsProps,
-    {}
-> {
+export class CopyDownloadControls extends React.Component<IAsyncCopyDownloadControlsProps, {}> {
     @observable downloadingData = false;
     @observable copyingData = false;
     @observable showErrorMessage = false;
@@ -65,10 +61,7 @@ export class CopyDownloadControls extends React.Component<
         }
     }
 
-    public bindCopyButton(
-        button: HTMLButtonElement | null,
-        container?: HTMLElement | null
-    ) {
+    public bindCopyButton(button: HTMLButtonElement | null, container?: HTMLElement | null) {
         if (button) {
             new Clipboard(button, {
                 text: this.getText.bind(this),
@@ -111,9 +104,7 @@ export class CopyDownloadControls extends React.Component<
                 className={`${copyDownloadStyles['centered-modal-dialog']}`}
             >
                 <Modal.Body>
-                    <ThreeBounce
-                        style={{ display: 'inline-block', marginRight: 10 }}
-                    />
+                    <ThreeBounce style={{ display: 'inline-block', marginRight: 10 }} />
                     <span>Downloading Table Data...</span>
                 </Modal.Body>
             </Modal>
@@ -126,17 +117,12 @@ export class CopyDownloadControls extends React.Component<
                 show={this.copyingData}
                 onHide={() => undefined}
                 onEntered={() => {
-                    this.bindCopyButton(
-                        this._modalCopyButton,
-                        this._modalCopyButtonContainer
-                    );
+                    this.bindCopyButton(this._modalCopyButton, this._modalCopyButtonContainer);
                 }}
                 bsSize="sm"
                 className={`${copyDownloadStyles['centered-modal-dialog']}`}
             >
-                <Modal.Header>
-                    {this.showErrorMessage ? 'Copy Error!' : 'Copy Ready!'}
-                </Modal.Header>
+                <Modal.Header>{this.showErrorMessage ? 'Copy Error!' : 'Copy Ready!'}</Modal.Header>
                 <Modal.Body>
                     {this.showErrorMessage &&
                         'An error occurred while copying the data. Data may be incomplete.'}
@@ -175,14 +161,11 @@ export class CopyDownloadControls extends React.Component<
             >
                 <Modal.Header>Download Error!</Modal.Header>
                 <Modal.Body>
-                    An error occurred while downloading the data. Downloaded
-                    file may contain incomplete data.
+                    An error occurred while downloading the data. Downloaded file may contain
+                    incomplete data.
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button
-                        onClick={this.handleModalClose}
-                        className="btn btn-primary"
-                    >
+                    <Button onClick={this.handleModalClose} className="btn btn-primary">
                         Close
                     </Button>
                 </Modal.Footer>

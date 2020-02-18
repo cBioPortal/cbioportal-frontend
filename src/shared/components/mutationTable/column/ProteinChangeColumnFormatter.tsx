@@ -7,9 +7,7 @@ import styles from './proteinChange.module.scss';
 
 export default class ProteinChangeColumnFormatter {
     public static getSortValue(d: Mutation[]): number | null {
-        return calcProteinChangeSortValue(
-            ProteinChangeColumnFormatter.getTextValue(d)
-        );
+        return calcProteinChangeSortValue(ProteinChangeColumnFormatter.getTextValue(d));
     }
 
     public static getTextValue(data: Mutation[]): string {
@@ -29,14 +27,9 @@ export default class ProteinChangeColumnFormatter {
         filterStringUpper: string
     ): boolean {
         let filterValue = ProteinChangeColumnFormatter.getDisplayValue(data);
-        const mutationStatus:
-            | string
-            | null = MutationStatusColumnFormatter.getData(data);
+        const mutationStatus: string | null = MutationStatusColumnFormatter.getData(data);
 
-        if (
-            mutationStatus &&
-            mutationStatus.toLowerCase().includes('germline')
-        ) {
+        if (mutationStatus && mutationStatus.toLowerCase().includes('germline')) {
             filterValue = `${filterValue}${mutationStatus}`;
         }
 
@@ -67,9 +60,7 @@ export default class ProteinChangeColumnFormatter {
         // use text as display value
         const text: string = ProteinChangeColumnFormatter.getDisplayValue(data);
 
-        const mutationStatus:
-            | string
-            | null = MutationStatusColumnFormatter.getData(data);
+        const mutationStatus: string | null = MutationStatusColumnFormatter.getData(data);
 
         let content = (
             <TruncatedText
@@ -81,10 +72,7 @@ export default class ProteinChangeColumnFormatter {
         );
 
         // add a germline indicator next to protein change if it is a germline mutation!
-        if (
-            mutationStatus &&
-            mutationStatus.toLowerCase().indexOf('germline') > -1
-        ) {
+        if (mutationStatus && mutationStatus.toLowerCase().indexOf('germline') > -1) {
             content = (
                 <span>
                     {content}

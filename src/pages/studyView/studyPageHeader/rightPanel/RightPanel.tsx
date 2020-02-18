@@ -6,9 +6,7 @@ import styles from '../styles.module.scss';
 import autobind from 'autobind-decorator';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import { Gene } from 'shared/api/generated/CBioPortalAPI';
-import OQLTextArea, {
-    GeneBoxType,
-} from 'shared/components/GeneSelectionBox/OQLTextArea';
+import OQLTextArea, { GeneBoxType } from 'shared/components/GeneSelectionBox/OQLTextArea';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import classnames from 'classnames';
 import { serializeEvent } from '../../../../shared/lib/tracking';
@@ -40,17 +38,13 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
         queryStr: string
     ) {
         this.geneValidationHasIssue =
-            queryStr === '' ||
-            !_.isUndefined(oql.error) ||
-            genes.suggestions.length !== 0;
+            queryStr === '' || !_.isUndefined(oql.error) || genes.suggestions.length !== 0;
         this.props.store.updateSelectedGenes(oql.query, queryStr);
     }
 
     @computed
     get isQueryButtonDisabled() {
-        return (
-            this.props.store.geneQueryStr === '' || this.geneValidationHasIssue
-        );
+        return this.props.store.geneQueryStr === '' || this.geneValidationHasIssue;
     }
 
     render() {
@@ -67,15 +61,11 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
                     </div>
                     <button
                         disabled={this.isQueryButtonDisabled}
-                        className={classnames(
-                            'btn btn-primary btn-sm',
-                            styles.submitQuery
-                        )}
+                        className={classnames('btn btn-primary btn-sm', styles.submitQuery)}
                         data-event={serializeEvent({
                             category: 'studyPage',
                             action: 'submitQuery',
-                            label: this.props.store.queriedPhysicalStudyIds
-                                .result,
+                            label: this.props.store.queriedPhysicalStudyIds.result,
                         })}
                         onClick={() => this.props.store.onSubmitQuery()}
                     >

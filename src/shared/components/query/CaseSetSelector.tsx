@@ -29,10 +29,7 @@ export interface ReactSelectOptionWithName extends ReactSelectOption<any> {
     textLabel: string;
 }
 
-export function filterCaseSetOptions(
-    opt: ReactSelectOptionWithName,
-    filter: string
-) {
+export function filterCaseSetOptions(opt: ReactSelectOptionWithName, filter: string) {
     return _.includes(opt.textLabel.toLowerCase(), filter.toLowerCase());
 }
 
@@ -50,11 +47,7 @@ export default class CaseSetSelector extends QueryStoreComponent<
                     <DefaultTooltip
                         placement="right"
                         mouseEnterDelay={0}
-                        overlay={
-                            <div className={styles.tooltip}>
-                                {sampleList.description}
-                            </div>
-                        }
+                        overlay={<div className={styles.tooltip}>{sampleList.description}</div>}
                     >
                         <span>{`${sampleList.name} (${sampleList.sampleCount})`}</span>
                     </DefaultTooltip>
@@ -77,11 +70,7 @@ export default class CaseSetSelector extends QueryStoreComponent<
                     <DefaultTooltip
                         placement="right"
                         mouseEnterDelay={0}
-                        overlay={
-                            <div className={styles.tooltip}>
-                                {s.description}
-                            </div>
-                        }
+                        overlay={<div className={styles.tooltip}>{s.description}</div>}
                     >
                         <span>{s.name}</span>
                     </DefaultTooltip>
@@ -99,20 +88,13 @@ export default class CaseSetSelector extends QueryStoreComponent<
         }
         if (!this.store.selectableSelectedStudyIds.length) return null;
         return (
-            <FlexRow
-                padded
-                overflow
-                className={styles.CaseSetSelector}
-                data-test="CaseSetSelector"
-            >
+            <FlexRow padded overflow className={styles.CaseSetSelector} data-test="CaseSetSelector">
                 <div>
                     <SectionHeader
                         className="sectionLabel"
                         secondaryComponent={
                             <a
-                                href={getStudySummaryUrl(
-                                    this.store.selectableSelectedStudyIds
-                                )}
+                                href={getStudySummaryUrl(this.store.selectableSelectedStudyIds)}
                                 target="_blank"
                             >
                                 To build your own case set,
@@ -135,27 +117,17 @@ export default class CaseSetSelector extends QueryStoreComponent<
                         options={this.caseSetOptions}
                         filterOption={filterCaseSetOptions}
                         onChange={(option: any) =>
-                            (this.store.selectedSampleListId = option
-                                ? option.value
-                                : undefined)
+                            (this.store.selectedSampleListId = option ? option.value : undefined)
                         }
                         data-test="caseSetSelector"
                     />
 
-                    {!!(
-                        this.store.selectedSampleListId === CUSTOM_CASE_LIST_ID
-                    ) && (
+                    {!!(this.store.selectedSampleListId === CUSTOM_CASE_LIST_ID) && (
                         <FlexCol padded>
                             <div className={styles.radioRow}>
                                 <FlexRow padded>
-                                    <this.CaseIdsModeRadio
-                                        label="By sample ID"
-                                        state="sample"
-                                    />
-                                    <this.CaseIdsModeRadio
-                                        label="By patient ID"
-                                        state="patient"
-                                    />
+                                    <this.CaseIdsModeRadio label="By sample ID" state="sample" />
+                                    <this.CaseIdsModeRadio label="By patient ID" state="patient" />
                                 </FlexRow>
                             </div>
 
@@ -165,10 +137,7 @@ export default class CaseSetSelector extends QueryStoreComponent<
                                 rows={6}
                                 cols={80}
                                 value={this.store.caseIds}
-                                onChange={event =>
-                                    (this.store.caseIds =
-                                        event.currentTarget.value)
-                                }
+                                onChange={event => (this.store.caseIds = event.currentTarget.value)}
                                 data-test="CustomCaseSetInput"
                             />
                         </FlexCol>
@@ -181,26 +150,21 @@ export default class CaseSetSelector extends QueryStoreComponent<
     @action
     private modifyQuery() {
         this.store.selectedSampleListId = this.props.modifyQueryParams!.selectedSampleListId;
-        this.store.caseIds = this.props.modifyQueryParams!.selectedSampleIds.join(
-            '\n'
-        );
+        this.store.caseIds = this.props.modifyQueryParams!.selectedSampleIds.join('\n');
         this.store.caseIdsMode = this.props.modifyQueryParams!.caseIdsMode;
         this.isQueryModified = true;
     }
 
-    CaseIdsModeRadio = observer(
-        (props: { label: string; state: QueryStore['caseIdsMode'] }) => (
-            <label>
-                <input
-                    type="radio"
-                    checked={this.store.caseIdsMode == props.state}
-                    onChange={event => {
-                        if (event.currentTarget.checked)
-                            this.store.caseIdsMode = props.state;
-                    }}
-                />
-                {props.label}
-            </label>
-        )
-    );
+    CaseIdsModeRadio = observer((props: { label: string; state: QueryStore['caseIdsMode'] }) => (
+        <label>
+            <input
+                type="radio"
+                checked={this.store.caseIdsMode == props.state}
+                onChange={event => {
+                    if (event.currentTarget.checked) this.store.caseIdsMode = props.state;
+                }}
+            />
+            {props.label}
+        </label>
+    ));
 }

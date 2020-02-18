@@ -4,17 +4,12 @@ import * as _ from 'lodash';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import numeral from 'numeral';
 
-export function toPrecision(
-    value: number,
-    precision: number,
-    threshold: number
-) {
+export function toPrecision(value: number, precision: number, threshold: number) {
     // round to precision significant figures
     // with threshold being the upper bound on the numbers that are
     // rewritten in exponential notation
 
-    if (0.000001 <= value && value < threshold)
-        return value.toExponential(precision);
+    if (0.000001 <= value && value < threshold) return value.toExponential(precision);
 
     let ret = value.toPrecision(precision);
     //if (ret.indexOf(".")!==-1)
@@ -23,10 +18,7 @@ export function toPrecision(
     return ret;
 }
 
-export function toFixedWithoutTrailingZeros(
-    value: number,
-    digits: number
-): string {
+export function toFixedWithoutTrailingZeros(value: number, digits: number): string {
     let fixed = value.toFixed(digits);
     let zeros = '';
     for (let i = 0; i < digits; i++) {
@@ -105,21 +97,14 @@ export function toConditionalPrecisionWithMinimum(
             </span>
         );
     } else {
-        return toConditionalPrecision(
-            positiveNumber,
-            precision,
-            precisionThreshold
-        );
+        return toConditionalPrecision(positiveNumber, precision, precisionThreshold);
     }
 }
 
 /* difference between this function and the previous one is it will display
 percentages less than 1% as <1%
 */
-export function getMutationalSignaturePercentage(
-    proportion: number,
-    digits: number = 0
-) {
+export function getMutationalSignaturePercentage(proportion: number, digits: number = 0) {
     //0.003 -> 0.3
 
     if (100 * proportion < 1) {

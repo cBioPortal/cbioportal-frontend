@@ -102,30 +102,12 @@ describe('LollipopPlotUtils', () => {
                 'G12D/12V/12C/12N/12A/12R/12S/G12AC/G12DC'
             );
 
-            assert.equal(
-                lollipopLabelText(mutationsAtPosition, 1),
-                'G12D and 8 more'
-            );
-            assert.equal(
-                lollipopLabelText(mutationsAtPosition, 2),
-                'G12D/V and 7 more'
-            );
-            assert.equal(
-                lollipopLabelText(mutationsAtPosition, 3),
-                'G12D/V/C and 6 more'
-            );
-            assert.equal(
-                lollipopLabelText(mutationsAtPosition, 4),
-                'G12D/V/C/N and 5 more'
-            );
-            assert.equal(
-                lollipopLabelText(mutationsAtPosition, 5),
-                'G12D/V/C/N/A and 4 more'
-            );
-            assert.equal(
-                lollipopLabelText(mutationsAtPosition, 6),
-                'G12D/V/C/N/A/R and 3 more'
-            );
+            assert.equal(lollipopLabelText(mutationsAtPosition, 1), 'G12D and 8 more');
+            assert.equal(lollipopLabelText(mutationsAtPosition, 2), 'G12D/V and 7 more');
+            assert.equal(lollipopLabelText(mutationsAtPosition, 3), 'G12D/V/C and 6 more');
+            assert.equal(lollipopLabelText(mutationsAtPosition, 4), 'G12D/V/C/N and 5 more');
+            assert.equal(lollipopLabelText(mutationsAtPosition, 5), 'G12D/V/C/N/A and 4 more');
+            assert.equal(lollipopLabelText(mutationsAtPosition, 6), 'G12D/V/C/N/A/R and 3 more');
         });
     });
 

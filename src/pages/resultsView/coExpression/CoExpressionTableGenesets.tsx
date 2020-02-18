@@ -6,10 +6,7 @@ import LazyMobXTable from '../../../shared/components/lazyMobXTable/LazyMobXTabl
 import { CoExpressionDataStore, TableMode } from './CoExpressionViz';
 import Select from 'react-select1';
 import { observer } from 'mobx-react';
-import {
-    CoExpressionWithQ,
-    tableSearchInformation,
-} from './CoExpressionTabUtils';
+import { CoExpressionWithQ, tableSearchInformation } from './CoExpressionTabUtils';
 import InfoIcon from '../../../shared/components/InfoIcon';
 import { bind } from 'bind-decorator';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
@@ -42,17 +39,11 @@ const COLUMNS = [
         sortBy: (d: CoExpressionWithQ) => d.geneticEntityName,
         width: '60%',
     },
-    makeNumberColumn(
-        SPEARMANS_CORRELATION_COLUMN_NAME,
-        'spearmansCorrelation',
-        true,
-        false
-    ),
+    makeNumberColumn(SPEARMANS_CORRELATION_COLUMN_NAME, 'spearmansCorrelation', true, false),
     makeNumberColumn(P_VALUE_COLUMN_NAME, 'pValue', false, false),
-    Object.assign(
-        makeNumberColumn(Q_VALUE_COLUMN_NAME, 'qValue', false, true),
-        { sortBy: (d: CoExpressionWithQ) => [d.qValue, d.pValue] }
-    ),
+    Object.assign(makeNumberColumn(Q_VALUE_COLUMN_NAME, 'qValue', false, true), {
+        sortBy: (d: CoExpressionWithQ) => [d.qValue, d.pValue],
+    }),
 ];
 
 function makeNumberColumn(
@@ -67,9 +58,7 @@ function makeNumberColumn(
             return (
                 <span
                     style={{
-                        color: colorByValue
-                            ? correlationColor(d[key] as number)
-                            : '#000000',
+                        color: colorByValue ? correlationColor(d[key] as number) : '#000000',
                         textAlign: 'right',
                         float: 'right',
                         whiteSpace: 'nowrap',
@@ -143,11 +132,7 @@ export default class CoExpressionTableGenesets extends React.Component<
                     </div>
                     <InfoIcon
                         style={{ marginLeft: 21, marginTop: '0.7em' }}
-                        tooltip={
-                            <div style={{ maxWidth: 200 }}>
-                                {tableSearchInformation}
-                            </div>
-                        }
+                        tooltip={<div style={{ maxWidth: 200 }}>{tableSearchInformation}</div>}
                         tooltipPlacement="left"
                     />
                 </div>

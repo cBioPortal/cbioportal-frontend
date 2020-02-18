@@ -157,8 +157,7 @@ export function getMolecularDataBuckets(
         memo: MolecularDataBuckets,
         molecularData: NumericGeneMolecularData
     ) => {
-        const mutation =
-            mutationsKeyedBySampleId[molecularData.uniqueSampleKey];
+        const mutation = mutationsKeyedBySampleId[molecularData.uniqueSampleKey];
         if (mutation) {
             const oncoprintMutationType = getOncoprintMutationType(mutation);
             const bucket = (memo.mutationBuckets[oncoprintMutationType] =
@@ -188,9 +187,7 @@ export function getMolecularDataBuckets(
         return memo;
     };
 
-    const iteratee = showMutations
-        ? mutationModeInteratee
-        : noMutationModeIteratee;
+    const iteratee = showMutations ? mutationModeInteratee : noMutationModeIteratee;
 
     // populate buckets using iteratee
     const buckets = studyData.reduce(iteratee, {
@@ -233,16 +230,11 @@ export function expressionTooltip(
         <div>
             <span>
                 <b>Study:</b>{' '}
-                <a href={getStudySummaryUrl(d.studyId)}>
-                    {studyIdToStudy[d.studyId].name}
-                </a>
+                <a href={getStudySummaryUrl(d.studyId)}>{studyIdToStudy[d.studyId].name}</a>
             </span>
             <br />
             <span>
-                <b>Sample ID:</b>{' '}
-                <a href={getSampleViewUrl(d.studyId, d.sampleId)}>
-                    {d.sampleId}
-                </a>
+                <b>Sample ID:</b> <a href={getSampleViewUrl(d.studyId, d.sampleId)}>{d.sampleId}</a>
             </span>
             <br />
             <span>
@@ -272,19 +264,15 @@ export function getPossibleRNASeqVersions(
         rna_seq_v2_mrna: false,
     };
 
-    possibleRNASeqVersions.rna_seq_mrna = _.some(
-        expressionProfiles,
-        expressionProfile =>
-            RegExp(
-                `rna_seq_mrna$|pan_can_atlas_2018_rna_seq_mrna_median$`
-            ).test(expressionProfile.molecularProfileId)
+    possibleRNASeqVersions.rna_seq_mrna = _.some(expressionProfiles, expressionProfile =>
+        RegExp(`rna_seq_mrna$|pan_can_atlas_2018_rna_seq_mrna_median$`).test(
+            expressionProfile.molecularProfileId
+        )
     );
-    possibleRNASeqVersions.rna_seq_v2_mrna = _.some(
-        expressionProfiles,
-        expressionProfile =>
-            RegExp(
-                `rna_seq_v2_mrna$|pan_can_atlas_2018_rna_seq_v2_mrna_median$`
-            ).test(expressionProfile.molecularProfileId)
+    possibleRNASeqVersions.rna_seq_v2_mrna = _.some(expressionProfiles, expressionProfile =>
+        RegExp(`rna_seq_v2_mrna$|pan_can_atlas_2018_rna_seq_v2_mrna_median$`).test(
+            expressionProfile.molecularProfileId
+        )
     );
 
     return RNASeqOptions.filter(option => possibleRNASeqVersions[option.value]);

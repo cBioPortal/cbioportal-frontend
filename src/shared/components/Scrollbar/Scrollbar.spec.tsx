@@ -24,9 +24,7 @@ describe('Scrollbar', () => {
             },
         };
 
-        wrapper = mount(
-            <ScrollBar getScrollEl={() => fakeInstance.scrollEl} />
-        );
+        wrapper = mount(<ScrollBar getScrollEl={() => fakeInstance.scrollEl} />);
         instance = wrapper.instance() as ScrollBar;
     });
 
@@ -71,11 +69,7 @@ describe('Scrollbar', () => {
 
         instance.handleDragEvent({}, { node: handleNode, x: 30 });
         assert(doScrollStub.calledOnce, 'calls doScroll');
-        assert.equal(
-            doScrollStub.args[0][0],
-            0.1,
-            'calls doScroll with correct percentage'
-        );
+        assert.equal(doScrollStub.args[0][0], 0.1, 'calls doScroll with correct percentage');
 
         instance.handleDragEvent({}, { node: handleNode, x: 1000 });
         assert.equal(doScrollStub.args[1][0], 1, 'handles ratio above 1');

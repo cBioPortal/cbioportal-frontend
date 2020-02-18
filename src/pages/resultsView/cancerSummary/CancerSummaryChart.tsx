@@ -104,10 +104,7 @@ export function mergeAlterationDataAcrossAlterationTypes(
 }
 
 @observer
-export class CancerSummaryChart extends React.Component<
-    CancerSummaryChartProps,
-    {}
-> {
+export class CancerSummaryChart extends React.Component<CancerSummaryChartProps, {}> {
     @observable.ref private barPlotTooltipModel: ITooltipModel | null;
     @observable.ref private scatterPlotTooltipModel: any | null;
 
@@ -139,36 +136,25 @@ export class CancerSummaryChart extends React.Component<
         if (!this.scatterPlotTooltipModel) {
             return null;
         } else {
-            const profiledCount = this.scatterPlotTooltipModel.datum
-                .profiledCount as number;
+            const profiledCount = this.scatterPlotTooltipModel.datum.profiledCount as number;
             let tooltopMessage = 'Not profiled';
             if (profiledCount > 0) {
-                tooltopMessage = `${profiledCount} ${pluralize(
-                    'sample',
-                    profiledCount
-                )}  profiled`;
+                tooltopMessage = `${profiledCount} ${pluralize('sample', profiledCount)}  profiled`;
             }
             const maxWidth = 400;
             let tooltipPlacement =
-                this.mousePosition.x > WindowStore.size.width - maxWidth
-                    ? 'left'
-                    : 'right';
+                this.mousePosition.x > WindowStore.size.width - maxWidth ? 'left' : 'right';
             return (ReactDOM as any).createPortal(
                 <Popover
                     arrowOffsetTop={VERTICAL_OFFSET}
                     className={classnames('cbioportal-frontend', 'cbioTooltip')}
                     positionLeft={
                         this.mousePosition.x +
-                        (tooltipPlacement === 'left'
-                            ? -HORIZONTAL_OFFSET
-                            : HORIZONTAL_OFFSET)
+                        (tooltipPlacement === 'left' ? -HORIZONTAL_OFFSET : HORIZONTAL_OFFSET)
                     }
                     positionTop={this.mousePosition.y - VERTICAL_OFFSET}
                     style={{
-                        transform:
-                            tooltipPlacement === 'left'
-                                ? 'translate(-100%,0%)'
-                                : undefined,
+                        transform: tooltipPlacement === 'left' ? 'translate(-100%,0%)' : undefined,
                         maxWidth,
                     }}
                     placement={tooltipPlacement}
@@ -187,9 +173,7 @@ export class CancerSummaryChart extends React.Component<
             const tooltipModel = this.barPlotTooltipModel;
             const maxWidth = 400;
             let tooltipPlacement =
-                this.mousePosition.x > WindowStore.size.width - maxWidth
-                    ? 'left'
-                    : 'right';
+                this.mousePosition.x > WindowStore.size.width - maxWidth ? 'left' : 'right';
 
             return (ReactDOM as any).createPortal(
                 <Popover
@@ -199,16 +183,11 @@ export class CancerSummaryChart extends React.Component<
                     className={classnames('cbioportal-frontend', 'cbioTooltip')}
                     positionLeft={
                         this.mousePosition.x +
-                        (tooltipPlacement === 'left'
-                            ? -HORIZONTAL_OFFSET
-                            : HORIZONTAL_OFFSET)
+                        (tooltipPlacement === 'left' ? -HORIZONTAL_OFFSET : HORIZONTAL_OFFSET)
                     }
                     positionTop={this.mousePosition.y - VERTICAL_OFFSET}
                     style={{
-                        transform:
-                            tooltipPlacement === 'left'
-                                ? 'translate(-100%,0%)'
-                                : undefined,
+                        transform: tooltipPlacement === 'left' ? 'translate(-100%,0%)' : undefined,
                         maxWidth,
                     }}
                     placement={tooltipPlacement}
@@ -218,9 +197,7 @@ export class CancerSummaryChart extends React.Component<
                             <Then>
                                 <strong>
                                     <a
-                                        href={this.formatStudyLink(
-                                            tooltipModel.studyId
-                                        )}
+                                        href={this.formatStudyLink(tooltipModel.studyId)}
                                         target="_blank"
                                     >
                                         {tooltipModel.groupName}
@@ -233,21 +210,16 @@ export class CancerSummaryChart extends React.Component<
                                 </strong>
                             </Then>
                             <Else>
-                                <strong>
-                                    Summary for {tooltipModel.groupName}
-                                </strong>
+                                <strong>Summary for {tooltipModel.groupName}</strong>
                             </Else>
                         </If>
                         <p>
                             Gene altered in{' '}
                             {percentageRounder(
                                 tooltipModel.alterationData.alteredSampleCount /
-                                    tooltipModel.alterationData
-                                        .profiledSampleTotal
+                                    tooltipModel.alterationData.profiledSampleTotal
                             )}
-                            % of{' '}
-                            {tooltipModel.alterationData.profiledSampleTotal}{' '}
-                            cases
+                            % of {tooltipModel.alterationData.profiledSampleTotal} cases
                         </p>
                         <table className="table table-striped">
                             <thead>
@@ -262,38 +234,24 @@ export class CancerSummaryChart extends React.Component<
                                     (memo, name: string, key: string) => {
                                         if (
                                             key in
-                                                tooltipModel!.alterationData
-                                                    .alterationTypeCounts &&
+                                                tooltipModel!.alterationData.alterationTypeCounts &&
                                             (tooltipModel!.alterationData
-                                                .alterationTypeCounts as any)[
-                                                key
-                                            ] > 0
+                                                .alterationTypeCounts as any)[key] > 0
                                         ) {
-                                            const alterationCount = (tooltipModel!
-                                                .alterationData
-                                                .alterationTypeCounts as any)[
-                                                key
-                                            ];
+                                            const alterationCount = (tooltipModel!.alterationData
+                                                .alterationTypeCounts as any)[key];
                                             memo.push(
                                                 <tr>
                                                     <td>{name}</td>
                                                     <td>
                                                         {percentageRounder(
-                                                            (tooltipModel!
-                                                                .alterationData
-                                                                .alterationTypeCounts as any)[
-                                                                key
-                                                            ] /
-                                                                tooltipModel!
-                                                                    .alterationData
+                                                            (tooltipModel!.alterationData
+                                                                .alterationTypeCounts as any)[key] /
+                                                                tooltipModel!.alterationData
                                                                     .profiledSampleTotal
                                                         )}
                                                         % ({alterationCount}{' '}
-                                                        {pluralize(
-                                                            'case',
-                                                            alterationCount
-                                                        )}
-                                                        )
+                                                        {pluralize('case', alterationCount)})
                                                     </td>
                                                 </tr>
                                             );
@@ -338,8 +296,7 @@ export class CancerSummaryChart extends React.Component<
         await sleepUntil(() => {
             return (
                 studyWindow.closed ||
-                (studyWindow.globalStores &&
-                    studyWindow.globalStores.appStore.appReady)
+                (studyWindow.globalStores && studyWindow.globalStores.appStore.appReady)
             );
         });
 
@@ -375,20 +332,11 @@ export class CancerSummaryChart extends React.Component<
     }
 
     private get chartWidth() {
-        return (
-            this.props.xLabels.length *
-                (this.barWidth() + this.barSeparation()) +
-            100
-        );
+        return this.props.xLabels.length * (this.barWidth() + this.barSeparation()) + 100;
     }
 
     private get svgHeight() {
-        return (
-            this.barChartHeight() +
-            this.scatterChartHeight +
-            this.bottomPadding -
-            100
-        );
+        return this.barChartHeight() + this.scatterChartHeight + this.bottomPadding - 100;
     }
 
     private get rightPadding() {
@@ -442,16 +390,12 @@ export class CancerSummaryChart extends React.Component<
     }
 
     private get yAxisLabel() {
-        return this.props.isPercentage
-            ? 'Alteration Frequency'
-            : 'Absolute Counts';
+        return this.props.isPercentage ? 'Alteration Frequency' : 'Absolute Counts';
     }
 
     @autobind
     private tickFormat() {
-        return this.props.isPercentage
-            ? (tick: string) => `${tick}%`
-            : (tick: string) => tick;
+        return this.props.isPercentage ? (tick: string) => `${tick}%` : (tick: string) => tick;
     }
     /*
      * returns events configuration for Victory chart
@@ -468,17 +412,12 @@ export class CancerSummaryChart extends React.Component<
                                 target: 'data',
                                 mutation: (props: any) => {
                                     self.shouldUpdatePosition = true;
-                                    if (
-                                        props.datum.xKey in
-                                        self.props.countsByGroup
-                                    ) {
+                                    if (props.datum.xKey in self.props.countsByGroup) {
                                         self.barPlotTooltipModel = {
                                             ...props,
                                             groupName: props.datum.x,
                                             alterationData:
-                                                self.props.countsByGroup[
-                                                    props.datum.xKey
-                                                ],
+                                                self.props.countsByGroup[props.datum.xKey],
                                             studyId: props.datum.xKey,
                                         };
                                         self.barToolTipCounter++;
@@ -556,10 +495,7 @@ export class CancerSummaryChart extends React.Component<
         return {
             position: 'relative',
             display: 'inline-block',
-            width:
-                this.props.xLabels.length > HORIZONTAL_SCROLLING_THRESHOLD
-                    ? '100%'
-                    : 'auto',
+            width: this.props.xLabels.length > HORIZONTAL_SCROLLING_THRESHOLD ? '100%' : 'auto',
         };
     }
 
@@ -588,16 +524,9 @@ export class CancerSummaryChart extends React.Component<
 
     @computed get scatterChartHeight() {
         let miscPadding = 100; // specifying chart width in victory doesnt translate directly to the actual graph size
-        const profiledDataTypesLength = _.uniqBy(
-            this.scatterData,
-            datum => datum.y
-        ).length;
+        const profiledDataTypesLength = _.uniqBy(this.scatterData, datum => datum.y).length;
         if (profiledDataTypesLength > 0) {
-            return (
-                profiledDataTypesLength *
-                    (this.barWidth() + this.barSeparation()) +
-                miscPadding
-            );
+            return profiledDataTypesLength * (this.barWidth() + this.barSeparation()) + miscPadding;
         } else {
             return miscPadding;
         }
@@ -667,9 +596,7 @@ export class CancerSummaryChart extends React.Component<
                             >
                                 <VictoryAxis
                                     dependentAxis
-                                    axisLabelComponent={
-                                        <VictoryLabel dy={-50} />
-                                    }
+                                    axisLabelComponent={<VictoryLabel dy={-50} />}
                                     label={this.yAxisLabel}
                                     tickFormat={this.tickFormat}
                                     offsetX={50}

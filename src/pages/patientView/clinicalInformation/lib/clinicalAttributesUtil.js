@@ -124,10 +124,7 @@ function derive(clinicalData) {
                 } else if (caseTypeLower.indexOf('prim') >= 0) {
                     caseTypeNormalized = 'Primary';
                 }
-                if (
-                    caseTypeNormalized !== null &&
-                    typeof caseTypeNormalized !== 'undefined'
-                ) {
+                if (caseTypeNormalized !== null && typeof caseTypeNormalized !== 'undefined') {
                     break;
                 }
             }
@@ -148,21 +145,10 @@ function derive(clinicalData) {
         derivedClinicalAttributes.DERIVED_NORMALIZED_CASE_TYPE = caseTypeNormalized;
 
         // TODO: DERIVED_SAMPLE_LOCATION should probably be a clinical attribute.
-        if (
-            derivedClinicalAttributes.DERIVED_NORMALIZED_CASE_TYPE ===
-            'Metastasis'
-        ) {
-            loc = getFirstKeyFound(clinicalData, [
-                'METASTATIC_SITE',
-                'TUMOR_SITE',
-            ]);
-        } else if (
-            derivedClinicalAttributes.DERIVED_NORMALIZED_CASE_TYPE === 'Primary'
-        ) {
-            loc = getFirstKeyFound(clinicalData, [
-                'PRIMARY_SITE',
-                'TUMOR_SITE',
-            ]);
+        if (derivedClinicalAttributes.DERIVED_NORMALIZED_CASE_TYPE === 'Metastasis') {
+            loc = getFirstKeyFound(clinicalData, ['METASTATIC_SITE', 'TUMOR_SITE']);
+        } else if (derivedClinicalAttributes.DERIVED_NORMALIZED_CASE_TYPE === 'Primary') {
+            loc = getFirstKeyFound(clinicalData, ['PRIMARY_SITE', 'TUMOR_SITE']);
         } else {
             loc = getFirstKeyFound(clinicalData, ['TUMOR_SITE']);
         }
@@ -189,16 +175,10 @@ function cleanAndDerive(clinicalData) {
  * @param {string} cancerStudyId    - short name of cancer study
  */
 function getSpanElements(clinicalData, cancerStudyId) {
-    return getSpanElementsFromCleanData(
-        cleanAndDerive(clinicalData),
-        cancerStudyId
-    );
+    return getSpanElementsFromCleanData(cleanAndDerive(clinicalData), cancerStudyId);
 }
 
-function getSpanElementsFromCleanData(
-    clinicalAttributesCleanDerived,
-    cancerStudyId
-) {
+function getSpanElementsFromCleanData(clinicalAttributesCleanDerived, cancerStudyId) {
     let spans = [];
     return Object.keys(clinicalAttributesCleanDerived).map(key => {
         let value = clinicalAttributesCleanDerived[key];
@@ -225,25 +205,15 @@ function getSpanElementsFromCleanData(
  */
 function addFirstOrderClass() {
     $('.sample-record-inline, #more-patient-info').each(() => {
-        const orderSortedAttributes = _.sortBy(
-            $(this).find('a > .clinical-attribute'),
-            y => {
-                const order = parseInt($(y).css('order'), 10);
-                if (isNaN(order)) {
-                    console.log(
-                        'Warning: No order attribute found in .clinical-attribute.'
-                    );
-                }
-                return order;
+        const orderSortedAttributes = _.sortBy($(this).find('a > .clinical-attribute'), y => {
+            const order = parseInt($(y).css('order'), 10);
+            if (isNaN(order)) {
+                console.log('Warning: No order attribute found in .clinical-attribute.');
             }
-        );
+            return order;
+        });
         $(orderSortedAttributes[0]).addClass('first-order');
     });
 }
 
-export {
-    cleanAndDerive,
-    getSpanElements,
-    getSpanElementsFromCleanData,
-    addFirstOrderClass,
-};
+export { cleanAndDerive, getSpanElements, getSpanElementsFromCleanData, addFirstOrderClass };

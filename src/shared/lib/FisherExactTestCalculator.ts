@@ -11,20 +11,11 @@ function getProbability(
         logFactorial[c + d] +
         logFactorial[a + c] +
         logFactorial[b + d] -
-        (logFactorial[a] +
-            logFactorial[b] +
-            logFactorial[c] +
-            logFactorial[d] +
-            logFactorial[n]);
+        (logFactorial[a] + logFactorial[b] + logFactorial[c] + logFactorial[d] + logFactorial[n]);
     return Math.exp(p);
 }
 
-export function getCumulativePValue(
-    a: number,
-    b: number,
-    c: number,
-    d: number
-): number {
+export function getCumulativePValue(a: number, b: number, c: number, d: number): number {
     let min: number, i: number;
     const n: number = a + b + c + d;
     let p: number = 0;

@@ -82,32 +82,24 @@ export class DefaultMutationMapperDataFetcher {
 
     public async fetchSwissProtAccession(entrezGeneId: number): Promise<any> {
         const myGeneData: Response = await request.get(
-            getUrl(
-                this.config.myGeneUrlTemplate || DEFAULT_MY_GENE_URL_TEMPLATE,
-                { entrezGeneId }
-            )
+            getUrl(this.config.myGeneUrlTemplate || DEFAULT_MY_GENE_URL_TEMPLATE, { entrezGeneId })
         );
         return JSON.parse(myGeneData.text).uniprot['Swiss-Prot'];
     }
 
     public async fetchUniprotId(swissProtAccession: string): Promise<string> {
         const uniprotData: Response = await request.get(
-            getUrl(
-                this.config.uniprotIdUrlTemplate ||
-                    DEFAULT_UNIPROT_ID_URL_TEMPLATE,
-                { swissProtAccession }
-            )
+            getUrl(this.config.uniprotIdUrlTemplate || DEFAULT_UNIPROT_ID_URL_TEMPLATE, {
+                swissProtAccession,
+            })
         );
         return uniprotData.text.split('\n')[1];
     }
 
-    public fetchMutationAlignerLink(
-        pfamDomainId: string
-    ): request.SuperAgentRequest {
+    public fetchMutationAlignerLink(pfamDomainId: string): request.SuperAgentRequest {
         return request.get(
             getUrl(
-                this.config.mutationAlignerUrlTemplate ||
-                    DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE,
+                this.config.mutationAlignerUrlTemplate || DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE,
                 { pfamDomainId }
             )
         );
@@ -148,9 +140,7 @@ export class DefaultMutationMapperDataFetcher {
             client
         );
 
-        return getMyVariantInfoAnnotationsFromIndexedVariantAnnotations(
-            indexedVariantAnnotations
-        );
+        return getMyVariantInfoAnnotationsFromIndexedVariantAnnotations(indexedVariantAnnotations);
     }
 
     /*
@@ -162,18 +152,16 @@ export class DefaultMutationMapperDataFetcher {
         allTranscripts: EnsemblTranscript[] | undefined,
         client: GenomeNexusAPI = this.genomeNexusClient
     ): Promise<EnsemblTranscript | undefined> {
-        return this.fetchCanonicalTranscript(
-            hugoSymbol,
-            isoformOverrideSource,
-            client
-        ).catch(() => {
-            // get transcript with max protein length in given list of all transcripts
-            const transcript = _.maxBy(
-                allTranscripts,
-                (t: EnsemblTranscript) => t.proteinLength
-            );
-            return transcript ? transcript : undefined;
-        });
+        return this.fetchCanonicalTranscript(hugoSymbol, isoformOverrideSource, client).catch(
+            () => {
+                // get transcript with max protein length in given list of all transcripts
+                const transcript = _.maxBy(
+                    allTranscripts,
+                    (t: EnsemblTranscript) => t.proteinLength
+                );
+                return transcript ? transcript : undefined;
+            }
+        );
     }
 
     public async fetchCanonicalTranscript(
@@ -241,18 +229,14 @@ export class DefaultMutationMapperDataFetcher {
             return Promise.resolve([]);
         }
 
-        const genomicLocations: GenomicLocation[] = uniqueGenomicLocations(
-            mutations
-        );
+        const genomicLocations: GenomicLocation[] = uniqueGenomicLocations(mutations);
 
         return client.fetchHotspotAnnotationByGenomicLocationPOST({
             genomicLocations: genomicLocations,
         });
     }
 
-    public fetchOncoKbCancerGenes(
-        client: OncoKbAPI = this.oncoKbClient
-    ): Promise<CancerGene[]> {
+    public fetchOncoKbCancerGenes(client: OncoKbAPI = this.oncoKbClient): Promise<CancerGene[]> {
         return client.utilsCancerGeneListGetUsingGET_1({});
     }
 
@@ -270,10 +254,7 @@ export class DefaultMutationMapperDataFetcher {
             return ONCOKB_DEFAULT_DATA;
         }
 
-        const mutationsToQuery = _.filter(
-            mutations,
-            m => !!annotatedGenes[getEntrezGeneId(m)]
-        );
+        const mutationsToQuery = _.filter(mutations, m => !!annotatedGenes[getEntrezGeneId(m)]);
         const queryVariants = _.uniqBy(
             _.map(mutationsToQuery, (mutation: Mutation) => {
                 return getEvidenceQuery(
@@ -302,10 +283,7 @@ export class DefaultMutationMapperDataFetcher {
 
         return {
             // generateIdToIndicatorMap(oncokbSearch)
-            indicatorMap: _.keyBy(
-                oncokbSearch,
-                indicator => indicator.query.id
-            ),
+            indicatorMap: _.keyBy(oncokbSearch, indicator => indicator.query.id),
         };
     }
 }

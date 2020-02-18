@@ -31,21 +31,13 @@ describe('SampleInline', () => {
             ...defaultProps,
             extraTooltipText: 'Custom Tooltip Text!',
         };
-        componentWithExtraTooltipText = mount(
-            <SampleInline {...extraTooltipTextProps} />
-        );
+        componentWithExtraTooltipText = mount(<SampleInline {...extraTooltipTextProps} />);
 
         const additionalContentProps = {
             ...defaultProps,
-            additionalContent: (
-                <span className="awesomeCustomAdditionalContent">
-                    I am custom!
-                </span>
-            ),
+            additionalContent: <span className="awesomeCustomAdditionalContent">I am custom!</span>,
         };
-        componentWithAdditionalContent = mount(
-            <SampleInline {...additionalContentProps} />
-        );
+        componentWithAdditionalContent = mount(<SampleInline {...additionalContentProps} />);
     });
 
     it('renders the default component properly', () => {
@@ -93,9 +85,7 @@ describe('SampleInline', () => {
         );
 
         assert.isTrue(
-            componentWithAdditionalContent
-                .find('span.awesomeCustomAdditionalContent')
-                .exists(),
+            componentWithAdditionalContent.find('span.awesomeCustomAdditionalContent').exists(),
             'Component should have the additional content'
         );
     });

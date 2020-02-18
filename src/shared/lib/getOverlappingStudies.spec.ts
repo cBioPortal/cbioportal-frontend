@@ -35,10 +35,7 @@ describe('getOverlappingStudies', () => {
     });
 
     it("doesn'nt detect non TCGA stuides", () => {
-        let studies = [
-            { studyId: 'blca_mskcc_solit_2014' },
-            { studyId: 'blca_mskcc_solit_2012' },
-        ];
+        let studies = [{ studyId: 'blca_mskcc_solit_2014' }, { studyId: 'blca_mskcc_solit_2012' }];
 
         let ret = getOverlappingStudies(studies as CancerStudy[]);
 
@@ -46,10 +43,7 @@ describe('getOverlappingStudies', () => {
     });
 
     it('finds them when year and pub are suffixes', () => {
-        let studies = [
-            { studyId: 'brca_tcga_pub2015' },
-            { studyId: 'brca_tcga_pub' },
-        ];
+        let studies = [{ studyId: 'brca_tcga_pub2015' }, { studyId: 'brca_tcga_pub' }];
 
         let ret = getOverlappingStudies(studies as CancerStudy[]);
 
@@ -69,10 +63,7 @@ describe('getOverlappingStudies', () => {
     });
 
     it('finds pan can and pub', () => {
-        let studies = [
-            { studyId: 'blca_tcga_pub' },
-            { studyId: 'blca_tcga_pan_can_atlas_2018' },
-        ];
+        let studies = [{ studyId: 'blca_tcga_pub' }, { studyId: 'blca_tcga_pan_can_atlas_2018' }];
 
         let ret = getOverlappingStudies(studies as CancerStudy[]);
 

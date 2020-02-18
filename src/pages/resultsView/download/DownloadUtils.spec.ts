@@ -1,11 +1,7 @@
 import { assert } from 'chai';
 
 import { GeneticTrackDatum } from 'shared/components/oncoprint/Oncoprint';
-import {
-    GenePanelData,
-    MolecularProfile,
-    Sample,
-} from 'shared/api/generated/CBioPortalAPI';
+import { GenePanelData, MolecularProfile, Sample } from 'shared/api/generated/CBioPortalAPI';
 import {
     generateCaseAlterationData,
     generateDownloadData,
@@ -58,8 +54,7 @@ describe('DownloadUtils', () => {
         },
     ] as Sample[];
 
-    const sampleDataWithNoAlteration: (ExtendedAlteration &
-        AnnotatedMutation)[] = [];
+    const sampleDataWithNoAlteration: (ExtendedAlteration & AnnotatedMutation)[] = [];
 
     const mrnaDataForTCGAEEA20C = {
         oncoKbOncogenic: '',
@@ -155,10 +150,8 @@ describe('DownloadUtils', () => {
             functionalImpactScore: 'M',
             fisValue: 2.855,
             linkXvar: 'getma.org/?cm=var&var=hg19,7,55233043,G,C&fts=all',
-            linkPdb:
-                'getma.org/pdb.php?prot=EGFR_HUMAN&from=482&to=681&var=G598A',
-            linkMsa:
-                'getma.org/?cm=msa&ty=f&p=EGFR_HUMAN&rb=482&re=681&var=G598A',
+            linkPdb: 'getma.org/pdb.php?prot=EGFR_HUMAN&from=482&to=681&var=G598A',
+            linkMsa: 'getma.org/?cm=msa&ty=f&p=EGFR_HUMAN&rb=482&re=681&var=G598A',
             ncbiBuild: 'GRCh37',
             variantType: 'SNP',
             keyword: 'EGFR G598 missense',
@@ -369,10 +362,7 @@ describe('DownloadUtils', () => {
                 study_id: 'skcm_tcga',
                 uid: 'VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ',
                 trackLabel: 'PTEN',
-                data: [
-                    mrnaDataForTCGAEEA20C,
-                    proteinDataForTCGAEEA20C,
-                ] as any[],
+                data: [mrnaDataForTCGAEEA20C, proteinDataForTCGAEEA20C] as any[],
                 disp_mrna: 'high',
                 disp_prot: 'high',
             };
@@ -480,11 +470,7 @@ describe('DownloadUtils', () => {
                 sampleKeys
             );
 
-            assert.equal(
-                caseAlterationData.length,
-                0,
-                'case alteration data should be empty'
-            );
+            assert.equal(caseAlterationData.length, 0, 'case alteration data should be empty');
         });
 
         it('generates gene alteration data for multiple samples', () => {
@@ -579,13 +565,7 @@ describe('DownloadUtils', () => {
 
             const expectedResult = [
                 ['STUDY_ID', 'SAMPLE_ID', 'PTEN', 'TP53', 'EGFR'],
-                [
-                    'msk_impact_2017',
-                    'P-0000378-T01-IM3',
-                    'NA',
-                    'NA',
-                    'G598A EGFR-intragenic G239C',
-                ],
+                ['msk_impact_2017', 'P-0000378-T01-IM3', 'NA', 'NA', 'G598A EGFR-intragenic G239C'],
                 ['skcm_tcga', 'TCGA-EE-A20C-06', 'NA', 'NA', 'NA'],
             ];
 
@@ -605,17 +585,12 @@ describe('DownloadUtils', () => {
                 TP53_UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3: [],
                 EGFR_VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ: [],
                 PTEN_VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ: [
-                    mrnaDataForTCGAEEA20C as ExtendedAlteration &
-                        AnnotatedMutation,
+                    mrnaDataForTCGAEEA20C as ExtendedAlteration & AnnotatedMutation,
                 ],
                 TP53_VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ: [],
             };
 
-            const downloadData = generateDownloadData(
-                sampleAlterationDataByGene,
-                samples,
-                genes
-            );
+            const downloadData = generateDownloadData(sampleAlterationDataByGene, samples, genes);
 
             const expectedResult = [
                 ['STUDY_ID', 'SAMPLE_ID', 'PTEN', 'TP53', 'EGFR'],
@@ -637,17 +612,12 @@ describe('DownloadUtils', () => {
                 TP53_UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3: [],
                 EGFR_VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ: [],
                 PTEN_VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ: [
-                    proteinDataForTCGAEEA20C as ExtendedAlteration &
-                        AnnotatedMutation,
+                    proteinDataForTCGAEEA20C as ExtendedAlteration & AnnotatedMutation,
                 ],
                 TP53_VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ: [],
             };
 
-            const downloadData = generateDownloadData(
-                sampleAlterationDataByGene,
-                samples,
-                genes
-            );
+            const downloadData = generateDownloadData(sampleAlterationDataByGene, samples, genes);
 
             const expectedResult = [
                 ['STUDY_ID', 'SAMPLE_ID', 'PTEN', 'TP53', 'EGFR'],
@@ -670,16 +640,11 @@ describe('DownloadUtils', () => {
                 EGFR_VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ: [],
                 PTEN_VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ: [],
                 TP53_VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ: [
-                    cnaDataForTCGAEEA20C as ExtendedAlteration &
-                        AnnotatedMutation,
+                    cnaDataForTCGAEEA20C as ExtendedAlteration & AnnotatedMutation,
                 ],
             };
 
-            const downloadData = generateDownloadData(
-                sampleAlterationDataByGene,
-                samples,
-                genes
-            );
+            const downloadData = generateDownloadData(sampleAlterationDataByGene, samples, genes);
 
             const expectedResult = [
                 ['STUDY_ID', 'SAMPLE_ID', 'PTEN', 'TP53', 'EGFR'],
@@ -797,11 +762,7 @@ describe('DownloadUtils', () => {
                 samples
             );
 
-            assert.equal(
-                caseAlterationData.length,
-                2,
-                'case alteration data has correct size'
-            );
+            assert.equal(caseAlterationData.length, 2, 'case alteration data has correct size');
 
             assert.equal(
                 caseAlterationData[0].sampleId,
@@ -970,8 +931,7 @@ describe('DownloadUtils', () => {
                     molecularAlterationType: 'PROTEIN_LEVEL',
                     datatype: 'LOG2-VALUE',
                     name: 'Protein expression (RPPA)',
-                    description:
-                        'Protein expression measured by reverse-phase protein array',
+                    description: 'Protein expression measured by reverse-phase protein array',
                     showProfileInAnalysisTab: false,
                     molecularProfileId: 'lgg_tcga_rppa',
                     studyId: 'lgg_tcga',
@@ -1033,8 +993,7 @@ describe('DownloadUtils', () => {
                     description:
                         'mRNA z-Scores (RNA Seq V2 RSEM) compared to the expression distribution of each gene tumors that are diploid for this gene.',
                     showProfileInAnalysisTab: true,
-                    molecularProfileId:
-                        'lgg_tcga_rna_seq_v2_mrna_median_Zscores',
+                    molecularProfileId: 'lgg_tcga_rna_seq_v2_mrna_median_Zscores',
                     studyId: 'lgg_tcga',
                 } as MolecularProfile,
                 lgg_tcga_linear_CNA: {

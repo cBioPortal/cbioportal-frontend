@@ -1,9 +1,5 @@
 import * as React from 'react';
-import {
-    CancerStudy,
-    MolecularProfile,
-    Mutation,
-} from 'shared/api/generated/CBioPortalAPI';
+import { CancerStudy, MolecularProfile, Mutation } from 'shared/api/generated/CBioPortalAPI';
 import TruncatedText from '../../TruncatedText';
 import { getStudySummaryUrl } from '../../../api/urls';
 
@@ -15,12 +11,10 @@ export default class StudyColumnFormatter {
         },
         studyIdToStudy?: { [studyId: string]: CancerStudy }
     ): CancerStudy | null {
-        if (!molecularProfileIdToMolecularProfile || !studyIdToStudy)
-            return null;
+        if (!molecularProfileIdToMolecularProfile || !studyIdToStudy) return null;
 
         const molecularProfileId = d[0].molecularProfileId;
-        const geneticProfile =
-            molecularProfileIdToMolecularProfile[molecularProfileId];
+        const geneticProfile = molecularProfileIdToMolecularProfile[molecularProfileId];
         if (!geneticProfile) return null;
         const study = studyIdToStudy[geneticProfile.studyId];
         return study || null;

@@ -10,18 +10,12 @@ export interface ICheckboxProps {
 }
 
 @observer
-export default class FlexAlignedCheckbox extends React.Component<
-    ICheckboxProps,
-    {}
-> {
+export default class FlexAlignedCheckbox extends React.Component<ICheckboxProps, {}> {
     render() {
         return (
             <div
                 className="checkbox"
-                style={Object.assign(
-                    { display: 'flex', alignItems: 'center' },
-                    this.props.style
-                )}
+                style={Object.assign({ display: 'flex', alignItems: 'center' }, this.props.style)}
             >
                 <label>
                     <input
@@ -32,9 +26,7 @@ export default class FlexAlignedCheckbox extends React.Component<
                         style={{ marginTop: 1 }}
                     />
                 </label>
-                {typeof this.props.label === 'function'
-                    ? this.props.label()
-                    : this.props.label}
+                {typeof this.props.label === 'function' ? this.props.label() : this.props.label}
             </div>
         );
     }

@@ -137,12 +137,9 @@ describe('alterationCountHelpers', () => {
                         mutationType: 'Missense_Mutation',
                         functionalImpactScore: 'M',
                         fisValue: 3.375,
-                        linkXvar:
-                            'getma.org/?cm=var&var=hg19,12,25398281,C,T&fts=all',
-                        linkPdb:
-                            'getma.org/pdb.php?prot=RASK_HUMAN&from=5&to=165&var=G13D',
-                        linkMsa:
-                            'getma.org/?cm=msa&ty=f&p=RASK_HUMAN&rb=5&re=165&var=G13D',
+                        linkXvar: 'getma.org/?cm=var&var=hg19,12,25398281,C,T&fts=all',
+                        linkPdb: 'getma.org/pdb.php?prot=RASK_HUMAN&from=5&to=165&var=G13D',
+                        linkMsa: 'getma.org/?cm=msa&ty=f&p=RASK_HUMAN&rb=5&re=165&var=G13D',
                         ncbiBuild: 'GRCh37',
                         variantType: 'SNP',
                         keyword: 'KRAS G13 missense',
@@ -229,10 +226,8 @@ describe('alterationCountHelpers', () => {
                             KRAS: [
                                 {
                                     uniqueSampleKey: 'UjEwNDpjaG9sX251c18yMDEy',
-                                    uniquePatientKey:
-                                        'UjEwNDpjaG9sX251c18yMDEy',
-                                    molecularProfileId:
-                                        'chol_nus_2012_mutations',
+                                    uniquePatientKey: 'UjEwNDpjaG9sX251c18yMDEy',
+                                    molecularProfileId: 'chol_nus_2012_mutations',
                                     genePanelId: 'GENEPANEL1',
                                     profiled: true,
                                 },
@@ -247,10 +242,8 @@ describe('alterationCountHelpers', () => {
                             KRAS: [
                                 {
                                     uniqueSampleKey: 'QjA4NTpjaG9sX251c18yMDEy',
-                                    uniquePatientKey:
-                                        'QjA4NTpjaG9sX251c18yMDEy',
-                                    molecularProfileId:
-                                        'chol_nus_2012_mutations',
+                                    uniquePatientKey: 'QjA4NTpjaG9sX251c18yMDEy',
+                                    molecularProfileId: 'chol_nus_2012_mutations',
                                     genePanelId: 'GENEPANEL1',
                                     profiled: true,
                                 },
@@ -265,10 +258,8 @@ describe('alterationCountHelpers', () => {
                             KRAS: [
                                 {
                                     uniqueSampleKey: 'VzA0MDpjaG9sX251c18yMDEy',
-                                    uniquePatientKey:
-                                        'VzA0MDpjaG9sX251c18yMDEy',
-                                    molecularProfileId:
-                                        'chol_nus_2012_mutations',
+                                    uniquePatientKey: 'VzA0MDpjaG9sX251c18yMDEy',
+                                    molecularProfileId: 'chol_nus_2012_mutations',
                                     genePanelId: 'GENEPANEL1',
                                     profiled: true,
                                 },
@@ -478,16 +469,8 @@ describe('alterationCountHelpers', () => {
                 genePanelData
             );
 
-            assert.equal(
-                ret['Hepatobiliary Cancer'].alterationTypeCounts
-                    .mrnaExpressionLow,
-                1
-            );
-            assert.equal(
-                ret['Hepatobiliary Cancer'].alterationTypeCounts
-                    .mrnaExpressionHigh,
-                1
-            );
+            assert.equal(ret['Hepatobiliary Cancer'].alterationTypeCounts.mrnaExpressionLow, 1);
+            assert.equal(ret['Hepatobiliary Cancer'].alterationTypeCounts.mrnaExpressionHigh, 1);
         });
 
         it('uses alterationSubType to evaluate PROT direction', () => {
@@ -515,16 +498,8 @@ describe('alterationCountHelpers', () => {
                 genePanelData
             );
 
-            assert.equal(
-                ret['Hepatobiliary Cancer'].alterationTypeCounts
-                    .protExpressionLow,
-                1
-            );
-            assert.equal(
-                ret['Hepatobiliary Cancer'].alterationTypeCounts
-                    .protExpressionHigh,
-                1
-            );
+            assert.equal(ret['Hepatobiliary Cancer'].alterationTypeCounts.protExpressionLow, 1);
+            assert.equal(ret['Hepatobiliary Cancer'].alterationTypeCounts.protExpressionHigh, 1);
         });
     });
 });

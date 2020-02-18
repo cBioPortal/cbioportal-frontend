@@ -19,11 +19,7 @@ describe('GenomicOverview', () => {
         expected: MutationFrequenciesBySample,
         message: string
     ) {
-        assert.equal(
-            Object.keys(actual).length,
-            Object.keys(expected).length,
-            message
-        );
+        assert.equal(Object.keys(actual).length, Object.keys(expected).length, message);
         for (const sample of Object.keys(actual)) {
             const actualList = actual[sample];
             const expectedList = expected[sample];
@@ -31,12 +27,7 @@ describe('GenomicOverview', () => {
                 if (isNaN(actualList[i])) {
                     assert.isTrue(isNaN(expectedList[i]), message);
                 } else {
-                    assert.closeTo(
-                        actualList[i],
-                        expectedList[i],
-                        0.0000001,
-                        message
-                    );
+                    assert.closeTo(actualList[i], expectedList[i], 0.0000001, message);
                 }
             }
         }
@@ -63,9 +54,7 @@ describe('GenomicOverview', () => {
                 'no frequencies with no mutations'
             );
 
-            mergedMutations = [
-                [{ sampleId: 'sample1', tumorAltCount: 10, tumorRefCount: 30 }],
-            ];
+            mergedMutations = [[{ sampleId: 'sample1', tumorAltCount: 10, tumorRefCount: 30 }]];
             genomicOverview = shallow(
                 <GenomicOverview
                     mergedMutations={mergedMutations}
@@ -125,9 +114,7 @@ describe('GenomicOverview', () => {
             // a few mutations with both, some with either one
             // a few mutations with both
             let frequencies;
-            mergedMutations = [
-                [{ sampleId: 'sample1', tumorAltCount: 10, tumorRefCount: 30 }],
-            ];
+            mergedMutations = [[{ sampleId: 'sample1', tumorAltCount: 10, tumorRefCount: 30 }]];
             genomicOverview = shallow(
                 <GenomicOverview
                     mergedMutations={mergedMutations}

@@ -34,9 +34,7 @@ export interface IOncoKbProps {
     disableFeedback?: boolean;
 }
 
-export function sortValue(
-    indicator?: IndicatorQueryResp | undefined | null
-): number[] {
+export function sortValue(indicator?: IndicatorQueryResp | undefined | null): number[] {
     const values: number[] = [0, 0, 0];
 
     if (indicator) {
@@ -48,9 +46,7 @@ export function sortValue(
     return values;
 }
 
-export function download(
-    indicator?: IndicatorQueryResp | undefined | null
-): string {
+export function download(indicator?: IndicatorQueryResp | undefined | null): string {
     if (!indicator) {
         return 'NA';
     }
@@ -86,9 +82,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}> {
             oncoKbContent = (
                 <span className={`${annotationStyles['annotation-item']}`}>
                     <i
-                        className={annotationIconClassNames(
-                            this.props.indicator
-                        )}
+                        className={annotationIconClassNames(this.props.indicator)}
                         data-test="oncogenic-icon-image"
                         data-test2={this.props.hugoGeneSymbol}
                     />
@@ -146,9 +140,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}> {
                 pubMedCache={this.props.pubMedCache}
                 onLoadComplete={this.handleLoadComplete}
                 handleFeedbackOpen={
-                    this.props.disableFeedback
-                        ? undefined
-                        : this.handleFeedbackOpen
+                    this.props.disableFeedback ? undefined : this.handleFeedbackOpen
                 }
             />
         );

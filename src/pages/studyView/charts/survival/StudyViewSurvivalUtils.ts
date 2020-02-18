@@ -8,9 +8,7 @@ export function makeSurvivalChartData(
     analysisGroups: ReadonlyArray<AnalysisGroup>,
     patientToAnalysisGroup: { [uniquePatientKey: string]: string }
 ) {
-    let patientToAnalysisGroups = _.mapValues(patientToAnalysisGroup, group => [
-        group,
-    ]);
+    let patientToAnalysisGroups = _.mapValues(patientToAnalysisGroup, group => [group]);
 
     return {
         patientToAnalysisGroups,

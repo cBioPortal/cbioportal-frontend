@@ -1,8 +1,4 @@
-import {
-    CategorizedConfigItems,
-    IAppConfig,
-    IServerConfig,
-} from './IAppConfig';
+import { CategorizedConfigItems, IAppConfig, IServerConfig } from './IAppConfig';
 import * as _ from 'lodash';
 import ServerConfigDefaults from './serverConfigDefaults';
 import memoize from 'memoize-weak-decorator';
@@ -79,10 +75,7 @@ export function setServerConfig(serverConfig: { [key: string]: any }) {
                 }
             } else {
                 // for non booleans, only resolve to default if prop is missing or null
-                if (
-                    serverConfig.hasOwnProperty(key) &&
-                    serverConfig[key] === null
-                ) {
+                if (serverConfig.hasOwnProperty(key) && serverConfig[key] === null) {
                     serverConfig[key] = defaultVal;
                 }
             }
@@ -119,9 +112,7 @@ export class ServerConfigHelpers {
         return matches ? matches.map((s: string) => s.trim()) : [];
     }
 
-    @memoize static parseConfigFormat(
-        str: string | null
-    ): CategorizedConfigItems {
+    @memoize static parseConfigFormat(str: string | null): CategorizedConfigItems {
         if (str && str.length) {
             // get rid of a trailing semicolon
             str = str.replace(/;$/, '');
@@ -156,11 +147,7 @@ export class ServerConfigHelpers {
     }
 }
 
-function cachePostMethods(
-    obj: any,
-    excluded: string[] = [],
-    regex: RegExp = /UsingPOST$/
-) {
+function cachePostMethods(obj: any, excluded: string[] = [], regex: RegExp = /UsingPOST$/) {
     cachePostMethodsOnClient(
         obj,
         excluded,
@@ -220,8 +207,7 @@ export function initializeConfiguration() {
     // @ts-ignore: ENV_* are defined in webpack.config.js
     const frontendUrl = config.frontendUrl || `//${win.location.host}/`;
 
-    const configServiceUrl =
-        config.configurationServiceUrl || `${APIROOT}config_service.jsp`;
+    const configServiceUrl = config.configurationServiceUrl || `${APIROOT}config_service.jsp`;
 
     // should override both when in dev mode and when serving compiled source
     // code outside of legacy project

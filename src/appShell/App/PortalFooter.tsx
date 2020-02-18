@@ -9,10 +9,7 @@ import { AppStore } from '../../AppStore';
 import { observer } from 'mobx-react';
 
 @observer
-export default class PortalFooter extends React.Component<
-    { appStore: AppStore },
-    {}
-> {
+export default class PortalFooter extends React.Component<{ appStore: AppStore }, {}> {
     render() {
         var version;
         if (
@@ -24,10 +21,7 @@ export default class PortalFooter extends React.Component<
         } else {
             version = '--';
         }
-        if (
-            AppConfig.serverConfig.skin_footer &&
-            !_.isEmpty(AppConfig.serverConfig.skin_footer)
-        ) {
+        if (AppConfig.serverConfig.skin_footer && !_.isEmpty(AppConfig.serverConfig.skin_footer)) {
             return (
                 <div
                     id="footer"
@@ -69,8 +63,7 @@ export default class PortalFooter extends React.Component<
                         </div>
                         <If
                             condition={
-                                AppConfig.serverConfig
-                                    .skin_show_tutorials_tab !== false ||
+                                AppConfig.serverConfig.skin_show_tutorials_tab !== false ||
                                 AppConfig.serverConfig.skin_show_faqs_tab
                             }
                         >
@@ -79,23 +72,14 @@ export default class PortalFooter extends React.Component<
                                 <ul>
                                     <If
                                         condition={
-                                            AppConfig.serverConfig
-                                                .skin_show_tutorials_tab !==
-                                            false
+                                            AppConfig.serverConfig.skin_show_tutorials_tab !== false
                                         }
                                     >
                                         <li>
-                                            <Link to="/tutorials">
-                                                Tutorials
-                                            </Link>
+                                            <Link to="/tutorials">Tutorials</Link>
                                         </li>
                                     </If>
-                                    <If
-                                        condition={
-                                            AppConfig.serverConfig
-                                                .skin_show_faqs_tab
-                                        }
-                                    >
+                                    <If condition={AppConfig.serverConfig.skin_show_faqs_tab}>
                                         <li>
                                             <Link to="/faq">FAQ</Link>
                                         </li>
@@ -120,44 +104,29 @@ export default class PortalFooter extends React.Component<
                             <div className="footer-elem">
                                 <h3>INFO</h3>
                                 <ul>
-                                    <If
-                                        condition={
-                                            AppConfig.serverConfig
-                                                .skin_show_news_tab
-                                        }
-                                    >
+                                    <If condition={AppConfig.serverConfig.skin_show_news_tab}>
                                         <li>
                                             <Link to="/news">News</Link>
                                         </li>
                                     </If>
-                                    <If
-                                        condition={
-                                            AppConfig.serverConfig
-                                                .skin_show_about_tab
-                                        }
-                                    >
+                                    <If condition={AppConfig.serverConfig.skin_show_about_tab}>
                                         <li>
                                             <Link to="/about">About</Link>
                                         </li>
                                     </If>
                                     <If
                                         condition={
-                                            AppConfig.serverConfig
-                                                .skin_show_r_matlab_tab ||
-                                            AppConfig.serverConfig
-                                                .skin_show_web_api_tab
+                                            AppConfig.serverConfig.skin_show_r_matlab_tab ||
+                                            AppConfig.serverConfig.skin_show_web_api_tab
                                         }
                                     >
                                         <li>
-                                            <a href={`${AppConfig.apiRoot}api`}>
-                                                API Docs
-                                            </a>
+                                            <a href={`${AppConfig.apiRoot}api`}>API Docs</a>
                                         </li>
                                     </If>
                                     <If
                                         condition={
-                                            AppConfig.serverConfig.app_name ===
-                                            'public-portal'
+                                            AppConfig.serverConfig.app_name === 'public-portal'
                                         }
                                     >
                                         <li>
@@ -172,12 +141,7 @@ export default class PortalFooter extends React.Component<
                                 </ul>
                             </div>
                         </If>
-                        <If
-                            condition={
-                                AppConfig.serverConfig.app_name ===
-                                'public-portal'
-                            }
-                        >
+                        <If condition={AppConfig.serverConfig.app_name === 'public-portal'}>
                             <div className="footer-elem">
                                 <h3>DEV</h3>
                                 <ul>
@@ -185,18 +149,12 @@ export default class PortalFooter extends React.Component<
                                         <Link to="/software">Software</Link>
                                     </li>
                                     <li>
-                                        <a
-                                            target="_blank"
-                                            href="https://github.com/cBioPortal/"
-                                        >
+                                        <a target="_blank" href="https://github.com/cBioPortal/">
                                             GitHub
                                         </a>
                                     </li>
                                     <li>
-                                        <a
-                                            target="_blank"
-                                            href="https://slack.cbioportal.org"
-                                        >
+                                        <a target="_blank" href="https://slack.cbioportal.org">
                                             Slack
                                         </a>
                                     </li>
@@ -217,13 +175,8 @@ export default class PortalFooter extends React.Component<
                             <h3>CONTACT</h3>
                             <ul>
                                 <li>
-                                    <a
-                                        href={`mailto:${AppConfig.serverConfig.skin_email_contact}`}
-                                    >
-                                        {
-                                            AppConfig.serverConfig
-                                                .skin_email_contact
-                                        }
+                                    <a href={`mailto:${AppConfig.serverConfig.skin_email_contact}`}>
+                                        {AppConfig.serverConfig.skin_email_contact}
                                     </a>
                                 </li>
                             </ul>

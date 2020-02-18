@@ -39,9 +39,7 @@ const styles = styles_any as {
 @observer
 export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
     @computed get selectedGeneListOption() {
-        let option = this.geneListOptions.find(
-            opt => opt.value == this.store.geneQuery
-        );
+        let option = this.geneListOptions.find(opt => opt.value == this.store.geneQuery);
         return option ? option.value : '';
     }
 
@@ -94,15 +92,10 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
                         className={''}
                         title={`Please limit your queries to ${this.store.geneLimit} genes or fewer.`}
                     >
-                        <FontAwesome
-                            className={styles.icon}
-                            name="exclamation-circle"
-                        />
+                        <FontAwesome className={styles.icon} name="exclamation-circle" />
                         <GeneSymbolValidationError
                             sampleCount={this.store.approxSampleCount}
-                            queryProductLimit={
-                                AppConfig.serverConfig.query_product_limit
-                            }
+                            queryProductLimit={AppConfig.serverConfig.query_product_limit}
                             email={AppConfig.serverConfig.skin_email_contact}
                         />
                     </div>
@@ -119,16 +112,10 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
                 <SectionHeader
                     className="sectionLabel"
                     secondaryComponent={
-                        <a
-                            target="_blank"
-                            className={styles.learnOql}
-                            href={getOncoQueryDocUrl()}
-                        >
-                            <strong>Hint:</strong> Learn Onco Query Language
-                            (OQL)
+                        <a target="_blank" className={styles.learnOql} href={getOncoQueryDocUrl()}>
+                            <strong>Hint:</strong> Learn Onco Query Language (OQL)
                             <br />
-                            to write more powerful queries{' '}
-                            <i className={'fa fa-external-link'} />
+                            to write more powerful queries <i className={'fa fa-external-link'} />
                         </a>
                     }
                 >
@@ -149,9 +136,7 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
                         inputGeneQuery={this.store.geneQuery}
                         validateInputGeneQuery={true}
                         location={GeneBoxType.DEFAULT}
-                        textBoxPrompt={
-                            'Enter HUGO Gene Symbols, Gene Aliases, or OQL'
-                        }
+                        textBoxPrompt={'Enter HUGO Gene Symbols, Gene Aliases, or OQL'}
                         callback={this.handleOQLUpdate}
                     >
                         {this.customError}
@@ -175,9 +160,7 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
                                 initialSelection={this.store.geneIds}
                                 data={this.store.mutSigForSingleStudy.result}
                                 onSelect={map_geneSymbol_selected => {
-                                    this.store.applyGeneSelection(
-                                        map_geneSymbol_selected
-                                    );
+                                    this.store.applyGeneSelection(map_geneSymbol_selected);
                                     this.store.showMutSigPopup = false;
                                 }}
                             />
@@ -193,18 +176,14 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
                         onHide={() => (this.store.showGisticPopup = false)}
                     >
                         <Modal.Header closeButton>
-                            <Modal.Title>
-                                Recurrent Copy Number Alterations (Gistic)
-                            </Modal.Title>
+                            <Modal.Title>Recurrent Copy Number Alterations (Gistic)</Modal.Title>
                         </Modal.Header>
                         <Modal.Body>
                             <GisticGeneSelector
                                 initialSelection={this.store.geneIds}
                                 data={this.store.gisticForSingleStudy.result}
                                 onSelect={map_geneSymbol_selected => {
-                                    this.store.applyGeneSelection(
-                                        map_geneSymbol_selected
-                                    );
+                                    this.store.applyGeneSelection(map_geneSymbol_selected);
                                     this.store.showGisticPopup = false;
                                 }}
                             />

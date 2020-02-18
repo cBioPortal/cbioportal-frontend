@@ -18,14 +18,11 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
 
     mdacc_heatmap_patient_url:
         'https://bioinformatics.mdanderson.org/participant2maps?participant=',
-    mdacc_heatmap_study_meta_url:
-        'https://bioinformatics.mdanderson.org/study2url?studyid=',
-    mdacc_heatmap_study_url:
-        'https:// bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?',
+    mdacc_heatmap_study_meta_url: 'https://bioinformatics.mdanderson.org/study2url?studyid=',
+    mdacc_heatmap_study_url: 'https:// bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?',
     show_mdacc_heatmap: false,
 
-    mygene_info_url:
-        'https://mygene.info/v3/gene/<%= entrezGeneId %>?fields=uniprot',
+    mygene_info_url: 'https://mygene.info/v3/gene/<%= entrezGeneId %>?fields=uniprot',
 
     oncoprint_oncokb_default: true,
     oncoprint_hotspots_default: true,
@@ -41,8 +38,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_description:
         'The cBioPortal for Cancer Genomics provides visualization, analysis and download of large-scale cancer genomics data sets',
     show_genomenexus: true,
-    skin_authorization_message:
-        'Access to this portal is only available to authorized users.',
+    skin_authorization_message: 'Access to this portal is only available to authorized users.',
     skin_documentation_about: 'About-Us.md',
     skin_documentation_software: 'Software-Acknowledgments.md',
     skin_documentation_baseurl:

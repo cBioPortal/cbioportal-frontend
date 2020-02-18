@@ -40,9 +40,7 @@ export function convertPdbPosToResCode(position: IPdbPositionRange): string[] {
 /**
  * Converts the given PDB position to residue and icode pairs
  */
-export function convertPdbPosToResAndInsCode(
-    position: IPdbPositionRange
-): IResidueSelector[] {
+export function convertPdbPosToResAndInsCode(position: IPdbPositionRange): IResidueSelector[] {
     const residues: IResidueSelector[] = [];
     const start = position.start.position;
     const end = position.end.position;
@@ -75,9 +73,7 @@ export function generateResiduePosToSelectorMap(
         // TODO "rescode" selector does not work anymore for some reason (3Dmol.js bug?)
         //const resCodes = convertPositionsToResCode([residue.positionRange]);
 
-        const residueSelectors = convertPdbPosToResAndInsCode(
-            residue.positionRange
-        );
+        const residueSelectors = convertPdbPosToResAndInsCode(residue.positionRange);
         const grouped = _.groupBy(residueSelectors, 'resi');
 
         _.each(_.keys(grouped), (resi: number) => {
@@ -102,12 +98,7 @@ export function findUpdatedResidues(
 
     // compare current to prev and find the updated residues
     _.each(_.keys(currentResidueToPositionMap), (resi: number) => {
-        if (
-            !_.isEqual(
-                currentResidueToPositionMap[resi],
-                prevResidueToPositionMap[resi]
-            )
-        ) {
+        if (!_.isEqual(currentResidueToPositionMap[resi], prevResidueToPositionMap[resi])) {
             residues = residues.concat(currentResidueToPositionMap[resi]);
         }
     });

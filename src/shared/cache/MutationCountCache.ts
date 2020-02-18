@@ -1,9 +1,6 @@
 import client from '../api/cbioportalClientInstance';
 import LazyMobXCache from '../lib/LazyMobXCache';
-import {
-    ClinicalData,
-    ClinicalDataMultiStudyFilter,
-} from '../api/generated/CBioPortalAPI';
+import { ClinicalData, ClinicalDataMultiStudyFilter } from '../api/generated/CBioPortalAPI';
 import _ from 'lodash';
 
 type Query = {
@@ -31,11 +28,7 @@ export async function fetch(queries: Query[]): Promise<ClinicalData[]> {
         return Promise.resolve([]);
     }
 }
-export default class MutationCountCache extends LazyMobXCache<
-    ClinicalData,
-    Query,
-    string
-> {
+export default class MutationCountCache extends LazyMobXCache<ClinicalData, Query, string> {
     constructor() {
         super(key, key, fetch);
     }

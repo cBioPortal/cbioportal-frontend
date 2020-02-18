@@ -13,12 +13,8 @@ describe('GeneFilterOptions', () => {
             onOptionChanged={callback}
         />
     );
-    const allGenesRadioButton = wrapper.find(
-        '[value="' + GeneFilterOption.ALL_SAMPLES + '"]'
-    );
-    const anyGenesRadioButton = wrapper.find(
-        '[value="' + GeneFilterOption.ANY_SAMPLE + '"]'
-    );
+    const allGenesRadioButton = wrapper.find('[value="' + GeneFilterOption.ALL_SAMPLES + '"]');
+    const anyGenesRadioButton = wrapper.find('[value="' + GeneFilterOption.ANY_SAMPLE + '"]');
 
     it('Selects correct option on init', () => {
         const propertiesAll = allGenesRadioButton.props() as any;

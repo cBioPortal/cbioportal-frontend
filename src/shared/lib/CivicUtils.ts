@@ -35,9 +35,7 @@ function addCivicVariant(
 /**
  * Asynchronously return a map with Civic information from the genes given.
  */
-export function getCivicGenes(
-    entrezGeneIds: Array<number>
-): Promise<ICivicGene> {
+export function getCivicGenes(entrezGeneIds: Array<number>): Promise<ICivicGene> {
     let civicGenes: ICivicGene = {};
 
     // Assemble a list of promises, each of which will retrieve a batch of genes
@@ -104,9 +102,7 @@ export function getCivicVariants(
             proteinChanges.push(split[0]);
             for (let proteinChange of proteinChanges) {
                 if (geneEntry && geneEntry.variants[proteinChange]) {
-                    if (
-                        !calledVariants.has(geneEntry.variants[proteinChange])
-                    ) {
+                    if (!calledVariants.has(geneEntry.variants[proteinChange])) {
                         //Avoid calling the same variant
                         calledVariants.add(geneEntry.variants[proteinChange]);
                         promises.push(
@@ -129,10 +125,7 @@ export function getCivicVariants(
             if (!_.isEmpty(geneVariants)) {
                 for (let variantName in geneVariants) {
                     // Only retrieve CNA variants
-                    if (
-                        variantName == 'AMPLIFICATION' ||
-                        variantName == 'DELETION'
-                    ) {
+                    if (variantName == 'AMPLIFICATION' || variantName == 'DELETION') {
                         promises.push(
                             addCivicVariant(
                                 civicVariants,

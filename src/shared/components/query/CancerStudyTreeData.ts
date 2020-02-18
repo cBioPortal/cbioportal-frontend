@@ -1,7 +1,4 @@
-import {
-    CancerStudy,
-    TypeOfCancer as CancerType,
-} from '../../api/generated/CBioPortalAPI';
+import { CancerStudy, TypeOfCancer as CancerType } from '../../api/generated/CBioPortalAPI';
 import * as _ from 'lodash';
 import { CategorizedConfigItems } from 'config/IAppConfig';
 import { VirtualStudy } from 'shared/model/VirtualStudy';
@@ -134,10 +131,7 @@ export default class CancerStudyTreeData {
             this.rootCancerType,
             ...cancerTypes,
         ];
-        studies = CancerStudyTreeData.sortNodes([
-            ..._virtualStudies,
-            ...studies,
-        ]);
+        studies = CancerStudyTreeData.sortNodes([..._virtualStudies, ...studies]);
 
         // initialize lookups and metadata entries
         for (nodes of [cancerTypes, studies]) {
@@ -182,9 +176,7 @@ export default class CancerStudyTreeData {
                 if (study) {
                     meta.childStudies.push(study);
                     meta.descendantStudies.push(study);
-                    let studyMeta = this.map_node_meta.get(
-                        study
-                    ) as NodeMetadata;
+                    let studyMeta = this.map_node_meta.get(study) as NodeMetadata;
                     studyMeta.priorityCategories.push(category);
                 }
             }
@@ -196,49 +188,36 @@ export default class CancerStudyTreeData {
                 meta = this.map_node_meta.get(node) as NodeMetadata;
                 let parent;
                 if (meta.isCancerType) {
-                    const alwaysVisible = (node as CancerTypeWithVisibility)
-                        .alwaysVisible;
+                    const alwaysVisible = (node as CancerTypeWithVisibility).alwaysVisible;
                     parent = this.map_cancerTypeId_cancerType.get(
                         (node as CancerTypeWithVisibility).parent
                     );
                     if (alwaysVisible && parent) {
                         (parent as CancerTypeWithVisibility).alwaysVisible = alwaysVisible;
                     }
-                } else
-                    parent = this.map_cancerTypeId_cancerType.get(
-                        node.cancerTypeId
-                    );
+                } else parent = this.map_cancerTypeId_cancerType.get(node.cancerTypeId);
 
                 let parentMeta = parent && this.map_node_meta.get(parent);
                 if (parentMeta) {
                     if (meta.isCancerType)
-                        parentMeta.childCancerTypes.push(
-                            node as CancerTypeWithVisibility
-                        );
+                        parentMeta.childCancerTypes.push(node as CancerTypeWithVisibility);
                     else parentMeta.childStudies.push(node as CancerStudy);
                 }
 
                 while (parent && parentMeta) {
                     meta.ancestors.push(parent);
                     if (meta.isCancerType)
-                        parentMeta.descendantCancerTypes.push(
-                            node as CancerTypeWithVisibility
-                        );
+                        parentMeta.descendantCancerTypes.push(node as CancerTypeWithVisibility);
                     else parentMeta.descendantStudies.push(node as CancerStudy);
 
-                    parent = this.map_cancerTypeId_cancerType.get(
-                        parent.parent
-                    );
+                    parent = this.map_cancerTypeId_cancerType.get(parent.parent);
                     parentMeta = parent && this.map_node_meta.get(parent);
                 }
 
-                let moreSearchTerms = [
-                    ...meta.ancestors,
-                    ...meta.priorityCategories,
-                ].map(cancerType => cancerType.name);
-                meta.searchTerms = [meta.searchTerms, ...moreSearchTerms].join(
-                    '\n'
+                let moreSearchTerms = [...meta.ancestors, ...meta.priorityCategories].map(
+                    cancerType => cancerType.name
                 );
+                meta.searchTerms = [meta.searchTerms, ...moreSearchTerms].join('\n');
             }
         }
 
@@ -248,9 +227,7 @@ export default class CancerStudyTreeData {
             // firstLevelAncestor is the ancestor below the rootCancerType
             let firstLevelAncestor = meta.ancestors[meta.ancestors.length - 2];
             if (firstLevelAncestor) {
-                let ancestorMeta = this.map_node_meta.get(
-                    firstLevelAncestor
-                ) as NodeMetadata;
+                let ancestorMeta = this.map_node_meta.get(firstLevelAncestor) as NodeMetadata;
                 meta.siblings = ancestorMeta.descendantStudies;
             }
         }

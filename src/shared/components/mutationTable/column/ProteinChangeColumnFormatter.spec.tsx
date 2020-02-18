@@ -33,16 +33,12 @@ describe('ProteinChangeColumnFormatter', () => {
         let data = [germlineMutation];
 
         // mount a single cell component (Td) for a germline mutation
-        germlineComponent = mount(
-            ProteinChangeColumnFormatter.renderWithMutationStatus(data)
-        );
+        germlineComponent = mount(ProteinChangeColumnFormatter.renderWithMutationStatus(data));
 
         data = [somaticMutation];
 
         // mount a single cell component (Td) for a somatic mutation
-        somaticComponent = mount(
-            ProteinChangeColumnFormatter.renderWithMutationStatus(data)
-        );
+        somaticComponent = mount(ProteinChangeColumnFormatter.renderWithMutationStatus(data));
 
         data = [mutationWithLongProteinChangeValue];
         longProteinChangeComponent = mount(
@@ -80,8 +76,7 @@ describe('ProteinChangeColumnFormatter', () => {
                 .find(`.${styles.proteinChange}`)
                 .first()
                 .text()
-                .indexOf('this_is_a_protein_change_with_more_than_20_chars') ===
-                -1,
+                .indexOf('this_is_a_protein_change_with_more_than_20_chars') === -1,
             'Long protein change values should be truncated'
         );
     });

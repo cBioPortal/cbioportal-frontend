@@ -21,10 +21,7 @@ export interface ActionButtonsProps {
 }
 
 @observer
-export default class ActionButtons extends React.Component<
-    ActionButtonsProps,
-    {}
-> {
+export default class ActionButtons extends React.Component<ActionButtonsProps, {}> {
     @observable downloadingData = false;
     @observable showDownloadErrorMessage = false;
 
@@ -36,10 +33,7 @@ export default class ActionButtons extends React.Component<
             .getDownloadDataPromise()
             .then(text => {
                 this.downloadingData = false;
-                fileDownload(
-                    text,
-                    this.props.store.clinicalDataDownloadFilename
-                );
+                fileDownload(text, this.props.store.clinicalDataDownloadFilename);
             })
             .catch(() => {
                 this.downloadingData = false;
@@ -52,32 +46,22 @@ export default class ActionButtons extends React.Component<
         if (!_.isEmpty(this.props.store.selectedPatients)) {
             const firstPatient = this.props.store.selectedPatients[0];
 
-            let navCaseIds = _.map(
-                this.props.store.selectedPatients,
-                patient => {
-                    return {
-                        patientId: patient.patientId,
-                        studyId: patient.studyId,
-                    };
-                }
-            );
+            let navCaseIds = _.map(this.props.store.selectedPatients, patient => {
+                return {
+                    patientId: patient.patientId,
+                    studyId: patient.studyId,
+                };
+            });
 
             window.open(
-                getPatientViewUrl(
-                    firstPatient.studyId,
-                    firstPatient.patientId,
-                    navCaseIds
-                )
+                getPatientViewUrl(firstPatient.studyId, firstPatient.patientId, navCaseIds)
             );
         }
     }
 
     @computed
     get virtualStudyButtonTooltip() {
-        return (
-            (!this.props.appStore.isLoggedIn ? '' : 'Save/') +
-            'Share Virtual Study'
-        );
+        return (!this.props.appStore.isLoggedIn ? '' : 'Save/') + 'Share Virtual Study';
     }
 
     @computed
@@ -96,14 +80,12 @@ export default class ActionButtons extends React.Component<
                     user={this.props.appStore.userName}
                     name={
                         this.props.store.isSingleVirtualStudyPageWithoutFilter
-                            ? this.props.store.filteredVirtualStudies.result[0]
-                                  .data.name
+                            ? this.props.store.filteredVirtualStudies.result[0].data.name
                             : undefined
                     }
                     description={
                         this.props.store.isSingleVirtualStudyPageWithoutFilter
-                            ? this.props.store.filteredVirtualStudies.result[0]
-                                  .data.description
+                            ? this.props.store.filteredVirtualStudies.result[0].data.description
                             : undefined
                     }
                     studyWithSamples={this.props.store.studyWithSamples.result}
@@ -130,8 +112,7 @@ export default class ActionButtons extends React.Component<
                         data-event={serializeEvent({
                             category: 'studyPage',
                             action: 'viewPatientCohort',
-                            label: this.props.store.queriedPhysicalStudyIds
-                                .result,
+                            label: this.props.store.queriedPhysicalStudyIds.result,
                         })}
                     >
                         <i className="fa fa-user-circle-o"></i>
@@ -170,8 +151,7 @@ export default class ActionButtons extends React.Component<
                         data-event={serializeEvent({
                             category: 'studyPage',
                             action: 'dataDownload',
-                            label: this.props.store.queriedPhysicalStudyIds
-                                .result,
+                            label: this.props.store.queriedPhysicalStudyIds.result,
                         })}
                     >
                         <If condition={this.downloadingData}>

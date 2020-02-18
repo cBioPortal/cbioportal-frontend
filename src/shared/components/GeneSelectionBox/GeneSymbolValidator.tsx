@@ -1,11 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import { observer } from 'mobx-react';
-import {
-    GeneReplacement,
-    normalizeQuery,
-    Focus,
-} from 'shared/components/query/QueryStore';
+import { GeneReplacement, normalizeQuery, Focus } from 'shared/components/query/QueryStore';
 import { action, computed } from '../../../../node_modules/mobx';
 import { Gene } from 'shared/api/generated/CBioPortalAPI';
 import 'react-select1/dist/react-select.css';
@@ -46,10 +42,7 @@ function isInteger(str: string) {
 }
 
 @observer
-export default class GeneSymbolValidator extends React.Component<
-    IGeneSymbolValidatorProps,
-    {}
-> {
+export default class GeneSymbolValidator extends React.Component<IGeneSymbolValidatorProps, {}> {
     public static defaultProps = {
         errorMessageOnly: false,
     };
@@ -70,10 +63,7 @@ export default class GeneSymbolValidator extends React.Component<
             if (this.geneIds.length === 0) {
                 return getEmptyGeneValidationResult();
             }
-            let [entrezIds, hugoIds] = _.partition(
-                _.uniq(this.geneIds),
-                isInteger
-            );
+            let [entrezIds, hugoIds] = _.partition(_.uniq(this.geneIds), isInteger);
 
             let getEntrezResults = async () => {
                 let found: Gene[];
@@ -83,10 +73,7 @@ export default class GeneSymbolValidator extends React.Component<
                         geneIds: entrezIds,
                     });
                 else found = [];
-                let missingIds = _.difference(
-                    entrezIds,
-                    found.map(gene => gene.entrezGeneId + '')
-                );
+                let missingIds = _.difference(entrezIds, found.map(gene => gene.entrezGeneId + ''));
                 let removals = missingIds.map(entrezId => ({
                     alias: entrezId,
                     genes: [],
@@ -107,10 +94,7 @@ export default class GeneSymbolValidator extends React.Component<
                         geneIds: hugoIds,
                     });
                 else found = [];
-                let missingIds = _.difference(
-                    hugoIds,
-                    found.map(gene => gene.hugoGeneSymbol)
-                );
+                let missingIds = _.difference(hugoIds, found.map(gene => gene.hugoGeneSymbol));
                 let suggestions = await Promise.all(
                     missingIds.map(alias => this.getGeneSuggestions(alias))
                 );
@@ -123,10 +107,7 @@ export default class GeneSymbolValidator extends React.Component<
             ]);
             return {
                 found: [...entrezResults.found, ...hugoResults.found],
-                suggestions: [
-                    ...entrezResults.suggestions,
-                    ...hugoResults.suggestions,
-                ],
+                suggestions: [...entrezResults.suggestions, ...hugoResults.suggestions],
             };
         },
         onResult: genes => {
@@ -156,9 +137,7 @@ export default class GeneSymbolValidator extends React.Component<
 
         if (this.props.focus !== null && this.props.focus !== undefined) {
             if (this.props.focus === Focus.Unfocused) {
-                return new Error(
-                    "Please click 'Submit' to see location of error."
-                );
+                return new Error("Please click 'Submit' to see location of error.");
             } else {
                 return new Error(
                     'OQL syntax error at selected character; please fix and submit again.'
@@ -172,11 +151,7 @@ export default class GeneSymbolValidator extends React.Component<
     render() {
         if (this.props.skipGeneValidation) {
             if (this.props.afterValidation) {
-                this.props.afterValidation(
-                    true,
-                    getEmptyGeneValidationResult(),
-                    this.oql
-                );
+                this.props.afterValidation(true, getEmptyGeneValidationResult(), this.oql);
             }
         }
 
@@ -190,9 +165,7 @@ export default class GeneSymbolValidator extends React.Component<
                         : this.genes.result
                 }
                 oql={this.oqlOrError}
-                validatingGenes={
-                    this.props.skipGeneValidation ? false : this.genes.isPending
-                }
+                validatingGenes={this.props.skipGeneValidation ? false : this.genes.isPending}
                 errorMessageOnly={this.props.errorMessageOnly}
                 wrapTheContent={this.props.wrap}
                 replaceGene={this.props.replaceGene}

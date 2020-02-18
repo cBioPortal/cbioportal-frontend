@@ -12,12 +12,7 @@ export class UserDataAccessToken {
     @observable creationDate: string;
     @observable expirationDate: string;
     @observable username: string;
-    constructor(
-        token: string,
-        creationDate: string,
-        expirationDate: string,
-        username: string
-    ) {
+    constructor(token: string, creationDate: string, expirationDate: string, username: string) {
         this.token = token;
         this.creationDate = creationDate;
         this.expirationDate = expirationDate;
@@ -34,10 +29,7 @@ export interface IDataAccessTokensProps {
 }
 
 @observer
-export class DataAccessTokensDropdown extends React.Component<
-    IDataAccessTokensProps,
-    {}
-> {
+export class DataAccessTokensDropdown extends React.Component<IDataAccessTokensProps, {}> {
     public static defaultProps: Partial<IDataAccessTokensProps> = {
         loadingComponent: <LoadingIndicator isLoading={true} />,
     };
@@ -51,26 +43,15 @@ export class DataAccessTokensDropdown extends React.Component<
             {
                 id: 'signout',
                 action: (
-                    <a
-                        href={buildCBioPortalPageUrl(
-                            this.props.appStore.logoutUrl
-                        )}
-                    >
-                        Sign out
-                    </a>
+                    <a href={buildCBioPortalPageUrl(this.props.appStore.logoutUrl)}>Sign out</a>
                 ),
                 hide: false,
             },
             {
                 id: 'datDownload',
-                action: (
-                    <Link to="/webAPI#using-data-access-tokens">
-                        Data Access Token
-                    </Link>
-                ),
+                action: <Link to="/webAPI#using-data-access-tokens">Data Access Token</Link>,
                 hide:
-                    AppConfig.serverConfig.authenticationMethod ===
-                        'social_auth' ||
+                    AppConfig.serverConfig.authenticationMethod === 'social_auth' ||
                     (AppConfig.serverConfig.dat_method !== 'uuid' &&
                         AppConfig.serverConfig.dat_method !== 'jwt'),
             },

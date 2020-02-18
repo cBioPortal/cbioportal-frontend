@@ -1,10 +1,7 @@
 import { assert } from 'chai';
 import { mount } from 'enzyme';
 import * as React from 'react';
-import OQLTextArea, {
-    IGeneSelectionBoxProps,
-    GeneBoxType,
-} from './OQLTextArea';
+import OQLTextArea, { IGeneSelectionBoxProps, GeneBoxType } from './OQLTextArea';
 import client from 'shared/api/cbioportalClientInstance';
 import sinon from 'sinon';
 
@@ -24,10 +21,7 @@ describe('GeneSelectionBox', () => {
         } as IGeneSelectionBoxProps;
 
         let wrapper = mount(<OQLTextArea {...props} />);
-        assert.equal(
-            wrapper.find({ 'data-test': 'geneSet' }).text(),
-            'CDKN2A CDKN2A-AS1 CDKN2B'
-        );
+        assert.equal(wrapper.find({ 'data-test': 'geneSet' }).text(), 'CDKN2A CDKN2A-AS1 CDKN2B');
     });
 
     it('textarea value - study view', () => {
@@ -37,9 +31,6 @@ describe('GeneSelectionBox', () => {
         } as IGeneSelectionBoxProps;
 
         let wrapper = mount(<OQLTextArea {...props} />);
-        assert.equal(
-            wrapper.find({ 'data-test': 'geneSet' }).text(),
-            'CDKN2A and 2 more'
-        );
+        assert.equal(wrapper.find({ 'data-test': 'geneSet' }).text(), 'CDKN2A and 2 more');
     });
 });

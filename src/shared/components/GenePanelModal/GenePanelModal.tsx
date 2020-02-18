@@ -13,10 +13,7 @@ interface IGeneModalProps {
 }
 
 @observer
-export default class GenePanelModal extends React.Component<
-    IGeneModalProps,
-    {}
-> {
+export default class GenePanelModal extends React.Component<IGeneModalProps, {}> {
     @autobind handleClose() {
         // `handleClose` receives an event object on each call,
         // so calling the `onHide` prop here to prevent unneccessary
@@ -47,9 +44,7 @@ export default class GenePanelModal extends React.Component<
                         <LoadingIndicator isLoading={true} />
                     )}
                     {this.props.show && !this.props.isLoading && (
-                        <div data-test="gene-panel-modal-body">
-                            {this.props.children}
-                        </div>
+                        <div data-test="gene-panel-modal-body">{this.props.children}</div>
                     )}
                 </Modal.Body>
                 <Modal.Footer>

@@ -8,8 +8,7 @@ import { ICopyDownloadControlsProps } from './ICopyDownloadControls';
 import { CopyDownloadQueryLinks } from './CopyDownloadQueryLinks';
 const Clipboard = require('clipboard');
 
-export interface ISimpleCopyDownloadControlsProps
-    extends ICopyDownloadControlsProps {
+export interface ISimpleCopyDownloadControlsProps extends ICopyDownloadControlsProps {
     downloadData?: () => string;
     showQuery?: boolean;
     showVirtualStudy?: boolean;
@@ -94,10 +93,7 @@ export class SimpleCopyDownloadControls extends React.Component<
 
     private handleDownload() {
         if (this.props.downloadData) {
-            fileDownload(
-                this.props.downloadData(),
-                this.props.downloadFilename
-            );
+            fileDownload(this.props.downloadData(), this.props.downloadFilename);
         }
     }
 

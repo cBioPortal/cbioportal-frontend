@@ -76,10 +76,8 @@ export function calculateBoxPlotModel(vector: number[]): BoxPlotModel {
     const outlierThresholdLower = q1 - OUTLIER_MULTIPLE * IQR;
     const outlierThresholdUpper = q3 + OUTLIER_MULTIPLE * IQR;
 
-    const suspectedOutlierThresholdLower =
-        q1 - SUSPECTED_OUTLIER_MULTIPLE * IQR;
-    const suspectedOutlierThresholdUpper =
-        q3 + SUSPECTED_OUTLIER_MULTIPLE * IQR;
+    const suspectedOutlierThresholdLower = q1 - SUSPECTED_OUTLIER_MULTIPLE * IQR;
+    const suspectedOutlierThresholdUpper = q3 + SUSPECTED_OUTLIER_MULTIPLE * IQR;
 
     const outliers = calculateOutliers(
         sortedVector,
@@ -90,14 +88,12 @@ export function calculateBoxPlotModel(vector: number[]): BoxPlotModel {
     );
 
     const whiskerLower =
-        outliers.lower.suspectedOutliers.length > 0 ||
-        outliers.lower.outliers.length > 0
+        outliers.lower.suspectedOutliers.length > 0 || outliers.lower.outliers.length > 0
             ? suspectedOutlierThresholdLower
             : sortedVector[0];
 
     const whiskerUpper =
-        outliers.upper.suspectedOutliers.length > 0 ||
-        outliers.upper.outliers.length > 0
+        outliers.upper.suspectedOutliers.length > 0 || outliers.upper.outliers.length > 0
             ? suspectedOutlierThresholdUpper
             : sortedVector[sortedVector.length - 1];
 

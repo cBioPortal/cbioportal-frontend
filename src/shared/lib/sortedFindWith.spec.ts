@@ -29,11 +29,7 @@ describe('sortedFindWith', () => {
         });
     });
     it('three element array', () => {
-        const array = [
-            { id: 0, name: 'A' },
-            { id: 1, name: 'B' },
-            { id: 2, name: 'C' },
-        ];
+        const array = [{ id: 0, name: 'A' }, { id: 1, name: 'B' }, { id: 2, name: 'C' }];
         assert.isUndefined(sortedFindWith(array, t => Math.sign(t.id - 3)));
         assert.deepEqual(sortedFindWith(array, t => Math.sign(t.id - 2)), {
             id: 2,

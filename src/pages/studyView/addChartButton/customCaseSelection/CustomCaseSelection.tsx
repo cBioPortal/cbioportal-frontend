@@ -41,10 +41,7 @@ enum SelectMode {
     UNSELECTED,
 }
 @observer
-export default class CustomCaseSelection extends React.Component<
-    ICustomCaseSelectionProps,
-    {}
-> {
+export default class CustomCaseSelection extends React.Component<ICustomCaseSelectionProps, {}> {
     private validateContent: boolean = false;
     private chartNameValidation: ValidationResult = { warning: [], error: [] };
     @observable dataFormatCollapsed: boolean = true;
@@ -61,10 +58,7 @@ export default class CustomCaseSelection extends React.Component<
 
     @computed
     get sampleSet(): { [id: string]: Sample } {
-        return _.keyBy(
-            this.props.selectedSamples,
-            s => `${s.studyId}:${s.sampleId}`
-        );
+        return _.keyBy(this.props.selectedSamples, s => `${s.studyId}:${s.sampleId}`);
     }
 
     @computed
@@ -93,10 +87,7 @@ export default class CustomCaseSelection extends React.Component<
                 ? this.props.getDefaultChartName()
                 : '',
             patientAttribute: this.caseIdsMode === ClinicalDataTypeEnum.PATIENT,
-            groups:
-                this.result.validationResult.error.length === 0
-                    ? this.result.groups
-                    : [],
+            groups: this.result.validationResult.error.length === 0 ? this.result.groups : [],
         };
     }
 
@@ -120,11 +111,7 @@ export default class CustomCaseSelection extends React.Component<
                 this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE
                     ? sample.sampleId
                     : sample.patientId
-            }${
-                this.props.disableGrouping
-                    ? ''
-                    : ` ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`
-            }`;
+            }${this.props.disableGrouping ? '' : ` ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`}`;
         });
         if (this.caseIdsMode === ClinicalDataTypeEnum.PATIENT) {
             cases = _.uniq(cases);
@@ -194,9 +181,7 @@ export default class CustomCaseSelection extends React.Component<
                 Each row can have two columns separated by space or tab:
                 <br />
                 1) study_id:
-                {this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE
-                    ? 'sample_id '
-                    : 'patient_id '}
+                {this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE ? 'sample_id ' : 'patient_id '}
                 and
                 <br />
                 2) group_name of your choice
@@ -210,9 +195,7 @@ export default class CustomCaseSelection extends React.Component<
     get submitButtonText() {
         if (this.props.disableGrouping) {
             return `Filter to listed ${
-                this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE
-                    ? 'samples'
-                    : 'patients'
+                this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE ? 'samples' : 'patients'
             }`;
         }
         return this.props.submitButtonText;
@@ -227,9 +210,7 @@ export default class CustomCaseSelection extends React.Component<
                             <Radio
                                 checked={option.value === this.caseIdsMode}
                                 onChange={e => {
-                                    this.caseIdsMode = $(e.target).attr(
-                                        'data-value'
-                                    ) as any;
+                                    this.caseIdsMode = $(e.target).attr('data-value') as any;
                                     this.validateContent = true;
                                 }}
                                 inline
@@ -255,13 +236,8 @@ export default class CustomCaseSelection extends React.Component<
                                 this.onClick(SelectMode.SELECTED);
                             }}
                         >
-                            <i
-                                className="fa fa-arrow-down"
-                                style={{ marginRight: 5 }}
-                            ></i>
-                            <span className={styles.selectionText}>
-                                currently selected
-                            </span>
+                            <i className="fa fa-arrow-down" style={{ marginRight: 5 }}></i>
+                            <span className={styles.selectionText}>currently selected</span>
                         </span>
                         <span
                             className={styles.selection}
@@ -269,19 +245,11 @@ export default class CustomCaseSelection extends React.Component<
                                 this.onClick(SelectMode.UNSELECTED);
                             }}
                         >
-                            <i
-                                className="fa fa-arrow-down"
-                                style={{ marginRight: 5 }}
-                            ></i>
-                            <span className={styles.selectionText}>
-                                currently unselected
-                            </span>
+                            <i className="fa fa-arrow-down" style={{ marginRight: 5 }}></i>
+                            <span className={styles.selectionText}>currently unselected</span>
                         </span>
 
-                        <div
-                            className="collapsible-header"
-                            onClick={this.handleDataFormatToggle}
-                        >
+                        <div className="collapsible-header" onClick={this.handleDataFormatToggle}>
                             <a>Data Format</a>
                             <span style={{ paddingLeft: 4, cursor: 'pointer' }}>
                                 {this.dataFormatCollapsed ? (
@@ -293,9 +261,7 @@ export default class CustomCaseSelection extends React.Component<
                         </div>
                     </div>
                     <Collapse isOpened={!this.dataFormatCollapsed}>
-                        <div style={{ marginTop: '5px' }}>
-                            {this.dataFormatContent}
-                        </div>
+                        <div style={{ marginTop: '5px' }}>{this.dataFormatContent}</div>
                     </Collapse>
                 </span>
 
@@ -317,10 +283,7 @@ export default class CustomCaseSelection extends React.Component<
                         className="alert alert-warning"
                         style={{ marginTop: '15px', marginBottom: '5px' }}
                     >
-                        <i
-                            className="fa fa-warning"
-                            style={{ marginRight: 3 }}
-                        />
+                        <i className="fa fa-warning" style={{ marginRight: 3 }} />
                         Submitting will clear current filters.
                     </div>
                 )}

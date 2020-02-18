@@ -46,9 +46,7 @@ describe('ClinicalInformationMutationalSignatureTable', () => {
     after(() => {});
 
     it('takes mutational signature sample data and formats it for mutational signature table to render', () => {
-        let result = prepareMutationalSignatureDataForTable(
-            sampleMutationalSignatureData
-        );
+        let result = prepareMutationalSignatureDataForTable(sampleMutationalSignatureData);
 
         assert.deepEqual(result, [
             {

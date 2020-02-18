@@ -5,10 +5,7 @@ import ReactTable from 'react-table';
 
 import { ArticleAbstract, OncoKbTreatment } from '../../model/OncoKb';
 import { levelIconClassNames, mergeAlterations } from '../../util/OncoKbUtils';
-import {
-    defaultArraySortMethod,
-    defaultSortMethod,
-} from '../../util/ReactTableUtils';
+import { defaultArraySortMethod, defaultSortMethod } from '../../util/ReactTableUtils';
 import OncoKbHelper from './OncoKbHelper';
 import ReferenceList from './ReferenceList';
 import SummaryWithRefs from './SummaryWithRefs';
@@ -22,15 +19,9 @@ type OncoKbTreatmentTableProps = {
 };
 
 @observer
-export default class OncoKbTreatmentTable extends React.Component<
-    OncoKbTreatmentTableProps
-> {
+export default class OncoKbTreatmentTable extends React.Component<OncoKbTreatmentTableProps> {
     levelTooltipContent = (level: string) => {
-        return (
-            <div style={{ maxWidth: '200px' }}>
-                {OncoKbHelper.LEVEL_DESC[level]}
-            </div>
-        );
+        return <div style={{ maxWidth: '200px' }}>{OncoKbHelper.LEVEL_DESC[level]}</div>;
     };
 
     treatmentTooltipContent = (
@@ -49,11 +40,7 @@ export default class OncoKbTreatmentTable extends React.Component<
                             pmidData={this.props.pmidData}
                         />
                     ) : (
-                        <ReferenceList
-                            pmids={pmids}
-                            pmidData={pmidData}
-                            abstracts={abstracts}
-                        />
+                        <ReferenceList pmids={pmids} pmidData={pmidData} abstracts={abstracts} />
                     )}
                 </div>
             )
@@ -77,10 +64,7 @@ export default class OncoKbTreatmentTable extends React.Component<
                     trigger={['hover', 'focus']}
                     destroyTooltipOnHide={true}
                 >
-                    <i
-                        className={levelIconClassNames(props.value)}
-                        style={{ margin: 'auto' }}
-                    />
+                    <i className={levelIconClassNames(props.value)} style={{ margin: 'auto' }} />
                 </DefaultTooltip>
             ),
         },
@@ -89,8 +73,7 @@ export default class OncoKbTreatmentTable extends React.Component<
             Header: <span>Alteration(s)</span>,
             accessor: 'variant',
             minWidth: 80,
-            sortMethod: (a: string[], b: string[]) =>
-                defaultArraySortMethod(a, b),
+            sortMethod: (a: string[], b: string[]) => defaultArraySortMethod(a, b),
             Cell: (props: { value: string[] }) => (
                 <div style={{ whiteSpace: 'normal', lineHeight: '1rem' }}>
                     {mergeAlterations(props.value)}
@@ -130,8 +113,7 @@ export default class OncoKbTreatmentTable extends React.Component<
             sortable: false,
             maxWidth: 25,
             Cell: (props: { original: OncoKbTreatment }) =>
-                (props.original.abstracts.length > 0 ||
-                    props.original.pmids.length > 0) && (
+                (props.original.abstracts.length > 0 || props.original.pmids.length > 0) && (
                     <DefaultTooltip
                         overlay={this.treatmentTooltipContent(
                             props.original.abstracts,

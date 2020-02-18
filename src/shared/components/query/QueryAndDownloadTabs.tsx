@@ -33,21 +33,15 @@ interface IQueryAndDownloadTabsProps {
 }
 
 @observer
-export default class QueryAndDownloadTabs extends React.Component<
-    IQueryAndDownloadTabsProps,
-    {}
-> {
+export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownloadTabsProps, {}> {
     constructor(props: IQueryAndDownloadTabsProps) {
         super(props);
 
         if (
             props.showQuickSearchTab &&
-            getBrowserWindow().localStorage.getItem(QUICK_SEARCH_LS_KEY) ===
-                QUICK_SEARCH_TAB_ID
+            getBrowserWindow().localStorage.getItem(QUICK_SEARCH_LS_KEY) === QUICK_SEARCH_TAB_ID
         ) {
-            this.activeTabId = getBrowserWindow().localStorage.getItem(
-                QUICK_SEARCH_LS_KEY
-            );
+            this.activeTabId = getBrowserWindow().localStorage.getItem(QUICK_SEARCH_LS_KEY);
         }
 
         // the query store models a single use of the query component and therefor a new one should
@@ -66,10 +60,7 @@ export default class QueryAndDownloadTabs extends React.Component<
     @observable activeTabId: string;
 
     public get quickSearchDefaulted() {
-        return (
-            getBrowserWindow().localStorage.getItem(QUICK_SEARCH_LS_KEY) ===
-            QUICK_SEARCH_TAB_ID
-        );
+        return getBrowserWindow().localStorage.getItem(QUICK_SEARCH_LS_KEY) === QUICK_SEARCH_TAB_ID;
     }
 
     @autobind
@@ -100,8 +91,7 @@ export default class QueryAndDownloadTabs extends React.Component<
                     <div
                         className="citationRule"
                         dangerouslySetInnerHTML={{
-                            __html: AppConfig.serverConfig
-                                .skin_citation_rule_text!,
+                            __html: AppConfig.serverConfig.skin_citation_rule_text!,
                         }}
                     ></div>
                 </If>
@@ -128,8 +118,7 @@ export default class QueryAndDownloadTabs extends React.Component<
                         id={QUICK_SEARCH_TAB_ID}
                         linkText={
                             <span>
-                                Quick Search{' '}
-                                <strong className={'beta-text'}>Beta!</strong>
+                                Quick Search <strong className={'beta-text'}>Beta!</strong>
                             </span>
                         }
                         hide={!this.props.showQuickSearchTab}

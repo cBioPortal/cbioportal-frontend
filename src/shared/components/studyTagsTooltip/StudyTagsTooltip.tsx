@@ -47,10 +47,7 @@ export type StudyInfoOverlayTooltipProps = {
 };
 
 @observer
-class StudyInfoOverlay extends React.Component<
-    StudyInfoOverlayTooltipProps,
-    {}
-> {
+class StudyInfoOverlay extends React.Component<StudyInfoOverlayTooltipProps, {}> {
     @observable readonly studyMetadata = remoteData({
         invoke: async () => {
             return client.getTagsUsingGET({ studyId: this.props.studyId });
@@ -69,17 +66,14 @@ class StudyInfoOverlay extends React.Component<
         if (this.props.isVirtualStudy) {
             overlay = (
                 <div
-                    dangerouslySetInnerHTML={this.addHTMLDescription(
-                        this.props.studyDescription
-                    )}
+                    dangerouslySetInnerHTML={this.addHTMLDescription(this.props.studyDescription)}
                 />
             );
         } else {
             if (this.studyMetadata.isPending) {
                 overlay = <Loader isLoading={true} />;
             } else if (this.studyMetadata.isComplete) {
-                const resultKeyLength = Object.keys(this.studyMetadata.result)
-                    .length;
+                const resultKeyLength = Object.keys(this.studyMetadata.result).length;
                 const description = (
                     <div
                         dangerouslySetInnerHTML={this.addHTMLDescription(
@@ -94,9 +88,7 @@ class StudyInfoOverlay extends React.Component<
                               <br />,
                               <div className="studyTagsTooltip">
                                   {' '}
-                                  <JsonToTable
-                                      json={this.studyMetadata.result}
-                                  />
+                                  <JsonToTable json={this.studyMetadata.result} />
                               </div>,
                           ]
                         : description;
@@ -110,10 +102,7 @@ class StudyInfoOverlay extends React.Component<
 }
 
 @observer
-export default class StudyTagsTooltip extends React.Component<
-    StudyTagsTooltipProps,
-    {}
-> {
+export default class StudyTagsTooltip extends React.Component<StudyTagsTooltipProps, {}> {
     renderTooltip() {
         return (
             <DefaultTooltip

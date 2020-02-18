@@ -1,10 +1,8 @@
-var assertScreenShotMatch = require('../../../shared/lib/testUtils')
-    .assertScreenShotMatch;
+var assertScreenShotMatch = require('../../../shared/lib/testUtils').assertScreenShotMatch;
 
 var assert = require('assert');
 var expect = require('chai').expect;
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
+var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
@@ -21,10 +19,7 @@ describe('Mutation Mapper Tool', function() {
         beforeEach(() => {
             var url = `${CBIOPORTAL_URL}/mutation_mapper`;
             goToUrlAndSetLocalStorage(url);
-            browser.waitForVisible(
-                '[data-test=GenomicChangesExampleButton]',
-                10000
-            );
+            browser.waitForVisible('[data-test=GenomicChangesExampleButton]', 10000);
         });
 
         it('should correctly annotate the genomic changes example and display the results', () => {
@@ -35,14 +30,9 @@ describe('Mutation Mapper Tool', function() {
 
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible(
-                'tr:nth-child(1) [data-test=oncogenic-icon-image]',
-                60000
-            );
+            browser.waitForVisible('tr:nth-child(1) [data-test=oncogenic-icon-image]', 60000);
 
-            const mutationsT790M = browser.getText(
-                './/*[text()[contains(.,"T790M")]]'
-            );
+            const mutationsT790M = browser.getText('.//*[text()[contains(.,"T790M")]]');
             assert.equal(
                 mutationsT790M.length,
                 2,
@@ -51,9 +41,7 @@ describe('Mutation Mapper Tool', function() {
 
             // check total number of mutations (this gets Showing 1-25 of 122
             // Mutations)
-            let mutationCount = browser.getText(
-                './/*[text()[contains(.,"122 Mutations")]]'
-            );
+            let mutationCount = browser.getText('.//*[text()[contains(.,"122 Mutations")]]');
             assert.ok(mutationCount.length > 0);
 
             const brca1 = browser.getText('.//*[text()[contains(.,"BRCA1")]]');
@@ -66,9 +54,7 @@ describe('Mutation Mapper Tool', function() {
 
             // check total number of mutations (this gets Showing 1-25 of 85
             // Mutations)
-            mutationCount = browser.getText(
-                './/*[text()[contains(.,"85 Mutations")]]'
-            );
+            mutationCount = browser.getText('.//*[text()[contains(.,"85 Mutations")]]');
             assert.ok(mutationCount.length > 0);
 
             const brca2 = browser.getText('.//*[text()[contains(.,"BRCA2")]]');
@@ -99,13 +85,9 @@ describe('Mutation Mapper Tool', function() {
             // wait for transcript to be listed
             browser.waitForText('.//*[text()[contains(.,"NM_005228")]]');
             // click on dropbox
-            browser
-                .elements('.//*[text()[contains(.,"NM_005228")]]')
-                .value[0].click();
+            browser.elements('.//*[text()[contains(.,"NM_005228")]]').value[0].click();
             // select a different transcript
-            browser
-                .elements('.//*[text()[contains(.,"NM_201283")]]')
-                .value[0].click();
+            browser.elements('.//*[text()[contains(.,"NM_201283")]]').value[0].click();
 
             // check number of mutations on this transcript (this gets Showing
             // 1-23 of 23 Mutations)
@@ -127,9 +109,7 @@ describe('Mutation Mapper Tool', function() {
             // wait for transcript to be listed
             browser.waitForText('.//*[text()[contains(.,"NM_005228")]]');
             // click on dropbox
-            browser
-                .elements('.//*[text()[contains(.,"NM_005228")]]')
-                .value[0].click();
+            browser.elements('.//*[text()[contains(.,"NM_005228")]]').value[0].click();
 
             // check if all 8 transcripts are listed (already know the one above
             // is listed, since we clicked on it)
@@ -142,9 +122,7 @@ describe('Mutation Mapper Tool', function() {
             browser.waitForText('.//*[text()[contains(.,"ENST00000450046")]]');
 
             // select a different transcript
-            browser
-                .elements('.//*[text()[contains(.,"NM_201283")]]')
-                .value[0].click();
+            browser.elements('.//*[text()[contains(.,"NM_201283")]]').value[0].click();
 
             // check number of mutations on this transcript (this should keep
             // showing all mutations (we don't know which transcript was used to
@@ -167,9 +145,7 @@ describe('Mutation Mapper Tool', function() {
             // wait for transcript to be listed
             browser.waitForText('.//*[text()[contains(.,"NM_005228")]]');
             // click on dropbox
-            browser
-                .elements('.//*[text()[contains(.,"NM_005228")]]')
-                .value[0].click();
+            browser.elements('.//*[text()[contains(.,"NM_005228")]]').value[0].click();
 
             // check if all 8 transcripts are listed (already know the one above
             // is listed, since we clicked on it)
@@ -182,9 +158,7 @@ describe('Mutation Mapper Tool', function() {
             browser.waitForText('.//*[text()[contains(.,"ENST00000450046")]]');
 
             // select a different transcript
-            browser
-                .elements('.//*[text()[contains(.,"NM_201283")]]')
-                .value[0].click();
+            browser.elements('.//*[text()[contains(.,"NM_201283")]]').value[0].click();
 
             // check number of mutations on this transcript (this should keep
             // showing all mutations (we don't know which transcript was used to
@@ -200,14 +174,9 @@ describe('Mutation Mapper Tool', function() {
 
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible(
-                'tr:nth-child(1) [data-test=oncogenic-icon-image]',
-                60000
-            );
+            browser.waitForVisible('tr:nth-child(1) [data-test=oncogenic-icon-image]', 60000);
 
-            const mutationsT790M = browser.getText(
-                './/*[text()[contains(.,"T790M")]]'
-            );
+            const mutationsT790M = browser.getText('.//*[text()[contains(.,"T790M")]]');
             assert.equal(
                 mutationsT790M.length,
                 2,
@@ -216,9 +185,7 @@ describe('Mutation Mapper Tool', function() {
 
             // check total number of mutations (this gets Showing 1-25 of 124
             // Mutations)
-            const mutationCount = browser.getText(
-                './/*[text()[contains(.,"124 Mutations")]]'
-            );
+            const mutationCount = browser.getText('.//*[text()[contains(.,"124 Mutations")]]');
             assert.ok(mutationCount.length > 0);
 
             const brca1 = browser.getText('.//*[text()[contains(.,"BRCA1")]]');
@@ -258,9 +225,7 @@ describe('Mutation Mapper Tool', function() {
 
             browser.waitForVisible('[class=borderedChart]', 20000);
 
-            const warning = browser.getText(
-                './/*[text()[contains(.,"Failed to annotate")]]'
-            );
+            const warning = browser.getText('.//*[text()[contains(.,"Failed to annotate")]]');
             assert.ok(
                 warning.length > 0,
                 'there should be a warning indicating one mutation failed annotation'
@@ -268,9 +233,7 @@ describe('Mutation Mapper Tool', function() {
 
             browser.click('[data-test=ShowWarningsButton]');
 
-            const failingRecord = browser.getText(
-                './/*[text()[contains(.,"TCGA-33-4566-01")]]'
-            );
+            const failingRecord = browser.getText('.//*[text()[contains(.,"TCGA-33-4566-01")]]');
             assert.ok(
                 failingRecord.length > 0,
                 'there should be a warning indicating which sample is failing'
@@ -290,9 +253,7 @@ describe('Mutation Mapper Tool', function() {
 
             // check total number of mutations (this gets Showing 1-12 of 12
             // Mutations)
-            const mutationCount = browser.getText(
-                './/*[text()[contains(.,"12 Mutations")]]'
-            );
+            const mutationCount = browser.getText('.//*[text()[contains(.,"12 Mutations")]]');
             assert.ok(mutationCount.length > 0);
         });
     });

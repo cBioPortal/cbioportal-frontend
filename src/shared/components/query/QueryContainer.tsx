@@ -50,10 +50,7 @@ interface QueryContainerProps {
 
 @providesStoreContext(QueryStore)
 @observer
-export default class QueryContainer extends React.Component<
-    QueryContainerProps,
-    {}
-> {
+export default class QueryContainer extends React.Component<QueryContainerProps, {}> {
     get store() {
         return this.props.store;
     }
@@ -93,12 +90,7 @@ export default class QueryContainer extends React.Component<
             overflow = (
                 <span className={'inlineBlock'}>
                     <DefaultTooltip overlay={overlay}>
-                        <a>
-                            and{' '}
-                            {this.store.selectableSelectedStudies.length -
-                                LIMIT}{' '}
-                            more
-                        </a>
+                        <a>and {this.store.selectableSelectedStudies.length - LIMIT} more</a>
                     </DefaultTooltip>
                 </span>
             );
@@ -109,30 +101,20 @@ export default class QueryContainer extends React.Component<
                 {this.store.selectableSelectedStudies
                     .slice(0, LIMIT)
                     .reduce((acc: (string | JSX.Element)[], study, i, arr) => {
-                        acc.push(
-                            <span className={styles.studyName}>
-                                {study.name}
-                            </span>
-                        );
+                        acc.push(<span className={styles.studyName}>{study.name}</span>);
                         return acc;
                     }, [])}
                 {overflow}
                 {overflow && <span>&nbsp;</span>}(
                 <b>{this.store.profiledSamplesCount.result.all}</b>{' '}
-                {this.store.profiledSamplesCount.result.all === 1
-                    ? 'sample'
-                    : 'total samples'}
-                )
+                {this.store.profiledSamplesCount.result.all === 1 ? 'sample' : 'total samples'})
             </span>
         );
     }
 
     @computed get getWrappedCancerStudySelector() {
         const control = (
-            <CancerStudySelector
-                queryStore={this.store}
-                forkedMode={this.props.forkedMode!}
-            />
+            <CancerStudySelector queryStore={this.store} forkedMode={this.props.forkedMode!} />
         );
         //NOTE: we have to wrap with div in order to deal with margin applied by css selector
         //react-reveal does not allow us to add inline-css to it's wrapper
@@ -210,42 +192,31 @@ export default class QueryContainer extends React.Component<
                             data-test="invalidQueryAlert"
                             style={{ marginBottom: 0 }}
                         >
-                            <i className={'fa fa-exclamation-triangle'} /> Your
-                            query has invalid or out-dated gene symbols. Please
-                            correct below.
+                            <i className={'fa fa-exclamation-triangle'} /> Your query has invalid or
+                            out-dated gene symbols. Please correct below.
                         </div>
                     )}
 
                 {this.store.unknownStudyIds.isComplete && (
-                    <UnknownStudiesWarning
-                        ids={this.store.unknownStudyIds.result}
-                    />
+                    <UnknownStudiesWarning ids={this.store.unknownStudyIds.result} />
                 )}
 
                 {this.store.forDownloadTab && (
                     <div className={'alert alert-danger'} role="alert">
-                        The Download interface has been removed. Enhanced
-                        download functionality is now available through the
-                        Query interface. Run a query with your gene(s) of
-                        interest and use the Download tab to download all
-                        available data types.
+                        The Download interface has been removed. Enhanced download functionality is
+                        now available through the Query interface. Run a query with your gene(s) of
+                        interest and use the Download tab to download all available data types.
                     </div>
                 )}
 
                 {!this.store.forDownloadTab && (
                     <If
                         condition={
-                            this.store.defaultSelectedIds.size === 0 ||
-                            this.studiesDataReady
+                            this.store.defaultSelectedIds.size === 0 || this.studiesDataReady
                         }
                     >
                         <Then>
-                            <If
-                                condition={
-                                    this.props.forkedMode &&
-                                    this.showQueryControls
-                                }
-                            >
+                            <If condition={this.props.forkedMode && this.showQueryControls}>
                                 <FlexRow className={styles.StudySelection}>
                                     <SectionHeader className={'sectionLabel'}>
                                         Selected Studies:{' '}
@@ -257,9 +228,7 @@ export default class QueryContainer extends React.Component<
                                             Modify
                                         </button>
                                     </SectionHeader>
-                                    <div style={{ marginLeft: 8 }}>
-                                        {this.selectedStudySummary}
-                                    </div>
+                                    <div style={{ marginLeft: 8 }}>{this.selectedStudySummary}</div>
                                 </FlexRow>
                             </If>
 
@@ -267,49 +236,35 @@ export default class QueryContainer extends React.Component<
 
                             <If condition={this.showQueryControls}>
                                 <>
-                                    {this.store.physicalStudyIdsInSelection
-                                        .length > 1 ? (
+                                    {this.store.physicalStudyIdsInSelection.length > 1 ? (
                                         <DataTypePrioritySelector />
                                     ) : (
                                         <MolecularProfileSelector />
                                     )}
 
-                                    {this.store.selectableSelectedStudyIds
-                                        .length > 0 && (
+                                    {this.store.selectableSelectedStudyIds.length > 0 && (
                                         <CaseSetSelector
-                                            modifyQueryParams={
-                                                this.props.modifyQueryParams
-                                            }
+                                            modifyQueryParams={this.props.modifyQueryParams}
                                         />
                                     )}
 
                                     <GeneSetSelector />
 
-                                    {!!this.store.isGenesetProfileSelected && (
-                                        <GenesetsSelector />
-                                    )}
+                                    {!!this.store.isGenesetProfileSelected && <GenesetsSelector />}
 
                                     {!!this.store.forDownloadTab && (
-                                        <span
-                                            className={
-                                                styles.downloadSubmitExplanation
-                                            }
-                                        >
-                                            Clicking submit will generate a
-                                            tab-delimited file containing your
-                                            requested data.
+                                        <span className={styles.downloadSubmitExplanation}>
+                                            Clicking submit will generate a tab-delimited file
+                                            containing your requested data.
                                         </span>
                                     )}
 
                                     {!!this.store.forDownloadTab && (
                                         <LabeledCheckbox
                                             labelProps={{
-                                                className:
-                                                    styles.transposeDataMatrix,
+                                                className: styles.transposeDataMatrix,
                                             }}
-                                            checked={
-                                                this.store.transposeDataMatrix
-                                            }
+                                            checked={this.store.transposeDataMatrix}
                                             onChange={event =>
                                                 (this.store.transposeDataMatrix =
                                                     event.currentTarget.checked)
@@ -321,10 +276,7 @@ export default class QueryContainer extends React.Component<
                                     <FlexRow
                                         overflow={true}
                                         padded
-                                        className={classNames(
-                                            styles.submitRow,
-                                            'posRelative'
-                                        )}
+                                        className={classNames(styles.submitRow, 'posRelative')}
                                     >
                                         <button
                                             style={{
@@ -344,9 +296,7 @@ export default class QueryContainer extends React.Component<
                                         <FlexCol>
                                             {!!this.store.submitError && (
                                                 <span
-                                                    className={
-                                                        styles.errorMessage
-                                                    }
+                                                    className={styles.errorMessage}
                                                     data-test="oqlErrorMessage"
                                                 >
                                                     {this.store.submitError}
@@ -355,11 +305,7 @@ export default class QueryContainer extends React.Component<
 
                                             {this.store.oqlMessages.map(msg => {
                                                 return (
-                                                    <span
-                                                        className={
-                                                            styles.oqlMessage
-                                                        }
-                                                    >
+                                                    <span className={styles.oqlMessage}>
                                                         <i
                                                             className="fa fa-info-circle"
                                                             style={{
@@ -383,9 +329,7 @@ export default class QueryContainer extends React.Component<
                                             marginRight: 20,
                                         }}
                                     >
-                                        <StudySelectorStats
-                                            store={this.store}
-                                        />
+                                        <StudySelectorStats store={this.store} />
                                     </div>
                                     <DefaultTooltip
                                         placement={'top'}
@@ -393,10 +337,7 @@ export default class QueryContainer extends React.Component<
                                         destroyTooltipOnHide={true}
                                         mouseEnterDelay={0}
                                         mouseLeaveDelay={0}
-                                        disabled={
-                                            this.store.selectableSelectedStudies
-                                                .length > 0
-                                        }
+                                        disabled={this.store.selectableSelectedStudies.length > 0}
                                         overlay={this.queryByGeneTooltipMessage}
                                     >
                                         <a
@@ -406,18 +347,13 @@ export default class QueryContainer extends React.Component<
                                                 this.toggleQueryControls()
                                             }
                                             data-event={serializeEvent({
-                                                action:
-                                                    'clickQueryByGeneButton',
+                                                action: 'clickQueryByGeneButton',
                                                 label: '',
                                                 category: 'homePage',
                                             })}
-                                            className={classNames(
-                                                'btn btn-primary btn-lg',
-                                                {
-                                                    disabled: !this.store
-                                                        .hasSelectedStudies,
-                                                }
-                                            )}
+                                            className={classNames('btn btn-primary btn-lg', {
+                                                disabled: !this.store.hasSelectedStudies,
+                                            })}
                                         >
                                             Query By Gene
                                         </a>
@@ -429,33 +365,22 @@ export default class QueryContainer extends React.Component<
                                         destroyTooltipOnHide={true}
                                         mouseEnterDelay={0}
                                         mouseLeaveDelay={0}
-                                        disabled={
-                                            !this.exploreCohortsButtonDisabled
-                                        }
-                                        overlay={
-                                            this
-                                                .exploreCohortsButtonTooltipMessage
-                                        }
+                                        disabled={!this.exploreCohortsButtonDisabled}
+                                        overlay={this.exploreCohortsButtonTooltipMessage}
                                     >
                                         <a
                                             onClick={() =>
-                                                !this
-                                                    .exploreCohortsButtonDisabled &&
+                                                !this.exploreCohortsButtonDisabled &&
                                                 this.store.openSummary()
                                             }
                                             data-event={serializeEvent({
-                                                action:
-                                                    'clickExploreStudiesButton',
+                                                action: 'clickExploreStudiesButton',
                                                 label: '',
                                                 category: 'homePage',
                                             })}
-                                            className={classNames(
-                                                'btn btn-primary btn-lg',
-                                                {
-                                                    disabled: this
-                                                        .exploreCohortsButtonDisabled,
-                                                }
-                                            )}
+                                            className={classNames('btn btn-primary btn-lg', {
+                                                disabled: this.exploreCohortsButtonDisabled,
+                                            })}
                                         >
                                             <i
                                                 style={{ marginTop: 5 }}
@@ -468,11 +393,7 @@ export default class QueryContainer extends React.Component<
                             </If>
                         </Then>
                         <Else>
-                            <LoadingIndicator
-                                isLoading={true}
-                                center={true}
-                                size={'big'}
-                            />
+                            <LoadingIndicator isLoading={true} center={true} size={'big'} />
                         </Else>
                     </If>
                 )}

@@ -86,14 +86,7 @@ describe('HotspotSet', () => {
 
     it('works with two regions, consolidated from several input regions', () => {
         // two regions, consolidated from several
-        const hss = new HotspotSet([
-            [4, 20],
-            [0, 5],
-            [30, 60],
-            [24, 70],
-            [2, 6],
-            [-5, 0],
-        ]);
+        const hss = new HotspotSet([[4, 20], [0, 5], [30, 60], [24, 70], [2, 6], [-5, 0]]);
         assert.deepEqual(hss._getHotspotRegions(), [[-5, 20], [24, 70]]);
         assert(hss.check(3));
         assert(hss.check(0, 5));
@@ -117,19 +110,8 @@ describe('HotspotSet', () => {
 
     it('works with three regions, consolidated from several input regions', () => {
         // three regions, consolidated from several
-        const hss = new HotspotSet([
-            [-50, -30],
-            [-4, 3],
-            [-4, 9],
-            [-4, 1],
-            [-30, -10],
-            [100, 200],
-        ]);
-        assert.deepEqual(hss._getHotspotRegions(), [
-            [-50, -10],
-            [-4, 9],
-            [100, 200],
-        ]);
+        const hss = new HotspotSet([[-50, -30], [-4, 3], [-4, 9], [-4, 1], [-30, -10], [100, 200]]);
+        assert.deepEqual(hss._getHotspotRegions(), [[-50, -10], [-4, 9], [100, 200]]);
         assert(hss.check(3));
         assert(hss.check(0, 5));
         assert(hss.check(-1, 0));

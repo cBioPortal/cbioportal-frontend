@@ -4,9 +4,7 @@ import * as React from 'react';
 import ColumnHeader from '../column/ColumnHeader';
 import { Column } from 'react-table';
 import { Mutation } from '../../model/Mutation';
-import ProteinChange, {
-    proteinChangeSortMethod,
-} from '../column/ProteinChange';
+import ProteinChange, { proteinChangeSortMethod } from '../column/ProteinChange';
 import { annotationSortMethod } from '../column/Annotation';
 import { gnomadSortMethod } from '../column/Gnomad';
 import { clinVarSortMethod } from '../column/ClinVar';
@@ -48,84 +46,52 @@ export function rightAlignedCell(cellProps: any) {
 export const MUTATION_COLUMN_HEADERS = {
     [MutationColumn.PROTEIN_CHANGE]: (
         <ColumnHeader
-            headerContent={
-                <span className="pull-left">
-                    {MutationColumnName.PROTEIN_CHANGE}
-                </span>
-            }
+            headerContent={<span className="pull-left">{MutationColumnName.PROTEIN_CHANGE}</span>}
         />
     ),
     [MutationColumn.ANNOTATION]: (
         <ColumnHeader
-            headerContent={
-                <span className="pull-left">
-                    {MutationColumnName.ANNOTATION}
-                </span>
-            }
+            headerContent={<span className="pull-left">{MutationColumnName.ANNOTATION}</span>}
         />
     ),
     [MutationColumn.MUTATION_STATUS]: (
         <ColumnHeader
-            headerContent={
-                <span className="pull-left">
-                    {MutationColumnName.MUTATION_STATUS}
-                </span>
-            }
+            headerContent={<span className="pull-left">{MutationColumnName.MUTATION_STATUS}</span>}
         />
     ),
     [MutationColumn.MUTATION_TYPE]: (
         <ColumnHeader
-            headerContent={
-                <span className="pull-left">
-                    {MutationColumnName.MUTATION_TYPE}
-                </span>
-            }
+            headerContent={<span className="pull-left">{MutationColumnName.MUTATION_TYPE}</span>}
         />
     ),
     [MutationColumn.CHROMOSOME]: (
         <ColumnHeader
-            headerContent={
-                <span className="pull-right mr-3">
-                    {MutationColumnName.CHROMOSOME}
-                </span>
-            }
+            headerContent={<span className="pull-right mr-3">{MutationColumnName.CHROMOSOME}</span>}
         />
     ),
     [MutationColumn.START_POSITION]: (
         <ColumnHeader
             headerContent={
-                <span className="pull-right mr-3">
-                    {MutationColumnName.START_POSITION}
-                </span>
+                <span className="pull-right mr-3">{MutationColumnName.START_POSITION}</span>
             }
         />
     ),
     [MutationColumn.END_POSITION]: (
         <ColumnHeader
             headerContent={
-                <span className="pull-right mr-3">
-                    {MutationColumnName.END_POSITION}
-                </span>
+                <span className="pull-right mr-3">{MutationColumnName.END_POSITION}</span>
             }
         />
     ),
     [MutationColumn.REFERENCE_ALLELE]: (
         <ColumnHeader
-            headerContent={
-                <span className="pull-left">
-                    {MutationColumnName.REFERENCE_ALLELE}
-                </span>
-            }
+            headerContent={<span className="pull-left">{MutationColumnName.REFERENCE_ALLELE}</span>}
             overlay={<span>Reference Allele</span>}
         />
     ),
     [MutationColumn.VARIANT_ALLELE]: (
         <ColumnHeader
-            headerContent={
-                <span className="pull-left">
-                    {MutationColumnName.VARIANT_ALLELE}
-                </span>
-            }
+            headerContent={<span className="pull-left">{MutationColumnName.VARIANT_ALLELE}</span>}
             overlay={<span>Variant Allele</span>}
         />
     ),
@@ -133,21 +99,16 @@ export const MUTATION_COLUMN_HEADERS = {
         <ColumnHeader
             headerContent={
                 <span className="pull-right mr-3">
-                    {MutationColumnName.GNOMAD}{' '}
-                    <i className="fa fa-info-circle" />
+                    {MutationColumnName.GNOMAD} <i className="fa fa-info-circle" />
                 </span>
             }
             overlay={
                 <span>
-                    <a
-                        href="https://gnomad.broadinstitute.org/"
-                        target="_blank"
-                    >
+                    <a href="https://gnomad.broadinstitute.org/" target="_blank">
                         gnomAD
                     </a>{' '}
-                    population allele frequencies. Overall population allele
-                    frequency is shown. Hover over a frequency to see the
-                    frequency for each specific population.
+                    population allele frequencies. Overall population allele frequency is shown.
+                    Hover over a frequency to see the frequency for each specific population.
                 </span>
             }
         />
@@ -156,20 +117,16 @@ export const MUTATION_COLUMN_HEADERS = {
         <ColumnHeader
             headerContent={
                 <span className="pull-right mr-3">
-                    {MutationColumnName.CLINVAR}{' '}
-                    <i className="fa fa-info-circle" />
+                    {MutationColumnName.CLINVAR} <i className="fa fa-info-circle" />
                 </span>
             }
             overlay={
                 <span>
-                    <a
-                        href="https://www.ncbi.nlm.nih.gov/clinvar/"
-                        target="_blank"
-                    >
+                    <a href="https://www.ncbi.nlm.nih.gov/clinvar/" target="_blank">
                         ClinVar
                     </a>{' '}
-                    aggregates information about genomic variation and its
-                    relationship to human health.
+                    aggregates information about genomic variation and its relationship to human
+                    health.
                 </span>
             }
         />

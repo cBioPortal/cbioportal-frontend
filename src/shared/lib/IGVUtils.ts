@@ -29,18 +29,12 @@ export function keyTracksByName(tracks?: TrackProps) {
     return _.keyBy(tracks || [], 'name');
 }
 
-export function getModifiedTrackNames(
-    currentTracks: TrackProps[],
-    nextTracks: TrackProps[]
-) {
+export function getModifiedTrackNames(currentTracks: TrackProps[], nextTracks: TrackProps[]) {
     const currentByName = keyTracksByName(currentTracks);
     const nextByName = keyTracksByName(nextTracks);
 
     const tracksToUpdate = nextTracks
-        .filter(
-            track =>
-                !_.isEqual(nextByName[track.name], currentByName[track.name])
-        )
+        .filter(track => !_.isEqual(nextByName[track.name], currentByName[track.name]))
         .map(track => track.name);
 
     const tracksToRemove = _.difference(
@@ -52,14 +46,7 @@ export function getModifiedTrackNames(
 }
 
 export function generateSegmentFileContent(segments: CopyNumberSeg[]): string {
-    const header = [
-        'ID',
-        'chrom',
-        'loc.start',
-        'loc.end',
-        'num.mark',
-        'seg.mean',
-    ];
+    const header = ['ID', 'chrom', 'loc.start', 'loc.end', 'num.mark', 'seg.mean'];
 
     const rows = segments.map(segment => [
         segment.sampleId,
@@ -74,9 +61,7 @@ export function generateSegmentFileContent(segments: CopyNumberSeg[]): string {
     return [header, ...rows].map(row => row.join('\t')).join('\n');
 }
 
-export function generateSegmentFeatures(
-    segments: CopyNumberSeg[]
-): SegmentTrackFeatures[] {
+export function generateSegmentFeatures(segments: CopyNumberSeg[]): SegmentTrackFeatures[] {
     return segments.map(segment => ({
         chr: normalizeChromosome(segment.chromosome),
         start: segment.start,
@@ -111,10 +96,7 @@ export function calcSegmentTrackHeight(
     rowHeight: number = 10
 ) {
     return Math.max(
-        Math.min(
-            maxHeight,
-            _.uniq(features.map(f => f.sampleKey)).length * rowHeight
-        ),
+        Math.min(maxHeight, _.uniq(features.map(f => f.sampleKey)).length * rowHeight),
         minHeight
     );
 }

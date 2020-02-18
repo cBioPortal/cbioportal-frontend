@@ -1,11 +1,7 @@
 import * as _ from 'lodash';
 import MobxPromise from 'mobxpromise';
 
-import {
-    AggregatedHotspots,
-    Hotspot,
-    IHotspotIndex,
-} from '../model/CancerHotspot';
+import { AggregatedHotspots, Hotspot, IHotspotIndex } from '../model/CancerHotspot';
 import { Mutation } from '../model/Mutation';
 import { extractGenomicLocation, genomicLocationString } from './MutationUtils';
 
@@ -27,9 +23,7 @@ export function indexHotspots(hotspots: AggregatedHotspots[]): IHotspotIndex {
     const index: IHotspotIndex = {};
 
     hotspots.forEach((aggregatedHotspots: AggregatedHotspots) => {
-        index[
-            genomicLocationString(aggregatedHotspots.genomicLocation)
-        ] = aggregatedHotspots;
+        index[genomicLocationString(aggregatedHotspots.genomicLocation)] = aggregatedHotspots;
     });
 
     return index;
@@ -44,11 +38,7 @@ export function groupHotspotsByMutations(
 
     _.keys(mutationsByPosition).forEach(key => {
         const position = Number(key);
-        const hotspots = filterHotspotsByMutations(
-            mutationsByPosition[position],
-            index,
-            filter
-        );
+        const hotspots = filterHotspotsByMutations(mutationsByPosition[position], index, filter);
 
         if (hotspots.length > 0) {
             hotspotMap[position] = hotspots;
@@ -106,10 +96,7 @@ export function filter3dHotspotsByMutations(
     );
 }
 
-export function isRecurrentHotspot(
-    mutation: Mutation,
-    index: IHotspotIndex
-): boolean {
+export function isRecurrentHotspot(mutation: Mutation, index: IHotspotIndex): boolean {
     return filterRecurrentHotspotsByMutations([mutation], index).length > 0;
 }
 
@@ -127,7 +114,5 @@ export function isHotspot(
 
 export function defaultHotspotFilter(hotspot: Hotspot) {
     const type = hotspot.type.toLowerCase();
-    return (
-        type.includes('single') || type.includes('indel') || type.includes('3d')
-    );
+    return type.includes('single') || type.includes('indel') || type.includes('3d');
 }

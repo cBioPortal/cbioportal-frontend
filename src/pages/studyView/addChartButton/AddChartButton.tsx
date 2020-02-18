@@ -3,11 +3,7 @@ import { action, computed, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import { ChildButton, MainButton, Menu } from 'react-mfb';
 import 'react-mfb/mfb.css';
-import {
-    CustomChart,
-    StudyViewPageStore,
-    StudyViewPageTabKey,
-} from '../StudyViewPageStore';
+import { CustomChart, StudyViewPageStore, StudyViewPageTabKey } from '../StudyViewPageStore';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import autobind from 'autobind-decorator';
 import * as _ from 'lodash';
@@ -24,11 +20,7 @@ import {
 import { MSKTab, MSKTabs } from '../../../shared/components/MSKTabs/MSKTabs';
 import { ChartTypeEnum, ChartTypeNameEnum } from '../StudyViewConfig';
 import SuccessBanner from '../infoBanner/SuccessBanner';
-import {
-    GAEvent,
-    serializeEvent,
-    trackEvent,
-} from '../../../shared/lib/tracking';
+import { GAEvent, serializeEvent, trackEvent } from '../../../shared/lib/tracking';
 import classNames from 'classnames';
 
 export interface IAddChartTabsProps {
@@ -59,11 +51,7 @@ export enum TabNamesEnum {
     GENOMIC = 'Genomic',
 }
 
-export type TabKeys =
-    | TabKeysEnum.CUSTOM_DATA
-    | TabKeysEnum.GENOMIC
-    | TabKeysEnum.CLINICAL
-    | '';
+export type TabKeys = TabKeysEnum.CUSTOM_DATA | TabKeysEnum.GENOMIC | TabKeysEnum.CLINICAL | '';
 
 export type ChartOption = {
     label: string;
@@ -97,10 +85,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     }
 
     readonly getClinicalDataCount = remoteData<ClinicalDataCountSet>({
-        await: () => [
-            this.props.store.clinicalDataWithCount,
-            this.props.store.selectedSamples,
-        ],
+        await: () => [this.props.store.clinicalDataWithCount, this.props.store.selectedSamples],
         invoke: async () => {
             return calculateClinicalDataCountFrequency(
                 this.props.store.clinicalDataWithCount.result,
@@ -111,10 +96,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     });
 
     readonly getGenomicDataCount = remoteData<ClinicalDataCountSet>({
-        await: () => [
-            this.props.store.genomicDataWithCount,
-            this.props.store.selectedSamples,
-        ],
+        await: () => [this.props.store.genomicDataWithCount, this.props.store.selectedSamples],
         invoke: async () => {
             return calculateClinicalDataCountFrequency(
                 this.props.store.genomicDataWithCount.result,
@@ -192,9 +174,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     private onAddAll(keys: string[]) {
         this.props.store.addCharts(this.selectedAttrs.concat(keys));
 
-        const addInSummaryInfoMessage = `${keys.length} chart${
-            keys.length > 1 ? 's' : ''
-        } added`;
+        const addInSummaryInfoMessage = `${keys.length} chart${keys.length > 1 ? 's' : ''} added`;
         if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
             this.infoMessage = `${keys.length} column${
                 keys.length > 1 ? 's' : ''
@@ -261,10 +241,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 let additionType = '';
                 if (this.props.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
                     additionType = ` ${ChartTypeNameEnum[option.chartType]}`;
-                } else if (
-                    this.props.currentTab ===
-                    StudyViewPageTabKeyEnum.CLINICAL_DATA
-                ) {
+                } else if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
                     additionType = ' column';
                 }
 
@@ -280,13 +257,8 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
                 let additionType = '';
                 if (this.props.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
-                    additionType = ` as a ${
-                        ChartTypeNameEnum[option.chartType]
-                    }`;
-                } else if (
-                    this.props.currentTab ===
-                    StudyViewPageTabKeyEnum.CLINICAL_DATA
-                ) {
+                    additionType = ` as a ${ChartTypeNameEnum[option.chartType]}`;
+                } else if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
                     additionType = ` to table and as ${
                         ChartTypeNameEnum[option.chartType]
                     } in Summary tab`;
@@ -352,17 +324,11 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     >
                         <CustomCaseSelection
                             allSamples={this.props.store.samples.result}
-                            selectedSamples={
-                                this.props.store.selectedSamples.result
-                            }
+                            selectedSamples={this.props.store.selectedSamples.result}
                             submitButtonText={'Add Chart'}
-                            queriedStudies={
-                                this.props.store.queriedPhysicalStudyIds.result
-                            }
+                            queriedStudies={this.props.store.queriedPhysicalStudyIds.result}
                             isChartNameValid={this.props.store.isChartNameValid}
-                            getDefaultChartName={
-                                this.props.store.getDefaultCustomChartName
-                            }
+                            getDefaultChartName={this.props.store.getDefaultCustomChartName}
                             onSubmit={(chart: CustomChart) => {
                                 this.infoMessage = `${chart.name} has been added.`;
                                 this.props.store.addCustomChart(chart);
@@ -386,19 +352,14 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                             Reset charts
                         </button>
                     )}
-                {this.infoMessage && (
-                    <SuccessBanner message={this.infoMessage} />
-                )}
+                {this.infoMessage && <SuccessBanner message={this.infoMessage} />}
             </div>
         );
     }
 }
 
 @observer
-export default class AddChartButton extends React.Component<
-    IAddChartButtonProps,
-    {}
-> {
+export default class AddChartButton extends React.Component<IAddChartButtonProps, {}> {
     @observable showTooltip = false;
     render() {
         return (

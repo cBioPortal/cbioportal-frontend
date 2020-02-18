@@ -97,10 +97,7 @@ describe('PyMolScriptGenerator', () => {
 
         scriptGenerator.generateScript('3pxe', 'B', residues, props);
 
-        assert.isTrue(
-            reinitStub.calledOnce,
-            'Reinitialize should be called only once'
-        );
+        assert.isTrue(reinitStub.calledOnce, 'Reinitialize should be called only once');
 
         assert.isTrue(
             bgColorStub.calledWithExactly('#EFEFEF'),
@@ -116,10 +113,7 @@ describe('PyMolScriptGenerator', () => {
     it('sets color and the opacity properly for the base structure and the chain', () => {
         const scriptGenerator = new PyMolScriptGenerator();
 
-        const setTransparencyStub = sinon.stub(
-            scriptGenerator as any,
-            'setTransparency'
-        );
+        const setTransparencyStub = sinon.stub(scriptGenerator as any, 'setTransparency');
         const setColorStub = sinon.stub(scriptGenerator as any, 'setColor');
 
         scriptGenerator.generateScript('3pxe', 'B', residues, props);
@@ -166,12 +160,7 @@ describe('PyMolScriptGenerator', () => {
         const scriptGenerator = new PyMolScriptGenerator();
 
         props.displayBoundMolecules = false;
-        const script = scriptGenerator.generateScript(
-            '3pxe',
-            'B',
-            residues,
-            props
-        );
+        const script = scriptGenerator.generateScript('3pxe', 'B', residues, props);
 
         assert.notEqual(
             script.indexOf(
@@ -226,10 +215,7 @@ describe('PyMolScriptGenerator', () => {
         const scriptGenerator = new PyMolScriptGenerator();
 
         const setColorStub = sinon.stub(scriptGenerator as any, 'setColor');
-        const selectResiduesStub = sinon.stub(
-            scriptGenerator as any,
-            'selectResidues'
-        );
+        const selectResiduesStub = sinon.stub(scriptGenerator as any, 'selectResidues');
         scriptGenerator.generateScript('3pxe', 'B', residues, props);
 
         assert.isTrue(selectResiduesStub.calledWith(['122', '1815'], 'B'));
@@ -298,10 +284,7 @@ describe('PyMolScriptGenerator', () => {
     it('displays side chain atoms wrt the corresponding props', () => {
         const scriptGenerator = new PyMolScriptGenerator();
 
-        const selectSideChainsStub = sinon.stub(
-            scriptGenerator as any,
-            'selectSideChains'
-        );
+        const selectSideChainsStub = sinon.stub(scriptGenerator as any, 'selectSideChains');
 
         // only selected residues should have visible side chains if sideChain is set to SELECTED
 

@@ -62,11 +62,7 @@ import {
     StudyViewFilter,
     ClinicalDataFilterValue,
 } from 'shared/api/generated/CBioPortalAPIInternal';
-import {
-    CancerStudy,
-    ClinicalAttribute,
-    Gene,
-} from 'shared/api/generated/CBioPortalAPI';
+import { CancerStudy, ClinicalAttribute, Gene } from 'shared/api/generated/CBioPortalAPI';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { UniqueKey } from './StudyViewUtils';
 import { Layout } from 'react-grid-layout';
@@ -93,16 +89,13 @@ describe('StudyViewUtils', () => {
 
     describe('updateGeneQuery', () => {
         it('when gene selected in table', () => {
-            assert.deepEqual(
-                updateGeneQuery([{ gene: 'TP53', alterations: false }], 'TTN'),
-                [
-                    {
-                        gene: 'TP53',
-                        alterations: false,
-                    },
-                    { gene: 'TTN', alterations: false },
-                ]
-            );
+            assert.deepEqual(updateGeneQuery([{ gene: 'TP53', alterations: false }], 'TTN'), [
+                {
+                    gene: 'TP53',
+                    alterations: false,
+                },
+                { gene: 'TTN', alterations: false },
+            ]);
             assert.deepEqual(
                 updateGeneQuery(
                     [
@@ -125,10 +118,7 @@ describe('StudyViewUtils', () => {
             );
         });
         it('when gene unselected in table', () => {
-            assert.deepEqual(
-                updateGeneQuery([{ gene: 'TP53', alterations: false }], 'TP53'),
-                []
-            );
+            assert.deepEqual(updateGeneQuery([{ gene: 'TP53', alterations: false }], 'TP53'), []);
             assert.deepEqual(
                 updateGeneQuery(
                     [
@@ -181,12 +171,7 @@ describe('StudyViewUtils', () => {
 
         it('when all samples are selected', () => {
             assert.isTrue(
-                getVirtualStudyDescription(
-                    '',
-                    studies as any,
-                    {} as any,
-                    {} as any
-                ).startsWith(
+                getVirtualStudyDescription('', studies as any, {} as any, {} as any).startsWith(
                     '4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)'
                 )
             );
@@ -311,16 +296,11 @@ describe('StudyViewUtils', () => {
             } as any;
 
             assert.isTrue(
-                getVirtualStudyDescription(
-                    'test\nCreated on ...',
-                    studies as any,
-                    filter,
-                    {
-                        attribute1: 'attribute1 name',
-                        attribute2: 'attribute2 name',
-                        attribute3: 'attribute3 name',
-                    }
-                ).startsWith('test\n\nCreated on')
+                getVirtualStudyDescription('test\nCreated on ...', studies as any, filter, {
+                    attribute1: 'attribute1 name',
+                    attribute2: 'attribute2 name',
+                    attribute3: 'attribute3 name',
+                }).startsWith('test\n\nCreated on')
             );
         });
     });
@@ -760,13 +740,11 @@ describe('StudyViewUtils', () => {
         ] as any;
 
         it('generates clinical data interval filter values from data bins', () => {
-            const values: ClinicalDataFilterValue[] = getClinicalDataIntervalFilterValues(
-                [
-                    linearScaleDataBinsWithNa[0],
-                    linearScaleDataBinsWithNa[2],
-                    linearScaleDataBinsWithNa[5],
-                ] as any
-            );
+            const values: ClinicalDataFilterValue[] = getClinicalDataIntervalFilterValues([
+                linearScaleDataBinsWithNa[0],
+                linearScaleDataBinsWithNa[2],
+                linearScaleDataBinsWithNa[5],
+            ] as any);
 
             assert.deepEqual(values, [
                 { end: 20, start: undefined, value: undefined },
@@ -776,22 +754,11 @@ describe('StudyViewUtils', () => {
         });
 
         it('processes linear scaled data bins including NA count', () => {
-            const numericalBins = filterNumericalBins(
-                linearScaleDataBinsWithNa
-            );
+            const numericalBins = filterNumericalBins(linearScaleDataBinsWithNa);
             assert.equal(numericalBins.length, 5, 'NA should be filtered out');
 
-            const formattedTickValues = formatNumericalTickValues(
-                numericalBins
-            );
-            assert.deepEqual(formattedTickValues, [
-                '≤20',
-                '20',
-                '40',
-                '60',
-                '80',
-                '100',
-            ]);
+            const formattedTickValues = formatNumericalTickValues(numericalBins);
+            assert.deepEqual(formattedTickValues, ['≤20', '20', '40', '60', '80', '100']);
 
             const intervalBins = filterIntervalBins(numericalBins);
             assert.equal(
@@ -813,42 +780,21 @@ describe('StudyViewUtils', () => {
                 'Only the bin with NA special value should be included'
             );
 
-            const needAdditionShift = needAdditionShiftForLogScaleBarChart(
-                numericalBins
-            );
+            const needAdditionShift = needAdditionShiftForLogScaleBarChart(numericalBins);
             assert.isFalse(needAdditionShift);
 
-            const normalizedNumericalData = generateNumericalData(
-                numericalBins
-            );
-            assert.deepEqual(normalizedNumericalData.map(data => data.x), [
-                1,
-                2.5,
-                3.5,
-                4.5,
-                5.5,
-            ]);
+            const normalizedNumericalData = generateNumericalData(numericalBins);
+            assert.deepEqual(normalizedNumericalData.map(data => data.x), [1, 2.5, 3.5, 4.5, 5.5]);
 
-            const normalizedCategoryData = generateCategoricalData(
-                categoryBins,
-                6
-            );
+            const normalizedCategoryData = generateCategoricalData(categoryBins, 6);
             assert.deepEqual(normalizedCategoryData.map(data => data.x), [7]);
         });
 
         it('processes log scaled data bins including NA and REDACTED counts', () => {
-            const numericalBins = filterNumericalBins(
-                logScaleDataBinsWithNaAndSpecialValues
-            );
-            assert.equal(
-                numericalBins.length,
-                8,
-                'NA and REDACTED should be filtered out'
-            );
+            const numericalBins = filterNumericalBins(logScaleDataBinsWithNaAndSpecialValues);
+            assert.equal(numericalBins.length, 8, 'NA and REDACTED should be filtered out');
 
-            const formattedTickValues = formatNumericalTickValues(
-                numericalBins
-            );
+            const formattedTickValues = formatNumericalTickValues(numericalBins);
             assert.deepEqual(formattedTickValues, [
                 '≤10',
                 '10',
@@ -869,36 +815,22 @@ describe('StudyViewUtils', () => {
             );
 
             const intervalBinValues = calcIntervalBinValues(intervalBins);
-            assert.deepEqual(intervalBinValues, [
-                10,
-                31,
-                100,
-                316,
-                1000,
-                3162,
-                10000,
-            ]);
+            assert.deepEqual(intervalBinValues, [10, 31, 100, 316, 1000, 3162, 10000]);
 
             const isLogScale = isLogScaleByValues(intervalBinValues);
             assert.isTrue(isLogScale);
 
-            const categoryBins = filterCategoryBins(
-                logScaleDataBinsWithNaAndSpecialValues
-            );
+            const categoryBins = filterCategoryBins(logScaleDataBinsWithNaAndSpecialValues);
             assert.equal(
                 categoryBins.length,
                 2,
                 'Only the bins with NA and REDACTED special values should be included'
             );
 
-            const needAdditionShift = needAdditionShiftForLogScaleBarChart(
-                numericalBins
-            );
+            const needAdditionShift = needAdditionShiftForLogScaleBarChart(numericalBins);
             assert.isFalse(needAdditionShift);
 
-            const normalizedNumericalData = generateNumericalData(
-                numericalBins
-            );
+            const normalizedNumericalData = generateNumericalData(numericalBins);
             assert.deepEqual(normalizedNumericalData.map(data => data.x), [
                 1,
                 2.5,
@@ -910,29 +842,17 @@ describe('StudyViewUtils', () => {
                 9,
             ]);
 
-            const normalizedCategoryData = generateCategoricalData(
-                categoryBins,
-                9
-            );
-            assert.deepEqual(normalizedCategoryData.map(data => data.x), [
-                10,
-                11,
-            ]);
+            const normalizedCategoryData = generateCategoricalData(categoryBins, 9);
+            assert.deepEqual(normalizedCategoryData.map(data => data.x), [10, 11]);
         });
 
         it('processes log scaled data bins including negative values and NA and REDACTED counts', () => {
             const numericalBins = filterNumericalBins(
                 logScaleDataBinsWithNegativeAndNaAndSpecialValues
             );
-            assert.equal(
-                numericalBins.length,
-                11,
-                'NA and REDACTED should be filtered out'
-            );
+            assert.equal(numericalBins.length, 11, 'NA and REDACTED should be filtered out');
 
-            const formattedTickValues = formatNumericalTickValues(
-                numericalBins
-            );
+            const formattedTickValues = formatNumericalTickValues(numericalBins);
             assert.deepEqual(formattedTickValues, [
                 '-10^5',
                 '',
@@ -951,11 +871,7 @@ describe('StudyViewUtils', () => {
             ]);
 
             const intervalBins = filterIntervalBins(numericalBins);
-            assert.equal(
-                intervalBins.length,
-                11,
-                'Should be same as the number of mumerical bins'
-            );
+            assert.equal(intervalBins.length, 11, 'Should be same as the number of mumerical bins');
 
             const intervalBinValues = calcIntervalBinValues(intervalBins);
             assert.deepEqual(intervalBinValues, [
@@ -985,14 +901,10 @@ describe('StudyViewUtils', () => {
                 'Only the bins with NA and REDACTED special values should be included'
             );
 
-            const needAdditionShift = needAdditionShiftForLogScaleBarChart(
-                numericalBins
-            );
+            const needAdditionShift = needAdditionShiftForLogScaleBarChart(numericalBins);
             assert.isTrue(needAdditionShift);
 
-            const normalizedNumericalData = generateNumericalData(
-                numericalBins
-            );
+            const normalizedNumericalData = generateNumericalData(numericalBins);
             assert.deepEqual(normalizedNumericalData.map(data => data.x), [
                 2.5,
                 3.5,
@@ -1007,14 +919,8 @@ describe('StudyViewUtils', () => {
                 12.5,
             ]);
 
-            const normalizedCategoryData = generateCategoricalData(
-                categoryBins,
-                13
-            );
-            assert.deepEqual(normalizedCategoryData.map(data => data.x), [
-                14,
-                15,
-            ]);
+            const normalizedCategoryData = generateCategoricalData(categoryBins, 13);
+            assert.deepEqual(normalizedCategoryData.map(data => data.x), [14, 15]);
         });
 
         it('processes log scaled data bins starting with zero and including NA counts', () => {
@@ -1023,9 +929,7 @@ describe('StudyViewUtils', () => {
             );
             assert.equal(numericalBins.length, 8, 'NA should be filtered out');
 
-            const formattedTickValues = formatNumericalTickValues(
-                numericalBins
-            );
+            const formattedTickValues = formatNumericalTickValues(numericalBins);
             assert.deepEqual(formattedTickValues, [
                 '0',
                 '',
@@ -1039,45 +943,21 @@ describe('StudyViewUtils', () => {
             ]);
 
             const intervalBins = filterIntervalBins(numericalBins);
-            assert.equal(
-                intervalBins.length,
-                8,
-                'Should be same as the number of mumerical bins'
-            );
+            assert.equal(intervalBins.length, 8, 'Should be same as the number of mumerical bins');
 
             const intervalBinValues = calcIntervalBinValues(intervalBins);
-            assert.deepEqual(intervalBinValues, [
-                0,
-                3,
-                10,
-                31,
-                100,
-                316,
-                1000,
-                3162,
-                10000,
-            ]);
+            assert.deepEqual(intervalBinValues, [0, 3, 10, 31, 100, 316, 1000, 3162, 10000]);
 
             const isLogScale = isLogScaleByValues(intervalBinValues);
             assert.isTrue(isLogScale);
 
-            const categoryBins = filterCategoryBins(
-                logScaleDataBinsStartingWithZeroAndContainsNa
-            );
-            assert.equal(
-                categoryBins.length,
-                1,
-                'Only NA bin should be included'
-            );
+            const categoryBins = filterCategoryBins(logScaleDataBinsStartingWithZeroAndContainsNa);
+            assert.equal(categoryBins.length, 1, 'Only NA bin should be included');
 
-            const needAdditionShift = needAdditionShiftForLogScaleBarChart(
-                numericalBins
-            );
+            const needAdditionShift = needAdditionShiftForLogScaleBarChart(numericalBins);
             assert.isFalse(needAdditionShift);
 
-            const normalizedNumericalData = generateNumericalData(
-                numericalBins
-            );
+            const normalizedNumericalData = generateNumericalData(numericalBins);
             assert.deepEqual(normalizedNumericalData.map(data => data.x), [
                 1.5,
                 2.5,
@@ -1089,33 +969,16 @@ describe('StudyViewUtils', () => {
                 8.5,
             ]);
 
-            const normalizedCategoryData = generateCategoricalData(
-                categoryBins,
-                9
-            );
+            const normalizedCategoryData = generateCategoricalData(categoryBins, 9);
             assert.deepEqual(normalizedCategoryData.map(data => data.x), [10]);
         });
 
         it('processes scientific small numbers data bins', () => {
-            const numericalBins = filterNumericalBins(
-                scientificSmallNumberBins
-            );
-            assert.equal(
-                numericalBins.length,
-                4,
-                'all bins should be included'
-            );
+            const numericalBins = filterNumericalBins(scientificSmallNumberBins);
+            assert.equal(numericalBins.length, 4, 'all bins should be included');
 
-            const formattedTickValues = formatNumericalTickValues(
-                numericalBins
-            );
-            assert.deepEqual(formattedTickValues, [
-                '1e-8',
-                '1e-7',
-                '1e-6',
-                '1e-5',
-                '>1e-5',
-            ]);
+            const formattedTickValues = formatNumericalTickValues(numericalBins);
+            assert.deepEqual(formattedTickValues, ['1e-8', '1e-7', '1e-6', '1e-5', '>1e-5']);
 
             const intervalBins = filterIntervalBins(numericalBins);
             assert.equal(
@@ -1131,31 +994,15 @@ describe('StudyViewUtils', () => {
             assert.isFalse(isLogScale);
 
             const categoryBins = filterCategoryBins(scientificSmallNumberBins);
-            assert.equal(
-                categoryBins.length,
-                0,
-                'There should not be any category bin'
-            );
+            assert.equal(categoryBins.length, 0, 'There should not be any category bin');
 
-            const needAdditionShift = needAdditionShiftForLogScaleBarChart(
-                numericalBins
-            );
+            const needAdditionShift = needAdditionShiftForLogScaleBarChart(numericalBins);
             assert.isFalse(needAdditionShift);
 
-            const normalizedNumericalData = generateNumericalData(
-                numericalBins
-            );
-            assert.deepEqual(normalizedNumericalData.map(data => data.x), [
-                1.5,
-                2.5,
-                3.5,
-                5,
-            ]);
+            const normalizedNumericalData = generateNumericalData(numericalBins);
+            assert.deepEqual(normalizedNumericalData.map(data => data.x), [1.5, 2.5, 3.5, 5]);
 
-            const normalizedCategoryData = generateCategoricalData(
-                categoryBins,
-                5
-            );
+            const normalizedCategoryData = generateCategoricalData(categoryBins, 5);
             assert.equal(normalizedCategoryData.length, 0);
         });
 
@@ -1163,17 +1010,11 @@ describe('StudyViewUtils', () => {
             const numericalBins = filterNumericalBins(noGroupingDataBinsWithNa);
             assert.equal(numericalBins.length, 5, 'NA should be filtered out');
 
-            const formattedTickValues = formatNumericalTickValues(
-                numericalBins
-            );
+            const formattedTickValues = formatNumericalTickValues(numericalBins);
             assert.deepEqual(formattedTickValues, ['0', '1', '2', '3', '5']);
 
             const intervalBins = filterIntervalBins(numericalBins);
-            assert.equal(
-                intervalBins.length,
-                5,
-                'should be equal to number of numerical bins'
-            );
+            assert.equal(intervalBins.length, 5, 'should be equal to number of numerical bins');
 
             const intervalBinValues = calcIntervalBinValues(intervalBins);
             assert.deepEqual(intervalBinValues, [0, 1, 2, 3, 5]);
@@ -1188,54 +1029,25 @@ describe('StudyViewUtils', () => {
                 'Only the bin with NA special value should be included'
             );
 
-            const normalizedNumericalData = generateNumericalData(
-                numericalBins
-            );
-            assert.deepEqual(normalizedNumericalData.map(data => data.x), [
-                1,
-                2,
-                3,
-                4,
-                5,
-            ]);
+            const normalizedNumericalData = generateNumericalData(numericalBins);
+            assert.deepEqual(normalizedNumericalData.map(data => data.x), [1, 2, 3, 4, 5]);
 
-            const normalizedCategoryData = generateCategoricalData(
-                categoryBins,
-                5
-            );
+            const normalizedCategoryData = generateCategoricalData(categoryBins, 5);
             assert.deepEqual(normalizedCategoryData.map(data => data.x), [6]);
         });
 
         it('processes no numerical data bins', () => {
             const numericalBins = filterNumericalBins(noNumericalDataBins);
-            assert.equal(
-                numericalBins.length,
-                0,
-                'all bins should be filtered out'
-            );
+            assert.equal(numericalBins.length, 0, 'all bins should be filtered out');
 
-            const formattedTickValues = formatNumericalTickValues(
-                numericalBins
-            );
-            assert.equal(
-                formattedTickValues.length,
-                0,
-                'there should be no numerical tick values'
-            );
+            const formattedTickValues = formatNumericalTickValues(numericalBins);
+            assert.equal(formattedTickValues.length, 0, 'there should be no numerical tick values');
 
             const intervalBins = filterIntervalBins(numericalBins);
-            assert.equal(
-                intervalBins.length,
-                0,
-                'should be equal to number of numerical bins'
-            );
+            assert.equal(intervalBins.length, 0, 'should be equal to number of numerical bins');
 
             const intervalBinValues = calcIntervalBinValues(intervalBins);
-            assert.equal(
-                intervalBinValues.length,
-                0,
-                'there should be no interval bin values'
-            );
+            assert.equal(intervalBinValues.length, 0, 'there should be no interval bin values');
 
             const isLogScale = isLogScaleByValues(intervalBinValues);
             assert.isFalse(isLogScale);
@@ -1243,36 +1055,19 @@ describe('StudyViewUtils', () => {
             const categoryBins = filterCategoryBins(noNumericalDataBins);
             assert.equal(categoryBins.length, 5, 'all bins should be included');
 
-            const normalizedNumericalData = generateNumericalData(
-                numericalBins
-            );
+            const normalizedNumericalData = generateNumericalData(numericalBins);
             assert.deepEqual(normalizedNumericalData.map(data => data.x), []);
 
-            const normalizedCategoryData = generateCategoricalData(
-                categoryBins,
-                0
-            );
-            assert.deepEqual(normalizedCategoryData.map(data => data.x), [
-                1,
-                2,
-                3,
-                4,
-                5,
-            ]);
+            const normalizedCategoryData = generateCategoricalData(categoryBins, 0);
+            assert.deepEqual(normalizedCategoryData.map(data => data.x), [1, 2, 3, 4, 5]);
         });
 
         it('determines log scale from an array of data bins', () => {
             assert.isFalse(isLogScaleByDataBins(linearScaleDataBinsWithNa));
             assert.isFalse(isLogScaleByDataBins(noGroupingDataBinsWithNa));
             assert.isFalse(isLogScaleByDataBins(noNumericalDataBins));
-            assert.isTrue(
-                isLogScaleByDataBins(logScaleDataBinsWithNaAndSpecialValues)
-            );
-            assert.isTrue(
-                isLogScaleByDataBins(
-                    logScaleDataBinsWithNegativeAndNaAndSpecialValues
-                )
-            );
+            assert.isTrue(isLogScaleByDataBins(logScaleDataBinsWithNaAndSpecialValues));
+            assert.isTrue(isLogScaleByDataBins(logScaleDataBinsWithNegativeAndNaAndSpecialValues));
         });
     });
 
@@ -1361,9 +1156,7 @@ describe('StudyViewUtils', () => {
         ] as ClinicalDataFilterValue[];
 
         it('generates display value for filter values with both ends closed', () => {
-            const value = intervalFiltersDisplayValue(
-                filterValuesWithBothEndsClosed
-            );
+            const value = intervalFiltersDisplayValue(filterValuesWithBothEndsClosed);
             assert.equal(value, '10 < x ≤ 50');
         });
 
@@ -1375,30 +1168,22 @@ describe('StudyViewUtils', () => {
         });
 
         it('generates display value for filter values with both ends open', () => {
-            const value = intervalFiltersDisplayValue(
-                filterValuesWithBothEndsOpen
-            );
+            const value = intervalFiltersDisplayValue(filterValuesWithBothEndsOpen);
             assert.equal(value, 'All Numbers');
         });
 
         it('generates display value for filter values with both ends open, with special values', () => {
-            const value = intervalFiltersDisplayValue(
-                filterValuesWithBothEndsOpenAndSpecialValues
-            );
+            const value = intervalFiltersDisplayValue(filterValuesWithBothEndsOpenAndSpecialValues);
             assert.equal(value, 'All Numbers, NA, REDACTED');
         });
 
         it('generates display value for filter values with start open, end closed', () => {
-            const value = intervalFiltersDisplayValue(
-                filterValuesWithStartOpen
-            );
+            const value = intervalFiltersDisplayValue(filterValuesWithStartOpen);
             assert.equal(value, '≤ 50');
         });
 
         it('generates display value for filter values with start open, end closed, with special values', () => {
-            const value = intervalFiltersDisplayValue(
-                filterValuesWithStartOpenAndSpecialValues
-            );
+            const value = intervalFiltersDisplayValue(filterValuesWithStartOpenAndSpecialValues);
             assert.equal(value, '≤ 50, NA, REDACTED');
         });
 
@@ -1408,23 +1193,17 @@ describe('StudyViewUtils', () => {
         });
 
         it('generates display value for filter values with start closed, end open, with special values', () => {
-            const value = intervalFiltersDisplayValue(
-                filterValuesWithEndOpenAndSpecialValues
-            );
+            const value = intervalFiltersDisplayValue(filterValuesWithEndOpenAndSpecialValues);
             assert.equal(value, '> 10, NA, REDACTED');
         });
 
         it('generates display value for filter values with special values only', () => {
-            const value = intervalFiltersDisplayValue(
-                filterValuesWithSpecialValuesOnly
-            );
+            const value = intervalFiltersDisplayValue(filterValuesWithSpecialValuesOnly);
             assert.equal(value, 'NA, REDACTED');
         });
 
         it('generates display value for filter values with distinct values only', () => {
-            const value = intervalFiltersDisplayValue(
-                filterValuesWithDistinctNumerals
-            );
+            const value = intervalFiltersDisplayValue(filterValuesWithDistinctNumerals);
             assert.equal(value, '20 ≤ x ≤ 40');
         });
 
@@ -1436,9 +1215,7 @@ describe('StudyViewUtils', () => {
         });
 
         it('generates display value for filter values with a single distinct value', () => {
-            const value = intervalFiltersDisplayValue(
-                filterValuesWithSingleDistinctValue
-            );
+            const value = intervalFiltersDisplayValue(filterValuesWithSingleDistinctValue);
             assert.equal(value, '666');
         });
 
@@ -1625,18 +1402,14 @@ describe('StudyViewUtils', () => {
         ];
 
         it('picks predefined colors for known clinical attribute values', () => {
-            const colors = pickClinicalDataColors(
-                clinicalDataCountWithFixedValues
-            );
+            const colors = pickClinicalDataColors(clinicalDataCountWithFixedValues);
             assert.equal(colors['TRUE'], RESERVED_CLINICAL_VALUE_COLORS.true);
             assert.equal(colors['FALSE'], RESERVED_CLINICAL_VALUE_COLORS.false);
             assert.equal(colors['NA'], RESERVED_CLINICAL_VALUE_COLORS.na);
         });
 
         it('picks predefined colors for known clinical attribute values in mixed letter case', () => {
-            const colors = pickClinicalDataColors(
-                clinicalDataCountWithFixedMixedCaseValues
-            );
+            const colors = pickClinicalDataColors(clinicalDataCountWithFixedMixedCaseValues);
 
             assert.equal(colors['Yes'], RESERVED_CLINICAL_VALUE_COLORS.yes);
             assert.equal(colors['No'], RESERVED_CLINICAL_VALUE_COLORS.no);
@@ -1718,36 +1491,24 @@ describe('StudyViewUtils', () => {
             let attr: ClinicalAttribute = {
                 clinicalAttributeId: 'CANCER_TYPE',
             } as ClinicalAttribute;
-            assert.isTrue(
-                getDefaultChartTypeByClinicalAttribute(attr) ===
-                    ChartTypeEnum.TABLE
-            );
+            assert.isTrue(getDefaultChartTypeByClinicalAttribute(attr) === ChartTypeEnum.TABLE);
 
             attr.clinicalAttributeId = 'CANCER_TYPE_DETAILED';
-            assert.isTrue(
-                getDefaultChartTypeByClinicalAttribute(attr) ===
-                    ChartTypeEnum.TABLE
-            );
+            assert.isTrue(getDefaultChartTypeByClinicalAttribute(attr) === ChartTypeEnum.TABLE);
         });
 
         it('return PIE_CHART when clinical attribute has data type as STRING', () => {
             const attr: ClinicalAttribute = {
                 datatype: 'STRING',
             } as ClinicalAttribute;
-            assert.isTrue(
-                getDefaultChartTypeByClinicalAttribute(attr) ===
-                    ChartTypeEnum.PIE_CHART
-            );
+            assert.isTrue(getDefaultChartTypeByClinicalAttribute(attr) === ChartTypeEnum.PIE_CHART);
         });
 
         it('return BAR_CHART when clinical attribute has data type as STRING', () => {
             const attr: ClinicalAttribute = {
                 datatype: 'NUMBER',
             } as ClinicalAttribute;
-            assert.isTrue(
-                getDefaultChartTypeByClinicalAttribute(attr) ===
-                    ChartTypeEnum.BAR_CHART
-            );
+            assert.isTrue(getDefaultChartTypeByClinicalAttribute(attr) === ChartTypeEnum.BAR_CHART);
         });
     });
 
@@ -1757,81 +1518,37 @@ describe('StudyViewUtils', () => {
         });
         it('Check the bigger chart starts from even index', () => {
             // x
-            assert.isTrue(
-                isOccupied(
-                    [['1', '', '', '2', '', '']],
-                    { x: 1, y: 0 },
-                    { w: 2, h: 1 }
-                )
-            );
-            assert.isTrue(
-                isOccupied(
-                    [['1', '', '', '2', '', '']],
-                    { x: 2, y: 0 },
-                    { w: 2, h: 1 }
-                )
-            );
+            assert.isTrue(isOccupied([['1', '', '', '2', '', '']], { x: 1, y: 0 }, { w: 2, h: 1 }));
+            assert.isTrue(isOccupied([['1', '', '', '2', '', '']], { x: 2, y: 0 }, { w: 2, h: 1 }));
             assert.isFalse(
-                isOccupied(
-                    [['1', '', '', '2', '', '']],
-                    { x: 4, y: 0 },
-                    { w: 2, h: 1 }
-                )
+                isOccupied([['1', '', '', '2', '', '']], { x: 4, y: 0 }, { w: 2, h: 1 })
             );
 
             // y
             assert.isTrue(
-                isOccupied(
-                    [['1', '1', '', ''], ['2', '2', '', '']],
-                    { x: 2, y: 1 },
-                    { w: 2, h: 2 }
-                )
+                isOccupied([['1', '1', '', ''], ['2', '2', '', '']], { x: 2, y: 1 }, { w: 2, h: 2 })
             );
         });
         it('Return proper value', () => {
-            assert.isTrue(
-                isOccupied([['1', '2', '']], { x: 0, y: 0 }, { w: 1, h: 1 })
-            );
-            assert.isTrue(
-                isOccupied([['1', '2', '']], { x: 1, y: 0 }, { w: 1, h: 1 })
-            );
-            assert.isFalse(
-                isOccupied([['1', '2', '']], { x: 2, y: 0 }, { w: 1, h: 1 })
-            );
+            assert.isTrue(isOccupied([['1', '2', '']], { x: 0, y: 0 }, { w: 1, h: 1 }));
+            assert.isTrue(isOccupied([['1', '2', '']], { x: 1, y: 0 }, { w: 1, h: 1 }));
+            assert.isFalse(isOccupied([['1', '2', '']], { x: 2, y: 0 }, { w: 1, h: 1 }));
+
+            assert.isTrue(isOccupied([['1', '2', '']], { x: 2, y: 0 }, { w: 2, h: 1 }));
 
             assert.isTrue(
-                isOccupied([['1', '2', '']], { x: 2, y: 0 }, { w: 2, h: 1 })
-            );
-
-            assert.isTrue(
-                isOccupied(
-                    [['1', '1', ''], ['2', '2', '']],
-                    { x: 0, y: 0 },
-                    { w: 1, h: 1 }
-                )
+                isOccupied([['1', '1', ''], ['2', '2', '']], { x: 0, y: 0 }, { w: 1, h: 1 })
             );
             assert.isTrue(
-                isOccupied(
-                    [['1', '1', ''], ['2', '2', '']],
-                    { x: 0, y: 1 },
-                    { w: 1, h: 1 }
-                )
+                isOccupied([['1', '1', ''], ['2', '2', '']], { x: 0, y: 1 }, { w: 1, h: 1 })
             );
 
             assert.isFalse(
-                isOccupied(
-                    [['1', '1', '', ''], ['2', '2', '', '']],
-                    { x: 2, y: 0 },
-                    { w: 2, h: 2 }
-                )
+                isOccupied([['1', '1', '', ''], ['2', '2', '', '']], { x: 2, y: 0 }, { w: 2, h: 2 })
             );
             assert.isFalse(
                 isOccupied(
-                    [
-                        ['1', '1', '', ''],
-                        ['2', '2', '', ''],
-                        ['3', '3', '', ''],
-                    ],
+                    [['1', '1', '', ''], ['2', '2', '', ''], ['3', '3', '', '']],
                     { x: 2, y: 2 },
                     { w: 2, h: 2 }
                 )
@@ -1858,14 +1575,14 @@ describe('StudyViewUtils', () => {
                 x: 0,
                 y: 1,
             });
-            assert.deepEqual(
-                findSpot([['1', '1', ''], ['2', '2', '']], { w: 1, h: 1 }),
-                { x: 2, y: 0 }
-            );
-            assert.deepEqual(
-                findSpot([['1', '1', ''], ['2', '2', '']], { w: 2, h: 1 }),
-                { x: 0, y: 2 }
-            );
+            assert.deepEqual(findSpot([['1', '1', ''], ['2', '2', '']], { w: 1, h: 1 }), {
+                x: 2,
+                y: 0,
+            });
+            assert.deepEqual(findSpot([['1', '1', ''], ['2', '2', '']], { w: 2, h: 1 }), {
+                x: 0,
+                y: 2,
+            });
         });
     });
 
@@ -1897,12 +1614,7 @@ describe('StudyViewUtils', () => {
         }
 
         it('Empty array should be returned when no attributes given', () => {
-            let layout: Layout[] = calculateLayout(
-                [],
-                6,
-                visibleAttrsChartDimensions,
-                []
-            );
+            let layout: Layout[] = calculateLayout([], 6, visibleAttrsChartDimensions, []);
             assert.isArray(layout);
             assert.equal(layout.length, 0);
         });
@@ -2182,10 +1894,7 @@ describe('StudyViewUtils', () => {
     describe('getSamplesByExcludingFiltersOnChart', () => {
         let fetchStub: sinon.SinonStub;
         beforeEach(() => {
-            fetchStub = sinon.stub(
-                internalClient,
-                'fetchFilteredSamplesUsingPOST'
-            );
+            fetchStub = sinon.stub(internalClient, 'fetchFilteredSamplesUsingPOST');
             fetchStub.returns(Promise.resolve([]));
         });
         afterEach(() => {
@@ -2205,9 +1914,7 @@ describe('StudyViewUtils', () => {
                         fetchStub.calledWith({
                             studyViewFilter: {
                                 ...emptyStudyViewFilter,
-                                sampleIdentifiers: [
-                                    { sampleId: 'sample1', studyId: 'study1' },
-                                ],
+                                sampleIdentifiers: [{ sampleId: 'sample1', studyId: 'study1' }],
                             },
                         })
                     );
@@ -2221,9 +1928,7 @@ describe('StudyViewUtils', () => {
                 UniqueKey.MUTATION_COUNT,
                 emptyStudyViewFilter,
                 {
-                    [UniqueKey.CANCER_STUDIES]: [
-                        { sampleId: 'sample1', studyId: 'study1' },
-                    ],
+                    [UniqueKey.CANCER_STUDIES]: [{ sampleId: 'sample1', studyId: 'study1' }],
                 },
                 [
                     { sampleId: 'sample1', studyId: 'study1' },
@@ -2236,9 +1941,7 @@ describe('StudyViewUtils', () => {
                         fetchStub.calledWith({
                             studyViewFilter: {
                                 ...emptyStudyViewFilter,
-                                sampleIdentifiers: [
-                                    { sampleId: 'sample1', studyId: 'study1' },
-                                ],
+                                sampleIdentifiers: [{ sampleId: 'sample1', studyId: 'study1' }],
                             },
                         })
                     );
@@ -2274,9 +1977,7 @@ describe('StudyViewUtils', () => {
                 UniqueKey.MUTATION_COUNT,
                 emptyStudyViewFilter,
                 {
-                    [UniqueKey.CANCER_STUDIES]: [
-                        { sampleId: 'sample1', studyId: 'study1' },
-                    ],
+                    [UniqueKey.CANCER_STUDIES]: [{ sampleId: 'sample1', studyId: 'study1' }],
                 },
                 [],
                 ['study1']
@@ -2286,9 +1987,7 @@ describe('StudyViewUtils', () => {
                         fetchStub.calledWith({
                             studyViewFilter: {
                                 ...emptyStudyViewFilter,
-                                sampleIdentifiers: [
-                                    { sampleId: 'sample1', studyId: 'study1' },
-                                ],
+                                sampleIdentifiers: [{ sampleId: 'sample1', studyId: 'study1' }],
                             },
                         })
                     );
@@ -2322,18 +2021,11 @@ describe('StudyViewUtils', () => {
         });
 
         it('when filter function is present', () => {
+            assert.deepEqual(getFilteredSampleIdentifiers(samples, sample => sample.sequenced), [
+                { sampleId: 'sample1', studyId: 'study1' },
+            ]);
             assert.deepEqual(
-                getFilteredSampleIdentifiers(
-                    samples,
-                    sample => sample.sequenced
-                ),
-                [{ sampleId: 'sample1', studyId: 'study1' }]
-            );
-            assert.deepEqual(
-                getFilteredSampleIdentifiers(
-                    samples,
-                    sample => sample.copyNumberSegmentPresent
-                ),
+                getFilteredSampleIdentifiers(samples, sample => sample.copyNumberSegmentPresent),
                 [{ sampleId: 'sample2', studyId: 'study1' }]
             );
         });
@@ -2391,16 +2083,11 @@ describe('StudyViewUtils', () => {
         ] as any;
         it('returns expected results', () => {
             assert.deepEqual(getFilteredStudiesWithSamples([], [], []), []);
+            assert.deepEqual(getFilteredStudiesWithSamples(samples, physicalStudies, []), [
+                { studyId: 'study1', uniqueSampleKeys: ['sample1'] },
+            ] as any);
             assert.deepEqual(
-                getFilteredStudiesWithSamples(samples, physicalStudies, []),
-                [{ studyId: 'study1', uniqueSampleKeys: ['sample1'] }] as any
-            );
-            assert.deepEqual(
-                getFilteredStudiesWithSamples(
-                    samples,
-                    physicalStudies,
-                    virtualStudies
-                ),
+                getFilteredStudiesWithSamples(samples, physicalStudies, virtualStudies),
                 [
                     {
                         studyId: 'study1',
@@ -2544,10 +2231,7 @@ describe('StudyViewUtils', () => {
     describe('clinicalDataCountComparator', () => {
         it('returns zero if both NA', () => {
             assert.equal(
-                clinicalDataCountComparator(
-                    { value: 'NA', count: 1 },
-                    { value: 'na', count: 666 }
-                ),
+                clinicalDataCountComparator({ value: 'NA', count: 1 }, { value: 'na', count: 666 }),
                 0
             );
         });
@@ -2807,9 +2491,7 @@ describe('StudyViewUtils', () => {
         });
 
         it('Allow using back slash to escape the comma actually in the content', () => {
-            let result = getClinicalEqualityFilterValuesByString(
-                'test1\\,test2'
-            );
+            let result = getClinicalEqualityFilterValuesByString('test1\\,test2');
             assert.equal(result.length, 1);
             assert.equal(result[0], 'test1,test2');
         });
@@ -2827,10 +2509,7 @@ describe('StudyViewUtils', () => {
 
     describe('getClinicalDataCountWithColorByCategoryCounts', () => {
         it('When both counts are zero', () => {
-            assert.deepEqual(
-                [],
-                getClinicalDataCountWithColorByCategoryCounts(0, 0)
-            );
+            assert.deepEqual([], getClinicalDataCountWithColorByCategoryCounts(0, 0));
         });
         it('When only yesCount is > 0', () => {
             assert.deepEqual(
@@ -3039,26 +2718,14 @@ describe('StudyViewUtils', () => {
         const largeDimension = { w: 2, h: 2 };
         const smallDimension = { w: 1, h: 1 };
         it('should return true if the chart shrunk', () => {
-            assert.equal(
-                isFocusedChartShrunk(largeDimension, smallDimension),
-                true
-            );
+            assert.equal(isFocusedChartShrunk(largeDimension, smallDimension), true);
         });
         it('should return false if the chart not shrunk', () => {
-            assert.equal(
-                isFocusedChartShrunk(smallDimension, largeDimension),
-                false
-            );
+            assert.equal(isFocusedChartShrunk(smallDimension, largeDimension), false);
         });
         it('should return false if the dimension is not changed', () => {
-            assert.equal(
-                isFocusedChartShrunk(smallDimension, smallDimension),
-                false
-            );
-            assert.equal(
-                isFocusedChartShrunk(largeDimension, largeDimension),
-                false
-            );
+            assert.equal(isFocusedChartShrunk(smallDimension, smallDimension), false);
+            assert.equal(isFocusedChartShrunk(largeDimension, largeDimension), false);
         });
     });
 
@@ -3074,35 +2741,23 @@ describe('StudyViewUtils', () => {
 
     describe('getPositionXByUniqueKey', () => {
         it('should return undefined for the not exist uniqueKey', () => {
-            assert.equal(
-                getPositionXByUniqueKey(layoutForPositionTest, 'test1'),
-                undefined
-            );
+            assert.equal(getPositionXByUniqueKey(layoutForPositionTest, 'test1'), undefined);
             assert.equal(getPositionXByUniqueKey([], 'test'), undefined);
             assert.equal(getPositionXByUniqueKey([], ''), undefined);
         });
         it('should return the X value of the layout which matches the uniqueKey', () => {
-            assert.equal(
-                getPositionXByUniqueKey(layoutForPositionTest, 'test'),
-                1
-            );
+            assert.equal(getPositionXByUniqueKey(layoutForPositionTest, 'test'), 1);
         });
     });
 
     describe('getPositionYByUniqueKey', () => {
         it('should return undefined for the not exist uniqueKey', () => {
-            assert.equal(
-                getPositionYByUniqueKey(layoutForPositionTest, 'test1'),
-                undefined
-            );
+            assert.equal(getPositionYByUniqueKey(layoutForPositionTest, 'test1'), undefined);
             assert.equal(getPositionYByUniqueKey([], 'test'), undefined);
             assert.equal(getPositionYByUniqueKey([], ''), undefined);
         });
         it('should return the Y value of the layout which matches the uniqueKey', () => {
-            assert.equal(
-                getPositionYByUniqueKey(layoutForPositionTest, 'test'),
-                1
-            );
+            assert.equal(getPositionYByUniqueKey(layoutForPositionTest, 'test'), 1);
         });
     });
 
@@ -3111,14 +2766,8 @@ describe('StudyViewUtils', () => {
             assert.equal(getStudyViewTabId('study'), undefined);
             assert.equal(getStudyViewTabId('study/'), undefined);
             assert.equal(getStudyViewTabId('study/asdf'), 'asdf' as any);
-            assert.equal(
-                getStudyViewTabId('study/summary'),
-                StudyViewPageTabKeyEnum.SUMMARY
-            );
-            assert.equal(
-                getStudyViewTabId('study/summary/'),
-                StudyViewPageTabKeyEnum.SUMMARY
-            );
+            assert.equal(getStudyViewTabId('study/summary'), StudyViewPageTabKeyEnum.SUMMARY);
+            assert.equal(getStudyViewTabId('study/summary/'), StudyViewPageTabKeyEnum.SUMMARY);
         });
     });
 
@@ -3174,14 +2823,8 @@ describe('StudyViewUtils', () => {
         it('should return correct bin name', () => {
             assert.equal(getBinName({ specialValue: 'NA' } as any), 'NA');
             assert.equal(getBinName({ start: 10, end: 20 } as any), '10-20');
-            assert.equal(
-                getBinName({ start: 10, specialValue: '<=' } as any),
-                '<=10'
-            );
-            assert.equal(
-                getBinName({ specialValue: '>', end: 20 } as any),
-                '>20'
-            );
+            assert.equal(getBinName({ start: 10, specialValue: '<=' } as any), '<=10');
+            assert.equal(getBinName({ specialValue: '>', end: 20 } as any), '>20');
         });
     });
 
@@ -3261,73 +2904,67 @@ describe('StudyViewUtils', () => {
         ];
 
         it('should return grouped clinicalData by bins', () => {
-            assert.deepEqual(
-                getGroupedClinicalDataByBins(
-                    clinicalData as any,
-                    dataBins as any
-                ),
-                {
-                    '<=10': [
-                        {
-                            patientId: 'patient1',
-                            sampleId: 'sample1',
-                            studyId: 'study1',
-                            uniquePatientKey: 'patient1',
-                            value: 10,
-                        },
-                    ],
-                    '10-20': [
-                        {
-                            patientId: 'patient2',
-                            sampleId: 'sample2',
-                            studyId: 'study1',
-                            uniquePatientKey: 'patient2',
-                            value: 11,
-                        },
-                        {
-                            patientId: 'patient3',
-                            sampleId: 'sample3',
-                            studyId: 'study1',
-                            uniquePatientKey: 'patient3',
-                            value: 20,
-                        },
-                    ],
-                    '20-40': [
-                        {
-                            patientId: 'patient4',
-                            sampleId: 'sample4',
-                            studyId: 'study1',
-                            uniquePatientKey: 'patient4',
-                            value: 30,
-                        },
-                        {
-                            patientId: 'patient5',
-                            sampleId: 'sample5',
-                            studyId: 'study1',
-                            uniquePatientKey: 'patient5',
-                            value: 40,
-                        },
-                    ],
-                    '>40': [
-                        {
-                            patientId: 'patient6',
-                            sampleId: 'sample6',
-                            studyId: 'study1',
-                            uniquePatientKey: 'patient6',
-                            value: 45,
-                        },
-                    ],
-                    NA: [
-                        {
-                            patientId: 'patient7',
-                            sampleId: 'sample7',
-                            studyId: 'study1',
-                            uniquePatientKey: 'patient7',
-                            value: 'NA',
-                        },
-                    ],
-                } as any
-            );
+            assert.deepEqual(getGroupedClinicalDataByBins(clinicalData as any, dataBins as any), {
+                '<=10': [
+                    {
+                        patientId: 'patient1',
+                        sampleId: 'sample1',
+                        studyId: 'study1',
+                        uniquePatientKey: 'patient1',
+                        value: 10,
+                    },
+                ],
+                '10-20': [
+                    {
+                        patientId: 'patient2',
+                        sampleId: 'sample2',
+                        studyId: 'study1',
+                        uniquePatientKey: 'patient2',
+                        value: 11,
+                    },
+                    {
+                        patientId: 'patient3',
+                        sampleId: 'sample3',
+                        studyId: 'study1',
+                        uniquePatientKey: 'patient3',
+                        value: 20,
+                    },
+                ],
+                '20-40': [
+                    {
+                        patientId: 'patient4',
+                        sampleId: 'sample4',
+                        studyId: 'study1',
+                        uniquePatientKey: 'patient4',
+                        value: 30,
+                    },
+                    {
+                        patientId: 'patient5',
+                        sampleId: 'sample5',
+                        studyId: 'study1',
+                        uniquePatientKey: 'patient5',
+                        value: 40,
+                    },
+                ],
+                '>40': [
+                    {
+                        patientId: 'patient6',
+                        sampleId: 'sample6',
+                        studyId: 'study1',
+                        uniquePatientKey: 'patient6',
+                        value: 45,
+                    },
+                ],
+                NA: [
+                    {
+                        patientId: 'patient7',
+                        sampleId: 'sample7',
+                        studyId: 'study1',
+                        uniquePatientKey: 'patient7',
+                        value: 'NA',
+                    },
+                ],
+            } as any);
         });
     });
 
@@ -3356,35 +2993,23 @@ describe('StudyViewUtils', () => {
         };
 
         it('should return correct chart settings', () => {
+            assert.deepEqual(updateSavedUserPreferenceChartIds([chartSetting1]), [
+                { ...chartSetting1, id: 'CANCER_TYPE' },
+            ]);
             assert.deepEqual(
-                updateSavedUserPreferenceChartIds([chartSetting1]),
+                updateSavedUserPreferenceChartIds([{ ...chartSetting1, id: 'CANCER_TYPE' }]),
                 [{ ...chartSetting1, id: 'CANCER_TYPE' }]
             );
-            assert.deepEqual(
-                updateSavedUserPreferenceChartIds([
-                    { ...chartSetting1, id: 'CANCER_TYPE' },
-                ]),
-                [{ ...chartSetting1, id: 'CANCER_TYPE' }]
-            );
-            assert.deepEqual(
-                updateSavedUserPreferenceChartIds([
-                    chartSetting1,
-                    chartSetting2,
-                ]),
-                [
-                    { ...chartSetting1, id: 'CANCER_TYPE' },
-                    { ...chartSetting2, id: 'SAMPLE_TYPE' },
-                ]
-            );
+            assert.deepEqual(updateSavedUserPreferenceChartIds([chartSetting1, chartSetting2]), [
+                { ...chartSetting1, id: 'CANCER_TYPE' },
+                { ...chartSetting2, id: 'SAMPLE_TYPE' },
+            ]);
             assert.deepEqual(
                 updateSavedUserPreferenceChartIds([
                     { ...chartSetting1, id: 'CANCER_TYPE' },
                     { ...chartSetting2, id: 'SAMPLE_TYPE' },
                 ]),
-                [
-                    { ...chartSetting1, id: 'CANCER_TYPE' },
-                    { ...chartSetting2, id: 'SAMPLE_TYPE' },
-                ]
+                [{ ...chartSetting1, id: 'CANCER_TYPE' }, { ...chartSetting2, id: 'SAMPLE_TYPE' }]
             );
         });
     });

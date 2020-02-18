@@ -24,8 +24,7 @@ export default class EllipsisTextTooltip extends React.Component<
         let actualWidth = this.el.scrollWidth;
 
         const isOverflowed = actualWidth - shownWidth > 1;
-        this.tooltipVisible =
-            !this.props.hideTooltip && isVisible && isOverflowed;
+        this.tooltipVisible = !this.props.hideTooltip && isVisible && isOverflowed;
     }
 
     @autobind
@@ -40,11 +39,7 @@ export default class EllipsisTextTooltip extends React.Component<
                 visible={this.tooltipVisible}
                 onVisibleChange={this.onVisibleChange}
             >
-                <div
-                    className={styles.text}
-                    style={this.props.style}
-                    ref={this.setRef}
-                >
+                <div className={styles.text} style={this.props.style} ref={this.setRef}>
                     {this.props.text}
                 </div>
             </DefaultTooltip>

@@ -41,10 +41,7 @@ export function normalizeLegacySession(sessionData: any) {
     });
 
     // convert cancer_study_id to cancer_study_list and get rid of cancer_study_id
-    if (
-        sessionData.data.cancer_study_id &&
-        !sessionData.data.cancer_study_list
-    ) {
+    if (sessionData.data.cancer_study_id && !sessionData.data.cancer_study_list) {
         sessionData.data.cancer_study_list = sessionData.data.cancer_study_id;
     }
     delete sessionData.data.cancer_study_id;

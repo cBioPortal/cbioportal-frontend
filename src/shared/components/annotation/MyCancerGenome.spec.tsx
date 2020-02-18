@@ -46,10 +46,7 @@ describe('MyCancerGenome', () => {
         const parsed = parseMyCancerGenomeLink(htmlLink);
 
         assert.isNotNull(parsed);
-        assert.equal(
-            parsed!.text,
-            'KRAS c.37G>T (G13C) Mutation in Colorectal Cancer'
-        );
+        assert.equal(parsed!.text, 'KRAS c.37G>T (G13C) Mutation in Colorectal Cancer');
         assert.equal(
             parsed!.url,
             'http://mycancergenome.org/content/disease/colorectal-cancer/kras/38/'

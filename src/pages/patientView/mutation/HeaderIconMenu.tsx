@@ -10,10 +10,7 @@ export interface IHeaderIconMenuProps {
     suppressClickBubble?: boolean;
 }
 
-export default class HeaderIconMenu extends React.Component<
-    IHeaderIconMenuProps,
-    {}
-> {
+export default class HeaderIconMenu extends React.Component<IHeaderIconMenuProps, {}> {
     public static defaultProps = {
         suppressClickBubble: true,
         showIcon: true,

@@ -38,10 +38,7 @@ function dataToKey(d: TreatmentMolecularData[], q: IQuery) {
 /**
 /* Pairs each IQuery with an (array-wrapped) array of any matching data.
 */
-function augmentQueryResults(
-    queries: IQuery[],
-    results: TreatmentMolecularData[][]
-) {
+function augmentQueryResults(queries: IQuery[], results: TreatmentMolecularData[][]) {
     const keyedAugments: {
         [key: string]: AugmentedData<TreatmentMolecularDataEnhanced[], IQuery>;
     } = {};

@@ -10,19 +10,13 @@ import {
     VictorySelectionContainer,
     VictoryLine,
 } from 'victory';
-import CBIOPORTAL_VICTORY_THEME, {
-    axisLabelStyles,
-} from '../../../shared/theme/cBioPoralTheme';
+import CBIOPORTAL_VICTORY_THEME, { axisLabelStyles } from '../../../shared/theme/cBioPoralTheme';
 import { Popover } from 'react-bootstrap';
 import { formatLogOddsRatio } from '../../../shared/lib/FormatUtils';
 import { toConditionalPrecision } from '../../../shared/lib/NumberUtils';
 import SelectionComponent from './SelectionComponent';
 import HoverablePoint from './HoverablePoint';
-import {
-    DownloadControls,
-    getTextWidth,
-    truncateWithEllipsis,
-} from 'cbioportal-frontend-commons';
+import { DownloadControls, getTextWidth, truncateWithEllipsis } from 'cbioportal-frontend-commons';
 
 export interface IMiniFrequencyScatterChartData {
     x: number;
@@ -57,16 +51,11 @@ export default class MiniFrequencyScatterChart extends React.Component<
     @autobind
     @action
     private svgRef(svgContainer: SVGElement | null) {
-        this.svgContainer =
-            svgContainer && svgContainer.children
-                ? svgContainer.children[0]
-                : null;
+        this.svgContainer = svgContainer && svgContainer.children ? svgContainer.children[0] : null;
     }
 
     private handleSelection(points: any, bounds: any, props: any) {
-        this.props.onSelection(
-            points[0].data.map((d: any) => d.hugoGeneSymbol)
-        );
+        this.props.onSelection(points[0].data.map((d: any) => d.hugoGeneSymbol));
     }
 
     private handleSelectionCleared() {
@@ -166,9 +155,7 @@ export default class MiniFrequencyScatterChart extends React.Component<
                 onSelectionCleared={this.handleSelectionCleared}
                 activateSelectedData={false}
                 selectionComponent={
-                    <SelectionComponent
-                        onRender={this.onSelectionComponentRender}
-                    />
+                    <SelectionComponent onRender={this.onSelectionComponentRender} />
                 }
             />
         );
@@ -196,26 +183,15 @@ export default class MiniFrequencyScatterChart extends React.Component<
                 >
                     Gene: {this.tooltipModel.datum.hugoGeneSymbol}
                     <br />
-                    Log Ratio:{' '}
-                    {formatLogOddsRatio(this.tooltipModel.datum.logRatio)}
+                    Log Ratio: {formatLogOddsRatio(this.tooltipModel.datum.logRatio)}
                     <br />
                     Alteration Frequency in {this.props.xGroupName}:{' '}
                     {this.tooltipModel.datum.x.toFixed()}%<br />
                     Alteration Frequency in {this.props.yGroupName}:{' '}
                     {this.tooltipModel.datum.y.toFixed()}%<br />
-                    p-Value:{' '}
-                    {toConditionalPrecision(
-                        this.tooltipModel.datum.pValue,
-                        3,
-                        0.01
-                    )}
+                    p-Value: {toConditionalPrecision(this.tooltipModel.datum.pValue, 3, 0.01)}
                     <br />
-                    q-Value:{' '}
-                    {toConditionalPrecision(
-                        this.tooltipModel.datum.qValue,
-                        3,
-                        0.01
-                    )}
+                    q-Value: {toConditionalPrecision(this.tooltipModel.datum.qValue, 3, 0.01)}
                 </Popover>
             );
         } else {
@@ -331,10 +307,7 @@ export default class MiniFrequencyScatterChart extends React.Component<
                                     onMouseOver={this.onMouseOver}
                                     onMouseOut={this.onMouseOut}
                                     fill={(datum: any) => {
-                                        if (
-                                            datum.hugoGeneSymbol in
-                                            this.props.selectedGenesSet
-                                        ) {
+                                        if (datum.hugoGeneSymbol in this.props.selectedGenesSet) {
                                             return '#FE9929';
                                         } else {
                                             return '#D3D3D3';
@@ -357,10 +330,7 @@ export default class MiniFrequencyScatterChart extends React.Component<
                                     onMouseOver={this.onMouseOver}
                                     onMouseOut={this.onMouseOut}
                                     fill={(datum: any) => {
-                                        if (
-                                            datum.hugoGeneSymbol in
-                                            this.props.selectedGenesSet
-                                        ) {
+                                        if (datum.hugoGeneSymbol in this.props.selectedGenesSet) {
                                             return '#FE9929';
                                         } else {
                                             return '#58ACFA';

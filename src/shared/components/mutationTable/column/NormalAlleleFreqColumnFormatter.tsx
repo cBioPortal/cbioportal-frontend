@@ -1,37 +1,26 @@
 import * as React from 'react';
 import { Mutation } from 'shared/api/generated/CBioPortalAPI';
-import {
-    TableCellStatus,
-    TableCellStatusIndicator,
-} from 'cbioportal-frontend-commons';
+import { TableCellStatus, TableCellStatusIndicator } from 'cbioportal-frontend-commons';
 import TumorAlleleFreqColumnFormatter, {
     getFormattedFrequencyValue,
 } from './TumorAlleleFreqColumnFormatter';
 
 export default class NormalAlleleFreqColumnFormatter {
     public static renderFunction(mutations: Mutation[]) {
-        const frequency = NormalAlleleFreqColumnFormatter.getSortValue(
-            mutations
-        );
+        const frequency = NormalAlleleFreqColumnFormatter.getSortValue(mutations);
 
         if (frequency) {
             const altReads = mutations[0].normalAltCount;
             const refReads = mutations[0].normalRefCount;
 
-            return TumorAlleleFreqColumnFormatter.mainContent(
-                frequency,
-                altReads,
-                refReads
-            );
+            return TumorAlleleFreqColumnFormatter.mainContent(frequency, altReads, refReads);
         } else {
             return <TableCellStatusIndicator status={TableCellStatus.NA} />;
         }
     }
 
     public static getTextValue(mutations: Mutation[]): string {
-        const frequency = NormalAlleleFreqColumnFormatter.getSortValue(
-            mutations
-        );
+        const frequency = NormalAlleleFreqColumnFormatter.getSortValue(mutations);
 
         if (frequency) {
             return getFormattedFrequencyValue(frequency);

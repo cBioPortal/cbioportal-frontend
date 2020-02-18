@@ -7,24 +7,17 @@ import {
     TableCellStatus,
     VariantAnnotation,
 } from 'cbioportal-frontend-commons';
-import GenomeNexusCache, {
-    GenomeNexusCacheDataType,
-} from 'shared/cache/GenomeNexusCache';
+import GenomeNexusCache, { GenomeNexusCacheDataType } from 'shared/cache/GenomeNexusCache';
 
 export default class HgvscColumnFormatter {
-    public static renderFunction(
-        data: Mutation[],
-        genomeNexusCache: GenomeNexusCache | undefined
-    ) {
+    public static renderFunction(data: Mutation[], genomeNexusCache: GenomeNexusCache | undefined) {
         const genomeNexusCacheData = HgvscColumnFormatter.getGenomeNexusDataFromCache(
             data,
             genomeNexusCache
         );
         return (
             <div>
-                <span>
-                    {HgvscColumnFormatter.getHgvscDataViz(genomeNexusCacheData)}
-                </span>
+                <span>{HgvscColumnFormatter.getHgvscDataViz(genomeNexusCacheData)}</span>
             </div>
         );
     }
@@ -39,9 +32,7 @@ export default class HgvscColumnFormatter {
         return cache.get(data[0]);
     }
 
-    private static getHgvscDataViz(
-        genomeNexusCacheData: GenomeNexusCacheDataType | null
-    ) {
+    private static getHgvscDataViz(genomeNexusCacheData: GenomeNexusCacheDataType | null) {
         let status: TableCellStatus | null = null;
 
         if (genomeNexusCacheData === null) {
@@ -51,17 +42,11 @@ export default class HgvscColumnFormatter {
         } else if (genomeNexusCacheData.data === null) {
             status = TableCellStatus.NA;
         } else {
-            let hgvscData = HgvscColumnFormatter.getData(
-                genomeNexusCacheData.data
-            );
+            let hgvscData = HgvscColumnFormatter.getData(genomeNexusCacheData.data);
             if (hgvscData == null) {
                 return hgvscData;
             } else {
-                return (
-                    <span style={{ display: 'inline-block', float: 'right' }}>
-                        {hgvscData}
-                    </span>
-                );
+                return <span style={{ display: 'inline-block', float: 'right' }}>{hgvscData}</span>;
             }
         }
 
@@ -83,27 +68,19 @@ export default class HgvscColumnFormatter {
         }
     }
 
-    public static getData(
-        genomeNexusData: VariantAnnotation | null
-    ): string | null {
+    public static getData(genomeNexusData: VariantAnnotation | null): string | null {
         if (!genomeNexusData) {
             return null;
         }
-        return genomeNexusData.annotation_summary.transcriptConsequenceSummary
-            .hgvsc;
+        return genomeNexusData.annotation_summary.transcriptConsequenceSummary.hgvsc;
     }
 
-    public static download(
-        data: Mutation[],
-        genomeNexusCache: GenomeNexusCache
-    ): string {
+    public static download(data: Mutation[], genomeNexusCache: GenomeNexusCache): string {
         const genomeNexusData = HgvscColumnFormatter.getGenomeNexusDataFromCache(
             data,
             genomeNexusCache
         );
-        const hgvscData =
-            genomeNexusData &&
-            HgvscColumnFormatter.getData(genomeNexusData.data);
+        const hgvscData = genomeNexusData && HgvscColumnFormatter.getData(genomeNexusData.data);
 
         if (!hgvscData) {
             return '';
@@ -121,9 +98,7 @@ export default class HgvscColumnFormatter {
             genomeNexusCache
         );
         if (genomeNexusCacheData) {
-            let hgvscData = HgvscColumnFormatter.getData(
-                genomeNexusCacheData.data
-            );
+            let hgvscData = HgvscColumnFormatter.getData(genomeNexusCacheData.data);
             if (hgvscData == null) {
                 return null;
             } else {

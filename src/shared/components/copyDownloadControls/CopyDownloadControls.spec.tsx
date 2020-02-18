@@ -1,7 +1,4 @@
-import {
-    CopyDownloadControls,
-    ICopyDownloadData,
-} from './CopyDownloadControls';
+import { CopyDownloadControls, ICopyDownloadData } from './CopyDownloadControls';
 import React from 'react';
 import { assert } from 'chai';
 import { mount, ReactWrapper } from 'enzyme';
@@ -36,9 +33,7 @@ describe('CopyDownloadControls', () => {
         resolvedPromiseWithCompleteData
             .then(() => {
                 assert.isTrue(
-                    downloadStub.calledWith(
-                        'This is your complete & shiny download data!'
-                    )
+                    downloadStub.calledWith('This is your complete & shiny download data!')
                 );
                 assert.isFalse(instance.showErrorMessage);
                 done();
@@ -47,9 +42,7 @@ describe('CopyDownloadControls', () => {
     });
 
     it('downloads the incomplete data, and shows a warning message', done => {
-        const resolvedPromiseWithIncompleteData = Promise.resolve(
-            incompleteData
-        );
+        const resolvedPromiseWithIncompleteData = Promise.resolve(incompleteData);
         const downloadData = () => resolvedPromiseWithIncompleteData;
         const component: ReactWrapper<any, any> = mount(
             <CopyDownloadControls downloadData={downloadData} />
@@ -84,10 +77,7 @@ describe('CopyDownloadControls', () => {
 
         resolvedPromiseWithCompleteData
             .then(() => {
-                assert.equal(
-                    instance.getText(),
-                    'This is your complete & shiny download data!'
-                );
+                assert.equal(instance.getText(), 'This is your complete & shiny download data!');
                 assert.isTrue(instance.copyingData);
                 assert.isFalse(instance.showErrorMessage);
                 done();
@@ -96,9 +86,7 @@ describe('CopyDownloadControls', () => {
     });
 
     it('copies the incomplete data, and shows a warning message', done => {
-        const resolvedPromiseWithIncompleteData = Promise.resolve(
-            incompleteData
-        );
+        const resolvedPromiseWithIncompleteData = Promise.resolve(incompleteData);
         const downloadData = () => resolvedPromiseWithIncompleteData;
         const component: ReactWrapper<any, any> = mount(
             <CopyDownloadControls downloadData={downloadData} />

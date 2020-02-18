@@ -52,8 +52,7 @@ export function computeRenderData(
                             y: vaf,
                             sampleId,
                             mutation,
-                            mutationStatus:
-                                MutationStatus.PROFILED_WITH_READS_BUT_UNCALLED,
+                            mutationStatus: MutationStatus.PROFILED_WITH_READS_BUT_UNCALLED,
                         });
                         samplesWithData[sampleKey] = true;
                     }
@@ -114,17 +113,12 @@ export function computeRenderData(
         thisLineData = _.sortBy(thisLineData, d => d.x);
         // interpolate missing y values
         // take out anything from the left and right that dont have data - we'll only interpolate points with data to their left and right
-        while (
-            thisLineData.length > 0 &&
-            !isPointBasedOnRealVAF(thisLineData[0] as IPoint)
-        ) {
+        while (thisLineData.length > 0 && !isPointBasedOnRealVAF(thisLineData[0] as IPoint)) {
             thisLineData.shift();
         }
         while (
             thisLineData.length > 0 &&
-            !isPointBasedOnRealVAF(thisLineData[
-                thisLineData.length - 1
-            ] as IPoint)
+            !isPointBasedOnRealVAF(thisLineData[thisLineData.length - 1] as IPoint)
         ) {
             thisLineData.pop();
         }
@@ -136,11 +130,7 @@ export function computeRenderData(
         const thisLineDataWithoutGrayPoints: IPoint[] = [];
         const thisGrayPoints: IPoint[] = [];
         for (let i = 0; i < thisLineData.length; i++) {
-            if (
-                i !== 0 &&
-                i !== thisLineData.length - 1 &&
-                thisLineData[i].y === undefined
-            ) {
+            if (i !== 0 && i !== thisLineData.length - 1 && thisLineData[i].y === undefined) {
                 // find closest defined data to the left and right
                 let leftIndex = 0,
                     rightIndex = 0;
@@ -149,11 +139,7 @@ export function computeRenderData(
                         break;
                     }
                 }
-                for (
-                    rightIndex = i;
-                    rightIndex <= thisLineData.length - 1;
-                    rightIndex++
-                ) {
+                for (rightIndex = i; rightIndex <= thisLineData.length - 1; rightIndex++) {
                     if (thisLineData[rightIndex].y !== undefined) {
                         break;
                     }

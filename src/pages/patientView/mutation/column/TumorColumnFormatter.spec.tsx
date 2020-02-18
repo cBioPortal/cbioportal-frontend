@@ -43,11 +43,7 @@ describe('TumorColumnFormatter', () => {
     });
 
     it('test get sample ids', () => {
-        assert.deepEqual(TumorColumnFormatter.getSample(testData), [
-            'A',
-            'B',
-            'C',
-        ]);
+        assert.deepEqual(TumorColumnFormatter.getSample(testData), ['A', 'B', 'C']);
     });
 
     describe('getProfiledSamplesForGene', () => {

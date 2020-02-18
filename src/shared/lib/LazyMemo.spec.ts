@@ -15,107 +15,47 @@ describe('LazyMemo', () => {
         );
 
         const elt = { id: 'yo' };
-        assert.isFalse(
-            memo.has(elt),
-            'element doesnt exist before its requested'
-        );
-        assert.equal(
-            computationCount[elt.id],
-            undefined,
-            'no computation when `has` is called'
-        );
+        assert.isFalse(memo.has(elt), 'element doesnt exist before its requested');
+        assert.equal(computationCount[elt.id], undefined, 'no computation when `has` is called');
         assert.equal(memo.get(elt), 'yoyo', 'computation works correctly');
         assert.equal(
             computationCount[elt.id],
             1,
             'computation happened once because it was requested'
         );
-        assert.isTrue(
-            memo.has(elt),
-            'element now exists because it was requested'
-        );
-        assert.equal(
-            computationCount[elt.id],
-            1,
-            '`has` still doesnt trigger computation'
-        );
+        assert.isTrue(memo.has(elt), 'element now exists because it was requested');
+        assert.equal(computationCount[elt.id], 1, '`has` still doesnt trigger computation');
         assert.equal(memo.get(elt), 'yoyo', 'element is still the same');
-        assert.equal(
-            computationCount[elt.id],
-            1,
-            'computation didnt happen again'
-        );
+        assert.equal(computationCount[elt.id], 1, 'computation didnt happen again');
         assert.isTrue(memo.has(elt), 'element still exists');
-        assert.equal(
-            computationCount[elt.id],
-            1,
-            '`has` still doesnt trigger computation'
-        );
+        assert.equal(computationCount[elt.id], 1, '`has` still doesnt trigger computation');
 
         const elt2 = { id: 'hi' };
-        assert.isFalse(
-            memo.has(elt2),
-            'element doesnt exist before its requested'
-        );
-        assert.equal(
-            computationCount[elt2.id],
-            undefined,
-            'no computation when `has` is called'
-        );
+        assert.isFalse(memo.has(elt2), 'element doesnt exist before its requested');
+        assert.equal(computationCount[elt2.id], undefined, 'no computation when `has` is called');
         assert.equal(memo.get(elt2), 'hihi', 'computation works correctly');
         assert.equal(
             computationCount[elt2.id],
             1,
             'computation happened once because it was requested'
         );
-        assert.isTrue(
-            memo.has(elt2),
-            'element now exists because it was requested'
-        );
-        assert.equal(
-            computationCount[elt2.id],
-            1,
-            '`has` still doesnt trigger computation'
-        );
+        assert.isTrue(memo.has(elt2), 'element now exists because it was requested');
+        assert.equal(computationCount[elt2.id], 1, '`has` still doesnt trigger computation');
         assert.equal(memo.get(elt2), 'hihi', 'element is still the same');
-        assert.equal(
-            computationCount[elt2.id],
-            1,
-            'computation didnt happen again'
-        );
+        assert.equal(computationCount[elt2.id], 1, 'computation didnt happen again');
         assert.isTrue(memo.has(elt2), 'element still exists');
-        assert.equal(
-            computationCount[elt2.id],
-            1,
-            '`has` still doesnt trigger computation'
-        );
+        assert.equal(computationCount[elt2.id], 1, '`has` still doesnt trigger computation');
 
         // check that `elt` is still there
         assert.equal(memo.get(elt), 'yoyo', 'element is still the same');
-        assert.equal(
-            computationCount[elt.id],
-            1,
-            'computation didnt happen again'
-        );
+        assert.equal(computationCount[elt.id], 1, 'computation didnt happen again');
         assert.isTrue(memo.has(elt), 'element still exists');
-        assert.equal(
-            computationCount[elt.id],
-            1,
-            '`has` still doesnt trigger computation'
-        );
+        assert.equal(computationCount[elt.id], 1, '`has` still doesnt trigger computation');
 
         // check that `elt2` is still there
         assert.equal(memo.get(elt2), 'hihi', 'element is still the same');
-        assert.equal(
-            computationCount[elt2.id],
-            1,
-            'computation didnt happen again'
-        );
+        assert.equal(computationCount[elt2.id], 1, 'computation didnt happen again');
         assert.isTrue(memo.has(elt2), 'element still exists');
-        assert.equal(
-            computationCount[elt2.id],
-            1,
-            '`has` still doesnt trigger computation'
-        );
+        assert.equal(computationCount[elt2.id], 1, '`has` still doesnt trigger computation');
     });
 });

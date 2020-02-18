@@ -19,19 +19,11 @@ type ButtonSpec = {
     disabled?: boolean;
 };
 
-export type DownloadControlsButton =
-    | 'PDF'
-    | 'PNG'
-    | 'SVG'
-    | 'Data'
-    | 'Summary Data'
-    | 'Full Data';
+export type DownloadControlsButton = 'PDF' | 'PNG' | 'SVG' | 'Data' | 'Summary Data' | 'Full Data';
 export type DataType = 'summary' | 'full';
 interface IDownloadControlsProps {
     getSvg?: () => SVGElement | null | PromiseLike<SVGElement | null>;
-    getData?: (
-        dataType?: DataType
-    ) => string | null | PromiseLike<string | null>;
+    getData?: (dataType?: DataType) => string | null | PromiseLike<string | null>;
     filename: string;
     buttons?: DownloadControlsButton[];
     additionalLeftButtons?: ButtonSpec[];
@@ -76,10 +68,7 @@ function makeMenuItem(spec: ButtonSpec) {
 function makeDropdownItem(spec: ButtonSpec) {
     return (
         <li key={spec.key}>
-            <a
-                className="dropdown-item"
-                onClick={spec.disabled ? () => {} : spec.onClick}
-            >
+            <a className="dropdown-item" onClick={spec.disabled ? () => {} : spec.onClick}>
                 {spec.key}
             </a>
         </li>
@@ -87,10 +76,7 @@ function makeDropdownItem(spec: ButtonSpec) {
 }
 
 @observer
-export default class DownloadControls extends React.Component<
-    IDownloadControlsProps,
-    {}
-> {
+export default class DownloadControls extends React.Component<IDownloadControlsProps, {}> {
     @observable private collapsed = true;
 
     @autobind
@@ -104,17 +90,11 @@ export default class DownloadControls extends React.Component<
                 if (isPromiseLike<SVGElement | null>(result)) {
                     result.then(svg => {
                         if (svg) {
-                            saveMethod(
-                                svg,
-                                `${this.props.filename}.${fileExtension}`
-                            );
+                            saveMethod(svg, `${this.props.filename}.${fileExtension}`);
                         }
                     });
                 } else {
-                    saveMethod(
-                        result,
-                        `${this.props.filename}.${fileExtension}`
-                    );
+                    saveMethod(result, `${this.props.filename}.${fileExtension}`);
                 }
             }
         }
@@ -128,18 +108,14 @@ export default class DownloadControls extends React.Component<
     @autobind
     private downloadPng() {
         this.download(
-            (svg, fileName) =>
-                saveSvgAsPng(svg, fileName, { backgroundColor: '#ffffff' }),
+            (svg, fileName) => saveSvgAsPng(svg, fileName, { backgroundColor: '#ffffff' }),
             'png'
         );
     }
 
     @autobind
     private downloadPdf() {
-        this.download(
-            (svg, fileName) => svgToPdfDownload(fileName, svg),
-            'pdf'
-        );
+        this.download((svg, fileName) => svgToPdfDownload(fileName, svg), 'pdf');
     }
 
     @autobind
@@ -168,11 +144,7 @@ export default class DownloadControls extends React.Component<
                 key: 'SVG',
                 content: (
                     <span>
-                        SVG{' '}
-                        <i
-                            className="fa fa-cloud-download"
-                            aria-hidden="true"
-                        />
+                        SVG <i className="fa fa-cloud-download" aria-hidden="true" />
                     </span>
                 ),
                 onClick: this.downloadSvg,
@@ -182,11 +154,7 @@ export default class DownloadControls extends React.Component<
                 key: 'PNG',
                 content: (
                     <span>
-                        PNG{' '}
-                        <i
-                            className="fa fa-cloud-download"
-                            aria-hidden="true"
-                        />
+                        PNG <i className="fa fa-cloud-download" aria-hidden="true" />
                     </span>
                 ),
                 onClick: this.downloadPng,
@@ -196,11 +164,7 @@ export default class DownloadControls extends React.Component<
                 key: 'PDF',
                 content: (
                     <span>
-                        PDF{' '}
-                        <i
-                            className="fa fa-cloud-download"
-                            aria-hidden="true"
-                        />
+                        PDF <i className="fa fa-cloud-download" aria-hidden="true" />
                     </span>
                 ),
                 onClick: this.downloadPdf,
@@ -210,11 +174,7 @@ export default class DownloadControls extends React.Component<
                 key: 'Data',
                 content: (
                     <span>
-                        Data{' '}
-                        <i
-                            className="fa fa-cloud-download"
-                            aria-hidden="true"
-                        />
+                        Data <i className="fa fa-cloud-download" aria-hidden="true" />
                     </span>
                 ),
                 onClick: this.downloadData,
@@ -224,11 +184,7 @@ export default class DownloadControls extends React.Component<
                 key: 'Summary Data',
                 content: (
                     <span>
-                        Summary Data{' '}
-                        <i
-                            className="fa fa-cloud-download"
-                            aria-hidden="true"
-                        />
+                        Summary Data <i className="fa fa-cloud-download" aria-hidden="true" />
                     </span>
                 ),
                 onClick: () => this.downloadData('summary'),
@@ -238,11 +194,7 @@ export default class DownloadControls extends React.Component<
                 key: 'Full Data',
                 content: (
                     <span>
-                        Full Data{' '}
-                        <i
-                            className="fa fa-cloud-download"
-                            aria-hidden="true"
-                        />
+                        Full Data <i className="fa fa-cloud-download" aria-hidden="true" />
                     </span>
                 ),
                 onClick: () => this.downloadData('full'),
@@ -275,10 +227,7 @@ export default class DownloadControls extends React.Component<
                     onVisibleChange={this.onTooltipVisibleChange}
                     overlay={
                         <div
-                            className={classnames(
-                                'cbioportal-frontend',
-                                styles.downloadControls
-                            )}
+                            className={classnames('cbioportal-frontend', styles.downloadControls)}
                             style={{ display: 'flex', flexDirection: 'column' }}
                         >
                             {this.buttonSpecs.map(makeMenuItem)}
@@ -287,14 +236,10 @@ export default class DownloadControls extends React.Component<
                     placement="bottom"
                 >
                     <div
-                        style={Object.assign(
-                            { cursor: 'pointer' },
-                            this.props.style
-                        )}
-                        className={classnames(
-                            'btn btn-group btn-default btn-xs',
-                            { active: !this.collapsed }
-                        )}
+                        style={Object.assign({ cursor: 'pointer' }, this.props.style)}
+                        className={classnames('btn btn-group btn-default btn-xs', {
+                            active: !this.collapsed,
+                        })}
                     >
                         <i
                             style={{ pointerEvents: 'none' }}
@@ -329,17 +274,13 @@ export default class DownloadControls extends React.Component<
                         <div style={{ cursor: 'pointer' }}>
                             <div
                                 key="collapsedIcon"
-                                className={classnames(
-                                    'btn btn-default btn-xs',
-                                    { active: !this.collapsed }
-                                )}
+                                className={classnames('btn btn-default btn-xs', {
+                                    active: !this.collapsed,
+                                })}
                                 style={{ pointerEvents: 'none' }}
                             >
                                 <span>
-                                    <i
-                                        className="fa fa-cloud-download"
-                                        aria-hidden="true"
-                                    />
+                                    <i className="fa fa-cloud-download" aria-hidden="true" />
                                 </span>
                             </div>
                         </div>
@@ -349,10 +290,7 @@ export default class DownloadControls extends React.Component<
         } else if (this.props.type === 'dropdown') {
             element = (
                 <ul
-                    className={classnames(
-                        'dropdown-menu',
-                        this.props.className || ''
-                    )}
+                    className={classnames('dropdown-menu', this.props.className || '')}
                     style={this.props.style || {}}
                 >
                     {this.buttonSpecs.map(makeDropdownItem)}

@@ -1,9 +1,7 @@
 import { CancerStudy } from '../api/generated/CBioPortalAPI';
 import * as _ from 'lodash';
 
-export default function getOverlappingStudies(
-    studies: CancerStudy[]
-): CancerStudy[][] {
+export default function getOverlappingStudies(studies: CancerStudy[]): CancerStudy[][] {
     const groupedTCGAStudies = _.reduce(
         studies,
         (memo, study: CancerStudy) => {

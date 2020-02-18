@@ -21,30 +21,19 @@ export type GAEvent = {
 
 export function initializeTracking() {
     if (!_.isEmpty(AppConfig.serverConfig.google_analytics_profile_id)) {
-        embedGoogleAnalytics(
-            AppConfig.serverConfig.google_analytics_profile_id!
-        );
+        embedGoogleAnalytics(AppConfig.serverConfig.google_analytics_profile_id!);
     }
 
     $('body').on('click', '[data-event]', el => {
         try {
-            const event: GAEvent = JSON.parse(
-                $(el.currentTarget).attr('data-event')!
-            ) as GAEvent;
+            const event: GAEvent = JSON.parse($(el.currentTarget).attr('data-event')!) as GAEvent;
             trackEvent(event);
         } catch (ex) {}
     });
 }
 
 export function trackEvent(event: GAEvent) {
-    getGAInstance()(
-        'send',
-        'event',
-        event.category,
-        event.action,
-        event.label,
-        event.fieldsObject
-    );
+    getGAInstance()('send', 'event', event.category, event.action, event.label, event.fieldsObject);
 }
 
 export function serializeEvent(gaEvent: GAEvent) {
@@ -86,9 +75,9 @@ function sendToLoggly() {
 
 export function embedGoogleAnalytics(ga_code: string) {
     $(document).ready(function() {
-        $(
-            '<script async src="https://www.google-analytics.com/analytics.js"></script>'
-        ).appendTo('body');
+        $('<script async src="https://www.google-analytics.com/analytics.js"></script>').appendTo(
+            'body'
+        );
         $(
             '<script async src="https://cdnjs.cloudflare.com/ajax/libs/autotrack/2.4.1/autotrack.js"></script>'
         ).appendTo('body');
@@ -151,20 +140,13 @@ export function trackQuery(
 
     getGAInstance()('send', 'event', 'resultsView', 'queryCount', qCount);
 
-    getGAInstance()(
-        'send',
-        'event',
-        'resultsView',
-        'query',
-        cancerStudyIds.join(',') + ',',
-        {
-            [GACustomFieldsEnum.QueryCount]: qCount,
-            [GACustomFieldsEnum.OQL]: oql,
-            [GACustomFieldsEnum.StudyCount]: cancerStudyIds.length,
-            [GACustomFieldsEnum.Genes]: geneSymbols.join(',') + ',',
-            [GACustomFieldsEnum.VirtualStudy]: isVirtualStudy.toString(),
-        }
-    );
+    getGAInstance()('send', 'event', 'resultsView', 'query', cancerStudyIds.join(',') + ',', {
+        [GACustomFieldsEnum.QueryCount]: qCount,
+        [GACustomFieldsEnum.OQL]: oql,
+        [GACustomFieldsEnum.StudyCount]: cancerStudyIds.length,
+        [GACustomFieldsEnum.Genes]: geneSymbols.join(',') + ',',
+        [GACustomFieldsEnum.VirtualStudy]: isVirtualStudy.toString(),
+    });
 }
 
 export function trackPatient(studyId: string): void {
@@ -175,17 +157,13 @@ export function trackPatient(studyId: string): void {
     });
 }
 
-export function trackStudyViewFilterEvent(
-    label: string,
-    store: StudyViewPageStore
-) {
+export function trackStudyViewFilterEvent(label: string, store: StudyViewPageStore) {
     trackEvent({
         category: 'studyPage',
         action: 'addFilter',
         label: label,
         fieldsObject: {
-            [GACustomFieldsEnum.StudyId]:
-                store.queriedPhysicalStudyIds.result.join(',') + ',',
+            [GACustomFieldsEnum.StudyId]: store.queriedPhysicalStudyIds.result.join(',') + ',',
         },
     });
 }

@@ -10,10 +10,7 @@ import {
     MAX_GROUPS_IN_SESSION,
     StudyViewComparisonGroup,
 } from '../GroupComparisonUtils';
-import {
-    getComparisonLoadingUrl,
-    redirectToComparisonPage,
-} from '../../../shared/api/urls';
+import { getComparisonLoadingUrl, redirectToComparisonPage } from '../../../shared/api/urls';
 import styles from '../styles.module.scss';
 import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
 import {
@@ -105,10 +102,7 @@ export default class ComparisonGroupManager extends React.Component<
         if (this.props.store.selectedSamples.result) {
             await comparisonClient.updateGroup(
                 group.uid,
-                addSamplesParameters(
-                    group,
-                    this.props.store.selectedSamples.result
-                )
+                addSamplesParameters(group, this.props.store.selectedSamples.result)
             );
             this.props.store.notifyComparisonGroupsChange();
         }
@@ -143,19 +137,13 @@ export default class ComparisonGroupManager extends React.Component<
                 }}
             >
                 <div className="btn-group" role="group">
-                    <button
-                        className="btn btn-default btn-xs"
-                        onClick={this.selectAllFiltered}
-                    >
+                    <button className="btn btn-default btn-xs" onClick={this.selectAllFiltered}>
                         Select all&nbsp;
                         {this.filteredGroups.isComplete
                             ? `(${this.filteredGroups.result!.length})`
                             : ''}
                     </button>
-                    <button
-                        className="btn btn-default btn-xs"
-                        onClick={this.deselectAllFiltered}
-                    >
+                    <button className="btn btn-default btn-xs" onClick={this.deselectAllFiltered}>
                         Deselect all
                     </button>
                 </div>
@@ -181,10 +169,7 @@ export default class ComparisonGroupManager extends React.Component<
     }
 
     @autobind
-    private async renameGroup(
-        newName: string,
-        group: StudyViewComparisonGroup
-    ) {
+    private async renameGroup(newName: string, group: StudyViewComparisonGroup) {
         const { name, ...rest } = group;
         await comparisonClient.updateGroup(group.uid, {
             name: newName,
@@ -232,9 +217,9 @@ export default class ComparisonGroupManager extends React.Component<
             } else {
                 return (
                     <div className={styles.noGroupsMessage}>
-                        Group comparison allows you to create custom groups and
-                        compare their clinical and genomic features. Use the
-                        button below to create groups based on selections.
+                        Group comparison allows you to create custom groups and compare their
+                        clinical and genomic features. Use the button below to create groups based
+                        on selections.
                     </div>
                 );
             }
@@ -243,9 +228,7 @@ export default class ComparisonGroupManager extends React.Component<
         renderError: () => (
             <div className={styles.noGroupsMessage}>
                 <ErrorMessage
-                    message={
-                        'There was an error loading saved groups. Please try again.'
-                    }
+                    message={'There was an error loading saved groups. Please try again.'}
                 />
             </div>
         ),
@@ -302,11 +285,7 @@ export default class ComparisonGroupManager extends React.Component<
             ? this.props.store.selectedSamples.result
             : undefined;
         const { id } = await comparisonClient.addGroup(
-            getGroupParameters(
-                this.inputGroupName,
-                selectedSamples!,
-                this.props.store.studyIds
-            )
+            getGroupParameters(this.inputGroupName, selectedSamples!, this.props.store.studyIds)
         );
         this.props.store.setComparisonGroupSelected(id); // created groups start selected
         this.props.store.notifyComparisonGroupsChange();
@@ -321,20 +300,17 @@ export default class ComparisonGroupManager extends React.Component<
                 this.props.store
             ).length;
             const wrongNumberOfGroups =
-                numSelectedGroups > MAX_GROUPS_IN_SESSION ||
-                numSelectedGroups < 2;
+                numSelectedGroups > MAX_GROUPS_IN_SESSION || numSelectedGroups < 2;
 
             let tooltipText = '';
             if (this.props.store.comparisonGroups.result.length >= 2) {
                 if (wrongNumberOfGroups) {
                     tooltipText = `Select between 2 and ${MAX_GROUPS_IN_SESSION} groups to enable comparison.`;
                 } else {
-                    tooltipText =
-                        'Open a comparison session with selected groups';
+                    tooltipText = 'Open a comparison session with selected groups';
                 }
             } else {
-                tooltipText =
-                    'Create at least two groups to open a comparison session';
+                tooltipText = 'Create at least two groups to open a comparison session';
             }
 
             return (
@@ -358,18 +334,14 @@ export default class ComparisonGroupManager extends React.Component<
                             );
 
                             // wait until the new window has routingStore available
-                            await sleepUntil(
-                                () => !!(comparisonWindow as any).routingStore
-                            );
+                            await sleepUntil(() => !!(comparisonWindow as any).routingStore);
 
                             // save comparison session, and get id
                             const groups = getSelectedGroups(
                                 this.props.store.comparisonGroups.result!,
                                 this.props.store
                             );
-                            const {
-                                id,
-                            } = await comparisonClient.addComparisonSession({
+                            const { id } = await comparisonClient.addComparisonSession({
                                 groups,
                                 origin: this.props.store.studyIds,
                             });
@@ -431,8 +403,7 @@ export default class ComparisonGroupManager extends React.Component<
                     }}
                 >
                     <h5>
-                        Add{selectedSamples ? ` ${selectedSamples.length}` : ''}{' '}
-                        selected samples
+                        Add{selectedSamples ? ` ${selectedSamples.length}` : ''} selected samples
                     </h5>
                     <button
                         className="btn btn-xs btn-default"
@@ -456,10 +427,7 @@ export default class ComparisonGroupManager extends React.Component<
                         }}
                     >
                         <DefaultTooltip
-                            visible={
-                                allGroupNames &&
-                                allGroupNames.includes(this.inputGroupName)
-                            }
+                            visible={allGroupNames && allGroupNames.includes(this.inputGroupName)}
                             overlay={
                                 <div>
                                     <i
@@ -481,10 +449,7 @@ export default class ComparisonGroupManager extends React.Component<
                                 value={this.inputGroupName}
                                 onChange={this.onChangeInputGroupName}
                                 onKeyPress={event => {
-                                    if (
-                                        event.key == 'Enter' &&
-                                        !this.submitNewGroupDisabled
-                                    ) {
+                                    if (event.key == 'Enter' && !this.submitNewGroupDisabled) {
                                         this.submitNewGroup();
                                     }
                                 }}
@@ -536,10 +501,7 @@ export default class ComparisonGroupManager extends React.Component<
 
     render() {
         return (
-            <div
-                className={styles.comparisonGroupManager}
-                style={{ position: 'relative' }}
-            >
+            <div className={styles.comparisonGroupManager} style={{ position: 'relative' }}>
                 {this.header}
                 {this.groupsSection.component}
                 {this.actionButtons.component}

@@ -30,19 +30,12 @@ enum EVENT_KEY {
 }
 
 @observer
-export default class ResultsPageSettings extends React.Component<
-    IResultsPageSettingsProps,
-    {}
-> {
-    @autobind private onChange(v: {
-        label: string;
-        value: OncoprintAnalysisCaseType;
-    }) {
+export default class ResultsPageSettings extends React.Component<IResultsPageSettingsProps, {}> {
+    @autobind private onChange(v: { label: string; value: OncoprintAnalysisCaseType }) {
         this.props.store.setOncoprintAnalysisCaseType(v.value);
     }
 
-    private driverSettingsState: IDriverAnnotationControlsState &
-        IObservableObject;
+    private driverSettingsState: IDriverAnnotationControlsState & IObservableObject;
     private driverSettingsHandlers: IDriverAnnotationControlsHandlers;
 
     constructor(props: IResultsPageSettingsProps) {
@@ -57,8 +50,8 @@ export default class ResultsPageSettings extends React.Component<
     @autobind private onInputClick(event: React.MouseEvent<HTMLInputElement>) {
         switch ((event.target as HTMLInputElement).value) {
             case EVENT_KEY.hidePutativePassengers:
-                this.props.store.driverAnnotationSettings.excludeVUS = !this
-                    .props.store.driverAnnotationSettings.excludeVUS;
+                this.props.store.driverAnnotationSettings.excludeVUS = !this.props.store
+                    .driverAnnotationSettings.excludeVUS;
                 break;
             case EVENT_KEY.showGermlineMutations:
                 this.props.store.setExcludeGermlineMutations(
@@ -66,14 +59,10 @@ export default class ResultsPageSettings extends React.Component<
                 );
                 break;
             case EVENT_KEY.dataTypeSample:
-                this.props.store.setOncoprintAnalysisCaseType(
-                    OncoprintAnalysisCaseType.SAMPLE
-                );
+                this.props.store.setOncoprintAnalysisCaseType(OncoprintAnalysisCaseType.SAMPLE);
                 break;
             case EVENT_KEY.dataTypePatient:
-                this.props.store.setOncoprintAnalysisCaseType(
-                    OncoprintAnalysisCaseType.PATIENT
-                );
+                this.props.store.setOncoprintAnalysisCaseType(OncoprintAnalysisCaseType.PATIENT);
                 break;
         }
     }
@@ -82,15 +71,10 @@ export default class ResultsPageSettings extends React.Component<
         return (
             <div
                 data-test="GlobalSettingsDropdown"
-                className={classNames(
-                    'cbioportal-frontend',
-                    styles.globalSettingsDropdown
-                )}
+                className={classNames('cbioportal-frontend', styles.globalSettingsDropdown)}
                 style={{ padding: 5 }}
             >
-                <h5 style={{ marginTop: 'auto', marginBottom: 'auto' }}>
-                    Annotate Data
-                </h5>
+                <h5 style={{ marginTop: 'auto', marginBottom: 'auto' }}>Annotate Data</h5>
                 <InfoIcon
                     divStyle={{ display: 'inline-block', marginLeft: 6 }}
                     style={{ color: 'rgb(54, 134, 194)' }}
@@ -110,20 +94,14 @@ export default class ResultsPageSettings extends React.Component<
 
                 <hr />
 
-                <h5 style={{ marginTop: 'auto', marginBottom: 'auto' }}>
-                    Filter Data
-                </h5>
+                <h5 style={{ marginTop: 'auto', marginBottom: 'auto' }}>Filter Data</h5>
                 <InfoIcon
                     divStyle={{ display: 'inline-block', marginLeft: 6 }}
                     style={{ color: 'rgb(54, 134, 194)' }}
                     tooltip={
                         <span>
                             These settings affect every tab except{' '}
-                            {boldedTabList([
-                                'Plots',
-                                'Co-expression',
-                                'CN Segments',
-                            ])}
+                            {boldedTabList(['Plots', 'Co-expression', 'CN Segments'])}
                         </span>
                     }
                 />
@@ -134,17 +112,11 @@ export default class ResultsPageSettings extends React.Component<
                                 data-test="HideVUS"
                                 type="checkbox"
                                 value={EVENT_KEY.hidePutativePassengers}
-                                checked={
-                                    this.props.store.driverAnnotationSettings
-                                        .excludeVUS
-                                }
+                                checked={this.props.store.driverAnnotationSettings.excludeVUS}
                                 onClick={this.onInputClick}
-                                disabled={
-                                    !this.driverSettingsState.distinguishDrivers
-                                }
+                                disabled={!this.driverSettingsState.distinguishDrivers}
                             />{' '}
-                            Exclude mutations and copy number alterations of
-                            unknown significance
+                            Exclude mutations and copy number alterations of unknown significance
                         </label>
                     </div>
                     <div className="checkbox">
@@ -153,9 +125,7 @@ export default class ResultsPageSettings extends React.Component<
                                 data-test="HideGermline"
                                 type="checkbox"
                                 value={EVENT_KEY.showGermlineMutations}
-                                checked={
-                                    this.props.store.excludeGermlineMutations
-                                }
+                                checked={this.props.store.excludeGermlineMutations}
                                 onClick={this.onInputClick}
                             />{' '}
                             Exclude germline mutations

@@ -6,10 +6,7 @@ import LazyMobXTable from '../../../shared/components/lazyMobXTable/LazyMobXTabl
 import { CoExpressionDataStore, TableMode } from './CoExpressionViz';
 import Select from 'react-select1';
 import { observer } from 'mobx-react';
-import {
-    CoExpressionWithQ,
-    tableSearchInformation,
-} from './CoExpressionTabUtils';
+import { CoExpressionWithQ, tableSearchInformation } from './CoExpressionTabUtils';
 import InfoIcon from '../../../shared/components/InfoIcon';
 import { bind } from 'bind-decorator';
 import { cytobandFilter } from 'pages/resultsView/ResultsViewTableUtils';
@@ -47,29 +44,14 @@ const COLUMNS = [
         sortBy: (d: CoExpressionWithQ) => d.cytoband,
         width: '30%',
     },
-    makeNumberColumn(
-        SPEARMANS_CORRELATION_COLUMN_NAME,
-        'spearmansCorrelation',
-        true,
-        false
-    ),
-    Object.assign(
-        makeNumberColumn(P_VALUE_COLUMN_NAME, 'pValue', false, false),
-        {
-            tooltip: <span>Derived from 2-sided t-test.</span>,
-        }
-    ),
-    Object.assign(
-        makeNumberColumn(Q_VALUE_COLUMN_NAME, 'qValue', false, true),
-        {
-            sortBy: (d: CoExpressionWithQ) => [d.qValue, d.pValue],
-            tooltip: (
-                <span>
-                    Derived from Benjamini-Hochberg FDR correction procedure.
-                </span>
-            ),
-        }
-    ),
+    makeNumberColumn(SPEARMANS_CORRELATION_COLUMN_NAME, 'spearmansCorrelation', true, false),
+    Object.assign(makeNumberColumn(P_VALUE_COLUMN_NAME, 'pValue', false, false), {
+        tooltip: <span>Derived from 2-sided t-test.</span>,
+    }),
+    Object.assign(makeNumberColumn(Q_VALUE_COLUMN_NAME, 'qValue', false, true), {
+        sortBy: (d: CoExpressionWithQ) => [d.qValue, d.pValue],
+        tooltip: <span>Derived from Benjamini-Hochberg FDR correction procedure.</span>,
+    }),
 ];
 
 function makeNumberColumn(
@@ -84,9 +66,7 @@ function makeNumberColumn(
             return (
                 <span
                     style={{
-                        color: colorByValue
-                            ? correlationColor(d[key] as number)
-                            : '#000000',
+                        color: colorByValue ? correlationColor(d[key] as number) : '#000000',
                         textAlign: 'right',
                         float: 'right',
                         whiteSpace: 'nowrap',
@@ -160,11 +140,7 @@ export default class CoExpressionTableGenes extends React.Component<
                     </div>
                     <InfoIcon
                         style={{ marginLeft: 21, marginTop: '0.7em' }}
-                        tooltip={
-                            <div style={{ maxWidth: 200 }}>
-                                {tableSearchInformation}
-                            </div>
-                        }
+                        tooltip={<div style={{ maxWidth: 200 }}>{tableSearchInformation}</div>}
                         tooltipPlacement="left"
                     />
                 </div>

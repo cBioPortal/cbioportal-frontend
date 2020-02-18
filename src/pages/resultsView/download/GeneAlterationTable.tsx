@@ -18,10 +18,7 @@ export interface IGeneAlterationTableProps {
 class GeneAlterationTableComponent extends LazyMobXTable<IGeneAlteration> {}
 
 @observer
-export default class GeneAlterationTable extends React.Component<
-    IGeneAlterationTableProps,
-    {}
-> {
+export default class GeneAlterationTable extends React.Component<IGeneAlterationTableProps, {}> {
     public render() {
         return (
             <GeneAlterationTableComponent
@@ -29,9 +26,7 @@ export default class GeneAlterationTable extends React.Component<
                 columns={[
                     {
                         name: 'Gene Symbol',
-                        render: (data: IGeneAlteration) => (
-                            <span>{data.gene}</span>
-                        ),
+                        render: (data: IGeneAlteration) => <span>{data.gene}</span>,
                         download: (data: IGeneAlteration) => data.gene,
                         sortBy: (data: IGeneAlteration) => data.gene,
                         filter: (
@@ -39,19 +34,13 @@ export default class GeneAlterationTable extends React.Component<
                             filterString: string,
                             filterStringUpper: string
                         ) => {
-                            return (
-                                data.gene
-                                    .toUpperCase()
-                                    .indexOf(filterStringUpper) > -1
-                            );
+                            return data.gene.toUpperCase().indexOf(filterStringUpper) > -1;
                         },
                     },
                     {
                         name: 'OQL Line',
                         visible: false,
-                        render: (data: IGeneAlteration) => (
-                            <span>{data.oqlLine}</span>
-                        ),
+                        render: (data: IGeneAlteration) => <span>{data.oqlLine}</span>,
                         download: (data: IGeneAlteration) => data.oqlLine,
                         sortBy: (data: IGeneAlteration) => data.oqlLine,
                         filter: (
@@ -59,19 +48,13 @@ export default class GeneAlterationTable extends React.Component<
                             filterString: string,
                             filterStringUpper: string
                         ) => {
-                            return (
-                                data.oqlLine
-                                    .toUpperCase()
-                                    .indexOf(filterStringUpper) > -1
-                            );
+                            return data.oqlLine.toUpperCase().indexOf(filterStringUpper) > -1;
                         },
                     },
                     {
                         name: 'Num Samples Altered',
                         render: (data: IGeneAlteration) => (
-                            <span>
-                                {data.sequenced ? data.altered : 'Not Profiled'}
-                            </span>
+                            <span>{data.sequenced ? data.altered : 'Not Profiled'}</span>
                         ),
                         download: (data: IGeneAlteration) =>
                             data.sequenced ? `${data.altered}` : 'N/P',
@@ -90,10 +73,8 @@ export default class GeneAlterationTable extends React.Component<
                             ) : (
                                 <span>Not Profiled</span>
                             ),
-                        download: (data: IGeneAlteration) =>
-                            data.percentAltered,
-                        sortBy: (data: IGeneAlteration) =>
-                            data.altered / data.sequenced,
+                        download: (data: IGeneAlteration) => data.percentAltered,
+                        sortBy: (data: IGeneAlteration) => data.altered / data.sequenced,
                     },
                 ]}
                 initialSortColumn="Percent Samples Altered"

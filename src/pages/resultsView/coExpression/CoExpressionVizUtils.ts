@@ -50,14 +50,10 @@ export function computePlotData(
     studyToMutationMolecularProfile: { [studyId: string]: MolecularProfile }
 ) {
     const xData: {
-        [uniqueSampleKey: string]:
-            | NumericGeneMolecularData
-            | GenesetMolecularData;
+        [uniqueSampleKey: string]: NumericGeneMolecularData | GenesetMolecularData;
     } = {};
     const yData: {
-        [uniqueSampleKey: string]:
-            | NumericGeneMolecularData
-            | GenesetMolecularData;
+        [uniqueSampleKey: string]: NumericGeneMolecularData | GenesetMolecularData;
     } = {};
     const xMutations: { [uniqueSampleKey: string]: Mutation[] } = {};
     const yMutations: { [uniqueSampleKey: string]: Mutation[] } = {};
@@ -78,11 +74,8 @@ export function computePlotData(
         for (const datum of mutationData) {
             if (datum.proteinChange) {
                 const targetData =
-                    datum.entrezGeneId === xGeneticEntityId
-                        ? xMutations
-                        : yMutations;
-                targetData[datum.uniqueSampleKey] =
-                    targetData[datum.uniqueSampleKey] || [];
+                    datum.entrezGeneId === xGeneticEntityId ? xMutations : yMutations;
+                targetData[datum.uniqueSampleKey] = targetData[datum.uniqueSampleKey] || [];
                 targetData[datum.uniqueSampleKey].push(datum);
                 addSampleInfo(datum);
             }
@@ -91,14 +84,12 @@ export function computePlotData(
 
     if (
         molecularData[0] &&
-        (molecularData[0] as NumericGeneMolecularData).entrezGeneId !==
-            undefined
+        (molecularData[0] as NumericGeneMolecularData).entrezGeneId !== undefined
     ) {
         //Check if molecularData contains gene or gene set data
         for (const datum of molecularData) {
             const targetData =
-                (datum as NumericGeneMolecularData).entrezGeneId ===
-                xGeneticEntityId
+                (datum as NumericGeneMolecularData).entrezGeneId === xGeneticEntityId
                     ? xData
                     : yData;
             targetData[datum.uniqueSampleKey] = datum;
@@ -107,8 +98,7 @@ export function computePlotData(
     } else {
         for (const datum of molecularData) {
             const targetData =
-                (datum as GenesetMolecularData).genesetId ===
-                xGeneticEntityId.toString()
+                (datum as GenesetMolecularData).genesetId === xGeneticEntityId.toString()
                     ? xData
                     : yData;
             targetData[datum.uniqueSampleKey] = datum;

@@ -1,10 +1,7 @@
 import { assert } from 'chai';
 
 import { Mutation } from '../model/Mutation';
-import {
-    defaultOncoKbIndicatorFilter,
-    groupOncoKbIndicatorDataByMutations,
-} from './OncoKbUtils';
+import { defaultOncoKbIndicatorFilter, groupOncoKbIndicatorDataByMutations } from './OncoKbUtils';
 
 describe('OncoKbUtils', () => {
     describe('groupOncoKbIndicatorDataByMutations', () => {
@@ -148,9 +145,7 @@ describe('OncoKbUtils', () => {
                 mutationsByPosition,
                 oncoKbData as any,
                 (mutation: Mutation) =>
-                    uniqueSampleKeyToTumorType[
-                        (mutation as any).uniqueSampleKey
-                    ],
+                    uniqueSampleKeyToTumorType[(mutation as any).uniqueSampleKey],
                 (mutation: Mutation) => (mutation as any).gene.entrezGeneId,
                 defaultOncoKbIndicatorFilter
             );

@@ -18,12 +18,7 @@ function addMoreGenieTimelineStylingHacks() {
     $("circle[id^='timelineItem_4']").attr('r', '4.5');
 }
 
-function plotCaseLabelsInTimeline(
-    timelineClasses,
-    caseIds,
-    clinicalDataMap,
-    caseMetaData
-) {
+function plotCaseLabelsInTimeline(timelineClasses, caseIds, clinicalDataMap, caseMetaData) {
     var fillColorAndLabelForCase = function(circle, caseId) {
         var label = caseMetaData.label[caseId];
         var color = caseMetaData.color[caseId];
@@ -64,17 +59,10 @@ function plotCaseLabelsInTimeline(
                 return undefined;
             });
             if (circle[0][0]) {
-                var g = document.createElementNS(
-                    'http://www.w3.org/2000/svg',
-                    'g'
-                );
+                var g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
                 $(g).attr(
                     'transform',
-                    'translate(' +
-                        circle.attr('cx') +
-                        ',' +
-                        circle.attr('cy') +
-                        ')'
+                    'translate(' + circle.attr('cx') + ',' + circle.attr('cy') + ')'
                 );
                 $(circle[0]).removeAttr('cx');
                 $(circle[0]).removeAttr('cy');
@@ -111,8 +99,7 @@ export function buildTimeline(
         // color based on state (need to rename Status to Med Onc Assessment)
         var statusGenieData = _.find(
             timeData,
-            item =>
-                item.label === 'Status' || item.label == 'Med Onc Assessment'
+            item => item.label === 'Status' || item.label == 'Med Onc Assessment'
         );
         if (statusGenieData) {
             statusGenieData.label = 'Med Onc Assessment';
@@ -135,23 +122,15 @@ export function buildTimeline(
             });
         }
         // same for imaging
-        var imagingGenieData = _.find(
-            timeData,
-            item => item.label === 'Imaging'
-        );
+        var imagingGenieData = _.find(timeData, item => item.label === 'Imaging');
         if (imagingGenieData) {
             imagingGenieData.times.forEach(time => {
                 var imageOverall = _.find(
                     time.tooltip_tables[0],
                     row => row[0] === 'IMAGE_OVERALL'
                 );
-                imageOverall = imageOverall
-                    ? imageOverall[1].toLowerCase()
-                    : 'indeterminate';
-                if (
-                    imageOverall.includes('indeter') ||
-                    imageOverall.includes('does not mention')
-                ) {
+                imageOverall = imageOverall ? imageOverall[1].toLowerCase() : 'indeterminate';
+                if (imageOverall.includes('indeter') || imageOverall.includes('does not mention')) {
                     time['color'] = 'white';
                 } else if (imageOverall.includes('stable')) {
                     time['color'] = 'gainsboro';
@@ -181,9 +160,7 @@ export function buildTimeline(
             });
             if (specRefNum) {
                 if (specRefNum.length > 1) {
-                    console.warn(
-                        'More than 1 specimen reference number found in tooltip table'
-                    );
+                    console.warn('More than 1 specimen reference number found in tooltip table');
                 } else if (specRefNum.length === 1) {
                     sortOrder = caseIds.indexOf(specRefNum[0][1]);
                     if (sortOrder === -1) {
@@ -215,17 +192,13 @@ export function buildTimeline(
             patientInfo[prefix + 'OS_STATUS'] === 'DECEASED' &&
             prefix + 'OS_MONTHS' in patientInfo
         ) {
-            var days = Math.round(
-                parseFloat(patientInfo[prefix + 'OS_MONTHS']) * 30.4
-            );
+            var days = Math.round(parseFloat(patientInfo[prefix + 'OS_MONTHS']) * 30.4);
             var timePoint = {
                 starting_time: days,
                 ending_time: days,
                 display: 'circle',
                 color: '#000',
-                tooltip_tables: [
-                    [['START_DATE', days], ['STATUS', 'DECEASED']],
-                ],
+                tooltip_tables: [[['START_DATE', days], ['STATUS', 'DECEASED']]],
             };
 
             var trackData = timeData.filter(function(x) {
@@ -289,10 +262,7 @@ export function buildTimeline(
         });
     // Scale dot size on timepoint by RESULT field
     testsWithResults.forEach(function(test) {
-        window.pvTimeline = window.pvTimeline.sizeByClinicalAttribute(
-            test,
-            'RESULT'
-        );
+        window.pvTimeline = window.pvTimeline.sizeByClinicalAttribute(test, 'RESULT');
     });
     if (isGenieBpcStudy) {
         window.pvTimeline = window.pvTimeline
@@ -313,9 +283,7 @@ export function buildTimeline(
             .enableTrackTooltips(false)
             .plugins([
                 {
-                    obj: new clinicalTimelineExports.trimClinicalTimeline(
-                        'Trim Timeline'
-                    ),
+                    obj: new clinicalTimelineExports.trimClinicalTimeline('Trim Timeline'),
                     enabled: true,
                 },
             ])
@@ -331,20 +299,14 @@ export function buildTimeline(
             .addPostTimelineHook(addMoreGenieTimelineStylingHacks.bind(this));
     } else {
         window.pvTimeline = window.pvTimeline
-            .splitByClinicalAttributes('Treatment', [
-                'TREATMENT_TYPE',
-                'SUBTYPE',
-                'AGENT',
-            ])
+            .splitByClinicalAttributes('Treatment', ['TREATMENT_TYPE', 'SUBTYPE', 'AGENT'])
             .splitByClinicalAttributes('Diagnosis', ['SUBTYPE'])
             .collapseAll()
             .toggleTrackCollapse('Specimen')
             .enableTrackTooltips(false)
             .plugins([
                 {
-                    obj: new clinicalTimelineExports.trimClinicalTimeline(
-                        'Trim Timeline'
-                    ),
+                    obj: new clinicalTimelineExports.trimClinicalTimeline('Trim Timeline'),
                     enabled: true,
                 },
             ])

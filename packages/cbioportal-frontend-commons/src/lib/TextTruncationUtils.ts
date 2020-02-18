@@ -5,30 +5,15 @@ export function getTextDiagonal(textHeight: number, textWidth: number) {
     return Math.sqrt(Math.pow(textWidth, 2) + Math.pow(textHeight, 2));
 }
 
-export function getTextHeight(
-    text: string,
-    fontFamily: string,
-    fontSize: string
-) {
-    return measureText({ text, fontFamily, fontSize, lineHeight: 1 }).height
-        .value;
+export function getTextHeight(text: string, fontFamily: string, fontSize: string) {
+    return measureText({ text, fontFamily, fontSize, lineHeight: 1 }).height.value;
 }
 
-export function getTextWidth(
-    text: string,
-    fontFamily: string,
-    fontSize: string
-) {
-    return measureText({ text, fontFamily, fontSize, lineHeight: 1 }).width
-        .value;
+export function getTextWidth(text: string, fontFamily: string, fontSize: string) {
+    return measureText({ text, fontFamily, fontSize, lineHeight: 1 }).width.value;
 }
 
-function splitTextByWidth(
-    text: string,
-    maxWidth: number,
-    fontFamily: string,
-    fontSize: string
-) {
+function splitTextByWidth(text: string, maxWidth: number, fontFamily: string, fontSize: string) {
     const ret: string[] = [];
     let index = 0;
     let chunk = '';
@@ -59,9 +44,7 @@ export function textTruncationUtils(
         let words = text.split(/\s+/g); // first split words, for nicer breaks if possible
         // next split chunks of max width
         words = _.flatten(
-            words.map(word =>
-                splitTextByWidth(word, maxWidth, fontFamily, fontSize)
-            )
+            words.map(word => splitTextByWidth(word, maxWidth, fontFamily, fontSize))
         );
         let currentLine = '';
         const ret: string[] = [];
@@ -74,8 +57,7 @@ export function textTruncationUtils(
                 currentLine = '';
             } else if (
                 getTextWidth(
-                    (currentLine.length ? currentLine + ' ' : currentLine) +
-                        word,
+                    (currentLine.length ? currentLine + ' ' : currentLine) + word,
                     fontFamily,
                     fontSize
                 ) >= maxWidth

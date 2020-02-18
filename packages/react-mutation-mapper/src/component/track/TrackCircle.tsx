@@ -33,8 +33,7 @@ export default class TrackCircle extends React.Component<TrackCircleProps, {}> {
     }
 
     @computed public get hitRectangle() {
-        const hoverRadius =
-            this.props.hoverRadius || TrackCircle.defaultProps.hoverRadius;
+        const hoverRadius = this.props.hoverRadius || TrackCircle.defaultProps.hoverRadius;
 
         return {
             x: this.props.x - hoverRadius + (this.props.hitZoneXOffset || 0),

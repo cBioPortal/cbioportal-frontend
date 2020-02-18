@@ -34,10 +34,7 @@ export default class PyMolScriptGenerator extends StructureVisualizer {
         this._script = [];
 
         this.reinitialize();
-        this.bgColor(
-            props.backgroundColor ||
-                StructureVisualizer.defaultProps.backgroundColor
-        );
+        this.bgColor(props.backgroundColor || StructureVisualizer.defaultProps.backgroundColor);
         this.loadPdb(pdbId);
         this.updateVisualStyle(residues, chainId, props);
         this.selectNone();
@@ -78,16 +75,12 @@ export default class PyMolScriptGenerator extends StructureVisualizer {
     }
 
     protected selectResidues(residueCodes: string[], chainId: string) {
-        this._script.push(
-            `select (resi ${residueCodes.join(',')}) and (chain ${chainId});`
-        );
+        this._script.push(`select (resi ${residueCodes.join(',')}) and (chain ${chainId});`);
     }
 
     protected selectSideChains(residueCodes: string[], chainId: string) {
         this._script.push(
-            `select ((resi ${residueCodes.join(
-                ','
-            )}) and (chain ${chainId}) and (not name c+n+o));`
+            `select ((resi ${residueCodes.join(',')}) and (chain ${chainId}) and (not name c+n+o));`
         );
     }
 
@@ -95,21 +88,13 @@ export default class PyMolScriptGenerator extends StructureVisualizer {
         // TODO cartoon_transparency doesn't work for chain or residue selections
         // see issue:  http://sourceforge.net/p/pymol/bugs/129/
         this._script.push(`set transparency, ${transparency / 10}, sele;`);
-        this._script.push(
-            `set cartoon_transparency, ${transparency / 10}, sele;`
-        );
-        this._script.push(
-            `set sphere_transparency, ${transparency / 10}, sele;`
-        );
-        this._script.push(
-            `set stick_transparency, ${transparency / 10}, sele;`
-        );
+        this._script.push(`set cartoon_transparency, ${transparency / 10}, sele;`);
+        this._script.push(`set sphere_transparency, ${transparency / 10}, sele;`);
+        this._script.push(`set stick_transparency, ${transparency / 10}, sele;`);
     }
 
     protected enableBallAndStick() {
-        this._script.push(
-            'show spheres, sele; show sticks, sele; alter sele, vdw=0.50;'
-        );
+        this._script.push('show spheres, sele; show sticks, sele; alter sele, vdw=0.50;');
     }
 
     protected disableBallAndStick() {
@@ -152,8 +137,7 @@ export default class PyMolScriptGenerator extends StructureVisualizer {
         props: IStructureVisualizerProps
     ) {
         const defaultProps = StructureVisualizer.defaultProps;
-        const highlightColor =
-            props.highlightColor || defaultProps.highlightColor;
+        const highlightColor = props.highlightColor || defaultProps.highlightColor;
 
         // group residues by color
         const grouped: { [color: string]: IResidueSpec[] } = _.groupBy(
@@ -178,9 +162,7 @@ export default class PyMolScriptGenerator extends StructureVisualizer {
             // use the highlight color if highlighted (always color highlighted residues)
             if (grouped[color][0].highlighted) {
                 this.selectResidues(resCodes, chainId);
-                this.setColor(
-                    props.highlightColor || defaultProps.highlightColor
-                );
+                this.setColor(props.highlightColor || defaultProps.highlightColor);
             }
             // use the provided color
             else if (props.mutationColor === MutationColor.MUTATION_TYPE) {
@@ -190,17 +172,13 @@ export default class PyMolScriptGenerator extends StructureVisualizer {
             // use a uniform color
             else if (props.mutationColor === MutationColor.UNIFORM) {
                 this.selectResidues(resCodes, chainId);
-                this.setColor(
-                    props.uniformMutationColor ||
-                        defaultProps.uniformMutationColor
-                );
+                this.setColor(props.uniformMutationColor || defaultProps.uniformMutationColor);
             }
             // else: NONE (no need to color)
 
             const displaySideChain =
                 props.sideChain === SideChain.ALL ||
-                (grouped[color][0].highlighted === true &&
-                    props.sideChain === SideChain.SELECTED);
+                (grouped[color][0].highlighted === true && props.sideChain === SideChain.SELECTED);
 
             // show/hide side chains
             this.updateSideChains(chainId, resCodes, displaySideChain, props);
@@ -214,10 +192,7 @@ export default class PyMolScriptGenerator extends StructureVisualizer {
         props: IStructureVisualizerProps
     ) {
         // display side chain (no effect for space-filling)
-        if (
-            displaySideChain &&
-            !(props.proteinScheme === ProteinScheme.SPACE_FILLING)
-        ) {
+        if (displaySideChain && !(props.proteinScheme === ProteinScheme.SPACE_FILLING)) {
             // select the corresponding side chain and also the CA atom on the backbone
             this.selectSideChains(rescodes, chainId);
 

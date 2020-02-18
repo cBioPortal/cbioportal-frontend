@@ -8,10 +8,7 @@ export interface IAjaxErrorModalProps {
     troubleshooting?: string[];
 }
 
-export default class AjaxErrorModal extends React.Component<
-    IAjaxErrorModalProps,
-    {}
-> {
+export default class AjaxErrorModal extends React.Component<IAjaxErrorModalProps, {}> {
     private defaultTitle = 'Sorry, something went wrong!';
     private defaultTroubleshooting = [
         'Check that your URL parameters are valid.',
@@ -30,10 +27,7 @@ export default class AjaxErrorModal extends React.Component<
                 <Modal.Body>
                     <p>Troubleshooting:</p>
                     <ul>
-                        {(
-                            this.props.troubleshooting ||
-                            this.defaultTroubleshooting
-                        ).map(s => (
+                        {(this.props.troubleshooting || this.defaultTroubleshooting).map(s => (
                             <li>{s}</li>
                         ))}
                     </ul>

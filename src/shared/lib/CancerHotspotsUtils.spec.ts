@@ -12,9 +12,7 @@ describe('CancerHotspotsUtils', () => {
                 { gene: { hugoGeneSymbol: 'TP53' } },
                 { gene: { hugoGeneSymbol: 'CLEC9A' } },
             ] as Mutation[];
-            assert.isTrue(
-                filterMutationsOnNonHotspotGenes(mutations).length === 1
-            );
+            assert.isTrue(filterMutationsOnNonHotspotGenes(mutations).length === 1);
         });
     });
 

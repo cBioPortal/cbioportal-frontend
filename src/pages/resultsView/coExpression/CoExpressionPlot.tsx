@@ -64,10 +64,7 @@ function noop() {}
 const SVG_ID = 'coexpression-plot-svg';
 
 @observer
-export default class CoExpressionPlot extends React.Component<
-    ICoExpressionPlotProps,
-    {}
-> {
+export default class CoExpressionPlot extends React.Component<ICoExpressionPlotProps, {}> {
     @bind
     private getSvg() {
         return document.getElementById(SVG_ID) as SVGElement | null;
@@ -150,19 +147,13 @@ export default class CoExpressionPlot extends React.Component<
         const ret = [];
         if (hasX) {
             ret.push({
-                name: [
-                    this.props.xAxisGeneticEntity.geneticEntityName,
-                    'mutated',
-                ],
+                name: [this.props.xAxisGeneticEntity.geneticEntityName, 'mutated'],
                 symbol: { fill: X_MUT_FILL, stroke: X_MUT_STROKE },
             });
         }
         if (hasY) {
             ret.push({
-                name: [
-                    this.props.yAxisGeneticEntity.geneticEntityName,
-                    'mutated',
-                ],
+                name: [this.props.yAxisGeneticEntity.geneticEntityName, 'mutated'],
                 symbol: { fill: Y_MUT_FILL, stroke: Y_MUT_STROKE },
             });
         }
@@ -213,8 +204,7 @@ export default class CoExpressionPlot extends React.Component<
     @computed get axisLabelX() {
         return axisLabel(
             {
-                geneticEntityName: this.props.xAxisGeneticEntity
-                    .geneticEntityName,
+                geneticEntityName: this.props.xAxisGeneticEntity.geneticEntityName,
             },
             this.axisLogScaleFunction,
             this.props.molecularProfileX.name
@@ -224,8 +214,7 @@ export default class CoExpressionPlot extends React.Component<
     @computed get axisLabelY() {
         return axisLabel(
             {
-                geneticEntityName: this.props.yAxisGeneticEntity
-                    .geneticEntityName,
+                geneticEntityName: this.props.yAxisGeneticEntity.geneticEntityName,
             },
             this.axisLogScaleFunction,
             this.props.molecularProfileY.name
@@ -240,8 +229,7 @@ export default class CoExpressionPlot extends React.Component<
         }
         return {
             label: 'log2',
-            fLogScale: (x: number, offset: number) =>
-                Math.log2(Math.max(x, MIN_LOG_ARGUMENT)),
+            fLogScale: (x: number, offset: number) => Math.log2(Math.max(x, MIN_LOG_ARGUMENT)),
             fInvLogScale: (x: number) => Math.pow(2, x),
         };
     }
@@ -286,10 +274,7 @@ export default class CoExpressionPlot extends React.Component<
                                 <input
                                     type="checkbox"
                                     checked={this.props.showMutations}
-                                    onClick={
-                                        this.props.handlers
-                                            .onClickShowMutations || noop
-                                    }
+                                    onClick={this.props.handlers.onClickShowMutations || noop}
                                     data-test="ShowMutations"
                                 />
                                 Show Mutations
@@ -303,10 +288,7 @@ export default class CoExpressionPlot extends React.Component<
                                     <input
                                         type="checkbox"
                                         checked={this.props.logScale}
-                                        onClick={
-                                            this.props.handlers
-                                                .onClickLogScale || noop
-                                        }
+                                        onClick={this.props.handlers.onClickLogScale || noop}
                                         data-test="logScale"
                                     />
                                     Log Scale
@@ -319,10 +301,7 @@ export default class CoExpressionPlot extends React.Component<
                             <input
                                 type="checkbox"
                                 checked={this.props.showRegressionLine}
-                                onClick={
-                                    this.props.handlers
-                                        .onClickShowRegressionLine
-                                }
+                                onClick={this.props.handlers.onClickShowRegressionLine}
                                 data-test="ShowRegressionLine"
                             />
                             Show Regression Line
@@ -347,9 +326,7 @@ export default class CoExpressionPlot extends React.Component<
             <div>
                 <div>
                     <span>Sample ID: </span>
-                    <a href={getSampleViewUrl(d.studyId, d.sampleId)}>
-                        {d.sampleId}
-                    </a>
+                    <a href={getSampleViewUrl(d.studyId, d.sampleId)}>{d.sampleId}</a>
                 </div>
                 <div>
                     <span>
@@ -366,8 +343,7 @@ export default class CoExpressionPlot extends React.Component<
                 {d.mutationsX && (
                     <div>
                         <span>
-                            {this.props.xAxisGeneticEntity.geneticEntityName}{' '}
-                            Mutation:&nbsp;
+                            {this.props.xAxisGeneticEntity.geneticEntityName} Mutation:&nbsp;
                             <b>{d.mutationsX}</b>
                         </span>
                     </div>
@@ -375,8 +351,7 @@ export default class CoExpressionPlot extends React.Component<
                 {d.mutationsY && (
                     <div>
                         <span>
-                            {this.props.yAxisGeneticEntity.geneticEntityName}{' '}
-                            Mutation:&nbsp;
+                            {this.props.yAxisGeneticEntity.geneticEntityName} Mutation:&nbsp;
                             <b>{d.mutationsY}</b>
                         </span>
                     </div>
@@ -387,10 +362,7 @@ export default class CoExpressionPlot extends React.Component<
 
     render() {
         return (
-            <div
-                className="borderedChart inlineBlock"
-                data-test="CoExpressionPlot"
-            >
+            <div className="borderedChart inlineBlock" data-test="CoExpressionPlot">
                 <Observer>{this.toolbar}</Observer>
                 <Observer>{this.plot}</Observer>
             </div>

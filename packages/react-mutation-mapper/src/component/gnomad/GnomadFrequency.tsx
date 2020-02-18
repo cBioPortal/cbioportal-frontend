@@ -13,9 +13,7 @@ import { observer } from 'mobx-react';
 import * as React from 'react';
 
 import { GnomadSummary } from '../../model/GnomadSummary';
-import GnomadFrequencyTable, {
-    GnomadTableColumnName,
-} from './GnomadFrequencyTable';
+import GnomadFrequencyTable, { GnomadTableColumnName } from './GnomadFrequencyTable';
 
 const GNOMAD_POPULATION_NAME: { [key: string]: string } = {
     African: 'afr',
@@ -37,9 +35,7 @@ export function calculateAlleleFrequency(
     if (frequency !== null) {
         return frequency;
     } else {
-        return count && totalNumber && totalNumber !== 0
-            ? count / totalNumber
-            : 0;
+        return count && totalNumber && totalNumber !== 0 ? count / totalNumber : 0;
     }
 }
 
@@ -75,27 +71,16 @@ export function setGnomadTableData(
         ? GnomadTableColumnName.homozygotes + '_' + GNOMAD_POPULATION_NAME[key]
         : GnomadTableColumnName.homozygotes
     ).toString() as keyof Homozygotes;
-    const alleleFrequencyName: keyof AlleleFrequency = (GNOMAD_POPULATION_NAME[
-        key
-    ]
-        ? GnomadTableColumnName.alleleFrequency +
-          '_' +
-          GNOMAD_POPULATION_NAME[key]
+    const alleleFrequencyName: keyof AlleleFrequency = (GNOMAD_POPULATION_NAME[key]
+        ? GnomadTableColumnName.alleleFrequency + '_' + GNOMAD_POPULATION_NAME[key]
         : GnomadTableColumnName.alleleFrequency
     ).toString() as keyof AlleleFrequency;
 
     result[key] = {
         population: key,
-        alleleCount: data.alleleCount[alleleCountName]
-            ? data.alleleCount[alleleCountName]
-            : 0,
-        alleleNumber: data.alleleNumber[alleleNumberName]
-            ? data.alleleNumber[alleleNumberName]
-            : 0,
-        homozygotes:
-            data.homozygotes === undefined
-                ? 'N/A'
-                : data.homozygotes[homozygotesName],
+        alleleCount: data.alleleCount[alleleCountName] ? data.alleleCount[alleleCountName] : 0,
+        alleleNumber: data.alleleNumber[alleleNumberName] ? data.alleleNumber[alleleNumberName] : 0,
+        homozygotes: data.homozygotes === undefined ? 'N/A' : data.homozygotes[homozygotesName],
         alleleFrequency: calculateAlleleFrequency(
             data.alleleCount[alleleCountName],
             data.alleleNumber[alleleNumberName],
@@ -110,10 +95,7 @@ export type GnomadFrequencyProps = {
 };
 
 @observer
-export default class GnomadFrequency extends React.Component<
-    GnomadFrequencyProps,
-    {}
-> {
+export default class GnomadFrequency extends React.Component<GnomadFrequencyProps, {}> {
     public gnomad() {
         const myVariantInfo = this.props.myVariantInfo;
 
@@ -123,17 +105,12 @@ export default class GnomadFrequency extends React.Component<
         let result: { [key: string]: GnomadSummary } = {};
 
         // Checking if gnomad data is valid
-        if (
-            myVariantInfo &&
-            (myVariantInfo.gnomadExome || myVariantInfo.gnomadGenome)
-        ) {
+        if (myVariantInfo && (myVariantInfo.gnomadExome || myVariantInfo.gnomadGenome)) {
             // get gnomad link from chrom, location, ref and alt
             gnomadUrl =
                 myVariantInfo && myVariantInfo.vcf
                     ? generateGnomadUrl(
-                          this.props.annotation
-                              ? this.props.annotation.seq_region_name
-                              : null,
+                          this.props.annotation ? this.props.annotation.seq_region_name : null,
                           myVariantInfo.vcf.position,
                           myVariantInfo.vcf.ref,
                           myVariantInfo.vcf.alt
@@ -147,11 +124,7 @@ export default class GnomadFrequency extends React.Component<
             // If only gnomadExome data exist, show gnomadExome result in the table
             if (myVariantInfo.gnomadExome) {
                 Object.keys(GNOMAD_POPULATION_NAME).forEach(key =>
-                    setGnomadTableData(
-                        key,
-                        myVariantInfo.gnomadExome,
-                        gnomadExome
-                    )
+                    setGnomadTableData(key, myVariantInfo.gnomadExome, gnomadExome)
                 );
                 result = gnomadExome;
             }
@@ -159,11 +132,7 @@ export default class GnomadFrequency extends React.Component<
             // If only gnomadGenome data exist, show gnomadGenome result in the table
             if (myVariantInfo.gnomadGenome) {
                 Object.keys(GNOMAD_POPULATION_NAME).forEach(key =>
-                    setGnomadTableData(
-                        key,
-                        myVariantInfo.gnomadGenome,
-                        gnomadGenome
-                    )
+                    setGnomadTableData(key, myVariantInfo.gnomadGenome, gnomadGenome)
                 );
                 result = gnomadGenome;
             }
@@ -173,12 +142,9 @@ export default class GnomadFrequency extends React.Component<
                 Object.keys(GNOMAD_POPULATION_NAME).forEach(key => {
                     gnomadResult[key] = {
                         population: key,
-                        alleleCount:
-                            gnomadExome[key].alleleCount +
-                            gnomadGenome[key].alleleCount,
+                        alleleCount: gnomadExome[key].alleleCount + gnomadGenome[key].alleleCount,
                         alleleNumber:
-                            gnomadExome[key].alleleNumber +
-                            gnomadGenome[key].alleleNumber,
+                            gnomadExome[key].alleleNumber + gnomadGenome[key].alleleNumber,
                         homozygotes:
                             gnomadExome[key].homozygotes === undefined ||
                             gnomadGenome[key].homozygotes === undefined
@@ -188,10 +154,8 @@ export default class GnomadFrequency extends React.Component<
                                       parseInt(gnomadGenome[key].homozygotes!)
                                   ).toString(),
                         alleleFrequency: calculateAlleleFrequency(
-                            gnomadExome[key].alleleCount +
-                                gnomadGenome[key].alleleCount,
-                            gnomadExome[key].alleleNumber +
-                                gnomadGenome[key].alleleNumber,
+                            gnomadExome[key].alleleCount + gnomadGenome[key].alleleCount,
+                            gnomadExome[key].alleleNumber + gnomadGenome[key].alleleNumber,
                             null
                         ),
                     } as GnomadSummary;
@@ -214,20 +178,15 @@ export default class GnomadFrequency extends React.Component<
                 // show frequency as number with 4 significant digits
                 display = (
                     <span>
-                        {result['Total'].alleleFrequency.toLocaleString(
-                            undefined,
-                            {
-                                maximumSignificantDigits: 2,
-                                minimumSignificantDigits: 2,
-                            }
-                        )}
+                        {result['Total'].alleleFrequency.toLocaleString(undefined, {
+                            maximumSignificantDigits: 2,
+                            minimumSignificantDigits: 2,
+                        })}
                     </span>
                 );
             }
 
-            overlay = () => (
-                <GnomadFrequencyTable data={sorted} gnomadUrl={gnomadUrl} />
-            );
+            overlay = () => <GnomadFrequencyTable data={sorted} gnomadUrl={gnomadUrl} />;
         } else {
             display = (
                 <span

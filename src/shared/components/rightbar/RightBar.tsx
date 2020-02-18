@@ -19,10 +19,7 @@ interface IRightBarState {
 }
 
 @observer
-export default class RightBar extends React.Component<
-    IRightBarProps,
-    IRightBarState
-> {
+export default class RightBar extends React.Component<IRightBarProps, IRightBarState> {
     constructor(props: IRightBarProps) {
         super(props);
         this.state = {
@@ -45,23 +42,13 @@ export default class RightBar extends React.Component<
         );
     }
 
-    private CancerTypeDescendantStudy({
-        cancerType,
-    }: {
-        cancerType: CancerType;
-    }) {
-        return this.logic.cancerTypeListView.getDescendantCancerStudies(
-            cancerType
-        );
+    private CancerTypeDescendantStudy({ cancerType }: { cancerType: CancerType }) {
+        return this.logic.cancerTypeListView.getDescendantCancerStudies(cancerType);
     }
 
     private CancerTypeDescendantStudies(cancerList: CancerType[]) {
         return cancerList
-            .filter(
-                cancer =>
-                    cancer.cancerTypeId !== 'other' &&
-                    cancer.cancerTypeId !== 'mixed'
-            )
+            .filter(cancer => cancer.cancerTypeId !== 'other' && cancer.cancerTypeId !== 'mixed')
             .map((filteredCancer: CancerType) => ({
                 shortName: filteredCancer.name,
                 color: filteredCancer.dedicatedColor,
@@ -73,18 +60,13 @@ export default class RightBar extends React.Component<
 
     private getWhatsNew() {
         if (AppConfig.serverConfig.skin_right_nav_show_whats_new) {
-            if (
-                !_.isEmpty(
-                    AppConfig.serverConfig.skin_right_nav_whats_new_blurb
-                )
-            ) {
+            if (!_.isEmpty(AppConfig.serverConfig.skin_right_nav_whats_new_blurb)) {
                 return (
                     <div className="rightBarSection">
                         <h3>What's New</h3>
                         <div
                             dangerouslySetInnerHTML={{
-                                __html: AppConfig.serverConfig
-                                    .skin_right_nav_whats_new_blurb!,
+                                __html: AppConfig.serverConfig.skin_right_nav_whats_new_blurb!,
                             }}
                         ></div>
                     </div>
@@ -92,21 +74,11 @@ export default class RightBar extends React.Component<
             } else {
                 let Timeline = require('react-twitter-widgets').Timeline;
                 return (
-                    <div
-                        className="rightBarSection"
-                        style={{ paddingBottom: 20 }}
-                    >
+                    <div className="rightBarSection" style={{ paddingBottom: 20 }}>
                         <h3 style={{ borderBottom: 0 }}>
                             What's New
-                            <a
-                                href="http://www.twitter.com/cbioportal"
-                                className="pull-right"
-                            >
-                                @cbioportal{' '}
-                                <i
-                                    className="fa fa-twitter"
-                                    aria-hidden="true"
-                                ></i>
+                            <a href="http://www.twitter.com/cbioportal" className="pull-right">
+                                @cbioportal <i className="fa fa-twitter" aria-hidden="true"></i>
                             </a>
                         </h3>
                         <div style={{ marginTop: 3 }}>
@@ -120,18 +92,13 @@ export default class RightBar extends React.Component<
                                     height: '200',
                                     chrome: 'noheader%20nofooter',
                                 }}
-                                onLoad={() =>
-                                    this.setState({ twitterLoading: false })
-                                }
+                                onLoad={() => this.setState({ twitterLoading: false })}
                             />
                         </div>
                         <div>
                             {(this.state.twitterLoading && (
                                 <span style={{ textAlign: 'center' }}>
-                                    <LoadingIndicator
-                                        isLoading={true}
-                                        small={true}
-                                    />
+                                    <LoadingIndicator isLoading={true} small={true} />
                                 </span>
                             )) || (
                                 <div style={{ paddingTop: 5 }}>
@@ -159,19 +126,14 @@ export default class RightBar extends React.Component<
 
     public getExampleSection() {
         if (AppConfig.serverConfig.skin_right_nav_show_examples) {
-            if (
-                !_.isEmpty(
-                    AppConfig.serverConfig.skin_examples_right_column_html
-                )
-            ) {
+            if (!_.isEmpty(AppConfig.serverConfig.skin_examples_right_column_html)) {
                 return (
                     <div
                         className="rightBarSection exampleQueries"
                         dangerouslySetInnerHTML={{
                             __html:
                                 '<h3>Example Queries</h3>' +
-                                AppConfig.serverConfig
-                                    .skin_examples_right_column_html,
+                                AppConfig.serverConfig.skin_examples_right_column_html,
                         }}
                     ></div>
                 );
@@ -226,8 +188,7 @@ export default class RightBar extends React.Component<
                             </li>
                             <li>
                                 <Link to="/study?id=msk_impact_2017">
-                                    MSK-IMPACT clinical cohort, Zehir et al.
-                                    2017
+                                    MSK-IMPACT clinical cohort, Zehir et al. 2017
                                 </Link>
                             </li>
                             <li>
@@ -260,16 +221,12 @@ export default class RightBar extends React.Component<
                     this.studyStore.cancerTypes.isComplete && (
                         <div>
                             <p>
-                                The portal contains{' '}
-                                {this.studyStore.cancerStudies.result.length}{' '}
-                                cancer studies{' '}
-                                <Link to={'/datasets'}>(details)</Link>
+                                The portal contains {this.studyStore.cancerStudies.result.length}{' '}
+                                cancer studies <Link to={'/datasets'}>(details)</Link>
                             </p>
 
                             <BarGraph
-                                data={this.CancerTypeDescendantStudies(
-                                    this.CancerTypeList()
-                                )}
+                                data={this.CancerTypeDescendantStudies(this.CancerTypeList())}
                                 openStudy={studyId => {
                                     redirectToStudyView(studyId);
                                 }}

@@ -15,20 +15,14 @@ export interface IColumnVisibilityControlsProps {
     className?: string;
     buttonText?: string | JSX.Element;
     columnVisibility?: IColumnVisibilityDef[];
-    onColumnToggled?: (
-        columnId: string,
-        columnVisibility?: IColumnVisibilityDef[]
-    ) => void;
+    onColumnToggled?: (columnId: string, columnVisibility?: IColumnVisibilityDef[]) => void;
 }
 
 /**
  * @author Selcuk Onur Sumer
  * @author Aaron Lisman
  */
-export class ColumnVisibilityControls extends React.Component<
-    IColumnVisibilityControlsProps,
-    {}
-> {
+export class ColumnVisibilityControls extends React.Component<IColumnVisibilityControlsProps, {}> {
     public static defaultProps: IColumnVisibilityControlsProps = {
         className: '',
         buttonText: 'Columns',
@@ -67,10 +61,7 @@ export class ColumnVisibilityControls extends React.Component<
                                             <Checkbox
                                                 data-id={visibility.id}
                                                 onChange={
-                                                    this
-                                                        .handleSelect as React.FormEventHandler<
-                                                        any
-                                                    >
+                                                    this.handleSelect as React.FormEventHandler<any>
                                                 }
                                                 checked={visibility.visible}
                                                 inline

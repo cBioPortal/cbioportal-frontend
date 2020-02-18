@@ -40,12 +40,8 @@ chai.use(deepEqualInAnyOrder);
 describe('GroupComparisonUtils', () => {
     describe('getOverlapComputations', () => {
         function assertEqualOverlapComputations(
-            expected: IOverlapComputations<
-                Pick<ComparisonGroup, 'studies' | 'uid'>
-            >,
-            actual: IOverlapComputations<
-                Pick<ComparisonGroup, 'studies' | 'uid'>
-            >
+            expected: IOverlapComputations<Pick<ComparisonGroup, 'studies' | 'uid'>>,
+            actual: IOverlapComputations<Pick<ComparisonGroup, 'studies' | 'uid'>>
         ) {
             assertDeepEqualInAnyOrder(expected.groups, actual.groups, 'groups');
             assertDeepEqualInAnyOrder(
@@ -88,19 +84,16 @@ describe('GroupComparisonUtils', () => {
             return true;
         }
         it('empty', () => {
-            assertEqualOverlapComputations(
-                getOverlapComputations([], isGroupSelected),
-                {
-                    groups: [],
-                    overlappingSamples: [],
-                    overlappingPatients: [],
-                    overlappingSamplesSet: new ComplexKeySet(),
-                    overlappingPatientsSet: new ComplexKeySet(),
-                    totalSampleOverlap: 0,
-                    totalPatientOverlap: 0,
-                    excludedFromAnalysis: {},
-                }
-            );
+            assertEqualOverlapComputations(getOverlapComputations([], isGroupSelected), {
+                groups: [],
+                overlappingSamples: [],
+                overlappingPatients: [],
+                overlappingSamplesSet: new ComplexKeySet(),
+                overlappingPatientsSet: new ComplexKeySet(),
+                totalSampleOverlap: 0,
+                totalPatientOverlap: 0,
+                excludedFromAnalysis: {},
+            });
         });
         it('one group', () => {
             const group0 = {
@@ -118,19 +111,16 @@ describe('GroupComparisonUtils', () => {
                     },
                 ],
             };
-            assertEqualOverlapComputations(
-                getOverlapComputations([group0], isGroupSelected),
-                {
-                    groups: [group0],
-                    overlappingSamples: [],
-                    overlappingPatients: [],
-                    overlappingSamplesSet: new ComplexKeySet(),
-                    overlappingPatientsSet: new ComplexKeySet(),
-                    totalSampleOverlap: 0,
-                    totalPatientOverlap: 0,
-                    excludedFromAnalysis: {},
-                }
-            );
+            assertEqualOverlapComputations(getOverlapComputations([group0], isGroupSelected), {
+                groups: [group0],
+                overlappingSamples: [],
+                overlappingPatients: [],
+                overlappingSamplesSet: new ComplexKeySet(),
+                overlappingPatientsSet: new ComplexKeySet(),
+                totalSampleOverlap: 0,
+                totalPatientOverlap: 0,
+                excludedFromAnalysis: {},
+            });
         });
         it('two disjoint groups', () => {
             const group0 = {
@@ -362,10 +352,7 @@ describe('GroupComparisonUtils', () => {
                 ],
             };
             assertEqualOverlapComputations(
-                getOverlapComputations(
-                    [group2, group1, group0],
-                    isGroupSelected
-                ),
+                getOverlapComputations([group2, group1, group0], isGroupSelected),
                 {
                     groups: [
                         group0,
@@ -430,10 +417,7 @@ describe('GroupComparisonUtils', () => {
                 ],
             };
             assertEqualOverlapComputations(
-                getOverlapComputations(
-                    [group2, group1, group0],
-                    isGroupSelected
-                ),
+                getOverlapComputations([group2, group1, group0], isGroupSelected),
                 {
                     groups: [
                         group0,
@@ -503,10 +487,7 @@ describe('GroupComparisonUtils', () => {
                 ],
             };
             assertEqualOverlapComputations(
-                getOverlapComputations(
-                    [group2, group1, group0],
-                    isGroupSelected
-                ),
+                getOverlapComputations([group2, group1, group0], isGroupSelected),
                 {
                     groups: [
                         group0,
@@ -576,10 +557,7 @@ describe('GroupComparisonUtils', () => {
                 ],
             };
             assertEqualOverlapComputations(
-                getOverlapComputations(
-                    [group2, group1, group0],
-                    isGroupSelected
-                ),
+                getOverlapComputations([group2, group1, group0], isGroupSelected),
                 {
                     groups: [
                         {
@@ -646,10 +624,7 @@ describe('GroupComparisonUtils', () => {
                 ],
             };
             assertEqualOverlapComputations(
-                getOverlapComputations(
-                    [group2, group1, group0],
-                    isGroupSelected
-                ),
+                getOverlapComputations([group2, group1, group0], isGroupSelected),
                 {
                     groups: [
                         {
@@ -686,9 +661,7 @@ describe('GroupComparisonUtils', () => {
                         { studyId: 'study1', sampleId: '4' },
                         { studyId: 'study2', sampleId: '1' },
                     ],
-                    overlappingPatients: [
-                        { studyId: 'study2', patientId: '1' },
-                    ],
+                    overlappingPatients: [{ studyId: 'study2', patientId: '1' }],
                     overlappingSamplesSet: ComplexKeySet.from([
                         { studyId: 'study1', sampleId: '4' },
                         { studyId: 'study2', sampleId: '1' },
@@ -749,10 +722,7 @@ describe('GroupComparisonUtils', () => {
                 ],
             };
             assertEqualOverlapComputations(
-                getOverlapComputations(
-                    [group1, group0, group2],
-                    isGroupSelected
-                ),
+                getOverlapComputations([group1, group0, group2], isGroupSelected),
                 {
                     groups: [group0, group1, group2],
                     overlappingSamples: [],
@@ -771,34 +741,26 @@ describe('GroupComparisonUtils', () => {
             assert.deepEqual(defaultGroupOrder([]), []);
         });
         it('one group', () => {
-            assert.deepEqual(defaultGroupOrder([{ name: 'yo' }]), [
-                { name: 'yo' },
-            ]);
+            assert.deepEqual(defaultGroupOrder([{ name: 'yo' }]), [{ name: 'yo' }]);
         });
         it('one group NA', () => {
-            assert.deepEqual(defaultGroupOrder([{ name: 'nA' }]), [
-                { name: 'nA' },
-            ]);
+            assert.deepEqual(defaultGroupOrder([{ name: 'nA' }]), [{ name: 'nA' }]);
         });
         it('two groups', () => {
-            assert.deepEqual(
-                defaultGroupOrder([{ name: 'HI' }, { name: 'Adam' }]),
-                [{ name: 'Adam' }, { name: 'HI' }]
-            );
+            assert.deepEqual(defaultGroupOrder([{ name: 'HI' }, { name: 'Adam' }]), [
+                { name: 'Adam' },
+                { name: 'HI' },
+            ]);
         });
         it('two groups including NA - NA sorts to end', () => {
-            assert.deepEqual(
-                defaultGroupOrder([{ name: 'NA' }, { name: 'zebra' }]),
-                [{ name: 'zebra' }, { name: 'NA' }]
-            );
+            assert.deepEqual(defaultGroupOrder([{ name: 'NA' }, { name: 'zebra' }]), [
+                { name: 'zebra' },
+                { name: 'NA' },
+            ]);
         });
         it('three groups', () => {
             assert.deepEqual(
-                defaultGroupOrder([
-                    { name: 'hI' },
-                    { name: 'abra' },
-                    { name: 'zebra' },
-                ]),
+                defaultGroupOrder([{ name: 'hI' }, { name: 'abra' }, { name: 'zebra' }]),
                 [{ name: 'abra' }, { name: 'hI' }, { name: 'zebra' }]
             );
         });
@@ -810,12 +772,7 @@ describe('GroupComparisonUtils', () => {
                     { name: 'Na' },
                     { name: 'zebra' },
                 ]),
-                [
-                    { name: 'hI' },
-                    { name: 'zebra' },
-                    { name: 'nA' },
-                    { name: 'Na' },
-                ]
+                [{ name: 'hI' }, { name: 'zebra' }, { name: 'nA' }, { name: 'Na' }]
             );
         });
     });
@@ -916,30 +873,18 @@ describe('GroupComparisonUtils', () => {
         });
         it('same nonzero number patients and samples', () => {
             assert.equal(
-                caseCountsInParens(
-                    ['sampleA', 'sampleB'],
-                    ['patientA', 'patientB']
-                ),
+                caseCountsInParens(['sampleA', 'sampleB'], ['patientA', 'patientB']),
                 '(2)'
             );
         });
         it('0 patients and 1 sample', () => {
-            assert.equal(
-                caseCountsInParens(['sample'], []),
-                '(1 sample/0 patients)'
-            );
+            assert.equal(caseCountsInParens(['sample'], []), '(1 sample/0 patients)');
         });
         it('1 patient and 0 samples', () => {
-            assert.equal(
-                caseCountsInParens([], ['patient']),
-                '(0 samples/1 patient)'
-            );
+            assert.equal(caseCountsInParens([], ['patient']), '(0 samples/1 patient)');
         });
         it('0 patients and nonzero samples', () => {
-            assert.equal(
-                caseCountsInParens(['sample', 'sample'], []),
-                '(2 samples/0 patients)'
-            );
+            assert.equal(caseCountsInParens(['sample', 'sample'], []), '(2 samples/0 patients)');
         });
         it('0 samples and nonzero patients', () => {
             assert.equal(
@@ -949,10 +894,7 @@ describe('GroupComparisonUtils', () => {
         });
         it('nonzero nonequal patients and samples', () => {
             assert.equal(
-                caseCountsInParens(
-                    ['sampleA', 'sampleB', 'sampleC'],
-                    ['patientA', 'patientB']
-                ),
+                caseCountsInParens(['sampleA', 'sampleB', 'sampleC'], ['patientA', 'patientB']),
                 '(3 samples/2 patients)'
             );
         });
@@ -961,10 +903,7 @@ describe('GroupComparisonUtils', () => {
     describe('caseCounts', () => {
         it('0 patients and samples', () => {
             assert.equal(caseCounts(0, 0), '0 samples/patients');
-            assert.equal(
-                caseCounts(0, 0, '+', ' overlapping '),
-                '0 overlapping samples+patients'
-            );
+            assert.equal(caseCounts(0, 0, '+', ' overlapping '), '0 overlapping samples+patients');
         });
         it('1 patients and samples', () => {
             assert.equal(caseCounts(1, 1), '1 sample/patient');
@@ -1041,10 +980,9 @@ describe('GroupComparisonUtils', () => {
             assertDeepEqualInAnyOrder(getPatientIdentifiers([], sampleSet), []);
         });
         it('one sample', () => {
-            assertDeepEqualInAnyOrder(
-                getPatientIdentifiers([sampleIds[0]], sampleSet),
-                [{ patientId: 'patient1', studyId: 'study1' }]
-            );
+            assertDeepEqualInAnyOrder(getPatientIdentifiers([sampleIds[0]], sampleSet), [
+                { patientId: 'patient1', studyId: 'study1' },
+            ]);
         });
         it('multiple samples one patient one study', () => {
             assertDeepEqualInAnyOrder(
@@ -1059,10 +997,7 @@ describe('GroupComparisonUtils', () => {
         });
         it('multiple samples one per patient one study', () => {
             assertDeepEqualInAnyOrder(
-                getPatientIdentifiers(
-                    [sampleIds[3], sampleIds[4], sampleIds[5]],
-                    sampleSet
-                ),
+                getPatientIdentifiers([sampleIds[3], sampleIds[4], sampleIds[5]], sampleSet),
                 [
                     {
                         patientId: 'patient1',
@@ -1081,10 +1016,7 @@ describe('GroupComparisonUtils', () => {
         });
         it('multiple samples multiple per patient one study', () => {
             assertDeepEqualInAnyOrder(
-                getPatientIdentifiers(
-                    [sampleIds[0], sampleIds[1], sampleIds[2]],
-                    sampleSet
-                ),
+                getPatientIdentifiers([sampleIds[0], sampleIds[1], sampleIds[2]], sampleSet),
                 [
                     {
                         patientId: 'patient1',
@@ -1124,31 +1056,28 @@ describe('GroupComparisonUtils', () => {
             );
         });
         it('multiple samples multiple per patient multiple studies', () => {
-            assertDeepEqualInAnyOrder(
-                getPatientIdentifiers(sampleIds, sampleSet),
-                [
-                    {
-                        patientId: 'patient1',
-                        studyId: 'study1',
-                    },
-                    {
-                        patientId: 'patient2',
-                        studyId: 'study1',
-                    },
-                    {
-                        patientId: 'patient1',
-                        studyId: 'study2',
-                    },
-                    {
-                        patientId: 'patient2',
-                        studyId: 'study2',
-                    },
-                    {
-                        patientId: 'patient3',
-                        studyId: 'study2',
-                    },
-                ]
-            );
+            assertDeepEqualInAnyOrder(getPatientIdentifiers(sampleIds, sampleSet), [
+                {
+                    patientId: 'patient1',
+                    studyId: 'study1',
+                },
+                {
+                    patientId: 'patient2',
+                    studyId: 'study1',
+                },
+                {
+                    patientId: 'patient1',
+                    studyId: 'study2',
+                },
+                {
+                    patientId: 'patient2',
+                    studyId: 'study2',
+                },
+                {
+                    patientId: 'patient3',
+                    studyId: 'study2',
+                },
+            ]);
         });
     });
 
@@ -1474,12 +1403,7 @@ describe('GroupComparisonUtils', () => {
                             },
                             {
                                 id: 'study3',
-                                samples: [
-                                    'sample1',
-                                    'sample2',
-                                    'sample3',
-                                    'sample4',
-                                ],
+                                samples: ['sample1', 'sample2', 'sample3', 'sample4'],
                                 patients: [
                                     'patient1',
                                     'patient2',
@@ -1598,12 +1522,7 @@ describe('GroupComparisonUtils', () => {
                             },
                             {
                                 id: 'study3',
-                                samples: [
-                                    'sample1',
-                                    'sample2',
-                                    'sample3',
-                                    'sample4',
-                                ],
+                                samples: ['sample1', 'sample2', 'sample3', 'sample4'],
                                 patients: [
                                     'patient1',
                                     'patient2',
@@ -1628,12 +1547,7 @@ describe('GroupComparisonUtils', () => {
                             },
                             {
                                 id: 'study3',
-                                samples: [
-                                    'sample1',
-                                    'sample2',
-                                    'sample3',
-                                    'sample4',
-                                ],
+                                samples: ['sample1', 'sample2', 'sample3', 'sample4'],
                                 patients: [
                                     'patient1',
                                     'patient2',
@@ -1768,12 +1682,7 @@ describe('GroupComparisonUtils', () => {
                             },
                             {
                                 id: 'study3',
-                                samples: [
-                                    'sample1',
-                                    'sample2',
-                                    'sample3',
-                                    'sample4',
-                                ],
+                                samples: ['sample1', 'sample2', 'sample3', 'sample4'],
                                 patients: [
                                     'patient1',
                                     'patient2',
@@ -1892,18 +1801,8 @@ describe('GroupComparisonUtils', () => {
                             },
                             {
                                 id: 'study3',
-                                samples: [
-                                    'sample1',
-                                    'sample2',
-                                    'sample3',
-                                    'sample4',
-                                ],
-                                patients: [
-                                    'patient1',
-                                    'patient2',
-                                    'patient4',
-                                    'patient5',
-                                ],
+                                samples: ['sample1', 'sample2', 'sample3', 'sample4'],
+                                patients: ['patient1', 'patient2', 'patient4', 'patient5'],
                             },
                         ],
                     },
@@ -1921,18 +1820,8 @@ describe('GroupComparisonUtils', () => {
                             },
                             {
                                 id: 'study3',
-                                samples: [
-                                    'sample1',
-                                    'sample2',
-                                    'sample3',
-                                    'sample4',
-                                ],
-                                patients: [
-                                    'patient2',
-                                    'patient3',
-                                    'patient4',
-                                    'patient5',
-                                ],
+                                samples: ['sample1', 'sample2', 'sample3', 'sample4'],
+                                patients: ['patient2', 'patient3', 'patient4', 'patient5'],
                             },
                         ],
                     },
@@ -2345,21 +2234,9 @@ describe('GroupComparisonUtils', () => {
         it('gets quartiles of 1,2,3, and 4 values', () => {
             const vals = [0, 1, 2, 3].map(x => ({ value: x.toString() }));
             assert.deepEqual(splitData(vals.slice(0, 1), 4), [[vals[0]]]);
-            assert.deepEqual(splitData(vals.slice(0, 2), 4), [
-                [vals[0]],
-                [vals[1]],
-            ]);
-            assert.deepEqual(splitData(vals.slice(0, 3), 4), [
-                [vals[0]],
-                [vals[1]],
-                [vals[2]],
-            ]);
-            assert.deepEqual(splitData(vals, 4), [
-                [vals[0]],
-                [vals[1]],
-                [vals[2]],
-                [vals[3]],
-            ]);
+            assert.deepEqual(splitData(vals.slice(0, 2), 4), [[vals[0]], [vals[1]]]);
+            assert.deepEqual(splitData(vals.slice(0, 3), 4), [[vals[0]], [vals[1]], [vals[2]]]);
+            assert.deepEqual(splitData(vals, 4), [[vals[0]], [vals[1]], [vals[2]], [vals[3]]]);
         });
         it('gets quartiles of 12,13,14,15 values', () => {
             const vals = [];
@@ -2428,38 +2305,18 @@ describe('GroupComparisonUtils', () => {
         ];
         let patientToSamplesSet: ComplexKeyGroupsMap<Pick<Sample, 'sampleId'>>;
         before(() => {
-            patientToSamplesSet = new ComplexKeyGroupsMap<
-                Pick<Sample, 'sampleId'>
-            >();
+            patientToSamplesSet = new ComplexKeyGroupsMap<Pick<Sample, 'sampleId'>>();
             for (const studyId of ['study1', 'study2']) {
                 for (const patientId of ['1', '2', '3', '4', '5']) {
                     if (patientId === '1') {
-                        patientToSamplesSet.add(
-                            { patientId, studyId },
-                            { sampleId: '1.1' }
-                        );
-                        patientToSamplesSet.add(
-                            { patientId, studyId },
-                            { sampleId: '1.2' }
-                        );
-                        patientToSamplesSet.add(
-                            { patientId, studyId },
-                            { sampleId: '1.3' }
-                        );
+                        patientToSamplesSet.add({ patientId, studyId }, { sampleId: '1.1' });
+                        patientToSamplesSet.add({ patientId, studyId }, { sampleId: '1.2' });
+                        patientToSamplesSet.add({ patientId, studyId }, { sampleId: '1.3' });
                     } else if (patientId === '2') {
-                        patientToSamplesSet.add(
-                            { patientId, studyId },
-                            { sampleId: '2.1' }
-                        );
-                        patientToSamplesSet.add(
-                            { patientId, studyId },
-                            { sampleId: '2.2' }
-                        );
+                        patientToSamplesSet.add({ patientId, studyId }, { sampleId: '2.1' });
+                        patientToSamplesSet.add({ patientId, studyId }, { sampleId: '2.2' });
                     } else {
-                        patientToSamplesSet.add(
-                            { patientId, studyId },
-                            { sampleId: patientId }
-                        );
+                        patientToSamplesSet.add({ patientId, studyId }, { sampleId: patientId });
                     }
                 }
             }
@@ -2593,17 +2450,11 @@ describe('GroupComparisonUtils', () => {
             });
             it('empty intersection of nonempties', () => {
                 assertDeepEqualInAnyOrder(
-                    intersectSamples(
-                        [{ id: 's', samples: ['1', '2', '3'] }],
-                        []
-                    ),
+                    intersectSamples([{ id: 's', samples: ['1', '2', '3'] }], []),
                     []
                 );
                 assertDeepEqualInAnyOrder(
-                    intersectSamples(
-                        [],
-                        [{ id: 's', samples: ['1', '2', '3'] }]
-                    ),
+                    intersectSamples([], [{ id: 's', samples: ['1', '2', '3'] }]),
                     []
                 );
             });
@@ -2620,30 +2471,24 @@ describe('GroupComparisonUtils', () => {
                 );
             });
             it('nonempty intersection of nonempties - one study nonempty', () => {
-                assertDeepEqualInAnyOrder(
-                    intersectSamples(groups[0].studies, groups[2].studies),
-                    [
-                        {
-                            id: 'study1',
-                            samples: ['1', '3'],
-                        },
-                    ]
-                );
+                assertDeepEqualInAnyOrder(intersectSamples(groups[0].studies, groups[2].studies), [
+                    {
+                        id: 'study1',
+                        samples: ['1', '3'],
+                    },
+                ]);
             });
             it('nonempty intersection of nonempties - some studies nonempty', () => {
-                assertDeepEqualInAnyOrder(
-                    intersectSamples(groups[0].studies, groups[1].studies),
-                    [
-                        {
-                            id: 'study1',
-                            samples: ['2'],
-                        },
-                        {
-                            id: 'study2',
-                            samples: ['1'],
-                        },
-                    ]
-                );
+                assertDeepEqualInAnyOrder(intersectSamples(groups[0].studies, groups[1].studies), [
+                    {
+                        id: 'study1',
+                        samples: ['2'],
+                    },
+                    {
+                        id: 'study2',
+                        samples: ['1'],
+                    },
+                ]);
             });
         });
         describe('excludeSamples', () => {
@@ -2659,51 +2504,33 @@ describe('GroupComparisonUtils', () => {
                 );
             });
             it('empty exclusion of nonempties', () => {
-                assertDeepEqualInAnyOrder(
-                    excludeSamples(groups[0].studies, groups[0].studies),
-                    []
-                );
-                assertDeepEqualInAnyOrder(
-                    excludeSamples(groups[3].studies, groups[0].studies),
-                    []
-                );
+                assertDeepEqualInAnyOrder(excludeSamples(groups[0].studies, groups[0].studies), []);
+                assertDeepEqualInAnyOrder(excludeSamples(groups[3].studies, groups[0].studies), []);
             });
             it('nonempty exclusion of nonempties', () => {
-                assertDeepEqualInAnyOrder(
-                    excludeSamples(groups[0].studies, groups[3].studies),
-                    [
-                        {
-                            id: 'study2',
-                            samples: ['1', '2'],
-                        },
-                    ]
-                );
-                assertDeepEqualInAnyOrder(
-                    excludeSamples(groups[0].studies, groups[1].studies),
-                    [
-                        {
-                            id: 'study1',
-                            samples: ['1', '3'],
-                        },
-                        {
-                            id: 'study2',
-                            samples: ['2'],
-                        },
-                    ]
-                );
+                assertDeepEqualInAnyOrder(excludeSamples(groups[0].studies, groups[3].studies), [
+                    {
+                        id: 'study2',
+                        samples: ['1', '2'],
+                    },
+                ]);
+                assertDeepEqualInAnyOrder(excludeSamples(groups[0].studies, groups[1].studies), [
+                    {
+                        id: 'study1',
+                        samples: ['1', '3'],
+                    },
+                    {
+                        id: 'study2',
+                        samples: ['2'],
+                    },
+                ]);
             });
         });
         describe('unionSamples', () => {
             it('unions involving empties', () => {
                 assertDeepEqualInAnyOrder(unionSamples([], []), []);
-                assertDeepEqualInAnyOrder(
-                    unionSamples(groups[0].studies, []),
-                    groups[0].studies
-                );
-                assertDeepEqualInAnyOrder(
-                    unionSamples([], groups[0].studies),
-                    groups[0].studies
-                );
+                assertDeepEqualInAnyOrder(unionSamples(groups[0].studies, []), groups[0].studies);
+                assertDeepEqualInAnyOrder(unionSamples([], groups[0].studies), groups[0].studies);
             });
             it('union with self is self', () => {
                 assertDeepEqualInAnyOrder(
@@ -2718,33 +2545,27 @@ describe('GroupComparisonUtils', () => {
                 );
             });
             it('unions of nonempties', () => {
-                assertDeepEqualInAnyOrder(
-                    unionSamples(groups[0].studies, groups[1].studies),
-                    [
-                        {
-                            id: 'study1',
-                            samples: ['1', '2', '3'],
-                        },
-                        {
-                            id: 'study2',
-                            samples: ['1', '2'],
-                        },
-                        {
-                            id: 'study3',
-                            samples: ['1', '2', '3', '4'],
-                        },
-                    ]
-                );
+                assertDeepEqualInAnyOrder(unionSamples(groups[0].studies, groups[1].studies), [
+                    {
+                        id: 'study1',
+                        samples: ['1', '2', '3'],
+                    },
+                    {
+                        id: 'study2',
+                        samples: ['1', '2'],
+                    },
+                    {
+                        id: 'study3',
+                        samples: ['1', '2', '3', '4'],
+                    },
+                ]);
 
-                assertDeepEqualInAnyOrder(
-                    unionSamples(groups[2].studies, groups[3].studies),
-                    [
-                        {
-                            id: 'study1',
-                            samples: ['1', '2', '3', '4'],
-                        },
-                    ]
-                );
+                assertDeepEqualInAnyOrder(unionSamples(groups[2].studies, groups[3].studies), [
+                    {
+                        id: 'study1',
+                        samples: ['1', '2', '3', '4'],
+                    },
+                ]);
             });
         });
     });
@@ -2806,17 +2627,11 @@ describe('GroupComparisonUtils', () => {
             });
             it('empty intersection of nonempties', () => {
                 assertDeepEqualInAnyOrder(
-                    intersectPatients(
-                        [{ id: 's', patients: ['1', '2', '3'] }],
-                        []
-                    ),
+                    intersectPatients([{ id: 's', patients: ['1', '2', '3'] }], []),
                     []
                 );
                 assertDeepEqualInAnyOrder(
-                    intersectPatients(
-                        [],
-                        [{ id: 's', patients: ['1', '2', '3'] }]
-                    ),
+                    intersectPatients([], [{ id: 's', patients: ['1', '2', '3'] }]),
                     []
                 );
             });
@@ -2833,47 +2648,35 @@ describe('GroupComparisonUtils', () => {
                 );
             });
             it('nonempty intersection of nonempties - one study nonempty', () => {
-                assertDeepEqualInAnyOrder(
-                    intersectPatients(groups[0].studies, groups[2].studies),
-                    [
-                        {
-                            id: 'study1',
-                            patients: ['1', '3'],
-                        },
-                    ]
-                );
+                assertDeepEqualInAnyOrder(intersectPatients(groups[0].studies, groups[2].studies), [
+                    {
+                        id: 'study1',
+                        patients: ['1', '3'],
+                    },
+                ]);
             });
             it('nonempty intersection of nonempties - some studies nonempty', () => {
-                assertDeepEqualInAnyOrder(
-                    intersectPatients(groups[0].studies, groups[1].studies),
-                    [
-                        {
-                            id: 'study1',
-                            patients: ['2'],
-                        },
-                        {
-                            id: 'study2',
-                            patients: ['1'],
-                        },
-                    ]
-                );
+                assertDeepEqualInAnyOrder(intersectPatients(groups[0].studies, groups[1].studies), [
+                    {
+                        id: 'study1',
+                        patients: ['2'],
+                    },
+                    {
+                        id: 'study2',
+                        patients: ['1'],
+                    },
+                ]);
             });
         });
         describe('excludePatients', () => {
             it('exclusion involving empties', () => {
                 assertDeepEqualInAnyOrder(excludePatients([], []), []);
                 assertDeepEqualInAnyOrder(
-                    excludePatients(
-                        [{ id: 's', patients: ['1', '2', '3'] }],
-                        []
-                    ),
+                    excludePatients([{ id: 's', patients: ['1', '2', '3'] }], []),
                     [{ id: 's', patients: ['1', '2', '3'] }]
                 );
                 assertDeepEqualInAnyOrder(
-                    excludePatients(
-                        [],
-                        [{ id: 's', patients: ['1', '2', '3'] }]
-                    ),
+                    excludePatients([], [{ id: 's', patients: ['1', '2', '3'] }]),
                     []
                 );
             });
@@ -2888,41 +2691,29 @@ describe('GroupComparisonUtils', () => {
                 );
             });
             it('nonempty exclusion of nonempties', () => {
-                assertDeepEqualInAnyOrder(
-                    excludePatients(groups[0].studies, groups[3].studies),
-                    [
-                        {
-                            id: 'study2',
-                            patients: ['1', '2'],
-                        },
-                    ]
-                );
-                assertDeepEqualInAnyOrder(
-                    excludePatients(groups[0].studies, groups[1].studies),
-                    [
-                        {
-                            id: 'study1',
-                            patients: ['1', '3'],
-                        },
-                        {
-                            id: 'study2',
-                            patients: ['2'],
-                        },
-                    ]
-                );
+                assertDeepEqualInAnyOrder(excludePatients(groups[0].studies, groups[3].studies), [
+                    {
+                        id: 'study2',
+                        patients: ['1', '2'],
+                    },
+                ]);
+                assertDeepEqualInAnyOrder(excludePatients(groups[0].studies, groups[1].studies), [
+                    {
+                        id: 'study1',
+                        patients: ['1', '3'],
+                    },
+                    {
+                        id: 'study2',
+                        patients: ['2'],
+                    },
+                ]);
             });
         });
         describe('unionPatients', () => {
             it('unions involving empties', () => {
                 assertDeepEqualInAnyOrder(unionPatients([], []), []);
-                assertDeepEqualInAnyOrder(
-                    unionPatients(groups[0].studies, []),
-                    groups[0].studies
-                );
-                assertDeepEqualInAnyOrder(
-                    unionPatients([], groups[0].studies),
-                    groups[0].studies
-                );
+                assertDeepEqualInAnyOrder(unionPatients(groups[0].studies, []), groups[0].studies);
+                assertDeepEqualInAnyOrder(unionPatients([], groups[0].studies), groups[0].studies);
             });
             it('union with self is self', () => {
                 assertDeepEqualInAnyOrder(
@@ -2937,33 +2728,27 @@ describe('GroupComparisonUtils', () => {
                 );
             });
             it('unions of nonempties', () => {
-                assertDeepEqualInAnyOrder(
-                    unionPatients(groups[0].studies, groups[1].studies),
-                    [
-                        {
-                            id: 'study1',
-                            patients: ['1', '2', '3'],
-                        },
-                        {
-                            id: 'study2',
-                            patients: ['1', '2'],
-                        },
-                        {
-                            id: 'study3',
-                            patients: ['1', '2', '3', '4'],
-                        },
-                    ]
-                );
+                assertDeepEqualInAnyOrder(unionPatients(groups[0].studies, groups[1].studies), [
+                    {
+                        id: 'study1',
+                        patients: ['1', '2', '3'],
+                    },
+                    {
+                        id: 'study2',
+                        patients: ['1', '2'],
+                    },
+                    {
+                        id: 'study3',
+                        patients: ['1', '2', '3', '4'],
+                    },
+                ]);
 
-                assertDeepEqualInAnyOrder(
-                    unionPatients(groups[2].studies, groups[3].studies),
-                    [
-                        {
-                            id: 'study1',
-                            patients: ['1', '2', '3', '4'],
-                        },
-                    ]
-                );
+                assertDeepEqualInAnyOrder(unionPatients(groups[2].studies, groups[3].studies), [
+                    {
+                        id: 'study1',
+                        patients: ['1', '2', '3', '4'],
+                    },
+                ]);
             });
         });
     });
@@ -3034,34 +2819,24 @@ describe('GroupComparisonUtils', () => {
         ];
         it('partitions empty list properly', () => {
             assertDeepEqualInAnyOrder(
-                partitionCasesByGroupMembership(
-                    groups,
-                    getCaseIdentifiers,
-                    getUniqueCaseKey,
-                    []
-                ),
+                partitionCasesByGroupMembership(groups, getCaseIdentifiers, getUniqueCaseKey, []),
                 []
             );
         });
         it('partitions a list of cases properly', () => {
             assertDeepEqualInAnyOrder(
-                partitionCasesByGroupMembership(
-                    groups,
-                    getCaseIdentifiers,
-                    getUniqueCaseKey,
-                    [
-                        'study1+1',
-                        'study1+2',
-                        'study1+3',
-                        'study1+4',
-                        'study2+1',
-                        'study2+2',
-                        'study3+1',
-                        'study3+2',
-                        'study3+3',
-                        'study3+4',
-                    ]
-                ),
+                partitionCasesByGroupMembership(groups, getCaseIdentifiers, getUniqueCaseKey, [
+                    'study1+1',
+                    'study1+2',
+                    'study1+3',
+                    'study1+4',
+                    'study2+1',
+                    'study2+2',
+                    'study3+1',
+                    'study3+2',
+                    'study3+3',
+                    'study3+4',
+                ]),
                 [
                     {
                         key: {

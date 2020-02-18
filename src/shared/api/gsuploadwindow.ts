@@ -30,29 +30,19 @@ export function gsUploadByGet(config: {
     else {
         newWin.focus();
         if (config['successCallback'] != null)
-            (newWin as any).setCallbackOnGSUploadComplete =
-                config['successCallback'];
+            (newWin as any).setCallbackOnGSUploadComplete = config['successCallback'];
 
         if (config['errorCallback'] != null)
-            (newWin as any).setCallbackOnGSUploadError =
-                config['errorCallback'];
+            (newWin as any).setCallbackOnGSUploadError = config['errorCallback'];
     }
 }
 
-export function gsLocationByGet(config: {
-    successCallback: Callback;
-    errorCallback?: Callback;
-}) {
+export function gsLocationByGet(config: { successCallback: Callback; errorCallback?: Callback }) {
     // expect an object with url, filename (optional), successCallback, errorCallback (optional)
 
-    let gsUploadUrl =
-        jsuiRoot + '/upload/loadUrlToGenomespace.html?getLocation=true';
+    let gsUploadUrl = jsuiRoot + '/upload/loadUrlToGenomespace.html?getLocation=true';
 
-    let newWin = window.open(
-        gsUploadUrl,
-        'GenomeSpace Upload',
-        'height=360px,width=600px'
-    );
+    let newWin = window.open(gsUploadUrl, 'GenomeSpace Upload', 'height=360px,width=600px');
 
     let successCallback = config['successCallback'];
     window.addEventListener(
@@ -71,27 +61,17 @@ export function gsLocationByGet(config: {
         (newWin as any).setCallbackOnGSUploadError = config['errorCallback'];
 }
 
-export function gsSelectFileByGet(config: {
-    successCallback: Callback;
-    errorCallback?: Callback;
-}) {
+export function gsSelectFileByGet(config: { successCallback: Callback; errorCallback?: Callback }) {
     // expect an object with url, filename (optional), successCallback, errorCallback (optional)
-    let gsUploadUrl =
-        jsuiRoot + '/upload/loadUrlToGenomespace.html?getFile=true';
-    let newWin = window.open(
-        gsUploadUrl,
-        'GenomeSpace Upload',
-        'height=340px,width=550px'
-    );
+    let gsUploadUrl = jsuiRoot + '/upload/loadUrlToGenomespace.html?getFile=true';
+    let newWin = window.open(gsUploadUrl, 'GenomeSpace Upload', 'height=340px,width=550px');
     if (newWin) {
         newWin.focus();
 
-        (newWin as any).setCallbackOnGSLocationComplete =
-            config['successCallback'];
+        (newWin as any).setCallbackOnGSLocationComplete = config['successCallback'];
 
         if (config['errorCallback'] != null)
-            (newWin as any).setCallbackOnGSUploadError =
-                config['errorCallback'];
+            (newWin as any).setCallbackOnGSUploadError = config['errorCallback'];
     }
 }
 
@@ -130,8 +110,6 @@ export async function gsUploadByPost(formData: any) {
 
     let req = request
         .agent()
-        .post(params.url, (err, res) =>
-            err ? params.error(err) : params.success(res)
-        )
+        .post(params.url, (err, res) => (err ? params.error(err) : params.success(res)))
         .send(params.data);
 }

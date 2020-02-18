@@ -1,16 +1,10 @@
 import * as React from 'react';
 import styles from './studySummaryTabStyles.module.scss';
 import chartHeaderStyles from '../chartHeader/styles.module.scss';
-import {
-    ChartContainer,
-    IChartContainerProps,
-} from 'pages/studyView/charts/ChartContainer';
+import { ChartContainer, IChartContainerProps } from 'pages/studyView/charts/ChartContainer';
 import { observable } from 'mobx';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
-import {
-    ClinicalDataFilterValue,
-    DataBin,
-} from 'shared/api/generated/CBioPortalAPIInternal';
+import { ClinicalDataFilterValue, DataBin } from 'shared/api/generated/CBioPortalAPIInternal';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ReactGridLayout from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
@@ -33,10 +27,7 @@ export interface IStudySummaryTabProps {
 // there is a change to any observable value which is referenced in its render method.
 // Even if this value is referenced deep within some helper method
 @observer
-export class StudySummaryTab extends React.Component<
-    IStudySummaryTabProps,
-    {}
-> {
+export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> {
     private store: StudyViewPageStore;
     private handlers: any;
 
@@ -54,24 +45,15 @@ export class StudySummaryTab extends React.Component<
                 );
             },
             onDataBinSelection: (chartMeta: ChartMeta, dataBins: DataBin[]) => {
-                this.store.updateClinicalDataIntervalFilters(
-                    chartMeta.uniqueKey,
-                    dataBins
-                );
+                this.store.updateClinicalDataIntervalFilters(chartMeta.uniqueKey, dataBins);
             },
             onToggleLogScale: (chartMeta: ChartMeta) => {
                 this.store.toggleLogScale(chartMeta.uniqueKey);
             },
             onDeleteChart: (chartMeta: ChartMeta) => {
-                this.store.resetFilterAndChangeChartVisibility(
-                    chartMeta,
-                    false
-                );
+                this.store.resetFilterAndChangeChartVisibility(chartMeta, false);
             },
-            onChangeChartType: (
-                chartMeta: ChartMeta,
-                newChartType: ChartType
-            ) => {
+            onChangeChartType: (chartMeta: ChartMeta, newChartType: ChartType) => {
                 this.store.changeChartType(chartMeta, newChartType);
             },
             isNewlyAdded: (uniqueKey: string) => {
@@ -103,8 +85,7 @@ export class StudySummaryTab extends React.Component<
             studyViewFilters: this.store.filters,
             analysisGroupsSettings: this.store.analysisGroupsSettings,
             cancerGeneFilterEnabled: this.store.oncokbCancerGeneFilterEnabled,
-            setComparisonConfirmationModal: this.store
-                .setComparisonConfirmationModal,
+            setComparisonConfirmationModal: this.store.setComparisonConfirmationModal,
         };
 
         const {
@@ -121,41 +102,27 @@ export class StudySummaryTab extends React.Component<
             case PIE_CHART: {
                 //if the chart is one of the custom charts then get the appropriate promise
                 if (this.store.isCustomChart(chartMeta.uniqueKey)) {
-                    props.filters = this.store.getCustomChartFilters(
-                        props.chartMeta!.uniqueKey
-                    );
+                    props.filters = this.store.getCustomChartFilters(props.chartMeta!.uniqueKey);
                     props.onValueSelection = this.handlers.setCustomChartFilters;
                     props.onResetSelection = this.handlers.setCustomChartFilters;
-                    props.promise = this.store.getCustomChartDataCount(
-                        chartMeta
-                    );
+                    props.promise = this.store.getCustomChartDataCount(chartMeta);
                 } else {
                     props.promise = this.store.getClinicalDataCount(chartMeta);
                     props.filters = this.store
                         .getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey)
-                        .map(
-                            clinicalDataFilterValue =>
-                                clinicalDataFilterValue.value
-                        );
+                        .map(clinicalDataFilterValue => clinicalDataFilterValue.value);
                     props.onValueSelection = this.handlers.onValueSelection;
                     props.onResetSelection = this.handlers.onValueSelection;
                 }
                 props.onChangeChartType = this.handlers.onChangeChartType;
                 props.getData = (dataType?: DataType) =>
                     this.store.getPieChartDataDownload(chartMeta, dataType);
-                props.downloadTypes = [
-                    'Summary Data',
-                    'Full Data',
-                    'SVG',
-                    'PDF',
-                ];
+                props.downloadTypes = ['Summary Data', 'Full Data', 'SVG', 'PDF'];
                 break;
             }
             case BAR_CHART: {
                 props.promise = this.store.getClinicalDataBin(chartMeta);
-                props.filters = this.store.getClinicalDataFiltersByUniqueKey(
-                    chartMeta.uniqueKey
-                );
+                props.filters = this.store.getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey);
                 props.onDataBinSelection = this.handlers.onDataBinSelection;
                 props.onResetSelection = this.handlers.onDataBinSelection;
                 props.onToggleLogScale = this.handlers.onToggleLogScale;
@@ -163,30 +130,21 @@ export class StudySummaryTab extends React.Component<
                     chartMeta.uniqueKey,
                     props.promise!.result
                 );
-                props.logScaleChecked = this.store.isLogScaleChecked(
-                    chartMeta.uniqueKey
-                );
+                props.logScaleChecked = this.store.isLogScaleChecked(chartMeta.uniqueKey);
                 props.getData = () => this.store.getClinicalData(chartMeta);
                 props.downloadTypes = ['Data', 'SVG', 'PDF'];
                 break;
             }
             case TABLE: {
                 if (this.store.isCustomChart(chartMeta.uniqueKey)) {
-                    props.filters = this.store.getCustomChartFilters(
-                        props.chartMeta!.uniqueKey
-                    );
+                    props.filters = this.store.getCustomChartFilters(props.chartMeta!.uniqueKey);
                     props.onValueSelection = this.handlers.setCustomChartFilters;
                     props.onResetSelection = this.handlers.setCustomChartFilters;
-                    props.promise = this.store.getCustomChartDataCount(
-                        chartMeta
-                    );
+                    props.promise = this.store.getCustomChartDataCount(chartMeta);
                 } else {
                     props.filters = this.store
                         .getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey)
-                        .map(
-                            clinicalDataFilterValue =>
-                                clinicalDataFilterValue.value
-                        );
+                        .map(clinicalDataFilterValue => clinicalDataFilterValue.value);
                     props.promise = this.store.getClinicalDataCount(chartMeta);
                     props.onValueSelection = this.handlers.onValueSelection;
                     props.onResetSelection = this.handlers.onValueSelection;
@@ -197,13 +155,10 @@ export class StudySummaryTab extends React.Component<
                 break;
             }
             case MUTATED_GENES_TABLE: {
-                props.filters = this.store.getGeneFiltersByUniqueKey(
-                    chartMeta.uniqueKey
-                );
+                props.filters = this.store.getGeneFiltersByUniqueKey(chartMeta.uniqueKey);
                 props.promise = this.store.mutatedGeneTableRowData;
                 props.onValueSelection = this.store.addGeneFilters;
-                props.onResetSelection = () =>
-                    this.store.resetGeneFilter(chartMeta.uniqueKey);
+                props.onResetSelection = () => this.store.resetGeneFilter(chartMeta.uniqueKey);
                 props.selectedGenes = this.store.selectedGenes;
                 props.onGeneSelect = this.store.onCheckGene;
                 (props.title =
@@ -212,8 +167,7 @@ export class StudySummaryTab extends React.Component<
                     this.store.molecularProfileSampleCounts.result === undefined
                         ? ''
                         : ` (${this.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples} profiled samples)`)),
-                    (props.getData = () =>
-                        this.store.getMutatedGenesDownloadData());
+                    (props.getData = () => this.store.getMutatedGenesDownloadData());
                 props.genePanelCache = this.store.genePanelCache;
                 props.downloadTypes = ['Data'];
                 props.filterByCancerGenes = this.store.filterMutatedGenesTableByCancerGenes;
@@ -221,13 +175,10 @@ export class StudySummaryTab extends React.Component<
                 break;
             }
             case FUSION_GENES_TABLE: {
-                props.filters = this.store.getGeneFiltersByUniqueKey(
-                    chartMeta.uniqueKey
-                );
+                props.filters = this.store.getGeneFiltersByUniqueKey(chartMeta.uniqueKey);
                 props.promise = this.store.fusionGeneTableRowData;
                 props.onValueSelection = this.store.addGeneFilters;
-                props.onResetSelection = () =>
-                    this.store.resetGeneFilter(chartMeta.uniqueKey);
+                props.onResetSelection = () => this.store.resetGeneFilter(chartMeta.uniqueKey);
                 props.selectedGenes = this.store.selectedGenes;
                 props.onGeneSelect = this.store.onCheckGene;
                 (props.title =
@@ -236,8 +187,7 @@ export class StudySummaryTab extends React.Component<
                     this.store.molecularProfileSampleCounts.result === undefined
                         ? ''
                         : ` (${this.store.molecularProfileSampleCounts.result.numberOfFusionProfiledSamples} profiled samples)`)),
-                    (props.getData = () =>
-                        this.store.getFusionGenesDownloadData());
+                    (props.getData = () => this.store.getFusionGenesDownloadData());
                 props.genePanelCache = this.store.genePanelCache;
                 props.downloadTypes = ['Data'];
                 props.filterByCancerGenes = this.store.filterFusionGenesTableByCancerGenes;
@@ -245,13 +195,10 @@ export class StudySummaryTab extends React.Component<
                 break;
             }
             case CNA_GENES_TABLE: {
-                props.filters = this.store.getGeneFiltersByUniqueKey(
-                    chartMeta.uniqueKey
-                );
+                props.filters = this.store.getGeneFiltersByUniqueKey(chartMeta.uniqueKey);
                 props.promise = this.store.cnaGeneTableRowData;
                 props.onValueSelection = this.store.addGeneFilters;
-                props.onResetSelection = () =>
-                    this.store.resetGeneFilter(chartMeta.uniqueKey);
+                props.onResetSelection = () => this.store.resetGeneFilter(chartMeta.uniqueKey);
                 props.selectedGenes = this.store.selectedGenes;
                 props.onGeneSelect = this.store.onCheckGene;
                 (props.title =
@@ -260,8 +207,7 @@ export class StudySummaryTab extends React.Component<
                     this.store.molecularProfileSampleCounts.result === undefined
                         ? ''
                         : ` (${this.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples} profiled samples)`)),
-                    (props.getData = () =>
-                        this.store.getGenesCNADownloadData());
+                    (props.getData = () => this.store.getGenesCNADownloadData());
                 props.genePanelCache = this.store.genePanelCache;
                 props.downloadTypes = ['Data'];
                 props.filterByCancerGenes = this.store.filterCNAGenesTableByCancerGenes;
@@ -270,8 +216,7 @@ export class StudySummaryTab extends React.Component<
             }
             case SURVIVAL: {
                 props.promise = this.store.survivalPlotData;
-                props.getData = () =>
-                    this.store.getSurvivalDownloadData(chartMeta);
+                props.getData = () => this.store.getSurvivalDownloadData(chartMeta);
                 props.patientToAnalysisGroup = this.store.patientToAnalysisGroup;
                 props.downloadTypes = ['Data', 'SVG', 'PDF'];
                 break;
@@ -282,15 +227,10 @@ export class StudySummaryTab extends React.Component<
                 );
                 props.promise = this.store.mutationCountVsCNADensityData;
                 props.onValueSelection = (bounds: RectangleBounds) => {
-                    this.store.updateScatterPlotFilterByValues(
-                        props.chartMeta!,
-                        bounds
-                    );
+                    this.store.updateScatterPlotFilterByValues(props.chartMeta!, bounds);
                 };
                 props.onResetSelection = () => {
-                    this.store.updateScatterPlotFilterByValues(
-                        props.chartMeta!
-                    );
+                    this.store.updateScatterPlotFilterByValues(props.chartMeta!);
                 };
                 props.sampleToAnalysisGroup = this.store.sampleToAnalysisGroup;
                 props.getData = () => this.store.getScatterDownloadData();
@@ -343,15 +283,13 @@ export class StudySummaryTab extends React.Component<
     }
 
     render() {
-        const numberOfMutationProfiledSamples: number | undefined = this.props
-            .store.molecularProfileSampleCounts.isComplete
-            ? this.props.store.molecularProfileSampleCounts.result
-                  .numberOfMutationProfiledSamples
+        const numberOfMutationProfiledSamples: number | undefined = this.props.store
+            .molecularProfileSampleCounts.isComplete
+            ? this.props.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples
             : undefined;
         const numberOfCNAProfiledSamples: number | undefined = this.props.store
             .molecularProfileSampleCounts.isComplete
-            ? this.props.store.molecularProfileSampleCounts.result
-                  .numberOfCNAProfiledSamples
+            ? this.props.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples
             : undefined;
         return (
             <div>
@@ -361,45 +299,29 @@ export class StudySummaryTab extends React.Component<
 
                         <LoadingIndicator
                             isLoading={
-                                this.props.store.molecularProfileSampleCounts
-                                    .isPending ||
-                                this.props.store.molecularProfileSampleCounts
-                                    .isPending
+                                this.props.store.molecularProfileSampleCounts.isPending ||
+                                this.props.store.molecularProfileSampleCounts.isPending
                             }
                         />
 
-                        {this.props.store.mutationProfiles.result.length >
-                            0 && (
+                        {this.props.store.mutationProfiles.result.length > 0 && (
                             <div data-test="with-mutation-data">
-                                {this.props.store.molecularProfileSampleCounts
-                                    .isComplete && (
+                                {this.props.store.molecularProfileSampleCounts.isComplete && (
                                     <LabeledCheckbox
                                         inputProps={{
-                                            className:
-                                                styles.selectedInfoCheckbox,
+                                            className: styles.selectedInfoCheckbox,
                                         }}
-                                        checked={
-                                            !!this.props.store.filters
-                                                .withMutationData
-                                        }
-                                        onChange={
-                                            this.props.store
-                                                .toggleWithMutationDataFilter
-                                        }
+                                        checked={!!this.props.store.filters.withMutationData}
+                                        onChange={this.props.store.toggleWithMutationDataFilter}
                                         disabled={
-                                            this.props.store
-                                                .molecularProfileSampleCounts
-                                                .result
-                                                .numberOfMutationProfiledSamples ===
-                                            undefined
+                                            this.props.store.molecularProfileSampleCounts.result
+                                                .numberOfMutationProfiledSamples === undefined
                                         }
                                     >
-                                        {numberOfMutationProfiledSamples ===
-                                        undefined
+                                        {numberOfMutationProfiledSamples === undefined
                                             ? '0 samples'
                                             : numberOfMutationProfiledSamples.toLocaleString() +
-                                              (numberOfMutationProfiledSamples ===
-                                              1
+                                              (numberOfMutationProfiledSamples === 1
                                                   ? ' sample'
                                                   : ' samples')}{' '}
                                         with mutation data
@@ -410,31 +332,19 @@ export class StudySummaryTab extends React.Component<
 
                         {this.props.store.cnaProfiles.result.length > 0 && (
                             <div data-test="with-cna-data">
-                                {this.props.store.molecularProfileSampleCounts
-                                    .isComplete && (
+                                {this.props.store.molecularProfileSampleCounts.isComplete && (
                                     <LabeledCheckbox
                                         inputProps={{
-                                            className:
-                                                styles.selectedInfoCheckbox,
+                                            className: styles.selectedInfoCheckbox,
                                         }}
-                                        checked={
-                                            !!this.props.store.filters
-                                                .withCNAData
-                                        }
-                                        onChange={
-                                            this.props.store
-                                                .toggleWithCNADataFilter
-                                        }
+                                        checked={!!this.props.store.filters.withCNAData}
+                                        onChange={this.props.store.toggleWithCNADataFilter}
                                         disabled={
-                                            this.props.store
-                                                .molecularProfileSampleCounts
-                                                .result
-                                                .numberOfCNAProfiledSamples ===
-                                            undefined
+                                            this.props.store.molecularProfileSampleCounts.result
+                                                .numberOfCNAProfiledSamples === undefined
                                         }
                                     >
-                                        {numberOfCNAProfiledSamples ===
-                                        undefined
+                                        {numberOfCNAProfiledSamples === undefined
                                             ? '0 samples'
                                             : numberOfCNAProfiledSamples.toLocaleString() +
                                               (numberOfCNAProfiledSamples === 1
@@ -460,43 +370,34 @@ export class StudySummaryTab extends React.Component<
                     />
                 </LoadingIndicator>
 
-                {this.store.invalidSampleIds.result.length > 0 &&
-                    this.showErrorMessage && (
-                        <div>
-                            <div className="alert alert-danger">
-                                <button
-                                    type="button"
-                                    className="close"
-                                    onClick={event =>
-                                        (this.showErrorMessage = false)
-                                    }
-                                >
-                                    &times;
-                                </button>
-                                The following sample(s) might have been
-                                deleted/updated with the recent data updates
-                                <br />
-                                <ul
-                                    style={{
-                                        listStyle: 'none',
-                                        padding: '10px',
-                                        maxHeight: '300px',
-                                        overflowY: 'scroll',
-                                    }}
-                                >
-                                    {this.store.invalidSampleIds.result.map(
-                                        sample => (
-                                            <li>
-                                                {sample.studyId +
-                                                    ':' +
-                                                    sample.sampleId}
-                                            </li>
-                                        )
-                                    )}
-                                </ul>
-                            </div>
+                {this.store.invalidSampleIds.result.length > 0 && this.showErrorMessage && (
+                    <div>
+                        <div className="alert alert-danger">
+                            <button
+                                type="button"
+                                className="close"
+                                onClick={event => (this.showErrorMessage = false)}
+                            >
+                                &times;
+                            </button>
+                            The following sample(s) might have been deleted/updated with the recent
+                            data updates
+                            <br />
+                            <ul
+                                style={{
+                                    listStyle: 'none',
+                                    padding: '10px',
+                                    maxHeight: '300px',
+                                    overflowY: 'scroll',
+                                }}
+                            >
+                                {this.store.invalidSampleIds.result.map(sample => (
+                                    <li>{sample.studyId + ':' + sample.sampleId}</li>
+                                ))}
+                            </ul>
                         </div>
-                    )}
+                    </div>
+                )}
                 {this.store.showSettingRestoreMsg && (
                     <div>
                         <div className="alert alert-info">
@@ -509,8 +410,7 @@ export class StudySummaryTab extends React.Component<
                             >
                                 &times;
                             </button>
-                            Your previously saved layout preferences have been
-                            applied.
+                            Your previously saved layout preferences have been applied.
                             <button
                                 className="btn btn-primary btn-sm"
                                 onClick={() => {
@@ -542,30 +442,18 @@ export class StudySummaryTab extends React.Component<
                                     className="layout"
                                     style={{ width: this.store.containerWidth }}
                                     width={this.store.containerWidth}
-                                    cols={
-                                        this.store.studyViewPageLayoutProps.cols
-                                    }
-                                    rowHeight={
-                                        this.store.studyViewPageLayoutProps.grid
-                                            .h
-                                    }
-                                    layout={
-                                        this.store.studyViewPageLayoutProps
-                                            .layout
-                                    }
+                                    cols={this.store.studyViewPageLayoutProps.cols}
+                                    rowHeight={this.store.studyViewPageLayoutProps.grid.h}
+                                    layout={this.store.studyViewPageLayoutProps.layout}
                                     margin={[
                                         STUDY_VIEW_CONFIG.layout.gridMargin.x,
                                         STUDY_VIEW_CONFIG.layout.gridMargin.y,
                                     ]}
                                     useCSSTransforms={false}
                                     draggableHandle={`.${chartHeaderStyles.draggable}`}
-                                    onLayoutChange={
-                                        this.handlers.onLayoutChange
-                                    }
+                                    onLayoutChange={this.handlers.onLayoutChange}
                                 >
-                                    {this.store.visibleAttributes.map(
-                                        this.renderAttributeChart
-                                    )}
+                                    {this.store.visibleAttributes.map(this.renderAttributeChart)}
                                 </ReactGridLayout>
                             )}
                         </div>

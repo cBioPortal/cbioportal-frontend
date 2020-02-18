@@ -1,19 +1,13 @@
-import {
-    getTextWidth,
-    longestCommonStartingSubstring,
-} from 'cbioportal-frontend-commons';
+import { getTextWidth, longestCommonStartingSubstring } from 'cbioportal-frontend-commons';
 
 import { LollipopSpec } from '../model/LollipopSpec';
 import { Mutation } from '../model/Mutation';
 import { countMutationsByProteinChange } from './MutationUtils';
 
-export function lollipopLabelText(
-    mutationsAtPosition: Mutation[],
-    size?: number
-): string {
-    const mutationCountsByProteinChange = countMutationsByProteinChange(
-        mutationsAtPosition
-    ).filter(c => c.proteinChange !== undefined);
+export function lollipopLabelText(mutationsAtPosition: Mutation[], size?: number): string {
+    const mutationCountsByProteinChange = countMutationsByProteinChange(mutationsAtPosition).filter(
+        c => c.proteinChange !== undefined
+    );
 
     // only pick specified number of protein change values
     const proteinChanges = mutationCountsByProteinChange
@@ -33,16 +27,13 @@ export function lollipopLabelText(
     }
 
     // remove longest common starting substring from all protein change values
-    const proteinChangesTrimmed = proteinChanges.map(p =>
-        p.substring(startStr.length)
-    );
+    const proteinChangesTrimmed = proteinChanges.map(p => p.substring(startStr.length));
 
     // construct label (sorted by protein change count, not alphabetically)
     let label = startStr + proteinChangesTrimmed.join('/');
 
     if (proteinChanges.length < mutationCountsByProteinChange.length) {
-        label = `${label} and ${mutationCountsByProteinChange.length -
-            proteinChanges.length} more`;
+        label = `${label} and ${mutationCountsByProteinChange.length - proteinChanges.length} more`;
     }
 
     return label;
@@ -57,11 +48,7 @@ export function lollipopLabelTextAnchor(
     proteinLength: number
 ): string {
     let anchor = 'middle';
-    const approxLabelWidth = getTextWidth(
-        labelText,
-        fontFamily,
-        `${fontSize}px`
-    );
+    const approxLabelWidth = getTextWidth(labelText, fontFamily, `${fontSize}px`);
     const lollipopDistanceToOrigin = codon * (geneWidth / proteinLength);
     const lollipopDistanceToXMax = geneWidth - lollipopDistanceToOrigin;
 
@@ -89,11 +76,7 @@ export function calcYMaxInput(
 
     if (input === undefined) {
         input = yAxisSameScale
-            ? getCommonYAxisMaxSliderValue(
-                  yMaxStep,
-                  countRange,
-                  oppositeCountRange
-              )
+            ? getCommonYAxisMaxSliderValue(yMaxStep, countRange, oppositeCountRange)
             : getYAxisMaxSliderValue(yMaxStep, countRange);
     }
 
@@ -106,25 +89,13 @@ export function getCommonYAxisMaxSliderValue(
     oppositeCountRange: number[],
     yMaxInput?: number
 ) {
-    const defaultTopMin = getYAxisMaxSliderValue(
-        yMaxStep,
-        countRange,
-        yMaxInput
-    );
-    const defaultBottomMin = getYAxisMaxSliderValue(
-        yMaxStep,
-        oppositeCountRange,
-        yMaxInput
-    );
+    const defaultTopMin = getYAxisMaxSliderValue(yMaxStep, countRange, yMaxInput);
+    const defaultBottomMin = getYAxisMaxSliderValue(yMaxStep, oppositeCountRange, yMaxInput);
 
     return Math.max(defaultTopMin, defaultBottomMin);
 }
 
-export function getYAxisMaxSliderValue(
-    yMaxStep: number,
-    countRange: number[],
-    yMaxInput?: number
-) {
+export function getYAxisMaxSliderValue(yMaxStep: number, countRange: number[], yMaxInput?: number) {
     const defaultMin = yMaxStep * Math.ceil(countRange[1] / yMaxStep);
     // we don't want max slider value to go over the actual max, even if the user input goes over it
     return Math.min(defaultMin, yMaxInput || defaultMin);

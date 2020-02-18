@@ -14,10 +14,7 @@ interface IErrorScreenProps {
 }
 
 @observer
-export default class ErrorScreen extends React.Component<
-    IErrorScreenProps,
-    {}
-> {
+export default class ErrorScreen extends React.Component<IErrorScreenProps, {}> {
     public render() {
         const location = getBrowserWindow().location.href;
         const subject = 'cBioPortal user reported error';
@@ -34,17 +31,11 @@ export default class ErrorScreen extends React.Component<
                 {this.props.title && <h4>{this.props.title}</h4>}
 
                 {this.props.errorMessages && (
-                    <div
-                        style={{ marginTop: 20 }}
-                        className={'alert alert-danger'}
-                        role="alert"
-                    >
+                    <div style={{ marginTop: 20 }} className={'alert alert-danger'} role="alert">
                         <ul style={{ listStyleType: 'none' }}>
-                            {this.props.errorMessages.map(
-                                (errorMessage: string, index) => (
-                                    <li>{`${index + 1}: ${errorMessage}`}</li>
-                                )
-                            )}
+                            {this.props.errorMessages.map((errorMessage: string, index) => (
+                                <li>{`${index + 1}: ${errorMessage}`}</li>
+                            ))}
                         </ul>
                     </div>
                 )}
@@ -57,9 +48,7 @@ export default class ErrorScreen extends React.Component<
                         <a
                             href={`mailto:${
                                 AppConfig.serverConfig.skin_email_contact
-                            }?subject=${encodeURIComponent(
-                                subject
-                            )}&body=${encodeURIComponent(
+                            }?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
                                 this.props.errorLog || ''
                             )}`}
                         >
@@ -71,10 +60,7 @@ export default class ErrorScreen extends React.Component<
                 {this.props.errorLog && (
                     <div style={{ marginTop: 20 }} className="form-group">
                         <label>Error log:</label>
-                        <textarea
-                            value={this.props.errorLog}
-                            className={'form-control'}
-                        ></textarea>
+                        <textarea value={this.props.errorLog} className={'form-control'}></textarea>
                     </div>
                 )}
             </div>

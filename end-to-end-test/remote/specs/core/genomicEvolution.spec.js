@@ -1,13 +1,9 @@
 var assert = require('assert');
 var expect = require('chai').expect;
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var checkOncoprintElement = require('../../../shared/specUtils')
-    .checkOncoprintElement;
-var waitForNetworkQuiet = require('../../../shared/specUtils')
-    .waitForNetworkQuiet;
-var assertScreenShotMatch = require('../../../shared/lib/testUtils')
-    .assertScreenShotMatch;
+var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
+var checkOncoprintElement = require('../../../shared/specUtils').checkOncoprintElement;
+var waitForNetworkQuiet = require('../../../shared/specUtils').waitForNetworkQuiet;
+var assertScreenShotMatch = require('../../../shared/lib/testUtils').assertScreenShotMatch;
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 describe('Patient View Genomic Evolution tab', function() {
@@ -20,15 +16,8 @@ describe('Patient View Genomic Evolution tab', function() {
         });
         it('shows only highlighted, or all mutations, depending on setting', () => {
             // at first, showing all mutations
-            browser.waitForExist(
-                'input[data-test="TableShowOnlyHighlighted"]',
-                3000
-            );
-            assert(
-                !browser.isSelected(
-                    'input[data-test="TableShowOnlyHighlighted"]'
-                )
-            );
+            browser.waitForExist('input[data-test="TableShowOnlyHighlighted"]', 3000);
+            assert(!browser.isSelected('input[data-test="TableShowOnlyHighlighted"]'));
 
             // at first, more than 2 mutations (making this ambiguous to be unaffected by data changes
             browser.waitForExist(

@@ -1,8 +1,6 @@
 // any module that is intended to be public needs to be exported here
 
-export {
-    default as CheckedSelect,
-} from './components/checkedSelect/CheckedSelect';
+export { default as CheckedSelect } from './components/checkedSelect/CheckedSelect';
 export * from './components/checkedSelect/CheckedSelectUtils';
 export { default as Checklist } from './components/checkedSelect/Checklist';
 export {
@@ -16,21 +14,14 @@ export {
     DataType,
     DownloadControlsButton,
 } from './components/downloadControls/DownloadControls';
-export {
-    default as EditableSpan,
-} from './components/editableSpan/EditableSpan';
+export { default as EditableSpan } from './components/editableSpan/EditableSpan';
 export {
     default as EllipsisTextTooltip,
 } from './components/ellipsisTextTooltip/EllipsisTextTooltip';
-export {
-    default as FadeInteraction,
-} from './components/fadeInteraction/FadeInteraction';
+export { default as FadeInteraction } from './components/fadeInteraction/FadeInteraction';
 export * from './components/HitZone';
 export { default as SVGAxis, Tick } from './components/SVGAxis';
-export {
-    default as TableCellStatusIndicator,
-    TableCellStatus,
-} from './components/TableCellStatus';
+export { default as TableCellStatusIndicator, TableCellStatus } from './components/TableCellStatus';
 export { default as WindowWrapper } from './components/WindowWrapper';
 
 export {
@@ -54,9 +45,7 @@ export {
     VariantAnnotation,
     VariantAnnotationSummary,
 } from './api/generated/GenomeNexusAPI';
-export {
-    default as GenomeNexusAPIInternal,
-} from './api/generated/GenomeNexusAPIInternal';
+export { default as GenomeNexusAPIInternal } from './api/generated/GenomeNexusAPIInternal';
 export {
     default as Genome2StructureAPI,
     Alignment,

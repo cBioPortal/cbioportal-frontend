@@ -94,9 +94,7 @@ export default class sessionServiceAPI {
         );
     }
 
-    fetchUserSettings(
-        studyIds: string[]
-    ): Promise<StudyPageSettings | undefined> {
+    fetchUserSettings(studyIds: string[]): Promise<StudyPageSettings | undefined> {
         return (
             request
                 .post(`${this.getUserSettingUrl()}/fetch`)

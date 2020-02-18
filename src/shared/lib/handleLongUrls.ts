@@ -8,16 +8,12 @@ const PROP_NAME = 'navCaseIdsCache';
 
 export function parseCohortIds(concatenatedIds: string) {
     return concatenatedIds.split(',').map((entityId: string) => {
-        return entityId.includes(':')
-            ? entityId
-            : this.studyId + ':' + entityId;
+        return entityId.includes(':') ? entityId : this.studyId + ':' + entityId;
     });
 }
 
 export function handleLongUrls() {
-    const navCaseIdMatch = getBrowserWindow().location.hash.match(
-        new RegExp(NAVCASEIDS_REGEXP)
-    );
+    const navCaseIdMatch = getBrowserWindow().location.hash.match(new RegExp(NAVCASEIDS_REGEXP));
     // google analytics starts to crash when location.href gets too long
     // this is a fairly arbitrary length at which point we need to store these caseIds in localStorage instead of in hash
     if (navCaseIdMatch && navCaseIdMatch[1].length > 60000) {

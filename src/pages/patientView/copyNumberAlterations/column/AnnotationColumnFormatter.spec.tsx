@@ -27,11 +27,7 @@ describe('AnnotationColumnFormatter', () => {
         let expectedCivicEntry = getExpectedCnaCivicEntry();
 
         assert.deepEqual(
-            AnnotationColumnFormatter.getCivicEntry(
-                cna,
-                civicGenes,
-                civicVariants
-            ),
+            AnnotationColumnFormatter.getCivicEntry(cna, civicGenes, civicVariants),
             expectedCivicEntry,
             'Equal Civic Entry'
         );
@@ -45,11 +41,7 @@ describe('AnnotationColumnFormatter', () => {
         let cna = getCnaData();
 
         assert.deepEqual(
-            AnnotationColumnFormatter.hasCivicVariants(
-                cna,
-                civicGenes,
-                civicVariants
-            ),
+            AnnotationColumnFormatter.hasCivicVariants(cna, civicGenes, civicVariants),
             true,
             'Civic has variants'
         );
@@ -63,11 +55,7 @@ describe('AnnotationColumnFormatter', () => {
         let cna = getCnaData();
 
         assert.deepEqual(
-            AnnotationColumnFormatter.hasCivicVariants(
-                cna,
-                civicGenes,
-                civicVariants
-            ),
+            AnnotationColumnFormatter.hasCivicVariants(cna, civicGenes, civicVariants),
             false,
             'Civic has no variants'
         );

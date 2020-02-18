@@ -21,10 +21,7 @@ import {
     toggleRegionSelected,
 } from '../OverlapUtils';
 import { computeRectangleVennLayout, getRegionLabelPosition } from './layout';
-import {
-    adjustSizesForMinimumSizeRegions,
-    scaleAndCenterLayout,
-} from './normalizeLayout';
+import { adjustSizesForMinimumSizeRegions, scaleAndCenterLayout } from './normalizeLayout';
 
 export interface IRectangleVennDiagramProps {
     uid: string;
@@ -54,10 +51,7 @@ function regionMouseOut(e: any) {
 }
 
 @observer
-export default class RectangleVennDiagram extends React.Component<
-    IRectangleVennDiagramProps,
-    {}
-> {
+export default class RectangleVennDiagram extends React.Component<IRectangleVennDiagramProps, {}> {
     @observable.ref svg: SVGElement | null = null;
     @observable.ref tooltipModel: {
         combination: number[];
@@ -69,19 +63,13 @@ export default class RectangleVennDiagram extends React.Component<
         (e: any, params: { combination: number[] }) => {
             this.props.onChangeSelectedRegions &&
                 this.props.onChangeSelectedRegions(
-                    toggleRegionSelected(
-                        params.combination,
-                        this.props.selection.regions
-                    )
+                    toggleRegionSelected(params.combination, this.props.selection.regions)
                 );
         }
     );
 
     private regionHoverHandlers = MemoizedHandlerFactory(
-        (
-            e: React.MouseEvent<any>,
-            params: { combination: number[]; sizeOfRegion: number }
-        ) => {
+        (e: React.MouseEvent<any>, params: { combination: number[]; sizeOfRegion: number }) => {
             if (params.sizeOfRegion > 0) {
                 this.tooltipModel = params;
                 this.mousePosition.x = e.pageX;
@@ -105,15 +93,7 @@ export default class RectangleVennDiagram extends React.Component<
             case 3:
             default:
                 // all combinations of three groups
-                combinations = [
-                    [0],
-                    [1],
-                    [2],
-                    [0, 1],
-                    [0, 2],
-                    [1, 2],
-                    [0, 1, 2],
-                ];
+                combinations = [[0], [1], [2], [0, 1], [0, 2], [1, 2], [0, 1, 2]];
                 break;
         }
 
@@ -126,10 +106,7 @@ export default class RectangleVennDiagram extends React.Component<
                 ...combination.map(index => this.props.groups[index].cases)
             );
             const sizeOfIntersectionOfSets = casesInRegion.length;
-            for (const i of getExcludedIndexes(
-                combination,
-                this.props.groups.length
-            )) {
+            for (const i of getExcludedIndexes(combination, this.props.groups.length)) {
                 _.pullAll(casesInRegion, this.props.groups[i].cases);
             }
             return {
@@ -139,9 +116,7 @@ export default class RectangleVennDiagram extends React.Component<
                 // compute the fill based on the colors of the included groups
                 color: blendColors(
                     combination.map(
-                        index =>
-                            this.props.uidToGroup[this.props.groups[index].uid]
-                                .color
+                        index => this.props.uidToGroup[this.props.groups[index].uid].color
                     )
                 ),
                 labelPosition: null as { x: number; y: number } | null,
@@ -168,10 +143,7 @@ export default class RectangleVennDiagram extends React.Component<
             })(),
         }));
 
-        const algorithmInput = adjustSizesForMinimumSizeRegions(
-            regionsInAlgorithmForm,
-            sets
-        );
+        const algorithmInput = adjustSizesForMinimumSizeRegions(regionsInAlgorithmForm, sets);
 
         // compute a layout for the venn diagram using the specification given by the
         //  sets and the regions
@@ -251,8 +223,7 @@ export default class RectangleVennDiagram extends React.Component<
                             fill={region.color}
                             style={{
                                 cursor:
-                                    this.props.onChangeSelectedRegions &&
-                                    region.sizeOfRegion > 0
+                                    this.props.onChangeSelectedRegions && region.sizeOfRegion > 0
                                         ? 'pointer'
                                         : 'default',
                             }}
@@ -261,16 +232,8 @@ export default class RectangleVennDiagram extends React.Component<
                                 .hsl(region.color)
                                 .brighter(1)
                                 .rgb()}
-                            onMouseOver={
-                                region.sizeOfRegion > 0
-                                    ? regionMouseOver
-                                    : undefined
-                            }
-                            onMouseOut={
-                                region.sizeOfRegion > 0
-                                    ? regionMouseOut
-                                    : undefined
-                            }
+                            onMouseOver={region.sizeOfRegion > 0 ? regionMouseOver : undefined}
+                            onMouseOut={region.sizeOfRegion > 0 ? regionMouseOut : undefined}
                             onMouseMove={this.regionHoverHandlers({
                                 combination: comb,
                                 sizeOfRegion: region.sizeOfRegion,
@@ -282,17 +245,15 @@ export default class RectangleVennDiagram extends React.Component<
                                       })
                                     : undefined
                             }
-                            data-test={`${
-                                this.props.caseType
-                            }${region.combination.join(',')}VennRegion`}
+                            data-test={`${this.props.caseType}${region.combination.join(
+                                ','
+                            )}VennRegion`}
                         />
                     </g>
                 );
                 for (const index of comb) {
                     hoverRegion = (
-                        <g clipPath={`url(#${this.props.uid}_circle_${index})`}>
-                            {hoverRegion}
-                        </g>
+                        <g clipPath={`url(#${this.props.uid}_circle_${index})`}>{hoverRegion}</g>
                     );
                 }
 
@@ -300,34 +261,29 @@ export default class RectangleVennDiagram extends React.Component<
             })
         );
 
-        const outlines = _.sortBy(this.layoutParams.sets, s => -s.size).map(
-            s => {
-                // draw the outlines of the rectangles
-                const uid = s.uid;
-                return (
-                    <rect
-                        x={rectangleParams[uid].x}
-                        y={rectangleParams[uid].y}
-                        width={rectangleParams[uid].xLength}
-                        height={rectangleParams[uid].yLength}
-                        fill="none"
-                        stroke={s.color}
-                        strokeWidth={2}
-                        rx={CORNER_RADIUS}
-                    />
-                );
-            }
-        );
+        const outlines = _.sortBy(this.layoutParams.sets, s => -s.size).map(s => {
+            // draw the outlines of the rectangles
+            const uid = s.uid;
+            return (
+                <rect
+                    x={rectangleParams[uid].x}
+                    y={rectangleParams[uid].y}
+                    width={rectangleParams[uid].xLength}
+                    height={rectangleParams[uid].yLength}
+                    fill="none"
+                    stroke={s.color}
+                    strokeWidth={2}
+                    rx={CORNER_RADIUS}
+                />
+            );
+        });
         const textElements = _.flattenDeep<any>(
             this.layoutParams.regions.map(region => {
                 if (region.sizeOfRegion === 0 || !region.labelPosition) {
                     return [];
                 }
 
-                const selected = regionIsSelected(
-                    region.combination,
-                    this.props.selection.regions
-                );
+                const selected = regionIsSelected(region.combination, this.props.selection.regions);
 
                 const textContents = `${region.sizeOfRegion.toString()}${
                     selected ? ' ' + String.fromCharCode(10004) : ''
@@ -345,11 +301,7 @@ export default class RectangleVennDiagram extends React.Component<
                 if (selected) {
                     textBackground = (
                         <rect
-                            x={
-                                textPosition.x -
-                                textSize.width.value / 2 -
-                                padding
-                            }
+                            x={textPosition.x - textSize.width.value / 2 - padding}
                             y={textPosition.y - textSize.height.value + 3}
                             width={textSize.width.value + 2 * padding}
                             height={textSize.height.value + padding}
@@ -367,9 +319,7 @@ export default class RectangleVennDiagram extends React.Component<
                         y={textPosition.y}
                         style={{
                             userSelect: 'none',
-                            color: selected
-                                ? 'black'
-                                : getTextColor(region.color),
+                            color: selected ? 'black' : getTextColor(region.color),
                         }}
                         fontWeight={region.sizeOfRegion > 0 ? 'bold' : 'normal'}
                         pointerEvents="none"
@@ -393,8 +343,7 @@ export default class RectangleVennDiagram extends React.Component<
     }
 
     @autobind private resetSelection() {
-        this.props.onChangeSelectedRegions &&
-            this.props.onChangeSelectedRegions([]);
+        this.props.onChangeSelectedRegions && this.props.onChangeSelectedRegions([]);
     }
 
     @autobind private resetTooltip() {
@@ -408,18 +357,13 @@ export default class RectangleVennDiagram extends React.Component<
         const includedGroupUids = this.tooltipModel.combination.map(
             groupIndex => this.props.groups[groupIndex].uid
         );
-        const includedGroups = includedGroupUids.map(
-            uid => this.props.uidToGroup[uid]
-        );
+        const includedGroups = includedGroupUids.map(uid => this.props.uidToGroup[uid]);
 
         return (
             <div style={{ width: 300, whiteSpace: 'normal' }}>
                 <strong>
                     {this.tooltipModel.sizeOfRegion}{' '}
-                    {pluralize(
-                        this.props.caseType,
-                        this.tooltipModel.sizeOfRegion
-                    )}
+                    {pluralize(this.props.caseType, this.tooltipModel.sizeOfRegion)}
                 </strong>
                 <br />
                 in only {joinGroupNames(includedGroups, 'and')}.

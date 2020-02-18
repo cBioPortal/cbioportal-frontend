@@ -102,9 +102,7 @@ _.forEach(RESERVED_CLINICAL_VALUE_COLORS, (color, key) => {
     RESERVED_CLINICAL_VALUE_COLORS[withoutSpace.toLowerCase()] = color;
     RESERVED_CLINICAL_VALUE_COLORS[withoutSpace.toUpperCase()] = color;
 
-    RESERVED_CLINICAL_VALUE_COLORS[
-        key[0].toUpperCase() + key.slice(1).toLowerCase()
-    ] = color;
+    RESERVED_CLINICAL_VALUE_COLORS[key[0].toUpperCase() + key.slice(1).toLowerCase()] = color;
     RESERVED_CLINICAL_VALUE_COLORS[
         key
             .split(' ')
@@ -114,7 +112,5 @@ _.forEach(RESERVED_CLINICAL_VALUE_COLORS, (color, key) => {
 });
 
 export function getClinicalValueColor(value: string): string | undefined {
-    return RESERVED_CLINICAL_VALUE_COLORS[
-        value.replace(/\s/g, '').toLowerCase()
-    ];
+    return RESERVED_CLINICAL_VALUE_COLORS[value.replace(/\s/g, '').toLowerCase()];
 }

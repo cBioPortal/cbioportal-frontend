@@ -110,18 +110,17 @@ describe('ListIndexedMap', () => {
         assert.isTrue(map.has('whatsup', 'yo', 'bye'));
     });
     it('`from` creates a ListIndexedMap from a given list', () => {
-        const map = ListIndexedMap.from(
-            [{ id: 'obj1' }, { id: 'obj2' }, { id: 'obj3' }],
-            o => [o.id]
-        );
+        const map = ListIndexedMap.from([{ id: 'obj1' }, { id: 'obj2' }, { id: 'obj3' }], o => [
+            o.id,
+        ]);
         assert.deepEqual(map.get('obj1'), { id: 'obj1' });
         assert.deepEqual(map.get('obj2'), { id: 'obj2' });
         assert.deepEqual(map.get('obj3'), { id: 'obj3' });
 
-        const map2 = ListIndexedMap.from(
-            [{ id: 'obj1' }, { id: 'obj2' }, { id: 'obj3' }],
-            o => [o.id, 'yo']
-        );
+        const map2 = ListIndexedMap.from([{ id: 'obj1' }, { id: 'obj2' }, { id: 'obj3' }], o => [
+            o.id,
+            'yo',
+        ]);
         assert.deepEqual(map2.get('obj1', 'yo'), { id: 'obj1' });
         assert.deepEqual(map2.get('obj2', 'yo'), { id: 'obj2' });
         assert.deepEqual(map2.get('obj3', 'yo'), { id: 'obj3' });

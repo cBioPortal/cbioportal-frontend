@@ -14,22 +14,15 @@ import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
 import _ from 'lodash';
 import autobind from 'autobind-decorator';
 import { pickClinicalDataColors } from 'pages/studyView/StudyViewUtils';
-import {
-    Session,
-    SessionGroupData,
-} from '../../shared/api/ComparisonGroupClient';
+import { Session, SessionGroupData } from '../../shared/api/ComparisonGroupClient';
 import { AppStore } from '../../AppStore';
 import { GACustomFieldsEnum, trackEvent } from 'shared/lib/tracking';
 import ifNotDefined from '../../shared/lib/ifNotDefined';
 import GroupComparisonURLWrapper from './GroupComparisonURLWrapper';
-import ComparisonStore, {
-    OverlapStrategy,
-} from '../../shared/lib/comparison/ComparisonStore';
+import ComparisonStore, { OverlapStrategy } from '../../shared/lib/comparison/ComparisonStore';
 
 export default class GroupComparisonStore extends ComparisonStore {
-    @observable private _currentTabId:
-        | GroupComparisonTab
-        | undefined = undefined;
+    @observable private _currentTabId: GroupComparisonTab | undefined = undefined;
     @observable private sessionId: string;
     @observable public newSessionPending = false;
 
@@ -202,9 +195,9 @@ export default class GroupComparisonStore extends ComparisonStore {
             };
             if (this.isLoggedIn) {
                 // need to add all groups belonging to this user for this origin
-                ret.user = (await comparisonClient.getGroupsForStudies(
-                    this.origin.result!
-                )).map(g => g.data.name);
+                ret.user = (await comparisonClient.getGroupsForStudies(this.origin.result!)).map(
+                    g => g.data.name
+                );
             }
             return ret;
         },
@@ -225,18 +218,11 @@ export default class GroupComparisonStore extends ComparisonStore {
                 group => ({ value: group.name })
             ) as any);
 
-            const finalizeGroup = (
-                groupData: SessionGroupData,
-                index: number
-            ) => {
+            const finalizeGroup = (groupData: SessionGroupData, index: number) => {
                 // assign color to group if no color given
-                let color =
-                    groupData.color || defaultGroupColors[groupData.name];
+                let color = groupData.color || defaultGroupColors[groupData.name];
 
-                const { nonExistentSamples, studies } = finalizeStudiesAttr(
-                    groupData,
-                    sampleSet
-                );
+                const { nonExistentSamples, studies } = finalizeStudiesAttr(groupData, sampleSet);
 
                 return Object.assign({}, groupData, {
                     color,
@@ -262,30 +248,16 @@ export default class GroupComparisonStore extends ComparisonStore {
             let sorted: ComparisonGroup[];
             if (this.groupOrder) {
                 const order = stringListToIndexSet(this.groupOrder);
-                sorted = _.sortBy<ComparisonGroup>(
-                    this._unsortedOriginalGroups.result!,
-                    g =>
-                        ifNotDefined<number>(
-                            order[g.name],
-                            Number.POSITIVE_INFINITY
-                        )
+                sorted = _.sortBy<ComparisonGroup>(this._unsortedOriginalGroups.result!, g =>
+                    ifNotDefined<number>(order[g.name], Number.POSITIVE_INFINITY)
                 );
             } else if (this._session.result!.groupNameOrder) {
-                const order = stringListToIndexSet(
-                    this._session.result!.groupNameOrder!
-                );
-                sorted = _.sortBy<ComparisonGroup>(
-                    this._unsortedOriginalGroups.result!,
-                    g =>
-                        ifNotDefined<number>(
-                            order[g.name],
-                            Number.POSITIVE_INFINITY
-                        )
+                const order = stringListToIndexSet(this._session.result!.groupNameOrder!);
+                sorted = _.sortBy<ComparisonGroup>(this._unsortedOriginalGroups.result!, g =>
+                    ifNotDefined<number>(order[g.name], Number.POSITIVE_INFINITY)
                 );
             } else {
-                sorted = defaultGroupOrder(
-                    this._unsortedOriginalGroups.result!
-                );
+                sorted = defaultGroupOrder(this._unsortedOriginalGroups.result!);
             }
 
             const ordinals = getOrdinals(sorted.length, 26);

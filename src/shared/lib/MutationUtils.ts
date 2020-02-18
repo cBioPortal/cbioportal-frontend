@@ -44,10 +44,7 @@ export function getColorForProteinImpactType(
     mutations: Mutation[],
     colors: IProteinImpactTypeColors = DEFAULT_PROTEIN_IMPACT_TYPE_COLORS
 ): string {
-    return getDefaultColorForProteinImpactType(
-        normalizeMutations(mutations),
-        colors
-    );
+    return getDefaultColorForProteinImpactType(normalizeMutations(mutations), colors);
 }
 
 // TODO remove when done refactoring mutation mapper
@@ -85,9 +82,7 @@ export function groupMutationsByGeneAndPatientAndProteinChange(
     return map;
 }
 
-export function countDuplicateMutations(groupedMutations: {
-    [key: string]: Mutation[];
-}): number {
+export function countDuplicateMutations(groupedMutations: { [key: string]: Mutation[] }): number {
     // helper to count duplicate mutations
     const countMapper = (mutations: Mutation[]) =>
         mutations.length > 0 ? mutations.length - 1 : 0;
@@ -101,19 +96,13 @@ export function countDuplicateMutations(groupedMutations: {
 }
 
 export function countUniqueMutations(mutations: Mutation[]): number {
-    return Object.keys(
-        groupMutationsByGeneAndPatientAndProteinChange(mutations)
-    ).length;
+    return Object.keys(groupMutationsByGeneAndPatientAndProteinChange(mutations)).length;
 }
 
 /**
  * Protein start positions for the mutations falling between a specific start and end position range
  */
-export function getProteinStartPositionsByRange(
-    data: Mutation[][],
-    start: number,
-    end: number
-) {
+export function getProteinStartPositionsByRange(data: Mutation[][], start: number, end: number) {
     const positions: number[] = [];
 
     data.forEach((mutations: Mutation[]) => {
@@ -158,8 +147,7 @@ export function germlineMutationRate(
         const sampleIds = stringListToSet(samples.map(toSampleUuid));
         const nrCasesGermlineMutation: number = _.chain(mutations)
             .filter((m: Mutation) => {
-                const profile =
-                    molecularProfileIdToMolecularProfile[m.molecularProfileId];
+                const profile = molecularProfileIdToMolecularProfile[m.molecularProfileId];
                 if (profile) {
                     return (
                         m.gene.hugoGeneSymbol === hugoGeneSymbol &&
@@ -196,18 +184,13 @@ export function somaticMutationRate(
         return (
             (_.chain(mutations)
                 .filter((m: Mutation) => {
-                    const profile =
-                        molecularProfileIdToMolecularProfile[
-                            m.molecularProfileId
-                        ];
+                    const profile = molecularProfileIdToMolecularProfile[m.molecularProfileId];
                     if (profile) {
                         return (
                             m.gene.hugoGeneSymbol === hugoGeneSymbol &&
                             !GERMLINE_REGEXP.test(m.mutationStatus) &&
                             // filter for given sample IDs
-                            !!sampleIds[
-                                toSampleUuid(profile.studyId, m.sampleId)
-                            ]
+                            !!sampleIds[toSampleUuid(profile.studyId, m.sampleId)]
                         );
                     } else {
                         return false;
@@ -240,8 +223,7 @@ export function updateMissingGeneInfo(
                 // keep the existing "mutation.gene" values: only overwrite missing (undefined) values
                 mutation.gene = _.merge({}, gene, mutation.gene);
                 // also update entrezGeneId for the mutation itself
-                mutation.entrezGeneId =
-                    mutation.entrezGeneId || gene.entrezGeneId;
+                mutation.entrezGeneId = mutation.entrezGeneId || gene.entrezGeneId;
             }
         }
     });
@@ -287,20 +269,14 @@ export function genomicLocationString(genomicLocation: GenomicLocation) {
 }
 
 // TODO remove when done refactoring mutation mapper
-export function uniqueGenomicLocations(
-    mutations: Mutation[]
-): GenomicLocation[] {
+export function uniqueGenomicLocations(mutations: Mutation[]): GenomicLocation[] {
     const genomicLocationMap: { [key: string]: GenomicLocation } = {};
 
     mutations.map((mutation: Mutation) => {
-        const genomicLocation:
-            | GenomicLocation
-            | undefined = extractGenomicLocation(mutation);
+        const genomicLocation: GenomicLocation | undefined = extractGenomicLocation(mutation);
 
         if (genomicLocation) {
-            genomicLocationMap[
-                genomicLocationString(genomicLocation)
-            ] = genomicLocation;
+            genomicLocationMap[genomicLocationString(genomicLocation)] = genomicLocation;
         }
     });
 
@@ -308,10 +284,7 @@ export function uniqueGenomicLocations(
 }
 
 export function getVariantAlleleFrequency(m: Mutation) {
-    if (
-        Number.isInteger(m.tumorRefCount) &&
-        Number.isInteger(m.tumorAltCount)
-    ) {
+    if (Number.isInteger(m.tumorRefCount) && Number.isInteger(m.tumorAltCount)) {
         const vaf = m.tumorAltCount / (m.tumorAltCount + m.tumorRefCount);
         if (isNaN(vaf)) {
             return null;
@@ -323,9 +296,7 @@ export function getVariantAlleleFrequency(m: Mutation) {
     }
 }
 
-export function generateHgvsgByMutation(
-    mutation: Partial<Mutation>
-): string | null {
+export function generateHgvsgByMutation(mutation: Partial<Mutation>): string | null {
     if (isValidGenomicLocation(mutation)) {
         // ins
         if (mutation.referenceAllele === '-') {
@@ -339,17 +310,11 @@ export function generateHgvsgByMutation(
             return `${mutation.chr}:g.${mutation.startPosition}_${mutation.endPosition}del`;
         }
         // substitution
-        else if (
-            mutation.referenceAllele!.length === 1 &&
-            mutation.variantAllele!.length === 1
-        ) {
+        else if (mutation.referenceAllele!.length === 1 && mutation.variantAllele!.length === 1) {
             return `${mutation.chr}:g.${mutation.startPosition}${mutation.referenceAllele}>${mutation.variantAllele}`;
         }
         // delins (in new format that no ref after del, may differ with genome nexus hgvsg response)
-        else if (
-            mutation.referenceAllele!.length === 1 &&
-            mutation.variantAllele!.length > 1
-        ) {
+        else if (mutation.referenceAllele!.length === 1 && mutation.variantAllele!.length > 1) {
             return `${mutation.chr}:g.${mutation.startPosition}delins${mutation.variantAllele}`;
         }
         // delins (in new format that no ref after del, may differ with genome nexus hgvsg response)
@@ -374,10 +339,7 @@ export function isValidGenomicLocation(mutation: Partial<Mutation>): boolean {
         mutation.variantAllele &&
         mutation.variantAllele !== 'NA'
     ) {
-        if (
-            mutation.referenceAllele === '-' &&
-            mutation.variantAllele === '-'
-        ) {
+        if (mutation.referenceAllele === '-' && mutation.variantAllele === '-') {
             return false;
         }
         return true;

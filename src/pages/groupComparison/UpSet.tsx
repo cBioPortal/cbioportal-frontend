@@ -11,16 +11,10 @@ import {
 } from 'victory';
 import { computed, observable } from 'mobx';
 import * as _ from 'lodash';
-import CBIOPORTAL_VICTORY_THEME, {
-    axisTickLabelStyles,
-} from 'shared/theme/cBioPoralTheme';
+import CBIOPORTAL_VICTORY_THEME, { axisTickLabelStyles } from 'shared/theme/cBioPoralTheme';
 import autobind from 'autobind-decorator';
 import { ComparisonGroup } from './GroupComparisonUtils';
-import {
-    getTextWidth,
-    pluralize,
-    truncateWithEllipsis,
-} from 'cbioportal-frontend-commons';
+import { getTextWidth, pluralize, truncateWithEllipsis } from 'cbioportal-frontend-commons';
 import { tickFormatNumeral } from 'shared/components/plots/TickUtils';
 import {
     joinGroupNames,
@@ -59,12 +53,7 @@ const DEFAULT_SCATTER_DOT_COLOR = '#efefef';
 const MAX_LABEL_WIDTH = 200;
 
 const BarComponent = (props: any) => (
-    <Bar
-        className={`${props.caseType}_${_.sortBy(props.datum.groups).join(
-            '_'
-        )}_bar`}
-        {...props}
-    />
+    <Bar className={`${props.caseType}_${_.sortBy(props.datum.groups).join('_')}_bar`} {...props} />
 );
 
 @observer
@@ -92,10 +81,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                             {
                                 target: 'data',
                                 mutation: (props: any) => {
-                                    if (
-                                        !props.datum ||
-                                        !props.datum.dontShowTooltip
-                                    ) {
+                                    if (!props.datum || !props.datum.dontShowTooltip) {
                                         this.tooltipModel = props;
                                     }
                                     return null;
@@ -125,17 +111,12 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                                     } else {
                                         groups = props.data[0].groups;
                                     }
-                                    if (
-                                        !props.datum ||
-                                        !props.datum.notClickable
-                                    ) {
-                                        this.props
-                                            .onChangeSelectedCombinations &&
+                                    if (!props.datum || !props.datum.notClickable) {
+                                        this.props.onChangeSelectedCombinations &&
                                             this.props.onChangeSelectedCombinations(
                                                 toggleRegionSelected(
                                                     groups,
-                                                    this.props
-                                                        .selectedCombinations
+                                                    this.props.selectedCombinations
                                                 )
                                             );
                                     }
@@ -150,8 +131,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
     }
 
     @autobind private resetSelection() {
-        this.props.onChangeSelectedCombinations &&
-            this.props.onChangeSelectedCombinations([]);
+        this.props.onChangeSelectedCombinations && this.props.onChangeSelectedCombinations([]);
     }
 
     @computed get usedGroups() {
@@ -278,10 +258,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
     }
 
     @computed get svgWidth() {
-        return Math.max(
-            this.leftPadding + this.chartWidth + this.rightPadding,
-            320
-        );
+        return Math.max(this.leftPadding + this.chartWidth + this.rightPadding, 320);
     }
 
     @computed get svgHeight() {
@@ -319,10 +296,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
     @autobind
     private categoryCoordToGroup(coord: number) {
         const index = Math.round(
-            invertIncreasingFunction(this.categoryCoord, coord, [
-                0,
-                this.usedGroups.length,
-            ])
+            invertIncreasingFunction(this.categoryCoord, coord, [0, this.usedGroups.length])
         );
         return this.usedGroups[index];
     }
@@ -348,9 +322,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                     fill: included ? '#000000' : DEFAULT_SCATTER_DOT_COLOR,
                     dontShowTooltip: !included,
                     cursor:
-                        included && this.props.onChangeSelectedCombinations
-                            ? 'pointer'
-                            : 'default',
+                        included && this.props.onChangeSelectedCombinations ? 'pointer' : 'default',
                     notClickable: !included,
                     ...set,
                 };
@@ -401,9 +373,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                             strokeOpacity: 0,
                             strokeWidth: this.barWidth(),
                             strokeLinecap: 'round',
-                            cursor: this.props.onChangeSelectedCombinations
-                                ? 'pointer'
-                                : '',
+                            cursor: this.props.onChangeSelectedCombinations ? 'pointer' : '',
                         },
                     }}
                     data={data}
@@ -414,10 +384,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
     }
 
     @computed get barPlotDomain() {
-        const maxCount =
-            _.max(
-                _.map(this.groupCombinationSets, datum => datum.cases.length)
-            ) || 0;
+        const maxCount = _.max(_.map(this.groupCombinationSets, datum => datum.cases.length)) || 0;
         return getPlotDomain(
             this.groupCombinationSets.length,
             maxCount,
@@ -440,9 +407,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
     }
 
     @computed get groupTickValues() {
-        return _.map(this.groupLabels, (label, index) =>
-            this.categoryCoord(index)
-        );
+        return _.map(this.groupLabels, (label, index) => this.categoryCoord(index));
     }
 
     @autobind
@@ -461,10 +426,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
     }
 
     private tooltipFunction(datum: any) {
-        const includedGroups = _.map(
-            datum.groups as string[],
-            uid => this.props.uidToGroup[uid]
-        );
+        const includedGroups = _.map(datum.groups as string[], uid => this.props.uidToGroup[uid]);
         const casesCount = datum.cases.length;
 
         return (
@@ -484,34 +446,20 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
         } else {
             const maxWidth = 400;
             let tooltipPlacement =
-                this.mousePosition.x > WindowStore.size.width - maxWidth
-                    ? 'left'
-                    : 'right';
+                this.mousePosition.x > WindowStore.size.width - maxWidth ? 'left' : 'right';
             return (ReactDOM as any).createPortal(
                 <Popover
                     arrowOffsetTop={17}
-                    className={classnames(
-                        'cbioportal-frontend',
-                        'cbioTooltip',
-                        styles.Tooltip
-                    )}
-                    positionLeft={
-                        this.mousePosition.x +
-                        (tooltipPlacement === 'left' ? -8 : 8)
-                    }
+                    className={classnames('cbioportal-frontend', 'cbioTooltip', styles.Tooltip)}
+                    positionLeft={this.mousePosition.x + (tooltipPlacement === 'left' ? -8 : 8)}
                     positionTop={this.mousePosition.y - 17}
                     style={{
-                        transform:
-                            tooltipPlacement === 'left'
-                                ? 'translate(-100%,0%)'
-                                : undefined,
+                        transform: tooltipPlacement === 'left' ? 'translate(-100%,0%)' : undefined,
                         maxWidth,
                     }}
                     placement={tooltipPlacement}
                 >
-                    {this.tooltipFunction(
-                        this.tooltipModel.datum || this.tooltipModel.data[0]
-                    )}
+                    {this.tooltipFunction(this.tooltipModel.datum || this.tooltipModel.data[0])}
                 </Popover>,
                 document.body
             );
@@ -527,10 +475,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
         if (datum.length === 0) {
             return 'black';
         }
-        const selected = regionIsSelected(
-            datum[0].groups,
-            this.props.selectedCombinations
-        );
+        const selected = regionIsSelected(datum[0].groups, this.props.selectedCombinations);
         if (selected) {
             return 'yellow';
         } else {
@@ -539,10 +484,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
     }
 
     @autobind private fill(datum: any) {
-        const selected = regionIsSelected(
-            datum.groups,
-            this.props.selectedCombinations
-        );
+        const selected = regionIsSelected(datum.groups, this.props.selectedCombinations);
         if (selected && !datum.notClickable) {
             return 'yellow';
         } else {
@@ -571,9 +513,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                         onMouseMove={this.onMouseMove}
                     >
                         <g>{this.title}</g>
-                        <g
-                            transform={`translate(${this.leftPadding}, ${this.topPadding})`}
-                        >
+                        <g transform={`translate(${this.leftPadding}, ${this.topPadding})`}>
                             <VictoryChart
                                 theme={CBIOPORTAL_VICTORY_THEME}
                                 width={this.chartWidth}
@@ -610,9 +550,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                                             stroke: 0,
                                         },
                                     }}
-                                    axisLabelComponent={
-                                        <VictoryLabel dy={-40} />
-                                    }
+                                    axisLabelComponent={<VictoryLabel dy={-40} />}
                                 />
                                 <VictoryBar
                                     style={{
@@ -628,19 +566,14 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                                         data: {
                                             fillOpacity: 0,
                                             width: this.barWidth(),
-                                            cursor: this.props
-                                                .onChangeSelectedCombinations
+                                            cursor: this.props.onChangeSelectedCombinations
                                                 ? 'pointer'
                                                 : '',
                                         },
                                     }}
                                     data={this.barPlotHitzoneData}
                                     events={this.mouseEvents}
-                                    dataComponent={
-                                        <BarComponent
-                                            caseType={this.props.caseType}
-                                        />
-                                    }
+                                    dataComponent={<BarComponent caseType={this.props.caseType} />}
                                 />
                             </VictoryChart>
                         </g>
@@ -682,9 +615,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                                     crossAxis={false}
                                     tickLabelComponent={
                                         <GroupTickLabelComponent
-                                            categoryCoordToGroup={
-                                                this.categoryCoordToGroup
-                                            }
+                                            categoryCoordToGroup={this.categoryCoordToGroup}
                                             maxLabelWidth={MAX_LABEL_WIDTH}
                                             dy="0.4em"
                                         />

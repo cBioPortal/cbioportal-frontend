@@ -43,9 +43,7 @@ describe('AlleleFreqColumnFormatter', () => {
             tumorAltCount: 1,
             tumorRefCount: 10,
         };
-        const res = AlleleFreqColumnFormatter.getComponentForSampleArgs(
-            calledMutation
-        );
+        const res = AlleleFreqColumnFormatter.getComponentForSampleArgs(calledMutation);
         assert(res.opacity === 1);
     });
     it('sampleElement should have the text (uncalled)', () => {
@@ -75,9 +73,6 @@ describe('AlleleFreqColumnFormatter', () => {
                 tumorRefCount: 10,
             }),
         ];
-        assert.equal(
-            AlleleFreqColumnFormatter.getFrequency(mutation),
-            '0.09090909090909091'
-        );
+        assert.equal(AlleleFreqColumnFormatter.getFrequency(mutation), '0.09090909090909091');
     });
 });

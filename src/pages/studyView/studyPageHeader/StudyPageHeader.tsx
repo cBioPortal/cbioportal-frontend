@@ -13,36 +13,26 @@ export interface IStudyPageHeaderProps {
 }
 
 @observer
-export default class StudyPageHeader extends React.Component<
-    IStudyPageHeaderProps,
-    {}
-> {
+export default class StudyPageHeader extends React.Component<IStudyPageHeaderProps, {}> {
     render() {
         return (
             <div className={'headBlock'} data-test="study-view-header">
                 {_.keys(this.props.store.pageStatusMessages).length > 0 && (
                     <div>
-                        {_.values(this.props.store.pageStatusMessages).map(
-                            statusMessage => (
-                                <div
-                                    className={`alert alert-${statusMessage.status}`}
-                                >
-                                    {statusMessage.message}
-                                </div>
-                            )
-                        )}
+                        {_.values(this.props.store.pageStatusMessages).map(statusMessage => (
+                            <div className={`alert alert-${statusMessage.status}`}>
+                                {statusMessage.message}
+                            </div>
+                        ))}
                     </div>
                 )}
                 <div style={{ display: 'flex' }}>
                     <StudySummary
-                        hasRawDataForDownload={
-                            this.props.store.hasRawDataForDownload.result
-                        }
+                        hasRawDataForDownload={this.props.store.hasRawDataForDownload.result}
                         studies={this.props.store.displayedStudies.result}
                         originStudies={this.props.store.originStudies}
                         showOriginStudiesInSummaryDescription={
-                            this.props.store
-                                .showOriginStudiesInSummaryDescription
+                            this.props.store.showOriginStudiesInSummaryDescription
                         }
                     />
                     <RightPanel store={this.props.store} />
@@ -51,34 +41,23 @@ export default class StudyPageHeader extends React.Component<
                 {this.props.store.clinicalAttributeIdToDataType.isComplete && (
                     <UserSelections
                         filter={this.props.store.userSelections}
-                        comparisonGroupSelection={
-                            this.props.store.filterComparisonGroups
-                        }
+                        comparisonGroupSelection={this.props.store.filterComparisonGroups}
                         numberOfSelectedSamplesInCustomSelection={
-                            this.props.store
-                                .numberOfSelectedSamplesInCustomSelection
+                            this.props.store.numberOfSelectedSamplesInCustomSelection
                         }
                         customChartsFilter={this.props.store.customChartFilterSet.toJS()}
-                        attributesMetaSet={
-                            this.props.store.chartMetaSetWithChartType
-                        }
+                        attributesMetaSet={this.props.store.chartMetaSetWithChartType}
                         clinicalAttributeIdToDataType={
-                            this.props.store.clinicalAttributeIdToDataType
-                                .result!
+                            this.props.store.clinicalAttributeIdToDataType.result!
                         }
                         updateClinicalDataFilterByValues={
                             this.props.store.updateClinicalDataFilterByValues
                         }
-                        updateCustomChartFilter={
-                            this.props.store.setCustomChartFilters
-                        }
+                        updateCustomChartFilter={this.props.store.setCustomChartFilters}
                         removeGeneFilter={this.props.store.removeGeneFilter}
-                        removeCustomSelectionFilter={
-                            this.props.store.removeCustomSelectFilter
-                        }
+                        removeCustomSelectionFilter={this.props.store.removeCustomSelectFilter}
                         removeComparisonGroupSelectionFilter={
-                            this.props.store
-                                .removeComparisonGroupSelectionFilter
+                            this.props.store.removeComparisonGroupSelectionFilter
                         }
                         onBookmarkClick={this.props.onBookmarkClick}
                         clearAllFilters={this.props.store.clearAllFilters}

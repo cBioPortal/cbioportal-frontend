@@ -5,9 +5,7 @@ import {
     Sample,
 } from '../api/generated/CBioPortalAPI';
 
-export function isMutation(
-    datum: Mutation | NumericGeneMolecularData
-): datum is Mutation {
+export function isMutation(datum: Mutation | NumericGeneMolecularData): datum is Mutation {
     return datum.hasOwnProperty('mutationType');
 }
 

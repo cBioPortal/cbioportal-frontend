@@ -29,11 +29,7 @@ class ColumnHeader extends React.Component<ColumnHeaderProps> {
         }
 
         return (
-            <span
-                className={
-                    this.props.className || ColumnHeader.defaultProps.className
-                }
-            >
+            <span className={this.props.className || ColumnHeader.defaultProps.className}>
                 {content}
             </span>
         );

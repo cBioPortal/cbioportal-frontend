@@ -25,10 +25,7 @@ const styles = styles_any as {
 };
 
 @observer
-export default class MolecularProfileSelector extends QueryStoreComponent<
-    {},
-    {}
-> {
+export default class MolecularProfileSelector extends QueryStoreComponent<{}, {}> {
     private get showGSVA() {
         return AppConfig.serverConfig.skin_show_gsva;
     }
@@ -38,35 +35,21 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
 
         return (
             <FlexRow padded className={styles.MolecularProfileSelector}>
-                <SectionHeader
-                    className="sectionLabel"
-                    promises={[this.store.molecularProfiles]}
-                >
+                <SectionHeader className="sectionLabel" promises={[this.store.molecularProfiles]}>
                     Select Genomic Profiles:
                 </SectionHeader>
-                <div
-                    className={styles.group}
-                    data-test="molecularProfileSelector"
-                >
+                <div className={styles.group} data-test="molecularProfileSelector">
                     {this.renderGroup('MUTATION_EXTENDED', 'Mutation')}
                     {this.renderGroup('COPY_NUMBER_ALTERATION', 'Copy Number')}
-                    {this.showGSVA &&
-                        this.renderGroup('GENESET_SCORE', 'GSVA scores')}
+                    {this.showGSVA && this.renderGroup('GENESET_SCORE', 'GSVA scores')}
                     {this.renderGroup('MRNA_EXPRESSION', 'mRNA Expression')}
                     {this.renderGroup('METHYLATION', 'DNA Methylation')}
                     {this.renderGroup('METHYLATION_BINARY', 'DNA Methylation')}
-                    {this.renderGroup(
-                        'PROTEIN_LEVEL',
-                        'Protein/phosphoprotein level'
-                    )}
+                    {this.renderGroup('PROTEIN_LEVEL', 'Protein/phosphoprotein level')}
                     {!!(
                         this.store.molecularProfiles.isComplete &&
                         !this.store.molecularProfiles.result.length
-                    ) && (
-                        <strong>
-                            No Genomic Profiles available for this Cancer Study
-                        </strong>
-                    )}
+                    ) && <strong>No Genomic Profiles available for this Cancer Study</strong>}
                 </div>
             </FlexRow>
         );
@@ -103,27 +86,14 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                 }
                 data-test={profile.molecularAlterationType}
             />
-            <span
-                className={
-                    isGroupToggle ? styles.groupName : styles.profileName
-                }
-            >
-                {label}
-            </span>
+            <span className={isGroupToggle ? styles.groupName : styles.profileName}>{label}</span>
             {!isGroupToggle && (
                 <DefaultTooltip
                     mouseEnterDelay={0}
                     placement="right"
-                    overlay={
-                        <div className={styles.tooltip}>
-                            {profile.description}
-                        </div>
-                    }
+                    overlay={<div className={styles.tooltip}>{profile.description}</div>}
                 >
-                    <FontAwesome
-                        className={styles.infoIcon}
-                        name="question-circle"
-                    />
+                    <FontAwesome className={styles.infoIcon} name="question-circle" />
                 </DefaultTooltip>
             )}
         </label>
@@ -136,12 +106,9 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
         let profiles = this.store.getFilteredProfiles(molecularAlterationType);
         if (!profiles.length) return null;
 
-        let groupProfileIds = profiles.map(
-            profile => profile.molecularProfileId
-        );
+        let groupProfileIds = profiles.map(profile => profile.molecularProfileId);
         let groupIsSelected =
-            _.intersection(this.store.selectedProfileIds, groupProfileIds)
-                .length > 0;
+            _.intersection(this.store.selectedProfileIds, groupProfileIds).length > 0;
         let output: JSX.Element[] = [];
 
         if (profiles.length > 1 && !this.store.forDownloadTab)
@@ -160,28 +127,17 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
             <this.ProfileToggle
                 key={'profile:' + profile.molecularProfileId}
                 profile={profile}
-                type={
-                    this.store.forDownloadTab || profiles.length > 1
-                        ? 'radio'
-                        : 'checkbox'
-                }
+                type={this.store.forDownloadTab || profiles.length > 1 ? 'radio' : 'checkbox'}
                 label={profile.name}
-                checked={_.includes(
-                    this.store.selectedProfileIds,
-                    profile.molecularProfileId
-                )}
+                checked={_.includes(this.store.selectedProfileIds, profile.molecularProfileId)}
                 isGroupToggle={false}
             />
         ));
 
-        if (this.store.forDownloadTab || profiles.length == 1)
-            output.push(...profileToggles);
+        if (this.store.forDownloadTab || profiles.length == 1) output.push(...profileToggles);
         else
             output.push(
-                <div
-                    key={'group:' + molecularAlterationType}
-                    className={styles.group}
-                >
+                <div key={'group:' + molecularAlterationType} className={styles.group}>
                     {profileToggles}
                 </div>
             );

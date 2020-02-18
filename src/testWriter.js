@@ -13,21 +13,17 @@ testObj.prototype.writeTest = function() {
 window._handleTestReports = function(args, func, params, context, funcName) {
     window._tr = window._tr || {};
     var name = funcName || func.name;
-    var paramArr = /\(/.test(params)
-        ? params.replace(/[()]/g, '').split(',')
-        : null;
+    var paramArr = /\(/.test(params) ? params.replace(/[()]/g, '').split(',') : null;
     var argArr = Array.from(args);
     var argMap = argArr.map((a, i) => JSON.stringify(a));
 
-    window._trCountMap[name] =
-        name in window._trCountMap ? window._trCountMap[name]++ : 0;
+    window._trCountMap[name] = name in window._trCountMap ? window._trCountMap[name]++ : 0;
     let ret = func.apply(context, args);
     // if there are no constraints or we asre within constraints
     window._tr[name] = window._tr[name] || [];
     if (
         paramArr === null ||
-        (window._trCountMap[name] >= paramArr[0] &&
-            window._trCountMap[name] <= paramArr[1])
+        (window._trCountMap[name] >= paramArr[0] && window._trCountMap[name] <= paramArr[1])
     ) {
         window._tr[name].push(
             new testObj({
@@ -67,9 +63,7 @@ describe('${report.name}', ()=>{
 
     it('###should do something###',()=>{
         ${argDeclarations}
-        const ret = ${report.name}(${report.argNames
-        .map((n, i) => n)
-        .join(', ')});
+        const ret = ${report.name}(${report.argNames.map((n, i) => n).join(', ')});
         
         const expectedResult = ${JSON.stringify(report.ret)};
         

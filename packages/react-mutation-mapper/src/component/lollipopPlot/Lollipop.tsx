@@ -27,9 +27,7 @@ export default class Lollipop extends React.Component<LollipopProps, {}> {
     @observable public isHovered: boolean = false;
 
     @computed private get headRadius() {
-        return this.isHovered
-            ? this.props.hoverHeadRadius
-            : this.props.headRadius;
+        return this.isHovered ? this.props.hoverHeadRadius : this.props.headRadius;
     }
 
     @computed private get circleX() {
@@ -42,19 +40,9 @@ export default class Lollipop extends React.Component<LollipopProps, {}> {
 
     @computed private get textY() {
         if (this.props.spec.placement === LollipopPlacement.BOTTOM) {
-            return (
-                this.props.stickBaseY -
-                this.props.stickHeight +
-                this.props.headRadius +
-                5
-            );
+            return this.props.stickBaseY - this.props.stickHeight + this.props.headRadius + 5;
         } else {
-            return (
-                this.props.stickBaseY -
-                this.props.stickHeight -
-                this.props.headRadius -
-                5
-            );
+            return this.props.stickBaseY - this.props.stickHeight - this.props.headRadius - 5;
         }
     }
 

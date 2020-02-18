@@ -45,15 +45,10 @@ export const GenePanelList: React.FunctionComponent<IGenePanelTooltipProps> = ({
 };
 
 @observer
-export class StudyViewGenePanelModal extends React.Component<
-    IStudyViewGeneModalProps,
-    {}
-> {
+export class StudyViewGenePanelModal extends React.Component<IStudyViewGeneModalProps, {}> {
     getGenesList = (result: GenePanel | undefined) => {
         if (result && result.genes) {
-            return result.genes.map(gene => (
-                <p key={gene.entrezGeneId}>{gene.hugoGeneSymbol}</p>
-            ));
+            return result.genes.map(gene => <p key={gene.entrezGeneId}>{gene.hugoGeneSymbol}</p>);
         }
         return null;
     };
@@ -69,8 +64,7 @@ export class StudyViewGenePanelModal extends React.Component<
                 onHide={this.props.onHide}
                 isLoading={mobxPromise.isPending}
             >
-                {mobxPromise.isComplete &&
-                    this.getGenesList(mobxPromise.result)}
+                {mobxPromise.isComplete && this.getGenesList(mobxPromise.result)}
             </GenePanelModal>
         );
     }

@@ -10,19 +10,13 @@ import {
     StudyViewFilter,
 } from '../../shared/api/generated/CBioPortalAPIInternal';
 import { AlterationEnrichmentWithQ } from '../resultsView/enrichments/EnrichmentsUtil';
-import {
-    GroupData,
-    SessionGroupData,
-} from '../../shared/api/ComparisonGroupClient';
+import { GroupData, SessionGroupData } from '../../shared/api/ComparisonGroupClient';
 import * as React from 'react';
 import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import ComplexKeySet from '../../shared/lib/complexKeyDataStructures/ComplexKeySet';
 import ComplexKeyCounter from '../../shared/lib/complexKeyDataStructures/ComplexKeyCounter';
 import ComplexKeyGroupsMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap';
-import {
-    MakeMobxView,
-    MobxViewAlwaysComponent,
-} from '../../shared/components/MobxView';
+import { MakeMobxView, MobxViewAlwaysComponent } from '../../shared/components/MobxView';
 import OverlapExclusionIndicator from './OverlapExclusionIndicator';
 import Loader from '../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../shared/components/ErrorMessage';
@@ -57,9 +51,7 @@ export type CopyNumberEnrichment = AlterationEnrichmentWithQ & {
     value: number;
 };
 
-export function defaultGroupOrder<T extends Pick<ComparisonGroup, 'name'>>(
-    groups: T[]
-) {
+export function defaultGroupOrder<T extends Pick<ComparisonGroup, 'name'>>(groups: T[]) {
     // sort alphabetically, except NA goes last
     const isNA = _.partition(groups, g => g.name.toLowerCase() === 'na');
     return _.sortBy(isNA[1], g => g.name.toLowerCase()).concat(isNA[0]);
@@ -95,9 +87,7 @@ export function getOrdinals(num: number, base: number) {
     return inNewBase.map(n => n.map(i => alphabet[i]).join(''));
 }
 
-export function getVennPlotData(
-    combinationSets: { groups: string[]; cases: string[] }[]
-) {
+export function getVennPlotData(combinationSets: { groups: string[]; cases: string[] }[]) {
     return combinationSets
         .map(set => {
             return {
@@ -120,9 +110,7 @@ export function caseCountsInParens(
         (Array.isArray(patients) || patients.isComplete)
     ) {
         const samplesArr = Array.isArray(samples) ? samples : samples.result!;
-        const patientsArr = Array.isArray(patients)
-            ? patients
-            : patients.result!;
+        const patientsArr = Array.isArray(patients) ? patients : patients.result!;
         if (samplesArr.length === patientsArr.length) {
             text = `(${samplesArr.length})`;
         } else {
@@ -136,17 +124,12 @@ export function caseCountsInParens(
     return text;
 }
 
-export function caseCounts(
-    numSamples: number,
-    numPatients: number,
-    delimiter = '/',
-    infix = ' '
-) {
+export function caseCounts(numSamples: number, numPatients: number, delimiter = '/', infix = ' ') {
     if (numSamples === numPatients) {
         const plural = numSamples !== 1;
-        return `${numSamples}${infix}sample${
+        return `${numSamples}${infix}sample${plural ? 's' : ''}${delimiter}patient${
             plural ? 's' : ''
-        }${delimiter}patient${plural ? 's' : ''}`;
+        }`;
     } else {
         const pluralSamples = numSamples !== 1;
         const pluralPatients = numPatients !== 1;
@@ -158,9 +141,7 @@ export function caseCounts(
 
 export function getPatientIdentifiers(
     sampleIdentifiers: SampleIdentifier[],
-    sampleSet: ComplexKeyMap<
-        Pick<Sample, 'uniquePatientKey' | 'patientId' | 'studyId'>
-    >
+    sampleSet: ComplexKeyMap<Pick<Sample, 'uniquePatientKey' | 'patientId' | 'studyId'>>
 ) {
     const patientSet: { [uniquePatientKey: string]: PatientIdentifier } = {};
     for (const sampleId of sampleIdentifiers) {
@@ -178,9 +159,7 @@ export function getPatientIdentifiers(
     return _.values(patientSet);
 }
 
-export function getOverlappingSamples(
-    groups: Pick<ComparisonGroup, 'studies'>[]
-) {
+export function getOverlappingSamples(groups: Pick<ComparisonGroup, 'studies'>[]) {
     // samples that are in at least two selected groups
     const sampleUseCount = new ComplexKeyCounter();
     for (const group of groups) {
@@ -200,9 +179,7 @@ export function getOverlappingSamples(
     return overlapping;
 }
 
-export function getOverlappingPatients(
-    groups: Pick<ComparisonGroup, 'studies'>[]
-) {
+export function getOverlappingPatients(groups: Pick<ComparisonGroup, 'studies'>[]) {
     // patients that are in at least two selected groups
     const patientUseCount = new ComplexKeyCounter();
     for (const group of groups) {
@@ -223,23 +200,16 @@ export function getOverlappingPatients(
 }
 
 export function isGroupEmpty(group: Pick<ComparisonGroup, 'studies'>) {
-    return !_.some(
-        group.studies,
-        study => study.samples.length > 0 || study.patients.length > 0
-    );
+    return !_.some(group.studies, study => study.samples.length > 0 || study.patients.length > 0);
 }
 
 export function getStudyIds(groups: Pick<SessionGroupData, 'studies'>[]) {
     return _.uniq<string>(
-        _.flattenDeep<string>(
-            groups.map(group => group.studies.map(study => study.id))
-        )
+        _.flattenDeep<string>(groups.map(group => group.studies.map(study => study.id)))
     );
 }
 
-export function getSampleIdentifiers(
-    groups: Pick<SessionGroupData, 'studies'>[]
-) {
+export function getSampleIdentifiers(groups: Pick<SessionGroupData, 'studies'>[]) {
     return _.uniqWith(
         _.flattenDeep<SampleIdentifier>(
             groups.map(group =>
@@ -252,8 +222,7 @@ export function getSampleIdentifiers(
                 })
             )
         ),
-        (id1, id2) =>
-            id1.sampleId === id2.sampleId && id1.studyId === id2.studyId
+        (id1, id2) => id1.sampleId === id2.sampleId && id1.studyId === id2.studyId
     );
 }
 
@@ -261,9 +230,7 @@ export function getNumSamples(group: Pick<SessionGroupData, 'studies'>) {
     return _.sum(group.studies.map(study => study.samples.length));
 }
 
-export function getNumPatients(
-    group: Pick<StudyViewComparisonGroup, 'studies'>
-) {
+export function getNumPatients(group: Pick<StudyViewComparisonGroup, 'studies'>) {
     return _.sum(group.studies.map(study => study.patients.length));
 }
 
@@ -307,9 +274,7 @@ export function finalizeStudiesAttr(
     };
 }
 
-export function getOverlapFilteredGroups<
-    T extends Pick<ComparisonGroup, 'studies'>
->(
+export function getOverlapFilteredGroups<T extends Pick<ComparisonGroup, 'studies'>>(
     groups: T[],
     info: {
         overlappingSamplesSet: ComplexKeySet;
@@ -330,10 +295,7 @@ export function getOverlapFilteredGroups<
             const nonOverlappingPatients = study.patients.filter(patientId => {
                 return !overlappingPatientsSet.has({ studyId, patientId });
             });
-            if (
-                nonOverlappingSamples.length > 0 ||
-                nonOverlappingPatients.length > 0
-            ) {
+            if (nonOverlappingSamples.length > 0 || nonOverlappingPatients.length > 0) {
                 studies.push({
                     id: studyId,
                     samples: nonOverlappingSamples,
@@ -364,10 +326,8 @@ export function MakeEnrichmentsTabUI(
                 store.activeStudyIds,
             ];
             if (
-                (store.activeGroups.isComplete &&
-                    store.activeGroups.result.length !== 2) ||
-                (store.activeStudyIds.isComplete &&
-                    store.activeStudyIds.result.length > 1)
+                (store.activeGroups.isComplete && store.activeGroups.result.length !== 2) ||
+                (store.activeStudyIds.isComplete && store.activeStudyIds.result.length > 1)
             ) {
                 // dont bother loading data for and computing enrichments UI if its not valid situation for it
             } else {
@@ -391,23 +351,15 @@ export function MakeEnrichmentsTabUI(
                         )}
                     </span>
                 );
-            } else if (
-                store.activeStudyIds.result!.length > 1 &&
-                !multiStudyAnalysisPossible
-            ) {
-                return (
-                    <span>
-                        {ENRICHMENTS_TOO_MANY_STUDIES_MSG(enrichmentType)}
-                    </span>
-                );
+            } else if (store.activeStudyIds.result!.length > 1 && !multiStudyAnalysisPossible) {
+                return <span>{ENRICHMENTS_TOO_MANY_STUDIES_MSG(enrichmentType)}</span>;
             } else {
                 const content: any = [];
                 content.push(
                     <OverlapExclusionIndicator
                         store={store}
                         only={
-                            patientAnalysisPossible &&
-                            store.usePatientLevelEnrichments
+                            patientAnalysisPossible && store.usePatientLevelEnrichments
                                 ? 'patient'
                                 : 'sample'
                         }
@@ -417,9 +369,7 @@ export function MakeEnrichmentsTabUI(
                 return content;
             }
         },
-        renderPending: () => (
-            <Loader center={true} isLoading={true} size={'big'} />
-        ),
+        renderPending: () => <Loader center={true} isLoading={true} size={'big'} />,
         renderError: () => <ErrorMessage />,
     });
 }
@@ -473,9 +423,7 @@ export function getDefaultGroupName(
     const equalityFilters = _.chain(filters.clinicalDataFilters || [])
         .filter(
             clinicalDataFilter =>
-                clinicalAttributeIdToDataType[
-                    clinicalDataFilter.attributeId
-                ] === DataType.STRING
+                clinicalAttributeIdToDataType[clinicalDataFilter.attributeId] === DataType.STRING
         )
         .sortBy(filter => filter.attributeId) // sort clinical data equality filters into a canonical order - lets just do alphabetical by attribute id
         .map(filter => _.flatMap(filter.values, datum => datum.value).join('+')) // get each attributes selected values, joined by +
@@ -520,8 +468,8 @@ export function MissingSamplesMessage(props: { samples: SampleIdentifier[] }) {
     return (
         <div style={{ width: 380 }}>
             <div style={{ marginBottom: 7 }}>
-                The following samples cannot be found in our database. They
-                might have been removed or changed since this group was created:{' '}
+                The following samples cannot be found in our database. They might have been removed
+                or changed since this group was created:{' '}
             </div>
             <div style={{ maxHeight: 200, overflowY: 'scroll' }}>
                 {props.samples.map(sample => (
@@ -532,10 +480,7 @@ export function MissingSamplesMessage(props: { samples: SampleIdentifier[] }) {
     );
 }
 
-export function splitData<D extends { value: string }>(
-    data: D[],
-    numberOfSplits: number
-) {
+export function splitData<D extends { value: string }>(data: D[], numberOfSplits: number) {
     data = _.chain(data)
         .filter(d => !isNaN(d.value as any))
         .sortBy(d => parseFloat(d.value))
@@ -561,10 +506,7 @@ export function intersectSamples(
     const studies2 = _.keyBy(groupData2, elt => elt.id);
     const intersection = _.mapValues(studies1, (elt, studyId) => ({
         id: elt.id,
-        samples: _.intersection(
-            elt.samples,
-            studyId in studies2 ? studies2[studyId].samples : []
-        ),
+        samples: _.intersection(elt.samples, studyId in studies2 ? studies2[studyId].samples : []),
     }));
     return _.values(intersection).filter(elt => elt.samples.length > 0);
 }
@@ -671,22 +613,17 @@ export function convertPatientsStudiesAttrToSamples(
         id: elt.id,
         samples: _.flatten(
             elt.patients.map(patientId => {
-                return (
-                    patientToSamples.get({ patientId, studyId: elt.id }) || []
-                ).map(s => s.sampleId);
+                return (patientToSamples.get({ patientId, studyId: elt.id }) || []).map(
+                    s => s.sampleId
+                );
             })
         ),
     }));
 }
 
 export function partitionCasesByGroupMembership(
-    groupsNotOverlapRemoved: Pick<
-        StudyViewComparisonGroup,
-        'studies' | 'uid'
-    >[],
-    getCaseIdentifiers: (
-        group: Pick<StudyViewComparisonGroup, 'studies' | 'uid'>
-    ) => any[],
+    groupsNotOverlapRemoved: Pick<StudyViewComparisonGroup, 'studies' | 'uid'>[],
+    getCaseIdentifiers: (group: Pick<StudyViewComparisonGroup, 'studies' | 'uid'>) => any[],
     getUniqueCaseKey: (caseIdentifier: any) => string,
     caseKeys: string[]
 ) {
@@ -719,9 +656,7 @@ export function partitionCasesByGroupMembership(
     return partitionMap.entries();
 }
 
-export interface IOverlapComputations<
-    T extends Pick<ComparisonGroup, 'studies' | 'uid'>
-> {
+export interface IOverlapComputations<T extends Pick<ComparisonGroup, 'studies' | 'uid'>> {
     groups: T[];
     overlappingSamples: SampleIdentifier[];
     overlappingPatients: PatientIdentifier[];
@@ -732,15 +667,11 @@ export interface IOverlapComputations<
     excludedFromAnalysis: { [uid: string]: true };
 }
 
-export function getOverlapComputations<
-    T extends Pick<ComparisonGroup, 'studies' | 'uid'>
->(
+export function getOverlapComputations<T extends Pick<ComparisonGroup, 'studies' | 'uid'>>(
     groups: T[],
     isGroupSelected: (uid: string) => boolean
 ): IOverlapComputations<T> {
-    let filteredGroups: T[] = groups.filter(group =>
-        isGroupSelected(group.uid)
-    );
+    let filteredGroups: T[] = groups.filter(group => isGroupSelected(group.uid));
 
     const totalSampleOverlap = new ComplexKeySet();
     const totalPatientOverlap = new ComplexKeySet();
@@ -795,9 +726,7 @@ export function getOverlapComputations<
                 break;
             } else {
                 // otherwise, keep iterating
-                filteredGroups = filteredGroups.filter(
-                    g => !(g.uid in removedGroups)
-                );
+                filteredGroups = filteredGroups.filter(g => !(g.uid in removedGroups));
             }
         }
     }

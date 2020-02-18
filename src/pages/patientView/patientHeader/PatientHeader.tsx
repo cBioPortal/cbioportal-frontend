@@ -4,10 +4,7 @@ import { OverlayTrigger, Popover } from 'react-bootstrap';
 
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import { getSpanElements } from '../clinicalInformation/lib/clinicalAttributesUtil.js';
-import {
-    DefaultTooltip,
-    placeArrowBottomLeft,
-} from 'cbioportal-frontend-commons';
+import { DefaultTooltip, placeArrowBottomLeft } from 'cbioportal-frontend-commons';
 import SampleManager from '../SampleManager';
 
 import styles from './styles.module.scss';
@@ -19,10 +16,7 @@ export type IPatientHeaderProps = {
     handlePatientClick: any;
     darwinUrl?: string;
 };
-export default class PatientHeader extends React.Component<
-    IPatientHeaderProps,
-    {}
-> {
+export default class PatientHeader extends React.Component<IPatientHeaderProps, {}> {
     public render() {
         return (
             <div className={styles.patientHeader}>
@@ -63,10 +57,7 @@ export default class PatientHeader extends React.Component<
     private getPopoverPatient(patient: any) {
         return (
             patient && (
-                <div
-                    key={patient.id}
-                    style={{ maxHeight: 400, maxWidth: 600, overflow: 'auto' }}
-                >
+                <div key={patient.id} style={{ maxHeight: 400, maxWidth: 600, overflow: 'auto' }}>
                     <h5>{patient.id}</h5>
                     <ClinicalInformationPatientTable
                         showFilter={false}
@@ -85,19 +76,16 @@ export default class PatientHeader extends React.Component<
         sampleManager?: SampleManager | null
     ) {
         const clinicalDataLegacy = fromPairs(
-            patient.clinicalData.map((x: any) => [
-                x.clinicalAttributeId,
-                x.value,
-            ])
+            patient.clinicalData.map((x: any) => [x.clinicalAttributeId, x.value])
         );
         // get common clinical attributes in all samples
         if (sampleManager) {
-            Object.keys(
-                sampleManager.commonClinicalDataLegacyCleanAndDerived
-            ).forEach((attr: string) => {
-                clinicalDataLegacy[attr] =
-                    sampleManager.commonClinicalDataLegacyCleanAndDerived[attr];
-            });
+            Object.keys(sampleManager.commonClinicalDataLegacyCleanAndDerived).forEach(
+                (attr: string) => {
+                    clinicalDataLegacy[attr] =
+                        sampleManager.commonClinicalDataLegacyCleanAndDerived[attr];
+                }
+            );
         }
 
         return (
@@ -113,9 +101,7 @@ export default class PatientHeader extends React.Component<
                     <span className="clinical-spans" id="patient-attributes">
                         <a
                             href="javascript:void(0)"
-                            onClick={() =>
-                                this.props.handlePatientClick(patient.id)
-                            }
+                            onClick={() => this.props.handlePatientClick(patient.id)}
                         >
                             {patient.id}
                         </a>

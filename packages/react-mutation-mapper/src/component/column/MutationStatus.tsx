@@ -12,10 +12,7 @@ type MutationStatusProps = {
     styleMap?: { [mutationStatus: string]: React.CSSProperties };
 };
 
-export default class MutationStatus extends React.Component<
-    MutationStatusProps,
-    {}
-> {
+export default class MutationStatus extends React.Component<MutationStatusProps, {}> {
     public static defaultProps: Partial<MutationStatusProps> = {
         enableTooltip: true,
     };
@@ -23,9 +20,7 @@ export default class MutationStatus extends React.Component<
     public render() {
         const value =
             this.props.value ||
-            (this.props.mutation
-                ? this.props.mutation.mutationStatus
-                : undefined);
+            (this.props.mutation ? this.props.mutation.mutationStatus : undefined);
         let content: JSX.Element;
 
         if (value) {
@@ -70,10 +65,7 @@ export default class MutationStatus extends React.Component<
 
         if (this.props.enableTooltip) {
             content = (
-                <DefaultTooltip
-                    overlay={<span>{value}</span>}
-                    placement="right"
-                >
+                <DefaultTooltip overlay={<span>{value}</span>} placement="right">
                     {content}
                 </DefaultTooltip>
             );

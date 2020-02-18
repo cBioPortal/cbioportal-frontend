@@ -10,10 +10,7 @@ interface ISelectionComponentProps {
     style?: any;
 }
 
-export default class SelectionComponent extends React.Component<
-    ISelectionComponentProps,
-    {}
-> {
+export default class SelectionComponent extends React.Component<ISelectionComponentProps, {}> {
     render() {
         const { onRender, ...props } = this.props;
         if (props.width! > 5 || props.height! > 5) {

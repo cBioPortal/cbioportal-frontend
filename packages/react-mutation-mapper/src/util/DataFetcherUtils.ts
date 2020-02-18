@@ -39,8 +39,7 @@ export async function fetchVariantAnnotationsByMutation(
 ) {
     const genomicLocations = uniqueGenomicLocations(mutations);
 
-    return genomicLocations.length > 0 &&
-        client.fetchVariantAnnotationByGenomicLocationPOST
+    return genomicLocations.length > 0 && client.fetchVariantAnnotationByGenomicLocationPOST
         ? await client.fetchVariantAnnotationByGenomicLocationPOST({
               genomicLocations,
               fields,
@@ -69,9 +68,7 @@ export function initGenomeNexusClient(
     cachePostMethods?: boolean,
     apiCacheLimit?: number
 ): GenomeNexusAPI {
-    const client = new GenomeNexusAPI(
-        genomeNexusUrl || DEFAULT_GENOME_NEXUS_URL
-    );
+    const client = new GenomeNexusAPI(genomeNexusUrl || DEFAULT_GENOME_NEXUS_URL);
 
     if (cachePostMethods) {
         cachePostMethodsOnClient(GenomeNexusAPI, [], /POST$/, apiCacheLimit);
@@ -85,17 +82,10 @@ export function initGenomeNexusInternalClient(
     cachePostMethods?: boolean,
     apiCacheLimit?: number
 ): GenomeNexusAPIInternal {
-    const client = new GenomeNexusAPIInternal(
-        genomeNexusUrl || DEFAULT_GENOME_NEXUS_URL
-    );
+    const client = new GenomeNexusAPIInternal(genomeNexusUrl || DEFAULT_GENOME_NEXUS_URL);
 
     if (cachePostMethods) {
-        cachePostMethodsOnClient(
-            GenomeNexusAPIInternal,
-            [],
-            /POST$/,
-            apiCacheLimit
-        );
+        cachePostMethodsOnClient(GenomeNexusAPIInternal, [], /POST$/, apiCacheLimit);
     }
 
     return client;

@@ -8,10 +8,7 @@ export interface IErrorMessageProps {
 }
 
 @observer
-export default class ErrorMessage extends React.Component<
-    IErrorMessageProps,
-    {}
-> {
+export default class ErrorMessage extends React.Component<IErrorMessageProps, {}> {
     static defaultProps = {
         message: 'Error encountered.',
     };
@@ -27,12 +24,9 @@ export default class ErrorMessage extends React.Component<
                         marginRight: 7,
                     }}
                 />
-                {this.props.message!} Please let us know about this error and
-                how you got here at{' '}
+                {this.props.message!} Please let us know about this error and how you got here at{' '}
                 <b style={{ whiteSpace: 'nowrap' }}>
-                    <a
-                        href={`mailto:${AppConfig.serverConfig.skin_email_contact}`}
-                    >
+                    <a href={`mailto:${AppConfig.serverConfig.skin_email_contact}`}>
                         {AppConfig.serverConfig.skin_email_contact}
                     </a>
                 </b>

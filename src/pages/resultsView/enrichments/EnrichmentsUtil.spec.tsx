@@ -492,10 +492,7 @@ describe('EnrichmentsUtil', () => {
 
         it('returns correct scatter data', () => {
             assert.deepEqual(
-                getAlterationScatterData(
-                    exampleAlterationEnrichmentRowData as any,
-                    ['EGFR']
-                ),
+                getAlterationScatterData(exampleAlterationEnrichmentRowData as any, ['EGFR']),
                 [
                     {
                         x: 10,
@@ -527,9 +524,7 @@ describe('EnrichmentsUtil', () => {
 
         it('returns correct scatter data', () => {
             assert.deepEqual(
-                getExpressionScatterData(exampleExpressionEnrichmentRowData, [
-                    'EGFR',
-                ]),
+                getExpressionScatterData(exampleExpressionEnrichmentRowData, ['EGFR']),
                 [
                     {
                         x: -0.7514352361955119,
@@ -739,10 +734,7 @@ describe('EnrichmentsUtil', () => {
 
     describe('#getAlterationsTooltipContent()', () => {
         it('returns correct tooltip content', () => {
-            assert.equal(
-                getAlterationsTooltipContent(exampleAlterations),
-                'EGFR: MUT; AMP; '
-            );
+            assert.equal(getAlterationsTooltipContent(exampleAlterations), 'EGFR: MUT; AMP; ');
         });
     });
 
@@ -751,9 +743,7 @@ describe('EnrichmentsUtil', () => {
             assert.deepEqual(getAlterationEnrichmentColumns([]), []);
             assert.deepEqual(
                 _.map(
-                    getAlterationEnrichmentColumns([
-                        { name: 'altered group', description: '' },
-                    ]),
+                    getAlterationEnrichmentColumns([{ name: 'altered group', description: '' }]),
                     datum => datum.name
                 ),
                 []
@@ -797,10 +787,7 @@ describe('EnrichmentsUtil', () => {
 
     describe('#getEnrichmentBarPlotData()', () => {
         it('returns correct data', () => {
-            const data = _.keyBy(
-                exampleAlterationEnrichmentRowData,
-                datum => datum.hugoGeneSymbol
-            );
+            const data = _.keyBy(exampleAlterationEnrichmentRowData, datum => datum.hugoGeneSymbol);
             //empty requests
             assert.deepEqual(getEnrichmentBarPlotData({}, []), []);
             //empty genes
@@ -811,15 +798,11 @@ describe('EnrichmentsUtil', () => {
             assert.deepEqual(getEnrichmentBarPlotData(data, ['EGFR']), [
                 {
                     minorCategory: 'altered group',
-                    counts: [
-                        { majorCategory: 'EGFR', count: 75, percentage: 100 },
-                    ],
+                    counts: [{ majorCategory: 'EGFR', count: 75, percentage: 100 }],
                 },
                 {
                     minorCategory: 'unaltered group',
-                    counts: [
-                        { majorCategory: 'EGFR', count: 0, percentage: 0 },
-                    ],
+                    counts: [{ majorCategory: 'EGFR', count: 0, percentage: 0 }],
                 },
             ]);
         });
@@ -833,25 +816,22 @@ describe('EnrichmentsUtil', () => {
             ] as any);
 
             //non empty requests
-            assert.deepEqual(
-                getGeneListOptions(exampleAlterationEnrichmentRowData),
-                [
-                    { label: 'User-defined genes', genes: [] },
-                    {
-                        label: 'Genes with highest frequency in any group',
-                        genes: ['EGFR', 'FBXW4', 'CAND2'],
-                    },
-                    {
-                        label: 'Genes with highest average frequency',
-                        genes: ['EGFR', 'FBXW4', 'CAND2'],
-                    },
-                    {
-                        label: 'Genes with most significant p-value',
-                        genes: ['EGFR', 'FBXW4', 'CAND2'],
-                    },
-                    { label: 'Sync with table (up to 100 genes)', genes: [] },
-                ]
-            );
+            assert.deepEqual(getGeneListOptions(exampleAlterationEnrichmentRowData), [
+                { label: 'User-defined genes', genes: [] },
+                {
+                    label: 'Genes with highest frequency in any group',
+                    genes: ['EGFR', 'FBXW4', 'CAND2'],
+                },
+                {
+                    label: 'Genes with highest average frequency',
+                    genes: ['EGFR', 'FBXW4', 'CAND2'],
+                },
+                {
+                    label: 'Genes with most significant p-value',
+                    genes: ['EGFR', 'FBXW4', 'CAND2'],
+                },
+                { label: 'Sync with table (up to 100 genes)', genes: [] },
+            ]);
 
             //non empty requests
             let exampleCopyNumberAlterationEnrichmentRowData = _.map(
@@ -868,10 +848,7 @@ describe('EnrichmentsUtil', () => {
                 }
             );
             assert.deepEqual(
-                getGeneListOptions(
-                    exampleCopyNumberAlterationEnrichmentRowData,
-                    true
-                ),
+                getGeneListOptions(exampleCopyNumberAlterationEnrichmentRowData, true),
                 [
                     { label: 'User-defined genes', genes: [] },
                     {

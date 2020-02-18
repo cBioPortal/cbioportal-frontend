@@ -4,10 +4,7 @@ import { observable } from 'mobx';
 import Chart from 'chart.js';
 import AppConfig from 'appConfig';
 import 'react-select1/dist/react-select.css';
-import {
-    CancerStudyQueryUrlParams,
-    QueryStore,
-} from '../../shared/components/query/QueryStore';
+import { CancerStudyQueryUrlParams, QueryStore } from '../../shared/components/query/QueryStore';
 import QueryAndDownloadTabs from '../../shared/components/query/QueryAndDownloadTabs';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import RightBar from '../../shared/components/rightbar/RightBar';
@@ -22,12 +19,7 @@ import { createQueryStore } from 'shared/lib/createQueryStore';
     beforeDraw: function(chartInstance: any) {
         const ctx = chartInstance.chart.ctx;
         ctx.fillStyle = 'white';
-        ctx.fillRect(
-            0,
-            0,
-            chartInstance.chart.width,
-            chartInstance.chart.height
-        );
+        ctx.fillRect(0, 0, chartInstance.chart.width, chartInstance.chart.height);
     },
 });
 
@@ -39,10 +31,7 @@ export interface IResultsViewPageProps {
 
 @inject('routing')
 @observer
-export default class HomePage extends React.Component<
-    IResultsViewPageProps,
-    {}
-> {
+export default class HomePage extends React.Component<IResultsViewPageProps, {}> {
     @observable showQuerySelector = true;
 
     queryStore: QueryStore;
@@ -80,9 +69,7 @@ export default class HomePage extends React.Component<
 
                 <QueryAndDownloadTabs
                     getQueryStore={this.getQueryStore}
-                    showQuickSearchTab={
-                        AppConfig.serverConfig.quick_search_enabled
-                    }
+                    showQuickSearchTab={AppConfig.serverConfig.quick_search_enabled}
                     showDownloadTab={true}
                 />
             </PageLayout>

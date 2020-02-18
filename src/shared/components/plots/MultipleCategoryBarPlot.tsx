@@ -7,10 +7,7 @@ import CBIOPORTAL_VICTORY_THEME, {
     axisTickLabelStyles,
     baseLabelStyles,
 } from '../../theme/cBioPoralTheme';
-import {
-    getTextWidth,
-    stringListToIndexSet,
-} from 'cbioportal-frontend-commons';
+import { getTextWidth, stringListToIndexSet } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
 import _ from 'lodash';
 import {
@@ -24,11 +21,7 @@ import {
 } from 'victory';
 import { tickFormatNumeral } from './TickUtils';
 import { makeUniqueColorGetter } from './PlotUtils';
-import {
-    makePlotData,
-    makeBarSpecs,
-    sortDataByCategory,
-} from './MultipleCategoryBarPlotUtils';
+import { makePlotData, makeBarSpecs, sortDataByCategory } from './MultipleCategoryBarPlotUtils';
 import * as ReactDOM from 'react-dom';
 import { Popover } from 'react-bootstrap';
 import classnames from 'classnames';
@@ -96,9 +89,7 @@ export default class MultipleCategoryBarPlot extends React.Component<
     }
 
     @computed get getColor() {
-        const uniqueColorGetter = makeUniqueColorGetter(
-            _.values(this.props.categoryToColor)
-        );
+        const uniqueColorGetter = makeUniqueColorGetter(_.values(this.props.categoryToColor));
         const categoryToColor: { [category: string]: string } = {};
         _.forEach(this.props.categoryToColor, (color, category) => {
             categoryToColor[category.toLowerCase()] = color;
@@ -201,43 +192,31 @@ export default class MultipleCategoryBarPlot extends React.Component<
         if (this.legendData.length === 0) {
             return 0;
         } else {
-            const numRows = Math.ceil(
-                this.legendData.length / LEGEND_ITEMS_PER_ROW
-            );
+            const numRows = Math.ceil(this.legendData.length / LEGEND_ITEMS_PER_ROW);
             return 23.7 * numRows;
         }
     }
 
     @computed get legendData() {
-        return sortDataByCategory(
-            this.data,
-            d => d.minorCategory,
-            this.minorCategoryOrder
-        ).map(obj => ({
-            name: obj.minorCategory,
-            symbol: {
-                type: 'square',
-                fill: this.getColor(obj.minorCategory),
-                strokeOpacity: 0,
-                size: 5,
-            },
-        }));
+        return sortDataByCategory(this.data, d => d.minorCategory, this.minorCategoryOrder).map(
+            obj => ({
+                name: obj.minorCategory,
+                symbol: {
+                    type: 'square',
+                    fill: this.getColor(obj.minorCategory),
+                    strokeOpacity: 0,
+                    size: 5,
+                },
+            })
+        );
     }
 
     private get legend() {
         if (this.legendData.length > 0) {
             return (
                 <VictoryLegend
-                    orientation={
-                        this.legendLocation === 'right'
-                            ? 'vertical'
-                            : 'horizontal'
-                    }
-                    itemsPerRow={
-                        this.legendLocation === 'right'
-                            ? undefined
-                            : LEGEND_ITEMS_PER_ROW
-                    }
+                    orientation={this.legendLocation === 'right' ? 'vertical' : 'horizontal'}
+                    itemsPerRow={this.legendLocation === 'right' ? undefined : LEGEND_ITEMS_PER_ROW}
                     rowGutter={this.legendLocation === 'right' ? undefined : -5}
                     gutter={30}
                     data={this.legendData}
@@ -276,8 +255,7 @@ export default class MultipleCategoryBarPlot extends React.Component<
         const majorCategoryCounts: { [major: string]: number } = {};
         for (const d of this.data) {
             for (const c of d.counts) {
-                majorCategoryCounts[c.majorCategory] =
-                    majorCategoryCounts[c.majorCategory] || 0;
+                majorCategoryCounts[c.majorCategory] = majorCategoryCounts[c.majorCategory] || 0;
                 if (this.props.stacked) {
                     majorCategoryCounts[c.majorCategory] += c.count;
                 } else {
@@ -355,20 +333,15 @@ export default class MultipleCategoryBarPlot extends React.Component<
 
     @computed get chartDomainPadding() {
         return {
-            [this.countAxis]: this.props.percentage
-                ? 0
-                : this.countAxisDomainPadding,
-            [this.categoryAxis]:
-                this.categoryAxisDomainPadding + this.additionalPadding,
+            [this.countAxis]: this.props.percentage ? 0 : this.countAxisDomainPadding,
+            [this.categoryAxis]: this.categoryAxisDomainPadding + this.additionalPadding,
         };
     }
 
     @computed get additionalPadding() {
         //if not stacked add padding to move the bars right
         //and add minorCategories count to fix padding issue when there are lot of categories
-        return this.props.stacked
-            ? 0
-            : this.categoryCoord(this.data.length / 2) + this.data.length;
+        return this.props.stacked ? 0 : this.categoryCoord(this.data.length / 2) + this.data.length;
     }
 
     @computed get chartExtent() {
@@ -384,9 +357,7 @@ export default class MultipleCategoryBarPlot extends React.Component<
                 miscPadding += this.categoryCoord(this.data[0].counts.length);
             }
             return (
-                this.categoryCoord(numBars - 1) +
-                2 * this.categoryAxisDomainPadding +
-                miscPadding
+                this.categoryCoord(numBars - 1) + 2 * this.categoryAxisDomainPadding + miscPadding
             );
         } else {
             return miscPadding;
@@ -439,9 +410,7 @@ export default class MultipleCategoryBarPlot extends React.Component<
     }
 
     @computed get numberOfTicks() {
-        return this.props.ticksCount !== undefined
-            ? this.props.ticksCount
-            : NUM_AXIS_TICKS;
+        return this.props.ticksCount !== undefined ? this.props.ticksCount : NUM_AXIS_TICKS;
     }
 
     @computed get zeroCountOffset() {
@@ -459,24 +428,19 @@ export default class MultipleCategoryBarPlot extends React.Component<
         if (this.props.stacked) {
             return 0;
         } else {
-            return addOffset
-                ? 0.01 * (this.maxMajorCount / this.numberOfTicks)
-                : 0;
+            return addOffset ? 0.01 * (this.maxMajorCount / this.numberOfTicks) : 0;
         }
     }
 
     @computed get axisStyle() {
-        return this.props.stacked
-            ? this.props.axisStyle || {}
-            : { axis: { stroke: '#b3b3b3' } };
+        return this.props.stacked ? this.props.axisStyle || {} : { axis: { stroke: '#b3b3b3' } };
     }
 
     @computed get categoryAxisStyle() {
         let style = this.axisStyle;
         if (!this.props.stacked) {
             let width =
-                this.categoryCoord(this.data.length) -
-                this.data.length * this.barSeparation;
+                this.categoryCoord(this.data.length) - this.data.length * this.barSeparation;
             style = {
                 ...this.axisStyle,
                 ...{ axis: { strokeWidth: 0 } },
@@ -499,56 +463,30 @@ export default class MultipleCategoryBarPlot extends React.Component<
         //  this axis is for numbers, not categories
         const label = [this.props.axisLabelX];
         if (this.props.horizontalBars) {
-            label.unshift(
-                `${this.props.countAxisLabel}${
-                    this.props.percentage ? ' (%)' : ''
-                }`
-            );
+            label.unshift(`${this.props.countAxisLabel}${this.props.percentage ? ' (%)' : ''}`);
         }
-        const style = this.props.horizontalBars
-            ? this.axisStyle
-            : this.categoryAxisStyle;
+        const style = this.props.horizontalBars ? this.axisStyle : this.categoryAxisStyle;
         return (
             <VictoryAxis
                 orientation="bottom"
                 offsetY={50}
                 crossAxis={false}
                 label={label}
-                tickValues={
-                    this.props.horizontalBars
-                        ? undefined
-                        : this.categoryTickValues
-                }
-                tickCount={
-                    this.props.horizontalBars ? this.numberOfTicks : undefined
-                }
+                tickValues={this.props.horizontalBars ? undefined : this.categoryTickValues}
+                tickCount={this.props.horizontalBars ? this.numberOfTicks : undefined}
                 tickFormat={
-                    this.props.horizontalBars
-                        ? this.formatNumericalTick
-                        : this.formatCategoryTick
+                    this.props.horizontalBars ? this.formatNumericalTick : this.formatCategoryTick
                 }
                 tickLabelComponent={
                     <VictoryLabel
-                        angle={
-                            this.props.horizontalBars
-                                ? undefined
-                                : CATEGORY_LABEL_HORZ_ANGLE
-                        }
-                        verticalAnchor={
-                            this.props.horizontalBars ? undefined : 'start'
-                        }
-                        textAnchor={
-                            this.props.horizontalBars ? undefined : 'start'
-                        }
+                        angle={this.props.horizontalBars ? undefined : CATEGORY_LABEL_HORZ_ANGLE}
+                        verticalAnchor={this.props.horizontalBars ? undefined : 'start'}
+                        textAnchor={this.props.horizontalBars ? undefined : 'start'}
                     />
                 }
                 axisLabelComponent={
                     <VictoryLabel
-                        dy={
-                            this.props.horizontalBars
-                                ? 35
-                                : this.biggestCategoryLabelSize + 24
-                        }
+                        dy={this.props.horizontalBars ? 35 : this.biggestCategoryLabelSize + 24}
                     />
                 }
                 style={style}
@@ -562,15 +500,9 @@ export default class MultipleCategoryBarPlot extends React.Component<
             label.push(this.props.axisLabelY);
         }
         if (!this.props.horizontalBars) {
-            label.push(
-                `${this.props.countAxisLabel}${
-                    this.props.percentage ? ' (%)' : ''
-                }`
-            );
+            label.push(`${this.props.countAxisLabel}${this.props.percentage ? ' (%)' : ''}`);
         }
-        const style = !this.props.horizontalBars
-            ? this.axisStyle
-            : this.categoryAxisStyle;
+        const style = !this.props.horizontalBars ? this.axisStyle : this.categoryAxisStyle;
         return (
             <VictoryAxis
                 orientation="left"
@@ -578,18 +510,10 @@ export default class MultipleCategoryBarPlot extends React.Component<
                 crossAxis={false}
                 label={label}
                 dependentAxis={true}
-                tickValues={
-                    this.props.horizontalBars
-                        ? this.categoryTickValues
-                        : undefined
-                }
-                tickCount={
-                    this.props.horizontalBars ? undefined : this.numberOfTicks
-                }
+                tickValues={this.props.horizontalBars ? this.categoryTickValues : undefined}
+                tickCount={this.props.horizontalBars ? undefined : this.numberOfTicks}
                 tickFormat={
-                    this.props.horizontalBars
-                        ? this.formatCategoryTick
-                        : this.formatNumericalTick
+                    this.props.horizontalBars ? this.formatCategoryTick : this.formatNumericalTick
                 }
                 axisLabelComponent={
                     <VictoryLabel
@@ -650,11 +574,7 @@ export default class MultipleCategoryBarPlot extends React.Component<
     @computed get biggestLegendLabelWidth() {
         return Math.max(
             ...this.legendData.map(x =>
-                getTextWidth(
-                    x.name,
-                    baseLabelStyles.fontFamily,
-                    baseLabelStyles.fontSize + 'px'
-                )
+                getTextWidth(x.name, baseLabelStyles.fontFamily, baseLabelStyles.fontSize + 'px')
             )
         );
     }
@@ -662,11 +582,7 @@ export default class MultipleCategoryBarPlot extends React.Component<
     @computed get biggestCategoryLabelSize() {
         const maxSize = Math.max(
             ...this.labels.map(x =>
-                getTextWidth(
-                    x,
-                    axisTickLabelStyles.fontFamily,
-                    axisTickLabelStyles.fontSize + 'px'
-                )
+                getTextWidth(x, axisTickLabelStyles.fontFamily, axisTickLabelStyles.fontSize + 'px')
             )
         );
         if (this.props.horizontalBars) {
@@ -674,10 +590,7 @@ export default class MultipleCategoryBarPlot extends React.Component<
             return maxSize;
         } else {
             // if vertical mode, its label height when rotated
-            return (
-                maxSize *
-                Math.abs(Math.sin((Math.PI / 180) * CATEGORY_LABEL_HORZ_ANGLE))
-            );
+            return maxSize * Math.abs(Math.sin((Math.PI / 180) * CATEGORY_LABEL_HORZ_ANGLE));
         }
     }
 
@@ -799,9 +712,7 @@ export default class MultipleCategoryBarPlot extends React.Component<
                     }}
                     placement={tooltipPlacement}
                 >
-                    {this.tooltipFunction(
-                        this.tooltipModel.datum || this.tooltipModel.data[0]
-                    )}
+                    {this.tooltipFunction(this.tooltipModel.datum || this.tooltipModel.data[0])}
                 </Popover>,
                 document.body
             );
@@ -810,17 +721,10 @@ export default class MultipleCategoryBarPlot extends React.Component<
 
     @computed get chartEtl() {
         if (this.props.stacked) {
-            return (
-                <VictoryStack horizontal={this.props.horizontalBars}>
-                    {this.bars}
-                </VictoryStack>
-            );
+            return <VictoryStack horizontal={this.props.horizontalBars}>{this.bars}</VictoryStack>;
         }
         return (
-            <VictoryGroup
-                offset={this.offset}
-                horizontal={this.props.horizontalBars}
-            >
+            <VictoryGroup offset={this.offset} horizontal={this.props.horizontalBars}>
                 {this.bars}
             </VictoryGroup>
         );
@@ -847,9 +751,7 @@ export default class MultipleCategoryBarPlot extends React.Component<
                         viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
                         onMouseMove={this.onMouseMove}
                     >
-                        <g
-                            transform={`translate(${this.leftPadding}, ${this.topPadding})`}
-                        >
+                        <g transform={`translate(${this.leftPadding}, ${this.topPadding})`}>
                             <VictoryChart
                                 theme={CBIOPORTAL_VICTORY_THEME}
                                 width={this.chartWidth}
@@ -883,9 +785,7 @@ export default class MultipleCategoryBarPlot extends React.Component<
 
     private updateLegendWidth() {
         if (this.container) {
-            const legend = this.container
-                .getElementsByClassName(this.legendClassName)
-                .item(0);
+            const legend = this.container.getElementsByClassName(this.legendClassName).item(0);
             if (legend) {
                 this.computedLegendWidth = legend.getBoundingClientRect().width;
             }

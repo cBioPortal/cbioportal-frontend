@@ -35,18 +35,14 @@ describe('CivicCard', () => {
         const wrapper = shallow(<CivicCard {...props} />);
         expect(wrapper.find('.civic-card-variant-header')).to.have.length(0);
         expect(wrapper.find('.civic-card-variant-name')).to.have.length(0);
-        expect(wrapper.find('.civic-card-variant-entry-types')).to.have.length(
-            0
-        );
+        expect(wrapper.find('.civic-card-variant-entry-types')).to.have.length(0);
     });
 
     it('should have two variants', () => {
         const wrapper = shallow(<CivicCard {...props_2} />);
         expect(wrapper.find('.civic-card-variant-header')).to.have.length(2);
         expect(wrapper.find('.civic-card-variant-name')).to.have.length(2);
-        expect(wrapper.find('.civic-card-variant-entry-types')).to.have.length(
-            2
-        );
+        expect(wrapper.find('.civic-card-variant-entry-types')).to.have.length(2);
     });
 
     after(() => {});

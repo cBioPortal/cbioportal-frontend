@@ -1,19 +1,15 @@
-var assertScreenShotMatch = require('../../../shared/lib/testUtils')
-    .assertScreenShotMatch;
+var assertScreenShotMatch = require('../../../shared/lib/testUtils').assertScreenShotMatch;
 var assert = require('assert');
 var waitForOncoprint = require('../../../shared/specUtils').waitForOncoprint;
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
+var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
 var getNthOncoprintTrackOptionsElements = require('../../../shared/specUtils')
     .getNthOncoprintTrackOptionsElements;
-var getTextInOncoprintLegend = require('../../../shared/specUtils')
-    .getTextInOncoprintLegend;
+var getTextInOncoprintLegend = require('../../../shared/specUtils').getTextInOncoprintLegend;
 var setOncoprintMutationsMenuOpen = require('../../../shared/specUtils')
     .setOncoprintMutationsMenuOpen;
 var setResultsPageSettingsMenuOpen = require('../../../shared/specUtils')
     .setResultsPageSettingsMenuOpen;
-var useExternalFrontend = require('../../../shared/specUtils')
-    .useExternalFrontend;
+var useExternalFrontend = require('../../../shared/specUtils').useExternalFrontend;
 var waitForNumberOfStudyCheckboxes = require('../../../shared/specUtils')
     .waitForNumberOfStudyCheckboxes;
 var setInputText = require('../../../shared/specUtils').setInputText;
@@ -175,15 +171,13 @@ describe('oncoprint', function() {
 
             // Confirm that 'Dont cluster' is bolded, reflecting current unclustered state
             assert.equal(
-                $(
-                    mrnaElements.dropdown_selector + ' li:nth-child(1)'
-                ).getCssProperty('font-weight').value,
+                $(mrnaElements.dropdown_selector + ' li:nth-child(1)').getCssProperty('font-weight')
+                    .value,
                 FONT_WEIGHT_NORMAL
             );
             assert.equal(
-                $(
-                    mrnaElements.dropdown_selector + ' li:nth-child(2)'
-                ).getCssProperty('font-weight').value,
+                $(mrnaElements.dropdown_selector + ' li:nth-child(2)').getCssProperty('font-weight')
+                    .value,
                 FONT_WEIGHT_BOLD
             );
 
@@ -197,15 +191,13 @@ describe('oncoprint', function() {
 
             // Confirm that 'Cluster' is bolded, reflecting current clustered state
             assert.equal(
-                $(
-                    mrnaElements.dropdown_selector + ' li:nth-child(1)'
-                ).getCssProperty('font-weight').value,
+                $(mrnaElements.dropdown_selector + ' li:nth-child(1)').getCssProperty('font-weight')
+                    .value,
                 FONT_WEIGHT_BOLD
             );
             assert.equal(
-                $(
-                    mrnaElements.dropdown_selector + ' li:nth-child(2)'
-                ).getCssProperty('font-weight').value,
+                $(mrnaElements.dropdown_selector + ' li:nth-child(2)').getCssProperty('font-weight')
+                    .value,
                 FONT_WEIGHT_NORMAL
             );
 
@@ -215,15 +207,13 @@ describe('oncoprint', function() {
 
             // Confirm that 'Don't cluster' is bolded, reflecting current unclustered state
             assert.equal(
-                $(
-                    mrnaElements.dropdown_selector + ' li:nth-child(1)'
-                ).getCssProperty('font-weight').value,
+                $(mrnaElements.dropdown_selector + ' li:nth-child(1)').getCssProperty('font-weight')
+                    .value,
                 FONT_WEIGHT_NORMAL
             );
             assert.equal(
-                $(
-                    mrnaElements.dropdown_selector + ' li:nth-child(2)'
-                ).getCssProperty('font-weight').value,
+                $(mrnaElements.dropdown_selector + ' li:nth-child(2)').getCssProperty('font-weight')
+                    .value,
                 FONT_WEIGHT_BOLD
             );
         });
@@ -242,21 +232,14 @@ describe('oncoprint', function() {
             );
             waitForOncoprint(ONCOPRINT_TIMEOUT);
 
-            resultsPageSettingsDropdown =
-                'div[data-test="GlobalSettingsDropdown"]';
+            resultsPageSettingsDropdown = 'div[data-test="GlobalSettingsDropdown"]';
 
-            oncoKbCheckbox =
-                resultsPageSettingsDropdown +
-                ' input[data-test="annotateOncoKb"]';
-            hotspotsCheckbox =
-                resultsPageSettingsDropdown +
-                ' input[data-test="annotateHotspots"]';
+            oncoKbCheckbox = resultsPageSettingsDropdown + ' input[data-test="annotateOncoKb"]';
+            hotspotsCheckbox = resultsPageSettingsDropdown + ' input[data-test="annotateHotspots"]';
             cbioportalCheckbox =
-                resultsPageSettingsDropdown +
-                ' input[data-test="annotateCBioPortalCount"]';
+                resultsPageSettingsDropdown + ' input[data-test="annotateCBioPortalCount"]';
             cosmicCheckbox =
-                resultsPageSettingsDropdown +
-                ' input[data-test="annotateCOSMICCount"]';
+                resultsPageSettingsDropdown + ' input[data-test="annotateCOSMICCount"]';
         });
         it('annotates all types of mutations with cbioportal count and cosmic', () => {
             setResultsPageSettingsMenuOpen(true);
@@ -283,8 +266,7 @@ describe('oncoprint', function() {
                 'cbio count annotates missense mutations'
             );
             assert(
-                legendText.indexOf('Truncating Mutation (putative driver)') >
-                    -1,
+                legendText.indexOf('Truncating Mutation (putative driver)') > -1,
                 'cbio count annotates truncating mutations'
             );
 
@@ -310,8 +292,7 @@ describe('oncoprint', function() {
                 'cosmic count annotates missense mutations'
             );
             assert(
-                legendText.indexOf('Truncating Mutation (putative driver)') >
-                    -1,
+                legendText.indexOf('Truncating Mutation (putative driver)') > -1,
                 'cosmic count annotates truncating mutations'
             );
         });
@@ -323,10 +304,7 @@ describe('oncoprint', function() {
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
             var inputSelector = '.autosuggest input[type="text"]';
             browser.waitForExist(inputSelector, 10000);
-            browser.setValue(
-                inputSelector,
-                'ovarian serous cystadenocarcinoma tcga nature 2011'
-            );
+            browser.setValue(inputSelector, 'ovarian serous cystadenocarcinoma tcga nature 2011');
             waitForNumberOfStudyCheckboxes(1);
 
             // select it
@@ -355,9 +333,7 @@ describe('oncoprint', function() {
                 'patient id order correct'
             );
 
-            $(
-                '.oncoprintContainer .oncoprint__controls #viewDropdownButton'
-            ).click(); // open view menu
+            $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
             $(
                 '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]'
             ).waitForExist(10000);
@@ -388,10 +364,7 @@ describe('oncoprint', function() {
                 legendText.indexOf('Germline Mutation') > -1,
                 'by default, there are germline mutations'
             );
-            assert(
-                oncoprintDivText.indexOf('12%') > -1,
-                'by default, 12% altered'
-            );
+            assert(oncoprintDivText.indexOf('12%') > -1, 'by default, 12% altered');
 
             setResultsPageSettingsMenuOpen(true);
             const hideGermlineButton = 'input[data-test="HideGermline"]';
@@ -412,10 +385,7 @@ describe('oncoprint', function() {
             waitForOncoprint(ONCOPRINT_TIMEOUT);
             legendText = getTextInOncoprintLegend();
             oncoprintDivText = browser.getText('#oncoprintDiv');
-            assert(
-                legendText.indexOf('Germline Mutation') > -1,
-                'germline mutations are back now'
-            );
+            assert(legendText.indexOf('Germline Mutation') > -1, 'germline mutations are back now');
             assert(oncoprintDivText.indexOf('12%') > -1, '12% altered again');
         });
 
@@ -451,14 +421,8 @@ describe('oncoprint', function() {
             waitForOncoprint(ONCOPRINT_TIMEOUT);
             legendText = getTextInOncoprintLegend();
             oncoprintDivText = browser.getText('#oncoprintDiv');
-            assert(
-                legendText.indexOf('Germline Mutation') > -1,
-                'germline mutations are back now'
-            );
-            assert(
-                oncoprintDivText.indexOf('12%') > -1,
-                'still still 12% altered'
-            );
+            assert(legendText.indexOf('Germline Mutation') > -1, 'germline mutations are back now');
+            assert(oncoprintDivText.indexOf('12%') > -1, 'still still 12% altered');
         });
     });
 
@@ -469,9 +433,7 @@ describe('oncoprint', function() {
                 waitForOncoprint(ONCOPRINT_TIMEOUT);
 
                 // make sure we are in sample mode
-                $(
-                    '.oncoprintContainer .oncoprint__controls #viewDropdownButton'
-                ).click(); // open view menu
+                $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
                 $(
                     '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]'
                 ).waitForVisible(10000);
@@ -498,9 +460,7 @@ describe('oncoprint', function() {
                     'sorted patient order correct'
                 );
 
-                $(
-                    '.oncoprintContainer .oncoprint__controls #viewDropdownButton'
-                ).click(); // open view menu
+                $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
                 $(
                     '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]'
                 ).waitForVisible(10000);
@@ -529,14 +489,8 @@ describe('oncoprint', function() {
             checkBox.waitForExist(10000);
             browser.click('[data-test="StudySelect"] input');
 
-            setInputText(
-                inputSelector,
-                'adrenocortical carcinoma tcga firehose legacy'
-            );
-            waitForNumberOfStudyCheckboxes(
-                1,
-                'Adrenocortical Carcinoma (TCGA, Firehose Legacy)'
-            );
+            setInputText(inputSelector, 'adrenocortical carcinoma tcga firehose legacy');
+            waitForNumberOfStudyCheckboxes(1, 'Adrenocortical Carcinoma (TCGA, Firehose Legacy)');
 
             var checkBox = $('[data-test="StudySelect"]');
             checkBox.waitForExist(10000);
@@ -554,9 +508,7 @@ describe('oncoprint', function() {
             );
 
             // select custom case list
-            var caseSetSelector = $(
-                '[data-test="CaseSetSelector"] .Select-input input'
-            );
+            var caseSetSelector = $('[data-test="CaseSetSelector"] .Select-input input');
             caseSetSelector.waitForExist(10000);
             caseSetSelector.setValue('User-defined Case List');
             browser.click('[data-test="CaseSetSelector"] .Select-option');
@@ -573,9 +525,7 @@ describe('oncoprint', function() {
                     'acc_tcga:TCGA-OR-A5J3-01'
             );
 
-            $('[data-test="geneSet"]').setValue(
-                'DKK2 KRAS BCL2L1 RASA1 HLA-B RRAGC'
-            );
+            $('[data-test="geneSet"]').setValue('DKK2 KRAS BCL2L1 RASA1 HLA-B RRAGC');
             browser.waitForEnabled('[data-test="queryButton"]', 30000);
             browser.click('[data-test="queryButton"]');
 
@@ -610,18 +560,13 @@ describe('oncoprint', function() {
             assert(legendText.indexOf('Male') > -1, 'a patient is male');
             assert(legendText.indexOf('Female') > -1, 'a patient is female');
 
-            $(
-                '.oncoprintContainer .oncoprint__controls #viewDropdownButton'
-            ).click(); // open view menu
+            $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
             $(checkboxSelector).waitForExist(1000);
             $(checkboxSelector).click(); // turn off legend for unaltered cases
             waitForOncoprint(3000); // wait for oncoprint to reset
             legendText = getTextInOncoprintLegend();
             assert(legendText.indexOf('Male') > -1, 'altered patient is male');
-            assert(
-                legendText.indexOf('Female') === -1,
-                'altered patient is not female'
-            );
+            assert(legendText.indexOf('Female') === -1, 'altered patient is not female');
 
             $(
                 '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]'
@@ -629,10 +574,7 @@ describe('oncoprint', function() {
             waitForOncoprint(3000); // wait for oncoprint to reset
             legendText = getTextInOncoprintLegend();
             assert(legendText.indexOf('Male') > -1, 'altered sample is male');
-            assert(
-                legendText.indexOf('Female') === -1,
-                'altered sample is not female'
-            );
+            assert(legendText.indexOf('Female') === -1, 'altered sample is not female');
 
             $(checkboxSelector).click(); // turn back on legend for unaltered cases
             waitForOncoprint(3000); // wait for oncoprint to reset
@@ -646,26 +588,15 @@ describe('oncoprint', function() {
             );
             waitForOncoprint(ONCOPRINT_TIMEOUT);
             let legendText = getTextInOncoprintLegend();
-            assert(
-                legendText.indexOf('Sex') > -1,
-                'Sex legend is shown (in patient mode)'
-            );
-            assert(
-                legendText.indexOf('Female') > -1,
-                'Female item is shown (in patient mode)'
-            );
+            assert(legendText.indexOf('Sex') > -1, 'Sex legend is shown (in patient mode)');
+            assert(legendText.indexOf('Female') > -1, 'Female item is shown (in patient mode)');
 
-            $(
-                '.oncoprintContainer .oncoprint__controls #viewDropdownButton'
-            ).click(); // open view menu
+            $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
             $(checkboxSelector).waitForExist(1000);
             $(checkboxSelector).click(); // turn off legend for unaltered cases
             waitForOncoprint(3000); // wait for oncoprint to reset
             legendText = getTextInOncoprintLegend();
-            assert(
-                legendText.indexOf('Sex') === -1,
-                'Sex legend is not shown (in patient mode)'
-            );
+            assert(legendText.indexOf('Sex') === -1, 'Sex legend is not shown (in patient mode)');
             assert(
                 legendText.indexOf('Female') === -1,
                 'Female item is not shown (in patient mode)'
@@ -676,10 +607,7 @@ describe('oncoprint', function() {
             ).click(); // go to sample mode
             waitForOncoprint(3000); // wait for oncoprint to reset
             legendText = getTextInOncoprintLegend();
-            assert(
-                legendText.indexOf('Sex') === -1,
-                'Sex legend is not shown (in sample mode)'
-            );
+            assert(legendText.indexOf('Sex') === -1, 'Sex legend is not shown (in sample mode)');
             assert(
                 legendText.indexOf('Female') === -1,
                 'Female item is not shown (in sample mode)'
@@ -688,14 +616,8 @@ describe('oncoprint', function() {
             $(checkboxSelector).click(); // turn back on legend for unaltered cases
             waitForOncoprint(3000); // wait for oncoprint to reset
             legendText = getTextInOncoprintLegend();
-            assert(
-                legendText.indexOf('Sex') > -1,
-                'Sex legend is shown (in sample mode)'
-            );
-            assert(
-                legendText.indexOf('Female') > -1,
-                'Female item is shown (in sample mode)'
-            );
+            assert(legendText.indexOf('Sex') > -1, 'Sex legend is shown (in sample mode)');
+            assert(legendText.indexOf('Female') > -1, 'Female item is shown (in sample mode)');
         });
     });
 

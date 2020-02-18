@@ -19,9 +19,7 @@ import {
     GroupLegendLabelComponent,
     SurvivalTabGroupLegendLabelComponent,
 } from './labelComponents/GroupLegendLabelComponent';
-import ComparisonStore, {
-    OverlapStrategy,
-} from '../../shared/lib/comparison/ComparisonStore';
+import ComparisonStore, { OverlapStrategy } from '../../shared/lib/comparison/ComparisonStore';
 
 export interface ISurvivalProps {
     store: ComparisonStore;
@@ -30,12 +28,10 @@ export interface ISurvivalProps {
 @observer
 export default class Survival extends React.Component<ISurvivalProps, {}> {
     private overallSurvivalTitleText = 'Overall Survival Kaplan-Meier Estimate';
-    private diseaseFreeSurvivalTitleText =
-        'Disease/Progression-free Kaplan-Meier Estimate';
+    private diseaseFreeSurvivalTitleText = 'Disease/Progression-free Kaplan-Meier Estimate';
     private multipleDescriptionWarningMessageWithoutTooltip =
         'The survival data on patients from different cohorts may have been defined by ';
-    private multipleDescriptionWarningMessageWithTooltip =
-        'different criteria.';
+    private multipleDescriptionWarningMessageWithTooltip = 'different criteria.';
     private differentDescriptionExistMessage =
         'Different descriptions of survival data were used for different studies.';
 
@@ -65,14 +61,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                 if (aUids.length !== bUids.length) {
                     return aUids.length - bUids.length;
                 }
-                const aCount = _.sumBy(
-                    aUids,
-                    uid => orderedActiveGroupUidSet[uid]
-                );
-                const bCount = _.sumBy(
-                    bUids,
-                    uid => orderedActiveGroupUidSet[uid]
-                );
+                const aCount = _.sumBy(aUids, uid => orderedActiveGroupUidSet[uid]);
+                const bCount = _.sumBy(bUids, uid => orderedActiveGroupUidSet[uid]);
                 return aCount - bCount;
             });
             const uidToGroup = this.props.store.uidToGroup.result!;
@@ -83,14 +73,10 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
 
             if (this.props.store.overlapStrategy === OverlapStrategy.INCLUDE) {
                 for (const entry of partition) {
-                    const partitionGroupUids = Object.keys(entry.key).filter(
-                        uid => entry.key[uid]
-                    );
+                    const partitionGroupUids = Object.keys(entry.key).filter(uid => entry.key[uid]);
                     // sort by give order of groups
                     partitionGroupUids.sort(
-                        (a, b) =>
-                            orderedActiveGroupUidSet[a] -
-                            orderedActiveGroupUidSet[b]
+                        (a, b) => orderedActiveGroupUidSet[a] - orderedActiveGroupUidSet[b]
                     );
                     if (partitionGroupUids.length > 0) {
                         const name = `Only ${partitionGroupUids
@@ -103,9 +89,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                         analysisGroups.push({
                             name,
                             color: blendColors(
-                                partitionGroupUids.map(
-                                    uid => uidToGroup[uid].color
-                                )
+                                partitionGroupUids.map(uid => uidToGroup[uid].color)
                             ),
                             value,
                             legendText: JSON.stringify(partitionGroupUids),
@@ -113,8 +97,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                     }
                 }
             } else {
-                const patientToSamplesSet = this.props.store.patientToSamplesSet
-                    .result!;
+                const patientToSamplesSet = this.props.store.patientToSamplesSet.result!;
                 for (const group of this.props.store.activeGroups.result!) {
                     const name = group.nameWithOrdinal;
                     analysisGroups.push({
@@ -130,9 +113,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                             patientId: identifier.patientId,
                         });
                         if (samples && samples.length) {
-                            patientToAnalysisGroups[
-                                samples[0].uniquePatientKey
-                            ] = [group.uid];
+                            patientToAnalysisGroups[samples[0].uniquePatientKey] = [group.uid];
                         }
                     }
                 }
@@ -148,8 +129,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
         await: () => {
             if (
                 this.props.store._activeGroupsNotOverlapRemoved.isComplete &&
-                this.props.store._activeGroupsNotOverlapRemoved.result.length >
-                    10
+                this.props.store._activeGroupsNotOverlapRemoved.result.length > 10
             ) {
                 // dont bother loading data for and computing UI if its not valid situation for it
                 return [this.props.store._activeGroupsNotOverlapRemoved];
@@ -163,15 +143,9 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
         },
         render: () => {
             let content: any = [];
-            if (
-                this.props.store._activeGroupsNotOverlapRemoved.result!.length >
-                10
-            ) {
+            if (this.props.store._activeGroupsNotOverlapRemoved.result!.length > 10) {
                 content.push(<span>{SURVIVAL_TOO_MANY_GROUPS_MSG}</span>);
-            } else if (
-                this.props.store._activeGroupsNotOverlapRemoved.result!
-                    .length === 0
-            ) {
+            } else if (this.props.store._activeGroupsNotOverlapRemoved.result!.length === 0) {
                 content.push(<span>{SURVIVAL_NOT_ENOUGH_GROUPS_MSG}</span>);
             } else {
                 content.push(
@@ -183,13 +157,9 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                 );
                 content.push(this.survivalUI.component);
             }
-            return (
-                <div data-test="ComparisonPageSurvivalTabDiv">{content}</div>
-            );
+            return <div data-test="ComparisonPageSurvivalTabDiv">{content}</div>;
         },
-        renderPending: () => (
-            <LoadingIndicator center={true} isLoading={true} size={'big'} />
-        ),
+        renderPending: () => <LoadingIndicator center={true} isLoading={true} size={'big'} />,
         renderError: () => <ErrorMessage />,
         showLastRenderWhenPending: true,
     });
@@ -209,36 +179,29 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             let content: any = [];
             let overallNotAvailable: boolean = false;
             let diseaseFreeNotAvailable: boolean = false;
-            const analysisGroups = this.analysisGroupsComputations.result!
-                .analysisGroups;
-            const patientToAnalysisGroups = this.analysisGroupsComputations
-                .result!.patientToAnalysisGroups;
+            const analysisGroups = this.analysisGroupsComputations.result!.analysisGroups;
+            const patientToAnalysisGroups = this.analysisGroupsComputations.result!
+                .patientToAnalysisGroups;
             const overallSurvivalDescription =
                 this.props.store.overallSurvivalDescriptions &&
                 this.props.store.overallSurvivalDescriptions.result!.length == 1
-                    ? this.props.store.overallSurvivalDescriptions.result![0]
-                          .description
+                    ? this.props.store.overallSurvivalDescriptions.result![0].description
                     : '';
             const diseaseFreeSurvivalDescription =
                 this.props.store.diseaseFreeSurvivalDescriptions &&
-                this.props.store.diseaseFreeSurvivalDescriptions.result!
-                    .length == 1
-                    ? this.props.store.diseaseFreeSurvivalDescriptions
-                          .result![0].description
+                this.props.store.diseaseFreeSurvivalDescriptions.result!.length == 1
+                    ? this.props.store.diseaseFreeSurvivalDescriptions.result![0].description
                     : '';
 
             if (this.props.store.overallPatientSurvivals.result!.length > 0) {
                 if (
                     this.props.store.overallSurvivalDescriptions &&
-                    this.props.store.overallSurvivalDescriptions.result!
-                        .length > 1
+                    this.props.store.overallSurvivalDescriptions.result!.length > 1
                 ) {
-                    let messageBeforeTooltip = this
-                        .multipleDescriptionWarningMessageWithoutTooltip;
+                    let messageBeforeTooltip = this.multipleDescriptionWarningMessageWithoutTooltip;
                     const uniqDescriptions = _.uniq(
                         _.map(
-                            this.props.store.overallSurvivalDescriptions
-                                .result!,
+                            this.props.store.overallSurvivalDescriptions.result!,
                             d => d.description
                         )
                     );
@@ -254,18 +217,13 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                     overlay={
                                         <SurvivalDescriptionTable
                                             survivalDescriptionData={
-                                                this.props.store
-                                                    .overallSurvivalDescriptions
-                                                    .result!
+                                                this.props.store.overallSurvivalDescriptions.result!
                                             }
                                         />
                                     }
                                 >
                                     <a href="javascript:void(0)">
-                                        {
-                                            this
-                                                .multipleDescriptionWarningMessageWithTooltip
-                                        }
+                                        {this.multipleDescriptionWarningMessageWithTooltip}
                                     </a>
                                 </DefaultTooltip>
                             </div>
@@ -282,14 +240,9 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                         <div style={{ width: '920px' }}>
                             <SurvivalChart
                                 className="borderedChart"
-                                patientSurvivals={
-                                    this.props.store.overallPatientSurvivals
-                                        .result
-                                }
+                                patientSurvivals={this.props.store.overallPatientSurvivals.result}
                                 analysisGroups={analysisGroups}
-                                patientToAnalysisGroups={
-                                    patientToAnalysisGroups
-                                }
+                                patientToAnalysisGroups={patientToAnalysisGroups}
                                 title={this.overallSurvivalTitleText}
                                 xAxisLabel="Months Survival"
                                 yAxisLabel="Overall Survival"
@@ -302,23 +255,16 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                 fileName="Overall_Survival"
                                 showCurveInTooltip={true}
                                 legendLabelComponent={
-                                    this.props.store.overlapStrategy ===
-                                    OverlapStrategy.INCLUDE ? (
+                                    this.props.store.overlapStrategy === OverlapStrategy.INCLUDE ? (
                                         <SurvivalTabGroupLegendLabelComponent
                                             maxLabelWidth={256}
-                                            uidToGroup={
-                                                this.props.store.uidToGroup
-                                                    .result!
-                                            }
+                                            uidToGroup={this.props.store.uidToGroup.result!}
                                             dy="0.3em"
                                         />
                                     ) : (
                                         <GroupLegendLabelComponent
                                             maxLabelWidth={256}
-                                            uidToGroup={
-                                                this.props.store.uidToGroup
-                                                    .result!
-                                            }
+                                            uidToGroup={this.props.store.uidToGroup.result!}
                                             dy="0.3em"
                                         />
                                     )
@@ -334,20 +280,15 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                 overallNotAvailable = true;
             }
 
-            if (
-                this.props.store.diseaseFreePatientSurvivals.result!.length > 0
-            ) {
+            if (this.props.store.diseaseFreePatientSurvivals.result!.length > 0) {
                 if (
                     this.props.store.diseaseFreeSurvivalDescriptions &&
-                    this.props.store.diseaseFreeSurvivalDescriptions.result!
-                        .length > 1
+                    this.props.store.diseaseFreeSurvivalDescriptions.result!.length > 1
                 ) {
-                    let messageBeforeTooltip = this
-                        .multipleDescriptionWarningMessageWithoutTooltip;
+                    let messageBeforeTooltip = this.multipleDescriptionWarningMessageWithoutTooltip;
                     const uniqDescriptions = _.uniq(
                         _.map(
-                            this.props.store.diseaseFreeSurvivalDescriptions
-                                .result!,
+                            this.props.store.diseaseFreeSurvivalDescriptions.result!,
                             d => d.description
                         )
                     );
@@ -363,18 +304,14 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                     overlay={
                                         <SurvivalDescriptionTable
                                             survivalDescriptionData={
-                                                this.props.store
-                                                    .diseaseFreeSurvivalDescriptions
+                                                this.props.store.diseaseFreeSurvivalDescriptions
                                                     .result!
                                             }
                                         />
                                     }
                                 >
                                     <a href="javascript:void(0)">
-                                        {
-                                            this
-                                                .multipleDescriptionWarningMessageWithTooltip
-                                        }
+                                        {this.multipleDescriptionWarningMessageWithTooltip}
                                     </a>
                                 </DefaultTooltip>
                             </div>
@@ -392,13 +329,10 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                             <SurvivalChart
                                 className="borderedChart"
                                 patientSurvivals={
-                                    this.props.store.diseaseFreePatientSurvivals
-                                        .result
+                                    this.props.store.diseaseFreePatientSurvivals.result
                                 }
                                 analysisGroups={analysisGroups}
-                                patientToAnalysisGroups={
-                                    patientToAnalysisGroups
-                                }
+                                patientToAnalysisGroups={patientToAnalysisGroups}
                                 title={this.diseaseFreeSurvivalTitleText}
                                 xAxisLabel="Months Disease/Progression-free"
                                 yAxisLabel="Disease/Progression-free Survival"
@@ -411,23 +345,16 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                 fileName="Disease_Free_Survival"
                                 showCurveInTooltip={true}
                                 legendLabelComponent={
-                                    this.props.store.overlapStrategy ===
-                                    OverlapStrategy.INCLUDE ? (
+                                    this.props.store.overlapStrategy === OverlapStrategy.INCLUDE ? (
                                         <SurvivalTabGroupLegendLabelComponent
                                             maxLabelWidth={256}
-                                            uidToGroup={
-                                                this.props.store.uidToGroup
-                                                    .result!
-                                            }
+                                            uidToGroup={this.props.store.uidToGroup.result!}
                                             dy="0.3em"
                                         />
                                     ) : (
                                         <GroupLegendLabelComponent
                                             maxLabelWidth={256}
-                                            uidToGroup={
-                                                this.props.store.uidToGroup
-                                                    .result!
-                                            }
+                                            uidToGroup={this.props.store.uidToGroup.result!}
                                             dy="0.3em"
                                         />
                                     )
@@ -461,9 +388,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
 
             return <div>{content}</div>;
         },
-        renderPending: () => (
-            <LoadingIndicator center={true} isLoading={true} size={'big'} />
-        ),
+        renderPending: () => <LoadingIndicator center={true} isLoading={true} size={'big'} />,
         renderError: () => <ErrorMessage />,
     });
 

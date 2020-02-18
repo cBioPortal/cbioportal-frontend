@@ -17,10 +17,7 @@ export interface IFlexBoxProps<T> extends React.HTMLProps<T> {
     overflow?: boolean;
 }
 
-function renderBox<T>(
-    props: IFlexBoxProps<T>,
-    flexDirection: 'row' | 'column'
-): JSX.Element {
+function renderBox<T>(props: IFlexBoxProps<T>, flexDirection: 'row' | 'column'): JSX.Element {
     let { padded, overflow, flex, ...attributes } = props;
     let style: React.CSSProperties = {
         flex,
@@ -29,11 +26,7 @@ function renderBox<T>(
         ...props.style,
         flexDirection,
     };
-    let className = classNames(
-        props.className,
-        styles[flexDirection],
-        padded && styles.padded
-    );
+    let className = classNames(props.className, styles[flexDirection], padded && styles.padded);
     return (
         <div
             {...(attributes as React.HTMLAttributes<HTMLDivElement>)}

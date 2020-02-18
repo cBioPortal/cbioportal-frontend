@@ -26,10 +26,7 @@ export function generatePdbInfoSummary(pdbHeader: PdbHeader, chainId: string) {
 
     // get chain specific molecule info
     _.find(pdbHeader.compound, (mol: any) => {
-        if (
-            mol.molecule &&
-            _.indexOf(mol.chain, chainId.toLowerCase()) !== -1
-        ) {
+        if (mol.molecule && _.indexOf(mol.chain, chainId.toLowerCase()) !== -1) {
             // chain is associated with this mol,
             // get the organism info from the source
             summary.moleculeInfo = mol.molecule;
@@ -44,9 +41,7 @@ export function indexPdbAlignments(alignments: Alignment[]): PdbAlignmentIndex {
     return groupAlignmentsByPdbIdAndChain(alignments);
 }
 
-export function mergeIndexedPdbAlignments(
-    indexedPdbData: PdbAlignmentIndex
-): IPdbChain[] {
+export function mergeIndexedPdbAlignments(indexedPdbData: PdbAlignmentIndex): IPdbChain[] {
     const chains: IPdbChain[] = [];
 
     // generate chains
@@ -85,9 +80,7 @@ function groupAlignmentsByPdbIdAndChain(alignments: Alignment[]) {
  * Assuming that all the provided alignments have the same pdb id and chain,
  * merges multiple alignments into one.
  */
-export function mergeAlignments(
-    alignments: Alignment[]
-): IPdbChain | undefined {
+export function mergeAlignments(alignments: Alignment[]): IPdbChain | undefined {
     let mergedAlignment = '';
     let start: number;
 
@@ -107,13 +100,11 @@ export function mergeAlignments(
 
             // overlap: we need to append non-overlapping segment of mergedAlignment to the current alignment
             if (alignmentStr.length >= diff) {
-                mergedAlignment =
-                    alignmentStr + mergedAlignment.substr(gapOrOverlap);
+                mergedAlignment = alignmentStr + mergedAlignment.substr(gapOrOverlap);
             }
             // gap: we need to add some gap before appending mergedAlignment
             else {
-                mergedAlignment =
-                    alignmentStr + alignmentGap(gapOrOverlap) + mergedAlignment;
+                mergedAlignment = alignmentStr + alignmentGap(gapOrOverlap) + mergedAlignment;
             }
         } else if (alignment.seqFrom >= start) {
             const gapOrOverlap = Math.abs(mergedAlignment.length - diff);
@@ -121,21 +112,15 @@ export function mergeAlignments(
             // overlap: we need to "insert" current alignment into merged alignment
             if (mergedAlignment.length >= diff) {
                 mergedAlignment =
-                    mergedAlignment.substr(
-                        0,
-                        mergedAlignment.length - gapOrOverlap
-                    ) +
+                    mergedAlignment.substr(0, mergedAlignment.length - gapOrOverlap) +
                     alignmentStr +
                     mergedAlignment.substr(
-                        mergedAlignment.length -
-                            gapOrOverlap +
-                            alignmentStr.length
+                        mergedAlignment.length - gapOrOverlap + alignmentStr.length
                     );
             }
             // gap: we need to add some gap before appending current alignment
             else {
-                mergedAlignment =
-                    mergedAlignment + alignmentGap(gapOrOverlap) + alignmentStr;
+                mergedAlignment = mergedAlignment + alignmentGap(gapOrOverlap) + alignmentStr;
             }
         }
 
@@ -165,9 +150,7 @@ function alignmentGap(length: number) {
     return gap.join('');
 }
 
-export function generateAlignmentString(
-    alignment: Alignment
-): string | undefined {
+export function generateAlignmentString(alignment: Alignment): string | undefined {
     let alignmentStr: string | undefined;
 
     // process 3 alignment strings and create a visualization string
@@ -247,10 +230,7 @@ function calcIdentity(alignment: string) {
  * This is for sorting purposes, and always returns an array of size 4.
  * If invert is true, then A will have a greater value than Z.
  */
-export function calcPdbIdNumericalValue(
-    pdbId: string,
-    invert?: boolean
-): number[] {
+export function calcPdbIdNumericalValue(pdbId: string, invert?: boolean): number[] {
     const values = [0, 0, 0, 0];
     const coeff = invert ? -1 : 1;
 

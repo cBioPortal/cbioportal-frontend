@@ -3,14 +3,10 @@ var expect = require('chai').expect;
 var waitForOncoprint = require('../../../shared/specUtils').waitForOncoprint;
 var setOncoprintMutationsMenuOpen = require('../../../shared/specUtils')
     .setOncoprintMutationsMenuOpen;
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var waitForNetworkQuiet = require('../../../shared/specUtils')
-    .waitForNetworkQuiet;
-var sessionServiceIsEnabled = require('../../../shared/specUtils')
-    .sessionServiceIsEnabled;
-var assertScreenShotMatch = require('../../../shared/lib/testUtils')
-    .assertScreenShotMatch;
+var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
+var waitForNetworkQuiet = require('../../../shared/specUtils').waitForNetworkQuiet;
+var sessionServiceIsEnabled = require('../../../shared/specUtils').sessionServiceIsEnabled;
+var assertScreenShotMatch = require('../../../shared/lib/testUtils').assertScreenShotMatch;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
@@ -47,19 +43,17 @@ function runResultsTestSuite(prefix) {
         browser.click('a.tabAnchor_cancerTypesSummary');
         browser.waitForVisible('[data-test="cancerTypeSummaryChart"]', 10000);
         browser.waitForExist('[data-test="cancerTypeSummaryWrapper"]', 5000);
-        var res = browser.checkElement(
-            '[data-test="cancerTypeSummaryWrapper"]',
-            { hide: ['.qtip'] }
-        );
+        var res = browser.checkElement('[data-test="cancerTypeSummaryWrapper"]', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} mutex tab`, function() {
         browser.click('a.tabAnchor_mutualExclusivity');
-        var res = browser.checkElement(
-            '[data-test="mutualExclusivityTabDiv"]',
-            { hide: ['.qtip'] }
-        );
+        var res = browser.checkElement('[data-test="mutualExclusivityTabDiv"]', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
 
@@ -72,11 +66,7 @@ function runResultsTestSuite(prefix) {
         browser.click('a.tabAnchor_mutations');
         browser.waitForVisible('.borderedChart svg', 20000);
         var res = browser.checkElement('[data-test="mutationsTabDiv"]', {
-            hide: [
-                '.qtip',
-                '[data-test=view3DStructure]',
-                '[data-test=GeneSummaryUniProt]',
-            ],
+            hide: ['.qtip', '[data-test=view3DStructure]', '[data-test=GeneSummaryUniProt]'],
             viewportChangePause: 4000,
         }); // hide these things because the timing of data loading makes this test so flaky
         assertScreenShotMatch(res);
@@ -84,10 +74,7 @@ function runResultsTestSuite(prefix) {
 
     it.skip(`${prefix} coexpression tab`, function() {
         browser.click('a.tabAnchor_coexpression');
-        browser.waitForVisible(
-            'div[data-test="CoExpressionPlot"]',
-            COEXPRESSION_TIMEOUT
-        );
+        browser.waitForVisible('div[data-test="CoExpressionPlot"]', COEXPRESSION_TIMEOUT);
         var res = browser.checkElement('[data-test="coExpressionTabDiv"]', {
             hide: ['.qtip'],
         });
@@ -96,35 +83,28 @@ function runResultsTestSuite(prefix) {
 
     it(`${prefix} comparison tab overlap`, function() {
         browser.click('a.tabAnchor_comparison');
-        browser.waitForVisible(
-            'div[data-test="ComparisonPageOverlapTabContent"]'
-        );
-        var res = browser.checkElement(
-            'div[data-test="ComparisonPageOverlapTabDiv"]',
-            { hide: ['.qtip'] }
-        );
+        browser.waitForVisible('div[data-test="ComparisonPageOverlapTabContent"]');
+        var res = browser.checkElement('div[data-test="ComparisonPageOverlapTabDiv"]', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} comparison tab clinical`, function() {
         browser.click('.comparisonTabSubTabs .tabAnchor_clinical');
         browser.waitForVisible('div[data-test="ComparisonPageClinicalTabDiv"]');
-        var res = browser.checkElement(
-            'div[data-test="ComparisonPageClinicalTabDiv"]',
-            { hide: ['.qtip'] }
-        );
+        var res = browser.checkElement('div[data-test="ComparisonPageClinicalTabDiv"]', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} comparison tab mutation enrichments`, function() {
         browser.click('.comparisonTabSubTabs .tabAnchor_mutations');
-        browser.waitForVisible(
-            'div[data-test="GroupComparisonMutationEnrichments"]'
-        );
-        var res = browser.checkElement(
-            'div[data-test="GroupComparisonMutationEnrichments"]',
-            { hide: ['.qtip'] }
-        );
+        browser.waitForVisible('div[data-test="GroupComparisonMutationEnrichments"]');
+        var res = browser.checkElement('div[data-test="GroupComparisonMutationEnrichments"]', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
 
@@ -132,42 +112,30 @@ function runResultsTestSuite(prefix) {
         browser.execute(function() {
             resultsViewPageStore.setUsePatientLevelEnrichments(true);
         });
-        browser.waitForVisible(
-            'div[data-test="GroupComparisonMutationEnrichments"]'
-        );
-        var res = browser.checkElement(
-            'div[data-test="GroupComparisonMutationEnrichments"]',
-            { hide: ['.qtip'] }
-        );
+        browser.waitForVisible('div[data-test="GroupComparisonMutationEnrichments"]');
+        var res = browser.checkElement('div[data-test="GroupComparisonMutationEnrichments"]', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} comparison tab mrna enrichments`, function() {
         browser.click('.comparisonTabSubTabs .tabAnchor_mrna');
-        browser.waitForVisible(
-            'div[data-test="GroupComparisonMRNAEnrichments"]'
-        );
+        browser.waitForVisible('div[data-test="GroupComparisonMRNAEnrichments"]');
         browser.click('b=ETV5');
         browser.waitForVisible('div[data-test="MiniBoxPlot"]');
-        var res = browser.checkElement(
-            'div[data-test="GroupComparisonMRNAEnrichments"]',
-            { hide: ['.qtip'] }
-        );
+        var res = browser.checkElement('div[data-test="GroupComparisonMRNAEnrichments"]', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} survival tab`, function() {
         browser.click('.comparisonTabSubTabs a.tabAnchor_survival');
-        browser.waitForVisible(
-            '[data-test="ComparisonPageSurvivalTabDiv"] svg',
-            10000
-        );
-        var res = browser.checkElement(
-            '[data-test="ComparisonPageSurvivalTabDiv"]',
-            {
-                hide: ['.qtip'],
-            }
-        );
+        browser.waitForVisible('[data-test="ComparisonPageSurvivalTabDiv"] svg', 10000);
+        var res = browser.checkElement('[data-test="ComparisonPageSurvivalTabDiv"]', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
 
@@ -198,9 +166,7 @@ function runResultsTestSuite(prefix) {
         //  browser.pause(1000);
         browser.waitForExist('#text_area_gene_alteration_freq', 20000);
         browser.waitUntil(function() {
-            return (
-                browser.getValue('#text_area_gene_alteration_freq').length > 0
-            );
+            return browser.getValue('#text_area_gene_alteration_freq').length > 0;
         }, 20000);
         var res = browser.checkElement('[data-test="downloadTabDiv"]', {
             hide: ['.qtip'],
@@ -236,10 +202,7 @@ describe('download tab screenshot tests', function() {
         goToUrlAndSetLocalStorage(url);
         browser.waitForExist('a.tabAnchor_download', 10000);
         browser.click('a.tabAnchor_download');
-        browser.waitForExist(
-            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg',
-            20000
-        );
+        browser.waitForExist('[data-test="dataDownloadGeneAlterationTable"] tr > td > svg', 20000);
         browser.waitForExist('[data-test="downloadTabDiv"]', 5000);
         var res = browser.checkElement('[data-test="downloadTabDiv"]', {
             hide: ['.qtip'],
@@ -250,10 +213,7 @@ describe('download tab screenshot tests', function() {
     it('download tab - nsclc_tcga_broad_2016 with TP53', function() {
         var url = `${CBIOPORTAL_URL}/results/download?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&case_set_id=nsclc_tcga_broad_2016_cnaseq&data_priority=0&gene_list=TP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations&tab_index=tab_visualize`;
         goToUrlAndSetLocalStorage(url);
-        browser.waitForExist(
-            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg',
-            20000
-        );
+        browser.waitForExist('[data-test="dataDownloadGeneAlterationTable"] tr > td > svg', 20000);
         browser.waitForExist('[data-test="downloadTabDiv"]', 5000);
         var res = browser.checkElement('[data-test="downloadTabDiv"]', {
             hide: ['.qtip'],
@@ -264,10 +224,7 @@ describe('download tab screenshot tests', function() {
     it('download tab - nsclc_tcga_broad_2016 with CDKN2A MDM2 and merged track MDM4 TP53', function() {
         var url = `${CBIOPORTAL_URL}/results/download?Action=Submit&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&Z_SCORE_THRESHOLD=2.0&tab_index=tab_visualize&data_priority=0&case_set_id=nsclc_tcga_broad_2016_cnaseq&gene_list=CDKN2A%2520MDM2%2520%255B%2522MERGED%2522%2520MDM4%2520TP53%255D&RPPA_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations`;
         goToUrlAndSetLocalStorage(url);
-        browser.waitForExist(
-            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg',
-            20000
-        );
+        browser.waitForExist('[data-test="dataDownloadGeneAlterationTable"] tr > td > svg', 20000);
         browser.waitForExist('[data-test="downloadTabDiv"]', 5000);
         var res = browser.checkElement('[data-test="downloadTabDiv"]', {
             hide: ['.qtip'],
@@ -278,10 +235,7 @@ describe('download tab screenshot tests', function() {
     it('download tab - nsclc_tcga_broad_2016 for query EGFR: MUT=T790M AMP', function() {
         var url = `${CBIOPORTAL_URL}/results/download?Action=Submit&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&Z_SCORE_THRESHOLD=2.0&tab_index=tab_visualize&data_priority=0&case_set_id=nsclc_tcga_broad_2016_cnaseq&gene_list=EGFR%253A%2520MUT%253DT790M%2520AMP&RPPA_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations`;
         goToUrlAndSetLocalStorage(url);
-        browser.waitForExist(
-            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg',
-            20000
-        );
+        browser.waitForExist('[data-test="dataDownloadGeneAlterationTable"] tr > td > svg', 20000);
         browser.waitForExist('[data-test="downloadTabDiv"]', 5000);
         var res = browser.checkElement('[data-test="downloadTabDiv"]', {
             hide: ['.qtip'],
@@ -292,10 +246,7 @@ describe('download tab screenshot tests', function() {
     it('download tab - nsclc_tcga_broad_2016 with overlapping TP53', function() {
         var url = `${CBIOPORTAL_URL}/results/download?Action=Submit&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&Z_SCORE_THRESHOLD=2.0&tab_index=tab_visualize&data_priority=0&case_set_id=nsclc_tcga_broad_2016_cnaseq&gene_list=TP53%250ATP53%253A%2520AMP%250ATP53%253A%2520MUT&RPPA_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations`;
         goToUrlAndSetLocalStorage(url);
-        browser.waitForExist(
-            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg',
-            20000
-        );
+        browser.waitForExist('[data-test="dataDownloadGeneAlterationTable"] tr > td > svg', 20000);
         browser.waitForExist('[data-test="downloadTabDiv"]', 5000);
         var res = browser.checkElement('[data-test="downloadTabDiv"]', {
             hide: ['.qtip'],
@@ -344,22 +295,16 @@ describe('enrichments tab screenshot tests', function() {
     it('enrichments tab coadread_tcga_pub mRNA profile', function() {
         browser.waitForVisible('.comparisonTabSubTabs .tabAnchor_mrna');
         browser.click('.comparisonTabSubTabs .tabAnchor_mrna');
-        browser.waitForVisible(
-            'div[data-test="GroupComparisonMRNAEnrichments"]'
-        );
+        browser.waitForVisible('div[data-test="GroupComparisonMRNAEnrichments"]');
         browser.waitForVisible('a=mRNA', 10000);
         browser.click('a=mRNA');
-        browser.waitForVisible(
-            'div[data-test="GroupComparisonMRNAEnrichments"]',
-            20000
-        );
+        browser.waitForVisible('div[data-test="GroupComparisonMRNAEnrichments"]', 20000);
         browser.waitForVisible('b=MERTK', 10000);
         browser.click('b=MERTK');
         browser.waitForVisible('div[data-test="MiniBoxPlot"]', 20000);
-        var res = browser.checkElement(
-            'div[data-test="GroupComparisonMRNAEnrichments"]',
-            { hide: ['.qtip'] }
-        );
+        var res = browser.checkElement('div[data-test="GroupComparisonMRNAEnrichments"]', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
 });
@@ -370,10 +315,7 @@ describe.skip('multi-study enrichments tab screenshot tests', function() {
         goToUrlAndSetLocalStorage(url);
     });
     it('multi-study mutation enrichments tab', function() {
-        browser.waitForVisible(
-            'div[data-test="MutationEnrichmentsTab"]',
-            10000
-        );
+        browser.waitForVisible('div[data-test="MutationEnrichmentsTab"]', 10000);
         var res = browser.checkElement('[data-test="enrichmentsTabDiv"]', {
             hide: ['.qtip'],
         });
@@ -382,10 +324,7 @@ describe.skip('multi-study enrichments tab screenshot tests', function() {
 
     it('multi-study copy-number enrichments tab', function() {
         browser.click('a=Copy-number');
-        browser.waitForVisible(
-            'div[data-test="CopyNumberEnrichmentsTab"]',
-            20000
-        );
+        browser.waitForVisible('div[data-test="CopyNumberEnrichmentsTab"]', 20000);
         var res = browser.checkElement('[data-test="enrichmentsTabDiv"]', {
             hide: ['.qtip'],
         });

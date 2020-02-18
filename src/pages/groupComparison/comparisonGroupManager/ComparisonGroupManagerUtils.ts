@@ -1,26 +1,14 @@
-import {
-    Group,
-    GroupData,
-    SessionGroupData,
-} from '../../../shared/api/ComparisonGroupClient';
+import { Group, GroupData, SessionGroupData } from '../../../shared/api/ComparisonGroupClient';
 import { StudyViewPageStore } from '../../studyView/StudyViewPageStore';
-import {
-    PatientIdentifier,
-    SampleIdentifier,
-} from '../../../shared/api/generated/CBioPortalAPI';
+import { PatientIdentifier, SampleIdentifier } from '../../../shared/api/generated/CBioPortalAPI';
 import _ from 'lodash';
-import {
-    getSampleIdentifiers,
-    StudyViewComparisonGroup,
-} from '../GroupComparisonUtils';
+import { getSampleIdentifiers, StudyViewComparisonGroup } from '../GroupComparisonUtils';
 
 export function getSelectedGroups(
     allGroups: StudyViewComparisonGroup[],
     store: StudyViewPageStore
 ) {
-    return allGroups.filter(group =>
-        store.isComparisonGroupSelected(group.uid)
-    );
+    return allGroups.filter(group => store.isComparisonGroupSelected(group.uid));
 }
 
 export function getStudiesAttr(
@@ -37,9 +25,7 @@ export function getStudiesAttr(
     patientIdentifiers?: PatientIdentifier[]
 ) {
     const samples = _.groupBy(sampleIdentifiers, id => id.studyId);
-    let patients = patientIdentifiers
-        ? _.groupBy(patientIdentifiers, id => id.studyId)
-        : {};
+    let patients = patientIdentifiers ? _.groupBy(patientIdentifiers, id => id.studyId) : {};
     const studies = _.uniq(Object.keys(samples).concat(Object.keys(patients)));
     return studies.map(studyId => {
         const ret: { id: string; samples: string[]; patients?: string[] } = {
@@ -47,9 +33,7 @@ export function getStudiesAttr(
             samples: _.uniq((samples[studyId] || []).map(id => id.sampleId)),
         };
         if (patientIdentifiers) {
-            ret.patients = _.uniq(
-                (patients[studyId] || []).map(id => id.patientId)
-            );
+            ret.patients = _.uniq((patients[studyId] || []).map(id => id.patientId));
         }
         return ret;
     });
@@ -70,10 +54,7 @@ export function getGroupParameters(
     };
 }
 
-export function addSamplesParameters(
-    group: GroupData,
-    sampleIdentifiers: SampleIdentifier[]
-) {
+export function addSamplesParameters(group: GroupData, sampleIdentifiers: SampleIdentifier[]) {
     group = Object.assign({}, group);
     const prevSampleIdentifiers = getSampleIdentifiers([group]);
     const newSampleIdentifiers = _.uniqWith(

@@ -6,10 +6,7 @@ import {
     categorizedSamplesCount,
 } from './QueryStoreUtils';
 import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewPageStore';
-import {
-    MolecularProfile,
-    SampleList,
-} from '../../api/generated/CBioPortalAPI';
+import { MolecularProfile, SampleList } from '../../api/generated/CBioPortalAPI';
 import Sinon from 'sinon';
 import { VirtualStudy } from 'shared/model/VirtualStudy';
 
@@ -57,8 +54,7 @@ describe('QueryStoreUtils', () => {
         it('returns correct profile availability result in case of one profile', () => {
             let profiles = [
                 {
-                    molecularAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                     showProfileInAnalysisTab: true,
                 },
             ] as MolecularProfile[];
@@ -69,8 +65,7 @@ describe('QueryStoreUtils', () => {
 
             profiles = [
                 {
-                    molecularAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                     showProfileInAnalysisTab: false,
                 },
             ] as MolecularProfile[];
@@ -81,8 +76,7 @@ describe('QueryStoreUtils', () => {
 
             profiles = [
                 {
-                    molecularAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                     showProfileInAnalysisTab: true,
                 },
             ] as MolecularProfile[];
@@ -93,8 +87,7 @@ describe('QueryStoreUtils', () => {
 
             profiles = [
                 {
-                    molecularAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                     showProfileInAnalysisTab: false,
                 },
             ] as MolecularProfile[];
@@ -106,13 +99,11 @@ describe('QueryStoreUtils', () => {
         it('returns correct profile availability result in case of two profiles', () => {
             let profiles = [
                 {
-                    molecularAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                     showProfileInAnalysisTab: true,
                 },
                 {
-                    molecularAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                     showProfileInAnalysisTab: true,
                 },
             ] as MolecularProfile[];
@@ -123,13 +114,11 @@ describe('QueryStoreUtils', () => {
 
             profiles = [
                 {
-                    molecularAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                     showProfileInAnalysisTab: false,
                 },
                 {
-                    molecularAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                     showProfileInAnalysisTab: true,
                 },
             ] as MolecularProfile[];
@@ -140,13 +129,11 @@ describe('QueryStoreUtils', () => {
 
             profiles = [
                 {
-                    molecularAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                     showProfileInAnalysisTab: true,
                 },
                 {
-                    molecularAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                     showProfileInAnalysisTab: false,
                 },
             ] as MolecularProfile[];
@@ -157,13 +144,11 @@ describe('QueryStoreUtils', () => {
 
             profiles = [
                 {
-                    molecularAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                     showProfileInAnalysisTab: false,
                 },
                 {
-                    molecularAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                     showProfileInAnalysisTab: false,
                 },
             ] as MolecularProfile[];
@@ -175,18 +160,15 @@ describe('QueryStoreUtils', () => {
         it('returns correct profile availability result in case of several profiles', () => {
             let profiles = [
                 {
-                    molecularAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                     showProfileInAnalysisTab: true,
                 },
                 {
-                    molecularAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                     showProfileInAnalysisTab: false,
                 },
                 {
-                    molecularAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                     showProfileInAnalysisTab: false,
                 },
             ] as MolecularProfile[];
@@ -269,11 +251,7 @@ describe('QueryStoreUtils', () => {
         });
         it('returns correct categoried samples count when only `all_cases_with_cna_data` sets are present', () => {
             assert.deepEqual(
-                categorizedSamplesCount(
-                    cnaSampleLists as SampleList[],
-                    ['study1', 'study2'],
-                    []
-                ),
+                categorizedSamplesCount(cnaSampleLists as SampleList[], ['study1', 'study2'], []),
                 { w_mut: 0, w_cna: 1, w_mut_cna: 0, all: 0 }
             );
         });
@@ -304,27 +282,21 @@ describe('QueryStoreUtils', () => {
 
         it('returns correct categoried samples count when virtual study is in selected studies', () => {
             assert.deepEqual(
-                categorizedSamplesCount(
-                    mutationSampleLists as SampleList[],
-                    ['vs1'],
-                    [virtualStudy] as VirtualStudy[]
-                ),
+                categorizedSamplesCount(mutationSampleLists as SampleList[], ['vs1'], [
+                    virtualStudy,
+                ] as VirtualStudy[]),
                 { w_mut: 1, w_cna: 0, w_mut_cna: 0, all: 0 }
             );
             assert.deepEqual(
-                categorizedSamplesCount(
-                    cnaSampleLists as SampleList[],
-                    ['vs1'],
-                    [virtualStudy] as VirtualStudy[]
-                ),
+                categorizedSamplesCount(cnaSampleLists as SampleList[], ['vs1'], [
+                    virtualStudy,
+                ] as VirtualStudy[]),
                 { w_mut: 0, w_cna: 0, w_mut_cna: 0, all: 0 }
             );
             assert.deepEqual(
-                categorizedSamplesCount(
-                    mutationCnaSampleLists as SampleList[],
-                    ['vs1'],
-                    [virtualStudy] as VirtualStudy[]
-                ),
+                categorizedSamplesCount(mutationCnaSampleLists as SampleList[], ['vs1'], [
+                    virtualStudy,
+                ] as VirtualStudy[]),
                 { w_mut: 0, w_cna: 0, w_mut_cna: 0, all: 0 }
             );
             assert.deepEqual(

@@ -1,10 +1,7 @@
 import * as React from 'react';
 
 export interface IEditableSpanProps
-    extends React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLSpanElement>,
-        HTMLSpanElement
-    > {
+    extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLSpanElement>, HTMLSpanElement> {
     value: string;
     setValue: (val: string) => void;
     maxChars?: number;
@@ -13,10 +10,7 @@ export interface IEditableSpanProps
     textFieldAppearance?: boolean;
 }
 
-export default class EditableSpan extends React.Component<
-    IEditableSpanProps,
-    {}
-> {
+export default class EditableSpan extends React.Component<IEditableSpanProps, {}> {
     private enterPressedSinceLastBlur = false;
     private spanElt: HTMLSpanElement;
     private dirty: boolean = false;
@@ -60,16 +54,10 @@ export default class EditableSpan extends React.Component<
         // By this point, the new character is acceptable to be typed, if not past max length already
 
         // If at max length...
-        if (
-            this.props.maxChars &&
-            this.spanElt.innerText.length === this.props.maxChars
-        ) {
+        if (this.props.maxChars && this.spanElt.innerText.length === this.props.maxChars) {
             // ...dont type unless at least one character selected to be replaced
             const selection = window.getSelection();
-            if (
-                !selection.containsNode(this.spanElt, true) ||
-                !selection.toString().length
-            ) {
+            if (!selection.containsNode(this.spanElt, true) || !selection.toString().length) {
                 evt.preventDefault();
             }
         }
@@ -78,10 +66,7 @@ export default class EditableSpan extends React.Component<
     private onKeyUp(evt: React.KeyboardEvent<HTMLSpanElement>) {
         this.props.onKeyUp && this.props.onKeyUp(evt);
 
-        if (
-            this.props.maxChars &&
-            this.spanElt.innerText.length > this.props.maxChars
-        ) {
+        if (this.props.maxChars && this.spanElt.innerText.length > this.props.maxChars) {
             // If something has gone wrong and the input length is longer than allowed, truncate it
             this.spanElt.innerText = this.spanElt.innerText.substring(
                 this.spanElt.innerText.length - this.props.maxChars

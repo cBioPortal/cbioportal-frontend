@@ -21,24 +21,14 @@ export class PageLayout extends React.Component<IPageLayout, {}> {
 
         return (
             <div className={'mainContainer'}>
-                <div
-                    className={classNames(
-                        'contentWidth',
-                        this.props.className,
-                        noMargin
-                    )}
-                >
+                <div className={classNames('contentWidth', this.props.className, noMargin)}>
                     <div id="mainColumn">
                         <div>{this.props.children}</div>
                     </div>
-                    {this.props.rightBar && (
-                        <div id="rightColumn">{this.props.rightBar}</div>
-                    )}
+                    {this.props.rightBar && <div id="rightColumn">{this.props.rightBar}</div>}
                 </div>
 
-                {!this.props.hideFooter && (
-                    <PortalFooter appStore={this.props.appStore!} />
-                )}
+                {!this.props.hideFooter && <PortalFooter appStore={this.props.appStore!} />}
             </div>
         );
     }

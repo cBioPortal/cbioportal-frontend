@@ -10,10 +10,7 @@ export interface IFadeInteractionProps {
 }
 
 @observer
-export default class FadeInteraction extends React.Component<
-    IFadeInteractionProps,
-    {}
-> {
+export default class FadeInteraction extends React.Component<IFadeInteractionProps, {}> {
     static defaultProps = {
         fadeInSeconds: 0.2,
         fadeOutSeconds: 0.6,
@@ -67,12 +64,7 @@ export default class FadeInteraction extends React.Component<
     }
 
     @computed get show() {
-        return (
-            this.props.show ||
-            this.focused ||
-            this.mouseInside ||
-            this.initialShow
-        );
+        return this.props.show || this.focused || this.mouseInside || this.initialShow;
     }
 
     private onFocus() {

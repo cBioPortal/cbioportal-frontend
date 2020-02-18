@@ -62,8 +62,7 @@ export default class ResultsViewMutationTable extends MutationTable<
 
     componentWillUpdate(nextProps: IResultsViewMutationTableProps) {
         this._columns[MutationTableColumnType.STUDY].visible = !!(
-            nextProps.studyIdToStudy &&
-            Object.keys(nextProps.studyIdToStudy).length > 1
+            nextProps.studyIdToStudy && Object.keys(nextProps.studyIdToStudy).length > 1
         );
     }
 
@@ -74,17 +73,13 @@ export default class ResultsViewMutationTable extends MutationTable<
         this._columns[
             MutationTableColumnType.CANCER_TYPE
         ].visible = CancerTypeColumnFormatter.isVisible(
-            this.props.dataStore
-                ? this.props.dataStore.allData
-                : this.props.data,
+            this.props.dataStore ? this.props.dataStore.allData : this.props.data,
             this.props.uniqueSampleKeyToTumorType
         );
         this._columns[
             MutationTableColumnType.TUMOR_ALLELE_FREQ
         ].visible = TumorAlleleFreqColumnFormatter.isVisible(
-            this.props.dataStore
-                ? this.props.dataStore.allData
-                : this.props.data
+            this.props.dataStore ? this.props.dataStore.allData : this.props.data
         );
 
         // order columns
@@ -120,24 +115,16 @@ export default class ResultsViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.DBSNP].order = 280;
 
         // exclude
-        this._columns[
-            MutationTableColumnType.CANCER_TYPE
-        ].shouldExclude = () => {
+        this._columns[MutationTableColumnType.CANCER_TYPE].shouldExclude = () => {
             return !this.props.uniqueSampleKeyToTumorType;
         };
-        this._columns[
-            MutationTableColumnType.NUM_MUTATIONS
-        ].shouldExclude = () => {
+        this._columns[MutationTableColumnType.NUM_MUTATIONS].shouldExclude = () => {
             return !this.props.mutationCountCache;
         };
 
         // customization for columns
         this._columns[MutationTableColumnType.EXON].render = (d: Mutation[]) =>
-            ExonColumnFormatter.renderFunction(
-                d,
-                this.props.genomeNexusCache,
-                false
-            );
+            ExonColumnFormatter.renderFunction(d, this.props.genomeNexusCache, false);
         this._columns[MutationTableColumnType.EXON].headerRender = () => (
             <span style={{ display: 'inline-block' }}>
                 Exon

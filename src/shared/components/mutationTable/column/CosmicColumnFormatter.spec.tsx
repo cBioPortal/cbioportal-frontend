@@ -85,23 +85,17 @@ describe('CosmicColumnFormatter', () => {
         let data = [mutation273];
 
         // mount a single cell component (Td)
-        component273 = mount(
-            CosmicColumnFormatter.renderFunction(data, cosmicData)
-        );
+        component273 = mount(CosmicColumnFormatter.renderFunction(data, cosmicData));
 
         data = [mutation38];
 
         // mount a single cell component (Td)
-        component38 = mount(
-            CosmicColumnFormatter.renderFunction(data, cosmicData)
-        );
+        component38 = mount(CosmicColumnFormatter.renderFunction(data, cosmicData));
 
         data = [mutation666];
 
         // mount a single cell component (Td)
-        component666 = mount(
-            CosmicColumnFormatter.renderFunction(data, cosmicData)
-        );
+        component666 = mount(CosmicColumnFormatter.renderFunction(data, cosmicData));
     });
 
     it('generates component tooltip', () => {

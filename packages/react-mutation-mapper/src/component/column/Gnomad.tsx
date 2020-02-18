@@ -7,13 +7,8 @@ import { Mutation } from '../../model/Mutation';
 import { RemoteData } from '../../model/RemoteData';
 import { defaultSortMethod } from '../../util/ReactTableUtils';
 import { getMyVariantInfoAnnotation } from '../../util/VariantAnnotationUtils';
-import GnomadFrequency, {
-    calculateAlleleFrequency,
-} from '../gnomad/GnomadFrequency';
-import {
-    MyVariantInfoProps,
-    renderMyVariantInfoContent,
-} from './MyVariantInfoHelper';
+import GnomadFrequency, { calculateAlleleFrequency } from '../gnomad/GnomadFrequency';
+import { MyVariantInfoProps, renderMyVariantInfoContent } from './MyVariantInfoHelper';
 
 export function getMyVariantInfoData(
     mutation?: Mutation,
@@ -23,22 +18,15 @@ export function getMyVariantInfoData(
 ) {
     return getMyVariantInfoAnnotation(
         mutation,
-        indexedMyVariantInfoAnnotations
-            ? indexedMyVariantInfoAnnotations.result
-            : undefined
+        indexedMyVariantInfoAnnotations ? indexedMyVariantInfoAnnotations.result : undefined
     );
 }
 
 export function sortValue(myVariantInfo?: MyVariantInfo): number | null {
     // If has both gnomadExome and gnomadGenome, sort by the total frequency
-    if (
-        myVariantInfo &&
-        myVariantInfo.gnomadExome &&
-        myVariantInfo.gnomadGenome
-    ) {
+    if (myVariantInfo && myVariantInfo.gnomadExome && myVariantInfo.gnomadGenome) {
         return calculateAlleleFrequency(
-            myVariantInfo.gnomadExome.alleleCount.ac +
-                myVariantInfo.gnomadGenome.alleleCount.ac,
+            myVariantInfo.gnomadExome.alleleCount.ac + myVariantInfo.gnomadGenome.alleleCount.ac,
             myVariantInfo.gnomadExome.alleleNumber.an +
                 myVariantInfo.gnomadGenome.alleleFrequency.af,
             null
@@ -82,15 +70,7 @@ export default class Gnomad extends React.Component<MyVariantInfoProps, {}> {
     }
 
     @autobind
-    public getContent(
-        myVariantInfo: MyVariantInfo,
-        variantAnnotation?: VariantAnnotation
-    ) {
-        return (
-            <GnomadFrequency
-                myVariantInfo={myVariantInfo}
-                annotation={variantAnnotation}
-            />
-        );
+    public getContent(myVariantInfo: MyVariantInfo, variantAnnotation?: VariantAnnotation) {
+        return <GnomadFrequency myVariantInfo={myVariantInfo} annotation={variantAnnotation} />;
     }
 }

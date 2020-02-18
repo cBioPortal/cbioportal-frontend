@@ -6,13 +6,9 @@ export type BuildUrlParams = {
     hash?: string;
 };
 
-export function getNCBIlink(
-    pathnameOrParams?: BuildUrlParams | string
-): string {
+export function getNCBIlink(pathnameOrParams?: BuildUrlParams | string): string {
     let params =
-        typeof pathnameOrParams === 'string'
-            ? { pathname: pathnameOrParams }
-            : pathnameOrParams;
+        typeof pathnameOrParams === 'string' ? { pathname: pathnameOrParams } : pathnameOrParams;
     return URL.format({
         protocol: 'https',
         host: 'www.ncbi.nlm.nih.gov',

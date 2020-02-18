@@ -33,16 +33,12 @@ describe('ComplexKeySet', () => {
             { 'AGASDIJB93939####$$$': undefined },
         ]);
         assert.isTrue(set.has({ '23u4pu13': 1, '123u90': false }));
-        assert.isTrue(
-            set.has({ '3': 1, '000-----': null, '13oid': undefined })
-        );
+        assert.isTrue(set.has({ '3': 1, '000-----': null, '13oid': undefined }));
         assert.isTrue(set.has({ 'AGASDIJB93939####$$$': undefined }));
         assert.isFalse(set.has({ yo: 'hey' }));
         set.add({ yo: 'hey' });
         assert.isTrue(set.has({ '23u4pu13': 1, '123u90': false }));
-        assert.isTrue(
-            set.has({ '3': 1, '000-----': null, '13oid': undefined })
-        );
+        assert.isTrue(set.has({ '3': 1, '000-----': null, '13oid': undefined }));
         assert.isTrue(set.has({ 'AGASDIJB93939####$$$': undefined }));
         assert.isTrue(set.has({ yo: 'hey' }));
         assert.isFalse(set.has({ yo: 'whatsup' }));
@@ -54,9 +50,7 @@ describe('ComplexKeySet', () => {
         ]);
         set.add({ yo: 'whatsup' });
         assert.isTrue(set.has({ '23u4pu13': 1, '123u90': false }));
-        assert.isTrue(
-            set.has({ '3': 1, '000-----': null, '13oid': undefined })
-        );
+        assert.isTrue(set.has({ '3': 1, '000-----': null, '13oid': undefined }));
         assert.isTrue(set.has({ 'AGASDIJB93939####$$$': undefined }));
         assert.deepEqual(set.keys(), [
             { '23u4pu13': 1, '123u90': false },
@@ -68,9 +62,7 @@ describe('ComplexKeySet', () => {
         assert.isTrue(set.has({ yo: 'whatsup' }));
         set.delete({ yo: 'hey' });
         assert.isTrue(set.has({ '23u4pu13': 1, '123u90': false }));
-        assert.isTrue(
-            set.has({ '3': 1, '000-----': null, '13oid': undefined })
-        );
+        assert.isTrue(set.has({ '3': 1, '000-----': null, '13oid': undefined }));
         assert.isTrue(set.has({ 'AGASDIJB93939####$$$': undefined }));
         assert.deepEqual(set.keys(), [
             { '23u4pu13': 1, '123u90': false },
@@ -83,9 +75,7 @@ describe('ComplexKeySet', () => {
         set.delete({ yo: 'whatsup' });
         set.add({ yo: 'hey' });
         assert.isTrue(set.has({ '23u4pu13': 1, '123u90': false }));
-        assert.isTrue(
-            set.has({ '3': 1, '000-----': null, '13oid': undefined })
-        );
+        assert.isTrue(set.has({ '3': 1, '000-----': null, '13oid': undefined }));
         assert.isTrue(set.has({ 'AGASDIJB93939####$$$': undefined }));
         assert.deepEqual(set.keys(), [
             { '23u4pu13': 1, '123u90': false },

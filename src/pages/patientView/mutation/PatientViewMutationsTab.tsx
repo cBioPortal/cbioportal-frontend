@@ -76,17 +76,14 @@ enum PlotTab {
     HEATMAP = 'heatmap',
 }
 
-export const LOCAL_STORAGE_PLOT_TAB_KEY =
-    'patient_view_mutations_tab__vaf_plot_choice';
+export const LOCAL_STORAGE_PLOT_TAB_KEY = 'patient_view_mutations_tab__vaf_plot_choice';
 
 @observer
 export default class PatientViewMutationsTab extends React.Component<
     IPatientViewMutationsTabProps,
     {}
 > {
-    private dataStore = new PatientViewMutationsDataStore(
-        () => this.mergedMutations
-    );
+    private dataStore = new PatientViewMutationsDataStore(() => this.mergedMutations);
     private vafLineChartSvg: SVGElement | null = null;
     @observable vafLineChartLogScale = false;
     @observable vafLineChartZeroToOneYAxis = true;
@@ -147,15 +144,12 @@ export default class PatientViewMutationsTab extends React.Component<
                             labelProps={{ style: { marginRight: 10 } }}
                             inputProps={{ 'data-test': 'VAFOnlyHighlighted' }}
                         >
-                            <span style={{ marginTop: -3 }}>
-                                {SHOW_ONLY_SELECTED_LABEL}
-                            </span>
+                            <span style={{ marginTop: -3 }}>{SHOW_ONLY_SELECTED_LABEL}</span>
                         </LabeledCheckbox>
                         <LabeledCheckbox
                             checked={this.vafLineChartLogScale}
                             onChange={() => {
-                                this.vafLineChartLogScale = !this
-                                    .vafLineChartLogScale;
+                                this.vafLineChartLogScale = !this.vafLineChartLogScale;
                             }}
                             labelProps={{ style: { marginRight: 10 } }}
                             inputProps={{ 'data-test': 'VAFLogScale' }}
@@ -165,15 +159,12 @@ export default class PatientViewMutationsTab extends React.Component<
                         <LabeledCheckbox
                             checked={!this.vafLineChartZeroToOneYAxis}
                             onChange={() => {
-                                this.vafLineChartZeroToOneYAxis = !this
-                                    .vafLineChartZeroToOneYAxis;
+                                this.vafLineChartZeroToOneYAxis = !this.vafLineChartZeroToOneYAxis;
                             }}
                             labelProps={{ style: { marginRight: 10 } }}
                             inputProps={{ 'data-test': 'VAFDataRange' }}
                         >
-                            <span style={{ marginTop: -3 }}>
-                                Set y-axis to data range
-                            </span>
+                            <span style={{ marginTop: -3 }}>Set y-axis to data range</span>
                         </LabeledCheckbox>
                     </div>
                     <DownloadControls
@@ -187,12 +178,8 @@ export default class PatientViewMutationsTab extends React.Component<
                 <VAFLineChart
                     dataStore={this.dataStore}
                     samples={this.props.store.samples.result!}
-                    coverageInformation={
-                        this.props.store.coverageInformation.result!
-                    }
-                    mutationProfileId={
-                        this.props.store.mutationMolecularProfileId.result!
-                    }
+                    coverageInformation={this.props.store.coverageInformation.result!}
+                    mutationProfileId={this.props.store.mutationMolecularProfileId.result!}
                     sampleManager={this.props.sampleManager}
                     svgRef={this.vafLineChartSvgRef}
                     logScale={this.vafLineChartLogScale}
@@ -248,19 +235,13 @@ export default class PatientViewMutationsTab extends React.Component<
                         labelProps={{ style: { marginRight: 10 } }}
                         inputProps={{ 'data-test': 'TableShowOnlyHighlighted' }}
                     >
-                        <span style={{ marginTop: -3 }}>
-                            Show only selected mutations
-                        </span>
+                        <span style={{ marginTop: -3 }}>Show only selected mutations</span>
                     </LabeledCheckbox>
                 </div>
                 <PatientViewMutationTable
                     dataStore={this.dataStore}
-                    showGeneFilterMenu={
-                        this.props.store.mutationTableShowGeneFilterMenu.result
-                    }
-                    currentGeneFilter={
-                        this.props.store.mutationTableGeneFilterOption
-                    }
+                    showGeneFilterMenu={this.props.store.mutationTableShowGeneFilterMenu.result}
+                    currentGeneFilter={this.props.store.mutationTableGeneFilterOption}
                     onFilterGenes={this.onFilterGenesMutationTable}
                     onRowClick={this.onTableRowClick}
                     onRowMouseEnter={this.onTableRowMouseEnter}
@@ -272,28 +253,20 @@ export default class PatientViewMutationsTab extends React.Component<
                             ? this.props.sampleManager.getSampleIdsInOrder()
                             : []
                     }
-                    uniqueSampleKeyToTumorType={
-                        this.props.store.uniqueSampleKeyToTumorType
-                    }
+                    uniqueSampleKeyToTumorType={this.props.store.uniqueSampleKeyToTumorType}
                     molecularProfileIdToMolecularProfile={
-                        this.props.store.molecularProfileIdToMolecularProfile
-                            .result
+                        this.props.store.molecularProfileIdToMolecularProfile.result
                     }
                     variantCountCache={this.props.store.variantCountCache}
-                    indexedVariantAnnotations={
-                        this.props.store.indexedVariantAnnotations
-                    }
+                    indexedVariantAnnotations={this.props.store.indexedVariantAnnotations}
                     discreteCNACache={this.props.store.discreteCNACache}
                     mrnaExprRankCache={this.props.store.mrnaExprRankCache}
                     oncoKbEvidenceCache={this.props.store.oncoKbEvidenceCache}
                     pubMedCache={this.props.store.pubMedCache}
                     genomeNexusCache={this.props.store.genomeNexusCache}
-                    genomeNexusMyVariantInfoCache={
-                        this.props.store.genomeNexusMyVariantInfoCache
-                    }
+                    genomeNexusMyVariantInfoCache={this.props.store.genomeNexusMyVariantInfoCache}
                     mrnaExprRankMolecularProfileId={
-                        this.props.store.mrnaRankMolecularProfileId.result ||
-                        undefined
+                        this.props.store.mrnaRankMolecularProfileId.result || undefined
                     }
                     discreteCNAMolecularProfileId={
                         this.props.store.molecularProfileIdDiscrete.result
@@ -309,25 +282,16 @@ export default class PatientViewMutationsTab extends React.Component<
                     civicVariants={this.props.store.civicVariants}
                     userEmailAddress={ServerConfigHelpers.getUserEmailAddress()}
                     enableOncoKb={AppConfig.serverConfig.show_oncokb}
-                    enableFunctionalImpact={
-                        AppConfig.serverConfig.show_genomenexus
-                    }
+                    enableFunctionalImpact={AppConfig.serverConfig.show_genomenexus}
                     enableHotspot={AppConfig.serverConfig.show_hotspot}
-                    enableMyCancerGenome={
-                        AppConfig.serverConfig.mycancergenome_show
-                    }
+                    enableMyCancerGenome={AppConfig.serverConfig.mycancergenome_show}
                     enableCivic={AppConfig.serverConfig.show_civic}
                     columnVisibility={this.props.mutationTableColumnVisibility}
                     columnVisibilityProps={{
-                        onColumnToggled: this.props
-                            .onMutationTableColumnVisibilityToggled,
+                        onColumnToggled: this.props.onMutationTableColumnVisibilityToggled,
                     }}
-                    sampleToGenePanelId={
-                        this.props.store.sampleToMutationGenePanelId.result!
-                    }
-                    genePanelIdToEntrezGeneIds={
-                        this.props.store.genePanelIdToEntrezGeneIds.result!
-                    }
+                    sampleToGenePanelId={this.props.store.sampleToMutationGenePanelId.result!}
+                    genePanelIdToEntrezGeneIds={this.props.store.genePanelIdToEntrezGeneIds.result!}
                 />
             </div>
         ),
@@ -335,9 +299,7 @@ export default class PatientViewMutationsTab extends React.Component<
 
     readonly tabUI = MakeMobxView({
         await: () => [this.table, this.vafLineChart],
-        renderPending: () => (
-            <LoadingIndicator isLoading={true} size="big" center={true} />
-        ),
+        renderPending: () => <LoadingIndicator isLoading={true} size="big" center={true} />,
         render: () => (
             <div data-test="GenomicEvolutionTab">
                 <MSKTabs
@@ -347,9 +309,7 @@ export default class PatientViewMutationsTab extends React.Component<
                     unmountOnHide={false}
                 >
                     <MSKTab id={PlotTab.LINE_CHART} linkText="Line Chart">
-                        <div style={{ paddingBottom: 20 }}>
-                            {this.vafLineChart.component}
-                        </div>
+                        <div style={{ paddingBottom: 20 }}>{this.vafLineChart.component}</div>
                     </MSKTab>
                     <MSKTab id={PlotTab.HEATMAP} linkText="Heatmap">
                         <div style={{ paddingBottom: 20 }}>

@@ -1,8 +1,5 @@
 import { assert } from 'chai';
-import {
-    Mutation,
-    Sample,
-} from '../../../../shared/api/generated/CBioPortalAPI';
+import { Mutation, Sample } from '../../../../shared/api/generated/CBioPortalAPI';
 import { CoverageInformation } from '../../../resultsView/ResultsViewPageStoreUtils';
 import { makeMutationHeatmapData } from './MutationOncoprintUtils';
 import { MutationOncoprintMode } from './MutationOncoprint';
@@ -45,8 +42,7 @@ describe('MutationOncoprintUtils', () => {
                 referenceAllele: '',
                 variantAllele: '',
                 tumorAltCount: vafPercent,
-                tumorRefCount:
-                    vafPercent === undefined ? undefined : 100 - vafPercent,
+                tumorRefCount: vafPercent === undefined ? undefined : 100 - vafPercent,
                 molecularProfileId: 'mutations',
             } as Mutation;
         }
@@ -67,17 +63,14 @@ describe('MutationOncoprintUtils', () => {
                 mutationMutationStatus
             );
             return {
-                profile_data:
-                    vafPercent === undefined ? null : vafPercent / 100,
+                profile_data: vafPercent === undefined ? null : vafPercent / 100,
                 sample: `sample${sampleI}`,
                 patient: 'patient',
                 study_id: 'study',
                 hugo_gene_symbol: '',
                 mutation,
                 uid: generateMutationIdByGeneAndProteinChangeAndEvent(mutation),
-                mutationId: generateMutationIdByGeneAndProteinChangeAndEvent(
-                    mutation
-                ),
+                mutationId: generateMutationIdByGeneAndProteinChangeAndEvent(mutation),
                 mutationStatus,
             };
         }
@@ -95,9 +88,7 @@ describe('MutationOncoprintUtils', () => {
                 hugo_gene_symbol: '',
                 mutation,
                 uid: generateMutationIdByGeneAndProteinChangeAndEvent(mutation),
-                mutationId: generateMutationIdByGeneAndProteinChangeAndEvent(
-                    mutation
-                ),
+                mutationId: generateMutationIdByGeneAndProteinChangeAndEvent(mutation),
                 mutationStatus,
                 na: mutationStatus === MutationStatus.NOT_PROFILED,
             };
@@ -128,11 +119,7 @@ describe('MutationOncoprintUtils', () => {
             mutation: Mutation,
             mutationStatus: MutationStatus
         ) {
-            const d = makeOncoprintData_NoData(
-                sampleI,
-                mutation,
-                mutationStatus
-            );
+            const d = makeOncoprintData_NoData(sampleI, mutation, mutationStatus);
             d.uid = d.sample;
             return d;
         }
@@ -208,13 +195,7 @@ describe('MutationOncoprintUtils', () => {
                         [makeSample(1), makeSample(2), makeSample(3)],
                         [
                             makeMutation(1, 'gene1', 'proteinchange1', 20),
-                            makeMutation(
-                                1,
-                                'gene2',
-                                'proteinchange2',
-                                30,
-                                'uncalled'
-                            ),
+                            makeMutation(1, 'gene2', 'proteinchange2', 30, 'uncalled'),
                             makeMutation(1, 'gene3', 'proteinchange3', 40),
 
                             makeMutation(2, 'gene1', 'proteinchange1', 10),
@@ -765,13 +746,7 @@ describe('MutationOncoprintUtils', () => {
                         [makeSample(1), makeSample(2), makeSample(3)],
                         [
                             makeMutation(1, 'gene1', 'proteinchange1', 20),
-                            makeMutation(
-                                1,
-                                'gene2',
-                                'proteinchange2',
-                                30,
-                                'uncalled'
-                            ),
+                            makeMutation(1, 'gene2', 'proteinchange2', 30, 'uncalled'),
                             makeMutation(1, 'gene3', 'proteinchange3', 40),
 
                             makeMutation(2, 'gene1', 'proteinchange1', 10),

@@ -241,10 +241,7 @@ describe('IGVUtils', () => {
         });
 
         it('returns the default min height for an input with too few samples', () => {
-            const features: any[] = [
-                { sampleKey: 'sample1' },
-                { sampleKey: 'sample2' },
-            ];
+            const features: any[] = [{ sampleKey: 'sample1' }, { sampleKey: 'sample2' }];
 
             assert.equal(calcSegmentTrackHeight(features), 25);
         });
@@ -294,10 +291,7 @@ describe('IGVUtils', () => {
                 },
             ];
 
-            assert.equal(
-                getModifiedTrackNames(currentTracks, nextTracks)[0],
-                'CNA'
-            );
+            assert.equal(getModifiedTrackNames(currentTracks, nextTracks)[0], 'CNA');
         });
 
         it('returns an empty array if no track has been changed', () => {
@@ -327,10 +321,7 @@ describe('IGVUtils', () => {
                 },
             ];
 
-            assert.equal(
-                getModifiedTrackNames(currentTracks, nextTracks).length,
-                0
-            );
+            assert.equal(getModifiedTrackNames(currentTracks, nextTracks).length, 0);
         });
 
         it('returns only modified tracks names', () => {
@@ -365,14 +356,8 @@ describe('IGVUtils', () => {
                 },
             ];
 
-            assert.equal(
-                getModifiedTrackNames(currentTracks, nextTracks).length,
-                1
-            );
-            assert.equal(
-                getModifiedTrackNames(currentTracks, nextTracks)[0],
-                'CNA'
-            );
+            assert.equal(getModifiedTrackNames(currentTracks, nextTracks).length, 1);
+            assert.equal(getModifiedTrackNames(currentTracks, nextTracks)[0], 'CNA');
         });
     });
 });

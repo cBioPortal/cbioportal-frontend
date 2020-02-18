@@ -17,11 +17,7 @@ import {
     getWaterfallPlotDownloadData,
     getLimitValues,
 } from './PlotsTabUtils';
-import {
-    Mutation,
-    Sample,
-    Gene,
-} from '../../../shared/api/generated/CBioPortalAPI';
+import { Mutation, Sample, Gene } from '../../../shared/api/generated/CBioPortalAPI';
 import {
     AlterationTypeConstants,
     AnnotatedNumericGeneMolecularData,
@@ -29,10 +25,7 @@ import {
     GenericAssayTypeConstants,
 } from '../ResultsViewPageStore';
 import { MutationCountBy, AxisMenuSelection } from './PlotsTab';
-import {
-    CoverageInformation,
-    CoverageInformationForCase,
-} from '../ResultsViewPageStoreUtils';
+import { CoverageInformation, CoverageInformationForCase } from '../ResultsViewPageStoreUtils';
 import {
     makeAxisLogScaleFunction,
     IAxisData,
@@ -137,13 +130,7 @@ describe('PlotsTabUtils', () => {
                 x: 1,
                 y: 4,
             };
-            for (const key of [
-                'uniqueSampleKey',
-                'sampleId',
-                'studyId',
-                'x',
-                'y',
-            ]) {
+            for (const key of ['uniqueSampleKey', 'sampleId', 'studyId', 'x', 'y']) {
                 assert.equal(target[key], datum[key], key);
             }
         });
@@ -276,13 +263,7 @@ describe('PlotsTabUtils', () => {
                 studyId: 'study',
                 value: 3,
             };
-            for (const key of [
-                'uniqueSampleKey',
-                'sampleId',
-                'studyId',
-                'x',
-                'y',
-            ]) {
+            for (const key of ['uniqueSampleKey', 'sampleId', 'studyId', 'x', 'y']) {
                 assert.equal(target[key], datum[key], key);
             }
         });
@@ -481,10 +462,7 @@ describe('PlotsTabUtils', () => {
     });
 
     describe('makeAxisDataPromise_Molecular_MakeMutationData', () => {
-        let mutations: Pick<
-            Mutation,
-            'uniqueSampleKey' | 'proteinChange' | 'mutationType'
-        >[];
+        let mutations: Pick<Mutation, 'uniqueSampleKey' | 'proteinChange' | 'mutationType'>[];
         let coverageInformation: CoverageInformation;
         let samples: Pick<Sample, 'uniqueSampleKey'>[];
         let molecularProfileId: string;
@@ -836,9 +814,7 @@ describe('PlotsTabUtils', () => {
         });
 
         it('returns empty array when multiple values in dattum', () => {
-            const data = [
-                { uniqueSampleKey: 'A', value: [5, 5], thresholdType: '>' },
-            ];
+            const data = [{ uniqueSampleKey: 'A', value: [5, 5], thresholdType: '>' }];
             const types = getLimitValues(data);
             assert.deepEqual(types, []);
         });

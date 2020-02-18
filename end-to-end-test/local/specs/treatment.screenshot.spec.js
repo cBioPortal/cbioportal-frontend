@@ -1,19 +1,14 @@
 var assert = require('assert');
-var goToUrlAndSetLocalStorage = require('../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var assertScreenShotMatch = require('../../shared/lib/testUtils')
-    .assertScreenShotMatch;
+var goToUrlAndSetLocalStorage = require('../../shared/specUtils').goToUrlAndSetLocalStorage;
+var assertScreenShotMatch = require('../../shared/lib/testUtils').assertScreenShotMatch;
 var waitForOncoprint = require('../../shared/specUtils').waitForOncoprint;
 var waitForPlotsTab = require('../../shared/specUtils').waitForPlotsTab;
-var selectReactSelectOption = require('../../shared/specUtils')
-    .selectReactSelectOption;
+var selectReactSelectOption = require('../../shared/specUtils').selectReactSelectOption;
 var oncoprintTabUrl = require('./treatment.spec').oncoprintTabUrl;
 var plotsTabUrl = require('./treatment.spec').plotsTabUrl;
-var selectReactSelectOption = require('../../shared/specUtils')
-    .selectReactSelectOption;
+var selectReactSelectOption = require('../../shared/specUtils').selectReactSelectOption;
 var openHeatmapMenu = require('./treatment.spec').openHeatmapMenu;
-var selectTreamentsBothAxes = require('./treatment.spec')
-    .selectTreamentsBothAxes;
+var selectTreamentsBothAxes = require('./treatment.spec').selectTreamentsBothAxes;
 
 describe('treatment feature', () => {
     describe('oncoprint tab', () => {
@@ -118,9 +113,7 @@ describe('treatment feature', () => {
             $('[data-test=ViewCopyNumber]').click();
 
             $('input[name=utilities_geneSelectionBox]').waitForExist();
-            var geneSelect = $('input[name=utilities_geneSelectionBox]').$(
-                '..'
-            );
+            var geneSelect = $('input[name=utilities_geneSelectionBox]').$('..');
             selectReactSelectOption(geneSelect, 'TP53');
 
             var res = browser.checkElement('[id=plots-tab-plot-svg]');

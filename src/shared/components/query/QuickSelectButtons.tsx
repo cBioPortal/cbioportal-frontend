@@ -30,17 +30,13 @@ export default class QuickSelectButtons extends React.Component<
                     );
 
                     const tooltipEl = (
-                        <span
-                            style={{ display: 'inline-block', width: '300px' }}
-                        >
+                        <span style={{ display: 'inline-block', width: '300px' }}>
                             {tooltipText || ''}
                         </span>
                     );
 
                     return tooltipText ? (
-                        <DefaultTooltip overlay={tooltipEl}>
-                            {buttonEl}
-                        </DefaultTooltip>
+                        <DefaultTooltip overlay={tooltipEl}>{buttonEl}</DefaultTooltip>
                     ) : (
                         buttonEl
                     );

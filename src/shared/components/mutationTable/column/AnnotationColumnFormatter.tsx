@@ -12,15 +12,8 @@ import OncoKbEvidenceCache from 'shared/cache/OncoKbEvidenceCache';
 import OncokbPubMedCache from 'shared/cache/PubMedCache';
 import MyCancerGenome from 'shared/components/annotation/MyCancerGenome';
 import Civic from 'shared/components/annotation/Civic';
-import {
-    IOncoKbCancerGenesWrapper,
-    IOncoKbData,
-    IOncoKbDataWrapper,
-} from 'shared/model/OncoKB';
-import {
-    IMyCancerGenomeData,
-    IMyCancerGenome,
-} from 'shared/model/MyCancerGenome';
+import { IOncoKbCancerGenesWrapper, IOncoKbData, IOncoKbDataWrapper } from 'shared/model/OncoKB';
+import { IMyCancerGenomeData, IMyCancerGenome } from 'shared/model/MyCancerGenome';
 import { IHotspotDataWrapper } from 'shared/model/CancerHotspots';
 import { CancerStudy, Mutation } from 'shared/api/generated/CBioPortalAPI';
 import {
@@ -118,14 +111,12 @@ export default class AnnotationColumnFormatter {
                     _.find(
                         oncoKbCancerGenes.result,
                         (gene: CancerGene) =>
-                            gene.oncokbAnnotated &&
-                            gene.entrezGeneId === mutation.entrezGeneId
+                            gene.oncokbAnnotated && gene.entrezGeneId === mutation.entrezGeneId
                     ) !== undefined;
                 isOncoKbCancerGene =
                     _.find(
                         oncoKbCancerGenes.result,
-                        (gene: CancerGene) =>
-                            gene.entrezGeneId === mutation.entrezGeneId
+                        (gene: CancerGene) => gene.entrezGeneId === mutation.entrezGeneId
                     ) !== undefined;
             }
 
@@ -134,10 +125,7 @@ export default class AnnotationColumnFormatter {
                 oncoKbGeneExist,
                 isOncoKbCancerGene,
                 civicEntry:
-                    civicGenes &&
-                    civicGenes.result &&
-                    civicVariants &&
-                    civicVariants.result
+                    civicGenes && civicGenes.result && civicVariants && civicVariants.result
                         ? AnnotationColumnFormatter.getCivicEntry(
                               mutation,
                               civicGenes.result,
@@ -145,10 +133,7 @@ export default class AnnotationColumnFormatter {
                           )
                         : undefined,
                 civicStatus:
-                    civicGenes &&
-                    civicGenes.status &&
-                    civicVariants &&
-                    civicVariants.status
+                    civicGenes && civicGenes.status && civicVariants && civicVariants.status
                         ? AnnotationColumnFormatter.getCivicStatus(
                               civicGenes.status,
                               civicVariants.status
@@ -156,21 +141,14 @@ export default class AnnotationColumnFormatter {
                         : 'pending',
                 hasCivicVariants: true,
                 myCancerGenomeLinks: myCancerGenomeData
-                    ? AnnotationColumnFormatter.getMyCancerGenomeLinks(
-                          mutation,
-                          myCancerGenomeData
-                      )
+                    ? AnnotationColumnFormatter.getMyCancerGenomeLinks(mutation, myCancerGenomeData)
                     : [],
                 isHotspot:
-                    hotspotData &&
-                    hotspotData.result &&
-                    hotspotData.status === 'complete'
+                    hotspotData && hotspotData.result && hotspotData.status === 'complete'
                         ? isRecurrentHotspot(mutation, hotspotData.result)
                         : false,
                 is3dHotspot:
-                    hotspotData &&
-                    hotspotData.result &&
-                    hotspotData.status === 'complete'
+                    hotspotData && hotspotData.result && hotspotData.status === 'complete'
                         ? is3dHotspot(mutation, hotspotData.result)
                         : false,
                 hotspotStatus: hotspotData ? hotspotData.status : 'pending',
@@ -235,8 +213,7 @@ export default class AnnotationColumnFormatter {
             civicVariants[geneSymbol][mutation.proteinChange]
         ) {
             let geneVariants: { [name: string]: ICivicVariantData } = {
-                [mutation.proteinChange]:
-                    civicVariants[geneSymbol][mutation.proteinChange],
+                [mutation.proteinChange]: civicVariants[geneSymbol][mutation.proteinChange],
             };
             let geneEntry: ICivicGeneData = civicGenes[geneSymbol];
             civicEntry = buildCivicEntry(geneEntry, geneVariants);
@@ -252,10 +229,7 @@ export default class AnnotationColumnFormatter {
         if (civicGenesStatus === 'error' || civicVariantsStatus === 'error') {
             return 'error';
         }
-        if (
-            civicGenesStatus === 'complete' &&
-            civicVariantsStatus === 'complete'
-        ) {
+        if (civicGenesStatus === 'complete' && civicVariantsStatus === 'complete') {
             return 'complete';
         }
 
@@ -267,10 +241,7 @@ export default class AnnotationColumnFormatter {
         oncoKbData: IOncoKbData,
         studyIdToStudy?: { [studyId: string]: CancerStudy }
     ): IndicatorQueryResp | undefined {
-        if (
-            oncoKbData.uniqueSampleKeyToTumorType === null ||
-            oncoKbData.indicatorMap === null
-        ) {
+        if (oncoKbData.uniqueSampleKeyToTumorType === null || oncoKbData.indicatorMap === null) {
             return undefined;
         }
 
@@ -293,10 +264,7 @@ export default class AnnotationColumnFormatter {
         return indicator;
     }
 
-    public static getEvidenceQuery(
-        mutation: Mutation,
-        oncoKbData: IOncoKbData
-    ): Query | undefined {
+    public static getEvidenceQuery(mutation: Mutation, oncoKbData: IOncoKbData): Query | undefined {
         return getEvidenceQuery(mutation, oncoKbData);
     }
 
@@ -310,10 +278,9 @@ export default class AnnotationColumnFormatter {
 
         if (myCancerGenomes) {
             // further filtering required by alteration field
-            links = AnnotationColumnFormatter.filterByAlteration(
-                mutation,
-                myCancerGenomes
-            ).map((myCancerGenome: IMyCancerGenome) => myCancerGenome.linkHTML);
+            links = AnnotationColumnFormatter.filterByAlteration(mutation, myCancerGenomes).map(
+                (myCancerGenome: IMyCancerGenome) => myCancerGenome.linkHTML
+            );
         }
 
         return links;
@@ -328,23 +295,13 @@ export default class AnnotationColumnFormatter {
             const proteinChangeRegExp: RegExp = /^[A-Za-z][0-9]+[A-Za-z]/;
             const numericalRegExp: RegExp = /[0-9]+/;
 
-            const matched = myCancerGenome.alteration
-                .trim()
-                .match(proteinChangeRegExp);
+            const matched = myCancerGenome.alteration.trim().match(proteinChangeRegExp);
 
             if (matched && mutation.proteinChange) {
-                const mutationPos = mutation.proteinChange.match(
-                    numericalRegExp
-                );
-                const alterationPos = myCancerGenome.alteration.match(
-                    numericalRegExp
-                );
+                const mutationPos = mutation.proteinChange.match(numericalRegExp);
+                const alterationPos = myCancerGenome.alteration.match(numericalRegExp);
 
-                return (
-                    mutationPos &&
-                    alterationPos &&
-                    mutationPos[0] === alterationPos[0]
-                );
+                return mutationPos && alterationPos && mutationPos[0] === alterationPos[0];
             }
 
             return false;
@@ -374,10 +331,7 @@ export default class AnnotationColumnFormatter {
             oncoKbAnnotationSortValue(annotationData.oncoKbIndicator),
             Civic.sortValue(annotationData.civicEntry),
             MyCancerGenome.sortValue(annotationData.myCancerGenomeLinks),
-            hotspotAnnotationSortValue(
-                annotationData.isHotspot,
-                annotationData.is3dHotspot
-            ),
+            hotspotAnnotationSortValue(annotationData.isHotspot, annotationData.is3dHotspot),
             annotationData.isOncoKbCancerGene ? 1 : 0,
         ]);
     }
@@ -402,22 +356,15 @@ export default class AnnotationColumnFormatter {
         );
 
         return [
-            `OncoKB: ${oncoKbAnnotationDownload(
-                annotationData.oncoKbIndicator
-            )}`,
+            `OncoKB: ${oncoKbAnnotationDownload(annotationData.oncoKbIndicator)}`,
             `CIViC: ${Civic.download(annotationData.civicEntry)}`,
-            `MyCancerGenome: ${MyCancerGenome.download(
-                annotationData.myCancerGenomeLinks
-            )}`,
+            `MyCancerGenome: ${MyCancerGenome.download(annotationData.myCancerGenomeLinks)}`,
             `CancerHotspot: ${annotationData.isHotspot ? 'yes' : 'no'}`,
             `3DHotspot: ${annotationData.is3dHotspot ? 'yes' : 'no'}`,
         ].join(';');
     }
 
-    public static renderFunction(
-        data: Mutation[],
-        columnProps: IAnnotationColumnProps
-    ) {
+    public static renderFunction(data: Mutation[], columnProps: IAnnotationColumnProps) {
         const annotation: IAnnotation = AnnotationColumnFormatter.getData(
             data,
             columnProps.oncoKbCancerGenes,
@@ -436,10 +383,7 @@ export default class AnnotationColumnFormatter {
             columnProps.oncoKbData.result &&
             !(columnProps.oncoKbData.result instanceof Error)
         ) {
-            evidenceQuery = this.getEvidenceQuery(
-                data[0],
-                columnProps.oncoKbData.result
-            );
+            evidenceQuery = this.getEvidenceQuery(data[0], columnProps.oncoKbData.result);
         }
 
         return AnnotationColumnFormatter.mainContent(
@@ -481,9 +425,7 @@ export default class AnnotationColumnFormatter {
                     />
                 </If>
                 <If condition={columnProps.enableMyCancerGenome || false}>
-                    <MyCancerGenome
-                        linksHTML={annotation.myCancerGenomeLinks}
-                    />
+                    <MyCancerGenome linksHTML={annotation.myCancerGenomeLinks} />
                 </If>
                 <If condition={columnProps.enableHotspot || false}>
                     <HotspotAnnotation

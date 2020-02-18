@@ -22,10 +22,7 @@ import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { StudyViewPageStore } from '../StudyViewPageStore';
 
 @observer
-export default class CNSegments extends React.Component<
-    { store: StudyViewPageStore },
-    {}
-> {
+export default class CNSegments extends React.Component<{ store: StudyViewPageStore }, {}> {
     @observable renderingComplete = false;
     @observable segmentTrackMaxHeight: number | undefined;
 
@@ -35,16 +32,11 @@ export default class CNSegments extends React.Component<
     }
 
     @computed get segmentTrackHeight() {
-        return calcSegmentTrackHeight(
-            this.features,
-            this.segmentTrackMaxHeight
-        );
+        return calcSegmentTrackHeight(this.features, this.segmentTrackMaxHeight);
     }
 
     @computed get features() {
-        const segments: CopyNumberSeg[] = this.activePromise
-            ? this.activePromise.result || []
-            : [];
+        const segments: CopyNumberSeg[] = this.activePromise ? this.activePromise.result || [] : [];
 
         return generateSegmentFeatures(segments);
     }
@@ -80,8 +72,7 @@ export default class CNSegments extends React.Component<
     @computed get hasNoSegmentData() {
         return (
             this.activePromise.isComplete &&
-            (!this.activePromise.result ||
-                this.activePromise.result.length === 0)
+            (!this.activePromise.result || this.activePromise.result.length === 0)
         );
     }
 
@@ -95,11 +86,7 @@ export default class CNSegments extends React.Component<
     public render() {
         return (
             <div>
-                <LoadingIndicator
-                    isLoading={this.isHidden}
-                    size={'big'}
-                    center={true}
-                >
+                <LoadingIndicator isLoading={this.isHidden} size={'big'} center={true}>
                     <ProgressIndicator
                         getItems={() => this.progressItems}
                         show={this.isHidden}
@@ -108,8 +95,8 @@ export default class CNSegments extends React.Component<
                 </LoadingIndicator>
                 <div style={{ marginBottom: 15, marginLeft: 15 }}>
                     <span>
-                        {this.hasNoSegmentData ? 'No segmented' : 'Segmented'}{' '}
-                        copy-number data for the selected{' '}
+                        {this.hasNoSegmentData ? 'No segmented' : 'Segmented'} copy-number data for
+                        the selected{' '}
                         {this.props.store.selectedSamples.result &&
                             this.props.store.selectedSamples.result.length}{' '}
                         {this.props.store.selectedSamples.result &&
@@ -124,13 +111,7 @@ export default class CNSegments extends React.Component<
                         />
                     )}
                 </div>
-                <div
-                    style={
-                        this.isHidden || this.hasNoSegmentData
-                            ? { opacity: 0 }
-                            : undefined
-                    }
-                >
+                <div style={this.isHidden || this.hasNoSegmentData ? { opacity: 0 } : undefined}>
                     <IntegrativeGenomicsViewer
                         tracks={[
                             {
@@ -143,8 +124,7 @@ export default class CNSegments extends React.Component<
                         onRenderingStart={this.onIgvRenderingStart}
                         onRenderingComplete={this.onIgvRenderingComplete}
                         isVisible={
-                            this.props.store.currentTab ===
-                                StudyViewPageTabKeyEnum.CN_SEGMENTS &&
+                            this.props.store.currentTab === StudyViewPageTabKeyEnum.CN_SEGMENTS &&
                             !this.isHidden
                         }
                     />

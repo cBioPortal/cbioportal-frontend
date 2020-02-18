@@ -19,14 +19,8 @@ export function getFilterOptionLabel(content: {
         return (
             <span>
                 {content.title}
-                <DefaultTooltip
-                    placement="right"
-                    overlay={<span>{content.description}</span>}
-                >
-                    <i
-                        className="fa fa-info-circle"
-                        style={{ marginLeft: '0.2rem' }}
-                    />
+                <DefaultTooltip placement="right" overlay={<span>{content.description}</span>}>
+                    <i className="fa fa-info-circle" style={{ marginLeft: '0.2rem' }} />
                 </DefaultTooltip>
             </span>
         );
@@ -72,12 +66,8 @@ export default class MutationStatusSelector extends React.Component<
         return this.props.rates ? (
             <BadgeLabel
                 label={getFilterOptionLabel(this.props.somaticContent)}
-                badgeContent={`${formatPercentValue(
-                    this.props.rates['Somatic']
-                )}%`}
-                badgeStyleOverride={
-                    this.mutationStatusFilterOptions[0].badgeStyleOverride
-                }
+                badgeContent={`${formatPercentValue(this.props.rates['Somatic'])}%`}
+                badgeStyleOverride={this.mutationStatusFilterOptions[0].badgeStyleOverride}
             />
         ) : null;
     }

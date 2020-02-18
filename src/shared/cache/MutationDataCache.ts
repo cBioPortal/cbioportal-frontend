@@ -1,10 +1,6 @@
 import client from '../api/cbioportalClientInstance';
 import LazyMobXCache, { AugmentedData } from '../lib/LazyMobXCache';
-import {
-    MolecularProfile,
-    Mutation,
-    MutationFilter,
-} from '../api/generated/CBioPortalAPI';
+import { MolecularProfile, Mutation, MutationFilter } from '../api/generated/CBioPortalAPI';
 import { IDataQueryFilter } from '../lib/StoreUtils';
 import _ from 'lodash';
 
@@ -67,21 +63,11 @@ async function fetch(
     return ret;
 }
 
-export default class MutationDataCache extends LazyMobXCache<
-    Mutation[],
-    Query,
-    number
-> {
+export default class MutationDataCache extends LazyMobXCache<Mutation[], Query, number> {
     constructor(
         studyToMolecularProfile: { [studyId: string]: MolecularProfile },
         studyToDataQueryFilter: { [studyId: string]: IDataQueryFilter }
     ) {
-        super(
-            queryToKey,
-            dataToKey,
-            fetch,
-            studyToMolecularProfile,
-            studyToDataQueryFilter
-        );
+        super(queryToKey, dataToKey, fetch, studyToMolecularProfile, studyToDataQueryFilter);
     }
 }

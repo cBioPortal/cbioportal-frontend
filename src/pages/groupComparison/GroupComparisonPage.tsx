@@ -15,22 +15,14 @@ import ErrorMessage from '../../shared/components/ErrorMessage';
 import GroupSelector from './groupSelector/GroupSelector';
 import { GroupComparisonTab } from './GroupComparisonTabs';
 import { StudyLink } from 'shared/components/StudyLink/StudyLink';
-import {
-    action,
-    computed,
-    IReactionDisposer,
-    observable,
-    reaction,
-} from 'mobx';
+import { action, computed, IReactionDisposer, observable, reaction } from 'mobx';
 import autobind from 'autobind-decorator';
 import { AppStore } from '../../AppStore';
 import ClinicalData from './ClinicalData';
 import ReactSelect from 'react-select';
 import { trackEvent } from 'shared/lib/tracking';
 import URL from 'url';
-import GroupComparisonURLWrapper, {
-    GroupComparisonURLQuery,
-} from './GroupComparisonURLWrapper';
+import GroupComparisonURLWrapper, { GroupComparisonURLQuery } from './GroupComparisonURLWrapper';
 
 import styles from './styles.module.scss';
 import 'cbioportal-frontend-commons/dist/styles.css';
@@ -43,10 +35,7 @@ export interface IGroupComparisonPageProps {
 
 @inject('routing', 'appStore')
 @observer
-export default class GroupComparisonPage extends React.Component<
-    IGroupComparisonPageProps,
-    {}
-> {
+export default class GroupComparisonPage extends React.Component<IGroupComparisonPageProps, {}> {
     @observable.ref private store: GroupComparisonStore;
     private queryReaction: IReactionDisposer;
     private urlWrapper: GroupComparisonURLWrapper;
@@ -57,10 +46,7 @@ export default class GroupComparisonPage extends React.Component<
         this.queryReaction = reaction(
             () => this.urlWrapper.query.sessionId,
             sessionId => {
-                if (
-                    !props.routing.location.pathname.includes('/comparison') ||
-                    !sessionId
-                ) {
+                if (!props.routing.location.pathname.includes('/comparison') || !sessionId) {
                     return;
                 }
 
@@ -122,20 +108,13 @@ export default class GroupComparisonPage extends React.Component<
                     getTabHref={this.getTabHref}
                 >
                     <MSKTab id={GroupComparisonTab.OVERLAP} linkText="Overlap">
-                        <Overlap
-                            key={this.selectedGroupsKey}
-                            store={this.store}
-                        />
+                        <Overlap key={this.selectedGroupsKey} store={this.store} />
                     </MSKTab>
                     {this.store.showSurvivalTab && (
                         <MSKTab
                             id={GroupComparisonTab.SURVIVAL}
                             linkText="Survival"
-                            anchorClassName={
-                                this.store.survivalTabUnavailable
-                                    ? 'greyedOut'
-                                    : ''
-                            }
+                            anchorClassName={this.store.survivalTabUnavailable ? 'greyedOut' : ''}
                         >
                             <Survival store={this.store} />
                         </MSKTab>
@@ -143,9 +122,7 @@ export default class GroupComparisonPage extends React.Component<
                     <MSKTab
                         id={GroupComparisonTab.CLINICAL}
                         linkText="Clinical"
-                        anchorClassName={
-                            this.store.clinicalTabUnavailable ? 'greyedOut' : ''
-                        }
+                        anchorClassName={this.store.clinicalTabUnavailable ? 'greyedOut' : ''}
                     >
                         <ClinicalData store={this.store} />
                     </MSKTab>
@@ -153,11 +130,7 @@ export default class GroupComparisonPage extends React.Component<
                         <MSKTab
                             id={GroupComparisonTab.MUTATIONS}
                             linkText="Mutations"
-                            anchorClassName={
-                                this.store.mutationsTabUnavailable
-                                    ? 'greyedOut'
-                                    : ''
-                            }
+                            anchorClassName={this.store.mutationsTabUnavailable ? 'greyedOut' : ''}
                         >
                             <MutationEnrichments store={this.store} />
                         </MSKTab>
@@ -166,11 +139,7 @@ export default class GroupComparisonPage extends React.Component<
                         <MSKTab
                             id={GroupComparisonTab.CNA}
                             linkText="Copy-number"
-                            anchorClassName={
-                                this.store.copyNumberUnavailable
-                                    ? 'greyedOut'
-                                    : ''
-                            }
+                            anchorClassName={this.store.copyNumberUnavailable ? 'greyedOut' : ''}
                         >
                             <CopyNumberEnrichments store={this.store} />
                         </MSKTab>
@@ -179,9 +148,7 @@ export default class GroupComparisonPage extends React.Component<
                         <MSKTab
                             id={GroupComparisonTab.MRNA}
                             linkText="mRNA"
-                            anchorClassName={
-                                this.store.mRNATabUnavailable ? 'greyedOut' : ''
-                            }
+                            anchorClassName={this.store.mRNATabUnavailable ? 'greyedOut' : ''}
                         >
                             <MRNAEnrichments store={this.store} />
                         </MSKTab>
@@ -190,11 +157,7 @@ export default class GroupComparisonPage extends React.Component<
                         <MSKTab
                             id={GroupComparisonTab.PROTEIN}
                             linkText="Protein"
-                            anchorClassName={
-                                this.store.proteinTabUnavailable
-                                    ? 'greyedOut'
-                                    : ''
-                            }
+                            anchorClassName={this.store.proteinTabUnavailable ? 'greyedOut' : ''}
                         >
                             <ProteinEnrichments store={this.store} />
                         </MSKTab>
@@ -202,9 +165,7 @@ export default class GroupComparisonPage extends React.Component<
                 </MSKTabs>
             );
         },
-        renderPending: () => (
-            <LoadingIndicator center={true} isLoading={true} size={'big'} />
-        ),
+        renderPending: () => <LoadingIndicator center={true} isLoading={true} size={'big'} />,
         renderError: () => <ErrorMessage />,
     });
 
@@ -220,9 +181,7 @@ export default class GroupComparisonPage extends React.Component<
                 case 1:
                     studyHeader = (
                         <h3>
-                            <StudyLink studyId={studies[0].studyId}>
-                                {studies[0].name}
-                            </StudyLink>
+                            <StudyLink studyId={studies[0].studyId}>{studies[0].name}</StudyLink>
                         </h3>
                     );
                     break;
@@ -230,9 +189,7 @@ export default class GroupComparisonPage extends React.Component<
                     studyHeader = (
                         <h4>
                             <a
-                                href={`study?id=${studies
-                                    .map(study => study.studyId)
-                                    .join(',')}`}
+                                href={`study?id=${studies.map(study => study.studyId).join(',')}`}
                                 target="_blank"
                             >
                                 Multiple studies
@@ -245,9 +202,7 @@ export default class GroupComparisonPage extends React.Component<
                 ret = (
                     <span>
                         {studyHeader}Groups from{' '}
-                        <span
-                            style={{ fontWeight: 'bold', fontStyle: 'italic' }}
-                        >
+                        <span style={{ fontWeight: 'bold', fontStyle: 'italic' }}>
                             {this.store.sessionClinicalAttributeName}
                         </span>
                     </span>
@@ -304,8 +259,7 @@ export default class GroupComparisonPage extends React.Component<
                             searchable={false}
                             value={{
                                 label:
-                                    this.store.overlapStrategy ===
-                                    OverlapStrategy.EXCLUDE
+                                    this.store.overlapStrategy === OverlapStrategy.EXCLUDE
                                         ? excludeLabel
                                         : includeLabel,
                                 value: this.store.overlapStrategy,
@@ -323,11 +277,7 @@ export default class GroupComparisonPage extends React.Component<
         }
 
         return (
-            <PageLayout
-                noMargin={true}
-                hideFooter={true}
-                className={'subhead-dark'}
-            >
+            <PageLayout noMargin={true} hideFooter={true} className={'subhead-dark'}>
                 <div>
                     <LoadingIndicator
                         center={true}

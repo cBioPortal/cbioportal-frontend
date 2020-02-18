@@ -11,10 +11,7 @@ import {
 import { spy, SinonStub, match, createStubInstance } from 'sinon';
 
 import OncoprintJS from 'oncoprintjs';
-import {
-    MolecularProfile,
-    CancerStudy,
-} from 'shared/api/generated/CBioPortalAPI';
+import { MolecularProfile, CancerStudy } from 'shared/api/generated/CBioPortalAPI';
 import {
     CLINICAL_TRACK_GROUP_INDEX,
     GENETIC_TRACK_GROUP_INDEX,
@@ -29,18 +26,12 @@ describe('Oncoprint DeltaUtils', () => {
         });
         it('should return 2 for one empty input and one with two (both added/deleted)', () => {
             assert.equal(
-                numTracksWhoseDataChanged(
-                    [{ key: 'a', data: [] }, { key: 'b', data: [] }],
-                    []
-                ),
+                numTracksWhoseDataChanged([{ key: 'a', data: [] }, { key: 'b', data: [] }], []),
                 2,
                 'tracks added'
             );
             assert.equal(
-                numTracksWhoseDataChanged(
-                    [],
-                    [{ key: 'a', data: [] }, { key: 'b', data: [] }]
-                ),
+                numTracksWhoseDataChanged([], [{ key: 'a', data: [] }, { key: 'b', data: [] }]),
                 2,
                 'tracks deleted'
             );
@@ -48,16 +39,8 @@ describe('Oncoprint DeltaUtils', () => {
         it('should return 3 for one track deleted, one track added, one track changed', () => {
             let state1 = [{ key: 'a', data: [] }, { key: 'b', data: [] }];
             let state2 = [{ key: 'b', data: [1] }, { key: 'c', data: [] }];
-            assert.equal(
-                numTracksWhoseDataChanged(state1, state2),
-                3,
-                'test one direction'
-            );
-            assert.equal(
-                numTracksWhoseDataChanged(state2, state1),
-                3,
-                'test other direction'
-            );
+            assert.equal(numTracksWhoseDataChanged(state1, state2), 3, 'test one direction');
+            assert.equal(numTracksWhoseDataChanged(state2, state1), 3, 'test other direction');
         });
         it('should return X for X tracks changed', () => {
             let state1 = [
@@ -127,15 +110,13 @@ describe('Oncoprint DeltaUtils', () => {
             // then it adds a track with an expandCallback track property that
             // calls the provided function
             assert.isTrue((oncoprint.addTracks as SinonStub).called);
-            (oncoprint.addTracks as SinonStub).args.forEach(
-                ([trackParamArray]) => {
-                    trackParamArray.forEach((trackParams: any) => {
-                        if (trackParams.expandCallback !== undefined) {
-                            trackParams.expandCallback();
-                        }
-                    });
-                }
-            );
+            (oncoprint.addTracks as SinonStub).args.forEach(([trackParamArray]) => {
+                trackParamArray.forEach((trackParams: any) => {
+                    if (trackParams.expandCallback !== undefined) {
+                        trackParams.expandCallback();
+                    }
+                });
+            });
             assert.isTrue(
                 expansionCallback.called,
                 'calling the expand callbacks of added tracks should invoke the one provided'
@@ -259,9 +240,7 @@ describe('Oncoprint DeltaUtils', () => {
                 () => makeMinimalProfileMap()
             );
             // then
-            assert.isTrue(
-                (oncoprint.disableTrackExpansion as SinonStub).calledWith(8)
-            );
+            assert.isTrue((oncoprint.disableTrackExpansion as SinonStub).calledWith(8));
         });
 
         it('re-enables expansion if an expandable genetic track no longer has expansions', () => {
@@ -316,9 +295,7 @@ describe('Oncoprint DeltaUtils', () => {
                 () => makeMinimalProfileMap()
             );
             // then
-            assert.isTrue(
-                (oncoprint.enableTrackExpansion as SinonStub).calledWith(2)
-            );
+            assert.isTrue((oncoprint.enableTrackExpansion as SinonStub).calledWith(2));
         });
 
         it('supplies genetic expansions with callbacks that update track IDs when collapsing', () => {
@@ -493,17 +470,11 @@ describe('Oncoprint DeltaUtils', () => {
         it('should not do anything if the heatmap tracks are the same', () => {
             transitionTrackGroupSortPriority(
                 {
-                    heatmapTracks: [
-                        { trackGroupIndex: 2 },
-                        { trackGroupIndex: 3 },
-                    ],
+                    heatmapTracks: [{ trackGroupIndex: 2 }, { trackGroupIndex: 3 }],
                     genesetHeatmapTracks: [],
                 },
                 {
-                    heatmapTracks: [
-                        { trackGroupIndex: 2 },
-                        { trackGroupIndex: 3 },
-                    ],
+                    heatmapTracks: [{ trackGroupIndex: 2 }, { trackGroupIndex: 3 }],
                     genesetHeatmapTracks: [],
                 },
                 oncoprint
@@ -570,20 +541,10 @@ describe('Oncoprint DeltaUtils', () => {
                 },
                 oncoprint
             );
-            assert.equal(
-                oncoprint.setTrackGroupSortPriority.callCount,
-                1,
-                'called once'
-            );
+            assert.equal(oncoprint.setTrackGroupSortPriority.callCount, 1, 'called once');
             assert.deepEqual(
                 oncoprint.setTrackGroupSortPriority.args[0][0],
-                [
-                    CLINICAL_TRACK_GROUP_INDEX,
-                    2,
-                    3,
-                    4,
-                    GENETIC_TRACK_GROUP_INDEX,
-                ],
+                [CLINICAL_TRACK_GROUP_INDEX, 2, 3, 4, GENETIC_TRACK_GROUP_INDEX],
                 'right priority order'
             );
         });
@@ -609,21 +570,10 @@ describe('Oncoprint DeltaUtils', () => {
                 },
                 oncoprint
             );
-            assert.equal(
-                oncoprint.setTrackGroupSortPriority.callCount,
-                1,
-                'called once'
-            );
+            assert.equal(oncoprint.setTrackGroupSortPriority.callCount, 1, 'called once');
             assert.deepEqual(
                 oncoprint.setTrackGroupSortPriority.args[0][0],
-                [
-                    CLINICAL_TRACK_GROUP_INDEX,
-                    2,
-                    3,
-                    4,
-                    5,
-                    GENETIC_TRACK_GROUP_INDEX,
-                ],
+                [CLINICAL_TRACK_GROUP_INDEX, 2, 3, 4, 5, GENETIC_TRACK_GROUP_INDEX],
                 'right priority order'
             );
         });
@@ -631,19 +581,12 @@ describe('Oncoprint DeltaUtils', () => {
             transitionTrackGroupSortPriority(
                 {
                     heatmapTracks: [],
-                    genesetHeatmapTracks: [
-                        { trackGroupIndex: 2 },
-                        { trackGroupIndex: 2 },
-                    ],
+                    genesetHeatmapTracks: [{ trackGroupIndex: 2 }, { trackGroupIndex: 2 }],
                 },
                 {},
                 oncoprint
             );
-            assert.equal(
-                oncoprint.setTrackGroupSortPriority.callCount,
-                1,
-                'called once'
-            );
+            assert.equal(oncoprint.setTrackGroupSortPriority.callCount, 1, 'called once');
             assert.deepEqual(
                 oncoprint.setTrackGroupSortPriority.args[0][0],
                 [CLINICAL_TRACK_GROUP_INDEX, 2, GENETIC_TRACK_GROUP_INDEX],
@@ -662,11 +605,7 @@ describe('Oncoprint DeltaUtils', () => {
             assert.equal(oncoprint.setSortConfig.callCount, 0);
         });
         it('should not do anything if the given sort configs have no order or cluster heatmap group specified, regardless of changes', () => {
-            transitionSortConfig(
-                { sortConfig: {} },
-                { sortConfig: {} },
-                oncoprint
-            );
+            transitionSortConfig({ sortConfig: {} }, { sortConfig: {} }, oncoprint);
             transitionSortConfig(
                 { sortConfig: { sortByMutationType: true } },
                 { sortConfig: { sortByMutationType: false } },
@@ -692,24 +631,12 @@ describe('Oncoprint DeltaUtils', () => {
                 { sortConfig: { sortByMutationType: false } },
                 oncoprint
             );
-            transitionSortConfig(
-                {},
-                { sortConfig: { sortByMutationType: false } },
-                oncoprint
-            );
-            transitionSortConfig(
-                { sortConfig: { sortByMutationType: false } },
-                {},
-                oncoprint
-            );
+            transitionSortConfig({}, { sortConfig: { sortByMutationType: false } }, oncoprint);
+            transitionSortConfig({ sortConfig: { sortByMutationType: false } }, {}, oncoprint);
             assert.equal(oncoprint.setSortConfig.callCount, 0);
         });
         it('should set the config to new order if order is specified, no sort config specified before', () => {
-            transitionSortConfig(
-                { sortConfig: { order: ['5', '3', '2'] } },
-                {},
-                oncoprint
-            );
+            transitionSortConfig({ sortConfig: { order: ['5', '3', '2'] } }, {}, oncoprint);
             assert.equal(oncoprint.setSortConfig.callCount, 1, 'called once');
             assert.deepEqual(
                 oncoprint.setSortConfig.args[0][0],
@@ -745,11 +672,7 @@ describe('Oncoprint DeltaUtils', () => {
         });
         it('should not do anything if same order given (same object, shallow equality)', () => {
             const order = '0,1,2,3,4'.split(',');
-            transitionSortConfig(
-                { sortConfig: { order } },
-                { sortConfig: { order } },
-                oncoprint
-            );
+            transitionSortConfig({ sortConfig: { order } }, { sortConfig: { order } }, oncoprint);
             assert.equal(oncoprint.setSortConfig.callCount, 0);
         });
         it('should set the config to order, if order and cluster heatmap group specified', () => {

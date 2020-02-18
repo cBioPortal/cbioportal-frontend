@@ -28,10 +28,9 @@ export default class DefaultLollipopPlotLegend extends React.Component<
             <div style={{ maxWidth: 700, marginTop: 5 }}>
                 <strong style={{ color: '#2153AA' }}>Color Codes</strong>
                 <p>
-                    Mutation diagram circles are colored with respect to the
-                    corresponding mutation types. In case of different mutation
-                    types at a single position, color of the circle is
-                    determined with respect to the most frequent mutation type.
+                    Mutation diagram circles are colored with respect to the corresponding mutation
+                    types. In case of different mutation types at a single position, color of the
+                    circle is determined with respect to the most frequent mutation type.
                 </p>
                 <br />
                 <div>
@@ -43,13 +42,11 @@ export default class DefaultLollipopPlotLegend extends React.Component<
                             </strong>
                         </li>
                         <li>
-                            <strong
-                                style={{ color: this.props.truncatingColor }}
-                            >
+                            <strong style={{ color: this.props.truncatingColor }}>
                                 Truncating Mutations
                             </strong>
-                            : Nonsense, Nonstop, Frameshift deletion, Frameshift
-                            insertion, Splice site
+                            : Nonsense, Nonstop, Frameshift deletion, Frameshift insertion, Splice
+                            site
                         </li>
                         <li>
                             <strong style={{ color: this.props.inframeColor }}>

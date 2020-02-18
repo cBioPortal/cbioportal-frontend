@@ -3,10 +3,7 @@ import oncokbClient from 'shared/api/oncokbClientInstance';
 import { generateEvidenceQuery, processEvidence } from 'shared/lib/OncoKbUtils';
 import { IEvidence } from 'shared/model/OncoKB';
 
-export default class OncoKbEvidenceCache extends SimpleCache<
-    IEvidence,
-    Query[]
-> {
+export default class OncoKbEvidenceCache extends SimpleCache<IEvidence, Query[]> {
     constructor() {
         super();
     }
@@ -15,14 +12,12 @@ export default class OncoKbEvidenceCache extends SimpleCache<
         const cache: ICache<IEvidence> = {};
 
         try {
-            const evidenceLookup = await oncokbClient.evidencesLookupPostUsingPOST(
-                {
-                    body: generateEvidenceQuery(
-                        queryVariants,
-                        'STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY,STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE,INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY,INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE'
-                    ),
-                }
-            );
+            const evidenceLookup = await oncokbClient.evidencesLookupPostUsingPOST({
+                body: generateEvidenceQuery(
+                    queryVariants,
+                    'STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY,STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE,INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY,INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE'
+                ),
+            });
 
             const evidenceMap = processEvidence(evidenceLookup);
 

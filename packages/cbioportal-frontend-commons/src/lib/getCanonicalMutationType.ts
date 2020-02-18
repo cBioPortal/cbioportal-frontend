@@ -82,9 +82,7 @@ export const CANONICAL_MUTATION_TYPE_MAP: {
 };
 
 export function getProteinImpactType(mutationType: string): ProteinImpactType {
-    return getProteinImpactTypeFromCanonical(
-        getCanonicalMutationType(mutationType)
-    );
+    return getProteinImpactTypeFromCanonical(getCanonicalMutationType(mutationType));
 }
 
 export function getProteinImpactTypeFromCanonical(
@@ -113,13 +111,8 @@ export function getProteinImpactTypeFromCanonical(
             return ProteinImpactType.OTHER;
     }
 }
-export function getCanonicalMutationType(
-    mutationType: string
-): CanonicalMutationType {
-    return (
-        CANONICAL_MUTATION_TYPE_MAP[mutationType.toLowerCase()] ||
-        CanonicalMutationType.OTHER
-    );
+export function getCanonicalMutationType(mutationType: string): CanonicalMutationType {
+    return CANONICAL_MUTATION_TYPE_MAP[mutationType.toLowerCase()] || CanonicalMutationType.OTHER;
 }
 
 export const CanonicalMutationTypeList: CanonicalMutationType[] = _.chain(

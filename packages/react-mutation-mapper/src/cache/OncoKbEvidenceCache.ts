@@ -10,10 +10,7 @@ import { IEvidence, Query } from '../model/OncoKb';
 import { initOncoKbClient } from '../util/DataFetcherUtils';
 import { processEvidence } from '../util/OncoKbUtils';
 
-export default class OncoKbEvidenceCache extends SimpleCache<
-    IEvidence,
-    Query[]
-> {
+export default class OncoKbEvidenceCache extends SimpleCache<IEvidence, Query[]> {
     protected oncoKbClient: Partial<OncoKbAPI>;
 
     constructor(oncoKbClient?: Partial<OncoKbAPI>) {
@@ -26,16 +23,14 @@ export default class OncoKbEvidenceCache extends SimpleCache<
 
         try {
             if (this.oncoKbClient.evidencesLookupPostUsingPOST) {
-                const evidenceLookup = await this.oncoKbClient.evidencesLookupPostUsingPOST(
-                    {
-                        body: {
-                            ...generatePartialEvidenceQuery(
-                                'STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY,STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE,INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY,INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE'
-                            ),
-                            queries: queryVariants as Query[],
-                        } as EvidenceQueries,
-                    }
-                );
+                const evidenceLookup = await this.oncoKbClient.evidencesLookupPostUsingPOST({
+                    body: {
+                        ...generatePartialEvidenceQuery(
+                            'STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY,STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE,INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY,INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE'
+                        ),
+                        queries: queryVariants as Query[],
+                    } as EvidenceQueries,
+                });
 
                 const evidenceMap = processEvidence(evidenceLookup);
 

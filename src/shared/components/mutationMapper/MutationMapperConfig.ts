@@ -22,8 +22,7 @@ export function convertToMutationMapperProps(
         isoformOverrideSource: config.isoformOverrideSource,
         myGeneInfoUrlTemplate: config.mygene_info_url || undefined,
         uniprotIdUrlTemplate: config.uniprot_id_url || undefined,
-        transcriptSummaryUrlTemplate:
-            config.ensembl_transcript_url || undefined,
+        transcriptSummaryUrlTemplate: config.ensembl_transcript_url || undefined,
         enableOncoKb: config.show_oncokb,
         enableGenomeNexus: config.show_genomenexus,
         enableHotspot: config.show_hotspot,

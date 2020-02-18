@@ -1,8 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import LazyMobXTable, {
-    Column,
-} from '../../../shared/components/lazyMobXTable/LazyMobXTable';
+import LazyMobXTable, { Column } from '../../../shared/components/lazyMobXTable/LazyMobXTable';
 import { observer } from 'mobx-react';
 import { computed } from 'mobx';
 import { Checkbox } from 'react-bootstrap';
@@ -43,9 +41,7 @@ const cnaToAlteration: { [cna: number]: string } = {
     '-2': 'DeepDel',
 };
 
-export type AlterationEnrichmentTableColumn = Column<
-    AlterationEnrichmentRow
-> & { order?: number };
+export type AlterationEnrichmentTableColumn = Column<AlterationEnrichmentRow> & { order?: number };
 
 @observer
 export default class AlterationEnrichmentTable extends React.Component<
@@ -89,9 +85,7 @@ export default class AlterationEnrichmentTable extends React.Component<
                 <div style={{ display: 'flex' }}>
                     {this.props.onCheckGene && this.props.checkedGenes && (
                         <Checkbox
-                            checked={this.props.checkedGenes.includes(
-                                d.hugoGeneSymbol
-                            )}
+                            checked={this.props.checkedGenes.includes(d.hugoGeneSymbol)}
                             disabled={d.disabled}
                             key={d.hugoGeneSymbol}
                             className={styles.Checkbox}
@@ -101,11 +95,7 @@ export default class AlterationEnrichmentTable extends React.Component<
                             onClick={e => {
                                 e.stopPropagation();
                             }}
-                            title={
-                                d.disabled
-                                    ? 'This is one of the query genes'
-                                    : ''
-                            }
+                            title={d.disabled ? 'This is one of the query genes' : ''}
                         />
                     )}
                     <span className={styles.GeneName}>
@@ -114,11 +104,8 @@ export default class AlterationEnrichmentTable extends React.Component<
                 </div>
             ),
             tooltip: <span>Gene</span>,
-            filter: (
-                d: AlterationEnrichmentRow,
-                filterString: string,
-                filterStringUpper: string
-            ) => d.hugoGeneSymbol.toUpperCase().includes(filterStringUpper),
+            filter: (d: AlterationEnrichmentRow, filterString: string, filterStringUpper: string) =>
+                d.hugoGeneSymbol.toUpperCase().includes(filterStringUpper),
             sortBy: (d: AlterationEnrichmentRow) => d.hugoGeneSymbol,
             download: (d: AlterationEnrichmentRow) => d.hugoGeneSymbol,
         };
@@ -137,22 +124,15 @@ export default class AlterationEnrichmentTable extends React.Component<
             render: (d: AlterationEnrichmentRow) => (
                 <span
                     style={{
-                        color:
-                            d.value! === 2 ? CNA_COLOR_AMP : CNA_COLOR_HOMDEL,
+                        color: d.value! === 2 ? CNA_COLOR_AMP : CNA_COLOR_HOMDEL,
                     }}
                 >
                     {cnaToAlteration[d.value!]}
                 </span>
             ),
             tooltip: <span>Copy number alteration</span>,
-            filter: (
-                d: AlterationEnrichmentRow,
-                filterString: string,
-                filterStringUpper: string
-            ) =>
-                cnaToAlteration[d.value!]
-                    .toUpperCase()
-                    .includes(filterStringUpper),
+            filter: (d: AlterationEnrichmentRow, filterString: string, filterStringUpper: string) =>
+                cnaToAlteration[d.value!].toUpperCase().includes(filterStringUpper),
             sortBy: (d: AlterationEnrichmentRow) => cnaToAlteration[d.value!],
             download: (d: AlterationEnrichmentRow) => cnaToAlteration[d.value!],
         };
@@ -161,34 +141,26 @@ export default class AlterationEnrichmentTable extends React.Component<
             name: 'p-Value',
             render: (d: AlterationEnrichmentRow) => (
                 <span style={{ whiteSpace: 'nowrap' }}>
-                    {d.pValue !== undefined
-                        ? toConditionalPrecision(d.pValue, 3, 0.01)
-                        : '-'}
+                    {d.pValue !== undefined ? toConditionalPrecision(d.pValue, 3, 0.01) : '-'}
                 </span>
             ),
             tooltip: <span>Derived from one-sided Fisher Exact Test</span>,
             sortBy: (d: AlterationEnrichmentRow) => Number(d.pValue),
             download: (d: AlterationEnrichmentRow) =>
-                d.pValue !== undefined
-                    ? toConditionalPrecision(d.pValue, 3, 0.01)
-                    : '-',
+                d.pValue !== undefined ? toConditionalPrecision(d.pValue, 3, 0.01) : '-',
         };
 
         columns[AlterationEnrichmentTableColumnType.Q_VALUE] = {
             name: 'q-Value',
             render: (d: AlterationEnrichmentRow) => (
                 <span style={{ whiteSpace: 'nowrap' }}>
-                    {d.qValue !== undefined
-                        ? formatSignificanceValueWithStyle(d.qValue)
-                        : '-'}
+                    {d.qValue !== undefined ? formatSignificanceValueWithStyle(d.qValue) : '-'}
                 </span>
             ),
             tooltip: <span>Derived from Benjamini-Hochberg procedure</span>,
             sortBy: (d: AlterationEnrichmentRow) => Number(d.qValue),
             download: (d: AlterationEnrichmentRow) =>
-                d.qValue !== undefined
-                    ? toConditionalPrecision(d.qValue, 3, 0.01)
-                    : '-',
+                d.qValue !== undefined ? toConditionalPrecision(d.qValue, 3, 0.01) : '-',
         };
 
         return columns;
@@ -196,9 +168,7 @@ export default class AlterationEnrichmentTable extends React.Component<
 
     public render() {
         const orderedColumns = _.sortBy(
-            this.props.visibleOrderedColumnNames!.map(
-                column => this.columns[column]
-            ),
+            this.props.visibleOrderedColumnNames!.map(column => this.columns[column]),
             (c: AlterationEnrichmentTableColumn) => c.order
         );
         return (
@@ -208,9 +178,7 @@ export default class AlterationEnrichmentTable extends React.Component<
                 columns={orderedColumns}
                 data={this.props.data}
                 initialSortColumn={this.props.initialSortColumn}
-                onRowClick={
-                    this.props.onGeneNameClick ? this.onRowClick : undefined
-                }
+                onRowClick={this.props.onGeneNameClick ? this.onRowClick : undefined}
                 dataStore={this.props.dataStore}
             />
         );

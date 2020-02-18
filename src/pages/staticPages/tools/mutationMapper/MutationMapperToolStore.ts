@@ -16,11 +16,7 @@ import {
     remoteData,
     VariantAnnotation,
 } from 'cbioportal-frontend-commons';
-import {
-    ClinicalData,
-    Gene,
-    Mutation,
-} from 'shared/api/generated/CBioPortalAPI';
+import { ClinicalData, Gene, Mutation } from 'shared/api/generated/CBioPortalAPI';
 import {
     fetchGenes,
     fetchMyCancerGenomeData,
@@ -116,10 +112,7 @@ export default class MutationMapperToolStore {
                     return Promise.resolve(
                         _.reduce(
                             this.oncoKbCancerGenes.result,
-                            (
-                                map: { [entrezGeneId: number]: boolean },
-                                next: CancerGene
-                            ) => {
+                            (map: { [entrezGeneId: number]: boolean }, next: CancerGene) => {
                                 if (next.oncokbAnnotated) {
                                     map[next.entrezGeneId] = true;
                                 }
@@ -165,12 +158,8 @@ export default class MutationMapperToolStore {
 
             if (this.mutations.result) {
                 this.mutations.result.forEach(mutation => {
-                    const cancerTypeClinicalData:
-                        | ClinicalData
-                        | undefined = _.find(
-                        this.clinicalDataByUniqueSampleKey[
-                            mutation.uniqueSampleKey
-                        ],
+                    const cancerTypeClinicalData: ClinicalData | undefined = _.find(
+                        this.clinicalDataByUniqueSampleKey[mutation.uniqueSampleKey],
                         { clinicalAttributeId: 'CANCER_TYPE' }
                     );
                     map[mutation.uniqueSampleKey] = cancerTypeClinicalData
@@ -198,8 +187,7 @@ export default class MutationMapperToolStore {
                 let mutations: Partial<Mutation>[] = [];
 
                 if (this.annotatedMutations) {
-                    mutations = normalizeMutations(this
-                        .annotatedMutations as Pick<
+                    mutations = normalizeMutations(this.annotatedMutations as Pick<
                         Mutation,
                         'chr'
                     >[]) as Partial<Mutation>[];
@@ -268,13 +256,9 @@ export default class MutationMapperToolStore {
                                 gene: Gene
                             ) => {
                                 const getMutations = () => {
-                                    return this.mutationsByGene[
-                                        gene.hugoGeneSymbol
-                                    ];
+                                    return this.mutationsByGene[gene.hugoGeneSymbol];
                                 };
-                                map[
-                                    gene.hugoGeneSymbol
-                                ] = new MutationMapperStore(
+                                map[gene.hugoGeneSymbol] = new MutationMapperStore(
                                     AppConfig.serverConfig,
                                     {
                                         filterMutationsBySelectedTranscript: !this
@@ -301,17 +285,12 @@ export default class MutationMapperToolStore {
         {}
     );
 
-    public getMutationMapperStore(
-        hugoGeneSymbol: string
-    ): MutationMapperStore | undefined {
+    public getMutationMapperStore(hugoGeneSymbol: string): MutationMapperStore | undefined {
         return this.mutationMapperStores.result[hugoGeneSymbol];
     }
 
     @computed get hasInputWithProteinChanges(): boolean {
-        return _.some(
-            this.mutationData,
-            m => m.proteinChange && m.proteinChange.length > 0
-        );
+        return _.some(this.mutationData, m => m.proteinChange && m.proteinChange.length > 0);
     }
 
     @computed get rawMutations(): Mutation[] {
@@ -332,11 +311,7 @@ export default class MutationMapperToolStore {
     }[] {
         return _.compact(
             this.mutations.result.map((mutation: Mutation, index: number) => {
-                if (
-                    !mutation ||
-                    !mutation.gene ||
-                    !mutation.gene.hugoGeneSymbol
-                ) {
+                if (!mutation || !mutation.gene || !mutation.gene.hugoGeneSymbol) {
                     return (
                         this.mutationData && {
                             lineNumber: index + 2,

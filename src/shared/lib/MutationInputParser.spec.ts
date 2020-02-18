@@ -1,10 +1,5 @@
 import { assert } from 'chai';
-import {
-    buildIndexMap,
-    getClinicalData,
-    getGeneList,
-    parseInput,
-} from './MutationInputParser';
+import { buildIndexMap, getClinicalData, getGeneList, parseInput } from './MutationInputParser';
 
 describe('MutationInputParser', () => {
     const partiallyAnnotatedMutationInput =
@@ -161,10 +156,7 @@ describe('MutationInputParser', () => {
         assert.equal(richInputIndexMap['reference_allele'], 7);
         assert.equal(richInputIndexMap['variant_allele'], 8);
 
-        const basicInputIndexMap = buildIndexMap(
-            basicMutationInput.split('\n')[0],
-            separator
-        );
+        const basicInputIndexMap = buildIndexMap(basicMutationInput.split('\n')[0], separator);
         assert.equal(basicInputIndexMap['sample_id'], 0);
         assert.equal(basicInputIndexMap['chromosome'], 1);
         assert.equal(basicInputIndexMap['start_position'], 2);
@@ -172,10 +164,7 @@ describe('MutationInputParser', () => {
         assert.equal(basicInputIndexMap['reference_allele'], 4);
         assert.equal(basicInputIndexMap['variant_allele'], 5);
 
-        const minimalInputIndexMap = buildIndexMap(
-            minimalMutationInput.split('\n')[0],
-            separator
-        );
+        const minimalInputIndexMap = buildIndexMap(minimalMutationInput.split('\n')[0], separator);
         assert.equal(minimalInputIndexMap['hugo_symbol'], 0);
         assert.equal(minimalInputIndexMap['protein_change'], 1);
 
@@ -213,37 +202,21 @@ describe('MutationInputParser', () => {
             'gene instance should have hugo symbol'
         );
 
-        assert.equal(
-            mutations[1].sampleId,
-            undefined,
-            'mutation should NOT have sample id'
-        );
-        assert.equal(
-            mutations[1].proteinChange,
-            'R832*',
-            'mutation should have protein change'
-        );
+        assert.equal(mutations[1].sampleId, undefined, 'mutation should NOT have sample id');
+        assert.equal(mutations[1].proteinChange, 'R832*', 'mutation should have protein change');
         assert.equal(
             mutations[1].mutationType,
             undefined,
             'mutation should NOT have mutation type'
         );
 
-        assert.equal(
-            mutations[1].chr,
-            undefined,
-            'mutation should NOT have chromosome'
-        );
+        assert.equal(mutations[1].chr, undefined, 'mutation should NOT have chromosome');
         assert.equal(
             mutations[1].startPosition,
             undefined,
             'mutation should NOT have start position'
         );
-        assert.equal(
-            mutations[1].endPosition,
-            undefined,
-            'mutation should NOT have end position'
-        );
+        assert.equal(mutations[1].endPosition, undefined, 'mutation should NOT have end position');
         assert.equal(
             mutations[1].referenceAllele,
             undefined,
@@ -276,17 +249,9 @@ describe('MutationInputParser', () => {
             'input order of mutations should be preserved'
         );
 
-        assert.equal(
-            mutations[0].gene,
-            undefined,
-            'gene instance should NOT have hugo symbol'
-        );
+        assert.equal(mutations[0].gene, undefined, 'gene instance should NOT have hugo symbol');
 
-        assert.equal(
-            mutations[1].sampleId,
-            'TCGA-BS-A0UF',
-            'mutation should have sample id'
-        );
+        assert.equal(mutations[1].sampleId, 'TCGA-BS-A0UF', 'mutation should have sample id');
         assert.equal(
             mutations[1].proteinChange,
             undefined,
@@ -299,26 +264,10 @@ describe('MutationInputParser', () => {
         );
 
         assert.equal(mutations[1].chr, 'X', 'mutation should have chromosome');
-        assert.equal(
-            mutations[1].startPosition,
-            66942713,
-            'mutation should have start position'
-        );
-        assert.equal(
-            mutations[1].endPosition,
-            66942713,
-            'mutation should have end position'
-        );
-        assert.equal(
-            mutations[1].referenceAllele,
-            'C',
-            'mutation should have reference allele'
-        );
-        assert.equal(
-            mutations[1].variantAllele,
-            'T',
-            'mutation should have variant allele'
-        );
+        assert.equal(mutations[1].startPosition, 66942713, 'mutation should have start position');
+        assert.equal(mutations[1].endPosition, 66942713, 'mutation should have end position');
+        assert.equal(mutations[1].referenceAllele, 'C', 'mutation should have reference allele');
+        assert.equal(mutations[1].variantAllele, 'T', 'mutation should have variant allele');
     });
 
     it('parses partially annotated mutation input', () => {
@@ -346,16 +295,8 @@ describe('MutationInputParser', () => {
             'AR',
             'gene instance should have hugo symbol'
         );
-        assert.equal(
-            mutations[1].sampleId,
-            'TCGA-BS-A0UF',
-            'mutation should have sample id'
-        );
-        assert.equal(
-            mutations[2].proteinChange,
-            'L185P',
-            'mutation should have protein change'
-        );
+        assert.equal(mutations[1].sampleId, 'TCGA-BS-A0UF', 'mutation should have sample id');
+        assert.equal(mutations[2].proteinChange, 'L185P', 'mutation should have protein change');
         assert.equal(
             mutations[3].mutationType,
             'Missense_Mutation',
@@ -363,26 +304,10 @@ describe('MutationInputParser', () => {
         );
 
         assert.equal(mutations[4].chr, '17', 'mutation should have chromosome');
-        assert.equal(
-            mutations[4].startPosition,
-            41242962,
-            'mutation should have start position'
-        );
-        assert.equal(
-            mutations[4].endPosition,
-            41242963,
-            'mutation should have end position'
-        );
-        assert.equal(
-            mutations[4].referenceAllele,
-            '-',
-            'mutation should have reference allele'
-        );
-        assert.equal(
-            mutations[4].variantAllele,
-            'GA',
-            'mutation should have variant allele'
-        );
+        assert.equal(mutations[4].startPosition, 41242962, 'mutation should have start position');
+        assert.equal(mutations[4].endPosition, 41242963, 'mutation should have end position');
+        assert.equal(mutations[4].referenceAllele, '-', 'mutation should have reference allele');
+        assert.equal(mutations[4].variantAllele, 'GA', 'mutation should have variant allele');
     });
 
     it('parses mutation input with clinical data', () => {
@@ -394,34 +319,21 @@ describe('MutationInputParser', () => {
             'number of parsed mutations should be equal to number of data lines'
         );
 
-        assert.equal(
-            mutations[0].sampleId,
-            'TCGA-13-0760',
-            'mutation should have sample id'
-        );
-        assert.equal(
-            mutations[0].cancerType,
-            'CancerType1',
-            'mutation should have cancer type'
-        );
+        assert.equal(mutations[0].sampleId, 'TCGA-13-0760', 'mutation should have sample id');
+        assert.equal(mutations[0].cancerType, 'CancerType1', 'mutation should have cancer type');
 
-        assert.equal(
-            mutations[7].sampleId,
-            'Unknown',
-            'mutation should have sample id'
-        );
-        assert.equal(
-            mutations[7].cancerType,
-            'CancerType4',
-            'mutation should have cancer type'
-        );
+        assert.equal(mutations[7].sampleId, 'Unknown', 'mutation should have sample id');
+        assert.equal(mutations[7].cancerType, 'CancerType4', 'mutation should have cancer type');
     });
 
     it('extracts list of hugo gene symbols from parsed input', () => {
-        assert.deepEqual(
-            getGeneList(parseInput(partiallyAnnotatedMutationInput)),
-            ['AR', 'BRCA1', 'BRCA2', 'POLE', 'TP53']
-        );
+        assert.deepEqual(getGeneList(parseInput(partiallyAnnotatedMutationInput)), [
+            'AR',
+            'BRCA1',
+            'BRCA2',
+            'POLE',
+            'TP53',
+        ]);
 
         assert.deepEqual(getGeneList(parseInput(minimalMutationInput)), [
             'AR',
@@ -452,9 +364,7 @@ describe('MutationInputParser', () => {
             'basic mutation input should NOT have any clinical data'
         );
 
-        const clinicalData = getClinicalData(
-            parseInput(mutationInputWithClinicalData)
-        );
+        const clinicalData = getClinicalData(parseInput(mutationInputWithClinicalData));
 
         assert.isAbove(
             clinicalData.length,

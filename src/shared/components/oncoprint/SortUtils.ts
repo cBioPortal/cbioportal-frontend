@@ -7,9 +7,7 @@ import naturalSort from 'javascript-natural-sort';
  * @param {(string | string[] | boolean)[]} array_spec
  * @returns {{[p: string]: number}}
  */
-function makeComparatorMetric(
-    array_spec: (string | string[] | undefined | boolean)[]
-) {
+function makeComparatorMetric(array_spec: (string | string[] | undefined | boolean)[]) {
     let metric: { [s: string]: number } = {};
     for (let i = 0; i < array_spec.length; i++) {
         const equiv_values = ([] as any[]).concat(array_spec[i]);
@@ -55,19 +53,11 @@ export function getGeneticTrackSortComparator(
         let _order: { [s: string]: number };
         if (!sortByMutationType && !sortByDrivers) {
             return function(m: any) {
-                return ({ true: 1, false: 2 } as { [bool: string]: number })[
-                    !!m + ''
-                ];
+                return ({ true: 1, false: 2 } as { [bool: string]: number })[!!m + ''];
             };
         } else if (!sortByMutationType && sortByDrivers) {
             _order = makeComparatorMetric([
-                [
-                    'inframe_rec',
-                    'missense_rec',
-                    'promoter_rec',
-                    'trunc_rec',
-                    'other_rec',
-                ],
+                ['inframe_rec', 'missense_rec', 'promoter_rec', 'trunc_rec', 'other_rec'],
                 ['inframe', 'missense', 'promoter', 'trunc', 'other'],
                 undefined,
             ]);
@@ -160,11 +150,7 @@ function makeNumericalComparator(value_key: string) {
         } else if (!d1.na && d2.na) {
             return -2;
         } else {
-            return d1[value_key] < d2[value_key]
-                ? -1
-                : d1[value_key] === d2[value_key]
-                ? 0
-                : 1;
+            return d1[value_key] < d2[value_key] ? -1 : d1[value_key] === d2[value_key] ? 0 : 1;
         }
     };
 }
@@ -204,16 +190,10 @@ function makeCountsMapClinicalComparator(categories: string[]) {
                 var d1_max_category = 0;
                 var d2_max_category = 0;
                 for (var i = 0; i < categories.length; i++) {
-                    if (
-                        d1.attr_val[categories[i]] >
-                        d1.attr_val[categories[d1_max_category]]
-                    ) {
+                    if (d1.attr_val[categories[i]] > d1.attr_val[categories[d1_max_category]]) {
                         d1_max_category = i;
                     }
-                    if (
-                        d2.attr_val[categories[i]] >
-                        d2.attr_val[categories[d2_max_category]]
-                    ) {
+                    if (d2.attr_val[categories[i]] > d2.attr_val[categories[d2_max_category]]) {
                         d2_max_category = i;
                     }
                 }
@@ -254,9 +234,7 @@ export function getClinicalTrackSortComparator(track: ClinicalTrackSpec) {
             comparator = makeNumericalComparator('attr_val');
             break;
         case 'counts':
-            comparator = makeCountsMapClinicalComparator(
-                track.countsCategoryLabels
-            );
+            comparator = makeCountsMapClinicalComparator(track.countsCategoryLabels);
             break;
         case 'string':
         default:

@@ -1,8 +1,5 @@
 import { fetchVariantAnnotationsByMutation } from 'shared/lib/StoreUtils';
-import {
-    extractGenomicLocation,
-    genomicLocationString,
-} from 'shared/lib/MutationUtils';
+import { extractGenomicLocation, genomicLocationString } from 'shared/lib/MutationUtils';
 import { VariantAnnotation } from 'cbioportal-frontend-commons';
 import { Mutation } from 'shared/api/generated/CBioPortalAPI';
 import LazyMobXCache, { CacheData } from 'shared/lib/LazyMobXCache';
@@ -42,17 +39,7 @@ export function generateGenomicLocationString(
     let ref = allele.split('/')[0];
     let alt = allele.split('/')[1];
 
-    return (
-        chromosome +
-        ',' +
-        start.toString() +
-        ',' +
-        end.toString() +
-        ',' +
-        ref +
-        ',' +
-        alt
-    );
+    return chromosome + ',' + start.toString() + ',' + end.toString() + ',' + ref + ',' + alt;
 }
 
 export default class GenomeNexusMyVariantInfoCache extends LazyMobXCache<
@@ -63,12 +50,7 @@ export default class GenomeNexusMyVariantInfoCache extends LazyMobXCache<
         super(
             (m: Mutation) => queryToKey(m), // queryToKey
             (v: VariantAnnotation) =>
-                generateGenomicLocationString(
-                    v.seq_region_name,
-                    v.start,
-                    v.end,
-                    v.allele_string
-                ), // dataToKey
+                generateGenomicLocationString(v.seq_region_name, v.start, v.end, v.allele_string), // dataToKey
             fetch
         );
     }

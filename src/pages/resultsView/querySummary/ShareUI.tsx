@@ -65,10 +65,7 @@ export class ShareUI extends React.Component<IShareUI, {}> {
     render() {
         return (
             <div className={styles.shareModule}>
-                <DefaultTooltip
-                    placement={'topLeft'}
-                    overlay={<div>Get bookmark link</div>}
-                >
+                <DefaultTooltip placement={'topLeft'} overlay={<div>Get bookmark link</div>}>
                     <a onClick={this.toggleBookmarkDialog}>
                         <span className="fa-stack fa-4x">
                             <i className="fa fa-circle fa-stack-2x"></i>

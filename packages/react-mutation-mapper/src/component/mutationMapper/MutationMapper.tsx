@@ -17,18 +17,12 @@ import DefaultMutationMapperStore from '../../store/DefaultMutationMapperStore';
 import { initDefaultTrackVisibility } from '../../util/TrackUtils';
 import { getDefaultWindowInstance } from '../../util/DefaultWindowInstance';
 import { ColumnSortDirection, DataTableColumn } from '../dataTable/DataTable';
-import DefaultMutationRateSummary, {
-    MutationRate,
-} from './DefaultMutationRateSummary';
+import DefaultMutationRateSummary, { MutationRate } from './DefaultMutationRateSummary';
 import DefaultMutationTable from '../mutationTable/DefaultMutationTable';
 import GeneSummary from './GeneSummary';
 import LollipopMutationPlot from '../lollipopMutationPlot/LollipopMutationPlot';
 import { DEFAULT_MUTATION_COLUMNS } from '../mutationTable/MutationColumnHelper';
-import {
-    TrackDataStatus,
-    TrackName,
-    TrackVisibility,
-} from '../track/TrackSelector';
+import { TrackDataStatus, TrackName, TrackVisibility } from '../track/TrackSelector';
 
 export type MutationMapperProps = {
     hugoSymbol?: string;
@@ -56,10 +50,7 @@ export type MutationMapperProps = {
     plotBottomYAxisDefaultMax?: number;
     plotBottomYAxisDefaultMin?: number;
     plotYAxisLabelPadding?: number;
-    plotLollipopTooltipCountInfo?: (
-        count: number,
-        mutations?: Partial<Mutation>[]
-    ) => JSX.Element;
+    plotLollipopTooltipCountInfo?: (count: number, mutations?: Partial<Mutation>[]) => JSX.Element;
     plotVizHeight?: number;
     customControls?: JSX.Element;
     mutationTable?: JSX.Element;
@@ -103,8 +94,7 @@ export function initDefaultMutationMapperStore(props: MutationMapperProps) {
         {
             annotationFields: props.annotationFields,
             isoformOverrideSource: props.isoformOverrideSource,
-            filterMutationsBySelectedTranscript:
-                props.filterMutationsBySelectedTranscript,
+            filterMutationsBySelectedTranscript: props.filterMutationsBySelectedTranscript,
             genomeNexusUrl: props.genomeNexusUrl,
             oncoKbUrl: props.oncoKbUrl,
             cachePostMethodsOnClients: props.cachePostMethodsOnClients,
@@ -204,9 +194,7 @@ export default class MutationMapper<
 
     @computed
     protected get store(): MutationMapperStore {
-        return this.props.store
-            ? this.props.store!
-            : initDefaultMutationMapperStore(this.props);
+        return this.props.store ? this.props.store! : initDefaultMutationMapperStore(this.props);
     }
 
     @computed
@@ -217,16 +205,12 @@ export default class MutationMapper<
     }
 
     protected get pubMedCache(): MobxCache {
-        return this.props.pubMedCache
-            ? this.props.pubMedCache!
-            : new DefaultPubMedCache();
+        return this.props.pubMedCache ? this.props.pubMedCache! : new DefaultPubMedCache();
     }
 
     @computed
     protected get windowWrapper(): { size: { width: number; height: number } } {
-        return this.props.windowWrapper
-            ? this.props.windowWrapper!
-            : getDefaultWindowInstance();
+        return this.props.windowWrapper ? this.props.windowWrapper! : getDefaultWindowInstance();
     }
 
     protected get mutationTableInfo(): JSX.Element | undefined {
@@ -250,9 +234,7 @@ export default class MutationMapper<
         if (this.props.mutationTable) {
             return this.props.mutationTable!;
         } else {
-            let columns: DataTableColumn<
-                Partial<Mutation>
-            >[] = DEFAULT_MUTATION_COLUMNS;
+            let columns: DataTableColumn<Partial<Mutation>>[] = DEFAULT_MUTATION_COLUMNS;
             if (this.props.mutationTableColumns) {
                 columns = this.props.mutationTableColumns!;
             }
@@ -261,23 +243,15 @@ export default class MutationMapper<
                 <DefaultMutationTable
                     dataStore={this.store.dataStore}
                     columns={columns}
-                    initialSortColumn={
-                        this.props.mutationTableInitialSortColumn
-                    }
-                    initialSortDirection={
-                        this.props.mutationTableInitialSortDirection
-                    }
+                    initialSortColumn={this.props.mutationTableInitialSortColumn}
+                    initialSortDirection={this.props.mutationTableInitialSortDirection}
                     reactTableProps={this.props.customMutationTableProps}
                     hotspotData={this.store.indexedHotspotData}
                     oncoKbData={this.store.oncoKbData}
                     oncoKbCancerGenes={this.store.oncoKbCancerGenes}
                     oncoKbEvidenceCache={this.store.oncoKbEvidenceCache}
-                    indexedMyVariantInfoAnnotations={
-                        this.store.indexedMyVariantInfoAnnotations
-                    }
-                    indexedVariantAnnotations={
-                        this.store.indexedVariantAnnotations
-                    }
+                    indexedMyVariantInfoAnnotations={this.store.indexedMyVariantInfoAnnotations}
+                    indexedVariantAnnotations={this.store.indexedVariantAnnotations}
                     pubMedCache={this.pubMedCache}
                     info={this.mutationTableInfo}
                 />
@@ -300,9 +274,7 @@ export default class MutationMapper<
                 showLegendToggle={this.props.showPlotLegendToggle}
                 showDownloadControls={this.props.showPlotDownloadControls}
                 filterResetPanel={
-                    this.props.showFilterResetPanel &&
-                    this.isFiltered &&
-                    this.filterResetPanel
+                    this.props.showFilterResetPanel && this.isFiltered && this.filterResetPanel
                         ? this.filterResetPanel
                         : undefined
                 }
@@ -322,9 +294,7 @@ export default class MutationMapper<
                 topYAxisDefaultMin={this.plotBottomYAxisDefaultMin}
                 bottomYAxisDefaultMax={this.plotBottomYAxisDefaultMax}
                 bottomYAxisDefaultMin={this.plotBottomYAxisDefaultMin}
-                lollipopTooltipCountInfo={
-                    this.props.plotLollipopTooltipCountInfo
-                }
+                lollipopTooltipCountInfo={this.props.plotLollipopTooltipCountInfo}
             />
         );
     }
@@ -347,16 +317,10 @@ export default class MutationMapper<
                 loadingIndicator={this.props.geneSummaryLoadingIndicator}
                 activeTranscript={this.store.activeTranscript}
                 indexedVariantAnnotations={this.store.indexedVariantAnnotations}
-                transcriptsWithAnnotations={
-                    this.store.transcriptsWithAnnotations
-                }
-                transcriptsWithProteinLength={
-                    this.store.transcriptsWithProteinLength
-                }
+                transcriptsWithAnnotations={this.store.transcriptsWithAnnotations}
+                transcriptsWithProteinLength={this.store.transcriptsWithProteinLength}
                 mutationsByTranscriptId={this.store.mutationsByTranscriptId}
-                transcriptSummaryUrlTemplate={
-                    this.props.transcriptSummaryUrlTemplate
-                }
+                transcriptSummaryUrlTemplate={this.props.transcriptSummaryUrlTemplate}
                 onTranscriptChange={this.handleTranscriptChange}
             />
         );
@@ -446,10 +410,7 @@ export default class MutationMapper<
         ) : (
             <div>
                 <div style={{ display: 'flex' }}>
-                    <div
-                        className="borderedChart"
-                        style={{ marginRight: '1rem' }}
-                    >
+                    <div className="borderedChart" style={{ marginRight: '1rem' }}>
                         {this.mutationPlot}
                         {this.proteinChainPanel}
                     </div>

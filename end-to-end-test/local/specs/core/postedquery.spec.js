@@ -1,14 +1,10 @@
 var assert = require('assert');
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
+var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
 var postDataToUrl = require('../../../shared/specUtils').postDataToUrl;
 var parse = require('url-parse');
 var _ = require('lodash');
 
-var {
-    useExternalFrontend,
-    waitForOncoprint,
-} = require('../../../shared/specUtils');
+var { useExternalFrontend, waitForOncoprint } = require('../../../shared/specUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
@@ -24,10 +20,8 @@ describe('posting query parameters (instead of GET) to query page', function() {
                 profileFilter: '0',
                 RPPA_SCORE_THRESHOLD: '2.0',
                 Z_SCORE_THRESHOLD: '2.0',
-                genetic_profile_ids_PROFILE_MUTATION_EXTENDED:
-                    'study_es_0_mutations',
-                genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION:
-                    'study_es_0_gistic',
+                genetic_profile_ids_PROFILE_MUTATION_EXTENDED: 'study_es_0_mutations',
+                genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: 'study_es_0_gistic',
             };
 
             postDataToUrl(url, query);
@@ -46,10 +40,7 @@ describe('posting query parameters (instead of GET) to query page', function() {
                 return window.postData;
             }).value;
 
-            assert(
-                postData === null,
-                'postData has been set to null after read'
-            );
+            assert(postData === null, 'postData has been set to null after read');
 
             waitForOncoprint();
         });

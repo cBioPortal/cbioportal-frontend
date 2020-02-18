@@ -1,10 +1,7 @@
 export default class LazyMemo<I, O> {
     private memo: { [key: string]: O } = {};
 
-    constructor(
-        private inputToKey: (input: I) => string,
-        private inputToOutput: (input: I) => O
-    ) {}
+    constructor(private inputToKey: (input: I) => string, private inputToOutput: (input: I) => O) {}
 
     public get(i: I) {
         const key = this.inputToKey(i);

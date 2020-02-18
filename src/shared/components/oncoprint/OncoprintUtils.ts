@@ -30,30 +30,20 @@ import {
 } from '../../../pages/resultsView/ResultsViewPageStore';
 import { CoverageInformation } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
 import { remoteData } from 'cbioportal-frontend-commons';
-import {
-    makeClinicalTrackData,
-    makeGeneticTrackData,
-    makeHeatmapTrackData,
-} from './DataUtils';
+import { makeClinicalTrackData, makeGeneticTrackData, makeHeatmapTrackData } from './DataUtils';
 import ResultsViewOncoprint from './ResultsViewOncoprint';
 import _ from 'lodash';
 import { action, IObservableArray, ObservableMap, runInAction } from 'mobx';
 import { MobxPromise } from 'mobxpromise';
 import GenesetCorrelatedGeneCache from 'shared/cache/GenesetCorrelatedGeneCache';
-import {
-    isMergedTrackFilter,
-    UnflattenedOQLLineFilterOutput,
-} from '../../lib/oql/oqlfilter';
+import { isMergedTrackFilter, UnflattenedOQLLineFilterOutput } from '../../lib/oql/oqlfilter';
 import {
     ClinicalAttribute,
     MolecularProfile,
     Patient,
     Sample,
 } from '../../api/generated/CBioPortalAPI';
-import {
-    clinicalAttributeIsPROFILEDIN,
-    SpecialAttribute,
-} from '../../cache/ClinicalDataCache';
+import { clinicalAttributeIsPROFILEDIN, SpecialAttribute } from '../../cache/ClinicalDataCache';
 import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
 import { ISelectOption } from './controls/OncoprintControls';
 
@@ -70,12 +60,7 @@ function makeGenesetHeatmapExpandHandler(
     cache.initIteration(track_key, query);
     return async () => {
         const new_genes = (await cache.next(track_key, 5)).map(
-            ({
-                entrezGeneId,
-                hugoGeneSymbol,
-                correlationValue,
-                zScoreGeneticProfileId,
-            }) => ({
+            ({ entrezGeneId, hugoGeneSymbol, correlationValue, zScoreGeneticProfileId }) => ({
                 entrezGeneId,
                 hugoGeneSymbol,
                 correlationValue,
@@ -83,13 +68,8 @@ function makeGenesetHeatmapExpandHandler(
             })
         );
         runInAction('genesetHeatmapExpansion', () => {
-            const list =
-                oncoprint.expansionsByGenesetHeatmapTrackKey.get(track_key) ||
-                [];
-            oncoprint.expansionsByGenesetHeatmapTrackKey.set(
-                track_key,
-                list.concat(new_genes)
-            );
+            const list = oncoprint.expansionsByGenesetHeatmapTrackKey.get(track_key) || [];
+            oncoprint.expansionsByGenesetHeatmapTrackKey.set(track_key, list.concat(new_genes));
         });
     };
 }
@@ -102,9 +82,7 @@ function makeGenesetHeatmapUnexpandHandler(
     onRemoveLast: () => void
 ) {
     return action('genesetHeatmapUnexpansion', () => {
-        const list = oncoprint.expansionsByGenesetHeatmapTrackKey.get(
-            parentKey
-        );
+        const list = oncoprint.expansionsByGenesetHeatmapTrackKey.get(parentKey);
         if (list) {
             // only remove if the expansion if it isn't needed in another track
             // group than the one this track is being removed from; keep the
@@ -124,46 +102,32 @@ function makeGenesetHeatmapUnexpandHandler(
                 }
             }
         } else {
-            throw new Error(
-                `Track '${parentKey}' has no expansions to remove.`
-            );
+            throw new Error(`Track '${parentKey}' has no expansions to remove.`);
         }
     });
 }
 
-function formatGeneticTrackSublabel(
-    oqlFilter: UnflattenedOQLLineFilterOutput<object>
-): string {
+function formatGeneticTrackSublabel(oqlFilter: UnflattenedOQLLineFilterOutput<object>): string {
     if (isMergedTrackFilter(oqlFilter)) {
         return ''; // no oql sublabel for merged tracks - too cluttered
     } else {
-        return oqlFilter.oql_line
-            .substring(oqlFilter.gene.length)
-            .replace(';', ''); // get rid of gene in beginning of OQL line, and semicolon at end
+        return oqlFilter.oql_line.substring(oqlFilter.gene.length).replace(';', ''); // get rid of gene in beginning of OQL line, and semicolon at end
     }
 }
 
-function formatGeneticTrackLabel(
-    oqlFilter: UnflattenedOQLLineFilterOutput<object>
-): string {
+function formatGeneticTrackLabel(oqlFilter: UnflattenedOQLLineFilterOutput<object>): string {
     return isMergedTrackFilter(oqlFilter)
-        ? oqlFilter.label ||
-              oqlFilter.list.map(geneLine => geneLine.gene).join(' / ')
+        ? oqlFilter.label || oqlFilter.list.map(geneLine => geneLine.gene).join(' / ')
         : oqlFilter.gene;
 }
 
-function formatGeneticTrackOql(
-    oqlFilter: UnflattenedOQLLineFilterOutput<object>
-): string {
+function formatGeneticTrackOql(oqlFilter: UnflattenedOQLLineFilterOutput<object>): string {
     return isMergedTrackFilter(oqlFilter)
         ? `[${oqlFilter.list.map(geneLine => geneLine.oql_line).join(' ')}]`
         : oqlFilter.oql_line;
 }
 
-export function doWithRenderingSuppressedAndSortingOff(
-    oncoprint: OncoprintJS,
-    task: () => void
-) {
+export function doWithRenderingSuppressedAndSortingOff(oncoprint: OncoprintJS, task: () => void) {
     oncoprint.suppressRendering();
     oncoprint.keepSorted(false);
     task();
@@ -171,9 +135,7 @@ export function doWithRenderingSuppressedAndSortingOff(
     oncoprint.releaseRendering();
 }
 
-export function getHeatmapTrackRuleSetParams(
-    trackSpec: IHeatmapTrackSpec
-): RuleSetParams {
+export function getHeatmapTrackRuleSetParams(trackSpec: IHeatmapTrackSpec): RuleSetParams {
     let value_range: [number, number];
     let legend_label: string;
     let colors: [number, number, number, number][];
@@ -220,9 +182,7 @@ export function getHeatmapTrackRuleSetParams(
     };
 }
 
-export function getTreatmentTrackRuleSetParams(
-    trackSpec: IHeatmapTrackSpec
-): RuleSetParams {
+export function getTreatmentTrackRuleSetParams(trackSpec: IHeatmapTrackSpec): RuleSetParams {
     let value_range: [number, number];
     let legend_label: string;
     let colors: [number, number, number, number][];
@@ -243,25 +203,10 @@ export function getTreatmentTrackRuleSetParams(
     const pivotThreshold = trackSpec.pivotThreshold;
     const sortOrder = trackSpec.sortOrder;
 
-    const colorBetterDark = [0, 114, 178, 1] as [
-        number,
-        number,
-        number,
-        number
-    ];
-    const colorBetterLight = [204, 236, 255, 1] as [
-        number,
-        number,
-        number,
-        number
-    ];
+    const colorBetterDark = [0, 114, 178, 1] as [number, number, number, number];
+    const colorBetterLight = [204, 236, 255, 1] as [number, number, number, number];
     const colorWorseDark = [213, 94, 0, 1] as [number, number, number, number];
-    const colorWorseLight = [255, 226, 204, 1] as [
-        number,
-        number,
-        number,
-        number
-    ];
+    const colorWorseLight = [255, 226, 204, 1] as [number, number, number, number];
     const categoryColorOptions = [
         'rgba(240,228,66,1)',
         'rgba(0,158,115,1)',
@@ -277,8 +222,7 @@ export function getTreatmentTrackRuleSetParams(
     }
 
     const pivotOutsideValueRange =
-        pivotThreshold &&
-        (maxValue === pivotThreshold || minValue === pivotThreshold);
+        pivotThreshold && (maxValue === pivotThreshold || minValue === pivotThreshold);
 
     // when all observed values are negative or positive
     // assume that 0 should be used in the legend
@@ -291,12 +235,7 @@ export function getTreatmentTrackRuleSetParams(
         colors = [colorBetterDark, colorBetterLight];
         value_stop_points = [leftBoundaryValue, rightBoundaryValue];
     } else {
-        colors = [
-            colorBetterDark,
-            colorBetterLight,
-            colorWorseLight,
-            colorWorseDark,
-        ];
+        colors = [colorBetterDark, colorBetterLight, colorWorseLight, colorWorseDark];
         if (pivotThreshold <= leftBoundaryValue) {
             // when data points do not bracket the pivotThreshold, make an artificial left boundary
             value_stop_points = [
@@ -383,19 +322,7 @@ export function getGenesetHeatmapTrackRuleSetParams() {
             [197, 27, 125, 1],
             [142, 1, 82, 1],
         ] as [number, number, number, number][],
-        value_stop_points: [
-            -1,
-            -0.8,
-            -0.6,
-            -0.4,
-            -0.2,
-            0,
-            0.2,
-            0.4,
-            0.6,
-            0.8,
-            1,
-        ],
+        value_stop_points: [-1, -0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 1],
         null_color: 'rgba(224,224,224,1)',
     } as IGradientRuleSetParams;
 }
@@ -482,18 +409,8 @@ function getAlterationInfoSequenced(
 ) {
     const geneSymbolArray = oql instanceof Array ? oql : [oql.gene];
     const sequenced = sampleMode
-        ? _.uniq(
-              _.flatMap(
-                  geneSymbolArray,
-                  symbol => sequencedSampleKeysByGene[symbol]
-              )
-          ).length
-        : _.uniq(
-              _.flatMap(
-                  geneSymbolArray,
-                  symbol => sequencedPatientKeysByGene[symbol]
-              )
-          ).length;
+        ? _.uniq(_.flatMap(geneSymbolArray, symbol => sequencedSampleKeysByGene[symbol])).length
+        : _.uniq(_.flatMap(geneSymbolArray, symbol => sequencedPatientKeysByGene[symbol])).length;
 
     return sequenced;
 }
@@ -538,12 +455,8 @@ export function alterationInfoForCaseAggregatedDataByOQLLine(
         sequencedPatientKeysByGene
     );
     const altered = sampleMode
-        ? Object.keys(data.cases.samples).filter(
-              k => !!data.cases.samples[k].length
-          ).length
-        : Object.keys(data.cases.patients).filter(
-              k => !!data.cases.patients[k].length
-          ).length;
+        ? Object.keys(data.cases.samples).filter(k => !!data.cases.samples[k].length).length
+        : Object.keys(data.cases.patients).filter(k => !!data.cases.patients[k].length).length;
     const percent = percentAltered(altered, sequenced);
     return {
         sequenced,
@@ -634,9 +547,7 @@ export function makeGeneticTrackWith({
             sequencedPatientKeysByGene
         );
         const trackKey =
-            parentKey === undefined
-                ? `GENETICTRACK_${index}`
-                : `${parentKey}_EXPANSION_${index}`;
+            parentKey === undefined ? `GENETICTRACK_${index}` : `${parentKey}_EXPANSION_${index}`;
         const expansionCallback = isMergedTrackFilter(oql)
             ? () => {
                   expansionIndexMap.set(trackKey, _.range(oql.list.length));
@@ -645,22 +556,15 @@ export function makeGeneticTrackWith({
         const removeCallback =
             parentKey !== undefined
                 ? () => {
-                      (expansionIndexMap.get(parentKey) as IObservableArray<
-                          number
-                      >).remove(index);
+                      (expansionIndexMap.get(parentKey) as IObservableArray<number>).remove(index);
                   }
                 : undefined;
         let expansions: GeneticTrackSpec[] = [];
 
         if (caseData.mergedTrackOqlList) {
             const subTrackData = caseData.mergedTrackOqlList;
-            expansions = (expansionIndexMap.get(trackKey) || []).map(
-                expansionIndex =>
-                    makeTrack(
-                        subTrackData[expansionIndex],
-                        expansionIndex,
-                        trackKey
-                    )
+            expansions = (expansionIndexMap.get(trackKey) || []).map(expansionIndex =>
+                makeTrack(subTrackData[expansionIndex], expansionIndex, trackKey)
             );
         }
 
@@ -680,9 +584,7 @@ export function makeGeneticTrackWith({
         }
         return {
             key: trackKey,
-            label:
-                (parentKey !== undefined ? '  ' : '') +
-                formatGeneticTrackLabel(oql),
+            label: (parentKey !== undefined ? '  ' : '') + formatGeneticTrackLabel(oql),
             sublabel: formatGeneticTrackSublabel(oql),
             labelColor: parentKey !== undefined ? 'grey' : undefined,
             oql: formatGeneticTrackOql(oql),
@@ -703,16 +605,12 @@ export function makeGeneticTrackWith({
     };
 }
 
-export function makeGeneticTracksMobxPromise(
-    oncoprint: ResultsViewOncoprint,
-    sampleMode: boolean
-) {
+export function makeGeneticTracksMobxPromise(oncoprint: ResultsViewOncoprint, sampleMode: boolean) {
     return remoteData<GeneticTrackSpec[]>({
         await: () => [
             oncoprint.props.store.samples,
             oncoprint.props.store.patients,
-            oncoprint.props.store
-                .oqlFilteredCaseAggregatedDataByUnflattenedOQLLine,
+            oncoprint.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine,
             oncoprint.props.store.coverageInformation,
             oncoprint.props.store.sequencedSampleKeysByGene,
             oncoprint.props.store.sequencedPatientKeysByGene,
@@ -724,19 +622,15 @@ export function makeGeneticTracksMobxPromise(
                 oncoprint,
                 samples: oncoprint.props.store.samples.result!,
                 patients: oncoprint.props.store.patients.result!,
-                coverageInformation: oncoprint.props.store.coverageInformation
+                coverageInformation: oncoprint.props.store.coverageInformation.result!,
+                sequencedSampleKeysByGene: oncoprint.props.store.sequencedSampleKeysByGene.result!,
+                sequencedPatientKeysByGene: oncoprint.props.store.sequencedPatientKeysByGene
                     .result!,
-                sequencedSampleKeysByGene: oncoprint.props.store
-                    .sequencedSampleKeysByGene.result!,
-                sequencedPatientKeysByGene: oncoprint.props.store
-                    .sequencedPatientKeysByGene.result!,
-                selectedMolecularProfiles: oncoprint.props.store
-                    .selectedMolecularProfiles.result!,
+                selectedMolecularProfiles: oncoprint.props.store.selectedMolecularProfiles.result!,
                 expansionIndexMap: oncoprint.expansionsByGeneticTrackKey,
             });
             return oncoprint.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.map(
-                (alterationData, trackIndex) =>
-                    trackFunction(alterationData, trackIndex, undefined)
+                (alterationData, trackIndex) => trackFunction(alterationData, trackIndex, undefined)
             );
         },
         default: [],
@@ -755,22 +649,16 @@ export function makeClinicalTracksMobxPromise(
                 oncoprint.props.store.clinicalAttributeIdToClinicalAttribute,
                 oncoprint.alteredKeys,
             ];
-            if (
-                oncoprint.props.store.clinicalAttributeIdToClinicalAttribute
-                    .isComplete
-            ) {
+            if (oncoprint.props.store.clinicalAttributeIdToClinicalAttribute.isComplete) {
                 const attributes = oncoprint.selectedClinicalAttributeIds
                     .keys()
                     .map(attrId => {
-                        return oncoprint.props.store
-                            .clinicalAttributeIdToClinicalAttribute.result![
+                        return oncoprint.props.store.clinicalAttributeIdToClinicalAttribute.result![
                             attrId
                         ];
                     })
                     .filter(x => !!x);
-                ret = ret.concat(
-                    oncoprint.props.store.clinicalDataCache.getAll(attributes)
-                );
+                ret = ret.concat(oncoprint.props.store.clinicalDataCache.getAll(attributes));
             }
             return ret;
         },
@@ -781,22 +669,19 @@ export function makeClinicalTracksMobxPromise(
             const attributes = oncoprint.selectedClinicalAttributeIds
                 .keys()
                 .map(attrId => {
-                    return oncoprint.props.store
-                        .clinicalAttributeIdToClinicalAttribute.result![attrId];
+                    return oncoprint.props.store.clinicalAttributeIdToClinicalAttribute.result![
+                        attrId
+                    ];
                 })
                 .filter(x => !!x); // filter out nonexistent attributes
             return attributes.map((attribute: ClinicalAttribute) => {
-                const data = oncoprint.props.store.clinicalDataCache.get(
-                    attribute
-                ).result!;
+                const data = oncoprint.props.store.clinicalDataCache.get(attribute).result!;
                 let altered_uids = undefined;
                 if (oncoprint.onlyShowClinicalLegendForAlteredCases) {
                     altered_uids = oncoprint.alteredKeys.result!;
                 }
                 const ret: Partial<ClinicalTrackSpec> = {
-                    key: oncoprint.clinicalAttributeIdToTrackKey(
-                        attribute.clinicalAttributeId
-                    ),
+                    key: oncoprint.clinicalAttributeIdToTrackKey(attribute.clinicalAttributeId),
                     label: attribute.displayName,
                     description: attribute.description,
                     data: makeClinicalTrackData(
@@ -815,18 +700,12 @@ export function makeClinicalTracksMobxPromise(
                 }
                 if (attribute.datatype === 'NUMBER') {
                     ret.datatype = 'number';
-                    if (
-                        attribute.clinicalAttributeId ===
-                        'FRACTION_GENOME_ALTERED'
-                    ) {
+                    if (attribute.clinicalAttributeId === 'FRACTION_GENOME_ALTERED') {
                         (ret as any).numberRange = [0, 1];
-                    } else if (
-                        attribute.clinicalAttributeId === 'MUTATION_COUNT'
-                    ) {
+                    } else if (attribute.clinicalAttributeId === 'MUTATION_COUNT') {
                         (ret as any).numberLogScale = true;
                     } else if (
-                        attribute.clinicalAttributeId ===
-                        SpecialAttribute.NumSamplesPerPatient
+                        attribute.clinicalAttributeId === SpecialAttribute.NumSamplesPerPatient
                     ) {
                         (ret as any).numberRange = [0, undefined];
                         ret.custom_options = sampleMode
@@ -834,34 +713,22 @@ export function makeClinicalTracksMobxPromise(
                                   {
                                       label: 'Show one column per patient.',
                                       onClick: () =>
-                                          oncoprint.controlsHandlers
-                                              .onSelectColumnType!('patient'),
+                                          oncoprint.controlsHandlers.onSelectColumnType!('patient'),
                                   },
                               ]
                             : [
                                   {
                                       label: 'Show one column per sample.',
                                       onClick: () =>
-                                          oncoprint.controlsHandlers
-                                              .onSelectColumnType!('sample'),
+                                          oncoprint.controlsHandlers.onSelectColumnType!('sample'),
                                   },
                               ];
                     }
                 } else if (attribute.datatype === 'STRING') {
                     ret.datatype = 'string';
-                } else if (
-                    attribute.clinicalAttributeId ===
-                    SpecialAttribute.MutationSpectrum
-                ) {
+                } else if (attribute.clinicalAttributeId === SpecialAttribute.MutationSpectrum) {
                     ret.datatype = 'counts';
-                    (ret as any).countsCategoryLabels = [
-                        'C>A',
-                        'C>G',
-                        'C>T',
-                        'T>A',
-                        'T>C',
-                        'T>G',
-                    ];
+                    (ret as any).countsCategoryLabels = ['C>A', 'C>G', 'C>T', 'T>A', 'T>C', 'T>G'];
                     (ret as any).countsCategoryFills = [
                         '#3D6EB1',
                         '#8EBFDC',
@@ -878,10 +745,7 @@ export function makeClinicalTracksMobxPromise(
     });
 }
 
-export function makeHeatmapTracksMobxPromise(
-    oncoprint: ResultsViewOncoprint,
-    sampleMode: boolean
-) {
+export function makeHeatmapTracksMobxPromise(oncoprint: ResultsViewOncoprint, sampleMode: boolean) {
     return remoteData<IHeatmapTrackSpec[]>({
         await: () => [
             oncoprint.props.store.samples,
@@ -892,18 +756,13 @@ export function makeHeatmapTracksMobxPromise(
         invoke: async () => {
             const molecularProfileIdToMolecularProfile = oncoprint.props.store
                 .molecularProfileIdToMolecularProfile.result!;
-            const molecularProfileIdToHeatmapTracks =
-                oncoprint.molecularProfileIdToHeatmapTracks;
+            const molecularProfileIdToHeatmapTracks = oncoprint.molecularProfileIdToHeatmapTracks;
 
             const geneProfiles = _.filter(
                 _.values(molecularProfileIdToHeatmapTracks),
-                d =>
-                    d.molecularAlterationType !==
-                    AlterationTypeConstants.GENERIC_ASSAY
+                d => d.molecularAlterationType !== AlterationTypeConstants.GENERIC_ASSAY
             );
-            const neededGenes = _.flatten(
-                geneProfiles.map(v => _.keys(v.entities))
-            );
+            const neededGenes = _.flatten(geneProfiles.map(v => _.keys(v.entities)));
             await oncoprint.props.store.geneCache.getPromise(
                 neededGenes.map(g => ({ hugoGeneSymbol: g })),
                 true
@@ -931,9 +790,7 @@ export function makeHeatmapTracksMobxPromise(
             return cacheQueries.map(query => {
                 const molecularProfileId = query.molecularProfileId;
                 const gene = query.hugoGeneSymbol;
-                const data = oncoprint.props.store.geneMolecularDataCache.result!.get(
-                    query
-                )!.data!;
+                const data = oncoprint.props.store.geneMolecularDataCache.result!.get(query)!.data!;
 
                 return {
                     key: `HEATMAPTRACK_${molecularProfileId},${gene}`,
@@ -942,47 +799,33 @@ export function makeHeatmapTracksMobxPromise(
                     molecularAlterationType:
                         molecularProfileIdToMolecularProfile[molecularProfileId]
                             .molecularAlterationType,
-                    datatype:
-                        molecularProfileIdToMolecularProfile[molecularProfileId]
-                            .datatype,
-                    data: makeHeatmapTrackData<
-                        IGeneHeatmapTrackDatum,
-                        'hugo_gene_symbol'
-                    >(
+                    datatype: molecularProfileIdToMolecularProfile[molecularProfileId].datatype,
+                    data: makeHeatmapTrackData<IGeneHeatmapTrackDatum, 'hugo_gene_symbol'>(
                         'hugo_gene_symbol',
                         gene,
                         sampleMode ? samples : patients,
                         data
                     ),
                     trackGroupIndex:
-                        molecularProfileIdToHeatmapTracks[molecularProfileId]
-                            .trackGroupIndex,
+                        molecularProfileIdToHeatmapTracks[molecularProfileId].trackGroupIndex,
                     onClickRemoveInTrackMenu: action(() => {
                         const trackGroup =
-                            oncoprint.molecularProfileIdToHeatmapTracks[
-                                molecularProfileId
-                            ];
+                            oncoprint.molecularProfileIdToHeatmapTracks[molecularProfileId];
                         if (trackGroup) {
-                            const newEntities = _.keys(
-                                trackGroup.entities
-                            ).filter(entity => entity !== gene);
+                            const newEntities = _.keys(trackGroup.entities).filter(
+                                entity => entity !== gene
+                            );
                             if (newEntities.length === 0) {
-                                oncoprint.removeHeatmapByMolecularProfileId(
-                                    molecularProfileId
-                                );
+                                oncoprint.removeHeatmapByMolecularProfileId(molecularProfileId);
                             } else {
-                                oncoprint.addHeatmapTracks(
-                                    molecularProfileId,
-                                    newEntities
-                                );
+                                oncoprint.addHeatmapTracks(molecularProfileId, newEntities);
                             }
                         }
 
                         if (
                             trackGroup === undefined &&
                             oncoprint.sortMode.type === 'heatmap' &&
-                            oncoprint.sortMode.clusteredHeatmapProfile ===
-                                molecularProfileId
+                            oncoprint.sortMode.clusteredHeatmapProfile === molecularProfileId
                         ) {
                             oncoprint.sortByData();
                         }
@@ -1010,10 +853,8 @@ export function makeTreatmentProfileHeatmapTracksMobxPromise(
         invoke: async () => {
             const molecularProfileIdToMolecularProfile = oncoprint.props.store
                 .molecularProfileIdToMolecularProfile.result!;
-            const molecularProfileIdToHeatmapTracks =
-                oncoprint.molecularProfileIdToHeatmapTracks;
-            const treatmentLinkMap = oncoprint.props.store.treatmentLinkMap
-                .result!;
+            const molecularProfileIdToHeatmapTracks = oncoprint.molecularProfileIdToHeatmapTracks;
+            const treatmentLinkMap = oncoprint.props.store.treatmentLinkMap.result!;
 
             const treatmentsById = _.keyBy(
                 oncoprint.props.store.treatmentsInStudies.result!,
@@ -1021,9 +862,7 @@ export function makeTreatmentProfileHeatmapTracksMobxPromise(
             );
             const treatmentProfiles = _.filter(
                 molecularProfileIdToHeatmapTracks,
-                d =>
-                    d.molecularAlterationType ===
-                    AlterationTypeConstants.GENERIC_ASSAY
+                d => d.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY
             );
 
             const cacheQueries = _.flatten(
@@ -1046,10 +885,8 @@ export function makeTreatmentProfileHeatmapTracksMobxPromise(
 
             const tracks = cacheQueries.map(query => {
                 const molecularProfileId = query.molecularProfileId;
-                const profile =
-                    molecularProfileIdToMolecularProfile[molecularProfileId];
-                const dataCache = oncoprint.props.store
-                    .treatmentMolecularDataCache.result!;
+                const profile = molecularProfileIdToMolecularProfile[molecularProfileId];
+                const dataCache = oncoprint.props.store.treatmentMolecularDataCache.result!;
 
                 const treatmentId = query.treatmentId;
                 const pivotThreshold = profile.pivotThreshold;
@@ -1060,18 +897,12 @@ export function makeTreatmentProfileHeatmapTracksMobxPromise(
                     label: query.treatmentName,
                     molecularProfileId: query.molecularProfileId,
                     molecularProfileName:
-                        molecularProfileIdToMolecularProfile[molecularProfileId]
-                            .name,
+                        molecularProfileIdToMolecularProfile[molecularProfileId].name,
                     molecularAlterationType:
                         molecularProfileIdToMolecularProfile[molecularProfileId]
                             .molecularAlterationType,
-                    datatype:
-                        molecularProfileIdToMolecularProfile[molecularProfileId]
-                            .datatype,
-                    data: makeHeatmapTrackData<
-                        ITreatmentHeatmapTrackDatum,
-                        'treatment_id'
-                    >(
+                    datatype: molecularProfileIdToMolecularProfile[molecularProfileId].datatype,
+                    data: makeHeatmapTrackData<ITreatmentHeatmapTrackDatum, 'treatment_id'>(
                         'treatment_id',
                         treatmentId,
                         sampleMode ? samples : patients,
@@ -1084,28 +915,22 @@ export function makeTreatmentProfileHeatmapTracksMobxPromise(
                     pivotThreshold: pivotThreshold,
                     sortOrder: sortOrder,
                     trackLinkUrl: treatmentLinkMap[treatmentId],
-                    trackGroupIndex: molecularProfileIdToHeatmapTracks[
-                        molecularProfileId
-                    ]!.trackGroupIndex,
+                    trackGroupIndex: molecularProfileIdToHeatmapTracks[molecularProfileId]!
+                        .trackGroupIndex,
                     onClickRemoveInTrackMenu: action(() => {
-                        const trackGroup = oncoprint
-                            .molecularProfileIdToHeatmapTracks[
+                        const trackGroup = oncoprint.molecularProfileIdToHeatmapTracks[
                             molecularProfileId
                         ]!;
                         if (trackGroup) {
-                            const newEntities = _.keys(
-                                trackGroup.entities
-                            ).filter(entity => entity !== treatmentId);
-                            oncoprint.addHeatmapTracks(
-                                molecularProfileId,
-                                newEntities
+                            const newEntities = _.keys(trackGroup.entities).filter(
+                                entity => entity !== treatmentId
                             );
+                            oncoprint.addHeatmapTracks(molecularProfileId, newEntities);
                         }
                         if (
                             trackGroup === undefined &&
                             oncoprint.sortMode.type === 'heatmap' &&
-                            oncoprint.sortMode.clusteredHeatmapProfile ===
-                                molecularProfileId
+                            oncoprint.sortMode.clusteredHeatmapProfile === molecularProfileId
                         ) {
                             oncoprint.sortByData();
                         }
@@ -1135,14 +960,11 @@ export function makeGenesetHeatmapExpansionsMobxPromise(
             const patients = oncoprint.props.store.patients.result!;
             const molecularProfileIdToMolecularProfile = oncoprint.props.store
                 .molecularProfileIdToMolecularProfile.result!;
-            const dataCache = oncoprint.props.store.geneMolecularDataCache
-                .result!;
-            const genesetGeneCache = oncoprint.props.store
-                .genesetCorrelatedGeneCache.result!;
+            const dataCache = oncoprint.props.store.geneMolecularDataCache.result!;
+            const genesetGeneCache = oncoprint.props.store.genesetCorrelatedGeneCache.result!;
 
             const trackGroup = oncoprint.genesetHeatmapTrackGroup;
-            const expansionsByGenesetTrack =
-                oncoprint.expansionsByGenesetHeatmapTrackKey;
+            const expansionsByGenesetTrack = oncoprint.expansionsByGenesetHeatmapTrackKey;
 
             // list all the genes in an array of plain, non-observable objects,
             // as observable arrays cannot be safely passed to external libs
@@ -1150,9 +972,7 @@ export function makeGenesetHeatmapExpansionsMobxPromise(
                 entrezGeneId: number;
                 molecularProfileId: string;
             })[] = _.flatten(
-                expansionsByGenesetTrack
-                    .values()
-                    .map(mobxArray => mobxArray.slice())
+                expansionsByGenesetTrack.values().map(mobxArray => mobxArray.slice())
             ).map(({ entrezGeneId, molecularProfileId }) => ({
                 entrezGeneId,
                 molecularProfileId,
@@ -1164,33 +984,21 @@ export function makeGenesetHeatmapExpansionsMobxPromise(
             } = {};
             expansionsByGenesetTrack.entries().forEach(([gsTrack, genes]) => {
                 tracksByGenesetTrack[gsTrack] = genes.map(
-                    ({
-                        entrezGeneId,
-                        hugoGeneSymbol,
-                        molecularProfileId,
-                        correlationValue,
-                    }) => {
+                    ({ entrezGeneId, hugoGeneSymbol, molecularProfileId, correlationValue }) => {
                         const data = dataCache.get({
                             entrezGeneId,
                             molecularProfileId,
                         })!.data!;
-                        const profile =
-                            molecularProfileIdToMolecularProfile[
-                                molecularProfileId
-                            ];
+                        const profile = molecularProfileIdToMolecularProfile[molecularProfileId];
                         return {
                             key: `EXPANSIONTRACK_${gsTrack},${hugoGeneSymbol},GROUP${trackGroup}`,
                             label: '  ' + hugoGeneSymbol,
                             labelColor: 'grey',
                             info: correlationValue.toFixed(2),
                             molecularProfileId: molecularProfileId,
-                            molecularAlterationType:
-                                profile.molecularAlterationType,
+                            molecularAlterationType: profile.molecularAlterationType,
                             datatype: profile.datatype,
-                            data: makeHeatmapTrackData<
-                                IGeneHeatmapTrackDatum,
-                                'hugo_gene_symbol'
-                            >(
+                            data: makeHeatmapTrackData<IGeneHeatmapTrackDatum, 'hugo_gene_symbol'>(
                                 'hugo_gene_symbol',
                                 hugoGeneSymbol,
                                 sampleMode ? samples : patients,
@@ -1202,10 +1010,7 @@ export function makeGenesetHeatmapExpansionsMobxPromise(
                                 gsTrack,
                                 entrezGeneId,
                                 trackGroup,
-                                genesetGeneCache.reset.bind(
-                                    genesetGeneCache,
-                                    gsTrack
-                                )
+                                genesetGeneCache.reset.bind(genesetGeneCache, gsTrack)
                             ),
                         };
                     }
@@ -1235,13 +1040,10 @@ export function makeGenesetHeatmapTracksMobxPromise(
         invoke: async () => {
             const samples = oncoprint.props.store.samples.result!;
             const patients = oncoprint.props.store.patients.result!;
-            const molecularProfile = oncoprint.props.store
-                .genesetMolecularProfile.result!;
-            const dataCache = oncoprint.props.store.genesetMolecularDataCache
-                .result!;
+            const molecularProfile = oncoprint.props.store.genesetMolecularProfile.result!;
+            const dataCache = oncoprint.props.store.genesetMolecularDataCache.result!;
             const genesetLinkMap = oncoprint.props.store.genesetLinkMap.result!;
-            const correlatedGeneCache = oncoprint.props.store
-                .genesetCorrelatedGeneCache.result!;
+            const correlatedGeneCache = oncoprint.props.store.genesetCorrelatedGeneCache.result!;
             const expansions = expansionMapPromise.result!;
 
             // observe computed property based on other tracks
@@ -1250,8 +1052,7 @@ export function makeGenesetHeatmapTracksMobxPromise(
             if (!molecularProfile.isApplicable) {
                 return [];
             }
-            const molecularProfileId =
-                molecularProfile.value.molecularProfileId;
+            const molecularProfileId = molecularProfile.value.molecularProfileId;
             const genesetIds = oncoprint.props.store.genesetIds;
 
             const cacheQueries = genesetIds.map(genesetId => ({
@@ -1266,25 +1067,19 @@ export function makeGenesetHeatmapTracksMobxPromise(
                     key: `GENESETHEATMAPTRACK_${molecularProfileId},${genesetId},GROUP${trackGroup}`,
                     label: genesetId,
                     molecularProfileId,
-                    molecularAlterationType:
-                        molecularProfile.value.molecularAlterationType,
+                    molecularAlterationType: molecularProfile.value.molecularAlterationType,
                     datatype: molecularProfile.value.datatype,
                     trackLinkUrl: genesetLinkMap[genesetId],
-                    data: makeHeatmapTrackData<
-                        IGenesetHeatmapTrackDatum,
-                        'geneset_id'
-                    >(
+                    data: makeHeatmapTrackData<IGenesetHeatmapTrackDatum, 'geneset_id'>(
                         'geneset_id',
                         genesetId,
                         sampleMode ? samples : patients,
                         // TODO: GenesetMolecularData still has type value of
                         // string, other NumericGeneMolecularData have number
-                        dataCache
-                            .get({ molecularProfileId, genesetId })!
-                            .data!.map(d => ({
-                                ...d!,
-                                value: parseFloat(d.value!),
-                            }))
+                        dataCache.get({ molecularProfileId, genesetId })!.data!.map(d => ({
+                            ...d!,
+                            value: parseFloat(d.value!),
+                        }))
                     ),
                     trackGroupIndex: trackGroup,
                     expansionCallback: makeGenesetHeatmapExpandHandler(

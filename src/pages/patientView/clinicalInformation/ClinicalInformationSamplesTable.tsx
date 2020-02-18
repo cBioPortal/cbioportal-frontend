@@ -1,12 +1,8 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import { ClinicalDataBySampleId } from '../../../shared/api/api-types-extended';
-import convertSamplesData, {
-    IConvertedSamplesData,
-} from './lib/convertSamplesData';
-import LazyMobXTable, {
-    Column,
-} from 'shared/components/lazyMobXTable/LazyMobXTable';
+import convertSamplesData, { IConvertedSamplesData } from './lib/convertSamplesData';
+import LazyMobXTable, { Column } from 'shared/components/lazyMobXTable/LazyMobXTable';
 import { ClinicalAttribute } from '../../../shared/api/generated/CBioPortalAPI';
 import styles from './style/sampleTable.module.scss';
 import { SHOW_ALL_PAGE_SIZE } from '../../../shared/components/paginationControls/PaginationControls';
@@ -47,11 +43,7 @@ export default class ClinicalInformationSamplesTable extends React.Component<
                 return <span>{data[col.id]}</span>;
             },
             download: (data: ISampleRow) => `${data[col.id]}`,
-            filter: (
-                data: ISampleRow,
-                filterString: string,
-                filterStringUpper: string
-            ) =>
+            filter: (data: ISampleRow, filterString: string, filterStringUpper: string) =>
                 data[col.id]
                     .toString()
                     .toUpperCase()

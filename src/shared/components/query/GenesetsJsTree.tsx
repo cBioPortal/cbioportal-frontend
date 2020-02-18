@@ -29,10 +29,7 @@ type JSNode = {
 };
 
 @observer
-export default class GenesetsJsTree extends React.Component<
-    GenesetsJsTreeProps,
-    {}
-> {
+export default class GenesetsJsTree extends React.Component<GenesetsJsTreeProps, {}> {
     tree: Element | null;
     @observable isLoading = true;
     promisedTree: Promise<Element>;
@@ -40,9 +37,7 @@ export default class GenesetsJsTree extends React.Component<
 
     constructor(props: GenesetsJsTreeProps) {
         super(props);
-        this.map_geneSets_selected.replace(
-            props.initialSelection.map(geneSet => [geneSet, true])
-        );
+        this.map_geneSets_selected.replace(props.initialSelection.map(geneSet => [geneSet, true]));
     }
 
     componentDidMount() {
@@ -99,36 +94,24 @@ export default class GenesetsJsTree extends React.Component<
                     const genesetId = leafId++;
                     const genesetName = geneSet.genesetId;
                     const genesetDescription = geneSet.description;
-                    const genesetRepresentativeScore =
-                        geneSet.representativeScore;
-                    let genesetRepresentativePvalue: number | string =
-                        geneSet.representativePvalue;
+                    const genesetRepresentativeScore = geneSet.representativeScore;
+                    let genesetRepresentativePvalue: number | string = geneSet.representativePvalue;
                     const genesetRefLink = geneSet.refLink;
                     let genesetInfo = '';
 
                     // Add score to leaf
-                    genesetInfo =
-                        genesetInfo +
-                        'score = ' +
-                        genesetRepresentativeScore.toFixed(2);
+                    genesetInfo = genesetInfo + 'score = ' + genesetRepresentativeScore.toFixed(2);
 
                     // Round pvalue if necessary
                     // 0.005 is rounded to 0.01 and 0.0049 to 0.00, so below 0.005 should be exponential (5e-3)
                     if (genesetRepresentativePvalue < 0.005) {
-                        genesetRepresentativePvalue = genesetRepresentativePvalue.toExponential(
-                            0
-                        );
+                        genesetRepresentativePvalue = genesetRepresentativePvalue.toExponential(0);
                     } else {
-                        genesetRepresentativePvalue = genesetRepresentativePvalue.toFixed(
-                            2
-                        );
+                        genesetRepresentativePvalue = genesetRepresentativePvalue.toFixed(2);
                     }
 
                     // Add pvalue to leaf
-                    genesetInfo =
-                        genesetInfo +
-                        ', p-value = ' +
-                        genesetRepresentativePvalue;
+                    genesetInfo = genesetInfo + ', p-value = ' + genesetRepresentativePvalue;
 
                     // Build label and add styling
                     const genesetNameText =
@@ -207,10 +190,7 @@ export default class GenesetsJsTree extends React.Component<
             const selectedNodes = $(tree).jstree('get_selected', true);
             for (const geneSet of selectedNodes) {
                 if (geneSet.original.geneset) {
-                    this.map_geneSets_selected.set(
-                        geneSet.original.description,
-                        true
-                    );
+                    this.map_geneSets_selected.set(geneSet.original.description, true);
                 }
             }
         }
@@ -239,9 +219,7 @@ export default class GenesetsJsTree extends React.Component<
                         style={{ margin: '2px' }}
                         disabled={this.isLoading}
                         onClick={() => {
-                            const geneSetsselected = this.submitGeneSets(
-                                this.tree
-                            );
+                            const geneSetsselected = this.submitGeneSets(this.tree);
                             this.props.onSelect(geneSetsselected);
                         }}
                     >

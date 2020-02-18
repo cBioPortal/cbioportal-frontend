@@ -18,21 +18,15 @@ describe('GenePanelModal', () => {
 
     it('only renders modal body when isLoading is false', () => {
         wrapper = shallow(<GenePanelModal {...props} />);
-        assert(
-            wrapper.find('[data-test="gene-panel-modal-body"]').length === 0
-        );
+        assert(wrapper.find('[data-test="gene-panel-modal-body"]').length === 0);
 
         wrapper.unmount();
         wrapper = shallow(<GenePanelModal {...props} isLoading={false} />);
-        assert(
-            wrapper.find('[data-test="gene-panel-modal-body"]').length === 1
-        );
+        assert(wrapper.find('[data-test="gene-panel-modal-body"]').length === 1);
     });
 
     it('renders panel modal name', () => {
-        const panelTitle = wrapper
-            .find('[data-test="gene-panel-modal-title"]')
-            .at(0);
+        const panelTitle = wrapper.find('[data-test="gene-panel-modal-title"]').at(0);
         assert(
             panelTitle
                 .dive()

@@ -41,11 +41,7 @@ describe('ExtendedRouterStore', () => {
             true
         );
 
-        assert.deepEqual(
-            routingStore.location.query,
-            { param3: 'cleared' },
-            'removes param1'
-        );
+        assert.deepEqual(routingStore.location.query, { param3: 'cleared' }, 'removes param1');
         assert.deepEqual(routingStore.location.pathname, '/results');
     });
 

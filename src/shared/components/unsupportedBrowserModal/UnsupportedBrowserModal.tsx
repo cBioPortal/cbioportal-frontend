@@ -9,10 +9,7 @@ interface IBrowserState {
     noShowModal: boolean;
 }
 
-export default class UnsupportedBrowserModal extends React.Component<
-    {},
-    IBrowserState
-> {
+export default class UnsupportedBrowserModal extends React.Component<{}, IBrowserState> {
     constructor(props: any) {
         super(props);
 
@@ -28,11 +25,7 @@ export default class UnsupportedBrowserModal extends React.Component<
     }
 
     componentDidMount() {
-        this.handleUnsupportedBrowsers(
-            this.state.name,
-            this.state.version,
-            this.state.noShowModal
-        );
+        this.handleUnsupportedBrowsers(this.state.name, this.state.version, this.state.noShowModal);
     }
 
     handleCheckboxChange(e: any) {
@@ -43,11 +36,7 @@ export default class UnsupportedBrowserModal extends React.Component<
         window.localStorage.noShowModal = this.state.noShowModal;
     }
 
-    handleUnsupportedBrowsers(
-        name: string,
-        version: string,
-        localStorage: boolean
-    ) {
+    handleUnsupportedBrowsers(name: string, version: string, localStorage: boolean) {
         if (localStorage) {
             this.setState({ show: false });
             return;
@@ -90,9 +79,7 @@ export default class UnsupportedBrowserModal extends React.Component<
         return (
             <Modal show={show} onHide={this.handleHideClick}>
                 <Modal.Header closeButton>
-                    <Modal.Title>
-                        Sorry, we do not support your browser version!
-                    </Modal.Title>
+                    <Modal.Title>Sorry, we do not support your browser version!</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <ul>
@@ -104,8 +91,8 @@ export default class UnsupportedBrowserModal extends React.Component<
                             .
                         </li>
                         <li>
-                            Please consider using the latest version of Chrome,
-                            Safari, Firefox or Microsoft Edge.
+                            Please consider using the latest version of Chrome, Safari, Firefox or
+                            Microsoft Edge.
                         </li>
                     </ul>
                     <div style={{ paddingLeft: 22 }}>
@@ -114,9 +101,7 @@ export default class UnsupportedBrowserModal extends React.Component<
                             onChange={this.handleCheckboxChange}
                             checked={this.state.noShowModal}
                         />
-                        <span style={{ paddingLeft: 10 }}>
-                            Do not show me this pop-up again.
-                        </span>
+                        <span style={{ paddingLeft: 10 }}>Do not show me this pop-up again.</span>
                     </div>
                 </Modal.Body>
             </Modal>

@@ -119,16 +119,11 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
 
     public static defaultProps: Partial<IMSKTabsProps> = {
         unmountOnHide: true,
-        loadingComponent: (
-            <LoadingIndicator isLoading={true} center={true} size={'big'} />
-        ),
+        loadingComponent: <LoadingIndicator isLoading={true} center={true} size={'big'} />,
     };
 
     private tabClickHandlers = MemoizedHandlerFactory(
-        (
-            e: React.MouseEvent<any>,
-            tabProps: Pick<IMSKTabProps, 'id' | 'datum'>
-        ) => {
+        (e: React.MouseEvent<any>, tabProps: Pick<IMSKTabProps, 'id' | 'datum'>) => {
             e.preventDefault();
             this.setActiveTab(tabProps.id, tabProps.datum);
         }
@@ -155,9 +150,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                 this.props.loadingComponent!
             );
         } else {
-            return React.cloneElement(tab, { inactive } as Partial<
-                IMSKTabProps
-            >);
+            return React.cloneElement(tab, { inactive } as Partial<IMSKTabProps>);
         }
     }
 
@@ -205,13 +198,9 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
 
     render() {
         if (this.props.children && React.Children.count(this.props.children)) {
-            let children = this.props.children as React.ReactElement<
-                IMSKTabProps
-            >[];
+            let children = this.props.children as React.ReactElement<IMSKTabProps>[];
 
-            const toArrayedChildren: ReactChild[] = React.Children.toArray(
-                children
-            );
+            const toArrayedChildren: ReactChild[] = React.Children.toArray(children);
 
             const targetTabId = (() => {
                 if (
@@ -224,9 +213,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                 ) {
                     return this.props.activeTabId;
                 } else {
-                    return (toArrayedChildren[0] as React.ReactElement<
-                        IMSKTabProps
-                    >).props.id;
+                    return (toArrayedChildren[0] as React.ReactElement<IMSKTabProps>).props.id;
                 }
             })();
 
@@ -260,22 +247,14 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
             return (
                 <div
                     id={this.props.id ? this.props.id : ''}
-                    className={classnames(
-                        'msk-tabs',
-                        'posRelative',
-                        this.props.className
-                    )}
+                    className={classnames('msk-tabs', 'posRelative', this.props.className)}
                 >
                     {this.navTabs(children, targetTabId)}
 
                     <DeferredRender
                         className="tab-content"
                         loadingState={
-                            <LoadingIndicator
-                                isLoading={true}
-                                center={true}
-                                size={'big'}
-                            />
+                            <LoadingIndicator isLoading={true} center={true} size={'big'} />
                         }
                     >
                         {arr}
@@ -287,10 +266,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
         }
     }
 
-    protected navTabs(
-        children: React.ReactElement<IMSKTabProps>[],
-        effectiveActiveTab: string
-    ) {
+    protected navTabs(children: React.ReactElement<IMSKTabProps>[], effectiveActiveTab: string) {
         // restart the tab refs before each tab rendering
         this.tabRefs = [];
 
@@ -311,10 +287,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
             this.state.currentPage > 1 ? (
                 <li key="prevPage" style={{ cursor: 'pointer' }}>
                     <a onClick={this.prevPage.bind(this)}>
-                        <i
-                            className="fa fa-chevron-left"
-                            style={this.props.arrowStyle}
-                        />
+                        <i className="fa fa-chevron-left" style={this.props.arrowStyle} />
                     </a>
                 </li>
             ) : null;
@@ -323,10 +296,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
             this.state.currentPage < pageCount ? (
                 <li key="nextPage" style={{ cursor: 'pointer' }}>
                     <a onClick={this.nextPage.bind(this)}>
-                        <i
-                            className="fa fa-chevron-right"
-                            style={this.props.arrowStyle}
-                        />
+                        <i className="fa fa-chevron-right" style={this.props.arrowStyle} />
                     </a>
                 </li>
             ) : null;
@@ -359,52 +329,45 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
         const pages: JSX.Element[][] = [[]];
         let currentPage = 1;
 
-        React.Children.forEach(
-            children,
-            (tab: React.ReactElement<IMSKTabProps>) => {
-                if (!tab || tab.props.hide) {
-                    return;
-                }
-
-                let activeClass =
-                    effectiveActiveTab === tab.props.id ? 'active' : '';
-
-                // find out if we need to add another page
-                if (
-                    this.props.enablePagination &&
-                    this.state.pageBreaks.length > 0 &&
-                    this.state.pageBreaks[currentPage - 1] === tab.props.id
-                ) {
-                    currentPage++;
-                    pages[currentPage - 1] = [];
-                }
-
-                pages[currentPage - 1].push(
-                    <li
-                        key={tab.props.id}
-                        style={{ cursor: 'pointer' }}
-                        ref={this.tabRefHandler.bind(this, tab.props.id)}
-                        className={activeClass}
-                    >
-                        <a
-                            className={classnames(
-                                'tabAnchor',
-                                `tabAnchor_${tab.props.id}`,
-                                tab.props.anchorClassName
-                            )}
-                            onClick={this.tabClickHandlers(tab.props)}
-                            href={
-                                this.props.getTabHref &&
-                                this.props.getTabHref(tab.props.id)
-                            }
-                            style={tab.props.anchorStyle}
-                        >
-                            {tab.props.linkText}
-                        </a>
-                    </li>
-                );
+        React.Children.forEach(children, (tab: React.ReactElement<IMSKTabProps>) => {
+            if (!tab || tab.props.hide) {
+                return;
             }
-        );
+
+            let activeClass = effectiveActiveTab === tab.props.id ? 'active' : '';
+
+            // find out if we need to add another page
+            if (
+                this.props.enablePagination &&
+                this.state.pageBreaks.length > 0 &&
+                this.state.pageBreaks[currentPage - 1] === tab.props.id
+            ) {
+                currentPage++;
+                pages[currentPage - 1] = [];
+            }
+
+            pages[currentPage - 1].push(
+                <li
+                    key={tab.props.id}
+                    style={{ cursor: 'pointer' }}
+                    ref={this.tabRefHandler.bind(this, tab.props.id)}
+                    className={activeClass}
+                >
+                    <a
+                        className={classnames(
+                            'tabAnchor',
+                            `tabAnchor_${tab.props.id}`,
+                            tab.props.anchorClassName
+                        )}
+                        onClick={this.tabClickHandlers(tab.props)}
+                        href={this.props.getTabHref && this.props.getTabHref(tab.props.id)}
+                        style={tab.props.anchorStyle}
+                    >
+                        {tab.props.linkText}
+                    </a>
+                </li>
+            );
+        });
 
         return pages;
     }
@@ -460,8 +423,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
 
     findPageBreaks() {
         const pageBreaks: string[] = [];
-        const containerWidth: number =
-            (this.navTabsRef && this.navTabsRef.offsetWidth) || 0;
+        const containerWidth: number = (this.navTabsRef && this.navTabsRef.offsetWidth) || 0;
         // do not attempt paging if container width is zero
         if (containerWidth > 0) {
             let width = 0;

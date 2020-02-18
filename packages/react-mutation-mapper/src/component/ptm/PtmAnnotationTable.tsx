@@ -18,10 +18,7 @@ export type PtmSummaryTableProps = {
 };
 
 @observer
-export default class PtmAnnotationTable extends React.Component<
-    PtmSummaryTableProps,
-    {}
-> {
+export default class PtmAnnotationTable extends React.Component<PtmSummaryTableProps, {}> {
     public static defaultProps = {
         data: [],
         initialSortColumn: 'type',
@@ -33,9 +30,7 @@ export default class PtmAnnotationTable extends React.Component<
     get pmidData(): Cache {
         if (this.props.pubMedCache) {
             this.props.data.forEach(ptm =>
-                ptm.pubmedIds.forEach((id: string) =>
-                    this.props.pubMedCache!.get(Number(id))
-                )
+                ptm.pubmedIds.forEach((id: string) => this.props.pubMedCache!.get(Number(id)))
             );
         }
 
@@ -46,15 +41,9 @@ export default class PtmAnnotationTable extends React.Component<
     get columns(): Column[] {
         const pubmedRender = !_.isEmpty(this.pmidData)
             ? (props: { original: PostTranslationalModification }) => (
-                  <PtmReferenceList
-                      pmidData={this.pmidData}
-                      pubmedIds={props.original.pubmedIds}
-                  />
+                  <PtmReferenceList pmidData={this.pmidData} pubmedIds={props.original.pubmedIds} />
               )
-            : () =>
-                  this.props.pubMedCache ? (
-                      <i className="fa fa-spinner fa-pulse" />
-                  ) : null;
+            : () => (this.props.pubMedCache ? <i className="fa fa-spinner fa-pulse" /> : null);
 
         return [
             {
@@ -62,9 +51,7 @@ export default class PtmAnnotationTable extends React.Component<
                 accessor: 'position',
                 Header: 'Position',
                 Cell: (props: { original: PostTranslationalModification }) => (
-                    <div style={{ textAlign: 'right' }}>
-                        {props.original.position}
-                    </div>
+                    <div style={{ textAlign: 'right' }}>{props.original.position}</div>
                 ),
                 maxWidth: 64,
             },
@@ -85,25 +72,14 @@ export default class PtmAnnotationTable extends React.Component<
     }
 
     public render() {
-        const {
-            data,
-            initialSortColumn,
-            initialSortDirection,
-            initialItemsPerPage,
-        } = this.props;
+        const { data, initialSortColumn, initialSortDirection, initialItemsPerPage } = this.props;
 
         const showPagination =
             data.length >
-            (this.props.initialItemsPerPage ||
-                PtmAnnotationTable.defaultProps.initialItemsPerPage);
+            (this.props.initialItemsPerPage || PtmAnnotationTable.defaultProps.initialItemsPerPage);
 
         return (
-            <div
-                className={classnames(
-                    'cbioportal-frontend',
-                    'default-track-tooltip-table'
-                )}
-            >
+            <div className={classnames('cbioportal-frontend', 'default-track-tooltip-table')}>
                 <ReactTable
                     data={data}
                     columns={this.columns}
@@ -111,15 +87,12 @@ export default class PtmAnnotationTable extends React.Component<
                         {
                             id:
                                 initialSortColumn ||
-                                PtmAnnotationTable.defaultProps
-                                    .initialSortColumn,
+                                PtmAnnotationTable.defaultProps.initialSortColumn,
                             desc: initialSortDirection === 'desc',
                         },
                     ]}
                     defaultPageSize={
-                        data.length > initialItemsPerPage!
-                            ? initialItemsPerPage
-                            : data.length
+                        data.length > initialItemsPerPage! ? initialItemsPerPage : data.length
                     }
                     showPagination={showPagination}
                     showPaginationTop={true}

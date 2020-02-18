@@ -45,10 +45,7 @@ export default class ListIndexedMap<KE extends KeyElementType, R> {
         return !!this.getEntry(key);
     }
 
-    public static from<T>(
-        objs: T[],
-        key: (t: T) => string[]
-    ): ListIndexedMap<string, T> {
+    public static from<T>(objs: T[], key: (t: T) => string[]): ListIndexedMap<string, T> {
         const map = new ListIndexedMap<string, T>();
         for (const o of objs) {
             map.set(o, ...key(o));
@@ -68,10 +65,7 @@ export default class ListIndexedMap<KE extends KeyElementType, R> {
 }
 
 export class ListIndexedSet {
-    private map: ListIndexedMap<string, boolean> = new ListIndexedMap<
-        string,
-        boolean
-    >();
+    private map: ListIndexedMap<string, boolean> = new ListIndexedMap<string, boolean>();
 
     public static from<T>(objs: T[], key: (t: T) => string[]): ListIndexedSet {
         const set = new ListIndexedSet();
@@ -100,9 +94,7 @@ export class ListIndexedSet {
 
 export class StringListIndexedMap<R> extends ListIndexedMap<string, R> {}
 
-export class ListIndexedMapOfCounts<
-    KE extends KeyElementType
-> extends ListIndexedMap<KE, number> {
+export class ListIndexedMapOfCounts<KE extends KeyElementType> extends ListIndexedMap<KE, number> {
     public increment(...key: KE[]) {
         if (this.has(...key)) {
             this.set(this.get(...key)! + 1, ...key);

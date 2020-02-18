@@ -1,13 +1,9 @@
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var waitForPatientView = require('../../../shared/specUtils')
-    .waitForPatientView;
-var assertScreenShotMatch = require('../../../shared/lib/testUtils')
-    .assertScreenShotMatch;
+var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
+var waitForPatientView = require('../../../shared/specUtils').waitForPatientView;
+var assertScreenShotMatch = require('../../../shared/lib/testUtils').assertScreenShotMatch;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
-const patienViewUrl =
-    CBIOPORTAL_URL + '/patient?studyId=teststudy_genepanels&caseId=patientA';
+const patienViewUrl = CBIOPORTAL_URL + '/patient?studyId=teststudy_genepanels&caseId=patientA';
 
 describe('patient view page', function() {
     describe('gene panel icons', () => {
@@ -20,17 +16,13 @@ describe('patient view page', function() {
         });
 
         it('shows gene panel icons behind mutation and CNA genomic tracks', () => {
-            var res = browser.checkElement(
-                'div.genomicOverviewTracksContainer'
-            );
+            var res = browser.checkElement('div.genomicOverviewTracksContainer');
             assertScreenShotMatch(res);
         });
 
         it('filters mutation tracks based on gene filter setting', () => {
             switchGeneFilter('allSamples');
-            var res = browser.checkElement(
-                'div.genomicOverviewTracksContainer'
-            );
+            var res = browser.checkElement('div.genomicOverviewTracksContainer');
             assertScreenShotMatch(res);
         });
 

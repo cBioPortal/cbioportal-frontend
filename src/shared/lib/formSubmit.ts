@@ -11,8 +11,7 @@ export default function formSubmit(
     const form = document.createElement('form');
     let computedMethod = method;
     if (method === 'smart') {
-        computedMethod =
-            buildCBioPortalPageUrl(path, params).length > 1800 ? 'post' : 'get'; // use POST if URL will be too large for some browsers
+        computedMethod = buildCBioPortalPageUrl(path, params).length > 1800 ? 'post' : 'get'; // use POST if URL will be too large for some browsers
     }
     form.setAttribute('method', computedMethod);
     form.setAttribute('action', path);

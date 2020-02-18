@@ -16,14 +16,7 @@ describe('Quick Plot Links in the Plots Tab', () => {
                 source: undefined,
             };
 
-            const actual = generateQuickPlots(
-                dataTypes,
-                dataSources,
-                [],
-                0,
-                horizontal,
-                vertical
-            );
+            const actual = generateQuickPlots(dataTypes, dataSources, [], 0, horizontal, vertical);
             const expected: ButtonInfo[] = [];
 
             assert.deepEqual(actual, expected);
@@ -44,14 +37,7 @@ describe('Quick Plot Links in the Plots Tab', () => {
                 source: undefined,
             };
 
-            const actual = generateQuickPlots(
-                dataTypes,
-                dataSources,
-                [],
-                0,
-                horizontal,
-                vertical
-            );
+            const actual = generateQuickPlots(dataTypes, dataSources, [], 0, horizontal, vertical);
             const expected: ButtonInfo[] = [
                 {
                     selected: true,
@@ -94,14 +80,7 @@ describe('Quick Plot Links in the Plots Tab', () => {
                 source: undefined,
             };
 
-            const actual = generateQuickPlots(
-                dataTypes,
-                dataSources,
-                [],
-                0,
-                horizontal,
-                vertical
-            );
+            const actual = generateQuickPlots(dataTypes, dataSources, [], 0, horizontal, vertical);
             const expected: ButtonInfo[] = [
                 {
                     selected: true,
@@ -151,14 +130,7 @@ describe('Quick Plot Links in the Plots Tab', () => {
                 source: 'MUTATION_COUNT',
             };
 
-            const actual = generateQuickPlots(
-                dataTypes,
-                dataSources,
-                [],
-                0,
-                horizontal,
-                vertical
-            );
+            const actual = generateQuickPlots(dataTypes, dataSources, [], 0, horizontal, vertical);
             const expected: ButtonInfo[] = [
                 {
                     selected: true,
@@ -493,8 +465,7 @@ describe('Quick Plot Links in the Plots Tab', () => {
                             },
                             dataSource: {
                                 value: 'brca_tcga_protein_quantification',
-                                label:
-                                    'Protein levels (mass spectrometry by CPTAC)',
+                                label: 'Protein levels (mass spectrometry by CPTAC)',
                             },
                             useSameGene: true,
                         },
@@ -555,8 +526,7 @@ describe('Quick Plot Links in the Plots Tab', () => {
                             },
                             dataSource: {
                                 value: 'brca_tcga_protein_quantification',
-                                label:
-                                    'Protein levels (mass spectrometry by CPTAC)',
+                                label: 'Protein levels (mass spectrometry by CPTAC)',
                             },
                             useSameGene: true,
                         },
@@ -575,9 +545,7 @@ describe('Quick Plot Links in the Plots Tab', () => {
         });
 
         it('should make sample order vs treatment IC50 quickplot', () => {
-            const dataTypes: PlotsTabOption[] = [
-                { value: 'GENERIC_ASSAY', label: 'Treatments' },
-            ];
+            const dataTypes: PlotsTabOption[] = [{ value: 'GENERIC_ASSAY', label: 'Treatments' }];
             const dataSources: PlotsTabDataSource = {};
             const horizontal: TypeSourcePair = {
                 type: 'none',
@@ -588,14 +556,7 @@ describe('Quick Plot Links in the Plots Tab', () => {
                 source: undefined,
             };
 
-            const actual = generateQuickPlots(
-                dataTypes,
-                dataSources,
-                [],
-                0,
-                horizontal,
-                vertical
-            );
+            const actual = generateQuickPlots(dataTypes, dataSources, [], 0, horizontal, vertical);
             const expected: ButtonInfo[] = [
                 {
                     selected: true,

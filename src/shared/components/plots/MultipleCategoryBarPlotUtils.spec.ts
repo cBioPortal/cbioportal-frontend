@@ -197,28 +197,20 @@ describe('MultipleCategoryBarPlotUtils', () => {
             assert.deepEqual(makePlotData([], [], true), []);
         });
         it('returns correct result for nonempty input, single values, vertical bars', () => {
-            (expect(
-                makePlotData(singleValueHorzData, singleValueVertData, false)
-            ).to.deep as any).equalInAnyOrder(singleValueVertBarsData);
+            (expect(makePlotData(singleValueHorzData, singleValueVertData, false)).to
+                .deep as any).equalInAnyOrder(singleValueVertBarsData);
         });
         it('returns correct result for nonempty input, single values, horizontal bars', () => {
-            (expect(
-                makePlotData(singleValueHorzData, singleValueVertData, true)
-            ).to.deep as any).equalInAnyOrder(singleValueHorzBarsData);
+            (expect(makePlotData(singleValueHorzData, singleValueVertData, true)).to
+                .deep as any).equalInAnyOrder(singleValueHorzBarsData);
         });
         it('returns correct result for nonempty input, multiple values, vertical bars', () => {
-            (expect(
-                makePlotData(
-                    multipleValueHorzData,
-                    multipleValueVertData,
-                    false
-                )
-            ).to.deep as any).equalInAnyOrder(multipleValueVertBarsData);
+            (expect(makePlotData(multipleValueHorzData, multipleValueVertData, false)).to
+                .deep as any).equalInAnyOrder(multipleValueVertBarsData);
         });
         it('returns correct result for nonempty input, multiple values, horizontal bars', () => {
-            (expect(
-                makePlotData(multipleValueHorzData, multipleValueVertData, true)
-            ).to.deep as any).equalInAnyOrder(multipleValueHorzBarsData);
+            (expect(makePlotData(multipleValueHorzData, multipleValueVertData, true)).to
+                .deep as any).equalInAnyOrder(multipleValueHorzBarsData);
         });
     });
 

@@ -1,13 +1,10 @@
 var assert = require('assert');
 var expect = require('chai').expect;
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
+var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
 var checkElementWithMouseDisabled = require('../../../shared/specUtils')
     .checkElementWithMouseDisabled;
-var waitForNetworkQuiet = require('../../../shared/specUtils')
-    .waitForNetworkQuiet;
-var assertScreenShotMatch = require('../../../shared/lib/testUtils')
-    .assertScreenShotMatch;
+var waitForNetworkQuiet = require('../../../shared/specUtils').waitForNetworkQuiet;
+var assertScreenShotMatch = require('../../../shared/lib/testUtils').assertScreenShotMatch;
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 describe('Patient View Genomic Evolution tab screenshot tests', function() {
@@ -22,31 +19,27 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
         waitForNetworkQuiet(10000);
     });
     it('pvge initial view with line chart', function() {
-        const res = browser.checkElement(
-            'div[data-test="GenomicEvolutionTab"]',
-            { hide: ['.qtip'] }
-        );
+        const res = browser.checkElement('div[data-test="GenomicEvolutionTab"]', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
     it('pvge one mutation selected with line chart', function() {
         browser.click(
             'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(1)'
         );
-        const res = checkElementWithMouseDisabled(
-            'div[data-test="GenomicEvolutionTab"]',
-            0,
-            { hide: ['.qtip'] }
-        );
+        const res = checkElementWithMouseDisabled('div[data-test="GenomicEvolutionTab"]', 0, {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
     it('pvge hover a mutation with line chart', function() {
         browser.moveToObject(
             'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(2)'
         );
-        const res = browser.checkElement(
-            'div[data-test="GenomicEvolutionTab"]',
-            { hide: ['.qtip'] }
-        );
+        const res = browser.checkElement('div[data-test="GenomicEvolutionTab"]', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
     it('pvge only show highlighted in line chart', function() {
@@ -82,10 +75,9 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
     it('pvge heatmap with two mutations selected from before', function() {
         browser.click('a.tabAnchor_heatmap');
         browser.waitForVisible('div#MutationHeatmap', 3000);
-        const res = browser.checkElement(
-            'div[data-test="GenomicEvolutionTab"]',
-            { hide: ['.qtip'] }
-        );
+        const res = browser.checkElement('div[data-test="GenomicEvolutionTab"]', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
     it('pvge one mutation selected with heatmap', function() {
@@ -93,20 +85,18 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
             'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(1)'
         );
         browser.moveToObject('#cbioportal-logo');
-        const res = browser.checkElement(
-            'div[data-test="GenomicEvolutionTab"]',
-            { hide: ['.qtip'] }
-        );
+        const res = browser.checkElement('div[data-test="GenomicEvolutionTab"]', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
     it('pvge hover a mutation with heatmap', function() {
         browser.moveToObject(
             'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(9)'
         );
-        const res = browser.checkElement(
-            'div[data-test="GenomicEvolutionTab"]',
-            { hide: ['.qtip'] }
-        );
+        const res = browser.checkElement('div[data-test="GenomicEvolutionTab"]', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
     it('pvge uncluster heatmap', function() {

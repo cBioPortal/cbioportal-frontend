@@ -37,9 +37,7 @@ export default class SurvivalTransitionTab extends React.Component<
                         this.props.store.navigateToSurvivalTab();
                     }
                 }, 1000);
-            } else if (
-                this.props.store.urlWrapper.tabId !== ResultsViewTab.SURVIVAL
-            ) {
+            } else if (this.props.store.urlWrapper.tabId !== ResultsViewTab.SURVIVAL) {
                 // If user navigates away from this tab, clear any pending redirect
                 this.clearPendingRedirect();
             }

@@ -1,14 +1,7 @@
 import * as React from 'react';
 import { DataFilter } from 'react-mutation-mapper';
-import {
-    MolecularProfile,
-    Mutation,
-    SampleIdentifier,
-} from 'shared/api/generated/CBioPortalAPI';
-import {
-    germlineMutationRate,
-    somaticMutationRate,
-} from 'shared/lib/MutationUtils';
+import { MolecularProfile, Mutation, SampleIdentifier } from 'shared/api/generated/CBioPortalAPI';
+import { germlineMutationRate, somaticMutationRate } from 'shared/lib/MutationUtils';
 import { computed } from 'mobx';
 import { MobxPromise } from 'mobxpromise';
 import { observer } from 'mobx-react';
@@ -24,17 +17,11 @@ export interface IMutationRateSummaryProps {
         [molecularProfileId: string]: MolecularProfile;
     }>;
     mutationStatusFilter?: DataFilter<string>;
-    onMutationStatusSelect?: (
-        selectedOptionIds: string[],
-        allValuesSelected?: boolean
-    ) => void;
+    onMutationStatusSelect?: (selectedOptionIds: string[], allValuesSelected?: boolean) => void;
 }
 
 @observer
-export default class MutationRateSummary extends React.Component<
-    IMutationRateSummaryProps,
-    {}
-> {
+export default class MutationRateSummary extends React.Component<IMutationRateSummaryProps, {}> {
     @computed
     public get germlineMutationRate() {
         let samples: SampleIdentifier[] | undefined;

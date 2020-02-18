@@ -28,15 +28,9 @@ describe('MutationStatusColumnFormatter', () => {
     let naComponent: ReactWrapper<any, any>;
 
     before(() => {
-        germlineComponent = mount(
-            MutationStatusColumnFormatter.renderFunction(germlineData)
-        );
-        somaticComponent = mount(
-            MutationStatusColumnFormatter.renderFunction(somaticData)
-        );
-        naComponent = mount(
-            MutationStatusColumnFormatter.renderFunction(naData)
-        );
+        germlineComponent = mount(MutationStatusColumnFormatter.renderFunction(germlineData));
+        somaticComponent = mount(MutationStatusColumnFormatter.renderFunction(somaticData));
+        naComponent = mount(MutationStatusColumnFormatter.renderFunction(naData));
     });
 
     after(() => {});

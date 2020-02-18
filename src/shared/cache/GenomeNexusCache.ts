@@ -1,8 +1,5 @@
 import { fetchVariantAnnotationsByMutation } from 'shared/lib/StoreUtils';
-import {
-    extractGenomicLocation,
-    genomicLocationString,
-} from 'shared/lib/MutationUtils';
+import { extractGenomicLocation, genomicLocationString } from 'shared/lib/MutationUtils';
 import { VariantAnnotation } from 'cbioportal-frontend-commons';
 import { Mutation } from 'shared/api/generated/CBioPortalAPI';
 import LazyMobXCache, { CacheData } from 'shared/lib/LazyMobXCache';
@@ -33,15 +30,11 @@ export function queryToKey(m: Mutation) {
     }
 }
 
-export default class GenomeNexusCache extends LazyMobXCache<
-    VariantAnnotation,
-    Mutation
-> {
+export default class GenomeNexusCache extends LazyMobXCache<VariantAnnotation, Mutation> {
     constructor() {
         super(
             (m: Mutation) => queryToKey(m), // queryToKey
-            (v: VariantAnnotation) =>
-                genomicLocationString(v.annotation_summary.genomicLocation), // dataToKey
+            (v: VariantAnnotation) => genomicLocationString(v.annotation_summary.genomicLocation), // dataToKey
             fetch
         );
     }

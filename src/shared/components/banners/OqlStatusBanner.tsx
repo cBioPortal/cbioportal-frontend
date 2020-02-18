@@ -15,10 +15,7 @@ interface IOqlStatusBannerProps {
 }
 
 @observer
-export default class OqlStatusBanner extends React.Component<
-    IOqlStatusBannerProps,
-    {}
-> {
+export default class OqlStatusBanner extends React.Component<IOqlStatusBannerProps, {}> {
     @computed get toggleButton() {
         if (this.props.onToggle && !this.props.isUnaffected) {
             return (
@@ -28,9 +25,7 @@ export default class OqlStatusBanner extends React.Component<
                         className="btn btn-default btn-xs"
                         style={{ marginLeft: 5 }}
                     >
-                        {this.props.tabReflectsOql
-                            ? 'Do not filter by OQL'
-                            : 'Filter by OQL'}
+                        {this.props.tabReflectsOql ? 'Do not filter by OQL' : 'Filter by OQL'}
                     </button>
                 </span>
             );
@@ -54,14 +49,12 @@ export default class OqlStatusBanner extends React.Component<
                 dataTest = 'OqlStatusBannerUnaffected';
             } else if (this.props.tabReflectsOql) {
                 className = 'alert alert-success';
-                message =
-                    'The results below reflect the OQL specification from your query.';
+                message = 'The results below reflect the OQL specification from your query.';
                 iconClassName = 'fa fa-md fa-check';
                 dataTest = 'OqlStatusBannerYes';
             } else {
                 className = 'alert alert-info';
-                message =
-                    'The results below do not reflect the OQL specification from your query.';
+                message = 'The results below do not reflect the OQL specification from your query.';
                 iconClassName = 'fa fa-md fa-exclamation-triangle';
                 dataTest = 'OqlStatusBannerNo';
             }
@@ -69,11 +62,7 @@ export default class OqlStatusBanner extends React.Component<
             return (
                 <div
                     data-test={dataTest}
-                    className={classnames(
-                        'oql-status-banner',
-                        className,
-                        this.props.className
-                    )}
+                    className={classnames('oql-status-banner', className, this.props.className)}
                     style={Object.assign({}, this.props.style || {})}
                 >
                     <span style={{ verticalAlign: 'middle' }}>

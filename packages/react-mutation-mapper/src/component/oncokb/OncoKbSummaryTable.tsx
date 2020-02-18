@@ -4,15 +4,9 @@ import { observer } from 'mobx-react';
 import * as React from 'react';
 import ReactTable, { Column } from 'react-table';
 
-import {
-    calcProteinChangeSortValue,
-    EllipsisTextTooltip,
-} from 'cbioportal-frontend-commons';
+import { calcProteinChangeSortValue, EllipsisTextTooltip } from 'cbioportal-frontend-commons';
 
-import {
-    defaultSortMethod,
-    defaultStringArraySortMethod,
-} from '../../util/ReactTableUtils';
+import { defaultSortMethod, defaultStringArraySortMethod } from '../../util/ReactTableUtils';
 import { levelIconClassNames } from '../../util/OncoKbUtils';
 
 export type OncoKbSummaryTableProps = {
@@ -31,10 +25,7 @@ export type OncoKbSummary = {
 };
 
 @observer
-export default class OncoKbSummaryTable extends React.Component<
-    OncoKbSummaryTableProps,
-    {}
-> {
+export default class OncoKbSummaryTable extends React.Component<OncoKbSummaryTableProps, {}> {
     public static defaultProps = {
         data: [],
         initialSortColumn: 'count',
@@ -60,10 +51,7 @@ export default class OncoKbSummaryTable extends React.Component<
                 accessor: 'proteinChange',
                 Header: 'Protein Change',
                 sortMethod: (a: string, b: string) =>
-                    defaultSortMethod(
-                        calcProteinChangeSortValue(a),
-                        calcProteinChangeSortValue(b)
-                    ),
+                    defaultSortMethod(calcProteinChangeSortValue(a), calcProteinChangeSortValue(b)),
             },
             {
                 id: 'count',
@@ -132,25 +120,14 @@ export default class OncoKbSummaryTable extends React.Component<
     }
 
     public render() {
-        const {
-            data,
-            initialSortColumn,
-            initialSortDirection,
-            initialItemsPerPage,
-        } = this.props;
+        const { data, initialSortColumn, initialSortDirection, initialItemsPerPage } = this.props;
 
         const showPagination =
             data.length >
-            (this.props.initialItemsPerPage ||
-                OncoKbSummaryTable.defaultProps.initialItemsPerPage);
+            (this.props.initialItemsPerPage || OncoKbSummaryTable.defaultProps.initialItemsPerPage);
 
         return (
-            <div
-                className={classnames(
-                    'cbioportal-frontend',
-                    'default-track-tooltip-table'
-                )}
-            >
+            <div className={classnames('cbioportal-frontend', 'default-track-tooltip-table')}>
                 <ReactTable
                     data={data}
                     columns={this.columns}
@@ -158,15 +135,12 @@ export default class OncoKbSummaryTable extends React.Component<
                         {
                             id:
                                 initialSortColumn ||
-                                OncoKbSummaryTable.defaultProps
-                                    .initialSortColumn,
+                                OncoKbSummaryTable.defaultProps.initialSortColumn,
                             desc: initialSortDirection === 'desc',
                         },
                     ]}
                     defaultPageSize={
-                        data.length > initialItemsPerPage!
-                            ? initialItemsPerPage
-                            : data.length
+                        data.length > initialItemsPerPage! ? initialItemsPerPage : data.length
                     }
                     showPagination={showPagination}
                     showPaginationTop={true}

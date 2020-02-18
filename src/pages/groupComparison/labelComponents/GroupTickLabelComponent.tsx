@@ -52,15 +52,7 @@ export default class GroupTickLabelComponent extends React.Component<
     }
 
     render() {
-        const {
-            categoryCoordToGroup,
-            dx,
-            dy,
-            maxLabelWidth,
-            datum,
-            text,
-            ...rest
-        } = this.props;
+        const { categoryCoordToGroup, dx, dy, maxLabelWidth, datum, text, ...rest } = this.props;
         return (
             <>
                 {this.colorRectangle}
@@ -71,9 +63,7 @@ export default class GroupTickLabelComponent extends React.Component<
                         this.group!.ordinal.length > 0
                             ? [
                                   <tspan>(</tspan>,
-                                  <tspan fontWeight="bold">
-                                      {this.group!.ordinal}
-                                  </tspan>,
+                                  <tspan fontWeight="bold">{this.group!.ordinal}</tspan>,
                                   <tspan>)&nbsp;</tspan>,
                               ]
                             : undefined

@@ -55,8 +55,7 @@ export class SimpleGetterLazyMobXTableApplicationDataStore<T>
     @computed get sortedData() {
         // if not defined, use default values for sortMetric and sortAscending
         const sortMetric = this.sortMetric || (() => 0);
-        const sortAscending =
-            this.sortAscending !== undefined ? this.sortAscending : true;
+        const sortAscending = this.sortAscending !== undefined ? this.sortAscending : true;
 
         return lazyMobXTableSort(this.allData, sortMetric, sortAscending);
     }
@@ -65,12 +64,7 @@ export class SimpleGetterLazyMobXTableApplicationDataStore<T>
         const filterStringUpper = this.filterString.toUpperCase();
         const filterStringLower = this.filterString.toLowerCase();
         return this.sortedData.filter((d: T) =>
-            this.dataFilter(
-                d,
-                this.filterString,
-                filterStringUpper,
-                filterStringLower
-            )
+            this.dataFilter(d, this.filterString, filterStringUpper, filterStringLower)
         );
     }
 

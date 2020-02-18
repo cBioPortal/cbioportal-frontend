@@ -1,10 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import { Mutation } from 'shared/api/generated/CBioPortalAPI';
-import {
-    TableCellStatusIndicator,
-    TableCellStatus,
-} from 'cbioportal-frontend-commons';
+import { TableCellStatusIndicator, TableCellStatus } from 'cbioportal-frontend-commons';
 import TruncatedText from 'shared/components/TruncatedText';
 
 export default class CancerTypeColumnFormatter {
@@ -25,10 +22,7 @@ export default class CancerTypeColumnFormatter {
         d: Mutation[],
         uniqueSampleKeyToTumorType?: { [uniqueSampleKey: string]: string }
     ): string | null {
-        const data = CancerTypeColumnFormatter.getData(
-            d,
-            uniqueSampleKeyToTumorType
-        );
+        const data = CancerTypeColumnFormatter.getData(d, uniqueSampleKeyToTumorType);
 
         if (data) {
             return data;
@@ -42,14 +36,9 @@ export default class CancerTypeColumnFormatter {
         filterStringUpper: string,
         uniqueSampleKeyToTumorType?: { [uniqueSampleKey: string]: string }
     ): boolean {
-        const data = CancerTypeColumnFormatter.getData(
-            d,
-            uniqueSampleKeyToTumorType
-        );
+        const data = CancerTypeColumnFormatter.getData(d, uniqueSampleKeyToTumorType);
 
-        return (
-            data !== null && data.toUpperCase().indexOf(filterStringUpper) > -1
-        );
+        return data !== null && data.toUpperCase().indexOf(filterStringUpper) > -1;
     }
 
     public static isVisible(
@@ -63,10 +52,7 @@ export default class CancerTypeColumnFormatter {
         const tumorTypeToSampleId: { [tumorType: string]: string } = {};
 
         mutations.forEach((d: Mutation[]) => {
-            const tumorType = CancerTypeColumnFormatter.getData(
-                d,
-                uniqueSampleKeyToTumorType
-            );
+            const tumorType = CancerTypeColumnFormatter.getData(d, uniqueSampleKeyToTumorType);
 
             if (tumorType) {
                 tumorTypeToSampleId[tumorType] = d[0].sampleId;
@@ -81,20 +67,14 @@ export default class CancerTypeColumnFormatter {
         d: Mutation[],
         uniqueSampleKeyToTumorType?: { [uniqueSampleKey: string]: string }
     ) {
-        return (
-            CancerTypeColumnFormatter.getData(d, uniqueSampleKeyToTumorType) ||
-            ''
-        );
+        return CancerTypeColumnFormatter.getData(d, uniqueSampleKeyToTumorType) || '';
     }
 
     public static render(
         d: Mutation[],
         uniqueSampleKeyToTumorType?: { [uniqueSampleKey: string]: string }
     ) {
-        const data = CancerTypeColumnFormatter.getData(
-            d,
-            uniqueSampleKeyToTumorType
-        );
+        const data = CancerTypeColumnFormatter.getData(d, uniqueSampleKeyToTumorType);
 
         if (data) {
             return (

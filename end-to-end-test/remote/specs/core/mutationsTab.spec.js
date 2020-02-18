@@ -2,8 +2,7 @@ var assert = require('assert');
 var waitForOncoprint = require('../../../shared/specUtils').waitForOncoprint;
 var setResultsPageSettingsMenuOpen = require('../../../shared/specUtils')
     .setResultsPageSettingsMenuOpen;
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
+var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
@@ -29,10 +28,7 @@ describe('mutations tab', function() {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/mutations?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=brca_tcga_pub&case_set_id=brca_tcga_pub_cnaseq&data_priority=0&gene_list=BRCA1%2520BRCA2&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=brca_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_tcga_pub_mutations&tab_index=tab_visualize`
         );
-        browser.waitForVisible(
-            '[data-test="LazyMobXTable_CountHeader"]',
-            10000
-        );
+        browser.waitForVisible('[data-test="LazyMobXTable_CountHeader"]', 10000);
         assert(
             browser
                 .getHTML('[data-test="LazyMobXTable_CountHeader"]', false)
@@ -41,19 +37,11 @@ describe('mutations tab', function() {
         );
 
         browser.click('button[data-test="GlobalSettingsButton"]');
-        browser.waitForVisible(
-            'div[data-test="GlobalSettingsDropdown"]',
-            10000
-        );
-        browser.click(
-            'div[data-test="GlobalSettingsDropdown"] input[data-test="HideGermline"]'
-        );
+        browser.waitForVisible('div[data-test="GlobalSettingsDropdown"]', 10000);
+        browser.click('div[data-test="GlobalSettingsDropdown"] input[data-test="HideGermline"]');
         browser.click('button[data-test="GlobalSettingsButton"]');
 
-        browser.waitForVisible(
-            '[data-test="LazyMobXTable_CountHeader"]',
-            10000
-        );
+        browser.waitForVisible('[data-test="LazyMobXTable_CountHeader"]', 10000);
         assert(
             browser
                 .getHTML('[data-test="LazyMobXTable_CountHeader"]', false)

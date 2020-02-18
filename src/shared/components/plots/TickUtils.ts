@@ -20,10 +20,7 @@ function zeroes(times: number) {
     return ret;
 }
 
-function getUniqueFormat(
-    values: number[],
-    formatFn: (precision: number) => string
-) {
+function getUniqueFormat(values: number[], formatFn: (precision: number) => string) {
     let precision = 0;
     let format = '';
     while (precision < 3) {

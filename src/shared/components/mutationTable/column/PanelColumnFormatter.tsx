@@ -26,11 +26,7 @@ export class GenePanelLinks extends React.Component<PanelColumnFormatterProps> {
         const links: (string | JSX.Element)[] = [];
         genePanelIds.forEach((genePanel, index) => {
             if (genePanel && genePanel !== 'N/A') {
-                links.push(
-                    <a onClick={() => this.handleClick(genePanel)}>
-                        {genePanel}
-                    </a>
-                );
+                links.push(<a onClick={() => this.handleClick(genePanel)}>{genePanel}</a>);
             } else {
                 links.push(genePanel);
             }
@@ -61,10 +57,7 @@ class PanelColumn extends React.Component<PanelColumnFormatterProps, {}> {
 
         return (
             <div style={{ position: 'relative' }}>
-                <ul
-                    style={{ marginBottom: 0 }}
-                    className="list-inline list-unstyled"
-                >
+                <ul style={{ marginBottom: 0 }} className="list-inline list-unstyled">
                     <GenePanelLinks {...this.props} />
                 </ul>
             </div>
@@ -73,18 +66,10 @@ class PanelColumn extends React.Component<PanelColumnFormatterProps, {}> {
 }
 
 const getGenePanelIds = (props: PanelColumnFormatterProps) => {
-    const {
-        data,
-        sampleToGenePanelId,
-        sampleManager,
-        genePanelIdToGene,
-    } = props;
+    const { data, sampleToGenePanelId, sampleManager, genePanelIdToGene } = props;
     if (sampleToGenePanelId && sampleManager) {
         const samples = sampleManager.samples;
-        const sampleIds = map(
-            samples,
-            (sample: ClinicalDataBySampleId) => sample.id
-        );
+        const sampleIds = map(samples, (sample: ClinicalDataBySampleId) => sample.id);
         const entrezGeneId = data[0].entrezGeneId;
         const mutatedSamples = TumorColumnFormatter.getPresentSamples(data);
         const profiledSamples = TumorColumnFormatter.getProfiledSamplesForGene(
@@ -96,8 +81,7 @@ const getGenePanelIds = (props: PanelColumnFormatterProps) => {
 
         const genePanelsIds = samples.map(sample => {
             const isMutated = sample.id in mutatedSamples;
-            const isProfiled =
-                sample.id in profiledSamples && profiledSamples[sample.id];
+            const isProfiled = sample.id in profiledSamples && profiledSamples[sample.id];
             if (isProfiled && !isMutated) return '';
             return sampleToGenePanelId[sample.id] || 'N/A';
         });

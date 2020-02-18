@@ -39,9 +39,7 @@ describe('OverlapUtils', () => {
     describe('joinGroupNames', () => {
         it('gives right result for several numbers of names', () => {
             expect(joinGroupNames([], 'conj')).toEqualJSX(<span></span>);
-            expect(
-                joinGroupNames([{ name: 'nameA', ordinal: '1' }], 'and')
-            ).toEqualJSX(
+            expect(joinGroupNames([{ name: 'nameA', ordinal: '1' }], 'and')).toEqualJSX(
                 <span>
                     <>
                         (<strong>1</strong>)&nbsp;
@@ -51,10 +49,7 @@ describe('OverlapUtils', () => {
             );
             expect(
                 joinGroupNames(
-                    [
-                        { name: 'nameA', ordinal: '1' },
-                        { name: 'nameB', ordinal: 'B' },
-                    ],
+                    [{ name: 'nameA', ordinal: '1' }, { name: 'nameB', ordinal: 'B' }],
                     'and'
                 )
             ).toEqualJSX(
@@ -250,11 +245,7 @@ describe('OverlapUtils', () => {
         it('one region, 1/1 group in it', () => {
             for (const group of groups) {
                 assert.deepEqual(
-                    getStudiesAttrForSampleOverlapGroup(
-                        groups,
-                        [[group.uid]],
-                        [group.uid]
-                    ),
+                    getStudiesAttrForSampleOverlapGroup(groups, [[group.uid]], [group.uid]),
                     group.studies,
                     group.uid
                 );
@@ -438,38 +429,18 @@ describe('OverlapUtils', () => {
         ];
         let patientToSamplesSet: ComplexKeyGroupsMap<Pick<Sample, 'sampleId'>>;
         before(() => {
-            patientToSamplesSet = new ComplexKeyGroupsMap<
-                Pick<Sample, 'sampleId'>
-            >();
+            patientToSamplesSet = new ComplexKeyGroupsMap<Pick<Sample, 'sampleId'>>();
             for (const studyId of ['study1', 'study2', 'study3', 'study4']) {
                 for (const patientId of ['1', '2', '3', '4', '5', '6']) {
                     if (patientId === '1') {
-                        patientToSamplesSet.add(
-                            { patientId, studyId },
-                            { sampleId: '1.1' }
-                        );
-                        patientToSamplesSet.add(
-                            { patientId, studyId },
-                            { sampleId: '1.2' }
-                        );
-                        patientToSamplesSet.add(
-                            { patientId, studyId },
-                            { sampleId: '1.3' }
-                        );
+                        patientToSamplesSet.add({ patientId, studyId }, { sampleId: '1.1' });
+                        patientToSamplesSet.add({ patientId, studyId }, { sampleId: '1.2' });
+                        patientToSamplesSet.add({ patientId, studyId }, { sampleId: '1.3' });
                     } else if (patientId === '2') {
-                        patientToSamplesSet.add(
-                            { patientId, studyId },
-                            { sampleId: '2.1' }
-                        );
-                        patientToSamplesSet.add(
-                            { patientId, studyId },
-                            { sampleId: '2.2' }
-                        );
+                        patientToSamplesSet.add({ patientId, studyId }, { sampleId: '2.1' });
+                        patientToSamplesSet.add({ patientId, studyId }, { sampleId: '2.2' });
                     } else {
-                        patientToSamplesSet.add(
-                            { patientId, studyId },
-                            { sampleId: patientId }
-                        );
+                        patientToSamplesSet.add({ patientId, studyId }, { sampleId: patientId });
                     }
                 }
             }
@@ -562,12 +533,7 @@ describe('OverlapUtils', () => {
                         [groups[0].uid, groups[5].uid],
                         [groups[1].uid],
                     ],
-                    [
-                        groups[0].uid,
-                        groups[1].uid,
-                        groups[3].uid,
-                        groups[5].uid,
-                    ],
+                    [groups[0].uid, groups[1].uid, groups[3].uid, groups[5].uid],
                     patientToSamplesSet
                 ),
                 [

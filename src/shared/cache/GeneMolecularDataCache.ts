@@ -1,8 +1,5 @@
 import LazyMobXCache, { AugmentedData } from '../lib/LazyMobXCache';
-import {
-    NumericGeneMolecularData,
-    MolecularDataFilter,
-} from '../api/generated/CBioPortalAPI';
+import { NumericGeneMolecularData, MolecularDataFilter } from '../api/generated/CBioPortalAPI';
 import client from 'shared/api/cbioportalClientInstance';
 import _ from 'lodash';
 import { IDataQueryFilter } from '../lib/StoreUtils';
@@ -30,20 +27,15 @@ async function fetch(
         _.groupBy(queries, q => q.molecularProfileId),
         profileQueries => profileQueries.map(q => q.entrezGeneId)
     );
-    const params = Object.keys(molecularProfileIdToEntrezGeneIds).map(
-        molecularProfileId => ({
-            molecularProfileId,
-            molecularDataFilter: {
-                entrezGeneIds:
-                    molecularProfileIdToEntrezGeneIds[molecularProfileId],
-                ...molecularProfileIdToSampleFilter[molecularProfileId],
-            } as MolecularDataFilter,
-        })
-    );
+    const params = Object.keys(molecularProfileIdToEntrezGeneIds).map(molecularProfileId => ({
+        molecularProfileId,
+        molecularDataFilter: {
+            entrezGeneIds: molecularProfileIdToEntrezGeneIds[molecularProfileId],
+            ...molecularProfileIdToSampleFilter[molecularProfileId],
+        } as MolecularDataFilter,
+    }));
     const results: NumericGeneMolecularData[][] = await Promise.all(
-        params.map(param =>
-            client.fetchAllMolecularDataInMolecularProfileUsingPOST(param)
-        )
+        params.map(param => client.fetchAllMolecularDataInMolecularProfileUsingPOST(param))
     );
     const ret: {
         [key: string]: AugmentedData<NumericGeneMolecularData[], Query>;

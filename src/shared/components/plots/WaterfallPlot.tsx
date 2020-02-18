@@ -48,9 +48,7 @@ export interface IWaterfallPlotProps<D extends IBaseWaterfallPlotData> {
     chartWidth: number;
     chartHeight: number;
     highlight?: (d: D) => boolean;
-    size?:
-        | number
-        | ((d: D, active: boolean, isHighlighted?: boolean) => number);
+    size?: number | ((d: D, active: boolean, isHighlighted?: boolean) => number);
     fill?: string | ((d: D) => string);
     stroke?: string | ((d: D) => string);
     fillOpacity?: number | ((d: D) => number);
@@ -91,9 +89,10 @@ const limitValueAppearanceSupplement = {
 };
 
 @observer
-export default class WaterfallPlot<
-    D extends IBaseWaterfallPlotData
-> extends React.Component<IWaterfallPlotProps<D>, {}> {
+export default class WaterfallPlot<D extends IBaseWaterfallPlotData> extends React.Component<
+    IWaterfallPlotProps<D>,
+    {}
+> {
     @observable.ref tooltipModel: any | null = null;
     @observable pointHovered: boolean = false;
 
@@ -120,10 +119,7 @@ export default class WaterfallPlot<
                                 target: 'data',
                                 mutation: (props: any) => {
                                     // swap x and y label pos when in horizontal mode
-                                    if (
-                                        this.props.horizontal &&
-                                        !props.datum.searchLabel
-                                    ) {
+                                    if (this.props.horizontal && !props.datum.searchLabel) {
                                         const x = props.x;
                                         // to position the tooltip more correctly
                                         props.x = props.y + TOOLTIP_OFFSET_X;
@@ -203,12 +199,7 @@ export default class WaterfallPlot<
             const maxDimension = this.props.horizontal
                 ? this.props.chartWidth
                 : this.props.chartHeight;
-            return textTruncationUtils(
-                this.props.axisLabel,
-                maxDimension,
-                this.fontFamily,
-                '13px'
-            );
+            return textTruncationUtils(this.props.axisLabel, maxDimension, this.fontFamily, '13px');
         }
         return '';
     }
@@ -222,9 +213,7 @@ export default class WaterfallPlot<
         if (!this.props.legendData) {
             return 0;
         } else {
-            const numRows = Math.ceil(
-                this.props.legendData.length / LEGEND_ITEMS_PER_ROW
-            );
+            const numRows = Math.ceil(this.props.legendData.length / LEGEND_ITEMS_PER_ROW);
             return 23.7 * numRows;
         }
     }
@@ -247,16 +236,8 @@ export default class WaterfallPlot<
             }
             return (
                 <VictoryLegend
-                    orientation={
-                        this.legendLocation === 'right'
-                            ? 'vertical'
-                            : 'horizontal'
-                    }
-                    itemsPerRow={
-                        this.legendLocation === 'right'
-                            ? undefined
-                            : LEGEND_ITEMS_PER_ROW
-                    }
+                    orientation={this.legendLocation === 'right' ? 'vertical' : 'horizontal'}
+                    itemsPerRow={this.legendLocation === 'right' ? undefined : LEGEND_ITEMS_PER_ROW}
                     rowGutter={this.legendLocation === 'right' ? undefined : -5}
                     data={legendData}
                     x={this.legendLocation === 'right' ? this.legendX : 50}
@@ -367,11 +348,7 @@ export default class WaterfallPlot<
         return makePlotSizeFunction(highlight, size);
     }
 
-    private tickFormat(
-        t: number,
-        ticks: number[],
-        logScaleFunc: IAxisLogScaleParams | undefined
-    ) {
+    private tickFormat(t: number, ticks: number[], logScaleFunc: IAxisLogScaleParams | undefined) {
         if (logScaleFunc && !this.props.useLogSpaceTicks) {
             t = logScaleFunc.fInvLogScale(t);
             ticks = ticks.map(x => logScaleFunc.fInvLogScale(x));
@@ -410,10 +387,7 @@ export default class WaterfallPlot<
             dataPoints = _.reverse(dataPoints);
         }
         // assign a x value (equivalent to position in array)
-        _.each(
-            dataPoints,
-            (d: IBaseWaterfallPlotData, index: number) => (d.order = index + 1)
-        );
+        _.each(dataPoints, (d: IBaseWaterfallPlotData, index: number) => (d.order = index + 1));
         const offset = this.props.pivotThreshold || 0;
 
         // for log transformation one should handle negative numbers
@@ -425,12 +399,8 @@ export default class WaterfallPlot<
 
         // add offset to data points and log-transform when applicable
         _.each(dataPoints, (d: IBaseWaterfallPlotData) => {
-            d.offset = logTransFormFunc
-                ? logTransFormFunc.fLogScale(offset, logOffset)
-                : offset;
-            d.value = logTransFormFunc
-                ? logTransFormFunc.fLogScale(d.value, logOffset)
-                : d.value;
+            d.offset = logTransFormFunc ? logTransFormFunc.fLogScale(offset, logOffset) : offset;
+            d.value = logTransFormFunc ? logTransFormFunc.fLogScale(d.value, logOffset) : d.value;
         });
 
         return dataPoints;
@@ -442,35 +412,17 @@ export default class WaterfallPlot<
         // add style information to each point
         _.each(dataPoints, (d: IBaseWaterfallPlotData) => {
             d.fill = this.resolveStyleOptionType<string>(d, this.props.fill);
-            d.fillOpacity = this.resolveStyleOptionType<number>(
-                d,
-                this.props.fillOpacity
-            );
-            d.stroke = this.resolveStyleOptionType<string>(
-                d,
-                this.props.stroke
-            );
-            d.strokeOpacity = this.resolveStyleOptionType<number>(
-                d,
-                this.props.strokeOpacity
-            );
-            d.strokeWidth = this.resolveStyleOptionType<number>(
-                d,
-                this.props.strokeWidth
-            );
-            d.symbol = this.resolveStyleOptionType<string>(
-                d,
-                this.props.symbol
-            );
+            d.fillOpacity = this.resolveStyleOptionType<number>(d, this.props.fillOpacity);
+            d.stroke = this.resolveStyleOptionType<string>(d, this.props.stroke);
+            d.strokeOpacity = this.resolveStyleOptionType<number>(d, this.props.strokeOpacity);
+            d.strokeWidth = this.resolveStyleOptionType<number>(d, this.props.strokeWidth);
+            d.symbol = this.resolveStyleOptionType<string>(d, this.props.symbol);
         });
 
         return dataPoints;
     }
 
-    resolveStyleOptionType<T>(
-        datum: IBaseWaterfallPlotData,
-        styleOption: any
-    ): T {
+    resolveStyleOptionType<T>(datum: IBaseWaterfallPlotData, styleOption: any): T {
         if (typeof styleOption === 'function') {
             return styleOption(datum);
         }
@@ -486,9 +438,7 @@ export default class WaterfallPlot<
 
         const limitLabels = _.cloneDeep(dataPoints);
 
-        const range = this.props.horizontal
-            ? this.plotDomainX
-            : this.plotDomainY;
+        const range = this.props.horizontal ? this.plotDomainX : this.plotDomainY;
         const min_value = range[0];
         const max_value = range[1];
         const pivotThreshold = this.props.pivotThreshold || 0;
@@ -517,17 +467,13 @@ export default class WaterfallPlot<
             return [];
         }
 
-        const dataPoints = _.filter(this.waterfallPlotData, (d: any) =>
-            this.props.highlight!(d)
-        );
+        const dataPoints = _.filter(this.waterfallPlotData, (d: any) => this.props.highlight!(d));
 
         const searchLabels = _.cloneDeep(dataPoints);
         // add marker field to search label
         _.each(searchLabels, o => (o.searchLabel = true));
 
-        const range = this.props.horizontal
-            ? this.plotDomainX
-            : this.plotDomainY;
+        const range = this.props.horizontal ? this.plotDomainX : this.plotDomainY;
         const min_value = range[0];
         const max_value = range[1];
 
@@ -565,10 +511,7 @@ export default class WaterfallPlot<
     @bind
     private getChart() {
         return (
-            <div
-                ref={this.containerRef}
-                style={{ width: this.svgWidth, height: this.svgHeight }}
-            >
+            <div ref={this.containerRef} style={{ width: this.svgWidth, height: this.svgHeight }}>
                 <svg
                     id={this.props.svgId || ''}
                     style={{
@@ -603,9 +546,7 @@ export default class WaterfallPlot<
                                     crossAxis={false}
                                     tickCount={NUM_AXIS_TICKS}
                                     tickFormat={this.tickFormatX}
-                                    axisLabelComponent={
-                                        <VictoryLabel dy={-20} />
-                                    }
+                                    axisLabelComponent={<VictoryLabel dy={-20} />}
                                     label={this.axisLabel}
                                 />
                             )}
@@ -630,9 +571,7 @@ export default class WaterfallPlot<
                                     tickCount={NUM_AXIS_TICKS}
                                     tickFormat={this.tickFormatY}
                                     dependentAxis={true}
-                                    axisLabelComponent={
-                                        <VictoryLabel dy={-35} />
-                                    }
+                                    axisLabelComponent={<VictoryLabel dy={-35} />}
                                     label={this.axisLabel}
                                 />
                             )}
@@ -643,8 +582,7 @@ export default class WaterfallPlot<
                                         fill: (d: D) => d.fill,
                                         stroke: (d: D) => d.stroke,
                                         strokeWidth: (d: D) => d.strokeWidth,
-                                        strokeOpacity: (d: D) =>
-                                            d.strokeOpacity,
+                                        strokeOpacity: (d: D) => d.strokeOpacity,
                                         fillOpacity: (d: D) => d.fillOpacity,
                                     },
                                 }}
@@ -659,14 +597,10 @@ export default class WaterfallPlot<
                             <VictoryScatter
                                 style={{
                                     data: {
-                                        fill:
-                                            limitValueAppearanceSupplement.fill,
-                                        stroke:
-                                            limitValueAppearanceSupplement.stroke,
-                                        strokeWidth:
-                                            limitValueAppearanceSupplement.strokeWidth,
-                                        strokeOpacity:
-                                            limitValueAppearanceSupplement.strokeOpacity,
+                                        fill: limitValueAppearanceSupplement.fill,
+                                        stroke: limitValueAppearanceSupplement.stroke,
+                                        strokeWidth: limitValueAppearanceSupplement.strokeWidth,
+                                        strokeOpacity: limitValueAppearanceSupplement.strokeOpacity,
                                     },
                                 }}
                                 symbol={limitValueAppearance.symbol}
@@ -678,10 +612,8 @@ export default class WaterfallPlot<
                             <VictoryScatter
                                 style={{
                                     data: {
-                                        fill:
-                                            waterfallSearchIndicatorAppearance.fill,
-                                        stroke:
-                                            waterfallSearchIndicatorAppearance.stroke,
+                                        fill: waterfallSearchIndicatorAppearance.fill,
+                                        stroke: waterfallSearchIndicatorAppearance.stroke,
                                         strokeWidth:
                                             waterfallSearchIndicatorAppearance.strokeWidth *
                                             SEARCH_LABEL_SIZE_MULTIPLIER,
@@ -689,9 +621,7 @@ export default class WaterfallPlot<
                                             waterfallSearchIndicatorAppearance.strokeOpacity,
                                     },
                                 }}
-                                symbol={
-                                    waterfallSearchIndicatorAppearance.symbol
-                                }
+                                symbol={waterfallSearchIndicatorAppearance.symbol}
                                 size={
                                     waterfallSearchIndicatorAppearance.size *
                                     SEARCH_LABEL_SIZE_MULTIPLIER

@@ -16,10 +16,7 @@ import {
 export type DropdownSelectorProps = {
     name?: string;
     placeholder?: string;
-    onSelect?: (
-        selectedOptionIds: string[],
-        allValuesSelected?: boolean
-    ) => void;
+    onSelect?: (selectedOptionIds: string[], allValuesSelected?: boolean) => void;
     showControls?: boolean;
     showNumberOfSelectedValues?: boolean;
     selectionIndicatorClassNames?: {
@@ -32,10 +29,7 @@ export type DropdownSelectorProps = {
 };
 
 @observer
-export class DropdownSelector extends React.Component<
-    DropdownSelectorProps,
-    {}
-> {
+export class DropdownSelector extends React.Component<DropdownSelectorProps, {}> {
     public static defaultProps: Partial<DropdownSelectorProps> = {
         showNumberOfSelectedValues: true,
         selectionIndicatorClassNames: {
@@ -65,8 +59,7 @@ export class DropdownSelector extends React.Component<
 
     @computed
     public get selectionIndicatorClassNames() {
-        const allValuesSelected =
-            this.allValues.length === this.selectedValues.length;
+        const allValuesSelected = this.allValues.length === this.selectedValues.length;
         const classes = this.props.selectionIndicatorClassNames!;
 
         return classNames(classes.base, {

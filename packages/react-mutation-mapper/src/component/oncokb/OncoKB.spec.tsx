@@ -61,25 +61,14 @@ function initQueryIndicator(props: { [key: string]: any }): IndicatorQueryResp {
     return _.merge(emptyQueryIndicator(), props);
 }
 
-function oncoKbAnnotationSortMethod(
-    a: IndicatorQueryResp,
-    b: IndicatorQueryResp
-) {
-    return defaultArraySortMethod(
-        oncoKbAnnotationSortValue(a),
-        oncoKbAnnotationSortValue(b)
-    );
+function oncoKbAnnotationSortMethod(a: IndicatorQueryResp, b: IndicatorQueryResp) {
+    return defaultArraySortMethod(oncoKbAnnotationSortValue(a), oncoKbAnnotationSortValue(b));
 }
 
 describe('OncoKB', () => {
     it('displays a load spinner when there is no indicator data', () => {
         const component = render(
-            <OncoKB
-                status="pending"
-                isCancerGene={false}
-                geneNotExist={false}
-                hugoGeneSymbol=""
-            />
+            <OncoKB status="pending" isCancerGene={false} geneNotExist={false} hugoGeneSymbol="" />
         );
 
         const loader = component.container.getElementsByClassName('fa-spinner');

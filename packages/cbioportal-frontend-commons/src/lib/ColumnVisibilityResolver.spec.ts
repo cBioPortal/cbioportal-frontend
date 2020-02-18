@@ -7,9 +7,7 @@ import {
     toggleColumnVisibility,
 } from './ColumnVisibilityResolver';
 
-function getVisibleColumnIds(columnVisibility: {
-    [columnId: string]: boolean;
-}): string[] {
+function getVisibleColumnIds(columnVisibility: { [columnId: string]: boolean }): string[] {
     return _.keys(columnVisibility)
         .filter(id => columnVisibility[id] === true)
         .sort();
@@ -72,9 +70,7 @@ describe('ColumnVisibilityResolver', () => {
                 '5th': true,
             };
 
-            const colVisByColumnDefinition = resolveColumnVisibilityByColumnDefinition(
-                columns
-            );
+            const colVisByColumnDefinition = resolveColumnVisibilityByColumnDefinition(columns);
 
             const colVis = resolveColumnVisibility(
                 colVisByColumnDefinition,
@@ -98,9 +94,7 @@ describe('ColumnVisibilityResolver', () => {
                 '5th': true,
             };
 
-            const colVisByColumnDefinition = resolveColumnVisibilityByColumnDefinition(
-                columns
-            );
+            const colVisByColumnDefinition = resolveColumnVisibilityByColumnDefinition(columns);
 
             const colVis = resolveColumnVisibility(
                 colVisByColumnDefinition,
@@ -130,9 +124,7 @@ describe('ColumnVisibilityResolver', () => {
                 visible: true,
             });
 
-            const colVisByColumnDefinition = resolveColumnVisibilityByColumnDefinition(
-                columns
-            );
+            const colVisByColumnDefinition = resolveColumnVisibilityByColumnDefinition(columns);
 
             const colVis = resolveColumnVisibility(
                 colVisByColumnDefinition,
@@ -179,11 +171,7 @@ describe('ColumnVisibilityResolver', () => {
             ];
 
             // init with column visibility def
-            let colVis = toggleColumnVisibility(
-                undefined,
-                '5th',
-                columnVisibilityDef
-            );
+            let colVis = toggleColumnVisibility(undefined, '5th', columnVisibilityDef);
 
             assert.deepEqual(
                 getVisibleColumnIds(colVis),
@@ -203,20 +191,12 @@ describe('ColumnVisibilityResolver', () => {
             // toggle 3rd column
             colVis = toggleColumnVisibility(colVis, '3rd');
 
-            assert.deepEqual(
-                getVisibleColumnIds(colVis),
-                ['5th'],
-                'only 5th visible'
-            );
+            assert.deepEqual(getVisibleColumnIds(colVis), ['5th'], 'only 5th visible');
 
             // toggle 1st column
             colVis = toggleColumnVisibility(colVis, '1st');
 
-            assert.deepEqual(
-                getVisibleColumnIds(colVis),
-                ['1st', '5th'],
-                '1st and 5th visible'
-            );
+            assert.deepEqual(getVisibleColumnIds(colVis), ['1st', '5th'], '1st and 5th visible');
 
             // toggle 1st and 5th columns
             colVis = toggleColumnVisibility(colVis, '1st');
@@ -228,11 +208,7 @@ describe('ColumnVisibilityResolver', () => {
             colVis = toggleColumnVisibility(colVis, '2nd');
             colVis = toggleColumnVisibility(colVis, '3rd');
 
-            assert.deepEqual(
-                getVisibleColumnIds(colVis),
-                ['2nd', '3rd'],
-                '2nd and 3rd visible'
-            );
+            assert.deepEqual(getVisibleColumnIds(colVis), ['2nd', '3rd'], '2nd and 3rd visible');
         });
     });
 });

@@ -53,8 +53,7 @@ export default class GeneSummary extends React.Component<GeneSummaryProps, {}> {
         } = this.props;
 
         const canonicalTranscriptId =
-            canonicalTranscript.result &&
-            canonicalTranscript.result.transcriptId;
+            canonicalTranscript.result && canonicalTranscript.result.transcriptId;
         const transcript =
             activeTranscript && activeTranscript === canonicalTranscriptId
                 ? (canonicalTranscript.result as EnsemblTranscript)
@@ -67,9 +66,7 @@ export default class GeneSummary extends React.Component<GeneSummaryProps, {}> {
                 <h4 className={styles.hugoSymbol}>{hugoGeneSymbol}</h4>
                 <TranscriptDropdown
                     showDropDown={showDropDown}
-                    showOnlyAnnotatedTranscriptsInDropdown={
-                        showOnlyAnnotatedTranscriptsInDropdown
-                    }
+                    showOnlyAnnotatedTranscriptsInDropdown={showOnlyAnnotatedTranscriptsInDropdown}
                     activeTranscript={activeTranscript}
                     transcriptsByTranscriptId={transcriptsByTranscriptId}
                     canonicalTranscript={canonicalTranscript}
@@ -84,10 +81,7 @@ export default class GeneSummary extends React.Component<GeneSummaryProps, {}> {
                     <span data-test="GeneSummaryRefSeq">
                         {'RefSeq: '}
                         {refseqMrnaId ? (
-                            <a
-                                href={getNCBIlink(`/nuccore/${refseqMrnaId}`)}
-                                target="_blank"
-                            >
+                            <a href={getNCBIlink(`/nuccore/${refseqMrnaId}`)} target="_blank">
                                 {refseqMrnaId}
                             </a>
                         ) : (
@@ -100,10 +94,9 @@ export default class GeneSummary extends React.Component<GeneSummaryProps, {}> {
                           <div>
                               <span>Ensembl: </span>
                               <a
-                                  href={getUrl(
-                                      this.props.transcriptSummaryUrlTemplate!,
-                                      { transcriptId: activeTranscript }
-                                  )}
+                                  href={getUrl(this.props.transcriptSummaryUrlTemplate!, {
+                                      transcriptId: activeTranscript,
+                                  })}
                                   target="_blank"
                               >
                                   {activeTranscript}
@@ -115,10 +108,9 @@ export default class GeneSummary extends React.Component<GeneSummaryProps, {}> {
                           <div>
                               <span>Ensembl: </span>
                               <a
-                                  href={getUrl(
-                                      this.props.transcriptSummaryUrlTemplate!,
-                                      { transcriptId: canonicalTranscriptId }
-                                  )}
+                                  href={getUrl(this.props.transcriptSummaryUrlTemplate!, {
+                                      transcriptId: canonicalTranscriptId,
+                                  })}
                                   target="_blank"
                               >
                                   {canonicalTranscriptId}
@@ -150,10 +142,7 @@ export default class GeneSummary extends React.Component<GeneSummaryProps, {}> {
                     <span data-test="GeneSummaryUniProt">
                         {'UniProt: '}
                         {uniprotId ? (
-                            <a
-                                href={`http://www.uniprot.org/uniprot/${uniprotId}`}
-                                target="_blank"
-                            >
+                            <a href={`http://www.uniprot.org/uniprot/${uniprotId}`} target="_blank">
                                 {uniprotId}
                             </a>
                         ) : (

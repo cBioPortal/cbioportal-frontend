@@ -18,14 +18,9 @@ export interface IProteinEnrichmentsProps {
 }
 
 @observer
-export default class ProteinEnrichments extends React.Component<
-    IProteinEnrichmentsProps,
-    {}
-> {
+export default class ProteinEnrichments extends React.Component<IProteinEnrichmentsProps, {}> {
     @autobind
-    private onChangeProfile(profileMap: {
-        [studyId: string]: MolecularProfile;
-    }) {
+    private onChangeProfile(profileMap: { [studyId: string]: MolecularProfile }) {
         this.props.store.setProteinEnrichmentProfileMap(profileMap);
     }
 
@@ -33,15 +28,12 @@ export default class ProteinEnrichments extends React.Component<
         await: () => [this.props.store.enrichmentAnalysisGroups],
         invoke: () => {
             return Promise.resolve(
-                _.map(
-                    this.props.store.enrichmentAnalysisGroups.result,
-                    group => {
-                        return {
-                            ...group,
-                            description: `samples in ${group.name}`,
-                        };
-                    }
-                )
+                _.map(this.props.store.enrichmentAnalysisGroups.result, group => {
+                    return {
+                        ...group,
+                        description: `samples in ${group.name}`,
+                    };
+                })
             );
         },
     });
@@ -68,16 +60,16 @@ export default class ProteinEnrichments extends React.Component<
             const studyIds = Object.keys(
                 this.props.store.selectedProteinEnrichmentProfileMap.result!
             );
-            const selectedProfile = this.props.store
-                .selectedProteinEnrichmentProfileMap.result![studyIds[0]];
+            const selectedProfile = this.props.store.selectedProteinEnrichmentProfileMap.result![
+                studyIds[0]
+            ];
             return (
                 <div data-test="GroupComparisonProteinEnrichments">
                     <EnrichmentsDataSetDropdown
                         dataSets={this.props.store.proteinEnrichmentProfiles}
                         onChange={this.onChangeProfile}
                         selectedProfileByStudyId={
-                            this.props.store.selectedProteinEnrichmentProfileMap
-                                .result!
+                            this.props.store.selectedProteinEnrichmentProfileMap.result!
                         }
                         alwaysShow={true}
                         studies={this.props.store.studies.result!}
@@ -87,17 +79,13 @@ export default class ProteinEnrichments extends React.Component<
                         groups={this.proteinEnrichmentAnalysisGroups.result}
                         selectedProfile={selectedProfile}
                         alteredVsUnalteredMode={false}
-                        sampleKeyToSample={
-                            this.props.store.sampleKeyToSample.result!
-                        }
+                        sampleKeyToSample={this.props.store.sampleKeyToSample.result!}
                         isGeneCheckBoxEnabled={this.props.resultsViewMode}
                     />
                 </div>
             );
         },
-        renderPending: () => (
-            <Loader center={true} isLoading={true} size={'big'} />
-        ),
+        renderPending: () => <Loader center={true} isLoading={true} size={'big'} />,
         renderError: () => <ErrorMessage />,
     });
 

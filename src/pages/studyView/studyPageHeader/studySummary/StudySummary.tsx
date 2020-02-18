@@ -21,17 +21,12 @@ interface IStudySummaryProps {
 }
 
 @observer
-export default class StudySummary extends React.Component<
-    IStudySummaryProps,
-    {}
-> {
+export default class StudySummary extends React.Component<IStudySummaryProps, {}> {
     @observable private showMoreDescription = false;
 
     @computed
     get name() {
-        return this.props.studies.length === 1
-            ? this.props.studies[0].name
-            : 'Combined Study';
+        return this.props.studies.length === 1 ? this.props.studies[0].name : 'Combined Study';
     }
 
     @computed
@@ -40,9 +35,7 @@ export default class StudySummary extends React.Component<
             let elems = [
                 <span
                     dangerouslySetInnerHTML={{
-                        __html: this.props.studies[0].description.split(
-                            /\n+/g
-                        )[0],
+                        __html: this.props.studies[0].description.split(/\n+/g)[0],
                     }}
                 />,
             ];
@@ -50,9 +43,7 @@ export default class StudySummary extends React.Component<
                 elems.push(
                     <a
                         target="_blank"
-                        href={getNCBIlink(
-                            `/pubmed/${this.props.studies[0].pmid}`
-                        )}
+                        href={getNCBIlink(`/pubmed/${this.props.studies[0].pmid}`)}
                         style={{ marginLeft: '5px' }}
                     >
                         PubMed
@@ -95,10 +86,7 @@ export default class StudySummary extends React.Component<
             return _.map(this.props.studies, study => {
                 return (
                     <li>
-                        <a
-                            href={getStudySummaryUrl(study.studyId)}
-                            target="_blank"
-                        >
+                        <a href={getStudySummaryUrl(study.studyId)} target="_blank">
                             {study.name}
                         </a>
                     </li>
@@ -124,10 +112,7 @@ export default class StudySummary extends React.Component<
                             trigger={['hover']}
                             placement={'top'}
                             overlay={
-                                <span>
-                                    Download all clinical and genomic data of
-                                    this study
-                                </span>
+                                <span>Download all clinical and genomic data of this study</span>
                             }
                         >
                             <span
@@ -135,15 +120,11 @@ export default class StudySummary extends React.Component<
                                 data-event={serializeEvent({
                                     category: 'studyPage',
                                     action: 'dataDownload',
-                                    label: this.props.studies
-                                        .map(s => s.studyId)
-                                        .join(','),
+                                    label: this.props.studies.map(s => s.studyId).join(','),
                                 })}
                                 style={{ marginLeft: '10px', fontSize: '14px' }}
                             >
-                                <StudyDataDownloadLink
-                                    studyId={this.props.studies[0].studyId}
-                                />
+                                <StudyDataDownloadLink studyId={this.props.studies[0].studyId} />
                             </span>
                         </DefaultTooltip>
                     )}
@@ -157,8 +138,7 @@ export default class StudySummary extends React.Component<
                                     this.showMoreDescription ? 'minus' : 'plus'
                                 }-circle`}
                                 onClick={() =>
-                                    (this.showMoreDescription = !this
-                                        .showMoreDescription)
+                                    (this.showMoreDescription = !this.showMoreDescription)
                                 }
                                 style={{ marginLeft: '5px', cursor: 'pointer' }}
                             />
@@ -167,15 +147,11 @@ export default class StudySummary extends React.Component<
 
                     {this.showMoreDescription && (
                         <div>
-                            <ul className={styles.studyLinks}>
-                                {this.descriptionRemainingLines}
-                            </ul>
-                            {this.props
-                                .showOriginStudiesInSummaryDescription && (
+                            <ul className={styles.studyLinks}>{this.descriptionRemainingLines}</ul>
+                            {this.props.showOriginStudiesInSummaryDescription && (
                                 <div>
                                     {this.props.originStudies.isComplete &&
-                                        this.props.originStudies.result!
-                                            .length > 0 && (
+                                        this.props.originStudies.result!.length > 0 && (
                                             <span>
                                                 <span
                                                     style={{
@@ -184,22 +160,15 @@ export default class StudySummary extends React.Component<
                                                         display: 'block',
                                                     }}
                                                 >
-                                                    This virtual study was
-                                                    derived from:
+                                                    This virtual study was derived from:
                                                 </span>
-                                                {this.props.originStudies.result!.map(
-                                                    study => (
-                                                        <StudySummaryRecord
-                                                            {...study}
-                                                        />
-                                                    )
-                                                )}
+                                                {this.props.originStudies.result!.map(study => (
+                                                    <StudySummaryRecord {...study} />
+                                                ))}
                                             </span>
                                         )}
                                     <LoadingIndicator
-                                        isLoading={
-                                            this.props.originStudies.isPending
-                                        }
+                                        isLoading={this.props.originStudies.isPending}
                                         center={true}
                                         size={'big'}
                                     />

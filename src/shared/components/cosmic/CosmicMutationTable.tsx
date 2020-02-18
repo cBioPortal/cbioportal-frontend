@@ -1,10 +1,7 @@
 import * as React from 'react';
 import { calcProteinChangeSortValue } from 'cbioportal-frontend-commons';
 import { CosmicMutation } from 'shared/api/generated/CBioPortalAPIInternal';
-import {
-    Column,
-    default as LazyMobXTable,
-} from '../lazyMobXTable/LazyMobXTable';
+import { Column, default as LazyMobXTable } from '../lazyMobXTable/LazyMobXTable';
 
 // TODO interface ICosmicTableProps extends IMSKTableProps<CosmicMutation>
 // To avoid duplication, it would be nice here to have an extendable interface for LazyMobXTableProps
@@ -22,10 +19,7 @@ class CosmicTable extends LazyMobXTable<CosmicMutation> {}
 /**
  * @author Selcuk Onur Sumer
  */
-export default class CosmicMutationTable extends React.Component<
-    ICosmicTableProps,
-    {}
-> {
+export default class CosmicMutationTable extends React.Component<ICosmicTableProps, {}> {
     public static defaultProps = {
         data: [],
         columns: [
@@ -48,8 +42,7 @@ export default class CosmicMutationTable extends React.Component<
                 name: 'Protein Change',
                 order: 2.0,
                 render: (d: CosmicMutation) => <span>{d.proteinChange}</span>,
-                sortBy: (d: CosmicMutation) =>
-                    calcProteinChangeSortValue(d.proteinChange),
+                sortBy: (d: CosmicMutation) => calcProteinChangeSortValue(d.proteinChange),
             },
             {
                 name: 'Occurrence',
@@ -86,9 +79,7 @@ export default class CosmicMutationTable extends React.Component<
             <div className="cbioportal-frontend">
                 <CosmicTable
                     data={data}
-                    columns={
-                        columns || CosmicMutationTable.defaultProps.columns
-                    }
+                    columns={columns || CosmicMutationTable.defaultProps.columns}
                     initialSortColumn={initialSortColumn}
                     initialSortDirection={initialSortDirection}
                     initialItemsPerPage={initialItemsPerPage}

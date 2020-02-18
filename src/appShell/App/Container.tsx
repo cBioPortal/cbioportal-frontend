@@ -12,11 +12,7 @@ import Helmet from 'react-helmet';
 import { computed } from 'mobx';
 import { If, Else, Then } from 'react-if';
 import UserMessager from 'shared/components/userMessager/UserMessage';
-import {
-    formatErrorLog,
-    formatErrorTitle,
-    formatErrorMessages,
-} from 'shared/lib/errorFormatter';
+import { formatErrorLog, formatErrorTitle, formatErrorMessages } from 'shared/lib/errorFormatter';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import ErrorScreen from 'shared/components/errorScreen/ErrorScreen';
 import { ServerConfigHelpers } from 'config/config';
@@ -52,9 +48,8 @@ export default class Container extends React.Component<IContainerProps, {}> {
                         title={'No session service configured'}
                         body={
                             <p>
-                                As of version 3.0.0, all cBioPortal
-                                installations require a session service. Please
-                                review these instructions for how to do so.{' '}
+                                As of version 3.0.0, all cBioPortal installations require a session
+                                service. Please review these instructions for how to do so.{' '}
                                 <a href="https://docs.cbioportal.org/2.1.2-deploy-without-docker/deploying#run-cbioportal-session-service">
                                     https://docs.cbioportal.org/2.1.2-deploy-without-docker/deploying#run-cbioportal-session-service
                                 </a>
@@ -70,10 +65,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
                 <Helmet>
                     <meta charSet="utf-8" />
                     <title>{AppConfig.serverConfig.skin_title}</title>
-                    <meta
-                        name="description"
-                        content={AppConfig.serverConfig.skin_description}
-                    />
+                    <meta name="description" content={AppConfig.serverConfig.skin_description} />
                 </Helmet>
 
                 <div className="pageTopContainer">
@@ -87,19 +79,11 @@ export default class Container extends React.Component<IContainerProps, {}> {
                         <div className="contentWrapper">
                             <ErrorScreen
                                 title={
-                                    formatErrorTitle(
-                                        this.appStore.undismissedSiteErrors
-                                    ) ||
+                                    formatErrorTitle(this.appStore.undismissedSiteErrors) ||
                                     'Oops. There was an error retrieving data.'
                                 }
-                                body={
-                                    <a href={buildCBioPortalPageUrl('/')}>
-                                        Return to homepage
-                                    </a>
-                                }
-                                errorLog={formatErrorLog(
-                                    this.appStore.undismissedSiteErrors
-                                )}
+                                body={<a href={buildCBioPortalPageUrl('/')}>Return to homepage</a>}
+                                errorLog={formatErrorLog(this.appStore.undismissedSiteErrors)}
                                 errorMessages={formatErrorMessages(
                                     this.appStore.undismissedSiteErrors
                                 )}
@@ -107,9 +91,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
                         </div>
                     </Then>
                     <Else>
-                        <div className="contentWrapper">
-                            {this.props.children}
-                        </div>
+                        <div className="contentWrapper">{this.props.children}</div>
                     </Else>
                 </If>
             </div>

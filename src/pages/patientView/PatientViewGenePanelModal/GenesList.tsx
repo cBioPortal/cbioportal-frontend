@@ -31,9 +31,7 @@ export default class GenesList extends React.Component<IGenesListProps, {}> {
         if (this.filter) {
             const regex = new RegExp(this.filter, 'i');
             return genes.filter(
-                gene =>
-                    regex.test(gene.entrezGeneId.toString()) ||
-                    regex.test(gene.hugoGeneSymbol)
+                gene => regex.test(gene.entrezGeneId.toString()) || regex.test(gene.hugoGeneSymbol)
             );
         }
         return genes;
@@ -44,10 +42,7 @@ export default class GenesList extends React.Component<IGenesListProps, {}> {
         let columnCount = this.columnCount;
         let remainingGenes = [...genes];
         while (columnCount > 0) {
-            const chunked = chunk(
-                remainingGenes,
-                Math.ceil(remainingGenes.length / columnCount)
-            );
+            const chunked = chunk(remainingGenes, Math.ceil(remainingGenes.length / columnCount));
             if (chunked.length === columnCount) {
                 result = result.concat(chunked);
                 break;
@@ -67,9 +62,7 @@ export default class GenesList extends React.Component<IGenesListProps, {}> {
         }
         const rows: JSX.Element[] = [];
         this.genesDividedToRows(filtered).forEach(row => {
-            const tdValues = row.map(gene => (
-                <td key={gene ? gene : Math.random()}>{gene}</td>
-            ));
+            const tdValues = row.map(gene => <td key={gene ? gene : Math.random()}>{gene}</td>);
             rows.push(<tr>{tdValues}</tr>);
         });
         return rows;
@@ -117,12 +110,8 @@ export default class GenesList extends React.Component<IGenesListProps, {}> {
     render() {
         return (
             <div id={this.props.id} className={styles.genesList}>
-                <h4 className={styles.panelName}>
-                    {this.props.genePanel.genePanelId}
-                </h4>
-                <span>
-                    Number of genes: {this.props.genePanel.genes.length}
-                </span>
+                <h4 className={styles.panelName}>{this.props.genePanel.genePanelId}</h4>
+                <span>Number of genes: {this.props.genePanel.genes.length}</span>
                 <div
                     className={classnames(
                         'pull-right has-feedback input-group-sm',
@@ -137,16 +126,10 @@ export default class GenesList extends React.Component<IGenesListProps, {}> {
                         }
                         className="form-control"
                     />
-                    <span
-                        className="fa fa-search form-control-feedback"
-                        aria-hidden="true"
-                    />
+                    <span className="fa fa-search form-control-feedback" aria-hidden="true" />
                 </div>
                 <SimpleCopyDownloadControls
-                    className={classnames(
-                        'pull-right',
-                        styles.copyDownloadControls
-                    )}
+                    className={classnames('pull-right', styles.copyDownloadControls)}
                     downloadData={this.getDownloadData}
                     downloadFilename={`gene_panel_${this.props.genePanel.genePanelId}.tsv`}
                     controlsStyle="BUTTON"

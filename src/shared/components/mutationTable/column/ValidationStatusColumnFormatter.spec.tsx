@@ -34,18 +34,10 @@ describe('MutationStatusColumnFormatter', () => {
     let otherComponent: ReactWrapper<any, any>;
 
     before(() => {
-        validComponent = mount(
-            ValidationStatusColumnFormatter.renderFunction(validData)
-        );
-        wildtypeComponent = mount(
-            ValidationStatusColumnFormatter.renderFunction(wildtypeData)
-        );
-        unknownComponent = mount(
-            ValidationStatusColumnFormatter.renderFunction(unknownData)
-        );
-        otherComponent = mount(
-            ValidationStatusColumnFormatter.renderFunction(otherData)
-        );
+        validComponent = mount(ValidationStatusColumnFormatter.renderFunction(validData));
+        wildtypeComponent = mount(ValidationStatusColumnFormatter.renderFunction(wildtypeData));
+        unknownComponent = mount(ValidationStatusColumnFormatter.renderFunction(unknownData));
+        otherComponent = mount(ValidationStatusColumnFormatter.renderFunction(otherData));
     });
 
     after(() => {});

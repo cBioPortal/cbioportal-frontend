@@ -15,27 +15,20 @@ export type ICustomBinsProps = {
 };
 
 @observer
-export default class CustomBinsModal extends React.Component<
-    ICustomBinsProps,
-    {}
-> {
+export default class CustomBinsModal extends React.Component<ICustomBinsProps, {}> {
     binSeparator: string = ',';
     @observable private currentBinsValue = '';
 
     constructor(props: Readonly<ICustomBinsProps>) {
         super(props);
         if (this.props.currentBins) {
-            this.currentBinsValue = _.sortBy(this.props.currentBins).join(
-                `${this.binSeparator} `
-            );
+            this.currentBinsValue = _.sortBy(this.props.currentBins).join(`${this.binSeparator} `);
         }
     }
 
     @autobind
     updateCurrentBinsValue() {
-        const newBins = _.sortBy(
-            this.newStringBins.map(item => Number(item.trim()))
-        );
+        const newBins = _.sortBy(this.newStringBins.map(item => Number(item.trim())));
         this.currentBinsValue = newBins.join(`${this.binSeparator} `);
         this.props.updateCustomBins(this.props.chartMeta.uniqueKey, newBins);
         this.props.onHide();
@@ -53,12 +46,7 @@ export default class CustomBinsModal extends React.Component<
 
     render() {
         return (
-            <Modal
-                bsSize={'small'}
-                show={this.props.show}
-                onHide={this.props.onHide}
-                keyboard
-            >
+            <Modal bsSize={'small'} show={this.props.show} onHide={this.props.onHide} keyboard>
                 <Modal.Header closeButton>
                     <Modal.Title>Custom Bins</Modal.Title>
                 </Modal.Header>
@@ -69,9 +57,7 @@ export default class CustomBinsModal extends React.Component<
                         rows={5}
                         value={this.currentBinsValue}
                         className="form-control input-sm"
-                        onChange={event =>
-                            (this.currentBinsValue = event.currentTarget.value)
-                        }
+                        onChange={event => (this.currentBinsValue = event.currentTarget.value)}
                     />
                     {!this.contentIsValid && (
                         <div

@@ -149,17 +149,13 @@ export function annotateMutationPutativeDriver(
             putativeDriver,
             isHotspot: putativeDriverInfo.hotspots,
             oncoKbOncogenic: putativeDriverInfo.oncoKb,
-            simplifiedMutationType: getSimplifiedMutationType(
-                mutation.mutationType
-            ),
+            simplifiedMutationType: getSimplifiedMutationType(mutation.mutationType),
         },
         mutation
     ) as AnnotatedMutation;
 }
 
-export type FilteredAndAnnotatedMutationsReport<
-    T extends AnnotatedMutation = AnnotatedMutation
-> = {
+export type FilteredAndAnnotatedMutationsReport<T extends AnnotatedMutation = AnnotatedMutation> = {
     data: T[];
     vus: T[];
     germline: T[];
@@ -189,8 +185,7 @@ export function filterAndAnnotateMutations(
             mutation,
             getPutativeDriverInfo(mutation)
         ); // annotate
-        annotatedMutation.hugoGeneSymbol =
-            entrezGeneIdToGene[mutation.entrezGeneId].hugoGeneSymbol;
+        annotatedMutation.hugoGeneSymbol = entrezGeneIdToGene[mutation.entrezGeneId].hugoGeneSymbol;
         const isGermline = !isNotGermlineMutation(mutation);
         const isVus = !annotatedMutation.putativeDriver;
         if (isGermline && isVus) {
@@ -211,9 +206,7 @@ export function filterAndAnnotateMutations(
     };
 }
 
-export function compileMutations<
-    T extends AnnotatedMutation = AnnotatedMutation
->(
+export function compileMutations<T extends AnnotatedMutation = AnnotatedMutation>(
     report: FilteredAndAnnotatedMutationsReport<T>,
     excludeVus: boolean,
     excludeGermline: boolean
@@ -231,18 +224,10 @@ export function compileMutations<
     return mutations;
 }
 
-export const ONCOKB_ONCOGENIC_LOWERCASE = [
-    'likely oncogenic',
-    'predicted oncogenic',
-    'oncogenic',
-];
+export const ONCOKB_ONCOGENIC_LOWERCASE = ['likely oncogenic', 'predicted oncogenic', 'oncogenic'];
 
 export function getOncoKbOncogenic(response: IndicatorQueryResp): string {
-    if (
-        ONCOKB_ONCOGENIC_LOWERCASE.indexOf(
-            (response.oncogenic || '').toLowerCase()
-        ) > -1
-    ) {
+    if (ONCOKB_ONCOGENIC_LOWERCASE.indexOf((response.oncogenic || '').toLowerCase()) > -1) {
         return response.oncogenic;
     } else {
         return '';
@@ -260,9 +245,7 @@ export function computeGenePanelInformation(
     const genePanelToGenes = _.mapValues(
         _.keyBy(genePanels, panel => panel.genePanelId),
         (panel: GenePanel) => {
-            return panel.genes.filter(
-                gene => !!entrezToGene[gene.entrezGeneId]
-            ); // only list genes that we're curious in
+            return panel.genes.filter(gene => !!entrezToGene[gene.entrezGeneId]); // only list genes that we're curious in
         }
     );
     const sampleInfo: CoverageInformation['samples'] = _.reduce(
@@ -305,18 +288,12 @@ export function computeGenePanelInformation(
                     // add gene panel data to record particular genes sequenced
                     for (const gene of genePanelToGenes[genePanelId]) {
                         sampleSequencingInfo.byGene[gene.hugoGeneSymbol] =
-                            sampleSequencingInfo.byGene[gene.hugoGeneSymbol] ||
-                            [];
-                        sampleSequencingInfo.byGene[gene.hugoGeneSymbol].push(
-                            gpData
-                        );
+                            sampleSequencingInfo.byGene[gene.hugoGeneSymbol] || [];
+                        sampleSequencingInfo.byGene[gene.hugoGeneSymbol].push(gpData);
 
                         patientSequencingInfo.byGene[gene.hugoGeneSymbol] =
-                            patientSequencingInfo.byGene[gene.hugoGeneSymbol] ||
-                            [];
-                        patientSequencingInfo.byGene[gene.hugoGeneSymbol].push(
-                            gpData
-                        );
+                            patientSequencingInfo.byGene[gene.hugoGeneSymbol] || [];
+                        patientSequencingInfo.byGene[gene.hugoGeneSymbol].push(gpData);
                     }
                     // Add to list for more processing later
                     genePanelDataWithGenePanelId.push(gpData);
@@ -338,26 +315,14 @@ export function computeGenePanelInformation(
 
         for (const queryGene of genes) {
             if (!sampleSequencingInfo.byGene[queryGene.hugoGeneSymbol]) {
-                sampleSequencingInfo.notProfiledByGene[
-                    queryGene.hugoGeneSymbol
-                ] =
-                    sampleSequencingInfo.notProfiledByGene[
-                        queryGene.hugoGeneSymbol
-                    ] || [];
-                sampleSequencingInfo.notProfiledByGene[
-                    queryGene.hugoGeneSymbol
-                ].push(gpData);
+                sampleSequencingInfo.notProfiledByGene[queryGene.hugoGeneSymbol] =
+                    sampleSequencingInfo.notProfiledByGene[queryGene.hugoGeneSymbol] || [];
+                sampleSequencingInfo.notProfiledByGene[queryGene.hugoGeneSymbol].push(gpData);
             }
             if (!patientSequencingInfo.byGene[queryGene.hugoGeneSymbol]) {
-                patientSequencingInfo.notProfiledByGene[
-                    queryGene.hugoGeneSymbol
-                ] =
-                    patientSequencingInfo.notProfiledByGene[
-                        queryGene.hugoGeneSymbol
-                    ] || [];
-                patientSequencingInfo.notProfiledByGene[
-                    queryGene.hugoGeneSymbol
-                ].push(gpData);
+                patientSequencingInfo.notProfiledByGene[queryGene.hugoGeneSymbol] =
+                    patientSequencingInfo.notProfiledByGene[queryGene.hugoGeneSymbol] || [];
+                patientSequencingInfo.notProfiledByGene[queryGene.hugoGeneSymbol].push(gpData);
             }
         }
     }
@@ -377,8 +342,7 @@ export function annotateMolecularDatum(
     },
     entrezGeneIdToGene: { [entrezGeneId: number]: Gene }
 ): AnnotatedNumericGeneMolecularData {
-    const hugoGeneSymbol =
-        entrezGeneIdToGene[molecularDatum.entrezGeneId].hugoGeneSymbol;
+    const hugoGeneSymbol = entrezGeneIdToGene[molecularDatum.entrezGeneId].hugoGeneSymbol;
     let oncogenic = '';
     if (
         molecularProfileIdToMolecularProfile[molecularDatum.molecularProfileId]
@@ -389,10 +353,7 @@ export function annotateMolecularDatum(
             oncogenic = getOncoKbOncogenic(oncoKbDatum);
         }
     }
-    return Object.assign(
-        { oncoKbOncogenic: oncogenic, hugoGeneSymbol },
-        molecularDatum
-    );
+    return Object.assign({ oncoKbOncogenic: oncogenic, hugoGeneSymbol }, molecularDatum);
 }
 
 export async function fetchQueriedStudies(
@@ -494,9 +455,7 @@ export function filterSubQueryData(
     if (!isMergedTrackFilter(queryStructure)) {
         return undefined;
     } else {
-        return queryStructure.list.map(innerLine =>
-            filterDataForLine(innerLine.oql_line)
-        );
+        return queryStructure.list.map(innerLine => filterDataForLine(innerLine.oql_line));
     }
 }
 
@@ -518,10 +477,7 @@ export function isPanCanStudy(studyId: string) {
     return /tcga_pan_can_atlas/.test(studyId);
 }
 
-export function buildResultsViewPageTitle(
-    genes: string[],
-    studies: CancerStudy[]
-) {
+export function buildResultsViewPageTitle(genes: string[], studies: CancerStudy[]) {
     const arr = ['cBioPortal for Cancer Genomics: '];
 
     if (genes.length) {
@@ -562,9 +518,7 @@ export function getMolecularProfiles(query: any) {
     ].filter((profile: string | undefined) => !!profile);
 
     // append 'genetic_profile_ids' which is sometimes in use
-    molecularProfiles = molecularProfiles.concat(
-        query.genetic_profile_ids || []
-    );
+    molecularProfiles = molecularProfiles.concat(query.genetic_profile_ids || []);
 
     // filter out duplicates
     molecularProfiles = _.uniq(molecularProfiles);
@@ -594,18 +548,12 @@ export function getSampleAlteredMap(
     filteredAlterationData.forEach((element, key) => {
         //1: is not group
         if (element.mergedTrackOqlList === undefined) {
-            const notGroupedOql = element.oql as OQLLineFilterOutput<
-                AnnotatedExtendedAlteration
-            >;
-            const sampleKeysMap = _.keyBy(
-                _.map(notGroupedOql.data, data => data.uniqueSampleKey)
-            );
+            const notGroupedOql = element.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>;
+            const sampleKeysMap = _.keyBy(_.map(notGroupedOql.data, data => data.uniqueSampleKey));
             const unProfiledSampleKeysMap = _.keyBy(
                 samples
                     .filter(sample => {
-                        const molecularProfileIds = studyToMolecularProfiles[
-                            sample.studyId
-                        ]
+                        const molecularProfileIds = studyToMolecularProfiles[sample.studyId]
                             ? _.intersection(
                                   studyToMolecularProfiles[sample.studyId].map(
                                       profile => profile.molecularProfileId
@@ -628,17 +576,17 @@ export function getSampleAlteredMap(
                     })
                     .map(sample => sample.uniqueSampleKey)
             );
-            result[
-                getSingleGeneResultKey(key, oqlQuery, notGroupedOql)
-            ] = samples.map((sample: Sample) => {
-                if (sample.uniqueSampleKey in unProfiledSampleKeysMap) {
-                    return AlteredStatus.UNPROFILED;
-                } else if (sample.uniqueSampleKey in sampleKeysMap) {
-                    return AlteredStatus.ALTERED;
-                } else {
-                    return AlteredStatus.UNALTERED;
+            result[getSingleGeneResultKey(key, oqlQuery, notGroupedOql)] = samples.map(
+                (sample: Sample) => {
+                    if (sample.uniqueSampleKey in unProfiledSampleKeysMap) {
+                        return AlteredStatus.UNPROFILED;
+                    } else if (sample.uniqueSampleKey in sampleKeysMap) {
+                        return AlteredStatus.ALTERED;
+                    } else {
+                        return AlteredStatus.UNALTERED;
+                    }
                 }
-            });
+            );
         }
         //2: is group
         else {
@@ -655,9 +603,7 @@ export function getSampleAlteredMap(
             const unProfiledSampleKeysMap = _.keyBy(
                 samples
                     .filter(sample => {
-                        const molecularProfileIds = studyToMolecularProfiles[
-                            sample.studyId
-                        ]
+                        const molecularProfileIds = studyToMolecularProfiles[sample.studyId]
                             ? _.intersection(
                                   studyToMolecularProfiles[sample.studyId].map(
                                       profile => profile.molecularProfileId
@@ -686,17 +632,15 @@ export function getSampleAlteredMap(
                     })
                     .map(sample => sample.uniqueSampleKey)
             );
-            result[getMultipleGeneResultKey(groupedOql)] = samples.map(
-                (sample: Sample) => {
-                    if (sample.uniqueSampleKey in unProfiledSampleKeysMap) {
-                        return AlteredStatus.UNPROFILED;
-                    } else if (sample.uniqueSampleKey in sampleKeysMap) {
-                        return AlteredStatus.ALTERED;
-                    } else {
-                        return AlteredStatus.UNALTERED;
-                    }
+            result[getMultipleGeneResultKey(groupedOql)] = samples.map((sample: Sample) => {
+                if (sample.uniqueSampleKey in unProfiledSampleKeysMap) {
+                    return AlteredStatus.UNPROFILED;
+                } else if (sample.uniqueSampleKey in sampleKeysMap) {
+                    return AlteredStatus.ALTERED;
+                } else {
+                    return AlteredStatus.UNALTERED;
                 }
-            );
+            });
         }
     });
     return result;
@@ -708,10 +652,7 @@ export function getSingleGeneResultKey(
     notGroupedOql: OQLLineFilterOutput<AnnotatedExtendedAlteration>
 ) {
     //only gene
-    if (
-        (oql_parser.parse(oqlQuery)![key] as oql_parser.SingleGeneQuery)
-            .alterations === false
-    ) {
+    if ((oql_parser.parse(oqlQuery)![key] as oql_parser.SingleGeneQuery).alterations === false) {
         return notGroupedOql.gene;
     }
     //gene with alteration type
@@ -762,17 +703,11 @@ export function makeEnrichmentDataPromise<
                 if (
                     params.store &&
                     params.store.selectedMolecularProfiles.result!.findIndex(
-                        molecularProfile =>
-                            profileMap[molecularProfile.studyId] !== undefined
+                        molecularProfile => profileMap[molecularProfile.studyId] !== undefined
                     ) > -1
                 ) {
-                    const queryGenes = _.keyBy(
-                        params.store.hugoGeneSymbols,
-                        x => x.toUpperCase()
-                    );
-                    data = data.filter(
-                        d => !(d.hugoGeneSymbol.toUpperCase() in queryGenes)
-                    );
+                    const queryGenes = _.keyBy(params.store.hugoGeneSymbols, x => x.toUpperCase());
+                    data = data.filter(d => !(d.hugoGeneSymbol.toUpperCase() in queryGenes));
                 }
 
                 let referenceGenes = params.referenceGenesPromise.result!;
@@ -792,18 +727,13 @@ export function makeEnrichmentDataPromise<
                 });
 
                 const sortedByPValue = _.sortBy(dataWithpValue, c => c.pValue);
-                const qValues = calculateQValues(
-                    sortedByPValue.map(c => c.pValue)
-                );
+                const qValues = calculateQValues(sortedByPValue.map(c => c.pValue));
 
                 qValues.forEach((qValue, index) => {
                     sortedByPValue[index].qValue = qValue;
                 });
 
-                return sortEnrichmentData([
-                    ...sortedByPValue,
-                    ...dataWithoutpValue,
-                ]);
+                return sortEnrichmentData([...sortedByPValue, ...dataWithoutpValue]);
             } else {
                 return [];
             }
@@ -826,9 +756,7 @@ export function fetchPatients(samples: Sample[]) {
         };
     }
     const patientFilter = {
-        uniquePatientKeys: _.uniq(
-            samples.map((sample: Sample) => sample.uniquePatientKey)
-        ),
+        uniquePatientKeys: _.uniq(samples.map((sample: Sample) => sample.uniquePatientKey)),
     } as PatientFilter;
 
     return client.fetchPatientsUsingPOST({
@@ -846,7 +774,6 @@ export function excludeMutationAndSVProfiles(
         AlterationTypeConstants.STRUCTURAL_VARIANT,
     ];
     return molecularprofiles.filter(
-        profile =>
-            !mutationAlterationTypes.includes(profile.molecularAlterationType)
+        profile => !mutationAlterationTypes.includes(profile.molecularAlterationType)
     );
 }

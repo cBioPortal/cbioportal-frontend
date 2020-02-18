@@ -19,10 +19,7 @@ type IGVProps = {
     onRenderingComplete?: () => void;
 };
 
-export default class IntegrativeGenomicsViewer extends React.Component<
-    IGVProps,
-    {}
-> {
+export default class IntegrativeGenomicsViewer extends React.Component<IGVProps, {}> {
     public static defaultProps = {
         genome: 'hg19',
         locus: 'all',
@@ -93,14 +90,10 @@ export default class IntegrativeGenomicsViewer extends React.Component<
 
             const genomeChanged = this.props.genome !== nextProps.genome;
             const locusChanged = this.props.locus !== nextProps.locus;
-            const searchUpdated =
-                this.props.disableSearch !== nextProps.disableSearch;
+            const searchUpdated = this.props.disableSearch !== nextProps.disableSearch;
 
             shouldUpdate =
-                genomeChanged ||
-                modifiedTrackNames.length > 0 ||
-                locusChanged ||
-                searchUpdated;
+                genomeChanged || modifiedTrackNames.length > 0 || locusChanged || searchUpdated;
 
             if (shouldUpdate) {
                 // update the class reference, since we need the modified tracks names in the componentDidUpdate method
@@ -118,16 +111,8 @@ export default class IntegrativeGenomicsViewer extends React.Component<
         }
 
         // update tracks
-        if (
-            this.igvBrowser &&
-            this.modifiedTrackNames &&
-            this.modifiedTrackNames.length > 0
-        ) {
-            this.updateTracks(
-                this.igvBrowser,
-                this.modifiedTrackNames,
-                this.tracksByName
-            );
+        if (this.igvBrowser && this.modifiedTrackNames && this.modifiedTrackNames.length > 0) {
+            this.updateTracks(this.igvBrowser, this.modifiedTrackNames, this.tracksByName);
 
             this.modifiedTrackNames = undefined;
             // update the list of last rendered tracks after each update
@@ -181,9 +166,7 @@ export default class IntegrativeGenomicsViewer extends React.Component<
     }
 
     private updateSearch(igvDiv: HTMLDivElement, disableSearch?: boolean) {
-        const chrDropdown = $(igvDiv).find(
-            '.igv-chromosome-select-widget-container select'
-        );
+        const chrDropdown = $(igvDiv).find('.igv-chromosome-select-widget-container select');
         const locusSearchBox = $(igvDiv).find('.igv-search-container input');
 
         if (disableSearch) {

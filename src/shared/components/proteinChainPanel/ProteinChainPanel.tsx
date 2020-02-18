@@ -2,13 +2,7 @@ import * as React from 'react';
 import ProteinChainView from './ProteinChainView';
 import PdbChainTable from './PdbChainTable';
 import { observer } from 'mobx-react';
-import {
-    computed,
-    observable,
-    action,
-    IReactionDisposer,
-    reaction,
-} from 'mobx';
+import { computed, observable, action, IReactionDisposer, reaction } from 'mobx';
 import { ProteinChainSpec } from './ProteinChainView';
 import { Collapse } from 'react-collapse';
 import { HitZone, DefaultTooltip } from 'cbioportal-frontend-commons';
@@ -27,10 +21,7 @@ type ProteinChainPanelProps = {
 };
 
 @observer
-export default class ProteinChainPanel extends React.Component<
-    ProteinChainPanelProps,
-    {}
-> {
+export default class ProteinChainPanel extends React.Component<ProteinChainPanelProps, {}> {
     @observable private isExpanded: boolean = false;
     @observable private pdbChainTableShown: boolean = false;
     @observable private hoveredChain: IPdbChain | undefined;
@@ -117,9 +108,7 @@ export default class ProteinChainPanel extends React.Component<
                 this.hitZoneConfig.onClick = () => {
                     this.selectChain(chainUid);
                 };
-                this.hoveredChain = this.props.store.pdbChainDataStore.getPdbChain(
-                    chainUid
-                );
+                this.hoveredChain = this.props.store.pdbChainDataStore.getPdbChain(chainUid);
             },
             setChainUidToY: (chainUidToY: { [uid: string]: number }) => {
                 this.chainUidToY = chainUidToY;
@@ -132,9 +121,7 @@ export default class ProteinChainPanel extends React.Component<
                 if (
                     typeof chainY !== 'undefined' &&
                     (chainY < this.chainDiv.scrollTop ||
-                        chainY >
-                            this.chainDiv.scrollTop +
-                                this.props.maxChainsHeight)
+                        chainY > this.chainDiv.scrollTop + this.props.maxChainsHeight)
                 ) {
                     const halfChainsHeight = this.props.maxChainsHeight / 2;
                     this.chainDiv.scrollTop = chainY - halfChainsHeight;
@@ -229,9 +216,7 @@ export default class ProteinChainPanel extends React.Component<
     }
 
     componentDidMount() {
-        onNextRenderFrame(() =>
-            this.props.store.pdbChainDataStore.selectFirstChain()
-        );
+        onNextRenderFrame(() => this.props.store.pdbChainDataStore.selectFirstChain());
     }
 
     componentDidUpdate() {
@@ -245,28 +230,24 @@ export default class ProteinChainPanel extends React.Component<
     public helpTooltipContent() {
         return (
             <div style={{ maxWidth: 400 }}>
-                This panel displays a list of PDB chains for the corresponding
-                uniprot ID. PDB chains are ranked with respect to their sequence
-                similarity ratio, and aligned to the y-axis of the mutation
-                diagram. Highly ranked chains have darker color than the lowly
-                ranked ones.
+                This panel displays a list of PDB chains for the corresponding uniprot ID. PDB
+                chains are ranked with respect to their sequence similarity ratio, and aligned to
+                the y-axis of the mutation diagram. Highly ranked chains have darker color than the
+                lowly ranked ones.
                 <br />
                 <br />
-                Each chain is represented by a single rectangle. Gaps within the
-                chains are represented by a thin line connecting the segments of
-                the chain.
+                Each chain is represented by a single rectangle. Gaps within the chains are
+                represented by a thin line connecting the segments of the chain.
                 <br />
                 <br />
-                By default, only a first few rows are displayed. To see more
-                chains, use the scroll bar next to the panel. To see the
-                detailed list of all available PDB chains in a table click on
-                the link below the panel.
+                By default, only a first few rows are displayed. To see more chains, use the scroll
+                bar next to the panel. To see the detailed list of all available PDB chains in a
+                table click on the link below the panel.
                 <br />
                 <br />
-                To select a chain, simply click on it. Selected chain is
-                highlighted with a different frame color. You can also select a
-                chain by clicking on a row in the table. Selecting a chain
-                reloads the PDB data for the 3D structure visualizer.
+                To select a chain, simply click on it. Selected chain is highlighted with a
+                different frame color. You can also select a chain by clicking on a row in the
+                table. Selecting a chain reloads the PDB data for the 3D structure visualizer.
             </div>
         );
     }
@@ -295,10 +276,7 @@ export default class ProteinChainPanel extends React.Component<
                                 overlay={this.helpTooltipContent}
                                 destroyTooltipOnHide={true}
                             >
-                                <i
-                                    className="fa fa-info-circle"
-                                    style={{ paddingLeft: 3 }}
-                                />
+                                <i className="fa fa-info-circle" style={{ paddingLeft: 3 }} />
                             </DefaultTooltip>
                         </div>
                         <div
@@ -316,10 +294,7 @@ export default class ProteinChainPanel extends React.Component<
                                 chains={this.chains}
                                 proteinLength={this.proteinLength}
                                 setHitZone={this.handlers.setHitZone}
-                                selectedChainUid={
-                                    this.props.store.pdbChainDataStore
-                                        .selectedUid
-                                }
+                                selectedChainUid={this.props.store.pdbChainDataStore.selectedUid}
                                 setChainUidToY={this.handlers.setChainUidToY}
                             />
                             <DefaultTooltip
@@ -346,16 +321,12 @@ export default class ProteinChainPanel extends React.Component<
                             </button>
                             <div
                                 style={{
-                                    display: this.pdbChainTableShown
-                                        ? 'inherit'
-                                        : 'none',
+                                    display: this.pdbChainTableShown ? 'inherit' : 'none',
                                     maxWidth: this.props.geneWidth,
                                 }}
                             >
                                 <PdbChainTable
-                                    dataStore={
-                                        this.props.store.pdbChainDataStore
-                                    }
+                                    dataStore={this.props.store.pdbChainDataStore}
                                     cache={this.props.pdbHeaderCache}
                                 />
                             </div>

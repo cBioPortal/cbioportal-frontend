@@ -24,14 +24,8 @@ import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import CoExpressionTab from './coExpression/CoExpressionTab';
 import Helmet from 'react-helmet';
 import { showCustomTab } from '../../shared/lib/customTabs';
-import {
-    parseConfigDisabledTabs,
-    ResultsViewTab,
-} from './ResultsViewPageHelpers';
-import {
-    buildResultsViewPageTitle,
-    doesQueryHaveCNSegmentData,
-} from './ResultsViewPageStoreUtils';
+import { parseConfigDisabledTabs, ResultsViewTab } from './ResultsViewPageHelpers';
+import { buildResultsViewPageTitle, doesQueryHaveCNSegmentData } from './ResultsViewPageStoreUtils';
 import { AppStore } from '../../AppStore';
 import { trackQuery } from '../../shared/lib/tracking';
 import QueryAndDownloadTabs from 'shared/components/query/QueryAndDownloadTabs';
@@ -42,14 +36,9 @@ import setWindowVariable from 'shared/lib/setWindowVariable';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import onMobxPromise from 'shared/lib/onMobxPromise';
 import { createQueryStore } from 'shared/lib/createQueryStore';
-import {
-    handleLegacySubmission,
-    handlePostedSubmission,
-} from 'shared/lib/redirectHelpers';
+import { handleLegacySubmission, handlePostedSubmission } from 'shared/lib/redirectHelpers';
 import ComparisonTab from './comparison/ComparisonTab';
-import OQLTextArea, {
-    GeneBoxType,
-} from 'shared/components/GeneSelectionBox/OQLTextArea';
+import OQLTextArea, { GeneBoxType } from 'shared/components/GeneSelectionBox/OQLTextArea';
 import SurvivalTransitionTab from './survival/SurvivalTransitionTab';
 
 function initStore(appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
@@ -60,16 +49,12 @@ function initStore(appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
     reaction(
         () => [resultsViewPageStore.studyIds, resultsViewPageStore.oqlText],
         () => {
-            if (
-                resultsViewPageStore.studyIds.isComplete &&
-                resultsViewPageStore.oqlText
-            ) {
+            if (resultsViewPageStore.studyIds.isComplete && resultsViewPageStore.oqlText) {
                 trackQuery(
                     resultsViewPageStore.studyIds.result!,
                     resultsViewPageStore.oqlText,
                     resultsViewPageStore.hugoGeneSymbols,
-                    resultsViewPageStore.queriedVirtualStudies.result!.length >
-                        0
+                    resultsViewPageStore.queriedVirtualStudies.result!.length > 0
                 );
             }
         }
@@ -90,10 +75,7 @@ export interface IResultsViewPageProps {
 
 @inject('appStore', 'routing')
 @observer
-export default class ResultsViewPage extends React.Component<
-    IResultsViewPageProps,
-    {}
-> {
+export default class ResultsViewPage extends React.Component<IResultsViewPageProps, {}> {
     private resultsViewPageStore: ResultsViewPageStore;
 
     private urlWrapper: ResultsViewURLWrapper;
@@ -115,16 +97,10 @@ export default class ResultsViewPage extends React.Component<
 
         if (this.urlWrapper.hasSessionId) {
             onMobxPromise(this.urlWrapper.remoteSessionData, () => {
-                this.resultsViewPageStore = initStore(
-                    props.appStore,
-                    this.urlWrapper
-                );
+                this.resultsViewPageStore = initStore(props.appStore, this.urlWrapper);
             });
         } else {
-            this.resultsViewPageStore = initStore(
-                props.appStore,
-                this.urlWrapper
-            );
+            this.resultsViewPageStore = initStore(props.appStore, this.urlWrapper);
         }
     }
 
@@ -133,11 +109,7 @@ export default class ResultsViewPage extends React.Component<
     }
 
     @autobind
-    private customTabCallback(
-        div: HTMLDivElement,
-        tab: any,
-        isUnmount = false
-    ) {
+    private customTabCallback(div: HTMLDivElement, tab: any, isUnmount = false) {
         showCustomTab(
             div,
             tab,
@@ -161,19 +133,13 @@ export default class ResultsViewPage extends React.Component<
                 id: ResultsViewTab.ONCOPRINT,
                 getTab: () => {
                     return (
-                        <MSKTab
-                            key={0}
-                            id={ResultsViewTab.ONCOPRINT}
-                            linkText="OncoPrint"
-                        >
+                        <MSKTab key={0} id={ResultsViewTab.ONCOPRINT} linkText="OncoPrint">
                             <ResultsViewOncoprint
                                 divId={'oncoprintDiv'}
                                 store={store}
                                 urlWrapper={store.urlWrapper}
                                 key={store.hugoGeneSymbols.join(',')}
-                                addOnBecomeVisibleListener={
-                                    addOnBecomeVisibleListener
-                                }
+                                addOnBecomeVisibleListener={addOnBecomeVisibleListener}
                             />
                         </MSKTab>
                     );
@@ -214,11 +180,8 @@ export default class ResultsViewPage extends React.Component<
                 hide: () => {
                     // we are using the size of isSampleAlteredMap as a proxy for the number of things we have to compare
                     return (
-                        !this.resultsViewPageStore.isSampleAlteredMap
-                            .isComplete ||
-                        _.size(
-                            this.resultsViewPageStore.isSampleAlteredMap.result
-                        ) < 2
+                        !this.resultsViewPageStore.isSampleAlteredMap.isComplete ||
+                        _.size(this.resultsViewPageStore.isSampleAlteredMap.result) < 2
                     );
                 },
             },
@@ -229,18 +192,12 @@ export default class ResultsViewPage extends React.Component<
                     if (!this.resultsViewPageStore.studies.isComplete) {
                         return true;
                     } else {
-                        return (
-                            this.resultsViewPageStore.studies.result!.length > 1
-                        );
+                        return this.resultsViewPageStore.studies.result!.length > 1;
                     }
                 },
                 getTab: () => {
                     return (
-                        <MSKTab
-                            key={12}
-                            id={ResultsViewTab.PLOTS}
-                            linkText={'Plots'}
-                        >
+                        <MSKTab key={12} id={ResultsViewTab.PLOTS} linkText={'Plots'}>
                             <PlotsTab store={store} />
                         </MSKTab>
                     );
@@ -251,15 +208,8 @@ export default class ResultsViewPage extends React.Component<
                 id: ResultsViewTab.MUTATIONS,
                 getTab: () => {
                     return (
-                        <MSKTab
-                            key={3}
-                            id={ResultsViewTab.MUTATIONS}
-                            linkText="Mutations"
-                        >
-                            <Mutations
-                                store={store}
-                                appStore={this.props.appStore}
-                            />
+                        <MSKTab key={3} id={ResultsViewTab.MUTATIONS} linkText="Mutations">
+                            <Mutations store={store} appStore={this.props.appStore} />
                         </MSKTab>
                     );
                 },
@@ -269,27 +219,20 @@ export default class ResultsViewPage extends React.Component<
                 id: ResultsViewTab.COEXPRESSION,
                 hide: () => {
                     if (
-                        !this.resultsViewPageStore.isThereDataForCoExpressionTab
-                            .isComplete ||
+                        !this.resultsViewPageStore.isThereDataForCoExpressionTab.isComplete ||
                         !this.resultsViewPageStore.studies.isComplete
                     ) {
                         return true;
                     } else {
-                        const tooManyStudies =
-                            this.resultsViewPageStore.studies.result!.length >
-                            1;
-                        const noData = !this.resultsViewPageStore
-                            .isThereDataForCoExpressionTab.result;
+                        const tooManyStudies = this.resultsViewPageStore.studies.result!.length > 1;
+                        const noData = !this.resultsViewPageStore.isThereDataForCoExpressionTab
+                            .result;
                         return tooManyStudies || noData;
                     }
                 },
                 getTab: () => {
                     return (
-                        <MSKTab
-                            key={7}
-                            id={ResultsViewTab.COEXPRESSION}
-                            linkText={'Co-expression'}
-                        >
+                        <MSKTab key={7} id={ResultsViewTab.COEXPRESSION} linkText={'Co-expression'}>
                             <CoExpressionTab store={store} />
                         </MSKTab>
                     );
@@ -303,11 +246,7 @@ export default class ResultsViewPage extends React.Component<
                 },
                 getTab: () => {
                     return (
-                        <MSKTab
-                            key={10}
-                            id={ResultsViewTab.COMPARISON}
-                            linkText={'Comparison'}
-                        >
+                        <MSKTab key={10} id={ResultsViewTab.COMPARISON} linkText={'Comparison'}>
                             <ComparisonTab
                                 urlWrapper={this.urlWrapper}
                                 appStore={this.props.appStore}
@@ -322,19 +261,13 @@ export default class ResultsViewPage extends React.Component<
                 id: ResultsViewTab.SURVIVAL,
                 hide: () => {
                     return (
-                        !this.resultsViewPageStore.survivalClinicalDataExists
-                            .isComplete ||
-                        !this.resultsViewPageStore.survivalClinicalDataExists
-                            .result!
+                        !this.resultsViewPageStore.survivalClinicalDataExists.isComplete ||
+                        !this.resultsViewPageStore.survivalClinicalDataExists.result!
                     );
                 },
                 getTab: () => {
                     return (
-                        <MSKTab
-                            key={4}
-                            id={ResultsViewTab.SURVIVAL}
-                            linkText="Survival"
-                        >
+                        <MSKTab key={4} id={ResultsViewTab.SURVIVAL} linkText="Survival">
                             <SurvivalTransitionTab store={store} />
                         </MSKTab>
                     );
@@ -348,18 +281,12 @@ export default class ResultsViewPage extends React.Component<
                         !this.resultsViewPageStore.studies.isComplete ||
                         !this.resultsViewPageStore.genes.isComplete ||
                         !this.resultsViewPageStore.referenceGenes.isComplete ||
-                        !doesQueryHaveCNSegmentData(
-                            this.resultsViewPageStore.samples.result
-                        )
+                        !doesQueryHaveCNSegmentData(this.resultsViewPageStore.samples.result)
                     );
                 },
                 getTab: () => {
                     return (
-                        <MSKTab
-                            key={6}
-                            id={ResultsViewTab.CN_SEGMENTS}
-                            linkText="CN Segments"
-                        >
+                        <MSKTab key={6} id={ResultsViewTab.CN_SEGMENTS} linkText="CN Segments">
                             <CNSegments store={store} />
                         </MSKTab>
                     );
@@ -373,18 +300,11 @@ export default class ResultsViewPage extends React.Component<
                 },
                 getTab: () => {
                     return (
-                        <MSKTab
-                            key={9}
-                            id={ResultsViewTab.NETWORK}
-                            linkText={'Network'}
-                        >
+                        <MSKTab key={9} id={ResultsViewTab.NETWORK} linkText={'Network'}>
                             <div className="alert alert-info">
-                                The Network tab has been retired. For similar
-                                functionality, please visit{' '}
-                                <a
-                                    href="http://www.pathwaycommons.org/pcviz/"
-                                    target="_blank"
-                                >
+                                The Network tab has been retired. For similar functionality, please
+                                visit{' '}
+                                <a href="http://www.pathwaycommons.org/pcviz/" target="_blank">
                                     http://www.pathwaycommons.org/pcviz/
                                 </a>
                             </div>
@@ -397,40 +317,27 @@ export default class ResultsViewPage extends React.Component<
                 id: ResultsViewTab.EXPRESSION,
                 hide: () => {
                     return (
-                        this.resultsViewPageStore.expressionProfiles.result
-                            .length === 0 ||
+                        this.resultsViewPageStore.expressionProfiles.result.length === 0 ||
                         this.resultsViewPageStore.studies.result.length < 2
                     );
                 },
                 getTab: () => {
                     return (
-                        <MSKTab
-                            key={8}
-                            id={ResultsViewTab.EXPRESSION}
-                            linkText={'Expression'}
-                        >
+                        <MSKTab key={8} id={ResultsViewTab.EXPRESSION} linkText={'Expression'}>
                             {store.studyIdToStudy.isComplete &&
-                                store.filteredAndAnnotatedMutations
-                                    .isComplete &&
+                                store.filteredAndAnnotatedMutations.isComplete &&
                                 store.genes.isComplete &&
                                 store.coverageInformation.isComplete && (
                                     <ExpressionWrapper
                                         store={store}
                                         studyMap={store.studyIdToStudy.result}
                                         genes={store.genes.result}
-                                        expressionProfiles={
-                                            store.expressionProfiles
-                                        }
+                                        expressionProfiles={store.expressionProfiles}
                                         numericGeneMolecularDataCache={
                                             store.numericGeneMolecularDataCache
                                         }
-                                        mutations={
-                                            store.filteredAndAnnotatedMutations
-                                                .result!
-                                        }
-                                        coverageInformation={
-                                            store.coverageInformation.result
-                                        }
+                                        mutations={store.filteredAndAnnotatedMutations.result!}
+                                        coverageInformation={store.coverageInformation.result}
                                     />
                                 )}
                         </MSKTab>
@@ -442,11 +349,7 @@ export default class ResultsViewPage extends React.Component<
                 id: ResultsViewTab.DOWNLOAD,
                 getTab: () => {
                     return (
-                        <MSKTab
-                            key={11}
-                            id={ResultsViewTab.DOWNLOAD}
-                            linkText={'Download'}
-                        >
+                        <MSKTab key={11} id={ResultsViewTab.DOWNLOAD} linkText={'Download'}>
                             <DownloadTab store={store} />
                         </MSKTab>
                     );
@@ -454,9 +357,7 @@ export default class ResultsViewPage extends React.Component<
             },
         ];
 
-        let filteredTabs = tabMap
-            .filter(this.evaluateTabInclusion)
-            .map(tab => tab.getTab());
+        let filteredTabs = tabMap.filter(this.evaluateTabInclusion).map(tab => tab.getTab());
 
         // now add custom tabs
         if (AppConfig.serverConfig.custom_tabs) {
@@ -487,9 +388,7 @@ export default class ResultsViewPage extends React.Component<
     @autobind
     public evaluateTabInclusion(tab: ITabConfiguration) {
         const excludedTabs = AppConfig.serverConfig.disabled_tabs || '';
-        const isExcludedInList = parseConfigDisabledTabs(excludedTabs).includes(
-            tab.id
-        );
+        const isExcludedInList = parseConfigDisabledTabs(excludedTabs).includes(tab.id);
         const isRoutedTo = this.resultsViewPageStore.tabId === tab.id;
         const isExcluded = tab.hide ? tab.hide() : false;
 
@@ -508,10 +407,7 @@ export default class ResultsViewPage extends React.Component<
                     Submit Query
                 </button>
                 &nbsp;
-                <button
-                    className={'btn btn-link btn-sm'}
-                    onClick={this.toggleOQLEditor}
-                >
+                <button className={'btn btn-link btn-sm'} onClick={this.toggleOQLEditor}>
                     Cancel
                 </button>
             </>
@@ -555,10 +451,7 @@ export default class ResultsViewPage extends React.Component<
                         showDownloadTab={false}
                         showAlerts={true}
                         getQueryStore={() =>
-                            createQueryStore(
-                                this.urlWrapper.query,
-                                this.urlWrapper
-                            )
+                            createQueryStore(this.urlWrapper.query, this.urlWrapper)
                         }
                     />
                 </div>
@@ -574,16 +467,9 @@ export default class ResultsViewPage extends React.Component<
                             role="alert"
                         >
                             <GeneSymbolValidationError
-                                sampleCount={
-                                    this.resultsViewPageStore.samples.result
-                                        .length
-                                }
-                                queryProductLimit={
-                                    AppConfig.serverConfig.query_product_limit
-                                }
-                                email={
-                                    AppConfig.serverConfig.skin_email_contact
-                                }
+                                sampleCount={this.resultsViewPageStore.samples.result.length}
+                                queryProductLimit={AppConfig.serverConfig.query_product_limit}
+                                email={AppConfig.serverConfig.skin_email_contact}
                             />
                         </div>
                     )}
@@ -599,8 +485,7 @@ export default class ResultsViewPage extends React.Component<
                             <Helmet>
                                 <title>
                                     {buildResultsViewPageTitle(
-                                        this.resultsViewPageStore
-                                            .hugoGeneSymbols,
+                                        this.resultsViewPageStore.hugoGeneSymbols,
                                         this.resultsViewPageStore.studies.result
                                     )}
                                 </title>
@@ -616,27 +501,19 @@ export default class ResultsViewPage extends React.Component<
                                                 this.showOQLEditor = false;
                                             });
                                         }}
-                                        onToggleOQLEditUIVisibility={
-                                            this.toggleOQLEditor
-                                        }
+                                        onToggleOQLEditUIVisibility={this.toggleOQLEditor}
                                     />
 
                                     {this.showOQLEditor && (
                                         <div className={'quick_oql_edit'}>
                                             <OQLTextArea
-                                                inputGeneQuery={
-                                                    this.resultsViewPageStore
-                                                        .oqlText
-                                                }
+                                                inputGeneQuery={this.resultsViewPageStore.oqlText}
                                                 validateInputGeneQuery={true}
                                                 callback={(...args) => {
-                                                    this.oqlSubmission =
-                                                        args[2];
+                                                    this.oqlSubmission = args[2];
                                                 }}
                                                 location={GeneBoxType.DEFAULT}
-                                                submitButton={
-                                                    this.quickOQLSubmitButtion
-                                                }
+                                                submitButton={this.quickOQLSubmitButtion}
                                             />
                                         </div>
                                     )}
@@ -645,17 +522,12 @@ export default class ResultsViewPage extends React.Component<
                                 {// we don't show the result tabs if we don't have valid query
                                 this.showTabs &&
                                     !this.resultsViewPageStore.genesInvalid &&
-                                    !this.resultsViewPageStore
-                                        .isQueryInvalid && (
+                                    !this.resultsViewPageStore.isQueryInvalid && (
                                         <MSKTabs
                                             key={this.urlWrapper.hash}
-                                            activeTabId={
-                                                this.resultsViewPageStore.tabId
-                                            }
+                                            activeTabId={this.resultsViewPageStore.tabId}
                                             unmountOnHide={false}
-                                            onTabClick={(id: string) =>
-                                                this.handleTabChange(id)
-                                            }
+                                            onTabClick={(id: string) => this.handleTabChange(id)}
                                             className="mainTabs"
                                             getTabHref={this.getTabHref}
                                         >
@@ -671,30 +543,18 @@ export default class ResultsViewPage extends React.Component<
     }
 
     public render() {
-        if (
-            this.urlWrapper.isPendingSession ||
-            this.urlWrapper.isLoadingSession
-        ) {
-            return (
-                <LoadingIndicator isLoading={true} center={true} size={'big'} />
-            );
+        if (this.urlWrapper.isPendingSession || this.urlWrapper.isLoadingSession) {
+            return <LoadingIndicator isLoading={true} center={true} size={'big'} />;
         }
 
-        if (
-            this.resultsViewPageStore.studies.isComplete &&
-            !this.resultsViewPageStore.tabId
-        ) {
+        if (this.resultsViewPageStore.studies.isComplete && !this.resultsViewPageStore.tabId) {
             setTimeout(() => {
                 this.handleTabChange(this.resultsViewPageStore.tabId, true);
             });
             return null;
         } else {
             return (
-                <PageLayout
-                    noMargin={true}
-                    hideFooter={true}
-                    className={'subhead-dark'}
-                >
+                <PageLayout noMargin={true} hideFooter={true} className={'subhead-dark'}>
                     {this.pageContent}
                 </PageLayout>
             );

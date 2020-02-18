@@ -1,9 +1,6 @@
 import * as _ from 'lodash';
 import { MolecularProfile } from '../../../shared/api/generated/CBioPortalAPI';
-import {
-    AlterationTypeConstants,
-    GeneticEntityType,
-} from '../ResultsViewPageStore';
+import { AlterationTypeConstants, GeneticEntityType } from '../ResultsViewPageStore';
 import { CoExpression } from '../../../shared/api/generated/CBioPortalAPIInternal';
 
 export type CoExpressionWithEntityInfo = CoExpression & {
@@ -40,10 +37,8 @@ export function filterAndSortProfiles(profiles: MolecularProfile[]) {
 
         let good = false;
         if (
-            profile.molecularAlterationType ===
-                AlterationTypeConstants.MRNA_EXPRESSION ||
-            profile.molecularAlterationType ===
-                AlterationTypeConstants.PROTEIN_LEVEL
+            profile.molecularAlterationType === AlterationTypeConstants.MRNA_EXPRESSION ||
+            profile.molecularAlterationType === AlterationTypeConstants.PROTEIN_LEVEL
         ) {
             const profileId = profile.molecularProfileId.toLowerCase();
             good =
@@ -62,10 +57,7 @@ export function getGenesetProfiles(profiles: MolecularProfile[]) {
         // we want only the geneset score profiles, excluding p-values
 
         let good = false;
-        if (
-            profile.molecularAlterationType ===
-            AlterationTypeConstants.GENESET_SCORE
-        ) {
+        if (profile.molecularAlterationType === AlterationTypeConstants.GENESET_SCORE) {
             const profileId = profile.molecularProfileId.toLowerCase();
             good = profileId.indexOf('gsva_pvalues') === -1;
         }
@@ -84,12 +76,8 @@ export function getProfileOptions(
         let label = profile.name;
         if (molecularProfileIdToProfiledSampleCount) {
             const profiledSampleCount =
-                molecularProfileIdToProfiledSampleCount[
-                    profile.molecularProfileId
-                ];
-            label += ` (${profiledSampleCount} sample${
-                profiledSampleCount !== 1 ? 's' : ''
-            })`;
+                molecularProfileIdToProfiledSampleCount[profile.molecularProfileId];
+            label += ` (${profiledSampleCount} sample${profiledSampleCount !== 1 ? 's' : ''})`;
         }
         return {
             label,

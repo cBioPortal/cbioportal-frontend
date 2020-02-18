@@ -34,9 +34,7 @@ export default class ReferenceList extends React.Component<ReferenceListProps> {
                                     : 'Unknown'
                             }
                             source={articleContent.source}
-                            date={new Date(articleContent.pubdate)
-                                .getFullYear()
-                                .toString()}
+                            date={new Date(articleContent.pubdate).getFullYear().toString()}
                             pmid={articleContent.uid}
                         />
                     );
@@ -44,12 +42,7 @@ export default class ReferenceList extends React.Component<ReferenceListProps> {
             });
         }
         this.props.abstracts.forEach(abstract => {
-            list.push(
-                <ArticleAbstractItem
-                    abstract={abstract.abstract}
-                    link={abstract.link}
-                />
-            );
+            list.push(<ArticleAbstractItem abstract={abstract.abstract} link={abstract.link} />);
         });
         return <ul className={styles['no-style-ul']}>{list}</ul>;
     }

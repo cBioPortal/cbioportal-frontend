@@ -110,14 +110,11 @@ export default class QuickSearch extends React.Component {
 
     // tslint:disable-next-line:member-ordering
     readonly geneStudyQueryVirtualStudy = remoteData(async () => {
-        const virtualStudyId =
-            AppConfig.serverConfig.default_cross_cancer_study_session_id;
+        const virtualStudyId = AppConfig.serverConfig.default_cross_cancer_study_session_id;
 
         if (ServerConfigHelpers.sessionServiceIsEnabled() && virtualStudyId) {
             try {
-                const study = await sessionServiceClient.getVirtualStudy(
-                    virtualStudyId
-                );
+                const study = await sessionServiceClient.getVirtualStudy(virtualStudyId);
                 return study;
             } catch (ex) {
                 return null;
@@ -140,11 +137,8 @@ export default class QuickSearch extends React.Component {
             } else {
                 return Promise.resolve({
                     type: GeneStudyQueryType.STUDY_LIST,
-                    query:
-                        AppConfig.serverConfig.default_cross_cancer_study_list,
-                    name:
-                        AppConfig.serverConfig
-                            .default_cross_cancer_study_list_name,
+                    query: AppConfig.serverConfig.default_cross_cancer_study_list,
+                    name: AppConfig.serverConfig.default_cross_cancer_study_list_name,
                 });
             }
         },
@@ -161,9 +155,7 @@ export default class QuickSearch extends React.Component {
                 return Promise.all([
                     client.getAllStudiesUsingGETWithHttpInfo({
                         keyword: input,
-                        pageSize:
-                            DEFAULT_PAGE_SIZE +
-                            SHOW_MORE_SIZE * this.studyPageMultiplier,
+                        pageSize: DEFAULT_PAGE_SIZE + SHOW_MORE_SIZE * this.studyPageMultiplier,
                     }),
                     client.getAllStudiesUsingGETWithHttpInfo({
                         keyword: input,
@@ -171,9 +163,7 @@ export default class QuickSearch extends React.Component {
                     }),
                     client.getAllGenesUsingGETWithHttpInfo({
                         keyword: input,
-                        pageSize:
-                            DEFAULT_PAGE_SIZE +
-                            SHOW_MORE_SIZE * this.genePageMultiplier,
+                        pageSize: DEFAULT_PAGE_SIZE + SHOW_MORE_SIZE * this.genePageMultiplier,
                     }),
                     client.getAllGenesUsingGETWithHttpInfo({
                         keyword: input,
@@ -181,9 +171,7 @@ export default class QuickSearch extends React.Component {
                     }),
                     client.getAllPatientsUsingGETWithHttpInfo({
                         keyword: input,
-                        pageSize:
-                            DEFAULT_PAGE_SIZE +
-                            SHOW_MORE_SIZE * this.patientPageMultiplier,
+                        pageSize: DEFAULT_PAGE_SIZE + SHOW_MORE_SIZE * this.patientPageMultiplier,
                         projection: 'DETAILED',
                     }),
                     client.getAllPatientsUsingGETWithHttpInfo({
@@ -192,9 +180,7 @@ export default class QuickSearch extends React.Component {
                     }),
                     client.getSamplesByKeywordUsingGETWithHttpInfo({
                         keyword: input,
-                        pageSize:
-                            DEFAULT_PAGE_SIZE +
-                            SHOW_MORE_SIZE * this.samplePageMultiplier,
+                        pageSize: DEFAULT_PAGE_SIZE + SHOW_MORE_SIZE * this.samplePageMultiplier,
                     }),
                     client.getSamplesByKeywordUsingGETWithHttpInfo({
                         keyword: input,
@@ -203,52 +189,34 @@ export default class QuickSearch extends React.Component {
                     // we use sleep method because if the response is cached by superagent, react-select can't render the options for some reason
                     sleep(0),
                 ]).then(async (response: any) => {
-                    let studyOptions = (response[0].body as any[]).map(
-                        this.studyToOption
-                    );
+                    let studyOptions = (response[0].body as any[]).map(this.studyToOption);
 
                     let studyCount = {
-                        value:
-                            parseInt(response[1].headers['total-count']) -
-                            studyOptions.length,
+                        value: parseInt(response[1].headers['total-count']) - studyOptions.length,
                         type: OptionType.STUDY_COUNT,
                     };
-                    const geneOptions = (response[2].body as any[]).map(
-                        this.geneToOption
-                    );
+                    const geneOptions = (response[2].body as any[]).map(this.geneToOption);
                     const geneCount = {
-                        value:
-                            parseInt(response[3].headers['total-count']) -
-                            geneOptions.length,
+                        value: parseInt(response[3].headers['total-count']) - geneOptions.length,
                         type: OptionType.GENE_COUNT,
                     };
-                    const patientOptions = (response[4].body as any[]).map(
-                        this.patientToOption
-                    );
+                    const patientOptions = (response[4].body as any[]).map(this.patientToOption);
                     const patientCount = {
-                        value:
-                            parseInt(response[5].headers['total-count']) -
-                            patientOptions.length,
+                        value: parseInt(response[5].headers['total-count']) - patientOptions.length,
                         type: OptionType.PATIENT_COUNT,
                     };
-                    const sampleOptions = (response[6].body as any[]).map(
-                        this.sampleToOption
-                    );
+                    const sampleOptions = (response[6].body as any[]).map(this.sampleToOption);
                     let sampleCount = {
-                        value:
-                            parseInt(response[7].headers['total-count']) -
-                            sampleOptions.length,
+                        value: parseInt(response[7].headers['total-count']) - sampleOptions.length,
                         type: OptionType.SAMPLE_COUNT,
                     };
 
                     if (
-                        geneOptions.length + patientOptions.length <
-                            2 * DEFAULT_PAGE_SIZE &&
+                        geneOptions.length + patientOptions.length < 2 * DEFAULT_PAGE_SIZE &&
                         studyCount.value > 0
                     ) {
                         const spillover =
-                            2 * DEFAULT_PAGE_SIZE -
-                            (geneOptions.length + patientOptions.length);
+                            2 * DEFAULT_PAGE_SIZE - (geneOptions.length + patientOptions.length);
                         await client
                             .getAllStudiesUsingGETWithHttpInfo({
                                 keyword: input,
@@ -258,9 +226,7 @@ export default class QuickSearch extends React.Component {
                                     SHOW_MORE_SIZE * this.studyPageMultiplier,
                             })
                             .then((response: any) => {
-                                studyOptions = response.body.map(
-                                    this.studyToOption
-                                );
+                                studyOptions = response.body.map(this.studyToOption);
                             });
                         studyCount.value = studyCount.value - spillover;
                     }
@@ -333,9 +299,7 @@ export default class QuickSearch extends React.Component {
             route = PagePath.Study;
             this.trackClick(PagePath.Study, this.inputValue);
         } else if (newOption.type === OptionType.GENE) {
-            const studyList =
-                this.geneStudyQuery.isComplete &&
-                this.geneStudyQuery.result.query;
+            const studyList = this.geneStudyQuery.isComplete && this.geneStudyQuery.result.query;
             parameters = {
                 case_set_id: 'all',
                 gene_list: newOption.hugoGeneSymbol,
@@ -469,9 +433,7 @@ export default class QuickSearch extends React.Component {
                     }}
                 >
                     We would love to hear what you think:&nbsp;
-                    <a href="mailto:cbioportal@googlegroups.com">
-                        cbioportal@googlegroups.com
-                    </a>
+                    <a href="mailto:cbioportal@googlegroups.com">cbioportal@googlegroups.com</a>
                 </p>
             </div>
         );
@@ -495,9 +457,7 @@ const Group = (props: any) => {
 
     return (
         <div className={moduleStyles.optionGroup}>
-            <div className={moduleStyles.groupHeader}>
-                {props.data.instruction}
-            </div>
+            <div className={moduleStyles.groupHeader}>{props.data.instruction}</div>
             <components.Group {...props} />
         </div>
     );
@@ -519,8 +479,7 @@ function formatMyLabel(data: any) {
         label = data.hugoGeneSymbol;
         typeStyle = 'success';
         details = data.cytoband || '-';
-        clickInfo =
-            'Select a gene to query it across all TCGA PanCancer Atlas studies';
+        clickInfo = 'Select a gene to query it across all TCGA PanCancer Atlas studies';
     } else if (data.type === OptionType.PATIENT) {
         label = data.patientId;
         typeStyle = 'danger';

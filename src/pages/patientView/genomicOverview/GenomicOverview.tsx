@@ -8,11 +8,7 @@ import SampleManager from '../SampleManager';
 import { ClinicalDataBySampleId } from '../../../shared/api/api-types-extended';
 import { MutationFrequenciesBySample } from '../vafPlot/VAFPlot';
 import { computed } from 'mobx';
-import {
-    sampleIdToIconData,
-    IKeyedIconData,
-    genePanelIdToIconData,
-} from './GenomicOverviewUtils';
+import { sampleIdToIconData, IKeyedIconData, genePanelIdToIconData } from './GenomicOverviewUtils';
 
 interface IGenomicOverviewProps {
     mergedMutations: Mutation[][];
@@ -38,9 +34,7 @@ export default class GenomicOverview extends React.Component<
     }
 
     @computed get frequencies() {
-        return this.computeMutationFrequencyBySample(
-            this.props.mergedMutations
-        );
+        return this.computeMutationFrequencyBySample(this.props.mergedMutations);
     }
 
     @computed get genePanelIds() {
@@ -89,12 +83,8 @@ export default class GenomicOverview extends React.Component<
                     width={this.getTracksWidth()}
                     cnaSegments={this.props.cnaSegments}
                     samples={this.props.samples}
-                    mutationGenePanelIconData={
-                        this.sampleIdToMutationGenePanelIconData
-                    }
-                    copyNumberGenePanelIconData={
-                        this.sampleIdToCopyNumberGenePanelIconData
-                    }
+                    mutationGenePanelIconData={this.sampleIdToMutationGenePanelIconData}
+                    copyNumberGenePanelIconData={this.sampleIdToCopyNumberGenePanelIconData}
                     onSelectGenePanel={this.props.onSelectGenePanel}
                 />
                 <If condition={this.shouldShowVAFPlot()}>
@@ -105,9 +95,7 @@ export default class GenomicOverview extends React.Component<
                         labels={labels}
                         overlayPlacement="right"
                         cssClass="vafPlot"
-                        genePanelIconData={
-                            this.sampleIdToMutationGenePanelIconData
-                        }
+                        genePanelIconData={this.sampleIdToMutationGenePanelIconData}
                     />
                 </If>
             </div>
@@ -130,9 +118,7 @@ export default class GenomicOverview extends React.Component<
     }
 
     private getTracksWidth(): number {
-        return (
-            this.props.containerWidth - (this.shouldShowVAFPlot() ? 140 : 40)
-        );
+        return this.props.containerWidth - (this.shouldShowVAFPlot() ? 140 : 40);
     }
 
     private computeMutationFrequencyBySample(
@@ -143,14 +129,10 @@ export default class GenomicOverview extends React.Component<
         let freq;
         for (const mutations of mergedMutations) {
             for (const mutation of mutations) {
-                if (
-                    mutation.tumorAltCount >= 0 &&
-                    mutation.tumorRefCount >= 0
-                ) {
+                if (mutation.tumorAltCount >= 0 && mutation.tumorRefCount >= 0) {
                     sampleId = mutation.sampleId;
                     freq =
-                        mutation.tumorAltCount /
-                        (mutation.tumorRefCount + mutation.tumorAltCount);
+                        mutation.tumorAltCount / (mutation.tumorRefCount + mutation.tumorAltCount);
                     ret[sampleId] = ret[sampleId] || [];
                     ret[sampleId].push(freq);
                 }

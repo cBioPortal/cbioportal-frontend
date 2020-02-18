@@ -102,9 +102,7 @@ describe('rectangleVennDiagram/geometry', () => {
                 { x: 0, y: 0, xLength: 10, yLength: 3 },
                 { x: 20, y: 0, xLength: 5, yLength: 3 },
             ];
-            assertDeepEqualInAnyOrder(rectangleDifference(rects[0], rects[1]), [
-                rects[0],
-            ]);
+            assertDeepEqualInAnyOrder(rectangleDifference(rects[0], rects[1]), [rects[0]]);
         });
         it('A contains B', () => {
             const rects = [
@@ -125,10 +123,7 @@ describe('rectangleVennDiagram/geometry', () => {
                 { x: 0, y: 0, xLength: 10, yLength: 3 },
                 { x: 5, y: 0, xLength: 5, yLength: 3 },
             ];
-            assertDeepEqualInAnyOrder(
-                rectangleDifference(rects[1], rects[0]),
-                []
-            );
+            assertDeepEqualInAnyOrder(rectangleDifference(rects[1], rects[0]), []);
         });
         it('A intersects and doesnt contain B', () => {
             const rects = [
@@ -137,10 +132,7 @@ describe('rectangleVennDiagram/geometry', () => {
             ];
             assertDeepEqualInAnyOrder(
                 rectangleDifference(rects[0], rects[1]),
-                [
-                    { x: 0, y: 3, xLength: 5, yLength: 2 },
-                    { x: 0, y: 0, xLength: 10, yLength: 3 },
-                ],
+                [{ x: 0, y: 3, xLength: 5, yLength: 2 }, { x: 0, y: 0, xLength: 10, yLength: 3 }],
                 'A - B'
             );
             assertDeepEqualInAnyOrder(
@@ -195,11 +187,7 @@ describe('rectangleVennDiagram/geometry', () => {
                 ],
                 'a - b - c'
             );
-            assertDeepEqualInAnyOrder(
-                rectangleDifferenceMultiple(b, [a, c]),
-                [],
-                'b - a - c'
-            );
+            assertDeepEqualInAnyOrder(rectangleDifferenceMultiple(b, [a, c]), [], 'b - a - c');
             assertDeepEqualInAnyOrder(
                 rectangleDifferenceMultiple(c, [a, b]),
                 [
@@ -217,15 +205,9 @@ describe('rectangleVennDiagram/geometry', () => {
             const a = { x: 0, y: 0, xLength: 10, yLength: 3 };
             const b = { x: 20, y: 0, xLength: 5, yLength: 3 };
             const c = { x: 50, y: 0, xLength: 5, yLength: 3 };
-            assertDeepEqualInAnyOrder(rectangleDifferenceMultiple(a, [b, c]), [
-                a,
-            ]);
-            assertDeepEqualInAnyOrder(rectangleDifferenceMultiple(b, [a, c]), [
-                b,
-            ]);
-            assertDeepEqualInAnyOrder(rectangleDifferenceMultiple(c, [a, b]), [
-                c,
-            ]);
+            assertDeepEqualInAnyOrder(rectangleDifferenceMultiple(a, [b, c]), [a]);
+            assertDeepEqualInAnyOrder(rectangleDifferenceMultiple(b, [a, c]), [b]);
+            assertDeepEqualInAnyOrder(rectangleDifferenceMultiple(c, [a, b]), [c]);
         });
     });
 
@@ -237,10 +219,9 @@ describe('rectangleVennDiagram/geometry', () => {
         };
 
         it('A', () => {
-            assertDeepEqualInAnyOrder(
-                getRegionShape(['a'], { a: setRectangles.a }),
-                [setRectangles.a]
-            );
+            assertDeepEqualInAnyOrder(getRegionShape(['a'], { a: setRectangles.a }), [
+                setRectangles.a,
+            ]);
         });
         it('A and B', () => {
             assertDeepEqualInAnyOrder(
@@ -272,23 +253,13 @@ describe('rectangleVennDiagram/geometry', () => {
         it('A not B not C', () => {
             assertDeepEqualInAnyOrder(
                 getRegionShape(['a'], setRectangles),
-                rectangleDifferenceMultiple(setRectangles.a, [
-                    setRectangles.b,
-                    setRectangles.c,
-                ])
+                rectangleDifferenceMultiple(setRectangles.a, [setRectangles.b, setRectangles.c])
             );
         });
         it('A and B and C', () => {
-            assertDeepEqualInAnyOrder(
-                getRegionShape(['a', 'b', 'c'], setRectangles),
-                [
-                    rectangleIntersection(
-                        setRectangles.a,
-                        setRectangles.b,
-                        setRectangles.c
-                    ),
-                ]
-            );
+            assertDeepEqualInAnyOrder(getRegionShape(['a', 'b', 'c'], setRectangles), [
+                rectangleIntersection(setRectangles.a, setRectangles.b, setRectangles.c),
+            ]);
         });
     });
 
@@ -334,10 +305,7 @@ describe('rectangleVennDiagram/geometry', () => {
         });
 
         it('region with empty rectangles', () => {
-            assert.equal(
-                getRegionArea([{ x: 0, y: 0, xLength: 0, yLength: 0 }]),
-                0
-            );
+            assert.equal(getRegionArea([{ x: 0, y: 0, xLength: 0, yLength: 0 }]), 0);
         });
     });
 });

@@ -1,10 +1,6 @@
 import $ from 'jquery';
 
-export function writeTest(
-    name: string,
-    argJSON: string[],
-    retJSON: string
-): void {
+export function writeTest(name: string, argJSON: string[], retJSON: string): void {
     showTest(formatTest(name, argJSON, retJSON));
 }
 
@@ -12,13 +8,7 @@ export function writeTest(
 export function testIt(obj: any, methodname: string, des: any) {
     var old = des.value;
     des.value = function(...args: any[]) {
-        return (window as any)._handleTestReports(
-            args,
-            old,
-            'fdsa,fdas',
-            this,
-            methodname
-        );
+        return (window as any)._handleTestReports(args, old, 'fdsa,fdas', this, methodname);
     };
 }
 
@@ -30,9 +20,7 @@ describe('${functionName}', ()=>{
         
         ${argMap.reduce((s, a) => (s += a + '\n\n'), '')}
         
-        const ret = ${functionName}(${argMap
-        .map((n, i) => 'arg' + i)
-        .join(', ')});
+        const ret = ${functionName}(${argMap.map((n, i) => 'arg' + i).join(', ')});
         
         const expectedResult = ${retJSON};
         

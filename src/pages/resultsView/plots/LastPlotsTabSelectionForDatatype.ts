@@ -1,8 +1,4 @@
-import {
-    AxisMenuSelection,
-    PlotsTabGeneOption,
-    PlotsTabOption,
-} from './PlotsTab';
+import { AxisMenuSelection, PlotsTabGeneOption, PlotsTabOption } from './PlotsTab';
 import autobind from 'autobind-decorator';
 
 type Selection = {
@@ -19,9 +15,7 @@ export default class LastPlotsTabSelectionForDatatype {
     private vertical: Map<string, Selection> = new Map();
 
     @autobind
-    public updateHorizontalFromSelection(
-        newSelection: AxisMenuSelection
-    ): void {
+    public updateHorizontalFromSelection(newSelection: AxisMenuSelection): void {
         this.updateAxisWithSelection(this.horizontal, newSelection);
     }
 
@@ -43,10 +37,7 @@ export default class LastPlotsTabSelectionForDatatype {
 
             axis.set(
                 newSelection.dataType,
-                LastPlotsTabSelectionForDatatype.updateSelection(
-                    selectionToUpdate,
-                    newSelection
-                )
+                LastPlotsTabSelectionForDatatype.updateSelection(selectionToUpdate, newSelection)
             );
         }
     }

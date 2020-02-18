@@ -4,10 +4,7 @@ import { observer } from 'mobx-react';
 import { computed, observable } from 'mobx';
 
 @observer
-export default class NonClosingDropdown extends React.Component<
-    DropdownButtonProps,
-    {}
-> {
+export default class NonClosingDropdown extends React.Component<DropdownButtonProps, {}> {
     private _forceOpen: boolean = false;
     @observable private open: boolean = false;
 
@@ -25,11 +22,7 @@ export default class NonClosingDropdown extends React.Component<
     render() {
         const { children, open, onToggle, ...props } = this.props;
         return (
-            <DropdownButton
-                open={this.open}
-                onToggle={this.onToggle}
-                {...props}
-            >
+            <DropdownButton open={this.open} onToggle={this.onToggle} {...props}>
                 {React.Children.toArray(children).map(
                     (x: React.ReactElement<{ onClick?: () => void }>) => {
                         const onClick = x.props.onClick || (() => {});

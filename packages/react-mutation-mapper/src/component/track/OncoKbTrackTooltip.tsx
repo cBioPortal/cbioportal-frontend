@@ -20,20 +20,14 @@ export function oncoKbTooltip(indicatorData: IndicatorQueryResp[]) {
 
     const pluralSuffix = sampleCount > 1 ? 's' : undefined;
     const groupedByImplication = _.groupBy(indicatorData, 'oncogenic');
-    const oncogenicKeywords = _.keys(groupedByImplication).map(keyword => (
-        <b>{keyword}</b>
-    ));
+    const oncogenicKeywords = _.keys(groupedByImplication).map(keyword => <b>{keyword}</b>);
     let oncogenicInfo: (JSX.Element | string)[] = [];
 
     if (oncogenicKeywords.length > 1) {
         // join all except the last one with ','
         const joined = oncogenicKeywords
             .slice(0, oncogenicKeywords.length - 1)
-            .reduce((prev: JSX.Element, curr: JSX.Element): any => [
-                prev,
-                ', ',
-                curr,
-            ]);
+            .reduce((prev: JSX.Element, curr: JSX.Element): any => [prev, ', ', curr]);
 
         oncogenicInfo.push(joined);
 
@@ -45,10 +39,7 @@ export function oncoKbTooltip(indicatorData: IndicatorQueryResp[]) {
         oncogenicInfo = oncogenicKeywords;
     }
 
-    const groupedByProteinChange = _.groupBy(
-        indicatorData,
-        d => d.query.alteration
-    );
+    const groupedByProteinChange = _.groupBy(indicatorData, d => d.query.alteration);
     const tableData = _.keys(groupedByProteinChange).map(proteinChange => ({
         count: groupedByProteinChange[proteinChange].length,
         proteinChange: proteinChange,
@@ -71,8 +62,7 @@ export function oncoKbTooltip(indicatorData: IndicatorQueryResp[]) {
 
     return (
         <span>
-            <b>{sampleCount}</b> sample{pluralSuffix} with {oncogenicInfo}{' '}
-            mutations.
+            <b>{sampleCount}</b> sample{pluralSuffix} with {oncogenicInfo} mutations.
             <OncoKbSummaryTable data={tableData} />
         </span>
     );
@@ -92,19 +82,12 @@ export function generateLevelData(indicatorData: IndicatorQueryResp[]) {
     });
 
     return _.keys(levels)
-        .sort((a, b) =>
-            LEVELS.all.indexOf(a) > LEVELS.all.indexOf(b) ? -1 : 1
-        )
+        .sort((a, b) => (LEVELS.all.indexOf(a) > LEVELS.all.indexOf(b) ? -1 : 1))
         .map(level => ({ level: level, tumorTypes: _.uniq(levels[level]) }));
 }
 
-export default class OncoKbTrackTooltip extends React.Component<
-    OncoKbTrackTooltipProps,
-    {}
-> {
+export default class OncoKbTrackTooltip extends React.Component<OncoKbTrackTooltipProps, {}> {
     public render() {
-        return this.props.indicatorData
-            ? oncoKbTooltip(this.props.indicatorData)
-            : null;
+        return this.props.indicatorData ? oncoKbTooltip(this.props.indicatorData) : null;
     }
 }

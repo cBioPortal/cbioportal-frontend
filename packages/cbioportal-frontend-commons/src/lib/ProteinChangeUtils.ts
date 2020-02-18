@@ -45,9 +45,7 @@ export function getProteinPositionFromProteinChange(
 
     if (!proteinPosition) {
         const location = extractFirstNumericalValue(proteinChange);
-        proteinPosition = location
-            ? { start: location, end: location }
-            : undefined;
+        proteinPosition = location ? { start: location, end: location } : undefined;
     }
 
     return proteinPosition;
@@ -70,9 +68,7 @@ function extractFirstNumericalValue(proteinChange: string) {
 
 // main logic copied over from annotateAlteration method in
 // https://github.com/oncokb/oncokb/blob/master/core/src/main/java/org/mskcc/cbio/oncokb/util/AlterationUtils.java
-export function getMutationTypeFromProteinChange(
-    proteinChange?: string
-): string | undefined {
+export function getMutationTypeFromProteinChange(proteinChange?: string): string | undefined {
     if (!proteinChange) {
         return undefined;
     }
@@ -223,9 +219,7 @@ function resolveProteinPositionForPattern5(
     return proteinPosition;
 }
 
-function resolveConsequenceForPattern0(
-    proteinChange: string
-): string | undefined {
+function resolveConsequenceForPattern0(proteinChange: string): string | undefined {
     let consequence: string | undefined;
 
     // const p = Pattern.compile("^([A-Z\\*]+)([0-9]+)([A-Z\\*\\?]*)$");
@@ -269,9 +263,7 @@ function resolveConsequenceForPattern0(
     return consequence;
 }
 
-function resolveConsequenceForPattern1(
-    proteinChange: string
-): string | undefined {
+function resolveConsequenceForPattern1(proteinChange: string): string | undefined {
     let consequence: string | undefined;
 
     // const p = Pattern.compile("[A-Z]?([0-9]+)(_[A-Z]?([0-9]+))?(delins|ins)([A-Z]+)");
@@ -302,9 +294,7 @@ function resolveConsequenceForPattern1(
     return consequence;
 }
 
-function resolveConsequenceForPattern2(
-    proteinChange: string
-): string | undefined {
+function resolveConsequenceForPattern2(proteinChange: string): string | undefined {
     let consequence: string | undefined;
 
     // const p = Pattern.compile("[A-Z]?([0-9]+)(_[A-Z]?([0-9]+))?(_)?splice");
@@ -318,9 +308,7 @@ function resolveConsequenceForPattern2(
     return consequence;
 }
 
-function resolveConsequenceForPattern3(
-    proteinChange: string
-): string | undefined {
+function resolveConsequenceForPattern3(proteinChange: string): string | undefined {
     let consequence: string | undefined;
 
     // const p = Pattern.compile("[A-Z]?([0-9]+)_[A-Z]?([0-9]+)(.+)");
@@ -357,9 +345,7 @@ function resolveConsequenceForPattern3(
     return consequence;
 }
 
-function resolveConsequenceForPattern4(
-    proteinChange: string
-): string | undefined {
+function resolveConsequenceForPattern4(proteinChange: string): string | undefined {
     let consequence: string | undefined;
 
     //const p = Pattern.compile("([A-Z\\*])([0-9]+)[A-Z]?fs.*");
@@ -374,9 +360,7 @@ function resolveConsequenceForPattern4(
     return consequence;
 }
 
-function resolveConsequenceForPattern5(
-    proteinChange: string
-): string | undefined {
+function resolveConsequenceForPattern5(proteinChange: string): string | undefined {
     let consequence: string | undefined;
 
     // const p = Pattern.compile("([A-Z]+)?([0-9]+)((ins)|(del)|(dup))");
@@ -432,17 +416,13 @@ function extractNonNumerical(matched: RegExpMatchArray): number[] {
  * @param proteinChange
  * @returns {number} sort value
  */
-export function calcProteinChangeSortValue(
-    proteinChange: string
-): number | null {
+export function calcProteinChangeSortValue(proteinChange: string): number | null {
     // let matched = proteinChange.match(/.*[A-Z]([0-9]+)[^0-9]+/);
     const alleleAndPosition: RegExp = /[A-Za-z][0-9]+./g;
     const position: RegExp = /[0-9]+/g;
 
     // first priority is to match values like V600E , V600, E747G, E747, X37_, X37, etc.
-    let matched: RegExpMatchArray | null = proteinChange.match(
-        alleleAndPosition
-    );
+    let matched: RegExpMatchArray | null = proteinChange.match(alleleAndPosition);
     let buffer: number[] = [];
 
     // if no match, then search for numerical (position) match only

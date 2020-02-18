@@ -9,10 +9,7 @@ async function fetch(studyId: string) {
     });
 }
 
-export default class SampleListsInStudyCache extends MobxPromiseCache<
-    string,
-    SampleList[]
-> {
+export default class SampleListsInStudyCache extends MobxPromiseCache<string, SampleList[]> {
     constructor() {
         super(
             q => ({

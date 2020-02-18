@@ -1,8 +1,5 @@
 import * as React from 'react';
-import {
-    DefaultTooltip,
-    getCanonicalMutationType,
-} from 'cbioportal-frontend-commons';
+import { DefaultTooltip, getCanonicalMutationType } from 'cbioportal-frontend-commons';
 import { Mutation } from 'shared/api/generated/CBioPortalAPI';
 import styles from './mutationType.module.scss';
 
@@ -137,9 +134,9 @@ export default class MutationTypeColumnFormatter {
      * @returns {string}    mutation assessor text value
      */
     public static getDisplayValue(data: Mutation[]): string {
-        const entry:
-            | IMutationTypeFormat
-            | undefined = MutationTypeColumnFormatter.getMapEntry(data);
+        const entry: IMutationTypeFormat | undefined = MutationTypeColumnFormatter.getMapEntry(
+            data
+        );
 
         // first, try to find a mapped value
         if (entry && entry.label) {
@@ -163,17 +160,16 @@ export default class MutationTypeColumnFormatter {
     }
 
     public static getClassName(data: Mutation[]): string {
-        const value:
-            | IMutationTypeFormat
-            | undefined = MutationTypeColumnFormatter.getMapEntry(data);
+        const value: IMutationTypeFormat | undefined = MutationTypeColumnFormatter.getMapEntry(
+            data
+        );
 
         if (value && value.className) {
             return value.className;
         }
         // for unmapped values, use the "other" style
         else {
-            return MutationTypeColumnFormatter.MAIN_MUTATION_TYPE_MAP['other']
-                .className;
+            return MutationTypeColumnFormatter.MAIN_MUTATION_TYPE_MAP['other'].className;
         }
     }
 
@@ -200,9 +196,7 @@ export default class MutationTypeColumnFormatter {
     public static renderFunction(data: Mutation[]) {
         // use text for all purposes (display, sort, filter)
         const text: string = MutationTypeColumnFormatter.getDisplayValue(data);
-        const className: string = MutationTypeColumnFormatter.getClassName(
-            data
-        );
+        const className: string = MutationTypeColumnFormatter.getClassName(data);
 
         // use actual value for tooltip
         const toolTip: string = MutationTypeColumnFormatter.getTextValue(data);

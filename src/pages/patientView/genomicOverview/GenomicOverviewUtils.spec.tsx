@@ -87,10 +87,7 @@ describe('GenomicOverviewUtils', () => {
                 },
             };
 
-            assert.deepEqual(
-                sampleIdToIconData(sampleToGenePanelId, iconLookUp),
-                expectedData
-            );
+            assert.deepEqual(sampleIdToIconData(sampleToGenePanelId, iconLookUp), expectedData);
         });
 
         it('returns empty object when sampleToGenePanel data is undefined', () => {
@@ -116,10 +113,7 @@ describe('GenomicOverviewUtils', () => {
                 },
             };
 
-            assert.deepEqual(
-                sampleIdToIconData(sampleToGenePanelId, iconLookUp),
-                expectedData
-            );
+            assert.deepEqual(sampleIdToIconData(sampleToGenePanelId, iconLookUp), expectedData);
         });
 
         it('links whole-genome genePanelIds to whole-genome analysis icon', () => {
@@ -165,10 +159,7 @@ describe('GenomicOverviewUtils', () => {
                 },
             };
 
-            assert.deepEqual(
-                sampleIdToIconData(sampleToGenePanelId, myIconLookup),
-                expectedData
-            );
+            assert.deepEqual(sampleIdToIconData(sampleToGenePanelId, myIconLookup), expectedData);
         });
 
         it('returns empty object when all samples are whole genome', () => {
@@ -192,10 +183,7 @@ describe('GenomicOverviewUtils', () => {
 
             const expectedData = {};
 
-            assert.deepEqual(
-                sampleIdToIconData(sampleToGenePanelId, myIconLookup),
-                expectedData
-            );
+            assert.deepEqual(sampleIdToIconData(sampleToGenePanelId, myIconLookup), expectedData);
         });
     });
 });

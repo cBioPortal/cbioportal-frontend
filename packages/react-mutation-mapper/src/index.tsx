@@ -1,16 +1,10 @@
-export {
-    default as ClinVar,
-    sortValue as clinVarSortValue,
-} from './component/column/ClinVar';
+export { default as ClinVar, sortValue as clinVarSortValue } from './component/column/ClinVar';
 export { default as ColumnHeader } from './component/column/ColumnHeader';
 export {
     default as HotspotAnnotation,
     sortValue as hotspotAnnotationSortValue,
 } from './component/column/HotspotAnnotation';
-export {
-    default as Gnomad,
-    sortValue as gnomadSortValue,
-} from './component/column/Gnomad';
+export { default as Gnomad, sortValue as gnomadSortValue } from './component/column/Gnomad';
 export { default as MutationStatus } from './component/column/MutationStatus';
 export {
     default as ProteinChange,
@@ -50,26 +44,19 @@ export {
 export {
     default as OncoKBSuggestAnnotationLinkout,
 } from './component/oncokb/OncoKBSuggestAnnotationLinkout';
-export {
-    default as OncoKbTreatmentTable,
-} from './component/oncokb/OncoKbTreatmentTable';
+export { default as OncoKbTreatmentTable } from './component/oncokb/OncoKbTreatmentTable';
 export { default as OncoKbFeedback } from './component/oncokb/OncoKbFeedback';
 export { default as OncoKbTooltip } from './component/oncokb/OncoKbTooltip';
 export { default as ReferenceList } from './component/oncokb/ReferenceList';
 export { default as RefComponent } from './component/oncokb/RefComponent';
 export { default as SummaryWithRefs } from './component/oncokb/SummaryWithRefs';
 
-export {
-    default as ClinVarId,
-    getClinVarId,
-} from './component/clinvar/ClinVarId';
+export { default as ClinVarId, getClinVarId } from './component/clinvar/ClinVarId';
 export {
     default as GnomadFrequency,
     calculateAlleleFrequency as calculateGnomadAllelFrequency,
 } from './component/gnomad/GnomadFrequency';
-export {
-    default as GnomadFrequencyTable,
-} from './component/gnomad/GnomadFrequencyTable';
+export { default as GnomadFrequencyTable } from './component/gnomad/GnomadFrequencyTable';
 
 export * from './component/dataTable/ColumnSelector';
 export * from './component/mutationMapper/FilterResetPanel';
@@ -80,9 +67,7 @@ export {
     ColumnSortDirection,
     DataTableColumn,
 } from './component/dataTable/DataTable';
-export {
-    default as DefaultMutationTable,
-} from './component/mutationTable/DefaultMutationTable';
+export { default as DefaultMutationTable } from './component/mutationTable/DefaultMutationTable';
 export * from './component/mutationTable/MutationColumnHelper';
 export { default as Domain } from './component/lollipopPlot/Domain';
 export { default as HotspotInfo } from './component/hotspot/HotspotInfo';
@@ -91,9 +76,7 @@ export {
     default as LollipopMutationPlot,
 } from './component/lollipopMutationPlot/LollipopMutationPlot';
 export { default as LollipopPlot } from './component/lollipopPlot/LollipopPlot';
-export {
-    default as LollipopPlotNoTooltip,
-} from './component/lollipopPlot/LollipopPlotNoTooltip';
+export { default as LollipopPlotNoTooltip } from './component/lollipopPlot/LollipopPlotNoTooltip';
 export { default as Sequence } from './component/lollipopPlot/LollipopPlot';
 export {
     default as MutationMapper,
@@ -141,21 +124,14 @@ export {
     mutationTypeSort,
     getColorForProteinImpactType,
 } from './util/MutationUtils';
-export {
-    defaultOncoKbFilter,
-    groupOncoKbIndicatorDataByMutations,
-} from './util/OncoKbUtils';
+export { defaultOncoKbFilter, groupOncoKbIndicatorDataByMutations } from './util/OncoKbUtils';
 export * from './util/TrackUtils';
 
 export {
     default as DefaultMutationMapperDataFetcher,
 } from './store/DefaultMutationMapperDataFetcher';
-export {
-    default as DefaultMutationMapperDataStore,
-} from './store/DefaultMutationMapperDataStore';
+export { default as DefaultMutationMapperDataStore } from './store/DefaultMutationMapperDataStore';
 export {
     default as DefaultMutationMapperFilterApplier,
 } from './store/DefaultMutationMapperFilterApplier';
-export {
-    default as DefaultMutationMapperStore,
-} from './store/DefaultMutationMapperStore';
+export { default as DefaultMutationMapperStore } from './store/DefaultMutationMapperStore';

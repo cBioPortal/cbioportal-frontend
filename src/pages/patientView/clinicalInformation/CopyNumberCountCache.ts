@@ -1,13 +1,8 @@
 import LazyMobXCache from '../../../shared/lib/LazyMobXCache';
-import {
-    CopyNumberCount,
-    CopyNumberCountIdentifier,
-} from 'shared/api/generated/CBioPortalAPI';
+import { CopyNumberCount, CopyNumberCountIdentifier } from 'shared/api/generated/CBioPortalAPI';
 import client from 'shared/api/cbioportalClientInstance';
 
-function getKey<T extends { entrezGeneId: number; alteration: number }>(
-    obj: T
-): string {
+function getKey<T extends { entrezGeneId: number; alteration: number }>(obj: T): string {
     return obj.entrezGeneId + '~' + obj.alteration;
 }
 

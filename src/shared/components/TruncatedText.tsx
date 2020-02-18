@@ -14,20 +14,11 @@ export interface ITruncatedTextProps {
     tooltip?: JSX.Element; // tooltip content
 }
 
-export function isTooLong(
-    text: string,
-    maxLength: number,
-    buffer?: number
-): boolean {
+export function isTooLong(text: string, maxLength: number, buffer?: number): boolean {
     return text != null && text.length > maxLength + (buffer || 0);
 }
 
-export function truncateText(
-    text: string,
-    suffix: string,
-    maxLength: number,
-    buffer?: number
-) {
+export function truncateText(text: string, suffix: string, maxLength: number, buffer?: number) {
     if (isTooLong(text, maxLength, buffer)) {
         return text.substring(0, maxLength) + suffix;
     } else {
@@ -39,10 +30,7 @@ export function truncateText(
  * @author Selcuk Onur Sumer
  */
 @observer
-export default class TruncatedText extends React.Component<
-    ITruncatedTextProps,
-    {}
-> {
+export default class TruncatedText extends React.Component<ITruncatedTextProps, {}> {
     public static defaultProps = {
         maxLength: 50,
         buffer: 2,
@@ -52,10 +40,7 @@ export default class TruncatedText extends React.Component<
 
     public render() {
         let content = (
-            <span
-                style={{ whiteSpace: 'nowrap' }}
-                className={classNames(this.props.className)}
-            >
+            <span style={{ whiteSpace: 'nowrap' }} className={classNames(this.props.className)}>
                 {this.truncatedText}
             </span>
         );
@@ -64,11 +49,7 @@ export default class TruncatedText extends React.Component<
             content = (
                 <DefaultTooltip
                     overlay={() =>
-                        this.props.tooltip || (
-                            <div style={{ maxWidth: 500 }}>
-                                {this.props.text}
-                            </div>
-                        )
+                        this.props.tooltip || <div style={{ maxWidth: 500 }}>{this.props.text}</div>
                     }
                     placement="right"
                     destroyTooltipOnHide={true}

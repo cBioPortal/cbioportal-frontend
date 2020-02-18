@@ -1,7 +1,4 @@
-import {
-    getProteinImpactType,
-    ProteinImpactType,
-} from 'cbioportal-frontend-commons';
+import { getProteinImpactType, ProteinImpactType } from 'cbioportal-frontend-commons';
 import _ from 'lodash';
 
 import { MutationFilter, MutationFilterValue } from '../filter/MutationFilter';
@@ -45,17 +42,11 @@ export function updatePositionSelectionFilters(
         values: selectedPositions,
     };
     // we want to keep other filters (filters not related to positions) as is
-    const otherFilters = dataStore.selectionFilters.filter(
-        f => f.type !== DataFilterType.POSITION
-    );
+    const otherFilters = dataStore.selectionFilters.filter(f => f.type !== DataFilterType.POSITION);
 
     // reset filters
     dataStore.clearSelectionFilters();
-    dataStore.setSelectionFilters([
-        positionFilter,
-        ...defaultFilters,
-        ...otherFilters,
-    ]);
+    dataStore.setSelectionFilters([positionFilter, ...defaultFilters, ...otherFilters]);
 }
 
 export function updatePositionHighlightFilters(
@@ -88,20 +79,11 @@ export function findAllUniquePositions(filters: DataFilter[]): number[] {
 export function indexPositions(
     filters: DataFilter[]
 ): { [position: string]: { position: number } } {
-    return _.keyBy(
-        findAllUniquePositions(filters).map(p => ({ position: p })),
-        'position'
-    );
+    return _.keyBy(findAllUniquePositions(filters).map(p => ({ position: p })), 'position');
 }
 
-export function includesSearchTextIgnoreCase(
-    value?: string,
-    searchText?: string
-) {
-    return (
-        searchText &&
-        (value || '').toLowerCase().includes(searchText.toLowerCase())
-    );
+export function includesSearchTextIgnoreCase(value?: string, searchText?: string) {
+    return searchText && (value || '').toLowerCase().includes(searchText.toLowerCase());
 }
 
 export function findTextInputFilter(dataFilters: DataFilter[]) {
@@ -116,10 +98,7 @@ export function findOneMutationFilterValue(filter: MutationFilter) {
     return filter.values.length > 0 ? _.values(filter.values[0])[0] : undefined;
 }
 
-export function applyDefaultPositionFilter(
-    filter: PositionFilter,
-    mutation: Mutation
-) {
+export function applyDefaultPositionFilter(filter: PositionFilter, mutation: Mutation) {
     // const positions: {[position: string]: {position: number}} = indexPositions([filter]);
     // return !positions || !!positions[mutation.proteinPosStart+""];
 
@@ -130,25 +109,14 @@ export function applyDefaultProteinImpactTypeFilter(
     filter: ProteinImpactTypeFilter,
     mutation: Mutation
 ) {
-    return filter.values.includes(
-        getProteinImpactType(mutation.mutationType || 'other')
-    );
+    return filter.values.includes(getProteinImpactType(mutation.mutationType || 'other'));
 }
 
-export function applyDefaultMutationStatusFilter(
-    filter: MutationStatusFilter,
-    mutation: Mutation
-) {
-    return (
-        mutation.mutationStatus !== undefined &&
-        filter.values.includes(mutation.mutationStatus)
-    );
+export function applyDefaultMutationStatusFilter(filter: MutationStatusFilter, mutation: Mutation) {
+    return mutation.mutationStatus !== undefined && filter.values.includes(mutation.mutationStatus);
 }
 
-export function applyDefaultMutationFilter(
-    filter: MutationFilter,
-    mutation: Mutation
-) {
+export function applyDefaultMutationFilter(filter: MutationFilter, mutation: Mutation) {
     const filterPredicates = filter.values.map((value: MutationFilterValue) => {
         const valuePredicates = Object.keys(value).map(key =>
             includesSearchTextIgnoreCase(
@@ -207,9 +175,7 @@ export function onFilterOptionSelect(
     dataFilterId: string
 ) {
     // all other filters except the current filter with the given data filter id
-    const otherFilters = dataStore.dataFilters.filter(
-        (f: DataFilter) => f.id !== dataFilterId
-    );
+    const otherFilters = dataStore.dataFilters.filter((f: DataFilter) => f.id !== dataFilterId);
 
     if (allValuesSelected) {
         // if all values are selected just remove the existing filter with the given data filter id
@@ -234,9 +200,7 @@ export function applyDataFiltersOnDatum(
 ) {
     return (
         dataFilters.length > 0 &&
-        !dataFilters
-            .map(dataFilter => applyFilter(dataFilter, datum))
-            .includes(false)
+        !dataFilters.map(dataFilter => applyFilter(dataFilter, datum)).includes(false)
     );
 }
 

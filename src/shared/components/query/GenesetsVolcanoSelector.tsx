@@ -2,15 +2,7 @@ import * as _ from 'lodash';
 import * as React from 'react';
 import LabeledCheckbox from '../labeledCheckbox/LabeledCheckbox';
 import * as styles_any from './styles/styles.module.scss';
-import {
-    action,
-    ObservableMap,
-    expr,
-    toJS,
-    computed,
-    observable,
-    autorun,
-} from 'mobx';
+import { action, ObservableMap, expr, toJS, computed, observable, autorun } from 'mobx';
 import { observer, Observer } from 'mobx-react';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
 import { Geneset } from '../../api/generated/CBioPortalAPIInternal';
@@ -80,14 +72,8 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<
                 const xValue = representativeScore;
                 const yValue = -(Math.log(representativePvalue) / Math.log(10));
                 for (const selectedPoint of selectedPoints) {
-                    if (
-                        selectedPoint.x === xValue &&
-                        selectedPoint.y === yValue
-                    ) {
-                        this.store.map_genesets_selected_volcano.set(
-                            name,
-                            true
-                        );
+                    if (selectedPoint.x === xValue && selectedPoint.y === yValue) {
+                        this.store.map_genesets_selected_volcano.set(name, true);
                     }
                 }
             }
@@ -96,10 +82,7 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<
 
     render() {
         return (
-            <div
-                className={styles.GenesetsVolcanoSelectorWindow}
-                style={{ height: '400px' }}
-            >
+            <div className={styles.GenesetsVolcanoSelectorWindow} style={{ height: '400px' }}>
                 <div style={{ float: 'left' }} className="form-inline">
                     <label htmlFor="PercentileScoreCalculation">
                         Percentile for score calculation:
@@ -143,9 +126,7 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<
                                 height={350}
                                 containerComponent={
                                     <VictorySelectionContainer
-                                        onSelection={
-                                            this.updateSelectionFromPlot
-                                        }
+                                        onSelection={this.updateSelectionFromPlot}
                                         selectionStyle={{
                                             fill: 'tomato',
                                             fillOpacity: 0.5,
@@ -189,27 +170,20 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<
                                         },
                                         parent: { border: 'dotted 1px #f00' },
                                     }}
-                                    data={[
-                                        { x: -1.2, y: 1.3 },
-                                        { x: 1, y: 1.3 },
-                                    ]}
+                                    data={[{ x: -1.2, y: 1.3 }, { x: 1, y: 1.3 }]}
                                 />
                                 <VictoryLine
                                     style={{
                                         data: { stroke: 'rgb(144, 164, 174)' },
                                         parent: { border: '1px dashed solid' },
                                     }}
-                                    data={[
-                                        { x: 0, y: 0 },
-                                        { x: 0, y: this.props.maxY },
-                                    ]}
+                                    data={[{ x: 0, y: 0 }, { x: 0, y: this.props.maxY }]}
                                 />
                                 <VictoryScatter
                                     style={{
                                         data: {
-                                            fill: (
-                                                d: GenesetsVolcanoSelectorProps['plotData']
-                                            ) => (d ? d.fill : ''),
+                                            fill: (d: GenesetsVolcanoSelectorProps['plotData']) =>
+                                                d ? d.fill : '',
                                             fillOpacity: 0.3,
                                         },
                                     }}
@@ -228,128 +202,100 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<
                     }}
                 >
                     <LoadingIndicator
-                        isLoading={
-                            !(
-                                this.store.volcanoPlotTableData.isComplete &&
-                                this.props.data
-                            )
-                        }
+                        isLoading={!(this.store.volcanoPlotTableData.isComplete && this.props.data)}
                     />
-                    {this.store.volcanoPlotTableData.isComplete &&
-                        this.props.data && (
-                            <GenesetsVolcanoTable
-                                data={this.props.data}
-                                columns={[
-                                    {
-                                        name: 'Gene Sets',
-                                        render: (data: Geneset) => (
-                                            <span>{data.name}</span>
-                                        ),
-                                        sortBy: (data: Geneset) => data.name,
-                                        filter: (
-                                            data: Geneset,
-                                            filterString: string,
-                                            filterStringUpper: string
-                                        ) => {
-                                            return (
-                                                data.name
-                                                    .toUpperCase()
-                                                    .indexOf(
-                                                        filterStringUpper
-                                                    ) > -1
-                                            );
-                                        },
+                    {this.store.volcanoPlotTableData.isComplete && this.props.data && (
+                        <GenesetsVolcanoTable
+                            data={this.props.data}
+                            columns={[
+                                {
+                                    name: 'Gene Sets',
+                                    render: (data: Geneset) => <span>{data.name}</span>,
+                                    sortBy: (data: Geneset) => data.name,
+                                    filter: (
+                                        data: Geneset,
+                                        filterString: string,
+                                        filterStringUpper: string
+                                    ) => {
+                                        return (
+                                            data.name.toUpperCase().indexOf(filterStringUpper) > -1
+                                        );
                                     },
-                                    {
-                                        name: 'GSVA Score',
-                                        render: (data: Geneset) => (
-                                            <span>
-                                                {data.representativeScore.toFixed(
-                                                    2
-                                                )}
-                                            </span>
-                                        ),
-                                        sortBy: (data: Geneset) =>
-                                            data.representativeScore,
-                                    },
-                                    {
-                                        name: 'P Value',
-                                        render: (data: Geneset) => (
-                                            <span>
-                                                {toPrecision(
-                                                    data.representativePvalue,
-                                                    2,
-                                                    0.1
-                                                )}
-                                            </span>
-                                        ),
-                                        sortBy: (data: Geneset) =>
-                                            data.representativePvalue,
-                                    },
-                                    {
-                                        name: 'Selected',
-                                        render: (data: Geneset) => (
-                                            <LabeledCheckbox
-                                                checked={
-                                                    !!this.store.map_genesets_selected_volcano.get(
-                                                        data.name
-                                                    )
-                                                }
-                                                onChange={event =>
-                                                    this.store.map_genesets_selected_volcano.set(
-                                                        data.name,
-                                                        event.target.checked
-                                                    )
-                                                }
-                                            />
-                                        ),
-                                    },
-                                ]}
-                                initialSortColumn="P Value"
-                                initialSortDirection={'asc'}
-                                showPagination={true}
-                                initialItemsPerPage={100}
-                                showColumnVisibility={false}
-                                showFilter={true}
-                                showCopyDownload={false}
-                            />
-                        )}
+                                },
+                                {
+                                    name: 'GSVA Score',
+                                    render: (data: Geneset) => (
+                                        <span>{data.representativeScore.toFixed(2)}</span>
+                                    ),
+                                    sortBy: (data: Geneset) => data.representativeScore,
+                                },
+                                {
+                                    name: 'P Value',
+                                    render: (data: Geneset) => (
+                                        <span>
+                                            {toPrecision(data.representativePvalue, 2, 0.1)}
+                                        </span>
+                                    ),
+                                    sortBy: (data: Geneset) => data.representativePvalue,
+                                },
+                                {
+                                    name: 'Selected',
+                                    render: (data: Geneset) => (
+                                        <LabeledCheckbox
+                                            checked={
+                                                !!this.store.map_genesets_selected_volcano.get(
+                                                    data.name
+                                                )
+                                            }
+                                            onChange={event =>
+                                                this.store.map_genesets_selected_volcano.set(
+                                                    data.name,
+                                                    event.target.checked
+                                                )
+                                            }
+                                        />
+                                    ),
+                                },
+                            ]}
+                            initialSortColumn="P Value"
+                            initialSortDirection={'asc'}
+                            showPagination={true}
+                            initialItemsPerPage={100}
+                            showColumnVisibility={false}
+                            showFilter={true}
+                            showCopyDownload={false}
+                        />
+                    )}
                 </div>
                 <div style={{ float: 'right' }}>
-                    {this.store.volcanoPlotTableData.isComplete &&
-                        this.props.data && (
-                            <button
-                                style={{ marginTop: 15, float: 'right' }}
-                                className="btn btn-primary btn-sm pull-right"
-                                onClick={() =>
-                                    this.props.onSelect(
-                                        this.store.map_genesets_selected_volcano
-                                    )
-                                }
-                            >
-                                Add selection to the query
-                            </button>
-                        )}
-                    {this.store.volcanoPlotTableData.isComplete &&
-                        this.props.data && (
-                            <button
-                                style={{
-                                    marginRight: 15,
-                                    marginTop: 15,
-                                    float: 'right',
-                                }}
-                                className="btn btn-primary btn-sm pull-right"
-                                onClick={() =>
-                                    this.store.map_genesets_selected_volcano.replace(
-                                        this.props.initialSelection.map(
-                                            geneset => [geneset, true]
-                                        )
-                                    )
-                                }
-                            >
-                                Clear selection
-                            </button>
-                        )}
+                    {this.store.volcanoPlotTableData.isComplete && this.props.data && (
+                        <button
+                            style={{ marginTop: 15, float: 'right' }}
+                            className="btn btn-primary btn-sm pull-right"
+                            onClick={() =>
+                                this.props.onSelect(this.store.map_genesets_selected_volcano)
+                            }
+                        >
+                            Add selection to the query
+                        </button>
+                    )}
+                    {this.store.volcanoPlotTableData.isComplete && this.props.data && (
+                        <button
+                            style={{
+                                marginRight: 15,
+                                marginTop: 15,
+                                float: 'right',
+                            }}
+                            className="btn btn-primary btn-sm pull-right"
+                            onClick={() =>
+                                this.store.map_genesets_selected_volcano.replace(
+                                    this.props.initialSelection.map(geneset => [geneset, true])
+                                )
+                            }
+                        >
+                            Clear selection
+                        </button>
+                    )}
                 </div>
             </div>
         );

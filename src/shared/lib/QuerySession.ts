@@ -1,7 +1,4 @@
-import {
-    GeneticTrackDatum,
-    IGeneHeatmapTrackDatum,
-} from '../components/oncoprint/Oncoprint';
+import { GeneticTrackDatum, IGeneHeatmapTrackDatum } from '../components/oncoprint/Oncoprint';
 import { SingleGeneQuery } from './oql/oql-parser';
 export type OncoprintSampleGeneticTrackData = {
     altered_sample_uids: string[];
@@ -77,12 +74,8 @@ export type QuerySession = {
     getOncoprintPatientGenomicEventData: (
         use_session_filters?: boolean
     ) => Promise<OncoprintPatientGeneticTrackData[]>;
-    getSampleClinicalData: (
-        attribute_ids: string[]
-    ) => Promise<OncoprintSampleClinicalDatum[]>;
-    getPatientClinicalData: (
-        attribute_ids: string[]
-    ) => Promise<OncoprintPatientClinicalDatum[]>;
+    getSampleClinicalData: (attribute_ids: string[]) => Promise<OncoprintSampleClinicalDatum[]>;
+    getPatientClinicalData: (attribute_ids: string[]) => Promise<OncoprintPatientClinicalDatum[]>;
     getSampleHeatmapData: (
         genetic_profile_id: string,
         genes: string[]

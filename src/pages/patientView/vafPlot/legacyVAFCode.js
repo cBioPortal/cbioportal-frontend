@@ -50,9 +50,7 @@ const AlleleFreqPlotUtils = (function() {
         return function(x) {
             return (
                 (1 / (variance * Math.sqrt(2 * Math.PI))) *
-                Math.exp(
-                    (-1 * Math.pow(x - mean, 2)) / (2 * Math.pow(variance, 2))
-                )
+                Math.exp((-1 * Math.pow(x - mean, 2)) / (2 * Math.pow(variance, 2)))
             );
         };
     };
@@ -97,8 +95,7 @@ const AlleleFreqPlotUtils = (function() {
             })
         );
         var standard_deviation = Math.pow(variance, 0.5);
-        var bandwidth =
-            1.06 * standard_deviation * Math.pow(data.length, -1 / 5);
+        var bandwidth = 1.06 * standard_deviation * Math.pow(data.length, -1 / 5);
 
         return bandwidth;
     };
@@ -147,10 +144,7 @@ export const AlleleFreqPlotMulti = function(
             /*var ind = Object.keys(colors).length;
              colors[k] = {stroke:fillcolors(ind), fill:fillcolors(ind)};*/
             var col = d3.rgb(colors[k] || 'rgb(0,0,0)');
-            while (
-                col.toString() in colorhist &&
-                !(col.r === 0 && col.g === 0 && col.b === 0)
-            ) {
+            while (col.toString() in colorhist && !(col.r === 0 && col.g === 0 && col.b === 0)) {
                 col = col.darker(0.4);
             }
             var col_string = col.toString();
@@ -174,9 +168,7 @@ export const AlleleFreqPlotMulti = function(
         options.margin
     );
     var width = options.width || 200;
-    var height =
-        options.height ||
-        (500 + label_dist_to_axis) / 2 - margin.top - margin.bottom;
+    var height = options.height || (500 + label_dist_to_axis) / 2 - margin.top - margin.bottom;
 
     // x scale and axis
     var x = d3.scale
@@ -199,10 +191,7 @@ export const AlleleFreqPlotMulti = function(
     for (var k in data) {
         if (data.hasOwnProperty(k)) {
             bandwidth[k] = Math.max(utils.calculate_bandwidth(data[k]), 0.01);
-            kde[k] = utils.kernelDensityEstimator(
-                utils.gaussianKernel(bandwidth[k]),
-                x.ticks(100)
-            );
+            kde[k] = utils.kernelDensityEstimator(utils.gaussianKernel(bandwidth[k]), x.ticks(100));
             plot_data[k] = kde[k](data[k]);
         }
     }
@@ -333,8 +322,7 @@ export const AlleleFreqPlotMulti = function(
     };
 
     var ylabel_dist_to_axis = label_dist_to_axis;
-    ylabel_dist_to_axis +=
-        options.yticks === 0 ? 0 : displace_by_digits(mutation_count_range[1]);
+    ylabel_dist_to_axis += options.yticks === 0 ? 0 : displace_by_digits(mutation_count_range[1]);
 
     // y axis label
     y_axis
@@ -348,10 +336,7 @@ export const AlleleFreqPlotMulti = function(
         .style('font-style', 'italic')
         .text('mutation count');
 
-    applyCss(y_axis.selectAll('path')).attr(
-        'display',
-        options.yticks === 0 ? '' : 'none'
-    );
+    applyCss(y_axis.selectAll('path')).attr('display', options.yticks === 0 ? '' : 'none');
     applyCss(y_axis.selectAll('line'));
 
     // calculate new domain for the binned data
@@ -378,9 +363,7 @@ export const AlleleFreqPlotMulti = function(
                 .attr('class', order[k] + '_viz_hist viz_hist')
                 .attr(
                     'width',
-                    x(binned_data[k][0].dx + binned_data[k][0].x) -
-                        x(binned_data[k][0].x) -
-                        1
+                    x(binned_data[k][0].dx + binned_data[k][0].x) - x(binned_data[k][0].x) - 1
                 )
                 .attr('height', function(d) {
                     return height - binned_yscale(d.y);
@@ -418,14 +401,7 @@ export const AlleleFreqPlotMulti = function(
             .attr('class', 'legend')
             .attr('transform', 'translate(' + (width + 25) + ',0)')
             .style('font-size', legend_font_size + 'px');
-        d3.legend(
-            component,
-            legend,
-            legend_font_size,
-            labels,
-            order,
-            genepanel_icon_data
-        );
+        d3.legend(component, legend, legend_font_size, labels, order, genepanel_icon_data);
     }
     return div;
 };
@@ -470,14 +446,7 @@ var showSamples = function(div, show_histogram, show_curve) {
             .show();
     }
 };
-d3.legend = function(
-    component,
-    g,
-    font_size,
-    labels,
-    order,
-    genepanel_icon_data
-) {
+d3.legend = function(component, g, font_size, labels, order, genepanel_icon_data) {
     g.each(function() {
         var g = d3.select(this),
             items = {},
@@ -528,9 +497,7 @@ d3.legend = function(
             .text(function(d) {
                 var key = d.key;
                 var label =
-                    key.length > maxLabelLength
-                        ? key.substring(0, 4) + '...' + key.slice(-3)
-                        : key;
+                    key.length > maxLabelLength ? key.substring(0, 4) + '...' + key.slice(-3) : key;
                 return label;
             });
         li.selectAll('circle')

@@ -8,9 +8,7 @@ export function sortByClinicalAttributePriorityThenName(
     const _b = Number(b.priority) || 0;
     const priorityDiff = _b - _a;
     if (priorityDiff === 0) {
-        return (a.displayName === undefined ? '' : a.displayName).localeCompare(
-            b.displayName
-        );
+        return (a.displayName === undefined ? '' : a.displayName).localeCompare(b.displayName);
     }
     return priorityDiff;
 }

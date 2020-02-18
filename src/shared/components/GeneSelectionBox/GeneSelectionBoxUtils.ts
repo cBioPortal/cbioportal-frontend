@@ -7,10 +7,7 @@ export function getFocusOutText(genes: string[]): string {
     if (genes.length > 0) {
         focusOutText = genes[0];
         for (let i = 1; i < genes.length; i++) {
-            if (
-                focusOutText.length > 13 ||
-                focusOutText.length + genes[i].length > 13
-            ) {
+            if (focusOutText.length > 13 || focusOutText.length + genes[i].length > 13) {
                 focusOutText += ' and ' + (genes.length - i) + ' more';
                 break;
             }
@@ -39,10 +36,8 @@ export function getOQL(query: string): OQL {
             },
         } = error as SyntaxError;
         let near, start, end;
-        if (offset === query.length)
-            [near, start, end] = ['after', offset - 1, offset];
-        else if (offset === 0)
-            [near, start, end] = ['before', offset, offset + 1];
+        if (offset === query.length) [near, start, end] = ['after', offset - 1, offset];
+        else if (offset === 0) [near, start, end] = ['before', offset, offset + 1];
         else [near, start, end] = ['at', offset, offset + 1];
         let message = `OQL syntax error ${near} selected character; please fix and submit again.`;
         return {

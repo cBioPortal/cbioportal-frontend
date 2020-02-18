@@ -12,14 +12,7 @@ describe('AlleleCountColumnFormatter', () => {
     after(() => {});
 
     it('ignores invalid allele count values', () => {
-        const samples = [
-            'SAMPLE1',
-            'SAMPLE2',
-            'SAMPLE3',
-            'SAMPLE4',
-            'SAMPLE5',
-            'SAMPLE6',
-        ];
+        const samples = ['SAMPLE1', 'SAMPLE2', 'SAMPLE3', 'SAMPLE4', 'SAMPLE5', 'SAMPLE6'];
 
         const mutations: Mutation[] = [
             initMutation({
@@ -48,20 +41,12 @@ describe('AlleleCountColumnFormatter', () => {
         ];
 
         assert.deepEqual(
-            AlleleCountColumnFormatter.getValues(
-                mutations,
-                samples,
-                'tumorAltCount'
-            ),
+            AlleleCountColumnFormatter.getValues(mutations, samples, 'tumorAltCount'),
             ['SAMPLE3: 2', 'SAMPLE5: 6']
         );
 
         assert.deepEqual(
-            AlleleCountColumnFormatter.getValues(
-                mutations.slice(0, 4),
-                samples,
-                'tumorAltCount'
-            ),
+            AlleleCountColumnFormatter.getValues(mutations.slice(0, 4), samples, 'tumorAltCount'),
             ['2']
         );
     });

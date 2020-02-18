@@ -26,10 +26,7 @@ class CustomMenu extends React.Component<any, {}> {
         const { className, children } = this.props;
 
         return (
-            <div
-                className={classNames('dropdown-menu', className)}
-                style={{ padding: '6px' }}
-            >
+            <div className={classNames('dropdown-menu', className)} style={{ padding: '6px' }}>
                 {children}
             </div>
         );

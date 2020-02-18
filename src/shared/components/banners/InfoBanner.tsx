@@ -14,14 +14,10 @@ export default class InfoBanner extends React.Component<IInfoBannerProps, {}> {
         return (
             <div
                 className="alert alert-info"
-                style={Object.assign(
-                    { marginTop: '10px', marginBottom: '0' },
-                    this.props.style
-                )}
+                style={Object.assign({ marginTop: '10px', marginBottom: '0' }, this.props.style)}
             >
                 <span>
-                    <i className="fa fa-md fa-info-circle" />{' '}
-                    {this.props.message}
+                    <i className="fa fa-md fa-info-circle" /> {this.props.message}
                 </span>
                 {!this.props.hidden && (
                     <button

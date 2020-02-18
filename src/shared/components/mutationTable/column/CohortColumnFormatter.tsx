@@ -8,10 +8,7 @@ import { IMutSigData as MutSigData } from 'shared/model/MutSig';
 import { VariantCount } from 'shared/api/generated/CBioPortalAPIInternal';
 import { CacheData } from 'shared/lib/LazyMobXCache';
 import { getPercentage } from 'shared/lib/FormatUtils';
-import {
-    TableCellStatusIndicator,
-    TableCellStatus,
-} from 'cbioportal-frontend-commons';
+import { TableCellStatusIndicator, TableCellStatus } from 'cbioportal-frontend-commons';
 
 type AugVariantCountOutput = CacheData<VariantCount> & {
     hugoGeneSymbol: string;
@@ -23,21 +20,13 @@ export default class CohortColumnFormatter {
         mutSigData: MutSigData | undefined,
         variantCountCache: VariantCountCache
     ) {
-        const mutSigQValue:
-            | number
-            | null = CohortColumnFormatter.getMutSigQValue(data, mutSigData);
-        const variantCountData = CohortColumnFormatter.getVariantCountData(
-            data,
-            variantCountCache
-        );
-        const freqViz = CohortColumnFormatter.makeCohortFrequencyViz(
-            variantCountData
-        );
+        const mutSigQValue: number | null = CohortColumnFormatter.getMutSigQValue(data, mutSigData);
+        const variantCountData = CohortColumnFormatter.getVariantCountData(data, variantCountCache);
+        const freqViz = CohortColumnFormatter.makeCohortFrequencyViz(variantCountData);
         return (
             <div>
                 {freqViz !== null && freqViz}
-                {mutSigQValue !== null &&
-                    CohortColumnFormatter.makeMutSigIcon(mutSigQValue)}
+                {mutSigQValue !== null && CohortColumnFormatter.makeMutSigIcon(mutSigQValue)}
             </div>
         );
     }
@@ -46,10 +35,7 @@ export default class CohortColumnFormatter {
         data: Mutation[],
         variantCountCache: VariantCountCache
     ): number | null {
-        const variantCountData = CohortColumnFormatter.getVariantCountData(
-            data,
-            variantCountCache
-        );
+        const variantCountData = CohortColumnFormatter.getVariantCountData(data, variantCountCache);
         if (variantCountData && variantCountData.data) {
             return variantCountData.data.numberOfSamplesWithMutationInGene;
         } else {
@@ -92,9 +78,7 @@ export default class CohortColumnFormatter {
         return thisData.qValue;
     }
 
-    private static makeCohortFrequencyViz(
-        variantCount: AugVariantCountOutput | null
-    ) {
+    private static makeCohortFrequencyViz(variantCount: AugVariantCountOutput | null) {
         let status: TableCellStatus | null = null;
         if (variantCount === null) {
             status = TableCellStatus.LOADING;
@@ -103,9 +87,7 @@ export default class CohortColumnFormatter {
         } else if (variantCount.data === null) {
             status = TableCellStatus.NA;
         } else {
-            const counts = [
-                variantCount.data.numberOfSamplesWithMutationInGene,
-            ];
+            const counts = [variantCount.data.numberOfSamplesWithMutationInGene];
 
             if (variantCount.data.keyword) {
                 counts.push(variantCount.data.numberOfSamplesWithKeyword!);
@@ -115,9 +97,7 @@ export default class CohortColumnFormatter {
                 <FrequencyBar
                     counts={counts}
                     totalCount={variantCount.data.numberOfSamples}
-                    tooltip={CohortColumnFormatter.getCohortFrequencyTooltip(
-                        variantCount
-                    )}
+                    tooltip={CohortColumnFormatter.getCohortFrequencyTooltip(variantCount)}
                 />
             );
         }
@@ -127,8 +107,7 @@ export default class CohortColumnFormatter {
     }
 
     private static makeMutSigIcon(qValue: number) {
-        const tooltipCallback = () =>
-            CohortColumnFormatter.getMutSigTooltip(qValue);
+        const tooltipCallback = () => CohortColumnFormatter.getMutSigTooltip(qValue);
 
         return <Icon text="M" tooltip={tooltipCallback} />;
     }
@@ -137,9 +116,7 @@ export default class CohortColumnFormatter {
         return <b>{getPercentage(proportion)}</b>;
     }
 
-    private static getCohortFrequencyTooltip(
-        variantCount: AugVariantCountOutput | null
-    ) {
+    private static getCohortFrequencyTooltip(variantCount: AugVariantCountOutput | null) {
         let message: string;
         if (variantCount === null) {
             return <span>Querying server for data.</span>;
@@ -151,22 +128,17 @@ export default class CohortColumnFormatter {
             return (
                 <div>
                     <span>
-                        {variantCount.data.numberOfSamplesWithMutationInGene}{' '}
-                        samples (
+                        {variantCount.data.numberOfSamplesWithMutationInGene} samples (
                         {CohortColumnFormatter.getBoldPercentage(
-                            variantCount.data
-                                .numberOfSamplesWithMutationInGene /
+                            variantCount.data.numberOfSamplesWithMutationInGene /
                                 variantCount.data.numberOfSamples
                         )}
-                        ) in this study have mutated{' '}
-                        {variantCount.hugoGeneSymbol}
+                        ) in this study have mutated {variantCount.hugoGeneSymbol}
                         {typeof variantCount.data.keyword !== 'undefined' && (
                             <span>
-                                , out of which{' '}
-                                {variantCount.data.numberOfSamplesWithKeyword} (
+                                , out of which {variantCount.data.numberOfSamplesWithKeyword} (
                                 {CohortColumnFormatter.getBoldPercentage(
-                                    variantCount.data
-                                        .numberOfSamplesWithKeyword! /
+                                    variantCount.data.numberOfSamplesWithKeyword! /
                                         variantCount.data.numberOfSamples
                                 )}
                                 ) have {variantCount.data.keyword} mutations

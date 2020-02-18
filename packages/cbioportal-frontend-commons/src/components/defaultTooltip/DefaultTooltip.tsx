@@ -12,10 +12,7 @@ export type DefaultTooltipProps = RCTooltip.Props & {
     getTooltipContainer?: () => Element;
 };
 @observer
-export default class DefaultTooltip extends React.Component<
-    DefaultTooltipProps,
-    {}
-> {
+export default class DefaultTooltip extends React.Component<DefaultTooltipProps, {}> {
     static readonly defaultProps = {
         mouseEnterDelay: TOOLTIP_MOUSE_ENTER_DELAY_MS,
         mouseLeaveDelay: 0.05,
@@ -44,13 +41,7 @@ function defaultSetArrowLeft(tooltipEl: Element, align: any) {
     // @ts-ignore: no-implicit-this
     const targetEl = this.getRootDomNode(); // eslint-disable-line no-invalid-this
 
-    if (
-        arrowEl &&
-        align &&
-        align.points &&
-        align.points[1] &&
-        align.points[1][1] === 'c'
-    ) {
+    if (arrowEl && align && align.points && align.points[1] && align.points[1][1] === 'c') {
         // if aligning to the horizontal center, set arrow left to the horizontal center of the target
         const offset = $(targetEl).offset()!;
         const width = $(targetEl).width()!;

@@ -27,19 +27,11 @@ type TrackSelectorProps = {
 };
 
 @observer
-export default class TrackSelector extends React.Component<
-    TrackSelectorProps,
-    {}
-> {
+export default class TrackSelector extends React.Component<TrackSelectorProps, {}> {
     public static defaultProps: Partial<TrackSelectorProps> = {
         name: 'mutationMapperTrackSelector',
         placeholder: 'Add annotation tracks',
-        tracks: [
-            TrackName.CancerHotspots,
-            TrackName.OncoKB,
-            TrackName.PTM,
-            TrackName.PDB,
-        ],
+        tracks: [TrackName.CancerHotspots, TrackName.OncoKB, TrackName.PTM, TrackName.PDB],
     };
 
     @autobind
@@ -60,8 +52,7 @@ export default class TrackSelector extends React.Component<
                 label: (
                     <span>
                         Cancer Hotspots
-                        {this.isPending(TrackName.CancerHotspots) &&
-                            this.loaderIcon()}
+                        {this.isPending(TrackName.CancerHotspots) && this.loaderIcon()}
                     </span>
                 ),
                 value: TrackName.CancerHotspots,
@@ -104,17 +95,11 @@ export default class TrackSelector extends React.Component<
     }
 
     private isPending(trackName: string) {
-        return (
-            this.props.trackDataStatus &&
-            this.props.trackDataStatus[trackName] === 'pending'
-        );
+        return this.props.trackDataStatus && this.props.trackDataStatus[trackName] === 'pending';
     }
 
     private isDisabled(trackName: string) {
-        return (
-            this.props.trackDataStatus &&
-            this.props.trackDataStatus[trackName] !== 'complete'
-        );
+        return this.props.trackDataStatus && this.props.trackDataStatus[trackName] !== 'complete';
     }
 
     private loaderIcon() {

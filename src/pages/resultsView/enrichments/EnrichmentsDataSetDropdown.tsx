@@ -2,10 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { computed } from 'mobx';
 import styles from './styles.module.scss';
-import {
-    MolecularProfile,
-    CancerStudy,
-} from 'shared/api/generated/CBioPortalAPI';
+import { MolecularProfile, CancerStudy } from 'shared/api/generated/CBioPortalAPI';
 import autobind from 'autobind-decorator';
 import MolecularProfileSelector from '../../../shared/components/MolecularProfileSelector';
 import { MobxPromise } from 'mobxpromise';
@@ -14,9 +11,7 @@ import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicato
 
 export interface IEnrichmentsDataSetDropdownProps {
     dataSets: MobxPromise<MolecularProfile[]>;
-    onChange: (studyMolecularProfileMap: {
-        [id: string]: MolecularProfile;
-    }) => void;
+    onChange: (studyMolecularProfileMap: { [id: string]: MolecularProfile }) => void;
     selectedProfileByStudyId: {
         [id: string]: Pick<MolecularProfile, 'molecularProfileId'>;
     };
@@ -41,28 +36,18 @@ export default class EnrichmentsDataSetDropdown extends React.Component<
                 if (selectedStudyId === studyId) {
                     return this.molecularProfileMap[o.value];
                 }
-                return this.molecularProfileMap[
-                    molecularProfile.molecularProfileId
-                ];
+                return this.molecularProfileMap[molecularProfile.molecularProfileId];
             }
         );
         // only update if the options are changed
-        if (
-            !_.isEqual(
-                this.props.selectedProfileByStudyId,
-                updatedStudyMolecularProfileMap
-            )
-        ) {
+        if (!_.isEqual(this.props.selectedProfileByStudyId, updatedStudyMolecularProfileMap)) {
             this.props.onChange(updatedStudyMolecularProfileMap);
         }
     }
 
     @computed private get molecularProfileMap() {
         if (this.props.dataSets.isComplete) {
-            return _.keyBy(
-                this.props.dataSets.result!,
-                x => x.molecularProfileId
-            );
+            return _.keyBy(this.props.dataSets.result!, x => x.molecularProfileId);
         }
         return {};
     }
@@ -94,18 +79,13 @@ export default class EnrichmentsDataSetDropdown extends React.Component<
             return <LoadingIndicator isLoading={true} />;
         }
         if (this.showEnrichmentsDataSetDropdown || !!this.props.alwaysShow) {
-            let studyProfilesMap = _.groupBy(
-                this.props.dataSets.result!,
-                x => x.studyId
-            );
+            let studyProfilesMap = _.groupBy(this.props.dataSets.result!, x => x.studyId);
             const includeStudyName = Object.keys(studyProfilesMap).length > 1;
             return _.map(studyProfilesMap, (molecularProfiles, studyId) => (
                 <div className={styles.DataSet}>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                         <strong>
-                            {includeStudyName
-                                ? this.studiesMap[studyId].name + ' '
-                                : ''}
+                            {includeStudyName ? this.studiesMap[studyId].name + ' ' : ''}
                             Data Set:
                         </strong>
                         <div
@@ -117,16 +97,12 @@ export default class EnrichmentsDataSetDropdown extends React.Component<
                         >
                             <MolecularProfileSelector
                                 value={
-                                    this.props.selectedProfileByStudyId[studyId]
-                                        .molecularProfileId
+                                    this.props.selectedProfileByStudyId[studyId].molecularProfileId
                                 }
                                 molecularProfiles={molecularProfiles}
                                 molecularProfileIdToProfiledSampleCount={
-                                    this.props
-                                        .molecularProfileIdToProfiledSampleCount
-                                        ? this.props
-                                              .molecularProfileIdToProfiledSampleCount
-                                              .result
+                                    this.props.molecularProfileIdToProfiledSampleCount
+                                        ? this.props.molecularProfileIdToProfiledSampleCount.result
                                         : undefined
                                 }
                                 onChange={(o: any) => this.change(studyId, o)}

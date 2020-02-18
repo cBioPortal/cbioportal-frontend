@@ -61,9 +61,7 @@ describe('MutationUtils', () => {
         });
 
         it('counts and sorts mutations by protein change values', () => {
-            const mutationCountByProteinChange = countMutationsByProteinChange(
-                mutationsToCount
-            );
+            const mutationCountByProteinChange = countMutationsByProteinChange(mutationsToCount);
 
             assert.equal(
                 mutationCountByProteinChange.length,
@@ -101,9 +99,7 @@ describe('MutationUtils', () => {
         });
 
         it('groups mutations by protein start position', () => {
-            const mutationCountByProteinChange = groupMutationsByProteinStartPos(
-                mutationsToCount
-            );
+            const mutationCountByProteinChange = groupMutationsByProteinStartPos(mutationsToCount);
 
             assert.equal(
                 mutationCountByProteinChange['66'].length,
@@ -133,26 +129,17 @@ describe('MutationUtils', () => {
     describe('mutationTypeSort', () => {
         it('sorts mutation types', () => {
             assert.equal(
-                mutationTypeSort(
-                    CanonicalMutationType.MISSENSE,
-                    CanonicalMutationType.NONSENSE
-                ),
+                mutationTypeSort(CanonicalMutationType.MISSENSE, CanonicalMutationType.NONSENSE),
                 -1,
                 'return value should be -1, indicating correct priority ordering'
             );
             assert.equal(
-                mutationTypeSort(
-                    CanonicalMutationType.NONSENSE,
-                    CanonicalMutationType.MISSENSE
-                ),
+                mutationTypeSort(CanonicalMutationType.NONSENSE, CanonicalMutationType.MISSENSE),
                 1,
                 'return value should be 1, indicating correct priority ordering'
             );
             assert.equal(
-                mutationTypeSort(
-                    CanonicalMutationType.MISSENSE,
-                    CanonicalMutationType.SILENT
-                ),
+                mutationTypeSort(CanonicalMutationType.MISSENSE, CanonicalMutationType.SILENT),
                 -1,
                 'return value should be -1, indicating correct priority ordering'
             );

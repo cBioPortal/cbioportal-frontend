@@ -18,30 +18,22 @@ export default class ConfirmNgchmModal extends React.Component<
 > {
     render() {
         return (
-            <Modal
-                show={this.props.show}
-                onHide={this.props.onHide}
-                animation={false}
-            >
+            <Modal show={this.props.show} onHide={this.props.onHide} animation={false}>
                 <Modal.Header closeButton>
-                    <Modal.Title>
-                        Open new tab to MD Anderson NG-CHM?
-                    </Modal.Title>
+                    <Modal.Title>Open new tab to MD Anderson NG-CHM?</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <div className="oncoprint__controls__heatmap_menu mdacc-modal">
                         <p>
-                            Continue will open a tab or window to a different
-                            site (not cBioPortal).
+                            Continue will open a tab or window to a different site (not cBioPortal).
                         </p>
                         <p>
-                            You will be able to view this study as Next
-                            Generation Clustered Heatmaps (NG-CHM) developed by
-                            The University of Texas MD Anderson Cancer Center.
+                            You will be able to view this study as Next Generation Clustered
+                            Heatmaps (NG-CHM) developed by The University of Texas MD Anderson
+                            Cancer Center.
                         </p>
                         <em>
-                            Note: NG-CHM will not be limited to your selected
-                            samples and genes.
+                            Note: NG-CHM will not be limited to your selected samples and genes.
                         </em>
                     </div>
                 </Modal.Body>

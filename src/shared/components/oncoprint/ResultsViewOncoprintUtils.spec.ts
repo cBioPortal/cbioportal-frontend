@@ -1,8 +1,5 @@
 import { assert } from 'chai';
-import {
-    GenePanelData,
-    MolecularProfile,
-} from '../../api/generated/CBioPortalAPI';
+import { GenePanelData, MolecularProfile } from '../../api/generated/CBioPortalAPI';
 import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewPageStore';
 import {
     alterationTypeToProfiledForText,
@@ -19,29 +16,25 @@ describe('ResultsViewOncoprintUtils', () => {
                 molecularProfileId: 'mutations',
                 name: 'mutations',
                 description: 'mutations profile',
-                molecularAlterationType:
-                    AlterationTypeConstants.MUTATION_EXTENDED,
+                molecularAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
             } as MolecularProfile,
             discreteCna: {
                 molecularProfileId: 'discreteCna',
                 name: 'discrete cna',
                 description: 'discrete cna profile',
-                molecularAlterationType:
-                    AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                molecularAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
             } as MolecularProfile,
             linearCna: {
                 molecularProfileId: 'linearCna',
                 name: 'linear cna',
                 description: 'linear cna profile',
-                molecularAlterationType:
-                    AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                molecularAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
             } as MolecularProfile,
             mrna: {
                 molecularProfileId: 'mrna',
                 name: 'mrna',
                 description: 'mrna profile',
-                molecularAlterationType:
-                    AlterationTypeConstants.MRNA_EXPRESSION,
+                molecularAlterationType: AlterationTypeConstants.MRNA_EXPRESSION,
             } as MolecularProfile,
         };
 
@@ -49,16 +42,12 @@ describe('ResultsViewOncoprintUtils', () => {
             const coverageInformation = {
                 sample1: {
                     byGene: {},
-                    allGenes: [
-                        { molecularProfileId: 'mutations' } as GenePanelData,
-                    ],
+                    allGenes: [{ molecularProfileId: 'mutations' } as GenePanelData],
                     notProfiledByGene: {},
                     notProfiledAllGenes: [],
                 },
             };
-            const selectedMolecularProfiles = [
-                molecularProfileIdToMolecularProfile.mutations,
-            ];
+            const selectedMolecularProfiles = [molecularProfileIdToMolecularProfile.mutations];
             assert.deepEqual(
                 makeProfiledInClinicalAttributes(
                     coverageInformation,
@@ -101,9 +90,7 @@ describe('ResultsViewOncoprintUtils', () => {
                     notProfiledAllGenes: [],
                 },
             };
-            const selectedMolecularProfiles = [
-                molecularProfileIdToMolecularProfile.mutations,
-            ];
+            const selectedMolecularProfiles = [molecularProfileIdToMolecularProfile.mutations];
             assert.deepEqual(
                 makeProfiledInClinicalAttributes(
                     coverageInformation,
@@ -129,9 +116,7 @@ describe('ResultsViewOncoprintUtils', () => {
             const coverageInformation = {
                 sample1: {
                     byGene: {},
-                    allGenes: [
-                        { molecularProfileId: 'mutations' } as GenePanelData,
-                    ],
+                    allGenes: [{ molecularProfileId: 'mutations' } as GenePanelData],
                     notProfiledByGene: {},
                     notProfiledAllGenes: [],
                 },
@@ -139,14 +124,10 @@ describe('ResultsViewOncoprintUtils', () => {
                     byGene: {},
                     allGenes: [],
                     notProfiledByGene: {},
-                    notProfiledAllGenes: [
-                        { molecularProfileId: 'mutations' } as GenePanelData,
-                    ],
+                    notProfiledAllGenes: [{ molecularProfileId: 'mutations' } as GenePanelData],
                 },
             };
-            const selectedMolecularProfiles = [
-                molecularProfileIdToMolecularProfile.mutations,
-            ];
+            const selectedMolecularProfiles = [molecularProfileIdToMolecularProfile.mutations];
             assert.deepEqual(
                 makeProfiledInClinicalAttributes(
                     coverageInformation,
@@ -194,9 +175,7 @@ describe('ResultsViewOncoprintUtils', () => {
             const coverageInformation = {
                 sample1: {
                     byGene: {},
-                    allGenes: [
-                        { molecularProfileId: 'mutations' } as GenePanelData,
-                    ],
+                    allGenes: [{ molecularProfileId: 'mutations' } as GenePanelData],
                     notProfiledByGene: {},
                     notProfiledAllGenes: [],
                 },
@@ -204,14 +183,10 @@ describe('ResultsViewOncoprintUtils', () => {
                     byGene: {},
                     allGenes: [],
                     notProfiledByGene: {},
-                    notProfiledAllGenes: [
-                        { molecularProfileId: 'mutations' } as GenePanelData,
-                    ],
+                    notProfiledAllGenes: [{ molecularProfileId: 'mutations' } as GenePanelData],
                 },
             };
-            const selectedMolecularProfiles = [
-                molecularProfileIdToMolecularProfile.linearCna,
-            ];
+            const selectedMolecularProfiles = [molecularProfileIdToMolecularProfile.linearCna];
             assert.deepEqual(
                 makeProfiledInClinicalAttributes(
                     coverageInformation,
@@ -259,9 +234,7 @@ describe('ResultsViewOncoprintUtils', () => {
             const coverageInformation = {
                 sample1: {
                     byGene: {},
-                    allGenes: [
-                        { molecularProfileId: 'mutations' } as GenePanelData,
-                    ],
+                    allGenes: [{ molecularProfileId: 'mutations' } as GenePanelData],
                     notProfiledByGene: {
                         TP53: [{ molecularProfileId: 'mrna' } as GenePanelData],
                     },
@@ -273,9 +246,7 @@ describe('ResultsViewOncoprintUtils', () => {
                     },
                     allGenes: [],
                     notProfiledByGene: {},
-                    notProfiledAllGenes: [
-                        { molecularProfileId: 'mutations' } as GenePanelData,
-                    ],
+                    notProfiledAllGenes: [{ molecularProfileId: 'mutations' } as GenePanelData],
                 },
             };
             const selectedMolecularProfiles = [
@@ -289,9 +260,7 @@ describe('ResultsViewOncoprintUtils', () => {
                 true
             );
             assert.deepEqual(
-                singleStudyAttributes.find(
-                    x => x.clinicalAttributeId.indexOf('mutations') > -1
-                ),
+                singleStudyAttributes.find(x => x.clinicalAttributeId.indexOf('mutations') > -1),
                 {
                     clinicalAttributeId: `${SpecialAttribute.ProfiledInPrefix}_mutations`,
                     datatype: 'STRING',
@@ -303,9 +272,7 @@ describe('ResultsViewOncoprintUtils', () => {
                 'single study, mutations attribute'
             );
             assert.deepEqual(
-                singleStudyAttributes.find(
-                    x => x.clinicalAttributeId.indexOf('mrna') > -1
-                ),
+                singleStudyAttributes.find(x => x.clinicalAttributeId.indexOf('mrna') > -1),
                 {
                     clinicalAttributeId: `${SpecialAttribute.ProfiledInPrefix}_mrna`,
                     datatype: 'STRING',
@@ -326,18 +293,15 @@ describe('ResultsViewOncoprintUtils', () => {
             assert.deepEqual(
                 multipleStudyAttributes.find(
                     x =>
-                        x.clinicalAttributeId.indexOf(
-                            AlterationTypeConstants.MUTATION_EXTENDED
-                        ) > -1
+                        x.clinicalAttributeId.indexOf(AlterationTypeConstants.MUTATION_EXTENDED) >
+                        -1
                 ),
                 {
                     clinicalAttributeId: `${SpecialAttribute.ProfiledInPrefix}_${AlterationTypeConstants.MUTATION_EXTENDED}`,
                     datatype: 'STRING',
                     description: '',
                     displayName: `Profiled for ${
-                        alterationTypeToProfiledForText[
-                            AlterationTypeConstants.MUTATION_EXTENDED
-                        ]
+                        alterationTypeToProfiledForText[AlterationTypeConstants.MUTATION_EXTENDED]
                     }`,
                     molecularProfileIds: ['mutations'],
                     patientAttribute: false,
@@ -346,19 +310,14 @@ describe('ResultsViewOncoprintUtils', () => {
             );
             assert.deepEqual(
                 multipleStudyAttributes.find(
-                    x =>
-                        x.clinicalAttributeId.indexOf(
-                            AlterationTypeConstants.MRNA_EXPRESSION
-                        ) > -1
+                    x => x.clinicalAttributeId.indexOf(AlterationTypeConstants.MRNA_EXPRESSION) > -1
                 ),
                 {
                     clinicalAttributeId: `${SpecialAttribute.ProfiledInPrefix}_${AlterationTypeConstants.MRNA_EXPRESSION}`,
                     datatype: 'STRING',
                     description: '',
                     displayName: `Profiled for ${
-                        alterationTypeToProfiledForText[
-                            AlterationTypeConstants.MRNA_EXPRESSION
-                        ]
+                        alterationTypeToProfiledForText[AlterationTypeConstants.MRNA_EXPRESSION]
                     }`,
                     molecularProfileIds: ['mrna'],
                     patientAttribute: false,

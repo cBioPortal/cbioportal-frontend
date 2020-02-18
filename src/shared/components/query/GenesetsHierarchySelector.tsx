@@ -2,9 +2,7 @@ import * as React from 'react';
 import { ObservableMap, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import GenesetsJsTree from './GenesetsJsTree';
-import GenesetsHierarchyFilterForm, {
-    validPercentile,
-} from './GenesetsHierarchyFilterForm';
+import GenesetsHierarchyFilterForm, { validPercentile } from './GenesetsHierarchyFilterForm';
 
 export interface GenesetsHierarchySelectorProps {
     initialSelection: string[];
@@ -25,9 +23,7 @@ export default class GenesetsHierarchySelector extends React.Component<
 
     constructor(props: GenesetsHierarchySelectorProps) {
         super(props);
-        this.updateSelectionParameters = this.updateSelectionParameters.bind(
-            this
-        );
+        this.updateSelectionParameters = this.updateSelectionParameters.bind(this);
     }
 
     updateSelectionParameters(
@@ -54,14 +50,9 @@ export default class GenesetsHierarchySelector extends React.Component<
                         className="form-control tableSearchInput"
                         style={{ width: 768 }}
                         value={this.searchValue}
-                        onChange={event =>
-                            (this.searchValue = event.target.value)
-                        }
+                        onChange={event => (this.searchValue = event.target.value)}
                     />
-                    <span
-                        className="fa fa-search form-control-feedback"
-                        aria-hidden="true"
-                    ></span>
+                    <span className="fa fa-search form-control-feedback" aria-hidden="true"></span>
                 </div>
                 <GenesetsHierarchyFilterForm
                     percentile={this.percentile}

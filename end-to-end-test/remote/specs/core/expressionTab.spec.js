@@ -1,10 +1,8 @@
 var assert = require('assert');
 var expect = require('chai').expect;
 var waitForOncoprint = require('../../../shared/specUtils').waitForOncoprint;
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var useExternalFrontend = require('../../../shared/specUtils')
-    .useExternalFrontend;
+var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
+var useExternalFrontend = require('../../../shared/specUtils').useExternalFrontend;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
@@ -49,11 +47,7 @@ describe('results page expression tab', () => {
 
         browser.click('[data-test="ExpressionStudyUnselectAll"]');
 
-        assert.equal(
-            getSelectedStudies(studyCheckboxes).length,
-            0,
-            'no studies are selected'
-        );
+        assert.equal(getSelectedStudies(studyCheckboxes).length, 0, 'no studies are selected');
 
         browser.click('[data-test="ExpressionStudySelectAll"]');
 

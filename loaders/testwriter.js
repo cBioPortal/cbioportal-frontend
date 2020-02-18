@@ -12,11 +12,7 @@ module.exports = function(content, sourceMap) {
     var exports = [];
     var keys = Object.keys(query);
 
-    content = content.replace(/\/\/testIt([^f]*)function ([^\(]*)/gim, function(
-        $0,
-        $2,
-        $1
-    ) {
+    content = content.replace(/\/\/testIt([^f]*)function ([^\(]*)/gim, function($0, $2, $1) {
         var params = $2.replace(/\n/g, '');
         return `var old_${$1} = ${$1}; ${$1} = exports.${$1} = 
         function(){ 
@@ -36,17 +32,12 @@ module.exports = function(content, sourceMap) {
                 mod = query[name];
             }
             //console.log("exporting", name);
-            exports.push(
-                'exports[' + JSON.stringify(name) + '] = (' + mod + ');'
-            );
+            exports.push('exports[' + JSON.stringify(name) + '] = (' + mod + ');');
         });
     }
     if (sourceMap) {
         var currentRequest = loaderUtils.getCurrentRequest(this);
-        var node = SourceNode.fromStringWithSourceMap(
-            content,
-            new SourceMapConsumer(sourceMap)
-        );
+        var node = SourceNode.fromStringWithSourceMap(content, new SourceMapConsumer(sourceMap));
         node.add('\n\n' + FOOTER + exports.join('\n'));
         var result = node.toStringWithSourceMap({
             file: currentRequest,

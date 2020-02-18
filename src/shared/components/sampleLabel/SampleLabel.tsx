@@ -1,9 +1,6 @@
 import * as React from 'react';
 
-export default class SampleLabelSVG extends React.Component<
-    ISampleLabelSVGProps,
-    {}
-> {
+export default class SampleLabelSVG extends React.Component<ISampleLabelSVGProps, {}> {
     static defaultProps = {
         r: 10,
     };
@@ -42,10 +39,7 @@ export interface ISampleLabelSVGProps {
     textDy?: number;
 }
 
-export class SampleLabelHTML extends React.Component<
-    ISampleLabelHTMLProps,
-    {}
-> {
+export class SampleLabelHTML extends React.Component<ISampleLabelHTMLProps, {}> {
     constructor(props: ISampleLabelHTMLProps) {
         super(props);
         this.render = this.render.bind(this);
@@ -54,12 +48,7 @@ export class SampleLabelHTML extends React.Component<
     public render() {
         const { label, color, fillOpacity } = this.props;
         return (
-            <svg
-                width="12"
-                height="12"
-                className="case-label-header"
-                data-test="sample-icon"
-            >
+            <svg width="12" height="12" className="case-label-header" data-test="sample-icon">
                 <g transform="translate(6,6)">
                     <circle r="6" fill={color} fillOpacity={fillOpacity} />
                 </g>

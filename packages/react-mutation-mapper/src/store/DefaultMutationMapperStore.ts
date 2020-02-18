@@ -1,9 +1,5 @@
 import autobind from 'autobind-decorator';
-import {
-    MyVariantInfo,
-    remoteData,
-    VariantAnnotation,
-} from 'cbioportal-frontend-commons';
+import { MyVariantInfo, remoteData, VariantAnnotation } from 'cbioportal-frontend-commons';
 import _ from 'lodash';
 import { computed, observable } from 'mobx';
 import MobxPromise, { cached } from 'mobxpromise';
@@ -32,10 +28,7 @@ import {
     indexHotspotsData,
 } from '../util/CancerHotspotsUtils';
 import { ONCOKB_DEFAULT_DATA } from '../util/DataFetcherUtils';
-import {
-    applyDataFilters,
-    groupDataByProteinImpactType,
-} from '../util/FilterUtils';
+import { applyDataFilters, groupDataByProteinImpactType } from '../util/FilterUtils';
 import { getMutationsToTranscriptId } from '../util/MutationAnnotator';
 import {
     genomicLocationString,
@@ -46,10 +39,7 @@ import {
     defaultOncoKbIndicatorFilter,
     groupOncoKbIndicatorDataByMutations,
 } from '../util/OncoKbUtils';
-import {
-    groupPtmDataByPosition,
-    groupPtmDataByTypeAndPosition,
-} from '../util/PtmUtils';
+import { groupPtmDataByPosition, groupPtmDataByTypeAndPosition } from '../util/PtmUtils';
 import { DefaultMutationMapperDataStore } from './DefaultMutationMapperDataStore';
 import { DefaultMutationMapperDataFetcher } from './DefaultMutationMapperDataFetcher';
 import { DefaultMutationMapperFilterApplier } from './DefaultMutationMapperFilterApplier';
@@ -98,8 +88,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     public get activeTranscript(): string | undefined {
         let activeTranscript;
         const canonicalTranscriptId =
-            !this.canonicalTranscript.isPending &&
-            this.canonicalTranscript.result
+            !this.canonicalTranscript.isPending && this.canonicalTranscript.result
                 ? this.canonicalTranscript.result.transcriptId
                 : undefined;
 
@@ -110,9 +99,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
                 this.transcriptsWithAnnotations.result &&
                 this.transcriptsWithAnnotations.result.length > 0 &&
                 canonicalTranscriptId &&
-                !this.transcriptsWithAnnotations.result.includes(
-                    canonicalTranscriptId
-                )
+                !this.transcriptsWithAnnotations.result.includes(canonicalTranscriptId)
             ) {
                 // if there are annotated transcripts and activeTranscript does
                 // not have any, change the active transcript
@@ -140,9 +127,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     @computed
     public get annotationFields(): string[] {
         return _.uniq(
-            ['annotation_summary', 'hotspots'].concat(
-                this.config.annotationFields || []
-            )
+            ['annotation_summary', 'hotspots'].concat(this.config.annotationFields || [])
         );
     }
 
@@ -200,9 +185,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
 
     @computed
     public get mutationsByPosition(): { [pos: number]: Mutation[] } {
-        return groupMutationsByProteinStartPos(
-            _.flatten(this.dataStore.sortedFilteredData)
-        );
+        return groupMutationsByProteinStartPos(_.flatten(this.dataStore.sortedFilteredData));
     }
 
     @computed
@@ -212,9 +195,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     }[] {
         return this.dataStore.sortedFilteredGroupedData.map(groupedData => ({
             group: groupedData.group,
-            mutations: groupMutationsByProteinStartPos(
-                _.flatten(groupedData.data)
-            ),
+            mutations: groupMutationsByProteinStartPos(_.flatten(groupedData.data)),
         }));
     }
 
@@ -241,14 +222,10 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     } {
         const map: { [proteinImpactType: string]: number } = {};
 
-        Object.keys(this.mutationsGroupedByProteinImpactType).forEach(
-            proteinImpactType => {
-                const g = this.mutationsGroupedByProteinImpactType[
-                    proteinImpactType
-                ];
-                map[g.group] = g.data.length;
-            }
-        );
+        Object.keys(this.mutationsGroupedByProteinImpactType).forEach(proteinImpactType => {
+            const g = this.mutationsGroupedByProteinImpactType[proteinImpactType];
+            map[g.group] = g.data.length;
+        });
 
         return map;
     }
@@ -265,9 +242,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     }[] {
         return this.groupedMutationsByPosition.map(groupedMutations => ({
             group: groupedMutations.group,
-            counts: this.countUniqueMutationsByPosition(
-                groupedMutations.mutations
-            ),
+            counts: this.countUniqueMutationsByPosition(groupedMutations.mutations),
         }));
     }
 
@@ -310,21 +285,14 @@ class DefaultMutationMapperStore implements MutationMapperStore {
         mutations: Mutation[],
         getMutationCount: (mutation: Partial<Mutation>) => number
     ) {
-        return mutations
-            .map(m => getMutationCount(m))
-            .reduce((sum, count) => sum + count);
+        return mutations.map(m => getMutationCount(m)).reduce((sum, count) => sum + count);
     }
 
-    readonly mutationData: MobxPromise<
-        Partial<Mutation>[] | undefined
-    > = remoteData(
+    readonly mutationData: MobxPromise<Partial<Mutation>[] | undefined> = remoteData(
         {
             await: () => {
                 if (this.config.filterMutationsBySelectedTranscript) {
-                    return [
-                        this.canonicalTranscript,
-                        this.indexedVariantAnnotations,
-                    ];
+                    return [this.canonicalTranscript, this.indexedVariantAnnotations];
                 } else {
                     return [this.canonicalTranscript];
                 }
@@ -345,9 +313,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
                     return '';
                 }
 
-                const accession:
-                    | string
-                    | string[] = await this.dataFetcher.fetchSwissProtAccession(
+                const accession: string | string[] = await this.dataFetcher.fetchSwissProtAccession(
                     this.gene.entrezGeneId
                 );
 
@@ -369,9 +335,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
             await: () => [this.swissProtId],
             invoke: async () => {
                 if (this.swissProtId.result) {
-                    return this.dataFetcher.fetchUniprotId(
-                        this.swissProtId.result
-                    );
+                    return this.dataFetcher.fetchUniprotId(this.swissProtId.result);
                 } else {
                     return '';
                 }
@@ -394,9 +358,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
                         this.allTranscripts.result &&
                         this.activeTranscript &&
                         this.transcriptsByTranscriptId[this.activeTranscript]
-                            ? this.transcriptsByTranscriptId[
-                                  this.activeTranscript
-                              ].pfamDomains
+                            ? this.transcriptsByTranscriptId[this.activeTranscript].pfamDomains
                             : undefined;
 
                     const responsePromises: Promise<Response>[] = [];
@@ -404,32 +366,22 @@ class DefaultMutationMapperStore implements MutationMapperStore {
                         // have to do a for loop because seamlessImmutable will make result of .map immutable,
                         // and that causes infinite loop here
                         // TODO fix `as any`
-                        responsePromises.push(
-                            this.dataFetcher.fetchMutationAlignerLink(
-                                regions[i].pfamDomainId
-                            ) as any
-                        );
+                        responsePromises.push(this.dataFetcher.fetchMutationAlignerLink(
+                            regions[i].pfamDomainId
+                        ) as any);
                     }
                     const allResponses = Promise.all(responsePromises);
                     allResponses.then(responses => {
                         // TODO fix `as any`
-                        const data = responses.map(r =>
-                            JSON.parse(r.text as any)
-                        );
+                        const data = responses.map(r => JSON.parse(r.text as any));
                         const ret: { [pfamAccession: string]: string } = {};
                         let mutationAlignerData: any;
                         let pfamAccession: string | null;
                         for (let i = 0; i < data.length; i++) {
                             mutationAlignerData = data[i];
-                            pfamAccession = regions
-                                ? regions[i].pfamDomainId
-                                : null;
-                            if (
-                                pfamAccession &&
-                                mutationAlignerData.linkToMutationAligner
-                            ) {
-                                ret[pfamAccession] =
-                                    mutationAlignerData.linkToMutationAligner;
+                            pfamAccession = regions ? regions[i].pfamDomainId : null;
+                            if (pfamAccession && mutationAlignerData.linkToMutationAligner) {
+                                ret[pfamAccession] = mutationAlignerData.linkToMutationAligner;
                             }
                         }
                         resolve(ret);
@@ -442,18 +394,14 @@ class DefaultMutationMapperStore implements MutationMapperStore {
 
     readonly pfamDomainData: MobxPromise<PfamDomain[] | undefined> = remoteData(
         {
-            await: () => [
-                this.canonicalTranscript,
-                this.transcriptsWithProteinLength,
-            ],
+            await: () => [this.canonicalTranscript, this.transcriptsWithProteinLength],
             invoke: async () => {
                 if (
                     this.canonicalTranscript.result &&
                     this.canonicalTranscript.result.pfamDomains &&
                     this.canonicalTranscript.result.pfamDomains.length > 0
                 ) {
-                    let domainRanges = this.canonicalTranscript.result
-                        .pfamDomains;
+                    let domainRanges = this.canonicalTranscript.result.pfamDomains;
                     if (
                         this.config.filterMutationsBySelectedTranscript &&
                         this.transcriptsWithProteinLength.result &&
@@ -465,9 +413,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
                             _.compact(
                                 this.transcriptsWithProteinLength.result.map(
                                     (transcriptId: string) =>
-                                        this.transcriptsByTranscriptId[
-                                            transcriptId
-                                        ].pfamDomains
+                                        this.transcriptsByTranscriptId[transcriptId].pfamDomains
                                 )
                             )
                         );
@@ -483,9 +429,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
         undefined
     );
 
-    readonly canonicalTranscript: MobxPromise<
-        EnsemblTranscript | undefined
-    > = remoteData(
+    readonly canonicalTranscript: MobxPromise<EnsemblTranscript | undefined> = remoteData(
         {
             await: () => [this.transcriptsByHugoSymbol],
             invoke: async () => {
@@ -506,14 +450,9 @@ class DefaultMutationMapperStore implements MutationMapperStore {
         undefined
     );
 
-    readonly allTranscripts: MobxPromise<
-        EnsemblTranscript[] | undefined
-    > = remoteData(
+    readonly allTranscripts: MobxPromise<EnsemblTranscript[] | undefined> = remoteData(
         {
-            await: () => [
-                this.transcriptsByHugoSymbol,
-                this.canonicalTranscript,
-            ],
+            await: () => [this.transcriptsByHugoSymbol, this.canonicalTranscript],
             invoke: async () => {
                 return _.compact(
                     _.unionBy(
@@ -530,15 +469,13 @@ class DefaultMutationMapperStore implements MutationMapperStore {
         undefined
     );
 
-    readonly transcriptsByHugoSymbol: MobxPromise<
-        EnsemblTranscript[] | undefined
-    > = remoteData(
+    readonly transcriptsByHugoSymbol: MobxPromise<EnsemblTranscript[] | undefined> = remoteData(
         {
             invoke: async () => {
                 if (this.gene) {
-                    return this.dataFetcher.fetchEnsemblTranscriptsByEnsemblFilter(
-                        { hugoSymbols: [this.gene.hugoGeneSymbol] }
-                    );
+                    return this.dataFetcher.fetchEnsemblTranscriptsByEnsemblFilter({
+                        hugoSymbols: [this.gene.hugoGeneSymbol],
+                    });
                 } else {
                     return undefined;
                 }
@@ -550,22 +487,16 @@ class DefaultMutationMapperStore implements MutationMapperStore {
         undefined
     );
 
-    readonly transcriptsWithProteinLength: MobxPromise<
-        string[] | undefined
-    > = remoteData(
+    readonly transcriptsWithProteinLength: MobxPromise<string[] | undefined> = remoteData(
         {
             await: () => [this.allTranscripts, this.canonicalTranscript],
             invoke: async () => {
-                if (
-                    this.allTranscripts.result &&
-                    this.canonicalTranscript.result
-                ) {
+                if (this.allTranscripts.result && this.canonicalTranscript.result) {
                     // ignore transcripts without protein length
                     // TODO: better solution is to hide lollipop plot for those transcripts
                     return _.compact(
                         this.allTranscripts.result.map(
-                            (et: EnsemblTranscript) =>
-                                et.proteinLength && et.transcriptId
+                            (et: EnsemblTranscript) => et.proteinLength && et.transcriptId
                         )
                     );
                 } else {
@@ -579,9 +510,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
         undefined
     );
 
-    readonly transcriptsWithAnnotations: MobxPromise<
-        string[] | undefined
-    > = remoteData(
+    readonly transcriptsWithAnnotations: MobxPromise<string[] | undefined> = remoteData(
         {
             await: () => [
                 this.indexedVariantAnnotations,
@@ -612,9 +541,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
                                             genomicLocationString(gl)
                                         ].transcript_consequences
                                             .map(
-                                                (tc: {
-                                                    transcript_id: string;
-                                                }) => tc.transcript_id
+                                                (tc: { transcript_id: string }) => tc.transcript_id
                                             )
                                             .filter((transcriptId: string) =>
                                                 this.transcriptsWithProteinLength.result!!.includes(
@@ -671,9 +598,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
         {
             await: () => [this.ptmData],
             invoke: async () =>
-                this.ptmData.result
-                    ? groupPtmDataByPosition(this.ptmData.result)
-                    : {},
+                this.ptmData.result ? groupPtmDataByPosition(this.ptmData.result) : {},
         },
         {}
     );
@@ -689,9 +614,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
         {
             await: () => [this.ptmData],
             invoke: async () =>
-                this.ptmData.result
-                    ? groupPtmDataByTypeAndPosition(this.ptmData.result)
-                    : {},
+                this.ptmData.result ? groupPtmDataByTypeAndPosition(this.ptmData.result) : {},
         },
         {}
     );
@@ -702,9 +625,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
             invoke: async () => {
                 if (this.activeTranscript) {
                     // TODO resolve protein start pos if missing
-                    return this.dataFetcher.fetchCancerHotspotData(
-                        this.activeTranscript
-                    );
+                    return this.dataFetcher.fetchCancerHotspotData(this.activeTranscript);
                 } else {
                     return [];
                 }
@@ -723,9 +644,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
             await: () => [this.cancerHotspotsData],
             invoke: async () =>
                 this.ptmData.result
-                    ? groupCancerHotspotDataByPosition(
-                          this.cancerHotspotsData.result!
-                      )
+                    ? groupCancerHotspotDataByPosition(this.cancerHotspotsData.result!)
                     : {},
         },
         {}
@@ -739,9 +658,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
         },
     });
 
-    readonly indexedHotspotData: MobxPromise<
-        IHotspotIndex | undefined
-    > = remoteData({
+    readonly indexedHotspotData: MobxPromise<IHotspotIndex | undefined> = remoteData({
         await: () => [this.hotspotData],
         invoke: () => Promise.resolve(indexHotspotsData(this.hotspotData)),
     });
@@ -775,10 +692,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
                 Promise.resolve(
                     _.reduce(
                         this.oncoKbCancerGenes.result,
-                        (
-                            map: { [entrezGeneId: number]: boolean },
-                            next: CancerGene
-                        ) => {
+                        (map: { [entrezGeneId: number]: boolean }, next: CancerGene) => {
                             if (next.oncokbAnnotated) {
                                 map[next.entrezGeneId] = true;
                             }
@@ -810,10 +724,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
 
     @computed
     get oncoKbDataByPosition(): { [pos: number]: IndicatorQueryResp[] } {
-        if (
-            this.oncoKbData.result &&
-            !(this.oncoKbData.result instanceof Error)
-        ) {
+        if (this.oncoKbData.result && !(this.oncoKbData.result instanceof Error)) {
             return groupOncoKbIndicatorDataByMutations(
                 this.mutationsByPosition,
                 this.oncoKbData.result,
@@ -866,10 +777,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
 
     @computed
     get mutationsByTranscriptId(): { [transcriptId: string]: Mutation[] } {
-        if (
-            this.indexedVariantAnnotations.result &&
-            this.transcriptsWithAnnotations.result
-        ) {
+        if (this.indexedVariantAnnotations.result && this.transcriptsWithAnnotations.result) {
             return _.fromPairs(
                 this.transcriptsWithAnnotations.result.map((t: string) => [
                     t,
@@ -887,19 +795,13 @@ class DefaultMutationMapperStore implements MutationMapperStore {
 
     @autobind
     protected getDefaultTumorType(mutation: Mutation): string {
-        return this.config.getTumorType
-            ? this.config.getTumorType(mutation)
-            : 'Unknown';
+        return this.config.getTumorType ? this.config.getTumorType(mutation) : 'Unknown';
     }
 
     @autobind
     protected getDefaultEntrezGeneId(mutation: Mutation): number {
         // assuming all mutations in this store is for the same gene
-        return (
-            this.gene.entrezGeneId ||
-            (mutation.gene && mutation.gene.entrezGeneId) ||
-            0
-        );
+        return this.gene.entrezGeneId || (mutation.gene && mutation.gene.entrezGeneId) || 0;
     }
 }
 

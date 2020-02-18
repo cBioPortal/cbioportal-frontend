@@ -89,11 +89,7 @@ describe('Box Plot Utils', () => {
         assert.equal(result.q3, 14.5, 'q3');
         assert.equal(result.median, 11.5, 'median');
         assert.equal(result.IQR, 9.5, 'IQR');
-        assert.equal(
-            result.whiskerUpper,
-            result.q3 + 1.5 * result.IQR,
-            'whiskerUpper is NOT max'
-        );
+        assert.equal(result.whiskerUpper, result.q3 + 1.5 * result.IQR, 'whiskerUpper is NOT max');
         assert.equal(result.whiskerLower, result.min, 'whiskerLower is min');
     });
 
@@ -130,11 +126,7 @@ describe('Box Plot Utils', () => {
         assert.equal(result.median, 11, 'median');
         assert.equal(result.IQR, 10, 'IQR');
         assert.equal(result.whiskerUpper, 20, 'whiskerUpper is NOT max');
-        assert.equal(
-            result.whiskerLower,
-            result.q1 - 1.5 * result.IQR,
-            'whiskerLower is min'
-        );
+        assert.equal(result.whiskerLower, result.q1 - 1.5 * result.IQR, 'whiskerLower is min');
     });
 
     it('Gets upper and lower suspectedoutliers', () => {
@@ -170,11 +162,7 @@ describe('Box Plot Utils', () => {
             [-26, -12],
             'two suspected outliers'
         );
-        assert.deepEqual(
-            result.outliersUpper.suspectedOutliers,
-            [28, 42.9],
-            'two outliers'
-        );
+        assert.deepEqual(result.outliersUpper.suspectedOutliers, [28, 42.9], 'two outliers');
         assert.deepEqual(result.outliersUpper.outliers, [44], 'two outliers');
     });
 });

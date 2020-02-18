@@ -3,9 +3,7 @@ import Immutable from 'seamless-immutable';
 import * as _ from 'lodash';
 import accumulatingDebounce from '../../../shared/lib/accumulatingDebounce';
 
-export type CacheData<T> =
-    | { status: 'complete'; data: T | null }
-    | { status: 'error'; data: null };
+export type CacheData<T> = { status: 'complete'; data: T | null } | { status: 'error'; data: null };
 export type Cache<T> = {
     [sampleId: string]: {
         fetchedWithoutGeneArgument: 'complete' | 'error' | false;
@@ -29,11 +27,8 @@ export type SampleToEntrezListOrNull = { [sampleId: string]: number[] | null };
 export type SampleToEntrezList = { [sampleId: string]: number[] };
 type SampleToEntrezSet = { [sampleId: string]: { [entrez: string]: true } };
 
-export default class SampleGeneCache<
-    T extends { sampleId: string; entrezGeneId: number }
-> {
-    @observable.ref private _cache: Cache<T> &
-        Immutable.ImmutableObject<Cache<T>>;
+export default class SampleGeneCache<T extends { sampleId: string; entrezGeneId: number }> {
+    @observable.ref private _cache: Cache<T> & Immutable.ImmutableObject<Cache<T>>;
     private _pending: PendingCache;
     private dependencies: any[];
 
@@ -44,24 +39,17 @@ export default class SampleGeneCache<
         this.initCache(sampleIds);
         this._pending = {};
 
-        this.debouncedPopulate = accumulatingDebounce<
-            SampleToEntrezSet,
-            string | number
-        >(
+        this.debouncedPopulate = accumulatingDebounce<SampleToEntrezSet, string | number>(
             (toFetch: SampleToEntrezSet) => {
                 const sampleToEntrezList: SampleToEntrezList = {};
                 for (const sample of Object.keys(toFetch)) {
-                    sampleToEntrezList[sample] = Object.keys(
-                        toFetch[sample]
-                    ).map(x => parseInt(x, 10));
+                    sampleToEntrezList[sample] = Object.keys(toFetch[sample]).map(x =>
+                        parseInt(x, 10)
+                    );
                 }
                 this.populate(sampleToEntrezList);
             },
-            (
-                acc: SampleToEntrezSet,
-                sampleId: string,
-                entrezGeneId: number
-            ) => {
+            (acc: SampleToEntrezSet, sampleId: string, entrezGeneId: number) => {
                 acc[sampleId] = acc[sampleId] || new Set<number>();
                 acc[sampleId][entrezGeneId] = true;
                 return acc;
@@ -82,13 +70,8 @@ export default class SampleGeneCache<
         for (const sampleId of Object.keys(this._cache)) {
             const geneData = this._cache[sampleId].geneData || {};
             for (const entrezGeneId of Object.keys(geneData)) {
-                const datum: CacheData<T> | null =
-                    geneData[parseInt(entrezGeneId, 10)];
-                if (
-                    datum !== null &&
-                    datum.status === 'complete' &&
-                    datum.data !== null
-                ) {
+                const datum: CacheData<T> | null = geneData[parseInt(entrezGeneId, 10)];
+                if (datum !== null && datum.status === 'complete' && datum.data !== null) {
                     ret.push(datum.data);
                 }
             }
@@ -97,9 +80,7 @@ export default class SampleGeneCache<
     }
 
     public get(sampleId: string, entrezGeneId: number): CacheData<T> | null {
-        const cacheDatum =
-            this._cache[sampleId] &&
-            this._cache[sampleId].geneData[entrezGeneId];
+        const cacheDatum = this._cache[sampleId] && this._cache[sampleId].geneData[entrezGeneId];
         if (!cacheDatum) {
             if (
                 this._cache[sampleId] &&
@@ -180,9 +161,7 @@ export default class SampleGeneCache<
         this.updateCache(toMerge);
     }
 
-    private getMissing(
-        sampleToEntrezList: SampleToEntrezListOrNull
-    ): SampleToEntrezListOrNull {
+    private getMissing(sampleToEntrezList: SampleToEntrezListOrNull): SampleToEntrezListOrNull {
         const ret: SampleToEntrezListOrNull = {};
         const pending = this._pending;
         const cache = this._cache;
@@ -190,14 +169,8 @@ export default class SampleGeneCache<
             const entrezList = sampleToEntrezList[sampleId];
             if (entrezList === null) {
                 if (
-                    !(
-                        cache[sampleId] &&
-                        cache[sampleId].fetchedWithoutGeneArgument
-                    ) &&
-                    !(
-                        pending[sampleId] &&
-                        pending[sampleId].fetchedWithoutGeneArgument
-                    )
+                    !(cache[sampleId] && cache[sampleId].fetchedWithoutGeneArgument) &&
+                    !(pending[sampleId] && pending[sampleId].fetchedWithoutGeneArgument)
                 ) {
                     ret[sampleId] = null;
                 }
@@ -216,10 +189,7 @@ export default class SampleGeneCache<
         return ret;
     }
 
-    private markPendingStatus(
-        sampleToEntrezList: SampleToEntrezListOrNull,
-        status: boolean
-    ) {
+    private markPendingStatus(sampleToEntrezList: SampleToEntrezListOrNull, status: boolean) {
         // Helper function for markPending and unmarkPending
         const pending = this._pending;
         for (const sampleId of Object.keys(sampleToEntrezList)) {
@@ -249,11 +219,8 @@ export default class SampleGeneCache<
             [sampleId: string]: { [entrezGeneId: number]: T };
         } = {};
         for (const fetchedDatum of fetchedData) {
-            dataMap[fetchedDatum.sampleId] =
-                dataMap[fetchedDatum.sampleId] || {};
-            dataMap[fetchedDatum.sampleId][
-                fetchedDatum.entrezGeneId
-            ] = fetchedDatum;
+            dataMap[fetchedDatum.sampleId] = dataMap[fetchedDatum.sampleId] || {};
+            dataMap[fetchedDatum.sampleId][fetchedDatum.entrezGeneId] = fetchedDatum;
         }
         const toMerge: CacheMerge<T> = {};
         for (const sampleId of Object.keys(query)) {
@@ -288,9 +255,7 @@ export default class SampleGeneCache<
 
     @action private updateCache(toMerge: CacheMerge<T>) {
         if (Object.keys(toMerge).length > 0) {
-            this._cache = this._cache.merge(toMerge, { deep: true }) as Cache<
-                T
-            > &
+            this._cache = this._cache.merge(toMerge, { deep: true }) as Cache<T> &
                 Immutable.ImmutableObject<Cache<T>>;
         }
     }

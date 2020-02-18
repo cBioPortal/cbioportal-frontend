@@ -36,9 +36,7 @@ export default class ComparisonGroupClient {
 
     private getPendingDeletions() {
         // filter out non-pending deletions
-        this._pendingDeletions = this._pendingDeletions.filter(
-            x => x.status !== 'pending'
-        );
+        this._pendingDeletions = this._pendingDeletions.filter(x => x.status !== 'pending');
         return this._pendingDeletions.map(p => p.promise);
     }
 
@@ -56,15 +54,11 @@ export default class ComparisonGroupClient {
     }
 
     public updateGroup(id: string, group: GroupData) {
-        return request
-            .post(`${getComparisonGroupServiceUrl()}/${id}`)
-            .send(group);
+        return request.post(`${getComparisonGroupServiceUrl()}/${id}`).send(group);
     }
 
     public getGroup(id: string) {
-        return request
-            .get(`${getComparisonGroupServiceUrl()}/${id}`)
-            .then((res: any) => res.body);
+        return request.get(`${getComparisonGroupServiceUrl()}/${id}`).then((res: any) => res.body);
     }
 
     public async getGroupsForStudies(studyIds: string[]): Promise<Group[]> {
@@ -79,18 +73,14 @@ export default class ComparisonGroupClient {
     }
 
     public deleteGroup(id: string) {
-        const req = request
-            .get(`${getComparisonGroupServiceUrl()}/delete/${id}`)
-            .then(() => {});
+        const req = request.get(`${getComparisonGroupServiceUrl()}/delete/${id}`).then(() => {});
 
         this._pendingDeletions.push(new PromisePlus(req));
         return req;
     }
 
     // Group Comparison Sessions
-    public addComparisonSession(
-        session: Omit<Session, 'id'>
-    ): Promise<{ id: string }> {
+    public addComparisonSession(session: Omit<Session, 'id'>): Promise<{ id: string }> {
         return request
             .post(getComparisonSessionServiceUrl())
             .send(session)

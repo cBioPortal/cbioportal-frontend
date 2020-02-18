@@ -18,17 +18,11 @@ export type Set = { size: number; uid: string; disjoint: boolean };
 export type SetRectangles = { [setUid: string]: Rectangle };
 const VennJs = require('venn.js');
 
-export function getRegionLabelPosition(
-    sets: string[],
-    setRectangles: SetRectangles
-) {
+export function getRegionLabelPosition(sets: string[], setRectangles: SetRectangles) {
     const regionShape = getRegionShape(sets, setRectangles);
 
     // Put label in center of biggest area rectangle in the region shape
-    const sortedRegionRectangles = _.sortBy(
-        regionShape,
-        rectangle => -rectangleArea(rectangle)
-    );
+    const sortedRegionRectangles = _.sortBy(regionShape, rectangle => -rectangleArea(rectangle));
     const biggestAreaRectangle = sortedRegionRectangles[0];
     return {
         x: biggestAreaRectangle.x + biggestAreaRectangle.xLength / 2,
@@ -36,19 +30,13 @@ export function getRegionLabelPosition(
     };
 }
 
-function rectangleVennLossFunction(
-    setRectangles: SetRectangles,
-    regions: Region[],
-    sets: Set[]
-) {
+function rectangleVennLossFunction(setRectangles: SetRectangles, regions: Region[], sets: Set[]) {
     let areaError = 0;
     let intersectionDistancePenalty = 0;
 
     for (const region of regions) {
         // Make regions proportional to their size
-        const regionArea = getRegionArea(
-            getRegionShape(region.sets, setRectangles)
-        );
+        const regionArea = getRegionArea(getRegionShape(region.sets, setRectangles));
         const error = regionArea - region.size;
         areaError += error * error;
 
@@ -75,11 +63,7 @@ function rectangleVennLossFunction(
     };
 }
 
-export function computeRectangleVennLayout(
-    regions: Region[],
-    sets: Set[],
-    parameters: any
-) {
+export function computeRectangleVennLayout(regions: Region[], sets: Set[], parameters: any) {
     // based on https://github.com/benfred/venn.js/blob/master/src/layout.js#L7
     parameters = parameters || {};
 
@@ -91,15 +75,12 @@ export function computeRectangleVennLayout(
         })),
         parameters
     );
-    const initialRectangles: SetRectangles = _.mapValues(
-        initialLayout,
-        circle => ({
-            x: circle.x - circle.radius,
-            y: circle.y - circle.radius,
-            xLength: 2 * circle.radius,
-            yLength: 2 * circle.radius,
-        })
-    );
+    const initialRectangles: SetRectangles = _.mapValues(initialLayout, circle => ({
+        x: circle.x - circle.radius,
+        y: circle.y - circle.radius,
+        xLength: 2 * circle.radius,
+        yLength: 2 * circle.radius,
+    }));
 
     const rectangleToVector = (rect: Rectangle) => {
         return [
@@ -125,11 +106,7 @@ export function computeRectangleVennLayout(
         //  whereas to change x in Param. B you'd need to alter both x1 and x2 synchronously.
     };
 
-    const vectorToRectangle = (
-        i: number,
-        vector: number[],
-        square: boolean
-    ) => {
+    const vectorToRectangle = (i: number, vector: number[], square: boolean) => {
         // This is completely tied to `rectangleToVector` - if one is rewritten then so must the other be so that they are inverses.
         const centerX = vector[6 * i];
         const centerY = vector[6 * i + 1];
@@ -184,7 +161,6 @@ export function computeRectangleVennLayout(
 
     return {
         rectangles,
-        finalErrorValue: rectangleVennLossFunction(rectangles, regions, sets)
-            .areaError,
+        finalErrorValue: rectangleVennLossFunction(rectangles, regions, sets).areaError,
     };
 }

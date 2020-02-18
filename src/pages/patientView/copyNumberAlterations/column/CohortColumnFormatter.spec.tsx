@@ -92,73 +92,41 @@ describe('CohortColumnFormatter', () => {
 
     before(() => {
         tooltips.push(
-            mount(
-                CohortColumnFormatter.tooltipContent(
-                    [copyNumberData[0]],
-                    copyNumberCountData[0]
-                )
-            )
+            mount(CohortColumnFormatter.tooltipContent([copyNumberData[0]], copyNumberCountData[0]))
         );
         tooltips.push(
-            mount(
-                CohortColumnFormatter.tooltipContent(
-                    [copyNumberData[1]],
-                    copyNumberCountData[1]
-                )
-            )
+            mount(CohortColumnFormatter.tooltipContent([copyNumberData[1]], copyNumberCountData[1]))
         );
 
-        sinon
-            .stub(fakeCache, 'get')
-            .callsFake((query: CopyNumberCountIdentifier): CacheData<
-                CopyNumberCount
-            > | null => {
-                let cnc: CopyNumberCount | undefined = copyNumberCountData.find(
-                    x => {
-                        return (
-                            x.entrezGeneId === query.entrezGeneId &&
-                            x.alteration === query.alteration
-                        );
-                    }
-                );
-                if (cnc) {
-                    return {
-                        status: 'complete',
-                        data: cnc,
-                    };
-                } else {
-                    return null;
-                }
+        sinon.stub(fakeCache, 'get').callsFake((query: CopyNumberCountIdentifier): CacheData<
+            CopyNumberCount
+        > | null => {
+            let cnc: CopyNumberCount | undefined = copyNumberCountData.find(x => {
+                return x.entrezGeneId === query.entrezGeneId && x.alteration === query.alteration;
             });
+            if (cnc) {
+                return {
+                    status: 'complete',
+                    data: cnc,
+                };
+            } else {
+                return null;
+            }
+        });
     });
 
     it('generates the tooltip text properly', () => {
-        assert.equal(
-            tooltips[0].text(),
-            '61 samples (61.0%) in this study have deleted BRCA2'
-        );
-        assert.equal(
-            tooltips[1].text(),
-            '1 sample (0.5%) in this study has amplified SMURF2'
-        );
+        assert.equal(tooltips[0].text(), '61 samples (61.0%) in this study have deleted BRCA2');
+        assert.equal(tooltips[1].text(), '1 sample (0.5%) in this study has amplified SMURF2');
     });
 
     it('calculates the sort value correctly', () => {
-        assert.equal(
-            CohortColumnFormatter.getSortValue([copyNumberData[0]], fakeCache),
-            61
-        );
-        assert.equal(
-            CohortColumnFormatter.getSortValue([copyNumberData[1]], fakeCache),
-            1
-        );
+        assert.equal(CohortColumnFormatter.getSortValue([copyNumberData[0]], fakeCache), 61);
+        assert.equal(CohortColumnFormatter.getSortValue([copyNumberData[1]], fakeCache), 1);
     });
 
     it('picks the correct gistic summary', () => {
-        let summary = CohortColumnFormatter.getGisticValue(
-            [copyNumberData[0]],
-            gisticData
-        );
+        let summary = CohortColumnFormatter.getGisticValue([copyNumberData[0]], gisticData);
 
         let qValue = summary === null ? null : summary.qValue;
         let amp = summary === null ? null : summary.amp;
@@ -172,10 +140,7 @@ describe('CohortColumnFormatter', () => {
         assert.equal(qValue, 0.00023);
         assert.equal(count, 5);
 
-        summary = CohortColumnFormatter.getGisticValue(
-            [copyNumberData[1]],
-            gisticData
-        );
+        summary = CohortColumnFormatter.getGisticValue([copyNumberData[1]], gisticData);
 
         qValue = summary === null ? null : summary.qValue;
         amp = summary === null ? null : summary.amp;

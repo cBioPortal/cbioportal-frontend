@@ -50,11 +50,7 @@ class DataTable extends LazyMobXTable<IDataTableRow> {}
 
 class CancerStudyCell extends React.Component<ICancerStudyCellProps, {}> {
     render() {
-        return (
-            <StudyLink studyId={this.props.studyId}>
-                {this.props.name}
-            </StudyLink>
-        );
+        return <StudyLink studyId={this.props.studyId}>{this.props.name}</StudyLink>;
     }
 }
 
@@ -91,26 +87,23 @@ export default class DataSetsPageTable extends React.Component<
 
     render() {
         if (this.props.datasets) {
-            const tableData: IDataTableRow[] = _.map(
-                this.props.datasets,
-                (study: CancerStudy) => ({
-                    name: study.name,
-                    reference: study.citation,
-                    all: study.allSampleCount || '',
-                    pmid: study.pmid,
-                    studyId: study.studyId,
-                    sequenced: study.sequencedSampleCount || '',
-                    cna: study.cnaSampleCount,
-                    citation: study.citation || '',
-                    mrnaRnaSeq: study.mrnaRnaSeqSampleCount || '',
-                    mrnaRnaSeqV2: study.mrnaRnaSeqV2SampleCount || '',
-                    mrnaMicroarray: study.mrnaMicroarraySampleCount || '',
-                    miRna: study.miRnaSampleCount || '',
-                    methylation: study.methylationHm27SampleCount || '',
-                    rppa: study.rppaSampleCount || '',
-                    complete: study.completeSampleCount || '',
-                })
-            );
+            const tableData: IDataTableRow[] = _.map(this.props.datasets, (study: CancerStudy) => ({
+                name: study.name,
+                reference: study.citation,
+                all: study.allSampleCount || '',
+                pmid: study.pmid,
+                studyId: study.studyId,
+                sequenced: study.sequencedSampleCount || '',
+                cna: study.cnaSampleCount,
+                citation: study.citation || '',
+                mrnaRnaSeq: study.mrnaRnaSeqSampleCount || '',
+                mrnaRnaSeqV2: study.mrnaRnaSeqV2SampleCount || '',
+                mrnaMicroarray: study.mrnaMicroarraySampleCount || '',
+                miRna: study.miRnaSampleCount || '',
+                methylation: study.methylationHm27SampleCount || '',
+                rppa: study.rppaSampleCount || '',
+                complete: study.completeSampleCount || '',
+            }));
             return (
                 <div ref={(el: HTMLDivElement) => (this.chartTarget = el)}>
                     <DataTable
@@ -120,19 +113,14 @@ export default class DataSetsPageTable extends React.Component<
                                 name: 'Name',
                                 type: 'name',
                                 render: (data: IDataTableRow) => (
-                                    <CancerStudyCell
-                                        studyId={data.studyId}
-                                        name={data.name}
-                                    />
+                                    <CancerStudyCell studyId={data.studyId} name={data.name} />
                                 ),
                                 filter: (
                                     data: any,
                                     filterString: string,
                                     filterStringUpper: string
                                 ) => {
-                                    return data.name
-                                        .toUpperCase()
-                                        .includes(filterStringUpper);
+                                    return data.name.toUpperCase().includes(filterStringUpper);
                                 },
                             },
                             {
@@ -146,11 +134,7 @@ export default class DataSetsPageTable extends React.Component<
                                         data.studyId
                                     );
                                     if (studyIsDownloadable) {
-                                        return (
-                                            <StudyDataDownloadLink
-                                                studyId={data.studyId}
-                                            />
-                                        );
+                                        return <StudyDataDownloadLink studyId={data.studyId} />;
                                     } else {
                                         return null;
                                     }
@@ -160,19 +144,14 @@ export default class DataSetsPageTable extends React.Component<
                                 name: 'Reference',
                                 type: 'citation',
                                 render: (data: IDataTableRow) => (
-                                    <ReferenceCell
-                                        pmid={data.pmid}
-                                        citation={data.citation}
-                                    />
+                                    <ReferenceCell pmid={data.pmid} citation={data.citation} />
                                 ),
                                 filter: (
                                     data: any,
                                     filterString: string,
                                     filterStringUpper: string
                                 ) => {
-                                    return data.citation
-                                        .toUpperCase()
-                                        .includes(filterStringUpper);
+                                    return data.citation.toUpperCase().includes(filterStringUpper);
                                 },
                             },
                             { name: 'All', type: 'all' },
@@ -191,9 +170,7 @@ export default class DataSetsPageTable extends React.Component<
                                     );
                                 },
                                 sortBy: (data: IDataTableRow) =>
-                                    Number(data.mrnaRnaSeqV2) ||
-                                    Number(data.mrnaRnaSeq) ||
-                                    0,
+                                    Number(data.mrnaRnaSeqV2) || Number(data.mrnaRnaSeq) || 0,
                             },
                             {
                                 name: 'Tumor mRNA (microarray)',
@@ -218,8 +195,7 @@ export default class DataSetsPageTable extends React.Component<
                             },
                         ].map((column: any) => ({
                             visible: column.visible === false ? false : true,
-                            togglable:
-                                column.togglable === false ? false : true,
+                            togglable: column.togglable === false ? false : true,
                             name: column.name,
                             defaultSortDirection: 'asc' as 'asc',
                             sortBy: column.hasOwnProperty('sortBy')
@@ -229,15 +205,9 @@ export default class DataSetsPageTable extends React.Component<
                                 ? column.render
                                 : (data: any) => {
                                       const style = {}; // {textAlign: 'center', width: '100%', display: 'block'}
-                                      return (
-                                          <span style={style}>
-                                              {data[column.type] || 0}
-                                          </span>
-                                      );
+                                      return <span style={style}>{data[column.type] || 0}</span>;
                                   },
-                            download: column.hasOwnProperty('download')
-                                ? column.download
-                                : false,
+                            download: column.hasOwnProperty('download') ? column.download : false,
                             filter: column.filter || undefined,
                         }))}
                         initialSortColumn={'Name'}

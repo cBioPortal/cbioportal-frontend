@@ -45,8 +45,7 @@ const sampleMutationalSignatureMetaData = [
     {
         mutationalSignatureId: 'firstMutationalSignature',
         description: 'Mutational Signature 1',
-        confidenceStatement:
-            'Signature 1, the aging signature, is detected in this case.',
+        confidenceStatement: 'Signature 1, the aging signature, is detected in this case.',
     },
     {
         mutationalSignatureId: 'secondMutationalSignature',
@@ -69,8 +68,7 @@ describe('SignificantMutationalSignatures', () => {
 
             assert.deepEqual(result, {
                 numberOfMutationsForSample: 20,
-                confidenceStatement:
-                    'Signature 1, the aging signature, is detected in this case.',
+                confidenceStatement: 'Signature 1, the aging signature, is detected in this case.',
                 significantSignatures: {
                     firstMutationalSignature: 1,
                 },

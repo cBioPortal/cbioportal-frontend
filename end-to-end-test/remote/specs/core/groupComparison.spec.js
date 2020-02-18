@@ -1,12 +1,9 @@
 var assert = require('assert');
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
+var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
-const SampleCreateGroupButton =
-    'button[data-test="sampleGroupComparisonCreateGroupButton"]';
-const PatientCreateGroupButton =
-    'button[data-test="patientGroupComparisonCreateGroupButton"]';
+const SampleCreateGroupButton = 'button[data-test="sampleGroupComparisonCreateGroupButton"]';
+const PatientCreateGroupButton = 'button[data-test="patientGroupComparisonCreateGroupButton"]';
 
 describe('group comparison venn diagram tests', function() {
     describe('create new group tests', function() {
@@ -14,10 +11,7 @@ describe('group comparison venn diagram tests', function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/comparison/overlap?sessionId=5cf6bcf0e4b0ab413787430c`
             );
-            browser.waitForVisible(
-                'div[data-test="ComparisonPageOverlapTabDiv"]',
-                20000
-            );
+            browser.waitForVisible('div[data-test="ComparisonPageOverlapTabDiv"]', 20000);
         });
 
         it('create group button disabled as default', function() {
@@ -41,44 +35,24 @@ describe('group comparison venn diagram tests', function() {
                 true,
                 'group name input exists'
             );
-            assert.equal(
-                browser.isEnabled('[data-test="sampleGroupNameSubmitButton"]'),
-                false
-            );
+            assert.equal(browser.isEnabled('[data-test="sampleGroupNameSubmitButton"]'), false);
         });
 
         it('sample venn diagram: group name exists, should disable submit button', function() {
-            browser.setValue(
-                '[data-test="sampleGroupNameInputField"]',
-                'GARS mutant'
-            );
+            browser.setValue('[data-test="sampleGroupNameInputField"]', 'GARS mutant');
             browser.pause(100);
-            browser.waitForVisible(
-                '[data-test="sampleDuplicateGroupNameMessage"]',
-                20000
-            );
+            browser.waitForVisible('[data-test="sampleDuplicateGroupNameMessage"]', 20000);
             assert.equal(
-                browser.getText(
-                    '[data-test="sampleDuplicateGroupNameMessage"]'
-                ),
+                browser.getText('[data-test="sampleDuplicateGroupNameMessage"]'),
                 'Another group already has this name.'
             );
-            assert.equal(
-                browser.isEnabled('[data-test="sampleGroupNameSubmitButton"]'),
-                false
-            );
+            assert.equal(browser.isEnabled('[data-test="sampleGroupNameSubmitButton"]'), false);
         });
 
         it('sample venn diagram: new group name, should enable submit button', function() {
-            browser.setValue(
-                '[data-test="sampleGroupNameInputField"]',
-                'new group'
-            );
+            browser.setValue('[data-test="sampleGroupNameInputField"]', 'new group');
             browser.pause(100);
-            assert.equal(
-                browser.isEnabled('[data-test="sampleGroupNameSubmitButton"]'),
-                true
-            );
+            assert.equal(browser.isEnabled('[data-test="sampleGroupNameSubmitButton"]'), true);
         });
 
         it('select from patient venn diagram', function() {
@@ -99,44 +73,24 @@ describe('group comparison venn diagram tests', function() {
                 true,
                 'group name input exists'
             );
-            assert.equal(
-                browser.isEnabled('[data-test="patientGroupNameSubmitButton"]'),
-                false
-            );
+            assert.equal(browser.isEnabled('[data-test="patientGroupNameSubmitButton"]'), false);
         });
 
         it('patient venn diagram: group name exists, should disable submit button', function() {
-            browser.setValue(
-                '[data-test="patientGroupNameInputField"]',
-                'GARS mutant'
-            );
+            browser.setValue('[data-test="patientGroupNameInputField"]', 'GARS mutant');
             browser.pause(100);
-            browser.waitForVisible(
-                '[data-test="patientDuplicateGroupNameMessage"]',
-                20000
-            );
+            browser.waitForVisible('[data-test="patientDuplicateGroupNameMessage"]', 20000);
             assert.equal(
-                browser.getText(
-                    '[data-test="patientDuplicateGroupNameMessage"]'
-                ),
+                browser.getText('[data-test="patientDuplicateGroupNameMessage"]'),
                 'Another group already has this name.'
             );
-            assert.equal(
-                browser.isEnabled('[data-test="patientGroupNameSubmitButton"]'),
-                false
-            );
+            assert.equal(browser.isEnabled('[data-test="patientGroupNameSubmitButton"]'), false);
         });
 
         it('patient venn diagram: new group name, should enable submit button', function() {
-            browser.setValue(
-                '[data-test="patientGroupNameInputField"]',
-                'new group'
-            );
+            browser.setValue('[data-test="patientGroupNameInputField"]', 'new group');
             browser.pause(100);
-            assert.equal(
-                browser.isEnabled('[data-test="patientGroupNameSubmitButton"]'),
-                true
-            );
+            assert.equal(browser.isEnabled('[data-test="patientGroupNameSubmitButton"]'), true);
         });
     });
 });
@@ -147,10 +101,7 @@ describe('group comparison upset diagram tests', function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/comparison?sessionId=5d0bc0c5e4b0ab4137876bc3`
             );
-            browser.waitForVisible(
-                'div[data-test="ComparisonPageOverlapTabDiv"]',
-                20000
-            );
+            browser.waitForVisible('div[data-test="ComparisonPageOverlapTabDiv"]', 20000);
         });
 
         it('create group button disabled as default', function() {
@@ -174,44 +125,24 @@ describe('group comparison upset diagram tests', function() {
                 true,
                 'group name input exists'
             );
-            assert.equal(
-                browser.isEnabled('[data-test="sampleGroupNameSubmitButton"]'),
-                false
-            );
+            assert.equal(browser.isEnabled('[data-test="sampleGroupNameSubmitButton"]'), false);
         });
 
         it('sample upset diagram: group name exists, should disable submit button', function() {
-            browser.setValue(
-                '[data-test="sampleGroupNameInputField"]',
-                'testGroup5'
-            );
+            browser.setValue('[data-test="sampleGroupNameInputField"]', 'testGroup5');
             browser.pause(100);
-            browser.waitForVisible(
-                '[data-test="sampleDuplicateGroupNameMessage"]',
-                20000
-            );
+            browser.waitForVisible('[data-test="sampleDuplicateGroupNameMessage"]', 20000);
             assert.equal(
-                browser.getText(
-                    '[data-test="sampleDuplicateGroupNameMessage"]'
-                ),
+                browser.getText('[data-test="sampleDuplicateGroupNameMessage"]'),
                 'Another group already has this name.'
             );
-            assert.equal(
-                browser.isEnabled('[data-test="sampleGroupNameSubmitButton"]'),
-                false
-            );
+            assert.equal(browser.isEnabled('[data-test="sampleGroupNameSubmitButton"]'), false);
         });
 
         it('sample upset diagram: new group name, should enable submit button', function() {
-            browser.setValue(
-                '[data-test="sampleGroupNameInputField"]',
-                'new group'
-            );
+            browser.setValue('[data-test="sampleGroupNameInputField"]', 'new group');
             browser.pause(100);
-            assert.equal(
-                browser.isEnabled('[data-test="sampleGroupNameSubmitButton"]'),
-                true
-            );
+            assert.equal(browser.isEnabled('[data-test="sampleGroupNameSubmitButton"]'), true);
         });
 
         it('select from patient upset diagram', function() {
@@ -232,44 +163,24 @@ describe('group comparison upset diagram tests', function() {
                 true,
                 'group name input exists'
             );
-            assert.equal(
-                browser.isEnabled('[data-test="patientGroupNameSubmitButton"]'),
-                false
-            );
+            assert.equal(browser.isEnabled('[data-test="patientGroupNameSubmitButton"]'), false);
         });
 
         it('patient upset diagram: group name exists, should disable submit button', function() {
-            browser.setValue(
-                '[data-test="patientGroupNameInputField"]',
-                'testGroup3'
-            );
+            browser.setValue('[data-test="patientGroupNameInputField"]', 'testGroup3');
             browser.pause(100);
-            browser.waitForVisible(
-                '[data-test="patientDuplicateGroupNameMessage"]',
-                20000
-            );
+            browser.waitForVisible('[data-test="patientDuplicateGroupNameMessage"]', 20000);
             assert.equal(
-                browser.getText(
-                    '[data-test="patientDuplicateGroupNameMessage"]'
-                ),
+                browser.getText('[data-test="patientDuplicateGroupNameMessage"]'),
                 'Another group already has this name.'
             );
-            assert.equal(
-                browser.isEnabled('[data-test="patientGroupNameSubmitButton"]'),
-                false
-            );
+            assert.equal(browser.isEnabled('[data-test="patientGroupNameSubmitButton"]'), false);
         });
 
         it('patient upset diagram: new group name, should enable submit button', function() {
-            browser.setValue(
-                '[data-test="patientGroupNameInputField"]',
-                'new group'
-            );
+            browser.setValue('[data-test="patientGroupNameInputField"]', 'new group');
             browser.pause(100);
-            assert.equal(
-                browser.isEnabled('[data-test="patientGroupNameSubmitButton"]'),
-                true
-            );
+            assert.equal(browser.isEnabled('[data-test="patientGroupNameSubmitButton"]'), true);
         });
     });
 });

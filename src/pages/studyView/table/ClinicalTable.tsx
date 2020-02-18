@@ -1,13 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import {
-    action,
-    computed,
-    observable,
-    toJS,
-    reaction,
-    IReactionDisposer,
-} from 'mobx';
+import { action, computed, observable, toJS, reaction, IReactionDisposer } from 'mobx';
 import autobind from 'autobind-decorator';
 import _ from 'lodash';
 import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
@@ -39,9 +32,7 @@ export interface IClinicalTableProps {
     showAddRemoveAllButtons?: boolean;
 }
 
-class ClinicalTableComponent extends FixedHeaderTable<
-    ClinicalDataCountSummary
-> {}
+class ClinicalTableComponent extends FixedHeaderTable<ClinicalDataCountSummary> {}
 
 export enum ColumnKey {
     CATEGORY = 'Category',
@@ -50,10 +41,7 @@ export enum ColumnKey {
 }
 
 @observer
-export default class ClinicalTable extends React.Component<
-    IClinicalTableProps,
-    {}
-> {
+export default class ClinicalTable extends React.Component<IClinicalTableProps, {}> {
     @observable private sortBy: string = DEFAULT_SORTING_COLUMN;
     @observable private sortDirection: SortDirection;
 
@@ -83,9 +71,7 @@ export default class ClinicalTable extends React.Component<
                           (this.columnsWidth[ColumnKey.NUMBER] -
                               10 -
                               (getFixedHeaderTableMaxLengthStringPixel(
-                                  _.max(
-                                      this.props.data.map(item => item.count)
-                                  )!.toLocaleString()
+                                  _.max(this.props.data.map(item => item.count))!.toLocaleString()
                               ) +
                                   20)) /
                               2
@@ -96,10 +82,9 @@ export default class ClinicalTable extends React.Component<
                     : correctMargin(
                           getFixedHeaderNumberCellMargin(
                               this.columnsWidth[ColumnKey.FREQ],
-                              _.sortBy(
-                                  this.props.data,
-                                  item => item.percentage
-                              )[this.props.data.length - 1].freq
+                              _.sortBy(this.props.data, item => item.percentage)[
+                                  this.props.data.length - 1
+                              ].freq
                           )
                       ),
         };
@@ -122,24 +107,12 @@ export default class ClinicalTable extends React.Component<
                         }}
                         onMouseLeave={this.tooltipLabelMouseLeave}
                     >
-                        <svg
-                            width="18"
-                            height="12"
-                            className={styles.labelContentSVG}
-                        >
+                        <svg width="18" height="12" className={styles.labelContentSVG}>
                             <g>
-                                <rect
-                                    x="0"
-                                    y="0"
-                                    width="12"
-                                    height="12"
-                                    fill={data.color}
-                                />
+                                <rect x="0" y="0" width="12" height="12" fill={data.color} />
                             </g>
                         </svg>
-                        <EllipsisTextTooltip
-                            text={data.value}
-                        ></EllipsisTextTooltip>
+                        <EllipsisTextTooltip text={data.value}></EllipsisTextTooltip>
                     </div>
                 );
             },
@@ -162,11 +135,8 @@ export default class ClinicalTable extends React.Component<
                 this.firstColumnName,
                 this.props.labelDescription ? this.props.labelDescription : ''
             ),
-            filter: (
-                d: ClinicalDataCountSummary,
-                f: string,
-                filterStringUpper: string
-            ) => d.value.toUpperCase().includes(filterStringUpper),
+            filter: (d: ClinicalDataCountSummary, f: string, filterStringUpper: string) =>
+                d.value.toUpperCase().includes(filterStringUpper),
             sortBy: (d: ClinicalDataCountSummary) => d.value,
             defaultSortDirection: 'asc' as 'asc',
             width: this.columnsWidth[ColumnKey.CATEGORY],
@@ -203,14 +173,8 @@ export default class ClinicalTable extends React.Component<
                     {data.count.toLocaleString()}
                 </LabeledCheckbox>
             ),
-            tooltip: (
-                <span>
-                    Number of{' '}
-                    {this.props.patientAttribute ? 'patients' : 'samples'}
-                </span>
-            ),
-            filter: (d: ClinicalDataCountSummary, f: string) =>
-                d.count.toString().includes(f),
+            tooltip: <span>Number of {this.props.patientAttribute ? 'patients' : 'samples'}</span>,
+            filter: (d: ClinicalDataCountSummary, f: string) => d.count.toString().includes(f),
             sortBy: (d: ClinicalDataCountSummary) => d.count,
             defaultSortDirection: 'desc' as 'desc',
             width: this.columnsWidth[ColumnKey.NUMBER],
@@ -218,13 +182,7 @@ export default class ClinicalTable extends React.Component<
         {
             name: ColumnKey.FREQ,
             headerRender: () => {
-                return (
-                    <div
-                        style={{ marginLeft: this.cellMargin[ColumnKey.FREQ] }}
-                    >
-                        Freq
-                    </div>
-                );
+                return <div style={{ marginLeft: this.cellMargin[ColumnKey.FREQ] }}>Freq</div>;
             },
             render: (data: ClinicalDataCountSummary) => (
                 <span
@@ -238,10 +196,7 @@ export default class ClinicalTable extends React.Component<
                 </span>
             ),
             tooltip: (
-                <span>
-                    Percentage of{' '}
-                    {this.props.patientAttribute ? 'patients' : 'samples'}
-                </span>
+                <span>Percentage of {this.props.patientAttribute ? 'patients' : 'samples'}</span>
             ),
             filter: (d: ClinicalDataCountSummary, f: string) => {
                 return d.freq.includes(f);

@@ -22,11 +22,7 @@ import { PillTag } from '../../shared/components/PillTag/PillTag';
 import { GroupLogic } from './filters/groupLogic/GroupLogic';
 import classnames from 'classnames';
 import { STUDY_VIEW_CONFIG, ChartTypeEnum } from './StudyViewConfig';
-import {
-    DEFAULT_NA_COLOR,
-    MUT_COLOR_FUSION,
-    MUT_COLOR_MISSENSE,
-} from 'shared/lib/Colors';
+import { DEFAULT_NA_COLOR, MUT_COLOR_FUSION, MUT_COLOR_MISSENSE } from 'shared/lib/Colors';
 import {
     caseCounts,
     getSampleIdentifiers,
@@ -54,10 +50,7 @@ export interface IUserSelectionsProps {
 }
 
 @observer
-export default class UserSelections extends React.Component<
-    IUserSelectionsProps,
-    {}
-> {
+export default class UserSelections extends React.Component<IUserSelectionsProps, {}> {
     @computed
     get showFilters() {
         //return isFiltered(this.props.filter)
@@ -74,27 +67,19 @@ export default class UserSelections extends React.Component<
                 <div className={styles.parentGroupLogic}>
                     <GroupLogic
                         components={[
-                            <span className={styles.filterClinicalAttrName}>
-                                Custom Selection
-                            </span>,
+                            <span className={styles.filterClinicalAttrName}>Custom Selection</span>,
                             <PillTag
                                 content={`${
-                                    this.props
-                                        .numberOfSelectedSamplesInCustomSelection
+                                    this.props.numberOfSelectedSamplesInCustomSelection
                                 } sample${
-                                    this.props
-                                        .numberOfSelectedSamplesInCustomSelection >
-                                    1
+                                    this.props.numberOfSelectedSamplesInCustomSelection > 1
                                         ? 's'
                                         : ''
                                 }`}
                                 backgroundColor={
-                                    STUDY_VIEW_CONFIG.colors.theme
-                                        .clinicalFilterContent
+                                    STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent
                                 }
-                                onDelete={() =>
-                                    this.props.removeCustomSelectionFilter()
-                                }
+                                onDelete={() => this.props.removeCustomSelectionFilter()}
                             />,
                         ]}
                         operation={':'}
@@ -106,30 +91,21 @@ export default class UserSelections extends React.Component<
 
         // Show the filter for the comparison group selection
         if (this.props.comparisonGroupSelection.length > 0) {
-            const numSamples = getSampleIdentifiers(
-                this.props.comparisonGroupSelection
-            ).length;
-            const numPatients = getPatientIdentifiers(
-                this.props.comparisonGroupSelection
-            ).length;
+            const numSamples = getSampleIdentifiers(this.props.comparisonGroupSelection).length;
+            const numPatients = getPatientIdentifiers(this.props.comparisonGroupSelection).length;
             components.push(
                 <div className={styles.parentGroupLogic}>
                     <GroupLogic
                         components={[
                             <span className={styles.filterClinicalAttrName}>
-                                {getSelectedGroupNames(
-                                    this.props.comparisonGroupSelection
-                                )}
+                                {getSelectedGroupNames(this.props.comparisonGroupSelection)}
                             </span>,
                             <PillTag
                                 content={caseCounts(numSamples, numPatients)}
                                 backgroundColor={
-                                    STUDY_VIEW_CONFIG.colors.theme
-                                        .clinicalFilterContent
+                                    STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent
                                 }
-                                onDelete={() =>
-                                    this.props.removeComparisonGroupSelectionFilter()
-                                }
+                                onDelete={() => this.props.removeComparisonGroupSelectionFilter()}
                             />,
                         ]}
                         operation={':'}
@@ -142,9 +118,7 @@ export default class UserSelections extends React.Component<
         _.reduce(
             this.props.filter.clinicalDataFilters || [],
             (acc, clinicalDataFilter) => {
-                const chartMeta = this.props.attributesMetaSet[
-                    clinicalDataFilter.attributeId
-                ];
+                const chartMeta = this.props.attributesMetaSet[clinicalDataFilter.attributeId];
                 if (chartMeta) {
                     const dataType = this.props.clinicalAttributeIdToDataType[
                         clinicalDataFilter.attributeId
@@ -155,11 +129,7 @@ export default class UserSelections extends React.Component<
                             <div className={styles.parentGroupLogic}>
                                 <GroupLogic
                                     components={[
-                                        <span
-                                            className={
-                                                styles.filterClinicalAttrName
-                                            }
-                                        >
+                                        <span className={styles.filterClinicalAttrName}>
                                             {chartMeta.displayName}
                                         </span>,
                                         <GroupLogic
@@ -167,13 +137,9 @@ export default class UserSelections extends React.Component<
                                                 clinicalDataFilterValue => {
                                                     return (
                                                         <PillTag
-                                                            content={
-                                                                clinicalDataFilterValue.value
-                                                            }
+                                                            content={clinicalDataFilterValue.value}
                                                             backgroundColor={
-                                                                STUDY_VIEW_CONFIG
-                                                                    .colors
-                                                                    .theme
+                                                                STUDY_VIEW_CONFIG.colors.theme
                                                                     .clinicalFilterContent
                                                             }
                                                             onDelete={() =>
@@ -206,11 +172,7 @@ export default class UserSelections extends React.Component<
                             <div className={styles.parentGroupLogic}>
                                 <GroupLogic
                                     components={[
-                                        <span
-                                            className={
-                                                styles.filterClinicalAttrName
-                                            }
-                                        >
+                                        <span className={styles.filterClinicalAttrName}>
                                             {chartMeta.displayName}
                                         </span>,
                                         <PillTag
@@ -218,8 +180,7 @@ export default class UserSelections extends React.Component<
                                                 clinicalDataFilter.values
                                             )}
                                             backgroundColor={
-                                                STUDY_VIEW_CONFIG.colors.theme
-                                                    .clinicalFilterContent
+                                                STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent
                                             }
                                             onDelete={() =>
                                                 this.props.updateClinicalDataFilterByValues(
@@ -252,11 +213,7 @@ export default class UserSelections extends React.Component<
                             <div className={styles.parentGroupLogic}>
                                 <GroupLogic
                                     components={[
-                                        <span
-                                            className={
-                                                styles.filterClinicalAttrName
-                                            }
-                                        >
+                                        <span className={styles.filterClinicalAttrName}>
                                             {chartMeta.displayName}
                                         </span>,
                                         <GroupLogic
@@ -265,8 +222,7 @@ export default class UserSelections extends React.Component<
                                                     <PillTag
                                                         content={label}
                                                         backgroundColor={
-                                                            STUDY_VIEW_CONFIG
-                                                                .colors.theme
+                                                            STUDY_VIEW_CONFIG.colors.theme
                                                                 .clinicalFilterContent
                                                         }
                                                         onDelete={() =>
@@ -274,9 +230,7 @@ export default class UserSelections extends React.Component<
                                                                 chartMeta.uniqueKey,
                                                                 _.remove(
                                                                     content,
-                                                                    value =>
-                                                                        value !==
-                                                                        label
+                                                                    value => value !== label
                                                                 )
                                                             )
                                                         }
@@ -310,69 +264,51 @@ export default class UserSelections extends React.Component<
                     acc.push(
                         <div className={styles.parentGroupLogic}>
                             <GroupLogic
-                                components={geneFilter.geneQueries.map(
-                                    geneQuery => {
-                                        return (
-                                            <GroupLogic
-                                                components={geneQuery.map(
-                                                    oql => {
-                                                        let color = DEFAULT_NA_COLOR;
-                                                        let displayGeneSymbol = oql;
-                                                        switch (
-                                                            chartMeta.chartType
-                                                        ) {
-                                                            case ChartTypeEnum.MUTATED_GENES_TABLE:
-                                                                color = MUT_COLOR_MISSENSE;
-                                                                break;
-                                                            case ChartTypeEnum.FUSION_GENES_TABLE:
-                                                                color = MUT_COLOR_FUSION;
-                                                                break;
-                                                            case ChartTypeEnum.CNA_GENES_TABLE: {
-                                                                const oqlParts = oql
-                                                                    .trim()
-                                                                    .split(':');
-                                                                if (
-                                                                    oqlParts.length ===
-                                                                    2
-                                                                ) {
-                                                                    displayGeneSymbol =
-                                                                        oqlParts[0];
-                                                                    let tagColor = getCNAColorByAlteration(
-                                                                        oqlParts[1]
-                                                                    );
-                                                                    if (
-                                                                        tagColor
-                                                                    ) {
-                                                                        color = tagColor;
-                                                                    }
-                                                                }
-                                                                break;
+                                components={geneFilter.geneQueries.map(geneQuery => {
+                                    return (
+                                        <GroupLogic
+                                            components={geneQuery.map(oql => {
+                                                let color = DEFAULT_NA_COLOR;
+                                                let displayGeneSymbol = oql;
+                                                switch (chartMeta.chartType) {
+                                                    case ChartTypeEnum.MUTATED_GENES_TABLE:
+                                                        color = MUT_COLOR_MISSENSE;
+                                                        break;
+                                                    case ChartTypeEnum.FUSION_GENES_TABLE:
+                                                        color = MUT_COLOR_FUSION;
+                                                        break;
+                                                    case ChartTypeEnum.CNA_GENES_TABLE: {
+                                                        const oqlParts = oql.trim().split(':');
+                                                        if (oqlParts.length === 2) {
+                                                            displayGeneSymbol = oqlParts[0];
+                                                            let tagColor = getCNAColorByAlteration(
+                                                                oqlParts[1]
+                                                            );
+                                                            if (tagColor) {
+                                                                color = tagColor;
                                                             }
                                                         }
-                                                        return (
-                                                            <PillTag
-                                                                content={
-                                                                    displayGeneSymbol
-                                                                }
-                                                                backgroundColor={
-                                                                    color
-                                                                }
-                                                                onDelete={() =>
-                                                                    this.props.removeGeneFilter(
-                                                                        chartMeta.uniqueKey,
-                                                                        oql
-                                                                    )
-                                                                }
-                                                            />
-                                                        );
+                                                        break;
                                                     }
-                                                )}
-                                                operation="or"
-                                                group={geneQuery.length > 1}
-                                            />
-                                        );
-                                    }
-                                )}
+                                                }
+                                                return (
+                                                    <PillTag
+                                                        content={displayGeneSymbol}
+                                                        backgroundColor={color}
+                                                        onDelete={() =>
+                                                            this.props.removeGeneFilter(
+                                                                chartMeta.uniqueKey,
+                                                                oql
+                                                            )
+                                                        }
+                                                    />
+                                                );
+                                            })}
+                                            operation="or"
+                                            group={geneQuery.length > 1}
+                                        />
+                                    );
+                                })}
                                 operation={'and'}
                                 group={false}
                             />
@@ -390,12 +326,7 @@ export default class UserSelections extends React.Component<
     render() {
         if (this.showFilters) {
             return (
-                <div
-                    className={classnames(
-                        styles.userSelections,
-                        'userSelections'
-                    )}
-                >
+                <div className={classnames(styles.userSelections, 'userSelections')}>
                     {this.allComponents}
                     <button
                         data-test="clear-all-filters"
@@ -413,10 +344,7 @@ export default class UserSelections extends React.Component<
                         placement={'topLeft'}
                         overlay={<div>Get bookmark link for this filter</div>}
                     >
-                        <a
-                            onClick={this.props.onBookmarkClick}
-                            className={styles.bookmarkButton}
-                        >
+                        <a onClick={this.props.onBookmarkClick} className={styles.bookmarkButton}>
                             <span className="fa-stack fa-4x">
                                 <i className="fa fa-circle fa-stack-2x"></i>
                                 <i className="fa fa-link fa-stack-1x"></i>

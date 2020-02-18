@@ -28,14 +28,8 @@ import {
     getSingleGeneResultKey,
     getMultipleGeneResultKey,
 } from './ResultsViewPageStoreUtils';
-import {
-    IQueriedMergedTrackCaseData,
-    AnnotatedExtendedAlteration,
-} from './ResultsViewPageStore';
-import {
-    OQLLineFilterOutput,
-    MergedTrackLineFilterOutput,
-} from '../../shared/lib/oql/oqlfilter';
+import { IQueriedMergedTrackCaseData, AnnotatedExtendedAlteration } from './ResultsViewPageStore';
+import { OQLLineFilterOutput, MergedTrackLineFilterOutput } from '../../shared/lib/oql/oqlfilter';
 import { observable } from 'mobx';
 import { IndicatorQueryResp } from 'cbioportal-frontend-commons';
 import { AnnotatedMutation } from './ResultsViewPageStore';
@@ -80,10 +74,10 @@ describe('ResultsViewPageStoreUtils', () => {
             });
         });
         it('returns the right report for no annotations, one element', () => {
-            assert.deepEqual(
-                computeCustomDriverAnnotationReport([neitherMutation]),
-                { hasBinary: false, tiers: [] }
-            );
+            assert.deepEqual(computeCustomDriverAnnotationReport([neitherMutation]), {
+                hasBinary: false,
+                tiers: [],
+            });
         });
         it('returns the right report for no annotations, three elements', () => {
             assert.deepEqual(
@@ -96,10 +90,10 @@ describe('ResultsViewPageStoreUtils', () => {
             );
         });
         it('returns the right report for just binary annotations, one element', () => {
-            assert.deepEqual(
-                computeCustomDriverAnnotationReport([driverFilterMutation]),
-                { hasBinary: true, tiers: [] }
-            );
+            assert.deepEqual(computeCustomDriverAnnotationReport([driverFilterMutation]), {
+                hasBinary: true,
+                tiers: [],
+            });
         });
         it('returns the right report for just binary annotations, three elements', () => {
             assert.deepEqual(
@@ -112,12 +106,10 @@ describe('ResultsViewPageStoreUtils', () => {
             );
         });
         it('returns the right report for just tiers annotations, one element', () => {
-            assert.deepEqual(
-                computeCustomDriverAnnotationReport([
-                    driverTiersFilterMutation,
-                ]),
-                { hasBinary: false, tiers: ['T'] }
-            );
+            assert.deepEqual(computeCustomDriverAnnotationReport([driverTiersFilterMutation]), {
+                hasBinary: false,
+                tiers: ['T'],
+            });
         });
         it('returns the right report for just tiers annotations, three elements', () => {
             assert.deepEqual(
@@ -130,18 +122,14 @@ describe('ResultsViewPageStoreUtils', () => {
             );
         });
         it('returns the right report for binary and tier annotation in one element', () => {
-            assert.deepEqual(
-                computeCustomDriverAnnotationReport([bothMutation]),
-                { hasBinary: true, tiers: ['SDPOIFJP'] }
-            );
+            assert.deepEqual(computeCustomDriverAnnotationReport([bothMutation]), {
+                hasBinary: true,
+                tiers: ['SDPOIFJP'],
+            });
         });
         it('returns the right report for binary and tier annotation, both present in three elements', () => {
             assert.deepEqual(
-                computeCustomDriverAnnotationReport([
-                    bothMutation,
-                    neitherMutation,
-                    bothMutation,
-                ]),
+                computeCustomDriverAnnotationReport([bothMutation, neitherMutation, bothMutation]),
                 { hasBinary: true, tiers: ['SDPOIFJP'] }
             );
         });
@@ -210,18 +198,14 @@ describe('ResultsViewPageStoreUtils', () => {
 
         it('returns undefined when queried for a non-merged track', () => {
             // given
-            const accessorsInstance = new AccessorsForOqlFilter([
-                makeBasicExpressionProfile(),
+            const accessorsInstance = new AccessorsForOqlFilter([makeBasicExpressionProfile()]);
+            const dataArray: NumericGeneMolecularData[] = makeMinimalExpressionData([
+                {
+                    entrezGeneId: 1000,
+                    uniqueSampleKey: 'SAMPLE1',
+                    value: 1.5,
+                },
             ]);
-            const dataArray: NumericGeneMolecularData[] = makeMinimalExpressionData(
-                [
-                    {
-                        entrezGeneId: 1000,
-                        uniqueSampleKey: 'SAMPLE1',
-                        value: 1.5,
-                    },
-                ]
-            );
             const { samples, patients } = makeMinimalCaseArrays(['SAMPLE1']);
             const queryLine: OQLLineFilterOutput<object> = {
                 gene: 'GENE400',
@@ -253,23 +237,19 @@ describe('ResultsViewPageStoreUtils', () => {
 
         it('returns a two-element array with no alterations if queried for a two-gene merged track that matches none', () => {
             // given
-            const accessorsInstance = new AccessorsForOqlFilter([
-                makeBasicExpressionProfile(),
+            const accessorsInstance = new AccessorsForOqlFilter([makeBasicExpressionProfile()]);
+            const dataArray: NumericGeneMolecularData[] = makeMinimalExpressionData([
+                {
+                    entrezGeneId: 1000,
+                    uniqueSampleKey: 'SAMPLE1',
+                    value: 1.5,
+                },
+                {
+                    entrezGeneId: 1001,
+                    uniqueSampleKey: 'SAMPLE1',
+                    value: 1.5,
+                },
             ]);
-            const dataArray: NumericGeneMolecularData[] = makeMinimalExpressionData(
-                [
-                    {
-                        entrezGeneId: 1000,
-                        uniqueSampleKey: 'SAMPLE1',
-                        value: 1.5,
-                    },
-                    {
-                        entrezGeneId: 1001,
-                        uniqueSampleKey: 'SAMPLE1',
-                        value: 1.5,
-                    },
-                ]
-            );
             const { samples, patients } = makeMinimalCaseArrays(['SAMPLE1']);
             // [DATATYPES: EXP<-3; GENE1000 GENE1001],
             const queryLine: MergedTrackLineFilterOutput<object> = {
@@ -329,37 +309,30 @@ describe('ResultsViewPageStoreUtils', () => {
 
         it('lists alterations that match genes in a merged track', () => {
             // given
-            const accessorsInstance = new AccessorsForOqlFilter([
-                makeBasicExpressionProfile(),
+            const accessorsInstance = new AccessorsForOqlFilter([makeBasicExpressionProfile()]);
+            const dataArray: NumericGeneMolecularData[] = makeMinimalExpressionData([
+                {
+                    entrezGeneId: 1000,
+                    uniqueSampleKey: 'SAMPLE1',
+                    value: 0,
+                },
+                {
+                    entrezGeneId: 1000,
+                    uniqueSampleKey: 'SAMPLE2',
+                    value: 0,
+                },
+                {
+                    entrezGeneId: 1001,
+                    uniqueSampleKey: 'SAMPLE1',
+                    value: 2.2,
+                },
+                {
+                    entrezGeneId: 1001,
+                    uniqueSampleKey: 'SAMPLE2',
+                    value: 2.7,
+                },
             ]);
-            const dataArray: NumericGeneMolecularData[] = makeMinimalExpressionData(
-                [
-                    {
-                        entrezGeneId: 1000,
-                        uniqueSampleKey: 'SAMPLE1',
-                        value: 0,
-                    },
-                    {
-                        entrezGeneId: 1000,
-                        uniqueSampleKey: 'SAMPLE2',
-                        value: 0,
-                    },
-                    {
-                        entrezGeneId: 1001,
-                        uniqueSampleKey: 'SAMPLE1',
-                        value: 2.2,
-                    },
-                    {
-                        entrezGeneId: 1001,
-                        uniqueSampleKey: 'SAMPLE2',
-                        value: 2.7,
-                    },
-                ]
-            );
-            const { samples, patients } = makeMinimalCaseArrays([
-                'SAMPLE1',
-                'SAMPLE2',
-            ]);
+            const { samples, patients } = makeMinimalCaseArrays(['SAMPLE1', 'SAMPLE2']);
             // [DATATYPES: EXP >= 2.5; GENE1000 GENE1001]'
             const queryLine: MergedTrackLineFilterOutput<object> = {
                 list: [
@@ -408,10 +381,7 @@ describe('ResultsViewPageStoreUtils', () => {
             const gene2AlterationsBySample = data![1].cases.samples;
             assert.lengthOf(gene2AlterationsBySample['SAMPLE1'], 0);
             assert.lengthOf(gene2AlterationsBySample['SAMPLE2'], 1);
-            assert.equal(
-                gene2AlterationsBySample['SAMPLE2'][0].alterationSubType,
-                'high'
-            );
+            assert.equal(gene2AlterationsBySample['SAMPLE2'][0].alterationSubType, 'high');
         });
     });
 
@@ -547,9 +517,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     putativeDriver: true,
                     isHotspot: true,
                     oncoKbOncogenic: 'oncogenic',
-                    simplifiedMutationType: getSimplifiedMutationType(
-                        'missense'
-                    ),
+                    simplifiedMutationType: getSimplifiedMutationType('missense'),
                     mutationType: 'missense',
                 }
             );
@@ -571,9 +539,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     putativeDriver: true,
                     isHotspot: false,
                     oncoKbOncogenic: '',
-                    simplifiedMutationType: getSimplifiedMutationType(
-                        'in_frame_ins'
-                    ),
+                    simplifiedMutationType: getSimplifiedMutationType('in_frame_ins'),
                     mutationType: 'in_frame_ins',
                 },
                 'cbioportal count'
@@ -595,9 +561,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     putativeDriver: true,
                     isHotspot: false,
                     oncoKbOncogenic: '',
-                    simplifiedMutationType: getSimplifiedMutationType(
-                        'in_frame_ins'
-                    ),
+                    simplifiedMutationType: getSimplifiedMutationType('in_frame_ins'),
                     mutationType: 'in_frame_ins',
                 },
                 'cosmic count'
@@ -620,9 +584,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     putativeDriver: true,
                     isHotspot: false,
                     oncoKbOncogenic: '',
-                    simplifiedMutationType: getSimplifiedMutationType(
-                        'asdfasdf'
-                    ),
+                    simplifiedMutationType: getSimplifiedMutationType('asdfasdf'),
                     mutationType: 'asdfasdf',
                 },
                 'tier'
@@ -643,9 +605,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     putativeDriver: true,
                     isHotspot: false,
                     oncoKbOncogenic: '',
-                    simplifiedMutationType: getSimplifiedMutationType(
-                        'missense'
-                    ),
+                    simplifiedMutationType: getSimplifiedMutationType('missense'),
                     mutationType: 'missense',
                 },
                 'binary'
@@ -670,9 +630,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     putativeDriver: true,
                     isHotspot: true,
                     oncoKbOncogenic: 'oncogenic',
-                    simplifiedMutationType: getSimplifiedMutationType(
-                        'asdfasdf'
-                    ),
+                    simplifiedMutationType: getSimplifiedMutationType('asdfasdf'),
                     mutationType: 'asdfasdf',
                 }
             );
@@ -704,15 +662,12 @@ describe('ResultsViewPageStoreUtils', () => {
 
     describe('filterAndAnnotateMutations', () => {
         it('returns empty list for empty input', () => {
-            assert.deepEqual(
-                filterAndAnnotateMutations([], () => ({} as any), {}),
-                {
-                    data: [],
-                    germline: [],
-                    vus: [],
-                    vusAndGermline: [],
-                }
-            );
+            assert.deepEqual(filterAndAnnotateMutations([], () => ({} as any), {}), {
+                data: [],
+                germline: [],
+                vus: [],
+                vusAndGermline: [],
+            });
         });
         it('annotates a single mutation', () => {
             assert.deepEqual(
@@ -733,9 +688,7 @@ describe('ResultsViewPageStoreUtils', () => {
                             mutationType: 'missense',
                             hugoGeneSymbol: 'mygene',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'missense'
-                            ),
+                            simplifiedMutationType: getSimplifiedMutationType('missense'),
                             isHotspot: true,
                             oncoKbOncogenic: '',
                             putativeDriver: true,
@@ -779,9 +732,7 @@ describe('ResultsViewPageStoreUtils', () => {
                             mutationType: 'missense',
                             hugoGeneSymbol: 'gene1hello',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'missense'
-                            ),
+                            simplifiedMutationType: getSimplifiedMutationType('missense'),
                             isHotspot: true,
                             oncoKbOncogenic: '',
                             putativeDriver: true,
@@ -790,9 +741,7 @@ describe('ResultsViewPageStoreUtils', () => {
                             mutationType: 'in_frame_del',
                             hugoGeneSymbol: 'gene1hello',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'in_frame_del'
-                            ),
+                            simplifiedMutationType: getSimplifiedMutationType('in_frame_del'),
                             isHotspot: true,
                             oncoKbOncogenic: '',
                             putativeDriver: true,
@@ -801,9 +750,7 @@ describe('ResultsViewPageStoreUtils', () => {
                             mutationType: 'asdf',
                             hugoGeneSymbol: 'gene3hello',
                             entrezGeneId: 134,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'asdf'
-                            ),
+                            simplifiedMutationType: getSimplifiedMutationType('asdf'),
                             isHotspot: true,
                             oncoKbOncogenic: '',
                             putativeDriver: true,
@@ -839,9 +786,7 @@ describe('ResultsViewPageStoreUtils', () => {
                             mutationType: 'missense',
                             hugoGeneSymbol: 'gene1hello',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'missense'
-                            ),
+                            simplifiedMutationType: getSimplifiedMutationType('missense'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: false,
@@ -892,9 +837,7 @@ describe('ResultsViewPageStoreUtils', () => {
                             mutationType: 'in_frame_del',
                             hugoGeneSymbol: 'gene1hello',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'in_frame_del'
-                            ),
+                            simplifiedMutationType: getSimplifiedMutationType('in_frame_del'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: true,
@@ -905,9 +848,7 @@ describe('ResultsViewPageStoreUtils', () => {
                             mutationType: 'missense',
                             hugoGeneSymbol: 'gene1hello',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'missense'
-                            ),
+                            simplifiedMutationType: getSimplifiedMutationType('missense'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: false,
@@ -916,9 +857,7 @@ describe('ResultsViewPageStoreUtils', () => {
                             mutationType: 'asdf',
                             hugoGeneSymbol: 'gene3hello',
                             entrezGeneId: 134,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'asdf'
-                            ),
+                            simplifiedMutationType: getSimplifiedMutationType('asdf'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: false,
@@ -959,9 +898,7 @@ describe('ResultsViewPageStoreUtils', () => {
                             hugoGeneSymbol: 'gene1hello',
                             mutationStatus: 'germline',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'missense'
-                            ),
+                            simplifiedMutationType: getSimplifiedMutationType('missense'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: false,
@@ -1018,9 +955,7 @@ describe('ResultsViewPageStoreUtils', () => {
                             mutationType: 'in_frame_del',
                             hugoGeneSymbol: 'gene1hello',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'in_frame_del'
-                            ),
+                            simplifiedMutationType: getSimplifiedMutationType('in_frame_del'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: true,
@@ -1034,9 +969,7 @@ describe('ResultsViewPageStoreUtils', () => {
                             hugoGeneSymbol: 'gene1hello',
                             mutationStatus: 'germline',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'missense'
-                            ),
+                            simplifiedMutationType: getSimplifiedMutationType('missense'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: false,
@@ -1046,9 +979,7 @@ describe('ResultsViewPageStoreUtils', () => {
                             hugoGeneSymbol: 'gene3hello',
                             mutationStatus: 'germline',
                             entrezGeneId: 134,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'asdf'
-                            ),
+                            simplifiedMutationType: getSimplifiedMutationType('asdf'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: false,
@@ -1103,20 +1034,14 @@ describe('ResultsViewPageStoreUtils', () => {
                 } as IndicatorQueryResp),
                 ''
             );
-            assert.equal(
-                getOncoKbOncogenic({ oncogenic: '' } as IndicatorQueryResp),
-                ''
-            );
+            assert.equal(getOncoKbOncogenic({ oncogenic: '' } as IndicatorQueryResp), '');
             assert.equal(
                 getOncoKbOncogenic({
                     oncogenic: 'asdfasdfasefawer',
                 } as IndicatorQueryResp),
                 ''
             );
-            assert.equal(
-                getOncoKbOncogenic({ oncogenic: undefined } as any),
-                ''
-            );
+            assert.equal(getOncoKbOncogenic({ oncogenic: undefined } as any), '');
         });
     });
 
@@ -1307,8 +1232,7 @@ describe('ResultsViewPageStoreUtils', () => {
                         molecularProfileId: 'profile',
                         entrezGeneId: 9,
                     } as NumericGeneMolecularData,
-                    (d: NumericGeneMolecularData) =>
-                        ({ oncogenic: undefined } as any),
+                    (d: NumericGeneMolecularData) => ({ oncogenic: undefined } as any),
                     {
                         profile: {
                             molecularAlterationType: 'COPY_NUMBER_ALTERATION',
@@ -1331,8 +1255,7 @@ describe('ResultsViewPageStoreUtils', () => {
                         molecularProfileId: 'profile',
                         entrezGeneId: 9,
                     } as NumericGeneMolecularData,
-                    (d: NumericGeneMolecularData) =>
-                        ({ oncogenic: '' } as IndicatorQueryResp),
+                    (d: NumericGeneMolecularData) => ({ oncogenic: '' } as IndicatorQueryResp),
                     {
                         profile: {
                             molecularAlterationType: 'COPY_NUMBER_ALTERATION',
@@ -1564,13 +1487,7 @@ describe('ResultsViewPageStoreUtils', () => {
         });
         it('computes the correct object with no input data', () => {
             assert.deepEqual(
-                computeGenePanelInformation(
-                    [],
-                    genePanels,
-                    samples,
-                    patients,
-                    genes
-                ),
+                computeGenePanelInformation([], genePanels, samples, patients, genes),
                 {
                     samples: {
                         'PATIENT1 SAMPLE1': {
@@ -1832,21 +1749,14 @@ describe('ResultsViewPageStoreUtils', () => {
     describe('getRNASeqProfiles', () => {
         it('properly recognizes expression profile based on patterns in id', () => {
             assert.isFalse(isRNASeqProfile(''), 'blank is false');
+            assert.isTrue(isRNASeqProfile('acc_tcga_rna_seq_v2_mrna'), 'matches seq v2 id');
             assert.isTrue(
-                isRNASeqProfile('acc_tcga_rna_seq_v2_mrna'),
-                'matches seq v2 id'
-            );
-            assert.isTrue(
-                isRNASeqProfile(
-                    'chol_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median'
-                ),
+                isRNASeqProfile('chol_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median'),
                 'matches pan can v2'
             );
             assert.isTrue(isRNASeqProfile('laml_tcga_rna_seq_mrna'));
             assert.isFalse(
-                isRNASeqProfile(
-                    'chol_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median_Zscores'
-                ),
+                isRNASeqProfile('chol_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median_Zscores'),
                 "doesn't match zscores profils"
             );
         });
@@ -1982,11 +1892,7 @@ describe('ResultsViewPageStoreUtils', () => {
         //this case is not possible because id in these scenarios are first identified in QueryBuilder.java and
         //returned to query selector page
         it('when virtual study query having private study or unknow virtual study id', async () => {
-            let test = await fetchQueriedStudies(
-                {},
-                ['shared_study1'],
-                virtualStudies
-            );
+            let test = await fetchQueriedStudies({}, ['shared_study1'], virtualStudies);
             // assume no studies returned
             assert.equal(test.length, 0);
         });
@@ -2011,15 +1917,13 @@ describe('ResultsViewPageStoreUtils', () => {
             genes = ['KRAS', 'NRAS'];
             studies = [{ shortName: 'Study Number One' } as CancerStudy];
             ret = buildResultsViewPageTitle(genes, studies);
-            expectedResult =
-                'cBioPortal for Cancer Genomics: KRAS, NRAS in Study Number One';
+            expectedResult = 'cBioPortal for Cancer Genomics: KRAS, NRAS in Study Number One';
             assert.equal(ret, expectedResult, 'two genes, one study');
 
             genes = ['KRAS'];
             studies = [{ shortName: 'Study Number One' } as CancerStudy];
             ret = buildResultsViewPageTitle(genes, studies);
-            expectedResult =
-                'cBioPortal for Cancer Genomics: KRAS in Study Number One';
+            expectedResult = 'cBioPortal for Cancer Genomics: KRAS in Study Number One';
             assert.equal(ret, expectedResult, 'one gene, one study');
 
             genes = ['KRAS'];
@@ -3038,10 +2942,7 @@ describe('getSampleAlteredMap', () => {
     };
 
     const molecularProfileIds = ['chol_nus_2012_mutations'];
-    const unprofiledMolecularProfileIds = [
-        'chol_nus_2012_mutations',
-        'chol_nus_2012_cna',
-    ];
+    const unprofiledMolecularProfileIds = ['chol_nus_2012_mutations', 'chol_nus_2012_cna'];
     const studyToMolecularProfiles = {
         chol_nus_2012: [
             {
@@ -3102,26 +3003,14 @@ describe('getSampleAlteredMap', () => {
                 AlteredStatus.UNALTERED,
             ],
         };
-        assert.deepEqual(
-            ret['KRAS'],
-            expectedResult['KRAS'],
-            'single gene track'
-        );
+        assert.deepEqual(ret['KRAS'], expectedResult['KRAS'], 'single gene track');
         assert.deepEqual(
             ret['SMAD4: MUT'],
             expectedResult['SMAD4: MUT'],
             'single gene track(with alteration)'
         );
-        assert.deepEqual(
-            ret['SMAD4 / RAN'],
-            expectedResult['SMAD4 / RAN'],
-            'merged gene track'
-        );
-        assert.deepEqual(
-            ret['RAS'],
-            expectedResult['RAS'],
-            'merged gene track(with group name)'
-        );
+        assert.deepEqual(ret['SMAD4 / RAN'], expectedResult['SMAD4 / RAN'], 'merged gene track');
+        assert.deepEqual(ret['RAS'], expectedResult['RAS'], 'merged gene track(with group name)');
     });
 
     it('should set undefined for the not profiled samples', () => {
@@ -3237,11 +3126,7 @@ describe('getSingleGeneResultKey', () => {
         const ret = getSingleGeneResultKey(arg0, arg1, arg2);
         const expectedResult = 'SMAD4: MUT';
 
-        assert.equal(
-            ret,
-            expectedResult,
-            'get single gene result key(with alteration)'
-        );
+        assert.equal(ret, expectedResult, 'get single gene result key(with alteration)');
     });
 
     it('handles gene without mutation', () => {
@@ -3259,11 +3144,7 @@ describe('getSingleGeneResultKey', () => {
         const ret = getSingleGeneResultKey(arg0, arg1, arg2);
         const expectedResult = 'KRAS';
 
-        assert.equal(
-            ret,
-            expectedResult,
-            'get single gene result key(without alteration)'
-        );
+        assert.equal(ret, expectedResult, 'get single gene result key(without alteration)');
     });
 });
 
@@ -3295,11 +3176,7 @@ describe('getMultipleGeneResultKey', () => {
         const ret = getMultipleGeneResultKey(arg0);
         const expectedResult = 'RAS';
 
-        assert.equal(
-            ret,
-            expectedResult,
-            'get gene group result key(with name)'
-        );
+        assert.equal(ret, expectedResult, 'get gene group result key(with name)');
     });
 
     it('handles gene group without name', () => {
@@ -3328,10 +3205,6 @@ describe('getMultipleGeneResultKey', () => {
         const ret = getMultipleGeneResultKey(arg0);
         const expectedResult = 'SMAD4 / RAN';
 
-        assert.equal(
-            ret,
-            expectedResult,
-            'get gene group result key(without name)'
-        );
+        assert.equal(ret, expectedResult, 'get gene group result key(without name)');
     });
 });

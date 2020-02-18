@@ -27,10 +27,7 @@ function dataToKey(d: GenesetMolecularData[], q: IQuery) {
 /**
 /* Pairs each IQuery with an (array-wrapped) array of any matching data.
 */
-function augmentQueryResults(
-    queries: IQuery[],
-    results: GenesetMolecularData[][]
-) {
+function augmentQueryResults(queries: IQuery[], results: GenesetMolecularData[][]) {
     const keyedAugments: {
         [key: string]: AugmentedData<GenesetMolecularData[], IQuery>;
     } = {};
@@ -72,9 +69,7 @@ async function fetch(
             ...sampleFilterByProfile[profileId],
         } as GenesetDataFilterCriteria,
     }));
-    const dataPromises = params.map(param =>
-        client.fetchGeneticDataItemsUsingPOST(param)
-    );
+    const dataPromises = params.map(param => client.fetchGeneticDataItemsUsingPOST(param));
     const results: GenesetMolecularData[][] = await Promise.all(dataPromises);
     return augmentQueryResults(queries, results);
 }

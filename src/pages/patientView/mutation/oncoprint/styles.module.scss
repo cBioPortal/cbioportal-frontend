@@ -34,11 +34,7 @@
             }
         }
         :global(.rangeslider__fill) {
-            background-image: linear-gradient(
-                to bottom,
-                #89cdef 0,
-                #81bfde 100%
-            );
+            background-image: linear-gradient(to bottom, #89cdef 0, #81bfde 100%);
         }
     }
 }

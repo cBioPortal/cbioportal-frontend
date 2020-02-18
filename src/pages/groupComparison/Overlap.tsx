@@ -67,16 +67,13 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                 content.push(<span>{OVERLAP_NOT_ENOUGH_GROUPS_MSG}</span>);
             } else {
                 content.push(
-                    <OverlapExclusionIndicator
-                        overlapTabMode={true}
-                        store={this.props.store}
-                    />
+                    <OverlapExclusionIndicator overlapTabMode={true} store={this.props.store} />
                 );
                 if (this.vennFailed) {
                     content.push(
                         <div className="alert alert-info">
-                            We couldn't find a good Venn diagram layout, so
-                            showing UpSet diagram instead.
+                            We couldn't find a good Venn diagram layout, so showing UpSet diagram
+                            instead.
                         </div>
                     );
                 }
@@ -84,9 +81,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
             }
             return <div data-test="ComparisonPageOverlapTabDiv">{content}</div>;
         },
-        renderPending: () => (
-            <Loader isLoading={true} center={true} size={'big'} />
-        ),
+        renderPending: () => <Loader isLoading={true} center={true} size={'big'} />,
         renderError: () => <ErrorMessage />,
     });
 
@@ -95,10 +90,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
         if (this.plotType.result! === PlotType.Upset) {
             let node = ReactDOM.findDOMNode(this);
 
-            const svg = document.createElementNS(
-                'http://www.w3.org/2000/svg',
-                'svg'
-            ) as SVGElement;
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg') as SVGElement;
             const childSVGs = $(node!).find('svg');
             const sampleElement = childSVGs[0].cloneNode(true) as Element;
             const patientElement = childSVGs[1].cloneNode(true) as Element;
@@ -111,22 +103,12 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
             //move patient element down by sample element size
             if (this.areUpsetPlotsSidebySide) {
                 patientElement.setAttribute('x', `${$(sampleElement).width()}`);
-                height = Math.max(
-                    $(sampleElement).height()!,
-                    $(patientElement).height()!
-                );
+                height = Math.max($(sampleElement).height()!, $(patientElement).height()!);
                 width = $(sampleElement).width()! + $(patientElement).width()!;
             } else {
-                patientElement.setAttribute(
-                    'y',
-                    `${$(sampleElement).height()}`
-                );
-                height =
-                    $(sampleElement).height()! + $(patientElement).height()!;
-                width = Math.max(
-                    $(sampleElement).width()!,
-                    $(patientElement).width()!
-                );
+                patientElement.setAttribute('y', `${$(sampleElement).height()}`);
+                height = $(sampleElement).height()! + $(patientElement).height()!;
+                width = Math.max($(sampleElement).width()!, $(patientElement).width()!);
             }
 
             $(svg).attr('height', height);
@@ -142,10 +124,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
     readonly plotType = remoteData({
         await: () => [this.props.store._selectedGroups],
         invoke: () => {
-            if (
-                this.vennFailed ||
-                this.props.store._selectedGroups.result!.length > 3
-            ) {
+            if (this.vennFailed || this.props.store._selectedGroups.result!.length > 3) {
                 return Promise.resolve(PlotType.Upset);
             } else {
                 return Promise.resolve(PlotType.Venn);
@@ -155,31 +134,21 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
 
     public readonly sampleGroupsWithCases = remoteData(
         {
-            await: () => [
-                this.props.store._selectedGroups,
-                this.props.store.sampleSet,
-            ],
+            await: () => [this.props.store._selectedGroups, this.props.store.sampleSet],
             invoke: () => {
                 const sampleSet = this.props.store.sampleSet.result!;
-                const groupsWithSamples = _.map(
-                    this.props.store._selectedGroups.result,
-                    group => {
-                        let samples = getSampleIdentifiers([group]).map(
-                            sampleIdentifier =>
-                                sampleSet.get({
-                                    studyId: sampleIdentifier.studyId,
-                                    sampleId: sampleIdentifier.sampleId,
-                                })
-                        );
-                        return {
-                            uid: group.uid,
-                            cases: _.map(
-                                samples,
-                                sample => sample!.uniqueSampleKey
-                            ),
-                        };
-                    }
-                );
+                const groupsWithSamples = _.map(this.props.store._selectedGroups.result, group => {
+                    let samples = getSampleIdentifiers([group]).map(sampleIdentifier =>
+                        sampleSet.get({
+                            studyId: sampleIdentifier.studyId,
+                            sampleId: sampleIdentifier.sampleId,
+                        })
+                    );
+                    return {
+                        uid: group.uid,
+                        cases: _.map(samples, sample => sample!.uniqueSampleKey),
+                    };
+                });
                 return Promise.resolve(groupsWithSamples);
             },
         },
@@ -188,33 +157,21 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
 
     public readonly patientGroupsWithCases = remoteData(
         {
-            await: () => [
-                this.props.store._selectedGroups,
-                this.props.store.sampleSet,
-            ],
+            await: () => [this.props.store._selectedGroups, this.props.store.sampleSet],
             invoke: () => {
                 const sampleSet = this.props.store.sampleSet.result!;
-                const groupsWithPatients = _.map(
-                    this.props.store._selectedGroups.result,
-                    group => {
-                        let samples = getSampleIdentifiers([group]).map(
-                            sampleIdentifier =>
-                                sampleSet.get({
-                                    studyId: sampleIdentifier.studyId,
-                                    sampleId: sampleIdentifier.sampleId,
-                                })
-                        );
-                        return {
-                            uid: group.uid,
-                            cases: _.uniq(
-                                _.map(
-                                    samples,
-                                    sample => sample!.uniquePatientKey
-                                )
-                            ),
-                        };
-                    }
-                );
+                const groupsWithPatients = _.map(this.props.store._selectedGroups.result, group => {
+                    let samples = getSampleIdentifiers([group]).map(sampleIdentifier =>
+                        sampleSet.get({
+                            studyId: sampleIdentifier.studyId,
+                            sampleId: sampleIdentifier.sampleId,
+                        })
+                    );
+                    return {
+                        uid: group.uid,
+                        cases: _.uniq(_.map(samples, sample => sample!.uniquePatientKey)),
+                    };
+                });
                 return Promise.resolve(groupsWithPatients);
             },
         },
@@ -222,10 +179,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
     );
 
     private activeSamples = remoteData({
-        await: () => [
-            this.props.store._selectedGroups,
-            this.props.store.sampleSet,
-        ],
+        await: () => [this.props.store._selectedGroups, this.props.store.sampleSet],
         invoke: () => {
             const sampleSet = this.props.store.sampleSet.result!;
             const activeSampleIdentifiers = getSampleIdentifiers(
@@ -266,8 +220,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
             this.activeSamples,
         ],
         invoke: () => {
-            const patientToSamplesSet = this.props.store.patientToSamplesSet
-                .result!;
+            const patientToSamplesSet = this.props.store.patientToSamplesSet.result!;
             return Promise.resolve(partitionCasesByGroupMembership(
                 this.props.store._selectedGroups.result!,
                 group => getPatientIdentifiers([group]),
@@ -284,20 +237,12 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
     readonly uidToGroup = remoteData({
         await: () => [this.props.store._selectedGroups],
         invoke: () =>
-            Promise.resolve(
-                _.keyBy(
-                    this.props.store._selectedGroups.result!,
-                    group => group.uid
-                )
-            ),
+            Promise.resolve(_.keyBy(this.props.store._selectedGroups.result!, group => group.uid)),
     });
 
     // whether to display sample and patient sets intersection charts side by side
     @computed get areUpsetPlotsSidebySide() {
-        if (
-            this.samplesVennPartition.isComplete &&
-            this.patientsVennPartition.isComplete
-        ) {
+        if (this.samplesVennPartition.isComplete && this.patientsVennPartition.isComplete) {
             return (
                 this.samplesVennPartition.result!.length +
                     this.patientsVennPartition.result!.length <=
@@ -331,12 +276,8 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                             disableGroupCreation={this.props.resultsViewMode}
                             sideBySide={this.areUpsetPlotsSidebySide}
                             maxWidth={this.maxWidth}
-                            samplesVennPartition={
-                                this.samplesVennPartition.result!
-                            }
-                            patientsVennPartition={
-                                this.patientsVennPartition.result!
-                            }
+                            samplesVennPartition={this.samplesVennPartition.result!}
+                            patientsVennPartition={this.patientsVennPartition.result!}
                             uidToGroup={this.uidToGroup.result!}
                         />
                     );
@@ -367,10 +308,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
     readonly overlapUI = MakeMobxView({
         await: () => [this.plot],
         render: () => (
-            <div
-                data-test="ComparisonPageOverlapTabContent"
-                className="borderedChart posRelative"
-            >
+            <div data-test="ComparisonPageOverlapTabContent" className="borderedChart posRelative">
                 {this.plotExists && (
                     <DownloadControls
                         getSvg={this.getSvg}
@@ -386,11 +324,7 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
             </div>
         ),
         renderPending: () => (
-            <LoadingIndicator
-                isLoading={true}
-                centerRelativeToContainer={true}
-                size="big"
-            />
+            <LoadingIndicator isLoading={true} centerRelativeToContainer={true} size="big" />
         ),
         renderError: () => <ErrorMessage />,
     });

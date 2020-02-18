@@ -29,32 +29,18 @@ const COLUMNS = [
                 {d.clinicalAttribute.displayName}
             </span>
         ),
-        filter: (
-            d: ClinicalDataEnrichmentWithQ,
-            f: string,
-            filterStringUpper: string
-        ) =>
-            d.clinicalAttribute.displayName
-                .toUpperCase()
-                .indexOf(filterStringUpper) > -1,
-        sortBy: (d: ClinicalDataEnrichmentWithQ) =>
-            d.clinicalAttribute.displayName,
-        download: (d: ClinicalDataEnrichmentWithQ) =>
-            d.clinicalAttribute.displayName,
+        filter: (d: ClinicalDataEnrichmentWithQ, f: string, filterStringUpper: string) =>
+            d.clinicalAttribute.displayName.toUpperCase().indexOf(filterStringUpper) > -1,
+        sortBy: (d: ClinicalDataEnrichmentWithQ) => d.clinicalAttribute.displayName,
+        download: (d: ClinicalDataEnrichmentWithQ) => d.clinicalAttribute.displayName,
         width: 160,
     },
     {
         name: ClinicalDataEnrichmentTableColumnType.CLINICAL_ATTRIBUTE_TYPE,
         render: (d: ClinicalDataEnrichmentWithQ) => (
-            <span>
-                {d.clinicalAttribute.patientAttribute ? 'Patient' : 'Sample'}
-            </span>
+            <span>{d.clinicalAttribute.patientAttribute ? 'Patient' : 'Sample'}</span>
         ),
-        filter: (
-            d: ClinicalDataEnrichmentWithQ,
-            f: string,
-            filterStringUpper: string
-        ) =>
+        filter: (d: ClinicalDataEnrichmentWithQ, f: string, filterStringUpper: string) =>
             (d.clinicalAttribute.patientAttribute ? 'Patient' : 'Sample')
                 .toUpperCase()
                 .indexOf(filterStringUpper) > -1,
@@ -69,11 +55,8 @@ const COLUMNS = [
         render: (d: ClinicalDataEnrichmentWithQ) => (
             <span style={{ whiteSpace: 'nowrap' }}>{d.method}</span>
         ),
-        filter: (
-            d: ClinicalDataEnrichmentWithQ,
-            f: string,
-            filterStringUpper: string
-        ) => d.method.toUpperCase().indexOf(filterStringUpper) > -1,
+        filter: (d: ClinicalDataEnrichmentWithQ, f: string, filterStringUpper: string) =>
+            d.method.toUpperCase().indexOf(filterStringUpper) > -1,
         sortBy: (d: ClinicalDataEnrichmentWithQ) => d.method,
         download: (d: ClinicalDataEnrichmentWithQ) => d.method,
         width: 130,
@@ -91,13 +74,11 @@ const COLUMNS = [
             </span>
         ),
         sortBy: (d: ClinicalDataEnrichmentWithQ) => d.pValue,
-        download: (d: ClinicalDataEnrichmentWithQ) =>
-            toConditionalPrecision(d.pValue, 3, 0.01),
+        download: (d: ClinicalDataEnrichmentWithQ) => toConditionalPrecision(d.pValue, 3, 0.01),
         width: 100,
         tooltip: (
             <span>
-                p-value of null Hypothesis, derived from Chi-Squared test or
-                Kruskal-Wallis test
+                p-value of null Hypothesis, derived from Chi-Squared test or Kruskal-Wallis test
             </span>
         ),
     },
@@ -114,14 +95,9 @@ const COLUMNS = [
             </span>
         ),
         sortBy: (d: ClinicalDataEnrichmentWithQ) => d.qValue,
-        download: (d: ClinicalDataEnrichmentWithQ) =>
-            toConditionalPrecision(d.qValue, 3, 0.01),
+        download: (d: ClinicalDataEnrichmentWithQ) => toConditionalPrecision(d.qValue, 3, 0.01),
         width: 100,
-        tooltip: (
-            <span>
-                Derived from Benjamini-Hochberg FDR correction procedure.
-            </span>
-        ),
+        tooltip: <span>Derived from Benjamini-Hochberg FDR correction procedure.</span>,
     },
 ];
 
@@ -139,9 +115,7 @@ export default class ClinicalDataEnrichmentsTable extends React.Component<
         return (
             <LazyMobXTable
                 columns={COLUMNS}
-                initialSortColumn={
-                    ClinicalDataEnrichmentTableColumnType.Q_VALUE
-                }
+                initialSortColumn={ClinicalDataEnrichmentTableColumnType.Q_VALUE}
                 initialSortDirection="asc"
                 showColumnVisibility={false}
                 dataStore={this.props.dataStore}

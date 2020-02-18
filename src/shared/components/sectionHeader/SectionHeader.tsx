@@ -16,37 +16,22 @@ const styles = styles_any as {
 };
 
 interface ISectionHeaderProps
-    extends React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLDivElement>,
-        HTMLDivElement
-    > {
+    extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
     promises?: MobxPromise<any>[];
     secondaryComponent?: ReactElement<any>;
 }
 
 @observer
-export default class SectionHeader extends React.Component<
-    ISectionHeaderProps,
-    {}
-> {
+export default class SectionHeader extends React.Component<ISectionHeaderProps, {}> {
     render() {
-        let {
-            promises,
-            children,
-            className,
-            secondaryComponent,
-            ...divProps
-        } = this.props;
+        let { promises, children, className, secondaryComponent, ...divProps } = this.props;
         return (
-            <div
-                className={classNames(className, styles.SectionHeader)}
-                {...divProps}
-            >
+            <div className={classNames(className, styles.SectionHeader)} {...divProps}>
                 <h2>
                     {children}
-                    {!!(
-                        promises && promises.some(promise => promise.isPending)
-                    ) && <LoadingIndicator isLoading={true} size={'small'} />}
+                    {!!(promises && promises.some(promise => promise.isPending)) && (
+                        <LoadingIndicator isLoading={true} size={'small'} />
+                    )}
                 </h2>
 
                 {!!secondaryComponent && secondaryComponent}
@@ -55,10 +40,7 @@ export default class SectionHeader extends React.Component<
                     promises.map(
                         promise =>
                             !!promise.error && (
-                                <ErrorBox
-                                    className={styles.error}
-                                    error={promise.error}
-                                />
+                                <ErrorBox className={styles.error} error={promise.error} />
                             )
                     )}
             </div>

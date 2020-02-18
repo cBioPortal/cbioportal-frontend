@@ -40,9 +40,7 @@ export class DefaultPubMedCache implements MobxCache<any, string> {
             this._cache[query] = { status: 'pending' };
 
             this.fetch(query)
-                .then(
-                    d => (this._cache[query] = { status: 'complete', data: d })
-                )
+                .then(d => (this._cache[query] = { status: 'complete', data: d }))
                 .catch(() => (this._cache[query] = { status: 'error' }));
         }
 

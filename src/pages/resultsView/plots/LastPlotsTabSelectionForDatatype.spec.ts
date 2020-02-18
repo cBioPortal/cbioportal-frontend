@@ -89,9 +89,7 @@ describe('PlotsTabSelectionHistory', () => {
             assert.equal(fakes.source.args.length, 0);
             assert.equal(fakes.treatment.args.length, 0);
 
-            assert.deepEqual(fakes.geneSet.args[0], [
-                { value: 'BRAF', label: 'BRAF' },
-            ]);
+            assert.deepEqual(fakes.geneSet.args[0], [{ value: 'BRAF', label: 'BRAF' }]);
         });
 
         it('should update source when changes have been made to source', () => {
@@ -200,9 +198,7 @@ describe('PlotsTabSelectionHistory', () => {
             assert.equal(fakes.treatment.args.length, 1);
 
             assert.deepEqual(fakes.gene.args[0], [{ value: 0, label: 'BRAF' }]);
-            assert.deepEqual(fakes.geneSet.args[0], [
-                { value: 'BRAF', label: 'BRAF' },
-            ]);
+            assert.deepEqual(fakes.geneSet.args[0], [{ value: 'BRAF', label: 'BRAF' }]);
             assert.deepEqual(fakes.source.args[0], [
                 {
                     value: 'coadread_tcga_pub_gistic',

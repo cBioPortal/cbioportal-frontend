@@ -48,10 +48,7 @@ export function parseMyCancerGenomeLink(link: string) {
 /**
  * @author Selcuk Onur Sumer
  */
-export default class MyCancerGenome extends React.Component<
-    IMyCancerGenomeProps,
-    {}
-> {
+export default class MyCancerGenome extends React.Component<IMyCancerGenomeProps, {}> {
     public static sortValue(links: string[]): number {
         return links.length > 0 ? 1 : 0;
     }
@@ -100,9 +97,7 @@ export default class MyCancerGenome extends React.Component<
 
         if (this.props.linksHTML.length > 0) {
             const arrowContent = <div className="rc-tooltip-arrow-inner" />;
-            const tooltipContent = MyCancerGenome.myCancerGenomeLinks(
-                this.props.linksHTML
-            );
+            const tooltipContent = MyCancerGenome.myCancerGenomeLinks(this.props.linksHTML);
 
             myCancerGenomeContent = (
                 <DefaultTooltip
@@ -112,9 +107,7 @@ export default class MyCancerGenome extends React.Component<
                     arrowContent={arrowContent}
                     onPopupAlign={placeArrow}
                 >
-                    <span
-                        className={`${annotationStyles['annotation-item']} mcg`}
-                    >
+                    <span className={`${annotationStyles['annotation-item']} mcg`}>
                         <img
                             width="14"
                             height="14"

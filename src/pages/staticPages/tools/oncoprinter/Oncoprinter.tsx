@@ -11,11 +11,7 @@ import { percentAltered } from '../../../../shared/components/oncoprint/Oncoprin
 import AppConfig from 'appConfig';
 import OncoprintJS from 'oncoprintjs';
 import fileDownload from 'react-file-download';
-import {
-    isWebdriver,
-    FadeInteraction,
-    svgToPdfDownload,
-} from 'cbioportal-frontend-commons';
+import { isWebdriver, FadeInteraction, svgToPdfDownload } from 'cbioportal-frontend-commons';
 import classNames from 'classnames';
 import OncoprinterStore from './OncoprinterStore';
 import autobind from 'autobind-decorator';
@@ -31,10 +27,7 @@ interface IOncoprinterProps {
 }
 
 @observer
-export default class Oncoprinter extends React.Component<
-    IOncoprinterProps,
-    {}
-> {
+export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> {
     @observable distinguishMutationType: boolean = true;
     @observable distinguishGermlineMutations = true;
     @observable sortByMutationType: boolean = true;
@@ -103,8 +96,7 @@ export default class Oncoprinter extends React.Component<
                 return self.props.store.didOncoKbFail;
             },
             get annotateDriversCBioPortal() {
-                return self.props.store.driverAnnotationSettings
-                    .cbioportalCount;
+                return self.props.store.driverAnnotationSettings.cbioportalCount;
             },
             get hidePutativePassengers() {
                 return self.props.store.driverAnnotationSettings.excludeVUS;
@@ -113,10 +105,7 @@ export default class Oncoprinter extends React.Component<
                 return self.props.store.hideGermlineMutations;
             },
             get annotateCBioPortalInputValue() {
-                return (
-                    self.props.store.driverAnnotationSettings
-                        .cbioportalCountThreshold + ''
-                );
+                return self.props.store.driverAnnotationSettings.cbioportalCountThreshold + '';
             },
             get sortByDrivers() {
                 return self.sortByDrivers;
@@ -240,36 +229,28 @@ export default class Oncoprinter extends React.Component<
             onClickDownload: (type: string) => {
                 switch (type) {
                     case 'pdf':
-                        svgToPdfDownload(
-                            'oncoprint.pdf',
-                            this.oncoprint.toSVG(false)
-                        );
+                        svgToPdfDownload('oncoprint.pdf', this.oncoprint.toSVG(false));
                         // if (!pdfDownload("oncoprint.pdf", this.oncoprint.toSVG(true))) {
                         //     alert("Oncoprint too big to download as PDF - please download as SVG.");
                         // }
                         break;
                     case 'png':
-                        const img = this.oncoprint.toCanvas(
-                            (canvas, truncated) => {
-                                canvas.toBlob(blob => {
-                                    if (truncated) {
-                                        alert(
-                                            `Oncoprint too large - PNG truncated to ${canvas.getAttribute(
-                                                'width'
-                                            )}x${canvas.getAttribute('height')}`
-                                        );
-                                    }
-                                    fileDownload(blob, 'oncoprint.png');
-                                });
-                            },
-                            2
-                        );
+                        const img = this.oncoprint.toCanvas((canvas, truncated) => {
+                            canvas.toBlob(blob => {
+                                if (truncated) {
+                                    alert(
+                                        `Oncoprint too large - PNG truncated to ${canvas.getAttribute(
+                                            'width'
+                                        )}x${canvas.getAttribute('height')}`
+                                    );
+                                }
+                                fileDownload(blob, 'oncoprint.png');
+                            });
+                        }, 2);
                         break;
                     case 'svg':
                         fileDownload(
-                            new XMLSerializer().serializeToString(
-                                this.oncoprint.toSVG(false)
-                            ),
+                            new XMLSerializer().serializeToString(this.oncoprint.toSVG(false)),
                             'oncoprint.svg'
                         );
                         break;
@@ -288,14 +269,10 @@ export default class Oncoprinter extends React.Component<
                 this.oncoprint.setHorzZoomCentered(z);
             },
             onClickZoomIn: () => {
-                this.oncoprint.setHorzZoomCentered(
-                    this.oncoprint.getHorzZoom() / 0.7
-                );
+                this.oncoprint.setHorzZoomCentered(this.oncoprint.getHorzZoom() / 0.7);
             },
             onClickZoomOut: () => {
-                this.oncoprint.setHorzZoomCentered(
-                    this.oncoprint.getHorzZoom() * 0.7
-                );
+                this.oncoprint.setHorzZoomCentered(this.oncoprint.getHorzZoom() * 0.7);
             },
             onClickNGCHM: () => {}, // do nothing in oncoprinter mode
         };
@@ -303,12 +280,9 @@ export default class Oncoprinter extends React.Component<
 
     @action
     private initializeOncoprint() {
-        onMobxPromise(
-            this.props.store.alteredSampleIds,
-            (alteredUids: string[]) => {
-                this.oncoprint.setHorzZoomToFit(alteredUids);
-            }
-        );
+        onMobxPromise(this.props.store.alteredSampleIds, (alteredUids: string[]) => {
+            this.oncoprint.setHorzZoomToFit(alteredUids);
+        });
 
         this.oncoprint.onHorzZoom(z => (this.horzZoom = z));
         this.horzZoom = this.oncoprint.getHorzZoom();
@@ -351,8 +325,7 @@ export default class Oncoprinter extends React.Component<
     @computed get alterationInfo() {
         if (this.props.store.alteredSampleIds.isComplete) {
             const numSamples = this.props.store.sampleIds.length;
-            const alteredSamples = this.props.store.alteredSampleIds.result
-                .length;
+            const alteredSamples = this.props.store.alteredSampleIds.result.length;
             return (
                 <span
                     style={{
@@ -418,14 +391,11 @@ export default class Oncoprinter extends React.Component<
                 >
                     {this.props.store.existCustomDrivers &&
                         !this.props.store.customDriverWarningHidden &&
-                        this.props.store.driverAnnotationSettings
-                            .customBinary && (
+                        this.props.store.driverAnnotationSettings.customBinary && (
                             <InfoBanner
                                 message={`Driver annotations reflect only user-provided data. Use the Mutations menu to modify annotation settings.`}
                                 style={{ marginBottom: 10 }}
-                                hidden={
-                                    this.props.store.customDriverWarningHidden
-                                }
+                                hidden={this.props.store.customDriverWarningHidden}
                                 hide={() => {
                                     this.props.store.customDriverWarningHidden = true;
                                 }}
@@ -440,14 +410,10 @@ export default class Oncoprinter extends React.Component<
                                 key={this.props.store.submitCount}
                                 oncoprintRef={this.oncoprintRef}
                                 clinicalTracks={this.props.store.clinicalTracks}
-                                geneticTracks={
-                                    this.props.store.geneticTracks.result
-                                }
+                                geneticTracks={this.props.store.geneticTracks.result}
                                 geneticTracksOrder={
                                     this.props.store.geneOrder &&
-                                    this.props.store.geneOrder.map(
-                                        getGeneticTrackKey
-                                    )
+                                    this.props.store.geneOrder.map(getGeneticTrackKey)
                                 }
                                 genesetHeatmapTracks={[]}
                                 heatmapTracks={[]}
@@ -457,26 +423,14 @@ export default class Oncoprinter extends React.Component<
                                 suppressRendering={this.isLoading}
                                 onSuppressRendering={this.onSuppressRendering}
                                 onReleaseRendering={this.onReleaseRendering}
-                                hiddenIds={
-                                    this.props.store.hiddenSampleIds.result
-                                }
-                                showClinicalTrackLegends={
-                                    this.showClinicalTrackLegends
-                                }
-                                horzZoomToFitIds={
-                                    this.props.store.alteredSampleIds.result
-                                }
-                                distinguishMutationType={
-                                    this.distinguishMutationType
-                                }
-                                distinguishGermlineMutations={
-                                    this.distinguishGermlineMutations
-                                }
+                                hiddenIds={this.props.store.hiddenSampleIds.result}
+                                showClinicalTrackLegends={this.showClinicalTrackLegends}
+                                horzZoomToFitIds={this.props.store.alteredSampleIds.result}
+                                distinguishMutationType={this.distinguishMutationType}
+                                distinguishGermlineMutations={this.distinguishGermlineMutations}
                                 distinguishDrivers={this.distinguishDrivers}
                                 sortConfig={this.sortConfig}
-                                showWhitespaceBetweenColumns={
-                                    this.showWhitespaceBetweenColumns
-                                }
+                                showWhitespaceBetweenColumns={this.showWhitespaceBetweenColumns}
                                 showMinimap={this.showMinimap}
                                 onMinimapClose={this.onMinimapClose}
                             />

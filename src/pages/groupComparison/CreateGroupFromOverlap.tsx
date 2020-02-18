@@ -5,10 +5,7 @@ import GroupComparisonStore from './GroupComparisonStore';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
 import { action, computed, observable } from 'mobx';
-import {
-    ComparisonGroup,
-    DUPLICATE_GROUP_NAME_MSG,
-} from './GroupComparisonUtils';
+import { ComparisonGroup, DUPLICATE_GROUP_NAME_MSG } from './GroupComparisonUtils';
 import { MakeMobxView } from '../../shared/components/MobxView';
 import LoadingIndicator from '../../shared/components/loadingIndicator/LoadingIndicator';
 import { SessionGroupData } from '../../shared/api/ComparisonGroupClient';
@@ -42,8 +39,7 @@ function getRegionSummary(
     let ret = (
         <span>
             {caseType[0].toUpperCase()}
-            {caseType.substring(1)}s only in{' '}
-            {joinGroupNames(includedGroups, 'and')}
+            {caseType.substring(1)}s only in {joinGroupNames(includedGroups, 'and')}
         </span>
     );
     ret = <span>{ret}.</span>;
@@ -102,15 +98,12 @@ export default class CreateGroupFromOverlap extends React.Component<
     }
 
     @computed get isDuplicateName() {
-        const existingGroupNamesObj = this.props.store.existingGroupNames
-            .result!;
+        const existingGroupNamesObj = this.props.store.existingGroupNames.result!;
         let existingGroupNames = existingGroupNamesObj.session;
         if (this.saveGroupToUser) {
             // if we're going to save the group to the user, we have to compare the group name
             //  with all existing groups on the user for these studies
-            existingGroupNames = existingGroupNames.concat(
-                existingGroupNamesObj.user
-            );
+            existingGroupNames = existingGroupNames.concat(existingGroupNamesObj.user);
         }
         return existingGroupNames.includes(this.inputGroupName.trim());
     }
@@ -130,16 +123,13 @@ export default class CreateGroupFromOverlap extends React.Component<
                         checked={this.saveGroupToUser}
                         onClick={this.toggleSaveGroupToUser}
                         label={[
-                            <span style={{ marginRight: 5 }}>
-                                Save group to user account
-                            </span>,
+                            <span style={{ marginRight: 5 }}>Save group to user account</span>,
                             <InfoIcon
                                 divStyle={{ display: 'inline' }}
                                 tooltip={
                                     <span>
-                                        Selecting this will save the new group
-                                        with the associated study in your user
-                                        account.
+                                        Selecting this will save the new group with the associated
+                                        study in your user account.
                                     </span>
                                 }
                             />,
@@ -164,14 +154,9 @@ export default class CreateGroupFromOverlap extends React.Component<
                     />
                     <button
                         className="btn btm-sm btn-primary"
-                        disabled={
-                            this.inputGroupName.length === 0 ||
-                            this.isDuplicateName
-                        }
+                        disabled={this.inputGroupName.length === 0 || this.isDuplicateName}
                         onClick={this.submit}
-                        data-test={
-                            this.props.caseType + 'GroupNameSubmitButton'
-                        }
+                        data-test={this.props.caseType + 'GroupNameSubmitButton'}
                     >
                         Submit
                     </button>
@@ -179,9 +164,7 @@ export default class CreateGroupFromOverlap extends React.Component<
                 {this.isDuplicateName && (
                     <div
                         style={{ marginTop: 4 }}
-                        data-test={
-                            this.props.caseType + 'DuplicateGroupNameMessage'
-                        }
+                        data-test={this.props.caseType + 'DuplicateGroupNameMessage'}
                     >
                         {DUPLICATE_GROUP_NAME_MSG}
                     </div>
@@ -238,17 +221,12 @@ export default class CreateGroupFromOverlap extends React.Component<
                             label: '',
                             category: 'groupComparison',
                         })}
-                        data-test={
-                            this.props.caseType +
-                            'GroupComparisonCreateGroupButton'
-                        }
+                        data-test={this.props.caseType + 'GroupComparisonCreateGroupButton'}
                     >
                         Create Group From Selected Diagram Areas
                     </button>
                 </DefaultTooltip>
-                <div style={{ marginTop: 20 }}>
-                    {this.includedRegionsDescription.component}
-                </div>
+                <div style={{ marginTop: 20 }}>{this.includedRegionsDescription.component}</div>
             </div>
         );
     }

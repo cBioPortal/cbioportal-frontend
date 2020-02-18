@@ -16,23 +16,14 @@ const style: CSSProperties = {
     marginTop: 0,
 };
 
-export default class FeatureTitle extends React.Component<
-    IFeatureTitleProps,
-    {}
-> {
+export default class FeatureTitle extends React.Component<IFeatureTitleProps, {}> {
     public render() {
         return (
             <If condition={this.props.isHidden}>
                 <Else>
-                    <h2
-                        style={this.props.style || style}
-                        className={this.props.className || ''}
-                    >
+                    <h2 style={this.props.style || style} className={this.props.className || ''}>
                         {this.props.title}
-                        <LoadingIndicator
-                            isLoading={this.props.isLoading}
-                            small={true}
-                        />
+                        <LoadingIndicator isLoading={this.props.isLoading} small={true} />
                     </h2>
                 </Else>
             </If>

@@ -23,23 +23,15 @@ export const StudySelectorStats: React.FunctionComponent<{
                             <a
                                 onClick={() => {
                                     if (numSelectedStudies)
-                                        props.store.showSelectedStudiesOnly = !props
-                                            .store.showSelectedStudiesOnly;
+                                        props.store.showSelectedStudiesOnly = !props.store
+                                            .showSelectedStudiesOnly;
                                 }}
                             >
                                 <b>{numSelectedStudies}</b>{' '}
-                                {numSelectedStudies === 1 ? 'study' : 'studies'}{' '}
-                                selected (
-                                <b>
-                                    {
-                                        props.store.profiledSamplesCount.result
-                                            .all
-                                    }
-                                </b>{' '}
-                                samples)
+                                {numSelectedStudies === 1 ? 'study' : 'studies'} selected (
+                                <b>{props.store.profiledSamplesCount.result.all}</b> samples)
                             </a>
-                            {props.store.selectableSelectedStudies.length >
-                                0 && (
+                            {props.store.selectableSelectedStudies.length > 0 && (
                                 <a
                                     data-test="globalDeselectAllStudiesButton"
                                     style={{ marginLeft: 10 }}
@@ -56,8 +48,6 @@ export const StudySelectorStats: React.FunctionComponent<{
             </Observer>
         );
     } else {
-        return (
-            <LoadingIndicator isLoading={true} size={'small'} center={false} />
-        );
+        return <LoadingIndicator isLoading={true} size={'small'} center={false} />;
     }
 });

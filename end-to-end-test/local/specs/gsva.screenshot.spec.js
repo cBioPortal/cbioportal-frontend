@@ -1,21 +1,16 @@
-var goToUrlAndSetLocalStorage = require('../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var assertScreenShotMatch = require('../../shared/lib/testUtils')
-    .assertScreenShotMatch;
-var waitForStudyQueryPage = require('../../shared/specUtils')
-    .waitForStudyQueryPage;
+var goToUrlAndSetLocalStorage = require('../../shared/specUtils').goToUrlAndSetLocalStorage;
+var assertScreenShotMatch = require('../../shared/lib/testUtils').assertScreenShotMatch;
+var waitForStudyQueryPage = require('../../shared/specUtils').waitForStudyQueryPage;
 var waitForOncoprint = require('../../shared/specUtils').waitForOncoprint;
 var waitForPlotsTab = require('../../shared/specUtils').waitForPlotsTab;
-var waitForCoExpressionTab = require('../../shared/specUtils')
-    .waitForCoExpressionTab;
+var waitForCoExpressionTab = require('../../shared/specUtils').waitForCoExpressionTab;
 var checkTestStudy = require('./gsva.spec').checkTestStudy;
 var checkGSVAprofile = require('./gsva.spec').checkGSVAprofile;
 var queryPageUrl = require('./gsva.spec').queryPageUrl;
 var plotsTabUrl = require('./gsva.spec').plotsTabUrl;
 var oncoprintTabUrl = require('./gsva.spec').oncoprintTabUrl;
 var coexpressionTabUrl = require('./gsva.spec').coexpressionTabUrl;
-var selectReactSelectOption = require('../../shared/specUtils')
-    .selectReactSelectOption;
+var selectReactSelectOption = require('../../shared/specUtils').selectReactSelectOption;
 var showGsva = require('../../shared/specUtils').showGsva;
 
 describe('gsva feature', () => {

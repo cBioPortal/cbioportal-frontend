@@ -9,19 +9,13 @@ import {
 } from 'victory';
 import { observable, action, computed } from 'mobx';
 import { Popover } from 'react-bootstrap';
-import CBIOPORTAL_VICTORY_THEME, {
-    axisLabelStyles,
-} from '../../../shared/theme/cBioPoralTheme';
+import CBIOPORTAL_VICTORY_THEME, { axisLabelStyles } from '../../../shared/theme/cBioPoralTheme';
 import { formatLogOddsRatio } from 'shared/lib/FormatUtils';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import autobind from 'autobind-decorator';
 import SelectionComponent from './SelectionComponent';
 import HoverablePoint from './HoverablePoint';
-import {
-    DownloadControls,
-    getTextWidth,
-    truncateWithEllipsis,
-} from 'cbioportal-frontend-commons';
+import { DownloadControls, getTextWidth, truncateWithEllipsis } from 'cbioportal-frontend-commons';
 
 export interface IMiniScatterChartProps {
     data: any[];
@@ -36,10 +30,7 @@ export interface IMiniScatterChartProps {
 }
 
 @observer
-export default class MiniScatterChart extends React.Component<
-    IMiniScatterChartProps,
-    {}
-> {
+export default class MiniScatterChart extends React.Component<IMiniScatterChartProps, {}> {
     @observable tooltipModel: any;
     @observable private svgContainer: any;
     private dragging = false;
@@ -47,16 +38,11 @@ export default class MiniScatterChart extends React.Component<
     @autobind
     @action
     private svgRef(svgContainer: SVGElement | null) {
-        this.svgContainer =
-            svgContainer && svgContainer.children
-                ? svgContainer.children[0]
-                : null;
+        this.svgContainer = svgContainer && svgContainer.children ? svgContainer.children[0] : null;
     }
 
     private handleSelection(points: any, bounds: any, props: any) {
-        this.props.onSelection(
-            points[0].data.map((d: any) => d.hugoGeneSymbol)
-        );
+        this.props.onSelection(points[0].data.map((d: any) => d.hugoGeneSymbol));
     }
 
     @autobind private handleSelectionCleared() {
@@ -69,11 +55,7 @@ export default class MiniScatterChart extends React.Component<
         this.props.onSelectionCleared();
     }
 
-    @autobind @action private onGenePointMouseOver(
-        datum: any,
-        x: number,
-        y: number
-    ) {
+    @autobind @action private onGenePointMouseOver(datum: any, x: number, y: number) {
         this.tooltipModel = datum;
         this.tooltipModel.x = x;
         this.tooltipModel.y = y;
@@ -95,11 +77,9 @@ export default class MiniScatterChart extends React.Component<
                     <br />
                     Log Ratio: {formatLogOddsRatio(this.tooltipModel.logRatio)}
                     <br />
-                    p-Value:{' '}
-                    {toConditionalPrecision(this.tooltipModel.pValue, 3, 0.01)}
+                    p-Value: {toConditionalPrecision(this.tooltipModel.pValue, 3, 0.01)}
                     <br />
-                    q-Value:{' '}
-                    {toConditionalPrecision(this.tooltipModel.qValue, 3, 0.01)}
+                    q-Value: {toConditionalPrecision(this.tooltipModel.qValue, 3, 0.01)}
                 </Popover>
             );
         } else {
@@ -127,12 +107,7 @@ export default class MiniScatterChart extends React.Component<
 
     @computed get xAxisLeftLabel() {
         if (this.totalLabelWidths > 200) {
-            return truncateWithEllipsis(
-                this.props.xAxisLeftLabel,
-                90,
-                'Arial',
-                '13px'
-            );
+            return truncateWithEllipsis(this.props.xAxisLeftLabel, 90, 'Arial', '13px');
         } else {
             return this.props.xAxisLeftLabel;
         }
@@ -140,12 +115,7 @@ export default class MiniScatterChart extends React.Component<
 
     @computed get xAxisRightLabel() {
         if (this.totalLabelWidths > 180) {
-            return truncateWithEllipsis(
-                this.props.xAxisRightLabel,
-                90,
-                'Arial',
-                '13px'
-            );
+            return truncateWithEllipsis(this.props.xAxisRightLabel, 90, 'Arial', '13px');
         } else {
             return this.props.xAxisRightLabel;
         }
@@ -164,20 +134,14 @@ export default class MiniScatterChart extends React.Component<
                             <VictorySelectionContainer
                                 containerRef={this.svgRef}
                                 activateSelectedData={false}
-                                onSelection={(
-                                    points: any,
-                                    bounds: any,
-                                    props: any
-                                ) =>
+                                onSelection={(points: any, bounds: any, props: any) =>
                                     this.handleSelection(points, bounds, props)
                                 }
                                 responsive={false}
                                 onSelectionCleared={this.handleSelectionCleared}
                                 selectionComponent={
                                     <SelectionComponent
-                                        onRender={
-                                            this.onSelectionComponentRender
-                                        }
+                                        onRender={this.onSelectionComponentRender}
                                     />
                                 }
                             />
@@ -191,14 +155,9 @@ export default class MiniScatterChart extends React.Component<
                     >
                         <VictoryAxis
                             tickValues={this.props.xAxisTickValues}
-                            domain={[
-                                -this.props.xAxisDomain,
-                                this.props.xAxisDomain,
-                            ]}
+                            domain={[-this.props.xAxisDomain, this.props.xAxisDomain]}
                             label="Log Ratio"
-                            tickFormat={(t: any) =>
-                                t >= 1000 || t <= -1000 ? `${t / 1000}k` : t
-                            }
+                            tickFormat={(t: any) => (t >= 1000 || t <= -1000 ? `${t / 1000}k` : t)}
                             style={{
                                 tickLabels: { padding: 20 },
                                 axisLabel: { padding: 40 },
@@ -252,10 +211,7 @@ export default class MiniScatterChart extends React.Component<
                                     onMouseOver={this.onGenePointMouseOver}
                                     onMouseOut={this.onGenePointMouseOut}
                                     fill={(datum: any) => {
-                                        if (
-                                            datum.hugoGeneSymbol in
-                                            this.props.selectedGenesSet
-                                        ) {
+                                        if (datum.hugoGeneSymbol in this.props.selectedGenesSet) {
                                             return '#FE9929';
                                         } else if (datum.qValue < 0.05) {
                                             return '#58ACFA';

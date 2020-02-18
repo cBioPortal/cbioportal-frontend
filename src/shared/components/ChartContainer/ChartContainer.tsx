@@ -6,10 +6,7 @@ interface IChartContainer {
     exportFileName?: string;
 }
 
-export default class ChartContainer extends React.Component<
-    IChartContainer,
-    {}
-> {
+export default class ChartContainer extends React.Component<IChartContainer, {}> {
     render() {
         return (
             <div className="borderedChart inlineBlock">
@@ -25,9 +22,7 @@ export default class ChartContainer extends React.Component<
                         zIndex: 10,
                     }}
                 />
-                <div style={{ overflowX: 'auto', overflowY: 'hidden' }}>
-                    {this.props.children}
-                </div>
+                <div style={{ overflowX: 'auto', overflowY: 'hidden' }}>{this.props.children}</div>
             </div>
         );
     }

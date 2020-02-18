@@ -6,22 +6,13 @@ import { IHotspotIndex } from '../../model/CancerHotspot';
 import { MobxCache } from '../../model/MobxCache';
 import { Mutation } from '../../model/Mutation';
 import { RemoteData } from '../../model/RemoteData';
-import {
-    CancerGene,
-    IndicatorQueryResp,
-    IOncoKbData,
-} from '../../model/OncoKb';
+import { CancerGene, IndicatorQueryResp, IOncoKbData } from '../../model/OncoKb';
 import { SimpleCache } from '../../model/SimpleCache';
-import {
-    is3dHotspot,
-    isRecurrentHotspot,
-} from '../../util/CancerHotspotsUtils';
+import { is3dHotspot, isRecurrentHotspot } from '../../util/CancerHotspotsUtils';
 import { getEvidenceQuery, getIndicatorData } from '../../util/OncoKbUtils';
 import { defaultArraySortMethod } from '../../util/ReactTableUtils';
 import OncoKB, { sortValue as oncoKbSortValue } from '../oncokb/OncoKB';
-import HotspotAnnotation, {
-    sortValue as hotspotSortValue,
-} from './HotspotAnnotation';
+import HotspotAnnotation, { sortValue as hotspotSortValue } from './HotspotAnnotation';
 
 export type AnnotationProps = {
     mutation: Mutation;
@@ -81,9 +72,7 @@ function getDefaultTumorType(): string {
 
 function getDefaultEvidenceQuery(
     mutation: Mutation,
-    resolveEntrezGeneId: (
-        mutation: Mutation
-    ) => number = getDefaultEntrezGeneId,
+    resolveEntrezGeneId: (mutation: Mutation) => number = getDefaultEntrezGeneId,
     resolveTumorType: (mutation: Mutation) => string = getDefaultTumorType
 ) {
     return getEvidenceQuery(mutation, resolveEntrezGeneId, resolveTumorType);
@@ -107,9 +96,7 @@ export function getAnnotationData(
         const entrezGeneId = resolveEntrezGeneId(mutation);
 
         let oncoKbIndicator: IndicatorQueryResp | undefined;
-        const hugoGeneSymbol = mutation.gene
-            ? mutation.gene.hugoGeneSymbol
-            : undefined;
+        const hugoGeneSymbol = mutation.gene ? mutation.gene.hugoGeneSymbol : undefined;
 
         let oncoKbGeneExist = false;
         let isOncoKbCancerGene = false;
@@ -117,9 +104,7 @@ export function getAnnotationData(
             oncoKbGeneExist =
                 _.find(
                     oncoKbCancerGenes.result,
-                    (gene: CancerGene) =>
-                        gene.oncokbAnnotated &&
-                        gene.entrezGeneId === entrezGeneId
+                    (gene: CancerGene) => gene.oncokbAnnotated && gene.entrezGeneId === entrezGeneId
                 ) !== undefined;
             isOncoKbCancerGene =
                 _.find(
@@ -140,15 +125,11 @@ export function getAnnotationData(
             // myCancerGenomeLinks: myCancerGenomeData ?
             //     AnnotationColumnFormatter.getMyCancerGenomeLinks(mutation, myCancerGenomeData) : [],
             isHotspot:
-                hotspotData &&
-                hotspotData.result &&
-                hotspotData.status === 'complete'
+                hotspotData && hotspotData.result && hotspotData.status === 'complete'
                     ? isRecurrentHotspot(mutation, hotspotData.result)
                     : false,
             is3dHotspot:
-                hotspotData &&
-                hotspotData.result &&
-                hotspotData.status === 'complete'
+                hotspotData && hotspotData.result && hotspotData.status === 'complete'
                     ? is3dHotspot(mutation, hotspotData.result)
                     : false,
             hotspotStatus: hotspotData ? hotspotData.status : 'pending',

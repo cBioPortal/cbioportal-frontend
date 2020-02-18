@@ -71,10 +71,7 @@ export default class ComplexKeyMap<V> {
         this.map = {};
     }
 
-    public static from<K, T>(
-        objs: T[],
-        key: (t: T) => ComplexKey
-    ): ComplexKeyMap<T> {
+    public static from<K, T>(objs: T[], key: (t: T) => ComplexKey): ComplexKeyMap<T> {
         const map = new ComplexKeyMap<T>();
         for (const o of objs) {
             map.set(key(o), o);
@@ -89,8 +86,6 @@ export default class ComplexKeyMap<V> {
     }
 
     private getEntry(key: ComplexKey): Entry<V> | undefined {
-        return this.getEntriesWithStringKey(key).find(entry =>
-            keyEquals(entry.key, key)
-        );
+        return this.getEntriesWithStringKey(key).find(entry => keyEquals(entry.key, key));
     }
 }

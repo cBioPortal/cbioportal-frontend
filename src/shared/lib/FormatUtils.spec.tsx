@@ -62,9 +62,7 @@ describe('#formatLogOddsRatio()', () => {
 
 describe('#formatSignificanceValueWithStyle()', () => {
     it('returns <span>0.300</span> for 0.3', () => {
-        expect(formatSignificanceValueWithStyle(0.3)).toEqualJSX(
-            <span>0.300</span>
-        );
+        expect(formatSignificanceValueWithStyle(0.3)).toEqualJSX(<span>0.300</span>);
     });
 
     it('returns <b><span>0.030</span></b> for 0.03', () => {

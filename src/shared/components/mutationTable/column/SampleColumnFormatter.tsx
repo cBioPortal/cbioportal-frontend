@@ -35,17 +35,11 @@ export default class SampleColumnFormatter {
         );
 
         if (molecularProfileIdToMolecularProfile) {
-            const profile =
-                molecularProfileIdToMolecularProfile[
-                    data[0].molecularProfileId
-                ];
+            const profile = molecularProfileIdToMolecularProfile[data[0].molecularProfileId];
             const studyId = profile && profile.studyId;
             if (studyId) {
                 content = (
-                    <a
-                        href={getSampleViewUrl(studyId, sampleId)}
-                        target="_blank"
-                    >
+                    <a href={getSampleViewUrl(studyId, sampleId)} target="_blank">
                         {content}
                     </a>
                 );

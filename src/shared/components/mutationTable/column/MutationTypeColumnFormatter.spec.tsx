@@ -61,44 +61,28 @@ describe('MutationTypeColumnFormatter', () => {
 
     before(() => {
         let data = [missenseVariant];
-        msVarComponent = mount(
-            MutationTypeColumnFormatter.renderFunction(data)
-        );
+        msVarComponent = mount(MutationTypeColumnFormatter.renderFunction(data));
 
         data = [missenseMutation];
-        msMutComponent = mount(
-            MutationTypeColumnFormatter.renderFunction(data)
-        );
+        msMutComponent = mount(MutationTypeColumnFormatter.renderFunction(data));
 
         data = [stopgainSnv];
-        stopgainSnvComponent = mount(
-            MutationTypeColumnFormatter.renderFunction(data)
-        );
+        stopgainSnvComponent = mount(MutationTypeColumnFormatter.renderFunction(data));
 
         data = [nonFrameShiftDeletion];
-        nonFsDelComponent = mount(
-            MutationTypeColumnFormatter.renderFunction(data)
-        );
+        nonFsDelComponent = mount(MutationTypeColumnFormatter.renderFunction(data));
 
         data = [spliceSite];
-        spliceComponent = mount(
-            MutationTypeColumnFormatter.renderFunction(data)
-        );
+        spliceComponent = mount(MutationTypeColumnFormatter.renderFunction(data));
 
         data = [frameshiftDeletion];
-        fsDelComponent = mount(
-            MutationTypeColumnFormatter.renderFunction(data)
-        );
+        fsDelComponent = mount(MutationTypeColumnFormatter.renderFunction(data));
 
         data = [unknownMutation];
-        unknownMutComponent = mount(
-            MutationTypeColumnFormatter.renderFunction(data)
-        );
+        unknownMutComponent = mount(MutationTypeColumnFormatter.renderFunction(data));
 
         data = [otherMutation];
-        otherMutComponent = mount(
-            MutationTypeColumnFormatter.renderFunction(data)
-        );
+        otherMutComponent = mount(MutationTypeColumnFormatter.renderFunction(data));
     });
 
     function testRenderedValues(
@@ -121,54 +105,19 @@ describe('MutationTypeColumnFormatter', () => {
     }
 
     it('renders component display value, class name, and cell value property', () => {
-        testRenderedValues(
-            msVarComponent,
-            'Missense_Variant',
-            'missense-mutation',
-            'Missense'
-        );
-        testRenderedValues(
-            msMutComponent,
-            'Missense_mutation',
-            'missense-mutation',
-            'Missense'
-        );
-        testRenderedValues(
-            stopgainSnvComponent,
-            'stopgain_SNV',
-            'trunc-mutation',
-            'Nonsense'
-        );
-        testRenderedValues(
-            nonFsDelComponent,
-            'NonFrameShift_deletion',
-            'inframe-mutation',
-            'IF'
-        );
-        testRenderedValues(
-            spliceComponent,
-            'Splice Site',
-            'trunc-mutation',
-            'Splice'
-        );
-        testRenderedValues(
-            fsDelComponent,
-            'FrameShift_Deletion',
-            'trunc-mutation',
-            'FS del'
-        );
+        testRenderedValues(msVarComponent, 'Missense_Variant', 'missense-mutation', 'Missense');
+        testRenderedValues(msMutComponent, 'Missense_mutation', 'missense-mutation', 'Missense');
+        testRenderedValues(stopgainSnvComponent, 'stopgain_SNV', 'trunc-mutation', 'Nonsense');
+        testRenderedValues(nonFsDelComponent, 'NonFrameShift_deletion', 'inframe-mutation', 'IF');
+        testRenderedValues(spliceComponent, 'Splice Site', 'trunc-mutation', 'Splice');
+        testRenderedValues(fsDelComponent, 'FrameShift_Deletion', 'trunc-mutation', 'FS del');
         testRenderedValues(
             unknownMutComponent,
             'a_strange_type_of_mutation',
             'other-mutation',
             'Other'
         );
-        testRenderedValues(
-            otherMutComponent,
-            'other',
-            'other-mutation',
-            'Other'
-        );
+        testRenderedValues(otherMutComponent, 'other', 'other-mutation', 'Other');
     });
 
     after(() => {});

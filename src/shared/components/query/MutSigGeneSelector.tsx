@@ -27,10 +27,7 @@ export interface MutSigGeneSelectorProps {
 }
 
 @observer
-export default class MutSigGeneSelector extends React.Component<
-    MutSigGeneSelectorProps,
-    {}
-> {
+export default class MutSigGeneSelector extends React.Component<MutSigGeneSelectorProps, {}> {
     constructor(props: MutSigGeneSelectorProps) {
         super(props);
         this.map_geneSymbol_selected.replace(
@@ -45,14 +42,11 @@ export default class MutSigGeneSelector extends React.Component<
     }
 
     @computed get selectedGenes() {
-        return this.allGenes.filter(symbol =>
-            this.map_geneSymbol_selected.get(symbol)
-        );
+        return this.allGenes.filter(symbol => this.map_geneSymbol_selected.get(symbol));
     }
 
     @action selectAll(selected: boolean) {
-        for (let gene of this.allGenes)
-            this.map_geneSymbol_selected.set(gene, selected);
+        for (let gene of this.allGenes) this.map_geneSymbol_selected.set(gene, selected);
     }
 
     private columns: IColumnDefMap = {
@@ -76,10 +70,7 @@ export default class MutSigGeneSelector extends React.Component<
             name: 'Q-Value',
             sortable: true,
             filterable: true,
-            formatter: ({
-                name,
-                columnData: value,
-            }: IColumnFormatterData<MutSig>) => (
+            formatter: ({ name, columnData: value }: IColumnFormatterData<MutSig>) => (
                 <Td key={name} column={name} value={value}>
                     {toPrecision(value, 2, 0.1)}
                 </Td>
@@ -99,21 +90,15 @@ export default class MutSigGeneSelector extends React.Component<
                                 checked={this.selectedGenes.length > 0}
                                 indeterminate={
                                     this.selectedGenes.length > 0 &&
-                                    this.selectedGenes.length <
-                                        this.allGenes.length
+                                    this.selectedGenes.length < this.allGenes.length
                                 }
-                                onChange={event =>
-                                    this.selectAll(event.target.checked)
-                                }
+                                onChange={event => this.selectAll(event.target.checked)}
                             />
                         )}
                     </Observer>
                 </div>
             ),
-            formatter: ({
-                name,
-                rowData: mutSig,
-            }: IColumnFormatterData<MutSig>) => (
+            formatter: ({ name, rowData: mutSig }: IColumnFormatterData<MutSig>) => (
                 <Td key={name} column={name}>
                     {!!mutSig && (
                         <div className={styles.selectionColumnCell}>
@@ -164,9 +149,7 @@ export default class MutSigGeneSelector extends React.Component<
                     <button
                         style={{ marginTop: 20 }}
                         className="btn btn-primary btn-sm pull-right"
-                        onClick={() =>
-                            this.props.onSelect(this.map_geneSymbol_selected)
-                        }
+                        onClick={() => this.props.onSelect(this.map_geneSymbol_selected)}
                     >
                         Select
                     </button>

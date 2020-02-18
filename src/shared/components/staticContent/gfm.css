@@ -4,8 +4,7 @@
     -webkit-text-size-adjust: 100%;
     color: #333;
     overflow: hidden;
-    font-family: 'Helvetica Neue', Helvetica, 'Segoe UI', Arial, freesans,
-        sans-serif;
+    font-family: 'Helvetica Neue', Helvetica, 'Segoe UI', Arial, freesans, sans-serif;
     font-size: 16px;
     line-height: 1.6;
     word-wrap: break-word;
@@ -56,8 +55,7 @@
 .markdown-body h4,
 .markdown-body h5,
 .markdown-body h6 {
-    font-family: 'Helvetica Neue', Helvetica, 'Segoe UI', Arial, freesans,
-        sans-serif;
+    font-family: 'Helvetica Neue', Helvetica, 'Segoe UI', Arial, freesans, sans-serif;
     position: relative;
     margin-top: 1em;
     margin-bottom: 16px;
@@ -162,8 +160,7 @@
     margin: 0;
     font-size: 13px;
     line-height: 1.4;
-    font-family: Helvetica, Arial, freesans, clean, sans-serif, 'Segoe UI Emoji',
-        'Segoe UI Symbol';
+    font-family: Helvetica, Arial, freesans, clean, sans-serif, 'Segoe UI Emoji', 'Segoe UI Symbol';
 }
 .markdown-body input[disabled] {
     cursor: default;

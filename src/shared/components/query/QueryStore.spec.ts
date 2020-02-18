@@ -1,9 +1,5 @@
 import { assert, expect } from 'chai';
-import {
-    QueryStore,
-    CUSTOM_CASE_LIST_ID,
-    CancerStudyQueryUrlParams,
-} from './QueryStore';
+import { QueryStore, CUSTOM_CASE_LIST_ID, CancerStudyQueryUrlParams } from './QueryStore';
 import { VirtualStudy, VirtualStudyData } from 'shared/model/VirtualStudy';
 import Sinon from 'sinon';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
@@ -19,10 +15,9 @@ describe('QueryStore', () => {
         let initializeStub: sinon.SinonStub;
 
         beforeEach(() => {
-            initializeStub = Sinon.stub(
-                QueryStore.prototype,
-                'initialize'
-            ).callsFake(function() {});
+            initializeStub = Sinon.stub(QueryStore.prototype, 'initialize').callsFake(
+                function() {}
+            );
 
             store = new QueryStore();
         });
@@ -80,14 +75,13 @@ describe('QueryStore', () => {
                     resolve();
                 });
             });
-            addVirtualStudyStub = Sinon.stub(
-                sessionServiceClient,
-                'addVirtualStudy'
-            ).callsFake(function fakeFn(id: string) {
-                return new Promise((resolve, reject) => {
-                    resolve();
-                });
-            });
+            addVirtualStudyStub = Sinon.stub(sessionServiceClient, 'addVirtualStudy').callsFake(
+                function fakeFn(id: string) {
+                    return new Promise((resolve, reject) => {
+                        resolve();
+                    });
+                }
+            );
 
             store_vs = new QueryStore();
         });

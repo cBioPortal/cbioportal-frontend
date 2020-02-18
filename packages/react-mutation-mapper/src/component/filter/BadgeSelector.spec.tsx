@@ -27,36 +27,28 @@ describe('BadgeSelector', () => {
             );
 
             assert.deepEqual(
-                calculateBadgeAlignmentStyle('6666'.length, '6666'.length)
-                    .width,
+                calculateBadgeAlignmentStyle('6666'.length, '6666'.length).width,
                 DEFAULT_BADGE_CHAR_WIDTH * 4 + DEFAULT_BADGE_CONTENT_PADDING * 2
             );
 
             assert.deepEqual(
-                calculateBadgeAlignmentStyle('66666'.length, '66666'.length)
-                    .width,
+                calculateBadgeAlignmentStyle('66666'.length, '66666'.length).width,
                 DEFAULT_BADGE_CHAR_WIDTH * 5 + DEFAULT_BADGE_CONTENT_PADDING * 2
             );
 
             assert.deepEqual(
-                calculateBadgeAlignmentStyle('666666'.length, '666666'.length)
-                    .width,
+                calculateBadgeAlignmentStyle('666666'.length, '666666'.length).width,
                 DEFAULT_BADGE_CHAR_WIDTH * 6 + DEFAULT_BADGE_CONTENT_PADDING * 2
             );
         });
     });
 
     describe('calculateBadgeWidths', () => {
-        const len1Width =
-            DEFAULT_BADGE_CHAR_WIDTH * 1 + DEFAULT_BADGE_CONTENT_PADDING * 2;
-        const len2Width =
-            DEFAULT_BADGE_CHAR_WIDTH * 2 + DEFAULT_BADGE_CONTENT_PADDING * 2;
-        const len3Width =
-            DEFAULT_BADGE_CHAR_WIDTH * 3 + DEFAULT_BADGE_CONTENT_PADDING * 2;
-        const len4Width =
-            DEFAULT_BADGE_CHAR_WIDTH * 4 + DEFAULT_BADGE_CONTENT_PADDING * 2;
-        const len5Width =
-            DEFAULT_BADGE_CHAR_WIDTH * 5 + DEFAULT_BADGE_CONTENT_PADDING * 2;
+        const len1Width = DEFAULT_BADGE_CHAR_WIDTH * 1 + DEFAULT_BADGE_CONTENT_PADDING * 2;
+        const len2Width = DEFAULT_BADGE_CHAR_WIDTH * 2 + DEFAULT_BADGE_CONTENT_PADDING * 2;
+        const len3Width = DEFAULT_BADGE_CHAR_WIDTH * 3 + DEFAULT_BADGE_CONTENT_PADDING * 2;
+        const len4Width = DEFAULT_BADGE_CHAR_WIDTH * 4 + DEFAULT_BADGE_CONTENT_PADDING * 2;
+        const len5Width = DEFAULT_BADGE_CHAR_WIDTH * 5 + DEFAULT_BADGE_CONTENT_PADDING * 2;
 
         const options: BadgeSelectorOption[] = [
             {
@@ -662,14 +654,8 @@ describe('BadgeSelector', () => {
                 { width: len5Width },
             ];
 
-            assert.deepEqual(
-                calculateBadgeAlignmentStyles(options, 1, true),
-                expected
-            );
-            assert.deepEqual(
-                calculateBadgeAlignmentStyles(options, 2, true),
-                expected
-            );
+            assert.deepEqual(calculateBadgeAlignmentStyles(options, 1, true), expected);
+            assert.deepEqual(calculateBadgeAlignmentStyles(options, 2, true), expected);
             assert.deepEqual(
                 calculateBadgeAlignmentStyles(
                     options,
@@ -714,18 +700,9 @@ describe('BadgeSelector', () => {
                 ),
                 expected
             );
-            assert.deepEqual(
-                calculateBadgeAlignmentStyles(options, 7, true),
-                expected
-            );
-            assert.deepEqual(
-                calculateBadgeAlignmentStyles(options, 666, true),
-                expected
-            );
-            assert.deepEqual(
-                calculateBadgeAlignmentStyles(options, 666, true),
-                expected
-            );
+            assert.deepEqual(calculateBadgeAlignmentStyles(options, 7, true), expected);
+            assert.deepEqual(calculateBadgeAlignmentStyles(options, 666, true), expected);
+            assert.deepEqual(calculateBadgeAlignmentStyles(options, 666, true), expected);
         });
     });
 });

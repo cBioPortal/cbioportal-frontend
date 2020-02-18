@@ -30,10 +30,7 @@ export function getOncoKBReferenceInfo(
             <span>
                 <If condition={oncokbAnnotated}>
                     <Then>
-                        <a
-                            href={`${ONCOKB_URL}/gene/${hugoGeneSymbol}`}
-                            target="_blank"
-                        >
+                        <a href={`${ONCOKB_URL}/gene/${hugoGeneSymbol}`} target="_blank">
                             {hugoGeneSymbol}
                         </a>
                     </Then>
@@ -43,10 +40,7 @@ export function getOncoKBReferenceInfo(
                 </If>
                 <span> is included in the </span>
                 {getOncoKBCancerGeneListLinkout()}
-                {(isOncogene || isTumorSuppressorGene) && (
-                    <span>{content}</span>
-                )}
-                .
+                {(isOncogene || isTumorSuppressorGene) && <span>{content}</span>}.
             </span>
         );
     }

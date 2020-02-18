@@ -6,11 +6,7 @@ import {
     getDrugsFromArm,
     mergeClinicalGroupMatchByAge,
 } from './TrialMatchTableUtils';
-import {
-    IArm,
-    IClinicalGroupMatch,
-    ITrialMatch,
-} from '../../../shared/model/MatchMiner';
+import { IArm, IClinicalGroupMatch, ITrialMatch } from '../../../shared/model/MatchMiner';
 
 describe('TrialMatchTableUtils', () => {
     it('Test setTrialMatchPriority: set priority of trial match record based on number of positive matches and not matches.', () => {
@@ -35,10 +31,7 @@ describe('TrialMatchTableUtils', () => {
                                 {
                                     trueHugoSymbol: null,
                                     trueProteinChange: null,
-                                    sampleIds: [
-                                        'P-0000628-T01-IM3',
-                                        'P-0000628-T02-IM5',
-                                    ],
+                                    sampleIds: ['P-0000628-T01-IM3', 'P-0000628-T02-IM5'],
                                 },
                             ],
                         },
@@ -48,10 +41,7 @@ describe('TrialMatchTableUtils', () => {
                                 {
                                     trueHugoSymbol: null,
                                     trueProteinChange: null,
-                                    sampleIds: [
-                                        'P-0000628-T01-IM3',
-                                        'P-0000628-T02-IM5',
-                                    ],
+                                    sampleIds: ['P-0000628-T01-IM3', 'P-0000628-T02-IM5'],
                                 },
                             ],
                         },
@@ -61,10 +51,7 @@ describe('TrialMatchTableUtils', () => {
                                 {
                                     trueHugoSymbol: null,
                                     trueProteinChange: null,
-                                    sampleIds: [
-                                        'P-0000628-T01-IM3',
-                                        'P-0000628-T02-IM5',
-                                    ],
+                                    sampleIds: ['P-0000628-T01-IM3', 'P-0000628-T02-IM5'],
                                 },
                             ],
                         },
@@ -129,10 +116,7 @@ describe('TrialMatchTableUtils', () => {
                                 {
                                     trueHugoSymbol: 'EGFR',
                                     trueProteinChange: 'L747_P753delinsS',
-                                    sampleIds: [
-                                        'P-0000628-T01-IM3',
-                                        'P-0000628-T02-IM5',
-                                    ],
+                                    sampleIds: ['P-0000628-T01-IM3', 'P-0000628-T02-IM5'],
                                 },
                                 {
                                     trueHugoSymbol: 'EGFR',
@@ -257,11 +241,7 @@ describe('TrialMatchTableUtils', () => {
                 trialOncotreePrimaryDiagnosis: 'All Solid Tumors',
             },
         ];
-        assert.deepEqual(
-            excludeControlArms(data),
-            expectedResult,
-            'Exclude control arm failed.'
-        );
+        assert.deepEqual(excludeControlArms(data), expectedResult, 'Exclude control arm failed.');
     });
 
     it('Test getDrugsFromArm: fetch drugs from arm.', () => {
@@ -289,8 +269,7 @@ describe('TrialMatchTableUtils', () => {
                             },
                             {
                                 clinical: {
-                                    oncotree_primary_diagnosis:
-                                        'Cholangiocarcinoma',
+                                    oncotree_primary_diagnosis: 'Cholangiocarcinoma',
                                     age_numerical: '>=18',
                                 },
                             },
@@ -311,15 +290,13 @@ describe('TrialMatchTableUtils', () => {
                         },
                     ],
                 ],
-                arm_info:
-                    'INCB054828 in subjects with other FGF/FGFR alterations',
+                arm_info: 'INCB054828 in subjects with other FGF/FGFR alterations',
                 match: [
                     {
                         and: [
                             {
                                 clinical: {
-                                    oncotree_primary_diagnosis:
-                                        'Cholangiocarcinoma',
+                                    oncotree_primary_diagnosis: 'Cholangiocarcinoma',
                                     age_numerical: '>=18',
                                 },
                             },
@@ -333,8 +310,7 @@ describe('TrialMatchTableUtils', () => {
                                     },
                                     {
                                         genomic: {
-                                            annotated_variant:
-                                                'Oncogenic Mutations',
+                                            annotated_variant: 'Oncogenic Mutations',
                                             hugo_symbol: 'FGFR3',
                                         },
                                     },
@@ -350,11 +326,7 @@ describe('TrialMatchTableUtils', () => {
         ];
         const armDescription: string = 'Cohort B INCB054828';
         const expectedResult: string[][] = [['Pemigatinib']];
-        assert.deepEqual(
-            getDrugsFromArm(armDescription, arm),
-            expectedResult,
-            'Get drugs failed.'
-        );
+        assert.deepEqual(getDrugsFromArm(armDescription, arm), expectedResult, 'Get drugs failed.');
     });
 
     it('Test mergeClinicalGroupMatchByAge: merge trial matches by the same clinical age.', () => {

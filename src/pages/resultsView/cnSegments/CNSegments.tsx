@@ -7,11 +7,7 @@ import { Nav, NavItem } from 'react-bootstrap';
 
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import { ResultsViewTab } from '../ResultsViewPageHelpers';
-import {
-    CopyNumberSeg,
-    Gene,
-    ReferenceGenomeGene,
-} from 'shared/api/generated/CBioPortalAPI';
+import { CopyNumberSeg, Gene, ReferenceGenomeGene } from 'shared/api/generated/CBioPortalAPI';
 import IntegrativeGenomicsViewer from 'shared/components/igv/IntegrativeGenomicsViewer';
 import CNSegmentsDownloader from 'shared/components/cnSegments/CNSegmentsDownloader';
 import WindowStore from 'shared/components/window/WindowStore';
@@ -29,10 +25,7 @@ import {
 import { remoteData } from 'cbioportal-frontend-commons';
 
 @observer
-export default class CNSegments extends React.Component<
-    { store: ResultsViewPageStore },
-    {}
-> {
+export default class CNSegments extends React.Component<{ store: ResultsViewPageStore }, {}> {
     @observable renderingComplete = false;
     @observable selectedLocus: string;
     @observable segmentTrackMaxHeight: number | undefined;
@@ -43,10 +36,7 @@ export default class CNSegments extends React.Component<
     }
 
     @computed get segmentTrackHeight() {
-        return calcSegmentTrackHeight(
-            this.features,
-            this.segmentTrackMaxHeight
-        );
+        return calcSegmentTrackHeight(this.features, this.segmentTrackMaxHeight);
     }
 
     @computed get activeLocus(): string {
@@ -62,9 +52,7 @@ export default class CNSegments extends React.Component<
     }
 
     @computed get features() {
-        const segments: CopyNumberSeg[] = this.activePromise
-            ? this.activePromise.result || []
-            : [];
+        const segments: CopyNumberSeg[] = this.activePromise ? this.activePromise.result || [] : [];
 
         return generateSegmentFeatures(segments);
     }
@@ -73,9 +61,7 @@ export default class CNSegments extends React.Component<
         await: () => [this.props.store.hugoGeneSymbolToReferenceGene],
         invoke: () => {
             return Promise.resolve(
-                this.props.store.hugoGeneSymbolToReferenceGene.result![
-                    this.activeLocus
-                ].chromosome
+                this.props.store.hugoGeneSymbolToReferenceGene.result![this.activeLocus].chromosome
             );
         },
     });
@@ -95,23 +81,15 @@ export default class CNSegments extends React.Component<
     @computed get activePromise() {
         if (this.activeLocus === WHOLE_GENOME) {
             return this.props.store.cnSegments;
-        } else if (
-            this.props.store.cnSegmentsByChromosome.result &&
-            this.chromosome
-        ) {
-            return this.props.store.cnSegmentsByChromosome.result[
-                this.chromosome.result!
-            ];
+        } else if (this.props.store.cnSegmentsByChromosome.result && this.chromosome) {
+            return this.props.store.cnSegmentsByChromosome.result[this.chromosome.result!];
         } else {
             return undefined;
         }
     }
 
     @computed get indicatorPromises() {
-        const promises: MobxPromise<any>[] = [
-            this.props.store.studies,
-            this.props.store.genes,
-        ];
+        const promises: MobxPromise<any>[] = [this.props.store.studies, this.props.store.genes];
 
         if (this.activeLocus !== WHOLE_GENOME) {
             promises.push(this.props.store.cnSegmentsByChromosome);
@@ -139,11 +117,7 @@ export default class CNSegments extends React.Component<
     public render() {
         return (
             <div className="pillTabs">
-                <LoadingIndicator
-                    isLoading={this.isHidden}
-                    size={'big'}
-                    center={true}
-                >
+                <LoadingIndicator isLoading={this.isHidden} size={'big'} center={true}>
                     <ProgressIndicator
                         getItems={() => this.progressItems}
                         show={this.isHidden}
@@ -154,17 +128,11 @@ export default class CNSegments extends React.Component<
                     promise={this.props.store.cnSegments}
                     filename={this.filename}
                 />
-                <Nav
-                    bsStyle="pills"
-                    activeKey={this.activeLocus}
-                    onSelect={this.onTabSelect}
-                >
+                <Nav bsStyle="pills" activeKey={this.activeLocus} onSelect={this.onTabSelect}>
                     <NavItem eventKey={WHOLE_GENOME}>Whole Genome</NavItem>
                     {this.props.store.genes.result &&
                         this.props.store.genes.result.map((gene: Gene) => (
-                            <NavItem eventKey={gene.hugoGeneSymbol}>
-                                {gene.hugoGeneSymbol}
-                            </NavItem>
+                            <NavItem eventKey={gene.hugoGeneSymbol}>{gene.hugoGeneSymbol}</NavItem>
                         ))}
                 </Nav>
                 <div style={this.isHidden ? { opacity: 0 } : undefined}>
@@ -182,8 +150,7 @@ export default class CNSegments extends React.Component<
                         onRenderingComplete={this.onIgvRenderingComplete}
                         disableSearch={this.activeLocus !== WHOLE_GENOME}
                         isVisible={
-                            this.props.store.tabId ===
-                                ResultsViewTab.CN_SEGMENTS && !this.isHidden
+                            this.props.store.tabId === ResultsViewTab.CN_SEGMENTS && !this.isHidden
                         }
                     />
                 </div>

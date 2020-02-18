@@ -7,10 +7,7 @@ import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import { ExpressionEnrichmentRow } from 'shared/model/ExpressionEnrichmentRow';
 import { tsvFormat } from 'd3-dsv';
 import { BoxPlotModel, calculateBoxPlotModel } from 'shared/lib/boxPlotUtils';
-import {
-    MolecularProfile,
-    NumericGeneMolecularData,
-} from 'shared/api/generated/CBioPortalAPI';
+import { MolecularProfile, NumericGeneMolecularData } from 'shared/api/generated/CBioPortalAPI';
 import seedrandom from 'seedrandom';
 import { roundLogRatio, formatLogOddsRatio } from 'shared/lib/FormatUtils';
 import * as _ from 'lodash';
@@ -83,20 +80,12 @@ export function formatAlterationTendency(text: string) {
     return <TruncatedText text={text} maxLength={20} />;
 }
 
-export function formatPercentage(
-    group: string,
-    data: AlterationEnrichmentRow
-): string {
+export function formatPercentage(group: string, data: AlterationEnrichmentRow): string {
     const datum = data.groupsSet[group];
-    return (
-        datum.alteredCount + ' (' + datum.alteredPercentage.toFixed(2) + '%)'
-    );
+    return datum.alteredCount + ' (' + datum.alteredPercentage.toFixed(2) + '%)';
 }
 
-export function getAlteredCount(
-    group: string,
-    data: AlterationEnrichmentRow
-): number {
+export function getAlteredCount(group: string, data: AlterationEnrichmentRow): number {
     return data.groupsSet[group].alteredCount;
 }
 
@@ -183,42 +172,30 @@ export function getAlterationRowData(
     groups: { name: string; nameOfEnrichmentDirection?: string }[]
 ): AlterationEnrichmentRow[] {
     return alterationEnrichments.map(alterationEnrichment => {
-        let countsWithAlteredPercentage = _.map(
-            alterationEnrichment.counts,
-            datum => {
-                const alteredPercentage =
-                    datum.alteredCount > 0 && datum.profiledCount > 0
-                        ? (datum.alteredCount / datum.profiledCount) * 100
-                        : 0;
-                return {
-                    ...datum,
-                    alteredPercentage,
-                };
-            }
-        );
-        let groupsSet = _.keyBy(
-            countsWithAlteredPercentage,
-            count => count.name
-        );
+        let countsWithAlteredPercentage = _.map(alterationEnrichment.counts, datum => {
+            const alteredPercentage =
+                datum.alteredCount > 0 && datum.profiledCount > 0
+                    ? (datum.alteredCount / datum.profiledCount) * 100
+                    : 0;
+            return {
+                ...datum,
+                alteredPercentage,
+            };
+        });
+        let groupsSet = _.keyBy(countsWithAlteredPercentage, count => count.name);
         let enrichedGroup: string | undefined = undefined;
         let logRatio: number | undefined = undefined;
         if (groups.length === 2) {
             let group1Data = groupsSet[groups[0].name];
             let group2Data = groupsSet[groups[1].name];
             if (alterationEnrichment.pValue !== undefined) {
-                logRatio = Math.log2(
-                    group1Data.alteredPercentage / group2Data.alteredPercentage
-                );
-                let group1Name =
-                    groups[0].nameOfEnrichmentDirection || groups[0].name;
-                let group2Name =
-                    groups[1].nameOfEnrichmentDirection || groups[1].name;
+                logRatio = Math.log2(group1Data.alteredPercentage / group2Data.alteredPercentage);
+                let group1Name = groups[0].nameOfEnrichmentDirection || groups[0].name;
+                let group2Name = groups[1].nameOfEnrichmentDirection || groups[1].name;
                 enrichedGroup = logRatio > 0 ? group1Name : group2Name;
             }
         } else if (alterationEnrichment.pValue !== undefined) {
-            countsWithAlteredPercentage.sort(
-                (a, b) => b.alteredPercentage - a.alteredPercentage
-            );
+            countsWithAlteredPercentage.sort((a, b) => b.alteredPercentage - a.alteredPercentage);
             enrichedGroup = countsWithAlteredPercentage[0].name;
         }
 
@@ -246,18 +223,13 @@ export function getExpressionRowData(
     return expressionEnrichments.map(expressionEnrichment => {
         let enrichedGroup = '';
         let logRatio: number | undefined = undefined;
-        let groupsSet = _.keyBy(
-            expressionEnrichment.groupsStatistics,
-            group => group.name
-        );
+        let groupsSet = _.keyBy(expressionEnrichment.groupsStatistics, group => group.name);
         if (groups.length === 2) {
             let group1Data = groupsSet[groups[0].name];
             let group2Data = groupsSet[groups[1].name];
             logRatio = group1Data.meanExpression - group2Data.meanExpression;
-            let group1Name =
-                groups[0].nameOfEnrichmentDirection || groups[0].name;
-            let group2Name =
-                groups[1].nameOfEnrichmentDirection || groups[1].name;
+            let group1Name = groups[0].nameOfEnrichmentDirection || groups[0].name;
+            let group2Name = groups[1].nameOfEnrichmentDirection || groups[1].name;
             enrichedGroup = logRatio > 0 ? group1Name : group2Name;
         } else {
             enrichedGroup = expressionEnrichment.groupsStatistics.sort(
@@ -289,22 +261,16 @@ export function getFilteredData(
     return data.filter(enrichmentDatum => {
         let result = false;
         expressedGroups.forEach(enrichedGroup => {
-            const enrichedGroupData = enrichmentDatum.groupsSet[
-                enrichedGroup
-            ] as any;
+            const enrichedGroupData = enrichmentDatum.groupsSet[enrichedGroup] as any;
             let enrichedGroupAlteredPercentage =
-                enrichedGroupData.meanExpression ||
-                enrichedGroupData.alteredPercentage;
+                enrichedGroupData.meanExpression || enrichedGroupData.alteredPercentage;
             let res = _.reduce(
                 enrichmentDatum.groupsSet,
                 (acc, next, group) => {
                     if (enrichedGroup !== group) {
                         let alteredPercentage =
-                            (next as any).meanExpression ||
-                            (next as any).alteredPercentage;
-                        acc =
-                            acc &&
-                            enrichedGroupAlteredPercentage >= alteredPercentage;
+                            (next as any).meanExpression || (next as any).alteredPercentage;
+                        acc = acc && enrichedGroupAlteredPercentage >= alteredPercentage;
                     }
                     return acc;
                 },
@@ -319,18 +285,13 @@ export function getFilteredData(
             result = result && enrichmentDatum.qValue < 0.05;
         }
         if (selectedGenes) {
-            result =
-                result &&
-                selectedGenes.includes(enrichmentDatum.hugoGeneSymbol);
+            result = result && selectedGenes.includes(enrichmentDatum.hugoGeneSymbol);
         }
         return result;
     });
 }
 
-export function getBarChartTooltipContent(
-    tooltipModel: any,
-    selectedGene: string
-): string {
+export function getBarChartTooltipContent(tooltipModel: any, selectedGene: string): string {
     let tooltipContent = '';
 
     if (tooltipModel != null) {
@@ -385,8 +346,7 @@ export function pickMutationEnrichmentProfiles(profiles: MolecularProfile[]) {
     return _.filter(
         profiles,
         (profile: MolecularProfile) =>
-            profile.molecularAlterationType ===
-            AlterationTypeConstants.MUTATION_EXTENDED
+            profile.molecularAlterationType === AlterationTypeConstants.MUTATION_EXTENDED
     );
 }
 
@@ -394,27 +354,21 @@ export function pickCopyNumberEnrichmentProfiles(profiles: MolecularProfile[]) {
     return _.filter(
         profiles,
         (profile: MolecularProfile) =>
-            profile.molecularAlterationType ===
-                AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
+            profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
             profile.datatype === 'DISCRETE'
     );
 }
 
 export function pickMRNAEnrichmentProfiles(profiles: MolecularProfile[]) {
     const mrnaProfiles = profiles.filter(p => {
-        return (
-            p.molecularAlterationType ===
-            AlterationTypeConstants.MRNA_EXPRESSION
-        );
+        return p.molecularAlterationType === AlterationTypeConstants.MRNA_EXPRESSION;
     });
     return filterAndSortProfiles(mrnaProfiles);
 }
 
 export function pickProteinEnrichmentProfiles(profiles: MolecularProfile[]) {
     const protProfiles = profiles.filter(p => {
-        return (
-            p.molecularAlterationType === AlterationTypeConstants.PROTEIN_LEVEL
-        );
+        return p.molecularAlterationType === AlterationTypeConstants.PROTEIN_LEVEL;
     });
     return filterAndSortProfiles(protProfiles);
 }
@@ -458,11 +412,8 @@ export function getAlterationEnrichmentColumns(
                 </div>
             );
         },
-        filter: (
-            d: AlterationEnrichmentRow,
-            filterString: string,
-            filterStringUpper: string
-        ) => (d.enrichedGroup || '').toUpperCase().includes(filterStringUpper),
+        filter: (d: AlterationEnrichmentRow, filterString: string, filterStringUpper: string) =>
+            (d.enrichedGroup || '').toUpperCase().includes(filterStringUpper),
         sortBy: (d: AlterationEnrichmentRow) => d.enrichedGroup || '-',
         download: (d: AlterationEnrichmentRow) => d.enrichedGroup || '-',
         tooltip: <span>The group with the highest alteration frequency</span>,
@@ -483,13 +434,11 @@ export function getAlterationEnrichmentColumns(
             ),
             tooltip: (
                 <span>
-                    Log2 based ratio of (pct in {group1.name}/ pct in{' '}
-                    {group2.name})
+                    Log2 based ratio of (pct in {group1.name}/ pct in {group2.name})
                 </span>
             ),
             sortBy: (d: AlterationEnrichmentRow) => Number(d.logRatio),
-            download: (d: AlterationEnrichmentRow) =>
-                formatLogOddsRatio(d.logRatio!),
+            download: (d: AlterationEnrichmentRow) => formatLogOddsRatio(d.logRatio!),
         });
 
         enrichedGroupColum.tooltip = (
@@ -514,18 +463,14 @@ export function getAlterationEnrichmentColumns(
         columns.push({
             name: group.name,
             headerRender: PERCENTAGE_IN_headerRender,
-            render: (d: AlterationEnrichmentRow) => (
-                <span>{formatPercentage(group.name, d)}</span>
-            ),
+            render: (d: AlterationEnrichmentRow) => <span>{formatPercentage(group.name, d)}</span>,
             tooltip: (
                 <span>
                     <strong>{group.name}:</strong> {group.description}
                 </span>
             ),
-            sortBy: (d: AlterationEnrichmentRow) =>
-                getAlteredCount(group.name, d),
-            download: (d: AlterationEnrichmentRow) =>
-                formatPercentage(group.name, d),
+            sortBy: (d: AlterationEnrichmentRow) => getAlteredCount(group.name, d),
+            download: (d: AlterationEnrichmentRow) => formatPercentage(group.name, d),
         });
     });
     return columns;
@@ -572,11 +517,8 @@ export function getExpressionEnrichmentColumns(
                 </div>
             );
         },
-        filter: (
-            d: ExpressionEnrichmentRow,
-            filterString: string,
-            filterStringUpper: string
-        ) => d.enrichedGroup.toUpperCase().includes(filterStringUpper),
+        filter: (d: ExpressionEnrichmentRow, filterString: string, filterStringUpper: string) =>
+            d.enrichedGroup.toUpperCase().includes(filterStringUpper),
         sortBy: (d: ExpressionEnrichmentRow) => d.enrichedGroup,
         download: (d: ExpressionEnrichmentRow) => d.enrichedGroup,
         tooltip: <span>The group with the highest expression frequency</span>,
@@ -587,18 +529,15 @@ export function getExpressionEnrichmentColumns(
         let group2 = groups[1];
         columns.push({
             name: ExpressionEnrichmentTableColumnType.LOG_RATIO,
-            render: (d: ExpressionEnrichmentRow) => (
-                <span>{formatLogOddsRatio(d.logRatio!)}</span>
-            ),
+            render: (d: ExpressionEnrichmentRow) => <span>{formatLogOddsRatio(d.logRatio!)}</span>,
             tooltip: (
                 <span>
-                    Log2 of ratio of (unlogged) mean in {group1.name} to
-                    (unlogged) mean in {group2.name}
+                    Log2 of ratio of (unlogged) mean in {group1.name} to (unlogged) mean in{' '}
+                    {group2.name}
                 </span>
             ),
             sortBy: (d: ExpressionEnrichmentRow) => Number(d.logRatio),
-            download: (d: ExpressionEnrichmentRow) =>
-                formatLogOddsRatio(d.logRatio!),
+            download: (d: ExpressionEnrichmentRow) => formatLogOddsRatio(d.logRatio!),
         });
 
         enrichedGroupColum.tooltip = (
@@ -626,41 +565,28 @@ export function getExpressionEnrichmentColumns(
             render: (d: ExpressionEnrichmentRow) => (
                 <span>{d.groupsSet[group.name].meanExpression.toFixed(2)}</span>
             ),
-            tooltip: (
-                <span>
-                    Mean log2 expression of the listed gene in{' '}
-                    {group.description}
-                </span>
-            ),
-            sortBy: (d: ExpressionEnrichmentRow) =>
-                d.groupsSet[group.name].meanExpression,
+            tooltip: <span>Mean log2 expression of the listed gene in {group.description}</span>,
+            sortBy: (d: ExpressionEnrichmentRow) => d.groupsSet[group.name].meanExpression,
             download: (d: ExpressionEnrichmentRow) =>
                 d.groupsSet[group.name].meanExpression.toFixed(2),
-            uniqueName:
-                group.name + ExpressionEnrichmentTableColumnType.MEAN_SUFFIX,
+            uniqueName: group.name + ExpressionEnrichmentTableColumnType.MEAN_SUFFIX,
         });
 
         columns.push({
             name: group.name,
             headerRender: (name: string) => STAT_IN_headerRender('σ', name),
             render: (d: ExpressionEnrichmentRow) => (
-                <span>
-                    {d.groupsSet[group.name].standardDeviation.toFixed(2)}
-                </span>
+                <span>{d.groupsSet[group.name].standardDeviation.toFixed(2)}</span>
             ),
             tooltip: (
                 <span>
-                    Standard deviation of log2 expression of the listed gene in{' '}
-                    {group.description}
+                    Standard deviation of log2 expression of the listed gene in {group.description}
                 </span>
             ),
-            sortBy: (d: ExpressionEnrichmentRow) =>
-                d.groupsSet[group.name].standardDeviation,
+            sortBy: (d: ExpressionEnrichmentRow) => d.groupsSet[group.name].standardDeviation,
             download: (d: ExpressionEnrichmentRow) =>
                 d.groupsSet[group.name].standardDeviation.toFixed(2),
-            uniqueName:
-                group.name +
-                ExpressionEnrichmentTableColumnType.STANDARD_DEVIATION_SUFFIX,
+            uniqueName: group.name + ExpressionEnrichmentTableColumnType.STANDARD_DEVIATION_SUFFIX,
         });
     });
     return columns;
@@ -707,23 +633,20 @@ export function getEnrichmentBarPlotData(
         geneTotalCounts[gene] = totalCount;
     });
 
-    return _.map(
-        groupToGeneCounts,
-        (geneCounts: { [gene: string]: number }, group) => {
-            let counts = _.map(geneCounts, (count, gene) => {
-                const percentage = (count / geneTotalCounts[gene]) * 100;
-                return {
-                    majorCategory: gene,
-                    count: count,
-                    percentage: parseFloat(percentage.toFixed(2)),
-                };
-            });
+    return _.map(groupToGeneCounts, (geneCounts: { [gene: string]: number }, group) => {
+        let counts = _.map(geneCounts, (count, gene) => {
+            const percentage = (count / geneTotalCounts[gene]) * 100;
             return {
-                minorCategory: group,
-                counts,
+                majorCategory: gene,
+                count: count,
+                percentage: parseFloat(percentage.toFixed(2)),
             };
-        }
-    );
+        });
+        return {
+            minorCategory: group,
+            counts,
+        };
+    });
 }
 
 export function getGeneListOptions(
@@ -747,45 +670,32 @@ export function getGeneListOptions(
         dataWithOptionName = _.map(dataWithOptionName, datum => {
             return {
                 ...datum,
-                optionName:
-                    datum.hugoGeneSymbol +
-                    `: ${CNA_TO_ALTERATION[datum.value!]}`,
+                optionName: datum.hugoGeneSymbol + `: ${CNA_TO_ALTERATION[datum.value!]}`,
             };
         });
     }
 
-    let dataSortedByAlteredPercentage = _.clone(dataWithOptionName).sort(
-        function(kv1, kv2) {
-            const t1 = _.reduce(
-                kv1.groupsSet,
-                (acc, next) => {
-                    acc =
-                        next.alteredPercentage > acc
-                            ? next.alteredPercentage
-                            : acc;
-                    return acc;
-                },
-                0
-            );
-            const t2 = _.reduce(
-                kv2.groupsSet,
-                (acc, next) => {
-                    acc =
-                        next.alteredPercentage > acc
-                            ? next.alteredPercentage
-                            : acc;
-                    return acc;
-                },
-                0
-            );
-            return t2 - t1;
-        }
-    );
+    let dataSortedByAlteredPercentage = _.clone(dataWithOptionName).sort(function(kv1, kv2) {
+        const t1 = _.reduce(
+            kv1.groupsSet,
+            (acc, next) => {
+                acc = next.alteredPercentage > acc ? next.alteredPercentage : acc;
+                return acc;
+            },
+            0
+        );
+        const t2 = _.reduce(
+            kv2.groupsSet,
+            (acc, next) => {
+                acc = next.alteredPercentage > acc ? next.alteredPercentage : acc;
+                return acc;
+            },
+            0
+        );
+        return t2 - t1;
+    });
 
-    let dataSortedByAvgFrequency = _.clone(dataWithOptionName).sort(function(
-        kv1,
-        kv2
-    ) {
+    let dataSortedByAvgFrequency = _.clone(dataWithOptionName).sort(function(kv1, kv2) {
         const t1 =
             _.sumBy(_.values(kv1.groupsSet), count => count.alteredPercentage) /
             _.keys(kv1.groupsSet).length;
@@ -795,10 +705,7 @@ export function getGeneListOptions(
         return t2 - t1;
     });
 
-    let dataSortedBypValue = _.clone(dataWithOptionName).sort(function(
-        kv1,
-        kv2
-    ) {
+    let dataSortedBypValue = _.clone(dataWithOptionName).sort(function(kv1, kv2) {
         if (kv1.pValue !== undefined && kv2.pValue !== undefined) {
             return 0;
         }
@@ -832,10 +739,7 @@ export function getGeneListOptions(
         },
         {
             label: GeneOptionLabel.SIGNIFICANT_P_VALUE,
-            genes: _.map(
-                dataSortedBypValue,
-                datum => datum.optionName || datum.hugoGeneSymbol
-            ),
+            genes: _.map(dataSortedBypValue, datum => datum.optionName || datum.hugoGeneSymbol),
         },
         {
             label: GeneOptionLabel.SYNC_WITH_TABLE,

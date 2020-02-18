@@ -5,9 +5,7 @@ import { ComparisonGroup, IOverlapComputations } from './GroupComparisonUtils';
 import { joinGroupNames } from './OverlapUtils';
 import { computed } from 'mobx';
 import { MakeMobxView } from '../../shared/components/MobxView';
-import ComparisonStore, {
-    OverlapStrategy,
-} from '../../shared/lib/comparison/ComparisonStore';
+import ComparisonStore, { OverlapStrategy } from '../../shared/lib/comparison/ComparisonStore';
 
 export interface IOverlapExclusionIndicatorProps {
     store: ComparisonStore;
@@ -17,11 +15,7 @@ export interface IOverlapExclusionIndicatorProps {
 }
 
 function makeSurvivalTabMessage(count: number) {
-    return (
-        <span>
-            Overlapping patients ({count}) are plotted as distinct groups below.
-        </span>
-    );
+    return <span>Overlapping patients ({count}) are plotted as distinct groups below.</span>;
 }
 
 @observer
@@ -126,26 +120,20 @@ export default class OverlapExclusionIndicator extends React.Component<
             const includedGroups = selectionInfo.groups.filter(
                 g => !(g.uid in selectionInfo.excludedFromAnalysis)
             );
-            const groupsAreExcluded =
-                includedGroups.length < selectionInfo.groups.length;
+            const groupsAreExcluded = includedGroups.length < selectionInfo.groups.length;
             let groupsSummary;
             if (groupsAreExcluded) {
-                groupsSummary = (
-                    <span>between {joinGroupNames(includedGroups, 'and')}</span>
-                );
+                groupsSummary = <span>between {joinGroupNames(includedGroups, 'and')}</span>;
             } else {
                 groupsSummary = <span>in the selected groups</span>;
             }
 
             message = (
                 <span>
-                    {`${
-                        caseType === 'sample' ? 'Samples' : 'Patients'
-                    } (${count}) that overlap `}
+                    {`${caseType === 'sample' ? 'Samples' : 'Patients'} (${count}) that overlap `}
                     {groupsSummary}
                     {` are ${
-                        this.props.store.overlapStrategy ===
-                        OverlapStrategy.INCLUDE
+                        this.props.store.overlapStrategy === OverlapStrategy.INCLUDE
                             ? 'included in'
                             : 'excluded from'
                     }`}
@@ -176,12 +164,9 @@ export default class OverlapExclusionIndicator extends React.Component<
         } else {
             const selectionInfo = this.props.store.overlapComputations.result!;
             if (
-                (!selectionInfo.totalSampleOverlap &&
-                    !selectionInfo.totalPatientOverlap) ||
-                (this.props.only === 'sample' &&
-                    !selectionInfo.totalSampleOverlap) ||
-                (this.props.only === 'patient' &&
-                    !selectionInfo.totalPatientOverlap)
+                (!selectionInfo.totalSampleOverlap && !selectionInfo.totalPatientOverlap) ||
+                (this.props.only === 'sample' && !selectionInfo.totalSampleOverlap) ||
+                (this.props.only === 'patient' && !selectionInfo.totalPatientOverlap)
             ) {
                 return null;
             }
@@ -190,15 +175,9 @@ export default class OverlapExclusionIndicator extends React.Component<
                 <div className={`alert ${this.classNames.alert}`}>
                     {this.excludedGroupsSummary.component}
                     {this.props.only !== 'patient' &&
-                        this.makeOverlappingCasesMessage(
-                            'sample',
-                            selectionInfo
-                        )}
+                        this.makeOverlappingCasesMessage('sample', selectionInfo)}
                     {this.props.only !== 'sample' &&
-                        this.makeOverlappingCasesMessage(
-                            'patient',
-                            selectionInfo
-                        )}
+                        this.makeOverlappingCasesMessage('patient', selectionInfo)}
                 </div>
             );
         }

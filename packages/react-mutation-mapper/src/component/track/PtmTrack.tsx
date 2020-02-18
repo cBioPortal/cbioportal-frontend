@@ -4,10 +4,7 @@ import { observer } from 'mobx-react';
 import { action, computed, observable } from 'mobx';
 import { Collapse } from 'react-collapse';
 import autobind from 'autobind-decorator';
-import {
-    DefaultTooltip,
-    EllipsisTextTooltip,
-} from 'cbioportal-frontend-commons';
+import { DefaultTooltip, EllipsisTextTooltip } from 'cbioportal-frontend-commons';
 
 import { MobxCache } from '../../model/MobxCache';
 import MutationMapperStore from '../../model/MutationMapperStore';
@@ -26,10 +23,7 @@ type PtmTrackProps = TrackProps & {
     subTrackMargin?: number;
 };
 
-export function ptmTooltip(
-    ptms: PostTranslationalModification[],
-    pubMedCache?: MobxCache
-) {
+export function ptmTooltip(ptms: PostTranslationalModification[], pubMedCache?: MobxCache) {
     return <PtmAnnotationTable data={ptms} pubMedCache={pubMedCache} />;
 }
 
@@ -38,10 +32,7 @@ export function ptmInfoTooltip(transcriptId?: string) {
         <div style={{ maxWidth: 400 }}>
             <p>
                 Displays all Post Translational Modifications (PTMs) available
-                {transcriptId && (
-                    <span> for the Ensembl transcript {transcriptId}</span>
-                )}
-                .
+                {transcriptId && <span> for the Ensembl transcript {transcriptId}</span>}.
             </p>
             <p className={styles.ptmLegend}>
                 PTM types and corresponding color codes are as follows:
@@ -59,8 +50,7 @@ export function ptmInfoTooltip(transcriptId?: string) {
                         <strong>Methylation</strong>
                     </li>
                     <li className={styles.multiType}>
-                        <strong>Multiple Type</strong>: Sites with more than one
-                        PTM type
+                        <strong>Multiple Type</strong>: Sites with more than one PTM type
                     </li>
                     <li className={styles.default}>
                         <strong>Other</strong>: All other PTM types
@@ -89,8 +79,7 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
     private expanded = true;
 
     @computed get ptmSpecs(): TrackItemSpec[] {
-        const ptmDataByProteinPosStart = this.props.store
-            .ptmDataByProteinPosStart.result;
+        const ptmDataByProteinPosStart = this.props.store.ptmDataByProteinPosStart.result;
 
         if (ptmDataByProteinPosStart && !_.isEmpty(ptmDataByProteinPosStart)) {
             return _.keys(ptmDataByProteinPosStart)
@@ -109,13 +98,10 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
     }
 
     @computed get ptmSubSpecs(): { title: string; specs: TrackItemSpec[] }[] {
-        const ptmDataByTypeAndProteinPosStart = this.props.store
-            .ptmDataByTypeAndProteinPosStart.result;
+        const ptmDataByTypeAndProteinPosStart = this.props.store.ptmDataByTypeAndProteinPosStart
+            .result;
 
-        if (
-            ptmDataByTypeAndProteinPosStart &&
-            !_.isEmpty(ptmDataByTypeAndProteinPosStart)
-        ) {
+        if (ptmDataByTypeAndProteinPosStart && !_.isEmpty(ptmDataByTypeAndProteinPosStart)) {
             return _.keys(ptmDataByTypeAndProteinPosStart)
                 .sort(compareByPtmTypePriority)
                 .map(type => ({
@@ -125,14 +111,10 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
                         .map(position => ({
                             codon: Number(position),
                             color: ptmColor(
-                                ptmDataByTypeAndProteinPosStart[type][
-                                    Number(position)
-                                ]
+                                ptmDataByTypeAndProteinPosStart[type][Number(position)]
                             ),
                             tooltip: ptmTooltip(
-                                ptmDataByTypeAndProteinPosStart[type][
-                                    Number(position)
-                                ],
+                                ptmDataByTypeAndProteinPosStart[type][Number(position)],
                                 this.props.pubMedCache
                             ),
                         })),
@@ -148,15 +130,10 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
                 <span onClick={this.handleToggleExpand}>{this.expander}</span>
                 <DefaultTooltip
                     placement="left"
-                    overlay={() =>
-                        ptmInfoTooltip(this.props.ensemblTranscriptId)
-                    }
+                    overlay={() => ptmInfoTooltip(this.props.ensemblTranscriptId)}
                     destroyTooltipOnHide={true}
                 >
-                    <span
-                        style={{ marginLeft: 4 }}
-                        onClick={this.handleToggleExpand}
-                    >
+                    <span style={{ marginLeft: 4 }} onClick={this.handleToggleExpand}>
                         PTM Sites <i className="fa fa-info-circle" />
                     </span>
                 </DefaultTooltip>
@@ -172,24 +149,18 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
             : null;
 
         if (className) {
-            return (
-                <i className={className} style={{ width: 10, marginLeft: 2 }} />
-            );
+            return <i className={className} style={{ width: 10, marginLeft: 2 }} />;
         }
 
         return null;
     }
 
     @computed get subTrackMargin() {
-        return (
-            this.props.subTrackMargin || PtmTrack.defaultProps.subTrackMargin
-        );
+        return this.props.subTrackMargin || PtmTrack.defaultProps.subTrackMargin;
     }
 
     @computed get subTrackTitleWidth() {
-        return this.props.xOffset
-            ? this.props.xOffset - this.subTrackMargin
-            : 0;
+        return this.props.xOffset ? this.props.xOffset - this.subTrackMargin : 0;
     }
 
     @computed get subTracks() {

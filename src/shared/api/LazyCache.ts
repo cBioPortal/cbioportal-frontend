@@ -14,13 +14,11 @@ export default class LazyCache {
     }
 
     public populate(args: any) {
-        this.populateCache(args, ...this.dependencies).then(
-            (didChange: boolean) => {
-                if (didChange) {
-                    this.redefineCacheToTriggerMobX();
-                }
+        this.populateCache(args, ...this.dependencies).then((didChange: boolean) => {
+            if (didChange) {
+                this.redefineCacheToTriggerMobX();
             }
-        );
+        });
     }
 
     @action private redefineCacheToTriggerMobX(): void {

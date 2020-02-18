@@ -79,9 +79,7 @@ export class DefaultMutationMapperDataStore implements DataStore {
     public get sortedFilteredSelectedData() {
         return this.selectionFilters.length > 0
             ? // TODO simplify array flatten if possible
-              this.sortedFilteredData.filter(m =>
-                  this.dataSelectFilter(_.flatten([m])[0])
-              )
+              this.sortedFilteredData.filter(m => this.dataSelectFilter(_.flatten([m])[0]))
             : [];
     }
 
@@ -145,27 +143,15 @@ export class DefaultMutationMapperDataStore implements DataStore {
     }
 
     public dataMainFilter(mutation: Mutation): boolean {
-        return applyDataFiltersOnDatum(
-            mutation,
-            this.dataFilters,
-            this.applyFilter
-        );
+        return applyDataFiltersOnDatum(mutation, this.dataFilters, this.applyFilter);
     }
 
     public dataSelectFilter(mutation: Mutation): boolean {
-        return applyDataFiltersOnDatum(
-            mutation,
-            this.selectionFilters,
-            this.applyFilter
-        );
+        return applyDataFiltersOnDatum(mutation, this.selectionFilters, this.applyFilter);
     }
 
     public dataHighlightFilter(mutation: Mutation): boolean {
-        return applyDataFiltersOnDatum(
-            mutation,
-            this.highlightFilters,
-            this.applyFilter
-        );
+        return applyDataFiltersOnDatum(mutation, this.highlightFilters, this.applyFilter);
     }
 
     @autobind

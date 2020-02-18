@@ -21,17 +21,13 @@ const storeFile = (url, outputFile) => response => {
     });
 
     response.on('end', () => {
-        fs.writeFile(
-            outputFile,
-            JSON.stringify(JSON.parse(str), null, 4),
-            e => {
-                if (e) {
-                    return 1;
-                }
-                console.log(`✓ Downloaded ${url} to ${outputFile}`.green);
-                return 0;
+        fs.writeFile(outputFile, JSON.stringify(JSON.parse(str), null, 4), e => {
+            if (e) {
+                return 1;
             }
-        );
+            console.log(`✓ Downloaded ${url} to ${outputFile}`.green);
+            return 0;
+        });
     });
 };
 
@@ -90,15 +86,9 @@ const main = testDiff => {
 
         if (URLsProcessed === mockDataURLs.length) {
             if (failed.length > 0) {
-                console.log(
-                    '✗ FAILED: Following files in API differ from stored mockData:'
-                        .red
-                );
+                console.log('✗ FAILED: Following files in API differ from stored mockData:'.red);
                 failed.forEach(file => {
-                    console.log(
-                        `✗ File from API is differs from stored mock ${file}`
-                            .red
-                    );
+                    console.log(`✗ File from API is differs from stored mock ${file}`.red);
                 });
                 process.exit(1);
             }

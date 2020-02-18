@@ -55,9 +55,7 @@ const RVSDTtoStrType = {
     ['asc' as SortDirection]: RVSortDirection.ASC,
 };
 
-export class FixedHeaderTableDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<
-    any
-> {
+export class FixedHeaderTableDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<any> {
     constructor(getData: () => any[], fixedTopRowsData: any[]) {
         super(getData);
         this.fixedTopRowsData = fixedTopRowsData;
@@ -68,8 +66,7 @@ export class FixedHeaderTableDataStore extends SimpleGetterLazyMobXTableApplicat
     @computed get sortedData() {
         // if not defined, use default values for sortMetric and sortAscending
         const sortMetric = this.sortMetric || (() => 0);
-        const sortAscending =
-            this.sortAscending !== undefined ? this.sortAscending : true;
+        const sortAscending = this.sortAscending !== undefined ? this.sortAscending : true;
 
         return [
             ...this.fixedTopRowsData,
@@ -79,10 +76,7 @@ export class FixedHeaderTableDataStore extends SimpleGetterLazyMobXTableApplicat
 }
 
 @observer
-export default class FixedHeaderTable<T> extends React.Component<
-    IFixedHeaderTableProps<T>,
-    {}
-> {
+export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTableProps<T>, {}> {
     private _store: LazyMobXTableStore<T>;
     inputElement: HTMLSpanElement;
 
@@ -106,10 +100,7 @@ export default class FixedHeaderTable<T> extends React.Component<
     constructor(props: IFixedHeaderTableProps<T>) {
         super(props);
         this._sortBy = props.sortBy!;
-        const sortByColumn = _.find(
-            this.props.columns,
-            column => column.name === this._sortBy
-        );
+        const sortByColumn = _.find(this.props.columns, column => column.name === this._sortBy);
         this._sortDirection =
             props.sortDirection === undefined
                 ? _.isUndefined(sortByColumn)
@@ -150,10 +141,7 @@ export default class FixedHeaderTable<T> extends React.Component<
 
     @autobind
     rowClassName({ index }: any) {
-        if (
-            index > -1 &&
-            this.isSelectedRow(this._store.dataStore.sortedFilteredData[index])
-        ) {
+        if (index > -1 && this.isSelectedRow(this._store.dataStore.sortedFilteredData[index])) {
             const classNames: string[] = [styles.row];
             if (this.props.highlightedRowClassName) {
                 const className = this.props.highlightedRowClassName(
@@ -167,10 +155,7 @@ export default class FixedHeaderTable<T> extends React.Component<
         } else if (index < 0) {
             return styles.headerRow;
         } else {
-            return classnames(
-                styles.row,
-                index % 2 === 0 ? styles.evenRow : styles.oddRow
-            );
+            return classnames(styles.row, index % 2 === 0 ? styles.evenRow : styles.oddRow);
         }
     }
 
@@ -253,9 +238,7 @@ export default class FixedHeaderTable<T> extends React.Component<
                             className={classnames(
                                 styles.headerSortingIcon,
                                 'fa',
-                                this._sortDirection === 'desc'
-                                    ? 'fa-sort-desc'
-                                    : 'fa-sort-asc'
+                                this._sortDirection === 'desc' ? 'fa-sort-desc' : 'fa-sort-asc'
                             )}
                         ></i>
                     );
@@ -264,10 +247,7 @@ export default class FixedHeaderTable<T> extends React.Component<
                 const content = <div style={{ display: 'flex' }}>{label}</div>;
                 if (column.tooltip) {
                     return (
-                        <DefaultTooltip
-                            placement="top"
-                            overlay={column.tooltip}
-                        >
+                        <DefaultTooltip placement="top" overlay={column.tooltip}>
                             {content}
                         </DefaultTooltip>
                     );
@@ -297,10 +277,7 @@ export default class FixedHeaderTable<T> extends React.Component<
                         placeholder={'Search...'}
                         type="text"
                         onInput={this.onFilterTextChange()}
-                        className={classnames(
-                            'form-control',
-                            styles.tableSearchInput
-                        )}
+                        className={classnames('form-control', styles.tableSearchInput)}
                     />
                 )}
                 <If condition={this.props.showAddRemoveAllButtons}>
@@ -333,10 +310,7 @@ export default class FixedHeaderTable<T> extends React.Component<
 
                 <If condition={this.props.showSelectSamples}>
                     <button
-                        className={classnames(
-                            'btn btn-primary btn-xs',
-                            styles.controlsBtn
-                        )}
+                        className={classnames('btn btn-primary btn-xs', styles.controlsBtn)}
                         data-test="fixed-header-table-select-sample"
                         onClick={this.afterSelectingRows}
                     >
@@ -350,10 +324,7 @@ export default class FixedHeaderTable<T> extends React.Component<
                         onInput={this.onFilterTextChange()}
                         ref={this.setInputRef}
                         data-test="fixed-header-table-search-input"
-                        className={classnames(
-                            'form-control',
-                            styles.tableSearchInput
-                        )}
+                        className={classnames('form-control', styles.tableSearchInput)}
                     />
                 )}
             </div>
@@ -363,9 +334,7 @@ export default class FixedHeaderTable<T> extends React.Component<
     public render() {
         return (
             <div className={styles.studyViewTablesTable}>
-                {this.props.showControls &&
-                    this.props.showControlsAtTop &&
-                    this.getControls()}
+                {this.props.showControls && this.props.showControlsAtTop && this.getControls()}
                 <RVTable
                     width={this.props.width!}
                     height={this.props.height!}
@@ -396,9 +365,7 @@ export default class FixedHeaderTable<T> extends React.Component<
                         );
                     })}
                 </RVTable>
-                {this.props.showControls &&
-                    !this.props.showControlsAtTop &&
-                    this.getControls()}
+                {this.props.showControls && !this.props.showControlsAtTop && this.getControls()}
             </div>
         );
     }

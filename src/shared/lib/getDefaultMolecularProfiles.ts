@@ -31,14 +31,11 @@ export interface CNAProfileGroups {
     other: MolecularProfile[];
 }
 
-export function getDefaultCNAProfile(
-    profiles: MolecularProfile[]
-): MolecularProfile | undefined {
+export function getDefaultCNAProfile(profiles: MolecularProfile[]): MolecularProfile | undefined {
     // we only want CNA profiles
     const cnaProfiles = profiles.filter(
         profile =>
-            profile.molecularAlterationType ===
-            AlterationTypeConstants.COPY_NUMBER_ALTERATION
+            profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION
     );
     // now put profiles into groups (gistic, RAE, other)
     const cnaGroups = cnaProfiles.reduce(
@@ -66,10 +63,7 @@ export function getDefaultCNAProfile(
         return cnaGroups.rae[0];
     } else if (cnaGroups.other.length) {
         // show the first profile in with showProfileInAnalysisTab flag set to true
-        return _.find(
-            cnaGroups.other,
-            profile => profile.showProfileInAnalysisTab
-        );
+        return _.find(cnaGroups.other, profile => profile.showProfileInAnalysisTab);
     } else {
         return undefined;
     }
@@ -78,9 +72,7 @@ export function getDefaultCNAProfile(
 export function getDefaultMutationProfile(profiles: MolecularProfile[]) {
     return _.find(
         profiles,
-        profile =>
-            profile.molecularAlterationType ===
-            AlterationTypeConstants.MUTATION_EXTENDED
+        profile => profile.molecularAlterationType === AlterationTypeConstants.MUTATION_EXTENDED
     );
 }
 

@@ -17,9 +17,7 @@ export default class OrganismColumnFormatter {
             ) {
                 // chain is associated with this mol,
                 // get the organism info from the source
-                organism =
-                    (pdbHeader.source as any)[mol.mol_id].organism_scientific ||
-                    organism;
+                organism = (pdbHeader.source as any)[mol.mol_id].organism_scientific || organism;
 
                 return mol;
             }
@@ -37,10 +35,7 @@ export default class OrganismColumnFormatter {
         }
         const cacheData = cache.get(chain.pdbId);
         if (cacheData && cacheData.data) {
-            return OrganismColumnFormatter.getOrganism(
-                cacheData.data,
-                chain.chain
-            );
+            return OrganismColumnFormatter.getOrganism(cacheData.data, chain.chain);
         } else {
             return '';
         }

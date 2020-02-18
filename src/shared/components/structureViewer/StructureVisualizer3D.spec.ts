@@ -133,23 +133,13 @@ describe('StructureVisualizer3D', () => {
         );
 
         assert.isTrue(
-            $3Dmol.download.calledWith(
-                'pdb:3PXE',
-                viewer,
-                sinon.match({ pdbUri: props.pdbUri })
-            ),
+            $3Dmol.download.calledWith('pdb:3PXE', viewer, sinon.match({ pdbUri: props.pdbUri })),
             'Structure download should be requested for pdb:3PXE from https://files.rcsb.org/view/'
         );
 
-        assert.isTrue(
-            viewer.clear.calledOnce,
-            'Clear should only be called once per init'
-        );
+        assert.isTrue(viewer.clear.calledOnce, 'Clear should only be called once per init');
 
-        assert.isTrue(
-            viewer.render.calledOnce,
-            'Render should only be called once per init'
-        );
+        assert.isTrue(viewer.render.calledOnce, 'Render should only be called once per init');
     });
 
     it('sets chain color and the opacity properly', () => {
@@ -171,11 +161,7 @@ describe('StructureVisualizer3D', () => {
             });
 
         initVis();
-        assert.equal(
-            chainColor,
-            '0x888888',
-            'Chain color should be set to 0x888888'
-        );
+        assert.equal(chainColor, '0x888888', 'Chain color should be set to 0x888888');
         assert.equal(chainOpacity, 1, 'Chain opacity should be set to 1');
     });
 
@@ -198,11 +184,7 @@ describe('StructureVisualizer3D', () => {
             });
 
         initVis();
-        assert.equal(
-            baseColor,
-            '0xDDDDDD',
-            'Base color should be set to 0xDDDDDD'
-        );
+        assert.equal(baseColor, '0xDDDDDD', 'Base color should be set to 0xDDDDDD');
         assert.equal(baseOpacity, 5 / 10, 'Base opacity should be set to 0.5');
     });
 
@@ -211,15 +193,11 @@ describe('StructureVisualizer3D', () => {
 
         props.proteinScheme = ProteinScheme.TRACE;
         const visualizer = initVis();
-        assert.isTrue(
-            viewer.setStyle.calledWithMatch({}, { cartoon: { style: 'trace' } })
-        );
+        assert.isTrue(viewer.setStyle.calledWithMatch({}, { cartoon: { style: 'trace' } }));
 
         props.proteinScheme = ProteinScheme.SPACE_FILLING;
         updateVis(visualizer);
-        assert.isTrue(
-            viewer.setStyle.calledWithMatch({}, { sphere: { scale: 0.6 } })
-        );
+        assert.isTrue(viewer.setStyle.calledWithMatch({}, { sphere: { scale: 0.6 } }));
 
         props.proteinScheme = ProteinScheme.CARTOON;
         updateVis(visualizer);
@@ -293,11 +271,7 @@ describe('StructureVisualizer3D', () => {
                     structureToColor[selector.ss] = style.cartoon.color;
                 }
 
-                if (
-                    _.isEqual(selector, { chain: 'B' }) &&
-                    style.sphere &&
-                    style.sphere.colors
-                ) {
+                if (_.isEqual(selector, { chain: 'B' }) && style.sphere && style.sphere.colors) {
                     defaultColors = style.sphere.colors;
                 }
 
@@ -353,15 +327,11 @@ describe('StructureVisualizer3D', () => {
     it.skip('colors residues with correct colors', () => {
         let residueToColor: { [residue: number]: string } = {};
 
-        sinon.stub(
-            viewer,
-            'setStyle',
-            (selector: AtomSelectionSpec, style: AtomStyleSpec) => {
-                if (selector.resi && style.cartoon && style.cartoon.color) {
-                    residueToColor[selector.resi] = style.cartoon.color;
-                }
+        sinon.stub(viewer, 'setStyle', (selector: AtomSelectionSpec, style: AtomStyleSpec) => {
+            if (selector.resi && style.cartoon && style.cartoon.color) {
+                residueToColor[selector.resi] = style.cartoon.color;
             }
-        );
+        });
 
         props.mutationColor = MutationColor.MUTATION_TYPE;
         const visualizer = initVis();
@@ -442,22 +412,18 @@ describe('StructureVisualizer3D', () => {
         let residueToStickColor: { [residue: number]: string };
         let residueToSphereColor: { [residue: number]: string };
 
-        sinon.stub(
-            viewer,
-            'setStyle',
-            (selector: AtomSelectionSpec, style: AtomStyleSpec) => {
-                if (
-                    selector.resi &&
-                    style.sphere &&
-                    style.sphere.color &&
-                    style.stick &&
-                    style.stick.color
-                ) {
-                    residueToStickColor[selector.resi] = style.stick.color;
-                    residueToSphereColor[selector.resi] = style.sphere.color;
-                }
+        sinon.stub(viewer, 'setStyle', (selector: AtomSelectionSpec, style: AtomStyleSpec) => {
+            if (
+                selector.resi &&
+                style.sphere &&
+                style.sphere.color &&
+                style.stick &&
+                style.stick.color
+            ) {
+                residueToStickColor[selector.resi] = style.stick.color;
+                residueToSphereColor[selector.resi] = style.sphere.color;
             }
-        );
+        });
 
         // only selected residues should have side chain style with selection color if sideChain is set to SELECTED
 

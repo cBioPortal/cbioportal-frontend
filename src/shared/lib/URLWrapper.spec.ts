@@ -1,9 +1,7 @@
 import { assert } from 'chai';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import { autorun, observable, reaction } from 'mobx';
-import ExtendedRouterStore, {
-    PortalSession,
-} from 'shared/lib/ExtendedRouterStore';
+import ExtendedRouterStore, { PortalSession } from 'shared/lib/ExtendedRouterStore';
 import sinon from 'sinon';
 import { createMemoryHistory } from 'react-router';
 import { syncHistoryWithStore } from 'mobx-react-router';
@@ -28,17 +26,9 @@ describe('URLWrapper', () => {
 
         const wrapper = new ResultsViewURLWrapper(routingStore);
 
-        assert.equal(
-            wrapper.query.clinicallist,
-            'monkeys',
-            'handles undefined properties'
-        );
+        assert.equal(wrapper.query.clinicallist, 'monkeys', 'handles undefined properties');
         routingStore.updateRoute({ clinicallist: 'donkeys' });
-        assert.equal(
-            wrapper.query.clinicallist,
-            'donkeys',
-            'handles undefined properties'
-        );
+        assert.equal(wrapper.query.clinicallist, 'donkeys', 'handles undefined properties');
     });
 
     it('resolves properties aliases correctly', () => {
@@ -73,11 +63,7 @@ describe('URLWrapper', () => {
 
         routingStore.updateRoute({ case_ids: 'bar2', non_property: 'foo' });
 
-        assert.equal(
-            stub.args.length,
-            1,
-            'stub has been called due to update to property'
-        );
+        assert.equal(stub.args.length, 1, 'stub has been called due to update to property');
 
         routingStore.updateRoute({ case_ids: 'bar2', non_property: 'foo' });
 
@@ -97,22 +83,11 @@ describe('URLWrapper', () => {
 
         routingStore.updateRoute({ case_ids: 'bar3', non_property: 'foo' });
 
-        assert.equal(
-            stub.args.length,
-            2,
-            'setting property to knew value DOES cause reaction'
-        );
+        assert.equal(stub.args.length, 2, 'setting property to knew value DOES cause reaction');
 
-        routingStore.updateRoute(
-            { case_ids: 'bar4', non_property: 'foo' },
-            '/patient'
-        );
+        routingStore.updateRoute({ case_ids: 'bar4', non_property: 'foo' }, '/patient');
 
-        assert.equal(
-            stub.args.length,
-            2,
-            "does not react when pathname doesn't match"
-        );
+        assert.equal(stub.args.length, 2, "does not react when pathname doesn't match");
 
         disposer();
     });
@@ -129,11 +104,7 @@ describe('URLWrapper', () => {
         );
 
         routingStore.updateRoute({ case_ids: 'blah', non_property: 'foo' });
-        assert.notEqual(
-            wrapper.hash,
-            beforeChange,
-            'hash changes if we mutate session prop'
-        );
+        assert.notEqual(wrapper.hash, beforeChange, 'hash changes if we mutate session prop');
     });
 
     it('sets and reads from internal session appropriately', done => {
@@ -174,16 +145,9 @@ describe('URLWrapper', () => {
             'non session params NOT present in internal session store'
         );
 
-        assert.isUndefined(
-            routingStore.location.query.case_ids,
-            'session params NOT in url'
-        );
+        assert.isUndefined(routingStore.location.query.case_ids, 'session params NOT in url');
 
-        assert.equal(
-            wrapper.query.case_ids,
-            '1231',
-            'we have access to session prop on query'
-        );
+        assert.equal(wrapper.query.case_ids, '1231', 'we have access to session prop on query');
 
         setTimeout(() => {
             assert.equal(wrapper.sessionId, 'someSessionId');
@@ -210,10 +174,7 @@ describe('URLWrapper', () => {
 
         assert.equal(routingStore.location.query.case_ids, '1231');
 
-        assert.isFalse(
-            stub.called,
-            'save session method is NOT called b/c thresshold is not met'
-        );
+        assert.isFalse(stub.called, 'save session method is NOT called b/c thresshold is not met');
 
         assert.isUndefined(wrapper.sessionId, 'no sessionID');
 
@@ -222,15 +183,9 @@ describe('URLWrapper', () => {
             case_ids: '12312341234',
         });
 
-        assert.isUndefined(
-            routingStore.location.query.case_ids,
-            'case_ids no longer in url'
-        );
+        assert.isUndefined(routingStore.location.query.case_ids, 'case_ids no longer in url');
 
-        assert.isTrue(
-            stub.calledOnce,
-            'save session method IS called when thresshold is met'
-        );
+        assert.isTrue(stub.calledOnce, 'save session method IS called when thresshold is met');
 
         // EVEN IF URL is under threshold, you cannot go back to non session behavior
         wrapper.updateURL({ clinicallist: 'one,two,three', case_ids: '2222' });
@@ -258,17 +213,9 @@ describe('URLWrapper', () => {
 
         assert.isFalse(wrapper.hasSessionId, 'does not have session id');
 
-        assert.equal(
-            routingStore.location.query.case_ids,
-            '1231',
-            'puts session prop in url'
-        );
+        assert.equal(routingStore.location.query.case_ids, '1231', 'puts session prop in url');
 
-        assert.equal(
-            wrapper.query.case_ids,
-            '1231',
-            'obtains session prop from url'
-        );
+        assert.equal(wrapper.query.case_ids, '1231', 'obtains session prop from url');
     });
 
     it('fetches remote session as necessary', done => {
@@ -371,26 +318,15 @@ describe('URLWrapper', () => {
                 'CDKN2A MDM2 MDM4 TP53',
                 'sets session props on query after session load'
             );
-            assert.equal(
-                routingStore.location.query.session_id,
-                '5dcae586e4b04a9c23e27e5f'
-            );
+            assert.equal(routingStore.location.query.session_id, '5dcae586e4b04a9c23e27e5f');
 
             wrapper.updateURL({ gene_list: 'CDKN2%20MDM2%20MDM4' });
 
             setTimeout(() => {
                 assert.isTrue(saveSessionStub.calledOnce);
                 assert.isTrue(getRemoteSessionStub.calledOnce);
-                assert.equal(
-                    wrapper.sessionId,
-                    'someSessionId',
-                    'session id updated'
-                );
-                assert.equal(
-                    wrapper.query.gene_list,
-                    'CDKN2 MDM2 MDM4',
-                    'has correct gene list'
-                );
+                assert.equal(wrapper.sessionId, 'someSessionId', 'session id updated');
+                assert.equal(wrapper.query.gene_list, 'CDKN2 MDM2 MDM4', 'has correct gene list');
 
                 routingStore.goBack();
 
@@ -401,10 +337,7 @@ describe('URLWrapper', () => {
 
                 setTimeout(() => {
                     assert.isFalse(wrapper.isLoadingSession);
-                    assert.equal(
-                        wrapper.query.gene_list,
-                        'CDKN2A MDM2 MDM4 TP53'
-                    );
+                    assert.equal(wrapper.query.gene_list, 'CDKN2A MDM2 MDM4 TP53');
                     done();
                 }, 20);
             }, 10);
@@ -467,10 +400,7 @@ describe('URLWrapper', () => {
 
             wrapper.updateURL({ gene_list: 'EGFR TP53' });
 
-            assert.isTrue(
-                saveSessionStub.calledOnce,
-                'it called save session service'
-            );
+            assert.isTrue(saveSessionStub.calledOnce, 'it called save session service');
 
             assert.equal(
                 wrapper.query.gene_list,
@@ -481,15 +411,8 @@ describe('URLWrapper', () => {
             assert.isTrue(wrapper.isPendingSession);
 
             setTimeout(() => {
-                assert.isTrue(
-                    getSessionStub.calledOnce,
-                    'did not call get session again'
-                );
-                assert.equal(
-                    wrapper.sessionId,
-                    'someSessionId',
-                    'sets session id appropriatly'
-                );
+                assert.isTrue(getSessionStub.calledOnce, 'did not call get session again');
+                assert.equal(wrapper.sessionId, 'someSessionId', 'sets session id appropriatly');
                 done();
             }, 50);
         }, 50);
@@ -509,10 +432,7 @@ describe('URLWrapper', () => {
 
         assert.isFalse('case_ids' in routingStore.location.query);
 
-        assert.isUndefined(
-            wrapper.query.case_ids,
-            'removes existing params on clear'
-        );
+        assert.isUndefined(wrapper.query.case_ids, 'removes existing params on clear');
 
         assert.equal(routingStore.location.query.cancer_study_list, 'somelist');
     });

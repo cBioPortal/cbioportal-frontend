@@ -3,9 +3,7 @@ import * as React from 'react';
 import { observer, Observer } from 'mobx-react';
 import bind from 'bind-decorator';
 import { computed, observable } from 'mobx';
-import CBIOPORTAL_VICTORY_THEME, {
-    baseLabelStyles,
-} from '../../theme/cBioPoralTheme';
+import CBIOPORTAL_VICTORY_THEME, { baseLabelStyles } from '../../theme/cBioPoralTheme';
 import Timer = NodeJS.Timer;
 import {
     VictoryChart,
@@ -26,10 +24,7 @@ import {
 } from './PlotUtils';
 import { toConditionalPrecision } from '../../lib/NumberUtils';
 import { getRegressionComputations } from './ScatterPlotUtils';
-import {
-    IAxisLogScaleParams,
-    IPlotSampleData,
-} from 'pages/resultsView/plots/PlotsTabUtils';
+import { IAxisLogScaleParams, IPlotSampleData } from 'pages/resultsView/plots/PlotsTabUtils';
 import ifNotDefined from '../../lib/ifNotDefined';
 
 export interface IBaseScatterPlotData {
@@ -46,9 +41,7 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     highlight?: (d: D) => boolean;
     fill?: string | ((d: D) => string);
     stroke?: string | ((d: D) => string);
-    size?:
-        | number
-        | ((d: D, active: boolean, isHighlighted?: boolean) => number);
+    size?: number | ((d: D, active: boolean, isHighlighted?: boolean) => number);
     fillOpacity?: number | ((d: D) => number);
     strokeOpacity?: number | ((d: D) => number);
     strokeWidth?: number | ((d: D) => number);
@@ -87,9 +80,10 @@ const PLOT_DATA_PADDING_PIXELS = 50;
 const LEFT_PADDING = 25;
 
 @observer
-export default class ScatterPlot<
-    D extends IBaseScatterPlotData
-> extends React.Component<IScatterPlotProps<D>, {}> {
+export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.Component<
+    IScatterPlotProps<D>,
+    {}
+> {
     @observable.ref tooltipModel: any | null = null;
     @observable pointHovered: boolean = false;
     private mouseEvents: any = this.makeMouseEvents();
@@ -222,11 +216,7 @@ export default class ScatterPlot<
                         y={CORRELATION_INFO_Y}
                         textAnchor="end"
                         dy="2"
-                        text={`(p = ${toConditionalPrecision(
-                            this.spearmanPval,
-                            3,
-                            0.01
-                        )})`}
+                        text={`(p = ${toConditionalPrecision(this.spearmanPval, 3, 0.01)})`}
                         style={GUTTER_TEXT_STYLE}
                     />
                 )}
@@ -244,11 +234,7 @@ export default class ScatterPlot<
                         y={CORRELATION_INFO_Y}
                         textAnchor="end"
                         dy="7"
-                        text={`(p = ${toConditionalPrecision(
-                            this.pearsonPval,
-                            3,
-                            0.01
-                        )})`}
+                        text={`(p = ${toConditionalPrecision(this.pearsonPval, 3, 0.01)})`}
                         style={GUTTER_TEXT_STYLE}
                     />
                 )}
@@ -302,10 +288,7 @@ export default class ScatterPlot<
         // when limit values are shown in the legend, exclude
         // these points from calculations of correlation coefficients
         const data = this.props.excludeLimitValuesFromCorrelation
-            ? _.filter(
-                  this.props.data,
-                  (d: IPlotSampleData) => !dataPointIsLimited(d)
-              )
+            ? _.filter(this.props.data, (d: IPlotSampleData) => !dataPointIsLimited(d))
             : this.props.data;
 
         const x = [];
@@ -373,17 +356,11 @@ export default class ScatterPlot<
     }
 
     @computed get spearmanPval() {
-        return computeCorrelationPValue(
-            this.spearmanCorr,
-            this.splitData.x.length
-        );
+        return computeCorrelationPValue(this.spearmanCorr, this.splitData.x.length);
     }
 
     @computed get pearsonPval() {
-        return computeCorrelationPValue(
-            this.pearsonCorr,
-            this.splitData.x.length
-        );
+        return computeCorrelationPValue(this.pearsonCorr, this.splitData.x.length);
     }
 
     @computed get rightPadding() {
@@ -423,11 +400,7 @@ export default class ScatterPlot<
         return makeScatterPlotSizeFunction(highlight, size);
     }
 
-    private tickFormat(
-        t: number,
-        ticks: number[],
-        logScaleFunc: IAxisLogScaleParams | undefined
-    ) {
+    private tickFormat(t: number, ticks: number[], logScaleFunc: IAxisLogScaleParams | undefined) {
         if (logScaleFunc && !this.props.useLogSpaceTicks) {
             t = logScaleFunc.fInvLogScale(t);
             ticks = ticks.map(x => logScaleFunc.fInvLogScale(x));
@@ -459,9 +432,7 @@ export default class ScatterPlot<
     }
 
     @computed private get regressionLineComputations() {
-        const data = this.props.data.map(
-            d => [this.x(d), this.y(d)] as [number, number]
-        );
+        const data = this.props.data.map(d => [this.x(d), this.y(d)] as [number, number]);
         return getRegressionComputations(data);
     }
 
@@ -469,10 +440,7 @@ export default class ScatterPlot<
         // when limit values are shown in the legend, exclude
         // these points from calculation of regression line
         const regressionData: D[] = this.props.excludeLimitValuesFromCorrelation
-            ? _.filter(
-                  this.props.data,
-                  (d: IPlotSampleData) => !dataPointIsLimited(d)
-              )
+            ? _.filter(this.props.data, (d: IPlotSampleData) => !dataPointIsLimited(d))
             : this.props.data;
 
         if (this.props.showRegressionLine && regressionData.length >= 2) {
@@ -481,8 +449,7 @@ export default class ScatterPlot<
             const labelX = 0.7;
             const xPoints = [
                 this.plotDomain.x[0],
-                this.plotDomain.x[0] * (1 - labelX) +
-                    this.plotDomain.x[1] * labelX,
+                this.plotDomain.x[0] * (1 - labelX) + this.plotDomain.x[1] * labelX,
                 this.plotDomain.x[1],
             ];
             const data: any[] = xPoints.map(x => ({ x, y: y(x), label: '' }));
@@ -514,10 +481,7 @@ export default class ScatterPlot<
     @bind
     private getChart() {
         return (
-            <div
-                ref={this.containerRef}
-                style={{ width: this.svgWidth, height: this.svgHeight }}
-            >
+            <div ref={this.containerRef} style={{ width: this.svgWidth, height: this.svgHeight }}>
                 <svg
                     id={this.props.svgId || ''}
                     style={{
@@ -569,12 +533,9 @@ export default class ScatterPlot<
                                         data: {
                                             fill: dataWithAppearance.fill,
                                             stroke: dataWithAppearance.stroke,
-                                            strokeWidth:
-                                                dataWithAppearance.strokeWidth,
-                                            strokeOpacity:
-                                                dataWithAppearance.strokeOpacity,
-                                            fillOpacity:
-                                                dataWithAppearance.fillOpacity,
+                                            strokeWidth: dataWithAppearance.strokeWidth,
+                                            strokeOpacity: dataWithAppearance.strokeOpacity,
+                                            fillOpacity: dataWithAppearance.fillOpacity,
                                         },
                                     }}
                                     size={this.size}

@@ -49,20 +49,13 @@ export function countMutationsByProteinChange(
     mutations: Mutation[]
 ): { proteinChange: string; count: number }[] {
     const mutationsByProteinChange = _.groupBy(mutations, 'proteinChange');
-    const mutationCountsByProteinChange = _.map(
-        mutationsByProteinChange,
-        mutations => ({
-            proteinChange: mutations[0].proteinChange,
-            count: mutations.length,
-        })
-    );
+    const mutationCountsByProteinChange = _.map(mutationsByProteinChange, mutations => ({
+        proteinChange: mutations[0].proteinChange,
+        count: mutations.length,
+    }));
 
     // order by count descending, and then protein change ascending
-    return _.orderBy(
-        mutationCountsByProteinChange,
-        ['count', 'proteinChange'],
-        ['desc', 'asc']
-    );
+    return _.orderBy(mutationCountsByProteinChange, ['count', 'proteinChange'], ['desc', 'asc']);
 }
 
 export function groupMutationsByProteinStartPos(
@@ -82,10 +75,7 @@ export function groupMutationsByProteinStartPos(
     return map;
 }
 
-export function mutationTypeSort(
-    typeA: CanonicalMutationType,
-    typeB: CanonicalMutationType
-) {
+export function mutationTypeSort(typeA: CanonicalMutationType, typeB: CanonicalMutationType) {
     const priorityA = MUTATION_TYPE_PRIORITY[typeA];
     const priorityB = MUTATION_TYPE_PRIORITY[typeB];
     if (priorityA < priorityB) {
@@ -115,9 +105,9 @@ export function getColorForProteinImpactType(
             )
         ).sort(mutationTypeSort);
 
-    const chosenCanonicalType:
-        | CanonicalMutationType
-        | undefined = findFirstMostCommonElt(sortedCanonicalMutationTypes);
+    const chosenCanonicalType: CanonicalMutationType | undefined = findFirstMostCommonElt(
+        sortedCanonicalMutationTypes
+    );
 
     if (chosenCanonicalType) {
         const proteinImpactType: ProteinImpactType = getProteinImpactTypeFromCanonical(
@@ -169,20 +159,14 @@ export function genomicLocationString(genomicLocation: GenomicLocation) {
     return `${genomicLocation.chromosome},${genomicLocation.start},${genomicLocation.end},${genomicLocation.referenceAllele},${genomicLocation.variantAllele}`;
 }
 
-export function uniqueGenomicLocations(
-    mutations: Partial<Mutation>[]
-): GenomicLocation[] {
+export function uniqueGenomicLocations(mutations: Partial<Mutation>[]): GenomicLocation[] {
     const genomicLocationMap: { [key: string]: GenomicLocation } = {};
 
     mutations.map((mutation: Partial<Mutation>) => {
-        const genomicLocation:
-            | GenomicLocation
-            | undefined = extractGenomicLocation(mutation);
+        const genomicLocation: GenomicLocation | undefined = extractGenomicLocation(mutation);
 
         if (genomicLocation) {
-            genomicLocationMap[
-                genomicLocationString(genomicLocation)
-            ] = genomicLocation;
+            genomicLocationMap[genomicLocationString(genomicLocation)] = genomicLocation;
         }
     });
 

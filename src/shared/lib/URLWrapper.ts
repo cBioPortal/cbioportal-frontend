@@ -33,20 +33,15 @@ export type Property<T> = {
     aliases?: string[];
 };
 
-export function needToLoadSession(
-    obj: Partial<ResultsViewURLWrapper>
-): boolean {
+export function needToLoadSession(obj: Partial<ResultsViewURLWrapper>): boolean {
     return (
         obj.sessionId !== undefined &&
         obj.sessionId !== 'pending' &&
-        (obj._sessionData === undefined ||
-            obj._sessionData.id !== obj.sessionId)
+        (obj._sessionData === undefined || obj._sessionData.id !== obj.sessionId)
     );
 }
 
-export default class URLWrapper<
-    QueryParamsType extends { [key: string]: string | undefined }
-> {
+export default class URLWrapper<QueryParamsType extends { [key: string]: string | undefined }> {
     public query: QueryParamsType;
     public reactionDisposer: IReactionDisposer;
     protected pathContext: string;
@@ -58,10 +53,7 @@ export default class URLWrapper<
         protected routing: ExtendedRouterStore,
         // pass it in in a map so that typescript can ensure that every property is accounted for
         protected propertiesMap: {
-            [property in keyof QueryParamsType]: Omit<
-                Property<QueryParamsType>,
-                'name'
-            >;
+            [property in keyof QueryParamsType]: Omit<Property<QueryParamsType>, 'name'>;
         },
         public sessionEnabled = false,
         public urlCharThresholdForSession = 1500
@@ -77,9 +69,7 @@ export default class URLWrapper<
         // even if they are not represented in browser url at the moment
         // they need to be there so that they will observable in the future upon assignment
         for (const property of this.properties) {
-            let value = (routing.location.query as QueryParamsType)[
-                property.name
-            ];
+            let value = (routing.location.query as QueryParamsType)[property.name];
             if (_.isString(value)) {
                 // @ts-ignore
                 value = decodeURIComponent(value);
@@ -94,10 +84,7 @@ export default class URLWrapper<
         //to avoid update signal when properties haven't actually changed (set to existing value)
         //we intercept changes and cancel them when old === new
         intercept(this.query, change => {
-            if (
-                change.newValue ===
-                this.query[change.name as keyof QueryParamsType]
-            ) {
+            if (change.newValue === this.query[change.name as keyof QueryParamsType]) {
                 // if same value, cancel change to prevent unnecessary changing data
                 return null;
             } else {
@@ -121,17 +108,12 @@ export default class URLWrapper<
                 // at least in test context, it doesn't otherwise work
                 //const queryProps = _.mapValues(routing.location.query);
                 //const sessionProps = this._sessionData && this._sessionData.query && _.mapValues(this._sessionData.query);
-                return [
-                    routing.location.query,
-                    this._sessionData && this._sessionData.query,
-                ];
+                return [routing.location.query, this._sessionData && this._sessionData.query];
             },
             ([routeQuery, sessionQuery]) => {
                 if (
                     this.pathContext &&
-                    !new RegExp(`^/*${this.pathContext}`).test(
-                        this.routing.location.pathname
-                    )
+                    !new RegExp(`^/*${this.pathContext}`).test(this.routing.location.pathname)
                 ) {
                     return;
                 }
@@ -144,8 +126,7 @@ export default class URLWrapper<
                         // it will always be represented in URL
                         if (this.hasSessionId && property.isSessionProp) {
                             // if there is a session, then sync it with session
-                            sessionQuery &&
-                                this.syncProperty(property, sessionQuery);
+                            sessionQuery && this.syncProperty(property, sessionQuery);
                         } else {
                             // @ts-ignore
                             this.syncProperty(property, routeQuery);
@@ -175,11 +156,7 @@ export default class URLWrapper<
         //put params in buckets according to whether they are session or non session
         const paramsMap = _.reduce(
             mergedParams,
-            (
-                acc: { sessionProps: any; nonSessionProps: any },
-                value,
-                paramKey
-            ) => {
+            (acc: { sessionProps: any; nonSessionProps: any }, value, paramKey) => {
                 if (paramKey in sessionProps) {
                     acc.sessionProps[paramKey] = mergedParams[paramKey];
                 } else {
@@ -208,10 +185,7 @@ export default class URLWrapper<
         log('url length', url.length);
 
         // determine which of the MODIFIED params are session props
-        const sessionParametersChanged = _.some(
-            _.keys(updatedParams),
-            key => key in sessionProps
-        );
+        const sessionParametersChanged = _.some(_.keys(updatedParams), key => key in sessionProps);
 
         // we need session if url is longer than this
         // or if we already have session
@@ -252,10 +226,7 @@ export default class URLWrapper<
                 this.saveRemoteSession(paramsMap.sessionProps).then(data => {
                     // make sure that we have sessionData and that timestamp on the session hasn't
                     // been changed since it started
-                    if (
-                        this._sessionData &&
-                        timeStamp === this._sessionData.timeStamp
-                    ) {
+                    if (this._sessionData && timeStamp === this._sessionData.timeStamp) {
                         this._sessionData.id = data.id;
                         this.routing.updateRoute(
                             { session_id: data.id },
@@ -354,10 +325,7 @@ export default class URLWrapper<
         },
     });
 
-    private syncProperty(
-        property: Property<QueryParamsType>,
-        query: QueryParamsType
-    ) {
+    private syncProperty(property: Property<QueryParamsType>, query: QueryParamsType) {
         // first determine what value should be
         // resolving to aliases IF they exist
 
@@ -375,12 +343,8 @@ export default class URLWrapper<
         this.trySyncProperty(property, value);
     }
 
-    private trySyncProperty(
-        property: Property<QueryParamsType>,
-        value: string | undefined
-    ) {
-        const processedValue =
-            typeof value === 'string' ? decodeURIComponent(value) : undefined;
+    private trySyncProperty(property: Property<QueryParamsType>, value: string | undefined) {
+        const processedValue = typeof value === 'string' ? decodeURIComponent(value) : undefined;
 
         if (property.name in this.query) {
             // @ts-ignore

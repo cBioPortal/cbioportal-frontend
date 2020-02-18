@@ -44,9 +44,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
     };
 
     @computed get chartWidth() {
-        return (
-            this.vennPlotAreaWidth + PADDING_BTWN_VENN_AND_LEGEND + LEGEND_WIDTH
-        );
+        return this.vennPlotAreaWidth + PADDING_BTWN_VENN_AND_LEGEND + LEGEND_WIDTH;
     }
 
     @computed get chartHeight() {
@@ -55,20 +53,14 @@ export default class Venn extends React.Component<IVennProps, {}> {
 
     @autobind
     @action
-    private submitSampleOverlapGroup(
-        group: SessionGroupData,
-        saveToUser: boolean
-    ) {
+    private submitSampleOverlapGroup(group: SessionGroupData, saveToUser: boolean) {
         (this.props.store as GroupComparisonStore).addGroup(group, saveToUser);
         this.sampleSelection.regions = [];
     }
 
     @autobind
     @action
-    private submitPatientOverlapGroup(
-        group: SessionGroupData,
-        saveToUser: boolean
-    ) {
+    private submitPatientOverlapGroup(group: SessionGroupData, saveToUser: boolean) {
         (this.props.store as GroupComparisonStore).addGroup(group, saveToUser);
         this.patientSelection.regions = [];
     }
@@ -207,10 +199,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
 
                     {this.legendData.length > 0 && (
                         <VictoryLegend
-                            x={
-                                this.vennPlotAreaWidth +
-                                PADDING_BTWN_VENN_AND_LEGEND
-                            }
+                            x={this.vennPlotAreaWidth + PADDING_BTWN_VENN_AND_LEGEND}
                             y={100}
                             theme={CBIOPORTAL_VICTORY_THEME}
                             labelComponent={
@@ -244,9 +233,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
                         includedRegions={this.patientSelectedRegionsUids}
                         style={{
                             position: 'absolute',
-                            left:
-                                VENN_PLOT_WIDTH +
-                                PADDING_BTWN_SAMPLE_AND_PATIENT,
+                            left: VENN_PLOT_WIDTH + PADDING_BTWN_SAMPLE_AND_PATIENT,
                             top: VENN_PLOT_HEIGHT + 20,
                         }}
                         submitGroup={this.submitPatientOverlapGroup}

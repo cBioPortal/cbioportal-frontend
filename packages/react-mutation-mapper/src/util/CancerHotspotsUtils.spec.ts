@@ -255,18 +255,11 @@ describe('CancerHotspotsUtils', () => {
                 hotspotIndex,
                 defaultHotspotFilter
             );
-            assert.equal(
-                filtered.length,
-                3,
-                '3 mutations should be identified as hotspot'
-            );
+            assert.equal(filtered.length, 3, '3 mutations should be identified as hotspot');
         });
 
         it('filters recurrent hotspots correctly', () => {
-            const filtered = filterRecurrentHotspotsByMutations(
-                mutations,
-                hotspotIndex
-            );
+            const filtered = filterRecurrentHotspotsByMutations(mutations, hotspotIndex);
             assert.equal(
                 filtered.length,
                 2,
@@ -275,15 +268,8 @@ describe('CancerHotspotsUtils', () => {
         });
 
         it('filters 3D hotspots correctly', () => {
-            const filtered = filter3dHotspotsByMutations(
-                mutations,
-                hotspotIndex
-            );
-            assert.equal(
-                filtered.length,
-                1,
-                'only 1 mutation should be identified as 3D hotspot'
-            );
+            const filtered = filter3dHotspotsByMutations(mutations, hotspotIndex);
+            assert.equal(filtered.length, 1, 'only 1 mutation should be identified as 3D hotspot');
         });
     });
 

@@ -28,27 +28,15 @@ export function countOccurences(
 
     valuesA.forEach((valueA, index) => {
         // jump over this comparison if there is a unprofiled value
-        if (
-            valueA === AlteredStatus.UNPROFILED ||
-            valuesB[index] === AlteredStatus.UNPROFILED
-        ) {
+        if (valueA === AlteredStatus.UNPROFILED || valuesB[index] === AlteredStatus.UNPROFILED) {
             return true;
         }
         const valueB = valuesB[index];
-        if (
-            valueA === AlteredStatus.UNALTERED &&
-            valueB === AlteredStatus.UNALTERED
-        ) {
+        if (valueA === AlteredStatus.UNALTERED && valueB === AlteredStatus.UNALTERED) {
             neither++;
-        } else if (
-            valueA === AlteredStatus.UNALTERED &&
-            valueB === AlteredStatus.ALTERED
-        ) {
+        } else if (valueA === AlteredStatus.UNALTERED && valueB === AlteredStatus.ALTERED) {
             bNotA++;
-        } else if (
-            valueA === AlteredStatus.ALTERED &&
-            valueB === AlteredStatus.UNALTERED
-        ) {
+        } else if (valueA === AlteredStatus.ALTERED && valueB === AlteredStatus.UNALTERED) {
             aNotB++;
         } else {
             both++;
@@ -57,12 +45,7 @@ export function countOccurences(
     return [neither, bNotA, aNotB, both];
 }
 
-export function calculatePValue(
-    a: number,
-    b: number,
-    c: number,
-    d: number
-): number {
+export function calculatePValue(a: number, b: number, c: number, d: number): number {
     return getCumulativePValue(a, b, c, d);
 }
 
@@ -71,12 +54,7 @@ export function calculateAdjustedPValue(pValue: number, count: number): number {
     return value > 1 ? 1 : value;
 }
 
-export function calculateLogOddsRatio(
-    a: number,
-    b: number,
-    c: number,
-    d: number
-): number {
+export function calculateLogOddsRatio(a: number, b: number, c: number, d: number): number {
     if (a * d === 0 && b * c === 0) {
         return Infinity;
     }
@@ -135,40 +113,31 @@ export function getMutuallyExclusiveCounts(
     return [exclusiveCount, significantCount];
 }
 
-export function getTrackPairsCountText(
-    data: MutualExclusivity[],
-    trackCount: number
-): JSX.Element {
+export function getTrackPairsCountText(data: MutualExclusivity[], trackCount: number): JSX.Element {
     const trackPairsCount = _.size(data);
     const pairText = trackPairsCount > 1 ? 'pairs' : 'pair';
     return (
         <p>
-            The analysis tested <b>{trackPairsCount}</b> {pairText} between the{' '}
-            <b>{trackCount}</b> tracks in the OncoPrint.
+            The analysis tested <b>{trackPairsCount}</b> {pairText} between the <b>{trackCount}</b>{' '}
+            tracks in the OncoPrint.
         </p>
     );
 }
 
 export function getCountsText(data: MutualExclusivity[]): JSX.Element {
-    const mutuallyExclusiveCounts = getMutuallyExclusiveCounts(
-        data,
-        n => n <= 0
-    );
+    const mutuallyExclusiveCounts = getMutuallyExclusiveCounts(data, n => n <= 0);
     const coOccurentCounts = getMutuallyExclusiveCounts(data, n => n > 0);
 
     return (
         <p>
-            The query contains {mutuallyExclusiveCounts[0]} with mutually
-            exclusive alterations{mutuallyExclusiveCounts[1]}, and{' '}
-            {coOccurentCounts[0]} with co-occurrent alterations
+            The query contains {mutuallyExclusiveCounts[0]} with mutually exclusive alterations
+            {mutuallyExclusiveCounts[1]}, and {coOccurentCounts[0]} with co-occurrent alterations
             {coOccurentCounts[1]}.
         </p>
     );
 }
 
-export function getData(
-    isSampleAlteredMap: Dictionary<AlteredStatus[]>
-): MutualExclusivity[] {
+export function getData(isSampleAlteredMap: Dictionary<AlteredStatus[]>): MutualExclusivity[] {
     let data: MutualExclusivity[] = [];
     const combinations: string[][] = (Combinatorics as any)
         .bigCombination(Object.keys(isSampleAlteredMap), 2)
@@ -177,22 +146,9 @@ export function getData(
     combinations.forEach(combination => {
         const trackA = combination[0];
         const trackB = combination[1];
-        const counts = countOccurences(
-            isSampleAlteredMap[trackA],
-            isSampleAlteredMap[trackB]
-        );
-        const pValue = calculatePValue(
-            counts[0],
-            counts[1],
-            counts[2],
-            counts[3]
-        );
-        const logOddsRatio = calculateLogOddsRatio(
-            counts[0],
-            counts[1],
-            counts[2],
-            counts[3]
-        );
+        const counts = countOccurences(isSampleAlteredMap[trackA], isSampleAlteredMap[trackB]);
+        const pValue = calculatePValue(counts[0], counts[1], counts[2], counts[3]);
+        const logOddsRatio = calculateLogOddsRatio(counts[0], counts[1], counts[2], counts[3]);
         const association = calculateAssociation(logOddsRatio);
         data.push({
             trackA,
@@ -209,9 +165,7 @@ export function getData(
     });
 
     data = _.sortBy(data, ['pValue']);
-    const qValues = calculateQValues(
-        _.map(data, mutexData => mutexData.pValue)
-    );
+    const qValues = calculateQValues(_.map(data, mutexData => mutexData.pValue));
     data.forEach((mutexData, index) => {
         mutexData.qValue = qValues[index];
     });
@@ -267,11 +221,7 @@ export function getSampleAlteredFilteredMap(
     const filteredMap: SampleAlteredMap = {};
     _.forIn(isSampleAlteredMap, (alteredStatus, trackOql) => {
         if (alteredStatus && alteredStatus.length > 0) {
-            if (
-                alteredStatus.filter(
-                    status => status != AlteredStatus.UNPROFILED
-                ).length > 0
-            ) {
+            if (alteredStatus.filter(status => status != AlteredStatus.UNPROFILED).length > 0) {
                 filteredMap[trackOql] = alteredStatus;
             }
         }

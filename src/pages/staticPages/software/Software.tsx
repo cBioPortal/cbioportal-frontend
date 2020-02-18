@@ -13,9 +13,7 @@ export default class Software extends React.Component<{}, {}> {
                     <title>{'cBioPortal for Cancer Genomics::Software'}</title>
                 </Helmet>
                 <StaticContent
-                    sourceUrl={
-                        AppConfig.serverConfig.skin_documentation_software!
-                    }
+                    sourceUrl={AppConfig.serverConfig.skin_documentation_software!}
                     title={'Software'}
                 />
             </PageLayout>

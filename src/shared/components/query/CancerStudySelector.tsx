@@ -68,10 +68,7 @@ export interface ICancerStudySelectorProps {
 }
 
 @observer
-export default class CancerStudySelector extends React.Component<
-    ICancerStudySelectorProps,
-    {}
-> {
+export default class CancerStudySelector extends React.Component<ICancerStudySelectorProps, {}> {
     @computed get studiesDataComplete(): boolean {
         return (
             this.store.cancerTypes.isComplete &&
@@ -116,56 +113,39 @@ export default class CancerStudySelector extends React.Component<
         return (
             <ul className={styles.cancerTypeList}>
                 {cancerTypes.map((cancerType, arrayIndex) => (
-                    <this.CancerTypeListItem
-                        key={arrayIndex}
-                        cancerType={cancerType}
-                    />
+                    <this.CancerTypeListItem key={arrayIndex} cancerType={cancerType} />
                 ))}
             </ul>
         );
     });
 
-    CancerTypeListItem = observer(
-        ({ cancerType }: { cancerType: CancerType }) => {
-            let numStudies = expr(
-                () =>
-                    this.logic.cancerTypeListView.getDescendantCancerStudies(
-                        cancerType
-                    ).length
-            );
-            let selected = _.includes(
-                this.store.selectedCancerTypeIds,
-                cancerType.cancerTypeId
-            );
-            let highlighted = this.logic.isHighlighted(cancerType);
-            let liClassName = classNames({
-                [styles.cancerTypeListItem]: true,
-                [styles.selectable]: true,
-                [styles.selected]: selected,
-                [styles.matchingNodeText]:
-                    !!this.store.searchText && highlighted,
-                [styles.nonMatchingNodeText]:
-                    !!this.store.searchText && !highlighted,
-                [styles.containsSelectedStudies]: expr(() =>
-                    this.logic.cancerTypeContainsSelectedStudies(cancerType)
-                ),
-            });
+    CancerTypeListItem = observer(({ cancerType }: { cancerType: CancerType }) => {
+        let numStudies = expr(
+            () => this.logic.cancerTypeListView.getDescendantCancerStudies(cancerType).length
+        );
+        let selected = _.includes(this.store.selectedCancerTypeIds, cancerType.cancerTypeId);
+        let highlighted = this.logic.isHighlighted(cancerType);
+        let liClassName = classNames({
+            [styles.cancerTypeListItem]: true,
+            [styles.selectable]: true,
+            [styles.selected]: selected,
+            [styles.matchingNodeText]: !!this.store.searchText && highlighted,
+            [styles.nonMatchingNodeText]: !!this.store.searchText && !highlighted,
+            [styles.containsSelectedStudies]: expr(() =>
+                this.logic.cancerTypeContainsSelectedStudies(cancerType)
+            ),
+        });
 
-            return (
-                <li
-                    className={liClassName}
-                    onMouseDown={this.getCancerTypeListClickHandler(cancerType)}
-                >
-                    <span className={styles.cancerTypeListItemLabel}>
-                        {cancerType.name}
-                    </span>
-                    <span className={styles.cancerTypeListItemCount}>
-                        {numStudies}
-                    </span>
-                </li>
-            );
-        }
-    );
+        return (
+            <li
+                className={liClassName}
+                onMouseDown={this.getCancerTypeListClickHandler(cancerType)}
+            >
+                <span className={styles.cancerTypeListItemLabel}>{cancerType.name}</span>
+                <span className={styles.cancerTypeListItemCount}>{numStudies}</span>
+            </li>
+        );
+    });
 
     private autosuggest: React.Component<any, any>;
 
@@ -183,9 +163,7 @@ export default class CancerStudySelector extends React.Component<
             // otherwise pass array of exactly matching studyIds
             if (matches.length === 1 && /^\*.*\*$/.test(matches[0])) {
                 // match wildcard of one
-                this.logic.mainView.selectAllMatchingStudies(
-                    matches[0].replace(/\*/g, '')
-                );
+                this.logic.mainView.selectAllMatchingStudies(matches[0].replace(/\*/g, ''));
             } else {
                 this.logic.mainView.selectAllMatchingStudies(matches);
             }
@@ -222,28 +200,16 @@ export default class CancerStudySelector extends React.Component<
     }
 
     render() {
-        const {
-            shownStudies,
-            shownAndSelectedStudies,
-        } = this.logic.mainView.getSelectionReport();
+        const { shownStudies, shownAndSelectedStudies } = this.logic.mainView.getSelectionReport();
 
         const quickSetButtons = this.logic.mainView.quickSelectButtons(
             AppConfig.serverConfig.skin_quick_select_buttons
         );
 
         return (
-            <FlexCol
-                overflow
-                data-test="studyList"
-                className={styles.CancerStudySelector}
-            >
+            <FlexCol overflow data-test="studyList" className={styles.CancerStudySelector}>
                 <FlexRow overflow className={styles.CancerStudySelectorHeader}>
-                    <SectionHeader
-                        promises={[
-                            this.store.cancerTypes,
-                            this.store.cancerStudies,
-                        ]}
-                    >
+                    <SectionHeader promises={[this.store.cancerTypes, this.store.cancerStudies]}>
                         Select Studies for Visualization & Analysis:
                     </SectionHeader>
 
@@ -256,25 +222,20 @@ export default class CancerStudySelector extends React.Component<
                     <Observer>
                         {() => {
                             let searchTextOptions = ServerConfigHelpers.skin_example_study_queries(
-                                AppConfig.serverConfig!
-                                    .skin_example_study_queries || ''
+                                AppConfig.serverConfig!.skin_example_study_queries || ''
                             );
                             if (
                                 this.store.searchText &&
-                                searchTextOptions.indexOf(
-                                    this.store.searchText
-                                ) < 0
+                                searchTextOptions.indexOf(this.store.searchText) < 0
                             )
-                                searchTextOptions = [
-                                    this.store.searchText,
-                                ].concat(searchTextOptions as string[]);
+                                searchTextOptions = [this.store.searchText].concat(
+                                    searchTextOptions as string[]
+                                );
                             let searchTimeout: number | null = null;
 
-                            const optionsWithSortKeys = searchTextOptions.map(
-                                (name, i) => {
-                                    return { value: name, sortKey: i };
-                                }
-                            );
+                            const optionsWithSortKeys = searchTextOptions.map((name, i) => {
+                                return { value: name, sortKey: i };
+                            });
 
                             return (
                                 <div
@@ -313,20 +274,13 @@ export default class CancerStudySelector extends React.Component<
                                         bsSize="small"
                                         onChange={(currentVal: string) => {
                                             if (searchTimeout !== null) {
-                                                window.clearTimeout(
-                                                    searchTimeout
-                                                );
+                                                window.clearTimeout(searchTimeout);
                                                 searchTimeout = null;
                                             }
 
-                                            searchTimeout = window.setTimeout(
-                                                () => {
-                                                    this.store.setSearchText(
-                                                        currentVal
-                                                    );
-                                                },
-                                                400
-                                            );
+                                            searchTimeout = window.setTimeout(() => {
+                                                this.store.setSearchText(currentVal);
+                                            }, 400);
                                         }}
                                         onFocus={(value: string) => {
                                             if (value.length === 0) {
@@ -357,10 +311,7 @@ export default class CancerStudySelector extends React.Component<
                             className={styles.cancerStudyListContainer}
                             data-test="cancerTypeListContainer"
                         >
-                            <div
-                                className="checkbox"
-                                style={{ marginLeft: 19 }}
-                            >
+                            <div className="checkbox" style={{ marginLeft: 19 }}>
                                 <If condition={shownStudies.length > 0}>
                                     <If
                                         condition={
@@ -371,13 +322,8 @@ export default class CancerStudySelector extends React.Component<
                                         <Then>
                                             <div className={styles.quickSelect}>
                                                 <QuickSelectButtons
-                                                    onSelect={
-                                                        this
-                                                            .selectMatchingStudies
-                                                    }
-                                                    buttonsConfig={
-                                                        quickSetButtons
-                                                    }
+                                                    onSelect={this.selectMatchingStudies}
+                                                    buttonsConfig={quickSetButtons}
                                                 />
                                             </div>
                                         </Then>
@@ -387,10 +333,7 @@ export default class CancerStudySelector extends React.Component<
                                                     type="checkbox"
                                                     data-test="selectAllStudies"
                                                     style={{ top: -2 }}
-                                                    onClick={
-                                                        this.handlers
-                                                            .onCheckAllFiltered
-                                                    }
+                                                    onClick={this.handlers.onCheckAllFiltered}
                                                     checked={
                                                         shownAndSelectedStudies.length ===
                                                         shownStudies.length
@@ -401,24 +344,16 @@ export default class CancerStudySelector extends React.Component<
                                                     shownStudies.length
                                                         ? `Deselect all listed studies ${
                                                               shownStudies.length <
-                                                              this.store
-                                                                  .cancerStudies
-                                                                  .result.length
+                                                              this.store.cancerStudies.result.length
                                                                   ? 'matching filter'
                                                                   : ''
-                                                          } (${
-                                                              shownStudies.length
-                                                          })`
+                                                          } (${shownStudies.length})`
                                                         : `Select all listed studies ${
                                                               shownStudies.length <
-                                                              this.store
-                                                                  .cancerStudies
-                                                                  .result.length
+                                                              this.store.cancerStudies.result.length
                                                                   ? 'matching filter'
                                                                   : ''
-                                                          }  (${
-                                                              shownStudies.length
-                                                          })`}
+                                                          }  (${shownStudies.length})`}
                                                 </strong>
                                             </label>
                                         </Else>
@@ -431,10 +366,7 @@ export default class CancerStudySelector extends React.Component<
                                         shownStudies.length === 0
                                     }
                                 >
-                                    <p>
-                                        There are no studies matching your
-                                        filter.
-                                    </p>
+                                    <p>There are no studies matching your filter.</p>
                                 </If>
                             </div>
 
@@ -444,10 +376,7 @@ export default class CancerStudySelector extends React.Component<
                 </If>
 
                 <Modal
-                    className={classNames(
-                        styles.SelectedStudiesWindow,
-                        'cbioportal-frontend'
-                    )}
+                    className={classNames(styles.SelectedStudiesWindow, 'cbioportal-frontend')}
                     show={this.store.showSelectedStudiesOnly}
                     onHide={() => (this.store.showSelectedStudiesOnly = false)}
                 >

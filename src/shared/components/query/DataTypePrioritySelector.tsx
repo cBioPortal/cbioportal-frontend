@@ -16,25 +16,17 @@ const styles = styles_any as {
 };
 
 @observer
-export default class DataTypePrioritySelector extends QueryStoreComponent<
-    {},
-    {}
-> {
+export default class DataTypePrioritySelector extends QueryStoreComponent<{}, {}> {
     render() {
         if (!this.store.isVirtualStudyQuery) return null;
 
         let flexRowContents: JSX.Element[] = [];
         flexRowContents.push(
-            <LoadingIndicator
-                key="loading"
-                isLoading={this.store.profileAvailability.isPending}
-            />
+            <LoadingIndicator key="loading" isLoading={this.store.profileAvailability.isPending} />
         );
         if (this.store.profileAvailability.isError) {
             flexRowContents.push(
-                <span key="error">
-                    Error loading profiles for selected studies.
-                </span>
+                <span key="error">Error loading profiles for selected studies.</span>
             );
         } else if (this.store.profileAvailability.isComplete) {
             flexRowContents = flexRowContents.concat(
@@ -47,9 +39,7 @@ export default class DataTypePrioritySelector extends QueryStoreComponent<
                 className={styles.DataTypePrioritySelector}
                 data-test="dataTypePrioritySelector"
             >
-                <SectionHeader className="sectionLabel">
-                    Select Molecular Profiles:
-                </SectionHeader>
+                <SectionHeader className="sectionLabel">Select Molecular Profiles:</SectionHeader>
                 <FlexRow>{flexRowContents}</FlexRow>
             </FlexRow>
         );
@@ -57,19 +47,13 @@ export default class DataTypePrioritySelector extends QueryStoreComponent<
 }
 
 export const DataTypePriorityCheckBox = observer(
-    (props: {
-        label: string;
-        state: 'mutation' | 'cna';
-        store: QueryStore;
-        dataTest: string;
-    }) => (
+    (props: { label: string; state: 'mutation' | 'cna'; store: QueryStore; dataTest: string }) => (
         <label className={styles.DataTypePriorityLabel}>
             <input
                 type="checkbox"
                 checked={props.store.dataTypePriority[props.state] || false}
                 onChange={event => {
-                    props.store.dataTypePriority[props.state] =
-                        event.currentTarget.checked;
+                    props.store.dataTypePriority[props.state] = event.currentTarget.checked;
                 }}
                 data-test={props.dataTest}
             />

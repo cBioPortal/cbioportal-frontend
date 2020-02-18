@@ -21,10 +21,7 @@ describe('url library', () => {
         // note that this is WRONG (http: should be followed by double shlash)
         // but this is due to testing env and url builder library
         // this works correctly in browser env
-        assert.equal(
-            getGenomeNexusApiUrl(),
-            'http://www.cbioportal.org/proxy/www.test.com/hello'
-        );
+        assert.equal(getGenomeNexusApiUrl(), 'http://www.cbioportal.org/proxy/www.test.com/hello');
     });
 
     it('transforms genome nexus url configuration url to proxied url: removes protocol and trailing slash', () => {

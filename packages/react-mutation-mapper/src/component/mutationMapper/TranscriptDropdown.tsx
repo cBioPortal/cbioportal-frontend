@@ -28,10 +28,7 @@ export type TranscriptDropdownProps = {
 };
 
 @observer
-export default class TranscriptDropdown extends React.Component<
-    TranscriptDropdownProps,
-    {}
-> {
+export default class TranscriptDropdown extends React.Component<TranscriptDropdownProps, {}> {
     public render() {
         const {
             showDropDown,
@@ -46,8 +43,7 @@ export default class TranscriptDropdown extends React.Component<
         } = this.props;
 
         const canonicalTranscriptId =
-            canonicalTranscript.result &&
-            canonicalTranscript.result.transcriptId;
+            canonicalTranscript.result && canonicalTranscript.result.transcriptId;
 
         if (!showDropDown) {
             return <span />;
@@ -80,8 +76,7 @@ export default class TranscriptDropdown extends React.Component<
         } else {
             // using existing annotations, show all transcripts with protein length
             const isLoading =
-                transcriptsWithProteinLength.isPending ||
-                canonicalTranscript.isPending;
+                transcriptsWithProteinLength.isPending || canonicalTranscript.isPending;
             const requiredData =
                 transcriptsWithProteinLength.result &&
                 transcriptsWithProteinLength.result.length > 0 &&
@@ -111,44 +106,33 @@ export default class TranscriptDropdown extends React.Component<
         },
         mutationsByTranscriptId?: { [transcriptId: string]: Mutation[] }
     ) {
-        const activeRefseqMrnaId =
-            transcriptsByTranscriptId[activeTranscript].refseqMrnaId;
+        const activeRefseqMrnaId = transcriptsByTranscriptId[activeTranscript].refseqMrnaId;
         return (
             <div>
                 <Select
                     value={{
-                        label: activeRefseqMrnaId
-                            ? activeRefseqMrnaId
-                            : activeTranscript,
+                        label: activeRefseqMrnaId ? activeRefseqMrnaId : activeTranscript,
                         value: activeTranscript,
                     }}
                     clearable={false}
                     // need to explicitly set delteRemoves for cleable
                     // https://github.com/JedWatson/react-select/issues/1560
                     deleteRemoves={false}
-                    options={this.sortTranscripts(allTranscripts).map(
-                        (t: string) => {
-                            const length =
-                                transcriptsByTranscriptId[t].proteinLength;
-                            const refseqMrnaId =
-                                transcriptsByTranscriptId[t].refseqMrnaId;
-                            const ccdsId = transcriptsByTranscriptId[t].ccdsId;
-                            const nrOfMutations =
-                                mutationsByTranscriptId &&
-                                mutationsByTranscriptId[t] &&
-                                mutationsByTranscriptId[t].length;
-                            const label = `${
-                                refseqMrnaId ? `${refseqMrnaId} / ` : ''
-                            }${t} ${ccdsId ? `(${ccdsId})` : ''} ${
-                                length ? `(${length} amino acids)` : ''
-                            } ${
-                                nrOfMutations
-                                    ? `(${nrOfMutations} mutations)`
-                                    : ''
-                            } ${t === canonicalTranscript ? ' (default)' : ''}`;
-                            return { label: label, value: t };
-                        }
-                    )}
+                    options={this.sortTranscripts(allTranscripts).map((t: string) => {
+                        const length = transcriptsByTranscriptId[t].proteinLength;
+                        const refseqMrnaId = transcriptsByTranscriptId[t].refseqMrnaId;
+                        const ccdsId = transcriptsByTranscriptId[t].ccdsId;
+                        const nrOfMutations =
+                            mutationsByTranscriptId &&
+                            mutationsByTranscriptId[t] &&
+                            mutationsByTranscriptId[t].length;
+                        const label = `${refseqMrnaId ? `${refseqMrnaId} / ` : ''}${t} ${
+                            ccdsId ? `(${ccdsId})` : ''
+                        } ${length ? `(${length} amino acids)` : ''} ${
+                            nrOfMutations ? `(${nrOfMutations} mutations)` : ''
+                        } ${t === canonicalTranscript ? ' (default)' : ''}`;
+                        return { label: label, value: t };
+                    })}
                     onChange={(option: any) => {
                         if (option.value) {
                             this.props.onChange(option.value);
@@ -170,11 +154,8 @@ export default class TranscriptDropdown extends React.Component<
         transcripts = _.orderBy(
             transcripts,
             [
-                t =>
-                    canonicalTranscript.result &&
-                    t === canonicalTranscript.result.transcriptId,
-                t =>
-                    transcriptsByTranscriptId[t].hasOwnProperty('refseqMrnaId'),
+                t => canonicalTranscript.result && t === canonicalTranscript.result.transcriptId,
+                t => transcriptsByTranscriptId[t].hasOwnProperty('refseqMrnaId'),
                 t => transcriptsByTranscriptId[t].proteinLength,
                 t => t,
             ],
@@ -185,9 +166,7 @@ export default class TranscriptDropdown extends React.Component<
 
     private loadingIndicator(isLoading: boolean) {
         return isLoading
-            ? this.props.loadingIndicator || (
-                  <i className="fa fa-spinner fa-pulse fa-2x" />
-              )
+            ? this.props.loadingIndicator || <i className="fa fa-spinner fa-pulse fa-2x" />
             : null;
     }
 }

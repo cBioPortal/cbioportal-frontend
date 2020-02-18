@@ -3,19 +3,12 @@ import $ from 'jquery';
 import * as _ from 'lodash';
 import 'qtip2';
 import 'qtip2/dist/jquery.qtip.css';
-import {
-    Mutation,
-    ReferenceGenomeGene,
-} from 'shared/api/generated/CBioPortalAPI';
+import { Mutation, ReferenceGenomeGene } from 'shared/api/generated/CBioPortalAPI';
 import { DEFAULT_GENOME_BUILD } from 'pages/patientView/genomicOverview/Tracks';
 import { default as chromosomeSizes } from './chromosomeSizes.json';
 import { IIconData } from './GenomicOverviewUtils.js';
 
-export function GenomicOverviewConfig(
-    nRows: any,
-    width: any,
-    showGenePanelIcons: boolean
-) {
+export function GenomicOverviewConfig(nRows: any, width: any, showGenePanelIcons: boolean) {
     let sel: any = {};
     sel.nRows = nRows;
     sel.canvasWidth = width;
@@ -37,26 +30,15 @@ export function GenomicOverviewConfig(
     sel.getCnColor = function(cnValue: any) {
         if (cnValue >= sel.cnTh[1]) return '#f00';
         if (cnValue <= -sel.cnTh[1]) return '#00f';
-        var c = Math.round(
-            (255 * (sel.cnTh[1] - Math.abs(cnValue))) /
-                (sel.cnTh[1] - sel.cnTh[0])
-        );
+        var c = Math.round((255 * (sel.cnTh[1] - Math.abs(cnValue))) / (sel.cnTh[1] - sel.cnTh[0]));
         if (cnValue < 0) return 'rgb(' + c + ',' + c + ',255)';
         else return 'rgb(255,' + c + ',' + c + ')';
     };
     sel.canvasHeight = function() {
-        return (
-            2 * sel.rowMargin +
-            sel.ticHeight +
-            sel.nRows * (sel.rowHeight + sel.rowMargin)
-        );
+        return 2 * sel.rowMargin + sel.ticHeight + sel.nRows * (sel.rowHeight + sel.rowMargin);
     };
     sel.yRow = function(row: any) {
-        return (
-            2 * sel.rowMargin +
-            sel.ticHeight +
-            row * (sel.rowHeight + sel.rowMargin)
-        );
+        return 2 * sel.rowMargin + sel.ticHeight + row * (sel.rowHeight + sel.rowMargin);
     };
     sel.xRightText = function() {
         return sel.wideLeftText + sel.GenomeWidth + 5;
@@ -100,13 +82,10 @@ export type ChromosomeSizes = {
 
 const referenceGenomeSizes: {
     [genomeBuild: string]: number[];
-} = chromosomeSizes.reduce(
-    (map: { [genomeBuild: string]: number[] }, next: ChromosomeSizes) => {
-        map[next.genomeBuild] = next.chromosomeSize || [];
-        return map;
-    },
-    {}
-);
+} = chromosomeSizes.reduce((map: { [genomeBuild: string]: number[] }, next: ChromosomeSizes) => {
+    map[next.genomeBuild] = next.chromosomeSize || [];
+    return map;
+}, {});
 
 export function getChmInfo(genomeBuild: string) {
     const sel: any = { genomeRef: {}, total: 0 };
@@ -125,10 +104,7 @@ export function getChmInfo(genomeBuild: string) {
         return sel.perc[chm - 1] + loc / sel.total;
     };
     sel.loc2xpixil = function(chm: any, loc: any, goConfig: any) {
-        return (
-            sel.loc2perc(chm, loc) * goConfig.GenomeWidth +
-            goConfig.wideLeftText
-        );
+        return sel.loc2perc(chm, loc) * goConfig.GenomeWidth + goConfig.wideLeftText;
     };
     sel.perc2loc = function(xPerc: any, startChm: any) {
         var chm;
@@ -173,12 +149,7 @@ export function getChmInfo(genomeBuild: string) {
     return sel;
 }
 
-export function plotChromosomes(
-    p: any,
-    config: any,
-    chmInfo: any,
-    genomeBuild: any
-) {
+export function plotChromosomes(p: any, config: any, chmInfo: any, genomeBuild: any) {
     var yRuler = config.rowMargin + config.ticHeight;
     drawLine(
         config.wideLeftText,
@@ -213,15 +184,7 @@ export function plotChromosomes(
     );
 }
 
-function drawLine(
-    x1: any,
-    y1: any,
-    x2: any,
-    y2: any,
-    p: any,
-    cl: any,
-    width: any
-) {
+function drawLine(x1: any, y1: any, x2: any, y2: any, p: any, cl: any, width: any) {
     var path = 'M' + x1 + ' ' + y1 + ' L' + x2 + ' ' + y2;
     var line = p.path(path);
     line.attr('stroke', cl);
@@ -313,9 +276,7 @@ export function plotCnSegs(
     }
 
     var label =
-        genomeMeasured === 0
-            ? 'N/A'
-            : ((100 * genomeAltered) / genomeMeasured).toFixed(1) + '%';
+        genomeMeasured === 0 ? 'N/A' : ((100 * genomeAltered) / genomeMeasured).toFixed(1) + '%';
     var tip =
         genomeMeasured === 0
             ? 'Copy number segment data not available'
@@ -390,17 +351,11 @@ export function plotMuts(
             var chm = translateChm(mutObj.chr);
             if (chm != null && chm <= chmInfo.genomeRef.length) {
                 var x = Math.round(
-                    chmInfo.loc2xpixil(
-                        chm,
-                        (mutObj.startPosition + mutObj.endPosition) / 2,
-                        config
-                    )
+                    chmInfo.loc2xpixil(chm, (mutObj.startPosition + mutObj.endPosition) / 2, config)
                 );
                 var xBin = x - (x % config.pixelsPerBinMut);
                 if (pixelMap[xBin] == null) pixelMap[xBin] = [];
-                pixelMap[xBin].push(
-                    mutObj.gene.hugoGeneSymbol + ': ' + mutObj.proteinChange
-                );
+                pixelMap[xBin].push(mutObj.gene.hugoGeneSymbol + ': ' + mutObj.proteinChange);
                 numMut++;
             }
         }
@@ -441,11 +396,7 @@ export function plotMuts(
         });
     }
     var t = p
-        .text(
-            config.xRightText(),
-            yRow - config.rowHeight / 2,
-            mutations.length
-        )
+        .text(config.xRightText(), yRow - config.rowHeight / 2, mutations.length)
         .attr({ 'text-anchor': 'start', 'font-weight': 'bold' });
     underlineText(t, p);
     var tip = 'Number of mutation events.';

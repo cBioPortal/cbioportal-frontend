@@ -1,6 +1,4 @@
-export type SearchClause =
-    | { type: 'not'; data: string }
-    | { type: 'and'; data: string[] };
+export type SearchClause = { type: 'not'; data: string } | { type: 'and'; data: string[] };
 
 export type SearchResult = { match: boolean; forced: boolean };
 
@@ -94,10 +92,7 @@ export function matchPhrase(phrase: string, fullText: string) {
     return fullText.toLowerCase().indexOf(phrase.toLowerCase()) > -1;
 }
 
-export function perform_search_single(
-    parsed_query: SearchClause[],
-    item: string
-): SearchResult;
+export function perform_search_single(parsed_query: SearchClause[], item: string): SearchResult;
 export function perform_search_single<T>(
     parsed_query: SearchClause[],
     item: T,

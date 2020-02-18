@@ -2,9 +2,7 @@ function getURLParameterByName(name) {
     name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
     var regex = new RegExp('[\\?&]' + name + '=([^&#]*)'),
         results = regex.exec(location.search);
-    return results === null
-        ? ''
-        : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
 }
 
 function getRootUrl(href) {
@@ -81,10 +79,8 @@ var sideBySideCycleInterval = null;
 
 function buildImagePath(ref, rootUrl) {
     return {
-        screenImagePath:
-            `${rootUrl}screenshots/` + ref.replace(/^reference\//, 'screen/'),
-        diffImagePath:
-            `${rootUrl}screenshots/` + ref.replace(/^reference\//, 'diff/'),
+        screenImagePath: `${rootUrl}screenshots/` + ref.replace(/^reference\//, 'screen/'),
+        diffImagePath: `${rootUrl}screenshots/` + ref.replace(/^reference\//, 'diff/'),
         refImagePath: `${rootUrl}screenshots/${ref}`,
         imageName: ref.substring(ref.lastIndexOf('/') + 1),
     };

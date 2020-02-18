@@ -24,10 +24,7 @@ import { labelMobxPromises, cached } from 'mobxpromise';
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
 import request from 'superagent';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
-import {
-    getDarwinUrl,
-    getDigitalSlideArchiveMetaUrl,
-} from '../../../shared/api/urls';
+import { getDarwinUrl, getDigitalSlideArchiveMetaUrl } from '../../../shared/api/urls';
 import OncoKbEvidenceCache from 'shared/cache/OncoKbEvidenceCache';
 import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
@@ -91,10 +88,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownloadDataFetcher';
 import { getNavCaseIdsCache } from '../../../shared/lib/handleLongUrls';
-import {
-    fetchTrialsById,
-    fetchTrialMatchesUsingPOST,
-} from '../../../shared/api/MatchMinerAPI';
+import { fetchTrialsById, fetchTrialMatchesUsingPOST } from '../../../shared/api/MatchMinerAPI';
 import {
     IDetailedTrialMatch,
     ITrial,
@@ -133,9 +127,7 @@ export type PathologyReportPDF = {
 
 export function parseCohortIds(concatenatedIds: string) {
     return concatenatedIds.split(',').map((entityId: string) => {
-        return entityId.includes(':')
-            ? entityId
-            : this.studyId + ':' + entityId;
+        return entityId.includes(':') ? entityId : this.studyId + ':' + entityId;
     });
 }
 
@@ -146,9 +138,7 @@ export function handlePathologyReportCheckResponse(
     if (resp.total_count > 0) {
         // only use pdfs starting with the patient id to prevent mismatches
         const r = new RegExp('^' + patientId);
-        const filteredItems: any = _.filter(resp.items, (item: any) =>
-            r.test(item.name)
-        );
+        const filteredItems: any = _.filter(resp.items, (item: any) => r.test(item.name));
         return _.map(filteredItems, (item: any) => ({
             url: item.url,
             name: item.name,
@@ -267,10 +257,7 @@ export class PatientViewPageStore {
     readonly mutationMolecularProfile = remoteData({
         await: () => [this.molecularProfilesInStudy],
         invoke: async () =>
-            findMutationMolecularProfile(
-                this.molecularProfilesInStudy,
-                this.studyId
-            ),
+            findMutationMolecularProfile(this.molecularProfilesInStudy, this.studyId),
     });
 
     readonly mutationMolecularProfileId = remoteData({
@@ -291,10 +278,7 @@ export class PatientViewPageStore {
     readonly uncalledMutationMolecularProfileId = remoteData({
         await: () => [this.molecularProfilesInStudy],
         invoke: async () =>
-            findUncalledMutationMolecularProfileId(
-                this.molecularProfilesInStudy,
-                this.studyId
-            ),
+            findUncalledMutationMolecularProfileId(this.molecularProfilesInStudy, this.studyId),
     });
 
     // this is a string of concatenated ids
@@ -341,21 +325,14 @@ export class PatientViewPageStore {
     });
 
     readonly clinicalDataPatient = remoteData({
-        await: () =>
-            this.pageMode === 'patient' ? [] : [this.derivedPatientId],
-        invoke: async () =>
-            fetchClinicalDataForPatient(this.studyId, this.patientId),
+        await: () => (this.pageMode === 'patient' ? [] : [this.derivedPatientId]),
+        invoke: async () => fetchClinicalDataForPatient(this.studyId, this.patientId),
         default: [],
     });
 
     readonly samples = remoteData(
         {
-            invoke: () =>
-                fetchSamplesForPatient(
-                    this.studyId,
-                    this._patientId,
-                    this.sampleId
-                ),
+            invoke: () => fetchSamplesForPatient(this.studyId, this._patientId, this.sampleId),
             onError: (err: Error) => {
                 this.appStore.siteErrors.push({
                     errorObj: err,
@@ -385,10 +362,7 @@ export class PatientViewPageStore {
         {
             await: () => [this.samples, this.clinicalDataForSamples],
             invoke: async () =>
-                findSamplesWithoutCancerTypeClinicalData(
-                    this.samples,
-                    this.clinicalDataForSamples
-                ),
+                findSamplesWithoutCancerTypeClinicalData(this.samples, this.clinicalDataForSamples),
         },
         []
     );
@@ -406,9 +380,7 @@ export class PatientViewPageStore {
 
     readonly studies = remoteData(
         {
-            invoke: async () => [
-                await client.getStudyUsingGET({ studyId: this.studyId }),
-            ],
+            invoke: async () => [await client.getStudyUsingGET({ studyId: this.studyId })],
         },
         []
     );
@@ -416,8 +388,7 @@ export class PatientViewPageStore {
     readonly studyIdToStudy = remoteData(
         {
             await: () => [this.studies],
-            invoke: () =>
-                Promise.resolve(_.keyBy(this.studies.result, x => x.studyId)),
+            invoke: () => Promise.resolve(_.keyBy(this.studies.result, x => x.studyId)),
         },
         {}
     );
@@ -447,27 +418,20 @@ export class PatientViewPageStore {
                     const reports: PathologyReportPDF[] = [];
 
                     // keep checking if patient has more reports recursively
-                    function getPathologyReport(
-                        patientId: string,
-                        i: number
-                    ): any {
-                        return request
-                            .get(`${pathLinkUrl}/${patientId}.${i}`)
-                            .then(
-                                function(resp) {
-                                    // add report
-                                    let pdfName: string = resp.text.split(
-                                        '/'
-                                    )[1];
-                                    reports.push({
-                                        name: `${pdfName}`,
-                                        url: `${rawPdfUrl}/${pdfName}`,
-                                    });
-                                    // check if patient has more reports
-                                    return getPathologyReport(patientId, i + 1);
-                                },
-                                () => reports
-                            );
+                    function getPathologyReport(patientId: string, i: number): any {
+                        return request.get(`${pathLinkUrl}/${patientId}.${i}`).then(
+                            function(resp) {
+                                // add report
+                                let pdfName: string = resp.text.split('/')[1];
+                                reports.push({
+                                    name: `${pdfName}`,
+                                    url: `${rawPdfUrl}/${pdfName}`,
+                                });
+                                // check if patient has more reports
+                                return getPathologyReport(patientId, i + 1);
+                            },
+                            () => reports
+                        );
                     }
 
                     return getPathologyReport(this.patientId, 0);
@@ -484,8 +448,7 @@ export class PatientViewPageStore {
 
     readonly cosmicData = remoteData({
         await: () => [this.mutationData, this.uncalledMutationData],
-        invoke: () =>
-            fetchCosmicData(this.mutationData, this.uncalledMutationData),
+        invoke: () => fetchCosmicData(this.mutationData, this.uncalledMutationData),
     });
 
     readonly mutSigData = remoteData({
@@ -501,10 +464,7 @@ export class PatientViewPageStore {
             await: () => [this.mutationData, this.uncalledMutationData],
             invoke: async () =>
                 await fetchVariantAnnotationsIndexedByGenomicLocation(
-                    concatMutationData(
-                        this.mutationData,
-                        this.uncalledMutationData
-                    ),
+                    concatMutationData(this.mutationData, this.uncalledMutationData),
                     ['annotation_summary', 'hotspots'],
                     AppConfig.serverConfig.isoformOverrideSource
                 ),
@@ -518,10 +478,7 @@ export class PatientViewPageStore {
     readonly hotspotData = remoteData({
         await: () => [this.mutationData, this.uncalledMutationData],
         invoke: async () => {
-            return fetchHotspotsData(
-                this.mutationData,
-                this.uncalledMutationData
-            );
+            return fetchHotspotsData(this.mutationData, this.uncalledMutationData);
         },
         onError: () => {
             // fail silently
@@ -548,11 +505,7 @@ export class PatientViewPageStore {
     readonly clinicalDataGroupedBySample = remoteData(
         {
             await: () => [this.clinicalDataForSamples],
-            invoke: async () =>
-                groupBySampleId(
-                    this.sampleIds,
-                    this.clinicalDataForSamples.result
-                ),
+            invoke: async () => groupBySampleId(this.sampleIds, this.clinicalDataForSamples.result),
         },
         []
     );
@@ -567,10 +520,7 @@ export class PatientViewPageStore {
                     .map(data => data.clinicalData)
                     .flatten()
                     .filter(attribute => {
-                        return (
-                            attribute.clinicalAttributeId ===
-                            clinicalAttributeId
-                        );
+                        return attribute.clinicalAttributeId === clinicalAttributeId;
                     })
                     .map(attribute => attribute.value)
                     .value();
@@ -587,10 +537,7 @@ export class PatientViewPageStore {
 
     readonly patientViewData = remoteData<ClinicalInformationData>(
         {
-            await: () => [
-                this.clinicalDataPatient,
-                this.clinicalDataForSamples,
-            ],
+            await: () => [this.clinicalDataPatient, this.clinicalDataForSamples],
             invoke: async () =>
                 transformClinicalInformationToStoreShape(
                     this.patientId,
@@ -669,8 +616,7 @@ export class PatientViewPageStore {
     public readonly mrnaRankMolecularProfileId = remoteData(
         {
             await: () => [this.molecularProfilesInStudy],
-            invoke: async () =>
-                findMrnaRankMolecularProfileId(this.molecularProfilesInStudy),
+            invoke: async () => findMrnaRankMolecularProfileId(this.molecularProfilesInStudy),
         },
         null
     );
@@ -682,10 +628,7 @@ export class PatientViewPageStore {
                 const filter = {
                     sampleIds: this.sampleIds,
                 } as DiscreteCopyNumberFilter;
-                return fetchDiscreteCNAData(
-                    filter,
-                    this.molecularProfileIdDiscrete
-                );
+                return fetchDiscreteCNAData(filter, this.molecularProfileIdDiscrete);
             },
             onResult: (result: DiscreteCopyNumberData[]) => {
                 // We want to take advantage of this loaded data, and not redownload the same data
@@ -711,13 +654,11 @@ export class PatientViewPageStore {
         {
             await: () => [this.patientViewData],
             invoke: async () => {
-                return await client.getAllClinicalEventsOfPatientInStudyUsingGET(
-                    {
-                        studyId: this.studyId,
-                        patientId: this.patientId,
-                        projection: 'DETAILED',
-                    }
-                );
+                return await client.getAllClinicalEventsOfPatientInStudyUsingGET({
+                    studyId: this.studyId,
+                    patientId: this.patientId,
+                    projection: 'DETAILED',
+                });
             },
         },
         []
@@ -726,9 +667,7 @@ export class PatientViewPageStore {
     readonly molecularProfileIdDiscrete = remoteData({
         await: () => [this.molecularProfilesInStudy],
         invoke: async () => {
-            return findMolecularProfileIdDiscrete(
-                this.molecularProfilesInStudy
-            );
+            return findMolecularProfileIdDiscrete(this.molecularProfilesInStudy);
         },
     });
 
@@ -739,11 +678,8 @@ export class PatientViewPageStore {
                 // we just need it in this form for input to DiscreteCNACache
                 const ret: { [studyId: string]: MolecularProfile } = {};
                 if (this.molecularProfileIdDiscrete.result) {
-                    ret[
-                        this.studyId
-                    ] = await client.getMolecularProfileUsingGET({
-                        molecularProfileId: this.molecularProfileIdDiscrete
-                            .result,
+                    ret[this.studyId] = await client.getMolecularProfileUsingGET({
+                        molecularProfileId: this.molecularProfileIdDiscrete.result,
                     });
                 }
                 return ret;
@@ -756,9 +692,7 @@ export class PatientViewPageStore {
         await: () => [this.derivedPatientId],
         invoke: async () => {
             if (AppConfig.serverConfig.enable_darwin === true) {
-                let resp = await request.get(
-                    getDarwinUrl(this.sampleIds, this.patientId)
-                );
+                let resp = await request.get(getDarwinUrl(this.sampleIds, this.patientId));
                 return resp.text;
             } else {
                 return '';
@@ -784,15 +718,10 @@ export class PatientViewPageStore {
 
     readonly uncalledMutationData = remoteData(
         {
-            await: () => [
-                this.samples,
-                this.uncalledMutationMolecularProfileId,
-            ],
+            await: () => [this.samples, this.uncalledMutationMolecularProfileId],
             invoke: async () => {
                 const mutationFilter = {
-                    sampleIds: this.samples.result.map(
-                        (sample: Sample) => sample.sampleId
-                    ),
+                    sampleIds: this.samples.result.map((sample: Sample) => sample.sampleId),
                 } as MutationFilter;
 
                 return fetchMutationData(
@@ -806,11 +735,7 @@ export class PatientViewPageStore {
 
     readonly coverageInformation = remoteData<CoverageInformation>(
         {
-            await: () => [
-                this.mutatedGenes,
-                this.samples,
-                this.molecularProfilesInStudy,
-            ],
+            await: () => [this.mutatedGenes, this.samples, this.molecularProfilesInStudy],
             invoke: async () => {
                 // gather sample molecular identifiers
                 const sampleMolecularIdentifiers: SampleMolecularIdentifier[] = [];
@@ -828,10 +753,7 @@ export class PatientViewPageStore {
                 });
                 // query for gene panel data using sample molecular identifiers
                 let genePanelData: GenePanelData[];
-                if (
-                    sampleMolecularIdentifiers.length &&
-                    this.mutatedGenes.result!.length
-                ) {
+                if (sampleMolecularIdentifiers.length && this.mutatedGenes.result!.length) {
                     genePanelData = await client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST(
                         {
                             sampleMolecularIdentifiers,
@@ -843,9 +765,7 @@ export class PatientViewPageStore {
 
                 // query for gene panel metadata
                 const genePanelIds = _.uniq(
-                    genePanelData
-                        .map(gpData => gpData.genePanelId)
-                        .filter(id => !!id)
+                    genePanelData.map(gpData => gpData.genePanelId).filter(id => !!id)
                 );
                 let genePanels: GenePanel[] = [];
                 if (genePanelIds.length) {
@@ -862,8 +782,7 @@ export class PatientViewPageStore {
                     this.samples.result!,
                     [
                         {
-                            uniquePatientKey: this.samples.result![0]
-                                .uniquePatientKey,
+                            uniquePatientKey: this.samples.result![0].uniquePatientKey,
                         },
                     ],
                     this.mutatedGenes.result!
@@ -881,10 +800,7 @@ export class PatientViewPageStore {
                     sampleIds: this.sampleIds,
                 } as MutationFilter;
 
-                return fetchMutationData(
-                    mutationFilter,
-                    this.mutationMolecularProfileId.result
-                );
+                return fetchMutationData(mutationFilter, this.mutationMolecularProfileId.result);
             },
         },
         []
@@ -894,12 +810,10 @@ export class PatientViewPageStore {
         await: () => [this.mutationData],
         invoke: () => {
             return Promise.resolve(
-                _.uniqBy(this.mutationData.result!, d => d.entrezGeneId).map(
-                    m => ({
-                        hugoGeneSymbol: m.gene.hugoGeneSymbol,
-                        entrezGeneId: m.entrezGeneId,
-                    })
-                )
+                _.uniqBy(this.mutationData.result!, d => d.entrezGeneId).map(m => ({
+                    hugoGeneSymbol: m.gene.hugoGeneSymbol,
+                    entrezGeneId: m.entrezGeneId,
+                }))
             );
         },
     });
@@ -925,10 +839,7 @@ export class PatientViewPageStore {
                     return Promise.resolve(
                         _.reduce(
                             this.oncoKbCancerGenes.result,
-                            (
-                                map: { [entrezGeneId: number]: boolean },
-                                next: CancerGene
-                            ) => {
+                            (map: { [entrezGeneId: number]: boolean }, next: CancerGene) => {
                                 if (next.oncokbAnnotated) {
                                     map[next.entrezGeneId] = true;
                                 }
@@ -987,10 +898,7 @@ export class PatientViewPageStore {
             ],
             invoke: async () =>
                 AppConfig.serverConfig.show_civic
-                    ? fetchCivicGenes(
-                          this.mutationData,
-                          this.uncalledMutationData
-                      )
+                    ? fetchCivicGenes(this.mutationData, this.uncalledMutationData)
                     : {},
             onError: (err: Error) => {
                 // fail silently
@@ -1001,16 +909,9 @@ export class PatientViewPageStore {
 
     readonly civicVariants = remoteData<ICivicVariant | undefined>(
         {
-            await: () => [
-                this.civicGenes,
-                this.mutationData,
-                this.uncalledMutationData,
-            ],
+            await: () => [this.civicGenes, this.mutationData, this.uncalledMutationData],
             invoke: async () => {
-                if (
-                    AppConfig.serverConfig.show_civic &&
-                    this.civicGenes.result
-                ) {
+                if (AppConfig.serverConfig.show_civic && this.civicGenes.result) {
                     return fetchCivicVariants(
                         this.civicGenes.result as ICivicGene,
                         this.mutationData,
@@ -1057,9 +958,7 @@ export class PatientViewPageStore {
         {
             await: () => [this.discreteCNAData, this.clinicalDataForSamples],
             invoke: async () =>
-                AppConfig.serverConfig.show_civic
-                    ? fetchCnaCivicGenes(this.discreteCNAData)
-                    : {},
+                AppConfig.serverConfig.show_civic ? fetchCnaCivicGenes(this.discreteCNAData) : {},
             onError: (err: Error) => {
                 // fail silently
             },
@@ -1072,8 +971,7 @@ export class PatientViewPageStore {
             await: () => [this.civicGenes, this.mutationData],
             invoke: async () => {
                 if (this.cnaCivicGenes.status == 'complete') {
-                    return fetchCivicVariants(this.cnaCivicGenes
-                        .result as ICivicGene);
+                    return fetchCivicVariants(this.cnaCivicGenes.result as ICivicGene);
                 }
             },
             onError: (err: Error) => {
@@ -1087,10 +985,7 @@ export class PatientViewPageStore {
         {
             await: () => [this.discreteCNAData],
             invoke: async () =>
-                fetchCopyNumberData(
-                    this.discreteCNAData,
-                    this.molecularProfileIdDiscrete
-                ),
+                fetchCopyNumberData(this.discreteCNAData, this.molecularProfileIdDiscrete),
         },
         []
     );
@@ -1178,10 +1073,7 @@ export class PatientViewPageStore {
         [genePanelId: string]: GenePanel;
     }>(
         {
-            await: () => [
-                this.sampleToMutationGenePanelData,
-                this.sampleToDiscreteGenePanelData,
-            ],
+            await: () => [this.sampleToMutationGenePanelData, this.sampleToDiscreteGenePanelData],
             invoke: async () => {
                 const sampleGenePanelInfo = _.concat(
                     _.values(this.sampleToMutationGenePanelData.result),
@@ -1205,10 +1097,7 @@ export class PatientViewPageStore {
             invoke: async () => {
                 return _(this.genePanelIdToPanel.result)
                     .mapValues(genePanel =>
-                        _.map(
-                            genePanel.genes,
-                            genePanelToGene => genePanelToGene.entrezGeneId
-                        )
+                        _.map(genePanel.genes, genePanelToGene => genePanelToGene.entrezGeneId)
                     )
                     .value();
             },
@@ -1221,16 +1110,11 @@ export class PatientViewPageStore {
     }
 
     @computed get mergedMutationDataIncludingUncalled(): Mutation[][] {
-        return mergeMutationsIncludingUncalled(
-            this.mutationData,
-            this.uncalledMutationData
-        );
+        return mergeMutationsIncludingUncalled(this.mutationData, this.uncalledMutationData);
     }
 
     @computed get mergedMutationDataFilteredByGene(): Mutation[][] {
-        if (
-            this.mutationTableGeneFilterOption === GeneFilterOption.ALL_SAMPLES
-        ) {
+        if (this.mutationTableGeneFilterOption === GeneFilterOption.ALL_SAMPLES) {
             return filterMutationsByProfiledGene(
                 this.mergedMutationData,
                 this.sampleIds,
@@ -1243,9 +1127,7 @@ export class PatientViewPageStore {
 
     @computed
     get mergedMutationDataIncludingUncalledFilteredByGene(): Mutation[][] {
-        if (
-            this.mutationTableGeneFilterOption === GeneFilterOption.ALL_SAMPLES
-        ) {
+        if (this.mutationTableGeneFilterOption === GeneFilterOption.ALL_SAMPLES) {
             return filterMutationsByProfiledGene(
                 this.mergedMutationDataIncludingUncalled,
                 this.sampleIds,
@@ -1258,42 +1140,33 @@ export class PatientViewPageStore {
 
     @computed
     get mergedDiscreteCNADataFilteredByGene(): DiscreteCopyNumberData[][] {
-        if (
-            this.copyNumberTableGeneFilterOption ===
-            GeneFilterOption.ALL_SAMPLES
-        ) {
-            return _.filter(
-                this.mergedDiscreteCNAData,
-                (mutations: DiscreteCopyNumberData[]) => {
-                    const entrezGeneId = mutations[0].gene.entrezGeneId;
-                    const geneProfiledInSamples = TumorColumnFormatter.getProfiledSamplesForGene(
-                        entrezGeneId,
-                        this.sampleIds,
-                        this.sampleToMutationGenePanelId.result,
-                        this.genePanelIdToEntrezGeneIds.result
-                    );
-                    return (
-                        _(geneProfiledInSamples)
-                            .values()
-                            .filter((profiled: boolean) => profiled)
-                            .value().length === this.sampleIds.length
-                    );
-                }
-            );
+        if (this.copyNumberTableGeneFilterOption === GeneFilterOption.ALL_SAMPLES) {
+            return _.filter(this.mergedDiscreteCNAData, (mutations: DiscreteCopyNumberData[]) => {
+                const entrezGeneId = mutations[0].gene.entrezGeneId;
+                const geneProfiledInSamples = TumorColumnFormatter.getProfiledSamplesForGene(
+                    entrezGeneId,
+                    this.sampleIds,
+                    this.sampleToMutationGenePanelId.result,
+                    this.genePanelIdToEntrezGeneIds.result
+                );
+                return (
+                    _(geneProfiledInSamples)
+                        .values()
+                        .filter((profiled: boolean) => profiled)
+                        .value().length === this.sampleIds.length
+                );
+            });
         }
         return this.mergedDiscreteCNAData;
     }
 
     @computed get existsSomeMutationWithVAFData() {
-        return _.some(
-            this.mergedMutationDataIncludingUncalled,
-            mutationList => {
-                return _.some(mutationList, m => {
-                    const vaf = getVariantAlleleFrequency(m);
-                    return vaf != null && vaf > 0;
-                });
-            }
-        );
+        return _.some(this.mergedMutationDataIncludingUncalled, mutationList => {
+            return _.some(mutationList, m => {
+                const vaf = getVariantAlleleFrequency(m);
+                return vaf != null && vaf > 0;
+            });
+        });
     }
 
     readonly mutationTableShowGeneFilterMenu = remoteData({
@@ -1330,10 +1203,7 @@ export class PatientViewPageStore {
         ],
         invoke: () => {
             const entrezGeneIds: number[] = _.uniq(
-                _.map(
-                    this.mergedDiscreteCNAData,
-                    alterations => alterations[0].entrezGeneId
-                )
+                _.map(this.mergedDiscreteCNAData, alterations => alterations[0].entrezGeneId)
             );
             const sampleIds = this.samples.result!.map(s => s.sampleId);
             return Promise.resolve(
@@ -1375,9 +1245,7 @@ export class PatientViewPageStore {
     }
 
     @cached get discreteCNACache() {
-        return new DiscreteCNACache(
-            this.studyToMolecularProfileDiscrete.result
-        );
+        return new DiscreteCNACache(this.studyToMolecularProfileDiscrete.result);
     }
 
     @cached get oncoKbEvidenceCache() {
@@ -1439,16 +1307,13 @@ export class PatientViewPageStore {
             invoke: async () => {
                 let nctIds = new Set<string>(); // Trial unique id from clinicaltrials.gov
                 let protocolNos = new Set<string>(); // Trials's MSK ID same as protocol_number or protocol_id
-                _.forEach(
-                    this.trialMatches.result,
-                    (trialMatch: ITrialMatch) => {
-                        if (_.isEmpty(trialMatch.protocolNo)) {
-                            nctIds.add(trialMatch.nctId);
-                        } else {
-                            protocolNos.add(trialMatch.protocolNo);
-                        }
+                _.forEach(this.trialMatches.result, (trialMatch: ITrialMatch) => {
+                    if (_.isEmpty(trialMatch.protocolNo)) {
+                        nctIds.add(trialMatch.nctId);
+                    } else {
+                        protocolNos.add(trialMatch.protocolNo);
                     }
-                );
+                });
                 return {
                     nct_id: [...nctIds],
                     protocol_no: [...protocolNos],
@@ -1482,10 +1347,7 @@ export class PatientViewPageStore {
             await: () => [this.trials, this.trialMatches],
             invoke: async () => {
                 if (this.trials.result && this.trialMatches.result) {
-                    return groupTrialMatchesById(
-                        this.trials.result,
-                        this.trialMatches.result
-                    );
+                    return groupTrialMatchesById(this.trials.result, this.trialMatches.result);
                 }
                 return [];
             },

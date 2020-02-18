@@ -1,9 +1,6 @@
 import { assert } from 'chai';
 import { computePlotData } from './CoExpressionVizUtils';
-import {
-    GenePanelData,
-    MolecularProfile,
-} from '../../../shared/api/generated/CBioPortalAPI';
+import { GenePanelData, MolecularProfile } from '../../../shared/api/generated/CBioPortalAPI';
 
 describe('CoExpressionVizUtils', () => {
     describe('computePlotData', () => {

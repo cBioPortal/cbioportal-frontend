@@ -1,7 +1,4 @@
-import {
-    Mutation,
-    Sample,
-} from '../../../../shared/api/generated/CBioPortalAPI';
+import { Mutation, Sample } from '../../../../shared/api/generated/CBioPortalAPI';
 import _ from 'lodash';
 import { generateMutationIdByGeneAndProteinChangeAndEvent } from '../../../../shared/lib/StoreUtils';
 import {
@@ -53,10 +50,7 @@ export function makeMutationHeatmapData(
     coverageInformation: CoverageInformation,
     mode: MutationOncoprintMode
 ) {
-    const mutationsByKey = _.keyBy(
-        mutations,
-        generateMutationIdByGeneAndProteinChangeAndEvent
-    );
+    const mutationsByKey = _.keyBy(mutations, generateMutationIdByGeneAndProteinChangeAndEvent);
     const mutationsBySample = _.groupBy(mutations, m => m.uniqueSampleKey);
     const mutationHasAtLeastOneVAF = _.mapValues(mutationsByKey, () => false);
 
@@ -65,23 +59,16 @@ export function makeMutationHeatmapData(
         const sampleMutations = mutationsBySample[sample.uniqueSampleKey] || [];
         const mutationKeys: { [mutationId: string]: boolean } = {};
         for (const mutation of sampleMutations) {
-            const mutationId = generateMutationIdByGeneAndProteinChangeAndEvent(
-                mutation
-            );
-            const uid =
-                mode === MutationOncoprintMode.SAMPLE_TRACKS
-                    ? mutationId
-                    : sample.sampleId;
-            const isUncalled =
-                mutation.mutationStatus.toLowerCase() === 'uncalled';
+            const mutationId = generateMutationIdByGeneAndProteinChangeAndEvent(mutation);
+            const uid = mode === MutationOncoprintMode.SAMPLE_TRACKS ? mutationId : sample.sampleId;
+            const isUncalled = mutation.mutationStatus.toLowerCase() === 'uncalled';
             if (!isUncalled || mutation.tumorAltCount > 0) {
                 mutationKeys[mutationId] = true;
                 let vaf = getVariantAlleleFrequency(mutation);
 
                 let mutationStatus;
                 if (isUncalled) {
-                    mutationStatus =
-                        MutationStatus.PROFILED_WITH_READS_BUT_UNCALLED;
+                    mutationStatus = MutationStatus.PROFILED_WITH_READS_BUT_UNCALLED;
                 } else if (vaf === null) {
                     mutationStatus = MutationStatus.MUTATED_BUT_NO_VAF;
                 } else {
@@ -110,13 +97,8 @@ export function makeMutationHeatmapData(
             .map(key => mutationsByKey[key]);
 
         for (const mutation of noData) {
-            const mutationId = generateMutationIdByGeneAndProteinChangeAndEvent(
-                mutation
-            );
-            const uid =
-                mode === MutationOncoprintMode.SAMPLE_TRACKS
-                    ? mutationId
-                    : sample.sampleId;
+            const mutationId = generateMutationIdByGeneAndProteinChangeAndEvent(mutation);
+            const uid = mode === MutationOncoprintMode.SAMPLE_TRACKS ? mutationId : sample.sampleId;
             const isProfiledForGene = isSampleProfiled(
                 sample.uniqueSampleKey,
                 mutation.molecularProfileId,
@@ -141,9 +123,7 @@ export function makeMutationHeatmapData(
     }
 
     // filter out data for mutations where none of them have data
-    oncoprintData = oncoprintData.filter(
-        d => mutationHasAtLeastOneVAF[d.mutationId]
-    );
+    oncoprintData = oncoprintData.filter(d => mutationHasAtLeastOneVAF[d.mutationId]);
 
     // group data by track
     if (mode === MutationOncoprintMode.SAMPLE_TRACKS) {
@@ -155,12 +135,7 @@ export function makeMutationHeatmapData(
 
 export function getDownloadData(data: IMutationOncoprintTrackDatum[]) {
     const downloadData = [];
-    downloadData.push([
-        'Sample_ID',
-        'Gene',
-        'Protein_Change',
-        'Variant_Allele_Frequency',
-    ]);
+    downloadData.push(['Sample_ID', 'Gene', 'Protein_Change', 'Variant_Allele_Frequency']);
     for (const datum of data) {
         if (datum.profile_data !== null) {
             downloadData.push([

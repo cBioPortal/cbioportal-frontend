@@ -75,10 +75,7 @@ describe('StudyViewScatterPlotUtils', () => {
                     {
                         x: 0,
                         y: 2,
-                        data: [
-                            { x: 1, y: 2, asdf: 'YO1' },
-                            { x: 0, y: 2, asdf: 'YO2' },
-                        ],
+                        data: [{ x: 1, y: 2, asdf: 'YO1' }, { x: 0, y: 2, asdf: 'YO2' }],
                     },
                     { x: 2, y: 4, data: [{ x: 3, y: 4, asdf: 'YO3' }] },
                     {

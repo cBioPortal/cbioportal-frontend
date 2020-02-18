@@ -1,16 +1,8 @@
 import _ from 'lodash';
 import { Region, SetRectangles, Set } from './layout';
-import {
-    getBoundingBox,
-    Rectangle,
-    rectangleArea,
-    rectangleIntersection,
-} from './geometry';
+import { getBoundingBox, Rectangle, rectangleArea, rectangleIntersection } from './geometry';
 
-export function adjustSizesForMinimumSizeRegions(
-    regions: Region[],
-    sets: Set[]
-) {
+export function adjustSizesForMinimumSizeRegions(regions: Region[], sets: Set[]) {
     // Adjust sizes in order to not have regions that are too tiny to interact with/see.
     // The minimum region size is a fraction of the biggest set size.
     const biggestSetSize = Math.max(...sets.map(s => s.size));
@@ -51,10 +43,7 @@ export function getConnectedComponents(setRectangles: SetRectangles) {
             if (
                 _.some(
                     component.rectangles,
-                    componentRect =>
-                        rectangleArea(
-                            rectangleIntersection(rect, componentRect)
-                        ) > 0
+                    componentRect => rectangleArea(rectangleIntersection(rect, componentRect)) > 0
                 )
             ) {
                 component.rectangles.push(rect);
@@ -96,13 +85,9 @@ export function layoutConnectedComponents(setRectangles: SetRectangles) {
             getBoundingBox(component.rectangles)
         );
         const xPadding =
-            Math.max(
-                ...boundingBoxes.map(box => box.xRange.max - box.xRange.min)
-            ) / 10;
+            Math.max(...boundingBoxes.map(box => box.xRange.max - box.xRange.min)) / 10;
         const yPadding =
-            Math.max(
-                ...boundingBoxes.map(box => box.yRange.max - box.yRange.min)
-            ) / 10;
+            Math.max(...boundingBoxes.map(box => box.yRange.max - box.yRange.min)) / 10;
 
         // select the target coordinates for the layout
         let targetCoordinates: { x: number; y: number }[] = [];
@@ -117,20 +102,12 @@ export function layoutConnectedComponents(setRectangles: SetRectangles) {
                 targetCoordinates = [
                     { x: 0, y: 0 },
                     {
-                        x:
-                            Math.max(
-                                boundingBoxes[0].xLength,
-                                boundingBoxes[2].xLength
-                            ) + xPadding,
+                        x: Math.max(boundingBoxes[0].xLength, boundingBoxes[2].xLength) + xPadding,
                         y: 0,
                     },
                     {
                         x: 0,
-                        y:
-                            Math.max(
-                                boundingBoxes[0].yLength,
-                                boundingBoxes[1].yLength
-                            ) + yPadding,
+                        y: Math.max(boundingBoxes[0].yLength, boundingBoxes[1].yLength) + yPadding,
                     },
                 ];
                 break;

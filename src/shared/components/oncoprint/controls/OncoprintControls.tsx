@@ -18,11 +18,7 @@ import _ from 'lodash';
 import { SortMode } from '../ResultsViewOncoprint';
 import { Gene, MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import {
-    DefaultTooltip,
-    EditableSpan,
-    CheckedSelect,
-} from 'cbioportal-frontend-commons';
+import { DefaultTooltip, EditableSpan, CheckedSelect } from 'cbioportal-frontend-commons';
 import Slider from 'react-rangeslider';
 import 'react-rangeslider/lib/index.css';
 import './styles.scss';
@@ -45,9 +41,7 @@ import DriverAnnotationControls, {
     IDriverAnnotationControlsHandlers,
 } from '../../../../pages/resultsView/settings/DriverAnnotationControls';
 import OncoprintDropdownCount from 'pages/resultsView/oncoprint/OncoprintDropdownCount';
-import TextIconArea, {
-    ITextIconAreaItemProps,
-} from 'shared/components/textIconArea/TextIconArea';
+import TextIconArea, { ITextIconAreaItemProps } from 'shared/components/textIconArea/TextIconArea';
 import { extractTreatmentSelections } from '../OncoprintUtils';
 import { Treatment } from 'shared/lib/GenericAssayUtils/TreatmentUtils';
 
@@ -56,9 +50,7 @@ export interface IOncoprintControlsHandlers {
     onSelectShowUnalteredColumns: (unalteredColumnsShown: boolean) => void;
     onSelectShowWhitespaceBetweenColumns: (showWhitespace: boolean) => void;
     onSelectShowClinicalTrackLegends?: (showLegends: boolean) => void;
-    onSelectOnlyShowClinicalLegendForAlteredCases?: (
-        showLegends: boolean
-    ) => void;
+    onSelectOnlyShowClinicalLegendForAlteredCases?: (showLegends: boolean) => void;
     onSelectShowOqlInLabels?: (show: boolean) => void;
     onSelectShowMinimap: (showMinimap: boolean) => void;
     onSelectDistinguishMutationType: (distinguish: boolean) => void;
@@ -82,9 +74,7 @@ export interface IOncoprintControlsHandlers {
     onClickSortAlphabetical?: () => void;
     onClickSortCaseListOrder?: () => void;
     onClickDownload?: (type: string) => void; // type is "pdf", "png", "svg", "order", or "tabular"
-    onChangeSelectedClinicalTracks?: (
-        attributeIds: (string | SpecialAttribute)[]
-    ) => void;
+    onChangeSelectedClinicalTracks?: (attributeIds: (string | SpecialAttribute)[]) => void;
     onClickAddGenesToHeatmap?: () => void;
     onClickAddTreatmentsToHeatmap?: (treatments: string[]) => void;
     onSelectHeatmapProfile?: (molecularProfileId: string) => void;
@@ -201,10 +191,7 @@ const EVENT_KEY = {
 };
 
 @observer
-export default class OncoprintControls extends React.Component<
-    IOncoprintControlsProps,
-    {}
-> {
+export default class OncoprintControls extends React.Component<IOncoprintControlsProps, {}> {
     @observable horzZoomSliderState: number;
     @observable heatmapGenesReady = false;
     @observable private _selectedTreatmentIds: string[] = [];
@@ -230,9 +217,7 @@ export default class OncoprintControls extends React.Component<
         this.onButtonClick = this.onButtonClick.bind(this);
         this.onZoomInClick = this.onZoomInClick.bind(this);
         this.onZoomOutClick = this.onZoomOutClick.bind(this);
-        this.onCustomDriverTierCheckboxClick = this.onCustomDriverTierCheckboxClick.bind(
-            this
-        );
+        this.onCustomDriverTierCheckboxClick = this.onCustomDriverTierCheckboxClick.bind(this);
         this.onHorzZoomSliderChange = this.onHorzZoomSliderChange.bind(this);
         this.onHorzZoomSliderSet = this.onHorzZoomSliderSet.bind(this);
         this.onSetHorzZoomTextInput = this.onSetHorzZoomTextInput.bind(this);
@@ -242,10 +227,7 @@ export default class OncoprintControls extends React.Component<
         }
 
         this.horzZoomSliderState = props.state.horzZoom;
-        reaction(
-            () => this.props.state.horzZoom,
-            z => (this.horzZoomSliderState = z)
-        ); // when horz zoom changes, set slider state
+        reaction(() => this.props.state.horzZoom, z => (this.horzZoomSliderState = z)); // when horz zoom changes, set slider state
     }
 
     private onZoomInClick() {
@@ -277,9 +259,7 @@ export default class OncoprintControls extends React.Component<
 
     private toggleShowMinimap() {
         this.props.handlers.onSelectShowMinimap &&
-            this.props.handlers.onSelectShowMinimap(
-                !this.props.state.showMinimap
-            );
+            this.props.handlers.onSelectShowMinimap(!this.props.state.showMinimap);
     }
 
     private onInputClick(event: React.MouseEvent<HTMLInputElement>) {
@@ -303,17 +283,14 @@ export default class OncoprintControls extends React.Component<
                     );
                 break;
             case EVENT_KEY.onlyShowClinicalLegendForAlteredCases:
-                this.props.handlers
-                    .onSelectOnlyShowClinicalLegendForAlteredCases &&
+                this.props.handlers.onSelectOnlyShowClinicalLegendForAlteredCases &&
                     this.props.handlers.onSelectOnlyShowClinicalLegendForAlteredCases(
                         !this.props.state.onlyShowClinicalLegendForAlteredCases
                     );
                 break;
             case EVENT_KEY.showOqlInLabels:
                 this.props.handlers.onSelectShowOqlInLabels &&
-                    this.props.handlers.onSelectShowOqlInLabels(
-                        !this.props.state.showOqlInLabels
-                    );
+                    this.props.handlers.onSelectShowOqlInLabels(!this.props.state.showOqlInLabels);
                 break;
             case EVENT_KEY.columnTypeSample:
                 this.props.handlers.onSelectColumnType &&
@@ -324,8 +301,7 @@ export default class OncoprintControls extends React.Component<
                     this.props.handlers.onSelectColumnType('patient');
                 break;
             case EVENT_KEY.sortByData:
-                this.props.handlers.onClickSortByData &&
-                    this.props.handlers.onClickSortByData();
+                this.props.handlers.onClickSortByData && this.props.handlers.onClickSortByData();
                 break;
             case EVENT_KEY.sortAlphabetical:
                 this.props.handlers.onClickSortAlphabetical &&
@@ -343,9 +319,7 @@ export default class OncoprintControls extends React.Component<
                 break;
             case EVENT_KEY.sortByDrivers:
                 this.props.handlers.onSelectSortByDrivers &&
-                    this.props.handlers.onSelectSortByDrivers(
-                        !this.props.state.sortByDrivers
-                    );
+                    this.props.handlers.onSelectSortByDrivers(!this.props.state.sortByDrivers);
                 break;
             case EVENT_KEY.distinguishDrivers:
                 this.props.handlers.onSelectDistinguishDrivers &&
@@ -417,9 +391,7 @@ export default class OncoprintControls extends React.Component<
         this.horzZoomSliderState = this.props.state.horzZoom; // set it back in case it doesnt change
     }
 
-    private onCustomDriverTierCheckboxClick(
-        event: React.MouseEvent<HTMLInputElement>
-    ) {
+    private onCustomDriverTierCheckboxClick(event: React.MouseEvent<HTMLInputElement>) {
         this.props.handlers.onSelectCustomDriverAnnotationTier &&
             this.props.handlers.onSelectCustomDriverAnnotationTier(
                 (event.target as HTMLInputElement).value,
@@ -440,35 +412,26 @@ export default class OncoprintControls extends React.Component<
                 break;
             case EVENT_KEY.addTreatmentsToHeatmap:
                 this.props.handlers.onClickAddTreatmentsToHeatmap &&
-                    this.props.handlers.onClickAddTreatmentsToHeatmap(
-                        this._selectedTreatmentIds
-                    );
+                    this.props.handlers.onClickAddTreatmentsToHeatmap(this._selectedTreatmentIds);
                 break;
             case EVENT_KEY.downloadSVG:
-                this.props.handlers.onClickDownload &&
-                    this.props.handlers.onClickDownload('svg');
+                this.props.handlers.onClickDownload && this.props.handlers.onClickDownload('svg');
                 break;
             case EVENT_KEY.downloadPNG:
-                this.props.handlers.onClickDownload &&
-                    this.props.handlers.onClickDownload('png');
+                this.props.handlers.onClickDownload && this.props.handlers.onClickDownload('png');
                 break;
             case EVENT_KEY.downloadPDF:
-                this.props.handlers.onClickDownload &&
-                    this.props.handlers.onClickDownload('pdf');
+                this.props.handlers.onClickDownload && this.props.handlers.onClickDownload('pdf');
                 break;
             case EVENT_KEY.downloadOrder:
-                this.props.handlers.onClickDownload &&
-                    this.props.handlers.onClickDownload('order');
+                this.props.handlers.onClickDownload && this.props.handlers.onClickDownload('order');
                 break;
             case EVENT_KEY.downloadTabular:
                 this.props.handlers.onClickDownload &&
                     this.props.handlers.onClickDownload('tabular');
                 break;
             case EVENT_KEY.viewNGCHM:
-                if (
-                    this.props.state.ngchmButtonActive &&
-                    this.props.handlers.onClickNGCHM
-                ) {
+                if (this.props.state.ngchmButtonActive && this.props.handlers.onClickNGCHM) {
                     this.showConfirmNgchmModal = true;
                 }
                 break;
@@ -495,15 +458,11 @@ export default class OncoprintControls extends React.Component<
         switch ((event.target as HTMLTextAreaElement).name) {
             case EVENT_KEY.annotateCBioPortalInput:
                 this.props.handlers.onChangeAnnotateCBioPortalInputValue &&
-                    this.props.handlers.onChangeAnnotateCBioPortalInputValue(
-                        event.target.value
-                    );
+                    this.props.handlers.onChangeAnnotateCBioPortalInputValue(event.target.value);
                 break;
             case EVENT_KEY.annotateCOSMICInput:
                 this.props.handlers.onChangeAnnotateCOSMICInputValue &&
-                    this.props.handlers.onChangeAnnotateCOSMICInputValue(
-                        event.target.value
-                    );
+                    this.props.handlers.onChangeAnnotateCOSMICInputValue(event.target.value);
                 break;
         }
     }
@@ -522,18 +481,13 @@ export default class OncoprintControls extends React.Component<
         _.remove(this._selectedTreatmentIds, v => v === treatmentId);
     }
 
-    private filterHeatmapProfilesByGenericAssayType(
-        profiles: MolecularProfile[]
-    ) {
+    private filterHeatmapProfilesByGenericAssayType(profiles: MolecularProfile[]) {
         return _.filter(
             profiles,
             profile =>
-                profile.molecularAlterationType !==
-                    AlterationTypeConstants.GENERIC_ASSAY ||
-                (profile.molecularAlterationType ===
-                    AlterationTypeConstants.GENERIC_ASSAY &&
-                    profile.genericAssayType ===
-                        GenericAssayTypeConstants.TREATMENT_RESPONSE)
+                profile.molecularAlterationType !== AlterationTypeConstants.GENERIC_ASSAY ||
+                (profile.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY &&
+                    profile.genericAssayType === GenericAssayTypeConstants.TREATMENT_RESPONSE)
         );
     }
 
@@ -570,9 +524,7 @@ export default class OncoprintControls extends React.Component<
     }
 
     @computed get selectedTreatments(): ISelectOption[] {
-        return this._selectedTreatmentIds.map(
-            o => this.treatmentOptionsByValueMap[o]
-        );
+        return this._selectedTreatmentIds.map(o => this.treatmentOptionsByValueMap[o]);
     }
 
     @computed get selectedTreatmentsJS() {
@@ -607,10 +559,7 @@ export default class OncoprintControls extends React.Component<
             // merge the current selected options with all the filtered ones and remove duplicates
             this.onSelectTreatments(
                 _.uniqBy(
-                    [
-                        ...this.selectedTreatmentsJS,
-                        ...this.filteredTreatmentOptions,
-                    ],
+                    [...this.selectedTreatmentsJS, ...this.filteredTreatmentOptions],
                     option => option.value
                 )
             );
@@ -636,9 +585,7 @@ export default class OncoprintControls extends React.Component<
             return (
                 <AddClinicalTracks
                     store={this.props.store}
-                    selectedClinicalAttributeIds={
-                        this.props.state.selectedClinicalAttributeIds
-                    }
+                    selectedClinicalAttributeIds={this.props.state.selectedClinicalAttributeIds}
                     onChangeSelectedClinicalTracks={
                         this.props.handlers.onChangeSelectedClinicalTracks
                     }
@@ -650,8 +597,7 @@ export default class OncoprintControls extends React.Component<
     }
 
     private getHeatmapMenu() {
-        const showItemSelectionElements = this.props.state
-            .heatmapIsDynamicallyQueried;
+        const showItemSelectionElements = this.props.state.heatmapIsDynamicallyQueried;
         const showGenesTextArea =
             showItemSelectionElements &&
             this.props.state.selectedHeatmapProfileAlterationType !==
@@ -678,19 +624,14 @@ export default class OncoprintControls extends React.Component<
                         <ReactSelect
                             clearable={false}
                             searchable={false}
-                            isLoading={
-                                this.props.state.heatmapProfilesPromise
-                                    .isPending
-                            }
+                            isLoading={this.props.state.heatmapProfilesPromise.isPending}
                             onChange={this.onHeatmapProfileSelect}
                             value={this.props.state.selectedHeatmapProfile}
                             options={this.heatmapProfileOptions}
                         />
                         {showGenesTextArea && [
                             <OQLTextArea
-                                inputGeneQuery={
-                                    this.props.state.heatmapGeneInputValue || ''
-                                }
+                                inputGeneQuery={this.props.state.heatmapGeneInputValue || ''}
                                 callback={this.onChangeHeatmapGeneInput}
                                 location={GeneBoxType.ONCOPRINT_HEATMAP}
                             />,
@@ -710,15 +651,11 @@ export default class OncoprintControls extends React.Component<
                                     elements={this.textareaTreatmentEntries}
                                     text={this.textareaTreatmentText}
                                     placeholder="Type space- or comma-separated treatments here, then click 'Add Treatments to Heatmap'"
-                                    onChangeTextArea={
-                                        this.onChangeTreatmentTextArea
-                                    }
+                                    onChangeTextArea={this.onChangeTreatmentTextArea}
                                     onIconClicked={this.onTreatmentRemoved}
                                     classNames={['treatment-textarea']}
                                 />,
-                                <div
-                                    className={classNames('treatment-selector')}
-                                >
+                                <div className={classNames('treatment-selector')}>
                                     <CheckedSelect
                                         name="treatment-select"
                                         placeholder="Search for Treatments..."
@@ -746,26 +683,18 @@ export default class OncoprintControls extends React.Component<
                             <DefaultTooltip
                                 overlay={
                                     <span>
-                                        Open a new tab to visualize this study
-                                        as Next Generation Clustered Heatmaps
-                                        from MD Anderson Cancer Center.
+                                        Open a new tab to visualize this study as Next Generation
+                                        Clustered Heatmaps from MD Anderson Cancer Center.
                                     </span>
                                 }
                             >
                                 <button
-                                    className={classNames(
-                                        'btn',
-                                        'btn-sm',
-                                        'btn-default'
-                                    )}
+                                    className={classNames('btn', 'btn-sm', 'btn-default')}
                                     name={EVENT_KEY.viewNGCHM}
                                     onClick={this.onButtonClick}
                                 >
                                     Whole Study Heatmap (NG-CHM){' '}
-                                    <i
-                                        className="fa fa-external-link"
-                                        aria-hidden="true"
-                                    ></i>
+                                    <i className="fa fa-external-link" aria-hidden="true"></i>
                                 </button>
                             </DefaultTooltip>,
                         ]}
@@ -786,12 +715,10 @@ export default class OncoprintControls extends React.Component<
                         // only add GENERIC_ASSAY when generic_assay_type is TREATMENT_RESPONSE
                         // TODO: apply to all generic assay profiles when front-end implementation finish
                         count={
-                            this.props.state.heatmapProfilesPromise
-                                .isComplete &&
+                            this.props.state.heatmapProfilesPromise.isComplete &&
                             this.props.state.heatmapProfilesPromise!.result
                                 ? this.filterHeatmapProfilesByGenericAssayType(
-                                      this.props.state.heatmapProfilesPromise!
-                                          .result!
+                                      this.props.state.heatmapProfilesPromise!.result!
                                   ).length
                                 : undefined
                         }
@@ -817,9 +744,7 @@ export default class OncoprintControls extends React.Component<
                                 value={EVENT_KEY.sortByMutationType}
                                 checked={this.props.state.sortByMutationType}
                                 onClick={this.onInputClick}
-                                disabled={
-                                    !this.props.state.distinguishMutationType
-                                }
+                                disabled={!this.props.state.distinguishMutationType}
                             />{' '}
                             Mutation Type
                         </label>
@@ -855,9 +780,7 @@ export default class OncoprintControls extends React.Component<
                                 type="radio"
                                 name="sortBy"
                                 value={EVENT_KEY.sortByData}
-                                checked={
-                                    this.props.state.sortMode!.type === 'data'
-                                }
+                                checked={this.props.state.sortMode!.type === 'data'}
                                 onClick={this.onInputClick}
                             />{' '}
                             Sort by data
@@ -869,15 +792,11 @@ export default class OncoprintControls extends React.Component<
                                 <input
                                     type="checkbox"
                                     value={EVENT_KEY.sortByMutationType}
-                                    checked={
-                                        this.props.state.sortByMutationType
-                                    }
+                                    checked={this.props.state.sortByMutationType}
                                     onClick={this.onInputClick}
                                     disabled={
-                                        this.props.state.sortMode!.type !==
-                                            'data' ||
-                                        !this.props.state
-                                            .distinguishMutationType
+                                        this.props.state.sortMode!.type !== 'data' ||
+                                        !this.props.state.distinguishMutationType
                                     }
                                 />{' '}
                                 Mutation Type
@@ -891,8 +810,7 @@ export default class OncoprintControls extends React.Component<
                                     checked={this.props.state.sortByDrivers}
                                     onClick={this.onInputClick}
                                     disabled={
-                                        this.props.state.sortMode!.type !==
-                                            'data' ||
+                                        this.props.state.sortMode!.type !== 'data' ||
                                         !this.props.state.distinguishDrivers
                                     }
                                 />{' '}
@@ -906,10 +824,7 @@ export default class OncoprintControls extends React.Component<
                                 type="radio"
                                 name="sortBy"
                                 value={EVENT_KEY.sortAlphabetical}
-                                checked={
-                                    this.props.state.sortMode!.type ===
-                                    'alphabetical'
-                                }
+                                checked={this.props.state.sortMode!.type === 'alphabetical'}
                                 onClick={this.onInputClick}
                             />{' '}
                             Sort by case id (alphabetical)
@@ -921,25 +836,18 @@ export default class OncoprintControls extends React.Component<
                                 type="radio"
                                 name="sortBy"
                                 value={EVENT_KEY.sortCaseListOrder}
-                                checked={
-                                    this.props.state.sortMode!.type ===
-                                    'caseList'
-                                }
+                                checked={this.props.state.sortMode!.type === 'caseList'}
                                 onClick={this.onInputClick}
                                 data-test="caseList"
-                                disabled={
-                                    !!this.props.state.sortByCaseListDisabled
-                                }
+                                disabled={!!this.props.state.sortByCaseListDisabled}
                             />{' '}
                             Sort by case list order
                         </label>
                     </div>
                     {this.props.state.heatmapProfilesPromise &&
                         !(
-                            this.props.state.heatmapProfilesPromise
-                                .isComplete &&
-                            !this.props.state.heatmapProfilesPromise.result!
-                                .length
+                            this.props.state.heatmapProfilesPromise.isComplete &&
+                            !this.props.state.heatmapProfilesPromise.result!.length
                         ) && (
                             <div className="radio">
                                 <label>
@@ -947,10 +855,7 @@ export default class OncoprintControls extends React.Component<
                                         data-test="sortByHeatmapClustering"
                                         type="radio"
                                         name="sortBy"
-                                        checked={
-                                            this.props.state.sortMode!.type ===
-                                            'heatmap'
-                                        }
+                                        checked={this.props.state.sortMode!.type === 'heatmap'}
                                         disabled
                                     />{' '}
                                     Sorted by heatmap clustering order
@@ -988,16 +893,11 @@ export default class OncoprintControls extends React.Component<
                                     data-test="HideVUS"
                                     type="checkbox"
                                     value={EVENT_KEY.hidePutativePassengers}
-                                    checked={
-                                        this.props.state.hidePutativePassengers
-                                    }
+                                    checked={this.props.state.hidePutativePassengers}
                                     onClick={this.onInputClick}
-                                    disabled={
-                                        !this.props.state.distinguishDrivers
-                                    }
+                                    disabled={!this.props.state.distinguishDrivers}
                                 />{' '}
-                                Hide mutations and copy number alterations of
-                                unknown significance
+                                Hide mutations and copy number alterations of unknown significance
                             </label>
                         </div>
                         <div className="checkbox">
@@ -1006,14 +906,9 @@ export default class OncoprintControls extends React.Component<
                                     data-test="HideGermline"
                                     type="checkbox"
                                     value={EVENT_KEY.hideGermlineMutations}
-                                    checked={
-                                        this.props.state.hideGermlineMutations
-                                    }
+                                    checked={this.props.state.hideGermlineMutations}
                                     onClick={this.onInputClick}
-                                    disabled={
-                                        !this.props.state
-                                            .distinguishGermlineMutations
-                                    }
+                                    disabled={!this.props.state.distinguishGermlineMutations}
                                 />{' '}
                                 Hide germline mutations
                             </label>
@@ -1059,11 +954,7 @@ export default class OncoprintControls extends React.Component<
 
     private getMutationColorMenu() {
         return (
-            <CustomDropdown
-                bsStyle="default"
-                title="Mutations"
-                id="mutationColorDropdown"
-            >
+            <CustomDropdown bsStyle="default" title="Mutations" id="mutationColorDropdown">
                 <div className="oncoprint__controls__mutation_color_menu">
                     <h5>Color by</h5>
                     <div style={{ marginLeft: '10px' }}>
@@ -1073,9 +964,7 @@ export default class OncoprintControls extends React.Component<
                                     data-test="ColorByType"
                                     type="checkbox"
                                     value={EVENT_KEY.distinguishMutationType}
-                                    checked={
-                                        this.props.state.distinguishMutationType
-                                    }
+                                    checked={this.props.state.distinguishMutationType}
                                     onClick={this.onInputClick}
                                 />{' '}
                                 Type
@@ -1086,13 +975,8 @@ export default class OncoprintControls extends React.Component<
                                 <input
                                     data-test="ColorByGermline"
                                     type="checkbox"
-                                    value={
-                                        EVENT_KEY.distinguishGermlineMutations
-                                    }
-                                    checked={
-                                        this.props.state
-                                            .distinguishGermlineMutations
-                                    }
+                                    value={EVENT_KEY.distinguishGermlineMutations}
+                                    checked={this.props.state.distinguishGermlineMutations}
                                     onClick={this.onInputClick}
                                 />{' '}
                                 Somatic vs Germline
@@ -1115,11 +999,7 @@ export default class OncoprintControls extends React.Component<
 
     private getViewMenuOncoprinter() {
         return (
-            <CustomDropdown
-                bsStyle="default"
-                title="View"
-                id="viewDropdownButton"
-            >
+            <CustomDropdown bsStyle="default" title="View" id="viewDropdownButton">
                 <div className="checkbox">
                     <label>
                         <input
@@ -1136,9 +1016,7 @@ export default class OncoprintControls extends React.Component<
                         <input
                             type="checkbox"
                             value={EVENT_KEY.showWhitespaceBetweenColumns}
-                            checked={
-                                this.props.state.showWhitespaceBetweenColumns
-                            }
+                            checked={this.props.state.showWhitespaceBetweenColumns}
                             onClick={this.onInputClick}
                         />{' '}
                         Show whitespace between columns
@@ -1160,11 +1038,7 @@ export default class OncoprintControls extends React.Component<
     }
     private getViewMenuOncoprint() {
         return (
-            <CustomDropdown
-                bsStyle="default"
-                title="View"
-                id="viewDropdownButton"
-            >
+            <CustomDropdown bsStyle="default" title="View" id="viewDropdownButton">
                 <strong>Data type:</strong>
                 <div className="radio">
                     <label>
@@ -1173,8 +1047,7 @@ export default class OncoprintControls extends React.Component<
                             name="columnType"
                             value={EVENT_KEY.columnTypeSample}
                             checked={
-                                this.props.state.columnMode ===
-                                OncoprintAnalysisCaseType.SAMPLE
+                                this.props.state.columnMode === OncoprintAnalysisCaseType.SAMPLE
                             }
                             onClick={this.onInputClick}
                         />{' '}
@@ -1188,8 +1061,7 @@ export default class OncoprintControls extends React.Component<
                             name="columnType"
                             value={EVENT_KEY.columnTypePatient}
                             checked={
-                                this.props.state.columnMode ===
-                                OncoprintAnalysisCaseType.PATIENT
+                                this.props.state.columnMode === OncoprintAnalysisCaseType.PATIENT
                             }
                             onClick={this.onInputClick}
                         />{' '}
@@ -1214,9 +1086,7 @@ export default class OncoprintControls extends React.Component<
                         <input
                             type="checkbox"
                             value={EVENT_KEY.showWhitespaceBetweenColumns}
-                            checked={
-                                this.props.state.showWhitespaceBetweenColumns
-                            }
+                            checked={this.props.state.showWhitespaceBetweenColumns}
                             onClick={this.onInputClick}
                         />{' '}
                         Show whitespace between columns
@@ -1233,29 +1103,18 @@ export default class OncoprintControls extends React.Component<
                         Show legends for clinical tracks
                     </label>
                 </div>
-                <div
-                    className="checkbox"
-                    style={{ marginLeft: 20, maxWidth: 220 }}
-                >
+                <div className="checkbox" style={{ marginLeft: 20, maxWidth: 220 }}>
                     <label>
                         <input
                             data-test="onlyShowClinicalLegendsForAltered"
                             type="checkbox"
-                            value={
-                                EVENT_KEY.onlyShowClinicalLegendForAlteredCases
-                            }
-                            checked={
-                                this.props.state
-                                    .onlyShowClinicalLegendForAlteredCases
-                            }
+                            value={EVENT_KEY.onlyShowClinicalLegendForAlteredCases}
+                            checked={this.props.state.onlyShowClinicalLegendForAlteredCases}
                             onClick={this.onInputClick}
-                            disabled={
-                                !this.props.state.showClinicalTrackLegends
-                            }
+                            disabled={!this.props.state.showClinicalTrackLegends}
                         />{' '}
                         Only show clinical track legends for altered{' '}
-                        {this.props.state.columnMode ===
-                        OncoprintAnalysisCaseType.PATIENT
+                        {this.props.state.columnMode === OncoprintAnalysisCaseType.PATIENT
                             ? 'patients'
                             : 'samples'}
                         .
@@ -1278,11 +1137,7 @@ export default class OncoprintControls extends React.Component<
 
     private getDownloadMenu() {
         return (
-            <CustomDropdown
-                bsStyle="default"
-                title="Download"
-                id="downloadDropdownButton"
-            >
+            <CustomDropdown bsStyle="default" title="Download" id="downloadDropdownButton">
                 <button
                     className="btn btn-sm btn-default"
                     name={EVENT_KEY.downloadPDF}
@@ -1331,18 +1186,12 @@ export default class OncoprintControls extends React.Component<
     private getHorzZoomControls() {
         return (
             <div className="btn btn-default oncoprint__zoom-controls">
-                <DefaultTooltip
-                    overlay={<span>Zoom out of oncoprint.</span>}
-                    placement="top"
-                >
+                <DefaultTooltip overlay={<span>Zoom out of oncoprint.</span>} placement="top">
                     <div onClick={this.onZoomOutClick}>
                         <i className="fa fa-search-minus"></i>
                     </div>
                 </DefaultTooltip>
-                <DefaultTooltip
-                    overlay={<span>Zoom in/out of oncoprint.</span>}
-                    placement="top"
-                >
+                <DefaultTooltip overlay={<span>Zoom in/out of oncoprint.</span>} placement="top">
                     <div style={{ width: '90px' }}>
                         <Slider
                             value={this.horzZoomSliderState}
@@ -1376,10 +1225,7 @@ export default class OncoprintControls extends React.Component<
                 />
                 <div>%</div>
 
-                <DefaultTooltip
-                    overlay={<span>Zoom in to oncoprint.</span>}
-                    placement="top"
-                >
+                <DefaultTooltip overlay={<span>Zoom in to oncoprint.</span>} placement="top">
                     <div onClick={this.onZoomInClick}>
                         <i className="fa fa-search-plus"></i>
                     </div>
@@ -1396,10 +1242,7 @@ export default class OncoprintControls extends React.Component<
         return (
             <div className="btn-group">
                 <DefaultTooltip overlay={<span>Toggle minimap panel.</span>}>
-                    <Button
-                        active={this.showMinimap}
-                        onClick={this.toggleShowMinimap}
-                    >
+                    <Button active={this.showMinimap} onClick={this.toggleShowMinimap}>
                         <img
                             data-test="ShowMinimapButton"
                             src={require('./toggle-minimap.svg')}

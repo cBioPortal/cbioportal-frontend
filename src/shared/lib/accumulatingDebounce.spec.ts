@@ -20,10 +20,7 @@ describe('accumulatingDebounce', () => {
         let deb: AccumulatingDebouncedFunction<any>;
         let done = false;
         const finalFn = sinon.spy(() => {
-            assert(
-                addFn.calledOnce,
-                'add function called exactly once, before the final function'
-            );
+            assert(addFn.calledOnce, 'add function called exactly once, before the final function');
             assert(true, 'final function called');
         });
         const addFn = sinon.spy(() => {
@@ -76,18 +73,12 @@ describe('accumulatingDebounce', () => {
                             '(actually, 2) since the timeout was set'
                     );
                 } else {
-                    assert(
-                        afterTimeoutExpire.callCount === 2,
-                        'timeout expired only twice'
-                    );
+                    assert(afterTimeoutExpire.callCount === 2, 'timeout expired only twice');
                     assert(
                         addFn.callCount === 3,
                         'no additional add calls triggered since last timeout expire'
                     );
-                    assert(
-                        !deb.isPending(),
-                        'final function will not be called again'
-                    );
+                    assert(!deb.isPending(), 'final function will not be called again');
                     done = true;
                 }
             });
@@ -124,17 +115,9 @@ describe('accumulatingDebounce', () => {
                     'first burst of arguments should be accumulated'
                 );
             } else if (finalFnCalls === 2) {
-                assert.deepEqual(
-                    arg,
-                    [6],
-                    'second burst of arguments accumulated'
-                );
+                assert.deepEqual(arg, [6], 'second burst of arguments accumulated');
             } else if (finalFnCalls === 3) {
-                assert.deepEqual(
-                    arg,
-                    [7, 8],
-                    'third burst of arguments accumulated'
-                );
+                assert.deepEqual(arg, [7, 8], 'third burst of arguments accumulated');
                 done = true;
             }
         };
@@ -151,10 +134,7 @@ describe('accumulatingDebounce', () => {
                     'before we add more arguments, no timeout is set to happen'
                 );
                 deb(6);
-                assert(
-                    deb.isPending(),
-                    'after adding arguments, timeout is set to happen'
-                );
+                assert(deb.isPending(), 'after adding arguments, timeout is set to happen');
             } else if (finalFnCalls === 2 && expiredTimeouts === 3) {
                 assert(
                     !deb.isPending(),
@@ -162,10 +142,7 @@ describe('accumulatingDebounce', () => {
                 );
                 deb(7);
                 deb(8);
-                assert(
-                    deb.isPending(),
-                    'after adding arguments, timeout is set to happen'
-                );
+                assert(deb.isPending(), 'after adding arguments, timeout is set to happen');
             }
         });
         deb(1);
@@ -213,10 +190,7 @@ describe('accumulatingDebounce', () => {
         deb();
         clock.tick(20);
         assert.isTrue(done.calledOnce, 'if not cancelled, it executes');
-        assert.isFalse(
-            deb.isPending(),
-            'call is not pending after an execution'
-        );
+        assert.isFalse(deb.isPending(), 'call is not pending after an execution');
 
         deb();
         assert.isTrue(deb.isPending(), 'call is pending');
@@ -226,10 +200,7 @@ describe('accumulatingDebounce', () => {
         assert.isTrue(deb.isPending(), 'call is still pending');
         assert.isTrue(done.calledOnce, 'final function not called again');
         deb.cancel();
-        assert.isFalse(
-            deb.isPending(),
-            'call not pending after being cancelled'
-        );
+        assert.isFalse(deb.isPending(), 'call not pending after being cancelled');
         clock.tick(500);
         assert.isFalse(deb.isPending(), 'call still not pending 500 ms later');
         assert.isTrue(done.calledOnce, 'final function was never called again');

@@ -9,11 +9,7 @@ interface GenesetsHierarchyFilterFormProps {
     percentile: validPercentile;
     pvalueThreshold: number;
     scoreThreshold: number;
-    onApply: (
-        percentile: validPercentile,
-        pvalueThreshold: number,
-        scoreThreshold: number
-    ) => void;
+    onApply: (percentile: validPercentile, pvalueThreshold: number, scoreThreshold: number) => void;
 }
 
 @observer
@@ -40,18 +36,10 @@ export default class GenesetsHierarchyFilterForm extends React.Component<
     }
 
     applyFilter() {
-        const pvalueThreshold = this.pvalueThreshold
-            ? Number(this.pvalueThreshold)
-            : NaN;
-        const scoreThreshold = this.scoreThreshold
-            ? Number(this.scoreThreshold)
-            : NaN;
+        const pvalueThreshold = this.pvalueThreshold ? Number(this.pvalueThreshold) : NaN;
+        const scoreThreshold = this.scoreThreshold ? Number(this.scoreThreshold) : NaN;
         if (!Number.isNaN(pvalueThreshold) && !Number.isNaN(scoreThreshold)) {
-            this.props.onApply(
-                this.percentile,
-                pvalueThreshold,
-                scoreThreshold
-            );
+            this.props.onApply(this.percentile, pvalueThreshold, scoreThreshold);
         }
     }
 
@@ -75,9 +63,7 @@ export default class GenesetsHierarchyFilterForm extends React.Component<
                         type="string"
                         value={this.scoreThreshold}
                         style={{ width: 160, height: 36, padding: 10 }}
-                        onChange={event =>
-                            (this.scoreThreshold = event.target.value)
-                        }
+                        onChange={event => (this.scoreThreshold = event.target.value)}
                         step="0.1"
                     />
                 </div>
@@ -88,9 +74,7 @@ export default class GenesetsHierarchyFilterForm extends React.Component<
                         type="string"
                         value={this.pvalueThreshold}
                         style={{ width: 160, height: 36, padding: 10 }}
-                        onChange={event =>
-                            (this.pvalueThreshold = event.target.value)
-                        }
+                        onChange={event => (this.pvalueThreshold = event.target.value)}
                         step="0.01"
                         min="0"
                     />

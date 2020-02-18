@@ -80,9 +80,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
         return this.props.data.filter(cancers =>
             _.every(
                 cancers.studies,
-                study =>
-                    study.cancerTypeId !== 'other' &&
-                    study.cancerTypeId !== 'mixed'
+                study => study.cancerTypeId !== 'other' && study.cancerTypeId !== 'mixed'
             )
         );
     }
@@ -106,10 +104,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
         const datasets: any = _.flattenDeep(
             cancerTypeStudiesArray.map((cancerStudySet, i) =>
                 cancerStudySet.studies
-                    .sort(
-                        (a: CancerStudy, b: CancerStudy) =>
-                            b.allSampleCount - a.allSampleCount
-                    )
+                    .sort((a: CancerStudy, b: CancerStudy) => b.allSampleCount - a.allSampleCount)
                     .map((cancerStudy: CancerStudy, j: number) => {
                         let lightenColorConstant = 3;
                         const cancerColor = cancerStudySet.color;
@@ -121,12 +116,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
                             lightenColorConstant = 11;
                         } else if (
                             _.includes(
-                                [
-                                    'LightBlue',
-                                    'LightSkyBlue',
-                                    'PeachPuff',
-                                    'LightYellow',
-                                ],
+                                ['LightBlue', 'LightSkyBlue', 'PeachPuff', 'LightYellow'],
                                 cancerColor
                             )
                         ) {
@@ -155,9 +145,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
                             label: name,
                             total: cancerStudySet.caseCount,
                             data:
-                                i === 0
-                                    ? [allSampleCount]
-                                    : [...Array(i).fill(0), allSampleCount],
+                                i === 0 ? [allSampleCount] : [...Array(i).fill(0), allSampleCount],
                         };
                     })
             )
@@ -182,9 +170,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
             },
             onClick: function(e: Event) {
                 if (this.getElementAtEvent(e)[0]) {
-                    const { studyId } = datasets[
-                        this.getElementAtEvent(e)[0]._datasetIndex
-                    ];
+                    const { studyId } = datasets[this.getElementAtEvent(e)[0]._datasetIndex];
                     self.props.openStudy(studyId);
                 }
                 return false;
@@ -214,8 +200,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
                             const label =
                                 tooltipItems.yLabel +
                                 ': ' +
-                                _data.datasets[tooltipItems.datasetIndex!]
-                                    .total +
+                                _data.datasets[tooltipItems.datasetIndex!].total +
                                 ' cases';
                             return this.formatTooltipString(label);
                         }
@@ -255,12 +240,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
         beforeDraw: function(chartInstance: any) {
             var ctx = chartInstance.chart.ctx;
             ctx.fillStyle = '#F1F6FE';
-            ctx.fillRect(
-                0,
-                0,
-                chartInstance.chart.width,
-                chartInstance.chart.height
-            );
+            ctx.fillRect(0, 0, chartInstance.chart.width, chartInstance.chart.height);
         },
     };
 

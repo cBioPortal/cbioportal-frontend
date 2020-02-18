@@ -17,14 +17,9 @@ describe('TruncatedText', () => {
             'it might be a good idea to truncate this text and show the full value in a tooltip';
 
         componentShort = mount(
-            <TruncatedText
-                text={shortText}
-                tooltip={<span>{shortText}</span>}
-            />
+            <TruncatedText text={shortText} tooltip={<span>{shortText}</span>} />
         );
-        componentLong = mount(
-            <TruncatedText text={longText} tooltip={<span>{longText}</span>} />
-        );
+        componentLong = mount(<TruncatedText text={longText} tooltip={<span>{longText}</span>} />);
     });
 
     it('truncates the text properly with a suffix', () => {

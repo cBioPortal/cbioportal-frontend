@@ -14,9 +14,9 @@ describe('WaterfallPlot', () => {
         horizontal: true,
         sortOrder: 'ASC',
     };
-    let plot: WaterfallPlot<IBaseWaterfallPlotData> = new WaterfallPlot<
-        IBaseWaterfallPlotData
-    >(testProps);
+    let plot: WaterfallPlot<IBaseWaterfallPlotData> = new WaterfallPlot<IBaseWaterfallPlotData>(
+        testProps
+    );
 
     beforeEach(() => {
         testProps = {

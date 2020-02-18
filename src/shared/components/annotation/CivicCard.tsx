@@ -38,12 +38,7 @@ export default class CivicCard extends React.Component<ICivicCardProps, {}> {
                     entryTypes = entryTypes.slice(0, -2) + '.';
 
                     list.push(
-                        this.variantItem(
-                            variant.url,
-                            variant.name,
-                            entryTypes,
-                            variant.description
-                        )
+                        this.variantItem(variant.url, variant.name, entryTypes, variant.description)
                     );
                 }
             }
@@ -62,12 +57,7 @@ export default class CivicCard extends React.Component<ICivicCardProps, {}> {
      * @param description
      * @returns {any}
      */
-    public variantItem(
-        url?: string,
-        name?: string,
-        entryTypes?: string,
-        description?: string
-    ) {
+    public variantItem(url?: string, name?: string, entryTypes?: string, description?: string) {
         let result;
 
         if (url || name || entryTypes || description) {
@@ -84,17 +74,15 @@ export default class CivicCard extends React.Component<ICivicCardProps, {}> {
                             Entries: {entryTypes}
                         </span>
                     </div>
-                    <div className="civic-card-variant-description summary">
-                        {description}
-                    </div>
+                    <div className="civic-card-variant-description summary">{description}</div>
                 </div>
             );
         } else {
             result = (
                 <div className="civic-card-variant">
                     <div className="civic-card-variant-description summary">
-                        Information about the oncogenic activity of this
-                        alteration is not yet available in CIViC.
+                        Information about the oncogenic activity of this alteration is not yet
+                        available in CIViC.
                     </div>
                 </div>
             );
@@ -116,10 +104,7 @@ export default class CivicCard extends React.Component<ICivicCardProps, {}> {
                         <div className="col s12 civic-card-gene">
                             <p>
                                 <span className="civic-card-gene-name">
-                                    <a
-                                        href={this.props.geneUrl}
-                                        target="_blank"
-                                    >
+                                    <a href={this.props.geneUrl} target="_blank">
                                         <b>{this.props.geneName}</b>
                                     </a>
                                 </span>{' '}
@@ -127,16 +112,14 @@ export default class CivicCard extends React.Component<ICivicCardProps, {}> {
                             </p>
                         </div>
                         <div className="col s12">
-                            <ul>
-                                {this.generateVariants(this.props.variants)}
-                            </ul>
+                            <ul>{this.generateVariants(this.props.variants)}</ul>
                         </div>
 
                         <div className="item disclaimer">
                             <span>
-                                Disclaimer: This resource is intended for purely
-                                research purposes. It should not be used for
-                                emergencies or medical or professional advice.
+                                Disclaimer: This resource is intended for purely research purposes.
+                                It should not be used for emergencies or medical or professional
+                                advice.
                             </span>
                         </div>
                     </div>

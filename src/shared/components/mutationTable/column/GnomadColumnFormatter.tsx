@@ -43,9 +43,7 @@ export default class GnomadColumnFormatter {
         return cache.get(data[0]);
     }
 
-    private static getGnomadDataViz(
-        genomeNexusCacheData: GenomeNexusCacheDataType | null
-    ) {
+    private static getGnomadDataViz(genomeNexusCacheData: GenomeNexusCacheDataType | null) {
         let status: TableCellStatus | null = null;
 
         if (genomeNexusCacheData == null) {
@@ -61,8 +59,7 @@ export default class GnomadColumnFormatter {
                         genomeNexusCacheData &&
                         genomeNexusCacheData.data &&
                         genomeNexusCacheData.data.my_variant_info
-                            ? genomeNexusCacheData.data.my_variant_info
-                                  .annotation
+                            ? genomeNexusCacheData.data.my_variant_info.annotation
                             : undefined
                     }
                     annotation={
@@ -92,9 +89,7 @@ export default class GnomadColumnFormatter {
         }
     }
 
-    public static getData(
-        genomeNexusData: MyVariantInfoAnnotation | null
-    ): MyVariantInfo | null {
+    public static getData(genomeNexusData: MyVariantInfoAnnotation | null): MyVariantInfo | null {
         if (!genomeNexusData) {
             return null;
         }
@@ -114,9 +109,7 @@ export default class GnomadColumnFormatter {
             genomeNexusCacheData.data &&
             genomeNexusCacheData.data.my_variant_info
         ) {
-            return gnomadSortValue(
-                genomeNexusCacheData.data.my_variant_info.annotation
-            );
+            return gnomadSortValue(genomeNexusCacheData.data.my_variant_info.annotation);
         }
         // If genomeNexusCacheData is null or gnomadData is null, return null
         return null;
@@ -136,14 +129,9 @@ export default class GnomadColumnFormatter {
                 genomeNexusCacheData.data.my_variant_info
             );
 
-            if (
-                gnomadData &&
-                gnomadData.gnomadExome &&
-                gnomadData.gnomadGenome
-            ) {
+            if (gnomadData && gnomadData.gnomadExome && gnomadData.gnomadGenome) {
                 return calculateGnomadAllelFrequency(
-                    gnomadData.gnomadExome.alleleCount.ac +
-                        gnomadData.gnomadGenome.alleleCount.ac,
+                    gnomadData.gnomadExome.alleleCount.ac + gnomadData.gnomadGenome.alleleCount.ac,
                     gnomadData.gnomadExome.alleleNumber.an +
                         gnomadData.gnomadGenome.alleleFrequency.af,
                     null

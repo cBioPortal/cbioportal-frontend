@@ -10,8 +10,6 @@ export default class OncoprintDropdownCount extends React.Component<
         if (this.props.count === undefined) {
             return null;
         }
-        return (
-            <span className="oncoprintDropdownCount">{this.props.count}</span>
-        );
+        return <span className="oncoprintDropdownCount">{this.props.count}</span>;
     }
 }

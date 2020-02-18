@@ -120,9 +120,7 @@ export function validateLines(
         (acc, sample) => {
             acc[
                 `${sample.studyId}:${
-                    caseType === ClinicalDataTypeEnum.PATIENT
-                        ? sample.patientId
-                        : sample.sampleId
+                    caseType === ClinicalDataTypeEnum.PATIENT ? sample.patientId : sample.sampleId
                 }`
             ] = true;
             return acc;
@@ -166,9 +164,7 @@ export function validateLines(
                 if (!_.includes(selectedStudies, line.studyId)) {
                     errorMessages.push({
                         code: CodeEnum.STUDY_NOT_SELECTED,
-                        message: new Error(
-                            `Incorrect study id: ${line.studyId}`
-                        ),
+                        message: new Error(`Incorrect study id: ${line.studyId}`),
                     });
                     validLine = false;
                 } else {
@@ -208,18 +204,11 @@ export function validateLines(
         const groupDistribution = _.reduce(
             lines,
             (acc, line) => {
-                let groupName = line.groupName
-                    ? line.groupName
-                    : groupNameDefault;
+                let groupName = line.groupName ? line.groupName : groupNameDefault;
                 if (acc[groupName] === undefined) {
                     acc[groupName] = [];
                 }
-                acc[groupName].push(
-                    getUniqueCaseId(
-                        line.studyId ? line.studyId : '',
-                        line.caseId
-                    )
-                );
+                acc[groupName].push(getUniqueCaseId(line.studyId ? line.studyId : '', line.caseId));
                 return acc;
             },
             {} as { [groupName: string]: string[] }
@@ -252,10 +241,7 @@ export function validateLines(
         warningMessages.push({
             code: CodeEnum.INVALID_CASE_ID,
             message: new Error(
-                `The following ${Pluralize(
-                    'case',
-                    invalidCases.length
-                )} ${Pluralize(
+                `The following ${Pluralize('case', invalidCases.length)} ${Pluralize(
                     'is',
                     invalidCases.length
                 )} invalid and will be ignored. ${invalidCases.join(', ')}`
@@ -311,11 +297,8 @@ export function getGroups(
                     line.studyId === undefined
                         ? `${singleStudyId}:${line.caseId}`
                         : `${line.studyId}:${line.caseId}`;
-                const caseMap = isPatientId
-                    ? patientMap[caseId]
-                    : [sampleMap[caseId]];
-                const caseIdentifiers =
-                    caseMap === undefined ? [] : parseCase(caseMap);
+                const caseMap = isPatientId ? patientMap[caseId] : [sampleMap[caseId]];
+                const caseIdentifiers = caseMap === undefined ? [] : parseCase(caseMap);
                 acc[groupName].sampleIdentifiers.push(...caseIdentifiers);
                 return acc;
             },
@@ -363,10 +346,7 @@ export function parseContent(
     }
 
     const hasGroupName =
-        _.find(
-            lines,
-            line => line.groupName !== undefined && line.groupName !== ''
-        ) !== undefined;
+        _.find(lines, line => line.groupName !== undefined && line.groupName !== '') !== undefined;
     if (validationResult.error.length > 0) {
         return {
             groups: [],
@@ -374,13 +354,7 @@ export function parseContent(
         };
     } else {
         return {
-            groups: getGroups(
-                lines,
-                selectedStudies[0],
-                caseType,
-                allSamples,
-                hasGroupName
-            ),
+            groups: getGroups(lines, selectedStudies[0], caseType, allSamples, hasGroupName),
             validationResult: validationResult,
         };
     }

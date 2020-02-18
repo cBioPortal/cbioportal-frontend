@@ -44,21 +44,15 @@ function parseClinicalDataHeader(headerLine: string[]) {
     for (const attribute of headerLine) {
         const match = attribute.match(ATTRIBUTE_REGEX);
         if (!match) {
-            throw new Error(
-                `${errorPrefix}misformatted attribute name ${attribute}`
-            );
+            throw new Error(`${errorPrefix}misformatted attribute name ${attribute}`);
         }
-        const datatype = (
-            match[2] || ClinicalTrackDataType.STRING
-        ).toLowerCase();
+        const datatype = (match[2] || ClinicalTrackDataType.STRING).toLowerCase();
         if (
             datatype !== ClinicalTrackDataType.NUMBER &&
             datatype !== ClinicalTrackDataType.LOG_NUMBER &&
             datatype !== ClinicalTrackDataType.STRING
         ) {
-            throw new Error(
-                `${errorPrefix}invalid track data type ${datatype}`
-            );
+            throw new Error(`${errorPrefix}invalid track data type ${datatype}`);
         }
         ret.push({
             clinicalAttributeName: match[1],
@@ -103,8 +97,9 @@ export function parseClinicalInput(
 
         const result = lines.map((line, lineIndex) => {
             //                                                  add 2 to line index: 1 because we removed header, 1 because changing from 0- to 1-indexing
-            const errorPrefix = `Clinical data input error on line ${lineIndex +
-                2}: \n${line.join('\t')}\n\n`;
+            const errorPrefix = `Clinical data input error on line ${lineIndex + 2}: \n${line.join(
+                '\t'
+            )}\n\n`;
             if (line.length === attributes.length + 1) {
                 const ret: OncoprinterClinicalInputLine = {
                     sampleId: line[0],
@@ -187,10 +182,7 @@ export function getClinicalTracks(
     parsedLines: OncoprinterClinicalInputLine[],
     excludedSampleIds?: string[]
 ): ClinicalTrackSpec[] {
-    let attributeToOncoprintData = getClinicalOncoprintData(
-        attributes,
-        parsedLines
-    );
+    let attributeToOncoprintData = getClinicalOncoprintData(attributes, parsedLines);
     // remove excluded sample data
     const excludedSampleIdsMap = _.keyBy(excludedSampleIds || []);
     attributeToOncoprintData = _.mapValues(attributeToOncoprintData, data => {
@@ -203,19 +195,11 @@ export function getClinicalTracks(
             key: getClinicalTrackKey(attr.clinicalAttributeName),
             label: attr.clinicalAttributeName,
             data,
-            datatype:
-                attr.datatype === ClinicalTrackDataType.STRING
-                    ? 'string'
-                    : 'number',
+            datatype: attr.datatype === ClinicalTrackDataType.STRING ? 'string' : 'number',
             description: '',
             numberRange:
-                attr.datatype === ClinicalTrackDataType.STRING
-                    ? undefined
-                    : getNumberRange(data),
-            numberLogScale:
-                attr.datatype === ClinicalTrackDataType.LOG_NUMBER
-                    ? true
-                    : undefined,
+                attr.datatype === ClinicalTrackDataType.STRING ? undefined : getNumberRange(data),
+            numberLogScale: attr.datatype === ClinicalTrackDataType.LOG_NUMBER ? true : undefined,
         } as ClinicalTrackSpec;
     });
 }

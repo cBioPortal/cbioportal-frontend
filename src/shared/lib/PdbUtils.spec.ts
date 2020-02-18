@@ -10,10 +10,7 @@ describe('PdbUtils', () => {
         let chain: IPdbChain | undefined;
 
         // overlapping, ordered
-        alignments = [
-            initPdbAlignment('ABCDEFG', 6),
-            initPdbAlignment('EFGXYZ', 10),
-        ];
+        alignments = [initPdbAlignment('ABCDEFG', 6), initPdbAlignment('EFGXYZ', 10)];
 
         chain = mergeAlignments(alignments);
         assert.equal(chain && chain.alignment, 'ABCDEFGXYZ');
@@ -21,10 +18,7 @@ describe('PdbUtils', () => {
         assert.equal(chain && chain.uniprotEnd, 15);
 
         // overlapping, reverse ordered
-        alignments = [
-            initPdbAlignment('EFGXYZ', 10),
-            initPdbAlignment('ABCDEFG', 6),
-        ];
+        alignments = [initPdbAlignment('EFGXYZ', 10), initPdbAlignment('ABCDEFG', 6)];
 
         chain = mergeAlignments(alignments);
         assert.equal(chain && chain.alignment, 'ABCDEFGXYZ');
@@ -32,10 +26,7 @@ describe('PdbUtils', () => {
         assert.equal(chain && chain.uniprotEnd, 15);
 
         // gap, ordered
-        alignments = [
-            initPdbAlignment('Portal', 2),
-            initPdbAlignment('Rocks', 11),
-        ];
+        alignments = [initPdbAlignment('Portal', 2), initPdbAlignment('Rocks', 11)];
 
         chain = mergeAlignments(alignments);
         assert.equal(chain && chain.alignment, 'Portal***Rocks');
@@ -43,10 +34,7 @@ describe('PdbUtils', () => {
         assert.equal(chain && chain.uniprotEnd, 15);
 
         // gap, reverse ordered
-        alignments = [
-            initPdbAlignment('Rocks', 11),
-            initPdbAlignment('Portal', 2),
-        ];
+        alignments = [initPdbAlignment('Rocks', 11), initPdbAlignment('Portal', 2)];
 
         chain = mergeAlignments(alignments);
         assert.equal(chain && chain.alignment, 'Portal***Rocks');
@@ -63,10 +51,7 @@ describe('PdbUtils', () => {
         ];
 
         chain = mergeAlignments(alignments);
-        assert.equal(
-            chain && chain.alignment,
-            'Random***WhatTheRockStarryNightThisIsTheEnd'
-        );
+        assert.equal(chain && chain.alignment, 'Random***WhatTheRockStarryNightThisIsTheEnd');
         assert.equal(chain && chain.uniprotStart, 2);
         assert.equal(chain && chain.uniprotEnd, 44);
     });

@@ -1,7 +1,4 @@
-import {
-    CancerStudyQueryUrlParams,
-    QueryStore,
-} from 'shared/components/query/QueryStore';
+import { CancerStudyQueryUrlParams, QueryStore } from 'shared/components/query/QueryStore';
 import { ResultsViewTab } from 'pages/resultsView/ResultsViewPageHelpers';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 
@@ -14,22 +11,17 @@ export function createQueryStore(
 
     const queryStore = new QueryStore(currentQuery);
 
-    queryStore.singlePageAppSubmitRoutine = function(
-        query: CancerStudyQueryUrlParams
-    ) {
+    queryStore.singlePageAppSubmitRoutine = function(query: CancerStudyQueryUrlParams) {
         // normalize this
-        query.cancer_study_list =
-            query.cancer_study_list || query.cancer_study_id;
+        query.cancer_study_list = query.cancer_study_list || query.cancer_study_id;
         delete query.cancer_study_id;
 
         const tab =
-            queryStore.physicalStudyIdsInSelection.length > 1 &&
-            queryStore.geneIds.length === 1
+            queryStore.physicalStudyIdsInSelection.length > 1 && queryStore.geneIds.length === 1
                 ? ResultsViewTab.CANCER_TYPES_SUMMARY
                 : ResultsViewTab.ONCOPRINT;
 
-        const wrapper =
-            urlWrapper || new ResultsViewURLWrapper(win.routingStore);
+        const wrapper = urlWrapper || new ResultsViewURLWrapper(win.routingStore);
 
         wrapper.updateURL(query, `results/${tab}`, clearUrl, false);
 

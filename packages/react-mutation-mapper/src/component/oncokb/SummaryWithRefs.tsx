@@ -8,9 +8,7 @@ type SummaryWithRefsProps = {
     pmidData: ICache<any>;
 };
 
-export default class SummaryWithRefs extends React.Component<
-    SummaryWithRefsProps
-> {
+export default class SummaryWithRefs extends React.Component<SummaryWithRefsProps> {
     render() {
         if (!this.props.content) {
             return <span />;

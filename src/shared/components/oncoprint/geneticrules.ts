@@ -358,9 +358,7 @@ export const genetic_rule_set_same_color_for_all_no_recurrence: IGeneticAlterati
             conditional: _.assign({}, non_mutation_rule_params.conditional, {
                 disp_mut: {
                     'trunc,inframe,missense,promoter,other,trunc_rec,inframe_rec,missense_rec,promoter_rec,other_rec': {
-                        shapes: [
-                            shapeBank[ShapeId.missenseMutationDriverRectangle],
-                        ],
+                        shapes: [shapeBank[ShapeId.missenseMutationDriverRectangle]],
                         legend_label: 'Mutation',
                         legend_order: MUTATION_LEGEND_ORDER,
                     },
@@ -379,16 +377,12 @@ export const genetic_rule_set_same_color_for_all_recurrence: IGeneticAlterationR
             conditional: _.assign({}, non_mutation_rule_params.conditional, {
                 disp_mut: {
                     'missense_rec,inframe_rec,trunc_rec,promoter_rec,other_rec': {
-                        shapes: [
-                            shapeBank[ShapeId.missenseMutationDriverRectangle],
-                        ],
+                        shapes: [shapeBank[ShapeId.missenseMutationDriverRectangle]],
                         legend_label: 'Mutation (putative driver)',
                         legend_order: MUTATION_LEGEND_ORDER,
                     },
                     'missense,inframe,trunc,promoter,other': {
-                        shapes: [
-                            shapeBank[ShapeId.missenseMutationVUSRectangle],
-                        ],
+                        shapes: [shapeBank[ShapeId.missenseMutationVUSRectangle]],
                         legend_label: 'Mutation (unknown significance)',
                         legend_order: MUTATION_LEGEND_ORDER,
                     },
@@ -417,25 +411,17 @@ export const genetic_rule_set_different_colors_no_recurrence: IGeneticAlteration
                         legend_order: MUTATION_LEGEND_ORDER,
                     },
                     'trunc,trunc_rec': {
-                        shapes: [
-                            shapeBank[
-                                ShapeId.truncatingMutationDriverRectangle
-                            ],
-                        ],
+                        shapes: [shapeBank[ShapeId.truncatingMutationDriverRectangle]],
                         legend_label: 'Truncating Mutation',
                         legend_order: MUTATION_LEGEND_ORDER,
                     },
                     'inframe,inframe_rec': {
-                        shapes: [
-                            shapeBank[ShapeId.inframeMutationDriverRectangle],
-                        ],
+                        shapes: [shapeBank[ShapeId.inframeMutationDriverRectangle]],
                         legend_label: 'Inframe Mutation',
                         legend_order: MUTATION_LEGEND_ORDER,
                     },
                     'missense,missense_rec': {
-                        shapes: [
-                            shapeBank[ShapeId.missenseMutationDriverRectangle],
-                        ],
+                        shapes: [shapeBank[ShapeId.missenseMutationDriverRectangle]],
                         legend_label: 'Missense Mutation',
                         legend_order: MUTATION_LEGEND_ORDER,
                     },
@@ -464,49 +450,33 @@ export const genetic_rule_set_different_colors_recurrence: IGeneticAlterationRul
                         legend_order: MUTATION_LEGEND_ORDER,
                     },
                     trunc_rec: {
-                        shapes: [
-                            shapeBank[
-                                ShapeId.truncatingMutationDriverRectangle
-                            ],
-                        ],
+                        shapes: [shapeBank[ShapeId.truncatingMutationDriverRectangle]],
                         legend_label: 'Truncating Mutation (putative driver)',
                         legend_order: MUTATION_LEGEND_ORDER,
                     },
                     trunc: {
-                        shapes: [
-                            shapeBank[ShapeId.truncatingMutationVUSRectangle],
-                        ],
-                        legend_label:
-                            'Truncating Mutation (unknown significance)',
+                        shapes: [shapeBank[ShapeId.truncatingMutationVUSRectangle]],
+                        legend_label: 'Truncating Mutation (unknown significance)',
                         legend_order: MUTATION_LEGEND_ORDER,
                     },
                     inframe_rec: {
-                        shapes: [
-                            shapeBank[ShapeId.inframeMutationDriverRectangle],
-                        ],
+                        shapes: [shapeBank[ShapeId.inframeMutationDriverRectangle]],
                         legend_label: 'Inframe Mutation (putative driver)',
                         legend_order: MUTATION_LEGEND_ORDER,
                     },
                     inframe: {
-                        shapes: [
-                            shapeBank[ShapeId.inframeMutationVUSRectangle],
-                        ],
+                        shapes: [shapeBank[ShapeId.inframeMutationVUSRectangle]],
                         legend_label: 'Inframe Mutation (unknown significance)',
                         legend_order: MUTATION_LEGEND_ORDER,
                     },
                     missense_rec: {
-                        shapes: [
-                            shapeBank[ShapeId.missenseMutationDriverRectangle],
-                        ],
+                        shapes: [shapeBank[ShapeId.missenseMutationDriverRectangle]],
                         legend_label: 'Missense Mutation (putative driver)',
                         legend_order: MUTATION_LEGEND_ORDER,
                     },
                     missense: {
-                        shapes: [
-                            shapeBank[ShapeId.missenseMutationVUSRectangle],
-                        ],
-                        legend_label:
-                            'Missense Mutation (unknown significance)',
+                        shapes: [shapeBank[ShapeId.missenseMutationVUSRectangle]],
+                        legend_label: 'Missense Mutation (unknown significance)',
                         legend_order: MUTATION_LEGEND_ORDER,
                     },
                 },

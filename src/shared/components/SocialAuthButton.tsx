@@ -6,10 +6,7 @@ export interface ISocialAuthButtonProps {
     appStore: AppStore;
 }
 
-export default class SocialAuthButton extends React.Component<
-    ISocialAuthButtonProps,
-    {}
-> {
+export default class SocialAuthButton extends React.Component<ISocialAuthButtonProps, {}> {
     render() {
         return (
             <div className="identity">

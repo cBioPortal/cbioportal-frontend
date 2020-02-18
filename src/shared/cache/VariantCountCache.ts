@@ -1,13 +1,8 @@
 import LazyMobXCache from 'shared/lib/LazyMobXCache';
 import client from 'shared/api/cbioportalInternalClientInstance';
-import {
-    VariantCount,
-    VariantCountIdentifier,
-} from 'shared/api/generated/CBioPortalAPIInternal';
+import { VariantCount, VariantCountIdentifier } from 'shared/api/generated/CBioPortalAPIInternal';
 
-function getKey<T extends { entrezGeneId: number; keyword?: string }>(
-    obj: T
-): string {
+function getKey<T extends { entrezGeneId: number; keyword?: string }>(obj: T): string {
     if (obj.keyword) {
         return obj.entrezGeneId + '~' + obj.keyword;
     } else {
@@ -31,10 +26,7 @@ function fetch(
     }
 }
 
-export default class VariantCountCache extends LazyMobXCache<
-    VariantCount,
-    VariantCountIdentifier
-> {
+export default class VariantCountCache extends LazyMobXCache<VariantCount, VariantCountIdentifier> {
     constructor(mutationMolecularProfileId: string | undefined) {
         super(getKey, getKey, fetch, mutationMolecularProfileId);
     }

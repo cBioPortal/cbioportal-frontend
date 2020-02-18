@@ -12,10 +12,7 @@ interface ISimpleTableProps {
 }
 
 @observer
-export default class SimpleTable extends React.Component<
-    ISimpleTableProps,
-    {}
-> {
+export default class SimpleTable extends React.Component<ISimpleTableProps, {}> {
     public render() {
         const { headers, rows, className, noRowsText } = this.props;
         const tableRows =
@@ -23,10 +20,7 @@ export default class SimpleTable extends React.Component<
                 ? rows
                 : [
                       <tr key="0">
-                          <td
-                              style={{ textAlign: 'center' }}
-                              colSpan={headers.length}
-                          >
+                          <td style={{ textAlign: 'center' }} colSpan={headers.length}>
                               {noRowsText || 'There are no results.'}
                           </td>
                       </tr>,

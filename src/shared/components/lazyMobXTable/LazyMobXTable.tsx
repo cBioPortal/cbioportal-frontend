@@ -1,12 +1,6 @@
 import SimpleTable from '../simpleTable/SimpleTable';
 import * as React from 'react';
-import {
-    action,
-    computed,
-    IReactionDisposer,
-    observable,
-    reaction,
-} from 'mobx';
+import { action, computed, IReactionDisposer, observable, reaction } from 'mobx';
 import { observer, Observer } from 'mobx-react';
 import './styles.scss';
 import {
@@ -100,11 +94,7 @@ type LazyMobXTableProps<T> = {
     filterPlaceholder?: string;
 };
 
-function compareValues<U extends number | string>(
-    a: U | null,
-    b: U | null,
-    asc: boolean
-): number {
+function compareValues<U extends number | string>(a: U | null, b: U | null, asc: boolean): number {
     let ret: number = 0;
     if (a !== b) {
         if (a === null) {
@@ -201,10 +191,7 @@ function getListOfEmptyStrings<T>(maxColLength: number): string[] {
         .split('.');
 }
 
-function getAsList<T>(
-    data: Array<string | string[]>,
-    maxColLength: number
-): string[][] {
+function getAsList<T>(data: Array<string | string[]>, maxColLength: number): string[][] {
     let returnList: string[][] = [];
     data.forEach((datum: string | string[]) => {
         if (datum instanceof Array) {
@@ -264,13 +251,9 @@ export class LazyMobXTableStore<T> {
     @observable private onRowMouseLeave: ((d: T) => void) | undefined;
 
     // this observable is intended to always refer to props.columnVisibility
-    @observable private _columnVisibility:
-        | { [columnId: string]: boolean }
-        | undefined;
+    @observable private _columnVisibility: { [columnId: string]: boolean } | undefined;
     // this one keeps the state of the latest action (latest user selection)
-    @observable private _columnVisibilityOverride:
-        | { [columnId: string]: boolean }
-        | undefined;
+    @observable private _columnVisibilityOverride: { [columnId: string]: boolean } | undefined;
 
     @computed public get itemsPerPage() {
         return this.dataStore.itemsPerPage;
@@ -297,10 +280,7 @@ export class LazyMobXTableStore<T> {
     }
 
     @computed get showingAllRows(): boolean {
-        return (
-            this.displayData.length <= this.itemsPerPage ||
-            this.itemsPerPage === -1
-        );
+        return this.displayData.length <= this.itemsPerPage || this.itemsPerPage === -1;
     }
 
     @computed public get page() {
@@ -339,9 +319,7 @@ export class LazyMobXTableStore<T> {
         tableDownloadData[0] = [];
         this.columns.forEach((column: Column<T>) => {
             tableDownloadData[0].push(
-                column.headerDownload
-                    ? column.headerDownload(column.name)
-                    : column.name
+                column.headerDownload ? column.headerDownload(column.name) : column.name
             );
         });
 
@@ -370,19 +348,16 @@ export class LazyMobXTableStore<T> {
                 });
             });
             //Writing the transposed list to tableDownloadData to build the final table.
-            processedRowsDownloadData.forEach(
-                (processedRowDownloadData: string[]) => {
-                    tableDownloadData.push(processedRowDownloadData);
-                }
-            );
+            processedRowsDownloadData.forEach((processedRowDownloadData: string[]) => {
+                tableDownloadData.push(processedRowDownloadData);
+            });
         });
         return tableDownloadData;
     }
 
     @computed get sortColumnObject(): Column<T> | undefined {
         return this.columns.find(
-            (col: Column<T>) =>
-                this.isVisible(col) && col.name === this.sortColumn
+            (col: Column<T>) => this.isVisible(col) && col.name === this.sortColumn
         );
     }
 
@@ -396,8 +371,7 @@ export class LazyMobXTableStore<T> {
             return !this.sortAscending;
         } else {
             // otherwise, use columns initial sort direction, or default ascending
-            const sortDirection: SortDirection =
-                clickedColumn.defaultSortDirection || 'asc';
+            const sortDirection: SortDirection = clickedColumn.defaultSortDirection || 'asc';
             return sortDirection === 'asc';
         }
     }
@@ -426,9 +400,7 @@ export class LazyMobXTableStore<T> {
         return this.visibleColumns.map((column: Column<T>, index: number) => {
             const headerProps: {
                 role?: 'button';
-                className?:
-                    | 'multilineHeader sort-asc'
-                    | 'multilineHeader sort-des';
+                className?: 'multilineHeader sort-asc' | 'multilineHeader sort-des';
                 onClick?: (e: React.MouseEvent) => void;
             } = {};
             if (column.sortBy) {
@@ -478,18 +450,11 @@ export class LazyMobXTableStore<T> {
 
             return (
                 <React.Fragment key={index}>
-                    <th
-                        className="multilineHeader"
-                        {...headerProps}
-                        style={style}
-                    >
+                    <th className="multilineHeader" {...headerProps} style={style}>
                         {thContents}
                     </th>
                     {column.resizable && (
-                        <ColumnResizer
-                            className="multilineHeader columnResizer"
-                            minWidth={0}
-                        />
+                        <ColumnResizer className="multilineHeader columnResizer" minWidth={0} />
                     )}
                 </React.Fragment>
             );
@@ -508,9 +473,7 @@ export class LazyMobXTableStore<T> {
                 id: column.name,
                 name: column.name,
                 visible: this.columnVisibility[column.name],
-                togglable: column.hasOwnProperty('togglable')
-                    ? column.togglable
-                    : true,
+                togglable: column.hasOwnProperty('togglable') ? column.togglable : true,
             });
         });
 
@@ -526,9 +489,7 @@ export class LazyMobXTableStore<T> {
             lastVisibleItemDisp = 0;
         } else {
             firstVisibleItemDisp =
-                this.itemsPerPage === PAGINATION_SHOW_ALL
-                    ? 1
-                    : this.page * this.itemsPerPage + 1;
+                this.itemsPerPage === PAGINATION_SHOW_ALL ? 1 : this.page * this.itemsPerPage + 1;
 
             lastVisibleItemDisp =
                 this.itemsPerPage === PAGINATION_SHOW_ALL
@@ -549,17 +510,12 @@ export class LazyMobXTableStore<T> {
     @computed get tds(): JSX.Element[][] {
         return this.visibleData.map((datum: T) => {
             return this.visibleColumns.map((column: Column<T>) => {
-                const result = (
-                    <td key={column.name}>{column.render(datum)}</td>
-                );
+                const result = <td key={column.name}>{column.render(datum)}</td>;
                 if (column.resizable) {
                     return (
                         <React.Fragment>
                             {result}
-                            <ColumnResizer
-                                className="columnResizer"
-                                minWidth={0}
-                            />
+                            <ColumnResizer className="columnResizer" minWidth={0} />
                         </React.Fragment>
                     );
                 }
@@ -573,9 +529,7 @@ export class LazyMobXTableStore<T> {
         const ret = [];
         for (let i = 0; i < this.visibleData.length; i++) {
             const rowProps: any = {};
-            const rowIsHighlighted = this.dataStore.isHighlighted(
-                this.visibleData[i]
-            );
+            const rowIsHighlighted = this.dataStore.isHighlighted(this.visibleData[i]);
             const classNames = [];
             if (rowIsHighlighted) {
                 classNames.push('highlighted');
@@ -623,12 +577,7 @@ export class LazyMobXTableStore<T> {
         this.dataStore.filterString = str;
         this.page = 0;
         this.dataStore.setFilter(
-            (
-                d: T,
-                filterString: string,
-                filterStringUpper: string,
-                filterStringLower: string
-            ) => {
+            (d: T, filterString: string, filterStringUpper: string, filterStringLower: string) => {
                 if (!filterString) {
                     return true; // dont filter if no input
                 }
@@ -636,12 +585,7 @@ export class LazyMobXTableStore<T> {
                 for (const column of this.visibleColumns) {
                     match =
                         (column.filter &&
-                            column.filter(
-                                d,
-                                filterString,
-                                filterStringUpper,
-                                filterStringLower
-                            )) ||
+                            column.filter(d, filterString, filterStringUpper, filterStringLower)) ||
                         false;
                     if (match) {
                         break;
@@ -678,9 +622,7 @@ export class LazyMobXTableStore<T> {
         if (props.dataStore) {
             this.dataStore = props.dataStore;
         } else {
-            this.dataStore = new SimpleLazyMobXTableApplicationDataStore<T>(
-                props.data || []
-            );
+            this.dataStore = new SimpleLazyMobXTableApplicationDataStore<T>(props.data || []);
         }
         if (this.dataStore.page === undefined) {
             this.dataStore.page = 0;
@@ -737,19 +679,14 @@ export class LazyMobXTableStore<T> {
         reaction(
             () => this.displayData.length,
             () => {
-                this.page = this.clampPage(
-                    this.page
-                ); /* update for possibly reduced maxPage */
+                this.page = this.clampPage(this.page); /* update for possibly reduced maxPage */
             }
         );
     }
 }
 
 @observer
-export default class LazyMobXTable<T> extends React.Component<
-    LazyMobXTableProps<T>,
-    {}
-> {
+export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps<T>, {}> {
     private store: LazyMobXTableStore<T>;
     private handlers: { [fnName: string]: (...args: any[]) => void };
     private filterInput: HTMLInputElement;
@@ -827,10 +764,7 @@ export default class LazyMobXTable<T> extends React.Component<
             })(),
             visibilityToggle: (columnId: string): void => {
                 // toggle visibility
-                this.updateColumnVisibility(
-                    columnId,
-                    !this.store.columnVisibility[columnId]
-                );
+                this.updateColumnVisibility(columnId, !this.store.columnVisibility[columnId]);
             },
             changeItemsPerPage: (ipp: number) => {
                 this.store.itemsPerPage = ipp;
@@ -861,9 +795,7 @@ export default class LazyMobXTable<T> extends React.Component<
             () => this.store.firstHighlightedRowIndex,
             (index: number) => {
                 if (this.props.pageToHighlight) {
-                    this.store.pageToRowIndex(
-                        this.store.firstHighlightedRowIndex
-                    );
+                    this.store.pageToRowIndex(this.store.firstHighlightedRowIndex);
                 }
             }
         );
@@ -901,14 +833,9 @@ export default class LazyMobXTable<T> extends React.Component<
             // put status text between button if no show more button
             if (this.props.paginationProps.showMoreButton === false) {
                 delete paginationProps['textBeforeButtons'];
-                paginationProps[
-                    'textBetweenButtons'
-                ] = this.store.paginationStatusText;
+                paginationProps['textBetweenButtons'] = this.store.paginationStatusText;
             }
-            paginationProps = Object.assign(
-                paginationProps,
-                this.props.paginationProps
-            );
+            paginationProps = Object.assign(paginationProps, this.props.paginationProps);
         }
         return <PaginationControls {...paginationProps} />;
         // } else {
@@ -927,8 +854,8 @@ export default class LazyMobXTable<T> extends React.Component<
                     fontWeight: 'bold',
                 }}
             >
-                {this.store.displayData.length} {this.store.itemsLabel} (page{' '}
-                {this.store.page + 1} of {this.store.maxPage + 1})
+                {this.store.displayData.length} {this.store.itemsLabel} (page {this.store.page + 1}{' '}
+                of {this.store.maxPage + 1})
             </span>
         );
     }
@@ -937,10 +864,7 @@ export default class LazyMobXTable<T> extends React.Component<
         return (
             <div>
                 {this.props.showCountHeader && this.countHeader}
-                <ButtonToolbar
-                    style={{ marginLeft: 0 }}
-                    className="tableMainToolbar"
-                >
+                <ButtonToolbar style={{ marginLeft: 0 }} className="tableMainToolbar">
                     {this.props.showFilter ? (
                         <div
                             className={`pull-right form-group has-feedback input-group-sm tableFilter`}
@@ -993,8 +917,7 @@ export default class LazyMobXTable<T> extends React.Component<
                     ) : (
                         ''
                     )}
-                    {this.props.showPagination &&
-                    this.props.showPaginationAtTop ? (
+                    {this.props.showPagination && this.props.showPaginationAtTop ? (
                         <Observer>{this.getPaginationControls}</Observer>
                     ) : null}
                 </ButtonToolbar>
@@ -1008,9 +931,7 @@ export default class LazyMobXTable<T> extends React.Component<
                 style={{ marginLeft: 0, float: 'none' }}
                 className="tableMainToolbar center"
             >
-                {this.props.showPagination && (
-                    <Observer>{this.getPaginationControls}</Observer>
-                )}
+                {this.props.showPagination && <Observer>{this.getPaginationControls}</Observer>}
             </ButtonToolbar>
         );
     }
@@ -1019,9 +940,7 @@ export default class LazyMobXTable<T> extends React.Component<
         return (
             <div
                 style={{
-                    overflowX: this.props.enableHorizontalScroll
-                        ? 'auto'
-                        : 'visible',
+                    overflowX: this.props.enableHorizontalScroll ? 'auto' : 'visible',
                 }}
             >
                 <SimpleTable
@@ -1038,9 +957,7 @@ export default class LazyMobXTable<T> extends React.Component<
             <div className="lazy-mobx-table" data-test="LazyMobXTable">
                 <Observer>{this.getTopToolbar}</Observer>
                 <Observer>{this.getTable}</Observer>
-                {!this.props.showPaginationAtTop && (
-                    <Observer>{this.getBottomToolbar}</Observer>
-                )}
+                {!this.props.showPaginationAtTop && <Observer>{this.getBottomToolbar}</Observer>}
             </div>
         );
     }

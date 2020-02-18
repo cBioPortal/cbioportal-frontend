@@ -1,6 +1,5 @@
 var assert = require('assert');
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
+var goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
@@ -23,17 +22,11 @@ describe('Quick Search', () => {
     });
 
     it('should give results for studies', () => {
-        browser.click(
-            'strong=Skin Cutaneous Melanoma(Broad, Cancer Discov 2014)'
-        );
-        browser.waitForText(
-            'h3=Skin Cutaneous Melanoma(Broad, Cancer Discov 2014)'
-        );
+        browser.click('strong=Skin Cutaneous Melanoma(Broad, Cancer Discov 2014)');
+        browser.waitForText('h3=Skin Cutaneous Melanoma(Broad, Cancer Discov 2014)');
 
         assert.equal(
-            browser.isVisible(
-                'h3=Skin Cutaneous Melanoma(Broad, Cancer Discov 2014)'
-            ),
+            browser.isVisible('h3=Skin Cutaneous Melanoma(Broad, Cancer Discov 2014)'),
             true,
             'modal is visible'
         );
@@ -45,32 +38,20 @@ describe('Quick Search', () => {
         browser.click('strong=BRAF_PS314');
         browser.waitForText('a=BRAF_PS314');
 
-        assert.equal(
-            browser.isVisible('a=BRAF_PS314'),
-            true,
-            'modal is visible'
-        );
+        assert.equal(browser.isVisible('a=BRAF_PS314'), true, 'modal is visible');
     });
 
     it('should give results for patients', () => {
         browser.click('strong=Mel-BRAFi-03');
         browser.waitForText('a=Mel-BRAFi-03');
 
-        assert.equal(
-            browser.isVisible('a=Mel-BRAFi-03')[0],
-            true,
-            'modal is visible'
-        );
+        assert.equal(browser.isVisible('a=Mel-BRAFi-03')[0], true, 'modal is visible');
     });
 
     it('should give results for samples', () => {
         browser.click('strong=Mel_BRAFi_02_PRE');
         browser.waitForText('a=Mel_BRAFi_02_PRE');
 
-        assert.equal(
-            browser.isVisible('a=Mel_BRAFi_02_PRE')[0],
-            true,
-            'modal is visible'
-        );
+        assert.equal(browser.isVisible('a=Mel_BRAFi_02_PRE')[0], true, 'modal is visible');
     });
 });

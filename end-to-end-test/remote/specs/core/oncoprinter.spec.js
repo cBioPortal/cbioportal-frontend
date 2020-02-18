@@ -22,14 +22,8 @@ describe('oncoprinter tests', function() {
 
             setOncoprintMutationsMenuOpen(true);
             assert(!browser.isSelected('input[data-test="annotateOncoKb"]'));
-            assert(
-                !browser.isSelected(
-                    'input[data-test="annotateCBioPortalCount"]'
-                )
-            );
-            assert(
-                browser.isSelected('input[data-test="annotateCustomBinary"]')
-            );
+            assert(!browser.isSelected('input[data-test="annotateCBioPortalCount"]'));
+            assert(browser.isSelected('input[data-test="annotateCustomBinary"]'));
         }
 
         function doTestWithoutCustomDriver() {
@@ -43,9 +37,7 @@ describe('oncoprinter tests', function() {
 
             setOncoprintMutationsMenuOpen(true);
             assert(browser.isSelected('input[data-test="annotateOncoKb"]'));
-            assert(
-                !browser.isExisting('input[data-test="annotateCustomBinary"]')
-            );
+            assert(!browser.isExisting('input[data-test="annotateCustomBinary"]'));
         }
 
         it('only custom driver annotation is selected when input data includes a custom driver', () => {

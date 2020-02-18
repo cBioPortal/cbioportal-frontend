@@ -50,10 +50,7 @@ export class CoExpressionCache extends MobxPromiseCache<
 > {}
 
 @observer
-export default class CoExpressionTab extends React.Component<
-    ICoExpressionTabProps,
-    {}
-> {
+export default class CoExpressionTab extends React.Component<ICoExpressionTabProps, {}> {
     @observable _selectedProfileX: string | undefined; // only undefined initially, until molecular profiles downloaded
     @observable _selectedProfileY: string | undefined; // only undefined initially, until molecular profiles downloaded
     @observable _selectedGeneticEntity: GeneticEntity | undefined; // only undefined initially, until genes and gene sets downloaded
@@ -61,10 +58,7 @@ export default class CoExpressionTab extends React.Component<
     readonly selectedProfileX = remoteData<string | undefined>({
         await: () => [this.xProfileOptions],
         invoke: () => {
-            if (
-                !this._selectedProfileX &&
-                this.xProfileOptions.result!.length > 0
-            ) {
+            if (!this._selectedProfileX && this.xProfileOptions.result!.length > 0) {
                 return Promise.resolve(this.xProfileOptions.result![0].value);
             } else {
                 return Promise.resolve(this._selectedProfileX);
@@ -75,10 +69,7 @@ export default class CoExpressionTab extends React.Component<
     readonly selectedProfileY = remoteData<string | undefined>({
         await: () => [this.yProfileOptions],
         invoke: () => {
-            if (
-                !this._selectedProfileY &&
-                this.yProfileOptions.result!.length > 0
-            ) {
+            if (!this._selectedProfileY && this.yProfileOptions.result!.length > 0) {
                 return Promise.resolve(this.yProfileOptions.result![0].value);
             } else {
                 return Promise.resolve(this._selectedProfileY);
@@ -90,9 +81,7 @@ export default class CoExpressionTab extends React.Component<
         await: () => [this.props.store.geneticEntities],
         invoke: () => {
             if (!this._selectedGeneticEntity) {
-                return Promise.resolve(
-                    this.props.store.geneticEntities.result![0]
-                );
+                return Promise.resolve(this.props.store.geneticEntities.result![0]);
             } else {
                 return Promise.resolve(this._selectedGeneticEntity);
             }
@@ -103,11 +92,9 @@ export default class CoExpressionTab extends React.Component<
         await: () => [this.props.store.geneticEntities],
         invoke: () => {
             if (this._selectedGeneticEntity) {
-                for (const geneticEntity of this.props.store.geneticEntities
-                    .result!) {
+                for (const geneticEntity of this.props.store.geneticEntities.result!) {
                     if (
-                        geneticEntity.geneticEntityType ===
-                            GeneticEntityType.GENESET &&
+                        geneticEntity.geneticEntityType === GeneticEntityType.GENESET &&
                         geneticEntity.geneticEntityId ===
                             this._selectedGeneticEntity!.geneticEntityId
                     ) {
@@ -137,12 +124,10 @@ export default class CoExpressionTab extends React.Component<
                 this.plotState.plotLogScale = !this.plotState.plotLogScale;
             }),
             onClickShowMutations: action(() => {
-                this.plotState.plotShowMutations = !this.plotState
-                    .plotShowMutations;
+                this.plotState.plotShowMutations = !this.plotState.plotShowMutations;
             }),
             onClickShowRegressionLine: action(() => {
-                this.plotState.plotShowRegressionLine = !this.plotState
-                    .plotShowRegressionLine;
+                this.plotState.plotShowRegressionLine = !this.plotState.plotShowRegressionLine;
             }),
         };
     }
@@ -160,11 +145,8 @@ export default class CoExpressionTab extends React.Component<
     @bind
     private onSelectGeneticEntity(geneticEntityId: string) {
         if (this.props.store.geneticEntities.isComplete) {
-            for (const geneticEntity of this.props.store.geneticEntities
-                .result) {
-                if (
-                    geneticEntity.geneticEntityId.toString() === geneticEntityId
-                ) {
+            for (const geneticEntity of this.props.store.geneticEntities.result) {
+                if (geneticEntity.geneticEntityId.toString() === geneticEntityId) {
                     this._selectedGeneticEntity = geneticEntity;
                 }
             }
@@ -176,9 +158,7 @@ export default class CoExpressionTab extends React.Component<
     @computed get hasMutationData() {
         return !!_.find(
             this.props.store.molecularProfilesWithData.result,
-            profile =>
-                profile.molecularAlterationType ===
-                AlterationTypeConstants.MUTATION_EXTENDED
+            profile => profile.molecularAlterationType === AlterationTypeConstants.MUTATION_EXTENDED
         );
     }
 
@@ -202,8 +182,7 @@ export default class CoExpressionTab extends React.Component<
             return Promise.resolve(
                 getProfileOptions(
                     filteredProfiles,
-                    this.props.store.molecularProfileIdToProfiledSampleCount
-                        .result!
+                    this.props.store.molecularProfileIdToProfiledSampleCount.result!
                 )
             );
         },
@@ -218,8 +197,7 @@ export default class CoExpressionTab extends React.Component<
             return Promise.resolve(
                 getProfileOptions(
                     this.props.store.coexpressionTabMolecularProfiles.result!,
-                    this.props.store.molecularProfileIdToProfiledSampleCount
-                        .result!
+                    this.props.store.molecularProfileIdToProfiledSampleCount.result!
                 )
             );
         },
@@ -266,9 +244,7 @@ export default class CoExpressionTab extends React.Component<
                     threshold = 0;
                 }
                 const dataQueryFilter = this.createDataQueryFilterForCoExpression(
-                    this.props.store.studyToDataQueryFilter.result![
-                        q.profileX.studyId
-                    ],
+                    this.props.store.studyToDataQueryFilter.result![q.profileX.studyId],
                     q.geneticEntityId,
                     q.geneticEntityType
                 );
@@ -279,67 +255,50 @@ export default class CoExpressionTab extends React.Component<
                             ? 'https://master.cbioportal.org/api'
                             : undefined;
 
-                    const data = await internalClient.fetchCoExpressionsUsingPOST(
-                        {
-                            molecularProfileIdA: q.profileX.molecularProfileId,
-                            molecularProfileIdB: q.profileY.molecularProfileId,
-                            coExpressionFilter: dataQueryFilter as CoExpressionFilter,
-                            threshold,
-                            $domain,
-                        }
-                    );
+                    const data = await internalClient.fetchCoExpressionsUsingPOST({
+                        molecularProfileIdA: q.profileX.molecularProfileId,
+                        molecularProfileIdB: q.profileY.molecularProfileId,
+                        coExpressionFilter: dataQueryFilter as CoExpressionFilter,
+                        threshold,
+                        $domain,
+                    });
 
                     let genesetMap: { [id: string]: Geneset } = {};
                     if (
-                        q.profileY.molecularAlterationType ===
-                        AlterationTypeConstants.GENESET_SCORE
+                        q.profileY.molecularAlterationType === AlterationTypeConstants.GENESET_SCORE
                     ) {
                         const genesetIds = _.chain(data)
                             .map(datum => datum.geneticEntityId)
                             .uniq()
                             .value();
-                        const genesets = await internalClient.fetchGenesetsUsingPOST(
-                            {
-                                genesetIds,
-                            }
-                        );
-                        genesetMap = _.keyBy(
-                            genesets,
-                            geneset => geneset.genesetId
-                        );
+                        const genesets = await internalClient.fetchGenesetsUsingPOST({
+                            genesetIds,
+                        });
+                        genesetMap = _.keyBy(genesets, geneset => geneset.genesetId);
                     }
 
                     const entrezGeneIdToReferenceGene =
-                        this.props.store.entrezGeneIdToReferenceGene.result ||
-                        {};
+                        this.props.store.entrezGeneIdToReferenceGene.result || {};
 
                     return Promise.resolve(
                         _.reduce(
                             data,
                             (acc, datum) => {
-                                let geneticEntityName:
-                                    | string
-                                    | undefined = undefined;
+                                let geneticEntityName: string | undefined = undefined;
                                 let cytoband = '-';
                                 if (
                                     q.profileY.molecularAlterationType ===
                                     AlterationTypeConstants.GENESET_SCORE
                                 ) {
-                                    geneticEntityName =
-                                        genesetMap[datum.geneticEntityId].name;
+                                    geneticEntityName = genesetMap[datum.geneticEntityId].name;
                                 } else if (
-                                    entrezGeneIdToReferenceGene[
-                                        datum.geneticEntityId
-                                    ] !== undefined
+                                    entrezGeneIdToReferenceGene[datum.geneticEntityId] !== undefined
                                 ) {
                                     geneticEntityName =
-                                        entrezGeneIdToReferenceGene[
-                                            datum.geneticEntityId
-                                        ].hugoGeneSymbol;
+                                        entrezGeneIdToReferenceGene[datum.geneticEntityId]
+                                            .hugoGeneSymbol;
                                     cytoband =
-                                        entrezGeneIdToReferenceGene[
-                                            datum.geneticEntityId
-                                        ].cytoband;
+                                        entrezGeneIdToReferenceGene[datum.geneticEntityId].cytoband;
                                 }
 
                                 if (geneticEntityName !== undefined) {
@@ -387,8 +346,7 @@ export default class CoExpressionTab extends React.Component<
                         <span>
                             Find{' '}
                             {getGenesetProfiles(
-                                this.props.store
-                                    .coexpressionTabMolecularProfiles.result
+                                this.props.store.coexpressionTabMolecularProfiles.result
                             ).length > 0
                                 ? 'genes/genesets'
                                 : 'genes'}{' '}
@@ -417,11 +375,7 @@ export default class CoExpressionTab extends React.Component<
                             <span>
                                 {' '}
                                 that are correlated with{' '}
-                                {
-                                    this.selectedGeneticEntity.result
-                                        .geneticEntityName
-                                }{' '}
-                                in{' '}
+                                {this.selectedGeneticEntity.result.geneticEntityName} in{' '}
                             </span>
                         }
                         <div
@@ -440,9 +394,7 @@ export default class CoExpressionTab extends React.Component<
                                 options={this.xProfileOptions.result}
                                 searchable={false}
                                 clearable={false}
-                                disabled={
-                                    this.isSelectedGeneticEntityAGeneSet.result
-                                }
+                                disabled={this.isSelectedGeneticEntityAGeneSet.result}
                                 className="coexpression-select-subject-profile"
                             />
                         </div>
@@ -450,9 +402,7 @@ export default class CoExpressionTab extends React.Component<
                 </div>
             );
         } else {
-            return (
-                <LoadingIndicator isLoading={true} center={true} size={'big'} />
-            );
+            return <LoadingIndicator isLoading={true} center={true} size={'big'} />;
         }
     }
 
@@ -472,20 +422,16 @@ export default class CoExpressionTab extends React.Component<
             this.props.store.coexpressionTabMolecularProfiles.isComplete
         ) {
             const coExpressionVizElements = [];
-            for (const geneticEntity of this.props.store.geneticEntities
-                .result) {
-                for (const profileX of geneticEntity.geneticEntityType ===
-                GeneticEntityType.GENE
+            for (const geneticEntity of this.props.store.geneticEntities.result) {
+                for (const profileX of geneticEntity.geneticEntityType === GeneticEntityType.GENE
                     ? filterAndSortProfiles(
-                          this.props.store.coexpressionTabMolecularProfiles
-                              .result
+                          this.props.store.coexpressionTabMolecularProfiles.result
                       )
                     : getGenesetProfiles(
-                          this.props.store.coexpressionTabMolecularProfiles
-                              .result
+                          this.props.store.coexpressionTabMolecularProfiles.result
                       )) {
-                    for (const profileY of this.props.store
-                        .coexpressionTabMolecularProfiles.result) {
+                    for (const profileY of this.props.store.coexpressionTabMolecularProfiles
+                        .result) {
                         coExpressionVizElements.push(
                             <CoExpressionViz
                                 key={`${geneticEntity.geneticEntityId},${profileX.molecularProfileId},${profileY.molecularProfileId}`}
@@ -494,12 +440,10 @@ export default class CoExpressionTab extends React.Component<
                                 profileX={profileX}
                                 profileY={profileY}
                                 numericGeneMolecularDataCache={
-                                    this.props.store
-                                        .numericGeneMolecularDataCache
+                                    this.props.store.numericGeneMolecularDataCache
                                 }
                                 numericGenesetMolecularDataCache={
-                                    this.props.store
-                                        .numericGenesetMolecularDataCache
+                                    this.props.store.numericGenesetMolecularDataCache
                                 }
                                 mutationCache={
                                     this.hasMutationData
@@ -507,22 +451,16 @@ export default class CoExpressionTab extends React.Component<
                                         : undefined
                                 }
                                 hidden={
-                                    profileX.molecularProfileId !==
-                                        this.selectedProfileX.result ||
-                                    profileY.molecularProfileId !==
-                                        this.selectedProfileY.result ||
+                                    profileX.molecularProfileId !== this.selectedProfileX.result ||
+                                    profileY.molecularProfileId !== this.selectedProfileY.result ||
                                     geneticEntity.geneticEntityId !==
-                                        this.selectedGeneticEntity.result
-                                            .geneticEntityId!
+                                        this.selectedGeneticEntity.result.geneticEntityId!
                                 }
                                 plotState={this.plotState}
                                 plotHandlers={this.plotHandlers}
-                                coverageInformation={
-                                    this.props.store.coverageInformation
-                                }
+                                coverageInformation={this.props.store.coverageInformation}
                                 studyToMutationMolecularProfile={
-                                    this.props.store
-                                        .studyToMutationMolecularProfile
+                                    this.props.store.studyToMutationMolecularProfile
                                 }
                             />
                         );
@@ -548,9 +486,7 @@ export default class CoExpressionTab extends React.Component<
                                     <MSKTab
                                         key={i}
                                         id={geneticEntity.geneticEntityId.toString()}
-                                        linkText={
-                                            geneticEntity.geneticEntityName
-                                        }
+                                        linkText={geneticEntity.geneticEntityName}
                                     ></MSKTab>
                                 );
                             }
@@ -561,9 +497,7 @@ export default class CoExpressionTab extends React.Component<
                 </div>
             );
         } else {
-            return (
-                <LoadingIndicator isLoading={true} center={true} size={'big'} />
-            );
+            return <LoadingIndicator isLoading={true} center={true} size={'big'} />;
         }
     }
 
@@ -600,19 +534,12 @@ export default class CoExpressionTab extends React.Component<
                         store={this.props.store}
                         tabReflectsOql={false}
                     />
-                    <AlterationFilterWarning
-                        store={this.props.store}
-                        isUnaffected={true}
-                    />
+                    <AlterationFilterWarning store={this.props.store} isUnaffected={true} />
                 </div>
 
                 {status === 'complete' && divContents}
 
-                <LoadingIndicator
-                    center={true}
-                    size={'big'}
-                    isLoading={status === 'pending'}
-                />
+                <LoadingIndicator center={true} size={'big'} isLoading={status === 'pending'} />
             </div>
         );
     }

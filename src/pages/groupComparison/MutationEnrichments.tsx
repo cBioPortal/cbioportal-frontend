@@ -20,14 +20,9 @@ export interface IMutationEnrichmentsProps {
 }
 
 @observer
-export default class MutationEnrichments extends React.Component<
-    IMutationEnrichmentsProps,
-    {}
-> {
+export default class MutationEnrichments extends React.Component<IMutationEnrichmentsProps, {}> {
     @autobind
-    private onChangeProfile(profileMap: {
-        [studyId: string]: MolecularProfile;
-    }) {
+    private onChangeProfile(profileMap: { [studyId: string]: MolecularProfile }) {
         this.props.store.setMutationEnrichmentProfileMap(profileMap);
     }
 
@@ -44,21 +39,14 @@ export default class MutationEnrichments extends React.Component<
         await: () => [this.props.store.enrichmentAnalysisGroups],
         invoke: () => {
             return Promise.resolve(
-                _.map(
-                    this.props.store.enrichmentAnalysisGroups.result,
-                    group => {
-                        return {
-                            ...group,
-                            description: `Number (percentage) of ${
-                                this.props.store.usePatientLevelEnrichments
-                                    ? 'patients'
-                                    : 'samples'
-                            } in ${
-                                group.name
-                            } that have a mutation in the listed gene.`,
-                        };
-                    }
-                )
+                _.map(this.props.store.enrichmentAnalysisGroups.result, group => {
+                    return {
+                        ...group,
+                        description: `Number (percentage) of ${
+                            this.props.store.usePatientLevelEnrichments ? 'patients' : 'samples'
+                        } in ${group.name} that have a mutation in the listed gene.`,
+                    };
+                })
             );
         },
     });
@@ -73,12 +61,10 @@ export default class MutationEnrichments extends React.Component<
         render: () => {
             let headerName = 'Mutation';
             let studyIds = Object.keys(
-                this.props.store.selectedStudyMutationEnrichmentProfileMap
-                    .result!
+                this.props.store.selectedStudyMutationEnrichmentProfileMap.result!
             );
             if (studyIds.length === 1) {
-                headerName = this.props.store
-                    .selectedStudyMutationEnrichmentProfileMap.result![
+                headerName = this.props.store.selectedStudyMutationEnrichmentProfileMap.result![
                     studyIds[0]
                 ].name;
             }
@@ -88,9 +74,7 @@ export default class MutationEnrichments extends React.Component<
                         dataSets={this.props.store.mutationEnrichmentProfiles}
                         onChange={this.onChangeProfile}
                         selectedProfileByStudyId={
-                            this.props.store
-                                .selectedStudyMutationEnrichmentProfileMap
-                                .result!
+                            this.props.store.selectedStudyMutationEnrichmentProfileMap.result!
                         }
                         studies={this.props.store.studies.result!}
                     />
@@ -100,9 +84,7 @@ export default class MutationEnrichments extends React.Component<
                         alteredVsUnalteredMode={false}
                         headerName={headerName}
                         containerType={AlterationContainerType.MUTATION}
-                        patientLevelEnrichments={
-                            this.props.store.usePatientLevelEnrichments
-                        }
+                        patientLevelEnrichments={this.props.store.usePatientLevelEnrichments}
                         onSetPatientLevelEnrichments={
                             this.props.store.setUsePatientLevelEnrichments
                         }
@@ -111,9 +93,7 @@ export default class MutationEnrichments extends React.Component<
                 </div>
             );
         },
-        renderPending: () => (
-            <LoadingIndicator center={true} isLoading={true} size={'big'} />
-        ),
+        renderPending: () => <LoadingIndicator center={true} isLoading={true} size={'big'} />,
         renderError: () => <ErrorMessage />,
     });
 

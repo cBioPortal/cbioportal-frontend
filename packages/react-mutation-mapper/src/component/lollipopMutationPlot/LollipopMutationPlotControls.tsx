@@ -8,11 +8,7 @@ import { observer } from 'mobx-react';
 
 import { numberOfLeadingDecimalZeros } from '../../util/FormatUtils';
 import { calcYMaxInput } from '../../util/LollipopPlotUtils';
-import TrackSelector, {
-    TrackDataStatus,
-    TrackName,
-    TrackVisibility,
-} from '../track/TrackSelector';
+import TrackSelector, { TrackDataStatus, TrackName, TrackVisibility } from '../track/TrackSelector';
 
 import 'react-rangeslider/lib/index.css';
 import styles from './lollipopMutationPlot.module.scss';
@@ -216,9 +212,7 @@ export default class LollipopMutationPlotControls extends React.Component<
             <div
                 className={classnames(
                     'lollipop_mutation_plot__controls',
-                    this.props.showControls
-                        ? styles['fade-in']
-                        : styles['fade-out']
+                    this.props.showControls ? styles['fade-in'] : styles['fade-out']
                 )}
             >
                 <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -232,8 +226,7 @@ export default class LollipopMutationPlotControls extends React.Component<
                     {this.props.customControls}
                     <div style={{ display: 'flex', marginLeft: 'auto' }}>
                         {this.props.showLegendToggle && this.legendToggle}
-                        {this.props.showDownloadControls &&
-                            this.downloadControls}
+                        {this.props.showDownloadControls && this.downloadControls}
                     </div>
                 </div>
                 {'  '}

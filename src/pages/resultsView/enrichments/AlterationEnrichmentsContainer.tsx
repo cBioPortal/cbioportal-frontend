@@ -23,11 +23,7 @@ import AddCheckedGenes from 'pages/resultsView/enrichments/AddCheckedGenes';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 import MiniFrequencyScatterChart from './MiniFrequencyScatterChart';
-import {
-    CheckedSelect,
-    DefaultTooltip,
-    Option,
-} from 'cbioportal-frontend-commons';
+import { CheckedSelect, DefaultTooltip, Option } from 'cbioportal-frontend-commons';
 import { MiniOncoprint } from 'shared/components/miniOncoprint/MiniOncoprint';
 import GeneBarPlot from './GeneBarPlot';
 import WindowStore from 'shared/components/window/WindowStore';
@@ -67,9 +63,7 @@ export default class AlterationEnrichmentContainer extends React.Component<
     @observable.shallow selectedGenes: string[] | null;
     @observable.ref highlightedRow: AlterationEnrichmentRow | undefined;
 
-    @observable.ref _enrichedGroups: string[] = this.props.groups.map(
-        group => group.name
-    );
+    @observable.ref _enrichedGroups: string[] = this.props.groups.map(group => group.name);
 
     @computed get isTwoGroupAnalysis(): boolean {
         return this.props.groups.length == 2;
@@ -163,38 +157,24 @@ export default class AlterationEnrichmentContainer extends React.Component<
                     const queriedGroup1 = this.props.groups[0];
                     const queriedGroup2 = this.props.groups[1];
                     // we want to order groups according to order in prop.groups
-                    const group1 = groups.find(
-                        group => group.name === this.props.groups[0].name
-                    )!;
-                    const group2 = groups.find(
-                        group => group.name === this.props.groups[1].name
-                    )!;
+                    const group1 = groups.find(group => group.name === this.props.groups[0].name)!;
+                    const group2 = groups.find(group => group.name === this.props.groups[1].name)!;
 
                     if (!group1 || !group2) {
                         throw 'No matching groups in Alteration Overlap Cell';
                     }
 
-                    const totalQueriedCases =
-                        queriedGroup1.count + queriedGroup2.count;
-                    const group1Width =
-                        (queriedGroup1.count / totalQueriedCases) * 100;
+                    const totalQueriedCases = queriedGroup1.count + queriedGroup2.count;
+                    const group1Width = (queriedGroup1.count / totalQueriedCases) * 100;
                     const group2Width = 100 - group1Width;
                     const group1Unprofiled =
-                        ((queriedGroup1.count - group1.profiledCount) /
-                            totalQueriedCases) *
-                        100;
+                        ((queriedGroup1.count - group1.profiledCount) / totalQueriedCases) * 100;
                     const group1Unaltered =
-                        ((group1.profiledCount - group1.alteredCount) /
-                            totalQueriedCases) *
-                        100;
+                        ((group1.profiledCount - group1.alteredCount) / totalQueriedCases) * 100;
                     const group2Unprofiled =
-                        ((queriedGroup2.count - group2.profiledCount) /
-                            totalQueriedCases) *
-                        100;
-                    const group1Altered =
-                        (group1.alteredCount / totalQueriedCases) * 100;
-                    const group2Altered =
-                        (group2.alteredCount / totalQueriedCases) * 100;
+                        ((queriedGroup2.count - group2.profiledCount) / totalQueriedCases) * 100;
+                    const group1Altered = (group1.alteredCount / totalQueriedCases) * 100;
+                    const group2Altered = (group2.alteredCount / totalQueriedCases) * 100;
 
                     const alterationLanguage = this.props.showCNAInTable
                         ? 'copy number alterations'
@@ -204,8 +184,7 @@ export default class AlterationEnrichmentContainer extends React.Component<
                         return (
                             <div>
                                 <h3>
-                                    {data.hugoGeneSymbol} {alterationLanguage}{' '}
-                                    in:
+                                    {data.hugoGeneSymbol} {alterationLanguage} in:
                                 </h3>
                                 <table className={'table table-striped'}>
                                     <tbody>
@@ -214,17 +193,12 @@ export default class AlterationEnrichmentContainer extends React.Component<
                                                 <strong>{group1.name}: </strong>
                                             </td>
                                             <td>
-                                                {group1.alteredCount} of{' '}
-                                                {group1.profiledCount} of
+                                                {group1.alteredCount} of {group1.profiledCount} of
                                                 profiled{' '}
-                                                {this.props
-                                                    .patientLevelEnrichments
+                                                {this.props.patientLevelEnrichments
                                                     ? 'patients'
                                                     : 'samples'}{' '}
-                                                (
-                                                {numeral(
-                                                    group1.alteredPercentage
-                                                ).format('0.0')}
+                                                ({numeral(group1.alteredPercentage).format('0.0')}
                                                 %)
                                             </td>
                                         </tr>
@@ -233,17 +207,12 @@ export default class AlterationEnrichmentContainer extends React.Component<
                                                 <strong>{group2.name}: </strong>
                                             </td>
                                             <td>
-                                                {group2.alteredCount} of{' '}
-                                                {group2.profiledCount} of
+                                                {group2.alteredCount} of {group2.profiledCount} of
                                                 profiled{' '}
-                                                {this.props
-                                                    .patientLevelEnrichments
+                                                {this.props.patientLevelEnrichments
                                                     ? 'patients'
                                                     : 'samples'}{' '}
-                                                (
-                                                {numeral(
-                                                    group2.alteredPercentage
-                                                ).format('0.0')}
+                                                ({numeral(group2.alteredPercentage).format('0.0')}
                                                 %)
                                             </td>
                                         </tr>
@@ -259,10 +228,7 @@ export default class AlterationEnrichmentContainer extends React.Component<
                             trigger={['hover']}
                             overlay={overlay}
                         >
-                            <div
-                                className={'inlineBlock'}
-                                style={{ padding: '3px 0' }}
-                            >
+                            <div className={'inlineBlock'} style={{ padding: '3px 0' }}>
                                 <MiniOncoprint
                                     group1Width={group1Width}
                                     group2Width={group2Width}
@@ -284,24 +250,15 @@ export default class AlterationEnrichmentContainer extends React.Component<
                         <tr>
                             <td>Upper row</td>
                             <td>
-                                :{' '}
-                                {this.props.patientLevelEnrichments
-                                    ? 'Patients'
-                                    : 'Samples'}{' '}
+                                : {this.props.patientLevelEnrichments ? 'Patients' : 'Samples'}{' '}
                                 colored according to group.
                             </td>
                         </tr>
                         <tr>
                             <td>Lower row</td>
                             <td>
-                                :{' '}
-                                {this.props.patientLevelEnrichments
-                                    ? 'Patients'
-                                    : 'Samples'}{' '}
-                                with{' '}
-                                {this.props.showCNAInTable
-                                    ? 'the listed alteration'
-                                    : 'a mutation'}{' '}
+                                : {this.props.patientLevelEnrichments ? 'Patients' : 'Samples'} with{' '}
+                                {this.props.showCNAInTable ? 'the listed alteration' : 'a mutation'}{' '}
                                 in the listed gene are highlighted.
                             </td>
                         </tr>
@@ -393,11 +350,7 @@ export default class AlterationEnrichmentContainer extends React.Component<
 
     public render() {
         if (this.props.data.length === 0) {
-            return (
-                <div className={'alert alert-info'}>
-                    No data/result available
-                </div>
-            );
+            return <div className={'alert alert-info'}>No data/result available</div>;
         }
 
         return (
@@ -410,17 +363,13 @@ export default class AlterationEnrichmentContainer extends React.Component<
                         <MiniScatterChart
                             data={getAlterationScatterData(
                                 this.data,
-                                this.props.store
-                                    ? this.props.store.hugoGeneSymbols
-                                    : []
+                                this.props.store ? this.props.store.hugoGeneSymbols : []
                             )}
                             xAxisLeftLabel={
-                                this.group2.nameOfEnrichmentDirection ||
-                                this.group2.name
+                                this.group2.nameOfEnrichmentDirection || this.group2.name
                             }
                             xAxisRightLabel={
-                                this.group1.nameOfEnrichmentDirection ||
-                                this.group1.name
+                                this.group1.nameOfEnrichmentDirection || this.group1.name
                             }
                             xAxisDomain={15}
                             xAxisTickValues={[-10, 0, 10]}
@@ -435,9 +384,7 @@ export default class AlterationEnrichmentContainer extends React.Component<
                         <MiniFrequencyScatterChart
                             data={getAlterationFrequencyScatterData(
                                 this.data,
-                                this.props.store
-                                    ? this.props.store.hugoGeneSymbols
-                                    : [],
+                                this.props.store ? this.props.store.hugoGeneSymbols : [],
                                 this.group1.name,
                                 this.group2.name
                             )}
@@ -454,9 +401,7 @@ export default class AlterationEnrichmentContainer extends React.Component<
                         <GeneBarPlot
                             data={this.data}
                             isTwoGroupAnalysis={this.isTwoGroupAnalysis}
-                            groupOrder={this.props.groups.map(
-                                group => group.name
-                            )}
+                            groupOrder={this.props.groups.map(group => group.name)}
                             showCNAInTable={this.props.showCNAInTable}
                             containerType={this.props.containerType}
                             categoryToColor={this.categoryToColor}
@@ -468,9 +413,7 @@ export default class AlterationEnrichmentContainer extends React.Component<
                 <div>
                     <div>
                         <h3>{this.props.headerName}</h3>
-                        {this.props.store && (
-                            <AddCheckedGenes checkedGenes={this.checkedGenes} />
-                        )}
+                        {this.props.store && <AddCheckedGenes checkedGenes={this.checkedGenes} />}
                     </div>
                     <div className={styles.Checkboxes}>
                         <div style={{ width: 250, marginRight: 7 }}>
@@ -478,9 +421,7 @@ export default class AlterationEnrichmentContainer extends React.Component<
                                 name="select enrichments level: sample or patient"
                                 onChange={(option: any | null) => {
                                     if (option) {
-                                        this.props.onSetPatientLevelEnrichments(
-                                            option.value
-                                        );
+                                        this.props.onSetPatientLevelEnrichments(option.value);
                                     }
                                 }}
                                 options={[
@@ -564,20 +505,11 @@ export default class AlterationEnrichmentContainer extends React.Component<
                     <AlterationEnrichmentTable
                         key={this.props.patientLevelEnrichments.toString()}
                         data={this.filteredData}
-                        onCheckGene={
-                            this.props.store ? this.onCheckGene : undefined
-                        }
-                        checkedGenes={
-                            this.props.store ? this.checkedGenes : undefined
-                        }
+                        onCheckGene={this.props.store ? this.onCheckGene : undefined}
+                        checkedGenes={this.props.store ? this.checkedGenes : undefined}
                         dataStore={this.dataStore}
-                        visibleOrderedColumnNames={
-                            this.visibleOrderedColumnNames
-                        }
-                        customColumns={_.keyBy(
-                            this.customColumns,
-                            column => column.name
-                        )}
+                        visibleOrderedColumnNames={this.visibleOrderedColumnNames}
+                        customColumns={_.keyBy(this.customColumns, column => column.name)}
                     />
                 </div>
             </div>

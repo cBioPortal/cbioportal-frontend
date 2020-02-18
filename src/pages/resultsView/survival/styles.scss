@@ -12,17 +12,9 @@
             }
         }
         .rangeslider__fill {
-            background-image: -webkit-linear-gradient(
-                top,
-                #89cdef 0,
-                #81bfde 100%
-            );
+            background-image: -webkit-linear-gradient(top, #89cdef 0, #81bfde 100%);
             background-image: -o-linear-gradient(top, #89cdef 0, #81bfde 100%);
-            background-image: linear-gradient(
-                to bottom,
-                #89cdef 0,
-                #81bfde 100%
-            );
+            background-image: linear-gradient(to bottom, #89cdef 0, #81bfde 100%);
             background-repeat: repeat-x;
         }
     }

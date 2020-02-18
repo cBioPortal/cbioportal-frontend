@@ -26,10 +26,7 @@ export const remoteData: MobxPromiseFactory = function<R>(
     input: MobxPromiseInputUnion<R>,
     defaultResult?: R
 ) {
-    const normalizedInput = MobxPromiseImpl.normalizeInput(
-        input,
-        defaultResult
-    );
+    const normalizedInput = MobxPromiseImpl.normalizeInput(input, defaultResult);
     const { invoke, onError } = normalizedInput;
     const mobxPromise = new MobxPromise({
         ...input,

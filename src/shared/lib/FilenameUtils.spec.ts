@@ -14,10 +14,7 @@ describe('FilenameUtils', () => {
         });
 
         it('Generates a prefix with actual study name for a single study input', () => {
-            assert.equal(
-                generateDownloadFilenamePrefixByStudyIds(['singleStudy']),
-                'singleStudy_'
-            );
+            assert.equal(generateDownloadFilenamePrefixByStudyIds(['singleStudy']), 'singleStudy_');
         });
 
         it('Generates a fixed prefix for with actual study name for multiple studies input', () => {
@@ -41,10 +38,7 @@ describe('FilenameUtils', () => {
                 },
             ] as CancerStudy[];
 
-            assert.equal(
-                generateDownloadFilenamePrefixByStudies(singleStudy),
-                'singleStudy_'
-            );
+            assert.equal(generateDownloadFilenamePrefixByStudies(singleStudy), 'singleStudy_');
         });
 
         it('Generates a fixed prefix for with actual study name for multiple studies input', () => {

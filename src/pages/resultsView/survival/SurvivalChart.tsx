@@ -35,9 +35,7 @@ import {
     filterScatterData,
     SurvivalPlotFilters,
 } from './SurvivalUtil';
-import CBIOPORTAL_VICTORY_THEME, {
-    baseLabelStyles,
-} from '../../../shared/theme/cBioPoralTheme';
+import CBIOPORTAL_VICTORY_THEME, { baseLabelStyles } from '../../../shared/theme/cBioPoralTheme';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { getPatientViewUrl } from '../../../shared/api/urls';
 import { DefaultTooltip, DownloadControls } from 'cbioportal-frontend-commons';
@@ -55,12 +53,7 @@ export enum LegendLocation {
     CHART = 'chart',
 }
 
-export const SURVIVAL_CHART_ATTRIBUTES = [
-    'OS_STATUS',
-    'OS_MONTHS',
-    'DFS_STATUS',
-    'DFS_MONTHS',
-];
+export const SURVIVAL_CHART_ATTRIBUTES = ['OS_STATUS', 'OS_MONTHS', 'DFS_STATUS', 'DFS_MONTHS'];
 
 export interface ISurvivalChartProps {
     patientSurvivals: ReadonlyArray<PatientSurvival>;
@@ -95,8 +88,7 @@ export interface ISurvivalChartProps {
 const SURVIVAL_DOWN_SAMPLING_THRESHOLD = 1000;
 
 @observer
-export default class SurvivalChart
-    extends React.Component<ISurvivalChartProps, {}>
+export default class SurvivalChart extends React.Component<ISurvivalChartProps, {}>
     implements AbstractChart {
     @observable.ref tooltipModel: any;
     @observable scatterFilter: SurvivalPlotFilters;
@@ -160,10 +152,7 @@ export default class SurvivalChart
                             target: 'data',
                             mutation: async () => {
                                 await sleep(100);
-                                if (
-                                    !this.isTooltipHovered &&
-                                    this.tooltipCounter === 1
-                                ) {
+                                if (!this.isTooltipHovered && this.tooltipCounter === 1) {
                                     this.tooltipModel = null;
                                 }
                                 this.tooltipCounter--;
@@ -185,11 +174,7 @@ export default class SurvivalChart
 
     @computed
     get styleOpts() {
-        let configurableOpts: any = _.merge(
-            {},
-            this.styleOptsDefaultProps,
-            this.props.styleOpts
-        );
+        let configurableOpts: any = _.merge({}, this.styleOptsDefaultProps, this.props.styleOpts);
         configurableOpts.padding.right =
             this.props.legendLocation === LegendLocation.CHART
                 ? 300
@@ -200,8 +185,7 @@ export default class SurvivalChart
             this.props.styleOpts.legend.x === undefined
         ) {
             // only set legend x if its not passed in
-            configurableOpts.legend.x =
-                configurableOpts.width - configurableOpts.padding.right;
+            configurableOpts.legend.x = configurableOpts.width - configurableOpts.padding.right;
         }
         return configurableOpts;
     }
@@ -209,14 +193,8 @@ export default class SurvivalChart
     @computed
     get downSamplingDenominators() {
         return {
-            x:
-                this.styleOpts.width -
-                this.styleOpts.padding.left -
-                this.styleOpts.padding.right,
-            y:
-                this.styleOpts.height -
-                this.styleOpts.padding.top -
-                this.styleOpts.padding.bottom,
+            x: this.styleOpts.width - this.styleOpts.padding.left - this.styleOpts.padding.right,
+            y: this.styleOpts.height - this.styleOpts.padding.top - this.styleOpts.padding.bottom,
         };
     }
 
@@ -229,8 +207,7 @@ export default class SurvivalChart
             (map, nextSurv) => {
                 if (nextSurv.uniquePatientKey in patientToAnalysisGroups) {
                     // only include this data if theres an analysis group (curve) to put it in
-                    const groups =
-                        patientToAnalysisGroups[nextSurv.uniquePatientKey];
+                    const groups = patientToAnalysisGroups[nextSurv.uniquePatientKey];
                     groups.forEach(group => {
                         map[group] = map[group] || [];
                         map[group].push(nextSurv);
@@ -247,9 +224,7 @@ export default class SurvivalChart
     }
 
     @computed get estimates(): { [groupValue: string]: number[] } {
-        return _.mapValues(this.sortedGroupedSurvivals, survivals =>
-            getEstimates(survivals)
-        );
+        return _.mapValues(this.sortedGroupedSurvivals, survivals => getEstimates(survivals));
     }
 
     @computed
@@ -261,11 +236,7 @@ export default class SurvivalChart
             return {
                 numOfCases: survivals.length,
                 line: getLineData(survivals, estimates),
-                scatterWithOpacity: getScatterDataWithOpacity(
-                    survivals,
-                    estimates,
-                    groupName
-                ),
+                scatterWithOpacity: getScatterDataWithOpacity(survivals, estimates, groupName),
                 scatter: getScatterData(survivals, estimates, groupName),
             };
         });
@@ -275,15 +246,11 @@ export default class SurvivalChart
     // The filter is only available when user zooms in the plot.
     @computed
     get scatterData(): GroupedScatterData {
-        return filterScatterData(
-            this.unfilteredScatterData,
-            this.scatterFilter,
-            {
-                xDenominator: this.downSamplingDenominators.x,
-                yDenominator: this.downSamplingDenominators.y,
-                threshold: SURVIVAL_DOWN_SAMPLING_THRESHOLD,
-            }
-        );
+        return filterScatterData(this.unfilteredScatterData, this.scatterFilter, {
+            xDenominator: this.downSamplingDenominators.x,
+            yDenominator: this.downSamplingDenominators.y,
+            threshold: SURVIVAL_DOWN_SAMPLING_THRESHOLD,
+        });
     }
 
     public static defaultProps: Partial<ISurvivalChartProps> = {
@@ -309,12 +276,8 @@ export default class SurvivalChart
         if (this.analysisGroupsWithData.length === 2) {
             // log rank test only makes sense with two groups
             return calculateLogRank(
-                this.sortedGroupedSurvivals[
-                    this.analysisGroupsWithData[0].value
-                ],
-                this.sortedGroupedSurvivals[
-                    this.analysisGroupsWithData[1].value
-                ]
+                this.sortedGroupedSurvivals[this.analysisGroupsWithData[0].value],
+                this.sortedGroupedSurvivals[this.analysisGroupsWithData[1].value]
             );
         } else {
             return null;
@@ -373,8 +336,7 @@ export default class SurvivalChart
         // add an indicator in case NA is excluded
         if (this.props.naPatientsHiddenInSurvival) {
             data.push({
-                name:
-                    '* Patients with NA for any of the selected attributes are excluded',
+                name: '* Patients with NA for any of the selected attributes are excluded',
                 symbol: { opacity: 0 },
             });
         }
@@ -431,9 +393,7 @@ export default class SurvivalChart
         let analysisGroups = this.props.analysisGroups;
         // filter out groups with no data
         analysisGroups = analysisGroups.filter(
-            grp =>
-                grp.value in this.scatterData &&
-                this.scatterData[grp.value].numOfCases > 0
+            grp => grp.value in this.scatterData && this.scatterData[grp.value].numOfCases > 0
         );
         return analysisGroups;
     }
@@ -453,8 +413,7 @@ export default class SurvivalChart
                 style={{
                     data: {
                         stroke: grp.color,
-                        strokeWidth:
-                            this.highlightedCurve === grp.value ? 4 : 1,
+                        strokeWidth: this.highlightedCurve === grp.value ? 4 : 1,
                         fill: '#000000',
                         fillOpacity: 0,
                     },
@@ -487,9 +446,7 @@ export default class SurvivalChart
                 events={this.events}
             />
         ));
-        return lineElements
-            .concat(scatterWithOpacityElements)
-            .concat(scatterElements);
+        return lineElements.concat(scatterWithOpacityElements).concat(scatterElements);
     }
 
     @computed get legendForDownload() {
@@ -603,9 +560,7 @@ export default class SurvivalChart
                             setValue={this.onSliderTextChange}
                             numericOnly={true}
                         />
-                        <span>
-                            {pluralize('Month', this.sliderValue)} Survival
-                        </span>
+                        <span>{pluralize('Month', this.sliderValue)} Survival</span>
                     </div>
                 )}
 
@@ -615,16 +570,12 @@ export default class SurvivalChart
                             responsive={false}
                             disable={true}
                             zoomDomain={
-                                this.props.showSlider
-                                    ? { x: [0, this.sliderValue] }
-                                    : undefined
+                                this.props.showSlider ? { x: [0, this.sliderValue] } : undefined
                             }
                             onZoomDomainChange={_.debounce((domain: any) => {
                                 this.scatterFilter = domain as SurvivalPlotFilters;
                             }, 1000)}
-                            containerRef={(ref: any) =>
-                                (this.svgContainer = ref)
-                            }
+                            containerRef={(ref: any) => (this.svgContainer = ref)}
                         />
                     }
                     height={this.styleOpts.height}
@@ -656,15 +607,10 @@ export default class SurvivalChart
                             data={this.victoryLegendData}
                             labelComponent={
                                 this.props.legendLabelComponent || (
-                                    <TruncatedTextWithTooltipSVG
-                                        dy="0.3em"
-                                        maxWidth={256}
-                                    />
+                                    <TruncatedTextWithTooltipSVG dy="0.3em" maxWidth={256} />
                                 )
                             }
-                            groupComponent={
-                                <g className="survivalChartLegendHideForDownload" />
-                            }
+                            groupComponent={<g className="survivalChartLegendHideForDownload" />}
                         />
                     )}
                     {this.legendForDownload}
@@ -683,17 +629,12 @@ export default class SurvivalChart
                         style={{
                             display: 'inline-block',
                             marginRight: 12,
-                            fontWeight:
-                                this.highlightedCurve === group.value
-                                    ? 'bold'
-                                    : 'initial',
+                            fontWeight: this.highlightedCurve === group.value ? 'bold' : 'initial',
                             cursor: 'pointer',
                         }}
                         onClick={() => {
                             this.highlightedCurve =
-                                this.highlightedCurve === group.value
-                                    ? ''
-                                    : group.value;
+                                this.highlightedCurve === group.value ? '' : group.value;
                         }}
                     >
                         <div
@@ -714,12 +655,9 @@ export default class SurvivalChart
                             <input
                                 type="checkbox"
                                 checked={this.props.naPatientsHiddenInSurvival}
-                                onClick={
-                                    this.props.toggleSurvivalHideNAPatients
-                                }
+                                onClick={this.props.toggleSurvivalHideNAPatients}
                             />{' '}
-                            Exclude patients with NA for any of the selected
-                            attributes.
+                            Exclude patients with NA for any of the selected attributes.
                         </label>
                     </div>
                 )}
@@ -731,14 +669,13 @@ export default class SurvivalChart
         return this.props.analysisGroups.map(grp => (
             <tr>
                 <td>{!!grp.name ? grp.name : grp.value}</td>
-                {getStats(
-                    this.sortedGroupedSurvivals[grp.value],
-                    this.estimates[grp.value]
-                ).map(stat => (
-                    <td>
-                        <b>{stat}</b>
-                    </td>
-                ))}
+                {getStats(this.sortedGroupedSurvivals[grp.value], this.estimates[grp.value]).map(
+                    stat => (
+                        <td>
+                            <b>{stat}</b>
+                        </td>
+                    )
+                )}
             </tr>
         ));
     }
@@ -768,15 +705,9 @@ export default class SurvivalChart
                                 'cbioTooltip',
                                 styles.Tooltip
                             )}
-                            positionLeft={
-                                this.tooltipModel.x +
-                                this.styleOpts.tooltipXOffset
-                            }
+                            positionLeft={this.tooltipModel.x + this.styleOpts.tooltipXOffset}
                             {...{ container: this }}
-                            positionTop={
-                                this.tooltipModel.y +
-                                this.styleOpts.tooltipYOffset
-                            }
+                            positionTop={this.tooltipModel.y + this.styleOpts.tooltipYOffset}
                             onMouseEnter={this.tooltipMouseEnter}
                             onMouseLeave={this.tooltipMouseLeave}
                         >
@@ -796,27 +727,20 @@ export default class SurvivalChart
                                     `Curve: ${this.tooltipModel.datum.group}`,
                                     <br />,
                                 ]}
-                                {this.props.yLabelTooltip}:{' '}
-                                {this.tooltipModel.datum.y.toFixed(2)}%<br />
+                                {this.props.yLabelTooltip}: {this.tooltipModel.datum.y.toFixed(2)}%
+                                <br />
                                 {this.tooltipModel.datum.status
                                     ? this.props.xLabelWithEventTooltip
                                     : this.props.xLabelWithoutEventTooltip}
                                 : {this.tooltipModel.datum.x.toFixed(2)} months{' '}
-                                {this.tooltipModel.datum.status
-                                    ? ''
-                                    : '(censored)'}
+                                {this.tooltipModel.datum.status ? '' : '(censored)'}
                                 <br />
                                 {this.props.analysisClinicalAttribute && (
                                     <span>
-                                        {
-                                            this.props.analysisClinicalAttribute
-                                                .displayName
-                                        }
-                                        :{' '}
+                                        {this.props.analysisClinicalAttribute.displayName}:{' '}
                                         {
                                             this.props.patientToAnalysisGroups[
-                                                this.tooltipModel.datum
-                                                    .uniquePatientKey
+                                                this.tooltipModel.datum.uniquePatientKey
                                             ]
                                         }
                                     </span>

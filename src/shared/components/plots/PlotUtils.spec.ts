@@ -1,8 +1,5 @@
 import { assert } from 'chai';
-import {
-    computeCorrelationPValue,
-    getDeterministicRandomNumber,
-} from './PlotUtils';
+import { computeCorrelationPValue, getDeterministicRandomNumber } from './PlotUtils';
 
 describe('PlotUtils', () => {
     describe('getDeterministicRandomNumber', () => {
@@ -18,18 +15,9 @@ describe('PlotUtils', () => {
         });
         it('returns same result for same seed (deterministic)', () => {
             for (let i = 0; i < 100; i++) {
-                assert.equal(
-                    getDeterministicRandomNumber(i),
-                    getDeterministicRandomNumber(i)
-                );
-                assert.equal(
-                    getDeterministicRandomNumber(i),
-                    getDeterministicRandomNumber(i)
-                );
-                assert.equal(
-                    getDeterministicRandomNumber(i),
-                    getDeterministicRandomNumber(i)
-                );
+                assert.equal(getDeterministicRandomNumber(i), getDeterministicRandomNumber(i));
+                assert.equal(getDeterministicRandomNumber(i), getDeterministicRandomNumber(i));
+                assert.equal(getDeterministicRandomNumber(i), getDeterministicRandomNumber(i));
             }
         });
     });

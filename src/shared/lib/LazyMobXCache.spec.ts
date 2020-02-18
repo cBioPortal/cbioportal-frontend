@@ -26,42 +26,37 @@ describe('LazyMobXCache', () => {
 
     let fetch: SinonSpy;
     beforeEach(() => {
-        fetch = sinon.spy(
-            (queries: Query[], multiplier: number, translator: number) => {
-                let data: number[] | null = [];
-                for (let i = 0; i < queries.length; i++) {
-                    if (queries[i].shouldFail) {
-                        data = null;
-                        break;
-                    } else if (!queries[i].shouldNotExist) {
-                        data.push(
-                            parseInt(queries[i].numAsString, 10) * multiplier +
-                                translator
-                        );
-                    }
-                }
-                if (data) {
-                    if (queries.find((query: Query) => !!query.shouldDelay)) {
-                        return new Promise((resolve, reject) => {
-                            setTimeout(() => {
-                                resolve(data as number[]);
-                            }, 1000);
-                        });
-                    } else {
-                        let meta: string | undefined = (
-                            queries.find(q => !!q.meta) || { meta: undefined }
-                        ).meta;
-                        if (meta) {
-                            return Promise.resolve([{ data, meta }]);
-                        } else {
-                            return Promise.resolve(data);
-                        }
-                    }
-                } else {
-                    return Promise.reject('fail!');
+        fetch = sinon.spy((queries: Query[], multiplier: number, translator: number) => {
+            let data: number[] | null = [];
+            for (let i = 0; i < queries.length; i++) {
+                if (queries[i].shouldFail) {
+                    data = null;
+                    break;
+                } else if (!queries[i].shouldNotExist) {
+                    data.push(parseInt(queries[i].numAsString, 10) * multiplier + translator);
                 }
             }
-        );
+            if (data) {
+                if (queries.find((query: Query) => !!query.shouldDelay)) {
+                    return new Promise((resolve, reject) => {
+                        setTimeout(() => {
+                            resolve(data as number[]);
+                        }, 1000);
+                    });
+                } else {
+                    let meta: string | undefined = (
+                        queries.find(q => !!q.meta) || { meta: undefined }
+                    ).meta;
+                    if (meta) {
+                        return Promise.resolve([{ data, meta }]);
+                    } else {
+                        return Promise.resolve(data);
+                    }
+                }
+            } else {
+                return Promise.reject('fail!');
+            }
+        });
 
         cache = new LazyMobXCache<number, Query, string>(
             q => q.numAsString + (q.meta || ''),
@@ -101,10 +96,7 @@ describe('LazyMobXCache', () => {
 
                     setTimeout(() => cache.addData([253, 128, 378]), 0); // gotta schedule it so itll trigger another autorun
                 } else if (timesRun === 2) {
-                    assert.isFalse(
-                        fetch.called,
-                        'fetch should never have been called'
-                    );
+                    assert.isFalse(fetch.called, 'fetch should never have been called');
                     assert.deepEqual(
                         cache.peek({
                             numAsString: '5',
@@ -173,10 +165,7 @@ describe('LazyMobXCache', () => {
                 if (timesRun === 1) {
                     assert.isNull(datum, 'no data when first checking for it');
                 } else if (timesRun === 2) {
-                    assert.isTrue(
-                        fetch.calledOnce,
-                        'fetch has been called once'
-                    );
+                    assert.isTrue(fetch.calledOnce, 'fetch has been called once');
                     assert.deepEqual(datum, {
                         status: 'complete',
                         data: 128,
@@ -191,10 +180,7 @@ describe('LazyMobXCache', () => {
                 cache.addData([253, 128, 378]);
                 assert.deepEqual(
                     cache.get({ numAsString: '5' }),
-                    { status: 'complete', data: 128 } as CacheData<
-                        number,
-                        string
-                    >,
+                    { status: 'complete', data: 128 } as CacheData<number, string>,
                     'returns existing data'
                 );
                 clock.tick(100);
@@ -206,10 +192,7 @@ describe('LazyMobXCache', () => {
                 cache.get({ numAsString: '10' });
                 cache.get({ numAsString: '20' });
                 clock.tick(100);
-                assert.isTrue(
-                    fetch.calledOnce,
-                    'fetch should only have been called once'
-                );
+                assert.isTrue(fetch.calledOnce, 'fetch should only have been called once');
                 assert.deepEqual(
                     fetch.getCall(0).args[0],
                     [{ numAsString: '20' }],
@@ -248,10 +231,7 @@ describe('LazyMobXCache', () => {
                     let secondTry = cache.get({ numAsString: '6' });
                     assert.deepEqual(
                         secondTry,
-                        { status: 'complete', data: null } as CacheData<
-                            number,
-                            string
-                        >,
+                        { status: 'complete', data: null } as CacheData<number, string>,
                         'no data available for this query'
                     );
                     reaction();
@@ -273,10 +253,7 @@ describe('LazyMobXCache', () => {
                     let secondTry = cache.get({ numAsString: '6' });
                     assert.deepEqual(
                         secondTry,
-                        { status: 'error', data: null } as CacheData<
-                            number,
-                            string
-                        >,
+                        { status: 'error', data: null } as CacheData<number, string>,
                         'an error occurred during fetch'
                     );
 
@@ -285,46 +262,31 @@ describe('LazyMobXCache', () => {
                     cache.get({ numAsString: '8' });
                 } else if (timesRun === 3) {
                     assert.isTrue(
-                        !!fetch.lastCall.args[0].find(
-                            (x: Query) => x.numAsString === '7'
-                        ),
+                        !!fetch.lastCall.args[0].find((x: Query) => x.numAsString === '7'),
                         '7 should have been queried'
                     );
                     assert.isTrue(
-                        !!fetch.lastCall.args[0].find(
-                            (x: Query) => x.numAsString === '8'
-                        ),
+                        !!fetch.lastCall.args[0].find((x: Query) => x.numAsString === '8'),
                         '8 should have been queried'
                     );
                     assert.isFalse(
-                        !!fetch.lastCall.args[0].find(
-                            (x: Query) => x.numAsString === '6'
-                        ),
+                        !!fetch.lastCall.args[0].find((x: Query) => x.numAsString === '6'),
                         '6 should have been queried, it already failed'
                     );
 
                     assert.deepEqual(
                         cache.peek({ numAsString: '7' }),
-                        { status: 'complete', data: 178 } as CacheData<
-                            number,
-                            string
-                        >,
+                        { status: 'complete', data: 178 } as CacheData<number, string>,
                         'data 1 fetched successfully'
                     );
                     assert.deepEqual(
                         cache.peek({ numAsString: '8' }),
-                        { status: 'complete', data: 203 } as CacheData<
-                            number,
-                            string
-                        >,
+                        { status: 'complete', data: 203 } as CacheData<number, string>,
                         'data 2 fetched successfully'
                     );
                     assert.deepEqual(
                         cache.peek({ numAsString: '6' }),
-                        { status: 'error', data: null } as CacheData<
-                            number,
-                            string
-                        >,
+                        { status: 'error', data: null } as CacheData<number, string>,
                         'error data still marked as error'
                     );
 
@@ -334,60 +296,40 @@ describe('LazyMobXCache', () => {
                     cache.get({ numAsString: '11', shouldFail: true });
                 } else if (timesRun === 4) {
                     assert.isFalse(
-                        !!fetch.lastCall.args[0].find(
-                            (x: Query) => x.numAsString === '7'
-                        ),
+                        !!fetch.lastCall.args[0].find((x: Query) => x.numAsString === '7'),
                         '7 should not have been queried, it already succeeded'
                     );
                     assert.isTrue(
-                        !!fetch.lastCall.args[0].find(
-                            (x: Query) => x.numAsString === '9'
-                        ),
+                        !!fetch.lastCall.args[0].find((x: Query) => x.numAsString === '9'),
                         '9 should have been queried'
                     );
                     assert.isTrue(
-                        !!fetch.lastCall.args[0].find(
-                            (x: Query) => x.numAsString === '10'
-                        ),
+                        !!fetch.lastCall.args[0].find((x: Query) => x.numAsString === '10'),
                         '10 should have been queried'
                     );
                     assert.isTrue(
-                        !!fetch.lastCall.args[0].find(
-                            (x: Query) => x.numAsString === '11'
-                        ),
+                        !!fetch.lastCall.args[0].find((x: Query) => x.numAsString === '11'),
                         '11 should have been queried'
                     );
 
                     assert.deepEqual(
                         cache.peek({ numAsString: '7' }),
-                        { status: 'complete', data: 178 } as CacheData<
-                            number,
-                            string
-                        >,
+                        { status: 'complete', data: 178 } as CacheData<number, string>,
                         '7 still there successfully from before'
                     );
                     assert.deepEqual(
                         cache.peek({ numAsString: '9' }),
-                        { status: 'error', data: null } as CacheData<
-                            number,
-                            string
-                        >,
+                        { status: 'error', data: null } as CacheData<number, string>,
                         'there was an error during fetching 9'
                     );
                     assert.deepEqual(
                         cache.peek({ numAsString: '10' }),
-                        { status: 'error', data: null } as CacheData<
-                            number,
-                            string
-                        >,
+                        { status: 'error', data: null } as CacheData<number, string>,
                         'there was an error during fetching 10'
                     );
                     assert.deepEqual(
                         cache.peek({ numAsString: '11' }),
-                        { status: 'error', data: null } as CacheData<
-                            number,
-                            string
-                        >,
+                        { status: 'error', data: null } as CacheData<number, string>,
                         'there was an error during fetching 11'
                     );
                     reaction();
@@ -406,10 +348,7 @@ describe('LazyMobXCache', () => {
                 if (timesRun === 1) {
                     assert.isNull(datum, 'no data when first checking for it');
                 } else if (timesRun === 2) {
-                    assert.isTrue(
-                        fetch.calledOnce,
-                        'fetch has been called once'
-                    );
+                    assert.isTrue(fetch.calledOnce, 'fetch has been called once');
                     assert.deepEqual(
                         datum,
                         {
@@ -464,11 +403,7 @@ describe('LazyMobXCache', () => {
         it('triggers any mobx reaction that touches the cache when its updated', done => {
             let peekFn = sinon.spy(() => {
                 cache.peek({ numAsString: '2' });
-                if (
-                    peekFn.callCount === 2 &&
-                    cacheFn.callCount === 2 &&
-                    getFn.callCount === 2
-                ) {
+                if (peekFn.callCount === 2 && cacheFn.callCount === 2 && getFn.callCount === 2) {
                     peekReaction();
                     cacheReaction();
                     getReaction();
@@ -477,11 +412,7 @@ describe('LazyMobXCache', () => {
             });
             let cacheFn = sinon.spy(() => {
                 cache.cache;
-                if (
-                    peekFn.callCount === 2 &&
-                    cacheFn.callCount === 2 &&
-                    getFn.callCount === 2
-                ) {
+                if (peekFn.callCount === 2 && cacheFn.callCount === 2 && getFn.callCount === 2) {
                     peekReaction();
                     cacheReaction();
                     getReaction();
@@ -490,11 +421,7 @@ describe('LazyMobXCache', () => {
             });
             let getFn = sinon.spy(() => {
                 cache.get({ numAsString: '2' });
-                if (
-                    peekFn.callCount === 2 &&
-                    cacheFn.callCount === 2 &&
-                    getFn.callCount === 2
-                ) {
+                if (peekFn.callCount === 2 && cacheFn.callCount === 2 && getFn.callCount === 2) {
                     peekReaction();
                     cacheReaction();
                     getReaction();
@@ -527,19 +454,11 @@ describe('LazyMobXCache', () => {
             cache.get({ numAsString: '2' });
             cache.get({ numAsString: '1' });
             await cache
-                .getPromise([
-                    { numAsString: '3' },
-                    { numAsString: '2' },
-                    { numAsString: '1' },
-                ])
+                .getPromise([{ numAsString: '3' }, { numAsString: '2' }, { numAsString: '1' }])
                 .then(callback);
             assert.equal(callback.callCount, 3);
             assert.equal(cache.activePromisesCount, 0);
-            assert.deepEqual(callback.args[2][0].map((x: any) => x.data), [
-                78,
-                53,
-                28,
-            ]);
+            assert.deepEqual(callback.args[2][0].map((x: any) => x.data), [78, 53, 28]);
             return true;
         });
         it('resolves when the selected queries become available: request made', done => {
@@ -548,9 +467,7 @@ describe('LazyMobXCache', () => {
                 assert.deepEqual(data.map(x => x.data), [28, 103]);
                 done();
             });
-            cache
-                .getPromise([{ numAsString: '1' }, { numAsString: '4' }], true)
-                .then(callback);
+            cache.getPromise([{ numAsString: '1' }, { numAsString: '4' }], true).then(callback);
         });
         it('resolves when the selected queries become available: request not made', done => {
             let callback = sinon.spy((data: CacheData<number, string>[]) => {
@@ -558,9 +475,7 @@ describe('LazyMobXCache', () => {
                 assert.deepEqual(data.map(x => x.data), [28, 103]);
                 done();
             });
-            cache
-                .getPromise([{ numAsString: '1' }, { numAsString: '4' }])
-                .then(callback);
+            cache.getPromise([{ numAsString: '1' }, { numAsString: '4' }]).then(callback);
             assert.equal(callback.callCount, 0);
             cache.get({ numAsString: '1' });
             assert.equal(callback.callCount, 0);
@@ -572,9 +487,7 @@ describe('LazyMobXCache', () => {
                 assert.equal(callback.callCount, 1);
                 done();
             });
-            cache
-                .getPromise([{ numAsString: '1' }, { numAsString: '4' }])
-                .catch(callback);
+            cache.getPromise([{ numAsString: '1' }, { numAsString: '4' }]).catch(callback);
             assert.equal(callback.callCount, 0);
             cache.get({ numAsString: '1' });
             assert.equal(callback.callCount, 0);

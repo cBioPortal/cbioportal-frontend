@@ -25,22 +25,13 @@ export default class DefaultMutationRateSummary extends React.Component<
                 {this.props.rates.map(r => (
                     <div key={r.title} className={styles.mutationRateSummary}>
                         <span>{r.title}: </span>
-                        <span>
-                            {formatPercentValue(
-                                r.rate,
-                                this.props.fractionDigits
-                            )}
-                            %
-                        </span>
+                        <span>{formatPercentValue(r.rate, this.props.fractionDigits)}%</span>
                         {r.description && (
                             <DefaultTooltip
                                 placement="right"
                                 overlay={<span>{r.description}</span>}
                             >
-                                <i
-                                    className="fa fa-info-circle"
-                                    style={{ marginLeft: '0.2rem' }}
-                                />
+                                <i className="fa fa-info-circle" style={{ marginLeft: '0.2rem' }} />
                             </DefaultTooltip>
                         )}
                     </div>

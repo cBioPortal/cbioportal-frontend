@@ -13,10 +13,7 @@ import {
     IValue2D,
 } from 'pages/resultsView/plots/PlotsTabUtils';
 import { IBoxScatterPlotData } from './BoxScatterPlot';
-export function getDeterministicRandomNumber(
-    seed: number,
-    range?: [number, number]
-) {
+export function getDeterministicRandomNumber(seed: number, range?: [number, number]) {
     // source: https://stackoverflow.com/a/23304189
     seed = Math.sin(seed) * 10000;
     let r = seed - Math.floor(seed); // between 0 and 1
@@ -44,10 +41,7 @@ export function getJitterForCase(uniqueKey: string) {
     return getDeterministicRandomNumber(seed, [-1, 1]);
 }
 
-export function makeMouseEvents(self: {
-    tooltipModel: any;
-    pointHovered: boolean;
-}) {
+export function makeMouseEvents(self: { tooltipModel: any; pointHovered: boolean }) {
     let disappearTimeout: Timer | null = null;
     const disappearDelayMs = 250;
 
@@ -114,11 +108,7 @@ export function makeScatterPlotSizeFunction<D>(
     }
 }
 
-export function scatterPlotSize(
-    d: any,
-    active: boolean,
-    isHighlighted: boolean
-) {
+export function scatterPlotSize(d: any, active: boolean, isHighlighted: boolean) {
     if (isHighlighted) {
         return 8;
     } else if (active) {
@@ -247,18 +237,10 @@ export function separateScatterDataByAppearance<D>(
         // compute appearance for datum
         d_fill = typeof fill === 'function' ? fill(datum) : fill;
         d_stroke = typeof stroke === 'function' ? stroke(datum) : stroke;
-        d_strokeWidth =
-            typeof strokeWidth === 'function'
-                ? strokeWidth(datum)
-                : strokeWidth;
+        d_strokeWidth = typeof strokeWidth === 'function' ? strokeWidth(datum) : strokeWidth;
         d_strokeOpacity =
-            typeof strokeOpacity === 'function'
-                ? strokeOpacity(datum)
-                : strokeOpacity;
-        d_fillOpacity =
-            typeof fillOpacity === 'function'
-                ? fillOpacity(datum)
-                : fillOpacity;
+            typeof strokeOpacity === 'function' ? strokeOpacity(datum) : strokeOpacity;
+        d_fillOpacity = typeof fillOpacity === 'function' ? fillOpacity(datum) : fillOpacity;
         d_symbol = typeof symbol === 'function' ? symbol(datum) : symbol;
         d_sortBy = zIndexSortBy ? zIndexSortBy.map(f => f(datum)) : [1];
 
@@ -298,18 +280,15 @@ export function separateScatterDataByAppearance<D>(
 
     if (zIndexSortBy) {
         // sort by sortBy
-        const sortBy = zIndexSortBy.map(
-            (f, index) => (bucket: typeof buckets[0]) => bucket.sortBy[index]
+        const sortBy = zIndexSortBy.map((f, index) => (bucket: typeof buckets[0]) =>
+            bucket.sortBy[index]
         );
         buckets = _.sortBy<typeof buckets[0]>(buckets, sortBy);
     }
     return buckets;
 }
 
-export function computeCorrelationPValue(
-    correlation: number,
-    numSamples: number
-) {
+export function computeCorrelationPValue(correlation: number, numSamples: number) {
     const R = correlation;
     if (Math.abs(R) === 1) {
         return 0;
@@ -332,22 +311,15 @@ export function dataPointIsLimited(point: IPlotSampleData): boolean {
     if (instanceOf1DThresholdDataPoint(point)) {
         return !!(point as IThreshold1D).thresholdType;
     } else if (instanceOf2DThresholdDataPoint(point)) {
-        return (
-            !!(point as IThreshold2D).xThresholdType ||
-            !!(point as IThreshold2D).yThresholdType
-        );
+        return !!(point as IThreshold2D).xThresholdType || !!(point as IThreshold2D).yThresholdType;
     }
     return false;
 }
 
-export function instanceOf1DThresholdDataPoint(
-    point: any
-): point is IThreshold1D {
+export function instanceOf1DThresholdDataPoint(point: any): point is IThreshold1D {
     return 'thresholdType' in point;
 }
 
-export function instanceOf2DThresholdDataPoint(
-    point: any
-): point is IThreshold2D {
+export function instanceOf2DThresholdDataPoint(point: any): point is IThreshold2D {
     return 'xThresholdType' in point || 'yThresholdType' in point;
 }

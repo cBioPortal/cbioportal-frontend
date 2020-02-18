@@ -4,10 +4,7 @@ import * as _ from 'lodash';
 import FixedHeaderTable from './FixedHeaderTable';
 import { action, computed, observable } from 'mobx';
 import autobind from 'autobind-decorator';
-import {
-    Column,
-    SortDirection,
-} from '../../../shared/components/lazyMobXTable/LazyMobXTable';
+import { Column, SortDirection } from '../../../shared/components/lazyMobXTable/LazyMobXTable';
 import { StudyViewGenePanelModal } from './StudyViewGenePanelModal';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import { GenePanel } from 'shared/api/generated/CBioPortalAPI';
@@ -21,18 +18,12 @@ import {
     getFrequencyStr,
 } from 'pages/studyView/StudyViewUtils';
 import { OncokbCancerGene } from 'pages/studyView/StudyViewPageStore';
-import {
-    getFreqColumnRender,
-    getGeneColumnHeaderRender,
-} from 'pages/studyView/TableUtils';
+import { getFreqColumnRender, getGeneColumnHeaderRender } from 'pages/studyView/TableUtils';
 import { GeneCell } from 'pages/studyView/table/GeneCell';
 import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
 import styles from 'pages/studyView/table/tables.module.scss';
 import MobxPromise from 'mobxpromise';
-import {
-    stringListToIndexSet,
-    stringListToSet,
-} from 'cbioportal-frontend-commons';
+import { stringListToIndexSet, stringListToSet } from 'cbioportal-frontend-commons';
 import ifNotDefined from 'shared/lib/ifNotDefined';
 
 export type GeneTableRow = OncokbCancerGene & {
@@ -144,31 +135,21 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                             isCancerGene={data.isCancerGene}
                             oncokbAnnotated={data.oncokbAnnotated}
                             isOncogene={data.isOncokbOncogene}
-                            isTumorSuppressorGene={
-                                data.isOncokbTumorSuppressorGene
-                            }
+                            isTumorSuppressorGene={data.isOncokbTumorSuppressorGene}
                             onGeneSelect={this.props.onGeneSelect}
                         />
                     );
                 },
                 sortBy: (data: GeneTableRow) => data.hugoGeneSymbol,
                 defaultSortDirection: 'asc' as 'asc',
-                filter: (
-                    data: GeneTableRow,
-                    filterString: string,
-                    filterStringUpper: string
-                ) => {
-                    return data.hugoGeneSymbol
-                        .toUpperCase()
-                        .includes(filterStringUpper);
+                filter: (data: GeneTableRow, filterString: string, filterStringUpper: string) => {
+                    return data.hugoGeneSymbol.toUpperCase().includes(filterStringUpper);
                 },
                 width: columnWidth,
             },
             [GeneTableColumnKey.NUMBER]: {
                 name: columnKey,
-                tooltip: (
-                    <span>Number of samples with one or more mutations</span>
-                ),
+                tooltip: <span>Number of samples with one or more mutations</span>,
                 headerRender: () => {
                     return <div style={{ marginLeft: cellMargin }}>#</div>;
                 },
@@ -176,9 +157,7 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                     <LabeledCheckbox
                         checked={this.isChecked(data.uniqueKey)}
                         disabled={this.isDisabled(data.uniqueKey)}
-                        onChange={event =>
-                            this.togglePreSelectRow(data.uniqueKey)
-                        }
+                        onChange={event => this.togglePreSelectRow(data.uniqueKey)}
                         labelProps={{
                             style: {
                                 display: 'flex',
@@ -191,27 +170,19 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                             className: styles.autoMarginCheckbox,
                         }}
                     >
-                        <span>
-                            {data.numberOfAlteredCases.toLocaleString()}
-                        </span>
+                        <span>{data.numberOfAlteredCases.toLocaleString()}</span>
                     </LabeledCheckbox>
                 ),
                 sortBy: (data: GeneTableRow) => data.numberOfAlteredCases,
                 defaultSortDirection: 'desc' as 'desc',
                 filter: (data: GeneTableRow, filterString: string) => {
-                    return _.toString(data.numberOfAlteredCases).includes(
-                        filterString
-                    );
+                    return _.toString(data.numberOfAlteredCases).includes(filterString);
                 },
                 width: columnWidth,
             },
             [GeneTableColumnKey.FREQ]: {
                 name: columnKey,
-                tooltip: (
-                    <span>
-                        Percentage of samples with one or more mutations
-                    </span>
-                ),
+                tooltip: <span>Percentage of samples with one or more mutations</span>,
                 headerRender: () => {
                     return <div style={{ marginLeft: cellMargin }}>Freq</div>;
                 },
@@ -226,15 +197,11 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                     );
                 },
                 sortBy: (data: GeneTableRow) =>
-                    (data.numberOfAlteredCases / data.numberOfProfiledCases) *
-                    100,
+                    (data.numberOfAlteredCases / data.numberOfProfiledCases) * 100,
                 defaultSortDirection: 'desc' as 'desc',
                 filter: (data: GeneTableRow, filterString: string) => {
                     return _.toString(
-                        getFrequencyStr(
-                            data.numberOfAlteredCases /
-                                data.numberOfProfiledCases
-                        )
+                        getFrequencyStr(data.numberOfAlteredCases / data.numberOfProfiledCases)
                     ).includes(filterString);
                 },
                 width: columnWidth,
@@ -291,16 +258,13 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                 name: GeneTableColumnKey.CNA,
                 tooltip: (
                     <span>
-                        Copy number alteration, only amplifications and deep
-                        deletions are shown
+                        Copy number alteration, only amplifications and deep deletions are shown
                     </span>
                 ),
                 render: (data: GeneTableRow) => (
                     <span
                         style={{
-                            color: getCNAColorByAlteration(
-                                getCNAByAlteration(data.alteration!)
-                            ),
+                            color: getCNAColorByAlteration(getCNAByAlteration(data.alteration!)),
                             fontWeight: 'bold',
                         }}
                     >
@@ -309,14 +273,8 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                 ),
                 sortBy: (data: GeneTableRow) => data.alteration!,
                 defaultSortDirection: 'asc' as 'asc',
-                filter: (
-                    data: GeneTableRow,
-                    filterString: string,
-                    filterStringUpper: string
-                ) => {
-                    return getCNAByAlteration(data.alteration!).includes(
-                        filterStringUpper
-                    );
+                filter: (data: GeneTableRow, filterString: string, filterStringUpper: string) => {
+                    return getCNAByAlteration(data.alteration!).includes(filterStringUpper);
                 },
                 width: columnWidth,
             },
@@ -326,16 +284,10 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                 render: (data: GeneTableRow) => <span>{data.cytoband}</span>,
                 sortBy: (data: GeneTableRow) => data.cytoband!,
                 defaultSortDirection: 'asc' as 'asc',
-                filter: (
-                    data: GeneTableRow,
-                    filterString: string,
-                    filterStringUpper: string
-                ) => {
+                filter: (data: GeneTableRow, filterString: string, filterStringUpper: string) => {
                     return _.isUndefined(data.cytoband)
                         ? false
-                        : data.cytoband
-                              .toUpperCase()
-                              .includes(filterStringUpper);
+                        : data.cytoband.toUpperCase().includes(filterStringUpper);
                 },
                 width: columnWidth,
             },
@@ -343,31 +295,19 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
         return defaults[columnKey];
     };
 
-    getDefaultCellMargin = (
-        columnKey: GeneTableColumnKey,
-        columnWidth: number
-    ) => {
+    getDefaultCellMargin = (columnKey: GeneTableColumnKey, columnWidth: number) => {
         const defaults: { [key in GeneTableColumnKey]: number } = {
             [GeneTableColumnKey.GENE]: 0,
             [GeneTableColumnKey.NUMBER_MUTATIONS]: correctMargin(
-                getFixedHeaderNumberCellMargin(
-                    columnWidth,
-                    this.totalCountLocaleString
-                )
+                getFixedHeaderNumberCellMargin(columnWidth, this.totalCountLocaleString)
             ),
             [GeneTableColumnKey.NUMBER_FUSIONS]: correctMargin(
-                getFixedHeaderNumberCellMargin(
-                    columnWidth,
-                    this.totalCountLocaleString
-                )
+                getFixedHeaderNumberCellMargin(columnWidth, this.totalCountLocaleString)
             ),
             [GeneTableColumnKey.NUMBER]: correctMargin(
                 (columnWidth -
                     10 -
-                    (getFixedHeaderTableMaxLengthStringPixel(
-                        this.alteredCasesLocaleString
-                    ) +
-                        20)) /
+                    (getFixedHeaderTableMaxLengthStringPixel(this.alteredCasesLocaleString) + 20)) /
                     2
             ),
             [GeneTableColumnKey.FREQ]: correctMargin(
@@ -377,9 +317,7 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                         _.max(
                             this.tableData.map(
                                 item =>
-                                    (item.numberOfAlteredCases! /
-                                        item.numberOfProfiledCases!) *
-                                    100
+                                    (item.numberOfAlteredCases! / item.numberOfProfiledCases!) * 100
                             )
                         )!
                     )
@@ -423,8 +361,7 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                 acc[column.columnKey] = correctColumnWidth(
                     (column.columnWidthRatio
                         ? column.columnWidthRatio
-                        : DEFAULT_COLUMN_WIDTH_RATIO[column.columnKey]) *
-                        this.props.width
+                        : DEFAULT_COLUMN_WIDTH_RATIO[column.columnKey]) * this.props.width
                 );
                 return acc;
             },
@@ -461,10 +398,7 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
         if (this.flattenedFilters.length === 0) {
             return this.tableData;
         }
-        return _.filter(
-            this.tableData,
-            data => !this.flattenedFilters.includes(data.uniqueKey)
-        );
+        return _.filter(this.tableData, data => !this.flattenedFilters.includes(data.uniqueKey));
     }
 
     @computed
@@ -520,17 +454,11 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
     }
 
     @computed get isFilteredByCancerGeneList() {
-        return (
-            !!this.props.cancerGeneFilterEnabled &&
-            this.props.filterByCancerGenes
-        );
+        return !!this.props.cancerGeneFilterEnabled && this.props.filterByCancerGenes;
     }
 
     @computed get allSelectedRowsKeysSet() {
-        return stringListToSet([
-            ...this.selectedRowsKeys,
-            ...this.preSelectedRowsKeys,
-        ]);
+        return stringListToSet([...this.selectedRowsKeys, ...this.preSelectedRowsKeys]);
     }
 
     @autobind
@@ -586,9 +514,7 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                 ? styles.highlightedEvenRow
                 : styles.highlightedOddRow;
         }
-        return index % 2 === 0
-            ? styles.highlightedEvenRow
-            : styles.highlightedOddRow;
+        return index % 2 === 0 ? styles.highlightedEvenRow : styles.highlightedOddRow;
     }
 
     @autobind
@@ -608,9 +534,7 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                         height={this.props.height}
                         data={this.selectableTableData}
                         columns={this.tableColumns}
-                        showSelectSamples={
-                            true && this.selectedRowsKeys.length > 0
-                        }
+                        showSelectSamples={true && this.selectedRowsKeys.length > 0}
                         isSelectedRow={this.isSelectedRow}
                         afterSelectingRows={this.afterSelectingRows}
                         sortBy={this.sortBy}

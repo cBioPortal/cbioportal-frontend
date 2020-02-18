@@ -9,24 +9,15 @@ export default class PDXTree extends React.Component {
         if (node.children) {
             return (
                 <g key={node.name}>
-                    <SampleLabelSVG
-                        x={x}
-                        y={y}
-                        color={'black'}
-                        label={node.label}
-                    />
+                    <SampleLabelSVG x={x} y={y} color={'black'} label={node.label} />
                     {node.children.map((n, i) => {
-                        const newX =
-                            x -
-                            width / 2 +
-                            (i + 0.5) * (width / node.children.length);
+                        const newX = x - width / 2 + (i + 0.5) * (width / node.children.length);
                         const newY = (level + 1) * yDistance;
 
                         return [
                             <path
-                                d={`M${x},${y + 10} C${x},${y +
-                                    10} ${newX},${newY + 10} ${newX},${newY -
-                                    10}`}
+                                d={`M${x},${y + 10} C${x},${y + 10} ${newX},${newY +
+                                    10} ${newX},${newY - 10}`}
                                 fill={'none'}
                                 stroke={'red'}
                             />,
@@ -45,12 +36,7 @@ export default class PDXTree extends React.Component {
         } else {
             return (
                 <g key={node.name}>
-                    <SampleLabelSVG
-                        x={x}
-                        y={y}
-                        color={'black'}
-                        label={node.label}
-                    />
+                    <SampleLabelSVG x={x} y={y} color={'black'} label={node.label} />
                 </g>
             );
         }

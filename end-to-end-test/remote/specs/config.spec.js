@@ -1,8 +1,7 @@
 var assert = require('assert');
 var expect = require('chai').expect;
 var waitForOncoprint = require('../../shared/specUtils').waitForOncoprint;
-var goToUrlAndSetLocalStorage = require('../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
+var goToUrlAndSetLocalStorage = require('../../shared/specUtils').goToUrlAndSetLocalStorage;
 var executeInBrowser = require('../../shared/specUtils').executeInBrowser;
 var useExternalFrontend = require('../../shared/specUtils').useExternalFrontend;
 
@@ -67,10 +66,7 @@ describe('homepage', function() {
         browser.waitForExist('#rightHeaderContent');
 
         var test = browser.execute(function() {
-            return (
-                $("img[src='images/msk_logo_transparent_black.png']").length ===
-                0
-            );
+            return $("img[src='images/msk_logo_transparent_black.png']").length === 0;
         });
 
         assert.equal(test.value, true);
@@ -85,10 +81,7 @@ describe('homepage', function() {
 
         assert(
             executeInBrowser(() => {
-                return (
-                    $("img[src='images/msk_logo_transparent_black.png']")
-                        .length > 0
-                );
+                return $("img[src='images/msk_logo_transparent_black.png']").length > 0;
             })
         );
     });

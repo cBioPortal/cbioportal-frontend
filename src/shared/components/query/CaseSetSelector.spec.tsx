@@ -1,7 +1,4 @@
-import {
-    filterCaseSetOptions,
-    ReactSelectOptionWithName,
-} from './CaseSetSelector';
+import { filterCaseSetOptions, ReactSelectOptionWithName } from './CaseSetSelector';
 import React from 'react';
 import { assert } from 'chai';
 import { shallow, mount } from 'enzyme';

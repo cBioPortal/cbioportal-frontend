@@ -9,11 +9,7 @@ import {
 } from 'cbioportal-frontend-commons';
 
 import { Mutation } from '../model/Mutation';
-import {
-    IndicatorQueryResp,
-    IOncoKbData,
-    OncoKbTreatment,
-} from '../model/OncoKb';
+import { IndicatorQueryResp, IOncoKbData, OncoKbTreatment } from '../model/OncoKb';
 
 // oncogenic value => oncogenic class name
 const ONCOGENIC_CLASS_NAMES: { [oncogenic: string]: string } = {
@@ -81,8 +77,7 @@ export function oncogenicXPosition(highestSensitiveLevel: string | null) {
         '4': 6,
     };
 
-    let levelIndex =
-        highestSensitiveLevel === null ? 0 : map[highestSensitiveLevel] || 0;
+    let levelIndex = highestSensitiveLevel === null ? 0 : map[highestSensitiveLevel] || 0;
     return -(8 + levelIndex * 30);
 }
 
@@ -118,8 +113,7 @@ export function oncogenicYPosition(
     let resistanceLevelIndex =
         resistanceLevel === null
             ? defaultIndexForUnrecognizedResistanceLevel
-            : resistanceLevelMap[resistanceLevel] ||
-              defaultIndexForUnrecognizedResistanceLevel;
+            : resistanceLevelMap[resistanceLevel] || defaultIndexForUnrecognizedResistanceLevel;
     return -(7 + oncogenicityIndex * 120 + resistanceLevelIndex * 30);
 }
 
@@ -234,11 +228,7 @@ export function generateTreatments(evidenceTreatments: any) {
                 treatments[_level][_alterations][_treatment] = {};
             }
 
-            if (
-                !treatments[_level][_alterations][_treatment].hasOwnProperty(
-                    _tumorType
-                )
-            ) {
+            if (!treatments[_level][_alterations][_treatment].hasOwnProperty(_tumorType)) {
                 treatments[_level][_alterations][_treatment][_tumorType] = {
                     articles: [],
                     tumorType: _tumorType,
@@ -248,20 +238,14 @@ export function generateTreatments(evidenceTreatments: any) {
                     treatment: _treatment,
                 };
             } else {
-                treatments[_level][_alterations][_treatment][
-                    _tumorType
-                ].description = [
-                    treatments[_level][_alterations][_treatment][_tumorType]
-                        .description,
+                treatments[_level][_alterations][_treatment][_tumorType].description = [
+                    treatments[_level][_alterations][_treatment][_tumorType].description,
                     '<br/>',
                     item.description,
                 ].join();
             }
-            treatments[_level][_alterations][_treatment][
-                _tumorType
-            ].articles = _.union(
-                treatments[_level][_alterations][_treatment][_tumorType]
-                    .articles,
+            treatments[_level][_alterations][_treatment][_tumorType].articles = _.union(
+                treatments[_level][_alterations][_treatment][_tumorType].articles,
                 item.articles
             );
         });
@@ -269,47 +253,39 @@ export function generateTreatments(evidenceTreatments: any) {
 
     _.each(_.keys(treatments).sort(levelComparator), function(level) {
         _.each(_.keys(treatments[level]).sort(), function(_alteration) {
-            _.each(_.keys(treatments[level][_alteration]).sort(), function(
-                _treatment
-            ) {
-                _.each(
-                    _.keys(treatments[level][_alteration][_treatment]).sort(),
-                    function(_tumorType) {
-                        var content =
-                            treatments[level][_alteration][_treatment][
-                                _tumorType
-                            ];
-                        result.push({
-                            level: content.level,
-                            variant: content.alterations.map(function(
-                                alteration: any
-                            ) {
-                                return alteration.name;
+            _.each(_.keys(treatments[level][_alteration]).sort(), function(_treatment) {
+                _.each(_.keys(treatments[level][_alteration][_treatment]).sort(), function(
+                    _tumorType
+                ) {
+                    var content = treatments[level][_alteration][_treatment][_tumorType];
+                    result.push({
+                        level: content.level,
+                        variant: content.alterations.map(function(alteration: any) {
+                            return alteration.name;
+                        }),
+                        treatment: _treatment,
+                        pmids: content.articles
+                            .filter(function(article: any) {
+                                return !isNaN(article.pmid);
+                            })
+                            .map(function(article: any) {
+                                return Number(article.pmid);
+                            })
+                            .sort(),
+                        abstracts: content.articles
+                            .filter(function(article: any) {
+                                return _.isString(article.abstract);
+                            })
+                            .map(function(article: any) {
+                                return {
+                                    abstract: article.abstract,
+                                    link: article.link,
+                                };
                             }),
-                            treatment: _treatment,
-                            pmids: content.articles
-                                .filter(function(article: any) {
-                                    return !isNaN(article.pmid);
-                                })
-                                .map(function(article: any) {
-                                    return Number(article.pmid);
-                                })
-                                .sort(),
-                            abstracts: content.articles
-                                .filter(function(article: any) {
-                                    return _.isString(article.abstract);
-                                })
-                                .map(function(article: any) {
-                                    return {
-                                        abstract: article.abstract,
-                                        link: article.link,
-                                    };
-                                }),
-                            description: content.description,
-                            cancerType: content.tumorType,
-                        });
-                    }
-                );
+                        description: content.description,
+                        cancerType: content.tumorType,
+                    });
+                });
             });
         });
     });
@@ -456,18 +432,12 @@ export function processEvidence(evidences: EvidenceQueryRes[]) {
                         var _treatment: any = {};
                         _treatment.alterations = evidence.alterations;
                         _treatment.articles = evidence.articles;
-                        _treatment.tumorType = getTumorTypeFromEvidence(
-                            evidence
-                        );
+                        _treatment.tumorType = getTumorTypeFromEvidence(evidence);
                         _treatment.level = evidence.levelOfEvidence;
                         _treatment.content = evidence.treatments;
                         _treatment.description = description || '';
 
-                        if (
-                            LEVELS.sensitivity.indexOf(
-                                getLevel(evidence.levelOfEvidence)
-                            ) !== -1
-                        ) {
+                        if (LEVELS.sensitivity.indexOf(getLevel(evidence.levelOfEvidence)) !== -1) {
                             sensitivityTreatments.push(_treatment);
                         } else {
                             resistanceTreatments.push(_treatment);
@@ -560,17 +530,9 @@ export function groupOncoKbIndicatorDataByMutations(
     _.keys(mutationsByPosition).forEach(key => {
         const position = Number(key);
         const indicators: IndicatorQueryResp[] = mutationsByPosition[position]
-            .map(mutation =>
-                getIndicatorData(
-                    mutation,
-                    oncoKbData,
-                    getTumorType,
-                    getEntrezGeneId
-                )
-            )
+            .map(mutation => getIndicatorData(mutation, oncoKbData, getTumorType, getEntrezGeneId))
             .filter(
-                indicator =>
-                    indicator !== undefined && (!filter || filter(indicator))
+                indicator => indicator !== undefined && (!filter || filter(indicator))
             ) as IndicatorQueryResp[];
 
         if (position > 0 && indicators.length > 0) {
@@ -617,15 +579,8 @@ export function defaultOncoKbFilter(
     let filter = true;
 
     if (oncoKbData && getTumorType && getEntrezGeneId) {
-        const indicatorData = getIndicatorData(
-            mutation,
-            oncoKbData,
-            getTumorType,
-            getEntrezGeneId
-        );
-        filter = indicatorData
-            ? defaultOncoKbIndicatorFilter(indicatorData)
-            : false;
+        const indicatorData = getIndicatorData(mutation, oncoKbData, getTumorType, getEntrezGeneId);
+        filter = indicatorData ? defaultOncoKbIndicatorFilter(indicatorData) : false;
     }
 
     return filter;

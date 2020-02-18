@@ -14,10 +14,7 @@ import { computed, observable } from 'mobx';
 import ErrorIcon from '../../../shared/components/ErrorIcon';
 import styles from '../styles.module.scss';
 import { SyntheticEvent } from 'react';
-import {
-    DefaultTooltip,
-    EllipsisTextTooltip,
-} from 'cbioportal-frontend-commons';
+import { DefaultTooltip, EllipsisTextTooltip } from 'cbioportal-frontend-commons';
 
 export interface IGroupCheckboxProps {
     group: StudyViewComparisonGroup;
@@ -31,10 +28,7 @@ export interface IGroupCheckboxProps {
 }
 
 @observer
-export default class GroupCheckbox extends React.Component<
-    IGroupCheckboxProps,
-    {}
-> {
+export default class GroupCheckbox extends React.Component<IGroupCheckboxProps, {}> {
     @observable _editingName = false;
     @observable nameInput = '';
 
@@ -70,10 +64,7 @@ export default class GroupCheckbox extends React.Component<
 
     @autobind
     private onEditSubmit() {
-        if (
-            this.nameInput.length > 0 &&
-            this.nameInput !== this.props.group.name
-        ) {
+        if (this.nameInput.length > 0 && this.nameInput !== this.props.group.name) {
             this.props.rename(this.nameInput, this.props.group);
         }
         this._editingName = false;
@@ -94,11 +85,7 @@ export default class GroupCheckbox extends React.Component<
             <span style={{ display: 'flex', alignItems: 'center' }}>
                 <EllipsisTextTooltip text={this.props.group.name} />
                 &nbsp;(
-                {caseCounts(
-                    getNumSamples(this.props.group),
-                    getNumPatients(this.props.group)
-                )}
-                )
+                {caseCounts(getNumSamples(this.props.group), getNumPatients(this.props.group))})
             </span>
         );
     }
@@ -106,9 +93,7 @@ export default class GroupCheckbox extends React.Component<
     @computed get editingNameUI() {
         return (
             <DefaultTooltip
-                visible={
-                    !!(this.editSubmitError && this.editSubmitError.message)
-                }
+                visible={!!(this.editSubmitError && this.editSubmitError.message)}
                 overlay={
                     <div>
                         <i
@@ -118,10 +103,7 @@ export default class GroupCheckbox extends React.Component<
                                 marginRight: 5,
                             }}
                         />
-                        <span>
-                            {this.editSubmitError &&
-                                this.editSubmitError.message}
-                        </span>
+                        <span>{this.editSubmitError && this.editSubmitError.message}</span>
                     </div>
                 }
             >
@@ -152,21 +134,14 @@ export default class GroupCheckbox extends React.Component<
         const group = this.props.group;
         let checkboxAndLabel;
         if (this.props.markedForDeletion) {
-            checkboxAndLabel = (
-                <span className={styles.markedForDeletion}>{this.label}</span>
-            );
+            checkboxAndLabel = <span className={styles.markedForDeletion}>{this.label}</span>;
         } else {
             checkboxAndLabel = (
-                <div
-                    className={styles.groupItem}
-                    style={{ display: 'flex', alignItems: 'center' }}
-                >
+                <div className={styles.groupItem} style={{ display: 'flex', alignItems: 'center' }}>
                     <input
                         type="checkbox"
                         value={group.uid}
-                        checked={this.props.store.isComparisonGroupSelected(
-                            group.uid
-                        )}
+                        checked={this.props.store.isComparisonGroupSelected(group.uid)}
                         onClick={this.onCheckboxClick}
                     />
                     {this.editingName ? this.editingNameUI : this.label}
@@ -185,10 +160,7 @@ export default class GroupCheckbox extends React.Component<
                 >
                     Save
                 </button>,
-                <button
-                    className="btn btn-xs btn-default"
-                    onClick={this.onEditCancel}
-                >
+                <button className="btn btn-xs btn-default" onClick={this.onEditCancel}>
                     Cancel
                 </button>,
             ];
@@ -217,9 +189,7 @@ export default class GroupCheckbox extends React.Component<
                 <DefaultTooltip
                     overlay={
                         <span>
-                            {`Add currently selected samples (${getNumSamples(
-                                group
-                            )}) to `}
+                            {`Add currently selected samples (${getNumSamples(group)}) to `}
                             <strong>{group.name}</strong>
                         </span>
                     }
@@ -256,9 +226,7 @@ export default class GroupCheckbox extends React.Component<
                         <ErrorIcon
                             tooltip={
                                 <MissingSamplesMessage
-                                    samples={
-                                        this.props.group.nonExistentSamples
-                                    }
+                                    samples={this.props.group.nonExistentSamples}
                                 />
                             }
                         />

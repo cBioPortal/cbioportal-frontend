@@ -129,10 +129,7 @@ var config = {
     },
 
     resolveLoader: {
-        modules: [
-            path.resolve(__dirname, 'loaders'),
-            path.join(process.cwd(), 'node_modules'),
-        ],
+        modules: [path.resolve(__dirname, 'loaders'), path.join(process.cwd(), 'node_modules')],
     },
 
     plugins: [
@@ -141,14 +138,10 @@ var config = {
             COMMIT: commit,
             IS_DEV_MODE: isDev,
             ENV_CBIOPORTAL_URL: process.env.CBIOPORTAL_URL
-                ? JSON.stringify(
-                      cleanAndValidateUrl(process.env.CBIOPORTAL_URL)
-                  )
+                ? JSON.stringify(cleanAndValidateUrl(process.env.CBIOPORTAL_URL))
                 : '"replace_me_env_cbioportal_url"',
             ENV_GENOME_NEXUS_URL: process.env.GENOME_NEXUS_URL
-                ? JSON.stringify(
-                      cleanAndValidateUrl(process.env.GENOME_NEXUS_URL)
-                  )
+                ? JSON.stringify(cleanAndValidateUrl(process.env.GENOME_NEXUS_URL))
                 : '"replace_me_env_genome_nexus_url"',
         }),
         new HtmlWebpackPlugin({ cache: false, template: 'my-index.ejs' }),
@@ -190,10 +183,7 @@ var config = {
                     {
                         loader: 'babel-loader',
                         options: {
-                            presets: [
-                                '@babel/preset-env',
-                                '@babel/preset-react',
-                            ],
+                            presets: ['@babel/preset-env', '@babel/preset-react'],
                             cacheDirectory: babelCacheFolder,
                         },
                     },
@@ -203,8 +193,7 @@ var config = {
                             transpileOnly:
                                 isDev ||
                                 isTest ||
-                                (process.env.NETLIFY &&
-                                    process.env.CONTEXT !== 'production'),
+                                (process.env.NETLIFY && process.env.CONTEXT !== 'production'),
                         },
                     },
                 ],
@@ -216,18 +205,12 @@ var config = {
                     {
                         loader: 'babel-loader',
                         options: {
-                            presets: [
-                                '@babel/preset-env',
-                                '@babel/preset-react',
-                            ],
+                            presets: ['@babel/preset-env', '@babel/preset-react'],
                         },
                     },
                 ],
                 exclude: function(modulePath) {
-                    return (
-                        /node_modules/.test(modulePath) &&
-                        !/igv\.min/.test(modulePath)
-                    );
+                    return /node_modules/.test(modulePath) && !/igv\.min/.test(modulePath);
                 },
             },
             {
@@ -431,10 +414,7 @@ if (isDev || isTest) {
     config.devtool = sourceMap;
 
     // in dev we don't want to load the twitter widget b/c it can block load of site
-    config.resolve.alias['react-twitter-widgets'] = join(
-        src,
-        'shared/Empty.tsx'
-    );
+    config.resolve.alias['react-twitter-widgets'] = join(src, 'shared/Empty.tsx');
 
     config.plugins.push(new ForkTsCheckerWebpackPlugin());
 

@@ -86,10 +86,7 @@ function lazyLoadComponent(
     return (location, cb) => {
         if (
             location &&
-            !(
-                validator(location.params) ||
-                customTabParamValidator(location.location)
-            )
+            !(validator(location.params) || customTabParamValidator(location.location))
         ) {
             loader = ErrorPage;
         }
@@ -141,10 +138,7 @@ export const makeRoutes = routing => {
                 onEnter={() => {
                     $(document).scrollTop(0);
                 }}
-                getComponent={lazyLoadComponent(
-                    Homepage,
-                    preloadImportantComponents
-                )}
+                getComponent={lazyLoadComponent(Homepage, preloadImportantComponents)}
             />
             <Route
                 path="/restore"
@@ -204,14 +198,8 @@ export const makeRoutes = routing => {
                 )}
             />
 
-            <Route
-                path="/mutation_mapper"
-                getComponent={lazyLoadComponent(MutationMapperTool)}
-            />
-            <Route
-                path="/oncoprinter"
-                getComponent={lazyLoadComponent(OncoprinterTool)}
-            />
+            <Route path="/mutation_mapper" getComponent={lazyLoadComponent(MutationMapperTool)} />
+            <Route path="/oncoprinter" getComponent={lazyLoadComponent(OncoprinterTool)} />
             <Route
                 path="/webAPI"
                 onEnter={handleEnter}
@@ -257,21 +245,9 @@ export const makeRoutes = routing => {
                 }}
                 getComponent={lazyLoadComponent(Software)}
             />
-            <Route
-                path="/news"
-                onEnter={handleEnter}
-                getComponent={lazyLoadComponent(News)}
-            />
-            <Route
-                path="/faq"
-                onEnter={handleEnter}
-                getComponent={lazyLoadComponent(FAQ)}
-            />
-            <Route
-                path="/oql"
-                onEnter={handleEnter}
-                getComponent={lazyLoadComponent(OQL)}
-            />
+            <Route path="/news" onEnter={handleEnter} getComponent={lazyLoadComponent(News)} />
+            <Route path="/faq" onEnter={handleEnter} getComponent={lazyLoadComponent(FAQ)} />
+            <Route path="/oql" onEnter={handleEnter} getComponent={lazyLoadComponent(OQL)} />
             <Route
                 path="/testimonials"
                 onEnter={() => {
@@ -279,32 +255,12 @@ export const makeRoutes = routing => {
                 }}
                 component={TestimonialsPage}
             />
-            <Route
-                path="/case.do"
-                onEnter={handleCaseDO}
-                component={getBlankPage()}
-            />
-            <Route
-                path="/index.do"
-                onEnter={handleIndexDO}
-                component={getBlankPage()}
-            />
-            <Route
-                path="/study.do"
-                onEnter={handleStudyDO}
-                component={getBlankPage()}
-            />
+            <Route path="/case.do" onEnter={handleCaseDO} component={getBlankPage()} />
+            <Route path="/index.do" onEnter={handleIndexDO} component={getBlankPage()} />
+            <Route path="/study.do" onEnter={handleStudyDO} component={getBlankPage()} />
 
-            <Route
-                path="/ln"
-                onEnter={handleLinkOut}
-                component={getBlankPage()}
-            />
-            <Route
-                path="/link.do"
-                onEnter={handleLinkOut}
-                component={getBlankPage()}
-            />
+            <Route path="/ln" onEnter={handleLinkOut} component={getBlankPage()} />
+            <Route path="/link.do" onEnter={handleLinkOut} component={getBlankPage()} />
 
             <Redirect from={'/mutation_mapper.jsp'} to={'/mutation_mapper'} />
             <Redirect from={'/data_sets.jsp'} to={'/datasets'} />

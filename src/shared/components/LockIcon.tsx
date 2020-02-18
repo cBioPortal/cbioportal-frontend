@@ -26,10 +26,7 @@ export default class LockIcon extends React.Component<
                     this.props.className
                 )}
                 style={{
-                    cursor:
-                        this.props.onClick && !this.props.disabled
-                            ? 'pointer'
-                            : 'auto',
+                    cursor: this.props.onClick && !this.props.disabled ? 'pointer' : 'auto',
                     paddingTop: '0.2em',
                 }}
             />

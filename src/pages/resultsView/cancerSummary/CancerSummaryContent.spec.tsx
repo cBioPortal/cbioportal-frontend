@@ -153,18 +153,10 @@ describe('CancerSummaryContent', () => {
 
         const instance = wrapper.instance() as CancerSummaryContent;
         const chartData = instance.chartData;
-        assert.equal(
-            instance.altCasesMax,
-            chartData.maxPercentage,
-            'returns percentage'
-        );
+        assert.equal(instance.altCasesMax, chartData.maxPercentage, 'returns percentage');
 
         instance.yAxis = 'abs-count';
-        assert.equal(
-            instance.altCasesMax,
-            chartData.maxAbsoluteCount,
-            'returns absolute count'
-        );
+        assert.equal(instance.altCasesMax, chartData.maxAbsoluteCount, 'returns absolute count');
     });
 
     it('#handleYAxisChange should reset alteration slider to zero', () => {
@@ -180,19 +172,12 @@ describe('CancerSummaryContent', () => {
             },
         });
         assert.equal(mockInstance.altCasesValue, 0, 'sets altCasesValue to 0');
-        assert.equal(
-            mockInstance.yAxis,
-            'something',
-            'sets altCasesValue to 0'
-        );
+        assert.equal(mockInstance.yAxis, 'something', 'sets altCasesValue to 0');
         assert.isTrue(
             mockInstance.handleAltSliderChange.calledOnce,
             'slider change handler called'
         );
-        assert.isTrue(
-            mockInstance.handleAltSliderChange.calledWith(0),
-            'slider set to zero'
-        );
+        assert.isTrue(mockInstance.handleAltSliderChange.calledWith(0), 'slider set to zero');
     });
 
     it('#handleXAxisChange should reset alteration slider to zero', () => {
@@ -205,11 +190,7 @@ describe('CancerSummaryContent', () => {
                 value: 'something',
             },
         });
-        assert.equal(
-            mockInstance.xAxis,
-            'something',
-            'sets xAis to passed value'
-        );
+        assert.equal(mockInstance.xAxis, 'something', 'sets xAis to passed value');
     });
 
     describe('chartData getter', () => {
@@ -224,8 +205,7 @@ describe('CancerSummaryContent', () => {
                 />
             );
 
-            const chartData = (wrapper.instance() as CancerSummaryContent)
-                .chartData;
+            const chartData = (wrapper.instance() as CancerSummaryContent).chartData;
             assert.equal(
                 chartData.data.length,
                 _.size(OrderedAlterationLabelMap),
@@ -256,11 +236,7 @@ describe('CancerSummaryContent', () => {
             const instance = wrapper.instance() as CancerSummaryContent;
             assert.deepEqual(
                 instance.chartData.labels,
-                [
-                    'Colon Adenocarcinoma',
-                    'Rectal Adenocarcinoma',
-                    'Colorectal Adenocarcinoma',
-                ],
+                ['Colon Adenocarcinoma', 'Rectal Adenocarcinoma', 'Colorectal Adenocarcinoma'],
                 'Has all three group types in labels'
             );
 
@@ -296,11 +272,7 @@ describe('CancerSummaryContent', () => {
 
             assert.deepEqual(
                 instance.chartData.labels,
-                [
-                    'Colon Adenocarcinoma',
-                    'Rectal Adenocarcinoma',
-                    'Colorectal Adenocarcinoma',
-                ],
+                ['Colon Adenocarcinoma', 'Rectal Adenocarcinoma', 'Colorectal Adenocarcinoma'],
                 'Has all three group types in labels'
             );
 
@@ -336,11 +308,7 @@ describe('CancerSummaryContent', () => {
             const instance = wrapper.instance() as CancerSummaryContent;
             assert.deepEqual(
                 instance.chartData.labels,
-                [
-                    'Colon Adenocarcinoma',
-                    'Rectal Adenocarcinoma',
-                    'Colorectal Adenocarcinoma',
-                ],
+                ['Colon Adenocarcinoma', 'Rectal Adenocarcinoma', 'Colorectal Adenocarcinoma'],
                 'Has all three group types in labels'
             );
 
@@ -382,14 +350,12 @@ describe('CancerSummaryContent', () => {
 
     describe('determineSorterAndDirection', () => {
         it('sorting is default=desc and if x-axis, asc', () => {
-            let ret = CancerSummaryContent.prototype.determineSorterAndDirection.apply(
-                {}
-            );
+            let ret = CancerSummaryContent.prototype.determineSorterAndDirection.apply({});
             assert.equal(ret.dir, 'desc');
 
-            ret = CancerSummaryContent.prototype.determineSorterAndDirection.apply(
-                { xAxis: 'x-axis' }
-            );
+            ret = CancerSummaryContent.prototype.determineSorterAndDirection.apply({
+                xAxis: 'x-axis',
+            });
             assert.equal(ret.dir, 'asc');
         });
 
@@ -397,9 +363,7 @@ describe('CancerSummaryContent', () => {
             const instance = {
                 xAxis: 'x-axis',
             };
-            let {
-                sorter,
-            } = CancerSummaryContent.prototype.determineSorterAndDirection.apply(
+            let { sorter } = CancerSummaryContent.prototype.determineSorterAndDirection.apply(
                 instance
             );
             assert.equal(sorter('tree'), 'tree');
@@ -416,30 +380,18 @@ describe('CancerSummaryContent', () => {
                     },
                 },
             };
-            let {
-                sorter,
-            } = CancerSummaryContent.prototype.determineSorterAndDirection.apply(
+            let { sorter } = CancerSummaryContent.prototype.determineSorterAndDirection.apply(
                 instance
             );
-            assert.equal(
-                sorter('test'),
-                12,
-                'just returns alteredSample value'
-            );
+            assert.equal(sorter('test'), 12, 'just returns alteredSample value');
 
             instance.yAxis = 'someDefault';
 
             let {
                 sorter: sorter2,
-            } = CancerSummaryContent.prototype.determineSorterAndDirection.apply(
-                instance
-            );
+            } = CancerSummaryContent.prototype.determineSorterAndDirection.apply(instance);
 
-            assert.equal(
-                sorter2('test'),
-                0.24,
-                'returns alteration percentage of total'
-            );
+            assert.equal(sorter2('test'), 0.24, 'returns alteration percentage of total');
         });
     });
 });

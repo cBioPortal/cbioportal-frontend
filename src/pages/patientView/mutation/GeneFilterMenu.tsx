@@ -13,10 +13,7 @@ export enum GeneFilterOption {
 }
 
 @observer
-export default class GeneFilterMenu extends React.Component<
-    IGeneFilterSelection,
-    {}
-> {
+export default class GeneFilterMenu extends React.Component<IGeneFilterSelection, {}> {
     constructor(props: IGeneFilterSelection) {
         super(props);
     }
@@ -35,25 +32,15 @@ export default class GeneFilterMenu extends React.Component<
                 <div>Filter mutations for:</div>
                 <Radio
                     value={GeneFilterOption.ANY_SAMPLE}
-                    checked={
-                        this.props.currentSelection ===
-                        GeneFilterOption.ANY_SAMPLE
-                    }
-                    onChange={(e: React.FormEvent<Radio>) =>
-                        this.handleOptionChange(e)
-                    }
+                    checked={this.props.currentSelection === GeneFilterOption.ANY_SAMPLE}
+                    onChange={(e: React.FormEvent<Radio>) => this.handleOptionChange(e)}
                 >
                     Genes profiled in any sample
                 </Radio>
                 <Radio
                     value={GeneFilterOption.ALL_SAMPLES}
-                    checked={
-                        this.props.currentSelection ===
-                        GeneFilterOption.ALL_SAMPLES
-                    }
-                    onChange={(e: React.FormEvent<Radio>) =>
-                        this.handleOptionChange(e)
-                    }
+                    checked={this.props.currentSelection === GeneFilterOption.ALL_SAMPLES}
+                    onChange={(e: React.FormEvent<Radio>) => this.handleOptionChange(e)}
                 >
                     Genes profiled in all samples
                 </Radio>

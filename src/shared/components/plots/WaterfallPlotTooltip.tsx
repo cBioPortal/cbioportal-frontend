@@ -15,10 +15,7 @@ export interface IWaterfallPlotTooltipProps {
 }
 
 @observer
-export default class WaterfallPlotTooltip extends React.Component<
-    IWaterfallPlotTooltipProps,
-    {}
-> {
+export default class WaterfallPlotTooltip extends React.Component<IWaterfallPlotTooltipProps, {}> {
     @observable isHovered = false; // allows persistence when mouse rolls over tooltip
 
     @bind

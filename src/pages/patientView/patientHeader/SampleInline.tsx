@@ -1,9 +1,6 @@
 import * as React from 'react';
 import { If, Else, Then } from 'react-if';
-import {
-    DefaultTooltip,
-    placeArrowBottomLeft,
-} from 'cbioportal-frontend-commons';
+import { DefaultTooltip, placeArrowBottomLeft } from 'cbioportal-frontend-commons';
 import { ClinicalDataBySampleId } from 'shared/api/api-types-extended';
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import './styles.scss';
@@ -18,10 +15,7 @@ interface ISampleInlineProps {
     disableTooltip?: boolean;
 }
 
-export default class SampleInline extends React.Component<
-    ISampleInlineProps,
-    {}
-> {
+export default class SampleInline extends React.Component<ISampleInlineProps, {}> {
     public static defaultProps = {
         tooltipEnabled: true,
         hideClinicalInfoTable: false,
@@ -43,9 +37,7 @@ export default class SampleInline extends React.Component<
         return (
             <div style={{ maxHeight: 400, maxWidth: 600, overflow: 'auto' }}>
                 <h5 style={{ marginBottom: 1 }}>
-                    <span className="sample-inline-tooltip-children">
-                        {this.props.children}
-                    </span>
+                    <span className="sample-inline-tooltip-children">{this.props.children}</span>
                     {sample.id}
                 </h5>
                 {extraTooltipText && <h5>{extraTooltipText}</h5>}

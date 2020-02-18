@@ -1,10 +1,7 @@
 import * as React from 'react';
 import styles from './styles.module.scss';
 import { If } from 'react-if';
-import {
-    ChartType,
-    NumericalGroupComparisonType,
-} from 'pages/studyView/StudyViewUtils';
+import { ChartType, NumericalGroupComparisonType } from 'pages/studyView/StudyViewUtils';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import { action, computed, observable } from 'mobx';
@@ -36,13 +33,9 @@ export interface IChartHeaderProps {
     chartControls?: ChartControls;
     changeChartType: (chartType: ChartType) => void;
     getSVG?: () => Promise<SVGElement | null>;
-    getData?:
-        | ((dataType?: DataType) => Promise<string | null>)
-        | ((dataType?: DataType) => string);
+    getData?: ((dataType?: DataType) => Promise<string | null>) | ((dataType?: DataType) => string);
     downloadTypes?: DownloadControlsButton[];
-    openComparisonPage: (
-        categorizationType?: NumericalGroupComparisonType
-    ) => void;
+    openComparisonPage: (categorizationType?: NumericalGroupComparisonType) => void;
 }
 
 export interface ChartControls {
@@ -95,10 +88,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
         if (this.props.chartType === ChartTypeEnum.BAR_CHART) {
             return (
                 <div
-                    className={classnames(
-                        'dropdown-item',
-                        styles.dropdownHoverEffect
-                    )}
+                    className={classnames('dropdown-item', styles.dropdownHoverEffect)}
                     style={{
                         display: 'flex',
                         justifyContent: 'space-between',
@@ -110,10 +100,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                     <div>
                         <img
                             src={require('../../../rootImages/compare_vs.svg')}
-                            className={classnames(
-                                'fa fa-fw',
-                                styles.menuItemIcon
-                            )}
+                            className={classnames('fa fa-fw', styles.menuItemIcon)}
                         />
                         <span>Compare Groups</span>
                     </div>
@@ -130,10 +117,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             style={{
                                 top: 0,
                                 margin: '-6px 0',
-                                left:
-                                    this.props.placement === 'left'
-                                        ? -submenuWidth
-                                        : '100%',
+                                left: this.props.placement === 'left' ? -submenuWidth : '100%',
                                 minWidth: submenuWidth,
                             }}
                         >
@@ -182,10 +166,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
         }
 
         return (
-            <a
-                className="dropdown-item"
-                onClick={() => this.props.openComparisonPage()}
-            >
+            <a className="dropdown-item" onClick={() => this.props.openComparisonPage()}>
                 <img
                     src={require('../../../rootImages/compare_vs.svg')}
                     className={classnames('fa fa-fw', styles.menuItemIcon)}
@@ -197,10 +178,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
 
     @computed get menuItems() {
         const items = [];
-        if (
-            this.props.chartControls &&
-            !!this.props.chartControls.showLogScaleToggle
-        ) {
+        if (this.props.chartControls && !!this.props.chartControls.showLogScaleToggle) {
             items.push(
                 <li>
                     <a
@@ -215,9 +193,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                 )
                             }
                             onClick={this.props.toggleLogScale}
-                            label={
-                                <span style={{ marginTop: -3 }}>Log Scale</span>
-                            }
+                            label={<span style={{ marginTop: -3 }}>Log Scale</span>}
                             style={{ marginTop: 1, marginBottom: -3 }}
                         />
                     </a>
@@ -225,17 +201,12 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
             );
         }
 
-        if (
-            this.props.chartControls &&
-            !!this.props.chartControls.showTableIcon
-        ) {
+        if (this.props.chartControls && !!this.props.chartControls.showTableIcon) {
             items.push(
                 <li>
                     <a
                         className="dropdown-item"
-                        onClick={() =>
-                            this.props.changeChartType(ChartTypeEnum.TABLE)
-                        }
+                        onClick={() => this.props.changeChartType(ChartTypeEnum.TABLE)}
                     >
                         <i
                             className={classnames(
@@ -251,17 +222,12 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
             );
         }
 
-        if (
-            this.props.chartControls &&
-            !!this.props.chartControls.showPieIcon
-        ) {
+        if (this.props.chartControls && !!this.props.chartControls.showPieIcon) {
             items.push(
                 <li>
                     <a
                         className="dropdown-item"
-                        onClick={() =>
-                            this.props.changeChartType(ChartTypeEnum.PIE_CHART)
-                        }
+                        onClick={() => this.props.changeChartType(ChartTypeEnum.PIE_CHART)}
                     >
                         <i
                             className={classnames(
@@ -277,24 +243,14 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
             );
         }
 
-        if (
-            this.props.chartControls &&
-            this.props.chartControls.showComparisonPageIcon
-        ) {
-            items.push(
-                <li style={{ position: 'relative' }}>
-                    {this.comparisonButton}
-                </li>
-            );
+        if (this.props.chartControls && this.props.chartControls.showComparisonPageIcon) {
+            items.push(<li style={{ position: 'relative' }}>{this.comparisonButton}</li>);
         }
 
         if (this.props.chartType === ChartTypeEnum.BAR_CHART) {
             items.push(
                 <li>
-                    <a
-                        className="dropdown-item"
-                        onClick={() => (this.showCustomBinModal = true)}
-                    >
+                    <a className="dropdown-item" onClick={() => (this.showCustomBinModal = true)}>
                         <i
                             className={classnames(
                                 'fa fa-xs fa-fw',
@@ -309,9 +265,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                         show={this.showCustomBinModal}
                         onHide={() => (this.showCustomBinModal = false)}
                         chartMeta={this.props.chartMeta}
-                        currentBins={this.props.store.geCurrentBins(
-                            this.props.chartMeta
-                        )}
+                        currentBins={this.props.store.geCurrentBins(this.props.chartMeta)}
                         updateCustomBins={this.props.store.updateCustomBins}
                     />
                 </li>
@@ -327,10 +281,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
             items.push(
                 <li style={{ position: 'relative' }}>
                     <div
-                        className={classnames(
-                            'dropdown-item',
-                            styles.dropdownHoverEffect
-                        )}
+                        className={classnames('dropdown-item', styles.dropdownHoverEffect)}
                         style={{
                             display: 'flex',
                             justifyContent: 'space-between',
@@ -430,8 +381,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                         this.props.chartMeta.displayName,
                                         this.props.chartMeta.description,
                                         this.props.chartMeta.clinicalAttribute
-                                            ? this.props.chartMeta
-                                                  .clinicalAttribute
+                                            ? this.props.chartMeta.clinicalAttribute
                                                   .clinicalAttributeId
                                             : undefined
                                     )}
@@ -462,9 +412,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                 <DefaultTooltip
                                     placement={this.tooltipPosition}
                                     align={this.tooltipAlign}
-                                    overlay={
-                                        <span>Reset filters in chart</span>
-                                    }
+                                    overlay={<span>Reset filters in chart</span>}
                                     destroyTooltipOnHide={true}
                                 >
                                     <button
@@ -492,10 +440,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                 overlay={<span>Delete chart</span>}
                             >
                                 <button
-                                    className={classnames(
-                                        'btn btn-xs btn-default',
-                                        styles.item
-                                    )}
+                                    className={classnames('btn btn-xs btn-default', styles.item)}
                                     onClick={this.props.deleteChart}
                                 >
                                     <i
@@ -513,11 +458,9 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                     onMouseEnter={this.openMenu}
                                     onMouseLeave={this.closeMenu}
                                     data-test="chart-header-hamburger-icon"
-                                    className={classnames(
-                                        'dropdown btn-group',
-                                        styles.chartMenu,
-                                        { show: this.menuOpen }
-                                    )}
+                                    className={classnames('dropdown btn-group', styles.chartMenu, {
+                                        show: this.menuOpen,
+                                    })}
                                 >
                                     <button
                                         className={classnames(
@@ -525,18 +468,13 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                             { active: this.menuOpen }
                                         )}
                                     >
-                                        <i
-                                            className={classnames(
-                                                'fa fa-xs fa-fw fa-bars'
-                                            )}
-                                        />
+                                        <i className={classnames('fa fa-xs fa-fw fa-bars')} />
                                     </button>
                                     <ul
                                         data-test="chart-header-hamburger-icon-menu"
-                                        className={classnames(
-                                            'dropdown-menu pull-right',
-                                            { show: this.menuOpen }
-                                        )}
+                                        className={classnames('dropdown-menu pull-right', {
+                                            show: this.menuOpen,
+                                        })}
                                         style={{ width: '190px' }}
                                     >
                                         {this.menuItems}

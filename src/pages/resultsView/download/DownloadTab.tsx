@@ -23,14 +23,8 @@ import {
 } from 'shared/lib/oql/oqlfilter';
 import FeatureTitle from 'shared/components/featureTitle/FeatureTitle';
 import { SimpleCopyDownloadControls } from 'shared/components/copyDownloadControls/SimpleCopyDownloadControls';
-import {
-    default as GeneAlterationTable,
-    IGeneAlteration,
-} from './GeneAlterationTable';
-import {
-    default as CaseAlterationTable,
-    ICaseAlteration,
-} from './CaseAlterationTable';
+import { default as GeneAlterationTable, IGeneAlteration } from './GeneAlterationTable';
+import { default as CaseAlterationTable, ICaseAlteration } from './CaseAlterationTable';
 import {
     generateCaseAlterationData,
     generateCnaData,
@@ -54,11 +48,7 @@ import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/Window
 import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import onMobxPromise from 'shared/lib/onMobxPromise';
-import {
-    MolecularProfile,
-    Sample,
-    CancerStudy,
-} from 'shared/api/generated/CBioPortalAPI';
+import { MolecularProfile, Sample, CancerStudy } from 'shared/api/generated/CBioPortalAPI';
 import { getMobxPromiseGroupStatus } from '../../../shared/lib/getMobxPromiseGroupStatus';
 import ErrorMessage from '../../../shared/components/ErrorMessage';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
@@ -73,29 +63,18 @@ export interface IDownloadTabProps {
 }
 
 @observer
-export default class DownloadTab extends React.Component<
-    IDownloadTabProps,
-    {}
-> {
+export default class DownloadTab extends React.Component<IDownloadTabProps, {}> {
     constructor(props: IDownloadTabProps) {
         super(props);
 
         this.handleMutationDownload = this.handleMutationDownload.bind(this);
-        this.handleTransposedMutationDownload = this.handleTransposedMutationDownload.bind(
-            this
-        );
+        this.handleTransposedMutationDownload = this.handleTransposedMutationDownload.bind(this);
         this.handleCnaDownload = this.handleCnaDownload.bind(this);
-        this.handleTransposedCnaDownload = this.handleTransposedCnaDownload.bind(
-            this
-        );
+        this.handleTransposedCnaDownload = this.handleTransposedCnaDownload.bind(this);
         this.handleMrnaDownload = this.handleMrnaDownload.bind(this);
-        this.handleTransposedMrnaDownload = this.handleTransposedMrnaDownload.bind(
-            this
-        );
+        this.handleTransposedMrnaDownload = this.handleTransposedMrnaDownload.bind(this);
         this.handleProteinDownload = this.handleProteinDownload.bind(this);
-        this.handleTransposedProteinDownload = this.handleTransposedProteinDownload.bind(
-            this
-        );
+        this.handleTransposedProteinDownload = this.handleTransposedProteinDownload.bind(this);
     }
 
     readonly geneAlterationData = remoteData<IGeneAlteration[]>({
@@ -106,8 +85,7 @@ export default class DownloadTab extends React.Component<
         invoke: () =>
             Promise.resolve(
                 generateGeneAlterationData(
-                    this.props.store.oqlFilteredCaseAggregatedDataByOQLLine
-                        .result!,
+                    this.props.store.oqlFilteredCaseAggregatedDataByOQLLine.result!,
                     this.props.store.sequencedSampleKeysByGene.result!
                 )
             ),
@@ -117,8 +95,7 @@ export default class DownloadTab extends React.Component<
         [gene: string]: IGeneAlteration;
     }>({
         await: () => [this.geneAlterationData],
-        invoke: () =>
-            Promise.resolve(_.keyBy(this.geneAlterationData.result!, 'gene')),
+        invoke: () => Promise.resolve(_.keyBy(this.geneAlterationData.result!, 'gene')),
     });
 
     readonly caseAlterationData = remoteData<ICaseAlteration[]>({
@@ -136,40 +113,27 @@ export default class DownloadTab extends React.Component<
                 generateCaseAlterationData(
                     this.props.store.oqlText,
                     this.props.store.selectedMolecularProfiles.result!,
-                    this.props.store.oqlFilteredCaseAggregatedDataByOQLLine
-                        .result!,
-                    this.props.store
-                        .oqlFilteredCaseAggregatedDataByUnflattenedOQLLine
-                        .result!,
+                    this.props.store.oqlFilteredCaseAggregatedDataByOQLLine.result!,
+                    this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!,
                     this.props.store.coverageInformation.result!,
                     this.props.store.samples.result!,
                     this.geneAlterationDataByGene.result!,
-                    this.props.store.molecularProfileIdToMolecularProfile
-                        .result!
+                    this.props.store.molecularProfileIdToMolecularProfile.result!
                 )
             ),
     });
 
-    readonly mutationData = remoteData<{ [key: string]: ExtendedAlteration[] }>(
-        {
-            await: () => [this.props.store.nonOqlFilteredCaseAggregatedData],
-            invoke: () => {
-                return Promise.resolve(
-                    generateMutationData(
-                        this.props.store.nonOqlFilteredCaseAggregatedData
-                            .result!
-                    )
-                );
-            },
-        }
-    );
+    readonly mutationData = remoteData<{ [key: string]: ExtendedAlteration[] }>({
+        await: () => [this.props.store.nonOqlFilteredCaseAggregatedData],
+        invoke: () => {
+            return Promise.resolve(
+                generateMutationData(this.props.store.nonOqlFilteredCaseAggregatedData.result!)
+            );
+        },
+    });
 
     readonly mutationDownloadData = remoteData<string[][]>({
-        await: () => [
-            this.mutationData,
-            this.props.store.samples,
-            this.props.store.genes,
-        ],
+        await: () => [this.mutationData, this.props.store.samples, this.props.store.genes],
         invoke: () =>
             Promise.resolve(
                 generateMutationDownloadData(
@@ -185,21 +149,16 @@ export default class DownloadTab extends React.Component<
     }>({
         await: () => [
             this.props.store.nonSelectedDownloadableMolecularData,
-            this.props.store
-                .nonSelectedDownloadableMolecularProfilesGroupByName,
+            this.props.store.nonSelectedDownloadableMolecularProfilesGroupByName,
         ],
         invoke: () => {
             const profileNames = _.keys(
-                this.props.store
-                    .nonSelectedDownloadableMolecularProfilesGroupByName.result
+                this.props.store.nonSelectedDownloadableMolecularProfilesGroupByName.result
             );
-            if (
-                this.props.store.doNonSelectedDownloadableMolecularProfilesExist
-            ) {
+            if (this.props.store.doNonSelectedDownloadableMolecularProfilesExist) {
                 const data = {
                     samples: _.groupBy(
-                        this.props.store.nonSelectedDownloadableMolecularData
-                            .result!,
+                        this.props.store.nonSelectedDownloadableMolecularData.result!,
                         data => data.uniqueSampleKey
                     ),
                 } as CaseAggregatedData<ExtendedAlteration>;
@@ -209,10 +168,7 @@ export default class DownloadTab extends React.Component<
                     };
                 } = _.reduce(
                     profileNames,
-                    (
-                        allOtherMolecularProfileDataGroupByProfileName,
-                        profileName
-                    ) => {
+                    (allOtherMolecularProfileDataGroupByProfileName, profileName) => {
                         allOtherMolecularProfileDataGroupByProfileName[
                             profileName
                         ] = generateOtherMolecularProfileData(
@@ -229,9 +185,7 @@ export default class DownloadTab extends React.Component<
                         };
                     }
                 );
-                return Promise.resolve(
-                    allOtherMolecularProfileDataGroupByProfileName
-                );
+                return Promise.resolve(allOtherMolecularProfileDataGroupByProfileName);
             }
             return Promise.resolve({});
         },
@@ -264,18 +218,12 @@ export default class DownloadTab extends React.Component<
         await: () => [this.props.store.nonOqlFilteredCaseAggregatedData],
         invoke: () =>
             Promise.resolve(
-                generateMrnaData(
-                    this.props.store.nonOqlFilteredCaseAggregatedData.result!
-                )
+                generateMrnaData(this.props.store.nonOqlFilteredCaseAggregatedData.result!)
             ),
     });
 
     readonly mrnaDownloadData = remoteData<string[][]>({
-        await: () => [
-            this.mrnaData,
-            this.props.store.samples,
-            this.props.store.genes,
-        ],
+        await: () => [this.mrnaData, this.props.store.samples, this.props.store.genes],
         invoke: () =>
             Promise.resolve(
                 generateDownloadData(
@@ -290,18 +238,12 @@ export default class DownloadTab extends React.Component<
         await: () => [this.props.store.nonOqlFilteredCaseAggregatedData],
         invoke: () =>
             Promise.resolve(
-                generateProteinData(
-                    this.props.store.nonOqlFilteredCaseAggregatedData.result!
-                )
+                generateProteinData(this.props.store.nonOqlFilteredCaseAggregatedData.result!)
             ),
     });
 
     readonly proteinDownloadData = remoteData<string[][]>({
-        await: () => [
-            this.proteinData,
-            this.props.store.samples,
-            this.props.store.genes,
-        ],
+        await: () => [this.proteinData, this.props.store.samples, this.props.store.genes],
         invoke: () =>
             Promise.resolve(
                 generateDownloadData(
@@ -316,18 +258,12 @@ export default class DownloadTab extends React.Component<
         await: () => [this.props.store.nonOqlFilteredCaseAggregatedData],
         invoke: () =>
             Promise.resolve(
-                generateCnaData(
-                    this.props.store.nonOqlFilteredCaseAggregatedData.result!
-                )
+                generateCnaData(this.props.store.nonOqlFilteredCaseAggregatedData.result!)
             ),
     });
 
     readonly cnaDownloadData = remoteData<string[][]>({
-        await: () => [
-            this.cnaData,
-            this.props.store.samples,
-            this.props.store.genes,
-        ],
+        await: () => [this.cnaData, this.props.store.samples, this.props.store.genes],
         invoke: () =>
             Promise.resolve(
                 generateDownloadData(
@@ -342,9 +278,7 @@ export default class DownloadTab extends React.Component<
         await: () => [this.caseAlterationData],
         invoke: () =>
             Promise.resolve(
-                this.caseAlterationData.result!.filter(
-                    caseAlteration => caseAlteration.altered
-                )
+                this.caseAlterationData.result!.filter(caseAlteration => caseAlteration.altered)
             ),
     });
 
@@ -352,9 +286,7 @@ export default class DownloadTab extends React.Component<
         await: () => [this.caseAlterationData],
         invoke: () =>
             Promise.resolve(
-                this.caseAlterationData.result!.filter(
-                    caseAlteration => !caseAlteration.altered
-                )
+                this.caseAlterationData.result!.filter(caseAlteration => !caseAlteration.altered)
             ),
     });
 
@@ -369,12 +301,9 @@ export default class DownloadTab extends React.Component<
                     result.push(['studyID:sampleId', 'Altered', ...titleMap]);
                 }
                 // get altered infomation by gene
-                const genesAlteredData = _.map(
-                    caseAlteration.oqlDataByGene,
-                    oqlData => {
-                        return _.isEmpty(oqlData.alterationTypes) ? '0' : '1';
-                    }
-                );
+                const genesAlteredData = _.map(caseAlteration.oqlDataByGene, oqlData => {
+                    return _.isEmpty(oqlData.alterationTypes) ? '0' : '1';
+                });
                 result.push([
                     `${caseAlteration.studyId}:${caseAlteration.sampleId}`,
                     caseAlteration.altered ? '1' : '0',
@@ -387,13 +316,10 @@ export default class DownloadTab extends React.Component<
 
     readonly sampleMatrixText = remoteData<string>({
         await: () => [this.sampleMatrix],
-        invoke: () =>
-            Promise.resolve(stringify2DArray(this.sampleMatrix.result!)),
+        invoke: () => Promise.resolve(stringify2DArray(this.sampleMatrix.result!)),
     });
 
-    readonly oqls = remoteData<
-        OQLLineFilterOutput<AnnotatedExtendedAlteration>[]
-    >({
+    readonly oqls = remoteData<OQLLineFilterOutput<AnnotatedExtendedAlteration>[]>({
         await: () => [this.props.store.oqlFilteredCaseAggregatedDataByOQLLine],
         invoke: () =>
             Promise.resolve(
@@ -404,9 +330,7 @@ export default class DownloadTab extends React.Component<
     });
 
     readonly trackLabels = remoteData({
-        await: () => [
-            this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine,
-        ],
+        await: () => [this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine],
         invoke: () => {
             const labels: string[] = [];
             this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach(
@@ -417,20 +341,16 @@ export default class DownloadTab extends React.Component<
                             getSingleGeneResultKey(
                                 index,
                                 this.props.store.oqlText,
-                                data.oql as OQLLineFilterOutput<
-                                    AnnotatedExtendedAlteration
-                                >
+                                data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>
                             )
                         );
                     }
                     // or data is for merged track (group: list of oqls)
                     else {
                         labels.push(
-                            getMultipleGeneResultKey(
-                                data.oql as MergedTrackLineFilterOutput<
-                                    AnnotatedExtendedAlteration
-                                >
-                            )
+                            getMultipleGeneResultKey(data.oql as MergedTrackLineFilterOutput<
+                                AnnotatedExtendedAlteration
+                            >)
                         );
                     }
                 }
@@ -440,9 +360,7 @@ export default class DownloadTab extends React.Component<
     });
 
     readonly trackAlterationTypesMap = remoteData({
-        await: () => [
-            this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine,
-        ],
+        await: () => [this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine],
         invoke: () => {
             const trackAlterationTypesMap: { [label: string]: string[] } = {};
             this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach(
@@ -455,17 +373,13 @@ export default class DownloadTab extends React.Component<
                         const label = getSingleGeneResultKey(
                             index,
                             this.props.store.oqlText,
-                            data.oql as OQLLineFilterOutput<
-                                AnnotatedExtendedAlteration
-                            >
+                            data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>
                         );
                         // put types for single track into the map, key is track label
                         if (singleTrackOql.parsed_oql_line.alterations) {
                             trackAlterationTypesMap[label] = _.uniq(
-                                _.map(
-                                    singleTrackOql.parsed_oql_line.alterations,
-                                    alteration =>
-                                        alteration.alteration_type.toUpperCase()
+                                _.map(singleTrackOql.parsed_oql_line.alterations, alteration =>
+                                    alteration.alteration_type.toUpperCase()
                                 )
                             );
                         }
@@ -476,24 +390,17 @@ export default class DownloadTab extends React.Component<
                             AnnotatedExtendedAlteration
                         >;
                         const label = getMultipleGeneResultKey(
-                            data.oql as MergedTrackLineFilterOutput<
-                                AnnotatedExtendedAlteration
-                            >
+                            data.oql as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>
                         );
                         // put types for merged track into the map, key is track label
                         let alterations: string[] = [];
                         _.forEach(
                             mergedTrackOql.list,
-                            (
-                                oql: OQLLineFilterOutput<
-                                    AnnotatedExtendedAlteration
-                                >
-                            ) => {
+                            (oql: OQLLineFilterOutput<AnnotatedExtendedAlteration>) => {
                                 if (oql.parsed_oql_line.alterations) {
                                     const types: string[] = _.map(
                                         oql.parsed_oql_line.alterations,
-                                        alteration =>
-                                            alteration.alteration_type.toUpperCase()
+                                        alteration => alteration.alteration_type.toUpperCase()
                                     );
                                     alterations.push(...types);
                                 }
@@ -508,9 +415,7 @@ export default class DownloadTab extends React.Component<
     });
 
     readonly geneAlterationMap = remoteData({
-        await: () => [
-            this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine,
-        ],
+        await: () => [this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine],
         invoke: () => {
             const geneAlterationMap: { [label: string]: Alteration[] } = {};
             this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach(
@@ -539,11 +444,7 @@ export default class DownloadTab extends React.Component<
                         let alterations: string[] = [];
                         _.forEach(
                             mergedTrackOql.list,
-                            (
-                                oql: OQLLineFilterOutput<
-                                    AnnotatedExtendedAlteration
-                                >
-                            ) => {
+                            (oql: OQLLineFilterOutput<AnnotatedExtendedAlteration>) => {
                                 if (oql.parsed_oql_line.alterations) {
                                     const types: string[] = _.map(
                                         oql.parsed_oql_line.alterations,
@@ -581,21 +482,14 @@ export default class DownloadTab extends React.Component<
             this.alteredCaseAlterationData,
             this.props.store.virtualStudyParams,
             this.sampleMatrixText,
-            this.props.store
-                .nonSelectedDownloadableMolecularProfilesGroupByName,
+            this.props.store.nonSelectedDownloadableMolecularProfilesGroupByName,
             this.props.store.studies,
             this.props.store.selectedMolecularProfiles
         );
 
         switch (status) {
             case 'pending':
-                return (
-                    <LoadingIndicator
-                        isLoading={true}
-                        center={true}
-                        size={'big'}
-                    />
-                );
+                return <LoadingIndicator isLoading={true} center={true} size={'big'} />;
             case 'error':
                 return <ErrorMessage />;
             case 'complete':
@@ -626,9 +520,8 @@ export default class DownloadTab extends React.Component<
                                 <tbody>
                                     {hasValidData(this.cnaData.result!) &&
                                         this.cnaDownloadControls()}
-                                    {hasValidMutationData(
-                                        this.mutationData.result!
-                                    ) && this.mutationDownloadControls()}
+                                    {hasValidMutationData(this.mutationData.result!) &&
+                                        this.mutationDownloadControls()}
                                     {hasValidData(this.mrnaData.result!) &&
                                         this.mrnaExprDownloadControls(
                                             this.props.store.selectedMolecularProfiles.result!.find(
@@ -647,14 +540,11 @@ export default class DownloadTab extends React.Component<
                                         )}
                                     {this.alteredSamplesDownloadControls(
                                         this.alteredCaseAlterationData.result!,
-                                        this.props.store.virtualStudyParams
-                                            .result!
+                                        this.props.store.virtualStudyParams.result!
                                     )}
                                     {this.unalteredSamplesDownloadControls(
-                                        this.unalteredCaseAlterationData
-                                            .result!,
-                                        this.props.store.virtualStudyParams
-                                            .result!
+                                        this.unalteredCaseAlterationData.result!,
+                                        this.props.store.virtualStudyParams.result!
                                     )}
                                     {this.sampleMatrixDownloadControls(
                                         this.sampleMatrixText.result!
@@ -680,9 +570,7 @@ export default class DownloadTab extends React.Component<
                                 className="pull-left forceHeaderStyle h4"
                             />
                             <GeneAlterationTable
-                                geneAlterationData={
-                                    this.geneAlterationData.result!
-                                }
+                                geneAlterationData={this.geneAlterationData.result!}
                             />
                         </div>
                         <hr />
@@ -693,17 +581,11 @@ export default class DownloadTab extends React.Component<
                                 className="pull-left forceHeaderStyle h4"
                             />
                             <CaseAlterationTable
-                                caseAlterationData={
-                                    this.caseAlterationData.result!
-                                }
+                                caseAlterationData={this.caseAlterationData.result!}
                                 oqls={this.oqls.result!}
                                 trackLabels={this.trackLabels.result!}
-                                trackAlterationTypesMap={
-                                    this.trackAlterationTypesMap.result!
-                                }
-                                geneAlterationTypesMap={
-                                    this.geneAlterationMap.result!
-                                }
+                                trackAlterationTypesMap={this.trackAlterationTypesMap.result!}
+                                geneAlterationTypesMap={this.geneAlterationMap.result!}
                             />
                         </div>
                     </WindowWidthBox>
@@ -754,27 +636,13 @@ export default class DownloadTab extends React.Component<
             <tr>
                 <td style={{ width: 500 }}>{profileName}</td>
                 <td>
-                    <a
-                        onClick={event =>
-                            handleTabDelimitedDownload(profileName)
-                        }
-                    >
-                        <i
-                            className="fa fa-cloud-download"
-                            style={{ marginRight: 5 }}
-                        />
+                    <a onClick={event => handleTabDelimitedDownload(profileName)}>
+                        <i className="fa fa-cloud-download" style={{ marginRight: 5 }} />
                         Tab Delimited Format
                     </a>
                     <span style={{ margin: '0px 10px' }}>|</span>
-                    <a
-                        onClick={event =>
-                            handleTransposedMatrixDownload(profileName)
-                        }
-                    >
-                        <i
-                            className="fa fa-cloud-download"
-                            style={{ marginRight: 5 }}
-                        />
+                    <a onClick={event => handleTransposedMatrixDownload(profileName)}>
+                        <i className="fa fa-cloud-download" style={{ marginRight: 5 }} />
                         Transposed Matrix
                     </a>
                 </td>
@@ -783,9 +651,7 @@ export default class DownloadTab extends React.Component<
     }
 
     private nonSelectedProfileDownloadRow(
-        nonSelectedDownloadableMolecularProfilesGroupByName: _.Dictionary<
-            MolecularProfile[]
-        >
+        nonSelectedDownloadableMolecularProfilesGroupByName: _.Dictionary<MolecularProfile[]>
     ) {
         const allProfileOptions = _.map(
             nonSelectedDownloadableMolecularProfilesGroupByName,
@@ -810,16 +676,9 @@ export default class DownloadTab extends React.Component<
                             <DefaultTooltip
                                 mouseEnterDelay={0}
                                 placement="right"
-                                overlay={
-                                    <div className={styles.tooltip}>
-                                        {option.description}
-                                    </div>
-                                }
+                                overlay={<div className={styles.tooltip}>{option.description}</div>}
                             >
-                                <FontAwesome
-                                    className={styles.infoIcon}
-                                    name="info-circle"
-                                />
+                                <FontAwesome className={styles.infoIcon} name="info-circle" />
                             </DefaultTooltip>
                         )}
                     </div>
@@ -828,16 +687,10 @@ export default class DownloadTab extends React.Component<
                     <div>
                         <a
                             onClick={event =>
-                                this.handleOtherMolecularProfileDownload(
-                                    event,
-                                    option.name
-                                )
+                                this.handleOtherMolecularProfileDownload(event, option.name)
                             }
                         >
-                            <i
-                                className="fa fa-cloud-download"
-                                style={{ marginRight: 5 }}
-                            />
+                            <i className="fa fa-cloud-download" style={{ marginRight: 5 }} />
                             Tab Delimited Format
                         </a>
                         <span style={{ margin: '0px 10px' }}>|</span>
@@ -849,10 +702,7 @@ export default class DownloadTab extends React.Component<
                                 )
                             }
                         >
-                            <i
-                                className="fa fa-cloud-download"
-                                style={{ marginRight: 5 }}
-                            />
+                            <i className="fa fa-cloud-download" style={{ marginRight: 5 }} />
                             Transposed Matrix
                         </a>
                     </div>
@@ -861,11 +711,7 @@ export default class DownloadTab extends React.Component<
         ));
     }
 
-    private copyDownloadControlsRow(
-        title: string,
-        handleDownload: () => string,
-        filename: string
-    ) {
+    private copyDownloadControlsRow(title: string, handleDownload: () => string, filename: string) {
         return (
             <tr>
                 <td>{title}</td>
@@ -909,23 +755,17 @@ export default class DownloadTab extends React.Component<
     ) {
         const alteredSampleCaseIds = _.map(
             alteredCaseAlterationData,
-            caseAlteration =>
-                `${caseAlteration.studyId}:${caseAlteration.sampleId}`
+            caseAlteration => `${caseAlteration.studyId}:${caseAlteration.sampleId}`
         );
         const handleDownload = () => alteredSampleCaseIds.join('\n');
-        const handleQuery = () =>
-            this.handleQueryButtonClick(alteredSampleCaseIds);
+        const handleQuery = () => this.handleQueryButtonClick(alteredSampleCaseIds);
         const alteredSamplesVirtualStudyParams = {
             user: virtualStudyParams.user,
             name: virtualStudyParams.name,
             description: virtualStudyParams.description,
             studyWithSamples: virtualStudyParams.studyWithSamples,
-            selectedSamples: _.filter(
-                virtualStudyParams.selectedSamples,
-                (sample: Sample) =>
-                    alteredSampleCaseIds.includes(
-                        `${sample.studyId}:${sample.sampleId}`
-                    )
+            selectedSamples: _.filter(virtualStudyParams.selectedSamples, (sample: Sample) =>
+                alteredSampleCaseIds.includes(`${sample.studyId}:${sample.sampleId}`)
             ),
             filter: virtualStudyParams.filter,
             attributesMetaSet: virtualStudyParams.attributesMetaSet,
@@ -946,23 +786,17 @@ export default class DownloadTab extends React.Component<
     ) {
         const unalteredSampleCaseIds = _.map(
             unalteredCaseAlterationData,
-            caseAlteration =>
-                `${caseAlteration.studyId}:${caseAlteration.sampleId}`
+            caseAlteration => `${caseAlteration.studyId}:${caseAlteration.sampleId}`
         );
         const handleDownload = () => unalteredSampleCaseIds.join('\n');
-        const handleQuery = () =>
-            this.handleQueryButtonClick(unalteredSampleCaseIds);
+        const handleQuery = () => this.handleQueryButtonClick(unalteredSampleCaseIds);
         const unalteredSamplesVirtualStudyParams = {
             user: virtualStudyParams.user,
             name: virtualStudyParams.name,
             description: virtualStudyParams.description,
             studyWithSamples: virtualStudyParams.studyWithSamples,
-            selectedSamples: _.filter(
-                virtualStudyParams.selectedSamples,
-                (sample: Sample) =>
-                    unalteredSampleCaseIds.includes(
-                        `${sample.studyId}:${sample.sampleId}`
-                    )
+            selectedSamples: _.filter(virtualStudyParams.selectedSamples, (sample: Sample) =>
+                unalteredSampleCaseIds.includes(`${sample.studyId}:${sample.sampleId}`)
             ),
             filter: virtualStudyParams.filter,
             attributesMetaSet: virtualStudyParams.attributesMetaSet,
@@ -1068,14 +902,9 @@ export default class DownloadTab extends React.Component<
             this.allOtherMolecularProfileDownloadDataGroupByProfileName,
             downloadDataGroupByProfileName => {
                 const transposedTextMap = this.downloadDataTextGroupByProfileName(
-                    this.unzipDownloadDataGroupByProfileName(
-                        downloadDataGroupByProfileName
-                    )
+                    this.unzipDownloadDataGroupByProfileName(downloadDataGroupByProfileName)
                 );
-                fileDownload(
-                    transposedTextMap[profileName],
-                    `${profileName}.txt`
-                );
+                fileDownload(transposedTextMap[profileName], `${profileName}.txt`);
             }
         );
     }
@@ -1094,12 +923,9 @@ export default class DownloadTab extends React.Component<
     private unzipDownloadDataGroupByProfileName(downloadDataGroupByProfileName: {
         [key: string]: string[][];
     }): { [key: string]: string[][] } {
-        return _.mapValues(
-            downloadDataGroupByProfileName,
-            otherMolecularProfileDownloadData => {
-                return _.unzip(otherMolecularProfileDownloadData);
-            }
-        );
+        return _.mapValues(downloadDataGroupByProfileName, otherMolecularProfileDownloadData => {
+            return _.unzip(otherMolecularProfileDownloadData);
+        });
     }
 
     private downloadDataTextGroupByProfileName(downloadDataGroupByProfileName: {

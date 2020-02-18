@@ -9,11 +9,7 @@ import {
     MolecularProfile,
 } from '../../../shared/api/generated/CBioPortalAPI';
 import { computed, observable } from 'mobx';
-import {
-    ExpressionStyle,
-    expressionTooltip,
-    getPossibleRNASeqVersions,
-} from './expressionHelpers';
+import { ExpressionStyle, expressionTooltip, getPossibleRNASeqVersions } from './expressionHelpers';
 import { Modal } from 'react-bootstrap';
 import autobind from 'autobind-decorator';
 import { ITooltipModel } from '../../../shared/model/ITooltipModel';
@@ -22,11 +18,7 @@ import { If, Then, Else } from 'react-if';
 import jStat from 'jStat';
 import classNames from 'classnames';
 import { MSKTab, MSKTabs } from '../../../shared/components/MSKTabs/MSKTabs';
-import {
-    CoverageInformation,
-    isPanCanStudy,
-    isTCGAProvStudy,
-} from '../ResultsViewPageStoreUtils';
+import { CoverageInformation, isPanCanStudy, isTCGAProvStudy } from '../ResultsViewPageStoreUtils';
 import {
     CNA_STROKE_WIDTH,
     IBoxScatterPlotPoint,
@@ -41,10 +33,7 @@ import {
     scatterPlotZIndexSortBy,
     IAxisLogScaleParams,
 } from '../plots/PlotsTabUtils';
-import {
-    AnnotatedMutation,
-    ResultsViewPageStore,
-} from '../ResultsViewPageStore';
+import { AnnotatedMutation, ResultsViewPageStore } from '../ResultsViewPageStore';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
 import { remoteData, stringListToSet } from 'cbioportal-frontend-commons';
 import MobxPromiseCache from '../../../shared/lib/MobxPromiseCache';
@@ -86,10 +75,7 @@ type ExpressionTooltipModel = {
 };
 
 @observer
-export default class ExpressionWrapper extends React.Component<
-    ExpressionWrapperProps,
-    {}
-> {
+export default class ExpressionWrapper extends React.Component<ExpressionWrapperProps, {}> {
     constructor(props: ExpressionWrapperProps) {
         super(props);
         this.selectedGene = props.genes[0];
@@ -105,9 +91,7 @@ export default class ExpressionWrapper extends React.Component<
 
     @observable private _rnaSeqVersion: 'rna_seq_mrna' | 'rna_seq_v2_mrna';
 
-    @observable.ref tooltipModel: ITooltipModel<
-        ExpressionTooltipModel
-    > | null = null;
+    @observable.ref tooltipModel: ITooltipModel<ExpressionTooltipModel> | null = null;
 
     @observable.ref selectedGene: Gene;
 
@@ -165,8 +149,7 @@ export default class ExpressionWrapper extends React.Component<
                         if (this.selectedStudyIds[sample.studyId]) {
                             _data.push({
                                 uniqueSampleKey: sample.uniqueSampleKey,
-                                value: this.props.studyMap[sample.studyId]
-                                    .shortName,
+                                value: this.props.studyMap[sample.studyId].shortName,
                             });
                         }
                         return _data;
@@ -179,16 +162,12 @@ export default class ExpressionWrapper extends React.Component<
     });
 
     @computed get selectedRNASeqVersion() {
-        return this._rnaSeqVersion
-            ? this._rnaSeqVersion
-            : this.possibleRNASeqVersions[0].value;
+        return this._rnaSeqVersion ? this._rnaSeqVersion : this.possibleRNASeqVersions[0].value;
     }
 
     @computed get possibleRNASeqVersions() {
         if (this.props.expressionProfiles.isComplete) {
-            return getPossibleRNASeqVersions(
-                this.props.expressionProfiles.result!
-            );
+            return getPossibleRNASeqVersions(this.props.expressionProfiles.result!);
         }
         return [];
     }
@@ -197,14 +176,11 @@ export default class ExpressionWrapper extends React.Component<
         await: () => [this.props.expressionProfiles],
         invoke: () => {
             return Promise.resolve(
-                _.filter(
-                    this.props.expressionProfiles.result,
-                    expressionProfile => {
-                        return RegExp(
-                            `${this.selectedRNASeqVersion}$|pan_can_atlas_2018_${this.selectedRNASeqVersion}_median$`
-                        ).test(expressionProfile.molecularProfileId);
-                    }
-                )
+                _.filter(this.props.expressionProfiles.result, expressionProfile => {
+                    return RegExp(
+                        `${this.selectedRNASeqVersion}$|pan_can_atlas_2018_${this.selectedRNASeqVersion}_median$`
+                    ).test(expressionProfile.molecularProfileId);
+                })
             );
         },
     });
@@ -239,9 +215,7 @@ export default class ExpressionWrapper extends React.Component<
     }>({
         await: () => [this.expressionData],
         invoke: () => {
-            const studyIds = _.chain<NumericGeneMolecularData[]>(
-                this.expressionData.result!
-            )
+            const studyIds = _.chain<NumericGeneMolecularData[]>(this.expressionData.result!)
                 .map(d => d.studyId)
                 .uniq()
                 .value();
@@ -253,8 +227,7 @@ export default class ExpressionWrapper extends React.Component<
         await: () => [this.props.store.studyToMutationMolecularProfile],
         invoke: () => {
             return Promise.resolve(
-                !!_.values(this.props.store.studyToMutationMolecularProfile)
-                    .length
+                !!_.values(this.props.store.studyToMutationMolecularProfile).length
             );
         },
     });
@@ -263,8 +236,7 @@ export default class ExpressionWrapper extends React.Component<
         await: () => [this.props.store.studyToMolecularProfileDiscrete],
         invoke: () => {
             return Promise.resolve(
-                !!_.values(this.props.store.studyToMolecularProfileDiscrete)
-                    .length
+                !!_.values(this.props.store.studyToMolecularProfileDiscrete).length
             );
         },
     });
@@ -325,21 +297,17 @@ export default class ExpressionWrapper extends React.Component<
                     this.mutationDataExists.result
                         ? {
                               molecularProfileIds: _.values(
-                                  this.props.store
-                                      .studyToMutationMolecularProfile.result!
+                                  this.props.store.studyToMutationMolecularProfile.result!
                               ).map(p => p.molecularProfileId),
                               data: this.props.mutations.filter(
-                                  m =>
-                                      m.entrezGeneId ===
-                                      this.selectedGene.entrezGeneId
+                                  m => m.entrezGeneId === this.selectedGene.entrezGeneId
                               ),
                           }
                         : undefined,
                     this.cnaDataShown
                         ? {
                               molecularProfileIds: _.values(
-                                  this.props.store
-                                      .studyToMolecularProfileDiscrete.result!
+                                  this.props.store.studyToMolecularProfileDiscrete.result!
                               ).map(p => p.molecularProfileId),
                               data: this.cnaData.result!,
                           }
@@ -367,9 +335,7 @@ export default class ExpressionWrapper extends React.Component<
                     _.sortBy<any>(sortedData, d => {
                         //Note: we have to use slice to convert Seamless immutable array to real array, otherwise jStat chokes
                         return jStat.median(
-                            Array.prototype.slice.apply(
-                                d.data.map((v: any) => v.value as number)
-                            )
+                            Array.prototype.slice.apply(d.data.map((v: any) => v.value as number))
                         );
                     })
                 );
@@ -380,9 +346,7 @@ export default class ExpressionWrapper extends React.Component<
     @computed get studyTypeCounts() {
         const allStudies = _.values(this.props.studyMap);
         return {
-            provisional: allStudies.filter(study =>
-                isTCGAProvStudy(study.studyId)
-            ),
+            provisional: allStudies.filter(study => isTCGAProvStudy(study.studyId)),
             panCancer: allStudies.filter(study => isPanCanStudy(study.studyId)),
         };
     }
@@ -390,8 +354,9 @@ export default class ExpressionWrapper extends React.Component<
     @autobind
     handleStudySelection(event: React.SyntheticEvent<HTMLInputElement>) {
         // toggle state of it
-        this.selectedStudyIds[event.currentTarget.value] = !this
-            .selectedStudyIds[event.currentTarget.value];
+        this.selectedStudyIds[event.currentTarget.value] = !this.selectedStudyIds[
+            event.currentTarget.value
+        ];
     }
 
     @autobind
@@ -425,8 +390,7 @@ export default class ExpressionWrapper extends React.Component<
             return (
                 undefined !==
                 _.find(this.props.studyMap, study => {
-                    const hasData =
-                        study.studyId in this.studiesWithExpressionData.result!;
+                    const hasData = study.studyId in this.studiesWithExpressionData.result!;
                     const isSelected = this.selectedStudies.includes(study);
                     return hasData && !isSelected;
                 })
@@ -442,8 +406,7 @@ export default class ExpressionWrapper extends React.Component<
             .values()
             .filter(
                 (study: CancerStudy) =>
-                    study.studyId in
-                    (this.studiesWithExpressionData.result || {})
+                    study.studyId in (this.studiesWithExpressionData.result || {})
             )
             .sortBy((study: CancerStudy) => study.name)
             .value();
@@ -494,30 +457,21 @@ export default class ExpressionWrapper extends React.Component<
                                 Deselect all
                             </a>
                         </div>
-                        {_.map(
-                            this.alphabetizedAndFilteredStudies,
-                            (study: CancerStudy) => {
-                                return (
-                                    <div className="checkbox">
-                                        <label>
-                                            <input
-                                                type="checkbox"
-                                                checked={
-                                                    this.selectedStudyIds[
-                                                        study.studyId
-                                                    ] === true
-                                                }
-                                                value={study.studyId}
-                                                onChange={
-                                                    this.handleStudySelection
-                                                }
-                                            />
-                                            {study.name}
-                                        </label>
-                                    </div>
-                                );
-                            }
-                        )}
+                        {_.map(this.alphabetizedAndFilteredStudies, (study: CancerStudy) => {
+                            return (
+                                <div className="checkbox">
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            checked={this.selectedStudyIds[study.studyId] === true}
+                                            value={study.studyId}
+                                            onChange={this.handleStudySelection}
+                                        />
+                                        {study.name}
+                                    </label>
+                                </div>
+                            );
+                        })}
                     </div>
                 </Modal.Body>
             </Modal>
@@ -614,10 +568,7 @@ export default class ExpressionWrapper extends React.Component<
     private tooltip(d: IBoxScatterPlotPoint) {
         let content;
         if (this.props.store.studyIdToStudy.isComplete) {
-            content = expressionTooltip(
-                d,
-                this.props.store.studyIdToStudy.result!
-            );
+            content = expressionTooltip(d, this.props.store.studyIdToStudy.result!);
         } else {
             content = <span>Loading...</span>;
         }
@@ -636,8 +587,7 @@ export default class ExpressionWrapper extends React.Component<
         }
         return {
             label: 'log2',
-            fLogScale: (x: number, offset: number) =>
-                Math.log2(Math.max(x, MIN_LOG_ARGUMENT)),
+            fLogScale: (x: number, offset: number) => Math.log2(Math.max(x, MIN_LOG_ARGUMENT)),
             fInvLogScale: (x: number) => Math.pow(2, x),
         };
     }
@@ -646,10 +596,7 @@ export default class ExpressionWrapper extends React.Component<
     private getChart() {
         if (this.boxPlotData.isComplete) {
             return (
-                <ChartContainer
-                    getSVGElement={this.getSvg}
-                    exportFileName={this.exportFileName}
-                >
+                <ChartContainer getSVGElement={this.getSvg} exportFileName={this.exportFileName}>
                     <ExpressionTabBoxPlot
                         svgId={SVG_ID}
                         domainPadding={50}
@@ -676,8 +623,7 @@ export default class ExpressionWrapper extends React.Component<
                             PlotType.BoxPlot,
                             this.mutationDataExists,
                             this.cnaDataExists,
-                            this.props.store.driverAnnotationSettings
-                                .driversAnnotated,
+                            this.props.store.driverAnnotationSettings.driversAnnotated,
                             []
                         )}
                         legendLocationWidthThreshold={900}
@@ -720,9 +666,7 @@ export default class ExpressionWrapper extends React.Component<
                         enablePagination={false}
                         unmountOnHide={true}
                         tabButtonStyle="pills"
-                        activeTabId={
-                            'summaryTab' + this.selectedGene.hugoGeneSymbol
-                        }
+                        activeTabId={'summaryTab' + this.selectedGene.hugoGeneSymbol}
                         className="pillTabs"
                     >
                         {this.props.genes.map((gene: Gene) => {
@@ -737,10 +681,7 @@ export default class ExpressionWrapper extends React.Component<
                         })}
                     </MSKTabs>
 
-                    <form
-                        className="form-inline expression-controls"
-                        style={{ marginBottom: 10 }}
-                    >
+                    <form className="form-inline expression-controls" style={{ marginBottom: 10 }}>
                         <div className="form-group">
                             <h5>Profile:</h5>
 
@@ -751,42 +692,33 @@ export default class ExpressionWrapper extends React.Component<
                                 title="Select profile"
                             >
                                 {this.possibleRNASeqVersions.map(option => {
-                                    return (
-                                        <option value={option.value}>
-                                            {option.label}
-                                        </option>
-                                    );
+                                    return <option value={option.value}>{option.label}</option>;
                                 })}
                             </select>
                         </div>
 
-                        {this.boxPlotData.isComplete &&
-                            this.boxPlotData.result.length > 1 && (
-                                <div className="form-group">
-                                    <h5>Sort By:</h5>
+                        {this.boxPlotData.isComplete && this.boxPlotData.result.length > 1 && (
+                            <div className="form-group">
+                                <h5>Sort By:</h5>
 
-                                    <select
-                                        className="form-control input-sm"
-                                        value={this.sortBy}
-                                        onChange={this.handleSortByChange}
-                                        title="Select profile"
-                                    >
-                                        <option value={'alphabetic'}>
-                                            Cancer Study
-                                        </option>
-                                        <option value={'median'}>Median</option>
-                                    </select>
-                                </div>
-                            )}
+                                <select
+                                    className="form-control input-sm"
+                                    value={this.sortBy}
+                                    onChange={this.handleSortByChange}
+                                    title="Select profile"
+                                >
+                                    <option value={'alphabetic'}>Cancer Study</option>
+                                    <option value={'median'}>Median</option>
+                                </select>
+                            </div>
+                        )}
 
                         <div className="form-group">
                             <label className="checkbox-inline">
                                 <input
                                     type="checkbox"
                                     checked={this.logScale}
-                                    onChange={() =>
-                                        (this.logScale = !this.logScale)
-                                    }
+                                    onChange={() => (this.logScale = !this.logScale)}
                                     title="Log scale"
                                 />
                                 Log scale
@@ -796,10 +728,7 @@ export default class ExpressionWrapper extends React.Component<
                                     <input
                                         type="checkbox"
                                         checked={this.showMutations}
-                                        onChange={() =>
-                                            (this.showMutations = !this
-                                                .showMutations)
-                                        }
+                                        onChange={() => (this.showMutations = !this.showMutations)}
                                         title="Show mutations *"
                                     />
                                     Show mutations *
@@ -810,9 +739,7 @@ export default class ExpressionWrapper extends React.Component<
                                     <input
                                         type="checkbox"
                                         checked={this.showCna}
-                                        onChange={() =>
-                                            (this.showCna = !this.showCna)
-                                        }
+                                        onChange={() => (this.showCna = !this.showCna)}
                                         title="Show copy number alterations"
                                     />
                                     Show copy number alterations
@@ -824,42 +751,30 @@ export default class ExpressionWrapper extends React.Component<
                     {this.studiesWithExpressionData.isComplete && (
                         <div>
                             <label>Select studies:</label>&nbsp;
-                            <If
-                                condition={
-                                    this.studyTypeCounts.provisional.length > 0
-                                }
-                            >
+                            <If condition={this.studyTypeCounts.provisional.length > 0}>
                                 <button
                                     className="btn btn-default btn-xs"
                                     style={{ marginRight: 5 }}
                                     onClick={() =>
-                                        this.applyStudyFilter(
-                                            (study: CancerStudy) =>
-                                                isTCGAProvStudy(study.studyId)
+                                        this.applyStudyFilter((study: CancerStudy) =>
+                                            isTCGAProvStudy(study.studyId)
                                         )
                                     }
                                 >
-                                    TCGA Provisional (
-                                    {this.studyTypeCounts.provisional.length})
+                                    TCGA Provisional ({this.studyTypeCounts.provisional.length})
                                 </button>
                             </If>
-                            <If
-                                condition={
-                                    this.studyTypeCounts.panCancer.length > 0
-                                }
-                            >
+                            <If condition={this.studyTypeCounts.panCancer.length > 0}>
                                 <button
                                     className="btn btn-default btn-xs"
                                     style={{ marginRight: 5 }}
                                     onClick={() =>
-                                        this.applyStudyFilter(
-                                            (study: CancerStudy) =>
-                                                isPanCanStudy(study.studyId)
+                                        this.applyStudyFilter((study: CancerStudy) =>
+                                            isPanCanStudy(study.studyId)
                                         )
                                     }
                                 >
-                                    TCGA Pan-Can Atlas (
-                                    {this.studyTypeCounts.panCancer.length})
+                                    TCGA Pan-Can Atlas ({this.studyTypeCounts.panCancer.length})
                                 </button>
                             </If>
                             <button
@@ -884,25 +799,21 @@ export default class ExpressionWrapper extends React.Component<
                     center={true}
                     size="big"
                     isLoading={
-                        this.boxPlotData.isPending ||
-                        this.studiesWithExpressionData.isPending
+                        this.boxPlotData.isPending || this.studiesWithExpressionData.isPending
                     }
                 />
 
                 {this.boxPlotData.isComplete && (
                     <If condition={this.selectedStudies.length > 0}>
                         <Then>
-                            <If
-                                condition={_.size(this.boxPlotData.result!) > 0}
-                            >
+                            <If condition={_.size(this.boxPlotData.result!) > 0}>
                                 <Then>
                                     <div className="posRelative">
                                         <Observer>{this.getChart}</Observer>
                                         {this.mutationDataExists.result && (
                                             <div style={{ marginTop: 20 }}>
-                                                * Driver annotation settings are
-                                                located in the Mutation Color
-                                                menu of the Oncoprint.
+                                                * Driver annotation settings are located in the
+                                                Mutation Color menu of the Oncoprint.
                                             </div>
                                         )}
                                     </div>
@@ -915,9 +826,7 @@ export default class ExpressionWrapper extends React.Component<
                             </If>
                         </Then>
                         <Else>
-                            <div className="alert alert-info">
-                                No studies selected.
-                            </div>
+                            <div className="alert alert-info">No studies selected.</div>
                         </Else>
                     </If>
                 )}

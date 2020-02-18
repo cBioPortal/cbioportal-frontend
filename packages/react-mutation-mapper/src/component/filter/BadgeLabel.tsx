@@ -24,13 +24,7 @@ export class BadgeLabel extends React.Component<BadgeLabelProps, {}> {
 
     protected get badge(): JSX.Element {
         return (
-            <span
-                style={
-                    this.props.badgeFirst
-                        ? { marginRight: 5 }
-                        : { marginLeft: 5 }
-                }
-            >
+            <span style={this.props.badgeFirst ? { marginRight: 5 } : { marginLeft: 5 }}>
                 <span
                     className={this.props.badgeClassName}
                     style={{

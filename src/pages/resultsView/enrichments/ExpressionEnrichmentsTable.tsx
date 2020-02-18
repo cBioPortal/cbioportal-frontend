@@ -1,8 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import LazyMobXTable, {
-    Column,
-} from '../../../shared/components/lazyMobXTable/LazyMobXTable';
+import LazyMobXTable, { Column } from '../../../shared/components/lazyMobXTable/LazyMobXTable';
 import { observer } from 'mobx-react';
 import { computed } from 'mobx';
 import { Checkbox } from 'react-bootstrap';
@@ -38,9 +36,10 @@ export enum ExpressionEnrichmentTableColumnType {
     STANDARD_DEVIATION_SUFFIX = ' standard deviation',
 }
 
-export type ExpressionEnrichmentTableColumn = Column<
-    ExpressionEnrichmentRow
-> & { uniqueName?: string; order?: number };
+export type ExpressionEnrichmentTableColumn = Column<ExpressionEnrichmentRow> & {
+    uniqueName?: string;
+    order?: number;
+};
 
 @observer
 export default class ExpressionEnrichmentTable extends React.Component<
@@ -85,9 +84,7 @@ export default class ExpressionEnrichmentTable extends React.Component<
                 <div style={{ display: 'flex' }}>
                     {this.props.onCheckGene && this.props.checkedGenes && (
                         <Checkbox
-                            checked={this.props.checkedGenes.includes(
-                                d.hugoGeneSymbol
-                            )}
+                            checked={this.props.checkedGenes.includes(d.hugoGeneSymbol)}
                             disabled={d.disabled}
                             key={d.hugoGeneSymbol}
                             className={styles.Checkbox}
@@ -97,11 +94,7 @@ export default class ExpressionEnrichmentTable extends React.Component<
                             onClick={e => {
                                 e.stopPropagation();
                             }}
-                            title={
-                                d.disabled
-                                    ? 'This is one of the query genes'
-                                    : ''
-                            }
+                            title={d.disabled ? 'This is one of the query genes' : ''}
                         />
                     )}
                     <span className={styles.GeneName}>
@@ -110,11 +103,8 @@ export default class ExpressionEnrichmentTable extends React.Component<
                 </div>
             ),
             tooltip: <span>Gene</span>,
-            filter: (
-                d: ExpressionEnrichmentRow,
-                filterString: string,
-                filterStringUpper: string
-            ) => d.hugoGeneSymbol.toUpperCase().includes(filterStringUpper),
+            filter: (d: ExpressionEnrichmentRow, filterString: string, filterStringUpper: string) =>
+                d.hugoGeneSymbol.toUpperCase().includes(filterStringUpper),
             sortBy: (d: ExpressionEnrichmentRow) => d.hugoGeneSymbol,
             download: (d: ExpressionEnrichmentRow) => d.hugoGeneSymbol,
         };
@@ -137,8 +127,7 @@ export default class ExpressionEnrichmentTable extends React.Component<
             ),
             tooltip: <span>Derived from Student's t-test</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.pValue,
-            download: (d: ExpressionEnrichmentRow) =>
-                toConditionalPrecision(d.pValue, 3, 0.01),
+            download: (d: ExpressionEnrichmentRow) => toConditionalPrecision(d.pValue, 3, 0.01),
         };
 
         columns[ExpressionEnrichmentTableColumnType.Q_VALUE] = {
@@ -150,8 +139,7 @@ export default class ExpressionEnrichmentTable extends React.Component<
             ),
             tooltip: <span>Derived from Benjamini-Hochberg procedure</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.qValue,
-            download: (d: ExpressionEnrichmentRow) =>
-                toConditionalPrecision(d.qValue, 3, 0.01),
+            download: (d: ExpressionEnrichmentRow) => toConditionalPrecision(d.qValue, 3, 0.01),
         };
 
         return columns;
@@ -159,9 +147,7 @@ export default class ExpressionEnrichmentTable extends React.Component<
 
     public render() {
         const orderedColumns = _.sortBy(
-            this.props.visibleOrderedColumnNames!.map(
-                column => this.columns[column]
-            ),
+            this.props.visibleOrderedColumnNames!.map(column => this.columns[column]),
             (c: ExpressionEnrichmentTableColumn) => c.order
         );
         return (
@@ -171,9 +157,7 @@ export default class ExpressionEnrichmentTable extends React.Component<
                 columns={orderedColumns}
                 data={this.props.data}
                 initialSortColumn={this.props.initialSortColumn}
-                onRowClick={
-                    this.props.onGeneNameClick ? this.onRowClick : undefined
-                }
+                onRowClick={this.props.onGeneNameClick ? this.onRowClick : undefined}
                 dataStore={this.props.dataStore}
             />
         );

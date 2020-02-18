@@ -3,11 +3,7 @@ import { observer } from 'mobx-react';
 import * as React from 'react';
 
 export function getClinVarId(myVariantInfo?: MyVariantInfo): string | null {
-    if (
-        myVariantInfo &&
-        myVariantInfo.clinVar &&
-        myVariantInfo.clinVar.variantId
-    ) {
+    if (myVariantInfo && myVariantInfo.clinVar && myVariantInfo.clinVar.variantId) {
         return myVariantInfo.clinVar.variantId.toString();
     } else {
         return null;
@@ -47,9 +43,7 @@ export default class ClinVarId extends React.Component<ClinVarIdProps, {}> {
             return (
                 <DefaultTooltip
                     placement="top"
-                    overlay={
-                        <span>Click to see variant on ClinVar website.</span>
-                    }
+                    overlay={<span>Click to see variant on ClinVar website.</span>}
                 >
                     <a href={clinVarLink} target="_blank">
                         {clinVarId}

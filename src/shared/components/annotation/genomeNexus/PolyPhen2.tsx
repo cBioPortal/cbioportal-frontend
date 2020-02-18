@@ -38,17 +38,12 @@ export default class PolyPhen2 extends React.Component<IPolyPhen2Props, {}> {
             <span className={`${annotationStyles['annotation-item-text']}`} />
         );
 
-        if (
-            this.props.polyPhenPrediction &&
-            this.props.polyPhenPrediction.length > 0
-        ) {
+        if (this.props.polyPhenPrediction && this.props.polyPhenPrediction.length > 0) {
             content = (
                 <span
                     className={classNames(
                         annotationStyles['annotation-item-text'],
-                        tooltipStyles[
-                            `polyPhen2-${this.props.polyPhenPrediction}`
-                        ]
+                        tooltipStyles[`polyPhen2-${this.props.polyPhenPrediction}`]
                     )}
                 >
                     <i className="fa fa-circle" aria-hidden="true"></i>
@@ -79,9 +74,7 @@ export default class PolyPhen2 extends React.Component<IPolyPhen2Props, {}> {
                     <tr>
                         <td>Source</td>
                         <td>
-                            <a href="http://genetics.bwh.harvard.edu/pph2/">
-                                PolyPhen-2
-                            </a>
+                            <a href="http://genetics.bwh.harvard.edu/pph2/">PolyPhen-2</a>
                         </td>
                     </tr>
                     <tr>
@@ -89,17 +82,14 @@ export default class PolyPhen2 extends React.Component<IPolyPhen2Props, {}> {
                         <td>
                             <span
                                 className={
-                                    tooltipStyles[
-                                        `polyPhen2-${this.props.polyPhenPrediction}`
-                                    ]
+                                    tooltipStyles[`polyPhen2-${this.props.polyPhenPrediction}`]
                                 }
                             >
                                 {this.props.polyPhenPrediction}
                             </span>
                         </td>
                     </tr>
-                    {(this.props.polyPhenScore ||
-                        this.props.polyPhenScore === 0) && (
+                    {(this.props.polyPhenScore || this.props.polyPhenScore === 0) && (
                         <tr>
                             <td>Score</td>
                             <td>

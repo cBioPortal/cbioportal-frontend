@@ -1,16 +1,10 @@
 import * as React from 'react';
-import {
-    getOncoKBCancerGeneListLinkout,
-    getOncoKBReferenceInfo,
-} from './oncokb/OncoKBUtils';
+import { getOncoKBCancerGeneListLinkout, getOncoKBReferenceInfo } from './oncokb/OncoKBUtils';
 import styles from './table/tables.module.scss';
 import classnames from 'classnames';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { ICON_FILTER_OFF, ICON_FILTER_ON } from 'shared/lib/Colors';
-import {
-    getFrequencyStr,
-    getCNAByAlteration,
-} from 'pages/studyView/StudyViewUtils';
+import { getFrequencyStr, getCNAByAlteration } from 'pages/studyView/StudyViewUtils';
 import { GenePanelList } from 'pages/studyView/table/StudyViewGenePanelModal';
 import { CSSProperties } from 'react';
 import * as _ from 'lodash';
@@ -42,17 +36,10 @@ export function getGeneColumnHeaderRender(
                 <DefaultTooltip
                     mouseEnterDelay={0}
                     placement="top"
-                    overlay={getCancerGeneToggledOverlay(
-                        isFilteredByCancerGeneList
-                    )}
+                    overlay={getCancerGeneToggledOverlay(isFilteredByCancerGeneList)}
                 >
-                    <div
-                        onClick={cancerGeneIconToggle}
-                        className={styles.displayFlex}
-                    >
-                        {getCancerGeneFilterToggleIcon(
-                            isFilteredByCancerGeneList
-                        )}
+                    <div onClick={cancerGeneIconToggle} className={styles.displayFlex}>
+                        {getCancerGeneFilterToggleIcon(isFilteredByCancerGeneList)}
                     </div>
                 </DefaultTooltip>
             )}
@@ -94,32 +81,22 @@ export function getGeneColumnCellOverlaySimple(
 export function getCancerGeneToggledOverlay(cancerGeneFilterEnabled: boolean) {
     if (cancerGeneFilterEnabled) {
         return (
-            <span>
-                Filtered by {getOncoKBCancerGeneListLinkout()}. Click to show
-                all genes.
-            </span>
+            <span>Filtered by {getOncoKBCancerGeneListLinkout()}. Click to show all genes.</span>
         );
     } else {
         return (
-            <span>
-                Showing all genes. Click to filter by{' '}
-                {getOncoKBCancerGeneListLinkout()}.
-            </span>
+            <span>Showing all genes. Click to filter by {getOncoKBCancerGeneListLinkout()}.</span>
         );
     }
 }
 
-export function getCancerGeneFilterToggleIcon(
-    isFilteredByCancerGeneList: boolean
-) {
+export function getCancerGeneFilterToggleIcon(isFilteredByCancerGeneList: boolean) {
     return (
         <span
             data-test="cancer-gene-filter"
             className={classnames(styles.cancerGeneIcon, styles.displayFlex)}
             style={{
-                color: isFilteredByCancerGeneList
-                    ? ICON_FILTER_ON
-                    : ICON_FILTER_OFF,
+                color: isFilteredByCancerGeneList ? ICON_FILTER_ON : ICON_FILTER_OFF,
             }}
         >
             <i className="fa fa-filter"></i>
@@ -138,21 +115,11 @@ export function getFreqColumnRender(
     style?: CSSProperties
 ) {
     const detailedTypeInfo =
-        type === 'mutation'
-            ? 'mutations'
-            : type === 'cna'
-            ? 'copy number alterations'
-            : 'fusions';
+        type === 'mutation' ? 'mutations' : type === 'cna' ? 'copy number alterations' : 'fusions';
     const addTotalProfiledOverlay = () => (
-        <span
-            style={{ display: 'flex', flexDirection: 'column' }}
-            data-test="freq-cell-tooltip"
-        >
+        <span style={{ display: 'flex', flexDirection: 'column' }} data-test="freq-cell-tooltip">
             <span>{`# of samples profiled for ${detailedTypeInfo} in this gene: ${numberOfProfiledCases.toLocaleString()}`}</span>
-            <GenePanelList
-                genePanelIds={matchingGenePanelIds}
-                toggleModal={toggleModal!}
-            />
+            <GenePanelList genePanelIds={matchingGenePanelIds} toggleModal={toggleModal!} />
         </span>
     );
 
@@ -163,9 +130,7 @@ export function getFreqColumnRender(
             destroyTooltipOnHide={true}
         >
             <span data-test="freq-cell" style={style}>
-                {getFrequencyStr(
-                    (numberOfAlteredCases / numberOfProfiledCases) * 100
-                )}
+                {getFrequencyStr((numberOfAlteredCases / numberOfProfiledCases) * 100)}
             </span>
         </DefaultTooltip>
     );

@@ -30,13 +30,8 @@ export default class SVGAxis extends React.Component<SVGAxisProps, {}> {
     };
 
     private positionToAxisPosition(position: number) {
-        const pos = this.props.reverse
-            ? this.props.rangeUpper - position
-            : position;
-        return (
-            (pos / (this.props.rangeUpper - this.props.rangeLower)) *
-            this.props.length
-        );
+        const pos = this.props.reverse ? this.props.rangeUpper - position : position;
+        return (pos / (this.props.rangeUpper - this.props.rangeLower)) * this.props.length;
     }
 
     private get ticks() {
@@ -45,9 +40,7 @@ export default class SVGAxis extends React.Component<SVGAxisProps, {}> {
                 ? -this.props.tickLength
                 : this.props.tickLength;
             const axisPosition = this.positionToAxisPosition(tick.position);
-            const x1 = this.props.vertical
-                ? this.props.x
-                : this.props.x + axisPosition;
+            const x1 = this.props.vertical ? this.props.x : this.props.x + axisPosition;
             const y1 = this.props.vertical
                 ? this.props.y + this.props.length - axisPosition
                 : this.props.y;
@@ -64,16 +57,12 @@ export default class SVGAxis extends React.Component<SVGAxisProps, {}> {
                 if (this.props.vertical) {
                     label = (
                         <text
-                            textAnchor={
-                                this.props.invertTicks ? 'start' : 'end'
-                            }
+                            textAnchor={this.props.invertTicks ? 'start' : 'end'}
                             style={{
                                 fontSize: '10px',
                                 fontFamily: 'arial',
                             }}
-                            dx={
-                                (this.props.invertTicks ? 1 : -1) * labelPadding
-                            }
+                            dx={(this.props.invertTicks ? 1 : -1) * labelPadding}
                             dy="0.4em"
                             x={x2}
                             y={y2}
@@ -90,10 +79,7 @@ export default class SVGAxis extends React.Component<SVGAxisProps, {}> {
                                 fontFamily: 'arial',
                             }}
                             x={x2}
-                            y={
-                                y2 +
-                                (this.props.invertTicks ? tickLength - 5 : 0)
-                            }
+                            y={y2 + (this.props.invertTicks ? tickLength - 5 : 0)}
                             dy="1em"
                         >
                             {tick.label}
@@ -131,9 +117,7 @@ export default class SVGAxis extends React.Component<SVGAxisProps, {}> {
                 x =
                     this.props.x -
                     tickLength +
-                    (this.props.invertTicks
-                        ? verticalPadding
-                        : -verticalPadding);
+                    (this.props.invertTicks ? verticalPadding : -verticalPadding);
                 y = this.props.y + this.props.length / 2;
                 transform = `rotate(270,${x},${y})`;
             } else {
@@ -141,9 +125,7 @@ export default class SVGAxis extends React.Component<SVGAxisProps, {}> {
                 y =
                     this.props.y +
                     tickLength +
-                    (this.props.invertTicks
-                        ? -horizontalPadding
-                        : horizontalPadding);
+                    (this.props.invertTicks ? -horizontalPadding : horizontalPadding);
                 transform = '';
             }
             return (
@@ -168,12 +150,8 @@ export default class SVGAxis extends React.Component<SVGAxisProps, {}> {
     }
 
     render() {
-        const x2 = this.props.vertical
-            ? this.props.x
-            : this.props.x + this.props.length;
-        const y2 = this.props.vertical
-            ? this.props.y + this.props.length
-            : this.props.y;
+        const x2 = this.props.vertical ? this.props.x : this.props.x + this.props.length;
+        const y2 = this.props.vertical ? this.props.y + this.props.length : this.props.y;
         return (
             <g>
                 <line

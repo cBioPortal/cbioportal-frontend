@@ -16,15 +16,9 @@ import { Mutation } from '../../model/Mutation';
 import { CancerGene, IOncoKbData } from '../../model/OncoKb';
 import { RemoteData } from '../../model/RemoteData';
 import { SimpleCache } from '../../model/SimpleCache';
-import {
-    findNonTextInputFilters,
-    TEXT_INPUT_FILTER_ID,
-} from '../../util/FilterUtils';
+import { findNonTextInputFilters, TEXT_INPUT_FILTER_ID } from '../../util/FilterUtils';
 import { getRemoteDataGroupStatus } from '../../util/RemoteDataUtils';
-import DataTable, {
-    DataTableColumn,
-    DataTableProps,
-} from '../dataTable/DataTable';
+import DataTable, { DataTableColumn, DataTableProps } from '../dataTable/DataTable';
 import { MutationColumn } from './MutationColumnHelper';
 
 import './defaultMutationTable.scss';
@@ -49,10 +43,7 @@ export type DefaultMutationTableProps = {
 class DefaultMutationTableComponent extends DataTable<Partial<Mutation>> {}
 
 @observer
-export default class DefaultMutationTable extends React.Component<
-    DefaultMutationTableProps,
-    {}
-> {
+export default class DefaultMutationTable extends React.Component<DefaultMutationTableProps, {}> {
     public static defaultProps = {
         initialSortColumn: MutationColumn.ANNOTATION,
         appendColumns: true,
@@ -60,11 +51,7 @@ export default class DefaultMutationTable extends React.Component<
 
     @computed
     get annotationColumnData() {
-        return [
-            this.props.oncoKbCancerGenes,
-            this.props.hotspotData,
-            this.props.oncoKbData,
-        ];
+        return [this.props.oncoKbCancerGenes, this.props.hotspotData, this.props.oncoKbData];
     }
 
     @computed
@@ -97,10 +84,7 @@ export default class DefaultMutationTable extends React.Component<
         return this.gnomadColumnDataStatus === 'pending'
             ? () => undefined
             : (mutation: Mutation) =>
-                  getMyVariantInfoData(
-                      mutation,
-                      this.props.indexedMyVariantInfoAnnotations
-                  );
+                  getMyVariantInfoData(mutation, this.props.indexedMyVariantInfoAnnotations);
     }
 
     @computed
@@ -140,21 +124,15 @@ export default class DefaultMutationTable extends React.Component<
                 return (column: any) => (
                     <Gnomad
                         mutation={column.original}
-                        indexedMyVariantInfoAnnotations={
-                            this.props.indexedMyVariantInfoAnnotations
-                        }
-                        indexedVariantAnnotations={
-                            this.props.indexedVariantAnnotations
-                        }
+                        indexedMyVariantInfoAnnotations={this.props.indexedMyVariantInfoAnnotations}
+                        indexedVariantAnnotations={this.props.indexedVariantAnnotations}
                     />
                 );
             case MutationColumn.CLINVAR:
                 return (column: any) => (
                     <ClinVar
                         mutation={column.original}
-                        indexedMyVariantInfoAnnotations={
-                            this.props.indexedMyVariantInfoAnnotations
-                        }
+                        indexedMyVariantInfoAnnotations={this.props.indexedMyVariantInfoAnnotations}
                     />
                 );
             default:
@@ -170,9 +148,7 @@ export default class DefaultMutationTable extends React.Component<
             const column = { ...c };
 
             if (!column.accessor) {
-                const defaultAccessor = this.getDefaultColumnAccessor(
-                    column.id as MutationColumn
-                );
+                const defaultAccessor = this.getDefaultColumnAccessor(column.id as MutationColumn);
                 if (defaultAccessor) {
                     column.accessor = defaultAccessor;
                 }
@@ -202,15 +178,10 @@ export default class DefaultMutationTable extends React.Component<
     }
 
     @action.bound
-    protected onSearch(
-        searchText: string,
-        visibleSearchableColumns: DataTableColumn<Mutation>[]
-    ) {
+    protected onSearch(searchText: string, visibleSearchableColumns: DataTableColumn<Mutation>[]) {
         if (this.props.dataStore) {
             // all other filters except current text input filter
-            const otherFilters = findNonTextInputFilters(
-                this.props.dataStore.dataFilters
-            );
+            const otherFilters = findNonTextInputFilters(this.props.dataStore.dataFilters);
 
             let dataFilterValues: MutationFilterValue[] = [];
 
@@ -226,10 +197,7 @@ export default class DefaultMutationTable extends React.Component<
                 };
 
                 // replace current text input filter with the new one
-                this.props.dataStore.setDataFilters([
-                    ...otherFilters,
-                    textInputFilter,
-                ]);
+                this.props.dataStore.setDataFilters([...otherFilters, textInputFilter]);
             } else {
                 // if no text input remove text input filter (set data filters to all other filters except input)
                 this.props.dataStore.setDataFilters(otherFilters);

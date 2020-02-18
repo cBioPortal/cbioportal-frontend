@@ -11,11 +11,7 @@ export function trimTrailingSlash(str: string) {
 }
 
 export function buildCBioPortalAPIUrl(params: BuildUrlParams): string;
-export function buildCBioPortalAPIUrl(
-    pathname: string,
-    query?: QueryParams,
-    hash?: string
-): string;
+export function buildCBioPortalAPIUrl(pathname: string, query?: QueryParams, hash?: string): string;
 export function buildCBioPortalAPIUrl(
     pathnameOrParams: string | BuildUrlParams,
     query?: QueryParams,
@@ -29,10 +25,7 @@ export function buildCBioPortalAPIUrl(
     const apiRootUrl = URL.parse(trimTrailingSlash(AppConfig.apiRoot!));
 
     // prepend the root path (e.g. "beta"
-    params.pathname =
-        trimTrailingSlash(apiRootUrl.pathname || '') +
-        '/' +
-        (params.pathname || '');
+    params.pathname = trimTrailingSlash(apiRootUrl.pathname || '') + '/' + (params.pathname || '');
 
     return URL.format({
         protocol: apiRootUrl.protocol || getBrowserWindow().location.protocol,
@@ -104,11 +97,7 @@ export function getStudySummaryUrl(studyIds: string | ReadonlyArray<string>) {
 }
 export function redirectToStudyView(studyIds: string | ReadonlyArray<string>) {
     const params = getStudySummaryUrlParams(studyIds);
-    (window as any).routingStore.updateRoute(
-        params.query,
-        PagePath.Study,
-        true
-    );
+    (window as any).routingStore.updateRoute(params.query, PagePath.Study, true);
 }
 export function getSampleViewUrl(
     studyId: string,
@@ -117,9 +106,7 @@ export function getSampleViewUrl(
 ) {
     let hash: any = undefined;
     if (navIds) {
-        hash = `navCaseIds=${navIds
-            .map(id => `${id.studyId}:${id.patientId}`)
-            .join(',')}`;
+        hash = `navCaseIds=${navIds.map(id => `${id.studyId}:${id.patientId}`).join(',')}`;
     }
     return buildCBioPortalPageUrl('patient', { sampleId, studyId }, hash);
 }
@@ -130,9 +117,7 @@ export function getPatientViewUrl(
 ) {
     let hash: any = undefined;
     if (navIds) {
-        hash = `navCaseIds=${navIds
-            .map(id => `${id.studyId}:${id.patientId}`)
-            .join(',')}`;
+        hash = `navCaseIds=${navIds.map(id => `${id.studyId}:${id.patientId}`).join(',')}`;
     }
     return buildCBioPortalPageUrl('patient', { studyId, caseId }, hash);
 }
@@ -141,18 +126,13 @@ export function getComparisonUrl(params: Partial<GroupComparisonURLQuery>) {
     return buildCBioPortalPageUrl('comparison', params);
 }
 
-export function redirectToComparisonPage(
-    win: Window,
-    params: Partial<GroupComparisonURLQuery>
-) {
+export function redirectToComparisonPage(win: Window, params: Partial<GroupComparisonURLQuery>) {
     (win as any).location.href = getComparisonUrl(params);
 
     //(win as any).routingStore.updateRoute(params, "comparison", true);
 }
 
-export function getComparisonLoadingUrl(
-    params?: Partial<GroupComparisonLoadingParams>
-) {
+export function getComparisonLoadingUrl(params?: Partial<GroupComparisonLoadingParams>) {
     return buildCBioPortalPageUrl('loading/comparison', params || {});
 }
 
@@ -230,10 +210,7 @@ export function buildGenomeNexusHgvsgUrl(hgvsg: string) {
 }
 
 export function getSessionUrl() {
-    if (
-        AppConfig.serverConfig &&
-        AppConfig.serverConfig.hasOwnProperty('apiRoot')
-    ) {
+    if (AppConfig.serverConfig && AppConfig.serverConfig.hasOwnProperty('apiRoot')) {
         // TODO: remove this after switch to AWS. This is a hack to use proxy
         // session-service from non apiRoot. We'll have to come up with a better
         // solution for auth portals
@@ -244,10 +221,7 @@ export function getSessionUrl() {
 }
 
 export function fetchComparisonGroupsServiceUrl() {
-    if (
-        AppConfig.serverConfig &&
-        AppConfig.serverConfig.hasOwnProperty('apiRoot')
-    ) {
+    if (AppConfig.serverConfig && AppConfig.serverConfig.hasOwnProperty('apiRoot')) {
         // TODO: remove this after switch to AWS. This is a hack to use proxy
         // session-service from non apiRoot. We'll have to come up with a better
         // solution for auth portals
@@ -258,10 +232,7 @@ export function fetchComparisonGroupsServiceUrl() {
 }
 
 export function getComparisonGroupServiceUrl() {
-    if (
-        AppConfig.serverConfig &&
-        AppConfig.serverConfig.hasOwnProperty('apiRoot')
-    ) {
+    if (AppConfig.serverConfig && AppConfig.serverConfig.hasOwnProperty('apiRoot')) {
         // TODO: remove this after switch to AWS. This is a hack to use proxy
         // session-service from non apiRoot. We'll have to come up with a better
         // solution for auth portals
@@ -272,28 +243,18 @@ export function getComparisonGroupServiceUrl() {
 }
 
 export function getComparisonSessionServiceUrl() {
-    if (
-        AppConfig.serverConfig &&
-        AppConfig.serverConfig.hasOwnProperty('apiRoot')
-    ) {
+    if (AppConfig.serverConfig && AppConfig.serverConfig.hasOwnProperty('apiRoot')) {
         // TODO: remove this after switch to AWS. This is a hack to use proxy
         // session-service from non apiRoot. We'll have to come up with a better
         // solution for auth portals
-        return buildCBioPortalPageUrl(
-            'api-legacy/proxy/session/comparison_session'
-        );
+        return buildCBioPortalPageUrl('api-legacy/proxy/session/comparison_session');
     } else {
-        return buildCBioPortalAPIUrl(
-            'api-legacy/proxy/session/comparison_session'
-        );
+        return buildCBioPortalAPIUrl('api-legacy/proxy/session/comparison_session');
     }
 }
 
 export function getConfigurationServiceApiUrl() {
-    return (
-        AppConfig.configurationServiceUrl ||
-        buildCBioPortalAPIUrl('config_service.jsp')
-    );
+    return AppConfig.configurationServiceUrl || buildCBioPortalAPIUrl('config_service.jsp');
 }
 
 export function getG2SApiUrl() {
@@ -315,9 +276,7 @@ export function getDarwinUrl(sampleIds: string[], caseId: string) {
 }
 
 export function getStudyDownloadListUrl() {
-    return buildCBioPortalAPIUrl(
-        'proxy/download.cbioportal.org/study_list.json'
-    );
+    return buildCBioPortalAPIUrl('proxy/download.cbioportal.org/study_list.json');
 }
 
 export function getBitlyServiceUrl() {
@@ -357,22 +316,14 @@ export function getDocsUrl(sourceUrl: string, docsBaseUrl?: string): string {
     }
 }
 
-export function getWholeSlideViewerUrl(
-    ids: string[],
-    userName: string
-): string {
+export function getWholeSlideViewerUrl(ids: string[], userName: string): string {
     try {
-        const tokenInfo = JSON.parse(
-            AppConfig.serverConfig.mskWholeSlideViewerToken
-        );
+        const tokenInfo = JSON.parse(AppConfig.serverConfig.mskWholeSlideViewerToken);
         const token = `&token=${tokenInfo.token}`;
         const time = `&t=${tokenInfo.time}`;
         const filterTree = ids.length === 1 ? '&filetree=off' : '';
         return ids.length >= 1
-            ? `https://slides.mskcc.org/cbioportal?ids=${_.map(
-                  ids,
-                  id => id + '.svs'
-              ).join(
+            ? `https://slides.mskcc.org/cbioportal?ids=${_.map(ids, id => id + '.svs').join(
                   ';'
               )}&user=${userName}${time}${token}&annotation=off${filterTree}`
             : '';

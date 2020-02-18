@@ -7,9 +7,7 @@ import {
     TableCellStatus,
     VariantAnnotation,
 } from 'cbioportal-frontend-commons';
-import GenomeNexusCache, {
-    GenomeNexusCacheDataType,
-} from 'shared/cache/GenomeNexusCache';
+import GenomeNexusCache, { GenomeNexusCacheDataType } from 'shared/cache/GenomeNexusCache';
 import styles from './exon.module.scss';
 
 export default class ExonColumnFormatter {
@@ -57,9 +55,7 @@ export default class ExonColumnFormatter {
         } else if (genomeNexusCacheData.data === null) {
             status = TableCellStatus.NA;
         } else {
-            let exonData = ExonColumnFormatter.getData(
-                genomeNexusCacheData.data
-            );
+            let exonData = ExonColumnFormatter.getData(genomeNexusCacheData.data);
             if (exonData == null) {
                 return exonData;
             } else {
@@ -111,15 +107,11 @@ export default class ExonColumnFormatter {
         }
     }
 
-    public static getData(
-        genomeNexusData: VariantAnnotation | null
-    ): string | null {
+    public static getData(genomeNexusData: VariantAnnotation | null): string | null {
         if (!genomeNexusData) {
             return null;
         }
-        const exon =
-            genomeNexusData.annotation_summary.transcriptConsequenceSummary
-                .exon;
+        const exon = genomeNexusData.annotation_summary.transcriptConsequenceSummary.exon;
         if (exon) {
             return exon;
         } else {
@@ -127,8 +119,8 @@ export default class ExonColumnFormatter {
             const transcriptConsequence = genomeNexusData.transcript_consequences.filter(
                 x =>
                     x.transcript_id ===
-                        genomeNexusData.annotation_summary
-                            .transcriptConsequenceSummary.transcriptId && x.exon
+                        genomeNexusData.annotation_summary.transcriptConsequenceSummary
+                            .transcriptId && x.exon
             )[0];
             if (transcriptConsequence) {
                 return transcriptConsequence.exon;
@@ -138,17 +130,12 @@ export default class ExonColumnFormatter {
         }
     }
 
-    public static download(
-        data: Mutation[],
-        genomeNexusCache: GenomeNexusCache
-    ): string {
+    public static download(data: Mutation[], genomeNexusCache: GenomeNexusCache): string {
         const genomeNexusData = ExonColumnFormatter.getGenomeNexusDataFromCache(
             data,
             genomeNexusCache
         );
-        const exonData =
-            genomeNexusData &&
-            ExonColumnFormatter.getData(genomeNexusData.data);
+        const exonData = genomeNexusData && ExonColumnFormatter.getData(genomeNexusData.data);
 
         if (!exonData) {
             return '';
@@ -166,9 +153,7 @@ export default class ExonColumnFormatter {
             genomeNexusCache
         );
         if (genomeNexusCacheData) {
-            let exonData = ExonColumnFormatter.getData(
-                genomeNexusCacheData.data
-            );
+            let exonData = ExonColumnFormatter.getData(genomeNexusCacheData.data);
             if (exonData == null) {
                 return null;
             } else {

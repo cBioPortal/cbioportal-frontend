@@ -5,11 +5,7 @@ import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import { CancerStudy } from '../../../shared/api/generated/CBioPortalAPI';
 import classNames from 'classnames';
 import './styles.scss';
-import {
-    DefaultTooltip,
-    getBrowserWindow,
-    setArrowLeft,
-} from 'cbioportal-frontend-commons';
+import { DefaultTooltip, getBrowserWindow, setArrowLeft } from 'cbioportal-frontend-commons';
 import Loader, {
     default as LoadingIndicator,
 } from '../../../shared/components/loadingIndicator/LoadingIndicator';
@@ -42,21 +38,13 @@ interface QuerySummaryProps {
 }
 
 @observer
-export default class QuerySummary extends React.Component<
-    QuerySummaryProps,
-    {}
-> {
+export default class QuerySummary extends React.Component<QuerySummaryProps, {}> {
     @autobind
     @action
     private toggleQueryFormVisibility() {
-        this.props.onToggleQueryFormVisibility(
-            this.props.store.queryFormVisible
-        );
+        this.props.onToggleQueryFormVisibility(this.props.store.queryFormVisible);
         // if clicked the query button in the download tab and want to close the query form, clear the selected sample ids
-        if (
-            this.props.store.modifyQueryParams &&
-            this.props.store.queryFormVisible === true
-        ) {
+        if (this.props.store.modifyQueryParams && this.props.store.queryFormVisible === true) {
             this.props.store.modifyQueryParams = undefined;
         }
         this.props.store.queryFormVisible = !this.props.store.queryFormVisible;
@@ -73,8 +61,7 @@ export default class QuerySummary extends React.Component<
                     submitToStudyViewPage(
                         this.props.store.queriedStudies.result,
                         this.props.store.samples.result,
-                        this.props.store.queriedVirtualStudies.result.length >
-                            0,
+                        this.props.store.queriedVirtualStudies.result.length > 0,
                         this.props.store.sampleLists.result
                     );
                 }}
@@ -116,8 +103,7 @@ export default class QuerySummary extends React.Component<
                             {this.props.store.queriedStudies.result[0].name}
                         </a>
                     </h3>
-                    {sampleListName}&nbsp;({this.studyPageFilteredCasesLink})
-                    &nbsp;-&nbsp;
+                    {sampleListName}&nbsp;({this.studyPageFilteredCasesLink}) &nbsp;-&nbsp;
                     {getGeneSummary(this.props.store.hugoGeneSymbols)}
                     &nbsp;
                     <DefaultTooltip overlay={'Edit genes or OQL'}>
@@ -169,8 +155,7 @@ export default class QuerySummary extends React.Component<
                     </h3>
                     <span>
                         Querying {this.studyPageFilteredCasesLink} in{' '}
-                        {this.props.store.queriedStudies.result.length} studies
-                        &nbsp;-&nbsp;
+                        {this.props.store.queriedStudies.result.length} studies &nbsp;-&nbsp;
                         {getGeneSummary(this.props.store.hugoGeneSymbols)}
                         &nbsp;
                         <DefaultTooltip
@@ -187,11 +172,7 @@ export default class QuerySummary extends React.Component<
     });
 
     readonly cohortAndGeneSummary = MakeMobxView({
-        await: () => [
-            this.singleStudyUI,
-            this.multipleStudyUI,
-            this.props.store.queriedStudies,
-        ],
+        await: () => [this.singleStudyUI, this.multipleStudyUI, this.props.store.queriedStudies],
         render: () => {
             if (this.props.store.queriedStudies.result.length === 1) {
                 return this.singleStudyUI.component!;
@@ -222,17 +203,13 @@ export default class QuerySummary extends React.Component<
         return (
             <div className="cbioportal-frontend">
                 <ul className="list-unstyled" style={{ marginBottom: 0 }}>
-                    {this.props.store.queriedStudies.result.map(
-                        (study: CancerStudy) => {
-                            return (
-                                <li>
-                                    <StudyLink studyId={study.studyId}>
-                                        {study.name}
-                                    </StudyLink>
-                                </li>
-                            );
-                        }
-                    )}
+                    {this.props.store.queriedStudies.result.map((study: CancerStudy) => {
+                        return (
+                            <li>
+                                <StudyLink studyId={study.studyId}>{study.name}</StudyLink>
+                            </li>
+                        );
+                    })}
                 </ul>
             </div>
         );
@@ -271,13 +248,9 @@ export default class QuerySummary extends React.Component<
     }
 
     render() {
-        if (
-            !this.cohortAndGeneSummary.isError &&
-            !this.alterationSummary.isError
-        ) {
+        if (!this.cohortAndGeneSummary.isError && !this.alterationSummary.isError) {
             const loadingComplete =
-                this.cohortAndGeneSummary.isComplete &&
-                this.alterationSummary.isComplete;
+                this.cohortAndGeneSummary.isComplete && this.alterationSummary.isComplete;
 
             return (
                 <div>
@@ -288,10 +261,9 @@ export default class QuerySummary extends React.Component<
                                     <button
                                         id="modifyQueryBtn"
                                         onClick={this.toggleQueryFormVisibility}
-                                        className={classNames(
-                                            'btn btn-primary',
-                                            { disabled: !loadingComplete }
-                                        )}
+                                        className={classNames('btn btn-primary', {
+                                            disabled: !loadingComplete,
+                                        })}
                                     >
                                         {this.queryFormVisible
                                             ? 'Cancel Modify Query'
@@ -300,21 +272,12 @@ export default class QuerySummary extends React.Component<
                                     <DefaultTooltip
                                         trigger={['click']}
                                         placement="bottomRight"
-                                        overlay={
-                                            <ResultsPageSettings
-                                                store={this.props.store}
-                                            />
-                                        }
-                                        visible={
-                                            this.props.store
-                                                .resultsPageSettingsVisible
-                                        }
+                                        overlay={<ResultsPageSettings store={this.props.store} />}
+                                        visible={this.props.store.resultsPageSettingsVisible}
                                         onVisibleChange={visible => {
                                             this.props.store.resultsPageSettingsVisible = !!visible;
                                         }}
-                                        onPopupAlign={tooltipEl =>
-                                            setArrowLeft(tooltipEl, '22px')
-                                        }
+                                        onPopupAlign={tooltipEl => setArrowLeft(tooltipEl, '22px')}
                                     >
                                         <button
                                             data-test="GlobalSettingsButton"
@@ -327,28 +290,20 @@ export default class QuerySummary extends React.Component<
                                 </div>
                             )}
 
-                            <LoadingIndicator
-                                isLoading={!loadingComplete}
-                                small={true}
-                            />
-                            {loadingComplete &&
-                                this.cohortAndGeneSummary.component!}
+                            <LoadingIndicator isLoading={!loadingComplete} small={true} />
+                            {loadingComplete && this.cohortAndGeneSummary.component!}
                         </div>
 
                         <div className="query-summary__rightItems">
                             <div className="query-summary__alterationData">
                                 {loadingComplete && (
-                                    <strong>
-                                        {this.alterationSummary.component!}
-                                    </strong>
+                                    <strong>{this.alterationSummary.component!}</strong>
                                 )}
                             </div>
 
                             <ShareUI
                                 sessionEnabled={ServerConfigHelpers.sessionServiceIsEnabled()}
-                                bitlyAccessToken={
-                                    AppConfig.serverConfig.bitly_access_token
-                                }
+                                bitlyAccessToken={AppConfig.serverConfig.bitly_access_token}
                                 urlWrapper={this.props.store.urlWrapper}
                             />
                         </div>

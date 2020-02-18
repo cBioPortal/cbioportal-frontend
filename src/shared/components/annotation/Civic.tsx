@@ -23,9 +23,7 @@ export function hideArrow(tooltipEl: any) {
 export default class Civic extends React.Component<ICivicProps, {}> {
     @observable tooltipDataLoadComplete: boolean = false;
 
-    public static sortValue(
-        civicEntry: ICivicEntry | null | undefined
-    ): number {
+    public static sortValue(civicEntry: ICivicEntry | null | undefined): number {
         let score: number = 0;
 
         if (civicEntry) {
@@ -78,10 +76,7 @@ export default class Civic extends React.Component<ICivicProps, {}> {
         if (this.props.civicStatus == 'error') {
             civicContent = errorIcon('Error fetching Civic data');
         } else if (this.props.civicEntry !== undefined) {
-            if (
-                this.props.civicEntry !== null &&
-                this.props.civicStatus == 'complete'
-            ) {
+            if (this.props.civicEntry !== null && this.props.civicStatus == 'complete') {
                 civicContent = (
                     <span className={`${annotationStyles['annotation-item']}`}>
                         <img
@@ -97,10 +92,7 @@ export default class Civic extends React.Component<ICivicProps, {}> {
 
                 civicContent = (
                     <DefaultTooltip
-                        overlay={this.cardContent.bind(
-                            this,
-                            this.props.civicEntry
-                        )}
+                        overlay={this.cardContent.bind(this, this.props.civicEntry)}
                         placement="right"
                         trigger={['hover', 'focus']}
                         arrowContent={arrowContent}

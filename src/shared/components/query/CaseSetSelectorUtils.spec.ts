@@ -8,21 +8,16 @@ import {
 describe('CaseSetSelectorUtils', () => {
     describe('filterCustomCaseSets', () => {
         it('returns only custom case set if profiledSamplesCount is empty', () => {
-            assert.deepEqual(
-                getFilteredCustomCaseSets(true, false, {} as any),
-                [CustomCaseSets[4]]
-            );
-            assert.deepEqual(getFilteredCustomCaseSets(true, true, {} as any), [
+            assert.deepEqual(getFilteredCustomCaseSets(true, false, {} as any), [
                 CustomCaseSets[4],
             ]);
-            assert.deepEqual(
-                getFilteredCustomCaseSets(false, false, {} as any),
-                [CustomCaseSets[4]]
-            );
-            assert.deepEqual(
-                getFilteredCustomCaseSets(false, true, {} as any),
-                [CustomCaseSets[4]]
-            );
+            assert.deepEqual(getFilteredCustomCaseSets(true, true, {} as any), [CustomCaseSets[4]]);
+            assert.deepEqual(getFilteredCustomCaseSets(false, false, {} as any), [
+                CustomCaseSets[4],
+            ]);
+            assert.deepEqual(getFilteredCustomCaseSets(false, true, {} as any), [
+                CustomCaseSets[4],
+            ]);
         });
 
         it('returns all case set and custom case set if there is at least one virtual study selected', () => {

@@ -18,11 +18,11 @@ export default class Tutorials extends React.Component<{}, {}> {
 
                 <h2>Step-by-step Guide to cBioPortal: a Protocol Paper</h2>
                 <p>
-                    Gao, Aksoy, Dogrusoz, Dresdner, Gross, Sumer, Sun, Jacobsen,
-                    Sinha, Larsson, Cerami, Sander, Schultz. <br />
+                    Gao, Aksoy, Dogrusoz, Dresdner, Gross, Sumer, Sun, Jacobsen, Sinha, Larsson,
+                    Cerami, Sander, Schultz. <br />
                     <b>
-                        Integrative analysis of complex cancer genomics and
-                        clinical profiles using the cBioPortal.
+                        Integrative analysis of complex cancer genomics and clinical profiles using
+                        the cBioPortal.
                     </b>{' '}
                     <br />
                     <i>Sci. Signal.</i> 6, pl1 (2013). [
@@ -50,9 +50,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                 </h2>
                 <hr />
 
-                <h2 id={'single-study-exploration'}>
-                    Tutorial #1: Single Study Exploration
-                </h2>
+                <h2 id={'single-study-exploration'}>Tutorial #1: Single Study Exploration</h2>
                 <iframe
                     src="https://docs.google.com/presentation/d/1_OGK69lO4Z62WaxHHkNYmWvY0LQN2v0slfaLyY1_IQ0/embed?start=false&loop=false&delayms=60000"
                     frameBorder="0"
@@ -70,9 +68,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                 </h4>
                 <hr />
 
-                <h2 id={'single-study-query'}>
-                    Tutorial #2: Single Study Query
-                </h2>
+                <h2 id={'single-study-query'}>Tutorial #2: Single Study Query</h2>
                 <iframe
                     src="https://docs.google.com/presentation/d/1y9UTIr5vHmsNVWqtGTVGgiuYX9wkK_a_RPNYiR8kYD8/embed?start=false&loop=false&delayms=60000"
                     frameBorder="0"

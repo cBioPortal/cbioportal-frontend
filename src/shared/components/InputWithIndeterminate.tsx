@@ -5,10 +5,7 @@ import { observable } from 'mobx';
 import autobind from 'autobind-decorator';
 
 export interface IInputWithIndeterminateCheckboxProps
-    extends DetailedHTMLProps<
-        InputHTMLAttributes<HTMLInputElement>,
-        HTMLInputElement
-    > {
+    extends DetailedHTMLProps<InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> {
     indeterminate?: boolean;
 }
 
@@ -24,9 +21,7 @@ export default class InputWithIndeterminate extends React.Component<
         this.input = input;
     }
 
-    componentWillReceiveProps(
-        nextProps: Readonly<IInputWithIndeterminateCheckboxProps>
-    ) {
+    componentWillReceiveProps(nextProps: Readonly<IInputWithIndeterminateCheckboxProps>) {
         if (this.input) {
             this.input.indeterminate = !!nextProps.indeterminate;
         }

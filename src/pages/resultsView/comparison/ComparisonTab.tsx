@@ -33,10 +33,7 @@ export interface IComparisonTabProps {
 }
 
 @observer
-export default class ComparisonTab extends React.Component<
-    IComparisonTabProps,
-    {}
-> {
+export default class ComparisonTab extends React.Component<IComparisonTabProps, {}> {
     @observable.ref private store: ResultsViewComparisonStore;
 
     constructor(props: IComparisonTabProps) {
@@ -87,8 +84,7 @@ export default class ComparisonTab extends React.Component<
                             searchable={false}
                             value={{
                                 label:
-                                    this.store.overlapStrategy ===
-                                    OverlapStrategy.EXCLUDE
+                                    this.store.overlapStrategy === OverlapStrategy.EXCLUDE
                                         ? excludeLabel
                                         : includeLabel,
                                 value: this.store.overlapStrategy,
@@ -129,10 +125,7 @@ export default class ComparisonTab extends React.Component<
                     onTabClick={this.props.urlWrapper.setComparisonSubTabId}
                     className="secondaryNavigation comparisonTabSubTabs"
                 >
-                    <MSKTab
-                        id={ResultsViewComparisonSubTab.OVERLAP}
-                        linkText="Overlap"
-                    >
+                    <MSKTab id={ResultsViewComparisonSubTab.OVERLAP} linkText="Overlap">
                         <div style={{ marginBottom: 10 }}>
                             {this.overlapStrategySelector.component}
                         </div>
@@ -142,16 +135,10 @@ export default class ComparisonTab extends React.Component<
                         <MSKTab
                             id={GroupComparisonTab.SURVIVAL}
                             linkText="Survival"
-                            anchorClassName={
-                                this.store.survivalTabUnavailable
-                                    ? 'greyedOut'
-                                    : ''
-                            }
+                            anchorClassName={this.store.survivalTabUnavailable ? 'greyedOut' : ''}
                         >
                             <div className="tabMessageContainer">
-                                <NotUsingGenePanelWarning
-                                    store={this.props.store}
-                                />
+                                <NotUsingGenePanelWarning store={this.props.store} />
                             </div>
                             <Survival store={this.store} />
                         </MSKTab>
@@ -159,9 +146,7 @@ export default class ComparisonTab extends React.Component<
                     <MSKTab
                         id={ResultsViewComparisonSubTab.CLINICAL}
                         linkText="Clinical"
-                        anchorClassName={
-                            this.store.clinicalTabUnavailable ? 'greyedOut' : ''
-                        }
+                        anchorClassName={this.store.clinicalTabUnavailable ? 'greyedOut' : ''}
                     >
                         <ClinicalData store={this.store} />
                     </MSKTab>
@@ -169,11 +154,7 @@ export default class ComparisonTab extends React.Component<
                         <MSKTab
                             id={ResultsViewComparisonSubTab.MUTATIONS}
                             linkText="Mutations"
-                            anchorClassName={
-                                this.store.mutationsTabUnavailable
-                                    ? 'greyedOut'
-                                    : ''
-                            }
+                            anchorClassName={this.store.mutationsTabUnavailable ? 'greyedOut' : ''}
                         >
                             <MutationEnrichments
                                 store={this.store}
@@ -185,11 +166,7 @@ export default class ComparisonTab extends React.Component<
                         <MSKTab
                             id={ResultsViewComparisonSubTab.CNA}
                             linkText="Copy-number"
-                            anchorClassName={
-                                this.store.copyNumberUnavailable
-                                    ? 'greyedOut'
-                                    : ''
-                            }
+                            anchorClassName={this.store.copyNumberUnavailable ? 'greyedOut' : ''}
                         >
                             <CopyNumberEnrichments
                                 store={this.store}
@@ -201,38 +178,24 @@ export default class ComparisonTab extends React.Component<
                         <MSKTab
                             id={ResultsViewComparisonSubTab.MRNA}
                             linkText="mRNA"
-                            anchorClassName={
-                                this.store.mRNATabUnavailable ? 'greyedOut' : ''
-                            }
+                            anchorClassName={this.store.mRNATabUnavailable ? 'greyedOut' : ''}
                         >
-                            <MRNAEnrichments
-                                store={this.store}
-                                resultsViewMode={true}
-                            />
+                            <MRNAEnrichments store={this.store} resultsViewMode={true} />
                         </MSKTab>
                     )}
                     {this.store.showProteinTab && (
                         <MSKTab
                             id={ResultsViewComparisonSubTab.PROTEIN}
                             linkText="Protein"
-                            anchorClassName={
-                                this.store.proteinTabUnavailable
-                                    ? 'greyedOut'
-                                    : ''
-                            }
+                            anchorClassName={this.store.proteinTabUnavailable ? 'greyedOut' : ''}
                         >
-                            <ProteinEnrichments
-                                store={this.store}
-                                resultsViewMode={true}
-                            />
+                            <ProteinEnrichments store={this.store} resultsViewMode={true} />
                         </MSKTab>
                     )}
                 </MSKTabs>
             );
         },
-        renderPending: () => (
-            <LoadingIndicator center={true} isLoading={true} size={'big'} />
-        ),
+        renderPending: () => <LoadingIndicator center={true} isLoading={true} size={'big'} />,
         renderError: () => <ErrorMessage />,
     });
 
@@ -243,10 +206,7 @@ export default class ComparisonTab extends React.Component<
 
         return (
             <div data-test="ComparisonTabDiv">
-                <div
-                    className={'tabMessageContainer'}
-                    style={{ marginBottom: 10 }}
-                >
+                <div className={'tabMessageContainer'} style={{ marginBottom: 10 }}>
                     <OqlStatusBanner
                         className="comparison-oql-status-banner"
                         store={this.props.store}

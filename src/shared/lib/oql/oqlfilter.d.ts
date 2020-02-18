@@ -9,10 +9,7 @@ import {
     AnnotatedMutation,
     ExtendedAlteration,
 } from '../../../pages/resultsView/ResultsViewPageStore';
-import {
-    NumericGeneMolecularData,
-    Mutation,
-} from '../../api/generated/CBioPortalAPI';
+import { NumericGeneMolecularData, Mutation } from '../../api/generated/CBioPortalAPI';
 import { Alteration } from 'shared/lib/oql/oql-parser';
 
 type OQLAlterationFilterString = string;
@@ -44,13 +41,9 @@ export declare function parseOQLQuery(
     opt_default_oql?: OQLAlterationFilterString
 ): SingleGeneQuery[];
 
-export declare function parsedOQLAlterationToSourceOQL(
-    alteration: Alteration
-): string;
+export declare function parsedOQLAlterationToSourceOQL(alteration: Alteration): string;
 
-export declare function unparseOQLQueryLine(
-    parsed_oql_line: SingleGeneQuery
-): string;
+export declare function unparseOQLQueryLine(parsed_oql_line: SingleGeneQuery): string;
 
 export declare function doesQueryContainOQL(oql_query: string): boolean;
 
@@ -58,12 +51,7 @@ export declare function doesQueryContainMutationOQL(oql_query: string): boolean;
 
 export declare function filterCBioPortalWebServiceData<
     T extends Mutation | NumericGeneMolecularData
->(
-    oql_query: string,
-    data: T[],
-    accessors: any,
-    default_oql: string
-): (T & ExtendedAlteration)[];
+>(oql_query: string, data: T[], accessors: any, default_oql: string): (T & ExtendedAlteration)[];
 
 export declare function filterCBioPortalWebServiceDataByOQLLine(
     oql_query: string,

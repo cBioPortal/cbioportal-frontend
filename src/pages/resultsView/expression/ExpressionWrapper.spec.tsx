@@ -11,9 +11,7 @@ describe('Expression Wrapper', () => {
 
     beforeEach(() => {
         wrapper = shallow(
-            <ExpressionWrapper
-                {...(expressionTestData as ExpressionWrapperProps)}
-            />
+            <ExpressionWrapper {...(expressionTestData as ExpressionWrapperProps)} />
         );
         instance = wrapper.instance() as ExpressionWrapper;
     });

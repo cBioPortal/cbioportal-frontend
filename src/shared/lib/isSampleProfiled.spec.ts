@@ -3,8 +3,7 @@ import { isSampleProfiled } from './isSampleProfiled';
 
 describe('isSampleProfiled', () => {
     it('(mis)matches by allGenes as appropriate', () => {
-        let uniqueSampleKey =
-            'VENHQS0zWC1BQVY5LTAxOmNob2xfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg';
+        let uniqueSampleKey = 'VENHQS0zWC1BQVY5LTAxOmNob2xfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg';
 
         let hugoGeneSymbol = 'EGFR';
 
@@ -18,8 +17,7 @@ describe('isSampleProfiled', () => {
                                 'VENHQS0zWC1BQVY5LTAxOmNob2xfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
                             uniquePatientKey:
                                 'VENHQS0zWC1BQVY5OmNob2xfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
-                            molecularProfileId:
-                                'chol_tcga_pan_can_atlas_2018_gistic',
+                            molecularProfileId: 'chol_tcga_pan_can_atlas_2018_gistic',
                             sampleId: 'TCGA-3X-AAV9-01',
                             patientId: 'TCGA-3X-AAV9',
                             studyId: 'chol_tcga_pan_can_atlas_2018',
@@ -30,8 +28,7 @@ describe('isSampleProfiled', () => {
                                 'VENHQS0zWC1BQVY5LTAxOmNob2xfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
                             uniquePatientKey:
                                 'VENHQS0zWC1BQVY5OmNob2xfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
-                            molecularProfileId:
-                                'chol_tcga_pan_can_atlas_2018_mutations',
+                            molecularProfileId: 'chol_tcga_pan_can_atlas_2018_mutations',
                             sampleId: 'TCGA-3X-AAV9-01',
                             patientId: 'TCGA-3X-AAV9',
                             studyId: 'chol_tcga_pan_can_atlas_2018',
@@ -49,8 +46,7 @@ describe('isSampleProfiled', () => {
                                 'VENHQS0zWC1BQVZBLTAxOmNob2xfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
                             uniquePatientKey:
                                 'VENHQS0zWC1BQVZBOmNob2xfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
-                            molecularProfileId:
-                                'chol_tcga_pan_can_atlas_2018_gistic',
+                            molecularProfileId: 'chol_tcga_pan_can_atlas_2018_gistic',
                             sampleId: 'TCGA-3X-AAVA-01',
                             patientId: 'TCGA-3X-AAVA',
                             studyId: 'chol_tcga_pan_can_atlas_2018',
@@ -61,8 +57,7 @@ describe('isSampleProfiled', () => {
                                 'VENHQS0zWC1BQVZBLTAxOmNob2xfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
                             uniquePatientKey:
                                 'VENHQS0zWC1BQVZBOmNob2xfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
-                            molecularProfileId:
-                                'chol_tcga_pan_can_atlas_2018_mutations',
+                            molecularProfileId: 'chol_tcga_pan_can_atlas_2018_mutations',
                             sampleId: 'TCGA-3X-AAVA-01',
                             patientId: 'TCGA-3X-AAVA',
                             studyId: 'chol_tcga_pan_can_atlas_2018',
@@ -127,8 +122,7 @@ describe('isSampleProfiled', () => {
     });
 
     it('(mis)matches by byGenes as appropriate', () => {
-        let uniqueSampleKey =
-            'VENHQS0zWC1BQVY5LTAxOmNob2xfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg';
+        let uniqueSampleKey = 'VENHQS0zWC1BQVY5LTAxOmNob2xfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg';
 
         let hugoGeneSymbol = 'EGFR';
 
@@ -142,8 +136,7 @@ describe('isSampleProfiled', () => {
                                     'VENHQS0zWC1BQVY5LTAxOmNob2xfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
                                 uniquePatientKey:
                                     'VENHQS0zWC1BQVY5OmNob2xfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
-                                molecularProfileId:
-                                    'chol_tcga_pan_can_atlas_2018_gistic',
+                                molecularProfileId: 'chol_tcga_pan_can_atlas_2018_gistic',
                                 sampleId: 'TCGA-3X-AAV9-01',
                                 patientId: 'TCGA-3X-AAV9',
                                 studyId: 'chol_tcga_pan_can_atlas_2018',
@@ -154,8 +147,7 @@ describe('isSampleProfiled', () => {
                                     'VENHQS0zWC1BQVY5LTAxOmNob2xfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
                                 uniquePatientKey:
                                     'VENHQS0zWC1BQVY5OmNob2xfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
-                                molecularProfileId:
-                                    'chol_tcga_pan_can_atlas_2018_mutations',
+                                molecularProfileId: 'chol_tcga_pan_can_atlas_2018_mutations',
                                 sampleId: 'TCGA-3X-AAV9-01',
                                 patientId: 'TCGA-3X-AAV9',
                                 studyId: 'chol_tcga_pan_can_atlas_2018',

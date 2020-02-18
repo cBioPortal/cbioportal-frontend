@@ -36,10 +36,7 @@ export function toggleRegionSelected<T extends string | number>(
     }
 }
 
-export function getExcludedIndexes(
-    combination: number[],
-    numGroupsTotal: number
-) {
+export function getExcludedIndexes(combination: number[], numGroupsTotal: number) {
     // get all indexes not in the given combination
 
     const excl = [];
@@ -51,9 +48,7 @@ export function getExcludedIndexes(
     return excl;
 }
 
-export function renderGroupNameWithOrdinal(
-    group: Pick<ComparisonGroup, 'name' | 'ordinal'>
-) {
+export function renderGroupNameWithOrdinal(group: Pick<ComparisonGroup, 'name' | 'ordinal'>) {
     return (
         <span>
             {group.ordinal.length > 0 && (
@@ -66,10 +61,7 @@ export function renderGroupNameWithOrdinal(
     );
 }
 
-export function joinGroupNames(
-    groups: Pick<ComparisonGroup, 'name' | 'ordinal'>[],
-    conj: string
-) {
+export function joinGroupNames(groups: Pick<ComparisonGroup, 'name' | 'ordinal'>[], conj: string) {
     const names = groups.map(renderGroupNameWithOrdinal);
     switch (names.length) {
         case 0:
@@ -116,10 +108,7 @@ export function blendColors(colors: string[]) {
     );
 }
 
-export function getTextColor(
-    backgroundColor: string,
-    inverse: boolean = false
-) {
+export function getTextColor(backgroundColor: string, inverse: boolean = false) {
     const colors = ['black', 'white'];
     let colorIndex = 1;
     const rgb = d3.rgb(backgroundColor);
@@ -136,8 +125,7 @@ export function getTextColor(
 }
 
 export function getStudiesAttrForSampleOverlapGroup(
-    availableGroups: (Pick<ComparisonGroup, 'uid'> &
-        Pick<SessionGroupData, 'studies'>)[],
+    availableGroups: (Pick<ComparisonGroup, 'uid'> & Pick<SessionGroupData, 'studies'>)[],
     includedRegions: string[][], // uid[][],
     allGroupsInPlot: string[] // uid[]
 ) {
@@ -145,22 +133,15 @@ export function getStudiesAttrForSampleOverlapGroup(
     const groups = _.keyBy(availableGroups, g => g.uid);
     let studiesAttr: SessionGroupData['studies'] = [];
     for (const region of includedRegions) {
-        let regionStudiesAttr: SessionGroupData['studies'] =
-            groups[region[0]].studies;
+        let regionStudiesAttr: SessionGroupData['studies'] = groups[region[0]].studies;
         // intersect
         for (let i = 1; i < region.length; i++) {
-            regionStudiesAttr = intersectSamples(
-                regionStudiesAttr,
-                groups[region[i]].studies
-            );
+            regionStudiesAttr = intersectSamples(regionStudiesAttr, groups[region[i]].studies);
         }
         // exclude
         for (const uid of allGroupsInPlot) {
             if (!region.includes(uid)) {
-                regionStudiesAttr = excludeSamples(
-                    regionStudiesAttr,
-                    groups[uid].studies
-                );
+                regionStudiesAttr = excludeSamples(regionStudiesAttr, groups[uid].studies);
             }
         }
         studiesAttr = unionSamples(studiesAttr, regionStudiesAttr);
@@ -180,28 +161,18 @@ export function getStudiesAttrForPatientOverlapGroup(
     const groups = _.keyBy(availableGroups, g => g.uid);
     let studiesAttr: { id: string; patients: string[] }[] = [];
     for (const region of includedRegions) {
-        let regionStudiesAttr: { id: string; patients: string[] }[] =
-            groups[region[0]].studies;
+        let regionStudiesAttr: { id: string; patients: string[] }[] = groups[region[0]].studies;
         // intersect
         for (let i = 1; i < region.length; i++) {
-            regionStudiesAttr = intersectPatients(
-                regionStudiesAttr,
-                groups[region[i]].studies
-            );
+            regionStudiesAttr = intersectPatients(regionStudiesAttr, groups[region[i]].studies);
         }
         // exclude
         for (const uid of allGroupsInVenn) {
             if (!region.includes(uid)) {
-                regionStudiesAttr = excludePatients(
-                    regionStudiesAttr,
-                    groups[uid].studies
-                );
+                regionStudiesAttr = excludePatients(regionStudiesAttr, groups[uid].studies);
             }
         }
         studiesAttr = unionPatients(studiesAttr, regionStudiesAttr);
     }
-    return convertPatientsStudiesAttrToSamples(
-        studiesAttr,
-        patientToSamplesSet
-    );
+    return convertPatientsStudiesAttrToSamples(studiesAttr, patientToSamplesSet);
 }

@@ -51,26 +51,18 @@ class GenesetCorrelatedGeneIteration {
         this.sampleFilterByProfile = sampleFilterByProfile;
     }
     async next(maxNumber: number) {
-        return this.nextGeneIndexStateChain.appendTransition(
-            async currentIndex => {
-                if (this.data === undefined) {
-                    this.data = await fetch(
-                        this.query,
-                        this.sampleFilterByProfile
-                    );
-                }
-                // select the first n genes starting from the index,
-                // up to the end of the array
-                const nextGenes = this.data.slice(
-                    currentIndex,
-                    currentIndex + maxNumber
-                );
-                return {
-                    newState: currentIndex + nextGenes.length,
-                    output: nextGenes,
-                };
+        return this.nextGeneIndexStateChain.appendTransition(async currentIndex => {
+            if (this.data === undefined) {
+                this.data = await fetch(this.query, this.sampleFilterByProfile);
             }
-        );
+            // select the first n genes starting from the index,
+            // up to the end of the array
+            const nextGenes = this.data.slice(currentIndex, currentIndex + maxNumber);
+            return {
+                newState: currentIndex + nextGenes.length,
+                output: nextGenes,
+            };
+        });
     }
 
     /**
@@ -94,9 +86,7 @@ export default class GenesetCorrelatedGeneCache {
     }
 
     initIteration(iterationKey: string, query: IQuery) {
-        if (
-            !Object.prototype.hasOwnProperty.call(this.iterations, iterationKey)
-        ) {
+        if (!Object.prototype.hasOwnProperty.call(this.iterations, iterationKey)) {
             this.iterations[iterationKey] = new GenesetCorrelatedGeneIteration(
                 query,
                 this.sampleFilterByProfile
@@ -104,10 +94,7 @@ export default class GenesetCorrelatedGeneCache {
         }
     }
 
-    async next(
-        iterationKey: string,
-        maxNumber: number
-    ): Promise<GenesetCorrelation[]> {
+    async next(iterationKey: string, maxNumber: number): Promise<GenesetCorrelation[]> {
         return this.iterations[iterationKey].next(maxNumber);
     }
 

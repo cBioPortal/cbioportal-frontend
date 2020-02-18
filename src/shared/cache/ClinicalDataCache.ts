@@ -8,10 +8,7 @@ import {
     Patient,
     Sample,
 } from '../api/generated/CBioPortalAPI';
-import {
-    MutationSpectrum,
-    MutationSpectrumFilter,
-} from '../api/generated/CBioPortalAPIInternal';
+import { MutationSpectrum, MutationSpectrumFilter } from '../api/generated/CBioPortalAPIInternal';
 import { MobxPromise } from 'mobxpromise';
 import {
     CoverageInformation,
@@ -39,17 +36,13 @@ const locallyComputedSpecialAttributes = [
 export function clinicalAttributeIsPROFILEDIN(attribute: {
     clinicalAttributeId: string | SpecialAttribute;
 }) {
-    return attribute.clinicalAttributeId.startsWith(
-        SpecialAttribute.ProfiledInPrefix
-    );
+    return attribute.clinicalAttributeId.startsWith(SpecialAttribute.ProfiledInPrefix);
 }
 
 export function clinicalAttributeIsINCOMPARISONGROUP(attribute: {
     clinicalAttributeId: string | SpecialAttribute;
 }) {
-    return attribute.clinicalAttributeId.startsWith(
-        SpecialAttribute.ComparisonGroupPrefix
-    );
+    return attribute.clinicalAttributeId.startsWith(SpecialAttribute.ComparisonGroupPrefix);
 }
 
 export function clinicalAttributeIsLocallyComputed(attribute: {
@@ -58,9 +51,7 @@ export function clinicalAttributeIsLocallyComputed(attribute: {
     return (
         clinicalAttributeIsPROFILEDIN(attribute) ||
         clinicalAttributeIsINCOMPARISONGROUP(attribute) ||
-        locallyComputedSpecialAttributes.indexOf(
-            attribute.clinicalAttributeId as any
-        ) > -1
+        locallyComputedSpecialAttributes.indexOf(attribute.clinicalAttributeId as any) > -1
     );
 }
 
@@ -106,18 +97,14 @@ function makeProfiledData(
     const molecularProfileIds = attribute.molecularProfileIds!;
     const ret = [];
     for (const sample of samples) {
-        const coverageInfo =
-            coverageInformation.samples[sample.uniqueSampleKey];
+        const coverageInfo = coverageInformation.samples[sample.uniqueSampleKey];
         if (!coverageInfo) {
             continue;
         }
         const allCoverage: { molecularProfileId: string }[] = (_.flatten(
             _.values(coverageInfo.byGene)
         ) as { molecularProfileId: string }[]).concat(coverageInfo.allGenes);
-        const coveredMolecularProfiles = _.keyBy(
-            allCoverage,
-            'molecularProfileId'
-        );
+        const coveredMolecularProfiles = _.keyBy(allCoverage, 'molecularProfileId');
         const profiled = _.some(
             molecularProfileIds,
             molecularProfileId => molecularProfileId in coveredMolecularProfiles
@@ -153,28 +140,20 @@ async function fetch(
             studyToSamples = _.groupBy(samples, sample => sample.studyId);
             ret = _.flatten(
                 await Promise.all(
-                    Object.keys(studyToMutationMolecularProfile).map(
-                        studyId => {
-                            const samplesInStudy = studyToSamples[studyId];
-                            if (samplesInStudy.length) {
-                                return internalClient.fetchMutationSpectrumsUsingPOST(
-                                    {
-                                        molecularProfileId:
-                                            studyToMutationMolecularProfile[
-                                                studyId
-                                            ].molecularProfileId,
-                                        mutationSpectrumFilter: {
-                                            sampleIds: samplesInStudy.map(
-                                                s => s.sampleId
-                                            ),
-                                        } as MutationSpectrumFilter,
-                                    }
-                                );
-                            } else {
-                                return Promise.resolve([]);
-                            }
+                    Object.keys(studyToMutationMolecularProfile).map(studyId => {
+                        const samplesInStudy = studyToSamples[studyId];
+                        if (samplesInStudy.length) {
+                            return internalClient.fetchMutationSpectrumsUsingPOST({
+                                molecularProfileId:
+                                    studyToMutationMolecularProfile[studyId].molecularProfileId,
+                                mutationSpectrumFilter: {
+                                    sampleIds: samplesInStudy.map(s => s.sampleId),
+                                } as MutationSpectrumFilter,
+                            });
+                        } else {
+                            return Promise.resolve([]);
                         }
-                    )
+                    })
                 )
             );
             break;
@@ -215,9 +194,7 @@ async function fetch(
                 ret = makeComparisonGroupData(attribute, samples);
             } else {
                 ret = await client.fetchClinicalDataUsingPOST({
-                    clinicalDataType: attribute.patientAttribute
-                        ? 'PATIENT'
-                        : 'SAMPLE',
+                    clinicalDataType: attribute.patientAttribute ? 'PATIENT' : 'SAMPLE',
                     clinicalDataMultiStudyFilter: {
                         attributeIds: [attribute.clinicalAttributeId as string],
                         identifiers: attribute.patientAttribute
@@ -270,9 +247,9 @@ export default class ClinicalDataCache extends MobxPromiseCache<
                     ),
             }),
             q =>
-                `${q.clinicalAttributeId},${(q.molecularProfileIds || []).join(
-                    '-'
-                )},${q.patientAttribute}`
+                `${q.clinicalAttributeId},${(q.molecularProfileIds || []).join('-')},${
+                    q.patientAttribute
+                }`
         );
     }
 }

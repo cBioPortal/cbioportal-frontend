@@ -11,11 +11,9 @@ export function isSampleProfiled(
     hugoGeneSymbol: string,
     coverageInformation: CoverageInformation
 ): boolean {
-    return !!getSampleProfiledReport(
-        uniqueSampleKey,
-        coverageInformation,
-        hugoGeneSymbol
-    )[molecularProfileId];
+    return !!getSampleProfiledReport(uniqueSampleKey, coverageInformation, hugoGeneSymbol)[
+        molecularProfileId
+    ];
 }
 
 function getSampleProfiledReport(
@@ -63,7 +61,5 @@ export function isSampleProfiledInMultiple(
         coverageInformation,
         hugoGeneSymbol
     );
-    return molecularProfileIds.map(
-        molecularProfileId => !!profiledReport[molecularProfileId]
-    );
+    return molecularProfileIds.map(molecularProfileId => !!profiledReport[molecularProfileId]);
 }

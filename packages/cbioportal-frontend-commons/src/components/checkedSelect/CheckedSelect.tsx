@@ -4,12 +4,7 @@ import autobind from 'autobind-decorator';
 import { computed, observable, action } from 'mobx';
 import { observer } from 'mobx-react';
 
-import {
-    CheckBoxType,
-    getOptionLabel,
-    getSelectedValuesMap,
-    Option,
-} from './CheckedSelectUtils';
+import { CheckBoxType, getOptionLabel, getSelectedValuesMap, Option } from './CheckedSelectUtils';
 
 type CheckedSelectProps = {
     name?: string;
@@ -35,10 +30,7 @@ type CheckedSelectProps = {
 };
 
 @observer
-export default class CheckedSelect extends React.Component<
-    CheckedSelectProps,
-    {}
-> {
+export default class CheckedSelect extends React.Component<CheckedSelectProps, {}> {
     public static defaultProps: Partial<CheckedSelectProps> = {
         isClearable: false,
         isDisabled: false,
@@ -94,11 +86,7 @@ export default class CheckedSelect extends React.Component<
 
     @autobind
     private getOptionLabel(option: Option): JSX.Element {
-        return getOptionLabel(
-            option,
-            this.selectedValues,
-            this.props.checkBoxType
-        );
+        return getOptionLabel(option, this.selectedValues, this.props.checkBoxType);
     }
 
     @computed get inputValue() {

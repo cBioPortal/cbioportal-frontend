@@ -36,10 +36,7 @@ describe('Oncoprint TooltipUtils', () => {
                 '<span>sampleID</span>'
             );
             assert.equal(
-                getCaseViewElt(
-                    [{ patient: 'patientID', study_id: 'studyID' }],
-                    false
-                ),
+                getCaseViewElt([{ patient: 'patientID', study_id: 'studyID' }], false),
                 '<span>patientID</span>'
             );
         });
@@ -56,21 +53,10 @@ describe('Oncoprint TooltipUtils', () => {
                     true
                 )
             );
-            assert.equal(
-                elt.attr('href'),
-                getSampleViewUrl('studyID', 'sampleID')
-            );
+            assert.equal(elt.attr('href'), getSampleViewUrl('studyID', 'sampleID'));
             assert.equal(elt.text(), 'sampleID');
-            elt = $(
-                getCaseViewElt(
-                    [{ patient: 'patientID', study_id: 'studyID' }],
-                    true
-                )
-            );
-            assert.equal(
-                elt.attr('href'),
-                getPatientViewUrl('studyID', 'patientID')
-            );
+            elt = $(getCaseViewElt([{ patient: 'patientID', study_id: 'studyID' }], true));
+            assert.equal(elt.attr('href'), getPatientViewUrl('studyID', 'patientID'));
             assert.equal(elt.text(), 'patientID');
         });
         it('shows number if multiple input and no linkout', () => {
@@ -187,8 +173,7 @@ describe('Oncoprint TooltipUtils', () => {
             return {
                 hugoGeneSymbol: 'GENE',
                 proteinChange: 'proteinchange',
-                molecularProfileAlterationType:
-                    AlterationTypeConstants.MUTATION_EXTENDED,
+                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                 ...props,
             } as AnnotatedExtendedAlteration;
         }
@@ -197,13 +182,10 @@ describe('Oncoprint TooltipUtils', () => {
         ): AnnotatedExtendedAlteration {
             return makeMutation({ alterationSubType: 'fusion', ...props });
         }
-        function makeCna(
-            props: Partial<AnnotatedExtendedAlteration>
-        ): AnnotatedExtendedAlteration {
+        function makeCna(props: Partial<AnnotatedExtendedAlteration>): AnnotatedExtendedAlteration {
             return {
                 hugoGeneSymbol: 'GENE',
-                molecularProfileAlterationType:
-                    AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                 ...props,
             } as AnnotatedExtendedAlteration;
         }
@@ -213,8 +195,7 @@ describe('Oncoprint TooltipUtils', () => {
         ): AnnotatedExtendedAlteration {
             return {
                 hugoGeneSymbol: 'GENE',
-                molecularProfileAlterationType:
-                    AlterationTypeConstants.MRNA_EXPRESSION,
+                molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION,
                 ...props,
             } as AnnotatedExtendedAlteration;
         }
@@ -224,8 +205,7 @@ describe('Oncoprint TooltipUtils', () => {
         ): AnnotatedExtendedAlteration {
             return {
                 hugoGeneSymbol: 'GENE',
-                molecularProfileAlterationType:
-                    AlterationTypeConstants.PROTEIN_LEVEL,
+                molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL,
                 ...props,
             } as AnnotatedExtendedAlteration;
         }
@@ -259,9 +239,7 @@ describe('Oncoprint TooltipUtils', () => {
                 };
                 let tooltipOutput = tooltip([datum]);
                 assert.equal(
-                    tooltipOutput.find(
-                        "img[title='Putative_Driver: annotation here']"
-                    ).length,
+                    tooltipOutput.find("img[title='Putative_Driver: annotation here']").length,
                     1
                 );
                 assert.equal(
@@ -276,9 +254,7 @@ describe('Oncoprint TooltipUtils', () => {
 
                 tooltipOutput = tooltip([datum, datum2]);
                 assert.equal(
-                    tooltipOutput.find(
-                        "img[title='Putative_Driver: annotation here']"
-                    ).length,
+                    tooltipOutput.find("img[title='Putative_Driver: annotation here']").length,
                     1,
                     'mutation appears once'
                 );
@@ -294,9 +270,7 @@ describe('Oncoprint TooltipUtils', () => {
 
                 tooltipOutput = tooltip([datum, datum3]);
                 assert.equal(
-                    tooltipOutput.find(
-                        "img[title='Putative_Driver: annotation here']"
-                    ).length,
+                    tooltipOutput.find("img[title='Putative_Driver: annotation here']").length,
                     1
                 );
                 assert.equal(
@@ -354,21 +328,15 @@ describe('Oncoprint TooltipUtils', () => {
                 };
                 let tooltipOutput = tooltip([datum]);
                 assert.equal(
-                    tooltipOutput.find(
-                        "img[title='Putative_Driver: annotation 1']"
-                    ).length,
+                    tooltipOutput.find("img[title='Putative_Driver: annotation 1']").length,
                     1
                 );
                 assert.equal(
-                    tooltipOutput.find(
-                        "img[title='Putative_Driver: annotation 2']"
-                    ).length,
+                    tooltipOutput.find("img[title='Putative_Driver: annotation 2']").length,
                     1
                 );
                 assert.equal(
-                    tooltipOutput.find(
-                        "img[title='Putative_Driver: 3 annotation']"
-                    ).length,
+                    tooltipOutput.find("img[title='Putative_Driver: 3 annotation']").length,
                     1
                 );
                 assert.equal(
@@ -383,23 +351,17 @@ describe('Oncoprint TooltipUtils', () => {
 
                 tooltipOutput = tooltip([datum, datum2]);
                 assert.equal(
-                    tooltipOutput.find(
-                        "img[title='Putative_Driver: annotation 1']"
-                    ).length,
+                    tooltipOutput.find("img[title='Putative_Driver: annotation 1']").length,
                     1,
                     'mutation 1 appears once'
                 );
                 assert.equal(
-                    tooltipOutput.find(
-                        "img[title='Putative_Driver: annotation 2']"
-                    ).length,
+                    tooltipOutput.find("img[title='Putative_Driver: annotation 2']").length,
                     1,
                     'mutation 2 appears once'
                 );
                 assert.equal(
-                    tooltipOutput.find(
-                        "img[title='Putative_Driver: 3 annotation']"
-                    ).length,
+                    tooltipOutput.find("img[title='Putative_Driver: 3 annotation']").length,
                     1,
                     'mutation 3 appears once'
                 );
@@ -416,23 +378,17 @@ describe('Oncoprint TooltipUtils', () => {
 
                 tooltipOutput = tooltip([datum, datum3]);
                 assert.equal(
-                    tooltipOutput.find(
-                        "img[title='Putative_Driver: annotation 1']"
-                    ).length,
+                    tooltipOutput.find("img[title='Putative_Driver: annotation 1']").length,
                     1,
                     'mutation 1 appears once'
                 );
                 assert.equal(
-                    tooltipOutput.find(
-                        "img[title='Putative_Driver: annotation 2']"
-                    ).length,
+                    tooltipOutput.find("img[title='Putative_Driver: annotation 2']").length,
                     1,
                     'mutation 2 appears once'
                 );
                 assert.equal(
-                    tooltipOutput.find(
-                        "img[title='Putative_Driver: 3 annotation']"
-                    ).length,
+                    tooltipOutput.find("img[title='Putative_Driver: 3 annotation']").length,
                     1,
                     'mutation 3 appears once'
                 );
@@ -464,10 +420,7 @@ describe('Oncoprint TooltipUtils', () => {
                     ],
                 };
                 const tooltipOutput = tooltip([datum]);
-                assert.equal(
-                    tooltipOutput.find("img[alt='driver filter']").length,
-                    0
-                );
+                assert.equal(tooltipOutput.find("img[alt='driver filter']").length, 0);
             });
 
             it('should show a tiers custom driver icon with descriptive title, if theres a tiers custom driver annotation', () => {
@@ -497,11 +450,7 @@ describe('Oncoprint TooltipUtils', () => {
                     data: [],
                 };
                 let tooltipOutput = tooltip([datum]);
-                assert.equal(
-                    tooltipOutput.find("img[title='tier1: tier1 mutation']")
-                        .length,
-                    1
-                );
+                assert.equal(tooltipOutput.find("img[title='tier1: tier1 mutation']").length, 1);
                 assert.equal(
                     tooltipOutput.find("img[alt='driver tiers filter']").length,
                     1,
@@ -513,11 +462,7 @@ describe('Oncoprint TooltipUtils', () => {
                 );
 
                 tooltipOutput = tooltip([datum, datum2]);
-                assert.equal(
-                    tooltipOutput.find("img[title='tier1: tier1 mutation']")
-                        .length,
-                    1
-                );
+                assert.equal(tooltipOutput.find("img[title='tier1: tier1 mutation']").length, 1);
                 assert.equal(
                     tooltipOutput.find("img[alt='driver tiers filter']").length,
                     1,
@@ -529,11 +474,7 @@ describe('Oncoprint TooltipUtils', () => {
                 );
 
                 tooltipOutput = tooltip([datum, datum3]);
-                assert.equal(
-                    tooltipOutput.find("img[title='tier1: tier1 mutation']")
-                        .length,
-                    1
-                );
+                assert.equal(tooltipOutput.find("img[title='tier1: tier1 mutation']").length, 1);
                 assert.equal(
                     tooltipOutput.find("img[alt='driver tiers filter']").length,
                     1,
@@ -588,21 +529,9 @@ describe('Oncoprint TooltipUtils', () => {
                     data: [],
                 };
                 let tooltipOutput = tooltip([datum]);
-                assert.equal(
-                    tooltipOutput.find("img[title='tier1: tier1 mutation']")
-                        .length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.find("img[title='tier2: tier2 mutation']")
-                        .length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.find("img[title='tier4: mutation tier4']")
-                        .length,
-                    1
-                );
+                assert.equal(tooltipOutput.find("img[title='tier1: tier1 mutation']").length, 1);
+                assert.equal(tooltipOutput.find("img[title='tier2: tier2 mutation']").length, 1);
+                assert.equal(tooltipOutput.find("img[title='tier4: mutation tier4']").length, 1);
                 assert.equal(
                     tooltipOutput.find("img[alt='driver tiers filter']").length,
                     3,
@@ -615,20 +544,17 @@ describe('Oncoprint TooltipUtils', () => {
 
                 tooltipOutput = tooltip([datum, datum2]);
                 assert.equal(
-                    tooltipOutput.find("img[title='tier1: tier1 mutation']")
-                        .length,
+                    tooltipOutput.find("img[title='tier1: tier1 mutation']").length,
                     1,
                     'mutation 1 appears once'
                 );
                 assert.equal(
-                    tooltipOutput.find("img[title='tier2: tier2 mutation']")
-                        .length,
+                    tooltipOutput.find("img[title='tier2: tier2 mutation']").length,
                     1,
                     'mutation 2 appears once'
                 );
                 assert.equal(
-                    tooltipOutput.find("img[title='tier4: mutation tier4']")
-                        .length,
+                    tooltipOutput.find("img[title='tier4: mutation tier4']").length,
                     1,
                     'mutation 3 appears once'
                 );
@@ -645,20 +571,17 @@ describe('Oncoprint TooltipUtils', () => {
 
                 tooltipOutput = tooltip([datum3, datum]);
                 assert.equal(
-                    tooltipOutput.find("img[title='tier1: tier1 mutation']")
-                        .length,
+                    tooltipOutput.find("img[title='tier1: tier1 mutation']").length,
                     1,
                     'mutation 1 appears once'
                 );
                 assert.equal(
-                    tooltipOutput.find("img[title='tier2: tier2 mutation']")
-                        .length,
+                    tooltipOutput.find("img[title='tier2: tier2 mutation']").length,
                     1,
                     'mutation 2 appears once'
                 );
                 assert.equal(
-                    tooltipOutput.find("img[title='tier4: mutation tier4']")
-                        .length,
+                    tooltipOutput.find("img[title='tier4: mutation tier4']").length,
                     1,
                     'mutation 3 appears once'
                 );
@@ -714,42 +637,24 @@ describe('Oncoprint TooltipUtils', () => {
                     ],
                 };
                 const tooltipOutput = tooltip([datum]);
-                assert.equal(
-                    tooltipOutput.find("img[title='tier1: tier1 mutation']")
-                        .length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.find("img[title='tier2: tier2 mutation']")
-                        .length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.find("img[title='tier4: mutation tier4']")
-                        .length,
-                    1
-                );
+                assert.equal(tooltipOutput.find("img[title='tier1: tier1 mutation']").length, 1);
+                assert.equal(tooltipOutput.find("img[title='tier2: tier2 mutation']").length, 1);
+                assert.equal(tooltipOutput.find("img[title='tier4: mutation tier4']").length, 1);
                 assert.equal(
                     tooltipOutput.find("img[alt='driver tiers filter']").length,
                     3,
                     'should be three tiers icons'
                 );
                 assert.equal(
-                    tooltipOutput.find(
-                        "img[title='Putative_Driver: annotation 1']"
-                    ).length,
+                    tooltipOutput.find("img[title='Putative_Driver: annotation 1']").length,
                     1
                 );
                 assert.equal(
-                    tooltipOutput.find(
-                        "img[title='Putative_Driver: annotation 2']"
-                    ).length,
+                    tooltipOutput.find("img[title='Putative_Driver: annotation 2']").length,
                     1
                 );
                 assert.equal(
-                    tooltipOutput.find(
-                        "img[title='Putative_Driver: 3 annotation']"
-                    ).length,
+                    tooltipOutput.find("img[title='Putative_Driver: 3 annotation']").length,
                     1
                 );
                 assert.equal(
@@ -829,10 +734,7 @@ describe('Oncoprint TooltipUtils', () => {
                     ],
                 };
                 let tooltipOutput = tooltip([datum]);
-                assert.equal(
-                    tooltipOutput.html().match(/Germline/g)!.length,
-                    2
-                );
+                assert.equal(tooltipOutput.html().match(/Germline/g)!.length, 2);
                 assert.isFalse(
                     tooltipOutput.html().indexOf('(1)') > -1,
                     'theres no (1) because theres only one datum to the tooltip'
@@ -888,11 +790,7 @@ describe('Oncoprint TooltipUtils', () => {
                     2,
                     'mutation1 germline, mutation2 germline'
                 );
-                assert.equal(
-                    tooltipOutput.html().match(/\(2\)/g),
-                    null,
-                    'nothing occurs in both'
-                );
+                assert.equal(tooltipOutput.html().match(/\(2\)/g), null, 'nothing occurs in both');
                 assert.equal(
                     tooltipOutput.html().match(/\(1\)/g)!.length,
                     4,
@@ -922,11 +820,8 @@ describe('Oncoprint TooltipUtils', () => {
                 };
                 let tooltipOutput = tooltip([datum]);
                 assert.isTrue(
-                    tooltipOutput
-                        .html()
-                        .indexOf(
-                            'Not profiled in selected molecular profiles.'
-                        ) > -1
+                    tooltipOutput.html().indexOf('Not profiled in selected molecular profiles.') >
+                        -1
                 );
                 assert.equal(
                     tooltipOutput.html().match(/\(1\)/g),
@@ -938,18 +833,14 @@ describe('Oncoprint TooltipUtils', () => {
                 assert.isTrue(
                     tooltipOutput
                         .html()
-                        .indexOf(
-                            'Not profiled in selected molecular profiles. (2)'
-                        ) > -1
+                        .indexOf('Not profiled in selected molecular profiles. (2)') > -1
                 );
 
                 tooltipOutput = tooltip([datum, datum, datum]);
                 assert.isTrue(
                     tooltipOutput
                         .html()
-                        .indexOf(
-                            'Not profiled in selected molecular profiles. (3)'
-                        ) > -1
+                        .indexOf('Not profiled in selected molecular profiles. (3)') > -1
                 );
             });
             it("should say 'profiled' if 'not_profiled_in' is empty and 'profiled_in' is not", () => {
@@ -958,18 +849,13 @@ describe('Oncoprint TooltipUtils', () => {
                     study_id: '',
                     data: [] as AnnotatedExtendedAlteration[],
                     na: true,
-                    profiled_in: [
-                        { molecularProfileId: 'profile', genePanelId: 'panel' },
-                    ],
+                    profiled_in: [{ molecularProfileId: 'profile', genePanelId: 'panel' }],
                     not_profiled_in: [],
                 };
                 let tooltipOutput = tooltip([datum]);
                 assert.isTrue(
-                    tooltipOutput
-                        .html()
-                        .indexOf(
-                            'Profiled in all selected molecular profiles.'
-                        ) > -1
+                    tooltipOutput.html().indexOf('Profiled in all selected molecular profiles.') >
+                        -1
                 );
                 assert.equal(
                     tooltipOutput.html().match(/\(1\)/g),
@@ -981,18 +867,14 @@ describe('Oncoprint TooltipUtils', () => {
                 assert.isTrue(
                     tooltipOutput
                         .html()
-                        .indexOf(
-                            'Profiled in all selected molecular profiles. (2)'
-                        ) > -1
+                        .indexOf('Profiled in all selected molecular profiles. (2)') > -1
                 );
 
                 tooltipOutput = tooltip([datum, datum, datum]);
                 assert.isTrue(
                     tooltipOutput
                         .html()
-                        .indexOf(
-                            'Profiled in all selected molecular profiles. (3)'
-                        ) > -1
+                        .indexOf('Profiled in all selected molecular profiles. (3)') > -1
                 );
             });
             it("should give the correct spread of 'Not profiled' and 'Profiled' over multiple data", () => {
@@ -1054,61 +936,40 @@ describe('Oncoprint TooltipUtils', () => {
                     not_profiled_in: [{ molecularProfileId: 'profile' }],
                 };
 
-                let tooltipOutput = tooltip([
-                    notProfiled,
-                    profiled,
-                    notProfiled,
-                ]);
+                let tooltipOutput = tooltip([notProfiled, profiled, notProfiled]);
                 assert.isTrue(
                     tooltipOutput
                         .html()
-                        .indexOf(
-                            'Not profiled in selected molecular profiles. (2)'
-                        ) > -1
+                        .indexOf('Not profiled in selected molecular profiles. (2)') > -1
                 );
                 assert.isTrue(
                     tooltipOutput
                         .html()
-                        .indexOf(
-                            'Profiled in all selected molecular profiles. (1)'
-                        ) > -1
+                        .indexOf('Profiled in all selected molecular profiles. (1)') > -1
                 );
 
-                tooltipOutput = tooltip([
-                    notProfiled,
-                    profiled,
-                    profiled,
-                    profiled,
-                ]);
+                tooltipOutput = tooltip([notProfiled, profiled, profiled, profiled]);
                 assert.isTrue(
                     tooltipOutput
                         .html()
-                        .indexOf(
-                            'Not profiled in selected molecular profiles. (1)'
-                        ) > -1
+                        .indexOf('Not profiled in selected molecular profiles. (1)') > -1
                 );
                 assert.isTrue(
                     tooltipOutput
                         .html()
-                        .indexOf(
-                            'Profiled in all selected molecular profiles. (3)'
-                        ) > -1
+                        .indexOf('Profiled in all selected molecular profiles. (3)') > -1
                 );
 
                 tooltipOutput = tooltip([notProfiled, profiled]);
                 assert.isTrue(
                     tooltipOutput
                         .html()
-                        .indexOf(
-                            'Not profiled in selected molecular profiles. (1)'
-                        ) > -1
+                        .indexOf('Not profiled in selected molecular profiles. (1)') > -1
                 );
                 assert.isTrue(
                     tooltipOutput
                         .html()
-                        .indexOf(
-                            'Profiled in all selected molecular profiles. (1)'
-                        ) > -1
+                        .indexOf('Profiled in all selected molecular profiles. (1)') > -1
                 );
 
                 tooltipOutput = tooltip([
@@ -1123,89 +984,60 @@ describe('Oncoprint TooltipUtils', () => {
                 assert.isTrue(
                     tooltipOutput
                         .html()
-                        .indexOf(
-                            'Not profiled in selected molecular profiles. (3)'
-                        ) > -1
+                        .indexOf('Not profiled in selected molecular profiles. (3)') > -1
                 );
                 assert.isTrue(
                     tooltipOutput
                         .html()
-                        .indexOf(
-                            'Profiled in all selected molecular profiles. (4)'
-                        ) > -1
+                        .indexOf('Profiled in all selected molecular profiles. (4)') > -1
                 );
 
                 tooltipOutput = tooltip([datum1, datum2, datum3]);
                 assert.isTrue(
-                    tooltipOutput
-                        .html()
-                        .indexOf(
-                            'Not profiled in selected molecular profiles.'
-                        ) === -1,
+                    tooltipOutput.html().indexOf('Not profiled in selected molecular profiles.') ===
+                        -1,
                     'None are profiled in none'
                 );
                 assert.isTrue(
-                    tooltipOutput
-                        .html()
-                        .indexOf(
-                            'Profiled in all selected molecular profiles.'
-                        ) === -1,
+                    tooltipOutput.html().indexOf('Profiled in all selected molecular profiles.') ===
+                        -1,
                     'None are profiled in all'
                 );
                 assert.isTrue(
                     tooltipOutput
                         .html()
-                        .indexOf(
-                            'Profiled in: Profile (2), Profile2 (2), Profile3 (1)'
-                        ) > -1,
+                        .indexOf('Profiled in: Profile (2), Profile2 (2), Profile3 (1)') > -1,
                     'all the counts are correct (order is arbitrary)'
                 );
                 assert.isTrue(
                     tooltipOutput
                         .html()
-                        .indexOf(
-                            'Not profiled in: Profile2 (1), Profile3 (2), Profile (1)'
-                        ) > -1,
+                        .indexOf('Not profiled in: Profile2 (1), Profile3 (2), Profile (1)') > -1,
                     'all the counts are correct (order is arbitrary)'
                 );
 
-                tooltipOutput = tooltip([
-                    datum1,
-                    datum2,
-                    datum3,
-                    profiled,
-                    notProfiled,
-                    profiled,
-                ]);
+                tooltipOutput = tooltip([datum1, datum2, datum3, profiled, notProfiled, profiled]);
                 // it shows the right number of "not profiled in any" and "profiled in all", and also adds those counts to the specific profile counts
                 assert.isTrue(
                     tooltipOutput
                         .html()
-                        .indexOf(
-                            'Not profiled in selected molecular profiles. (1)'
-                        ) > -1
+                        .indexOf('Not profiled in selected molecular profiles. (1)') > -1
                 );
                 assert.isTrue(
                     tooltipOutput
                         .html()
-                        .indexOf(
-                            'Profiled in all selected molecular profiles. (2)'
-                        ) > -1
+                        .indexOf('Profiled in all selected molecular profiles. (2)') > -1
                 );
                 assert.isTrue(
                     tooltipOutput
                         .html()
-                        .indexOf(
-                            'Profiled in: Profile (4), Profile2 (4), Profile3 (3)'
-                        ) > -1,
+                        .indexOf('Profiled in: Profile (4), Profile2 (4), Profile3 (3)') > -1,
                     'all the counts are correct (order is arbitrary)'
                 );
                 assert.isTrue(
                     tooltipOutput
                         .html()
-                        .indexOf(
-                            'Not profiled in: Profile2 (2), Profile3 (3), Profile (2)'
-                        ) > -1,
+                        .indexOf('Not profiled in: Profile2 (2), Profile3 (3), Profile (2)') > -1,
                     'all the counts are correct (order is arbitrary)'
                 );
             });
@@ -1287,18 +1119,9 @@ describe('Oncoprint TooltipUtils', () => {
                 assert.equal(tooltipOutput.text().match(/panel1/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/panel2/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/panel3/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/panel1 \(1\)/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/panel2 \(1\)/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/panel3 \(1\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/panel1 \(1\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/panel2 \(1\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/panel3 \(1\)/g)!.length, 1);
                 assert.notEqual(
                     tooltipOutput
                         .find('a:contains("panel1")')
@@ -1325,18 +1148,9 @@ describe('Oncoprint TooltipUtils', () => {
                 assert.equal(tooltipOutput.text().match(/panel1/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/panel2/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/panel3/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/panel1 \(2\)/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/panel2 \(2\)/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/panel3 \(1\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/panel1 \(2\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/panel2 \(2\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/panel3 \(1\)/g)!.length, 1);
                 assert.notEqual(
                     tooltipOutput
                         .find('a:contains("panel1")')
@@ -1363,18 +1177,9 @@ describe('Oncoprint TooltipUtils', () => {
                 assert.equal(tooltipOutput.text().match(/panel1/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/panel2/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/panel3/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/panel1 \(1\)/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/panel2 \(1\)/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/panel3 \(2\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/panel1 \(1\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/panel2 \(1\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/panel3 \(2\)/g)!.length, 1);
                 assert.notEqual(
                     tooltipOutput
                         .find('a:contains("panel1")')
@@ -1402,18 +1207,9 @@ describe('Oncoprint TooltipUtils', () => {
                 assert.equal(tooltipOutput.text().match(/panel1/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/panel2/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/panel3/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/panel1 \(2\)/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/panel2 \(2\)/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/panel3 \(1\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/panel1 \(2\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/panel2 \(2\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/panel3 \(1\)/g)!.length, 1);
                 assert.notEqual(
                     tooltipOutput
                         .find('a:contains("panel1")')
@@ -1462,14 +1258,8 @@ describe('Oncoprint TooltipUtils', () => {
             it('single genetic alteration in single case - mutation', () => {
                 datum.data = [makeMutation({ proteinChange: 'PC1' })];
                 tooltipOutput = tooltip([datum]);
-                assert.equal(
-                    tooltipOutput.text().match(/Mutation:/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC1/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/Mutation:/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE PC1/g)!.length, 1);
                 assert.equal(
                     tooltipOutput.text().match(/\(\d+\)/g),
                     null,
@@ -1481,14 +1271,8 @@ describe('Oncoprint TooltipUtils', () => {
                     makeMutation({ proteinChange: 'PC1' }),
                 ];
                 tooltipOutput = tooltip([datum]);
-                assert.equal(
-                    tooltipOutput.text().match(/Mutation:/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC1/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/Mutation:/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE PC1/g)!.length, 1);
                 assert.equal(
                     tooltipOutput.text().match(/\(\d+\)/g),
                     null,
@@ -1499,10 +1283,7 @@ describe('Oncoprint TooltipUtils', () => {
                 datum.data = [makeFusion({ proteinChange: 'PC1' })];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/Fusion:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC1/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE PC1/g)!.length, 1);
                 assert.equal(
                     tooltipOutput.text().match(/\(\d+\)/g),
                     null,
@@ -1515,10 +1296,7 @@ describe('Oncoprint TooltipUtils', () => {
                 ];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/Fusion:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC1/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE PC1/g)!.length, 1);
                 assert.equal(
                     tooltipOutput.text().match(/\(\d+\)/g),
                     null,
@@ -1538,28 +1316,16 @@ describe('Oncoprint TooltipUtils', () => {
 
                     if (i === 0) {
                         // nothing in tooltip for diploid
-                        assert.equal(
-                            tooltipOutput
-                                .text()
-                                .match(/Copy Number Alteration:/g),
-                            null
-                        );
+                        assert.equal(tooltipOutput.text().match(/Copy Number Alteration:/g), null);
                     } else {
                         assert.equal(
-                            tooltipOutput
-                                .text()
-                                .match(/Copy Number Alteration:/g)!.length,
+                            tooltipOutput.text().match(/Copy Number Alteration:/g)!.length,
                             1
                         );
                         assert.equal(
                             tooltipOutput
                                 .text()
-                                .match(
-                                    new RegExp(
-                                        `GENE ${disp_cna[i.toString()]}`,
-                                        'g'
-                                    )
-                                )!.length,
+                                .match(new RegExp(`GENE ${disp_cna[i.toString()]}`, 'g'))!.length,
                             1
                         );
                         assert.equal(
@@ -1574,28 +1340,16 @@ describe('Oncoprint TooltipUtils', () => {
 
                     if (i === 0) {
                         // nothing in tooltip for diploid
-                        assert.equal(
-                            tooltipOutput
-                                .text()
-                                .match(/Copy Number Alteration:/g),
-                            null
-                        );
+                        assert.equal(tooltipOutput.text().match(/Copy Number Alteration:/g), null);
                     } else {
                         assert.equal(
-                            tooltipOutput
-                                .text()
-                                .match(/Copy Number Alteration:/g)!.length,
+                            tooltipOutput.text().match(/Copy Number Alteration:/g)!.length,
                             1
                         );
                         assert.equal(
                             tooltipOutput
                                 .text()
-                                .match(
-                                    new RegExp(
-                                        `GENE ${disp_cna[i.toString()]}`,
-                                        'g'
-                                    )
-                                )!.length,
+                                .match(new RegExp(`GENE ${disp_cna[i.toString()]}`, 'g'))!.length,
                             1
                         );
                         assert.equal(
@@ -1610,10 +1364,7 @@ describe('Oncoprint TooltipUtils', () => {
                 datum.data = [makeMrna({ alterationSubType: 'high' })];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE HIGH/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE HIGH/g)!.length, 1);
                 assert.equal(
                     tooltipOutput.text().match(/\(\d+\)/g),
                     null,
@@ -1626,10 +1377,7 @@ describe('Oncoprint TooltipUtils', () => {
                 ];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE HIGH/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE HIGH/g)!.length, 1);
                 assert.equal(
                     tooltipOutput.text().match(/\(\d+\)/g),
                     null,
@@ -1639,10 +1387,7 @@ describe('Oncoprint TooltipUtils', () => {
                 datum.data = [makeMrna({ alterationSubType: 'low' })];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE LOW/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE LOW/g)!.length, 1);
                 assert.equal(
                     tooltipOutput.text().match(/\(\d+\)/g),
                     null,
@@ -1655,10 +1400,7 @@ describe('Oncoprint TooltipUtils', () => {
                 ];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE LOW/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE LOW/g)!.length, 1);
                 assert.equal(
                     tooltipOutput.text().match(/\(\d+\)/g),
                     null,
@@ -1669,10 +1411,7 @@ describe('Oncoprint TooltipUtils', () => {
                 datum.data = [makeProt({ alterationSubType: 'high' })];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/PROT:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE HIGH/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE HIGH/g)!.length, 1);
                 assert.equal(
                     tooltipOutput.text().match(/\(\d+\)/g),
                     null,
@@ -1685,10 +1424,7 @@ describe('Oncoprint TooltipUtils', () => {
                 ];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/PROT:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE HIGH/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE HIGH/g)!.length, 1);
                 assert.equal(
                     tooltipOutput.text().match(/\(\d+\)/g),
                     null,
@@ -1698,10 +1434,7 @@ describe('Oncoprint TooltipUtils', () => {
                 datum.data = [makeProt({ alterationSubType: 'low' })];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/PROT:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE LOW/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE LOW/g)!.length, 1);
                 assert.equal(
                     tooltipOutput.text().match(/\(\d+\)/g),
                     null,
@@ -1714,10 +1447,7 @@ describe('Oncoprint TooltipUtils', () => {
                 ];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/PROT:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE LOW/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE LOW/g)!.length, 1);
                 assert.equal(
                     tooltipOutput.text().match(/\(\d+\)/g),
                     null,
@@ -1727,40 +1457,22 @@ describe('Oncoprint TooltipUtils', () => {
             it('single genetic alteration across multiple cases - mutation', () => {
                 datum.data = [makeMutation({ proteinChange: 'PC1' })];
                 tooltipOutput = tooltip([datum, datum, datum]);
-                assert.equal(
-                    tooltipOutput.text().match(/Mutation:/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC1\xa0\(3\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/Mutation:/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE PC1\xa0\(3\)/g)!.length, 1);
 
                 tooltipOutput = tooltip([datum, emptyDatum]);
-                assert.equal(
-                    tooltipOutput.text().match(/Mutation:/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC1\xa0\(1\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/Mutation:/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE PC1\xa0\(1\)/g)!.length, 1);
             });
             it('single genetic alteration across multiple cases - fusion', () => {
                 datum.data = [makeFusion({ proteinChange: 'PC1' })];
                 tooltipOutput = tooltip([datum, datum, datum]);
                 assert.equal(tooltipOutput.text().match(/Fusion:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC1\xa0\(3\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE PC1\xa0\(3\)/g)!.length, 1);
 
                 tooltipOutput = tooltip([datum, emptyDatum]);
                 assert.equal(tooltipOutput.text().match(/Fusion:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC1\xa0\(1\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE PC1\xa0\(1\)/g)!.length, 1);
             });
             it('single genetic alteration across multiple cases - cna', () => {
                 const disp_cna: { [integerCN: string]: string } = {
@@ -1771,39 +1483,21 @@ describe('Oncoprint TooltipUtils', () => {
                 };
                 for (let i = -2; i <= 2; i++) {
                     datum.data = [makeCna({ value: i })];
-                    tooltipOutput = tooltip([
-                        emptyDatum,
-                        datum,
-                        datum,
-                        datum,
-                        datum,
-                    ]);
+                    tooltipOutput = tooltip([emptyDatum, datum, datum, datum, datum]);
 
                     if (i === 0) {
                         // nothing in tooltip for diploid
-                        assert.equal(
-                            tooltipOutput
-                                .text()
-                                .match(/Copy Number Alteration:/g),
-                            null
-                        );
+                        assert.equal(tooltipOutput.text().match(/Copy Number Alteration:/g), null);
                     } else {
                         assert.equal(
-                            tooltipOutput
-                                .text()
-                                .match(/Copy Number Alteration:/g)!.length,
+                            tooltipOutput.text().match(/Copy Number Alteration:/g)!.length,
                             1
                         );
                         assert.equal(
                             tooltipOutput
                                 .text()
                                 .match(
-                                    new RegExp(
-                                        `GENE ${
-                                            disp_cna[i.toString()]
-                                        }\\xa0\\(4\\)`,
-                                        'g'
-                                    )
+                                    new RegExp(`GENE ${disp_cna[i.toString()]}\\xa0\\(4\\)`, 'g')
                                 )!.length,
                             1
                         );
@@ -1814,42 +1508,27 @@ describe('Oncoprint TooltipUtils', () => {
                 datum.data = [makeMrna({ alterationSubType: 'high' })];
                 tooltipOutput = tooltip([datum, datum]);
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE HIGH\xa0\(2\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE HIGH\xa0\(2\)/g)!.length, 1);
 
                 datum.data = [makeMrna({ alterationSubType: 'low' })];
                 tooltipOutput = tooltip([datum, datum]);
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE LOW\xa0\(2\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE LOW\xa0\(2\)/g)!.length, 1);
 
                 tooltipOutput = tooltip([emptyDatum, datum]);
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE LOW\xa0\(1\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE LOW\xa0\(1\)/g)!.length, 1);
             });
             it('single genetic alteration across multiple cases - prot', () => {
                 datum.data = [makeProt({ alterationSubType: 'high' })];
                 tooltipOutput = tooltip([datum, datum, datum, datum, datum]);
                 assert.equal(tooltipOutput.text().match(/PROT:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE HIGH\xa0\(5\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE HIGH\xa0\(5\)/g)!.length, 1);
 
                 datum.data = [makeProt({ alterationSubType: 'low' })];
                 tooltipOutput = tooltip([datum, datum, datum, datum, datum]);
                 assert.equal(tooltipOutput.text().match(/PROT:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE LOW\xa0\(5\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE LOW\xa0\(5\)/g)!.length, 1);
             });
             it('multiple alterations of same type in single case - mutation', () => {
                 datum.data = [
@@ -1857,18 +1536,9 @@ describe('Oncoprint TooltipUtils', () => {
                     makeMutation({ proteinChange: 'PC2' }),
                 ];
                 tooltipOutput = tooltip([datum]);
-                assert.equal(
-                    tooltipOutput.text().match(/Mutation:/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC1/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC2/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/Mutation:/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE PC1/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE PC2/g)!.length, 1);
                 assert.equal(
                     tooltipOutput.text().match(/\(\d+\)/g),
                     null,
@@ -1882,14 +1552,8 @@ describe('Oncoprint TooltipUtils', () => {
                 ];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/Fusion:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC1/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC2/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE PC1/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE PC2/g)!.length, 1);
                 assert.equal(
                     tooltipOutput.text().match(/\(\d+\)/g),
                     null,
@@ -1903,23 +1567,10 @@ describe('Oncoprint TooltipUtils', () => {
                     makeCna({ value: 1 }),
                 ];
                 tooltipOutput = tooltip([datum]);
-                assert.equal(
-                    tooltipOutput.text().match(/Copy Number Alteration:/g)!
-                        .length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE HOMODELETED/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE HETLOSS/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE GAIN/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/Copy Number Alteration:/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE HOMODELETED/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE HETLOSS/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE GAIN/g)!.length, 1);
                 assert.equal(
                     tooltipOutput.text().match(/\(\d+\)/g),
                     null,
@@ -1934,14 +1585,8 @@ describe('Oncoprint TooltipUtils', () => {
                 ];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE HIGH/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE LOW/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE HIGH/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE LOW/g)!.length, 1);
                 assert.equal(
                     tooltipOutput.text().match(/\(\d+\)/g),
                     null,
@@ -1956,14 +1601,8 @@ describe('Oncoprint TooltipUtils', () => {
                 ];
                 tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.text().match(/PROT:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE HIGH/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE LOW/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE HIGH/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE LOW/g)!.length, 1);
                 assert.equal(
                     tooltipOutput.text().match(/\(\d+\)/g),
                     null,
@@ -1976,32 +1615,14 @@ describe('Oncoprint TooltipUtils', () => {
                     makeMutation({ proteinChange: 'PC2' }),
                 ];
                 tooltipOutput = tooltip([datum, datum, datum]);
-                assert.equal(
-                    tooltipOutput.text().match(/Mutation:/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC1\xa0\(3\)/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC2\xa0\(3\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/Mutation:/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE PC1\xa0\(3\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE PC2\xa0\(3\)/g)!.length, 1);
 
                 tooltipOutput = tooltip([datum, emptyDatum]);
-                assert.equal(
-                    tooltipOutput.text().match(/Mutation:/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC1\xa0\(1\)/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC2\xa0\(1\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/Mutation:/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE PC1\xa0\(1\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE PC2\xa0\(1\)/g)!.length, 1);
             });
             it('multiple alterations of same type across multiple cases - fusion', () => {
                 datum.data = [
@@ -2010,25 +1631,13 @@ describe('Oncoprint TooltipUtils', () => {
                 ];
                 tooltipOutput = tooltip([datum, datum, datum, datum]);
                 assert.equal(tooltipOutput.text().match(/Fusion:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC1\xa0\(4\)/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC2\xa0\(4\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE PC1\xa0\(4\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE PC2\xa0\(4\)/g)!.length, 1);
 
                 tooltipOutput = tooltip([datum, datum, emptyDatum, emptyDatum]);
                 assert.equal(tooltipOutput.text().match(/Fusion:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC1\xa0\(2\)/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC2\xa0\(2\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE PC1\xa0\(2\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE PC2\xa0\(2\)/g)!.length, 1);
             });
             it('multiple alterations of same type across multiple cases - cna', () => {
                 datum.data = [
@@ -2037,46 +1646,16 @@ describe('Oncoprint TooltipUtils', () => {
                     makeCna({ value: 1 }),
                 ];
                 tooltipOutput = tooltip([datum, datum, datum]);
-                assert.equal(
-                    tooltipOutput.text().match(/Copy Number Alteration:/g)!
-                        .length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE HOMODELETED\xa0\(3\)/g)!
-                        .length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE HETLOSS\xa0\(3\)/g)!
-                        .length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE GAIN\xa0\(3\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/Copy Number Alteration:/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE HOMODELETED\xa0\(3\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE HETLOSS\xa0\(3\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE GAIN\xa0\(3\)/g)!.length, 1);
 
                 tooltipOutput = tooltip([emptyDatum, emptyDatum, datum]);
-                assert.equal(
-                    tooltipOutput.text().match(/Copy Number Alteration:/g)!
-                        .length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE HOMODELETED\xa0\(1\)/g)!
-                        .length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE HETLOSS\xa0\(1\)/g)!
-                        .length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE GAIN\xa0\(1\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/Copy Number Alteration:/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE HOMODELETED\xa0\(1\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE HETLOSS\xa0\(1\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE GAIN\xa0\(1\)/g)!.length, 1);
             });
             it('multiple alterations of same type across multiple cases - mrna', () => {
                 datum.data = [
@@ -2086,31 +1665,13 @@ describe('Oncoprint TooltipUtils', () => {
                 ];
                 tooltipOutput = tooltip([datum, datum]);
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE HIGH\xa0\(4\)/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE LOW\xa0\(2\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE HIGH\xa0\(4\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE LOW\xa0\(2\)/g)!.length, 1);
 
-                tooltipOutput = tooltip([
-                    datum,
-                    datum,
-                    emptyDatum,
-                    emptyDatum,
-                    datum,
-                ]);
+                tooltipOutput = tooltip([datum, datum, emptyDatum, emptyDatum, datum]);
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE HIGH\xa0\(6\)/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE LOW\xa0\(3\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE HIGH\xa0\(6\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE LOW\xa0\(3\)/g)!.length, 1);
             });
             it('multiple alterations of same type across multiple cases - protein', () => {
                 datum.data = [
@@ -2120,25 +1681,13 @@ describe('Oncoprint TooltipUtils', () => {
                 ];
                 tooltipOutput = tooltip([datum, datum, datum]);
                 assert.equal(tooltipOutput.text().match(/PROT:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE HIGH\xa0\(3\)/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE LOW\xa0\(6\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE HIGH\xa0\(3\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE LOW\xa0\(6\)/g)!.length, 1);
 
                 tooltipOutput = tooltip([datum, emptyDatum]);
                 assert.equal(tooltipOutput.text().match(/PROT:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE HIGH\xa0\(1\)/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE LOW\xa0\(2\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE HIGH\xa0\(1\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE LOW\xa0\(2\)/g)!.length, 1);
             });
             it('multiple alterations of different types in single case', () => {
                 datum.data = [
@@ -2153,53 +1702,22 @@ describe('Oncoprint TooltipUtils', () => {
                     makeProt({ alterationSubType: 'low' }),
                 ];
                 tooltipOutput = tooltip([datum]);
-                assert.equal(
-                    tooltipOutput.text().match(/Mutation:/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC1/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC2/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/Mutation:/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE PC1/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE PC2/g)!.length, 1);
 
                 assert.equal(tooltipOutput.text().match(/Fusion:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE fusion1/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE fusion2/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE fusion1/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE fusion2/g)!.length, 1);
 
-                assert.equal(
-                    tooltipOutput.text().match(/Copy Number Alteration:/g)!
-                        .length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE AMPLIFIED/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE HOMODELETED/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/Copy Number Alteration:/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE AMPLIFIED/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE HOMODELETED/g)!.length, 1);
 
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE HIGH/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE HIGH/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/PROT:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE LOW/g)!.length,
-                    2
-                ); // (2 for mrna and protein)
+                assert.equal(tooltipOutput.text().match(/GENE LOW/g)!.length, 2); // (2 for mrna and protein)
 
                 assert.equal(
                     tooltipOutput.text().match(/\(\d+\)/g),
@@ -2229,72 +1747,25 @@ describe('Oncoprint TooltipUtils', () => {
                         makeProt({ alterationSubType: 'low' }),
                     ],
                 });
-                tooltipOutput = tooltip([
-                    datum,
-                    datum,
-                    emptyDatum,
-                    datum,
-                    datum2,
-                ]);
-                assert.equal(
-                    tooltipOutput.text().match(/Mutation:/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC1\xa0\(4\)/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE PC2\xa0\(3\)/g)!.length,
-                    1
-                );
+                tooltipOutput = tooltip([datum, datum, emptyDatum, datum, datum2]);
+                assert.equal(tooltipOutput.text().match(/Mutation:/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE PC1\xa0\(4\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE PC2\xa0\(3\)/g)!.length, 1);
 
                 assert.equal(tooltipOutput.text().match(/Fusion:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE fusion1\xa0\(3\)/g)!
-                        .length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE fusion2\xa0\(4\)/g)!
-                        .length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE fusion1\xa0\(3\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE fusion2\xa0\(4\)/g)!.length, 1);
 
-                assert.equal(
-                    tooltipOutput.text().match(/Copy Number Alteration:/g)!
-                        .length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE AMPLIFIED\xa0\(3\)/g)!
-                        .length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE GAIN\xa0\(1\)/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE HOMODELETED\xa0\(3\)/g)!
-                        .length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/Copy Number Alteration:/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE AMPLIFIED\xa0\(3\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE GAIN\xa0\(1\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE HOMODELETED\xa0\(3\)/g)!.length, 1);
 
                 assert.equal(tooltipOutput.text().match(/MRNA:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE HIGH\xa0\(3\)/g)!.length,
-                    1
-                );
+                assert.equal(tooltipOutput.text().match(/GENE HIGH\xa0\(3\)/g)!.length, 1);
                 assert.equal(tooltipOutput.text().match(/PROT:/g)!.length, 1);
-                assert.equal(
-                    tooltipOutput.text().match(/GENE HIGH\xa0\(1\)/g)!.length,
-                    1
-                );
-                assert.equal(
-                    tooltipOutput.text().match(/GENE LOW\xa0\(4\)/g)!.length,
-                    2
-                ); // (2 for mrna and protein)
+                assert.equal(tooltipOutput.text().match(/GENE HIGH\xa0\(1\)/g)!.length, 1);
+                assert.equal(tooltipOutput.text().match(/GENE LOW\xa0\(4\)/g)!.length, 2); // (2 for mrna and protein)
             });
         });
     });
@@ -2323,11 +1794,7 @@ describe('Oncoprint TooltipUtils', () => {
                         sample: 'sampleID',
                     },
                 ]);
-                assert.isTrue(
-                    sampleTooltipResult
-                        .html()
-                        .indexOf('<span>sampleID</span>') > -1
-                );
+                assert.isTrue(sampleTooltipResult.html().indexOf('<span>sampleID</span>') > -1);
             });
             it('should show the given patient id', () => {
                 const patientTooltipResult = tooltip([
@@ -2337,11 +1804,7 @@ describe('Oncoprint TooltipUtils', () => {
                         patient: 'patientID',
                     },
                 ]);
-                assert.isTrue(
-                    patientTooltipResult
-                        .html()
-                        .indexOf('<span>patientID</span>') > -1
-                );
+                assert.isTrue(patientTooltipResult.html().indexOf('<span>patientID</span>') > -1);
             });
             it('should show the correct output for a single value', () => {
                 const tooltipResult = tooltip([
@@ -2519,9 +1982,7 @@ describe('Oncoprint TooltipUtils', () => {
                     },
                 ]);
                 assert.isTrue(
-                    tooltipResult
-                        .html()
-                        .indexOf('<b>0.24 (average of 3 values)</b>') > -1,
+                    tooltipResult.html().indexOf('<b>0.24 (average of 3 values)</b>') > -1,
                     'multiple - correct result with no integer part'
                 );
                 tooltipResult = tooltip([
@@ -2529,9 +1990,7 @@ describe('Oncoprint TooltipUtils', () => {
                     { attr_val_counts: { '8.100032': 1 }, sample: 'sampleID' },
                 ]);
                 assert.isTrue(
-                    tooltipResult
-                        .html()
-                        .indexOf('<b>7.10 (average of 2 values)</b>') > -1,
+                    tooltipResult.html().indexOf('<b>7.10 (average of 2 values)</b>') > -1,
                     'multiple - correct result with integer part'
                 );
                 tooltipResult = tooltip([
@@ -2541,9 +2000,7 @@ describe('Oncoprint TooltipUtils', () => {
                     { attr_val_counts: { '0': 1 }, sample: 'sampleID' },
                 ]);
                 assert.isTrue(
-                    tooltipResult
-                        .html()
-                        .indexOf('<b>0 (average of 4 values)</b>') > -1,
+                    tooltipResult.html().indexOf('<b>0 (average of 4 values)</b>') > -1,
                     'multiple - correct result for zero'
                 );
                 tooltipResult = tooltip([
@@ -2556,9 +2013,7 @@ describe('Oncoprint TooltipUtils', () => {
                     },
                 ]);
                 assert.isTrue(
-                    tooltipResult
-                        .html()
-                        .indexOf('<b>-0.14 (average of 4 values)</b>') > -1,
+                    tooltipResult.html().indexOf('<b>-0.14 (average of 4 values)</b>') > -1,
                     'correct result with no integer part, negative'
                 );
                 tooltipResult = tooltip([
@@ -2566,9 +2021,7 @@ describe('Oncoprint TooltipUtils', () => {
                     { attr_val_counts: { '-2.100032': 2 }, sample: 'sampleID' },
                 ]);
                 assert.isTrue(
-                    tooltipResult
-                        .html()
-                        .indexOf('<b>-3.10 (average of 3 values)</b>') > -1,
+                    tooltipResult.html().indexOf('<b>-3.10 (average of 3 values)</b>') > -1,
                     'correct result with integer part, negative'
                 );
             });
@@ -2579,16 +2032,12 @@ describe('Oncoprint TooltipUtils', () => {
 
         it('should show data rounded to 2 decimal digits', () => {
             // one data
-            let tooltipResult = tooltip([
-                { profile_data: 0.13500013531, sample: 'sampleID' },
-            ]);
+            let tooltipResult = tooltip([{ profile_data: 0.13500013531, sample: 'sampleID' }]);
             assert.isTrue(
                 tooltipResult.html().indexOf('<b>0.14</b>') > -1,
                 'correct result with no integer part'
             );
-            tooltipResult = tooltip([
-                { profile_data: 6.100032, sample: 'sampleID' },
-            ]);
+            tooltipResult = tooltip([{ profile_data: 6.100032, sample: 'sampleID' }]);
             assert.isTrue(
                 tooltipResult.html().indexOf('<b>6.10</b>') > -1,
                 'correct result with integer part'
@@ -2598,16 +2047,12 @@ describe('Oncoprint TooltipUtils', () => {
                 tooltipResult.html().indexOf('<b>0.00</b>') > -1,
                 'correct result for zero'
             );
-            tooltipResult = tooltip([
-                { profile_data: -0.13500013531, sample: 'sampleID' },
-            ]);
+            tooltipResult = tooltip([{ profile_data: -0.13500013531, sample: 'sampleID' }]);
             assert.isTrue(
                 tooltipResult.html().indexOf('<b>-0.14</b>') > -1,
                 'correct result with no integer part, negative'
             );
-            tooltipResult = tooltip([
-                { profile_data: -6.100032, sample: 'sampleID' },
-            ]);
+            tooltipResult = tooltip([{ profile_data: -6.100032, sample: 'sampleID' }]);
             assert.isTrue(
                 tooltipResult.html().indexOf('<b>-6.10</b>') > -1,
                 'correct result with integer part, negative'
@@ -2620,9 +2065,7 @@ describe('Oncoprint TooltipUtils', () => {
                 { profile_data: 0.33500013531, sample: 'sampleID' },
             ]);
             assert.isTrue(
-                tooltipResult
-                    .html()
-                    .indexOf('<b>0.24 (average of 3 values)</b>') > -1,
+                tooltipResult.html().indexOf('<b>0.24 (average of 3 values)</b>') > -1,
                 'multiple - correct result with no integer part'
             );
             tooltipResult = tooltip([
@@ -2630,9 +2073,7 @@ describe('Oncoprint TooltipUtils', () => {
                 { profile_data: 8.100032, sample: 'sampleID' },
             ]);
             assert.isTrue(
-                tooltipResult
-                    .html()
-                    .indexOf('<b>7.10 (average of 2 values)</b>') > -1,
+                tooltipResult.html().indexOf('<b>7.10 (average of 2 values)</b>') > -1,
                 'multiple - correct result with integer part'
             );
             tooltipResult = tooltip([
@@ -2642,9 +2083,7 @@ describe('Oncoprint TooltipUtils', () => {
                 { profile_data: 0, sample: 'sampleID' },
             ]);
             assert.isTrue(
-                tooltipResult
-                    .html()
-                    .indexOf('<b>0.00 (average of 4 values)</b>') > -1,
+                tooltipResult.html().indexOf('<b>0.00 (average of 4 values)</b>') > -1,
                 'multiple - correct result for zero'
             );
             tooltipResult = tooltip([
@@ -2654,9 +2093,7 @@ describe('Oncoprint TooltipUtils', () => {
                 { profile_data: -0.23500013531, sample: 'sampleID' },
             ]);
             assert.isTrue(
-                tooltipResult
-                    .html()
-                    .indexOf('<b>-0.14 (average of 4 values)</b>') > -1,
+                tooltipResult.html().indexOf('<b>-0.14 (average of 4 values)</b>') > -1,
                 'correct result with no integer part, negative'
             );
             tooltipResult = tooltip([
@@ -2664,9 +2101,7 @@ describe('Oncoprint TooltipUtils', () => {
                 { profile_data: -2.100032, sample: 'sampleID' },
             ]);
             assert.isTrue(
-                tooltipResult
-                    .html()
-                    .indexOf('<b>-4.10 (average of 2 values)</b>') > -1,
+                tooltipResult.html().indexOf('<b>-4.10 (average of 2 values)</b>') > -1,
                 'correct result with integer part, negative'
             );
         });
@@ -2681,10 +2116,7 @@ describe('Oncoprint TooltipUtils', () => {
             );
         });
 
-        const fTreamentTooltip = makeHeatmapTrackTooltip(
-            'GENERIC_ASSAY',
-            false
-        );
+        const fTreamentTooltip = makeHeatmapTrackTooltip('GENERIC_ASSAY', false);
 
         it('Should handle categories for treatment genetic alterations', () => {
             const tooltipResult = fTreamentTooltip([
@@ -2702,9 +2134,7 @@ describe('Oncoprint TooltipUtils', () => {
                 { profile_data: 7, sample: 'sampleID', category: '>7.00' },
             ]);
             assert.isTrue(
-                tooltipResult
-                    .html()
-                    .indexOf('<b>&gt;8.00, &gt;7.00 (2 data points)</b>') > -1,
+                tooltipResult.html().indexOf('<b>&gt;8.00, &gt;7.00 (2 data points)</b>') > -1,
                 'treatment - multiple categories are displayed when under mouse'
             );
         });
@@ -2715,9 +2145,7 @@ describe('Oncoprint TooltipUtils', () => {
                 { profile_data: 7, sample: 'sampleID', category: '>7.00' },
             ]);
             assert.isTrue(
-                tooltipResult
-                    .html()
-                    .indexOf('<b>8.00</b> and <b>&gt;7.00</b>') > -1,
+                tooltipResult.html().indexOf('<b>8.00</b> and <b>&gt;7.00</b>') > -1,
                 'treatment - multiple categories are displayed when under mouse'
             );
         });
@@ -2742,59 +2170,44 @@ describe('Oncoprint TooltipUtils', () => {
     });
     describe('makeGeneticTrackTooltip_getCoverageInformation', () => {
         it('gives correct results on undefined input', () => {
-            assert.deepEqual(
-                makeGeneticTrackTooltip_getCoverageInformation(
-                    undefined,
-                    undefined
-                ),
-                {
-                    dispProfiledGenePanelIds: [],
-                    dispNotProfiledGenePanelIds: [],
-                    dispProfiledIn: undefined,
-                    dispNotProfiledIn: undefined,
-                    dispAllProfiled: false,
-                    dispNotProfiled: false,
-                }
-            );
+            assert.deepEqual(makeGeneticTrackTooltip_getCoverageInformation(undefined, undefined), {
+                dispProfiledGenePanelIds: [],
+                dispNotProfiledGenePanelIds: [],
+                dispProfiledIn: undefined,
+                dispNotProfiledIn: undefined,
+                dispAllProfiled: false,
+                dispNotProfiled: false,
+            });
         });
         it('gives correct results on empty input', () => {
-            assert.deepEqual(
-                makeGeneticTrackTooltip_getCoverageInformation([], []),
-                {
-                    dispProfiledGenePanelIds: [],
-                    dispNotProfiledGenePanelIds: [],
-                    dispProfiledIn: [],
-                    dispNotProfiledIn: [],
-                    dispAllProfiled: false,
-                    dispNotProfiled: false,
-                }
-            );
+            assert.deepEqual(makeGeneticTrackTooltip_getCoverageInformation([], []), {
+                dispProfiledGenePanelIds: [],
+                dispNotProfiledGenePanelIds: [],
+                dispProfiledIn: [],
+                dispNotProfiledIn: [],
+                dispAllProfiled: false,
+                dispNotProfiled: false,
+            });
         });
         it('gives correct results with empty profiled_in but no not_profiled_in', () => {
-            assert.deepEqual(
-                makeGeneticTrackTooltip_getCoverageInformation([], undefined),
-                {
-                    dispProfiledGenePanelIds: [],
-                    dispNotProfiledGenePanelIds: [],
-                    dispProfiledIn: [],
-                    dispNotProfiledIn: undefined,
-                    dispAllProfiled: false,
-                    dispNotProfiled: false,
-                }
-            );
+            assert.deepEqual(makeGeneticTrackTooltip_getCoverageInformation([], undefined), {
+                dispProfiledGenePanelIds: [],
+                dispNotProfiledGenePanelIds: [],
+                dispProfiledIn: [],
+                dispNotProfiledIn: undefined,
+                dispAllProfiled: false,
+                dispNotProfiled: false,
+            });
         });
         it('gives correct results with empty not_profiled_in but no profiled_in', () => {
-            assert.deepEqual(
-                makeGeneticTrackTooltip_getCoverageInformation(undefined, []),
-                {
-                    dispProfiledGenePanelIds: [],
-                    dispNotProfiledGenePanelIds: [],
-                    dispProfiledIn: undefined,
-                    dispNotProfiledIn: [],
-                    dispAllProfiled: false,
-                    dispNotProfiled: false,
-                }
-            );
+            assert.deepEqual(makeGeneticTrackTooltip_getCoverageInformation(undefined, []), {
+                dispProfiledGenePanelIds: [],
+                dispNotProfiledGenePanelIds: [],
+                dispProfiledIn: undefined,
+                dispNotProfiledIn: [],
+                dispAllProfiled: false,
+                dispNotProfiled: false,
+            });
         });
         it('gives correct results with nonempty profiled_in but no not_profiled_in', () => {
             assert.deepEqual(

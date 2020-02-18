@@ -16,10 +16,7 @@ export interface IScatterPlotTooltipProps {
 }
 
 @observer
-export default class ScatterPlotTooltip extends React.Component<
-    IScatterPlotTooltipProps,
-    {}
-> {
+export default class ScatterPlotTooltip extends React.Component<IScatterPlotTooltipProps, {}> {
     @observable isHovered = false; // allows persistence when mouse rolls over tooltip
 
     @bind
@@ -34,9 +31,7 @@ export default class ScatterPlotTooltip extends React.Component<
 
     render() {
         const arrowOffsetTop =
-            this.props.arrowOffsetTop === undefined
-                ? 30
-                : this.props.arrowOffsetTop;
+            this.props.arrowOffsetTop === undefined ? 30 : this.props.arrowOffsetTop;
         const arrowOffsetLeft = 24;
         const leftPadding = 5;
         const horizontal =

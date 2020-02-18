@@ -33,26 +33,20 @@ class AddChartTableComponent extends FixedHeaderTable<AddChartOption> {}
 const NUM_ROWS_SHOWN = 15;
 
 @observer
-export default class AddChartByType extends React.Component<
-    IAddChartByTypeProps,
-    {}
-> {
+export default class AddChartByType extends React.Component<IAddChartByTypeProps, {}> {
     @computed
     get options() {
         if (this.props.freqPromise.isComplete) {
             const options = _.reduce(
                 this.props.options,
                 (acc, next) => {
-                    const disabled =
-                        this.props.freqPromise.result![next.key] === 0;
+                    const disabled = this.props.freqPromise.result![next.key] === 0;
                     acc.push({
                         label: next.label,
                         key: next.key,
                         disabled: disabled,
                         selected: next.selected,
-                        freq: disabled
-                            ? 0
-                            : this.props.freqPromise.result![next.key],
+                        freq: disabled ? 0 : this.props.freqPromise.result![next.key],
                     });
                     return acc;
                 },
@@ -66,9 +60,7 @@ export default class AddChartByType extends React.Component<
                 });
             }
         } else {
-            const options = this.props.options.map(o =>
-                Object.assign({ freq: 100 }, o)
-            );
+            const options = this.props.options.map(o => Object.assign({ freq: 100 }, o));
             if (this.props.optionsGivenInSortedOrder) {
                 return options;
             } else {
@@ -83,10 +75,7 @@ export default class AddChartByType extends React.Component<
             render: (option: AddChartOption) => {
                 return (
                     <div
-                        className={classnames(
-                            styles.option,
-                            'add-chart-option'
-                        )}
+                        className={classnames(styles.option, 'add-chart-option')}
                         data-test={`add-chart-option-${option.label
                             .toLowerCase()
                             .replace(/\s/g, '-')}`}
@@ -120,22 +109,15 @@ export default class AddChartByType extends React.Component<
             name: 'Freq',
             tooltip: (
                 <span>
-                    {ifNotDefined(
-                        this.props.frequencyHeaderTooltip,
-                        '% samples with data'
-                    )}
+                    {ifNotDefined(this.props.frequencyHeaderTooltip, '% samples with data')}
                 </span>
             ),
             render: (option: AddChartOption) => (
                 <span
                     style={{ display: 'flex', flexDirection: 'row-reverse' }}
-                    className={classnames(
-                        option.disabled ? styles.labelDisabled : ''
-                    )}
+                    className={classnames(option.disabled ? styles.labelDisabled : '')}
                 >
-                    {this.props.freqPromise.isComplete
-                        ? getFrequencyStr(option.freq)
-                        : ''}
+                    {this.props.freqPromise.isComplete ? getFrequencyStr(option.freq) : ''}
                 </span>
             ),
             sortBy: (d: AddChartOption) => d.freq,
@@ -178,9 +160,7 @@ export default class AddChartByType extends React.Component<
     @action
     addAll(selectedOptions: AddChartOption[]) {
         this.props.onAddAll(
-            _.filter(selectedOptions, option => !option.disabled).map(
-                option => option.key
-            )
+            _.filter(selectedOptions, option => !option.disabled).map(option => option.key)
         );
     }
 
@@ -198,10 +178,7 @@ export default class AddChartByType extends React.Component<
 
     render() {
         return (
-            <div
-                style={{ display: 'flex', flexDirection: 'column' }}
-                data-test="add-by-type"
-            >
+            <div style={{ display: 'flex', flexDirection: 'column' }} data-test="add-by-type">
                 <AddChartTableComponent
                     width={380}
                     height={this.tableHeight}

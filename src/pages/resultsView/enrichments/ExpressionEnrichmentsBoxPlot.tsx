@@ -16,9 +16,7 @@ import {
     makeBoxScatterPlotData,
     getBoxPlotDownloadData,
 } from '../plots/PlotsTabUtils';
-import BoxScatterPlot, {
-    IBoxScatterPlotData,
-} from 'shared/components/plots/BoxScatterPlot';
+import BoxScatterPlot, { IBoxScatterPlotData } from 'shared/components/plots/BoxScatterPlot';
 import { remoteData, DownloadControls } from 'cbioportal-frontend-commons';
 import client from 'shared/api/cbioportalClientInstance';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
@@ -28,9 +26,7 @@ import { getSampleViewUrl } from 'shared/api/urls';
 import classNames from 'classnames';
 import { getGeneSummary } from '../querySummary/QuerySummaryUtils';
 
-class EnrichmentsBoxPlotComponent extends BoxScatterPlot<
-    IBoxScatterPlotPoint
-> {}
+class EnrichmentsBoxPlotComponent extends BoxScatterPlot<IBoxScatterPlotPoint> {}
 
 export interface IExpressionEnrichmentsBoxPlotProps {
     selectedProfile: MolecularProfile;
@@ -67,9 +63,7 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
             return getBoxPlotDownloadData(
                 this.boxPlotData.result!,
                 'Group',
-                this.props.selectedRow.hugoGeneSymbol +
-                    ', ' +
-                    this.props.selectedProfile.name,
+                this.props.selectedRow.hugoGeneSymbol + ', ' + this.props.selectedProfile.name,
                 {}
             );
         }
@@ -120,12 +114,9 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
             if (this.props.selectedRow !== undefined) {
                 const modecluarData = await client.fetchAllMolecularDataInMolecularProfileUsingPOST(
                     {
-                        molecularProfileId: this.props.selectedProfile
-                            .molecularProfileId,
+                        molecularProfileId: this.props.selectedProfile.molecularProfileId,
                         molecularDataFilter: {
-                            entrezGeneIds: [
-                                this.props.selectedRow.entrezGeneId,
-                            ],
+                            entrezGeneIds: [this.props.selectedRow.entrezGeneId],
                             sampleIds: _.map(
                                 this.props.sampleKeyToSample,
                                 sample => sample.sampleId
@@ -135,14 +126,10 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
                 );
 
                 const axisData_Data = axisData.data;
-                const applyLog2 = this.props.selectedProfile.molecularProfileId.includes(
-                    'rna_seq'
-                );
+                const applyLog2 = this.props.selectedProfile.molecularProfileId.includes('rna_seq');
 
                 for (const d of modecluarData) {
-                    const value = applyLog2
-                        ? Math.log(d.value + 1) / Math.log(2)
-                        : d.value;
+                    const value = applyLog2 ? Math.log(d.value + 1) / Math.log(2) : d.value;
                     axisData_Data.push({
                         uniqueSampleKey: d.uniqueSampleKey,
                         value,
@@ -153,9 +140,7 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
         },
     });
 
-    private readonly boxPlotData = remoteData<
-        IBoxScatterPlotData<IBoxScatterPlotPoint>[]
-    >({
+    private readonly boxPlotData = remoteData<IBoxScatterPlotData<IBoxScatterPlotPoint>[]>({
         await: () => [this.vertAxisData, this.horzAxisData],
         invoke: () => {
             const horzAxisData = this.horzAxisData.result!;
@@ -185,28 +170,20 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
             let alterationContent: string | undefined = undefined;
             if (this.props.oqlFilteredCaseAggregatedData) {
                 const alterations = this.props.oqlFilteredCaseAggregatedData
-                    ? this.props.oqlFilteredCaseAggregatedData[
-                          d.uniqueSampleKey
-                      ]
+                    ? this.props.oqlFilteredCaseAggregatedData[d.uniqueSampleKey]
                     : [];
-                alterationContent =
-                    'Alteration(s): ' +
-                    getAlterationsTooltipContent(alterations);
+                alterationContent = 'Alteration(s): ' + getAlterationsTooltipContent(alterations);
             }
 
             let content = (
                 <span>
-                    Loading... (this shouldnt appear because the box plot
-                    shouldnt be visible)
+                    Loading... (this shouldnt appear because the box plot shouldnt be visible)
                 </span>
             );
             if (this.boxPlotData.isComplete) {
                 content = (
                     <div>
-                        <a
-                            href={getSampleViewUrl(d.studyId, d.sampleId)}
-                            target="_blank"
-                        >
+                        <a href={getSampleViewUrl(d.studyId, d.sampleId)} target="_blank">
                             <b>{d.sampleId}</b>
                         </a>
                         <br />
@@ -245,9 +222,7 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
         ) {
             let axisLabelX = `group`;
             if (this.props.queriedHugoGeneSymbols !== undefined) {
-                axisLabelX = `Query: ${getGeneSummary(
-                    this.props.queriedHugoGeneSymbols
-                )}`;
+                axisLabelX = `Query: ${getGeneSummary(this.props.queriedHugoGeneSymbols)}`;
             }
 
             plotElt = (

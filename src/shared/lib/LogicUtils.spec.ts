@@ -7,10 +7,7 @@ describe('LogicUtils', () => {
             assert.isTrue(logicalAnd([]), 'empty input');
             assert.isTrue(logicalAnd([true]), 'true input');
             assert.isTrue(logicalAnd([true, true]), 'true two args');
-            assert.isTrue(
-                logicalAnd([true, true, true, true, true]),
-                'five args'
-            );
+            assert.isTrue(logicalAnd([true, true, true, true, true]), 'five args');
             assert.isFalse(logicalAnd([true, false, false]), 'false args');
         });
     });

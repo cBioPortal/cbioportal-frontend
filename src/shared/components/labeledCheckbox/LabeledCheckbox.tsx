@@ -16,19 +16,13 @@ export interface ILabeledCheckboxProps {
     inputProps?: React.HTMLProps<HTMLInputElement> & { 'data-test'?: string };
 }
 
-export default class LabeledCheckbox extends React.Component<
-    ILabeledCheckboxProps,
-    {}
-> {
+export default class LabeledCheckbox extends React.Component<ILabeledCheckboxProps, {}> {
     private input: HTMLInputElement;
 
     handleInputRef = (input: HTMLInputElement) => {
         this.input = input;
 
-        if (
-            this.props.inputProps &&
-            typeof this.props.inputProps.ref === 'function'
-        )
+        if (this.props.inputProps && typeof this.props.inputProps.ref === 'function')
             this.props.inputProps.ref(input);
     };
 
@@ -41,8 +35,7 @@ export default class LabeledCheckbox extends React.Component<
     }
 
     render() {
-        let labelPropsClassName =
-            this.props.labelProps && this.props.labelProps.className;
+        let labelPropsClassName = this.props.labelProps && this.props.labelProps.className;
         let className = classNames(styles.labeledCheckbox, labelPropsClassName);
         return (
             <label className={className} {...this.props.labelProps}>

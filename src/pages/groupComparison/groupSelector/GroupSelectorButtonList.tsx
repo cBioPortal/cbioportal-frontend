@@ -8,10 +8,7 @@ export interface IGroupSelectorButtonListProps {
 }
 
 @observer
-class GroupSelectorButtonList extends React.Component<
-    IGroupSelectorButtonListProps,
-    {}
-> {
+class GroupSelectorButtonList extends React.Component<IGroupSelectorButtonListProps, {}> {
     render() {
         return (
             <div className={styles.groupButtons}>

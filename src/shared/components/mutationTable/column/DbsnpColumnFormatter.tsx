@@ -38,9 +38,7 @@ export default class DbsnpColumnFormatter {
         return cache.get(data[0]);
     }
 
-    private static getDbsnpViz(
-        genomeNexusCacheData: GenomeNexusCacheDataType | null
-    ) {
+    private static getDbsnpViz(genomeNexusCacheData: GenomeNexusCacheDataType | null) {
         let status: TableCellStatus | null = null;
 
         if (genomeNexusCacheData === null) {
@@ -50,9 +48,7 @@ export default class DbsnpColumnFormatter {
         } else if (genomeNexusCacheData.data === null) {
             status = TableCellStatus.NA;
         } else {
-            let rsId = DbsnpColumnFormatter.getData(
-                genomeNexusCacheData.data.my_variant_info
-            );
+            let rsId = DbsnpColumnFormatter.getData(genomeNexusCacheData.data.my_variant_info);
             if (rsId == null) {
                 return (
                     <DefaultTooltip
@@ -76,9 +72,7 @@ export default class DbsnpColumnFormatter {
                 return (
                     <DefaultTooltip
                         placement="top"
-                        overlay={
-                            <span>Click to see variant on dbSNP website.</span>
-                        }
+                        overlay={<span>Click to see variant on dbSNP website.</span>}
                     >
                         <span style={{ textAlign: 'right', float: 'right' }}>
                             <a href={dbsnpLink} target="_blank">
@@ -108,9 +102,7 @@ export default class DbsnpColumnFormatter {
         }
     }
 
-    public static getData(
-        genomeNexusData: MyVariantInfoAnnotation | null
-    ): string | null {
+    public static getData(genomeNexusData: MyVariantInfoAnnotation | null): string | null {
         if (
             genomeNexusData &&
             genomeNexusData.annotation &&
@@ -134,9 +126,7 @@ export default class DbsnpColumnFormatter {
         if (genomeNexusCacheData && genomeNexusCacheData.data) {
             const dbsnpData =
                 genomeNexusCacheData &&
-                DbsnpColumnFormatter.getData(
-                    genomeNexusCacheData.data.my_variant_info
-                );
+                DbsnpColumnFormatter.getData(genomeNexusCacheData.data.my_variant_info);
             if (dbsnpData) {
                 return dbsnpData;
             }
@@ -157,9 +147,7 @@ export default class DbsnpColumnFormatter {
             genomeNexusCacheData.data &&
             genomeNexusCacheData.data.my_variant_info
         ) {
-            let dbsnpData = DbsnpColumnFormatter.getData(
-                genomeNexusCacheData.data.my_variant_info
-            );
+            let dbsnpData = DbsnpColumnFormatter.getData(genomeNexusCacheData.data.my_variant_info);
             if (dbsnpData !== null) {
                 return dbsnpData;
             }

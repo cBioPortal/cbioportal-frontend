@@ -2,10 +2,7 @@ import { IHotspotIndex, isHotspot } from 'react-mutation-mapper/';
 
 import { CosmicMutation } from 'shared/api/generated/CBioPortalAPIInternal';
 import { ICosmicData } from 'shared/model/Cosmic';
-import {
-    IMyCancerGenome,
-    IMyCancerGenomeData,
-} from 'shared/model/MyCancerGenome';
+import { IMyCancerGenome, IMyCancerGenomeData } from 'shared/model/MyCancerGenome';
 import { Mutation } from 'shared/api/generated/CBioPortalAPI';
 import { normalizeMutation } from '../components/mutationMapper/MutationMapperUtils';
 import { Hotspot } from 'cbioportal-frontend-commons';
@@ -16,9 +13,7 @@ import { Hotspot } from 'cbioportal-frontend-commons';
  * @author Selcuk Onur Sumer
  */
 
-export function keywordToCosmic(
-    cosmicMutations: CosmicMutation[]
-): ICosmicData {
+export function keywordToCosmic(cosmicMutations: CosmicMutation[]): ICosmicData {
     // key: keyword
     // value: CosmicMutation[]
     const map: ICosmicData = {};
@@ -35,9 +30,7 @@ export function keywordToCosmic(
     return map;
 }
 
-export function geneToMyCancerGenome(
-    myCancerGenomes: IMyCancerGenome[]
-): IMyCancerGenomeData {
+export function geneToMyCancerGenome(myCancerGenomes: IMyCancerGenome[]): IMyCancerGenomeData {
     // key: hugo gene symbol
     // value: IMyCancerGenome[]
     const map: IMyCancerGenomeData = {};
@@ -61,15 +54,8 @@ export function recurrentHotspotFilter(hotspot: Hotspot) {
     );
 }
 
-export function isRecurrentHotspot(
-    mutation: Mutation,
-    index: IHotspotIndex
-): boolean {
-    return isHotspot(
-        normalizeMutation(mutation),
-        index,
-        recurrentHotspotFilter
-    );
+export function isRecurrentHotspot(mutation: Mutation, index: IHotspotIndex): boolean {
+    return isHotspot(normalizeMutation(mutation), index, recurrentHotspotFilter);
 }
 
 export function is3dHotspot(mutation: Mutation, index: IHotspotIndex): boolean {

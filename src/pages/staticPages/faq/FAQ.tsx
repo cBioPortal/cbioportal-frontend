@@ -10,8 +10,7 @@ class Heading extends React.Component<{ level: number }, {}> {
     render() {
         const CustomTag = `h${this.props.level}` as any;
         const firstChild: string = (this.props.children as any[])[0] as string;
-        const text: string =
-            firstChild && typeof firstChild === 'string' ? firstChild : '';
+        const text: string = firstChild && typeof firstChild === 'string' ? firstChild : '';
 
         // this transformation is to match headers to internal anchors (#) produced by markdown renderer
         // unfortunately, we rely on the text of the headers matching the text of urls in the markdown

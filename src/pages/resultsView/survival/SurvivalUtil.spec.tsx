@@ -110,15 +110,8 @@ const examplePatientSurvivals = exampleAlteredPatientSurvivals.concat(
 );
 
 const exampleAlteredEstimates = [1, 0.8];
-const exampleUnalteredEstimates = [
-    0.8,
-    0.5333333333333333,
-    0.5333333333333333,
-    0,
-];
-const exampleEstimates = exampleAlteredEstimates.concat(
-    exampleUnalteredEstimates
-);
+const exampleUnalteredEstimates = [0.8, 0.5333333333333333, 0.5333333333333333, 0];
+const exampleEstimates = exampleAlteredEstimates.concat(exampleUnalteredEstimates);
 
 describe('SurvivalUtil', () => {
     describe('#getEstimates()', () => {
@@ -127,10 +120,7 @@ describe('SurvivalUtil', () => {
         });
 
         it('returns correct estimates for the example data', () => {
-            assert.deepEqual(
-                getEstimates(examplePatientSurvivals),
-                exampleEstimates
-            );
+            assert.deepEqual(getEstimates(examplePatientSurvivals), exampleEstimates);
         });
     });
 
@@ -140,10 +130,7 @@ describe('SurvivalUtil', () => {
         });
 
         it('returns 182.19 for the example data', () => {
-            assert.equal(
-                getMedian(examplePatientSurvivals, exampleEstimates),
-                '182.19'
-            );
+            assert.equal(getMedian(examplePatientSurvivals, exampleEstimates), '182.19');
         });
     });
 
@@ -153,18 +140,15 @@ describe('SurvivalUtil', () => {
         });
 
         it('returns correct line data for the example data', () => {
-            assert.deepEqual(
-                getLineData(examplePatientSurvivals, exampleEstimates),
-                [
-                    { x: 0, y: 100 },
-                    { x: 5.09, y: 100 },
-                    { x: 0.09, y: 80 },
-                    { x: 0, y: 80 },
-                    { x: 63.83, y: 53.3333333333333333 },
-                    { x: 0.13, y: 53.3333333333333333 },
-                    { x: 182.19, y: 0 },
-                ]
-            );
+            assert.deepEqual(getLineData(examplePatientSurvivals, exampleEstimates), [
+                { x: 0, y: 100 },
+                { x: 5.09, y: 100 },
+                { x: 0.09, y: 80 },
+                { x: 0, y: 80 },
+                { x: 63.83, y: 53.3333333333333333 },
+                { x: 0.13, y: 53.3333333333333333 },
+                { x: 182.19, y: 0 },
+            ]);
         });
     });
 
@@ -174,59 +158,56 @@ describe('SurvivalUtil', () => {
         });
 
         it('returns correct scatter data for the example data', () => {
-            assert.deepEqual(
-                getScatterData(examplePatientSurvivals, exampleEstimates),
-                [
-                    {
-                        x: 5.09,
-                        y: 100,
-                        patientId: 'TCGA-OR-A5J1',
-                        uniquePatientKey: 'TCGA-OR-A5J1',
-                        studyId: 'acc_tcga',
-                        status: false,
-                    },
-                    {
-                        x: 0.09,
-                        y: 80,
-                        patientId: 'TCGA-OR-A5J2',
-                        uniquePatientKey: 'TCGA-OR-A5J2',
-                        studyId: 'acc_tcga',
-                        status: true,
-                    },
-                    {
-                        x: 0,
-                        y: 80,
-                        patientId: 'TCGA-OR-A5J3',
-                        uniquePatientKey: 'TCGA-OR-A5J3',
-                        studyId: 'acc_tcga',
-                        status: false,
-                    },
-                    {
-                        x: 63.83,
-                        y: 53.3333333333333333,
-                        patientId: 'TCGA-2F-A9KO',
-                        uniquePatientKey: 'TCGA-2F-A9KO',
-                        studyId: 'blca_tcga',
-                        status: true,
-                    },
-                    {
-                        x: 0.13,
-                        y: 53.3333333333333333,
-                        patientId: 'TCGA-2F-A9KP',
-                        uniquePatientKey: 'TCGA-2F-A9KP',
-                        studyId: 'blca_tcga',
-                        status: false,
-                    },
-                    {
-                        x: 182.19,
-                        y: 0,
-                        patientId: 'TCGA-2F-A9KQ',
-                        uniquePatientKey: 'TCGA-2F-A9KQ',
-                        studyId: 'blca_tcga',
-                        status: true,
-                    },
-                ]
-            );
+            assert.deepEqual(getScatterData(examplePatientSurvivals, exampleEstimates), [
+                {
+                    x: 5.09,
+                    y: 100,
+                    patientId: 'TCGA-OR-A5J1',
+                    uniquePatientKey: 'TCGA-OR-A5J1',
+                    studyId: 'acc_tcga',
+                    status: false,
+                },
+                {
+                    x: 0.09,
+                    y: 80,
+                    patientId: 'TCGA-OR-A5J2',
+                    uniquePatientKey: 'TCGA-OR-A5J2',
+                    studyId: 'acc_tcga',
+                    status: true,
+                },
+                {
+                    x: 0,
+                    y: 80,
+                    patientId: 'TCGA-OR-A5J3',
+                    uniquePatientKey: 'TCGA-OR-A5J3',
+                    studyId: 'acc_tcga',
+                    status: false,
+                },
+                {
+                    x: 63.83,
+                    y: 53.3333333333333333,
+                    patientId: 'TCGA-2F-A9KO',
+                    uniquePatientKey: 'TCGA-2F-A9KO',
+                    studyId: 'blca_tcga',
+                    status: true,
+                },
+                {
+                    x: 0.13,
+                    y: 53.3333333333333333,
+                    patientId: 'TCGA-2F-A9KP',
+                    uniquePatientKey: 'TCGA-2F-A9KP',
+                    studyId: 'blca_tcga',
+                    status: false,
+                },
+                {
+                    x: 182.19,
+                    y: 0,
+                    patientId: 'TCGA-2F-A9KQ',
+                    uniquePatientKey: 'TCGA-2F-A9KQ',
+                    studyId: 'blca_tcga',
+                    status: true,
+                },
+            ]);
         });
     });
 
@@ -236,68 +217,62 @@ describe('SurvivalUtil', () => {
         });
 
         it('returns correct scatter data with opacity for the example data', () => {
-            assert.deepEqual(
-                getScatterDataWithOpacity(
-                    examplePatientSurvivals,
-                    exampleEstimates
-                ),
-                [
-                    {
-                        x: 5.09,
-                        y: 100,
-                        patientId: 'TCGA-OR-A5J1',
-                        uniquePatientKey: 'TCGA-OR-A5J1',
-                        studyId: 'acc_tcga',
-                        status: false,
-                        opacity: 1,
-                    },
-                    {
-                        x: 0.09,
-                        y: 80,
-                        patientId: 'TCGA-OR-A5J2',
-                        uniquePatientKey: 'TCGA-OR-A5J2',
-                        studyId: 'acc_tcga',
-                        status: true,
-                        opacity: 0,
-                    },
-                    {
-                        x: 0,
-                        y: 80,
-                        patientId: 'TCGA-OR-A5J3',
-                        uniquePatientKey: 'TCGA-OR-A5J3',
-                        studyId: 'acc_tcga',
-                        status: false,
-                        opacity: 1,
-                    },
-                    {
-                        x: 63.83,
-                        y: 53.3333333333333333,
-                        patientId: 'TCGA-2F-A9KO',
-                        uniquePatientKey: 'TCGA-2F-A9KO',
-                        studyId: 'blca_tcga',
-                        status: true,
-                        opacity: 0,
-                    },
-                    {
-                        x: 0.13,
-                        y: 53.3333333333333333,
-                        patientId: 'TCGA-2F-A9KP',
-                        uniquePatientKey: 'TCGA-2F-A9KP',
-                        studyId: 'blca_tcga',
-                        status: false,
-                        opacity: 1,
-                    },
-                    {
-                        x: 182.19,
-                        y: 0,
-                        patientId: 'TCGA-2F-A9KQ',
-                        uniquePatientKey: 'TCGA-2F-A9KQ',
-                        studyId: 'blca_tcga',
-                        status: true,
-                        opacity: 0,
-                    },
-                ]
-            );
+            assert.deepEqual(getScatterDataWithOpacity(examplePatientSurvivals, exampleEstimates), [
+                {
+                    x: 5.09,
+                    y: 100,
+                    patientId: 'TCGA-OR-A5J1',
+                    uniquePatientKey: 'TCGA-OR-A5J1',
+                    studyId: 'acc_tcga',
+                    status: false,
+                    opacity: 1,
+                },
+                {
+                    x: 0.09,
+                    y: 80,
+                    patientId: 'TCGA-OR-A5J2',
+                    uniquePatientKey: 'TCGA-OR-A5J2',
+                    studyId: 'acc_tcga',
+                    status: true,
+                    opacity: 0,
+                },
+                {
+                    x: 0,
+                    y: 80,
+                    patientId: 'TCGA-OR-A5J3',
+                    uniquePatientKey: 'TCGA-OR-A5J3',
+                    studyId: 'acc_tcga',
+                    status: false,
+                    opacity: 1,
+                },
+                {
+                    x: 63.83,
+                    y: 53.3333333333333333,
+                    patientId: 'TCGA-2F-A9KO',
+                    uniquePatientKey: 'TCGA-2F-A9KO',
+                    studyId: 'blca_tcga',
+                    status: true,
+                    opacity: 0,
+                },
+                {
+                    x: 0.13,
+                    y: 53.3333333333333333,
+                    patientId: 'TCGA-2F-A9KP',
+                    uniquePatientKey: 'TCGA-2F-A9KP',
+                    studyId: 'blca_tcga',
+                    status: false,
+                    opacity: 1,
+                },
+                {
+                    x: 182.19,
+                    y: 0,
+                    patientId: 'TCGA-2F-A9KQ',
+                    uniquePatientKey: 'TCGA-2F-A9KQ',
+                    studyId: 'blca_tcga',
+                    status: true,
+                    opacity: 0,
+                },
+            ]);
         });
     });
 
@@ -307,10 +282,7 @@ describe('SurvivalUtil', () => {
         });
 
         it('returns correct stats for the example data', () => {
-            assert.deepEqual(
-                getStats(examplePatientSurvivals, exampleEstimates),
-                [6, 3, '182.19']
-            );
+            assert.deepEqual(getStats(examplePatientSurvivals, exampleEstimates), [6, 3, '182.19']);
         });
     });
 
@@ -321,10 +293,7 @@ describe('SurvivalUtil', () => {
 
         it('returns correct log rank for the example data', () => {
             assert.equal(
-                calculateLogRank(
-                    exampleAlteredPatientSurvivals,
-                    exampleUnalteredPatientSurvivals
-                ),
+                calculateLogRank(exampleAlteredPatientSurvivals, exampleUnalteredPatientSurvivals),
                 0.08326451662523682
             );
             assert.equal(
@@ -482,19 +451,13 @@ describe('SurvivalUtil', () => {
                 'acc_tcga\t4\tcensored\t0.8\t0\nTCGA-2F-A9KO\tblca_tcga\t3\tdeceased\t0.5333333333333333\t63.83\nTCGA-2F-A9KP\tblca_tcga\t2\tcensored\t' +
                 '0.5333333333333333\t0.13\nTCGA-2F-A9KQ\tblca_tcga\t1\tdeceased\t0\t182.19';
 
-            assert.equal(
-                getDownloadContent(data, 'test_main_title'),
-                targetDownloadContent
-            );
+            assert.equal(getDownloadContent(data, 'test_main_title'), targetDownloadContent);
         });
     });
 
     describe('#convertScatterDataToDownloadData()', () => {
         it('returns empty list for empty list', () => {
-            assert.deepEqual(
-                convertScatterDataToDownloadData(getScatterData([], [])),
-                []
-            );
+            assert.deepEqual(convertScatterDataToDownloadData(getScatterData([], [])), []);
         });
 
         it('returns correct download data for the example data', () => {
@@ -574,10 +537,7 @@ describe('SurvivalUtil', () => {
                 yDenominator: 100,
                 threshold: 100,
             };
-            assert.deepEqual(
-                downSampling(allScatterData, opts),
-                allScatterData
-            );
+            assert.deepEqual(downSampling(allScatterData, opts), allScatterData);
         });
 
         it('when any denominator is negative value, return the full data', () => {
@@ -586,10 +546,7 @@ describe('SurvivalUtil', () => {
                 yDenominator: 100,
                 threshold: 100,
             };
-            assert.deepEqual(
-                downSampling(allScatterData, opts),
-                allScatterData
-            );
+            assert.deepEqual(downSampling(allScatterData, opts), allScatterData);
         });
 
         it('Remove the dot which too close from the last dot', () => {

@@ -77,10 +77,8 @@ describe('#countMutations', () => {
                 functionalImpactScore: 'M',
                 fisValue: 2.675,
                 linkXvar: 'getma.org/?cm=var&var=hg19,12,25398285,C,G&fts=all',
-                linkPdb:
-                    'getma.org/pdb.php?prot=RASK_HUMAN&from=5&to=165&var=G12R',
-                linkMsa:
-                    'getma.org/?cm=msa&ty=f&p=RASK_HUMAN&rb=5&re=165&var=G12R',
+                linkPdb: 'getma.org/pdb.php?prot=RASK_HUMAN&from=5&to=165&var=G12R',
+                linkMsa: 'getma.org/?cm=msa&ty=f&p=RASK_HUMAN&rb=5&re=165&var=G12R',
                 ncbiBuild: 'GRCh37',
                 variantType: 'SNP',
                 keyword: 'KRAS G12 missense',

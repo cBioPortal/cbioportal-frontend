@@ -16,10 +16,7 @@ export default class News extends React.Component<{}, {}> {
                     sourceUrl={AppConfig.serverConfig.skin_documentation_news!}
                     title={'News'}
                 />
-                <a
-                    id="releasesLink"
-                    href="https://github.com/cBioPortal/cbioportal/releases"
-                >
+                <a id="releasesLink" href="https://github.com/cBioPortal/cbioportal/releases">
                     Release notes
                 </a>
             </PageLayout>

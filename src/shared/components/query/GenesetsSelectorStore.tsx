@@ -1,14 +1,9 @@
 import * as React from 'react';
-import {
-    Geneset,
-    GenesetHierarchyInfo,
-} from 'shared/api/generated/CBioPortalAPIInternal';
+import { Geneset, GenesetHierarchyInfo } from 'shared/api/generated/CBioPortalAPIInternal';
 import * as _ from 'lodash';
 import { ObservableMap } from 'mobx/lib/mobx';
 
-export function getGenesetsFromHierarchy(
-    hierarchyData: GenesetHierarchyInfo[]
-): Geneset[] {
+export function getGenesetsFromHierarchy(hierarchyData: GenesetHierarchyInfo[]): Geneset[] {
     const array: Geneset[] = [];
     for (const node of hierarchyData) {
         if (_.has(node, 'genesets')) {
@@ -18,9 +13,7 @@ export function getGenesetsFromHierarchy(
     return array;
 }
 
-export function getVolcanoPlotMinYValue(
-    genesetsData: Geneset[]
-): number | undefined {
+export function getVolcanoPlotMinYValue(genesetsData: Geneset[]): number | undefined {
     if (genesetsData.length > 0) {
         const genesetWithMinYValue = _.minBy(genesetsData, function(o) {
             return o.representativePvalue;
@@ -40,9 +33,7 @@ export function getVolcanoPlotData(
             ({ representativeScore, representativePvalue, name }) => {
                 const xValue = representativeScore;
                 const yValue = -(Math.log(representativePvalue) / Math.log(10));
-                const fillColor = map_genesets_selected_volcano.get(name)
-                    ? 'tomato'
-                    : '3786C2';
+                const fillColor = map_genesets_selected_volcano.get(name) ? 'tomato' : '3786C2';
                 return { x: xValue, y: yValue, fill: fillColor };
             }
         );

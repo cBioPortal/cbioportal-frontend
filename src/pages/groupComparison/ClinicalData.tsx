@@ -22,9 +22,7 @@ import {
     mutationSummaryToAppearance,
 } from 'pages/resultsView/plots/PlotsTabUtils';
 import ScrollBar from 'shared/components/Scrollbar/ScrollBar';
-import BoxScatterPlot, {
-    IBoxScatterPlotData,
-} from 'shared/components/plots/BoxScatterPlot';
+import BoxScatterPlot, { IBoxScatterPlotData } from 'shared/components/plots/BoxScatterPlot';
 import { getMobxPromiseGroupStatus } from 'shared/lib/getMobxPromiseGroupStatus';
 import { scatterPlotSize } from 'shared/components/plots/PlotUtils';
 import {
@@ -70,11 +68,7 @@ export class ClinicalDataEnrichmentStore extends SimpleGetterLazyMobXTableApplic
         };
 
         this.reactionDisposer = autorun(() => {
-            if (
-                this.sortMetric &&
-                this.sortedFilteredData.length > 0 &&
-                !getHighlighted()
-            ) {
+            if (this.sortMetric && this.sortedFilteredData.length > 0 && !getHighlighted()) {
                 this.setHighlighted(this.sortedFilteredData[0]);
             }
         });
@@ -98,10 +92,7 @@ export const plotTypeOptions = [
 ];
 
 @observer
-export default class ClinicalData extends React.Component<
-    IClinicalDataProps,
-    {}
-> {
+export default class ClinicalData extends React.Component<IClinicalDataProps, {}> {
     @observable.ref highlightedRow: ClinicalDataEnrichmentWithQ | undefined;
 
     private scrollPane: HTMLDivElement;
@@ -125,24 +116,17 @@ export default class ClinicalData extends React.Component<
                 content.push(
                     <span>
                         {CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG(
-                            this.props.store._activeGroupsNotOverlapRemoved
-                                .result!.length
+                            this.props.store._activeGroupsNotOverlapRemoved.result!.length
                         )}
                     </span>
                 );
             } else {
-                content.push(
-                    <OverlapExclusionIndicator store={this.props.store} />
-                );
+                content.push(<OverlapExclusionIndicator store={this.props.store} />);
                 content.push(this.overlapUI.component);
             }
-            return (
-                <div data-test="ComparisonPageClinicalTabDiv">{content}</div>
-            );
+            return <div data-test="ComparisonPageClinicalTabDiv">{content}</div>;
         },
-        renderPending: () => (
-            <LoadingIndicator isLoading={true} center={true} size={'big'} />
-        ),
+        renderPending: () => <LoadingIndicator isLoading={true} center={true} size={'big'} />,
         renderError: () => <ErrorMessage />,
     });
 
@@ -152,9 +136,7 @@ export default class ClinicalData extends React.Component<
             return (
                 <div className="clearfix" style={{ display: 'flex' }}>
                     <div style={{ width: '600px' }}>
-                        <ClinicalDataEnrichmentsTable
-                            dataStore={this.tableDataStore}
-                        />
+                        <ClinicalDataEnrichmentsTable dataStore={this.tableDataStore} />
                     </div>
                     <div style={{ marginLeft: '10px' }}>
                         {this.getUtilitiesMenu}
@@ -164,11 +146,7 @@ export default class ClinicalData extends React.Component<
             );
         },
         renderPending: () => (
-            <LoadingIndicator
-                isLoading={true}
-                centerRelativeToContainer={true}
-                size="big"
-            />
+            <LoadingIndicator isLoading={true} centerRelativeToContainer={true} size="big" />
         ),
         renderError: () => <ErrorMessage />,
     });
@@ -193,10 +171,7 @@ export default class ClinicalData extends React.Component<
     );
 
     @computed get showLogScaleControls() {
-        return (
-            this.highlightedRow!.clinicalAttribute.datatype.toLowerCase() ===
-            'number'
-        );
+        return this.highlightedRow!.clinicalAttribute.datatype.toLowerCase() === 'number';
     }
 
     @observable private logScale = false;
@@ -212,8 +187,7 @@ export default class ClinicalData extends React.Component<
             const MIN_LOG_ARGUMENT = 0.01;
             this.logScaleFunction = {
                 label: 'log2',
-                fLogScale: (x: number, offset: number) =>
-                    Math.log2(Math.max(x, MIN_LOG_ARGUMENT)),
+                fLogScale: (x: number, offset: number) => Math.log2(Math.max(x, MIN_LOG_ARGUMENT)),
                 fInvLogScale: (x: number) => Math.pow(2, x),
             };
         } else {
@@ -234,43 +208,33 @@ export default class ClinicalData extends React.Component<
     }
 
     private readonly clinicalDataPromise = remoteData({
-        await: () => [
-            this.props.store.patientKeyToSamples,
-            this.props.store.activeGroups,
-        ],
+        await: () => [this.props.store.patientKeyToSamples, this.props.store.activeGroups],
         invoke: async () => {
             const axisData: IAxisData = { data: [], datatype: 'string' };
             if (this.highlightedRow) {
                 let attribute = this.highlightedRow!.clinicalAttribute;
-                let patientKeyToSamples = this.props.store.patientKeyToSamples
-                    .result!;
+                let patientKeyToSamples = this.props.store.patientKeyToSamples.result!;
 
-                let sampleIdentifiers = _.flatMap(
-                    this.props.store.activeGroups.result,
-                    group =>
-                        _.flatMap(group.studies, study => {
-                            return study.samples.map(sample => ({
-                                studyId: study.id,
-                                entityId: sample,
-                            }));
-                        })
+                let sampleIdentifiers = _.flatMap(this.props.store.activeGroups.result, group =>
+                    _.flatMap(group.studies, study => {
+                        return study.samples.map(sample => ({
+                            studyId: study.id,
+                            entityId: sample,
+                        }));
+                    })
                 );
 
-                let patientidentifiers = _.flatMap(
-                    this.props.store.activeGroups.result,
-                    group =>
-                        _.flatMap(group.studies, study => {
-                            return study.patients.map(patient => ({
-                                studyId: study.id,
-                                entityId: patient,
-                            }));
-                        })
+                let patientidentifiers = _.flatMap(this.props.store.activeGroups.result, group =>
+                    _.flatMap(group.studies, study => {
+                        return study.patients.map(patient => ({
+                            studyId: study.id,
+                            entityId: patient,
+                        }));
+                    })
                 );
 
                 let clinicalData = await client.fetchClinicalDataUsingPOST({
-                    clinicalDataType: attribute.patientAttribute
-                        ? 'PATIENT'
-                        : 'SAMPLE',
+                    clinicalDataType: attribute.patientAttribute ? 'PATIENT' : 'SAMPLE',
                     clinicalDataMultiStudyFilter: {
                         attributeIds: [attribute.clinicalAttributeId],
                         identifiers: attribute.patientAttribute
@@ -279,8 +243,7 @@ export default class ClinicalData extends React.Component<
                     },
                 });
 
-                const shouldParseFloat =
-                    attribute.datatype.toLowerCase() === 'number';
+                const shouldParseFloat = attribute.datatype.toLowerCase() === 'number';
                 axisData.datatype = attribute.datatype.toLowerCase();
                 const axisData_Data = axisData.data;
                 if (attribute.patientAttribute) {
@@ -314,10 +277,7 @@ export default class ClinicalData extends React.Component<
     });
 
     private readonly groupMembershipAxisData = remoteData({
-        await: () => [
-            this.props.store.sampleSet,
-            this.props.store.activeGroups,
-        ],
+        await: () => [this.props.store.sampleSet, this.props.store.activeGroups],
         invoke: async () => {
             const categoryOrder = _.map(
                 this.props.store.activeGroups.result!,
@@ -328,9 +288,7 @@ export default class ClinicalData extends React.Component<
                 datatype: 'string',
                 categoryOrder,
             } as IStringAxisData;
-            const sampleSet =
-                this.props.store.sampleSet.result ||
-                new ComplexKeyMap<Sample>();
+            const sampleSet = this.props.store.sampleSet.result || new ComplexKeyMap<Sample>();
 
             const sampleKeyToGroupSampleData = _.reduce(
                 this.props.store.activeGroups.result,
@@ -353,9 +311,7 @@ export default class ClinicalData extends React.Component<
                                         value: [],
                                     };
                                 }
-                                acc[uniqueSampleKey].value.push(
-                                    group.nameWithOrdinal
-                                );
+                                acc[uniqueSampleKey].value.push(group.nameWithOrdinal);
                             }
                         });
                     });
@@ -375,15 +331,11 @@ export default class ClinicalData extends React.Component<
     });
 
     @computed get vertAxisDataPromise() {
-        return this.swapAxes
-            ? this.groupMembershipAxisData
-            : this.clinicalDataPromise;
+        return this.swapAxes ? this.groupMembershipAxisData : this.clinicalDataPromise;
     }
 
     @computed get horzAxisDataPromise() {
-        return this.swapAxes
-            ? this.clinicalDataPromise
-            : this.groupMembershipAxisData;
+        return this.swapAxes ? this.clinicalDataPromise : this.groupMembershipAxisData;
     }
 
     @computed get horzLabel() {
@@ -434,10 +386,7 @@ export default class ClinicalData extends React.Component<
                     categoryData = vertAxisData;
                     numberData = horzAxisData;
                     horizontal = true;
-                } else if (
-                    isStringData(horzAxisData) &&
-                    isNumberData(vertAxisData)
-                ) {
+                } else if (isStringData(horzAxisData) && isNumberData(vertAxisData)) {
                     categoryData = horzAxisData;
                     numberData = vertAxisData;
                     horizontal = false;
@@ -467,8 +416,7 @@ export default class ClinicalData extends React.Component<
             } else {
                 content = (
                     <span>
-                        Loading... (this shouldnt appear because the box plot
-                        shouldnt be visible)
+                        Loading... (this shouldnt appear because the box plot shouldnt be visible)
                     </span>
                 );
             }
@@ -482,12 +430,7 @@ export default class ClinicalData extends React.Component<
                 <table className="table table-striped">
                     <thead>
                         <tr>
-                            <th colSpan={2}>
-                                {
-                                    this.boxPlotData.result!.data[d.eventKey]
-                                        .label
-                                }
-                            </th>
+                            <th colSpan={2}>{this.boxPlotData.result!.data[d.eventKey].label}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -544,15 +487,9 @@ export default class ClinicalData extends React.Component<
         return (
             <div style={{ marginBottom: '10px' }}>
                 {!this.showLogScaleControls && (
-                    <div
-                        className="form-group"
-                        style={{ display: 'flex', alignItems: 'center' }}
-                    >
+                    <div className="form-group" style={{ display: 'flex', alignItems: 'center' }}>
                         <label>Plot Type</label>
-                        <div
-                            style={{ width: 240, marginLeft: 5 }}
-                            data-test="plotTypeSelector"
-                        >
+                        <div style={{ width: 240, marginLeft: 5 }} data-test="plotTypeSelector">
                             <ReactSelect
                                 name="discrete-vs-discrete-plot-type"
                                 value={this.plotType}
@@ -612,38 +549,22 @@ export default class ClinicalData extends React.Component<
         const isStacked = isPercentage || this.plotType === PlotType.StackedBar;
         switch (groupStatus) {
             case 'pending':
-                return (
-                    <LoadingIndicator
-                        center={true}
-                        isLoading={true}
-                        size={'big'}
-                    />
-                );
+                return <LoadingIndicator center={true} isLoading={true} size={'big'} />;
             case 'error':
                 return <span>Error loading plot data.</span>;
             default: {
-                if (
-                    !this.horzAxisDataPromise.result ||
-                    !this.vertAxisDataPromise.result
-                ) {
+                if (!this.horzAxisDataPromise.result || !this.vertAxisDataPromise.result) {
                     return <span>Error loading plot data.</span>;
                 }
 
                 let plotElt: any = null;
-                if (
-                    this.highlightedRow!.clinicalAttribute.datatype.toLowerCase() ===
-                    'number'
-                ) {
+                if (this.highlightedRow!.clinicalAttribute.datatype.toLowerCase() === 'number') {
                     if (this.boxPlotData.isComplete) {
                         plotElt = (
                             <PlotsTabBoxPlot
                                 svgId={SVG_ID}
                                 domainPadding={75}
-                                boxWidth={
-                                    this.boxPlotData.result.data.length > 7
-                                        ? 30
-                                        : 60
-                                }
+                                boxWidth={this.boxPlotData.result.data.length > 7 ? 30 : 60}
                                 axisLabelX={this.horzLabel}
                                 axisLabelY={this.vertLabel}
                                 data={this.boxPlotData.result.data}
@@ -653,20 +574,11 @@ export default class ClinicalData extends React.Component<
                                 horizontal={this.boxPlotData.result.horizontal}
                                 logScale={this.logScaleFunction}
                                 size={scatterPlotSize}
-                                fill={
-                                    mutationSummaryToAppearance[
-                                        MutationSummary.Neither
-                                    ].fill
-                                }
-                                stroke={
-                                    mutationSummaryToAppearance[
-                                        MutationSummary.Neither
-                                    ].stroke
-                                }
+                                fill={mutationSummaryToAppearance[MutationSummary.Neither].fill}
+                                stroke={mutationSummaryToAppearance[MutationSummary.Neither].stroke}
                                 strokeOpacity={
-                                    mutationSummaryToAppearance[
-                                        MutationSummary.Neither
-                                    ].strokeOpacity
+                                    mutationSummaryToAppearance[MutationSummary.Neither]
+                                        .strokeOpacity
                                 }
                                 symbol="circle"
                                 useLogSpaceTicks={true}
@@ -676,33 +588,19 @@ export default class ClinicalData extends React.Component<
                     } else if (this.boxPlotData.isError) {
                         return <span>Error loading plot data.</span>;
                     } else {
-                        return (
-                            <LoadingIndicator
-                                center={true}
-                                isLoading={true}
-                                size={'big'}
-                            />
-                        );
+                        return <LoadingIndicator center={true} isLoading={true} size={'big'} />;
                     }
                 } else {
                     plotElt = (
                         <MultipleCategoryBarPlot
                             svgId={SVG_ID}
-                            horzData={
-                                (this.horzAxisDataPromise
-                                    .result! as IStringAxisData).data
-                            }
-                            vertData={
-                                (this.vertAxisDataPromise
-                                    .result! as IStringAxisData).data
-                            }
+                            horzData={(this.horzAxisDataPromise.result! as IStringAxisData).data}
+                            vertData={(this.vertAxisDataPromise.result! as IStringAxisData).data}
                             horzCategoryOrder={
-                                (this.horzAxisDataPromise
-                                    .result! as IStringAxisData).categoryOrder
+                                (this.horzAxisDataPromise.result! as IStringAxisData).categoryOrder
                             }
                             vertCategoryOrder={
-                                (this.vertAxisDataPromise
-                                    .result! as IStringAxisData).categoryOrder
+                                (this.vertAxisDataPromise.result! as IStringAxisData).categoryOrder
                             }
                             categoryToColor={this.categoryToColor}
                             barWidth={20}
@@ -720,10 +618,7 @@ export default class ClinicalData extends React.Component<
                 }
 
                 return (
-                    <div
-                        data-test="PlotsTabPlotDiv"
-                        className="borderedChart posRelative"
-                    >
+                    <div data-test="PlotsTabPlotDiv" className="borderedChart posRelative">
                         <ScrollBar
                             style={{ position: 'relative', top: -5 }}
                             getScrollEl={this.getScrollPane}

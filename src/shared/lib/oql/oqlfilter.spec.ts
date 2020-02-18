@@ -236,10 +236,7 @@ describe('doesQueryContainMutationOQL', () => {
         assert.equal(doesQueryContainMutationOQL('TP53: MUT'), false);
         assert.equal(doesQueryContainMutationOQL('TP53: GERMLINE'), true);
         assert.equal(doesQueryContainMutationOQL('TP53: proteinchange'), true);
-        assert.equal(
-            doesQueryContainMutationOQL('TP53: proteinchange_GERMLINE'),
-            true
-        );
+        assert.equal(doesQueryContainMutationOQL('TP53: proteinchange_GERMLINE'), true);
         assert.equal(doesQueryContainMutationOQL('TP53: DRIVER'), true);
     });
 });
@@ -255,10 +252,7 @@ describe('unparseOQLQueryLine', () => {
     });
     it('unparses query with complex mutation specifications', () => {
         const parsedLine = parseOQLQuery('TP53: MISSENSE proteinchange;')[0];
-        assert.equal(
-            unparseOQLQueryLine(parsedLine),
-            'TP53: MUT=MISSENSE MUT=proteinchange;'
-        );
+        assert.equal(unparseOQLQueryLine(parsedLine), 'TP53: MUT=MISSENSE MUT=proteinchange;');
     });
     it('unparses query with EXP and PROT', () => {
         const parsedLine = parseOQLQuery('TP53: EXP > 0 PROT < -2')[0];
@@ -309,11 +303,7 @@ describe('filterCBioPortalWebServiceData', () => {
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [
-            1,
-            2,
-            3,
-        ]);
+        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [1, 2, 3]);
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:MISSENSE_SOMATIC',
             MUTATION_DATA,
@@ -351,23 +341,14 @@ describe('filterCBioPortalWebServiceData', () => {
         assert.deepEqual((filteredData as any).map((x: any) => x.__id), [0, 3]);
     });
     it('filters properly using the DRIVER modifier', () => {
-        const accessorsInstance = new AccessorsForOqlFilter([
-            MUTATION_PROFILE,
-            DATA_PROFILE,
-        ]);
+        const accessorsInstance = new AccessorsForOqlFilter([MUTATION_PROFILE, DATA_PROFILE]);
         let filteredData = filterCBioPortalWebServiceData(
             'BRCA1:DRIVER',
             [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [
-            -1,
-            0,
-            1,
-            3,
-            7,
-        ]);
+        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [-1, 0, 1, 3, 7]);
 
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:MUT=DRIVER',
@@ -375,11 +356,7 @@ describe('filterCBioPortalWebServiceData', () => {
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [
-            0,
-            1,
-            3,
-        ]);
+        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [0, 1, 3]);
 
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:MISSENSE_DRIVER',
@@ -427,15 +404,7 @@ describe('filterCBioPortalWebServiceData', () => {
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [
-            -1,
-            0,
-            1,
-            3,
-            7,
-            8,
-            9,
-        ]);
+        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [-1, 0, 1, 3, 7, 8, 9]);
 
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:FUSION_DRIVER',
@@ -460,9 +429,7 @@ describe('filterCBioPortalWebServiceDataByUnflattenedOQLLine', () => {
         // given CNA data for 3 genes in 2 samples and an AccessorsForOqlFilter instance
         // aware of their profile
         const dataArray: NumericGeneMolecularData[] = THREE_GENE_TWO_SAMPLE_CNA_DATA;
-        const accessorsInstance: AccessorsForOqlFilter = new AccessorsForOqlFilter(
-            [DATA_PROFILE]
-        );
+        const accessorsInstance: AccessorsForOqlFilter = new AccessorsForOqlFilter([DATA_PROFILE]);
         // when calling the function with an OQL query asking data for 1 gene
         const filteredData = filterCBioPortalWebServiceDataByUnflattenedOQLLine(
             'BRCA1',
@@ -479,9 +446,7 @@ describe('filterCBioPortalWebServiceDataByUnflattenedOQLLine', () => {
         // given CNA data for 3 genes in 2 samples and an AccessorsForOqlFilter instance
         // aware of their profile
         const dataArray: NumericGeneMolecularData[] = THREE_GENE_TWO_SAMPLE_CNA_DATA;
-        const accessorsInstance: AccessorsForOqlFilter = new AccessorsForOqlFilter(
-            [DATA_PROFILE]
-        );
+        const accessorsInstance: AccessorsForOqlFilter = new AccessorsForOqlFilter([DATA_PROFILE]);
         // when calling the function with an OQL query asking data for a
         // 1-gene list
         const filteredData = filterCBioPortalWebServiceDataByUnflattenedOQLLine(
@@ -493,23 +458,15 @@ describe('filterCBioPortalWebServiceDataByUnflattenedOQLLine', () => {
         // then it returns a single list object containing a single data object
         assert.lengthOf(filteredData, 1);
         assert.property(filteredData[0], 'list');
-        assert.lengthOf(
-            (filteredData[0] as MergedTrackLineFilterOutput<object>).list,
-            1
-        );
-        assert.property(
-            (filteredData[0] as MergedTrackLineFilterOutput<object>).list[0],
-            'data'
-        );
+        assert.lengthOf((filteredData[0] as MergedTrackLineFilterOutput<object>).list, 1);
+        assert.property((filteredData[0] as MergedTrackLineFilterOutput<object>).list[0], 'data');
     });
 
     it('returns a .list with two .data objects for a two-gene merged query', () => {
         // given CNA data for 3 genes in 2 samples and an AccessorsForOqlFilter instance
         // aware of their profile
         const dataArray: NumericGeneMolecularData[] = THREE_GENE_TWO_SAMPLE_CNA_DATA;
-        const accessorsInstance: AccessorsForOqlFilter = new AccessorsForOqlFilter(
-            [DATA_PROFILE]
-        );
+        const accessorsInstance: AccessorsForOqlFilter = new AccessorsForOqlFilter([DATA_PROFILE]);
         // when calling the function with an OQL query asking data for a
         // 2-gene list
         const filteredData = filterCBioPortalWebServiceDataByUnflattenedOQLLine(
@@ -521,12 +478,9 @@ describe('filterCBioPortalWebServiceDataByUnflattenedOQLLine', () => {
         // then it returns a single list object containing 2 data objects
         assert.lengthOf(filteredData, 1);
         assert.property(filteredData[0], 'list');
-        assert.lengthOf(
-            (filteredData[0] as MergedTrackLineFilterOutput<object>).list,
-            2
-        );
-        (filteredData[0] as MergedTrackLineFilterOutput<object>).list.forEach(
-            subline => assert.property(subline, 'data')
+        assert.lengthOf((filteredData[0] as MergedTrackLineFilterOutput<object>).list, 2);
+        (filteredData[0] as MergedTrackLineFilterOutput<object>).list.forEach(subline =>
+            assert.property(subline, 'data')
         );
     });
 
@@ -534,9 +488,7 @@ describe('filterCBioPortalWebServiceDataByUnflattenedOQLLine', () => {
         // given CNA data for 3 genes in 2 samples and an AccessorsForOqlFilter instance
         // aware of their profile
         const dataArray: NumericGeneMolecularData[] = THREE_GENE_TWO_SAMPLE_CNA_DATA;
-        const accessorsInstance: AccessorsForOqlFilter = new AccessorsForOqlFilter(
-            [DATA_PROFILE]
-        );
+        const accessorsInstance: AccessorsForOqlFilter = new AccessorsForOqlFilter([DATA_PROFILE]);
         // when calling the function with an OQL query asking data for 1 gene
         const filteredData = filterCBioPortalWebServiceDataByUnflattenedOQLLine(
             '[BRCA1 PTEN] TP53',
@@ -547,10 +499,7 @@ describe('filterCBioPortalWebServiceDataByUnflattenedOQLLine', () => {
         // then it returns both a two-element .list and a .data
         assert.lengthOf(filteredData, 2);
         assert.property(filteredData[0], 'list');
-        assert.lengthOf(
-            (filteredData[0] as MergedTrackLineFilterOutput<object>).list,
-            2
-        );
+        assert.lengthOf((filteredData[0] as MergedTrackLineFilterOutput<object>).list, 2);
         assert.property(filteredData[1], 'data');
     });
 
@@ -558,9 +507,7 @@ describe('filterCBioPortalWebServiceDataByUnflattenedOQLLine', () => {
         // given CNA data for 3 genes in 2 samples and an AccessorsForOqlFilter instance
         // aware of their profile
         const dataArray: NumericGeneMolecularData[] = THREE_GENE_TWO_SAMPLE_CNA_DATA;
-        const accessorsInstance: AccessorsForOqlFilter = new AccessorsForOqlFilter(
-            [DATA_PROFILE]
-        );
+        const accessorsInstance: AccessorsForOqlFilter = new AccessorsForOqlFilter([DATA_PROFILE]);
         // when calling the function with an OQL query asking data for 1 gene
         const filteredData = filterCBioPortalWebServiceDataByUnflattenedOQLLine(
             'PTEN [BRCA1 TP53]',
@@ -572,9 +519,6 @@ describe('filterCBioPortalWebServiceDataByUnflattenedOQLLine', () => {
         assert.lengthOf(filteredData, 2);
         assert.property(filteredData[0], 'data');
         assert.property(filteredData[1], 'list');
-        assert.lengthOf(
-            (filteredData[1] as MergedTrackLineFilterOutput<object>).list,
-            2
-        );
+        assert.lengthOf((filteredData[1] as MergedTrackLineFilterOutput<object>).list, 2);
     });
 });

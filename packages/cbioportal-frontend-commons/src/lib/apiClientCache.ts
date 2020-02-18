@@ -137,18 +137,10 @@ export function cachePostMethodsOnClient(
     sentryLog?: (message: string) => void
 ) {
     const postMethods = Object.getOwnPropertyNames(obj.prototype).filter(
-        methodName =>
-            postMethodNameRegex.test(methodName) &&
-            !excluded.includes(methodName)
+        methodName => postMethodNameRegex.test(methodName) && !excluded.includes(methodName)
     );
 
     postMethods.forEach(methodName =>
-        cachePostMethod(
-            obj.prototype,
-            methodName,
-            apiCacheLimit,
-            log,
-            sentryLog
-        )
+        cachePostMethod(obj.prototype, methodName, apiCacheLimit, log, sentryLog)
     );
 }

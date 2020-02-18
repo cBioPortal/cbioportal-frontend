@@ -1,10 +1,5 @@
 import autobind from 'autobind-decorator';
-import {
-    CheckBoxType,
-    Checklist,
-    getSelectedValuesMap,
-    Option,
-} from 'cbioportal-frontend-commons';
+import { CheckBoxType, Checklist, getSelectedValuesMap, Option } from 'cbioportal-frontend-commons';
 import _ from 'lodash';
 import { action, computed } from 'mobx';
 import { observer } from 'mobx-react';
@@ -36,10 +31,7 @@ export type BadgeSelectorProps = {
     alignColumns?: boolean;
     uniformBadgeWidth?: boolean;
     alignmentPaddingWithinBadge?: boolean;
-    onSelect?: (
-        selectedOptionIds: string[],
-        allValuesSelected?: boolean
-    ) => void;
+    onSelect?: (selectedOptionIds: string[], allValuesSelected?: boolean) => void;
     selectedValues?: { value: string }[];
     getOptionLabel?: (
         option: Option,
@@ -105,8 +97,7 @@ export function calculateBadgeAlignmentStyle(
     padWithinBadge: boolean = false
 ): CSSProperties {
     // this is an approximation with the assumption that each character has more or less equal width
-    const totalWidth =
-        maxLengthInCol * badgeCharWidth + badgeContentPadding * 2;
+    const totalWidth = maxLengthInCol * badgeCharWidth + badgeContentPadding * 2;
 
     if (padWithinBadge) {
         // no additional left or right margin, since all the padding is applied within the badge width
@@ -125,9 +116,7 @@ export function calculateBadgeAlignmentStyle(
     }
 }
 
-export function getOptionContentLengths(
-    options: BadgeSelectorOption[]
-): number[] {
+export function getOptionContentLengths(options: BadgeSelectorOption[]): number[] {
     // string length of each badge content of an option
     return options
         .map((option: BadgeSelectorOption) => option.badgeContent)
@@ -166,14 +155,10 @@ export function calculateBadgeAlignmentStyles(
         return options.map((option: BadgeSelectorOption, index: number) => {
             // define a max badge length for each column
             const maxLengthInCol = Math.max(
-                ...getOptionContentLengths(
-                    groupedByCol[index % numberOfColumnsPerRow]
-                )
+                ...getOptionContentLengths(groupedByCol[index % numberOfColumnsPerRow])
             );
             const length =
-                option.badgeContent === undefined
-                    ? 0
-                    : option.badgeContent.toString().length;
+                option.badgeContent === undefined ? 0 : option.badgeContent.toString().length;
 
             // align all badges with respect to the max badge length for the corresponding column
             return calculateBadgeAlignmentStyle(
@@ -199,8 +184,7 @@ export class BadgeSelector extends React.Component<BadgeSelectorProps, {}> {
     @computed
     public get selectedValues() {
         return (
-            this.props.selectedValues ||
-            getSelectedOptionValues(this.allValues, this.props.filter)
+            this.props.selectedValues || getSelectedOptionValues(this.allValues, this.props.filter)
         );
     }
 
@@ -216,12 +200,7 @@ export class BadgeSelector extends React.Component<BadgeSelectorProps, {}> {
         badgeAlignmentStyle?: CSSProperties
     ): JSX.Element {
         return this.props.getBadgeLabel ? (
-            this.props.getBadgeLabel(
-                option,
-                selectedValues,
-                badgeClassName,
-                badgeAlignmentStyle
-            )
+            this.props.getBadgeLabel(option, selectedValues, badgeClassName, badgeAlignmentStyle)
         ) : (
             <BadgeLabel
                 label={option.label || option.value}
@@ -274,9 +253,7 @@ export class BadgeSelector extends React.Component<BadgeSelectorProps, {}> {
                 value={this.selectedValues}
                 isDisabled={this.props.isDisabled}
                 numberOfColumnsPerRow={this.props.numberOfColumnsPerRow}
-                unselectOthersWhenAllSelected={
-                    this.props.unselectOthersWhenAllSelected
-                }
+                unselectOthersWhenAllSelected={this.props.unselectOthersWhenAllSelected}
             />
         );
     }

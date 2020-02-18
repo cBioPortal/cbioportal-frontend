@@ -23,15 +23,11 @@ export interface IMiniBarChartProps {
 }
 
 @observer
-export default class MiniBarChart extends React.Component<
-    IMiniBarChartProps,
-    {}
-> {
+export default class MiniBarChart extends React.Component<IMiniBarChartProps, {}> {
     @observable tooltipModel: any;
 
     public render() {
-        const totalCount =
-            this.props.totalAlteredCount + this.props.totalUnalteredCount;
+        const totalCount = this.props.totalAlteredCount + this.props.totalUnalteredCount;
         const barWidth: number = 21;
 
         const events = [
@@ -72,9 +68,7 @@ export default class MiniBarChart extends React.Component<
                         <div style={{ paddingTop: 35 }}>
                             <DefaultTooltip
                                 placement="right"
-                                overlay={
-                                    <span>Query genes selected by user</span>
-                                }
+                                overlay={<span>Query genes selected by user</span>}
                                 destroyTooltipOnHide={true}
                             >
                                 <i className="fa fa-info-circle" />
@@ -143,9 +137,7 @@ export default class MiniBarChart extends React.Component<
                                     { x: 2, y: 0 },
                                     {
                                         x: 4,
-                                        y: this.props.selectedGene
-                                            ? totalCount * 0.001
-                                            : 0,
+                                        y: this.props.selectedGene ? totalCount * 0.001 : 0,
                                     },
                                 ]}
                                 style={{ data: { width: barWidth } }}
@@ -188,16 +180,13 @@ export default class MiniBarChart extends React.Component<
                                 '',
                                 'Query Genes',
                                 null,
-                                this.props.selectedGene
-                                    ? this.props.selectedGene
-                                    : 'None selected',
+                                this.props.selectedGene ? this.props.selectedGene : 'None selected',
                                 '',
                             ]}
                             style={{
                                 ticks: {
                                     size: 5,
-                                    stroke: (tick: any) =>
-                                        tick != null ? 'black' : 'transparent',
+                                    stroke: (tick: any) => (tick != null ? 'black' : 'transparent'),
                                 },
                                 tickLabels: {
                                     padding: 2,
@@ -229,10 +218,7 @@ export default class MiniBarChart extends React.Component<
                         className={styles.BarTooltip}
                     >
                         <div>
-                            {getBarChartTooltipContent(
-                                this.tooltipModel,
-                                this.props.selectedGene
-                            )}
+                            {getBarChartTooltipContent(this.tooltipModel, this.props.selectedGene)}
                         </div>
                     </Popover>
                 )}

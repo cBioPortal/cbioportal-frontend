@@ -11,11 +11,7 @@ import {
     generateHgvsgByMutation,
 } from './MutationUtils';
 import { assert } from 'chai';
-import {
-    Gene,
-    MolecularProfile,
-    Mutation,
-} from '../api/generated/CBioPortalAPI';
+import { Gene, MolecularProfile, Mutation } from '../api/generated/CBioPortalAPI';
 import { initMutation } from 'test/MutationMockUtils';
 import { MUTATION_STATUS_GERMLINE } from 'shared/constants';
 import { GenomicLocation } from 'cbioportal-frontend-commons';
@@ -165,9 +161,7 @@ describe('MutationUtils', () => {
 
     describe('groupMutationsByGeneAndPatientAndProteinChange', () => {
         it('groups mutations correctly by gene, patient, and protein change', () => {
-            const grouped = groupMutationsByGeneAndPatientAndProteinChange(
-                mutationsToCount
-            );
+            const grouped = groupMutationsByGeneAndPatientAndProteinChange(mutationsToCount);
 
             assert.equal(
                 grouped['TP53_P1_D66B'].length,
@@ -209,11 +203,7 @@ describe('MutationUtils', () => {
         it('counts unique mutations correctly', () => {
             const count = countUniqueMutations(mutationsToCount);
 
-            assert.equal(
-                count,
-                5,
-                'total number of unique mutations should be 5'
-            );
+            assert.equal(count, 5, 'total number of unique mutations should be 5');
         });
     });
 
@@ -227,16 +217,10 @@ describe('MutationUtils', () => {
         });
 
         it('counts duplicates correctly for mutations grouped by patients', () => {
-            const grouped = groupMutationsByGeneAndPatientAndProteinChange(
-                mutationsToCount
-            );
+            const grouped = groupMutationsByGeneAndPatientAndProteinChange(mutationsToCount);
             const count = countDuplicateMutations(grouped);
 
-            assert.equal(
-                count,
-                2,
-                'total number of duplicate mutations should be 2'
-            );
+            assert.equal(count, 2, 'total number of duplicate mutations should be 2');
         });
     });
 
@@ -440,26 +424,14 @@ describe('MutationUtils', () => {
                 },
             ];
 
-            updateMissingGeneInfo(
-                mutations as Partial<Mutation>[],
-                genesByHugoSymbol
-            );
+            updateMissingGeneInfo(mutations as Partial<Mutation>[], genesByHugoSymbol);
 
             assert.deepEqual(mutations[0].gene, genesByHugoSymbol['AR']);
-            assert.equal(
-                mutations[0].entrezGeneId,
-                genesByHugoSymbol['AR'].entrezGeneId
-            );
+            assert.equal(mutations[0].entrezGeneId, genesByHugoSymbol['AR'].entrezGeneId);
             assert.deepEqual(mutations[1].gene, genesByHugoSymbol['BRCA1']);
-            assert.equal(
-                mutations[1].entrezGeneId,
-                genesByHugoSymbol['BRCA1'].entrezGeneId
-            );
+            assert.equal(mutations[1].entrezGeneId, genesByHugoSymbol['BRCA1'].entrezGeneId);
             assert.deepEqual(mutations[2].gene, genesByHugoSymbol['BRCA2']);
-            assert.equal(
-                mutations[2].entrezGeneId,
-                genesByHugoSymbol['BRCA2'].entrezGeneId
-            );
+            assert.equal(mutations[2].entrezGeneId, genesByHugoSymbol['BRCA2'].entrezGeneId);
         });
 
         it('should not overwrite existing gene information', () => {
@@ -473,19 +445,10 @@ describe('MutationUtils', () => {
                 },
             ];
 
-            updateMissingGeneInfo(
-                mutations as Partial<Mutation>[],
-                genesByHugoSymbol
-            );
+            updateMissingGeneInfo(mutations as Partial<Mutation>[], genesByHugoSymbol);
 
-            assert.notEqual(
-                mutations[0].entrezGeneId,
-                genesByHugoSymbol['AR'].entrezGeneId
-            );
-            assert.notEqual(
-                mutations[0].gene.entrezGeneId,
-                genesByHugoSymbol['AR'].entrezGeneId
-            );
+            assert.notEqual(mutations[0].entrezGeneId, genesByHugoSymbol['AR'].entrezGeneId);
+            assert.notEqual(mutations[0].gene.entrezGeneId, genesByHugoSymbol['AR'].entrezGeneId);
         });
     });
 

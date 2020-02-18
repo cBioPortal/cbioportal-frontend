@@ -64,12 +64,8 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps> {
     constructor(props: OncoKbCardProps) {
         super(props);
 
-        this.handleOncogenicityTabSelect = this.handleOncogenicityTabSelect.bind(
-            this
-        );
-        this.handleMutationEffectTabSelect = this.handleMutationEffectTabSelect.bind(
-            this
-        );
+        this.handleOncogenicityTabSelect = this.handleOncogenicityTabSelect.bind(this);
+        this.handleMutationEffectTabSelect = this.handleMutationEffectTabSelect.bind(this);
         this.handleLevelCollapse = this.handleLevelCollapse.bind(this);
     }
 
@@ -99,11 +95,7 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps> {
     // also divide this component into smaller components
     public render() {
         const oncokbLogo = (
-            <img
-                src={oncoKbLogoImgSrc}
-                className={mainStyles['oncokb-logo']}
-                alt="OncoKB"
-            />
+            <img src={oncoKbLogoImgSrc} className={mainStyles['oncokb-logo']} alt="OncoKB" />
         );
         return (
             <div className={mainStyles['oncokb-card']} data-test="oncokb-card">
@@ -111,91 +103,53 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps> {
                     {!this.props.geneNotExist && (
                         <span>
                             <div className={tabsStyles['tabs-wrapper']}>
-                                <div
-                                    className={mainStyles['title']}
-                                    data-test="oncokb-card-title"
-                                >
+                                <div className={mainStyles['title']} data-test="oncokb-card-title">
                                     {this.props.title}
                                 </div>
                                 <div className={tabsStyles.tabs}>
                                     <div
                                         key="oncogenicity"
-                                        className={classnames(
-                                            tabsStyles.tab,
-                                            'enable-hover'
-                                        )}
+                                        className={classnames(tabsStyles.tab, 'enable-hover')}
                                     >
                                         <a
                                             className={classnames(
                                                 'oncogenicity',
                                                 tabsStyles['tab-title-a'],
                                                 mainStyles['enable-hover-a'],
-                                                this.activeTab ===
-                                                    'oncogenicity'
-                                                    ? mainStyles[
-                                                          'enable-hover-active'
-                                                      ]
+                                                this.activeTab === 'oncogenicity'
+                                                    ? mainStyles['enable-hover-active']
                                                     : ''
                                             )}
-                                            onClick={
-                                                this.handleOncogenicityTabSelect
-                                            }
+                                            onClick={this.handleOncogenicityTabSelect}
                                         >
-                                            <span
-                                                className={
-                                                    tabsStyles['tab-title']
-                                                }
-                                            >
+                                            <span className={tabsStyles['tab-title']}>
                                                 clinical implications
                                             </span>
-                                            <span
-                                                className={
-                                                    tabsStyles['tab-subtitle']
-                                                }
-                                            >
-                                                {this.props.oncogenicity ||
-                                                    'Unknown'}
+                                            <span className={tabsStyles['tab-subtitle']}>
+                                                {this.props.oncogenicity || 'Unknown'}
                                             </span>
                                         </a>
                                     </div>
                                     <div
                                         key="mutationEffect"
-                                        className={classnames(
-                                            tabsStyles.tab,
-                                            'enable-hover'
-                                        )}
+                                        className={classnames(tabsStyles.tab, 'enable-hover')}
                                     >
                                         <a
                                             className={classnames(
                                                 'mutation-effect',
                                                 tabsStyles['tab-title-a'],
                                                 mainStyles['enable-hover-a'],
-                                                this.activeTab ===
-                                                    'mutationEffect'
-                                                    ? mainStyles[
-                                                          'enable-hover-active'
-                                                      ]
+                                                this.activeTab === 'mutationEffect'
+                                                    ? mainStyles['enable-hover-active']
                                                     : ''
                                             )}
-                                            onClick={
-                                                this
-                                                    .handleMutationEffectTabSelect
-                                            }
+                                            onClick={this.handleMutationEffectTabSelect}
                                         >
-                                            <span
-                                                className={
-                                                    tabsStyles['tab-title']
-                                                }
-                                            >
+                                            <span className={tabsStyles['tab-title']}>
                                                 Biological Effect
                                             </span>
-                                            <span
-                                                className={
-                                                    tabsStyles['tab-subtitle']
-                                                }
-                                            >
-                                                {this.props.mutationEffect ||
-                                                    'Unknown'}
+                                            <span className={tabsStyles['tab-subtitle']}>
+                                                {this.props.mutationEffect || 'Unknown'}
                                             </span>
                                         </a>
                                     </div>
@@ -203,39 +157,23 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps> {
                                 </div>
                                 {this.activeTab === 'oncogenicity' && (
                                     <div>
-                                        <div
-                                            className={classnames(
-                                                tabsStyles['tab-pane']
-                                            )}
-                                        >
+                                        <div className={classnames(tabsStyles['tab-pane'])}>
                                             <p>{this.props.geneSummary}</p>
                                             <p>
-                                                {this.insertLink(
-                                                    this.props.variantSummary!,
-                                                    {
-                                                        keyword:
-                                                            'Chang et al. 2016',
-                                                        link: getNCBIlink(
-                                                            '/pubmed/26619011'
-                                                        ),
-                                                    }
-                                                )}
+                                                {this.insertLink(this.props.variantSummary!, {
+                                                    keyword: 'Chang et al. 2016',
+                                                    link: getNCBIlink('/pubmed/26619011'),
+                                                })}
                                             </p>
                                             <p style={{ marginBottom: 0 }}>
                                                 {this.props.tumorTypeSummary}
                                             </p>
 
-                                            {this.props.treatments!.length >
-                                                0 && (
+                                            {this.props.treatments!.length > 0 && (
                                                 <div style={{ marginTop: 10 }}>
                                                     <OncoKbTreatmentTable
-                                                        pmidData={
-                                                            this.props.pmidData!
-                                                        }
-                                                        treatments={
-                                                            this.props
-                                                                .treatments!
-                                                        }
+                                                        pmidData={this.props.pmidData!}
+                                                        treatments={this.props.treatments!}
                                                     />
                                                 </div>
                                             )}
@@ -244,46 +182,36 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps> {
                                 )}
                                 {this.activeTab === 'mutationEffect' && (
                                     <div
-                                        className={classnames(
-                                            tabsStyles['tab-pane']
-                                        )}
+                                        className={classnames(tabsStyles['tab-pane'])}
                                         style={{
                                             maxHeight: 200,
                                             overflowY: 'auto',
                                         }}
                                     >
-                                        {this.props.biologicalSummary !==
-                                            undefined &&
-                                        this.props.biologicalSummary.length >
-                                            0 ? (
+                                        {this.props.biologicalSummary !== undefined &&
+                                        this.props.biologicalSummary.length > 0 ? (
                                             <SummaryWithRefs
-                                                content={
-                                                    this.props.biologicalSummary
-                                                }
+                                                content={this.props.biologicalSummary}
                                                 type={'tooltip'}
                                                 pmidData={this.props.pmidData!}
                                             />
-                                        ) : this.props
-                                              .mutationEffectCitations &&
-                                          (this.props.mutationEffectCitations
-                                              .abstracts.length > 0 ||
-                                              this.props.mutationEffectCitations
-                                                  .pmids.length > 0) ? (
+                                        ) : this.props.mutationEffectCitations &&
+                                          (this.props.mutationEffectCitations.abstracts.length >
+                                              0 ||
+                                              this.props.mutationEffectCitations.pmids.length >
+                                                  0) ? (
                                             <ReferenceList
                                                 pmidData={this.props.pmidData}
                                                 pmids={this.props.mutationEffectCitations!.pmids.map(
                                                     pmid => Number(pmid)
                                                 )}
                                                 abstracts={
-                                                    this.props
-                                                        .mutationEffectCitations!
-                                                        .abstracts
+                                                    this.props.mutationEffectCitations!.abstracts
                                                 }
                                             />
                                         ) : (
                                             <span>
-                                                Mutation effect information is
-                                                not available.
+                                                Mutation effect information is not available.
                                             </span>
                                         )}
                                     </div>
@@ -292,18 +220,15 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps> {
 
                             <div className={mainStyles.disclaimer}>
                                 <span>
-                                    The information above is intended for
-                                    research purposes only and should not be
-                                    used as a substitute for professional
-                                    diagnosis and treatment.
+                                    The information above is intended for research purposes only and
+                                    should not be used as a substitute for professional diagnosis
+                                    and treatment.
                                 </span>
                             </div>
 
                             <div>
                                 <div
-                                    className={
-                                        collapsibleStyles['collapsible-header']
-                                    }
+                                    className={collapsibleStyles['collapsible-header']}
                                     onClick={this.handleLevelCollapse}
                                 >
                                     Levels
@@ -350,15 +275,12 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps> {
                     )}
                     {!this.props.isCancerGene && (
                         <div className={mainStyles['additional-info']}>
-                            There is currently no information about this gene in
-                            OncoKB.
+                            There is currently no information about this gene in OncoKB.
                         </div>
                     )}
                     {this.props.geneNotExist && this.props.isCancerGene && (
                         <div className={mainStyles['additional-info']}>
-                            <OncoKBSuggestAnnotationLinkout
-                                gene={this.props.gene!}
-                            />
+                            <OncoKBSuggestAnnotationLinkout gene={this.props.gene!} />
                         </div>
                     )}
 
@@ -371,12 +293,7 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps> {
                             </a>
                         )}
                         {this.props.handleFeedbackOpen && (
-                            <span
-                                className={classnames(
-                                    'pull-right',
-                                    mainStyles.feedback
-                                )}
-                            >
+                            <span className={classnames('pull-right', mainStyles.feedback)}>
                                 <button
                                     className="btn btn-default btn-sm btn-xs"
                                     onClick={this.props.handleFeedbackOpen}

@@ -46,10 +46,7 @@ import { PatientSurvival } from 'shared/model/PatientSurvival';
 import request from 'superagent';
 import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
 import { SURVIVAL_CHART_ATTRIBUTES } from 'pages/resultsView/survival/SurvivalChart';
-import {
-    getPatientIdentifiers,
-    pickClinicalDataColors,
-} from 'pages/studyView/StudyViewUtils';
+import { getPatientIdentifiers, pickClinicalDataColors } from 'pages/studyView/StudyViewUtils';
 import {
     AlterationEnrichment,
     Group,
@@ -77,16 +74,12 @@ export default class ComparisonStore {
     private tabHasBeenShown = observable.map<boolean>();
     private tabHasBeenShownReactionDisposer: IReactionDisposer;
 
-    constructor(
-        protected appStore: AppStore,
-        protected resultsViewStore?: ResultsViewPageStore
-    ) {
+    constructor(protected appStore: AppStore, protected resultsViewStore?: ResultsViewPageStore) {
         setTimeout(() => {
             this.tabHasBeenShownReactionDisposer = autorun(() => {
                 this.tabHasBeenShown.set(
                     GroupComparisonTab.SURVIVAL,
-                    !!this.tabHasBeenShown.get(GroupComparisonTab.SURVIVAL) ||
-                        this.showSurvivalTab
+                    !!this.tabHasBeenShown.get(GroupComparisonTab.SURVIVAL) || this.showSurvivalTab
                 );
                 this.tabHasBeenShown.set(
                     GroupComparisonTab.MUTATIONS,
@@ -95,26 +88,22 @@ export default class ComparisonStore {
                 );
                 this.tabHasBeenShown.set(
                     GroupComparisonTab.CNA,
-                    !!this.tabHasBeenShown.get(GroupComparisonTab.CNA) ||
-                        this.showCopyNumberTab
+                    !!this.tabHasBeenShown.get(GroupComparisonTab.CNA) || this.showCopyNumberTab
                 );
                 this.tabHasBeenShown.set(
                     GroupComparisonTab.MRNA,
-                    !!this.tabHasBeenShown.get(GroupComparisonTab.MRNA) ||
-                        this.showMRNATab
+                    !!this.tabHasBeenShown.get(GroupComparisonTab.MRNA) || this.showMRNATab
                 );
                 this.tabHasBeenShown.set(
                     GroupComparisonTab.PROTEIN,
-                    !!this.tabHasBeenShown.get(GroupComparisonTab.PROTEIN) ||
-                        this.showProteinTab
+                    !!this.tabHasBeenShown.get(GroupComparisonTab.PROTEIN) || this.showProteinTab
                 );
             });
         }); // do this after timeout so that all subclasses have time to construct
     }
 
     public destroy() {
-        this.tabHasBeenShownReactionDisposer &&
-            this.tabHasBeenShownReactionDisposer();
+        this.tabHasBeenShownReactionDisposer && this.tabHasBeenShownReactionDisposer();
     }
 
     // < To be implemented in subclasses: >
@@ -132,16 +121,11 @@ export default class ComparisonStore {
     readonly studies: MobxPromise<CancerStudy[]>; // must be implemented in subclass
     // < / >
 
-    readonly overlapComputations = remoteData<
-        IOverlapComputations<ComparisonGroup>
-    >({
+    readonly overlapComputations = remoteData<IOverlapComputations<ComparisonGroup>>({
         await: () => [this._originalGroups],
         invoke: () => {
             return Promise.resolve(
-                getOverlapComputations(
-                    this._originalGroups.result!,
-                    this.isGroupSelected
-                )
+                getOverlapComputations(this._originalGroups.result!, this.isGroupSelected)
             );
         },
     });
@@ -168,8 +152,7 @@ export default class ComparisonStore {
         invoke: () =>
             Promise.resolve(
                 this.availableGroups.result!.filter(
-                    group =>
-                        this.isGroupSelected(group.uid) && !isGroupEmpty(group)
+                    group => this.isGroupSelected(group.uid) && !isGroupEmpty(group)
                 )
             ),
     });
@@ -177,8 +160,7 @@ export default class ComparisonStore {
     readonly enrichmentAnalysisGroups = remoteData({
         await: () => [this.activeGroups, this.sampleSet],
         invoke: () => {
-            const sampleSet =
-                this.sampleSet.result || new ComplexKeyMap<Sample>();
+            const sampleSet = this.sampleSet.result || new ComplexKeyMap<Sample>();
             const groups = this.activeGroups.result!.map(group => {
                 const samples: Sample[] = [];
                 group.studies.forEach(studyEntry => {
@@ -216,8 +198,7 @@ export default class ComparisonStore {
         invoke: () =>
             Promise.resolve(
                 this._originalGroupsOverlapRemoved.result!.filter(
-                    group =>
-                        this.isGroupSelected(group.uid) && !isGroupEmpty(group)
+                    group => this.isGroupSelected(group.uid) && !isGroupEmpty(group)
                 )
             ),
     });
@@ -225,16 +206,13 @@ export default class ComparisonStore {
     readonly _activeGroupsNotOverlapRemoved = remoteData({
         await: () => [this._originalGroups, this.overlapComputations],
         invoke: () => {
-            let excludedGroups = this.overlapComputations.result!
-                .excludedFromAnalysis;
+            let excludedGroups = this.overlapComputations.result!.excludedFromAnalysis;
             if (this.overlapStrategy === OverlapStrategy.INCLUDE) {
                 excludedGroups = {};
             }
             return Promise.resolve(
                 this._originalGroups.result!.filter(
-                    group =>
-                        this.isGroupSelected(group.uid) &&
-                        !(group.uid in excludedGroups)
+                    group => this.isGroupSelected(group.uid) && !(group.uid in excludedGroups)
                 )
             );
         },
@@ -244,9 +222,7 @@ export default class ComparisonStore {
         await: () => [this._originalGroups],
         invoke: () =>
             Promise.resolve(
-                this._originalGroups.result!.filter(group =>
-                    this.isGroupSelected(group.uid)
-                )
+                this._originalGroups.result!.filter(group => this.isGroupSelected(group.uid))
             ),
     });
 
@@ -258,9 +234,7 @@ export default class ComparisonStore {
             );
             const sampleSet = this.sampleSet.result!;
             return Promise.resolve(
-                activeSampleIdentifiers.map(
-                    sampleIdentifier => sampleSet.get(sampleIdentifier)!
-                )
+                activeSampleIdentifiers.map(sampleIdentifier => sampleSet.get(sampleIdentifier)!)
             );
         },
     });
@@ -269,11 +243,7 @@ export default class ComparisonStore {
         await: () => [this.activeSamplesNotOverlapRemoved],
         invoke: () =>
             Promise.resolve(
-                _.uniq(
-                    this.activeSamplesNotOverlapRemoved.result!.map(
-                        s => s.uniquePatientKey
-                    )
-                )
+                _.uniq(this.activeSamplesNotOverlapRemoved.result!.map(s => s.uniquePatientKey))
             ),
     });
 
@@ -304,9 +274,7 @@ export default class ComparisonStore {
         await: () => [this.studies],
         invoke: () => {
             if (this.studies.result!.length > 0) {
-                return fetchAllReferenceGenomeGenes(
-                    this.studies.result![0].referenceGenome
-                );
+                return fetchAllReferenceGenomeGenes(this.studies.result![0].referenceGenome);
             } else {
                 return Promise.resolve([]);
             }
@@ -319,9 +287,7 @@ export default class ComparisonStore {
         await: () => [this.referenceGenes],
         invoke: () => {
             // build reference gene map
-            return Promise.resolve(
-                _.keyBy(this.referenceGenes.result!, g => g.hugoGeneSymbol)
-            );
+            return Promise.resolve(_.keyBy(this.referenceGenes.result!, g => g.hugoGeneSymbol));
         },
     });
 
@@ -329,9 +295,7 @@ export default class ComparisonStore {
         await: () => [this.molecularProfilesInActiveStudies],
         invoke: () =>
             Promise.resolve(
-                pickMutationEnrichmentProfiles(
-                    this.molecularProfilesInActiveStudies.result!
-                )
+                pickMutationEnrichmentProfiles(this.molecularProfilesInActiveStudies.result!)
             ),
     });
 
@@ -339,9 +303,7 @@ export default class ComparisonStore {
         await: () => [this.molecularProfilesInActiveStudies],
         invoke: () =>
             Promise.resolve(
-                pickCopyNumberEnrichmentProfiles(
-                    this.molecularProfilesInActiveStudies.result!
-                )
+                pickCopyNumberEnrichmentProfiles(this.molecularProfilesInActiveStudies.result!)
             ),
     });
 
@@ -349,9 +311,7 @@ export default class ComparisonStore {
         await: () => [this.molecularProfilesInActiveStudies],
         invoke: () =>
             Promise.resolve(
-                pickMRNAEnrichmentProfiles(
-                    this.molecularProfilesInActiveStudies.result!
-                )
+                pickMRNAEnrichmentProfiles(this.molecularProfilesInActiveStudies.result!)
             ),
     });
 
@@ -359,9 +319,7 @@ export default class ComparisonStore {
         await: () => [this.molecularProfilesInActiveStudies],
         invoke: () =>
             Promise.resolve(
-                pickProteinEnrichmentProfiles(
-                    this.molecularProfilesInActiveStudies.result!
-                )
+                pickProteinEnrichmentProfiles(this.molecularProfilesInActiveStudies.result!)
             ),
     });
 
@@ -463,46 +421,33 @@ export default class ComparisonStore {
     });
 
     @action
-    public setMutationEnrichmentProfileMap(profileMap: {
-        [studyId: string]: MolecularProfile;
-    }) {
+    public setMutationEnrichmentProfileMap(profileMap: { [studyId: string]: MolecularProfile }) {
         this._mutationEnrichmentProfileMap = profileMap;
     }
 
     @action
-    public setCopyNumberEnrichmentProfileMap(profileMap: {
-        [studyId: string]: MolecularProfile;
-    }) {
+    public setCopyNumberEnrichmentProfileMap(profileMap: { [studyId: string]: MolecularProfile }) {
         this._copyNumberEnrichmentProfileMap = profileMap;
     }
 
     @action
-    public setMRNAEnrichmentProfileMap(profiles: {
-        [studyId: string]: MolecularProfile;
-    }) {
+    public setMRNAEnrichmentProfileMap(profiles: { [studyId: string]: MolecularProfile }) {
         this._mRNAEnrichmentProfileMap = profiles;
     }
 
     @action
-    public setProteinEnrichmentProfileMap(profileMap: {
-        [studyId: string]: MolecularProfile;
-    }) {
+    public setProteinEnrichmentProfileMap(profileMap: { [studyId: string]: MolecularProfile }) {
         this._proteinEnrichmentProfileMap = profileMap;
     }
 
     //
     public readonly mutationEnrichmentData = makeEnrichmentDataPromise({
         store: this.resultsViewStore,
-        await: () => [
-            this.selectedStudyMutationEnrichmentProfileMap,
-            this.activeGroups,
-        ],
+        await: () => [this.selectedStudyMutationEnrichmentProfileMap, this.activeGroups],
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
-        getSelectedProfileMap: () =>
-            this.selectedStudyMutationEnrichmentProfileMap.result!,
+        getSelectedProfileMap: () => this.selectedStudyMutationEnrichmentProfileMap.result!,
         fetchData: () => {
-            let molecularProfiles = this
-                .selectedStudyMutationEnrichmentProfileMap.result!;
+            let molecularProfiles = this.selectedStudyMutationEnrichmentProfileMap.result!;
             let studyMolecularProfileMap = _.keyBy(
                 molecularProfiles,
                 molecularProfile => molecularProfile.studyId
@@ -511,25 +456,18 @@ export default class ComparisonStore {
                 let groups: MolecularProfileCasesGroupFilter[] = _.map(
                     this.activeGroups.result,
                     group => {
-                        const molecularProfileCaseIdentifiers = _.flatMap(
-                            group.studies,
-                            study => {
-                                return _.map(
-                                    this.usePatientLevelEnrichments
-                                        ? study.patients
-                                        : study.samples,
-                                    caseId => {
-                                        return {
-                                            caseId,
-                                            molecularProfileId:
-                                                studyMolecularProfileMap[
-                                                    study.id
-                                                ].molecularProfileId,
-                                        };
-                                    }
-                                );
-                            }
-                        );
+                        const molecularProfileCaseIdentifiers = _.flatMap(group.studies, study => {
+                            return _.map(
+                                this.usePatientLevelEnrichments ? study.patients : study.samples,
+                                caseId => {
+                                    return {
+                                        caseId,
+                                        molecularProfileId:
+                                            studyMolecularProfileMap[study.id].molecularProfileId,
+                                    };
+                                }
+                            );
+                        });
                         return {
                             name: group.nameWithOrdinal,
                             molecularProfileCaseIdentifiers,
@@ -538,9 +476,7 @@ export default class ComparisonStore {
                 );
 
                 return internalClient.fetchMutationEnrichmentsUsingPOST({
-                    enrichmentType: this.usePatientLevelEnrichments
-                        ? 'PATIENT'
-                        : 'SAMPLE',
+                    enrichmentType: this.usePatientLevelEnrichments ? 'PATIENT' : 'SAMPLE',
                     groups,
                 });
             } else {
@@ -550,34 +486,24 @@ export default class ComparisonStore {
     });
 
     readonly copyNumberEnrichmentDataRequestGroups = remoteData({
-        await: () => [
-            this.selectedStudyCopyNumberEnrichmentProfileMap,
-            this.activeGroups,
-        ],
+        await: () => [this.selectedStudyCopyNumberEnrichmentProfileMap, this.activeGroups],
         invoke: async () => {
-            let molecularProfile = this
-                .selectedStudyCopyNumberEnrichmentProfileMap.result!;
+            let molecularProfile = this.selectedStudyCopyNumberEnrichmentProfileMap.result!;
             let groups: MolecularProfileCasesGroupFilter[] = _.map(
                 this.activeGroups.result,
                 group => {
-                    const molecularProfileCaseIdentifiers = _.flatMap(
-                        group.studies,
-                        study => {
-                            return _.map(
-                                this.usePatientLevelEnrichments
-                                    ? study.patients
-                                    : study.samples,
-                                caseId => {
-                                    return {
-                                        caseId,
-                                        molecularProfileId:
-                                            molecularProfile[study.id]
-                                                .molecularProfileId,
-                                    };
-                                }
-                            );
-                        }
-                    );
+                    const molecularProfileCaseIdentifiers = _.flatMap(group.studies, study => {
+                        return _.map(
+                            this.usePatientLevelEnrichments ? study.patients : study.samples,
+                            caseId => {
+                                return {
+                                    caseId,
+                                    molecularProfileId:
+                                        molecularProfile[study.id].molecularProfileId,
+                                };
+                            }
+                        );
+                    });
                     return {
                         name: group.nameWithOrdinal,
                         molecularProfileCaseIdentifiers,
@@ -588,9 +514,7 @@ export default class ComparisonStore {
         },
     });
 
-    readonly copyNumberHomdelEnrichmentData = remoteData<
-        AlterationEnrichment[]
-    >({
+    readonly copyNumberHomdelEnrichmentData = remoteData<AlterationEnrichment[]>({
         await: () => [this.copyNumberEnrichmentDataRequestGroups],
         invoke: () => {
             // assumes single study for now
@@ -633,20 +557,17 @@ export default class ComparisonStore {
             this.copyNumberAmpEnrichmentData,
             this.selectedStudyCopyNumberEnrichmentProfileMap,
         ],
-        getSelectedProfileMap: () =>
-            this.selectedStudyCopyNumberEnrichmentProfileMap.result!,
+        getSelectedProfileMap: () => this.selectedStudyCopyNumberEnrichmentProfileMap.result!,
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData: () => {
             const ampData = this.copyNumberAmpEnrichmentData.result!.map(d => {
                 (d as CopyNumberEnrichment).value = 2;
                 return d as CopyNumberEnrichment;
             });
-            const homdelData = this.copyNumberHomdelEnrichmentData.result!.map(
-                d => {
-                    (d as CopyNumberEnrichment).value = -2;
-                    return d as CopyNumberEnrichment;
-                }
-            );
+            const homdelData = this.copyNumberHomdelEnrichmentData.result!.map(d => {
+                (d as CopyNumberEnrichment).value = -2;
+                return d as CopyNumberEnrichment;
+            });
             return Promise.resolve(ampData.concat(homdelData));
         },
     });
@@ -657,9 +578,7 @@ export default class ComparisonStore {
     ): Promise<AlterationEnrichment[]> {
         return internalClient.fetchCopyNumberEnrichmentsUsingPOST({
             copyNumberEventType: copyNumberEventType,
-            enrichmentType: this.usePatientLevelEnrichments
-                ? 'PATIENT'
-                : 'SAMPLE',
+            enrichmentType: this.usePatientLevelEnrichments ? 'PATIENT' : 'SAMPLE',
             groups,
         });
     }
@@ -667,29 +586,24 @@ export default class ComparisonStore {
     readonly mRNAEnrichmentData = makeEnrichmentDataPromise({
         store: this.resultsViewStore,
         await: () => [this.selectedmRNAEnrichmentProfileMap, this.activeGroups],
-        getSelectedProfileMap: () =>
-            this.selectedmRNAEnrichmentProfileMap.result!, // returns an empty array if the selected study doesn't have any mRNA profiles
+        getSelectedProfileMap: () => this.selectedmRNAEnrichmentProfileMap.result!, // returns an empty array if the selected study doesn't have any mRNA profiles
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData: () => {
-            let studyIds = Object.keys(
-                this.selectedmRNAEnrichmentProfileMap.result!
-            );
+            let studyIds = Object.keys(this.selectedmRNAEnrichmentProfileMap.result!);
             // assumes single study for now
             if (studyIds.length === 1) {
-                const molecularProfileId = this.selectedmRNAEnrichmentProfileMap
-                    .result![studyIds[0]].molecularProfileId;
+                const molecularProfileId = this.selectedmRNAEnrichmentProfileMap.result![
+                    studyIds[0]
+                ].molecularProfileId;
                 const groups: MolecularProfileCasesGroupFilter[] = _.map(
                     this.activeGroups.result,
                     group => {
-                        const molecularProfileCaseIdentifiers = _.flatMap(
-                            group.studies,
-                            study => {
-                                return _.map(study.samples, sampleId => ({
-                                    caseId: sampleId,
-                                    molecularProfileId,
-                                }));
-                            }
-                        );
+                        const molecularProfileCaseIdentifiers = _.flatMap(group.studies, study => {
+                            return _.map(study.samples, sampleId => ({
+                                caseId: sampleId,
+                                molecularProfileId,
+                            }));
+                        });
                         return {
                             name: group.nameWithOrdinal,
                             molecularProfileCaseIdentifiers,
@@ -709,34 +623,25 @@ export default class ComparisonStore {
 
     readonly proteinEnrichmentData = makeEnrichmentDataPromise({
         store: this.resultsViewStore,
-        await: () => [
-            this.selectedProteinEnrichmentProfileMap,
-            this.activeGroups,
-        ],
+        await: () => [this.selectedProteinEnrichmentProfileMap, this.activeGroups],
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
-        getSelectedProfileMap: () =>
-            this.selectedProteinEnrichmentProfileMap.result!, // returns an empty array if the selected study doesn't have any mRNA profiles
+        getSelectedProfileMap: () => this.selectedProteinEnrichmentProfileMap.result!, // returns an empty array if the selected study doesn't have any mRNA profiles
         fetchData: () => {
-            let studyIds = Object.keys(
-                this.selectedProteinEnrichmentProfileMap.result!
-            );
+            let studyIds = Object.keys(this.selectedProteinEnrichmentProfileMap.result!);
             // assumes single study for now
             if (studyIds.length === 1) {
-                const molecularProfileId = this
-                    .selectedProteinEnrichmentProfileMap.result![studyIds[0]]
-                    .molecularProfileId;
+                const molecularProfileId = this.selectedProteinEnrichmentProfileMap.result![
+                    studyIds[0]
+                ].molecularProfileId;
                 const groups: MolecularProfileCasesGroupFilter[] = _.map(
                     this.activeGroups.result,
                     group => {
-                        const molecularProfileCaseIdentifiers = _.flatMap(
-                            group.studies,
-                            study => {
-                                return _.map(study.samples, sampleId => ({
-                                    caseId: sampleId,
-                                    molecularProfileId,
-                                }));
-                            }
-                        );
+                        const molecularProfileCaseIdentifiers = _.flatMap(group.studies, study => {
+                            return _.map(study.samples, sampleId => ({
+                                caseId: sampleId,
+                                molecularProfileId,
+                            }));
+                        });
                         return {
                             name: group.nameWithOrdinal,
                             molecularProfileCaseIdentifiers,
@@ -754,10 +659,7 @@ export default class ComparisonStore {
     });
 
     @computed get survivalTabShowable() {
-        return (
-            this.survivalClinicalDataExists.isComplete &&
-            this.survivalClinicalDataExists.result
-        );
+        return this.survivalClinicalDataExists.isComplete && this.survivalClinicalDataExists.result;
     }
 
     @computed get showSurvivalTab() {
@@ -772,8 +674,7 @@ export default class ComparisonStore {
     @computed get survivalTabUnavailable() {
         // grey out if more than 10 active groups
         return (
-            (this.activeGroups.isComplete &&
-                this.activeGroups.result.length > 10) ||
+            (this.activeGroups.isComplete && this.activeGroups.result.length > 10) ||
             !this.survivalTabShowable
         );
     }
@@ -796,17 +697,14 @@ export default class ComparisonStore {
 
     @computed get mutationsTabUnavailable() {
         return (
-            (this.activeGroups.isComplete &&
-                this.activeGroups.result.length < 2) || //less than two active groups
+            (this.activeGroups.isComplete && this.activeGroups.result.length < 2) || //less than two active groups
             !this.mutationsTabShowable
         );
     }
 
     @computed get clinicalTabUnavailable() {
         // grey out if active groups is less than 2
-        return (
-            this.activeGroups.isComplete && this.activeGroups.result.length < 2
-        );
+        return this.activeGroups.isComplete && this.activeGroups.result.length < 2;
     }
 
     @computed get copyNumberTabShowable() {
@@ -827,16 +725,14 @@ export default class ComparisonStore {
 
     @computed get copyNumberUnavailable() {
         return (
-            (this.activeGroups.isComplete &&
-                this.activeGroups.result.length < 2) || //less than two active groups
+            (this.activeGroups.isComplete && this.activeGroups.result.length < 2) || //less than two active groups
             !this.copyNumberTabShowable
         );
     }
 
     @computed get mRNATabShowable() {
         return (
-            this.mRNAEnrichmentProfiles.isComplete &&
-            this.mRNAEnrichmentProfiles.result!.length > 0
+            this.mRNAEnrichmentProfiles.isComplete && this.mRNAEnrichmentProfiles.result!.length > 0
         );
     }
 
@@ -851,10 +747,8 @@ export default class ComparisonStore {
 
     @computed get mRNATabUnavailable() {
         return (
-            (this.activeGroups.isComplete &&
-                this.activeGroups.result.length < 2) || //less than two active groups
-            (this.activeStudyIds.isComplete &&
-                this.activeStudyIds.result.length > 1) || //more than one active study
+            (this.activeGroups.isComplete && this.activeGroups.result.length < 2) || //less than two active groups
+            (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) || //more than one active study
             !this.mRNATabShowable
         );
     }
@@ -877,10 +771,8 @@ export default class ComparisonStore {
 
     @computed get proteinTabUnavailable() {
         return (
-            (this.activeGroups.isComplete &&
-                this.activeGroups.result.length < 2) || //less than two active groups
-            (this.activeStudyIds.isComplete &&
-                this.activeStudyIds.result.length > 1) || //more than one active study
+            (this.activeGroups.isComplete && this.activeGroups.result.length < 2) || //less than two active groups
+            (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) || //more than one active study
             !this.proteinTabShowable
         );
     }
@@ -890,10 +782,7 @@ export default class ComparisonStore {
         invoke: () => {
             const sampleSet = new ComplexKeyMap<Sample>();
             for (const sample of this.samples.result!) {
-                sampleSet.set(
-                    { studyId: sample.studyId, sampleId: sample.sampleId },
-                    sample
-                );
+                sampleSet.set({ studyId: sample.studyId, sampleId: sample.sampleId }, sample);
             }
             return Promise.resolve(sampleSet);
         },
@@ -902,9 +791,7 @@ export default class ComparisonStore {
     readonly patientKeys = remoteData({
         await: () => [this.samples],
         invoke: () => {
-            return Promise.resolve(
-                _.uniq(this.samples.result!.map(s => s.uniquePatientKey))
-            );
+            return Promise.resolve(_.uniq(this.samples.result!.map(s => s.uniquePatientKey)));
         },
     });
 
@@ -913,10 +800,7 @@ export default class ComparisonStore {
         invoke: () => {
             const ret = new ComplexKeyGroupsMap<Sample>();
             for (const sample of this.samples.result!) {
-                ret.add(
-                    { studyId: sample.studyId, patientId: sample.patientId },
-                    sample
-                );
+                ret.add({ studyId: sample.studyId, patientId: sample.patientId }, sample);
             }
             return Promise.resolve(ret);
         },
@@ -926,10 +810,7 @@ export default class ComparisonStore {
         await: () => [this.samples],
         invoke: () => {
             return Promise.resolve(
-                _.groupBy(
-                    this.samples.result!,
-                    sample => sample.uniquePatientKey
-                )
+                _.groupBy(this.samples.result!, sample => sample.uniquePatientKey)
             );
         },
     });
@@ -978,9 +859,10 @@ export default class ComparisonStore {
             }
             const filter: ClinicalDataMultiStudyFilter = {
                 attributeIds: SURVIVAL_CHART_ATTRIBUTES,
-                identifiers: this.activeSamplesNotOverlapRemoved.result!.map(
-                    (s: any) => ({ entityId: s.patientId, studyId: s.studyId })
-                ),
+                identifiers: this.activeSamplesNotOverlapRemoved.result!.map((s: any) => ({
+                    entityId: s.patientId,
+                    studyId: s.studyId,
+                })),
             };
             const count = await client
                 .fetchClinicalDataUsingPOSTWithHttpInfo({
@@ -1004,12 +886,10 @@ export default class ComparisonStore {
                 }
                 const filter: ClinicalDataMultiStudyFilter = {
                     attributeIds: SURVIVAL_CHART_ATTRIBUTES,
-                    identifiers: this.activeSamplesNotOverlapRemoved.result!.map(
-                        (s: any) => ({
-                            entityId: s.patientId,
-                            studyId: s.studyId,
-                        })
-                    ),
+                    identifiers: this.activeSamplesNotOverlapRemoved.result!.map((s: any) => ({
+                        entityId: s.patientId,
+                        studyId: s.studyId,
+                    })),
                 };
                 return client.fetchClinicalDataUsingPOST({
                     clinicalDataType: 'PATIENT',
@@ -1040,10 +920,7 @@ export default class ComparisonStore {
     }>({
         await: () => [this.survivalClinicalData],
         invoke: async () => {
-            return _.groupBy(
-                this.survivalClinicalData.result,
-                'uniquePatientKey'
-            );
+            return _.groupBy(this.survivalClinicalData.result, 'uniquePatientKey');
         },
     });
 
@@ -1088,9 +965,7 @@ export default class ComparisonStore {
     readonly uidToGroup = remoteData({
         await: () => [this._originalGroups],
         invoke: () => {
-            return Promise.resolve(
-                _.keyBy(this._originalGroups.result!, group => group.uid)
-            );
+            return Promise.resolve(_.keyBy(this._originalGroups.result!, group => group.uid));
         },
     });
 
@@ -1134,29 +1009,17 @@ export default class ComparisonStore {
         []
     );
 
-    readonly clinicalDataEnrichmentsWithQValues = remoteData<
-        ClinicalDataEnrichmentWithQ[]
-    >(
+    readonly clinicalDataEnrichmentsWithQValues = remoteData<ClinicalDataEnrichmentWithQ[]>(
         {
             await: () => [this.clinicalDataEnrichments],
             invoke: () => {
-                const clinicalDataEnrichments = this.clinicalDataEnrichments
-                    .result!;
-                const sortedByPvalue = _.sortBy(
-                    clinicalDataEnrichments,
-                    c => c.pValue
-                );
-                const qValues = calculateQValues(
-                    sortedByPvalue.map(c => c.pValue)
-                );
+                const clinicalDataEnrichments = this.clinicalDataEnrichments.result!;
+                const sortedByPvalue = _.sortBy(clinicalDataEnrichments, c => c.pValue);
+                const qValues = calculateQValues(sortedByPvalue.map(c => c.pValue));
                 qValues.forEach((qValue, index) => {
-                    (sortedByPvalue[
-                        index
-                    ] as ClinicalDataEnrichmentWithQ).qValue = qValue;
+                    (sortedByPvalue[index] as ClinicalDataEnrichmentWithQ).qValue = qValue;
                 });
-                return Promise.resolve(
-                    sortedByPvalue as ClinicalDataEnrichmentWithQ[]
-                );
+                return Promise.resolve(sortedByPvalue as ClinicalDataEnrichmentWithQ[]);
             },
             onError: () => {
                 // suppress failsafe error handler
@@ -1182,10 +1045,7 @@ export default class ComparisonStore {
     );
 
     readonly overallSurvivalDescriptions = remoteData({
-        await: () => [
-            this.activeStudiesClinicalAttributes,
-            this.activeStudyIdToStudy,
-        ],
+        await: () => [this.activeStudiesClinicalAttributes, this.activeStudyIdToStudy],
         invoke: () => {
             const overallSurvivalClinicalAttributeId = 'OS_STATUS';
             const clinicalAttributeMap = _.groupBy(
@@ -1193,17 +1053,14 @@ export default class ComparisonStore {
                 'clinicalAttributeId'
             );
             const result: ISurvivalDescription[] = [];
-            const studyIdToStudy: { [studyId: string]: CancerStudy } = this
-                .activeStudyIdToStudy.result;
+            const studyIdToStudy: { [studyId: string]: CancerStudy } = this.activeStudyIdToStudy
+                .result;
             if (
                 clinicalAttributeMap &&
                 clinicalAttributeMap[overallSurvivalClinicalAttributeId] &&
-                clinicalAttributeMap[overallSurvivalClinicalAttributeId]
-                    .length > 0
+                clinicalAttributeMap[overallSurvivalClinicalAttributeId].length > 0
             ) {
-                clinicalAttributeMap[
-                    overallSurvivalClinicalAttributeId
-                ].forEach(attr => {
+                clinicalAttributeMap[overallSurvivalClinicalAttributeId].forEach(attr => {
                     result.push({
                         studyName: studyIdToStudy[attr.studyId].name,
                         description: attr.description,
@@ -1216,10 +1073,7 @@ export default class ComparisonStore {
     });
 
     readonly diseaseFreeSurvivalDescriptions = remoteData({
-        await: () => [
-            this.activeStudiesClinicalAttributes,
-            this.activeStudyIdToStudy,
-        ],
+        await: () => [this.activeStudiesClinicalAttributes, this.activeStudyIdToStudy],
         invoke: () => {
             const diseaseFreeSurvivalClinicalAttributeId = 'DFS_STATUS';
             const clinicalAttributeMap = _.groupBy(
@@ -1227,17 +1081,14 @@ export default class ComparisonStore {
                 'clinicalAttributeId'
             );
             const result: ISurvivalDescription[] = [];
-            const studyIdToStudy: { [studyId: string]: CancerStudy } = this
-                .activeStudyIdToStudy.result;
+            const studyIdToStudy: { [studyId: string]: CancerStudy } = this.activeStudyIdToStudy
+                .result;
             if (
                 clinicalAttributeMap &&
                 clinicalAttributeMap[diseaseFreeSurvivalClinicalAttributeId] &&
-                clinicalAttributeMap[diseaseFreeSurvivalClinicalAttributeId]
-                    .length > 0
+                clinicalAttributeMap[diseaseFreeSurvivalClinicalAttributeId].length > 0
             ) {
-                clinicalAttributeMap[
-                    diseaseFreeSurvivalClinicalAttributeId
-                ].forEach(attr => {
+                clinicalAttributeMap[diseaseFreeSurvivalClinicalAttributeId].forEach(attr => {
                     result.push({
                         studyName: studyIdToStudy[attr.studyId].name,
                         description: attr.description,

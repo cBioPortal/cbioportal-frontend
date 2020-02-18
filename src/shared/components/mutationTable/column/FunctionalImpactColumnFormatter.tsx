@@ -9,10 +9,7 @@ import {
     VariantAnnotation,
 } from 'cbioportal-frontend-commons';
 import 'rc-tooltip/assets/bootstrap_white.css';
-import {
-    Mutation,
-    DiscreteCopyNumberData,
-} from 'shared/api/generated/CBioPortalAPI';
+import { Mutation, DiscreteCopyNumberData } from 'shared/api/generated/CBioPortalAPI';
 import MutationAssessor from 'shared/components/annotation/genomeNexus/MutationAssessor';
 import Sift from 'shared/components/annotation/genomeNexus/Sift';
 import PolyPhen2 from 'shared/components/annotation/genomeNexus/PolyPhen2';
@@ -21,9 +18,7 @@ import polyPhen2Styles from 'shared/components/annotation/genomeNexus/styles/pol
 import mutationAssessorStyles from 'shared/components/annotation/genomeNexus/styles/mutationAssessorColumn.module.scss';
 import annotationStyles from 'shared/components/annotation/styles/annotation.module.scss';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
-import GenomeNexusCache, {
-    GenomeNexusCacheDataType,
-} from 'shared/cache/GenomeNexusCache';
+import GenomeNexusCache, { GenomeNexusCacheDataType } from 'shared/cache/GenomeNexusCache';
 
 type FunctionalImpactColumnTooltipProps = {
     active: 'mutationAssessor' | 'sift' | 'polyPhen2';
@@ -87,9 +82,7 @@ class FunctionalImpactColumnTooltip extends React.Component<
                                         width: 22,
                                     }}
                                     title="SIFT"
-                                    onMouseOver={() =>
-                                        this.setState({ active: 'sift' })
-                                    }
+                                    onMouseOver={() => this.setState({ active: 'sift' })}
                                 >
                                     <img
                                         height={14}
@@ -106,9 +99,7 @@ class FunctionalImpactColumnTooltip extends React.Component<
                                         width: 22,
                                     }}
                                     title="PolyPhen-2"
-                                    onMouseOver={() =>
-                                        this.setState({ active: 'polyPhen2' })
-                                    }
+                                    onMouseOver={() => this.setState({ active: 'polyPhen2' })}
                                 >
                                     <img
                                         height={14}
@@ -125,29 +116,16 @@ class FunctionalImpactColumnTooltip extends React.Component<
                             <td>
                                 <span
                                     className={classNames(
-                                        annotationStyles[
-                                            'annotation-item-text'
-                                        ],
+                                        annotationStyles['annotation-item-text'],
                                         mutationAssessorStyles[`ma-high`]
                                     )}
                                 >
-                                    <i
-                                        className="fa fa-circle"
-                                        aria-hidden="true"
-                                    ></i>
+                                    <i className="fa fa-circle" aria-hidden="true"></i>
                                 </span>
                             </td>
                             {/* <td className={mutationAssessorStyles['ma-high']}>high</td> */}
-                            <td className={siftStyles['sift-deleterious']}>
-                                deleterious
-                            </td>
-                            <td
-                                className={
-                                    polyPhen2Styles[
-                                        'polyPhen2-probably_damaging'
-                                    ]
-                                }
-                            >
+                            <td className={siftStyles['sift-deleterious']}>deleterious</td>
+                            <td className={polyPhen2Styles['polyPhen2-probably_damaging']}>
                                 probably_damaging
                             </td>
                         </tr>
@@ -165,35 +143,18 @@ class FunctionalImpactColumnTooltip extends React.Component<
                             <td>
                                 <span
                                     className={classNames(
-                                        annotationStyles[
-                                            'annotation-item-text'
-                                        ],
+                                        annotationStyles['annotation-item-text'],
                                         mutationAssessorStyles[`ma-low`]
                                     )}
                                 >
-                                    <i
-                                        className="fa fa-circle"
-                                        aria-hidden="true"
-                                    ></i>
+                                    <i className="fa fa-circle" aria-hidden="true"></i>
                                 </span>
                             </td>
                             {/* <td className={mutationAssessorStyles['ma-low']}>low</td> */}
-                            <td
-                                className={
-                                    siftStyles[
-                                        'sift-deleterious_low_confidence'
-                                    ]
-                                }
-                            >
+                            <td className={siftStyles['sift-deleterious_low_confidence']}>
                                 deleterious_low_confidence
                             </td>
-                            <td
-                                className={
-                                    polyPhen2Styles[
-                                        'polyPhen2-possibly_damaging'
-                                    ]
-                                }
-                            >
+                            <td className={polyPhen2Styles['polyPhen2-possibly_damaging']}>
                                 possibly_damaging
                             </td>
                         </tr>
@@ -201,36 +162,23 @@ class FunctionalImpactColumnTooltip extends React.Component<
                             <td>
                                 <span
                                     className={classNames(
-                                        annotationStyles[
-                                            'annotation-item-text'
-                                        ],
+                                        annotationStyles['annotation-item-text'],
                                         mutationAssessorStyles[`ma-neutral`]
                                     )}
                                 >
-                                    <i
-                                        className="fa fa-circle"
-                                        aria-hidden="true"
-                                    ></i>
+                                    <i className="fa fa-circle" aria-hidden="true"></i>
                                 </span>
                             </td>
                             {/* <td className={mutationAssessorStyles['ma-neutral']}>neutral</td> */}
-                            <td
-                                className={
-                                    siftStyles['sift-tolerated_low_confidence']
-                                }
-                            >
+                            <td className={siftStyles['sift-tolerated_low_confidence']}>
                                 tolerated_low_confidence
                             </td>
-                            <td className={polyPhen2Styles['polyPhen2-benign']}>
-                                benign
-                            </td>
+                            <td className={polyPhen2Styles['polyPhen2-benign']}>benign</td>
                         </tr>
                         <tr>
                             <td></td>
                             {/* <td>-</td> */}
-                            <td className={siftStyles['sift-tolerated']}>
-                                tolerated
-                            </td>
+                            <td className={siftStyles['sift-tolerated']}>tolerated</td>
                             <td>-</td>
                         </tr>
                     </tbody>
@@ -242,18 +190,14 @@ class FunctionalImpactColumnTooltip extends React.Component<
     public static mutationAssessorText() {
         return (
             <div style={{ width: 450, height: 100 }}>
-                <a
-                    href={MutationAssessor.MUTATION_ASSESSOR_URL}
-                    target="_blank"
-                >
+                <a href={MutationAssessor.MUTATION_ASSESSOR_URL} target="_blank">
                     Mutation Assessor
                 </a>{' '}
-                predicts the functional impact of amino-acid substitutions in
-                proteins, such as mutations discovered in cancer or missense
-                polymorphisms. The functional impact is assessed based on
-                evolutionary conservation of the affected amino acid in protein
-                homologs. The method has been validated on a large set (60k) of
-                disease associated (OMIM) and polymorphic variants.
+                predicts the functional impact of amino-acid substitutions in proteins, such as
+                mutations discovered in cancer or missense polymorphisms. The functional impact is
+                assessed based on evolutionary conservation of the affected amino acid in protein
+                homologs. The method has been validated on a large set (60k) of disease associated
+                (OMIM) and polymorphic variants.
             </div>
         );
     }
@@ -264,10 +208,9 @@ class FunctionalImpactColumnTooltip extends React.Component<
                 <a href={Sift.SIFT_URL} target="_blank">
                     SIFT
                 </a>{' '}
-                predicts whether an amino acid substitution affects protein
-                function based on sequence homology and the physical properties
-                of amino acids. SIFT can be applied to naturally occurring
-                nonsynonymous polymorphisms and laboratory-induced missense
+                predicts whether an amino acid substitution affects protein function based on
+                sequence homology and the physical properties of amino acids. SIFT can be applied to
+                naturally occurring nonsynonymous polymorphisms and laboratory-induced missense
                 mutations.
             </div>
         );
@@ -279,10 +222,9 @@ class FunctionalImpactColumnTooltip extends React.Component<
                 <a href={PolyPhen2.POLYPHEN2_URL} target="_blank">
                     PolyPhen-2
                 </a>{' '}
-                (Polymorphism Phenotyping v2) is a tool which predicts possible
-                impact of an amino acid substitution on the structure and
-                function of a human protein using straightforward physical and
-                comparative considerations.
+                (Polymorphism Phenotyping v2) is a tool which predicts possible impact of an amino
+                acid substitution on the structure and function of a human protein using
+                straightforward physical and comparative considerations.
             </div>
         );
     }
@@ -292,10 +234,8 @@ class FunctionalImpactColumnTooltip extends React.Component<
             <div>
                 {this.state.active === 'mutationAssessor' &&
                     FunctionalImpactColumnTooltip.mutationAssessorText()}
-                {this.state.active === 'sift' &&
-                    FunctionalImpactColumnTooltip.siftText()}
-                {this.state.active === 'polyPhen2' &&
-                    FunctionalImpactColumnTooltip.polyPhen2Text()}
+                {this.state.active === 'sift' && FunctionalImpactColumnTooltip.siftText()}
+                {this.state.active === 'polyPhen2' && FunctionalImpactColumnTooltip.polyPhen2Text()}
                 {this.legend()}
             </div>
         );
@@ -316,9 +256,7 @@ export default class FunctionalImpactColumnFormatter {
                 <br />
                 <div style={{ height: 14 }}>
                     <DefaultTooltip
-                        overlay={
-                            <FunctionalImpactColumnTooltip active="mutationAssessor" />
-                        }
+                        overlay={<FunctionalImpactColumnTooltip active="mutationAssessor" />}
                         placement="topLeft"
                         trigger={['hover', 'focus']}
                         arrowContent={arrowContent}
@@ -336,9 +274,7 @@ export default class FunctionalImpactColumnFormatter {
                         </span>
                     </DefaultTooltip>
                     <DefaultTooltip
-                        overlay={
-                            <FunctionalImpactColumnTooltip active="sift" />
-                        }
+                        overlay={<FunctionalImpactColumnTooltip active="sift" />}
                         placement="topLeft"
                         trigger={['hover', 'focus']}
                         arrowContent={arrowContent}
@@ -356,9 +292,7 @@ export default class FunctionalImpactColumnFormatter {
                         </span>
                     </DefaultTooltip>
                     <DefaultTooltip
-                        overlay={
-                            <FunctionalImpactColumnTooltip active="polyPhen2" />
-                        }
+                        overlay={<FunctionalImpactColumnTooltip active="polyPhen2" />}
                         placement="topLeft"
                         trigger={['hover', 'focus']}
                         arrowContent={arrowContent}
@@ -407,8 +341,7 @@ export default class FunctionalImpactColumnFormatter {
         const siftScore = siftData && siftData.siftScore;
         const siftPrediction = siftData && siftData.siftPrediction;
         const polyPhenScore = polyphenData && polyphenData.polyPhenScore;
-        const polyPhenPrediction =
-            polyphenData && polyphenData.polyPhenPrediction;
+        const polyPhenPrediction = polyphenData && polyphenData.polyPhenPrediction;
 
         const functionalImpactData: FunctionalImpactData = {
             mutationAssessor,
@@ -549,11 +482,7 @@ export default class FunctionalImpactColumnFormatter {
                     functionalImpactData = FunctionalImpactColumnFormatter.getMutationAssessorData(
                         cacheData.data
                     );
-                    return (
-                        <MutationAssessor
-                            mutationAssessor={functionalImpactData}
-                        />
-                    );
+                    return <MutationAssessor mutationAssessor={functionalImpactData} />;
                 case FunctionalImpactColumnsName.SIFT:
                     functionalImpactData = FunctionalImpactColumnFormatter.getSiftData(
                         cacheData.data
@@ -571,9 +500,7 @@ export default class FunctionalImpactColumnFormatter {
                     return (
                         <PolyPhen2
                             polyPhenScore={functionalImpactData.polyPhenScore}
-                            polyPhenPrediction={
-                                functionalImpactData.polyPhenPrediction
-                            }
+                            polyPhenPrediction={functionalImpactData.polyPhenPrediction}
                         />
                     );
             }

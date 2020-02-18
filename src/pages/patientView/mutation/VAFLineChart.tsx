@@ -1,12 +1,6 @@
 import * as React from 'react';
 import { Observer, observer } from 'mobx-react';
-import {
-    VictoryAxis,
-    VictoryChart,
-    VictoryLabel,
-    VictoryLine,
-    VictoryScatter,
-} from 'victory';
+import { VictoryAxis, VictoryChart, VictoryLabel, VictoryLine, VictoryScatter } from 'victory';
 import CBIOPORTAL_VICTORY_THEME from '../../../shared/theme/cBioPoralTheme';
 import { action, computed, observable } from 'mobx';
 import { Sample } from '../../../shared/api/generated/CBioPortalAPI';
@@ -72,11 +66,7 @@ class Tick extends React.Component<any, any> {
             <g transform={`rotate(50, ${rest.x}, ${rest.y})`}>
                 <SampleLabelSVG
                     label={index + 1}
-                    color={
-                        sampleManager
-                            ? sampleManager.getColorForSample(sampleId)
-                            : 'black'
-                    }
+                    color={sampleManager ? sampleManager.getColorForSample(sampleId) : 'black'}
                     x={rest.x + 10}
                     y={rest.y - 5}
                     r={6}
@@ -98,10 +88,7 @@ class Tick extends React.Component<any, any> {
 type VictoryScale = { x: (_x: number) => number; y: (_y: number) => number };
 
 @observer
-export default class VAFLineChart extends React.Component<
-    IVAFLineChartProps,
-    {}
-> {
+export default class VAFLineChart extends React.Component<IVAFLineChartProps, {}> {
     @observable.ref private tooltipDatum: any | null = null;
     @observable private tooltipOnPoint = false;
 
@@ -158,9 +145,7 @@ export default class VAFLineChart extends React.Component<
                                 mutation: action(() => {
                                     this.tooltipDatum = null;
                                     this.tooltipOnPoint = false;
-                                    this.props.dataStore.setMouseOverMutation(
-                                        null
-                                    );
+                                    this.props.dataStore.setMouseOverMutation(null);
                                     return null;
                                 }),
                             },
@@ -179,9 +164,7 @@ export default class VAFLineChart extends React.Component<
                                         // click on line
                                         datum = props.data[0];
                                     }
-                                    this.props.dataStore.toggleSelectedMutation(
-                                        datum.mutation
-                                    );
+                                    this.props.dataStore.toggleSelectedMutation(datum.mutation);
                                 }),
                             },
                         ];
@@ -204,9 +187,7 @@ export default class VAFLineChart extends React.Component<
     @action
     private selectPointsInDragRect() {
         if (this.scale) {
-            const points = this.renderData.grayPoints.concat(
-                _.flatten(this.renderData.lineData)
-            );
+            const points = this.renderData.grayPoints.concat(_.flatten(this.renderData.lineData));
 
             const rectBoundsSvgSpace = {
                 x: [
@@ -221,12 +202,8 @@ export default class VAFLineChart extends React.Component<
             };
 
             const rectBoundsDataSpace = {
-                x: rectBoundsSvgSpace.x.map(v =>
-                    invertIncreasingFunction(this.scale!.x, v)
-                ),
-                y: rectBoundsSvgSpace.y.map(v =>
-                    invertDecreasingFunction(this.scale!.y, v)
-                ), // y is decreasing function because svg y goes top to bottom
+                x: rectBoundsSvgSpace.x.map(v => invertIncreasingFunction(this.scale!.x, v)),
+                y: rectBoundsSvgSpace.y.map(v => invertDecreasingFunction(this.scale!.y, v)), // y is decreasing function because svg y goes top to bottom
             };
 
             const selectedPoints = points.filter(p => {
@@ -238,9 +215,7 @@ export default class VAFLineChart extends React.Component<
                 );
             });
 
-            this.props.dataStore.setSelectedMutations(
-                selectedPoints.map(p => p.mutation)
-            );
+            this.props.dataStore.setSelectedMutations(selectedPoints.map(p => p.mutation));
         }
     }
 
@@ -250,10 +225,7 @@ export default class VAFLineChart extends React.Component<
         e.persist();
         this.mouseEvent = e;
 
-        if (
-            this.dragging &&
-            (e.target as SVGElement).classList.contains(DRAG_COVER_CLASSNAME)
-        ) {
+        if (this.dragging && (e.target as SVGElement).classList.contains(DRAG_COVER_CLASSNAME)) {
             // only update drag coordinates based on SVG events
             const offset = $(e.target).offset()!;
             this.dragRect.currentX = e.pageX - offset.left;
@@ -288,10 +260,7 @@ export default class VAFLineChart extends React.Component<
     }
 
     @computed get chartWidth() {
-        return Math.min(
-            this.props.samples.length * 100 + 100,
-            WindowStore.size.width - 100
-        );
+        return Math.min(this.props.samples.length * 100 + 100, WindowStore.size.width - 100);
     }
 
     @computed get chartHeight() {
@@ -362,8 +331,7 @@ export default class VAFLineChart extends React.Component<
         if (!this.tooltipDatum || !this.mouseEvent) {
             return <span />;
         } else {
-            let tooltipPlacement =
-                this.mouseEvent.clientY < 250 ? 'bottom' : 'top';
+            let tooltipPlacement = this.mouseEvent.clientY < 250 ? 'bottom' : 'top';
             return (
                 <Portal isOpened={true} node={document.body}>
                     <Popover
@@ -374,10 +342,7 @@ export default class VAFLineChart extends React.Component<
                             styles.Tooltip
                         )}
                         positionLeft={this.mouseEvent.pageX}
-                        positionTop={
-                            this.mouseEvent.pageY +
-                            (tooltipPlacement === 'top' ? -7 : 7)
-                        }
+                        positionTop={this.mouseEvent.pageY + (tooltipPlacement === 'top' ? -7 : 7)}
                         style={{
                             transform:
                                 tooltipPlacement === 'top'
@@ -401,9 +366,7 @@ export default class VAFLineChart extends React.Component<
         const highlightedMutations = [];
         if (!this.props.dataStore.onlyShowSelectedInVAFChart) {
             // dont bold highlighted mutations if we're only showing highlighted mutations
-            highlightedMutations.push(
-                ...this.props.dataStore.selectedMutations
-            );
+            highlightedMutations.push(...this.props.dataStore.selectedMutations);
         }
         const mouseOverMutation = this.props.dataStore.getMouseOverMutation();
         if (mouseOverMutation) {
@@ -421,13 +384,11 @@ export default class VAFLineChart extends React.Component<
                 let linePath = null;
                 if (points.length > 1) {
                     // more than one point -> we should render a path
-                    let d = `M ${this.scale!.x(points[0].x)} ${this.scale!.y(
-                        this.y(points[0])
-                    )}`;
+                    let d = `M ${this.scale!.x(points[0].x)} ${this.scale!.y(this.y(points[0]))}`;
                     for (let i = 1; i < points.length; i++) {
-                        d = `${d} L ${this.scale!.x(
-                            points[i].x
-                        )} ${this.scale!.y(this.y(points[i]))}`;
+                        d = `${d} L ${this.scale!.x(points[i].x)} ${this.scale!.y(
+                            this.y(points[i])
+                        )}`;
                     }
                     linePath = (
                         <path
@@ -444,9 +405,7 @@ export default class VAFLineChart extends React.Component<
                 }
                 const pointPaths = points.map(point => (
                     <path
-                        d={`M ${this.scale!.x(point.x)} ${this.scale!.y(
-                            this.y(point)
-                        )}
+                        d={`M ${this.scale!.x(point.x)} ${this.scale!.y(this.y(point))}
                             m -${SCATTER_DATA_POINT_SIZE}, 0
                             a ${SCATTER_DATA_POINT_SIZE}, ${SCATTER_DATA_POINT_SIZE} 0 1,0 ${2 *
                             SCATTER_DATA_POINT_SIZE},0
@@ -480,12 +439,8 @@ export default class VAFLineChart extends React.Component<
         if (this.dragging) {
             const x = Math.min(this.dragRect.startX, this.dragRect.currentX);
             const y = Math.min(this.dragRect.startY, this.dragRect.currentY);
-            const width = Math.abs(
-                this.dragRect.startX - this.dragRect.currentX
-            );
-            const height = Math.abs(
-                this.dragRect.startY - this.dragRect.currentY
-            );
+            const width = Math.abs(this.dragRect.startX - this.dragRect.currentX);
+            const height = Math.abs(this.dragRect.startY - this.dragRect.currentY);
 
             return [
                 <rect
@@ -550,9 +505,7 @@ export default class VAFLineChart extends React.Component<
     @autobind
     private tickFormatY(t: number, tickIndex: number, tickValues: number[]) {
         if (this.props.logScale) {
-            const realValue = tickFormatNumeral(t, tickValues, t =>
-                Math.pow(10, t)
-            );
+            const realValue = tickFormatNumeral(t, tickValues, t => Math.pow(10, t));
             if (tickIndex === 0 && t <= MIN_LOG_ARG && t > 0) {
                 // bottom tick - if its greater than 0, show less-than-or-equal sign since data is floored at MIN_LOG_ARG
                 return `≤ ${realValue}`;
@@ -610,10 +563,7 @@ export default class VAFLineChart extends React.Component<
                             <VictoryAxis
                                 style={{
                                     grid: {
-                                        strokeOpacity: (
-                                            t: number,
-                                            i: number
-                                        ) => {
+                                        strokeOpacity: (t: number, i: number) => {
                                             return i === 0 ? 0 : 1;
                                         },
                                     },
@@ -710,8 +660,8 @@ export default class VAFLineChart extends React.Component<
                         width: '100%',
                     }}
                 >
-                    No VAF data to show. Select mutations below or un-check the
-                    "{SHOW_ONLY_SELECTED_LABEL}" filter above.
+                    No VAF data to show. Select mutations below or un-check the "
+                    {SHOW_ONLY_SELECTED_LABEL}" filter above.
                 </div>
             );
         }

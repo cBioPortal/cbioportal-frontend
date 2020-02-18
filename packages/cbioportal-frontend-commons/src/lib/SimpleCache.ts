@@ -10,8 +10,7 @@ export interface ICache<T> {
     [queryId: string]: ICacheData<T>;
 }
 
-export type ImmutableCache<T> = ICache<T> &
-    Immutable.ImmutableObject<ICache<T>>;
+export type ImmutableCache<T> = ICache<T> & Immutable.ImmutableObject<ICache<T>>;
 
 /**
  * @author Selcuk Onur Sumer

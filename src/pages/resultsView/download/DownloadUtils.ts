@@ -10,27 +10,15 @@ import {
 import { alterationInfoForCaseAggregatedDataByOQLLine } from 'shared/components/oncoprint/OncoprintUtils';
 import { makeGeneticTrackData } from 'shared/components/oncoprint/DataUtils';
 import { GeneticTrackDatum } from 'shared/components/oncoprint/Oncoprint';
-import {
-    Sample,
-    Gene,
-    MolecularProfile,
-    GenePanelData,
-} from 'shared/api/generated/CBioPortalAPI';
-import {
-    ICaseAlteration,
-    IOqlData,
-    ISubAlteration,
-} from './CaseAlterationTable';
+import { Sample, Gene, MolecularProfile, GenePanelData } from 'shared/api/generated/CBioPortalAPI';
+import { ICaseAlteration, IOqlData, ISubAlteration } from './CaseAlterationTable';
 import { IGeneAlteration } from './GeneAlterationTable';
 import {
     CoverageInformation,
     getSingleGeneResultKey,
     getMultipleGeneResultKey,
 } from '../ResultsViewPageStoreUtils';
-import {
-    OQLLineFilterOutput,
-    MergedTrackLineFilterOutput,
-} from 'shared/lib/oql/oqlfilter';
+import { OQLLineFilterOutput, MergedTrackLineFilterOutput } from 'shared/lib/oql/oqlfilter';
 
 export interface IDownloadFileRow {
     studyId: string;
@@ -55,8 +43,7 @@ export function generateOqlData(
 
     // there might be multiple alterations for a single sample
     for (const alteration of datum.data) {
-        const molecularAlterationType =
-            alteration.molecularProfileAlterationType;
+        const molecularAlterationType = alteration.molecularProfileAlterationType;
         const alterationSubType = alteration.alterationSubType.toUpperCase();
         switch (molecularAlterationType) {
             case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
@@ -104,8 +91,7 @@ export function generateOqlData(
         // should always be a gene symbol as long as the download tab doesn't
         // use multi-gene tracks
         sequenced:
-            geneAlterationDataByGene &&
-            geneAlterationDataByGene[datum.trackLabel]
+            geneAlterationDataByGene && geneAlterationDataByGene[datum.trackLabel]
                 ? geneAlterationDataByGene[datum.trackLabel].sequenced > 0
                 : true,
         geneSymbol: datum.trackLabel,
@@ -141,9 +127,8 @@ export function updateOqlData(
         for (const profile of datum.profiled_in) {
             if (molecularProfileIdToMolecularProfile) {
                 const molecularAlterationType =
-                    molecularProfileIdToMolecularProfile[
-                        profile.molecularProfileId
-                    ].molecularAlterationType;
+                    molecularProfileIdToMolecularProfile[profile.molecularProfileId]
+                        .molecularAlterationType;
                 switch (molecularAlterationType) {
                     case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
                         isCnaNotProfiled = false;
@@ -173,9 +158,7 @@ export function updateOqlData(
 }
 
 export function generateGeneAlterationData(
-    caseAggregatedDataByOQLLine?: IQueriedCaseData<
-        AnnotatedExtendedAlteration
-    >[],
+    caseAggregatedDataByOQLLine?: IQueriedCaseData<AnnotatedExtendedAlteration>[],
     sequencedSampleKeysByGene: { [hugoGeneSymbol: string]: string[] } = {}
 ): IGeneAlteration[] {
     return caseAggregatedDataByOQLLine && !_.isEmpty(sequencedSampleKeysByGene)
@@ -213,16 +196,12 @@ export function generateMutationData(
         return (
             alteration.molecularProfileAlterationType ===
                 AlterationTypeConstants.MUTATION_EXTENDED ||
-            alteration.molecularProfileAlterationType ===
-                AlterationTypeConstants.FUSION
+            alteration.molecularProfileAlterationType === AlterationTypeConstants.FUSION
         );
     };
 
     return unfilteredCaseAggregatedData
-        ? generateSampleAlterationDataByGene(
-              unfilteredCaseAggregatedData,
-              sampleFilter
-          )
+        ? generateSampleAlterationDataByGene(unfilteredCaseAggregatedData, sampleFilter)
         : {};
 }
 
@@ -232,12 +211,7 @@ export function generateMutationDownloadData(
     genes: Gene[] = []
 ): string[][] {
     return sampleAlterationDataByGene
-        ? generateDownloadData(
-              sampleAlterationDataByGene,
-              samples,
-              genes,
-              extractMutationValue
-          )
+        ? generateDownloadData(sampleAlterationDataByGene, samples, genes, extractMutationValue)
         : [];
 }
 
@@ -246,16 +220,12 @@ export function generateMrnaData(
 ): { [key: string]: ExtendedAlteration[] } {
     const sampleFilter = (alteration: ExtendedAlteration) => {
         return (
-            alteration.molecularProfileAlterationType ===
-            AlterationTypeConstants.MRNA_EXPRESSION
+            alteration.molecularProfileAlterationType === AlterationTypeConstants.MRNA_EXPRESSION
         );
     };
 
     return unfilteredCaseAggregatedData
-        ? generateSampleAlterationDataByGene(
-              unfilteredCaseAggregatedData,
-              sampleFilter
-          )
+        ? generateSampleAlterationDataByGene(unfilteredCaseAggregatedData, sampleFilter)
         : {};
 }
 
@@ -263,17 +233,11 @@ export function generateProteinData(
     unfilteredCaseAggregatedData?: CaseAggregatedData<ExtendedAlteration>
 ): { [key: string]: ExtendedAlteration[] } {
     const sampleFilter = (alteration: ExtendedAlteration) => {
-        return (
-            alteration.molecularProfileAlterationType ===
-            AlterationTypeConstants.PROTEIN_LEVEL
-        );
+        return alteration.molecularProfileAlterationType === AlterationTypeConstants.PROTEIN_LEVEL;
     };
 
     return unfilteredCaseAggregatedData
-        ? generateSampleAlterationDataByGene(
-              unfilteredCaseAggregatedData,
-              sampleFilter
-          )
+        ? generateSampleAlterationDataByGene(unfilteredCaseAggregatedData, sampleFilter)
         : {};
 }
 
@@ -288,10 +252,7 @@ export function generateCnaData(
     };
 
     return unfilteredCaseAggregatedData
-        ? generateSampleAlterationDataByGene(
-              unfilteredCaseAggregatedData,
-              sampleFilter
-          )
+        ? generateSampleAlterationDataByGene(unfilteredCaseAggregatedData, sampleFilter)
         : {};
 }
 
@@ -304,10 +265,7 @@ export function generateOtherMolecularProfileData(
     };
 
     return unfilteredCaseAggregatedData
-        ? generateSampleAlterationDataByGene(
-              unfilteredCaseAggregatedData,
-              sampleFilter
-          )
+        ? generateSampleAlterationDataByGene(unfilteredCaseAggregatedData, sampleFilter)
         : {};
 }
 
@@ -435,9 +393,7 @@ export function generateDownloadData(
 export function generateCaseAlterationData(
     oqlQuery: string,
     selectedMolecularProfiles: MolecularProfile[],
-    caseAggregatedDataByOQLLine?: IQueriedCaseData<
-        AnnotatedExtendedAlteration
-    >[],
+    caseAggregatedDataByOQLLine?: IQueriedCaseData<AnnotatedExtendedAlteration>[],
     caseAggregatedDataByUnflattenedOQLLine?: IQueriedMergedTrackCaseData[],
     genePanelInformation?: CoverageInformation,
     samples: Sample[] = [],
@@ -464,11 +420,7 @@ export function generateCaseAlterationData(
 
             geneticTrackData.forEach(datum => {
                 const key = datum.study_id + ':' + datum.uid;
-                initializeCaseAlterationData(
-                    caseAlterationData,
-                    datum,
-                    sampleIndex
-                );
+                initializeCaseAlterationData(caseAlterationData, datum, sampleIndex);
                 // for each gene the oql data is different
                 // that's why we need a map here
                 const generatedOqlData = generateOqlData(
@@ -477,20 +429,13 @@ export function generateCaseAlterationData(
                     molecularProfileIdToMolecularProfile
                 );
                 //generate and update oqlDataByGene in caseAlterationData
-                if (
-                    caseAlterationData[key].oqlDataByGene[data.oql.gene] !==
-                    undefined
-                ) {
-                    caseAlterationData[key].oqlDataByGene[
-                        data.oql.gene
-                    ] = _.merge(
+                if (caseAlterationData[key].oqlDataByGene[data.oql.gene] !== undefined) {
+                    caseAlterationData[key].oqlDataByGene[data.oql.gene] = _.merge(
                         generatedOqlData,
                         caseAlterationData[key].oqlDataByGene[data.oql.gene]
                     );
                 } else {
-                    caseAlterationData[key].oqlDataByGene[
-                        data.oql.gene
-                    ] = generatedOqlData;
+                    caseAlterationData[key].oqlDataByGene[data.oql.gene] = generatedOqlData;
                 }
                 updateOqlData(
                     datum,
@@ -511,23 +456,17 @@ export function generateCaseAlterationData(
             let trackName: string;
             // get genes and track mames
             if (data.mergedTrackOqlList === undefined) {
-                genes = (data.oql as OQLLineFilterOutput<
+                genes = (data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>).gene;
+                trackName = getSingleGeneResultKey(index, oqlQuery, data.oql as OQLLineFilterOutput<
                     AnnotatedExtendedAlteration
-                >).gene;
-                trackName = getSingleGeneResultKey(
-                    index,
-                    oqlQuery,
-                    data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>
-                );
+                >);
             } else {
                 genes = (data.oql as MergedTrackLineFilterOutput<
                     AnnotatedExtendedAlteration
                 >).list.map(oql => oql.gene);
-                trackName = getMultipleGeneResultKey(
-                    data.oql as MergedTrackLineFilterOutput<
-                        AnnotatedExtendedAlteration
-                    >
-                );
+                trackName = getMultipleGeneResultKey(data.oql as MergedTrackLineFilterOutput<
+                    AnnotatedExtendedAlteration
+                >);
             }
             const geneticTrackData = makeGeneticTrackData(
                 data.cases.samples,
@@ -539,11 +478,7 @@ export function generateCaseAlterationData(
 
             geneticTrackData.forEach(datum => {
                 const key = datum.study_id + ':' + datum.uid;
-                initializeCaseAlterationData(
-                    caseAlterationData,
-                    datum,
-                    sampleIndex
-                );
+                initializeCaseAlterationData(caseAlterationData, datum, sampleIndex);
                 // for each track (for each oql line/gene) the oql data is different
                 // that's why we need a map here
                 const generatedOqlData = generateOqlData(
@@ -571,25 +506,21 @@ export function initializeCaseAlterationData(
 ) {
     const studyId = datum.study_id;
     const sampleId =
-        datum.sample ||
-        (sampleIndex[datum.uid] ? sampleIndex[datum.uid].sampleId : '');
+        datum.sample || (sampleIndex[datum.uid] ? sampleIndex[datum.uid].sampleId : '');
     const key = studyId + ':' + datum.uid;
 
     // initialize the row data
     caseAlterationData[key] = caseAlterationData[key] || {
         studyId,
         sampleId,
-        patientId: sampleIndex[datum.uid]
-            ? sampleIndex[datum.uid].patientId
-            : '',
+        patientId: sampleIndex[datum.uid] ? sampleIndex[datum.uid].patientId : '',
         altered: false,
         oqlData: {},
         oqlDataByGene: {},
     };
 
     // update altered: a single alteration in any track means altered
-    caseAlterationData[key].altered =
-        caseAlterationData[key].altered || datum.data.length > 0;
+    caseAlterationData[key].altered = caseAlterationData[key].altered || datum.data.length > 0;
 }
 
 export function hasValidData(
@@ -598,9 +529,7 @@ export function hasValidData(
 ): boolean {
     for (const alterations of _.values(sampleAlterationDataByGene)) {
         for (const alteration of alterations) {
-            const value = extractValue
-                ? extractValue(alteration)
-                : alteration.value;
+            const value = extractValue ? extractValue(alteration) : alteration.value;
 
             // at least one valid value means, there is valid data
             // TODO also filter out values like "NA", "N/A", etc. ?

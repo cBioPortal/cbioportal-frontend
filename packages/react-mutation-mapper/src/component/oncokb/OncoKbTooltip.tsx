@@ -33,18 +33,11 @@ export interface IOncoKbTooltipProps {
  * @author Selcuk Onur Sumer
  */
 @observer
-export default class OncoKbTooltip extends React.Component<
-    IOncoKbTooltipProps,
-    {}
-> {
+export default class OncoKbTooltip extends React.Component<IOncoKbTooltipProps, {}> {
     public get evidenceCacheData(): ICacheData<IEvidence> | undefined {
         let cacheData: ICacheData<IEvidence> | undefined;
 
-        if (
-            !this.props.geneNotExist &&
-            this.props.evidenceCache &&
-            this.props.evidenceQuery
-        ) {
+        if (!this.props.geneNotExist && this.props.evidenceCache && this.props.evidenceQuery) {
             const cache = this.props.evidenceCache.getData(
                 [this.props.evidenceQuery.id],
                 [this.props.evidenceQuery]
@@ -62,13 +55,9 @@ export default class OncoKbTooltip extends React.Component<
         if (this.props.pubMedCache && this.evidenceCacheData) {
             let mutationEffectPmids =
                 this.props.indicator && this.props.indicator.mutationEffect
-                    ? this.props.indicator.mutationEffect.citations.pmids.map(
-                          pmid => Number(pmid)
-                      )
+                    ? this.props.indicator.mutationEffect.citations.pmids.map(pmid => Number(pmid))
                     : [];
-            const refs = extractPmids(this.evidenceCacheData.data).concat(
-                mutationEffectPmids
-            );
+            const refs = extractPmids(this.evidenceCacheData.data).concat(mutationEffectPmids);
 
             for (const ref of refs) {
                 this.props.pubMedCache.get(ref);
@@ -80,8 +69,7 @@ export default class OncoKbTooltip extends React.Component<
 
     public render() {
         let tooltipContent: JSX.Element = <span />;
-        const cacheData: ICacheData<IEvidence> | undefined = this
-            .evidenceCacheData;
+        const cacheData: ICacheData<IEvidence> | undefined = this.evidenceCacheData;
 
         if (this.props.geneNotExist) {
             tooltipContent = (
@@ -99,11 +87,7 @@ export default class OncoKbTooltip extends React.Component<
             return tooltipContent;
         }
 
-        if (
-            cacheData.status === 'complete' &&
-            cacheData.data &&
-            !this.props.geneNotExist
-        ) {
+        if (cacheData.status === 'complete' && cacheData.data && !this.props.geneNotExist) {
             const evidence = cacheData.data;
             const pmidData: ICache<any> = this.pmidData;
             tooltipContent = (
@@ -112,9 +96,7 @@ export default class OncoKbTooltip extends React.Component<
                     isCancerGene={this.props.isCancerGene}
                     title={`${this.props.indicator.query.hugoSymbol} ${this.props.indicator.query.alteration} in ${this.props.indicator.query.tumorType}`}
                     gene={
-                        this.props.indicator.geneExist
-                            ? this.props.indicator.query.hugoSymbol
-                            : ''
+                        this.props.indicator.geneExist ? this.props.indicator.query.hugoSymbol : ''
                     }
                     variant={
                         this.props.indicator.query.alteration
@@ -122,9 +104,7 @@ export default class OncoKbTooltip extends React.Component<
                             : ''
                     }
                     oncogenicity={this.props.indicator.oncogenic}
-                    oncogenicityPmids={generateOncogenicCitations(
-                        evidence.oncogenicRefs
-                    )}
+                    oncogenicityPmids={generateOncogenicCitations(evidence.oncogenicRefs)}
                     mutationEffect={
                         this.props.indicator.mutationEffect
                             ? this.props.indicator.mutationEffect.knownEffect
@@ -152,13 +132,9 @@ export default class OncoKbTooltip extends React.Component<
                 />
             );
         } else if (cacheData.status === 'pending') {
-            tooltipContent = (
-                <TableCellStatusIndicator status={TableCellStatus.LOADING} />
-            );
+            tooltipContent = <TableCellStatusIndicator status={TableCellStatus.LOADING} />;
         } else if (cacheData.status === 'error') {
-            tooltipContent = (
-                <TableCellStatusIndicator status={TableCellStatus.ERROR} />
-            );
+            tooltipContent = <TableCellStatusIndicator status={TableCellStatus.ERROR} />;
         }
 
         return tooltipContent;

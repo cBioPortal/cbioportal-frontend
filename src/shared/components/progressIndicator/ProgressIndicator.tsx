@@ -24,9 +24,7 @@ export interface IProgressIndicatorProps {
     sequential?: boolean; // if true, things further in list are not showed as loading until previous in list are completed
 }
 
-function getItemStatus(
-    item: IProgressIndicatorItem
-): 'complete' | 'pending' | 'error' {
+function getItemStatus(item: IProgressIndicatorItem): 'complete' | 'pending' | 'error' {
     if (item.promises) {
         if (item.promises.length === 0) {
             return 'complete';
@@ -39,10 +37,7 @@ function getItemStatus(
 }
 
 @observer
-export default class ProgressIndicator extends React.Component<
-    IProgressIndicatorProps,
-    {}
-> {
+export default class ProgressIndicator extends React.Component<IProgressIndicatorProps, {}> {
     @observable timeShown = 0;
     private timeShownInterval: Timer;
 
@@ -74,21 +69,13 @@ export default class ProgressIndicator extends React.Component<
     private makeItem(item: IProgressIndicatorItem, index: number) {
         let icon: any = null;
         // if sequential option is true, then only show any icon if all previous items are complete
-        const notInvoked =
-            this.props.sequential && index > this.firstIncompleteIndex;
+        const notInvoked = this.props.sequential && index > this.firstIncompleteIndex;
         // also don't show any icon if user specifies it
         const showIcon = !notInvoked && !item.hideIcon;
         if (showIcon) {
             switch (getItemStatus(item)) {
                 case 'complete':
-                    icon = (
-                        <i
-                            className={classnames(
-                                'fa fa-sm fa-check',
-                                styles['fa-check']
-                            )}
-                        />
-                    );
+                    icon = <i className={classnames('fa fa-sm fa-check', styles['fa-check'])} />;
                     break;
                 case 'pending':
                     icon = (
@@ -128,12 +115,8 @@ export default class ProgressIndicator extends React.Component<
         if (this.props.show) {
             return (
                 <div className={styles.container}>
-                    <div className={styles['items-container']}>
-                        {this.items.map(this.makeItem)}
-                    </div>
-                    {_.some(this.items, i => getItemStatus(i) === 'error') && (
-                        <ErrorMessage />
-                    )}
+                    <div className={styles['items-container']}>{this.items.map(this.makeItem)}</div>
+                    {_.some(this.items, i => getItemStatus(i) === 'error') && <ErrorMessage />}
                 </div>
             );
         } else {

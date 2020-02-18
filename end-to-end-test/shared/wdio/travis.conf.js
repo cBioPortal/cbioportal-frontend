@@ -126,15 +126,9 @@ exports.config = {
 
     visualRegression: {
         compare: new VisualRegressionCompare.LocalCompare({
-            referenceName: getScreenshotName(
-                path.join(process.cwd(), 'screenshots/reference')
-            ),
-            screenshotName: getScreenshotName(
-                path.join(process.cwd(), 'screenshots/screen')
-            ),
-            diffName: getScreenshotName(
-                path.join(process.cwd(), 'screenshots/diff')
-            ),
+            referenceName: getScreenshotName(path.join(process.cwd(), 'screenshots/reference')),
+            screenshotName: getScreenshotName(path.join(process.cwd(), 'screenshots/screen')),
+            diffName: getScreenshotName(path.join(process.cwd(), 'screenshots/diff')),
             misMatchTolerance: 0.1,
         }),
         viewportChangePause: 300,
@@ -286,15 +280,12 @@ exports.config = {
         console.log('Connecting local');
         return new Promise(function(resolve, reject) {
             exports.bs_local = new browserstack.Local();
-            exports.bs_local.start(
-                { key: exports.config.key, localIdentifier },
-                function(error) {
-                    if (error) return reject(error);
-                    console.log('Connected. Now testing...');
+            exports.bs_local.start({ key: exports.config.key, localIdentifier }, function(error) {
+                if (error) return reject(error);
+                console.log('Connected. Now testing...');
 
-                    resolve();
-                }
-            );
+                resolve();
+            });
         });
     },
 

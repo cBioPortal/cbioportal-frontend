@@ -132,10 +132,7 @@ describe('PtmUtils', () => {
                 1,
                 'No priority defined for Unknown or Sumoylation, sort alphabetically'
             );
-            assert.equal(
-                compareByPtmTypePriority('Sumoylation', 'Sumoylation'),
-                0
-            );
+            assert.equal(compareByPtmTypePriority('Sumoylation', 'Sumoylation'), 0);
         });
     });
 
@@ -172,36 +169,16 @@ describe('PtmUtils', () => {
                 '#444444',
                 'mixed PTM types should have a special color'
             );
-            assert.equal(
-                ptmColor([ptmData[4]]),
-                '#2DCF00',
-                'Phosphorylation: #2DCF00'
-            );
-            assert.equal(
-                ptmColor([ptmData[0], ptmData[3]]),
-                '#5B5BFF',
-                'Acetylation: #5B5BFF'
-            );
+            assert.equal(ptmColor([ptmData[4]]), '#2DCF00', 'Phosphorylation: #2DCF00');
+            assert.equal(ptmColor([ptmData[0], ptmData[3]]), '#5B5BFF', 'Acetylation: #5B5BFF');
             assert.equal(
                 ptmColor([ptmData[1], ptmData[2], ptmData[6]]),
                 '#B9264F',
                 'Ubiquitination: #B9264F'
             );
-            assert.equal(
-                ptmColor([ptmData[5]]),
-                '#EBD61D',
-                'Methylation: #EBD61D'
-            );
-            assert.equal(
-                ptmColor([ptmData[7]]),
-                '#BA21E0',
-                'Glutathionylation (default): #BA21E0'
-            );
-            assert.equal(
-                ptmColor([ptmData[8]]),
-                '#BA21E0',
-                'Sumoylation (default): #BA21E0'
-            );
+            assert.equal(ptmColor([ptmData[5]]), '#EBD61D', 'Methylation: #EBD61D');
+            assert.equal(ptmColor([ptmData[7]]), '#BA21E0', 'Glutathionylation (default): #BA21E0');
+            assert.equal(ptmColor([ptmData[8]]), '#BA21E0', 'Sumoylation (default): #BA21E0');
         });
     });
 });

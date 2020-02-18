@@ -3,10 +3,7 @@ import { observer } from 'mobx-react';
 import * as React from 'react';
 
 import { formatPercentValue } from '../../util/FormatUtils';
-import BadgeSelector, {
-    BadgeSelectorOption,
-    BadgeSelectorProps,
-} from './BadgeSelector';
+import BadgeSelector, { BadgeSelectorOption, BadgeSelectorProps } from './BadgeSelector';
 
 export type MutationStatusBadgeSelectorProps = BadgeSelectorProps & {
     rates?: { [mutationStatus: string]: number };

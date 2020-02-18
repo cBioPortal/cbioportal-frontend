@@ -18,14 +18,9 @@ export interface IMRNAEnrichmentsProps {
 }
 
 @observer
-export default class MRNAEnrichments extends React.Component<
-    IMRNAEnrichmentsProps,
-    {}
-> {
+export default class MRNAEnrichments extends React.Component<IMRNAEnrichmentsProps, {}> {
     @autobind
-    private onChangeProfile(profileMap: {
-        [studyId: string]: MolecularProfile;
-    }) {
+    private onChangeProfile(profileMap: { [studyId: string]: MolecularProfile }) {
         this.props.store.setMRNAEnrichmentProfileMap(profileMap);
     }
 
@@ -33,15 +28,12 @@ export default class MRNAEnrichments extends React.Component<
         await: () => [this.props.store.enrichmentAnalysisGroups],
         invoke: () => {
             return Promise.resolve(
-                _.map(
-                    this.props.store.enrichmentAnalysisGroups.result,
-                    group => {
-                        return {
-                            ...group,
-                            description: `samples in ${group.name}`,
-                        };
-                    }
-                )
+                _.map(this.props.store.enrichmentAnalysisGroups.result, group => {
+                    return {
+                        ...group,
+                        description: `samples in ${group.name}`,
+                    };
+                })
             );
         },
     });
@@ -66,19 +58,17 @@ export default class MRNAEnrichments extends React.Component<
         render: () => {
             // since mRNA enrichments tab is enabled only for one study, selectedProteinEnrichmentProfileMap
             // would contain only one key.
-            const studyIds = Object.keys(
-                this.props.store.selectedmRNAEnrichmentProfileMap.result!
-            );
-            const selectedProfile = this.props.store
-                .selectedmRNAEnrichmentProfileMap.result![studyIds[0]];
+            const studyIds = Object.keys(this.props.store.selectedmRNAEnrichmentProfileMap.result!);
+            const selectedProfile = this.props.store.selectedmRNAEnrichmentProfileMap.result![
+                studyIds[0]
+            ];
             return (
                 <div data-test="GroupComparisonMRNAEnrichments">
                     <EnrichmentsDataSetDropdown
                         dataSets={this.props.store.mRNAEnrichmentProfiles}
                         onChange={this.onChangeProfile}
                         selectedProfileByStudyId={
-                            this.props.store.selectedmRNAEnrichmentProfileMap
-                                .result!
+                            this.props.store.selectedmRNAEnrichmentProfileMap.result!
                         }
                         alwaysShow={true}
                         studies={this.props.store.studies.result!}
@@ -88,17 +78,13 @@ export default class MRNAEnrichments extends React.Component<
                         groups={this.mrnaEnrichmentAnalysisGroups.result}
                         selectedProfile={selectedProfile}
                         alteredVsUnalteredMode={false}
-                        sampleKeyToSample={
-                            this.props.store.sampleKeyToSample.result!
-                        }
+                        sampleKeyToSample={this.props.store.sampleKeyToSample.result!}
                         isGeneCheckBoxEnabled={this.props.resultsViewMode}
                     />
                 </div>
             );
         },
-        renderPending: () => (
-            <LoadingIndicator center={true} isLoading={true} size={'big'} />
-        ),
+        renderPending: () => <LoadingIndicator center={true} isLoading={true} size={'big'} />,
         renderError: () => <ErrorMessage />,
     });
 

@@ -13,10 +13,7 @@ import { DataAccessTokensDropdown } from '../../shared/components/dataAccessToke
 import { observable } from 'mobx';
 
 @observer
-export default class PortalHeader extends React.Component<
-    { appStore: AppStore },
-    {}
-> {
+export default class PortalHeader extends React.Component<{ appStore: AppStore }, {}> {
     private tabs() {
         return [
             {
@@ -32,8 +29,7 @@ export default class PortalHeader extends React.Component<
                 text: 'Web API',
                 address: '/webAPI',
                 internal: true,
-                hide: () =>
-                    AppConfig.serverConfig.skin_show_web_api_tab === false,
+                hide: () => AppConfig.serverConfig.skin_show_web_api_tab === false,
             },
 
             {
@@ -41,8 +37,7 @@ export default class PortalHeader extends React.Component<
                 text: 'R/MATLAB',
                 address: '/rmatlab',
                 internal: true,
-                hide: () =>
-                    AppConfig.serverConfig.skin_show_r_matlab_tab === false,
+                hide: () => AppConfig.serverConfig.skin_show_r_matlab_tab === false,
             },
 
             {
@@ -50,8 +45,7 @@ export default class PortalHeader extends React.Component<
                 text: 'Tutorials',
                 address: '/tutorials',
                 internal: true,
-                hide: () =>
-                    AppConfig.serverConfig.skin_show_tutorials_tab === false,
+                hide: () => AppConfig.serverConfig.skin_show_tutorials_tab === false,
             },
 
             {
@@ -75,8 +69,7 @@ export default class PortalHeader extends React.Component<
                 text: 'Visualize Your Data',
                 address: '/visualize',
                 internal: true,
-                hide: () =>
-                    AppConfig.serverConfig.skin_show_tools_tab === false,
+                hide: () => AppConfig.serverConfig.skin_show_tools_tab === false,
             },
 
             {
@@ -84,8 +77,7 @@ export default class PortalHeader extends React.Component<
                 text: 'About',
                 address: '/about',
                 internal: true,
-                hide: () =>
-                    AppConfig.serverConfig.skin_show_about_tab === false,
+                hide: () => AppConfig.serverConfig.skin_show_about_tab === false,
             },
         ];
     }
@@ -131,8 +123,7 @@ export default class PortalHeader extends React.Component<
                                 <div className="identity">
                                     <Dropdown id="dat-dropdown">
                                         <Dropdown.Toggle className="btn-sm">
-                                            Logged in as{' '}
-                                            {this.props.appStore.userName}
+                                            Logged in as {this.props.appStore.userName}
                                         </Dropdown.Toggle>
                                         <Dropdown.Menu
                                             style={{
@@ -152,29 +143,21 @@ export default class PortalHeader extends React.Component<
                             <Else>
                                 <If
                                     condition={
-                                        AppConfig.serverConfig
-                                            .authenticationMethod &&
+                                        AppConfig.serverConfig.authenticationMethod &&
                                         AppConfig.serverConfig.authenticationMethod.includes(
                                             'social_auth'
                                         )
                                     }
                                 >
-                                    <SocialAuthButton
-                                        appStore={this.props.appStore}
-                                    />
+                                    <SocialAuthButton appStore={this.props.appStore} />
                                 </If>
                             </Else>
                         </If>
                     </If>
-                    <If
-                        condition={
-                            !_.isEmpty(AppConfig.serverConfig.skin_right_logo)
-                        }
-                    >
+                    <If condition={!_.isEmpty(AppConfig.serverConfig.skin_right_logo)}>
                         <img
                             id="institute-logo"
-                            src={`images/${AppConfig.serverConfig
-                                .skin_right_logo!}`}
+                            src={`images/${AppConfig.serverConfig.skin_right_logo!}`}
                             alt="Institute Logo"
                         />
                     </If>

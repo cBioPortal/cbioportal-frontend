@@ -15,14 +15,11 @@ export function WrappedTour() {
                         content: () => (
                             <>
                                 <h3>Group Comparison is here!</h3>
-                                <a
-                                    href={'/tutorials#group-comparison'}
-                                    target={'_blank'}
-                                >
+                                <a href={'/tutorials#group-comparison'} target={'_blank'}>
                                     Click here
                                 </a>{' '}
-                                to learn how to create custom groups of samples
-                                and open comparison sessions.
+                                to learn how to create custom groups of samples and open comparison
+                                sessions.
                             </>
                         ),
                     },

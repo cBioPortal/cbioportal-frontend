@@ -23,9 +23,7 @@ describe('ScatterPlotUtils', () => {
             const b = 0.59449349756220937;
             const r2 = 0.010257434869772463;
             // test regression equation to make sure its approximately the same as what python gives
-            const match = computations.string.match(
-                /y = ([\d.]+)x \+ ([\d.]+)/
-            );
+            const match = computations.string.match(/y = ([\d.]+)x \+ ([\d.]+)/);
             assert.isNotNull(match, 'equation has correct form');
             const M = parseFloat(match![1]);
             const B = parseFloat(match![2]);
@@ -72,9 +70,7 @@ describe('ScatterPlotUtils', () => {
             const b = 0.41853989070105158;
             const r2 = 0.99970735279778178;
             // test regression equation to make sure its approximately the same as what python gives
-            const match = computations.string.match(
-                /y = ([\d.]+)x \+ ([\d.]+)/
-            );
+            const match = computations.string.match(/y = ([\d.]+)x \+ ([\d.]+)/);
             assert.isNotNull(match, 'equation has correct form');
             const M = parseFloat(match![1]);
             const B = parseFloat(match![2]);

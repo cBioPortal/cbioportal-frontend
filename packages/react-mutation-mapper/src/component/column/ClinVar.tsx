@@ -5,10 +5,7 @@ import * as React from 'react';
 
 import { defaultSortMethod } from '../../util/ReactTableUtils';
 import ClinVarId, { getClinVarId } from '../clinvar/ClinVarId';
-import {
-    MyVariantInfoProps,
-    renderMyVariantInfoContent,
-} from './MyVariantInfoHelper';
+import { MyVariantInfoProps, renderMyVariantInfoContent } from './MyVariantInfoHelper';
 
 export function sortValue(myVariantInfo?: MyVariantInfo): number | null {
     const id = getClinVarId(myVariantInfo);

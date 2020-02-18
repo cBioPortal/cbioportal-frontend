@@ -12,9 +12,7 @@ export default class OQL extends React.Component<{}, {}> {
                 <Helmet>
                     <title>{'cBioPortal for Cancer Genomics::OQL Guide'}</title>
                 </Helmet>
-                <StaticContent
-                    sourceUrl={AppConfig.serverConfig.skin_documentation_oql!}
-                />
+                <StaticContent sourceUrl={AppConfig.serverConfig.skin_documentation_oql!} />
             </PageLayout>
         );
     }

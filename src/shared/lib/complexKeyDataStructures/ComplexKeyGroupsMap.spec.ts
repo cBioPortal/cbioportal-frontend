@@ -16,18 +16,9 @@ describe('ComplexKeyGroupsMap', () => {
         map.add({ sampleId: 'sample2', studyId: 'study1' }, 4);
         map.add({ sampleId: 'sample2', studyId: 'study10' }, 6);
 
-        assert.deepEqual(map.get({ sampleId: 'sample1', studyId: 'study1' }), [
-            1,
-            5,
-            10,
-        ]);
-        assert.deepEqual(map.get({ sampleId: 'sample2', studyId: 'study1' }), [
-            2,
-            4,
-        ]);
-        assert.deepEqual(map.get({ sampleId: 'sample2', studyId: 'study10' }), [
-            6,
-        ]);
+        assert.deepEqual(map.get({ sampleId: 'sample1', studyId: 'study1' }), [1, 5, 10]);
+        assert.deepEqual(map.get({ sampleId: 'sample2', studyId: 'study1' }), [2, 4]);
+        assert.deepEqual(map.get({ sampleId: 'sample2', studyId: 'study10' }), [6]);
         assert.isUndefined(map.get({ id2: 'any' }));
 
         assert.deepEqual(map.entries(), [

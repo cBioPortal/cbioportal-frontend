@@ -23,8 +23,7 @@ type Pending = {
     [key: string]: boolean;
 };
 
-type ImmutableCache<D, M> = Cache<D, M> &
-    Immutable.ImmutableObject<Cache<D, M>>;
+type ImmutableCache<D, M> = Cache<D, M> & Immutable.ImmutableObject<Cache<D, M>>;
 
 type QueryKeyToQuery<Q> = { [queryKey: string]: Q };
 
@@ -41,9 +40,7 @@ type CachePromise<D, M> = {
     error: () => void;
 };
 
-function isAugmentedData<D, M>(
-    data: D | AugmentedData<D, M>
-): data is AugmentedData<D, M> {
+function isAugmentedData<D, M>(data: D | AugmentedData<D, M>): data is AugmentedData<D, M> {
     return data.hasOwnProperty('meta');
 }
 
@@ -67,14 +64,9 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
     ) {
         this.init();
         this.staticDependencies = staticDependencies;
-        this.debouncedPopulate = accumulatingDebounce<
-            QueryKeyToQuery<Query>,
-            Query
-        >(
+        this.debouncedPopulate = accumulatingDebounce<QueryKeyToQuery<Query>, Query>(
             (queryMap: QueryKeyToQuery<Query>) => {
-                const queries: Query[] = Object.keys(queryMap).map(
-                    k => queryMap[k]
-                );
+                const queries: Query[] = Object.keys(queryMap).map(k => queryMap[k]);
                 this.populate(queries);
             },
             (queryMap: QueryKeyToQuery<Query>, newQuery: Query) => {
@@ -91,9 +83,7 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
             () => this._cache,
             (cache: Cache<Data, Metadata>) => {
                 // filter out completed promises, we dont listen on them anymore
-                this.promises = this.promises.filter(
-                    promise => !this.tryTrigger(promise)
-                );
+                this.promises = this.promises.filter(promise => !this.tryTrigger(promise));
             }
         );
     }
@@ -167,9 +157,7 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
 
     public peek(query: Query): CacheData<Data, Metadata> | null {
         const key = this.queryToKey(query);
-        const cacheData: CacheData<Data, Metadata> | undefined = this._cache[
-            key
-        ];
+        const cacheData: CacheData<Data, Metadata> | undefined = this._cache[key];
         return cacheData || null;
     }
 

@@ -41,14 +41,11 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
         return {
             [TrackName.CancerHotspots]:
                 !this.props.trackVisibility ||
-                this.props.trackVisibility[TrackName.CancerHotspots] ===
-                    'visible' ? (
+                this.props.trackVisibility[TrackName.CancerHotspots] === 'visible' ? (
                     <HotspotTrack
                         store={this.props.store}
                         dataStore={this.props.store.dataStore}
-                        hotspotIndex={
-                            this.props.store.indexedHotspotData.result || {}
-                        }
+                        hotspotIndex={this.props.store.indexedHotspotData.result || {}}
                         width={this.props.geneWidth}
                         xOffset={this.props.geneXOffset}
                         proteinLength={this.proteinLength}

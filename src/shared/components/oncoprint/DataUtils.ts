@@ -90,9 +90,7 @@ export function getOncoprintMutationType(
         // promoter mutations aren't labeled as such in mutationType, but in proteinChange, so we must detect it there
         return 'promoter';
     } else {
-        const simplifiedMutationType = getSimplifiedMutationType(
-            d.mutationType
-        );
+        const simplifiedMutationType = getSimplifiedMutationType(d.mutationType);
         switch (simplifiedMutationType) {
             case 'missense':
             case 'inframe':
@@ -115,8 +113,7 @@ export function selectDisplayValue(
     }));
     if (options.length > 0) {
         options.sort(function(kv1, kv2) {
-            const rendering_priority_diff =
-                priority[kv1.key] - priority[kv2.key];
+            const rendering_priority_diff = priority[kv1.key] - priority[kv2.key];
             if (rendering_priority_diff < 0) {
                 return -1;
             } else if (rendering_priority_diff > 0) {
@@ -152,19 +149,13 @@ export function fillGeneticTrackDatum(
     const dispProtCounts: { [protEvent: string]: number } = {};
     const dispMutCounts: { [mutType: string]: number } = {};
     const dispGermline: { [mutType: string]: boolean } = {};
-    const caseInsensitiveGermlineMatch = new RegExp(
-        MUTATION_STATUS_GERMLINE,
-        'i'
-    );
+    const caseInsensitiveGermlineMatch = new RegExp(MUTATION_STATUS_GERMLINE, 'i');
 
     for (const event of data) {
         const molecularAlterationType = event.molecularProfileAlterationType;
         switch (molecularAlterationType) {
             case 'COPY_NUMBER_ALTERATION':
-                const cnaEvent =
-                    cnaDataToString[
-                        event.value as NumericGeneMolecularData['value']
-                    ];
+                const cnaEvent = cnaDataToString[event.value as NumericGeneMolecularData['value']];
                 if (cnaEvent) {
                     // not diploid
                     dispCnaCounts[cnaEvent] = dispCnaCounts[cnaEvent] || 0;
@@ -186,9 +177,10 @@ export function fillGeneticTrackDatum(
                 }
                 break;
             case 'MUTATION_EXTENDED':
-                let oncoprintMutationType = getOncoprintMutationType(
-                    event as Pick<Mutation, 'proteinChange' | 'mutationType'>
-                );
+                let oncoprintMutationType = getOncoprintMutationType(event as Pick<
+                    Mutation,
+                    'proteinChange' | 'mutationType'
+                >);
                 if (oncoprintMutationType === 'fusion') {
                     dispFusion = true;
                 } else {
@@ -212,17 +204,13 @@ export function fillGeneticTrackDatum(
     newDatum.disp_mrna = selectDisplayValue(dispMrnaCounts, mrnaRenderPriority);
     newDatum.disp_prot = selectDisplayValue(dispProtCounts, protRenderPriority);
     newDatum.disp_mut = selectDisplayValue(dispMutCounts, mutRenderPriority);
-    newDatum.disp_germ = newDatum.disp_mut
-        ? dispGermline[newDatum.disp_mut]
-        : undefined;
+    newDatum.disp_germ = newDatum.disp_mut ? dispGermline[newDatum.disp_mut] : undefined;
 
     return newDatum as GeneticTrackDatum; // return for convenience, even though changes made in place
 }
 
 export function makeGeneticTrackData(
-    caseAggregatedAlterationData: CaseAggregatedData<
-        AnnotatedExtendedAlteration
-    >['samples'],
+    caseAggregatedAlterationData: CaseAggregatedData<AnnotatedExtendedAlteration>['samples'],
     hugoGeneSymbols: string | string[],
     samples: Sample[],
     genePanelInformation: CoverageInformation,
@@ -230,9 +218,7 @@ export function makeGeneticTrackData(
 ): GeneticTrackDatum[];
 
 export function makeGeneticTrackData(
-    caseAggregatedAlterationData: CaseAggregatedData<
-        AnnotatedExtendedAlteration
-    >['patients'],
+    caseAggregatedAlterationData: CaseAggregatedData<AnnotatedExtendedAlteration>['patients'],
     hugoGeneSymbols: string | string[],
     patients: Patient[],
     genePanelInformation: CoverageInformation,
@@ -251,8 +237,7 @@ export function makeGeneticTrackData(
     if (!cases.length) {
         return [];
     }
-    const geneSymbolArray =
-        hugoGeneSymbols instanceof Array ? hugoGeneSymbols : [hugoGeneSymbols];
+    const geneSymbolArray = hugoGeneSymbols instanceof Array ? hugoGeneSymbols : [hugoGeneSymbols];
     const _selectedMolecularProfiles = _.keyBy(
         selectedMolecularProfiles,
         p => p.molecularProfileId
@@ -267,41 +252,27 @@ export function makeGeneticTrackData(
             newDatum.study_id = sample.studyId;
             newDatum.uid = sample.uniqueSampleKey;
 
-            const sampleSequencingInfo =
-                genePanelInformation.samples[sample.uniqueSampleKey];
+            const sampleSequencingInfo = genePanelInformation.samples[sample.uniqueSampleKey];
             newDatum.profiled_in = _.flatMap(
                 geneSymbolArray,
-                hugoGeneSymbol =>
-                    sampleSequencingInfo.byGene[hugoGeneSymbol] || []
+                hugoGeneSymbol => sampleSequencingInfo.byGene[hugoGeneSymbol] || []
             );
             newDatum.profiled_in = newDatum.profiled_in
                 .concat(sampleSequencingInfo.allGenes)
-                .filter(
-                    p => !!_selectedMolecularProfiles[p.molecularProfileId]
-                ); // filter out coverage information about non-selected profiles
+                .filter(p => !!_selectedMolecularProfiles[p.molecularProfileId]); // filter out coverage information about non-selected profiles
             if (!newDatum.profiled_in!.length) {
                 newDatum.na = true;
             }
             newDatum.not_profiled_in = _.flatMap(
                 geneSymbolArray,
-                hugoGeneSymbol =>
-                    sampleSequencingInfo.notProfiledByGene[hugoGeneSymbol] || []
+                hugoGeneSymbol => sampleSequencingInfo.notProfiledByGene[hugoGeneSymbol] || []
             );
             newDatum.not_profiled_in = newDatum.not_profiled_in
                 .concat(sampleSequencingInfo.notProfiledAllGenes)
-                .filter(
-                    p => !!_selectedMolecularProfiles[p.molecularProfileId]
-                ); // filter out coverage information about non-selected profiles
+                .filter(p => !!_selectedMolecularProfiles[p.molecularProfileId]); // filter out coverage information about non-selected profiles
 
-            let sampleData =
-                caseAggregatedAlterationData[sample.uniqueSampleKey];
-            ret.push(
-                fillGeneticTrackDatum(
-                    newDatum,
-                    geneSymbolArray.join(' / '),
-                    sampleData
-                )
-            );
+            let sampleData = caseAggregatedAlterationData[sample.uniqueSampleKey];
+            ret.push(fillGeneticTrackDatum(newDatum, geneSymbolArray.join(' / '), sampleData));
         }
     } else {
         // case: Patients
@@ -311,51 +282,33 @@ export function makeGeneticTrackData(
             newDatum.study_id = patient.studyId;
             newDatum.uid = patient.uniquePatientKey;
 
-            const patientSequencingInfo =
-                genePanelInformation.patients[patient.uniquePatientKey];
+            const patientSequencingInfo = genePanelInformation.patients[patient.uniquePatientKey];
             newDatum.profiled_in = _.flatMap(
                 geneSymbolArray,
-                hugoGeneSymbol =>
-                    patientSequencingInfo.byGene[hugoGeneSymbol] || []
+                hugoGeneSymbol => patientSequencingInfo.byGene[hugoGeneSymbol] || []
             );
             newDatum.profiled_in = newDatum.profiled_in
                 .concat(patientSequencingInfo.allGenes)
-                .filter(
-                    p => !!_selectedMolecularProfiles[p.molecularProfileId]
-                ); // filter out coverage information about non-selected profiles
+                .filter(p => !!_selectedMolecularProfiles[p.molecularProfileId]); // filter out coverage information about non-selected profiles
             if (!newDatum.profiled_in!.length) {
                 newDatum.na = true;
             }
             newDatum.not_profiled_in = _.flatMap(
                 geneSymbolArray,
-                hugoGeneSymbol =>
-                    patientSequencingInfo.notProfiledByGene[hugoGeneSymbol] ||
-                    []
+                hugoGeneSymbol => patientSequencingInfo.notProfiledByGene[hugoGeneSymbol] || []
             );
             newDatum.not_profiled_in = newDatum.not_profiled_in
                 .concat(patientSequencingInfo.notProfiledAllGenes)
-                .filter(
-                    p => !!_selectedMolecularProfiles[p.molecularProfileId]
-                ); // filter out coverage information about non-selected profiles
+                .filter(p => !!_selectedMolecularProfiles[p.molecularProfileId]); // filter out coverage information about non-selected profiles
 
-            let patientData =
-                caseAggregatedAlterationData[patient.uniquePatientKey];
-            ret.push(
-                fillGeneticTrackDatum(
-                    newDatum,
-                    geneSymbolArray.join(' / '),
-                    patientData
-                )
-            );
+            let patientData = caseAggregatedAlterationData[patient.uniquePatientKey];
+            ret.push(fillGeneticTrackDatum(newDatum, geneSymbolArray.join(' / '), patientData));
         }
     }
     return ret;
 }
 
-export function fillHeatmapTrackDatum<
-    T extends IBaseHeatmapTrackDatum,
-    K extends keyof T
->(
+export function fillHeatmapTrackDatum<T extends IBaseHeatmapTrackDatum, K extends keyof T>(
     trackDatum: Partial<T>,
     featureKey: K,
     featureId: T[K],
@@ -378,16 +331,12 @@ export function fillHeatmapTrackDatum<
             trackDatum.thresholdType = dataWithValue[0].thresholdType;
             trackDatum.category =
                 trackDatum.profile_data && trackDatum.thresholdType
-                    ? `${
-                          trackDatum.thresholdType
-                      }${trackDatum.profile_data.toFixed(2)}`
+                    ? `${trackDatum.thresholdType}${trackDatum.profile_data.toFixed(2)}`
                     : undefined;
         }
     } else {
         if (isSample(case_)) {
-            throw Error(
-                'Unexpectedly received multiple heatmap profile data for one sample'
-            );
+            throw Error('Unexpectedly received multiple heatmap profile data for one sample');
         } else {
             // aggregate samples for this patient by selecting the highest absolute (Z-)score
             // default: the most extreme value (pos. or neg.) is shown for data
@@ -416,14 +365,9 @@ export function fillHeatmapTrackDatum<
                     );
                     break;
                 default:
-                    bestValue = _.maxBy(dataWithValue, (d: HeatmapCaseDatum) =>
-                        Math.abs(d.value)
-                    )!.value;
-                    representingDatum = selectRepresentingDataPoint(
-                        bestValue,
-                        dataWithValue,
-                        true
-                    );
+                    bestValue = _.maxBy(dataWithValue, (d: HeatmapCaseDatum) => Math.abs(d.value))!
+                        .value;
+                    representingDatum = selectRepresentingDataPoint(bestValue, dataWithValue, true);
                     break;
             }
 
@@ -438,9 +382,7 @@ export function fillHeatmapTrackDatum<
             if (representingDatum!.thresholdType) {
                 trackDatum.thresholdType = representingDatum!.thresholdType;
                 trackDatum.category = trackDatum.thresholdType
-                    ? `${
-                          trackDatum.thresholdType
-                      }${trackDatum.profile_data.toFixed(2)}`
+                    ? `${trackDatum.thresholdType}${trackDatum.profile_data.toFixed(2)}`
                     : undefined;
             }
         }
@@ -457,10 +399,7 @@ function selectRepresentingDataPoint(
         ? (d: HeatmapCaseDatum) => Math.abs(d.value) === bestValue
         : (d: HeatmapCaseDatum) => d.value === bestValue;
     const selData = _.filter(data, fFilter);
-    const selDataNoTreshold = _.filter(
-        selData,
-        (d: HeatmapCaseDatum) => !d.thresholdType
-    );
+    const selDataNoTreshold = _.filter(selData, (d: HeatmapCaseDatum) => !d.thresholdType);
     if (selDataNoTreshold.length > 0) {
         return selDataNoTreshold[0];
     } else {
@@ -468,10 +407,7 @@ function selectRepresentingDataPoint(
     }
 }
 
-export function makeHeatmapTrackData<
-    T extends IBaseHeatmapTrackDatum,
-    K extends keyof T
->(
+export function makeHeatmapTrackData<T extends IBaseHeatmapTrackDatum, K extends keyof T>(
     featureKey: K,
     featureId: T[K],
     cases: Sample[] | Patient[],
@@ -496,13 +432,7 @@ export function makeHeatmapTrackData<
             trackDatum.sample = c.sampleId;
             trackDatum.uid = c.uniqueSampleKey;
             const caseData = keyToData[c.uniqueSampleKey];
-            fillHeatmapTrackDatum(
-                trackDatum,
-                featureKey,
-                featureId,
-                c,
-                caseData
-            );
+            fillHeatmapTrackDatum(trackDatum, featureKey, featureId, c, caseData);
             return trackDatum as T;
         });
     } else {
@@ -512,14 +442,7 @@ export function makeHeatmapTrackData<
             trackDatum.patient = c.patientId;
             trackDatum.uid = c.uniquePatientKey;
             const caseData = keyToData[c.uniquePatientKey];
-            fillHeatmapTrackDatum(
-                trackDatum,
-                featureKey,
-                featureId,
-                c,
-                caseData,
-                sortOrder
-            );
+            fillHeatmapTrackDatum(trackDatum, featureKey, featureId, c, caseData, sortOrder);
             return trackDatum as T;
         });
     }
@@ -571,8 +494,7 @@ export function fillClinicalTrackDatum(
                     default:
                         // average
                         trackDatum.attr_val =
-                            values.reduce((sum, nextVal) => sum + nextVal, 0) /
-                            values.length;
+                            values.reduce((sum, nextVal) => sum + nextVal, 0) / values.length;
                         break;
                 }
                 trackDatum.attr_val_counts[trackDatum.attr_val!] = 1;
@@ -580,8 +502,7 @@ export function fillClinicalTrackDatum(
         } else if (attribute.datatype.toLowerCase() === 'string') {
             const attr_val_counts = trackDatum.attr_val_counts;
             for (const datum of data as ClinicalData[]) {
-                attr_val_counts[datum.value] =
-                    attr_val_counts[datum.value] || 0;
+                attr_val_counts[datum.value] = attr_val_counts[datum.value] || 0;
                 attr_val_counts[datum.value] += 1;
             }
             const attr_vals = Object.keys(attr_val_counts);
@@ -590,9 +511,7 @@ export function fillClinicalTrackDatum(
             } else {
                 trackDatum.attr_val = attr_vals[0];
             }
-        } else if (
-            attribute.clinicalAttributeId === SpecialAttribute.MutationSpectrum
-        ) {
+        } else if (attribute.clinicalAttributeId === SpecialAttribute.MutationSpectrum) {
             const spectrumData = data as MutationSpectrum[];
             // add up vectors
             const attr_val_counts = trackDatum.attr_val_counts;
@@ -633,20 +552,15 @@ function makeGetDataForCase(
     data: (ClinicalData | MutationSpectrum)[]
 ): (case_: Sample | Patient) => (ClinicalData | MutationSpectrum)[] {
     if (attribute.patientAttribute) {
-        const uniqueKeyToData = _.groupBy(
-            data,
-            datum => datum.uniquePatientKey
-        );
+        const uniqueKeyToData = _.groupBy(data, datum => datum.uniquePatientKey);
         return function(case_: Sample | Patient) {
             return uniqueKeyToData[case_.uniquePatientKey];
         };
     } else {
         const getKey =
             queryBy === 'sample'
-                ? (x: { uniqueSampleKey: string; uniquePatientKey: string }) =>
-                      x.uniqueSampleKey
-                : (x: { uniqueSampleKey: string; uniquePatientKey: string }) =>
-                      x.uniquePatientKey;
+                ? (x: { uniqueSampleKey: string; uniquePatientKey: string }) => x.uniqueSampleKey
+                : (x: { uniqueSampleKey: string; uniquePatientKey: string }) => x.uniquePatientKey;
         const uniqueKeyToData: any = _.groupBy(data, getKey);
         return function(case_: Sample | Patient) {
             return uniqueKeyToData[getKey(case_)];
@@ -664,9 +578,7 @@ export function makeClinicalTrackData(
         [uniqueKey: string]: (ClinicalData | MutationSpectrum)[];
     } = _.groupBy(
         data,
-        isSampleList(cases)
-            ? datum => datum.uniqueSampleKey
-            : datum => datum.uniquePatientKey
+        isSampleList(cases) ? datum => datum.uniqueSampleKey : datum => datum.uniquePatientKey
     );
 
     // Create oncoprint data
@@ -682,12 +594,7 @@ export function makeClinicalTrackData(
             const trackDatum: Partial<ClinicalTrackDatum> = {};
             trackDatum.uid = sample.uniqueSampleKey;
             trackDatum.sample = sample.sampleId;
-            fillClinicalTrackDatum(
-                trackDatum,
-                attribute,
-                sample,
-                getDataForCase(sample)
-            );
+            fillClinicalTrackDatum(trackDatum, attribute, sample, getDataForCase(sample));
             return trackDatum as ClinicalTrackDatum;
         });
     } else {
@@ -695,12 +602,7 @@ export function makeClinicalTrackData(
             const trackDatum: Partial<ClinicalTrackDatum> = {};
             trackDatum.uid = patient.uniquePatientKey;
             trackDatum.patient = patient.patientId;
-            fillClinicalTrackDatum(
-                trackDatum,
-                attribute,
-                patient,
-                getDataForCase(patient)
-            );
+            fillClinicalTrackDatum(trackDatum, attribute, patient, getDataForCase(patient));
             return trackDatum as ClinicalTrackDatum;
         });
     }

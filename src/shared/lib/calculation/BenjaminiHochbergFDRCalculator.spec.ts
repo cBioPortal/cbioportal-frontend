@@ -8,11 +8,7 @@ describe('#calculateQValue()', () => {
     it('returns p value as q value for the single data', () => {
         const arg = [0.0256];
         const exampleResult = [0.0256];
-        assert.deepEqual(
-            exampleResult,
-            calculateQValues(arg),
-            'single q value'
-        );
+        assert.deepEqual(exampleResult, calculateQValues(arg), 'single q value');
     });
 
     it('returns 0s for the zero p values', () => {
@@ -24,11 +20,7 @@ describe('#calculateQValue()', () => {
     it('returns correct q values for multiple data', () => {
         const arg = [0.0256, 0.0635, 0.1465];
         const exampleResult = [0.07680000000000001, 0.09525, 0.1465];
-        assert.deepEqual(
-            exampleResult,
-            calculateQValues(arg),
-            'multiple q value'
-        );
+        assert.deepEqual(exampleResult, calculateQValues(arg), 'multiple q value');
     });
 
     it('returns correct q values for massive data', () => {
@@ -70,10 +62,6 @@ describe('#calculateQValue()', () => {
             0.8500000000000001,
             0.9,
         ];
-        assert.deepEqual(
-            exampleResult,
-            calculateQValues(arg),
-            'massive q value'
-        );
+        assert.deepEqual(exampleResult, calculateQValues(arg), 'massive q value');
     });
 });

@@ -18,10 +18,7 @@ export interface IAlterationFilterWarningProps {
     };
 }
 
-function getVusDescription(
-    types: { mutation: boolean; cna: boolean },
-    plural: boolean
-) {
+function getVusDescription(types: { mutation: boolean; cna: boolean }, plural: boolean) {
     const descriptions = [];
     if (types.mutation) {
         descriptions.push(`mutation${plural ? 's' : ''}`);
@@ -61,10 +58,7 @@ export default class AlterationFilterWarning extends React.Component<
     }
 
     @computed get germlineToggleable() {
-        return (
-            this.props.mutationsTabModeSettings &&
-            this.props.store.excludeGermlineMutations
-        );
+        return this.props.mutationsTabModeSettings && this.props.store.excludeGermlineMutations;
     }
 
     readonly vusWarning = MakeMobxView({
@@ -93,13 +87,11 @@ export default class AlterationFilterWarning extends React.Component<
                     vusTypes.mutation = true;
                 }
             } else {
-                const mutationReport = this.props.store
-                    .oqlFilteredMutationsReport.result!;
+                const mutationReport = this.props.store.oqlFilteredMutationsReport.result!;
                 const mutationVusCount =
-                    mutationReport.vus.length +
-                    mutationReport.vusAndGermline.length;
-                const cnaVusCount = this.props.store
-                    .oqlFilteredMolecularDataReport.result!.vus.length;
+                    mutationReport.vus.length + mutationReport.vusAndGermline.length;
+                const cnaVusCount = this.props.store.oqlFilteredMolecularDataReport.result!.vus
+                    .length;
                 vusCount = mutationVusCount + cnaVusCount;
                 if (mutationVusCount > 0) {
                     vusTypes.mutation = true;
@@ -158,10 +150,7 @@ export default class AlterationFilterWarning extends React.Component<
                                   }`}
                             {this.vusToggleable && (
                                 <button
-                                    onClick={
-                                        this.props.mutationsTabModeSettings!
-                                            .toggleExcludeVUS
-                                    }
+                                    onClick={this.props.mutationsTabModeSettings!.toggleExcludeVUS}
                                     className="btn btn-default btn-xs"
                                     style={{ marginLeft: 5 }}
                                 >
@@ -201,8 +190,7 @@ export default class AlterationFilterWarning extends React.Component<
                 report = this.props.store.oqlFilteredMutationsReport.result!;
             }
 
-            const germlineCount =
-                report.germline.length + report.vusAndGermline.length;
+            const germlineCount = report.germline.length + report.vusAndGermline.length;
 
             if (germlineCount > 0) {
                 const is = germlineCount === 1 ? 'is' : 'are';
@@ -245,8 +233,7 @@ export default class AlterationFilterWarning extends React.Component<
                             {this.germlineToggleable && (
                                 <button
                                     onClick={
-                                        this.props.mutationsTabModeSettings!
-                                            .toggleExcludeGermline
+                                        this.props.mutationsTabModeSettings!.toggleExcludeGermline
                                     }
                                     className="btn btn-default btn-xs"
                                     style={{ marginLeft: 5 }}

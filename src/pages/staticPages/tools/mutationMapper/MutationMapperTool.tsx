@@ -25,10 +25,7 @@ interface IMutationMapperToolProps {
 
 @inject('routing')
 @observer
-export default class MutationMapperTool extends React.Component<
-    IMutationMapperToolProps,
-    {}
-> {
+export default class MutationMapperTool extends React.Component<IMutationMapperToolProps, {}> {
     private userSelectionStore: MutationMapperUserSelectionStore;
 
     @observable standaloneMutationMapperGeneTab: string | undefined;
@@ -53,13 +50,11 @@ export default class MutationMapperTool extends React.Component<
         return (
             <PageLayout className={'whiteBackground staticPage'}>
                 <Helmet>
-                    <title>
-                        {'cBioPortal for Cancer Genomics::MutationMapper'}
-                    </title>
+                    <title>{'cBioPortal for Cancer Genomics::MutationMapper'}</title>
                 </Helmet>
                 <div className="cbioportal-frontend">
-                    <h1 style={{ display: 'inline' }}>MutationMapper</h1>{' '}
-                    interprets mutations with protein annotations
+                    <h1 style={{ display: 'inline' }}>MutationMapper</h1> interprets mutations with
+                    protein annotations
                     <div style={{ padding: 4 }} />
                     {this.input()}
                     <div style={{ padding: 4 }} />
@@ -68,17 +63,13 @@ export default class MutationMapperTool extends React.Component<
                         children={
                             <span style={{ paddingLeft: 20 }}>
                                 Annotating mutations with{' '}
-                                <a
-                                    href={'https://www.genomenexus.org'}
-                                    target="_blank"
-                                >
+                                <a href={'https://www.genomenexus.org'} target="_blank">
                                     Genome Nexus
                                 </a>
                             </span>
                         }
                     />
-                    {this.store.mutationsNotAnnotated.length > 0 &&
-                        this.inputParseWarning()}
+                    {this.store.mutationsNotAnnotated.length > 0 && this.inputParseWarning()}
                     {this.store.mutationData && this.mainTabs()}
                 </div>
             </PageLayout>
@@ -114,28 +105,22 @@ export default class MutationMapperTool extends React.Component<
         ) {
             return (
                 <div className="alert alert-warning" role="alert">
-                    Failed to annotate {this.store.mutationsNotAnnotated.length}{' '}
-                    mutation
+                    Failed to annotate {this.store.mutationsNotAnnotated.length} mutation
                     {this.store.mutationsNotAnnotated.length > 1 ? 's' : ''}
                     &nbsp;
                     {this.showIncorrectInput &&
                         this.lastParsedInputContent &&
-                        this.store.mutationsNotAnnotated.map(
-                            failedAnnotation => (
-                                <div>
-                                    Line {failedAnnotation.lineNumber}:{' '}
-                                    {this.lastParsedInputContent &&
-                                        this.lastParsedInputContent.split('\n')[
-                                            failedAnnotation.lineNumber - 1
-                                        ]}
-                                </div>
-                            )
-                        )}
+                        this.store.mutationsNotAnnotated.map(failedAnnotation => (
+                            <div>
+                                Line {failedAnnotation.lineNumber}:{' '}
+                                {this.lastParsedInputContent &&
+                                    this.lastParsedInputContent.split('\n')[
+                                        failedAnnotation.lineNumber - 1
+                                    ]}
+                            </div>
+                        ))}
                     (
-                    <a
-                        data-test="ShowWarningsButton"
-                        onClick={this.toggleIncorrectInput}
-                    >
+                    <a data-test="ShowWarningsButton" onClick={this.toggleIncorrectInput}>
                         {this.showIncorrectInput ? 'Hide' : 'Show'}
                     </a>
                     )
@@ -152,49 +137,38 @@ export default class MutationMapperTool extends React.Component<
             this.store.hugoGeneSymbols.result &&
             this.store.hugoGeneSymbols.result.length > 0
         ) {
-            const activeTabId =
-                this.activeTabId || this.store.hugoGeneSymbols.result[0];
+            const activeTabId = this.activeTabId || this.store.hugoGeneSymbols.result[0];
 
             return (
                 <div>
-                    <Loader
-                        isLoading={this.store.mutationMapperStores.isPending}
-                    />
+                    <Loader isLoading={this.store.mutationMapperStores.isPending} />
                     {this.store.mutationMapperStores.isComplete && (
                         <MSKTabs
                             id="mutationMapperToolTabs"
                             activeTabId={activeTabId}
-                            onTabClick={(id: string) =>
-                                this.handleTabChange(id)
-                            }
+                            onTabClick={(id: string) => this.handleTabChange(id)}
                             className="pillTabs"
                             enablePagination={false}
                             arrowStyle={{ 'line-height': 0.8 }}
                             tabButtonStyle="pills"
                             unmountOnHide={true}
                         >
-                            {this.generateTabs(
-                                this.store.hugoGeneSymbols.result
-                            )}
+                            {this.generateTabs(this.store.hugoGeneSymbols.result)}
                         </MSKTabs>
                     )}
                 </div>
             );
-        } else if (
-            this.store.hugoGeneSymbols.isComplete &&
-            !this.inputControlsVisible
-        ) {
+        } else if (this.store.hugoGeneSymbols.isComplete && !this.inputControlsVisible) {
             return (
                 <div className="alert alert-danger">
-                    Error processing the input. Please review your input and try
-                    again.
+                    Error processing the input. Please review your input and try again.
                 </div>
             );
         } else if (this.store.criticalErrors.length > 0) {
             return (
                 <div className="alert alert-danger">
-                    Critical annotation error. Annotation services might be
-                    temporarily down, or your input format might be invalid.
+                    Critical annotation error. Annotation services might be temporarily down, or
+                    your input format might be invalid.
                 </div>
             );
         } else {
@@ -207,15 +181,12 @@ export default class MutationMapperTool extends React.Component<
             return (
                 <div className="standalone-mutation-input">
                     <p>
-                        Please input <b>tab-delimited</b> or{' '}
-                        <b>space-delimited</b> mutation data. (Load example
-                        data:
+                        Please input <b>tab-delimited</b> or <b>space-delimited</b> mutation data.
+                        (Load example data:
                         <span>
                             {' '}
                             <a
-                                onClick={
-                                    this.handleLoadExampleGenomicCoordinates
-                                }
+                                onClick={this.handleLoadExampleGenomicCoordinates}
                                 data-test="GenomicChangesExampleButton"
                             >
                                 Genomic Changes
@@ -225,9 +196,7 @@ export default class MutationMapperTool extends React.Component<
                         <span>
                             {' '}
                             <a
-                                onClick={
-                                    this.handleLoadExampleGeneAndProteinChange
-                                }
+                                onClick={this.handleLoadExampleGeneAndProteinChange}
                                 data-test="ProteinChangesExampleButton"
                             >
                                 Protein Changes
@@ -237,9 +206,7 @@ export default class MutationMapperTool extends React.Component<
                         <span>
                             {' '}
                             <a
-                                onClick={
-                                    this.handleLoadExamplePartiallyAnnotated
-                                }
+                                onClick={this.handleLoadExamplePartiallyAnnotated}
                                 data-test="GenomicAndProteinChangesExampleButton"
                             >
                                 Genomic and Protein Changes
@@ -254,9 +221,7 @@ export default class MutationMapperTool extends React.Component<
                     {this.dataFormatToggler()}
 
                     <FormGroup controlId="standaloneMutationTextInput">
-                        <ControlLabel>
-                            Copy and paste your own mutation data
-                        </ControlLabel>
+                        <ControlLabel>Copy and paste your own mutation data</ControlLabel>
                         <FormControl
                             componentClass="textarea"
                             rows={15}
@@ -267,9 +232,7 @@ export default class MutationMapperTool extends React.Component<
                     </FormGroup>
 
                     <FormGroup controlId="standaloneMutationFileUpload">
-                        <ControlLabel>
-                            Upload your own mutation file
-                        </ControlLabel>
+                        <ControlLabel>Upload your own mutation file</ControlLabel>
                         <FormControl
                             type="file"
                             accept="text/plain"
@@ -290,10 +253,7 @@ export default class MutationMapperTool extends React.Component<
         } else {
             return (
                 <div className="mutation-input-field-expander">
-                    <button
-                        onClick={this.handleModifyInput}
-                        className="btn btn-primary"
-                    >
+                    <button onClick={this.handleModifyInput} className="btn btn-primary">
                         Modify Input
                     </button>
                 </div>
@@ -304,10 +264,7 @@ export default class MutationMapperTool extends React.Component<
     protected dataFormatToggler() {
         return (
             <p>
-                <div
-                    className="collapsible-header"
-                    onClick={this.handleDataFormatToggle}
-                >
+                <div className="collapsible-header" onClick={this.handleDataFormatToggle}>
                     <a>Data Format</a>
                     <span style={{ paddingLeft: 4 }}>
                         {this.dataFormatCollapsed ? (
@@ -322,9 +279,7 @@ export default class MutationMapperTool extends React.Component<
                         {this.essentialColumnsInfo()}
 
                         <p>List of valid input headers:</p>
-                        <div className="full-list-of-headers">
-                            {this.inputFormatDesc()}
-                        </div>
+                        <div className="full-list-of-headers">{this.inputFormatDesc()}</div>
                     </div>
                 </Collapse>
             </p>
@@ -335,15 +290,14 @@ export default class MutationMapperTool extends React.Component<
         return (
             <div className="mutation-input-format-info">
                 <p>
-                    You can either copy and paste your input into the text field
-                    below or select a file with mutation data for upload.
+                    You can either copy and paste your input into the text field below or select a
+                    file with mutation data for upload.
                     <br />
                 </p>
                 <p>
-                    Mutation files should be tab delimited, and should at least
-                    have the genomic location headers in the first line for a
-                    successful annotation. Note that all variants have to be
-                    reported for genome build GRCh37 (hg19).
+                    Mutation files should be tab delimited, and should at least have the genomic
+                    location headers in the first line for a successful annotation. Note that all
+                    variants have to be reported for genome build GRCh37 (hg19).
                 </p>
                 <ul>
                     <li>Chromosome</li>
@@ -353,9 +307,9 @@ export default class MutationMapperTool extends React.Component<
                     <li>Variant_Allele</li>
                 </ul>
                 <p>
-                    If your mutation input doesn't contain the genomic location
-                    headers, but you still want to visualize your data, your
-                    input should at least have the following headers:
+                    If your mutation input doesn't contain the genomic location headers, but you
+                    still want to visualize your data, your input should at least have the following
+                    headers:
                 </p>
                 <ul>
                     <li>Hugo_Symbol</li>
@@ -404,24 +358,22 @@ export default class MutationMapperTool extends React.Component<
                     <tr>
                         <td>Start_Position</td>
                         <td>
-                            Lowest numeric position of the reported variant on
-                            the genomic reference sequence
+                            Lowest numeric position of the reported variant on the genomic reference
+                            sequence
                         </td>
                         <td>666</td>
                     </tr>
                     <tr>
                         <td>End_Position</td>
                         <td>
-                            Highest numeric position of the reported variant on
-                            the genomic reference sequence
+                            Highest numeric position of the reported variant on the genomic
+                            reference sequence
                         </td>
                         <td>667</td>
                     </tr>
                     <tr>
                         <td>Reference_Allele</td>
-                        <td>
-                            The plus strand reference allele at this position
-                        </td>
+                        <td>The plus strand reference allele at this position</td>
                         <td>A</td>
                     </tr>
                     <tr>
@@ -459,22 +411,16 @@ export default class MutationMapperTool extends React.Component<
                 tabs.push(
                     <MSKTab key={gene} id={gene} linkText={gene}>
                         <StandaloneMutationMapper
-                            {...convertToMutationMapperProps(
-                                AppConfig.serverConfig
-                            )}
+                            {...convertToMutationMapperProps(AppConfig.serverConfig)}
                             oncoKbPublicApiUrl={getOncoKbApiUrl()}
                             store={mutationMapperStore}
-                            trackVisibility={
-                                this.userSelectionStore.trackVisibility
-                            }
+                            trackVisibility={this.userSelectionStore.trackVisibility}
                             downloadDataFetcher={this.store.downloadDataFetcher}
                             genomeNexusCache={this.store.genomeNexusCache}
                             genomeNexusMutationAssessorCache={
                                 this.store.genomeNexusMutationAssessorCache
                             }
-                            genomeNexusMyVariantInfoCache={
-                                this.store.genomeNexusMyVariantInfoCache
-                            }
+                            genomeNexusMyVariantInfoCache={this.store.genomeNexusMyVariantInfoCache}
                             oncoKbEvidenceCache={this.store.oncoKbEvidenceCache}
                             pubMedCache={this.store.pubMedCache}
                             pdbHeaderCache={this.store.pdbHeaderCache}

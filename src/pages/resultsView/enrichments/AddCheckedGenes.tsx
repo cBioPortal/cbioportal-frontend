@@ -11,19 +11,14 @@ export interface IAddCheckedGenesProps {
 }
 
 @observer
-export default class AddCheckedGenes extends React.Component<
-    IAddCheckedGenesProps,
-    {}
-> {
+export default class AddCheckedGenes extends React.Component<IAddCheckedGenesProps, {}> {
     @autobind
     private onAddGenes() {
         // add genes and go back to oncoprint tab
         (window as any).urlWrapper.updateURL(
             {
                 [ResultsViewURLQueryEnum.gene_list]: `${
-                    (window as any).urlWrapper.query[
-                        ResultsViewURLQueryEnum.gene_list
-                    ]
+                    (window as any).urlWrapper.query[ResultsViewURLQueryEnum.gene_list]
                 }\n${this.props.checkedGenes.join(' ')}`,
             },
             `results/${ResultsViewTab.ONCOPRINT}`

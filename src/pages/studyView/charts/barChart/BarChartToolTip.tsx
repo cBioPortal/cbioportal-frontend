@@ -27,18 +27,13 @@ export const HORIZONTAL_OFFSET = 8;
 const WIDTH = 150;
 
 @observer
-export default class BarChartToolTip extends React.Component<
-    BarChartToolTipProps,
-    {}
-> {
+export default class BarChartToolTip extends React.Component<BarChartToolTipProps, {}> {
     /**
      * When the active bar is past the middle of the plot, render on the left side of the bar
      */
     @computed
     get placement(): 'left' | 'right' {
-        return this.props.totalBars < this.props.currentBarIndex * 2
-            ? 'left'
-            : 'right';
+        return this.props.totalBars < this.props.currentBarIndex * 2 ? 'left' : 'right';
     }
 
     @computed
@@ -71,8 +66,7 @@ export default class BarChartToolTip extends React.Component<
             >
                 <div>
                     <div>
-                        Number of samples:{' '}
-                        <strong>{this.props.model.sampleCount}</strong>
+                        Number of samples: <strong>{this.props.model.sampleCount}</strong>
                     </div>
                     <div>
                         Range:{' '}

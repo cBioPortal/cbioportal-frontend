@@ -12,18 +12,12 @@ export function getPatientSurvivals(
         return targetUniquePatientKeys.reduce(
             (patientSurvivals: PatientSurvival[], uniquePatientKey: string) => {
                 const clinicalData: ClinicalData[] =
-                    survivalClinicalDataGroupByUniquePatientKey[
-                        uniquePatientKey
-                    ];
+                    survivalClinicalDataGroupByUniquePatientKey[uniquePatientKey];
                 if (clinicalData) {
-                    const statusClinicalData:
-                        | ClinicalData
-                        | undefined = clinicalData.find(
+                    const statusClinicalData: ClinicalData | undefined = clinicalData.find(
                         c => c.clinicalAttributeId === statusAttributeId
                     );
-                    const monthsClinicalData:
-                        | ClinicalData
-                        | undefined = clinicalData.find(
+                    const monthsClinicalData: ClinicalData | undefined = clinicalData.find(
                         c => c.clinicalAttributeId === monthsAttributeId
                     );
                     if (

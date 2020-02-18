@@ -15,10 +15,7 @@ const ONCOPRINT_TIMEOUT = 15000;
 const ALL_CASE_SET_REGEXP = /^All \(\d+\)$/;
 
 function setInputText(selector, text) {
-    browser.setValue(
-        selector,
-        '\uE003'.repeat(browser.getValue(selector).length) + text
-    );
+    browser.setValue(selector, '\uE003'.repeat(browser.getValue(selector).length) + text);
 }
 
 var searchInputSelector = '.autosuggest input[type=text]';
@@ -246,10 +243,7 @@ describe('case set selection in modify query form', function() {
             10000
         );
         browser.waitForExist(selectedCaseSet_sel, 10000);
-        assert(
-            ALL_CASE_SET_REGEXP.test(browser.getText(selectedCaseSet_sel)),
-            "'All' case set"
-        );
+        assert(ALL_CASE_SET_REGEXP.test(browser.getText(selectedCaseSet_sel)), "'All' case set");
 
         // Uncheck study
         browser.click('[data-test="StudySelect"] input');
@@ -294,9 +288,7 @@ describe('case set selection in modify query form', function() {
         );
         browser.waitForExist(selectedCaseSet_sel, 10000);
         browser.waitUntil(() => {
-            return ALL_CASE_SET_REGEXP.test(
-                browser.getText(selectedCaseSet_sel)
-            );
+            return ALL_CASE_SET_REGEXP.test(browser.getText(selectedCaseSet_sel));
         }, 5000);
 
         // Deselect all filtered studies

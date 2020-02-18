@@ -26,10 +26,7 @@ export interface IOverlapUpsetProps {
 }
 
 @observer
-export default class OverlapUpset extends React.Component<
-    IOverlapUpsetProps,
-    {}
-> {
+export default class OverlapUpset extends React.Component<IOverlapUpsetProps, {}> {
     @observable.shallow sampleSelection: string[][] = [];
     @observable.shallow patientSelection: string[][] = [];
 
@@ -60,20 +57,14 @@ export default class OverlapUpset extends React.Component<
 
     @autobind
     @action
-    private submitSampleOverlapGroup(
-        group: SessionGroupData,
-        saveToUser: boolean
-    ) {
+    private submitSampleOverlapGroup(group: SessionGroupData, saveToUser: boolean) {
         (this.props.store as GroupComparisonStore).addGroup(group, saveToUser);
         this.sampleSelection = [];
     }
 
     @autobind
     @action
-    private submitPatientOverlapGroup(
-        group: SessionGroupData,
-        saveToUser: boolean
-    ) {
+    private submitPatientOverlapGroup(group: SessionGroupData, saveToUser: boolean) {
         (this.props.store as GroupComparisonStore).addGroup(group, saveToUser);
         this.patientSelection = [];
     }

@@ -91,18 +91,12 @@ export class BookmarkModal extends React.Component<
                     >
                         <form>
                             <div className="form-group">
-                                <label htmlFor="exampleInputAmount">
-                                    Share link
-                                </label>
+                                <label htmlFor="exampleInputAmount">Share link</label>
                                 <div className="input-group">
                                     <input
                                         type="text"
                                         className="form-control"
-                                        value={
-                                            this.urlData
-                                                ? this.urlData.fullUrl
-                                                : ''
-                                        }
+                                        value={this.urlData ? this.urlData.fullUrl : ''}
                                     />
                                     <div className="input-group-addon">
                                         <a
@@ -118,18 +112,12 @@ export class BookmarkModal extends React.Component<
                             </div>
                             {this.urlData && this.urlData.bitlyUrl && (
                                 <div className="form-group">
-                                    <label htmlFor="exampleInputAmount">
-                                        Shortened URL
-                                    </label>
+                                    <label htmlFor="exampleInputAmount">Shortened URL</label>
                                     <div className="input-group">
                                         <input
                                             type="text"
                                             className="form-control"
-                                            value={
-                                                this.urlData
-                                                    ? this.urlData.bitlyUrl
-                                                    : ''
-                                            }
+                                            value={this.urlData ? this.urlData.bitlyUrl : ''}
                                         />
                                         <div className="input-group-addon">
                                             <a

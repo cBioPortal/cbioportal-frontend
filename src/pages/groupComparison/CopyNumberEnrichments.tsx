@@ -25,9 +25,7 @@ export default class CopyNumberEnrichments extends React.Component<
     {}
 > {
     @autobind
-    private onChangeProfile(profileMap: {
-        [studyId: string]: MolecularProfile;
-    }) {
+    private onChangeProfile(profileMap: { [studyId: string]: MolecularProfile }) {
         this.props.store.setCopyNumberEnrichmentProfileMap(profileMap);
     }
 
@@ -44,21 +42,14 @@ export default class CopyNumberEnrichments extends React.Component<
         await: () => [this.props.store.enrichmentAnalysisGroups],
         invoke: () => {
             return Promise.resolve(
-                _.map(
-                    this.props.store.enrichmentAnalysisGroups.result,
-                    group => {
-                        return {
-                            ...group,
-                            description: `Number (percentage) of ${
-                                this.props.store.usePatientLevelEnrichments
-                                    ? 'patients'
-                                    : 'samples'
-                            } in ${
-                                group.name
-                            } that have the listed alteration in the listed gene.`,
-                        };
-                    }
-                )
+                _.map(this.props.store.enrichmentAnalysisGroups.result, group => {
+                    return {
+                        ...group,
+                        description: `Number (percentage) of ${
+                            this.props.store.usePatientLevelEnrichments ? 'patients' : 'samples'
+                        } in ${group.name} that have the listed alteration in the listed gene.`,
+                    };
+                })
             );
         },
     });
@@ -73,12 +64,10 @@ export default class CopyNumberEnrichments extends React.Component<
         render: () => {
             let headerName = 'Copy number';
             let studyIds = Object.keys(
-                this.props.store.selectedStudyCopyNumberEnrichmentProfileMap
-                    .result!
+                this.props.store.selectedStudyCopyNumberEnrichmentProfileMap.result!
             );
             if (studyIds.length === 1) {
-                headerName = this.props.store
-                    .selectedStudyCopyNumberEnrichmentProfileMap.result![
+                headerName = this.props.store.selectedStudyCopyNumberEnrichmentProfileMap.result![
                     studyIds[0]
                 ].name;
             }
@@ -88,9 +77,7 @@ export default class CopyNumberEnrichments extends React.Component<
                         dataSets={this.props.store.copyNumberEnrichmentProfiles}
                         onChange={this.onChangeProfile}
                         selectedProfileByStudyId={
-                            this.props.store
-                                .selectedStudyCopyNumberEnrichmentProfileMap
-                                .result!
+                            this.props.store.selectedStudyCopyNumberEnrichmentProfileMap.result!
                         }
                         studies={this.props.store.studies.result!}
                     />
@@ -102,9 +89,7 @@ export default class CopyNumberEnrichments extends React.Component<
                         headerName={headerName}
                         showCNAInTable={true}
                         containerType={AlterationContainerType.COPY_NUMBER}
-                        patientLevelEnrichments={
-                            this.props.store.usePatientLevelEnrichments
-                        }
+                        patientLevelEnrichments={this.props.store.usePatientLevelEnrichments}
                         onSetPatientLevelEnrichments={
                             this.props.store.setUsePatientLevelEnrichments
                         }
@@ -113,9 +98,7 @@ export default class CopyNumberEnrichments extends React.Component<
                 </div>
             );
         },
-        renderPending: () => (
-            <LoadingIndicator center={true} isLoading={true} size={'big'} />
-        ),
+        renderPending: () => <LoadingIndicator center={true} isLoading={true} size={'big'} />,
         renderError: () => <ErrorMessage />,
     });
 

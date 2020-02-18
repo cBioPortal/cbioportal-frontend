@@ -34,9 +34,7 @@ type Evidence = {
 /**
  * Returns a map with the different types of evidence and the number of times that each evidence happens.
  */
-function countEvidenceTypes(
-    evidenceItems: Array<Evidence>
-): { [evidenceType: string]: number } {
+function countEvidenceTypes(evidenceItems: Array<Evidence>): { [evidenceType: string]: number } {
     let evidence: { [evidenceType: string]: number } = {};
     evidenceItems.forEach(function(evidenceItem: Evidence) {
         let evidenceType = evidenceItem.evidence_type;
@@ -87,10 +85,7 @@ export default class CivicAPI {
                     id: record.id,
                     name: record.name,
                     description: record.description,
-                    url:
-                        'https://civicdb.org/#/events/genes/' +
-                        record.id +
-                        '/summary',
+                    url: 'https://civicdb.org/#/events/genes/' + record.id + '/summary',
                     variants: createVariantMap(record.variants),
                 }));
             });
@@ -99,28 +94,22 @@ export default class CivicAPI {
     /**
      * Returns a promise that resolves with the variants for the parameters given.
      */
-    getVariant(
-        id: number,
-        name: string,
-        geneId: number
-    ): Promise<ICivicVariantData> {
-        return request
-            .get('https://civicdb.org/api/variants/' + id)
-            .then(res => {
-                let result = res.body;
-                return {
-                    id,
-                    name,
-                    geneId,
-                    description: result.description,
-                    url:
-                        'https://civicdb.org/#/events/genes/' +
-                        geneId +
-                        '/summary/variants/' +
-                        id +
-                        '/summary#variant',
-                    evidence: countEvidenceTypes(result.evidence_items),
-                };
-            });
+    getVariant(id: number, name: string, geneId: number): Promise<ICivicVariantData> {
+        return request.get('https://civicdb.org/api/variants/' + id).then(res => {
+            let result = res.body;
+            return {
+                id,
+                name,
+                geneId,
+                description: result.description,
+                url:
+                    'https://civicdb.org/#/events/genes/' +
+                    geneId +
+                    '/summary/variants/' +
+                    id +
+                    '/summary#variant',
+                evidence: countEvidenceTypes(result.evidence_items),
+            };
+        });
     }
 }

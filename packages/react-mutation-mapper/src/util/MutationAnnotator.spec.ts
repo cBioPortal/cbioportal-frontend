@@ -3,10 +3,7 @@ import { assert } from 'chai';
 import sinon from 'sinon';
 import * as _ from 'lodash';
 
-import {
-    annotateMutations,
-    resolveMissingProteinPositions,
-} from './MutationAnnotator';
+import { annotateMutations, resolveMissingProteinPositions } from './MutationAnnotator';
 import { Mutation } from '../model/Mutation';
 import { fetchVariantAnnotationsIndexedByGenomicLocation } from './DataFetcherUtils';
 
@@ -208,10 +205,7 @@ describe('MutationAnnotator', () => {
                     amino_acids: 'Q/LX',
                     hgnc_id: 1100,
                     refseq_transcript_ids: ['NM_007297.3'],
-                    consequence_terms: [
-                        'frameshift_variant',
-                        'splice_region_variant',
-                    ],
+                    consequence_terms: ['frameshift_variant', 'splice_region_variant'],
                 },
                 {
                     transcript_id: 'ENST00000346315',
@@ -226,10 +220,7 @@ describe('MutationAnnotator', () => {
                     gene_id: 'ENSG00000012048',
                     amino_acids: 'Q/LX',
                     hgnc_id: 1100,
-                    consequence_terms: [
-                        'frameshift_variant',
-                        'splice_region_variant',
-                    ],
+                    consequence_terms: ['frameshift_variant', 'splice_region_variant'],
                 },
                 {
                     transcript_id: 'ENST00000351666',
@@ -244,10 +235,7 @@ describe('MutationAnnotator', () => {
                     gene_id: 'ENSG00000012048',
                     amino_acids: 'Q/LX',
                     hgnc_id: 1100,
-                    consequence_terms: [
-                        'frameshift_variant',
-                        'splice_region_variant',
-                    ],
+                    consequence_terms: ['frameshift_variant', 'splice_region_variant'],
                 },
                 {
                     transcript_id: 'ENST00000352993',
@@ -262,10 +250,7 @@ describe('MutationAnnotator', () => {
                     gene_id: 'ENSG00000012048',
                     amino_acids: 'Q/LX',
                     hgnc_id: 1100,
-                    consequence_terms: [
-                        'frameshift_variant',
-                        'splice_region_variant',
-                    ],
+                    consequence_terms: ['frameshift_variant', 'splice_region_variant'],
                 },
                 {
                     transcript_id: 'ENST00000354071',
@@ -280,10 +265,7 @@ describe('MutationAnnotator', () => {
                     gene_id: 'ENSG00000012048',
                     amino_acids: 'Q/LX',
                     hgnc_id: 1100,
-                    consequence_terms: [
-                        'frameshift_variant',
-                        'splice_region_variant',
-                    ],
+                    consequence_terms: ['frameshift_variant', 'splice_region_variant'],
                 },
                 {
                     transcript_id: 'ENST00000357654',
@@ -300,10 +282,7 @@ describe('MutationAnnotator', () => {
                     hgnc_id: 1100,
                     canonical: '1',
                     refseq_transcript_ids: ['NM_007294.3'],
-                    consequence_terms: [
-                        'frameshift_variant',
-                        'splice_region_variant',
-                    ],
+                    consequence_terms: ['frameshift_variant', 'splice_region_variant'],
                 },
                 {
                     transcript_id: 'ENST00000412061',
@@ -341,10 +320,7 @@ describe('MutationAnnotator', () => {
                     gene_id: 'ENSG00000012048',
                     amino_acids: 'Q/LX',
                     hgnc_id: 1100,
-                    consequence_terms: [
-                        'frameshift_variant',
-                        'splice_region_variant',
-                    ],
+                    consequence_terms: ['frameshift_variant', 'splice_region_variant'],
                 },
                 {
                     transcript_id: 'ENST00000467274',
@@ -368,10 +344,7 @@ describe('MutationAnnotator', () => {
                     amino_acids: 'Q/LX',
                     hgnc_id: 1100,
                     refseq_transcript_ids: ['NM_007299.3'],
-                    consequence_terms: [
-                        'frameshift_variant',
-                        'splice_region_variant',
-                    ],
+                    consequence_terms: ['frameshift_variant', 'splice_region_variant'],
                 },
                 {
                     transcript_id: 'ENST00000470026',
@@ -396,10 +369,7 @@ describe('MutationAnnotator', () => {
                     amino_acids: 'Q/LX',
                     hgnc_id: 1100,
                     refseq_transcript_ids: ['NM_007300.3'],
-                    consequence_terms: [
-                        'frameshift_variant',
-                        'splice_region_variant',
-                    ],
+                    consequence_terms: ['frameshift_variant', 'splice_region_variant'],
                 },
                 {
                     transcript_id: 'ENST00000473961',
@@ -441,10 +411,7 @@ describe('MutationAnnotator', () => {
                     gene_id: 'ENSG00000012048',
                     amino_acids: 'Q/LX',
                     hgnc_id: 1100,
-                    consequence_terms: [
-                        'frameshift_variant',
-                        'splice_region_variant',
-                    ],
+                    consequence_terms: ['frameshift_variant', 'splice_region_variant'],
                 },
                 {
                     transcript_id: 'ENST00000484087',
@@ -459,10 +426,7 @@ describe('MutationAnnotator', () => {
                     gene_id: 'ENSG00000012048',
                     amino_acids: 'Q/LX',
                     hgnc_id: 1100,
-                    consequence_terms: [
-                        'frameshift_variant',
-                        'splice_region_variant',
-                    ],
+                    consequence_terms: ['frameshift_variant', 'splice_region_variant'],
                 },
                 {
                     transcript_id: 'ENST00000487825',
@@ -477,10 +441,7 @@ describe('MutationAnnotator', () => {
                     gene_id: 'ENSG00000012048',
                     amino_acids: 'Q/LX',
                     hgnc_id: 1100,
-                    consequence_terms: [
-                        'frameshift_variant',
-                        'splice_region_variant',
-                    ],
+                    consequence_terms: ['frameshift_variant', 'splice_region_variant'],
                 },
                 {
                     transcript_id: 'ENST00000491747',
@@ -496,10 +457,7 @@ describe('MutationAnnotator', () => {
                     amino_acids: 'Q/LX',
                     hgnc_id: 1100,
                     refseq_transcript_ids: ['NM_007298.3'],
-                    consequence_terms: [
-                        'frameshift_variant',
-                        'splice_region_variant',
-                    ],
+                    consequence_terms: ['frameshift_variant', 'splice_region_variant'],
                 },
                 {
                     transcript_id: 'ENST00000492859',
@@ -523,10 +481,7 @@ describe('MutationAnnotator', () => {
                     gene_id: 'ENSG00000012048',
                     amino_acids: 'Q/LX',
                     hgnc_id: 1100,
-                    consequence_terms: [
-                        'frameshift_variant',
-                        'splice_region_variant',
-                    ],
+                    consequence_terms: ['frameshift_variant', 'splice_region_variant'],
                 },
                 {
                     transcript_id: 'ENST00000493919',
@@ -541,10 +496,7 @@ describe('MutationAnnotator', () => {
                     gene_id: 'ENSG00000012048',
                     amino_acids: 'Q/LX',
                     hgnc_id: 1100,
-                    consequence_terms: [
-                        'frameshift_variant',
-                        'splice_region_variant',
-                    ],
+                    consequence_terms: ['frameshift_variant', 'splice_region_variant'],
                 },
                 {
                     transcript_id: 'ENST00000494123',
@@ -613,8 +565,7 @@ describe('MutationAnnotator', () => {
                         transcriptId: 'ENST00000357654',
                         codonChange: 'cag/cTCag',
                         entrezGeneId: '672',
-                        consequenceTerms:
-                            'frameshift_variant,splice_region_variant',
+                        consequenceTerms: 'frameshift_variant,splice_region_variant',
                         hugoGeneSymbol: 'BRCA1',
                         hgvspShort: 'p.Q1395Lfs*11',
                         hgvsp: 'p.Gln1395LeufsTer11',
@@ -632,8 +583,7 @@ describe('MutationAnnotator', () => {
                         transcriptId: 'ENST00000309486',
                         codonChange: 'cag/cTCag',
                         entrezGeneId: '672',
-                        consequenceTerms:
-                            'frameshift_variant,splice_region_variant',
+                        consequenceTerms: 'frameshift_variant,splice_region_variant',
                         hugoGeneSymbol: 'BRCA1',
                         hgvspShort: 'p.Q1099Lfs*11',
                         hgvsp: 'p.Gln1099LeufsTer11',
@@ -649,8 +599,7 @@ describe('MutationAnnotator', () => {
                         transcriptId: 'ENST00000346315',
                         codonChange: 'cag/cTCag',
                         entrezGeneId: '672',
-                        consequenceTerms:
-                            'frameshift_variant,splice_region_variant',
+                        consequenceTerms: 'frameshift_variant,splice_region_variant',
                         hugoGeneSymbol: 'BRCA1',
                         hgvspShort: 'p.Q1395Lfs*11',
                         hgvsp: 'p.Gln1395LeufsTer11',
@@ -665,8 +614,7 @@ describe('MutationAnnotator', () => {
                         transcriptId: 'ENST00000351666',
                         codonChange: 'cag/cTCag',
                         entrezGeneId: '672',
-                        consequenceTerms:
-                            'frameshift_variant,splice_region_variant',
+                        consequenceTerms: 'frameshift_variant,splice_region_variant',
                         hugoGeneSymbol: 'BRCA1',
                         hgvspShort: 'p.Q212Lfs*11',
                         hgvsp: 'p.Gln212LeufsTer11',
@@ -681,8 +629,7 @@ describe('MutationAnnotator', () => {
                         transcriptId: 'ENST00000352993',
                         codonChange: 'cag/cTCag',
                         entrezGeneId: '672',
-                        consequenceTerms:
-                            'frameshift_variant,splice_region_variant',
+                        consequenceTerms: 'frameshift_variant,splice_region_variant',
                         hugoGeneSymbol: 'BRCA1',
                         hgvspShort: 'p.Q253Lfs*11',
                         hgvsp: 'p.Gln253LeufsTer11',
@@ -697,8 +644,7 @@ describe('MutationAnnotator', () => {
                         transcriptId: 'ENST00000354071',
                         codonChange: 'cag/cTCag',
                         entrezGeneId: '672',
-                        consequenceTerms:
-                            'frameshift_variant,splice_region_variant',
+                        consequenceTerms: 'frameshift_variant,splice_region_variant',
                         hugoGeneSymbol: 'BRCA1',
                         hgvspShort: 'p.Q1395Lfs*11',
                         hgvsp: 'p.Gln1395LeufsTer11',
@@ -713,8 +659,7 @@ describe('MutationAnnotator', () => {
                         transcriptId: 'ENST00000357654',
                         codonChange: 'cag/cTCag',
                         entrezGeneId: '672',
-                        consequenceTerms:
-                            'frameshift_variant,splice_region_variant',
+                        consequenceTerms: 'frameshift_variant,splice_region_variant',
                         hugoGeneSymbol: 'BRCA1',
                         hgvspShort: 'p.Q1395Lfs*11',
                         hgvsp: 'p.Gln1395LeufsTer11',
@@ -751,8 +696,7 @@ describe('MutationAnnotator', () => {
                         transcriptId: 'ENST00000461574',
                         codonChange: 'cag/cTCag',
                         entrezGeneId: '672',
-                        consequenceTerms:
-                            'frameshift_variant,splice_region_variant',
+                        consequenceTerms: 'frameshift_variant,splice_region_variant',
                         hugoGeneSymbol: 'BRCA1',
                         hgvspShort: 'p.Q160Lfs*11',
                         hgvsp: 'p.Gln160LeufsTer11',
@@ -774,8 +718,7 @@ describe('MutationAnnotator', () => {
                         transcriptId: 'ENST00000468300',
                         codonChange: 'cag/cTCag',
                         entrezGeneId: '672',
-                        consequenceTerms:
-                            'frameshift_variant,splice_region_variant',
+                        consequenceTerms: 'frameshift_variant,splice_region_variant',
                         hugoGeneSymbol: 'BRCA1',
                         hgvspShort: 'p.Q292Lfs*11',
                         hgvsp: 'p.Gln292LeufsTer11',
@@ -798,8 +741,7 @@ describe('MutationAnnotator', () => {
                         transcriptId: 'ENST00000471181',
                         codonChange: 'cag/cTCag',
                         entrezGeneId: '672',
-                        consequenceTerms:
-                            'frameshift_variant,splice_region_variant',
+                        consequenceTerms: 'frameshift_variant,splice_region_variant',
                         hugoGeneSymbol: 'BRCA1',
                         hgvspShort: 'p.Q1395Lfs*11',
                         hgvsp: 'p.Gln1395LeufsTer11',
@@ -836,8 +778,7 @@ describe('MutationAnnotator', () => {
                         transcriptId: 'ENST00000478531',
                         codonChange: 'cag/cTCag',
                         entrezGeneId: '672',
-                        consequenceTerms:
-                            'frameshift_variant,splice_region_variant',
+                        consequenceTerms: 'frameshift_variant,splice_region_variant',
                         hugoGeneSymbol: 'BRCA1',
                         hgvspShort: 'p.Q291Lfs*11',
                         hgvsp: 'p.Gln291LeufsTer11',
@@ -852,8 +793,7 @@ describe('MutationAnnotator', () => {
                         transcriptId: 'ENST00000484087',
                         codonChange: 'cag/cTCag',
                         entrezGeneId: '672',
-                        consequenceTerms:
-                            'frameshift_variant,splice_region_variant',
+                        consequenceTerms: 'frameshift_variant,splice_region_variant',
                         hugoGeneSymbol: 'BRCA1',
                         hgvspShort: 'p.Q166Lfs*11',
                         hgvsp: 'p.Gln166LeufsTer11',
@@ -868,8 +808,7 @@ describe('MutationAnnotator', () => {
                         transcriptId: 'ENST00000487825',
                         codonChange: 'cag/cTCag',
                         entrezGeneId: '672',
-                        consequenceTerms:
-                            'frameshift_variant,splice_region_variant',
+                        consequenceTerms: 'frameshift_variant,splice_region_variant',
                         hugoGeneSymbol: 'BRCA1',
                         hgvspShort: 'p.Q167Lfs*11',
                         hgvsp: 'p.Gln167LeufsTer11',
@@ -884,8 +823,7 @@ describe('MutationAnnotator', () => {
                         transcriptId: 'ENST00000491747',
                         codonChange: 'cag/cTCag',
                         entrezGeneId: '672',
-                        consequenceTerms:
-                            'frameshift_variant,splice_region_variant',
+                        consequenceTerms: 'frameshift_variant,splice_region_variant',
                         hugoGeneSymbol: 'BRCA1',
                         hgvspShort: 'p.Q292Lfs*11',
                         hgvsp: 'p.Gln292LeufsTer11',
@@ -908,8 +846,7 @@ describe('MutationAnnotator', () => {
                         transcriptId: 'ENST00000493795',
                         codonChange: 'cag/cTCag',
                         entrezGeneId: '672',
-                        consequenceTerms:
-                            'frameshift_variant,splice_region_variant',
+                        consequenceTerms: 'frameshift_variant,splice_region_variant',
                         hugoGeneSymbol: 'BRCA1',
                         hgvspShort: 'p.Q1348Lfs*11',
                         hgvsp: 'p.Gln1348LeufsTer11',
@@ -924,8 +861,7 @@ describe('MutationAnnotator', () => {
                         transcriptId: 'ENST00000493919',
                         codonChange: 'cag/cTCag',
                         entrezGeneId: '672',
-                        consequenceTerms:
-                            'frameshift_variant,splice_region_variant',
+                        consequenceTerms: 'frameshift_variant,splice_region_variant',
                         hugoGeneSymbol: 'BRCA1',
                         hgvspShort: 'p.Q245Lfs*11',
                         hgvsp: 'p.Gln245LeufsTer11',
@@ -982,8 +918,7 @@ describe('MutationAnnotator', () => {
                     transcriptId: 'ENST00000357654',
                     codonChange: 'cag/cTCag',
                     entrezGeneId: '672',
-                    consequenceTerms:
-                        'frameshift_variant,splice_region_variant',
+                    consequenceTerms: 'frameshift_variant,splice_region_variant',
                     hugoGeneSymbol: 'BRCA1',
                     hgvspShort: 'p.Q1395Lfs*11',
                     hgvsp: 'p.Gln1395LeufsTer11',
@@ -1218,10 +1153,7 @@ describe('MutationAnnotator', () => {
                     gene_symbol: 'POLE',
                     gene_id: 'ENSG00000177084',
                     hgnc_id: 9177,
-                    consequence_terms: [
-                        '3_prime_UTR_variant',
-                        'NMD_transcript_variant',
-                    ],
+                    consequence_terms: ['3_prime_UTR_variant', 'NMD_transcript_variant'],
                 },
                 {
                     transcript_id: 'ENST00000541213',
@@ -1354,8 +1286,7 @@ describe('MutationAnnotator', () => {
                     {
                         transcriptId: 'ENST00000537064',
                         entrezGeneId: '5426',
-                        consequenceTerms:
-                            '3_prime_UTR_variant,NMD_transcript_variant',
+                        consequenceTerms: '3_prime_UTR_variant,NMD_transcript_variant',
                         hugoGeneSymbol: 'POLE',
                         hgvspShort: '*1786*',
                         hgvsc: 'ENST00000537064.1:c.*5358C>G',
@@ -2220,18 +2151,9 @@ describe('MutationAnnotator', () => {
                 'uniprot',
                 genomeNexusClient
             ).then(
-                (indexedVariantAnnotations: {
-                    [genomicLocation: string]: VariantAnnotation;
-                }) => {
-                    const data = annotateMutations(
-                        [],
-                        indexedVariantAnnotations
-                    );
-                    assert.equal(
-                        data.length,
-                        0,
-                        'annotated mutation data should be empty'
-                    );
+                (indexedVariantAnnotations: { [genomicLocation: string]: VariantAnnotation }) => {
+                    const data = annotateMutations([], indexedVariantAnnotations);
+                    assert.equal(data.length, 0, 'annotated mutation data should be empty');
                     assert.isFalse(
                         fetchStub.called,
                         'variant annotation fetcher should NOT be called'
@@ -2255,9 +2177,7 @@ describe('MutationAnnotator', () => {
                 'uniprot',
                 genomeNexusClient
             ).then(
-                (indexedVariantAnnotations: {
-                    [genomicLocation: string]: VariantAnnotation;
-                }) => {
+                (indexedVariantAnnotations: { [genomicLocation: string]: VariantAnnotation }) => {
                     const data = annotateMutations(
                         _.cloneDeep(mutationsWithNoGenomicLocation),
                         indexedVariantAnnotations
@@ -2291,9 +2211,7 @@ describe('MutationAnnotator', () => {
                 'uniprot',
                 genomeNexusClient
             ).then(
-                (indexedVariantAnnotations: {
-                    [genomicLocation: string]: VariantAnnotation;
-                }) => {
+                (indexedVariantAnnotations: { [genomicLocation: string]: VariantAnnotation }) => {
                     const data = annotateMutations(
                         mutationsWithGenomicLocation,
                         indexedVariantAnnotations
@@ -2304,22 +2222,15 @@ describe('MutationAnnotator', () => {
                         mutationsWithGenomicLocation,
                         'annotated mutation data should be different than the initial input'
                     );
-                    assert.isTrue(
-                        fetchStub.called,
-                        'variant annotation fetcher should be called'
-                    );
+                    assert.isTrue(fetchStub.called, 'variant annotation fetcher should be called');
 
                     assert.equal(data[0].gene!.hugoGeneSymbol, 'AR');
                     assert.isTrue(data[0].proteinChange!.includes('L729I'));
                     assert.isTrue(data[0].mutationType!.includes('Missense'));
 
                     assert.equal(data[1].gene!.hugoGeneSymbol, 'BRCA1');
-                    assert.isTrue(
-                        data[1].proteinChange!.includes('Q1395Lfs*11')
-                    );
-                    assert.isTrue(
-                        data[1].mutationType!.includes('Frame_Shift_Ins')
-                    );
+                    assert.isTrue(data[1].proteinChange!.includes('Q1395Lfs*11'));
+                    assert.isTrue(data[1].mutationType!.includes('Frame_Shift_Ins'));
 
                     assert.equal(data[2].gene!.hugoGeneSymbol, 'BRCA2');
                     assert.isTrue(data[2].proteinChange!.includes('E1441*'));

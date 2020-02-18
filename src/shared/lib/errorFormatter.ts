@@ -45,9 +45,7 @@ export function formatErrorMessages(errors: SiteError[]): string[] | undefined {
             return undefined;
         }
     });
-    const validErrorMessages = errorMessages.filter(
-        errorMessage => errorMessage !== undefined
-    );
+    const validErrorMessages = errorMessages.filter(errorMessage => errorMessage !== undefined);
     if (validErrorMessages.length > 0) {
         return validErrorMessages;
     } else {

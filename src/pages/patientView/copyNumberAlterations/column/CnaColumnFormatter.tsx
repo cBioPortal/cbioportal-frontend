@@ -25,11 +25,7 @@ export default class CnaColumnFormatter {
         if (!color) {
             return <span />;
         } else {
-            return (
-                <span style={{ color }}>
-                    {CnaColumnFormatter.displayText(d)}
-                </span>
-            );
+            return <span style={{ color }}>{CnaColumnFormatter.displayText(d)}</span>;
         }
     }
 

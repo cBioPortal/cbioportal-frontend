@@ -39,9 +39,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
     }
 
     @computed get mutationStatusFilter() {
-        return this.store.dataStore.dataFilters.find(
-            f => f.id === MUTATION_STATUS_FILTER_ID
-        );
+        return this.store.dataStore.dataFilters.find(f => f.id === MUTATION_STATUS_FILTER_ID);
     }
 
     @computed get mutationRateSummary(): JSX.Element | null {
@@ -60,9 +58,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                     }
                     mutations={this.props.store.mutationData.result}
                     samples={this.props.store.samples.result!}
-                    germlineConsentedSamples={
-                        this.props.store.germlineConsentedSamples
-                    }
+                    germlineConsentedSamples={this.props.store.germlineConsentedSamples}
                     onMutationStatusSelect={this.onMutationStatusSelect}
                     mutationStatusFilter={this.mutationStatusFilter}
                 />
@@ -100,9 +96,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
     protected get mutationTableComponent(): JSX.Element | null {
         return (
             <ResultsViewMutationTable
-                uniqueSampleKeyToTumorType={
-                    this.props.store.uniqueSampleKeyToTumorType
-                }
+                uniqueSampleKeyToTumorType={this.props.store.uniqueSampleKeyToTumorType}
                 oncoKbCancerGenes={this.props.store.oncoKbCancerGenes}
                 discreteCNACache={this.props.discreteCNACache}
                 studyIdToStudy={this.props.store.studyIdToStudy.result}
@@ -113,20 +107,14 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 pubMedCache={this.props.pubMedCache}
                 mutationCountCache={this.props.mutationCountCache}
                 genomeNexusCache={this.props.genomeNexusCache}
-                genomeNexusMutationAssessorCache={
-                    this.props.genomeNexusMutationAssessorCache
-                }
-                genomeNexusMyVariantInfoCache={
-                    this.props.genomeNexusMyVariantInfoCache
-                }
+                genomeNexusMutationAssessorCache={this.props.genomeNexusMutationAssessorCache}
+                genomeNexusMyVariantInfoCache={this.props.genomeNexusMyVariantInfoCache}
                 dataStore={this.props.store.dataStore}
                 itemsLabelPlural={this.itemsLabelPlural}
                 downloadDataFetcher={this.props.store.downloadDataFetcher}
                 myCancerGenomeData={this.props.myCancerGenomeData}
                 hotspotData={this.props.store.indexedHotspotData}
-                indexedVariantAnnotations={
-                    this.props.store.indexedVariantAnnotations
-                }
+                indexedVariantAnnotations={this.props.store.indexedVariantAnnotations}
                 cosmicData={this.props.store.cosmicData.result}
                 oncoKbData={this.props.store.oncoKbData}
                 civicGenes={this.props.store.civicGenes}
@@ -143,12 +131,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
     }
 
     protected get mutationTable(): JSX.Element | null {
-        return (
-            <span>
-                {!this.isMutationTableDataLoading &&
-                    this.mutationTableComponent}
-            </span>
-        );
+        return <span>{!this.isMutationTableDataLoading && this.mutationTableComponent}</span>;
     }
 
     @autobind

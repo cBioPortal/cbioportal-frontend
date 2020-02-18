@@ -11,11 +11,7 @@ import {
 import GenomeNexusMyVariantInfoCache, {
     GenomeNexusCacheDataType,
 } from 'shared/cache/GenomeNexusMyVariantInfoCache';
-import {
-    ClinVarId,
-    clinVarSortValue,
-    getClinVarId,
-} from 'react-mutation-mapper';
+import { ClinVarId, clinVarSortValue, getClinVarId } from 'react-mutation-mapper';
 import generalStyles from './styles.module.scss';
 
 export default class ClinVarColumnFormatter {
@@ -28,10 +24,7 @@ export default class ClinVarColumnFormatter {
             genomeNexusMyVariantInfoCache
         );
         return (
-            <div
-                data-test="clinvar-data"
-                className={generalStyles['integer-data']}
-            >
+            <div data-test="clinvar-data" className={generalStyles['integer-data']}>
                 {ClinVarColumnFormatter.getClinVarDataViz(genomeNexusCacheData)}
             </div>
         );
@@ -47,9 +40,7 @@ export default class ClinVarColumnFormatter {
         return cache.get(data[0]);
     }
 
-    private static getClinVarDataViz(
-        genomeNexusCacheData: GenomeNexusCacheDataType | null
-    ) {
+    private static getClinVarDataViz(genomeNexusCacheData: GenomeNexusCacheDataType | null) {
         let status: TableCellStatus | null = null;
 
         if (genomeNexusCacheData === null) {
@@ -63,8 +54,7 @@ export default class ClinVarColumnFormatter {
                 <ClinVarId
                     myVariantInfo={
                         genomeNexusCacheData.data.my_variant_info
-                            ? genomeNexusCacheData.data.my_variant_info
-                                  .annotation
+                            ? genomeNexusCacheData.data.my_variant_info.annotation
                             : undefined
                     }
                 />
@@ -89,9 +79,7 @@ export default class ClinVarColumnFormatter {
         }
     }
 
-    public static getData(
-        genomeNexusData: MyVariantInfoAnnotation | null
-    ): string | null {
+    public static getData(genomeNexusData: MyVariantInfoAnnotation | null): string | null {
         if (genomeNexusData) {
             return getClinVarId(genomeNexusData.annotation);
         } else {
@@ -131,9 +119,7 @@ export default class ClinVarColumnFormatter {
             genomeNexusCacheData.data &&
             genomeNexusCacheData.data.my_variant_info
         ) {
-            return clinVarSortValue(
-                genomeNexusCacheData.data.my_variant_info.annotation
-            );
+            return clinVarSortValue(genomeNexusCacheData.data.my_variant_info.annotation);
         }
         return null;
     }

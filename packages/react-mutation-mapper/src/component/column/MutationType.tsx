@@ -1,7 +1,4 @@
-import {
-    DefaultTooltip,
-    getCanonicalMutationType,
-} from 'cbioportal-frontend-commons';
+import { DefaultTooltip, getCanonicalMutationType } from 'cbioportal-frontend-commons';
 import * as React from 'react';
 
 import { Mutation } from '../../model/Mutation';
@@ -120,10 +117,7 @@ function getMapEntry(mutation: Mutation) {
     }
 }
 
-export default class MutationType extends React.Component<
-    MutationTypeProps,
-    {}
-> {
+export default class MutationType extends React.Component<MutationTypeProps, {}> {
     public render() {
         // use text for all purposes (display, sort, filter)
         const text = getDisplayValue(this.props.mutation);
@@ -137,10 +131,7 @@ export default class MutationType extends React.Component<
         // add tooltip only if the display value differs from the actual text value!
         if (toolTip && toolTip.toLowerCase() !== text.toLowerCase()) {
             content = (
-                <DefaultTooltip
-                    overlay={<span>{toolTip}</span>}
-                    placement="left"
-                >
+                <DefaultTooltip overlay={<span>{toolTip}</span>} placement="left">
                     {content}
                 </DefaultTooltip>
             );

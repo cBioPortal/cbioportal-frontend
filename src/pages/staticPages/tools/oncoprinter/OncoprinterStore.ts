@@ -19,26 +19,17 @@ import {
 } from './OncoprinterGeneticUtils';
 import { CancerGene, remoteData } from 'cbioportal-frontend-commons';
 import { IOncoKbData } from '../../../../shared/model/OncoKB';
-import {
-    fetchOncoKbCancerGenes,
-    ONCOKB_DEFAULT,
-} from '../../../../shared/lib/StoreUtils';
+import { fetchOncoKbCancerGenes, ONCOKB_DEFAULT } from '../../../../shared/lib/StoreUtils';
 import client from '../../../../shared/api/cbioportalClientInstance';
 import _ from 'lodash';
 import {
     countMutations,
     mutationCountByPositionKey,
 } from '../../../resultsView/mutationCountHelpers';
-import {
-    Mutation,
-    MutationCountByPosition,
-} from '../../../../shared/api/generated/CBioPortalAPI';
+import { Mutation, MutationCountByPosition } from '../../../../shared/api/generated/CBioPortalAPI';
 import { SampleAlteredMap } from '../../../resultsView/ResultsViewPageStoreUtils';
 import { AlteredStatus } from 'pages/resultsView/mutualExclusivity/MutualExclusivityUtil';
-import {
-    getClinicalTracks,
-    parseClinicalInput,
-} from './OncoprinterClinicalUtils';
+import { getClinicalTracks, parseClinicalInput } from './OncoprinterClinicalUtils';
 
 export type OncoprinterDriverAnnotationSettings = Pick<
     DriverAnnotationSettings,
@@ -85,10 +76,7 @@ export default class OncoprinterStore {
     }
 
     @computed get didOncoKbFail() {
-        return (
-            this.oncoKbData.peekStatus === 'complete' &&
-            this.oncoKbData.result instanceof Error
-        );
+        return this.oncoKbData.peekStatus === 'complete' && this.oncoKbData.result instanceof Error;
     }
 
     @computed get sampleIds() {
@@ -100,11 +88,8 @@ export default class OncoprinterStore {
     }
 
     @computed get allSampleIds() {
-        const parsedInputLines = (
-            this.parsedGeneticInputLines.result || []
-        ).concat(
-            (this.parsedClinicalInputLines.result &&
-                this.parsedClinicalInputLines.result.data) ||
+        const parsedInputLines = (this.parsedGeneticInputLines.result || []).concat(
+            (this.parsedClinicalInputLines.result && this.parsedClinicalInputLines.result.data) ||
                 []
         );
         if (parsedInputLines.length > 0) {
@@ -121,10 +106,7 @@ export default class OncoprinterStore {
     @computed get inputSampleIdOrder() {
         if (this._inputSampleIdOrder) {
             // intersection - only take into account specified sample ids
-            return _.intersection(
-                this._inputSampleIdOrder.split(/[,\s]+/),
-                this.allSampleIds
-            );
+            return _.intersection(this._inputSampleIdOrder.split(/[,\s]+/), this.allSampleIds);
         } else {
             return undefined;
         }
@@ -140,8 +122,7 @@ export default class OncoprinterStore {
 
     readonly hiddenSampleIds = remoteData({
         await: () => [this.unalteredSampleIds],
-        invoke: async () =>
-            this.showUnalteredColumns ? [] : this.unalteredSampleIds.result!,
+        invoke: async () => (this.showUnalteredColumns ? [] : this.unalteredSampleIds.result!),
         default: [],
     });
 
@@ -249,9 +230,8 @@ export default class OncoprinterStore {
     @computed get existCustomDrivers() {
         return (
             this.parsedGeneticInputLines.result &&
-            this.parsedGeneticInputLines.result.findIndex(
-                x => !!(isType2(x) && x.isCustomDriver)
-            ) > -1
+            this.parsedGeneticInputLines.result.findIndex(x => !!(isType2(x) && x.isCustomDriver)) >
+                -1
         );
     }
 
@@ -293,10 +273,7 @@ export default class OncoprinterStore {
                     return Promise.resolve(
                         _.reduce(
                             this.oncoKbCancerGenes.result,
-                            (
-                                map: { [entrezGeneId: number]: boolean },
-                                next: CancerGene
-                            ) => {
+                            (map: { [entrezGeneId: number]: boolean }, next: CancerGene) => {
                                 if (next.oncokbAnnotated) {
                                     map[next.entrezGeneId] = true;
                                 }
@@ -315,10 +292,7 @@ export default class OncoprinterStore {
 
     readonly oncoKbData = remoteData<IOncoKbData | Error>(
         {
-            await: () => [
-                this.nonAnnotatedGeneticData,
-                this.oncoKbAnnotatedGenes,
-            ],
+            await: () => [this.nonAnnotatedGeneticData, this.oncoKbAnnotatedGenes],
             invoke: async () => {
                 if (AppConfig.serverConfig.show_oncokb) {
                     let result;
@@ -344,10 +318,7 @@ export default class OncoprinterStore {
 
     readonly oncoKbCnaData = remoteData<IOncoKbData | Error>(
         {
-            await: () => [
-                this.nonAnnotatedGeneticData,
-                this.oncoKbAnnotatedGenes,
-            ],
+            await: () => [this.nonAnnotatedGeneticData, this.oncoKbAnnotatedGenes],
             invoke: async () => {
                 if (AppConfig.serverConfig.show_oncokb) {
                     let result;
@@ -377,17 +348,10 @@ export default class OncoprinterStore {
         await: () => [this.nonAnnotatedGeneticData],
         invoke: async () => {
             const mutations = this.nonAnnotatedGeneticData.result!.filter(
-                x =>
-                    x.proteinPosStart !== undefined &&
-                    x.proteinPosEnd !== undefined
-            ) as Pick<
-                Mutation,
-                'entrezGeneId' | 'proteinPosStart' | 'proteinPosEnd'
-            >[];
+                x => x.proteinPosStart !== undefined && x.proteinPosEnd !== undefined
+            ) as Pick<Mutation, 'entrezGeneId' | 'proteinPosStart' | 'proteinPosEnd'>[];
 
-            const mutationPositionIdentifiers = _.values(
-                countMutations(mutations)
-            );
+            const mutationPositionIdentifiers = _.values(countMutations(mutations));
 
             const data = await client.fetchMutationCountsByPositionUsingPOST({
                 mutationPositionIdentifiers,
@@ -395,9 +359,7 @@ export default class OncoprinterStore {
 
             return _.chain(data)
                 .groupBy(mutationCountByPositionKey)
-                .mapValues((counts: MutationCountByPosition[]) =>
-                    _.sumBy(counts, c => c.count)
-                )
+                .mapValues((counts: MutationCountByPosition[]) => _.sumBy(counts, c => c.count))
                 .value();
         },
     });
@@ -411,10 +373,7 @@ export default class OncoprinterStore {
                 .map(datum => datum.sample)
                 .uniq()
                 .value();
-            const visibleAlteredIds = _.intersection(
-                this.sampleIds,
-                allAlteredIds
-            );
+            const visibleAlteredIds = _.intersection(this.sampleIds, allAlteredIds);
             return visibleAlteredIds;
         },
         default: [],
@@ -508,10 +467,7 @@ export default class OncoprinterStore {
     });
 
     readonly annotatedGeneticTrackData = remoteData({
-        await: () => [
-            this.nonAnnotatedGeneticTrackData,
-            ...this.annotationData.promises,
-        ],
+        await: () => [this.nonAnnotatedGeneticTrackData, ...this.annotationData.promises],
         invoke: async () =>
             annotateGeneticTrackData(
                 this.nonAnnotatedGeneticTrackData.result!,
@@ -523,8 +479,7 @@ export default class OncoprinterStore {
 
     readonly annotatedGeneticOncoprintData = remoteData({
         await: () => [this.annotatedGeneticTrackData],
-        invoke: async () =>
-            getGeneticOncoprintData(this.annotatedGeneticTrackData.result!),
+        invoke: async () => getGeneticOncoprintData(this.annotatedGeneticTrackData.result!),
     });
 
     readonly geneticTracks = remoteData({

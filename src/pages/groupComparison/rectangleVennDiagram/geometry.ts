@@ -9,9 +9,7 @@ export type Rectangle = {
 }; // bottom-left aligned
 export type RegionShape = Rectangle[];
 
-export function rectangleArea(
-    rectangle: Pick<Rectangle, 'xLength' | 'yLength'>
-) {
+export function rectangleArea(rectangle: Pick<Rectangle, 'xLength' | 'yLength'>) {
     return rectangle.xLength * rectangle.yLength;
 }
 
@@ -29,16 +27,10 @@ export function rectangleIntersection(...rectangles: Rectangle[]): Rectangle {
         const rect = rectangles[i];
 
         const xMin = Math.max(intersection.x, rect.x);
-        const xMax = Math.min(
-            intersection.x + intersection.xLength,
-            rect.x + rect.xLength
-        );
+        const xMax = Math.min(intersection.x + intersection.xLength, rect.x + rect.xLength);
 
         const yMin = Math.max(intersection.y, rect.y);
-        const yMax = Math.min(
-            intersection.y + intersection.yLength,
-            rect.y + rect.yLength
-        );
+        const yMax = Math.min(intersection.y + intersection.yLength, rect.y + rect.yLength);
 
         if (xMin >= xMax || yMin >= yMax) {
             // no intersection
@@ -114,23 +106,16 @@ export function rectangleDifference(a: Rectangle, b: Rectangle): RegionShape {
     ];
 
     // Intersect a with each of those rectangles
-    let intersection = setComplementOfB.map(rect =>
-        rectangleIntersection(rect, a)
-    );
+    let intersection = setComplementOfB.map(rect => rectangleIntersection(rect, a));
     // filter out empty rectangles
     intersection = intersection.filter(r => rectangleArea(r) > 0);
     return intersection;
 }
 
-export function rectangleDifferenceMultiple(
-    a: Rectangle,
-    subRects: Rectangle[]
-): RegionShape {
+export function rectangleDifferenceMultiple(a: Rectangle, subRects: Rectangle[]): RegionShape {
     let difference = [a];
     for (const subRect of subRects) {
-        difference = _.flatMap(difference, rect =>
-            rectangleDifference(rect, subRect)
-        );
+        difference = _.flatMap(difference, rect => rectangleDifference(rect, subRect));
     }
     return difference;
 }
@@ -140,14 +125,11 @@ export function getRegionArea(region: RegionShape) {
 }
 
 export function getRegionShape(sets: string[], setRectangles: SetRectangles) {
-    const intersectionRect = rectangleIntersection(
-        ...sets.map(s => setRectangles[s])
-    );
+    const intersectionRect = rectangleIntersection(...sets.map(s => setRectangles[s]));
 
-    const excludedRectangles = _.difference(
-        Object.keys(setRectangles),
-        sets
-    ).map(uid => setRectangles[uid]);
+    const excludedRectangles = _.difference(Object.keys(setRectangles), sets).map(
+        uid => setRectangles[uid]
+    );
 
     return rectangleDifferenceMultiple(intersectionRect, excludedRectangles);
 }

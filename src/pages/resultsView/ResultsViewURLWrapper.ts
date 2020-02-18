@@ -1,7 +1,4 @@
-import URLWrapper, {
-    BooleanString,
-    NumberString,
-} from '../../shared/lib/URLWrapper';
+import URLWrapper, { BooleanString, NumberString } from '../../shared/lib/URLWrapper';
 import ExtendedRouterStore from '../../shared/lib/ExtendedRouterStore';
 import { computed } from 'mobx';
 import autobind from 'autobind-decorator';
@@ -48,9 +45,7 @@ export type ResultsViewURLQuery = {
     [key in keyof typeof ResultsViewURLQueryEnum]: string;
 };
 
-export default class ResultsViewURLWrapper extends URLWrapper<
-    ResultsViewURLQuery
-> {
+export default class ResultsViewURLWrapper extends URLWrapper<ResultsViewURLQuery> {
     constructor(routing: ExtendedRouterStore) {
         super(
             routing,
@@ -124,9 +119,7 @@ export default class ResultsViewURLWrapper extends URLWrapper<
     }
 
     @computed public get comparisonSubTabId() {
-        return (
-            this.query.comparison_subtab || ResultsViewComparisonSubTab.OVERLAP
-        );
+        return this.query.comparison_subtab || ResultsViewComparisonSubTab.OVERLAP;
     }
 
     @autobind

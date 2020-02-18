@@ -1,8 +1,6 @@
 import { SimpleGetterLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 
-export class EnrichmentsTableDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<
-    any
-> {
+export class EnrichmentsTableDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<any> {
     constructor(
         getData: () => any[],
         getHighlighted: () => any | undefined,
@@ -11,9 +9,7 @@ export class EnrichmentsTableDataStore extends SimpleGetterLazyMobXTableApplicat
         super(getData);
         this.dataHighlighter = (d: any) => {
             const highlighted = getHighlighted();
-            return !!(
-                highlighted && d.entrezGeneId === highlighted.entrezGeneId
-            );
+            return !!(highlighted && d.entrezGeneId === highlighted.entrezGeneId);
         };
     }
 }

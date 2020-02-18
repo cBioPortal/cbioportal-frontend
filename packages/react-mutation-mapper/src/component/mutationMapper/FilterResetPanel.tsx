@@ -13,18 +13,11 @@ type FilterResetPanelProps = {
 };
 
 @observer
-export class FilterResetPanel extends React.Component<
-    FilterResetPanelProps,
-    {}
-> {
+export class FilterResetPanel extends React.Component<FilterResetPanelProps, {}> {
     public static defaultProps: Partial<FilterResetPanelProps> = {
         buttonText: 'Show all',
         buttonClass: classNames('btn', 'btn-secondary', 'btn-sm'),
-        className: classNames(
-            'alert',
-            'alert-success',
-            styles.filterResetPanel
-        ),
+        className: classNames('alert', 'alert-success', styles.filterResetPanel),
     };
 
     public render() {

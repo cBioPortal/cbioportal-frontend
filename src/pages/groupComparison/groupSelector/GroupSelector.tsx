@@ -15,10 +15,7 @@ export interface IGroupSelectorProps {
 }
 
 @observer
-export default class GroupSelector extends React.Component<
-    IGroupSelectorProps,
-    {}
-> {
+export default class GroupSelector extends React.Component<IGroupSelectorProps, {}> {
     private dragging = false;
 
     @autobind
@@ -63,31 +60,26 @@ export default class GroupSelector extends React.Component<
             if (this.props.store._originalGroups.result!.length === 0) {
                 return null;
             } else {
-                const deletable =
-                    this.props.store._originalGroups.result!.length > 2;
-                const buttons = this.props.store._originalGroups.result!.map(
-                    (group, index) => {
-                        const excludedFromAnalysis =
-                            this.props.store.overlapStrategy ===
-                                OverlapStrategy.EXCLUDE &&
-                            group.uid in
-                                this.props.store.overlapComputations.result!
-                                    .excludedFromAnalysis;
+                const deletable = this.props.store._originalGroups.result!.length > 2;
+                const buttons = this.props.store._originalGroups.result!.map((group, index) => {
+                    const excludedFromAnalysis =
+                        this.props.store.overlapStrategy === OverlapStrategy.EXCLUDE &&
+                        group.uid in
+                            this.props.store.overlapComputations.result!.excludedFromAnalysis;
 
-                        return (
-                            <GroupSelectorButton
-                                isSelected={this.isSelected}
-                                deletable={deletable}
-                                onClick={this.onClick}
-                                onClickDelete={this.onClickDelete}
-                                sampleSet={this.props.store.sampleSet.result!}
-                                group={group}
-                                index={index}
-                                excludedFromAnalysis={excludedFromAnalysis}
-                            />
-                        );
-                    }
-                );
+                    return (
+                        <GroupSelectorButton
+                            isSelected={this.isSelected}
+                            deletable={deletable}
+                            onClick={this.onClick}
+                            onClickDelete={this.onClickDelete}
+                            sampleSet={this.props.store.sampleSet.result!}
+                            group={group}
+                            index={index}
+                            excludedFromAnalysis={excludedFromAnalysis}
+                        />
+                    );
+                });
                 buttons.push(
                     <SelectAllDeselectAll
                         store={this.props.store}
@@ -104,9 +96,7 @@ export default class GroupSelector extends React.Component<
                         }}
                     >
                         <strong style={{ marginRight: 5 }}>Groups: </strong>
-                        <span style={{ fontSize: 12, marginRight: 3 }}>
-                            (drag to reorder)
-                        </span>
+                        <span style={{ fontSize: 12, marginRight: 3 }}>(drag to reorder)</span>
                         <GroupSelectorButtonList
                             buttons={buttons}
                             axis="xy"
@@ -118,9 +108,7 @@ export default class GroupSelector extends React.Component<
                 );
             }
         },
-        renderPending: () => (
-            <LoadingIndicator isLoading={true} size="big" center={true} />
-        ),
+        renderPending: () => <LoadingIndicator isLoading={true} size="big" center={true} />,
         renderError: () => <ErrorMessage />,
     });
 

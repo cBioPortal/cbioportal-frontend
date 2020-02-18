@@ -3,13 +3,11 @@ import React from 'react';
 import { assert } from 'chai';
 import sinon from 'sinon';
 
-const componentUnderTest: PatientViewPage = (PatientViewPage as any)
-    .wrappedComponent;
+const componentUnderTest: PatientViewPage = (PatientViewPage as any).wrappedComponent;
 
 describe('PatientViewPage', () => {
     describe('handleSampleClick', () => {
-        const handleSampleClick = (componentUnderTest as any).prototype
-            .handleSampleClick;
+        const handleSampleClick = (componentUnderTest as any).prototype.handleSampleClick;
 
         let updateURLStub: sinon.SinonStub,
             preventDefaultStub: sinon.SinonStub,

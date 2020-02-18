@@ -1,22 +1,9 @@
 import { assert } from 'chai';
-import {
-    toSampleUuid,
-    toPatientUuid,
-    fromSampleUuid,
-    fromPatientUuid,
-} from './UuidUtils';
+import { toSampleUuid, toPatientUuid, fromSampleUuid, fromPatientUuid } from './UuidUtils';
 
 describe('UuidUtils', () => {
     it('recovers the input study/sample/patient properly', () => {
-        const samples = [
-            'a',
-            'ab',
-            'abc',
-            'abcd',
-            '12345',
-            'xijd-3985-djfi',
-            'xij-+jdsapf-3r31',
-        ];
+        const samples = ['a', 'ab', 'abc', 'abcd', '12345', 'xijd-3985-djfi', 'xij-+jdsapf-3r31'];
         const studies = ['abc_def', 'abcdfa_a', 'a_b_c_d_e_f'];
 
         for (const sample of samples) {

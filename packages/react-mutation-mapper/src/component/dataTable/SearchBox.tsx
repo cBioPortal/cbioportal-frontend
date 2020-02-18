@@ -29,15 +29,8 @@ export class SearchBox extends React.Component<ISearchBoxProps> {
                     aria-label="Search"
                     style={{ height: this.props.boxHeight }}
                 />
-                <div
-                    className="input-group-append"
-                    style={{ height: this.props.boxHeight }}
-                >
-                    <button
-                        className="btn btn-outline-secondary"
-                        type="button"
-                        disabled={true}
-                    >
+                <div className="input-group-append" style={{ height: this.props.boxHeight }}>
+                    <button className="btn btn-outline-secondary" type="button" disabled={true}>
                         <i className="fa fa-search" />
                     </button>
                 </div>

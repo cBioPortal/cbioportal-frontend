@@ -46,17 +46,13 @@ export interface IStructureViewerPanelProps extends IProteinImpactTypeColors {
 }
 
 @observer
-export default class StructureViewerPanel extends React.Component<
-    IStructureViewerPanelProps,
-    {}
-> {
+export default class StructureViewerPanel extends React.Component<IStructureViewerPanelProps, {}> {
     @observable protected isCollapsed: boolean = false;
     @observable protected isIncreasedSize: boolean = false;
     @observable protected proteinScheme: ProteinScheme = ProteinScheme.CARTOON;
     @observable protected proteinColor: ProteinColor = ProteinColor.UNIFORM;
     @observable protected sideChain: SideChain = SideChain.SELECTED;
-    @observable protected mutationColor: MutationColor =
-        MutationColor.MUTATION_TYPE;
+    @observable protected mutationColor: MutationColor = MutationColor.MUTATION_TYPE;
     @observable protected displayBoundMolecules: boolean = true;
 
     protected _3dMolDiv: HTMLDivElement | undefined;
@@ -67,27 +63,15 @@ export default class StructureViewerPanel extends React.Component<
         this.containerRefHandler = this.containerRefHandler.bind(this);
         this.toggleCollapse = this.toggleCollapse.bind(this);
         this.toggleDoubleSize = this.toggleDoubleSize.bind(this);
-        this.handleProteinSchemeChange = this.handleProteinSchemeChange.bind(
-            this
-        );
-        this.handleProteinColorChange = this.handleProteinColorChange.bind(
-            this
-        );
+        this.handleProteinSchemeChange = this.handleProteinSchemeChange.bind(this);
+        this.handleProteinColorChange = this.handleProteinColorChange.bind(this);
         this.handleSideChainChange = this.handleSideChainChange.bind(this);
-        this.handleMutationColorChange = this.handleMutationColorChange.bind(
-            this
-        );
-        this.handleBoundMoleculeChange = this.handleBoundMoleculeChange.bind(
-            this
-        );
+        this.handleMutationColorChange = this.handleMutationColorChange.bind(this);
+        this.handleBoundMoleculeChange = this.handleBoundMoleculeChange.bind(this);
         this.handlePyMolDownload = this.handlePyMolDownload.bind(this);
     }
 
-    public selectionTitle(
-        text: string,
-        tooltip?: JSX.Element,
-        placement: string = 'top'
-    ) {
+    public selectionTitle(text: string, tooltip?: JSX.Element, placement: string = 'top') {
         let content: JSX.Element | null = null;
 
         if (tooltip) {
@@ -123,22 +107,19 @@ export default class StructureViewerPanel extends React.Component<
                 <br />
                 <b>Uniform:</b> Colors the entire protein structure with a
                 <span className={styles['loop']}> single color</span>. <br />
-                <b>Secondary structure:</b> Colors the protein by secondary
-                structure. Assigns different colors for{' '}
-                <span className={styles['alpha-helix']}>alpha helices</span>,
+                <b>Secondary structure:</b> Colors the protein by secondary structure. Assigns
+                different colors for <span className={styles['alpha-helix']}>alpha helices</span>,
                 <span className={styles['beta-sheet']}> beta sheets</span>, and
-                <span className={styles['loop']}> loops</span>. This color
-                option is not available for the space-filling protein scheme.{' '}
+                <span className={styles['loop']}> loops</span>. This color option is not available
+                for the space-filling protein scheme. <br />
+                <b>N-C rainbow:</b> Colors the protein with a rainbow gradient from red (N-terminus)
+                to blue (C-terminus). <br />
+                <b>Atom Type:</b> Colors the structure with respect to the atom type (CPK color
+                scheme). This color option is only available for the space-filling protein scheme.{' '}
                 <br />
-                <b>N-C rainbow:</b> Colors the protein with a rainbow gradient
-                from red (N-terminus) to blue (C-terminus). <br />
-                <b>Atom Type:</b> Colors the structure with respect to the atom
-                type (CPK color scheme). This color option is only available for
-                the space-filling protein scheme. <br />
                 <br />
-                The selected chain is always displayed with full opacity while
-                the rest of the structure has some transparency to help better
-                focusing on the selected chain.
+                The selected chain is always displayed with full opacity while the rest of the
+                structure has some transparency to help better focusing on the selected chain.
             </div>
         );
     }
@@ -148,10 +129,9 @@ export default class StructureViewerPanel extends React.Component<
             <div style={{ maxWidth: 400, maxHeight: 200, overflowY: 'auto' }}>
                 Display options for the side chain atoms. <br />
                 <br />
-                <b>All:</b> Displays the side chain atoms for every mapped
-                residue. <br />
-                <b>Selected:</b> Displays the side chain atoms only for the
-                selected mutations. <br />
+                <b>All:</b> Displays the side chain atoms for every mapped residue. <br />
+                <b>Selected:</b> Displays the side chain atoms only for the selected mutations.{' '}
+                <br />
                 <b>None:</b> Hides the side chain atoms. <br />
                 <br />
                 This option has no effect for the space-filling protein scheme.
@@ -165,34 +145,25 @@ export default class StructureViewerPanel extends React.Component<
                 Color options for the mapped mutations. <br />
                 <br />
                 <b>Uniform:</b> Colors all mutated residues with a
-                <span className={styles['uniform-mutation']}>
-                    {' '}
-                    single color
-                </span>
+                <span className={styles['uniform-mutation']}> single color</span>
                 . <br />
-                <b>Mutation type:</b> Enables residue coloring by mutation type.
-                Mutation types and corresponding color codes are as follows:
+                <b>Mutation type:</b> Enables residue coloring by mutation type. Mutation types and
+                corresponding color codes are as follows:
                 <ul>
                     <li>
-                        <span className={styles['missense-mutation']}>
-                            Missense Mutations
-                        </span>
+                        <span className={styles['missense-mutation']}>Missense Mutations</span>
                     </li>
                     <li>
-                        <span className={styles['trunc-mutation']}>
-                            Truncating Mutations
-                        </span>
+                        <span className={styles['trunc-mutation']}>Truncating Mutations</span>
                         <span> (Nonsense, Nonstop, FS del, FS ins)</span>
                     </li>
                     <li>
-                        <span className={styles['inframe-mutation']}>
-                            Inframe Mutations
-                        </span>
+                        <span className={styles['inframe-mutation']}>Inframe Mutations</span>
                         <span> (IF del, IF ins)</span>
                     </li>
                 </ul>
-                <b>None:</b> Disables coloring of the mutated residues except
-                for manually selected (highlighted) residues. <br />
+                <b>None:</b> Disables coloring of the mutated residues except for manually selected
+                (highlighted) residues. <br />
                 <br />
                 Highlighted residues are colored with{' '}
                 <span className={styles['highlighted']}>yellow</span>.
@@ -203,9 +174,8 @@ export default class StructureViewerPanel extends React.Component<
     public boundMoleculesTooltipContent() {
         return (
             <div style={{ maxWidth: 400, maxHeight: 200, overflowY: 'auto' }}>
-                Displays co-crystalized molecules. This option has no effect if
-                the current structure does not contain any co-crystalized bound
-                molecules.
+                Displays co-crystalized molecules. This option has no effect if the current
+                structure does not contain any co-crystalized bound molecules.
             </div>
         );
     }
@@ -213,15 +183,14 @@ export default class StructureViewerPanel extends React.Component<
     public helpTooltipContent() {
         return (
             <div style={{ maxWidth: 400, maxHeight: 200, overflowY: 'auto' }}>
-                <b>Zoom in/out:</b> Press and hold the SHIFT key and the left
-                mouse button, and then move the mouse backward/forward.
+                <b>Zoom in/out:</b> Press and hold the SHIFT key and the left mouse button, and then
+                move the mouse backward/forward.
                 <br />
-                <b>Pan:</b> Press and hold the CTRL key, click and hold the left
-                mouse button, and then move the mouse in the desired direction.
+                <b>Pan:</b> Press and hold the CTRL key, click and hold the left mouse button, and
+                then move the mouse in the desired direction.
                 <br />
-                <b>Rotate:</b> Press and hold the left mouse button, and then
-                move the mouse in the desired direction to rotate along the x
-                and y axes.
+                <b>Rotate:</b> Press and hold the left mouse button, and then move the mouse in the
+                desired direction to rotate along the x and y axes.
                 <br />
             </div>
         );
@@ -241,54 +210,33 @@ export default class StructureViewerPanel extends React.Component<
                 <div className="row">
                     <Checkbox
                         checked={this.displayBoundMolecules}
-                        onChange={
-                            this
-                                .handleBoundMoleculeChange as React.FormEventHandler<
-                                any
-                            >
-                        }
+                        onChange={this.handleBoundMoleculeChange as React.FormEventHandler<any>}
                     >
                         Display bound molecules{' '}
-                        {this.defaultInfoTooltip(
-                            this.boundMoleculesTooltipContent()
-                        )}
+                        {this.defaultInfoTooltip(this.boundMoleculesTooltipContent())}
                     </Checkbox>
                 </div>
                 <div className="row">
                     <div className="col col-sm-6">
-                        <div className="row">
-                            {this.selectionTitle('Scheme')}
-                        </div>
+                        <div className="row">{this.selectionTitle('Scheme')}</div>
                         <div className="row">
                             <FormControl
                                 className={styles['default-option-select']}
                                 componentClass="select"
                                 value={`${this.proteinScheme}`}
                                 onChange={
-                                    this
-                                        .handleProteinSchemeChange as React.FormEventHandler<
-                                        any
-                                    >
+                                    this.handleProteinSchemeChange as React.FormEventHandler<any>
                                 }
                             >
-                                <option value={ProteinScheme.CARTOON}>
-                                    cartoon
-                                </option>
-                                <option value={ProteinScheme.SPACE_FILLING}>
-                                    space-filling
-                                </option>
-                                <option value={ProteinScheme.TRACE}>
-                                    trace
-                                </option>
+                                <option value={ProteinScheme.CARTOON}>cartoon</option>
+                                <option value={ProteinScheme.SPACE_FILLING}>space-filling</option>
+                                <option value={ProteinScheme.TRACE}>trace</option>
                             </FormControl>
                         </div>
                     </div>
                     <div className="col col-sm-6">
                         <div className="row">
-                            {this.selectionTitle(
-                                'Color',
-                                this.proteinColorTooltipContent()
-                            )}
+                            {this.selectionTitle('Color', this.proteinColorTooltipContent())}
                         </div>
                         <div className="row">
                             <FormControl
@@ -296,20 +244,13 @@ export default class StructureViewerPanel extends React.Component<
                                 componentClass="select"
                                 value={`${this.proteinColor}`}
                                 onChange={
-                                    this
-                                        .handleProteinColorChange as React.FormEventHandler<
-                                        any
-                                    >
+                                    this.handleProteinColorChange as React.FormEventHandler<any>
                                 }
                             >
-                                <option value={ProteinColor.UNIFORM}>
-                                    uniform
-                                </option>
+                                <option value={ProteinColor.UNIFORM}>uniform</option>
                                 <option
                                     value={ProteinColor.SECONDARY_STRUCTURE}
-                                    disabled={
-                                        this.colorBySecondaryStructureDisabled
-                                    }
+                                    disabled={this.colorBySecondaryStructureDisabled}
                                 >
                                     secondary structure
                                 </option>
@@ -347,27 +288,17 @@ export default class StructureViewerPanel extends React.Component<
                 <div className="row">
                     <div className="col col-sm-6">
                         <div className="row">
-                            {this.selectionTitle(
-                                'Side Chain',
-                                this.sideChainTooltipContent()
-                            )}
+                            {this.selectionTitle('Side Chain', this.sideChainTooltipContent())}
                         </div>
                         <div className="row">
                             <FormControl
                                 className={styles['default-option-select']}
                                 componentClass="select"
                                 value={`${this.sideChain}`}
-                                onChange={
-                                    this
-                                        .handleSideChainChange as React.FormEventHandler<
-                                        any
-                                    >
-                                }
+                                onChange={this.handleSideChainChange as React.FormEventHandler<any>}
                             >
                                 <option value={SideChain.ALL}>all</option>
-                                <option value={SideChain.SELECTED}>
-                                    selected
-                                </option>
+                                <option value={SideChain.SELECTED}>selected</option>
                                 <option value={SideChain.NONE}>none</option>
                             </FormControl>
                         </div>
@@ -386,18 +317,11 @@ export default class StructureViewerPanel extends React.Component<
                                 componentClass="select"
                                 value={`${this.mutationColor}`}
                                 onChange={
-                                    this
-                                        .handleMutationColorChange as React.FormEventHandler<
-                                        any
-                                    >
+                                    this.handleMutationColorChange as React.FormEventHandler<any>
                                 }
                             >
-                                <option value={MutationColor.UNIFORM}>
-                                    uniform
-                                </option>
-                                <option value={MutationColor.MUTATION_TYPE}>
-                                    mutation type
-                                </option>
+                                <option value={MutationColor.UNIFORM}>uniform</option>
+                                <option value={MutationColor.MUTATION_TYPE}>mutation type</option>
                                 <option value={MutationColor.NONE}>none</option>
                             </FormControl>
                         </div>
@@ -416,10 +340,7 @@ export default class StructureViewerPanel extends React.Component<
                             overlay={<span>Download PyMol script</span>}
                             placement="top"
                         >
-                            <Button
-                                className="btn-sm"
-                                onClick={this.handlePyMolDownload}
-                            >
+                            <Button className="btn-sm" onClick={this.handlePyMolDownload}>
                                 <i className="fa fa-cloud-download" /> PyMol
                             </Button>
                         </DefaultTooltip>
@@ -428,10 +349,7 @@ export default class StructureViewerPanel extends React.Component<
                 <div className="col col-sm-6">
                     <span className="pull-right">
                         how to pan/zoom/rotate?{' '}
-                        {this.defaultInfoTooltip(
-                            this.helpTooltipContent(),
-                            'left'
-                        )}
+                        {this.defaultInfoTooltip(this.helpTooltipContent(), 'left')}
                     </span>
                 </div>
             </div>
@@ -486,16 +404,11 @@ export default class StructureViewerPanel extends React.Component<
                     <If condition={this.residueWarning.length > 0}>
                         <div className="row">
                             <div className="col col-sm-12 text-center">
-                                <span className="text-danger">
-                                    {this.residueWarning}
-                                </span>
+                                <span className="text-danger">{this.residueWarning}</span>
                             </div>
                         </div>
                     </If>
-                    <div
-                        className="row"
-                        style={{ paddingTop: 5, paddingBottom: 5 }}
-                    >
+                    <div className="row" style={{ paddingTop: 5, paddingBottom: 5 }}>
                         <StructureViewer
                             displayBoundMolecules={this.displayBoundMolecules}
                             proteinScheme={this.proteinScheme}
@@ -550,12 +463,8 @@ export default class StructureViewerPanel extends React.Component<
                             <hr />
                         </div>
                         <div className="row">
-                            <div className="col col-sm-6">
-                                {this.proteinStyleMenu()}
-                            </div>
-                            <div className="col col-sm-6">
-                                {this.mutationStyleMenu()}
-                            </div>
+                            <div className="col col-sm-6">{this.proteinStyleMenu()}</div>
+                            <div className="col col-sm-6">{this.mutationStyleMenu()}</div>
                         </div>
                     </div>
                 </div>
@@ -576,10 +485,7 @@ export default class StructureViewerPanel extends React.Component<
     }
 
     private handleProteinSchemeChange(evt: React.FormEvent<HTMLSelectElement>) {
-        this.proteinScheme = parseInt(
-            (evt.target as HTMLSelectElement).value,
-            10
-        );
+        this.proteinScheme = parseInt((evt.target as HTMLSelectElement).value, 10);
 
         // when the protein scheme is SPACE_FILLING, NC_RAINBOW and SECONDARY_STRUCTURE are not allowed
         if (
@@ -600,10 +506,7 @@ export default class StructureViewerPanel extends React.Component<
     }
 
     private handleProteinColorChange(evt: React.FormEvent<HTMLSelectElement>) {
-        this.proteinColor = parseInt(
-            (evt.target as HTMLSelectElement).value,
-            10
-        );
+        this.proteinColor = parseInt((evt.target as HTMLSelectElement).value, 10);
     }
 
     private handleSideChainChange(evt: React.FormEvent<HTMLSelectElement>) {
@@ -611,10 +514,7 @@ export default class StructureViewerPanel extends React.Component<
     }
 
     private handleMutationColorChange(evt: React.FormEvent<HTMLSelectElement>) {
-        this.mutationColor = parseInt(
-            (evt.target as HTMLSelectElement).value,
-            10
-        );
+        this.mutationColor = parseInt((evt.target as HTMLSelectElement).value, 10);
     }
 
     private handleBoundMoleculeChange() {
@@ -639,15 +539,11 @@ export default class StructureViewerPanel extends React.Component<
         // otherwise toggle the size
         if (this.isIncreasedSize) {
             // TODO: hardocded default value to fix cBioPortal/cbioportal#4561
-            width = this._3dMolDiv
-                ? Math.floor(this._3dMolDiv.offsetWidth * (5 / 3))
-                : 698;
+            width = this._3dMolDiv ? Math.floor(this._3dMolDiv.offsetWidth * (5 / 3)) : 698;
             height = this._3dMolDiv ? this._3dMolDiv.offsetHeight * 2 : 350;
         } else {
             // TODO: hardcoded default value to fix cBioPortal/cbioportal#4561
-            width = this._3dMolDiv
-                ? Math.floor(this._3dMolDiv.offsetWidth / (5 / 3))
-                : 450;
+            width = this._3dMolDiv ? Math.floor(this._3dMolDiv.offsetWidth / (5 / 3)) : 450;
             height = this._3dMolDiv ? this._3dMolDiv.offsetHeight / 2 : 350;
         }
 
@@ -703,16 +599,12 @@ export default class StructureViewerPanel extends React.Component<
             // the number of mapped positions among the selected ones.
             // if the difference is not zero, then it means there is at least one unmapped position
             // among the selected positions.
-            const selectedPositionCount = _.keys(
-                this.selectedMutationsByPosition
-            ).length;
-            const diff =
-                selectedPositionCount - this.mappedSelectedPositions.length;
+            const selectedPositionCount = _.keys(this.selectedMutationsByPosition).length;
+            const diff = selectedPositionCount - this.mappedSelectedPositions.length;
 
             // there is only one position selected, and it cannot be mapped
             if (selectedPositionCount === 1 && diff === 1) {
-                warning =
-                    'Selected mutation cannot be mapped onto this structure';
+                warning = 'Selected mutation cannot be mapped onto this structure';
             }
             // more than one position selected, at least one of them cannot be mapped
             else if (diff > 0) {
@@ -732,9 +624,7 @@ export default class StructureViewerPanel extends React.Component<
 
         this.residueMappingData.forEach(cacheData => {
             if (cacheData && cacheData.data) {
-                const mutations = this.mutationsByPosition[
-                    cacheData.data.queryPosition
-                ];
+                const mutations = this.mutationsByPosition[cacheData.data.queryPosition];
 
                 const highlighted: boolean =
                     (this.props.mutationDataStore &&
@@ -756,10 +646,7 @@ export default class StructureViewerPanel extends React.Component<
                                 position: cacheData.data.pdbPosition,
                             },
                         },
-                        color: getColorForProteinImpactType(
-                            mutations,
-                            this.props
-                        ),
+                        color: getColorForProteinImpactType(mutations, this.props),
                         highlighted,
                     });
                 }
@@ -769,9 +656,7 @@ export default class StructureViewerPanel extends React.Component<
         return _.uniq(residues);
     }
 
-    @computed get residueMappingData():
-        | Array<CacheData<ResidueMapping> | null>
-        | undefined {
+    @computed get residueMappingData(): Array<CacheData<ResidueMapping> | null> | undefined {
         if (this.alignmentIds.length === 0) {
             return undefined;
         }
@@ -826,9 +711,7 @@ export default class StructureViewerPanel extends React.Component<
                 cacheData &&
                 cacheData.data &&
                 this.props.mutationDataStore &&
-                this.props.mutationDataStore.isPositionSelected(
-                    cacheData.data.queryPosition
-                )
+                this.props.mutationDataStore.isPositionSelected(cacheData.data.queryPosition)
             ) {
                 positions.push(cacheData.data.queryPosition);
             }
@@ -841,15 +724,15 @@ export default class StructureViewerPanel extends React.Component<
         let alignmentIds: number[] = [];
 
         if (this.pdbChain && this.props.pdbAlignmentIndex) {
-            const alignments = this.props.pdbAlignmentIndex[
-                this.pdbChain.pdbId
-            ][this.pdbChain.chain];
+            const alignments = this.props.pdbAlignmentIndex[this.pdbChain.pdbId][
+                this.pdbChain.chain
+            ];
             alignmentIds =
                 alignments === undefined
                     ? []
-                    : this.props.pdbAlignmentIndex[this.pdbChain.pdbId][
-                          this.pdbChain.chain
-                      ].map(alignment => alignment.alignmentId);
+                    : this.props.pdbAlignmentIndex[this.pdbChain.pdbId][this.pdbChain.chain].map(
+                          alignment => alignment.alignmentId
+                      );
         }
 
         return _.uniq(alignmentIds);
@@ -857,9 +740,7 @@ export default class StructureViewerPanel extends React.Component<
 
     @computed get mutationsByPosition(): { [pos: number]: Mutation[] } {
         if (this.props.mutationDataStore) {
-            return groupMutationsByProteinStartPos(
-                this.props.mutationDataStore.sortedFilteredData
-            );
+            return groupMutationsByProteinStartPos(this.props.mutationDataStore.sortedFilteredData);
         } else {
             return {};
         }

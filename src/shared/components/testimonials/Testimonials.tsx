@@ -15,8 +15,7 @@ export class TestimonialStore {
     @observable public testimonials: ITestimonial[];
 
     @action incrementIndex() {
-        this.testimonialIndex =
-            (this.testimonialIndex + 1) % this.testimonials.length;
+        this.testimonialIndex = (this.testimonialIndex + 1) % this.testimonials.length;
     }
 
     constructor() {
@@ -62,13 +61,11 @@ export class TestimonialStore {
                 quote: `Thank you for generating such an excellent software. It is very useful for our research.`,
             },
             {
-                cite:
-                    'Scientist, Discovery Bioinformatics, Biotechnology Company',
+                cite: 'Scientist, Discovery Bioinformatics, Biotechnology Company',
                 quote: `Thank you very much for providing and maintaining this great resource.`,
             },
             {
-                cite:
-                    "Postdoctoral Fellow, Harvard Medical School, Children's Hospital Boston",
+                cite: "Postdoctoral Fellow, Harvard Medical School, Children's Hospital Boston",
                 quote: `I want to thank you for the nice, useful and user-friendly interface you have generated
                         and shared with the community.`,
             },

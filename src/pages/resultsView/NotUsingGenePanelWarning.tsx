@@ -13,10 +13,7 @@ export default class NotUsingGenePanelWarning extends React.Component<
     {}
 > {
     readonly ui = MakeMobxView({
-        await: () => [
-            this.props.store.existUnsequencedSamplesInAGene,
-            this.props.store.genes,
-        ],
+        await: () => [this.props.store.existUnsequencedSamplesInAGene, this.props.store.genes],
         render: () => {
             if (this.props.store.existUnsequencedSamplesInAGene.result) {
                 let message = '';

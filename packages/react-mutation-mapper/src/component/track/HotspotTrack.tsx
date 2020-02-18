@@ -32,10 +32,7 @@ export function hotspotTooltip(
     hotspotIndex: IHotspotIndex,
     hotspots: Hotspot[]
 ) {
-    const hotspotsRecurrent = filterRecurrentHotspotsByMutations(
-        mutations,
-        hotspotIndex
-    );
+    const hotspotsRecurrent = filterRecurrentHotspotsByMutations(mutations, hotspotIndex);
 
     const hotspots3d = filter3dHotspotsByMutations(mutations, hotspotIndex);
 
@@ -68,13 +65,9 @@ export function getHotspotImage() {
 }
 
 @observer
-export default class HotspotTrack extends React.Component<
-    HotspotTrackProps,
-    {}
-> {
+export default class HotspotTrack extends React.Component<HotspotTrackProps, {}> {
     @computed get hotspotSpecs(): TrackItemSpec[] {
-        const filteredHotspotsByProteinPosStart = this.props.store
-            .hotspotsByPosition;
+        const filteredHotspotsByProteinPosStart = this.props.store.hotspotsByPosition;
 
         if (!_.isEmpty(filteredHotspotsByProteinPosStart)) {
             return _.keys(filteredHotspotsByProteinPosStart)

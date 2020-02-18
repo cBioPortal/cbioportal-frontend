@@ -28,10 +28,7 @@ type ProteinChainViewProps = {
 
 const CHAIN_ID_PREFIX = 'chain-';
 @observer
-export default class ProteinChainView extends React.Component<
-    ProteinChainViewProps,
-    {}
-> {
+export default class ProteinChainView extends React.Component<ProteinChainViewProps, {}> {
     @observable private rowHeight = 6;
     @observable private rowPadding = 3;
     private chainComponents: { [id: string]: ProteinChain } = {};
@@ -41,10 +38,7 @@ export default class ProteinChainView extends React.Component<
         const ret: ProteinChainSpec[][] = [[]];
         const overlapSets: HotspotSet[] = [new HotspotSet()];
         for (const chain of this.props.chains) {
-            let chosenRow = _.findIndex(
-                overlapSets,
-                set => !set.check(chain.start, chain.end)
-            ); // first row that can accomodate it
+            let chosenRow = _.findIndex(overlapSets, set => !set.check(chain.start, chain.end)); // first row that can accomodate it
             if (chosenRow === -1) {
                 chosenRow = ret.length;
                 ret.push([]);
@@ -98,9 +92,7 @@ export default class ProteinChainView extends React.Component<
                             <ProteinChain
                                 ref={proteinChain => {
                                     if (proteinChain !== null) {
-                                        this.chainComponents[
-                                            className
-                                        ] = proteinChain;
+                                        this.chainComponents[className] = proteinChain;
                                     }
                                 }}
                                 positionToX={this.positionToX}
@@ -112,9 +104,7 @@ export default class ProteinChainView extends React.Component<
                                 gaps={chain.gaps}
                                 opacity={chain.opacity}
                                 uid={uid}
-                                highlighted={
-                                    this.props.selectedChainUid === chain.uid
-                                }
+                                highlighted={this.props.selectedChainUid === chain.uid}
                             />
                         );
                     })}
@@ -126,10 +116,7 @@ export default class ProteinChainView extends React.Component<
     }
 
     @computed get svgHeight(): number {
-        return (
-            this.rows.length * this.rowHeight +
-            (this.rows.length - 1) * this.rowPadding
-        );
+        return this.rows.length * this.rowHeight + (this.rows.length - 1) * this.rowPadding;
     }
 
     private onMouseOver(e: SyntheticEvent<any>) {
@@ -143,14 +130,8 @@ export default class ProteinChainView extends React.Component<
                     {
                         x: parseInt(target.getAttribute('x') || '0', 10),
                         y: parseInt(target.getAttribute('y') || '0', 10),
-                        width: parseInt(
-                            target.getAttribute('width') || '0',
-                            10
-                        ),
-                        height: parseInt(
-                            target.getAttribute('height') || '0',
-                            10
-                        ),
+                        width: parseInt(target.getAttribute('width') || '0', 10),
+                        height: parseInt(target.getAttribute('height') || '0', 10),
                     },
                     chainComponent.props.uid
                 );

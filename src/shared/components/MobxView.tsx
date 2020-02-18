@@ -49,9 +49,7 @@ export function MakeMobxView(params: {
     return observable({
         get status() {
             const awaitElements = params.await();
-            const promiseStatus = getMobxPromiseGroupStatus(
-                ...awaitElements
-            ) as any;
+            const promiseStatus = getMobxPromiseGroupStatus(...awaitElements) as any;
             return promiseStatus;
         },
         get isComplete() {

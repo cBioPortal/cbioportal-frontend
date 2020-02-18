@@ -16,9 +16,7 @@ export function makePlotData(
         majorCategoryData = horzData;
         minorCategoryData = vertData;
     }
-    const sampleToMinorCategories: { [sampleKey: string]: string[] } = _.chain(
-        minorCategoryData
-    )
+    const sampleToMinorCategories: { [sampleKey: string]: string[] } = _.chain(minorCategoryData)
         .keyBy('uniqueSampleKey')
         .mapValues(d => ([] as any).concat(d.value))
         .value();
@@ -37,8 +35,7 @@ export function makePlotData(
             categoryToCounts[cat] = categoryToCounts[cat] || {};
             for (const countCat of majorCategories) {
                 usedMajorCategories[countCat] = true;
-                categoryToCounts[cat][countCat] =
-                    categoryToCounts[cat][countCat] || 0;
+                categoryToCounts[cat][countCat] = categoryToCounts[cat][countCat] || 0;
                 categoryToCounts[cat][countCat] += 1;
             }
         }
@@ -58,13 +55,9 @@ export function makePlotData(
     // turn counts into data
     let data = _.map(
         categoryToCounts,
-        (
-            countsMap: { [majorCategory: string]: number },
-            minorCategory: string
-        ) => {
+        (countsMap: { [majorCategory: string]: number }, minorCategory: string) => {
             let counts = _.map(countsMap, (count, majorCategory) => {
-                const percentage =
-                    (count / majorCategoryTotalCounts[majorCategory]) * 100;
+                const percentage = (count / majorCategoryTotalCounts[majorCategory]) * 100;
                 return {
                     majorCategory,
                     count,
@@ -127,11 +120,7 @@ export function makeBarSpecs(
     }
     return data.map(({ minorCategory, counts }) => {
         const fill = getColor(minorCategory);
-        const sortedCounts = sortDataByCategory(
-            counts,
-            d => d.majorCategory,
-            majorCategoryOrder
-        );
+        const sortedCounts = sortDataByCategory(counts, d => d.majorCategory, majorCategoryOrder);
         return {
             fill,
             data: sortedCounts.map((obj, index) => ({

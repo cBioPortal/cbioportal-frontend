@@ -121,11 +121,7 @@ export default class TruncatedTextWithTooltipSVG extends React.Component<
         } = this.props;
 
         let transformApplied = undefined;
-        if (
-            transform &&
-            this.props.x !== undefined &&
-            this.props.y !== undefined
-        ) {
+        if (transform && this.props.x !== undefined && this.props.y !== undefined) {
             transformApplied = transform(this.props.x, this.props.y);
         }
 
@@ -142,34 +138,29 @@ export default class TruncatedTextWithTooltipSVG extends React.Component<
                     {this.props.prefixTspans}
                     {this.truncatedText}
                 </text>
-                {(this.textReport.isTruncated ||
-                    this.props.alwaysShowTooltip) &&
-                    this.tooltipOpen && (
-                        <Portal isOpened={true} node={document.body}>
-                            <Popover
-                                arrowOffsetTop={17}
-                                className={classnames(
-                                    'cbioportal-frontend',
-                                    'cbioTooltip',
-                                    styles.Tooltip
-                                )}
-                                positionLeft={
-                                    this.mousePosition.x +
-                                    (tooltipPlacement === 'left' ? -8 : 8)
-                                }
-                                positionTop={this.mousePosition.y - 17}
-                                style={{
-                                    transform:
-                                        tooltipPlacement === 'left'
-                                            ? 'translate(-100%,0%)'
-                                            : undefined,
-                                }}
-                                placement={tooltipPlacement}
-                            >
-                                {this.tooltipElt}
-                            </Popover>
-                        </Portal>
-                    )}
+                {(this.textReport.isTruncated || this.props.alwaysShowTooltip) && this.tooltipOpen && (
+                    <Portal isOpened={true} node={document.body}>
+                        <Popover
+                            arrowOffsetTop={17}
+                            className={classnames(
+                                'cbioportal-frontend',
+                                'cbioTooltip',
+                                styles.Tooltip
+                            )}
+                            positionLeft={
+                                this.mousePosition.x + (tooltipPlacement === 'left' ? -8 : 8)
+                            }
+                            positionTop={this.mousePosition.y - 17}
+                            style={{
+                                transform:
+                                    tooltipPlacement === 'left' ? 'translate(-100%,0%)' : undefined,
+                            }}
+                            placement={tooltipPlacement}
+                        >
+                            {this.tooltipElt}
+                        </Popover>
+                    </Portal>
+                )}
             </>
         );
     }

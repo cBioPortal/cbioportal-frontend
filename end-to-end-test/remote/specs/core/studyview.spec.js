@@ -1,22 +1,14 @@
 const assert = require('assert');
 const expect = require('chai').expect;
 const waitForOncoprint = require('../../../shared/specUtils').waitForOncoprint;
-const goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-const waitForNetworkQuiet = require('../../../shared/specUtils')
-    .waitForNetworkQuiet;
-const assertScreenShotMatch = require('../../../shared/lib/testUtils')
-    .assertScreenShotMatch;
-const toStudyViewSummaryTab = require('../../../shared/specUtils')
-    .toStudyViewSummaryTab;
-const toStudyViewClinicalDataTab = require('../../../shared/specUtils')
-    .toStudyViewClinicalDataTab;
-const removeAllStudyViewFilters = require('../../../shared/specUtils')
-    .removeAllStudyViewFilters;
-const getNumberOfStudyViewCharts = require('../../../shared/specUtils')
-    .getNumberOfStudyViewCharts;
-const getTextFromElement = require('../../../shared/specUtils')
-    .getTextFromElement;
+const goToUrlAndSetLocalStorage = require('../../../shared/specUtils').goToUrlAndSetLocalStorage;
+const waitForNetworkQuiet = require('../../../shared/specUtils').waitForNetworkQuiet;
+const assertScreenShotMatch = require('../../../shared/lib/testUtils').assertScreenShotMatch;
+const toStudyViewSummaryTab = require('../../../shared/specUtils').toStudyViewSummaryTab;
+const toStudyViewClinicalDataTab = require('../../../shared/specUtils').toStudyViewClinicalDataTab;
+const removeAllStudyViewFilters = require('../../../shared/specUtils').removeAllStudyViewFilters;
+const getNumberOfStudyViewCharts = require('../../../shared/specUtils').getNumberOfStudyViewCharts;
+const getTextFromElement = require('../../../shared/specUtils').getTextFromElement;
 const waitForStudyViewSelectedInfo = require('../../../shared/specUtils')
     .waitForStudyViewSelectedInfo;
 
@@ -30,11 +22,9 @@ const ADD_CHART_BUTTON = "[data-test='add-charts-button']";
 const ADD_CHART_CLINICAL_TAB = '.addChartTabs a.tabAnchor_Clinical';
 const ADD_CHART_GENOMIC_TAB = '.addChartTabs a.tabAnchor_Genomic';
 const ADD_CHART_CUSTOM_DATA_TAB = '.addChartTabs a.tabAnchor_Custom_Data';
-const ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON =
-    "[data-test='CustomCaseSetSubmitButton']";
+const ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON = "[data-test='CustomCaseSetSubmitButton']";
 const ADD_CHART_CUSTOM_GROUPS_TEXTAREA = "[data-test='CustomCaseSetInput']";
-const STUDY_SUMMARY_RAW_DATA_DOWNLOAD =
-    "[data-test='studySummaryRawDataDownloadIcon']";
+const STUDY_SUMMARY_RAW_DATA_DOWNLOAD = "[data-test='studySummaryRawDataDownloadIcon']";
 const CNA_GENES_TABLE = "[data-test='cna-genes-table']";
 const CANCER_GENE_FILTER_ICON = "[data-test='cancer-gene-filter']";
 
@@ -48,10 +38,7 @@ describe('study laml_tcga tests', () => {
         goToUrlAndSetLocalStorage(url);
     });
     it('study view laml_tcga', () => {
-        browser.waitForVisible(
-            "[data-test='summary-tab-content']",
-            WAIT_FOR_VISIBLE_TIMEOUT
-        );
+        browser.waitForVisible("[data-test='summary-tab-content']", WAIT_FOR_VISIBLE_TIMEOUT);
         waitForNetworkQuiet();
         // screenshot seems to occasionally fail because of tooltip showing up
         // see "need-fixing" tests
@@ -60,10 +47,7 @@ describe('study laml_tcga tests', () => {
     });
     it('study view laml_tcga clinical data clicked', () => {
         browser.click('.tabAnchor_clinicalData');
-        browser.waitForVisible(
-            "[data-test='clinical-data-tab-content']",
-            WAIT_FOR_VISIBLE_TIMEOUT
-        );
+        browser.waitForVisible("[data-test='clinical-data-tab-content']", WAIT_FOR_VISIBLE_TIMEOUT);
         waitForNetworkQuiet();
         const res = browser.checkElement('#mainColumn');
         assertScreenShotMatch(res);
@@ -100,9 +84,7 @@ describe('study laml_tcga tests', () => {
         waitForNetworkQuiet();
         // Click on three options
         browser.click("[data-test='add-chart-option-fab'] input");
-        browser.click(
-            "[data-test='add-chart-option-basophils-cell-count'] input"
-        );
+        browser.click("[data-test='add-chart-option-basophils-cell-count'] input");
         browser.click("[data-test='add-chart-option-blast-count'] input");
 
         // Pause a bit time to let the page render the charts
@@ -112,10 +94,7 @@ describe('study laml_tcga tests', () => {
     });
 
     it('when adding chart with categories more than the pie2Table threshold, the pie chart should be converted to table', () => {
-        browser.setValue(
-            "[data-test='fixed-header-table-search-input']",
-            'Other Sample ID'
-        );
+        browser.setValue("[data-test='fixed-header-table-search-input']", 'Other Sample ID');
         browser.waitForVisible(
             "[data-test='add-chart-option-other-sample-id'] input",
             WAIT_FOR_VISIBLE_TIMEOUT
@@ -129,9 +108,7 @@ describe('study laml_tcga tests', () => {
             "[data-test='chart-container-OTHER_SAMPLE_ID']",
             WAIT_FOR_VISIBLE_TIMEOUT
         );
-        const res = browser.checkElement(
-            "[data-test='chart-container-OTHER_SAMPLE_ID']"
-        );
+        const res = browser.checkElement("[data-test='chart-container-OTHER_SAMPLE_ID']");
         assertScreenShotMatch(res);
     });
 
@@ -173,15 +150,13 @@ describe('study laml_tcga tests', () => {
             }
             browser.click(ADD_CHART_GENOMIC_TAB);
 
-            const chosenCheckbox = browser.elements(
-                '.addChartTabs .add-chart-option input'
-            ).value[0];
+            const chosenCheckbox = browser.elements('.addChartTabs .add-chart-option input')
+                .value[0];
             const isSelected = chosenCheckbox.isSelected();
 
             chosenCheckbox.click();
             assert(
-                numOfChartsBeforeAdding ===
-                    getNumberOfStudyViewCharts() + (isSelected ? 1 : -1)
+                numOfChartsBeforeAdding === getNumberOfStudyViewCharts() + (isSelected ? 1 : -1)
             );
         });
         it('chart in clinical tab can be updated', () => {
@@ -192,15 +167,13 @@ describe('study laml_tcga tests', () => {
             }
             browser.click(ADD_CHART_CLINICAL_TAB);
 
-            const chosenCheckbox = browser.elements(
-                '.addChartTabs .add-chart-option input'
-            ).value[0];
+            const chosenCheckbox = browser.elements('.addChartTabs .add-chart-option input')
+                .value[0];
             const isSelected = chosenCheckbox.isSelected();
 
             chosenCheckbox.click();
             assert(
-                numOfChartsBeforeAdding ===
-                    getNumberOfStudyViewCharts() + (isSelected ? 1 : -1)
+                numOfChartsBeforeAdding === getNumberOfStudyViewCharts() + (isSelected ? 1 : -1)
             );
         });
         describe('add custom chart', () => {
@@ -213,39 +186,26 @@ describe('study laml_tcga tests', () => {
                 browser.click(ADD_CHART_CUSTOM_DATA_TAB);
             });
             it('add chart button should be disabled when no content in the textarea', () => {
-                assert(
-                    !browser.isEnabled(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON)
-                );
+                assert(!browser.isEnabled(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON));
             });
             it('add chart button should be disabled when content is invalid', () => {
                 browser.setValue(ADD_CHART_CUSTOM_GROUPS_TEXTAREA, 'test');
                 // pause to wait for the content validation
                 browser.pause();
-                assert(
-                    !browser.isEnabled(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON)
-                );
+                assert(!browser.isEnabled(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON));
             });
             it('add chart button should be enabled when content is valid', () => {
-                browser.setValue(
-                    ADD_CHART_CUSTOM_GROUPS_TEXTAREA,
-                    'laml_tcga:TCGA-AB-2802-03'
-                );
+                browser.setValue(ADD_CHART_CUSTOM_GROUPS_TEXTAREA, 'laml_tcga:TCGA-AB-2802-03');
                 // pause to wait for the content validation
                 browser.pause();
-                assert(
-                    browser.isEnabled(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON)
-                );
+                assert(browser.isEnabled(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON));
             });
             it('a new chart should be added and filtered', () => {
-                browser.waitForEnabled(
-                    ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON
-                );
+                browser.waitForEnabled(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON);
                 const beforeClick = getNumberOfStudyViewCharts();
                 browser.click(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON);
 
-                browser.waitForVisible(
-                    "[data-test='chart-container-CUSTOM_FILTERS_4']"
-                );
+                browser.waitForVisible("[data-test='chart-container-CUSTOM_FILTERS_4']");
 
                 // it should not impact any other charts
                 assert(beforeClick + 1 === getNumberOfStudyViewCharts());
@@ -276,10 +236,7 @@ describe('add chart should not be shown in other irrelevant tabs', () => {
         // This is one of the studies have MDACC heatmap enabled
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/study?id=brca_tcga_pub`);
         waitForNetworkQuiet(30000);
-        browser.waitForVisible(
-            '#studyViewTabs a.tabAnchor_heatmaps',
-            WAIT_FOR_VISIBLE_TIMEOUT
-        );
+        browser.waitForVisible('#studyViewTabs a.tabAnchor_heatmaps', WAIT_FOR_VISIBLE_TIMEOUT);
         browser.click('#studyViewTabs a.tabAnchor_heatmaps');
         assert(!browser.isExisting(ADD_CHART_BUTTON));
     });
@@ -359,15 +316,10 @@ describe('cancer gene filter', () => {
             `${CNA_GENES_TABLE} [data-test='gene-column-header']`,
             WAIT_FOR_VISIBLE_TIMEOUT
         );
+        assert.equal(browser.isExisting(`${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`), true);
         assert.equal(
-            browser.isExisting(`${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`),
-            true
-        );
-        assert.equal(
-            browser.getCssProperty(
-                `${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`,
-                'color'
-            ).parsed.hex,
+            browser.getCssProperty(`${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`, 'color').parsed
+                .hex,
             '#000000'
         );
     });
@@ -380,10 +332,8 @@ describe('cancer gene filter', () => {
         // disable the filter and check
         browser.click(`${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`);
         assert.equal(
-            browser.getCssProperty(
-                `${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`,
-                'color'
-            ).parsed.hex,
+            browser.getCssProperty(`${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`, 'color').parsed
+                .hex,
             '#bebebe'
         );
         assertScreenShotMatch(checkElementWithMouseDisabled(CNA_GENES_TABLE));
@@ -404,30 +354,19 @@ describe('crc_msk_2017 study tests', () => {
         waitForNetworkQuiet();
 
         const msiScoreRow = "[data-test='add-chart-option-msi-score']";
-        browser.setValue(
-            "[data-test='fixed-header-table-search-input']",
-            'msi'
-        );
+        browser.setValue("[data-test='fixed-header-table-search-input']", 'msi');
         browser.waitForVisible(msiScoreRow);
 
-        browser.waitForVisible(
-            msiScoreRow + ' input',
-            WAIT_FOR_VISIBLE_TIMEOUT
-        );
+        browser.waitForVisible(msiScoreRow + ' input', WAIT_FOR_VISIBLE_TIMEOUT);
         browser.click(msiScoreRow + ' input');
         // Close the tooltip
 
         browser.waitForVisible(ADD_CHART_BUTTON, WAIT_FOR_VISIBLE_TIMEOUT);
         browser.click(ADD_CHART_BUTTON);
 
-        browser.waitForVisible(
-            "[data-test='chart-container-MSI_SCORE']",
-            WAIT_FOR_VISIBLE_TIMEOUT
-        );
+        browser.waitForVisible("[data-test='chart-container-MSI_SCORE']", WAIT_FOR_VISIBLE_TIMEOUT);
 
-        const res = checkElementWithMouseDisabled(
-            "[data-test='chart-container-MSI_SCORE'] svg"
-        );
+        const res = checkElementWithMouseDisabled("[data-test='chart-container-MSI_SCORE'] svg");
         assertScreenShotMatch(res);
 
         toStudyViewClinicalDataTab();
@@ -466,11 +405,7 @@ describe('study view lgg_tcga study tests', () => {
                 WAIT_FOR_VISIBLE_TIMEOUT
             );
 
-            assert(
-                browser.isSelected(
-                    barChart + ' .chartHeader .logScaleCheckbox input'
-                )
-            );
+            assert(browser.isSelected(barChart + ' .chartHeader .logScaleCheckbox input'));
         });
     });
     describe('pie chart', () => {
@@ -503,14 +438,10 @@ describe('study view lgg_tcga study tests', () => {
                 browser.moveToObject('body', 0, 0);
                 // Remove and add the table back to reset the table to prevent any side effects created in other tests
                 browser.click(ADD_CHART_BUTTON);
-                browser.waitForVisible(
-                    ADD_CHART_CLINICAL_TAB,
-                    WAIT_FOR_VISIBLE_TIMEOUT
-                );
+                browser.waitForVisible(ADD_CHART_CLINICAL_TAB, WAIT_FOR_VISIBLE_TIMEOUT);
                 browser.click(ADD_CHART_CLINICAL_TAB);
 
-                const option =
-                    "[data-test='add-chart-option-cancer-type-detailed'] input";
+                const option = "[data-test='add-chart-option-cancer-type-detailed'] input";
 
                 browser.setValue(
                     "[data-test='fixed-header-table-search-input']",
@@ -552,9 +483,7 @@ describe('check the simple filter(filterAttributeId, filterValues) is working pr
         waitForNetworkQuiet();
         browser.moveToObject('body', 0, 0);
 
-        const res = checkElementWithMouseDisabled(
-            "[data-test='study-view-header']"
-        );
+        const res = checkElementWithMouseDisabled("[data-test='study-view-header']");
         assertScreenShotMatch(res);
     });
 });
@@ -571,39 +500,21 @@ describe('the gene panel is loaded properly', () => {
             WAIT_FOR_VISIBLE_TIMEOUT
         );
 
-        browser.moveToObject(
-            `${CNA_GENES_TABLE} [data-test='freq-cell']:first-child`
-        );
+        browser.moveToObject(`${CNA_GENES_TABLE} [data-test='freq-cell']:first-child`);
 
         browser.waitForVisible(tooltipSelector, WAIT_FOR_VISIBLE_TIMEOUT);
 
         // the gene panel ID IMPACT341 should be listed
         browser.getText(tooltipSelector).includes('IMPACT341');
 
-        browser.click(
-            `${tooltipSelector} a[data-test='gene-panel-linkout-IMPACT341']`
-        );
+        browser.click(`${tooltipSelector} a[data-test='gene-panel-linkout-IMPACT341']`);
 
         // the modal title should show gene panel ID
-        browser.waitForVisible(
-            `[data-test="gene-panel-modal-title"]`,
-            WAIT_FOR_VISIBLE_TIMEOUT
-        );
-        assert.equal(
-            browser.getText(`[data-test="gene-panel-modal-title"]`),
-            'IMPACT341'
-        );
+        browser.waitForVisible(`[data-test="gene-panel-modal-title"]`, WAIT_FOR_VISIBLE_TIMEOUT);
+        assert.equal(browser.getText(`[data-test="gene-panel-modal-title"]`), 'IMPACT341');
 
         // test whether the gene info has been loaded correctly
-        browser.waitForVisible(
-            `[data-test="gene-panel-modal-body"]`,
-            WAIT_FOR_VISIBLE_TIMEOUT
-        );
-        assert.equal(
-            browser.getText(
-                '[data-test="gene-panel-modal-body"] p:first-child'
-            ),
-            'ABL1'
-        );
+        browser.waitForVisible(`[data-test="gene-panel-modal-body"]`, WAIT_FOR_VISIBLE_TIMEOUT);
+        assert.equal(browser.getText('[data-test="gene-panel-modal-body"] p:first-child'), 'ABL1');
     });
 });

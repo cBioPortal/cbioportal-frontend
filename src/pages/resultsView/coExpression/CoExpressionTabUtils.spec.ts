@@ -43,17 +43,10 @@ describe('CoExpressionTabUtils', () => {
         it('returns empty if no valid profiles', () => {
             assert.equal(filterAndSortProfiles([profiles[0]]).length, 0);
             assert.equal(filterAndSortProfiles([profiles[3]]).length, 0);
-            assert.equal(
-                filterAndSortProfiles([profiles[0], profiles[3], profiles[4]])
-                    .length,
-                0
-            );
+            assert.equal(filterAndSortProfiles([profiles[0], profiles[3], profiles[4]]).length, 0);
         });
         it('returns valid profiles, with rna seq sorted to the top', () => {
-            assert.deepEqual(filterAndSortProfiles(profiles), [
-                profiles[1],
-                profiles[2],
-            ]);
+            assert.deepEqual(filterAndSortProfiles(profiles), [profiles[1], profiles[2]]);
         });
     });
     describe('getGenesetProfiles', () => {
@@ -63,11 +56,7 @@ describe('CoExpressionTabUtils', () => {
         it('returns empty if no valid profiles', () => {
             assert.equal(getGenesetProfiles([profiles[0]]).length, 0);
             assert.equal(getGenesetProfiles([profiles[1]]).length, 0);
-            assert.equal(
-                getGenesetProfiles([profiles[1], profiles[2], profiles[4]])
-                    .length,
-                0
-            );
+            assert.equal(getGenesetProfiles([profiles[1], profiles[2], profiles[4]]).length, 0);
         });
         it('returns valid profiles', () => {
             assert.deepEqual(getGenesetProfiles(profiles), [profiles[5]]);
@@ -75,10 +64,10 @@ describe('CoExpressionTabUtils', () => {
     });
     describe('sortProfiles', () => {
         it('sorts profiles, with rna seq to the top', () => {
-            assert.deepEqual(
-                sortRnaSeqProfilesToTop([profiles[2], profiles[1]]),
-                [profiles[1], profiles[2]]
-            );
+            assert.deepEqual(sortRnaSeqProfilesToTop([profiles[2], profiles[1]]), [
+                profiles[1],
+                profiles[2],
+            ]);
         });
     });
 });

@@ -73,10 +73,7 @@ export function substitutePhysicalStudiesForVirtualStudies(
     let physicalStudies: string[] = [];
 
     //if a study is a virtual study, substitute its physical study ids
-    const virtualStudiesKeyedById = _.keyBy(
-        virtualStudies,
-        virtualStudy => virtualStudy.id
-    );
+    const virtualStudiesKeyedById = _.keyBy(virtualStudies, virtualStudy => virtualStudy.id);
     cancerStudyIds.forEach(studyId => {
         if (studyId in virtualStudiesKeyedById) {
             const virtualStudy = virtualStudiesKeyedById[studyId];
@@ -98,10 +95,7 @@ export function populateSampleSpecificationsFromVirtualStudies(
     samplesSpecifications: SamplesSpecificationElement[],
     virtualStudies: VirtualStudy[]
 ) {
-    const virtualStudiesKeyedById = _.keyBy(
-        virtualStudies,
-        virtualStudy => virtualStudy.id
-    );
+    const virtualStudiesKeyedById = _.keyBy(virtualStudies, virtualStudy => virtualStudy.id);
     const samplesSpecificationsKeyedByStudyId = _.keyBy(
         samplesSpecifications,
         spec => spec.studyId
@@ -159,16 +153,14 @@ export function parseSamplesSpecifications(
             } as SamplesSpecificationElement;
         });
     } else if (sample_list_ids) {
-        samplesSpecifications = sample_list_ids
-            .split(',')
-            .map((studyListPair: string) => {
-                const pair = studyListPair.split(':');
-                return {
-                    studyId: pair[0],
-                    sampleListId: pair[1],
-                    sampleId: undefined,
-                };
-            });
+        samplesSpecifications = sample_list_ids.split(',').map((studyListPair: string) => {
+            const pair = studyListPair.split(':');
+            return {
+                studyId: pair[0],
+                sampleListId: pair[1],
+                sampleId: undefined,
+            };
+        });
     } else if (case_set_id !== 'all') {
         // by definition if there is a case_set_id, there is only one study
         samplesSpecifications = cancerStudyIds.map((studyId: string) => {

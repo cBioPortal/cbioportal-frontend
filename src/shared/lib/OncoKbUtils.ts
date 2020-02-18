@@ -77,10 +77,7 @@ export function initEvidence() {
     };
 }
 
-export function getEvidenceQuery(
-    mutation: Mutation,
-    oncoKbData: IOncoKbData
-): Query | undefined {
+export function getEvidenceQuery(mutation: Mutation, oncoKbData: IOncoKbData): Query | undefined {
     // return null in case sampleToTumorMap is null
     return oncoKbData.uniqueSampleKeyToTumorType
         ? generateQueryVariant(
@@ -142,26 +139,16 @@ export function processEvidence(evidences: EvidenceQueryRes[]) {
                     datum.alteration.push(_datum);
                 } else if (evidence.levelOfEvidence) {
                     //if evidence has level information, that means this is treatment evidence.
-                    if (
-                        [LevelOfEvidence.LEVEL_0].indexOf(
-                            evidence.levelOfEvidence
-                        ) === -1
-                    ) {
+                    if ([LevelOfEvidence.LEVEL_0].indexOf(evidence.levelOfEvidence) === -1) {
                         var _treatment: any = {};
                         _treatment.alterations = evidence.alterations;
                         _treatment.articles = evidence.articles;
-                        _treatment.tumorType = getTumorTypeFromEvidence(
-                            evidence
-                        );
+                        _treatment.tumorType = getTumorTypeFromEvidence(evidence);
                         _treatment.level = evidence.levelOfEvidence;
                         _treatment.content = evidence.treatments;
                         _treatment.description = description || '';
 
-                        if (
-                            LEVELS.sensitivity.indexOf(
-                                getLevel(evidence.levelOfEvidence)
-                            ) !== -1
-                        ) {
+                        if (LEVELS.sensitivity.indexOf(getLevel(evidence.levelOfEvidence)) !== -1) {
                             sensitivityTreatments.push(_treatment);
                         } else {
                             resistanceTreatments.push(_treatment);

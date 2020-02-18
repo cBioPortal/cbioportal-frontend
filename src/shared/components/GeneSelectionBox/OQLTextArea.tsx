@@ -3,28 +3,12 @@ import * as _ from 'lodash';
 import { observer } from 'mobx-react';
 import classnames from 'classnames';
 import styles from './styles.module.scss';
-import {
-    observable,
-    computed,
-    action,
-    reaction,
-    IReactionDisposer,
-} from 'mobx';
+import { observable, computed, action, reaction, IReactionDisposer } from 'mobx';
 import { Gene } from 'shared/api/generated/CBioPortalAPI';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
-import {
-    GeneReplacement,
-    Focus,
-    normalizeQuery,
-} from 'shared/components/query/QueryStore';
-import {
-    getEmptyGeneValidationResult,
-    getFocusOutText,
-    getOQL,
-} from './GeneSelectionBoxUtils';
-import GeneSymbolValidator, {
-    GeneValidationResult,
-} from './GeneSymbolValidator';
+import { GeneReplacement, Focus, normalizeQuery } from 'shared/components/query/QueryStore';
+import { getEmptyGeneValidationResult, getFocusOutText, getOQL } from './GeneSelectionBoxUtils';
+import GeneSymbolValidator, { GeneValidationResult } from './GeneSymbolValidator';
 import autobind from 'autobind-decorator';
 import bind from 'bind-decorator';
 
@@ -60,10 +44,7 @@ export type OQL = {
 };
 
 @observer
-export default class OQLTextArea extends React.Component<
-    IGeneSelectionBoxProps,
-    {}
-> {
+export default class OQLTextArea extends React.Component<IGeneSelectionBoxProps, {}> {
     private disposers: IReactionDisposer[];
 
     // Need to record the textarea value due to SyntheticEvent restriction due to debounce
@@ -85,11 +66,7 @@ export default class OQLTextArea extends React.Component<
         if (this.currentTextAreaValue === '') {
             this.geneQuery = '';
             if (this.props.callback) {
-                this.props.callback(
-                    getOQL(''),
-                    getEmptyGeneValidationResult(),
-                    this.geneQuery
-                );
+                this.props.callback(getOQL(''), getEmptyGeneValidationResult(), this.geneQuery);
             }
         }
     }, 500);
@@ -113,10 +90,7 @@ export default class OQLTextArea extends React.Component<
             reaction(
                 () => this.props.inputGeneQuery,
                 inputGeneQuery => {
-                    if (
-                        (inputGeneQuery || '').toUpperCase() !==
-                        this.geneQuery.toUpperCase()
-                    ) {
+                    if ((inputGeneQuery || '').toUpperCase() !== this.geneQuery.toUpperCase()) {
                         if (!this.props.validateInputGeneQuery) {
                             this.skipGenesValidation = true;
                         }
@@ -170,9 +144,7 @@ export default class OQLTextArea extends React.Component<
     }
 
     private getFocusOutValue() {
-        return getFocusOutText(
-            getOQL(this.geneQuery).query.map(query => query.gene)
-        );
+        return getFocusOutText(getOQL(this.geneQuery).query.map(query => query.gene));
     }
 
     @computed private get textAreaClasses() {
@@ -192,9 +164,7 @@ export default class OQLTextArea extends React.Component<
                 classNames.push(styles.default);
                 break;
         }
-        this.geneQuery
-            ? classNames.push(styles.notEmpty)
-            : classNames.push(styles.empty);
+        this.geneQuery ? classNames.push(styles.notEmpty) : classNames.push(styles.empty);
         return classNames;
     }
 
@@ -221,15 +191,11 @@ export default class OQLTextArea extends React.Component<
 
         if (
             oql.error !== undefined &&
-            (this.props.focus === undefined ||
-                this.props.focus === Focus.ShouldFocus) &&
+            (this.props.focus === undefined || this.props.focus === Focus.ShouldFocus) &&
             this.textAreaRef.current
         ) {
             this.textAreaRef.current.focus();
-            this.textAreaRef.current.setSelectionRange(
-                oql.error.start,
-                oql.error.end
-            );
+            this.textAreaRef.current.setSelectionRange(oql.error.start, oql.error.end);
         }
     }
 
@@ -258,9 +224,8 @@ export default class OQLTextArea extends React.Component<
         let updatedQuery = normalizeQuery(
             this.getTextAreaValue()
                 .toUpperCase()
-                .replace(
-                    new RegExp(`\\b${oldSymbol.toUpperCase()}\\b`, 'g'),
-                    () => newSymbol.toUpperCase()
+                .replace(new RegExp(`\\b${oldSymbol.toUpperCase()}\\b`, 'g'), () =>
+                    newSymbol.toUpperCase()
                 )
         );
         this.updateGeneQuery(updatedQuery);
@@ -294,9 +259,7 @@ export default class OQLTextArea extends React.Component<
                         updateGeneQuery={this.updateGeneQuery}
                         afterValidation={this.afterGeneSymbolValidation}
                         replaceGene={this.replaceGene}
-                        errorMessageOnly={
-                            this.props.location === GeneBoxType.STUDY_VIEW_PAGE
-                        }
+                        errorMessageOnly={this.props.location === GeneBoxType.STUDY_VIEW_PAGE}
                     >
                         {this.props.children}
                     </GeneSymbolValidator>

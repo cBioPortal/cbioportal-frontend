@@ -1,8 +1,5 @@
 import * as React from 'react';
-import {
-    Column,
-    default as LazyMobXTable,
-} from 'shared/components/lazyMobXTable/LazyMobXTable';
+import { Column, default as LazyMobXTable } from 'shared/components/lazyMobXTable/LazyMobXTable';
 import { observer } from 'mobx-react';
 import * as _ from 'lodash';
 import { getPatientViewUrl, getSampleViewUrl } from 'shared/api/urls';
@@ -33,20 +30,11 @@ class ClinicalDataTabTableComponent extends LazyMobXTable<{
 }> {}
 
 @observer
-export class ClinicalDataTab extends React.Component<
-    IClinicalDataTabTable,
-    {}
-> {
-    getDefaultColumnConfig(
-        key: string,
-        columnName: string,
-        isNumber?: boolean
-    ) {
+export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> {
+    getDefaultColumnConfig(key: string, columnName: string, isNumber?: boolean) {
         return {
             name: columnName || '',
-            headerRender: (data: string) => (
-                <span data-test={data}>{data}</span>
-            ),
+            headerRender: (data: string) => <span data-test={data}>{data}</span>,
             render: (data: { [id: string]: string }) => {
                 if (isUrl(data[key])) {
                     return (
@@ -84,10 +72,7 @@ export class ClinicalDataTab extends React.Component<
                     render: (data: { [id: string]: string }) => {
                         return (
                             <a
-                                href={getPatientViewUrl(
-                                    data.studyId,
-                                    data.patientId
-                                )}
+                                href={getPatientViewUrl(data.studyId, data.patientId)}
                                 target="_blank"
                             >
                                 {data.patientId}
@@ -99,13 +84,7 @@ export class ClinicalDataTab extends React.Component<
                     ...this.getDefaultColumnConfig('sampleId', 'Sample ID'),
                     render: (data: { [id: string]: string }) => {
                         return (
-                            <a
-                                href={getSampleViewUrl(
-                                    data.studyId,
-                                    data.sampleId
-                                )}
-                                target="_blank"
-                            >
+                            <a href={getSampleViewUrl(data.studyId, data.sampleId)} target="_blank">
                                 {data.sampleId}
                             </a>
                         );
@@ -116,8 +95,7 @@ export class ClinicalDataTab extends React.Component<
             if (
                 _.find(
                     this.props.store.visibleAttributes,
-                    chartMeta =>
-                        chartMeta.uniqueKey === UniqueKey.CANCER_STUDIES
+                    chartMeta => chartMeta.uniqueKey === UniqueKey.CANCER_STUDIES
                 ) !== undefined
             ) {
                 defaultColumns.push({
@@ -126,27 +104,19 @@ export class ClinicalDataTab extends React.Component<
             }
             return _.reduce(
                 this.props.store.visibleAttributes.sort(chartMetaComparator),
-                (
-                    acc: Column<{ [id: string]: string }>[],
-                    chartMeta: ChartMeta,
-                    index: number
-                ) => {
+                (acc: Column<{ [id: string]: string }>[], chartMeta: ChartMeta, index: number) => {
                     if (chartMeta.clinicalAttribute !== undefined) {
                         acc.push({
                             ...this.getDefaultColumnConfig(
                                 getUniqueKey(chartMeta.clinicalAttribute),
                                 chartMeta.clinicalAttribute.displayName,
-                                chartMeta.clinicalAttribute.datatype ===
-                                    DataType.NUMBER
+                                chartMeta.clinicalAttribute.datatype === DataType.NUMBER
                             ),
                             tooltip: getClinicalAttributeOverlay(
                                 chartMeta.clinicalAttribute.displayName,
-                                chartMeta.description
-                                    ? chartMeta.description
-                                    : '',
+                                chartMeta.description ? chartMeta.description : '',
                                 chartMeta.clinicalAttribute
-                                    ? chartMeta.clinicalAttribute
-                                          .clinicalAttributeId
+                                    ? chartMeta.clinicalAttribute.clinicalAttributeId
                                     : undefined
                             ),
                         });
@@ -185,8 +155,7 @@ export class ClinicalDataTab extends React.Component<
                             <LoadingIndicator
                                 isLoading={
                                     this.columns.isPending ||
-                                    this.props.store.getDataForClinicalDataTab
-                                        .isPending
+                                    this.props.store.getDataForClinicalDataTab.isPending
                                 }
                                 size={'big'}
                                 center={true}
@@ -195,8 +164,7 @@ export class ClinicalDataTab extends React.Component<
                                     getItems={this.getProgressItems}
                                     show={
                                         this.columns.isPending ||
-                                        this.props.store
-                                            .getDataForClinicalDataTab.isPending
+                                        this.props.store.getDataForClinicalDataTab.isPending
                                     }
                                 />
                             </LoadingIndicator>
@@ -206,15 +174,11 @@ export class ClinicalDataTab extends React.Component<
                                 initialItemsPerPage={20}
                                 showCopyDownload={true}
                                 showColumnVisibility={false}
-                                data={
-                                    this.props.store.getDataForClinicalDataTab
-                                        .result || []
-                                }
+                                data={this.props.store.getDataForClinicalDataTab.result || []}
                                 columns={this.columns.result}
                                 copyDownloadProps={{
                                     showCopy: false,
-                                    downloadFilename: this.props.store
-                                        .clinicalDataDownloadFilename,
+                                    downloadFilename: this.props.store.clinicalDataDownloadFilename,
                                 }}
                             />
                         </Else>

@@ -80,13 +80,7 @@ export default class Sift extends React.Component<ISiftProps, {}> {
                     <tr>
                         <td>Impact</td>
                         <td>
-                            <span
-                                className={
-                                    tooltipStyles[
-                                        `sift-${this.props.siftPrediction}`
-                                    ]
-                                }
-                            >
+                            <span className={tooltipStyles[`sift-${this.props.siftPrediction}`]}>
                                 {this.props.siftPrediction}
                             </span>
                         </td>

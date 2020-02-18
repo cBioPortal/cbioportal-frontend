@@ -14,9 +14,7 @@ export type GroupComparisonURLQuery = {
     patientEnrichments?: string;
 };
 
-export default class GroupComparisonURLWrapper extends URLWrapper<
-    GroupComparisonURLQuery
-> {
+export default class GroupComparisonURLWrapper extends URLWrapper<GroupComparisonURLQuery> {
     constructor(routing: ExtendedRouterStore) {
         super(routing, {
             sessionId: { isSessionProp: false },

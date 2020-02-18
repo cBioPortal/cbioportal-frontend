@@ -19,8 +19,7 @@ export default function tabularDownload(
     distinguishDrivers: boolean
 ) {
     const caseNames = uidOrder.map(getCaseId);
-    const prefixName =
-        columnMode === 'sample' ? 'SAMPLE_DATA_' : 'PATIENT_DATA_'; //Name depending on the type of case
+    const prefixName = columnMode === 'sample' ? 'SAMPLE_DATA_' : 'PATIENT_DATA_'; //Name depending on the type of case
 
     //Gather all the Oncoprint data
     const oncoprintData: any = {
@@ -98,18 +97,14 @@ export default function tabularDownload(
         //Iterate over all patients/samples of the track and add them to oncoprintData
         for (const geneticTrackDatum of currentTrackData) {
             let id: string =
-                columnMode === 'sample'
-                    ? geneticTrackDatum.sample!
-                    : geneticTrackDatum.patient!;
+                columnMode === 'sample' ? geneticTrackDatum.sample! : geneticTrackDatum.patient!;
             oncoprintData.CNA[currentGeneName][id] = '';
             oncoprintData.MUTATIONS[currentGeneName][id] = '';
             oncoprintData.MRNA[currentGeneName][id] = '';
             oncoprintData.PROTEIN[currentGeneName][id] = '';
             oncoprintData.FUSION[currentGeneName][id] = '';
             if (geneticTrackDatum.disp_cna !== undefined) {
-                oncoprintData.CNA[currentGeneName][id] = cnaMap[
-                    geneticTrackDatum.disp_cna
-                ]
+                oncoprintData.CNA[currentGeneName][id] = cnaMap[geneticTrackDatum.disp_cna]
                     ? cnaMap[geneticTrackDatum.disp_cna]
                     : geneticTrackDatum.disp_cna;
             }
@@ -121,16 +116,12 @@ export default function tabularDownload(
                     : geneticTrackDatum.disp_fusion;
             }
             if (geneticTrackDatum.disp_mrna !== undefined) {
-                oncoprintData.MRNA[currentGeneName][id] = mrnaMap[
-                    geneticTrackDatum.disp_mrna
-                ]
+                oncoprintData.MRNA[currentGeneName][id] = mrnaMap[geneticTrackDatum.disp_mrna]
                     ? mrnaMap[geneticTrackDatum.disp_mrna]
                     : geneticTrackDatum.disp_mrna;
             }
             if (geneticTrackDatum.disp_prot !== undefined) {
-                oncoprintData.PROTEIN[currentGeneName][id] = proteinMap[
-                    geneticTrackDatum.disp_prot
-                ]
+                oncoprintData.PROTEIN[currentGeneName][id] = proteinMap[geneticTrackDatum.disp_prot]
                     ? proteinMap[geneticTrackDatum.disp_prot]
                     : geneticTrackDatum.disp_prot;
             }
@@ -155,13 +146,10 @@ export default function tabularDownload(
         //Iterate over all patients/samples of the track and add them to oncoprintData
         for (const clinicalTrackDatum of currentClinicalTrackData) {
             let id: string =
-                columnMode === 'sample'
-                    ? clinicalTrackDatum.sample!
-                    : clinicalTrackDatum.patient!;
+                columnMode === 'sample' ? clinicalTrackDatum.sample! : clinicalTrackDatum.patient!;
             oncoprintData.CLINICAL[currentAttributeName][id] = '';
             if (clinicalTrackDatum.attr_val !== undefined) {
-                oncoprintData.CLINICAL[currentAttributeName][id] =
-                    clinicalTrackDatum.attr_val;
+                oncoprintData.CLINICAL[currentAttributeName][id] = clinicalTrackDatum.attr_val;
             }
         }
     }
@@ -173,29 +161,19 @@ export default function tabularDownload(
     for (const heatmapTrack of exportedHeatmapTracks) {
         const currentHeatmapGene = heatmapTrack.label;
         const currentHeatmapType =
-            'HEATMAP ' +
-            heatmapTrack.molecularAlterationType +
-            ' ' +
-            heatmapTrack.datatype;
+            'HEATMAP ' + heatmapTrack.molecularAlterationType + ' ' + heatmapTrack.datatype;
         const currentHeatmapTrackData = heatmapTrack.data;
         for (const heatmapTrackDatum of currentHeatmapTrackData) {
             if (oncoprintData[currentHeatmapType] === undefined) {
                 oncoprintData[currentHeatmapType] = {};
             }
-            if (
-                oncoprintData[currentHeatmapType][currentHeatmapGene] ===
-                undefined
-            ) {
+            if (oncoprintData[currentHeatmapType][currentHeatmapGene] === undefined) {
                 oncoprintData[currentHeatmapType][currentHeatmapGene] = {};
             }
             let id: string =
-                columnMode === 'sample'
-                    ? heatmapTrackDatum.sample!
-                    : heatmapTrackDatum.patient!;
+                columnMode === 'sample' ? heatmapTrackDatum.sample! : heatmapTrackDatum.patient!;
             oncoprintData[currentHeatmapType][currentHeatmapGene][id] =
-                heatmapTrackDatum.profile_data === null
-                    ? ''
-                    : heatmapTrackDatum.profile_data;
+                heatmapTrackDatum.profile_data === null ? '' : heatmapTrackDatum.profile_data;
         }
     }
 

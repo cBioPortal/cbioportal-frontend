@@ -1,8 +1,5 @@
 import * as React from 'react';
-import {
-    DefaultTooltip,
-    placeArrowBottomLeft,
-} from 'cbioportal-frontend-commons';
+import { DefaultTooltip, placeArrowBottomLeft } from 'cbioportal-frontend-commons';
 import {
     IMutationalSignature,
     IMutationalSignatureMeta,
@@ -57,20 +54,14 @@ export default class SignificantMutationalSignatures extends React.Component<
         );
         let hasMutationalSignatures: boolean = true;
 
-        if (
-            _.isEmpty(
-                significantMutationalSignaturesForSample.significantSignatures
-            )
-        ) {
+        if (_.isEmpty(significantMutationalSignaturesForSample.significantSignatures)) {
             hasMutationalSignatures = false;
         }
 
         return (
             <div style={{ maxWidth: 250 }}>
                 <span className="small">
-                    {
-                        significantMutationalSignaturesForSample.confidenceStatement
-                    }
+                    {significantMutationalSignaturesForSample.confidenceStatement}
                 </span>
                 <hr style={{ marginTop: 10, marginBottom: 10 }} />
                 {hasMutationalSignatures && (
@@ -81,9 +72,7 @@ export default class SignificantMutationalSignatures extends React.Component<
                             significantMutationalSignaturesForSample.significantSignatures
                         ).map(significantSignatureValue => (
                             <tr>
-                                <td style={{ paddingTop: 3 }}>
-                                    {significantSignatureValue}
-                                </td>
+                                <td style={{ paddingTop: 3 }}>{significantSignatureValue}</td>
                                 <td style={{ paddingTop: 3 }}>
                                     {progressBar(
                                         significantMutationalSignaturesForSample.significantSignatures[

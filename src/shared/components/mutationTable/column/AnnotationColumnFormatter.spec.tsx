@@ -26,11 +26,7 @@ describe('AnnotationColumnFormatter', () => {
         let expectedCivicEntry = getExpectedCivicEntry();
 
         assert.deepEqual(
-            AnnotationColumnFormatter.getCivicEntry(
-                mutation,
-                civicGenes,
-                civicVariants
-            ),
+            AnnotationColumnFormatter.getCivicEntry(mutation, civicGenes, civicVariants),
             expectedCivicEntry,
             'Equal Civic Entry'
         );

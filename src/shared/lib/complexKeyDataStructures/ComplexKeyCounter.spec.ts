@@ -6,20 +6,14 @@ describe('ComplexKeyCounter', () => {
         const counter = new ComplexKeyCounter();
         assert.deepEqual(counter.entries(), []);
         assert.equal(counter.get({ k: 'aaidsopjfap' }), 0);
-        assert.equal(
-            counter.get({ 'kjaspdoijfp134u13!@@#$!$$': 'sdf0913' }),
-            0
-        );
+        assert.equal(counter.get({ 'kjaspdoijfp134u13!@@#$!$$': 'sdf0913' }), 0);
         assert.deepEqual(counter.entries(), []);
     });
     it('after incrementing, the value with `get` changes appropriately, `entries` reflect current state', () => {
         const counter = new ComplexKeyCounter();
         assert.deepEqual(counter.entries(), []);
         assert.equal(counter.get({ k: 'aaidsopjfap' }), 0);
-        assert.equal(
-            counter.get({ 'kjaspdoijfp134u13!@@#$!$$': 'sdf0913' }),
-            0
-        );
+        assert.equal(counter.get({ 'kjaspdoijfp134u13!@@#$!$$': 'sdf0913' }), 0);
         counter.increment({ k: 'aaidsopjfap' });
         counter.increment({ k: 'aaidsopjfap' });
         counter.increment({ k: 'aaidsopjfap' });
@@ -28,10 +22,7 @@ describe('ComplexKeyCounter', () => {
         counter.increment({ 'kjaspdoijfp134u13!@@#$!$$': 'sdf0913' });
         counter.increment({ 'kjaspdoijfp134u13!@@#$!$$': 'sdf0913' });
         assert.equal(counter.get({ k: 'aaidsopjfap' }), 5);
-        assert.equal(
-            counter.get({ 'kjaspdoijfp134u13!@@#$!$$': 'sdf0913' }),
-            2
-        );
+        assert.equal(counter.get({ 'kjaspdoijfp134u13!@@#$!$$': 'sdf0913' }), 2);
         assert.deepEqual(counter.entries(), [
             { key: { k: 'aaidsopjfap' }, value: 5 },
             { key: { 'kjaspdoijfp134u13!@@#$!$$': 'sdf0913' }, value: 2 },
@@ -47,16 +38,10 @@ describe('ComplexKeyCounter', () => {
         counter.increment({ 'kjaspdoijfp134u13!@@#$!$$': 'sdf0913' });
         counter.increment({ 'kjaspdoijfp134u13!@@#$!$$': 'sdf0913' });
         assert.equal(counter.get({ k: 'aaidsopjfap' }), 5);
-        assert.equal(
-            counter.get({ 'kjaspdoijfp134u13!@@#$!$$': 'sdf0913' }),
-            2
-        );
+        assert.equal(counter.get({ 'kjaspdoijfp134u13!@@#$!$$': 'sdf0913' }), 2);
         counter.clear();
         assert.equal(counter.get({ k: 'aaidsopjfap' }), 0);
-        assert.equal(
-            counter.get({ 'kjaspdoijfp134u13!@@#$!$$': 'sdf0913' }),
-            0
-        );
+        assert.equal(counter.get({ 'kjaspdoijfp134u13!@@#$!$$': 'sdf0913' }), 0);
         assert.deepEqual(counter.entries(), []);
     });
 });

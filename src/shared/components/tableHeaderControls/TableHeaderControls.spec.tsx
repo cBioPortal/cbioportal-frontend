@@ -80,16 +80,8 @@ describe('TableHeaderControls', () => {
             1,
             'pagination controls rendered once'
         );
-        assert.equal(
-            wrapper.find(`div.${copyClassName}`).length,
-            1,
-            'copy button rendered once'
-        );
-        assert.equal(
-            wrapper.find(`.${searchClassName}`).length,
-            1,
-            'search rendered once'
-        );
+        assert.equal(wrapper.find(`div.${copyClassName}`).length, 1, 'copy button rendered once');
+        assert.equal(wrapper.find(`.${searchClassName}`).length, 1, 'search rendered once');
     });
 
     it('input to search box causes handleInput to be called', () => {

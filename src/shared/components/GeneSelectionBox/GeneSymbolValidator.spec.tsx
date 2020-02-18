@@ -1,9 +1,7 @@
 import { assert } from 'chai';
 import { mount } from 'enzyme';
 import * as React from 'react';
-import GeneSymbolValidator, {
-    IGeneSymbolValidatorProps,
-} from './GeneSymbolValidator';
+import GeneSymbolValidator, { IGeneSymbolValidatorProps } from './GeneSymbolValidator';
 import sinon from 'sinon';
 
 describe('GeneSymbolValidator', () => {

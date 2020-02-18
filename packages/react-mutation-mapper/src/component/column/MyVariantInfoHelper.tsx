@@ -22,18 +22,12 @@ export type MyVariantInfoProps = {
 
 export function renderMyVariantInfoContent(
     props: MyVariantInfoProps,
-    getContent: (
-        myVariantInfo: MyVariantInfo,
-        variantAnnotation?: VariantAnnotation
-    ) => JSX.Element
+    getContent: (myVariantInfo: MyVariantInfo, variantAnnotation?: VariantAnnotation) => JSX.Element
 ) {
     let content;
     const status = props.indexedMyVariantInfoAnnotations.status;
     const variantAnnotation = props.indexedVariantAnnotations
-        ? getVariantAnnotation(
-              props.mutation,
-              props.indexedVariantAnnotations.result
-          )
+        ? getVariantAnnotation(props.mutation, props.indexedVariantAnnotations.result)
         : undefined;
     const myVariantInfo = getMyVariantInfoAnnotation(
         props.mutation,

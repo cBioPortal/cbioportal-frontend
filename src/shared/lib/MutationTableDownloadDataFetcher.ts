@@ -81,20 +81,14 @@ export class MutationTableDownloadDataFetcher
 
         if (this.genomeNexusMutationAssessorCache) {
             if (this.mutationData.result) {
-                promises.push(
-                    fetchGenomeNexusMutationAssessorData(
-                        this.mutationData.result
-                    )
-                );
+                promises.push(fetchGenomeNexusMutationAssessorData(this.mutationData.result));
                 caches.push(this.genomeNexusMutationAssessorCache());
             }
         }
 
         if (this.genomeNexusMyVariantInfoCache) {
             if (this.mutationData.result) {
-                promises.push(
-                    fetchGenomeNexusMyVariantInfoData(this.mutationData.result)
-                );
+                promises.push(fetchGenomeNexusMyVariantInfoData(this.mutationData.result));
                 caches.push(this.genomeNexusMyVariantInfoCache());
             }
         }
@@ -138,12 +132,9 @@ export class MutationTableDownloadDataFetcher
             );
             const modifiedCNAData = _.flatten(
                 _.map(cnaData, rawData => {
-                    const mappedArray = _.map(
-                        _.flatten(rawData.data),
-                        props => {
-                            return { ...props, studyId: rawData.meta };
-                        }
-                    );
+                    const mappedArray = _.map(_.flatten(rawData.data), props => {
+                        return { ...props, studyId: rawData.meta };
+                    });
                     return mappedArray;
                 })
             );

@@ -3,10 +3,7 @@ import React from 'react';
 import { assert, expect } from 'chai';
 import { shallow, mount, ReactWrapper } from 'enzyme';
 import sinon from 'sinon';
-import {
-    getExpectedCivicEntry,
-    getExpectedCnaCivicEntry,
-} from 'test/CivicMockUtils';
+import { getExpectedCivicEntry, getExpectedCnaCivicEntry } from 'test/CivicMockUtils';
 import CivicCard from './CivicCard';
 import { ICivicProps } from './Civic';
 
@@ -50,17 +47,9 @@ describe('Civic with data with variants', () => {
 
         assert.isTrue(civicIcon.exists(), 'Civic icon should exist');
 
-        assert.equal(
-            civicIcon.prop('width'),
-            14,
-            'Civic icon width should be equal to 14'
-        );
+        assert.equal(civicIcon.prop('width'), 14, 'Civic icon width should be equal to 14');
 
-        assert.equal(
-            civicIcon.prop('height'),
-            14,
-            'Civic icon height should be equal to 14'
-        );
+        assert.equal(civicIcon.prop('height'), 14, 'Civic icon height should be equal to 14');
 
         assert.equal(
             civicIcon.prop('src'),
@@ -90,17 +79,9 @@ describe('Civic with data with no variants', () => {
 
         assert.isTrue(civicIcon.exists(), 'Civic icon should exist');
 
-        assert.equal(
-            civicIcon.prop('width'),
-            14,
-            'Civic icon width should be equal to 14'
-        );
+        assert.equal(civicIcon.prop('width'), 14, 'Civic icon width should be equal to 14');
 
-        assert.equal(
-            civicIcon.prop('height'),
-            14,
-            'Civic icon height should be equal to 14'
-        );
+        assert.equal(civicIcon.prop('height'), 14, 'Civic icon height should be equal to 14');
 
         assert.equal(
             civicIcon.prop('src'),
@@ -124,11 +105,7 @@ describe('Counts correctly', () => {
     it('Gives 0 points if the entry is undefined', () => {
         const value = Civic.sortValue(undefined);
 
-        assert.equal(
-            value,
-            0,
-            'Correctly gives 0 points if the entry is undefined'
-        );
+        assert.equal(value, 0, 'Correctly gives 0 points if the entry is undefined');
     });
 
     it('Gives 0 points if the entry is null', () => {

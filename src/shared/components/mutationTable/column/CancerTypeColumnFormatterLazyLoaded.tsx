@@ -19,11 +19,7 @@ export default class CancerTypeColumnFormatter {
                 studyId,
             });
 
-            if (
-                cacheDatum &&
-                cacheDatum.status === 'complete' &&
-                cacheDatum.data === null
-            ) {
+            if (cacheDatum && cacheDatum.status === 'complete' && cacheDatum.data === null) {
                 // If no clinical data, use study cancer type if we have it
                 if (studyCancerTypeMap) {
                     const cancerType = studyCancerTypeMap[studyId];
@@ -65,11 +61,7 @@ export default class CancerTypeColumnFormatter {
         );
     }
 
-    public static sortBy(
-        d: Mutation[],
-        studyId?: string,
-        cancerTypeCache?: CancerTypeCache
-    ) {
+    public static sortBy(d: Mutation[], studyId?: string, cancerTypeCache?: CancerTypeCache) {
         let ret;
         if (cancerTypeCache && studyId) {
             const cacheDatum = cancerTypeCache.get({

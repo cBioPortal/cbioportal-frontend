@@ -2574,12 +2574,10 @@ const data = [
             uniprotAccession: null,
             functionalImpactScore: 'L',
             fisValue: null,
-            linkPdb:
-                'getma.org/pdb.php?prot=NCAM2_HUMAN&from=593&to=678&var=Q616K',
+            linkPdb: 'getma.org/pdb.php?prot=NCAM2_HUMAN&from=593&to=678&var=Q616K',
             linkMsa:
                 'http://mutationassessor.org/r2/?cm=msa&ty=f&p=NCAM2_HUMAN&rb=593&re=678&var=Q616K',
-            linkXvar:
-                'http://mutationassessor.org/r2/?cm=var&var=hg19,21,22841054,C,A&fts=all',
+            linkXvar: 'http://mutationassessor.org/r2/?cm=var&var=hg19,21,22841054,C,A&fts=all',
         },
         {
             gene: {
@@ -2615,8 +2613,7 @@ const data = [
             fisValue: null,
             linkPdb: null,
             linkMsa: null,
-            linkXvar:
-                'http://mutationassessor.org/r2/?cm=var&var=hg19,6,90368337,G,A&fts=all',
+            linkXvar: 'http://mutationassessor.org/r2/?cm=var&var=hg19,6,90368337,G,A&fts=all',
         },
         {
             gene: {
@@ -2653,8 +2650,7 @@ const data = [
             linkPdb: null,
             linkMsa:
                 'http://mutationassessor.org/r2/?cm=msa&ty=f&p=APC_HUMAN&rb=1395&re=1484&var=Q1429R',
-            linkXvar:
-                'http://mutationassessor.org/r2/?cm=var&var=hg19,5,112175577,A,G&fts=all',
+            linkXvar: 'http://mutationassessor.org/r2/?cm=var&var=hg19,5,112175577,A,G&fts=all',
         },
     ],
 ];

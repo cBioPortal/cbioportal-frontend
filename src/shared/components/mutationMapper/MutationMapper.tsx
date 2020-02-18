@@ -79,12 +79,12 @@ export interface IMutationMapperProps {
 }
 
 @observer
-export default class MutationMapper<
-    P extends IMutationMapperProps
-> extends DefaultMutationMapper<P> {
+export default class MutationMapper<P extends IMutationMapperProps> extends DefaultMutationMapper<
+    P
+> {
     @computed get trackDataStatus(): TrackDataStatus {
-        let oncoKbDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this
-            .props.store.oncoKbData.status;
+        let oncoKbDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this.props.store
+            .oncoKbData.status;
 
         if (
             oncoKbDataStatus === 'complete' &&
@@ -93,21 +93,15 @@ export default class MutationMapper<
             oncoKbDataStatus = 'empty';
         }
 
-        let hotspotDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this
-            .props.store.indexedHotspotData.status;
+        let hotspotDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this.props.store
+            .indexedHotspotData.status;
 
-        if (
-            hotspotDataStatus === 'complete' &&
-            _.isEmpty(this.props.store.hotspotsByPosition)
-        ) {
+        if (hotspotDataStatus === 'complete' && _.isEmpty(this.props.store.hotspotsByPosition)) {
             hotspotDataStatus = 'empty';
         }
 
-        let alignmentDataStatus:
-            | 'pending'
-            | 'error'
-            | 'complete'
-            | 'empty' = this.props.store.alignmentData.status;
+        let alignmentDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this.props.store
+            .alignmentData.status;
 
         if (
             alignmentDataStatus === 'complete' &&
@@ -116,13 +110,12 @@ export default class MutationMapper<
             alignmentDataStatus = 'empty';
         }
 
-        let ptmDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this
-            .props.store.ptmData.status;
+        let ptmDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this.props.store.ptmData
+            .status;
 
         if (
             ptmDataStatus === 'complete' &&
-            (!this.props.store.ptmData.result ||
-                this.props.store.ptmData.result.length === 0)
+            (!this.props.store.ptmData.result || this.props.store.ptmData.result.length === 0)
         ) {
             ptmDataStatus = 'empty';
         }
@@ -151,8 +144,7 @@ export default class MutationMapper<
     }
 
     @computed get multipleMutationInfo(): string {
-        const count = this.props.store.dataStore
-            .duplicateMutationCountInMultipleSamples;
+        const count = this.props.store.dataStore.duplicateMutationCountInMultipleSamples;
         const mutationsLabel = count === 1 ? 'mutation' : 'mutations';
 
         return count > 0
@@ -214,8 +206,7 @@ export default class MutationMapper<
                 onTrackVisibilityChange={this.onTrackVisibilityChange}
                 getLollipopColor={getColorForProteinImpactType}
                 filterResetPanel={
-                    !this.props.store.dataStore.showingAllData &&
-                    this.filterResetPanel !== null
+                    !this.props.store.dataStore.showingAllData && this.filterResetPanel !== null
                         ? this.filterResetPanel
                         : undefined
                 }
@@ -258,9 +249,7 @@ export default class MutationMapper<
         return (
             <button
                 className="btn btn-default btn-sm"
-                disabled={
-                    this.props.store.pdbChainDataStore.allData.length === 0
-                }
+                disabled={this.props.store.pdbChainDataStore.allData.length === 0}
                 onClick={this.toggle3dPanel}
                 data-test="view3DStructure"
             >
@@ -276,11 +265,7 @@ export default class MutationMapper<
             <FilterResetPanel
                 resetFilters={() => dataStore.resetFilters()}
                 filterInfo={`Showing ${dataStore.tableData.length} of ${dataStore.allData.length} mutations.`}
-                className={classnames(
-                    'alert',
-                    'alert-success',
-                    styles.filterResetPanel
-                )}
+                className={classnames('alert', 'alert-success', styles.filterResetPanel)}
                 buttonClass="btn btn-default btn-xs"
             />
         );
@@ -301,18 +286,11 @@ export default class MutationMapper<
             <div>
                 {this.structureViewerPanel}
 
-                <LoadingIndicator
-                    center={true}
-                    size="big"
-                    isLoading={this.isLoading}
-                />
+                <LoadingIndicator center={true} size="big" isLoading={this.isLoading} />
                 {!this.isLoading && (
                     <div>
                         <div style={{ display: 'flex' }}>
-                            <div
-                                className="borderedChart"
-                                style={{ marginRight: 10 }}
-                            >
+                            <div className="borderedChart" style={{ marginRight: 10 }}>
                                 {this.mutationPlot}
                                 {this.proteinChainPanel}
                             </div>
@@ -377,9 +355,7 @@ export default class MutationMapper<
         );
 
         // reset visibility values for the visible ones
-        selectedTrackNames.forEach(
-            trackName => (this.trackVisibility[trackName] = 'visible')
-        );
+        selectedTrackNames.forEach(trackName => (this.trackVisibility[trackName] = 'visible'));
     }
 
     @autobind

@@ -112,9 +112,7 @@ describe('GenesetCorrelatedGeneCache', () => {
 
     it('provides an empty array if nothing available', () => {
         // given an API client with 0 available genes and a cache with a started iteration
-        (client.fetchCorrelatedGenesUsingPOST as sinon.SinonStub).returns(
-            Promise.resolve([])
-        );
+        (client.fetchCorrelatedGenesUsingPOST as sinon.SinonStub).returns(Promise.resolve([]));
         const cache = new GenesetCorrelatedGeneCache({
             profile1: { sampleIds: ['sample1', 'sample2'] },
         });

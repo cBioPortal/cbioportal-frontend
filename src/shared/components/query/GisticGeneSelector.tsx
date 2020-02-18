@@ -39,10 +39,7 @@ export interface GisticGeneSelectorProps {
 }
 
 @observer
-export default class GisticGeneSelector extends React.Component<
-    GisticGeneSelectorProps,
-    {}
-> {
+export default class GisticGeneSelector extends React.Component<GisticGeneSelectorProps, {}> {
     constructor(props: GisticGeneSelectorProps) {
         super(props);
         this.map_geneSymbol_selected.replace(
@@ -55,21 +52,13 @@ export default class GisticGeneSelector extends React.Component<
     private columns: IColumnDefMap = {
         amp: {
             priority: 1,
-            columnDataFunction: ({
-                rowData: gistic,
-            }: IColumnFormatterData<Gistic>) =>
+            columnDataFunction: ({ rowData: gistic }: IColumnFormatterData<Gistic>) =>
                 gistic && (gistic.amp ? 'Amp' : 'Del'),
             name: 'Amp Del',
             sortable: true,
             filterable: true,
             header: (
-                <div
-                    className={classNames(
-                        styles.header,
-                        styles.amp,
-                        styles.del
-                    )}
-                >
+                <div className={classNames(styles.header, styles.amp, styles.del)}>
                     <span className={styles.amp}>Amp</span>
                     <span className={styles.del}>Del</span>
                 </div>
@@ -80,9 +69,7 @@ export default class GisticGeneSelector extends React.Component<
                 columnData: value,
             }: IColumnFormatterData<Gistic>) => (
                 <Td key={name} column={name} value={value}>
-                    {!!gistic && (
-                        <div className={gistic.amp ? styles.amp : styles.del} />
-                    )}
+                    {!!gistic && <div className={gistic.amp ? styles.amp : styles.del} />}
                 </Td>
             ),
         },
@@ -102,9 +89,8 @@ export default class GisticGeneSelector extends React.Component<
         },
         '#': {
             priority: 4,
-            columnDataFunction: ({
-                rowData: gistic,
-            }: IColumnFormatterData<Gistic>) => getGeneSymbols(gistic).length,
+            columnDataFunction: ({ rowData: gistic }: IColumnFormatterData<Gistic>) =>
+                getGeneSymbols(gistic).length,
             name: '#',
             sortable: true,
             filterable: true,
@@ -112,17 +98,12 @@ export default class GisticGeneSelector extends React.Component<
         genes: {
             priority: 5,
             // this columnDataFunction allows quick searching by gene symbol
-            columnDataFunction: ({
-                rowData: gistic,
-            }: IColumnFormatterData<Gistic>) =>
+            columnDataFunction: ({ rowData: gistic }: IColumnFormatterData<Gistic>) =>
                 getGeneSymbols(gistic).join(' '),
             name: 'Genes',
             sortable: (genes1: string, genes2: string) => {
                 // sort by length, then alphabetically
-                return (
-                    genes1.length - genes2.length ||
-                    +(genes1 > genes2) - +(genes1 < genes2)
-                );
+                return genes1.length - genes2.length || +(genes1 > genes2) - +(genes1 < genes2);
             },
             filterable: true,
             formatter: ({
@@ -193,9 +174,7 @@ export default class GisticGeneSelector extends React.Component<
                     <button
                         style={{ marginTop: 20 }}
                         className="btn btn-primary btn-sm pull-right"
-                        onClick={() =>
-                            this.props.onSelect(this.map_geneSymbol_selected)
-                        }
+                        onClick={() => this.props.onSelect(this.map_geneSymbol_selected)}
                     >
                         Select
                     </button>
@@ -216,9 +195,7 @@ class GisticGeneToggles extends React.Component<
         return genes.map(gene => (
             <Observer>
                 {() => {
-                    let selected = !!this.props.map_geneSymbol_selected.get(
-                        gene
-                    );
+                    let selected = !!this.props.map_geneSymbol_selected.get(gene);
                     return (
                         <span
                             key={gene}
@@ -227,10 +204,7 @@ class GisticGeneToggles extends React.Component<
                                 selected ? styles.selected : styles.notSelected
                             )}
                             onClick={event =>
-                                this.props.map_geneSymbol_selected.set(
-                                    gene,
-                                    !selected
-                                )
+                                this.props.map_geneSymbol_selected.set(gene, !selected)
                             }
                         >
                             {gene}
@@ -254,9 +228,7 @@ class GisticGeneToggles extends React.Component<
                             className={styles.showMoreLess}
                             onClick={() => (this.showAll = !this.showAll)}
                         >
-                            {this.showAll
-                                ? 'less'
-                                : `+${moreGenes.length} more`}
+                            {this.showAll ? 'less' : `+${moreGenes.length} more`}
                         </a>
                     )}
                 </div>

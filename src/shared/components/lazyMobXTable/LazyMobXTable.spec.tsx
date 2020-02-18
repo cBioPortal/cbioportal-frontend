@@ -3,21 +3,14 @@ import { default as chai, assert } from 'chai';
 import chaiEnzyme from 'chai-enzyme';
 import { shallow, mount, ReactWrapper } from 'enzyme';
 import sinon from 'sinon';
-import {
-    lazyMobXTableSort,
-    default as LazyMobXTable,
-    Column,
-} from './LazyMobXTable';
+import { lazyMobXTableSort, default as LazyMobXTable, Column } from './LazyMobXTable';
 import SimpleTable from '../simpleTable/SimpleTable';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
 import lolex from 'lolex';
 import { Clock } from 'lolex';
-import {
-    PaginationControls,
-    SHOW_ALL_PAGE_SIZE,
-} from '../paginationControls/PaginationControls';
+import { PaginationControls, SHOW_ALL_PAGE_SIZE } from '../paginationControls/PaginationControls';
 import { Button, FormControl, Checkbox } from 'react-bootstrap';
 import { ColumnVisibilityControls } from '../columnVisibilityControls/ColumnVisibilityControls';
 import { SimpleLazyMobXTableApplicationDataStore } from '../../lib/ILazyMobXTableApplicationDataStore';
@@ -30,18 +23,14 @@ chai.use(chaiEnzyme());
 
 class Table extends LazyMobXTable<any> {}
 
-class HighlightingDataStore extends SimpleLazyMobXTableApplicationDataStore<
-    any
-> {
+class HighlightingDataStore extends SimpleLazyMobXTableApplicationDataStore<any> {
     constructor(data: any[]) {
         super(data);
         this.dataHighlighter = (d: any) => d.numList[1] === null;
     }
 }
 
-function getVisibleColumnHeaders(
-    tableWrapper: ReactWrapper<any, any>
-): string[] {
+function getVisibleColumnHeaders(tableWrapper: ReactWrapper<any, any>): string[] {
     return tableWrapper.find('th span').map(span => span.text());
 }
 
@@ -87,8 +76,7 @@ function selectItemsPerPage(table: ReactWrapper<any, any>, opt: number) {
         selector.simulate('change', {target: {value:opt+""}});
         return true;
     }*/
-    let onChangeItemsPerPage = table.find(PaginationControls).props()
-        .onChangeItemsPerPage;
+    let onChangeItemsPerPage = table.find(PaginationControls).props().onChangeItemsPerPage;
     onChangeItemsPerPage && onChangeItemsPerPage(opt);
     table.update();
 }
@@ -125,36 +113,27 @@ function getNumVisibleRows(table: ReactWrapper<any, any>): number {
     return getVisibleRows(table).length;
 }
 
-function getTextBetweenButtons(
-    table: ReactWrapper<any, any>
-): string | undefined {
+function getTextBetweenButtons(table: ReactWrapper<any, any>): string | undefined {
     return table
         .find(PaginationControls)
         .filterWhere(x => x.hasClass('topPagination'))
         .props().textBetweenButtons;
 }
 
-function getTextBeforeButtons(
-    table: ReactWrapper<any, any>
-): string | undefined {
+function getTextBeforeButtons(table: ReactWrapper<any, any>): string | undefined {
     return table
         .find(PaginationControls)
         .filterWhere(x => x.hasClass('topPagination'))
         .props().textBeforeButtons;
 }
 
-function clickColumnVisibilityCheckbox(
-    table: ReactWrapper<any, any>,
-    columnName: string
-): boolean {
+function clickColumnVisibilityCheckbox(table: ReactWrapper<any, any>, columnName: string): boolean {
     let checkbox: any = table
         .update()
         .find(ColumnVisibilityControls)
         .find(Checkbox)
         .find('input[type="checkbox"]')
-        .filterWhere(
-            x => ((x.props() as any)['data-id'] as string) === columnName
-        )
+        .filterWhere(x => ((x.props() as any)['data-id'] as string) === columnName)
         .first();
 
     const isChecked = checkbox.instance().checked;
@@ -401,83 +380,27 @@ describe('LazyMobXTable', () => {
     describe('utils', () => {
         describe('maxPage', () => {
             it('gives the correct outputs in various cases', () => {
-                assert.equal(
-                    maxPage(0, SHOW_ALL_PAGE_SIZE),
-                    0,
-                    'maxPage is 0 when showing all'
-                );
-                assert.equal(
-                    maxPage(100, SHOW_ALL_PAGE_SIZE),
-                    0,
-                    'maxPage is 0 when showing all'
-                );
-                assert.equal(
-                    maxPage(1000, SHOW_ALL_PAGE_SIZE),
-                    0,
-                    'maxPage is 0 when showing all'
-                );
+                assert.equal(maxPage(0, SHOW_ALL_PAGE_SIZE), 0, 'maxPage is 0 when showing all');
+                assert.equal(maxPage(100, SHOW_ALL_PAGE_SIZE), 0, 'maxPage is 0 when showing all');
+                assert.equal(maxPage(1000, SHOW_ALL_PAGE_SIZE), 0, 'maxPage is 0 when showing all');
 
                 assert.equal(maxPage(0, 50), 0, 'maxPage is 0 when no data');
                 assert.equal(maxPage(0, 25), 0, 'maxPage is 0 when no data');
                 assert.equal(maxPage(0, 100), 0, 'maxPage is 0 when no data');
 
-                assert.equal(
-                    maxPage(1, 50),
-                    0,
-                    'maxPage is 0 when less than page size'
-                );
-                assert.equal(
-                    maxPage(5, 50),
-                    0,
-                    'maxPage is 0 when less than page size'
-                );
-                assert.equal(
-                    maxPage(10, 50),
-                    0,
-                    'maxPage is 0 when less than page size'
-                );
-                assert.equal(
-                    maxPage(3, 10),
-                    0,
-                    'maxPage is 0 when less than page size'
-                );
-                assert.equal(
-                    maxPage(7, 10),
-                    0,
-                    'maxPage is 0 when less than page size'
-                );
-                assert.equal(
-                    maxPage(9, 10),
-                    0,
-                    'maxPage is 0 when less than page size'
-                );
+                assert.equal(maxPage(1, 50), 0, 'maxPage is 0 when less than page size');
+                assert.equal(maxPage(5, 50), 0, 'maxPage is 0 when less than page size');
+                assert.equal(maxPage(10, 50), 0, 'maxPage is 0 when less than page size');
+                assert.equal(maxPage(3, 10), 0, 'maxPage is 0 when less than page size');
+                assert.equal(maxPage(7, 10), 0, 'maxPage is 0 when less than page size');
+                assert.equal(maxPage(9, 10), 0, 'maxPage is 0 when less than page size');
 
-                assert.equal(
-                    maxPage(50, 50),
-                    0,
-                    'maxPage is 0 when equal to page size'
-                );
-                assert.equal(
-                    maxPage(24, 24),
-                    0,
-                    'maxPage is 0 when equal to page size'
-                );
-                assert.equal(
-                    maxPage(1, 1),
-                    0,
-                    'maxPage is 0 when equal to page size'
-                );
+                assert.equal(maxPage(50, 50), 0, 'maxPage is 0 when equal to page size');
+                assert.equal(maxPage(24, 24), 0, 'maxPage is 0 when equal to page size');
+                assert.equal(maxPage(1, 1), 0, 'maxPage is 0 when equal to page size');
 
-                assert.equal(
-                    maxPage(25, 10),
-                    2,
-                    'maxPage calculated correctly'
-                );
-                assert.equal(
-                    maxPage(50, 10),
-                    4,
-                    'maxPage calculated correctly'
-                );
+                assert.equal(maxPage(25, 10), 2, 'maxPage calculated correctly');
+                assert.equal(maxPage(50, 10), 4, 'maxPage calculated correctly');
                 assert.equal(maxPage(11, 2), 5, 'maxPage calculated correctly');
             });
         });
@@ -651,11 +574,7 @@ describe('LazyMobXTable', () => {
                 'string list: same order, ascending'
             );
             assert.deepEqual(
-                lazyMobXTableSort(
-                    [d0, d1, d2, d3],
-                    d => d.stringListVal,
-                    false
-                ),
+                lazyMobXTableSort([d0, d1, d2, d3], d => d.stringListVal, false),
                 [d3, d1, d2, d0],
                 'string list: same order, descending'
             );
@@ -690,13 +609,7 @@ describe('LazyMobXTable', () => {
                     .find(SimpleTable)
                     .find('th')
                     .map(x => x.text()),
-                [
-                    'Name',
-                    'Number',
-                    'String',
-                    'Number List',
-                    'String without filter function',
-                ],
+                ['Name', 'Number', 'String', 'Number List', 'String without filter function'],
                 '5 visible columns showing the given header labels, in the given order, case: with data'
             );
 
@@ -716,13 +629,7 @@ describe('LazyMobXTable', () => {
                     .find(SimpleTable)
                     .find('th')
                     .map(x => x.text()),
-                [
-                    'Name',
-                    'Number',
-                    'String',
-                    'Number List',
-                    'String without filter function',
-                ],
+                ['Name', 'Number', 'String', 'Number List', 'String without filter function'],
                 '5 visible columns showing the given header labels, in the given order, case: no data'
             );
 
@@ -821,11 +728,7 @@ describe('LazyMobXTable', () => {
                 .find(SimpleTable)
                 .find('th')
                 .at(0);
-            assert.equal(
-                nameHeader.text(),
-                'Name',
-                "we're dealing with the name header"
-            );
+            assert.equal(nameHeader.text(), 'Name', "we're dealing with the name header");
             assert.isTrue(
                 nameHeader.hasClass('sort-des'),
                 'table starts with the initial sort specs given in the props'
@@ -860,14 +763,9 @@ describe('LazyMobXTable', () => {
                 .find(SimpleTable)
                 .find('th')
                 .at(2);
-            assert.equal(
-                stringHeader.text(),
-                'String',
-                "we're dealing with the string header"
-            );
+            assert.equal(stringHeader.text(), 'String', "we're dealing with the string header");
             assert.isFalse(
-                stringHeader.hasClass('sort-asc') ||
-                    stringHeader.hasClass('sort-des'),
+                stringHeader.hasClass('sort-asc') || stringHeader.hasClass('sort-des'),
                 'string header doesnt have any sort classes to start'
             );
             stringHeader.simulate('click');
@@ -926,20 +824,17 @@ describe('LazyMobXTable', () => {
                 "we're dealing with the number list header"
             );
             assert.isFalse(
-                numberListHeader.hasClass('sort-asc') ||
-                    numberListHeader.hasClass('sort-des'),
+                numberListHeader.hasClass('sort-asc') || numberListHeader.hasClass('sort-des'),
                 'doesnt have any sort classes to start'
             );
             numberListHeader.simulate('click');
             assert.isFalse(
-                numberListHeader.hasClass('sort-asc') ||
-                    numberListHeader.hasClass('sort-des'),
+                numberListHeader.hasClass('sort-asc') || numberListHeader.hasClass('sort-des'),
                 'doesnt have any sort classes after a click'
             );
             numberListHeader.simulate('click');
             assert.isFalse(
-                numberListHeader.hasClass('sort-asc') ||
-                    numberListHeader.hasClass('sort-des'),
+                numberListHeader.hasClass('sort-asc') || numberListHeader.hasClass('sort-des'),
                 'doesnt have any sort classes after two clicks'
             );
         });
@@ -975,11 +870,7 @@ describe('LazyMobXTable', () => {
                 .find(SimpleTable)
                 .find('th')
                 .at(0);
-            assert.equal(
-                nameHeader.text(),
-                'Name',
-                "we're dealing with the name header"
-            );
+            assert.equal(nameHeader.text(), 'Name', "we're dealing with the name header");
 
             numberListHeader.simulate('click');
             assert.equal(getCurrentPage(table), 1, 'still on page 1');
@@ -1307,11 +1198,7 @@ describe('LazyMobXTable', () => {
                 .find(SimpleTable)
                 .find('th')
                 .at(1);
-            assert.equal(
-                header.text(),
-                'Number',
-                "we're dealing with the number header"
-            );
+            assert.equal(header.text(), 'Number', "we're dealing with the number header");
             header.simulate('click');
             assert.isTrue(
                 header.render().hasClass('sort-des'),
@@ -1636,11 +1523,7 @@ describe('LazyMobXTable', () => {
                 .find(SimpleTable)
                 .find('th')
                 .at(0);
-            assert.equal(
-                header.text(),
-                'Name',
-                "we're dealing with the name header"
-            );
+            assert.equal(header.text(), 'Name', "we're dealing with the name header");
             header.simulate('click');
             assert.isTrue(
                 header.render().hasClass('sort-asc'),
@@ -1744,9 +1627,7 @@ describe('LazyMobXTable', () => {
             );
         });
         it('paginates the data correctly according to the sorted order', () => {
-            let table = mount(
-                <Table columns={simpleColumns} data={simpleData} />
-            );
+            let table = mount(<Table columns={simpleColumns} data={simpleData} />);
             let header = table
                 .find(SimpleTable)
                 .find('th')
@@ -1756,16 +1637,9 @@ describe('LazyMobXTable', () => {
                 50,
                 "for this test we're assuming 50 items per page"
             );
-            assert.equal(
-                simpleData.length,
-                120,
-                "for this test we're assuming 120 rows total"
-            );
+            assert.equal(simpleData.length, 120, "for this test we're assuming 120 rows total");
             header.simulate('click');
-            assert.isTrue(
-                header.render().hasClass('sort-asc'),
-                'ascending sort'
-            );
+            assert.isTrue(header.render().hasClass('sort-asc'), 'ascending sort');
             let rows = getVisibleRows(table);
             for (let i = 0; i < rows.length; i++) {
                 expect(rows[i]).toEqualJSX(
@@ -1789,10 +1663,7 @@ describe('LazyMobXTable', () => {
                 );
             }
             header.simulate('click');
-            assert.isTrue(
-                header.render().hasClass('sort-des'),
-                'descending sort'
-            );
+            assert.isTrue(header.render().hasClass('sort-des'), 'descending sort');
             assert.equal(getCurrentPage(table), 0, 'back to page 0');
             rows = getVisibleRows(table);
             for (let i = 0; i < rows.length; i++) {
@@ -1882,45 +1753,20 @@ describe('LazyMobXTable', () => {
             assert.equal(rows.length, 0);
         });
         it('highlights rows properly, according to highlight function in data store', () => {
-            const store: HighlightingDataStore = new HighlightingDataStore(
-                data
-            );
+            const store: HighlightingDataStore = new HighlightingDataStore(data);
             let table = mount(<Table columns={columns} dataStore={store} />);
             let rows = getSimpleTableRows(table);
-            assert.isFalse(
-                rows.at(0).hasClass('highlighted'),
-                'row 0 not highlighted'
-            );
-            assert.isTrue(
-                rows.at(1).hasClass('highlighted'),
-                'row 1 highlighted'
-            );
-            assert.isFalse(
-                rows.at(2).hasClass('highlighted'),
-                'row 2 not highlighted'
-            );
-            assert.isTrue(
-                rows.at(3).hasClass('highlighted'),
-                'row 3 highlighted'
-            );
-            assert.isTrue(
-                rows.at(4).hasClass('highlighted'),
-                'row 4 highlighted'
-            );
+            assert.isFalse(rows.at(0).hasClass('highlighted'), 'row 0 not highlighted');
+            assert.isTrue(rows.at(1).hasClass('highlighted'), 'row 1 highlighted');
+            assert.isFalse(rows.at(2).hasClass('highlighted'), 'row 2 not highlighted');
+            assert.isTrue(rows.at(3).hasClass('highlighted'), 'row 3 highlighted');
+            assert.isTrue(rows.at(4).hasClass('highlighted'), 'row 4 highlighted');
         });
         it('onRowClick prop fires w associated datum when the row is clicked', () => {
             let onRowClick = sinon.spy((fd: any) => {});
             let tmpColumns = _.cloneDeep(columns);
-            tmpColumns[0].render = (d: any) => (
-                <span id={`name-cell-${d.name}`}>{d.name}</span>
-            );
-            let table = mount(
-                <Table
-                    columns={tmpColumns}
-                    data={data}
-                    onRowClick={onRowClick}
-                />
-            );
+            tmpColumns[0].render = (d: any) => <span id={`name-cell-${d.name}`}>{d.name}</span>;
+            let table = mount(<Table columns={tmpColumns} data={data} onRowClick={onRowClick} />);
             table.find('#name-cell-3').simulate('click');
             assert.isTrue(onRowClick.calledOnce);
             assert.deepEqual(onRowClick.args[0][0], datum3);
@@ -1935,13 +1781,7 @@ describe('LazyMobXTable', () => {
         it('shows initially visible columns at first, and does not show invisible ones', () => {
             assert.deepEqual(
                 getVisibleColumnHeaders(table),
-                [
-                    'Name',
-                    'Number',
-                    'String',
-                    'Number List',
-                    'String without filter function',
-                ],
+                ['Name', 'Number', 'String', 'Number List', 'String without filter function'],
                 "initially visible columns are the ones specified without 'visible:false'"
             );
         });
@@ -1974,12 +1814,7 @@ describe('LazyMobXTable', () => {
             );
             assert.deepEqual(
                 getVisibleColumnHeaders(table),
-                [
-                    'Number',
-                    'String',
-                    'Number List',
-                    'String without filter function',
-                ],
+                ['Number', 'String', 'Number List', 'String without filter function'],
                 'Name column no longer visible'
             );
             rows = getVisibleRows(table);
@@ -2002,10 +1837,7 @@ describe('LazyMobXTable', () => {
                 );
             }
             assert.isTrue(
-                clickColumnVisibilityCheckbox(
-                    table,
-                    'Initially invisible column'
-                ),
+                clickColumnVisibilityCheckbox(table, 'Initially invisible column'),
                 'IIC column is now checked'
             );
             assert.deepEqual(
@@ -2047,10 +1879,7 @@ describe('LazyMobXTable', () => {
                 'Name checkbox is now checked'
             );
             assert.isFalse(
-                clickColumnVisibilityCheckbox(
-                    table,
-                    'Initially invisible column'
-                ),
+                clickColumnVisibilityCheckbox(table, 'Initially invisible column'),
                 'Iic column is now unchecked'
             );
             rows = getVisibleRows(table);
@@ -2077,60 +1906,32 @@ describe('LazyMobXTable', () => {
             }
         });
         it('does not break if no columns are visible', () => {
-            assert.isFalse(
-                clickColumnVisibilityCheckbox(table, 'Name'),
-                'unchecking Name'
-            );
-            assert.isFalse(
-                clickColumnVisibilityCheckbox(table, 'Number'),
-                'unchecking Number'
-            );
-            assert.isFalse(
-                clickColumnVisibilityCheckbox(table, 'String'),
-                'unchecking String'
-            );
+            assert.isFalse(clickColumnVisibilityCheckbox(table, 'Name'), 'unchecking Name');
+            assert.isFalse(clickColumnVisibilityCheckbox(table, 'Number'), 'unchecking Number');
+            assert.isFalse(clickColumnVisibilityCheckbox(table, 'String'), 'unchecking String');
             assert.isFalse(
                 clickColumnVisibilityCheckbox(table, 'Number List'),
                 'unchecking Number List'
             );
             assert.isFalse(
-                clickColumnVisibilityCheckbox(
-                    table,
-                    'String without filter function'
-                ),
+                clickColumnVisibilityCheckbox(table, 'String without filter function'),
                 'unchecking String without filter function'
             );
-            assert.deepEqual(
-                getVisibleColumnHeaders(table),
-                [],
-                'no headers visible'
-            );
+            assert.deepEqual(getVisibleColumnHeaders(table), [], 'no headers visible');
             // Rows should be empty
             let rows = getVisibleRows(table);
             for (let i = 0; i < rows.length; i++) {
                 expect(rows[i]).toEqualJSX(<tr></tr>);
             }
-            assert.isTrue(
-                clickColumnVisibilityCheckbox(table, 'Name'),
-                'checking Name'
-            );
-            assert.isTrue(
-                clickColumnVisibilityCheckbox(table, 'Number'),
-                'checking Number'
-            );
-            assert.isTrue(
-                clickColumnVisibilityCheckbox(table, 'String'),
-                'checking String'
-            );
+            assert.isTrue(clickColumnVisibilityCheckbox(table, 'Name'), 'checking Name');
+            assert.isTrue(clickColumnVisibilityCheckbox(table, 'Number'), 'checking Number');
+            assert.isTrue(clickColumnVisibilityCheckbox(table, 'String'), 'checking String');
             assert.isTrue(
                 clickColumnVisibilityCheckbox(table, 'Number List'),
                 'checking Number List'
             );
             assert.isTrue(
-                clickColumnVisibilityCheckbox(
-                    table,
-                    'String without filter function'
-                ),
+                clickColumnVisibilityCheckbox(table, 'String without filter function'),
                 'checking String without filter function'
             );
             // rows should be back to normal
@@ -2175,10 +1976,7 @@ describe('LazyMobXTable', () => {
         it('shows no rows if filtering is attempted when no columns have defined filter functions', () => {
             let column = columns[6];
             let filterString = 'f'; // this string is contained in the 'str' field of two data, which is the field thats rendere by this column
-            assert.isFalse(
-                !!column.filter,
-                'this column has no filter function'
-            );
+            assert.isFalse(!!column.filter, 'this column has no filter function');
             let table = mount(<Table columns={[column]} data={data} />);
             simulateTableSearchInput(table, filterString);
             clock.tick(1000);
@@ -2264,18 +2062,14 @@ describe('LazyMobXTable', () => {
         it('gives just the column names when theres no data in the table', async () => {
             let table = mount(<Table columns={columns} data={[]} />);
             assert.deepEqual(
-                (await (table.instance() as LazyMobXTable<
-                    any
-                >).getDownloadDataPromise()).text,
+                (await (table.instance() as LazyMobXTable<any>).getDownloadDataPromise()).text,
                 'Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n'
             );
         });
         it("gives one row of data when theres one row. data given for every column, including hidden, and without download def'n. if no data, gives empty string for that cell.", async () => {
             let table = mount(<Table columns={columns} data={[data[0]]} />);
             assert.deepEqual(
-                (await (table.instance() as LazyMobXTable<
-                    any
-                >).getDownloadDataPromise()).text,
+                (await (table.instance() as LazyMobXTable<any>).getDownloadDataPromise()).text,
                 'Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n' +
                     '0\t0\tasdfj\t\t0HELLO123456\t\t\r\n'
             );
@@ -2283,9 +2077,7 @@ describe('LazyMobXTable', () => {
         it("gives data for all rows. data given for every column, including hidden, and without download def'n. if no data, gives empty string for that cell", async () => {
             let table = mount(<Table columns={columns} data={data} />);
             assert.deepEqual(
-                (await (table.instance() as LazyMobXTable<
-                    any
-                >).getDownloadDataPromise()).text,
+                (await (table.instance() as LazyMobXTable<any>).getDownloadDataPromise()).text,
                 'Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n' +
                     '0\t0\tasdfj\t\t0HELLO123456\t\t\r\n' +
                     '1\t6\tkdfjpo\t\t1HELLO123456\t\t\r\n' +
@@ -2305,9 +2097,7 @@ describe('LazyMobXTable', () => {
             );
 
             assert.deepEqual(
-                (await (table.instance() as LazyMobXTable<
-                    any
-                >).getDownloadDataPromise()).text,
+                (await (table.instance() as LazyMobXTable<any>).getDownloadDataPromise()).text,
                 'Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n' +
                     '3\t-1\tzijxcpo\t\t3HELLO123456\t\t\r\n' +
                     '0\t0\tasdfj\t\t0HELLO123456\t\t\r\n' +
@@ -2320,9 +2110,7 @@ describe('LazyMobXTable', () => {
         it('gives data for data with multiple elements', async () => {
             let table = mount(<Table columns={columns} data={multiData} />);
             assert.deepEqual(
-                (await (table.instance() as LazyMobXTable<
-                    any
-                >).getDownloadDataPromise()).text,
+                (await (table.instance() as LazyMobXTable<any>).getDownloadDataPromise()).text,
                 'Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n' +
                     '0\t0\tasdfj\t\t0HELLO123456\t\t\r\n' +
                     '1\t6\tkdfjpo\t\t1HELLO123456\t\t\r\n' +
@@ -2341,17 +2129,14 @@ describe('LazyMobXTable', () => {
                 {
                     name: 'Science',
                     render: (d: any) => <span />,
-                    headerDownload: (name: string) =>
-                        `${name}: Ruining everything since 1543`,
+                    headerDownload: (name: string) => `${name}: Ruining everything since 1543`,
                 },
             ];
 
             const table = mount(<Table columns={cols} data={[]} />);
 
             assert.deepEqual(
-                (await (table.instance() as LazyMobXTable<
-                    any
-                >).getDownloadDataPromise()).text,
+                (await (table.instance() as LazyMobXTable<any>).getDownloadDataPromise()).text,
                 'Myth\tScience: Ruining everything since 1543\r\n'
             );
         });
@@ -2369,28 +2154,16 @@ describe('LazyMobXTable', () => {
         it('limits page accessing appropriately, depending on how many items total and how many per page, and changes page numbers correctly', () => {
             let table = mount(<Table columns={simpleColumns} data={[]} />);
             assert.equal(getCurrentPage(table), 0, 'starts on page 0');
-            assert.isFalse(
-                clickPrevPage(table),
-                'prev page button is disabled with no data'
-            );
+            assert.isFalse(clickPrevPage(table), 'prev page button is disabled with no data');
             assert.equal(getCurrentPage(table), 0, 'still on page 0');
-            assert.isFalse(
-                clickNextPage(table),
-                'next page button is disabled with no data'
-            );
+            assert.isFalse(clickNextPage(table), 'next page button is disabled with no data');
             assert.equal(getCurrentPage(table), 0, 'havent changed pages');
 
             table.setProps({ columns: simpleColumns, data: [simpleData[0]] });
             assert.equal(getCurrentPage(table), 0, 'starts on page 0');
-            assert.isFalse(
-                clickPrevPage(table),
-                'prev page button is disabled with 1 row'
-            );
+            assert.isFalse(clickPrevPage(table), 'prev page button is disabled with 1 row');
             assert.equal(getCurrentPage(table), 0, 'still on page 0');
-            assert.isFalse(
-                clickNextPage(table),
-                'next page button is disabled with 1 row'
-            );
+            assert.isFalse(clickNextPage(table), 'next page button is disabled with 1 row');
             assert.equal(getCurrentPage(table), 0, 'havent changed pages');
 
             assert.equal(
@@ -2403,15 +2176,9 @@ describe('LazyMobXTable', () => {
                 data: simpleData.slice(0, 20),
             });
             assert.equal(getCurrentPage(table), 0, 'starts on page 0');
-            assert.isFalse(
-                clickPrevPage(table),
-                'prev page disabled on page 0'
-            );
+            assert.isFalse(clickPrevPage(table), 'prev page disabled on page 0');
             assert.equal(getCurrentPage(table), 0, 'still on page 0');
-            assert.isFalse(
-                clickNextPage(table),
-                'next page disabled when all data fits on page'
-            );
+            assert.isFalse(clickNextPage(table), 'next page disabled when all data fits on page');
             assert.equal(getCurrentPage(table), 0, 'havent changed pages');
 
             table.setProps({
@@ -2419,43 +2186,21 @@ describe('LazyMobXTable', () => {
                 data: simpleData.slice(0, 60),
             });
             assert.equal(getCurrentPage(table), 0, 'starts on page 0');
-            assert.isFalse(
-                clickPrevPage(table),
-                'prev page disabled on page 0'
-            );
+            assert.isFalse(clickPrevPage(table), 'prev page disabled on page 0');
             assert.equal(getCurrentPage(table), 0, 'still on page 0');
-            assert.isTrue(
-                clickNextPage(table),
-                'next page works to go to page 1'
-            );
+            assert.isTrue(clickNextPage(table), 'next page works to go to page 1');
             assert.equal(getCurrentPage(table), 1, 'now on page 1');
-            assert.isFalse(
-                clickNextPage(table),
-                'when on page 1, no more pages'
-            );
+            assert.isFalse(clickNextPage(table), 'when on page 1, no more pages');
             assert.equal(getCurrentPage(table), 1, 'still on page 1');
-            assert.isTrue(
-                clickPrevPage(table),
-                'when on page 1, we can go prev page'
-            );
+            assert.isTrue(clickPrevPage(table), 'when on page 1, we can go prev page');
             assert.equal(getCurrentPage(table), 0, 'now on page 0');
-            assert.isFalse(
-                clickPrevPage(table),
-                "can't go back more than page 0"
-            );
+            assert.isFalse(clickPrevPage(table), "can't go back more than page 0");
             assert.equal(getCurrentPage(table), 0, 'still on page 0');
-            assert.isTrue(
-                clickNextPage(table),
-                'but we can go to the next page again'
-            );
+            assert.isTrue(clickNextPage(table), 'but we can go to the next page again');
             assert.equal(getCurrentPage(table), 1, 'back to page 1');
 
             selectItemsPerPage(table, -1);
-            assert.equal(
-                getItemsPerPage(table),
-                -1,
-                'make sure setting is on show all'
-            );
+            assert.equal(getItemsPerPage(table), -1, 'make sure setting is on show all');
             assert.equal(getCurrentPage(table), 0, 'goes back to page 0');
             assert.isFalse(
                 clickPrevPage(table),
@@ -2477,11 +2222,7 @@ describe('LazyMobXTable', () => {
                 25,
                 'case: no data; it successfully changes the items per page to 25'
             );
-            assert.equal(
-                getCurrentPage(table),
-                0,
-                'case: no data; still on page 0'
-            );
+            assert.equal(getCurrentPage(table), 0, 'case: no data; still on page 0');
             assert.equal(
                 getNumVisibleRows(table),
                 0,
@@ -2493,11 +2234,7 @@ describe('LazyMobXTable', () => {
                 -1,
                 'case: no data; it successfully changes the items per page to show all'
             );
-            assert.equal(
-                getCurrentPage(table),
-                0,
-                'case: no data; still on page 0'
-            );
+            assert.equal(getCurrentPage(table), 0, 'case: no data; still on page 0');
             assert.equal(
                 getNumVisibleRows(table),
                 0,
@@ -2511,50 +2248,26 @@ describe('LazyMobXTable', () => {
                 25,
                 'case: 1 data; it successfully changes the items per page to 25'
             );
-            assert.equal(
-                getCurrentPage(table),
-                0,
-                'case: 1 data; still on page 0'
-            );
-            assert.equal(
-                getNumVisibleRows(table),
-                1,
-                'case: 1 data; 1 row visible with 25/page'
-            );
+            assert.equal(getCurrentPage(table), 0, 'case: 1 data; still on page 0');
+            assert.equal(getNumVisibleRows(table), 1, 'case: 1 data; 1 row visible with 25/page');
             selectItemsPerPage(table, -1);
             assert.equal(
                 getItemsPerPage(table),
                 -1,
                 'case: 1 data; it successfully changes the items per page to show all'
             );
-            assert.equal(
-                getCurrentPage(table),
-                0,
-                'case: 1 data; still on page 0'
-            );
-            assert.equal(
-                getNumVisibleRows(table),
-                1,
-                'case: 1 data; 1 row visible with show all'
-            );
+            assert.equal(getCurrentPage(table), 0, 'case: 1 data; still on page 0');
+            assert.equal(getNumVisibleRows(table), 1, 'case: 1 data; 1 row visible with show all');
 
             table.setProps({ columns: columns, data: simpleData });
-            assert.equal(
-                simpleData.length,
-                120,
-                "for this test we're assuming 120 data"
-            );
+            assert.equal(simpleData.length, 120, "for this test we're assuming 120 data");
             selectItemsPerPage(table, 25);
             assert.equal(
                 getItemsPerPage(table),
                 25,
                 'case: 120 data; it successfully changes the items per page to 25'
             );
-            assert.equal(
-                getCurrentPage(table),
-                0,
-                'case: 120 data; still on page 0'
-            );
+            assert.equal(getCurrentPage(table), 0, 'case: 120 data; still on page 0');
             assert.equal(
                 getNumVisibleRows(table),
                 25,
@@ -2562,11 +2275,7 @@ describe('LazyMobXTable', () => {
             );
             clickNextPage(table);
             clickNextPage(table);
-            assert.equal(
-                getCurrentPage(table),
-                2,
-                'case: 120 data; moved to page 2'
-            );
+            assert.equal(getCurrentPage(table), 2, 'case: 120 data; moved to page 2');
             assert.equal(
                 getNumVisibleRows(table),
                 25,
@@ -2578,11 +2287,7 @@ describe('LazyMobXTable', () => {
                 10,
                 'case: 120 data; it successfully changes the items per page to 10'
             );
-            assert.equal(
-                getCurrentPage(table),
-                2,
-                'case: 120 data; still on page 2'
-            );
+            assert.equal(getCurrentPage(table), 2, 'case: 120 data; still on page 2');
             assert.equal(
                 getNumVisibleRows(table),
                 10,
@@ -2594,11 +2299,7 @@ describe('LazyMobXTable', () => {
                 50,
                 'case: 120 data; it successfully changes the items per page to 50'
             );
-            assert.equal(
-                getCurrentPage(table),
-                2,
-                'case: 120 data; still on page 2'
-            );
+            assert.equal(getCurrentPage(table), 2, 'case: 120 data; still on page 2');
             assert.equal(
                 getNumVisibleRows(table),
                 20,
@@ -2610,11 +2311,7 @@ describe('LazyMobXTable', () => {
                 100,
                 'case: 120 data; it successfully changes the items per page to 100'
             );
-            assert.equal(
-                getCurrentPage(table),
-                1,
-                'case: 120 data; now on page 1'
-            );
+            assert.equal(getCurrentPage(table), 1, 'case: 120 data; now on page 1');
             assert.equal(
                 getNumVisibleRows(table),
                 20,
@@ -2626,11 +2323,7 @@ describe('LazyMobXTable', () => {
                 -1,
                 'case: 120 data; it successfully changes the items per page to show all'
             );
-            assert.equal(
-                getCurrentPage(table),
-                0,
-                "case: 120 data; now we're on page 0"
-            );
+            assert.equal(getCurrentPage(table), 0, "case: 120 data; now we're on page 0");
             assert.equal(
                 getNumVisibleRows(table),
                 120,
@@ -2638,9 +2331,7 @@ describe('LazyMobXTable', () => {
             );
         });
         it('shows the correct data for given page', () => {
-            let table = mount(
-                <Table columns={simpleColumns} data={simpleData.slice(0, 40)} />
-            );
+            let table = mount(<Table columns={simpleColumns} data={simpleData.slice(0, 40)} />);
             assert.equal(
                 getItemsPerPage(table),
                 50,
@@ -2665,11 +2356,7 @@ describe('LazyMobXTable', () => {
                 "case: 120 data; for this test we're assuming 50/page"
             );
             assert.equal(getCurrentPage(table), 0, 'case: 120 data; on page 0');
-            assert.equal(
-                simpleData.length,
-                120,
-                "confirm we're working with 120 data"
-            );
+            assert.equal(simpleData.length, 120, "confirm we're working with 120 data");
             rows = getVisibleRows(table);
             for (let i = 0; i < rows.length; i++) {
                 expect(rows[i]).toEqualJSX(
@@ -2707,11 +2394,7 @@ describe('LazyMobXTable', () => {
         });
         it('shows the right text before the paging buttons', () => {
             let table = mount(<Table columns={simpleColumns} data={[]} />);
-            assert.equal(
-                getItemsPerPage(table),
-                50,
-                'confirm 50 items per page'
-            );
+            assert.equal(getItemsPerPage(table), 50, 'confirm 50 items per page');
             assert.equal(getTextBeforeButtons(table), 'Showing 0-0 of 0');
 
             table.setProps({ columns: simpleColumns, data: [simpleData[0]] });
@@ -2724,11 +2407,7 @@ describe('LazyMobXTable', () => {
             assert.equal(getTextBeforeButtons(table), 'Showing 1-40 of 40');
 
             table.setProps({ columns: simpleColumns, data: simpleData });
-            assert.equal(
-                simpleData.length,
-                120,
-                "confirm we're working with 120 data"
-            );
+            assert.equal(simpleData.length, 120, "confirm we're working with 120 data");
             assert.equal(getTextBeforeButtons(table), 'Showing 1-50 of 120');
             clickNextPage(table);
             assert.equal(getCurrentPage(table), 1);

@@ -51,16 +51,13 @@ export function title(
 
     return (
         <span>
-            {countInfo} {recurrentHotspot} {maybeAnd} {clusteredHotspot}{' '}
-            {customInfo}
+            {countInfo} {recurrentHotspot} {maybeAnd} {clusteredHotspot} {customInfo}
         </span>
     );
 }
 
 export function publication(isHotspot: boolean, is3dHotspot: boolean) {
-    const recurrentHotspot = isHotspot
-        ? 'a recurrent hotspot (statistically significant)'
-        : '';
+    const recurrentHotspot = isHotspot ? 'a recurrent hotspot (statistically significant)' : '';
     const maybeAnd = isHotspot && is3dHotspot ? 'and' : '';
     const clusteredHotspot = is3dHotspot ? 'a 3D clustered hotspot' : '';
 
@@ -85,10 +82,10 @@ export function publication(isHotspot: boolean, is3dHotspot: boolean) {
 
     return (
         <span>
-            This mutated amino acid was identified as {recurrentHotspot}{' '}
-            {maybeAnd} {clusteredHotspot} in a population-scale cohort of tumor
-            samples of various cancer types using methodology based in part on{' '}
-            {recurrentPublication} {maybeAnd} {clusteredPublication}.
+            This mutated amino acid was identified as {recurrentHotspot} {maybeAnd}{' '}
+            {clusteredHotspot} in a population-scale cohort of tumor samples of various cancer types
+            using methodology based in part on {recurrentPublication} {maybeAnd}{' '}
+            {clusteredPublication}.
         </span>
     );
 }

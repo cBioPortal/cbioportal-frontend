@@ -60,9 +60,7 @@ export default class HotspotSet {
     }
 }
 
-function createHotspotRegions(
-    intervals: [number, number][]
-): [number, number][] {
+function createHotspotRegions(intervals: [number, number][]): [number, number][] {
     // in: intervals:[L:number, U:number][] where L <= U
     // out: a list of intervals (type [L:number, U:number][] where L <= U) such that
     //	every interval is disjoint and the list is in sorted order
@@ -76,10 +74,7 @@ function createHotspotRegions(
     });
     // Then, consolidate them
     const ret: [number, number][] = [];
-    let currentCombinedInterval: [number, number] = [
-        intervals[0][0],
-        intervals[0][1],
-    ];
+    let currentCombinedInterval: [number, number] = [intervals[0][0], intervals[0][1]];
     let currentInterval: [number, number];
     let i = 1;
     while (i <= intervals.length) {

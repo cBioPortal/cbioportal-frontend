@@ -1,8 +1,6 @@
 import { CancerStudy } from 'shared/api/generated/CBioPortalAPI';
 
-export function generateDownloadFilenamePrefixByStudies(
-    studies?: CancerStudy[]
-) {
+export function generateDownloadFilenamePrefixByStudies(studies?: CancerStudy[]) {
     return generateDownloadFilenamePrefixByStudyIds(
         studies ? studies.map(s => s.studyId) : undefined
     );

@@ -99,9 +99,7 @@ export class VAFPlot extends React.Component<IVAFPlotProps, IVAFPlotState> {
             options.margin.bottom = 30 + label_dist_to_axis / 2;
         if (options.height === undefined && options.margin.top !== undefined)
             options.height =
-                (500 + label_dist_to_axis) / 2 -
-                options.margin.top -
-                options.margin.bottom;
+                (500 + label_dist_to_axis) / 2 - options.margin.top - options.margin.bottom;
         this.state = {
             show_histogram: !!this.props.init_show_histogram,
             show_curve: !!this.props.init_show_curve,

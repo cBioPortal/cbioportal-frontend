@@ -26,10 +26,7 @@ export default class ScrollBar extends React.Component<IScrollBar, {}> {
     }
 
     public get overflow() {
-        return (
-            this.scrollEl.offsetWidth -
-            (this.scrollEl.parentNode as HTMLElement).offsetWidth
-        );
+        return this.scrollEl.offsetWidth - (this.scrollEl.parentNode as HTMLElement).offsetWidth;
     }
 
     @observable visible = false;
@@ -68,8 +65,7 @@ export default class ScrollBar extends React.Component<IScrollBar, {}> {
     @autobind
     handleDragEvent(mouseEvent: any, dragEvent: any) {
         const node = dragEvent.node;
-        let percentage =
-            dragEvent.x / (node.parentNode.offsetWidth - node.offsetWidth);
+        let percentage = dragEvent.x / (node.parentNode.offsetWidth - node.offsetWidth);
         percentage = percentage > 1 ? 1 : percentage;
         percentage = percentage < 0 ? 0 : percentage;
         if (this.props.onScroll) this.props.onScroll({ percentage });
@@ -90,10 +86,7 @@ export default class ScrollBar extends React.Component<IScrollBar, {}> {
                 ref={(el: HTMLDivElement) => (this.scrollbarEl = el)}
             >
                 <Draggable bounds={'parent'} onDrag={this.handleDragEvent}>
-                    <div
-                        className={styles.handle}
-                        style={{ width: this.handleWidth }}
-                    ></div>
+                    <div className={styles.handle} style={{ width: this.handleWidth }}></div>
                 </Draggable>
             </div>
         );

@@ -11,11 +11,7 @@ import _ from 'lodash';
 
 describe('VAFLineChartUtils', () => {
     describe('computeRenderData', () => {
-        function roughlyDeepEqualPoints(
-            actual: IPoint[],
-            expected: IPoint[],
-            message?: string
-        ) {
+        function roughlyDeepEqualPoints(actual: IPoint[], expected: IPoint[], message?: string) {
             // theres no other way to do this in chai
             actual.forEach(d => {
                 d.y = d.y.toFixed(5) as any;
@@ -92,8 +88,7 @@ describe('VAFLineChartUtils', () => {
                 referenceAllele: '',
                 variantAllele: '',
                 tumorAltCount: vafPercent,
-                tumorRefCount:
-                    vafPercent === undefined ? undefined : 100 - vafPercent,
+                tumorRefCount: vafPercent === undefined ? undefined : 100 - vafPercent,
                 molecularProfileId: 'mutations',
             } as Mutation;
         }
@@ -180,13 +175,7 @@ describe('VAFLineChartUtils', () => {
                         ],
 
                         [
-                            makeMutation(
-                                1,
-                                'gene2',
-                                'proteinchange2',
-                                30,
-                                'uncalled'
-                            ),
+                            makeMutation(1, 'gene2', 'proteinchange2', 30, 'uncalled'),
                             makeMutation(2, 'gene2', 'proteinchange2', 50),
                             makeMutation(3, 'gene2', 'proteinchange2', 25),
                         ],
@@ -207,36 +196,21 @@ describe('VAFLineChartUtils', () => {
                         [
                             {
                                 sampleId: 'sample1',
-                                mutation: makeMutation(
-                                    1,
-                                    'gene1',
-                                    'proteinchange1',
-                                    20
-                                ),
+                                mutation: makeMutation(1, 'gene1', 'proteinchange1', 20),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 0,
                                 y: 20 / 100,
                             },
                             {
                                 sampleId: 'sample2',
-                                mutation: makeMutation(
-                                    2,
-                                    'gene1',
-                                    'proteinchange1',
-                                    10
-                                ),
+                                mutation: makeMutation(2, 'gene1', 'proteinchange1', 10),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 1,
                                 y: 10 / 100,
                             },
                             {
                                 sampleId: 'sample3',
-                                mutation: makeMutation(
-                                    3,
-                                    'gene1',
-                                    'proteinchange1',
-                                    15
-                                ),
+                                mutation: makeMutation(3, 'gene1', 'proteinchange1', 15),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 2,
                                 y: 15 / 100,
@@ -252,31 +226,20 @@ describe('VAFLineChartUtils', () => {
                                     30,
                                     'uncalled'
                                 ),
-                                mutationStatus:
-                                    MutationStatus.PROFILED_WITH_READS_BUT_UNCALLED,
+                                mutationStatus: MutationStatus.PROFILED_WITH_READS_BUT_UNCALLED,
                                 x: 0,
                                 y: 30 / 100,
                             },
                             {
                                 sampleId: 'sample2',
-                                mutation: makeMutation(
-                                    2,
-                                    'gene2',
-                                    'proteinchange2',
-                                    50
-                                ),
+                                mutation: makeMutation(2, 'gene2', 'proteinchange2', 50),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 1,
                                 y: 50 / 100,
                             },
                             {
                                 sampleId: 'sample3',
-                                mutation: makeMutation(
-                                    3,
-                                    'gene2',
-                                    'proteinchange2',
-                                    25
-                                ),
+                                mutation: makeMutation(3, 'gene2', 'proteinchange2', 25),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 2,
                                 y: 25 / 100,
@@ -285,36 +248,21 @@ describe('VAFLineChartUtils', () => {
                         [
                             {
                                 sampleId: 'sample1',
-                                mutation: makeMutation(
-                                    1,
-                                    'gene3',
-                                    'proteinchange3',
-                                    40
-                                ),
+                                mutation: makeMutation(1, 'gene3', 'proteinchange3', 40),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 0,
                                 y: 40 / 100,
                             },
                             {
                                 sampleId: 'sample2',
-                                mutation: makeMutation(
-                                    2,
-                                    'gene3',
-                                    'proteinchange3',
-                                    60
-                                ),
+                                mutation: makeMutation(2, 'gene3', 'proteinchange3', 60),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 1,
                                 y: 60 / 100,
                             },
                             {
                                 sampleId: 'sample3',
-                                mutation: makeMutation(
-                                    3,
-                                    'gene3',
-                                    'proteinchange3',
-                                    80
-                                ),
+                                mutation: makeMutation(3, 'gene3', 'proteinchange3', 80),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 2,
                                 y: 80 / 100,
@@ -355,22 +303,14 @@ describe('VAFLineChartUtils', () => {
                     grayPoints: [
                         {
                             sampleId: 'sample2',
-                            mutation: makeMutation(
-                                2,
-                                'gene1',
-                                'proteinchange1'
-                            ),
+                            mutation: makeMutation(2, 'gene1', 'proteinchange1'),
                             mutationStatus: MutationStatus.MUTATED_BUT_NO_VAF,
                             x: 1,
                             y: 17.5 / 100,
                         },
                         {
                             sampleId: 'sample2',
-                            mutation: makeMutation(
-                                2,
-                                'gene3',
-                                'proteinchange3'
-                            ),
+                            mutation: makeMutation(2, 'gene3', 'proteinchange3'),
                             mutationStatus: MutationStatus.MUTATED_BUT_NO_VAF,
                             x: 1,
                             y: 60 / 100,
@@ -380,24 +320,14 @@ describe('VAFLineChartUtils', () => {
                         [
                             {
                                 sampleId: 'sample1',
-                                mutation: makeMutation(
-                                    1,
-                                    'gene1',
-                                    'proteinchange1',
-                                    20
-                                ),
+                                mutation: makeMutation(1, 'gene1', 'proteinchange1', 20),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 0,
                                 y: 20 / 100,
                             },
                             {
                                 sampleId: 'sample3',
-                                mutation: makeMutation(
-                                    3,
-                                    'gene1',
-                                    'proteinchange1',
-                                    15
-                                ),
+                                mutation: makeMutation(3, 'gene1', 'proteinchange1', 15),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 2,
                                 y: 15 / 100,
@@ -406,24 +336,14 @@ describe('VAFLineChartUtils', () => {
                         [
                             {
                                 sampleId: 'sample1',
-                                mutation: makeMutation(
-                                    1,
-                                    'gene2',
-                                    'proteinchange2',
-                                    30
-                                ),
+                                mutation: makeMutation(1, 'gene2', 'proteinchange2', 30),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 0,
                                 y: 30 / 100,
                             },
                             {
                                 sampleId: 'sample2',
-                                mutation: makeMutation(
-                                    2,
-                                    'gene2',
-                                    'proteinchange2',
-                                    50
-                                ),
+                                mutation: makeMutation(2, 'gene2', 'proteinchange2', 50),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 1,
                                 y: 50 / 100,
@@ -432,24 +352,14 @@ describe('VAFLineChartUtils', () => {
                         [
                             {
                                 sampleId: 'sample1',
-                                mutation: makeMutation(
-                                    1,
-                                    'gene3',
-                                    'proteinchange3',
-                                    40
-                                ),
+                                mutation: makeMutation(1, 'gene3', 'proteinchange3', 40),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 0,
                                 y: 40 / 100,
                             },
                             {
                                 sampleId: 'sample3',
-                                mutation: makeMutation(
-                                    3,
-                                    'gene3',
-                                    'proteinchange3',
-                                    80
-                                ),
+                                mutation: makeMutation(3, 'gene3', 'proteinchange3', 80),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 2,
                                 y: 80 / 100,
@@ -488,11 +398,7 @@ describe('VAFLineChartUtils', () => {
                     grayPoints: [
                         {
                             sampleId: 'sample2',
-                            mutation: makeMutation(
-                                2,
-                                'gene1',
-                                'proteinchange1'
-                            ),
+                            mutation: makeMutation(2, 'gene1', 'proteinchange1'),
                             mutationStatus: MutationStatus.MUTATED_BUT_NO_VAF,
                             x: 1,
                             y: 40 / 100,
@@ -502,24 +408,14 @@ describe('VAFLineChartUtils', () => {
                         [
                             {
                                 sampleId: 'sample1',
-                                mutation: makeMutation(
-                                    1,
-                                    'gene1',
-                                    'proteinchange1',
-                                    20
-                                ),
+                                mutation: makeMutation(1, 'gene1', 'proteinchange1', 20),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 0,
                                 y: 20 / 100,
                             },
                             {
                                 sampleId: 'sample3',
-                                mutation: makeMutation(
-                                    3,
-                                    'gene1',
-                                    'proteinchange1',
-                                    60
-                                ),
+                                mutation: makeMutation(3, 'gene1', 'proteinchange1', 60),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 2,
                                 y: 60 / 100,
@@ -528,12 +424,7 @@ describe('VAFLineChartUtils', () => {
                         [
                             {
                                 sampleId: 'sample2',
-                                mutation: makeMutation(
-                                    2,
-                                    'gene2',
-                                    'proteinchange2',
-                                    50
-                                ),
+                                mutation: makeMutation(2, 'gene2', 'proteinchange2', 50),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 1,
                                 y: 50 / 100,
@@ -542,12 +433,7 @@ describe('VAFLineChartUtils', () => {
                         [
                             {
                                 sampleId: 'sample1',
-                                mutation: makeMutation(
-                                    1,
-                                    'gene3',
-                                    'proteinchange3',
-                                    40
-                                ),
+                                mutation: makeMutation(1, 'gene3', 'proteinchange3', 40),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 0,
                                 y: 40 / 100,
@@ -584,12 +470,7 @@ describe('VAFLineChartUtils', () => {
                         [
                             {
                                 sampleId: 'sample1',
-                                mutation: makeMutation(
-                                    1,
-                                    'gene1',
-                                    'proteinchange1',
-                                    20
-                                ),
+                                mutation: makeMutation(1, 'gene1', 'proteinchange1', 20),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 0,
                                 y: 20 / 100,
@@ -598,12 +479,7 @@ describe('VAFLineChartUtils', () => {
                         [
                             {
                                 sampleId: 'sample3',
-                                mutation: makeMutation(
-                                    3,
-                                    'gene2',
-                                    'proteinchange2',
-                                    50
-                                ),
+                                mutation: makeMutation(3, 'gene2', 'proteinchange2', 50),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 2,
                                 y: 50 / 100,
@@ -612,37 +488,21 @@ describe('VAFLineChartUtils', () => {
                         [
                             {
                                 sampleId: 'sample1',
-                                mutation: makeMutation(
-                                    1,
-                                    'gene3',
-                                    'proteinchange3',
-                                    40
-                                ),
+                                mutation: makeMutation(1, 'gene3', 'proteinchange3', 40),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 0,
                                 y: 40 / 100,
                             },
                             {
                                 sampleId: 'sample2',
-                                mutation: makeMutation(
-                                    1,
-                                    'gene3',
-                                    'proteinchange3',
-                                    40
-                                ),
-                                mutationStatus:
-                                    MutationStatus.PROFILED_BUT_NOT_MUTATED,
+                                mutation: makeMutation(1, 'gene3', 'proteinchange3', 40),
+                                mutationStatus: MutationStatus.PROFILED_BUT_NOT_MUTATED,
                                 x: 1,
                                 y: 0,
                             },
                             {
                                 sampleId: 'sample3',
-                                mutation: makeMutation(
-                                    3,
-                                    'gene3',
-                                    'proteinchange3',
-                                    65
-                                ),
+                                mutation: makeMutation(3, 'gene3', 'proteinchange3', 65),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 2,
                                 y: 65 / 100,
@@ -705,12 +565,7 @@ describe('VAFLineChartUtils', () => {
                     grayPoints: [
                         {
                             sampleId: 'sample2',
-                            mutation: makeMutation(
-                                1,
-                                'gene2',
-                                'proteinchange2',
-                                20
-                            ),
+                            mutation: makeMutation(1, 'gene2', 'proteinchange2', 20),
                             mutationStatus: MutationStatus.NOT_PROFILED,
                             x: 1,
                             y: 25 / 100,
@@ -720,12 +575,7 @@ describe('VAFLineChartUtils', () => {
                         [
                             {
                                 sampleId: 'sample1',
-                                mutation: makeMutation(
-                                    1,
-                                    'gene1',
-                                    'proteinchange1',
-                                    20
-                                ),
+                                mutation: makeMutation(1, 'gene1', 'proteinchange1', 20),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 0,
                                 y: 20 / 100,
@@ -734,24 +584,14 @@ describe('VAFLineChartUtils', () => {
                         [
                             {
                                 sampleId: 'sample1',
-                                mutation: makeMutation(
-                                    1,
-                                    'gene2',
-                                    'proteinchange2',
-                                    20
-                                ),
+                                mutation: makeMutation(1, 'gene2', 'proteinchange2', 20),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 0,
                                 y: 20 / 100,
                             },
                             {
                                 sampleId: 'sample3',
-                                mutation: makeMutation(
-                                    3,
-                                    'gene2',
-                                    'proteinchange2',
-                                    30
-                                ),
+                                mutation: makeMutation(3, 'gene2', 'proteinchange2', 30),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 2,
                                 y: 30 / 100,
@@ -760,12 +600,7 @@ describe('VAFLineChartUtils', () => {
                         [
                             {
                                 sampleId: 'sample1',
-                                mutation: makeMutation(
-                                    1,
-                                    'gene3',
-                                    'proteinchange3',
-                                    40
-                                ),
+                                mutation: makeMutation(1, 'gene3', 'proteinchange3', 40),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 0,
                                 y: 40 / 100,
@@ -802,12 +637,7 @@ describe('VAFLineChartUtils', () => {
                         [
                             {
                                 sampleId: 'sample1',
-                                mutation: makeMutation(
-                                    1,
-                                    'gene1',
-                                    'proteinchange1',
-                                    20
-                                ),
+                                mutation: makeMutation(1, 'gene1', 'proteinchange1', 20),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 0,
                                 y: 20 / 100,
@@ -816,12 +646,7 @@ describe('VAFLineChartUtils', () => {
                         [
                             {
                                 sampleId: 'sample2',
-                                mutation: makeMutation(
-                                    2,
-                                    'gene2',
-                                    'proteinchange2',
-                                    50
-                                ),
+                                mutation: makeMutation(2, 'gene2', 'proteinchange2', 50),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 1,
                                 y: 50 / 100,
@@ -830,12 +655,7 @@ describe('VAFLineChartUtils', () => {
                         [
                             {
                                 sampleId: 'sample1',
-                                mutation: makeMutation(
-                                    1,
-                                    'gene3',
-                                    'proteinchange3',
-                                    40
-                                ),
+                                mutation: makeMutation(1, 'gene3', 'proteinchange3', 40),
                                 mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                                 x: 0,
                                 y: 40 / 100,

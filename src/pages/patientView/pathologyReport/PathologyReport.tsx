@@ -38,8 +38,7 @@ export default class PathologyReport extends React.Component<
     handleSelection() {
         this.setState({
             pdfUrl: this.buildPDFUrl(
-                this.pdfSelectList.options[this.pdfSelectList.selectedIndex]
-                    .value
+                this.pdfSelectList.options[this.pdfSelectList.selectedIndex].value
             ),
         });
     }
@@ -59,10 +58,7 @@ export default class PathologyReport extends React.Component<
                     </select>
                 </If>
 
-                <IFrameLoader
-                    height={this.props.iframeHeight}
-                    url={this.state.pdfUrl}
-                />
+                <IFrameLoader height={this.props.iframeHeight} url={this.state.pdfUrl} />
             </div>
         );
     }

@@ -72,58 +72,25 @@ describe('DataUtils', () => {
             assert.equal(selectDisplayValue({ a: 0 }, { a: 0 }), 'a');
         });
         it('returns the lowest priority value if two values', () => {
-            assert.equal(
-                selectDisplayValue({ a: 0, b: 0 }, { a: 0, b: 1 }),
-                'a'
-            );
-            assert.equal(
-                selectDisplayValue({ a: 0, b: 0 }, { a: 1, b: 0 }),
-                'b'
-            );
+            assert.equal(selectDisplayValue({ a: 0, b: 0 }, { a: 0, b: 1 }), 'a');
+            assert.equal(selectDisplayValue({ a: 0, b: 0 }, { a: 1, b: 0 }), 'b');
         });
         it('returns the lowest priority value if several values', () => {
-            assert.equal(
-                selectDisplayValue({ a: 0, b: 0, c: 5 }, { a: 0, b: 1, c: 2 }),
-                'a'
-            );
-            assert.equal(
-                selectDisplayValue(
-                    { a: 20, b: 0, c: 10 },
-                    { a: 2, b: 1, c: 0 }
-                ),
-                'c'
-            );
+            assert.equal(selectDisplayValue({ a: 0, b: 0, c: 5 }, { a: 0, b: 1, c: 2 }), 'a');
+            assert.equal(selectDisplayValue({ a: 20, b: 0, c: 10 }, { a: 2, b: 1, c: 0 }), 'c');
         });
         it('returns the lowest priority, highest count value if two values w same priority', () => {
-            assert.equal(
-                selectDisplayValue({ a: 1, b: 0 }, { a: 0, b: 0 }),
-                'a'
-            );
-            assert.equal(
-                selectDisplayValue({ a: 0, b: 1 }, { a: 0, b: 0 }),
-                'b'
-            );
+            assert.equal(selectDisplayValue({ a: 1, b: 0 }, { a: 0, b: 0 }), 'a');
+            assert.equal(selectDisplayValue({ a: 0, b: 1 }, { a: 0, b: 0 }), 'b');
         });
         it('returns the lowest priority, highest count value if several values w same priority', () => {
-            assert.equal(
-                selectDisplayValue({ a: 1, b: 0, c: 5 }, { a: 0, b: 0, c: 2 }),
-                'a'
-            );
-            assert.equal(
-                selectDisplayValue(
-                    { a: 20, b: 0, c: 10 },
-                    { a: 0, b: 1, c: 0 }
-                ),
-                'a'
-            );
+            assert.equal(selectDisplayValue({ a: 1, b: 0, c: 5 }, { a: 0, b: 0, c: 2 }), 'a');
+            assert.equal(selectDisplayValue({ a: 20, b: 0, c: 10 }, { a: 0, b: 1, c: 0 }), 'a');
         });
     });
 
     describe('makeGeneticTrackData', () => {
-        const makeMinimalGenePanelData = (
-            patientKey: string,
-            profiled: boolean
-        ) =>
+        const makeMinimalGenePanelData = (patientKey: string, profiled: boolean) =>
             ({
                 molecularProfileId: 'PROFILE1',
                 uniquePatientKey: patientKey,
@@ -131,10 +98,7 @@ describe('DataUtils', () => {
                 genePanelId: 'GENEPANEL1',
                 profiled,
             } as GenePanelData);
-        const makeMinimalDifferentGenePanelData = (
-            patientKey: string,
-            profiled: boolean
-        ) =>
+        const makeMinimalDifferentGenePanelData = (patientKey: string, profiled: boolean) =>
             ({
                 molecularProfileId: 'PROFILE1',
                 uniquePatientKey: patientKey,
@@ -142,20 +106,14 @@ describe('DataUtils', () => {
                 genePanelId: 'GENEPANEL2',
                 profiled,
             } as GenePanelData);
-        const makeMinimalWholeExomePanelData = (
-            patientKey: string,
-            profiled: boolean
-        ) =>
+        const makeMinimalWholeExomePanelData = (patientKey: string, profiled: boolean) =>
             ({
                 molecularProfileId: 'PROFILE1',
                 uniquePatientKey: patientKey,
                 uniqueSampleKey: `${patientKey}-SAMPLE1`,
                 profiled,
             } as GenePanelData);
-        const makeMinimalPatient = (
-            uniquePatientKey: string,
-            patientId: string
-        ) =>
+        const makeMinimalPatient = (uniquePatientKey: string, patientId: string) =>
             ({
                 uniquePatientKey,
                 patientId,
@@ -223,9 +181,7 @@ describe('DataUtils', () => {
         it('sets na if a single-gene cell is not covered by any panel', () => {
             // given a patient and a gene panel that doesn't mark all genes as
             // profiled in that patient
-            const patientArray = [
-                makeMinimalPatient('PATIENT1', 'TCGA-02-0001'),
-            ];
+            const patientArray = [makeMinimalPatient('PATIENT1', 'TCGA-02-0001')];
             const genePanelByCase = {
                 samples: {},
                 patients: {
@@ -257,9 +213,7 @@ describe('DataUtils', () => {
         it('sets na if none of the genes in a multi-gene cell is covered by a panel', () => {
             // given a patient and a gene panel that doesn't mark all genes as
             // profiled in that patient
-            const patientArray = [
-                makeMinimalPatient('PATIENT1', 'TCGA-02-0001'),
-            ];
+            const patientArray = [makeMinimalPatient('PATIENT1', 'TCGA-02-0001')];
             const genePanelByCase = {
                 samples: {},
                 patients: {
@@ -271,9 +225,7 @@ describe('DataUtils', () => {
                         notProfiledAllGenes: [],
                         notProfiledByGene: {
                             TP53: [makeMinimalGenePanelData('PATIENT1', false)],
-                            BRCA1: [
-                                makeMinimalGenePanelData('PATIENT1', false),
-                            ],
+                            BRCA1: [makeMinimalGenePanelData('PATIENT1', false)],
                         },
                     },
                 },
@@ -294,9 +246,7 @@ describe('DataUtils', () => {
         it('does not set na if a single-gene cell is covered by a panel', () => {
             // given a patient and a gene panel that marks a gene as profiled in
             // that patient
-            const patientArray = [
-                makeMinimalPatient('PATIENT1', 'TCGA-02-0001'),
-            ];
+            const patientArray = [makeMinimalPatient('PATIENT1', 'TCGA-02-0001')];
             const genePanelByCase = {
                 samples: {},
                 patients: {
@@ -325,9 +275,7 @@ describe('DataUtils', () => {
         it('does not set na if one of the genes in a multi-gene cell is covered by a panel', () => {
             // given a patient and a gene panel that marks a gene as profiled in
             // that patient
-            const patientArray = [
-                makeMinimalPatient('PATIENT1', 'TCGA-02-0001'),
-            ];
+            const patientArray = [makeMinimalPatient('PATIENT1', 'TCGA-02-0001')];
             const genePanelByCase = {
                 samples: {},
                 patients: {
@@ -338,9 +286,7 @@ describe('DataUtils', () => {
                         },
                         notProfiledAllGenes: [],
                         notProfiledByGene: {
-                            BRCA2: [
-                                makeMinimalGenePanelData('PATIENT1', false),
-                            ],
+                            BRCA2: [makeMinimalGenePanelData('PATIENT1', false)],
                         },
                     },
                 },
@@ -361,16 +307,12 @@ describe('DataUtils', () => {
         it('does not set na if a single-gene cell is covered by whole-exome profiling', () => {
             // given a patient and a whole-exome gene panel that marks a gene as
             // profiled in that patient
-            const patientArray = [
-                makeMinimalPatient('PATIENT1', 'TCGA-02-0001'),
-            ];
+            const patientArray = [makeMinimalPatient('PATIENT1', 'TCGA-02-0001')];
             const genePanelByCase = {
                 samples: {},
                 patients: {
                     PATIENT1: {
-                        allGenes: [
-                            makeMinimalWholeExomePanelData('PATIENT1', true),
-                        ],
+                        allGenes: [makeMinimalWholeExomePanelData('PATIENT1', true)],
                         byGene: {},
                         notProfiledAllGenes: [],
                         notProfiledByGene: {},
@@ -433,16 +375,12 @@ describe('DataUtils', () => {
         it('lists a profile in profiled_in if it covers a single-gene cell by whole-exome profiling', () => {
             // given a patient and a whole-exome gene panel that marks a gene as
             // profiled in that patient
-            const patientArray = [
-                makeMinimalPatient('PATIENT1', 'TCGA-02-0001'),
-            ];
+            const patientArray = [makeMinimalPatient('PATIENT1', 'TCGA-02-0001')];
             const genePanelByCase = {
                 samples: {},
                 patients: {
                     PATIENT1: {
-                        allGenes: [
-                            makeMinimalWholeExomePanelData('PATIENT1', true),
-                        ],
+                        allGenes: [makeMinimalWholeExomePanelData('PATIENT1', true)],
                         byGene: {},
                         notProfiledAllGenes: [],
                         notProfiledByGene: {},
@@ -471,9 +409,7 @@ describe('DataUtils', () => {
         it('lists a profile in profiled_in if it covers a single-gene cell by a non-whole-exome panel', () => {
             // given a patient and a non-whole-exome gene panel that marks a gene
             // as profiled in that patient
-            const patientArray = [
-                makeMinimalPatient('PATIENT1', 'TCGA-02-0001'),
-            ];
+            const patientArray = [makeMinimalPatient('PATIENT1', 'TCGA-02-0001')];
             const genePanelByCase = {
                 samples: {},
                 patients: {
@@ -496,9 +432,7 @@ describe('DataUtils', () => {
                 makeMinimalProfilelArray()
             );
             // then it lists the profile in profiled_in and not in not_profiled_in
-            assert.deepEqual(trackDatum.profiled_in, [
-                makeMinimalGenePanelData('PATIENT1', true),
-            ]);
+            assert.deepEqual(trackDatum.profiled_in, [makeMinimalGenePanelData('PATIENT1', true)]);
             assert.deepEqual(
                 trackDatum.not_profiled_in,
                 [],
@@ -509,9 +443,7 @@ describe('DataUtils', () => {
         it('lists a profile in not_profiled_in if it skips a single-gene cell in a non-whole-exome panel', () => {
             // given a patient and a gene panel that doesn't mark all genes as
             // profiled in that patient
-            const patientArray = [
-                makeMinimalPatient('PATIENT1', 'TCGA-02-0001'),
-            ];
+            const patientArray = [makeMinimalPatient('PATIENT1', 'TCGA-02-0001')];
             const genePanelByCase = {
                 samples: {},
                 patients: {
@@ -550,18 +482,14 @@ describe('DataUtils', () => {
         it('lists a profile in not_profiled_in if it fails to cover a patient at all', () => {
             // given a patient and a gene panel that marks that patient as
             // unprofiled for all genes
-            const patientArray = [
-                makeMinimalPatient('PATIENT1', 'TCGA-02-0001'),
-            ];
+            const patientArray = [makeMinimalPatient('PATIENT1', 'TCGA-02-0001')];
             const genePanelByCase = {
                 samples: {},
                 patients: {
                     PATIENT1: {
                         allGenes: [],
                         byGene: {},
-                        notProfiledAllGenes: [
-                            makeMinimalWholeExomePanelData('PATIENT1', false),
-                        ],
+                        notProfiledAllGenes: [makeMinimalWholeExomePanelData('PATIENT1', false)],
                         notProfiledByGene: {},
                     },
                 },
@@ -589,9 +517,7 @@ describe('DataUtils', () => {
             // given a patient, a gene panel that marks two genes as profiled in
             // that patient, and a different gene panel that marks one
             // of them as profiled in that patient
-            const patientArray = [
-                makeMinimalPatient('PATIENT1', 'TCGA-02-0001'),
-            ];
+            const patientArray = [makeMinimalPatient('PATIENT1', 'TCGA-02-0001')];
             const genePanelByCase = {
                 samples: {},
                 patients: {
@@ -601,26 +527,15 @@ describe('DataUtils', () => {
                             PTEN: [makeMinimalGenePanelData('PATIENT1', true)],
                             BRCA2: [
                                 makeMinimalGenePanelData('PATIENT1', true),
-                                makeMinimalDifferentGenePanelData(
-                                    'PATIENT1',
-                                    true
-                                ),
+                                makeMinimalDifferentGenePanelData('PATIENT1', true),
                             ],
                         },
                         notProfiledAllGenes: [],
                         notProfiledByGene: {
-                            PTEN: [
-                                makeMinimalDifferentGenePanelData(
-                                    'PATIENT1',
-                                    false
-                                ),
-                            ],
+                            PTEN: [makeMinimalDifferentGenePanelData('PATIENT1', false)],
                             BRCA1: [
                                 makeMinimalGenePanelData('PATIENT1', false),
-                                makeMinimalDifferentGenePanelData(
-                                    'PATIENT1',
-                                    false
-                                ),
+                                makeMinimalDifferentGenePanelData('PATIENT1', false),
                             ],
                         },
                     },
@@ -667,27 +582,23 @@ describe('DataUtils', () => {
             patient: 'patient1',
         });
         it('fills a datum w no data correctly', () => {
-            assert.deepEqual(
-                fillGeneticTrackDatum(makeMinimalUnfilledDatum(), 'gene', []),
-                {
-                    ...makeMinimalUnfilledDatum(),
-                    trackLabel: 'gene',
-                    data: [],
-                    disp_cna: undefined,
-                    disp_mrna: undefined,
-                    disp_prot: undefined,
-                    disp_mut: undefined,
-                    disp_germ: undefined,
-                }
-            );
+            assert.deepEqual(fillGeneticTrackDatum(makeMinimalUnfilledDatum(), 'gene', []), {
+                ...makeMinimalUnfilledDatum(),
+                trackLabel: 'gene',
+                data: [],
+                disp_cna: undefined,
+                disp_mrna: undefined,
+                disp_prot: undefined,
+                disp_mut: undefined,
+                disp_germ: undefined,
+            });
         });
         it('fills a datum w one mutation data correctly', () => {
             let data = [
                 {
                     mutationType: 'missense',
                     putativeDriver: true,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -709,8 +620,7 @@ describe('DataUtils', () => {
                 {
                     mutationType: 'in_frame_del',
                     putativeDriver: false,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -732,8 +642,7 @@ describe('DataUtils', () => {
                 {
                     mutationType: 'start_codon_del',
                     putativeDriver: false,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -755,8 +664,7 @@ describe('DataUtils', () => {
                 {
                     mutationType: 'fusion',
                     putativeDriver: false,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -780,8 +688,7 @@ describe('DataUtils', () => {
             let data = [
                 {
                     value: 2,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -802,8 +709,7 @@ describe('DataUtils', () => {
             data = [
                 {
                     value: 1,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -825,8 +731,7 @@ describe('DataUtils', () => {
                 {
                     value: -1,
                     alterationType: '',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -848,8 +753,7 @@ describe('DataUtils', () => {
                 {
                     value: -2,
                     alterationType: '',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -870,8 +774,7 @@ describe('DataUtils', () => {
             data = [
                 {
                     value: 0,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -896,8 +799,7 @@ describe('DataUtils', () => {
                     mutationType: 'missense',
                     putativeDriver: true,
                     mutationStatus: 'Germline',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -919,8 +821,7 @@ describe('DataUtils', () => {
                 {
                     mutationType: 'missense',
                     putativeDriver: true,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -945,14 +846,12 @@ describe('DataUtils', () => {
                     mutationType: 'missense',
                     putativeDriver: true,
                     mutationStatus: 'Germline',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                 } as AnnotatedExtendedAlteration,
                 {
                     mutationType: 'missense',
                     putativeDriver: false,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                 } as AnnotatedExtendedAlteration,
             ];
 
@@ -976,14 +875,12 @@ describe('DataUtils', () => {
                     mutationType: 'missense',
                     putativeDriver: false,
                     mutationStatus: 'Germline',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                 } as AnnotatedExtendedAlteration,
                 {
                     mutationType: 'start_codon_del',
                     putativeDriver: true,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                 } as AnnotatedExtendedAlteration,
             ];
 
@@ -1007,8 +904,7 @@ describe('DataUtils', () => {
             let data = [
                 {
                     alterationSubType: 'high',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MRNA_EXPRESSION,
+                    molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -1029,8 +925,7 @@ describe('DataUtils', () => {
             data = [
                 {
                     alterationSubType: 'low',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MRNA_EXPRESSION,
+                    molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -1052,8 +947,7 @@ describe('DataUtils', () => {
             let data = [
                 {
                     alterationSubType: 'high',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.PROTEIN_LEVEL,
+                    molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -1074,8 +968,7 @@ describe('DataUtils', () => {
             data = [
                 {
                     alterationSubType: 'low',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.PROTEIN_LEVEL,
+                    molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -1098,14 +991,12 @@ describe('DataUtils', () => {
                 {
                     mutationType: 'missense',
                     putativeDriver: true,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                 } as AnnotatedExtendedAlteration,
                 {
                     mutationType: 'start_codon_del',
                     putativeDriver: true,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -1127,14 +1018,12 @@ describe('DataUtils', () => {
                 {
                     mutationType: 'missense',
                     putativeDriver: true,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                 } as AnnotatedExtendedAlteration,
                 {
                     mutationType: 'start_codon_del',
                     putativeDriver: false,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -1156,14 +1045,12 @@ describe('DataUtils', () => {
                 {
                     mutationType: 'missense',
                     putativeDriver: false,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                 } as AnnotatedExtendedAlteration,
                 {
                     mutationType: 'start_codon_del',
                     putativeDriver: false,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -1185,13 +1072,11 @@ describe('DataUtils', () => {
             let data = [
                 {
                     value: 2,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                 } as AnnotatedExtendedAlteration,
                 {
                     value: 1,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -1212,13 +1097,11 @@ describe('DataUtils', () => {
             data = [
                 {
                     value: -2,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                 } as AnnotatedExtendedAlteration,
                 {
                     value: 0,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -1239,18 +1122,15 @@ describe('DataUtils', () => {
             data = [
                 {
                     value: -2,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                 } as AnnotatedExtendedAlteration,
                 {
                     value: -2,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                 } as AnnotatedExtendedAlteration,
                 {
                     value: 2,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -1271,18 +1151,15 @@ describe('DataUtils', () => {
             data = [
                 {
                     value: -2,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                 } as AnnotatedExtendedAlteration,
                 {
                     value: 2,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                 } as AnnotatedExtendedAlteration,
                 {
                     value: 2,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -1304,18 +1181,15 @@ describe('DataUtils', () => {
             let data = [
                 {
                     alterationSubType: 'high',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MRNA_EXPRESSION,
+                    molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION,
                 } as AnnotatedExtendedAlteration,
                 {
                     alterationSubType: 'low',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MRNA_EXPRESSION,
+                    molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION,
                 } as AnnotatedExtendedAlteration,
                 {
                     alterationSubType: 'low',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MRNA_EXPRESSION,
+                    molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -1336,18 +1210,15 @@ describe('DataUtils', () => {
             data = [
                 {
                     alterationSubType: 'high',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MRNA_EXPRESSION,
+                    molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION,
                 } as AnnotatedExtendedAlteration,
                 {
                     alterationSubType: 'high',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MRNA_EXPRESSION,
+                    molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION,
                 } as AnnotatedExtendedAlteration,
                 {
                     alterationSubType: 'low',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MRNA_EXPRESSION,
+                    molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -1369,18 +1240,15 @@ describe('DataUtils', () => {
             let data = [
                 {
                     alterationSubType: 'high',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.PROTEIN_LEVEL,
+                    molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL,
                 } as AnnotatedExtendedAlteration,
                 {
                     alterationSubType: 'low',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.PROTEIN_LEVEL,
+                    molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL,
                 } as AnnotatedExtendedAlteration,
                 {
                     alterationSubType: 'low',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.PROTEIN_LEVEL,
+                    molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -1401,18 +1269,15 @@ describe('DataUtils', () => {
             data = [
                 {
                     alterationSubType: 'high',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.PROTEIN_LEVEL,
+                    molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL,
                 } as AnnotatedExtendedAlteration,
                 {
                     alterationSubType: 'high',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.PROTEIN_LEVEL,
+                    molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL,
                 } as AnnotatedExtendedAlteration,
                 {
                     alterationSubType: 'low',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.PROTEIN_LEVEL,
+                    molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL,
                 } as AnnotatedExtendedAlteration,
             ];
             assert.deepEqual(
@@ -1434,94 +1299,79 @@ describe('DataUtils', () => {
             let data = [
                 {
                     alterationSubType: 'high',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.PROTEIN_LEVEL,
+                    molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL,
                 } as AnnotatedExtendedAlteration,
                 {
                     alterationSubType: 'low',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.PROTEIN_LEVEL,
+                    molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL,
                 } as AnnotatedExtendedAlteration,
                 {
                     alterationSubType: 'low',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.PROTEIN_LEVEL,
+                    molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL,
                 } as AnnotatedExtendedAlteration,
                 {
                     alterationSubType: 'high',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MRNA_EXPRESSION,
+                    molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION,
                 } as AnnotatedExtendedAlteration,
                 {
                     alterationSubType: 'high',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MRNA_EXPRESSION,
+                    molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION,
                 } as AnnotatedExtendedAlteration,
                 {
                     alterationSubType: 'low',
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MRNA_EXPRESSION,
+                    molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION,
                 } as AnnotatedExtendedAlteration,
                 {
                     value: -2,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                 } as AnnotatedExtendedAlteration,
                 {
                     value: -2,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                 } as AnnotatedExtendedAlteration,
                 {
                     value: 2,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
                 } as AnnotatedExtendedAlteration,
                 {
                     mutationType: 'missense',
                     putativeDriver: true,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                 } as AnnotatedExtendedAlteration,
                 {
                     mutationType: 'start_codon_del',
                     putativeDriver: true,
-                    molecularProfileAlterationType:
-                        AlterationTypeConstants.MUTATION_EXTENDED,
+                    molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
                 } as AnnotatedExtendedAlteration,
             ];
-            assert.deepEqual(
-                fillGeneticTrackDatum(makeMinimalUnfilledDatum(), 'gene', data),
-                {
-                    ...makeMinimalUnfilledDatum(),
-                    trackLabel: 'gene',
-                    data: data,
-                    disp_cna: 'homdel',
-                    disp_mrna: 'high',
-                    disp_prot: 'low',
-                    disp_mut: 'trunc_rec',
-                    disp_germ: false,
-                }
-            );
+            assert.deepEqual(fillGeneticTrackDatum(makeMinimalUnfilledDatum(), 'gene', data), {
+                ...makeMinimalUnfilledDatum(),
+                trackLabel: 'gene',
+                data: data,
+                disp_cna: 'homdel',
+                disp_mrna: 'high',
+                disp_prot: 'low',
+                disp_mut: 'trunc_rec',
+                disp_germ: false,
+            });
         });
     });
 
     describe('fillHeatmapTrackDatum', () => {
         it('sets na true if no data', () => {
             assert.isTrue(
-                fillHeatmapTrackDatum<
-                    IGeneHeatmapTrackDatum,
-                    'hugo_gene_symbol'
-                >({}, 'hugo_gene_symbol', '', {} as Sample).na
+                fillHeatmapTrackDatum<IGeneHeatmapTrackDatum, 'hugo_gene_symbol'>(
+                    {},
+                    'hugo_gene_symbol',
+                    '',
+                    {} as Sample
+                ).na
             );
         });
         it('sets data for sample', () => {
             const data: any[] = [{ value: 3 }];
             assert.deepEqual(
-                fillHeatmapTrackDatum<
-                    IGeneHeatmapTrackDatum,
-                    'hugo_gene_symbol'
-                >(
+                fillHeatmapTrackDatum<IGeneHeatmapTrackDatum, 'hugo_gene_symbol'>(
                     {},
                     'hugo_gene_symbol',
                     'gene',
@@ -1534,10 +1384,7 @@ describe('DataUtils', () => {
         it('removes data points with NaN value', () => {
             const data: any[] = [{ value: 3 }, { value: NaN }];
             assert.deepEqual(
-                fillHeatmapTrackDatum<
-                    IGeneHeatmapTrackDatum,
-                    'hugo_gene_symbol'
-                >(
+                fillHeatmapTrackDatum<IGeneHeatmapTrackDatum, 'hugo_gene_symbol'>(
                     {},
                     'hugo_gene_symbol',
                     'gene',
@@ -1550,10 +1397,7 @@ describe('DataUtils', () => {
         it('throws exception if more than one data given for sample', () => {
             const data: any[] = [{ value: 3 }, { value: 2 }];
             try {
-                fillHeatmapTrackDatum<
-                    IGeneHeatmapTrackDatum,
-                    'hugo_gene_symbol'
-                >(
+                fillHeatmapTrackDatum<IGeneHeatmapTrackDatum, 'hugo_gene_symbol'>(
                     {},
                     'hugo_gene_symbol',
                     'gene',
@@ -1568,10 +1412,7 @@ describe('DataUtils', () => {
         it('sets data for patient, if multiple then maximum in abs value', () => {
             let data: any[] = [{ value: 3 }, { value: 2 }];
             assert.deepEqual(
-                fillHeatmapTrackDatum<
-                    IGeneHeatmapTrackDatum,
-                    'hugo_gene_symbol'
-                >(
+                fillHeatmapTrackDatum<IGeneHeatmapTrackDatum, 'hugo_gene_symbol'>(
                     {},
                     'hugo_gene_symbol',
                     'gene',
@@ -1583,10 +1424,7 @@ describe('DataUtils', () => {
 
             data = [{ value: 2 }];
             assert.deepEqual(
-                fillHeatmapTrackDatum<
-                    IGeneHeatmapTrackDatum,
-                    'hugo_gene_symbol'
-                >(
+                fillHeatmapTrackDatum<IGeneHeatmapTrackDatum, 'hugo_gene_symbol'>(
                     {},
                     'hugo_gene_symbol',
                     'gene',
@@ -1598,10 +1436,7 @@ describe('DataUtils', () => {
 
             data = [{ value: 2 }, { value: 3 }, { value: 4 }];
             assert.deepEqual(
-                fillHeatmapTrackDatum<
-                    IGeneHeatmapTrackDatum,
-                    'hugo_gene_symbol'
-                >(
+                fillHeatmapTrackDatum<IGeneHeatmapTrackDatum, 'hugo_gene_symbol'>(
                     {},
                     'hugo_gene_symbol',
                     'gene',
@@ -1613,10 +1448,7 @@ describe('DataUtils', () => {
 
             data = [{ value: -10 }, { value: 3 }, { value: 4 }];
             assert.deepEqual(
-                fillHeatmapTrackDatum<
-                    IGeneHeatmapTrackDatum,
-                    'hugo_gene_symbol'
-                >(
+                fillHeatmapTrackDatum<IGeneHeatmapTrackDatum, 'hugo_gene_symbol'>(
                     {},
                     'hugo_gene_symbol',
                     'gene',
@@ -1733,10 +1565,7 @@ describe('DataUtils', () => {
         });
 
         it('Prefers largest non-threshold absolute value when no sort order provided', () => {
-            let data = [
-                { value: -10 },
-                { value: 10, thresholdType: '>' as '>' },
-            ];
+            let data = [{ value: -10 }, { value: 10, thresholdType: '>' as '>' }];
             const partialTrackDatum = {};
             fillHeatmapTrackDatum<ITreatmentHeatmapTrackDatum, 'treatment_id'>(
                 partialTrackDatum,

@@ -1,9 +1,5 @@
 import * as _ from 'lodash';
-import {
-    ClinicalData,
-    Gene,
-    Mutation,
-} from 'shared/api/generated/CBioPortalAPI';
+import { ClinicalData, Gene, Mutation } from 'shared/api/generated/CBioPortalAPI';
 
 const LITERAL_TO_HEADER: { [attrName: string]: string } = {
     aminoAcidChange: 'amino_acid_change',
@@ -69,10 +65,7 @@ export type MutationInput = Mutation & ClinicalInput;
  * @param header    header line (first line) of the input
  * @returns {object} map of <header name, index> pairs
  */
-export function buildIndexMap(
-    header: string,
-    separator: string
-): { [columnName: string]: number } {
+export function buildIndexMap(header: string, separator: string): { [columnName: string]: number } {
     const columns = header.split(separator);
     const map: { [columnName: string]: number } = {};
 
@@ -195,8 +188,7 @@ export function generatePatientIds(mutations: Partial<Mutation>[]) {
 
     mutations.forEach(mutation => {
         // if provided use patient id, else auto-generate
-        mutation.patientId =
-            mutation.patientId || mutation.sampleId || `patient_${idCounter++}`;
+        mutation.patientId = mutation.patientId || mutation.sampleId || `patient_${idCounter++}`;
     });
 }
 
@@ -205,8 +197,7 @@ export function generateUniqueSampleKeys(mutations: Partial<Mutation>[]) {
 
     mutations.forEach(mutation => {
         // if provided use unique sample key, else auto-generate
-        mutation.uniqueSampleKey =
-            mutation.uniqueSampleKey || `uniqueSampleKey_${idCounter++}`;
+        mutation.uniqueSampleKey = mutation.uniqueSampleKey || `uniqueSampleKey_${idCounter++}`;
     });
 }
 
@@ -235,22 +226,20 @@ export function getClinicalData(
 
     if (mutationInputData) {
         mutationInputData.forEach(mutationInput => {
-            Object.keys(clinicalAttrIdMap).forEach(
-                (key: keyof ClinicalInput) => {
-                    const value = mutationInput[key];
+            Object.keys(clinicalAttrIdMap).forEach((key: keyof ClinicalInput) => {
+                const value = mutationInput[key];
 
-                    if (value) {
-                        clinicalData.push({
-                            uniqueSampleKey: mutationInput.uniqueSampleKey,
-                            uniquePatientKey: mutationInput.uniquePatientKey,
-                            sampleId: mutationInput.sampleId,
-                            patientId: mutationInput.patientId,
-                            clinicalAttributeId: clinicalAttrIdMap[key],
-                            value,
-                        });
-                    }
+                if (value) {
+                    clinicalData.push({
+                        uniqueSampleKey: mutationInput.uniqueSampleKey,
+                        uniquePatientKey: mutationInput.uniquePatientKey,
+                        sampleId: mutationInput.sampleId,
+                        patientId: mutationInput.patientId,
+                        clinicalAttributeId: clinicalAttrIdMap[key],
+                        value,
+                    });
                 }
-            );
+            });
         });
     }
 
@@ -275,10 +264,7 @@ export function mutationInputToMutation(
         Object.keys(mutationInput).forEach((key: keyof MutationInput) => {
             // do NOT include ClinicalInput fields
             if (!clinicalAttrIdMap[key]) {
-                mutation[key as keyof Mutation] = parseField(
-                    mutationInput,
-                    key
-                );
+                mutation[key as keyof Mutation] = parseField(mutationInput, key);
             }
         });
 
@@ -288,10 +274,7 @@ export function mutationInputToMutation(
     return mutations;
 }
 
-function parseField(
-    mutationInput: Partial<MutationInput>,
-    key: keyof MutationInput
-) {
+function parseField(mutationInput: Partial<MutationInput>, key: keyof MutationInput) {
     let value = mutationInput[key];
 
     if (value && NUMERICAL_TO_HEADER[key]) {

@@ -1,9 +1,5 @@
 import * as _ from 'lodash';
-import {
-    AugmentedData,
-    CacheData,
-    default as LazyMobXCache,
-} from 'shared/lib/LazyMobXCache';
+import { AugmentedData, CacheData, default as LazyMobXCache } from 'shared/lib/LazyMobXCache';
 import client from 'shared/api/cbioportalClientInstance';
 import {
     DiscreteCopyNumberData,
@@ -27,8 +23,7 @@ async function fetchForStudy(
             // Make one query per sample, since there are fewer samples than genes
             const sampleToEntrezList: { [sampleId: string]: number[] } = {};
             for (const query of queries) {
-                sampleToEntrezList[query.sampleId] =
-                    sampleToEntrezList[query.sampleId] || [];
+                sampleToEntrezList[query.sampleId] = sampleToEntrezList[query.sampleId] || [];
                 sampleToEntrezList[query.sampleId].push(query.entrezGeneId);
             }
             filters = Object.keys(sampleToEntrezList).map(sample => {
@@ -57,14 +52,12 @@ async function fetchForStudy(
                 if (typeof molecularProfileIdDiscrete === 'undefined') {
                     return Promise.reject('No molecular profile id given.');
                 } else {
-                    return client.fetchDiscreteCopyNumbersInMolecularProfileUsingPOST(
-                        {
-                            projection: 'DETAILED',
-                            molecularProfileId: molecularProfileIdDiscrete,
-                            discreteCopyNumberFilter: filter,
-                            discreteCopyNumberEventType: 'ALL',
-                        }
-                    );
+                    return client.fetchDiscreteCopyNumbersInMolecularProfileUsingPOST({
+                        projection: 'DETAILED',
+                        molecularProfileId: molecularProfileIdDiscrete,
+                        discreteCopyNumberFilter: filter,
+                        discreteCopyNumberEventType: 'ALL',
+                    });
                 }
             })
         );
@@ -97,18 +90,11 @@ export function fetch(
         );
     }
 }
-function key(
-    d: { studyId?: string; sampleId: string; entrezGeneId: number },
-    m?: string
-) {
+function key(d: { studyId?: string; sampleId: string; entrezGeneId: number }, m?: string) {
     const studyId = d.studyId ? d.studyId : m;
     return `${studyId}~${d.sampleId}~${d.entrezGeneId}`;
 }
-export default class DiscreteCNACache extends LazyMobXCache<
-    DiscreteCopyNumberData,
-    Query,
-    string
-> {
+export default class DiscreteCNACache extends LazyMobXCache<DiscreteCopyNumberData, Query, string> {
     constructor(
         private studyToMolecularProfileDiscrete?: {
             [studyId: string]: MolecularProfile;

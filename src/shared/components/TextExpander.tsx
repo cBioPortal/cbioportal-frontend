@@ -13,10 +13,7 @@ export interface ITextExpanderProps {
 }
 
 @observer
-export default class TextExpander extends React.Component<
-    ITextExpanderProps,
-    {}
-> {
+export default class TextExpander extends React.Component<ITextExpanderProps, {}> {
     @observable protected isTextTruncated: boolean = true;
 
     public static defaultProps = {
@@ -44,10 +41,7 @@ export default class TextExpander extends React.Component<
                     line={this.props.line}
                     truncateText={this.props.truncateText}
                     textTruncateChild={
-                        <a
-                            onClick={this.toggleText}
-                            style={{ cursor: 'pointer' }}
-                        >
+                        <a onClick={this.toggleText} style={{ cursor: 'pointer' }}>
                             {this.props.expandIndicator}
                         </a>
                     }
@@ -62,10 +56,7 @@ export default class TextExpander extends React.Component<
                     <span>
                         <span>{this.props.text} </span>
                         <span>
-                            <a
-                                onClick={this.toggleText}
-                                style={{ cursor: 'pointer' }}
-                            >
+                            <a onClick={this.toggleText} style={{ cursor: 'pointer' }}>
                                 {this.props.collapseIndicator}
                             </a>
                         </span>

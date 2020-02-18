@@ -65,9 +65,7 @@ class _VictorySelectionContainerWithLegend extends VictorySelectionContainer {
                 activateSelectedData={false}
                 onSelection={onSelection}
                 containerRef={containerRef}
-                children={children
-                    .concat(legend)
-                    .concat(<defs>{gradient}</defs>)}
+                children={children.concat(legend).concat(<defs>{gradient}</defs>)}
                 {...rest}
             />
         );
@@ -225,9 +223,7 @@ export default class StudyViewDensityScatterPlot
     }
 
     @computed get data(): IStudyViewDensityScatterPlotDatum[] {
-        return this.props.data.map(d =>
-            Object.assign({}, d, { x: d.binX, y: d.binY })
-        );
+        return this.props.data.map(d => Object.assign({}, d, { x: d.binX, y: d.binY }));
     }
 
     private isSelected(d: IStudyViewDensityScatterPlotDatum) {
@@ -309,12 +305,10 @@ export default class StudyViewDensityScatterPlot
             colorCoordToCount = null;
         } else {
             // scale between 0 and some limit, to avoid lighter colors on top which are not visible against white bg
-            countToColorCoord = count =>
-                (Math.log(count) - logMin) / (logMax - logMin);
+            countToColorCoord = count => (Math.log(count) - logMin) / (logMax - logMin);
             colorCoordToCount = coord =>
                 Math.exp((coord * (logMax - logMin)) / colorCoordMax + logMin);
-            colorCoordToColor = coord =>
-                interpolatePlasma(colorCoordMax * coord);
+            colorCoordToColor = coord => interpolatePlasma(colorCoordMax * coord);
         }
 
         return {
@@ -322,8 +316,7 @@ export default class StudyViewDensityScatterPlot
             unselectedDataByAreaCount,
             colorCoordToCount,
             colorCoordMax,
-            countToSelectedColor: (count: number) =>
-                colorCoordToColor(countToColorCoord(count)),
+            countToSelectedColor: (count: number) => colorCoordToColor(countToColorCoord(count)),
             countToUnselectedColor: (count: number) => {
                 return 'rgb(200,200,200)';
                 /*const val = Math.round(countToColorCoord(count)*255);
@@ -348,17 +341,14 @@ export default class StudyViewDensityScatterPlot
                 size: 3,
             },
             {
-                dataByAreaCount: this.plotComputations
-                    .unselectedDataByAreaCount,
+                dataByAreaCount: this.plotComputations.unselectedDataByAreaCount,
                 countToColor: this.plotComputations.countToUnselectedColor,
                 size: 2.5,
             },
         ];
         for (const scatterCategory of scatterCategories) {
             _.forEach(scatterCategory.dataByAreaCount, (data, areaCount) => {
-                const color = scatterCategory.countToColor(
-                    parseInt(areaCount, 10)
-                );
+                const color = scatterCategory.countToColor(parseInt(areaCount, 10));
                 scatters.push(
                     <VictoryScatter
                         key={`${areaCount}`}
@@ -394,22 +384,13 @@ export default class StudyViewDensityScatterPlot
                     <stop
                         offset={`${((i / GRADIENTMESH) * 100).toFixed(0)}%`}
                         style={{
-                            stopColor: this.plotComputations.colorCoordToColor(
-                                i / GRADIENTMESH
-                            ),
+                            stopColor: this.plotComputations.colorCoordToColor(i / GRADIENTMESH),
                         }}
                     />
                 );
             }
             const gradientElt = (
-                <linearGradient
-                    id={gradientId}
-                    key={gradientId}
-                    x1="0%"
-                    y1="100%"
-                    x2="0%"
-                    y2="0%"
-                >
+                <linearGradient id={gradientId} key={gradientId} x1="0%" y1="100%" x2="0%" y2="0%">
                     {gradientStopPoints}
                 </linearGradient>
             );
@@ -417,10 +398,7 @@ export default class StudyViewDensityScatterPlot
             const rectX = this.props.width - 45;
             const rectY = 70;
             const rectWidth = 10;
-            const largeRange =
-                this.plotComputations.countMax -
-                    this.plotComputations.countMin >=
-                2;
+            const largeRange = this.plotComputations.countMax - this.plotComputations.countMin >= 2;
             const rectHeight = largeRange ? 68 : 38;
 
             const rect = (
@@ -434,20 +412,10 @@ export default class StudyViewDensityScatterPlot
             );
 
             const labels = [
-                <text
-                    fontSize={11}
-                    x={rectX + rectWidth + 4}
-                    y={rectY}
-                    dy="1em"
-                >
+                <text fontSize={11} x={rectX + rectWidth + 4} y={rectY} dy="1em">
                     {this.plotComputations.countMax.toLocaleString()}
                 </text>,
-                <text
-                    fontSize={11}
-                    x={rectX + rectWidth + 4}
-                    y={rectY + rectHeight}
-                    dy="-0.3em"
-                >
+                <text fontSize={11} x={rectX + rectWidth + 4} y={rectY + rectHeight} dy="-0.3em">
                     {this.plotComputations.countMin.toLocaleString()}
                 </text>,
             ];

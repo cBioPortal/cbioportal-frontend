@@ -29,10 +29,7 @@ export interface ITextIconAreaItemProps {
 // from the icon area.
 
 @observer
-class TextIconArea extends React.Component<
-    ITextIconAreaProps,
-    { text: string }
-> {
+class TextIconArea extends React.Component<ITextIconAreaProps, { text: string }> {
     // Shomehow the textare is not able to listen to updates of this field
     // from the parent with MobX. Instead, the parent callback 'onChangeTextArea'
     // returns a string that is used to update the textarea.
@@ -64,9 +61,7 @@ class TextIconArea extends React.Component<
 
         this.timeout = setTimeout(
             function() {
-                this.textAreaContent = this.props.onChangeTextArea(
-                    this.textAreaContent
-                );
+                this.textAreaContent = this.props.onChangeTextArea(this.textAreaContent);
                 this.stopTimedSubmit();
             }.bind(this),
             this.TIMEOUT_DELAY
@@ -91,30 +86,19 @@ class TextIconArea extends React.Component<
                 onClick={this.onAreaClicked}
             >
                 <div className={classNames('icon-area', this.props.classNames)}>
-                    {this.props.elements.map(
-                        (element: ITextIconAreaItemProps) => {
-                            return (
+                    {this.props.elements.map((element: ITextIconAreaItemProps) => {
+                        return (
+                            <div className={classNames(element.classNames, 'icon')}>
+                                {element.label}
+                                &nbsp;
                                 <div
-                                    className={classNames(
-                                        element.classNames,
-                                        'icon'
-                                    )}
-                                >
-                                    {element.label}
-                                    &nbsp;
-                                    <div
-                                        className={classNames(
-                                            'fa',
-                                            'fa-times-circle',
-                                            'icon-button'
-                                        )}
-                                        onClick={this.itemRemovedByUser}
-                                        id={element.value}
-                                    />
-                                </div>
-                            );
-                        }
-                    )}
+                                    className={classNames('fa', 'fa-times-circle', 'icon-button')}
+                                    onClick={this.itemRemovedByUser}
+                                    id={element.value}
+                                />
+                            </div>
+                        );
+                    })}
                 </div>
                 <textarea
                     ref={'textarea'}

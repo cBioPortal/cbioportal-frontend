@@ -7,10 +7,7 @@ describe('invertIncreasingFunction', () => {
     it('correctly inverts square', () => {
         for (let i = 1; i < 10; i += 1) {
             assert.isTrue(
-                Math.abs(
-                    invertIncreasingFunction(x => x * x, i, [0, i]) -
-                        Math.sqrt(i)
-                ) < 0.001
+                Math.abs(invertIncreasingFunction(x => x * x, i, [0, i]) - Math.sqrt(i)) < 0.001
             );
         }
     });
@@ -42,10 +39,7 @@ describe('findXRangeOfIncreasingFunction', () => {
         } catch (e) {
             errorOccurred = true;
         }
-        assert.isTrue(
-            errorOccurred,
-            'Failed to throw error when lower bound doesnt exist'
-        );
+        assert.isTrue(errorOccurred, 'Failed to throw error when lower bound doesnt exist');
 
         errorOccurred = false;
         try {
@@ -53,9 +47,6 @@ describe('findXRangeOfIncreasingFunction', () => {
         } catch (e) {
             errorOccurred = true;
         }
-        assert.isTrue(
-            errorOccurred,
-            'Failed to throw error when upper bound doesnt exist'
-        );
+        assert.isTrue(errorOccurred, 'Failed to throw error when upper bound doesnt exist');
     });
 });

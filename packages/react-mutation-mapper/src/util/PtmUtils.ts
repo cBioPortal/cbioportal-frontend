@@ -18,15 +18,11 @@ export const PTM_PRIORITY: { [type: string]: number } = {
     default: 999,
 };
 
-export function groupPtmDataByPosition(
-    ptmData: PostTranslationalModification[]
-) {
+export function groupPtmDataByPosition(ptmData: PostTranslationalModification[]) {
     return _.groupBy(ptmData, 'position');
 }
 
-export function groupPtmDataByTypeAndPosition(
-    ptmData: PostTranslationalModification[]
-) {
+export function groupPtmDataByTypeAndPosition(ptmData: PostTranslationalModification[]) {
     const groupedByType = _.groupBy(ptmData, 'type');
 
     const groupedByTypeAndPosition: {
@@ -34,10 +30,7 @@ export function groupPtmDataByTypeAndPosition(
     } = {};
 
     _.keys(groupedByType).forEach(type => {
-        groupedByTypeAndPosition[type] = _.groupBy(
-            groupedByType[type],
-            'position'
-        );
+        groupedByTypeAndPosition[type] = _.groupBy(groupedByType[type], 'position');
     });
 
     return groupedByTypeAndPosition;

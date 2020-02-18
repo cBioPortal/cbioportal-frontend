@@ -7,10 +7,7 @@ import OncoprintJS, {
     InitParams,
     ColumnLabel,
 } from 'oncoprintjs';
-import {
-    GenePanelData,
-    MolecularProfile,
-} from '../../api/generated/CBioPortalAPI';
+import { GenePanelData, MolecularProfile } from '../../api/generated/CBioPortalAPI';
 import { observer } from 'mobx-react';
 import { computed } from 'mobx';
 import { transition } from './DeltaUtils';
@@ -257,15 +254,12 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
     public getTrackSpecKey(targetTrackId: TrackId) {
         let ret: string | null = null;
 
-        _.forEach(
-            this.trackSpecKeyToTrackId,
-            (trackId: TrackId, key: string) => {
-                if (trackId === targetTrackId) {
-                    ret = key;
-                    return false;
-                }
+        _.forEach(this.trackSpecKeyToTrackId, (trackId: TrackId, key: string) => {
+            if (trackId === targetTrackId) {
+                ret = key;
+                return false;
             }
-        );
+        });
 
         return ret;
     }
@@ -289,11 +283,7 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
     private refreshOncoprint(props: IOncoprintProps) {
         if (!this.oncoprint) {
             // instantiate new one
-            this.oncoprint = new OncoprintJS(
-                `#${props.divId}`,
-                props.width,
-                props.initParams
-            );
+            this.oncoprint = new OncoprintJS(`#${props.divId}`, props.width, props.initParams);
             this.oncoprint.setTrackGroupLegendOrder([
                 GENETIC_TRACK_GROUP_INDEX,
                 CLINICAL_TRACK_GROUP_INDEX,

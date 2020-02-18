@@ -27,9 +27,7 @@ var path = require('path');
 webpackConfig.plugins.push(
     new webpack.DefinePlugin({
         SPEC_REGEXP:
-            'grep' in argv
-                ? `/(global|(${argv.grep}[a-z]*))\.spec\./i`
-                : '/.spec.(jsx?|tsx?)$/',
+            'grep' in argv ? `/(global|(${argv.grep}[a-z]*))\.spec\./i` : '/.spec.(jsx?|tsx?)$/',
     })
 );
 

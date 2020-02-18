@@ -51,11 +51,7 @@ export default class DiscreteCNAColumnFormatter {
         cache: DiscreteCNACache
     ): string {
         const tdValue = DiscreteCNAColumnFormatter.getTdValue(
-            DiscreteCNAColumnFormatter.getData(
-                data,
-                molecularProfileIdToMolecularProfile,
-                cache
-            )
+            DiscreteCNAColumnFormatter.getData(data, molecularProfileIdToMolecularProfile, cache)
         );
         if (tdValue !== null) {
             return DiscreteCNAColumnFormatter.altToFilterString[tdValue];
@@ -71,11 +67,7 @@ export default class DiscreteCNAColumnFormatter {
         cache: DiscreteCNACache
     ) {
         return DiscreteCNAColumnFormatter.getTdValue(
-            DiscreteCNAColumnFormatter.getData(
-                data,
-                molecularProfileIdToMolecularProfile,
-                cache
-            )
+            DiscreteCNAColumnFormatter.getData(data, molecularProfileIdToMolecularProfile, cache)
         );
     }
 
@@ -94,12 +86,10 @@ export default class DiscreteCNAColumnFormatter {
         );
         if (cnaData && cnaData.data) {
             return (
-                !!DiscreteCNAColumnFormatter.altToFilterString[
-                    cnaData.data.alteration
-                ] &&
-                DiscreteCNAColumnFormatter.altToFilterString[
-                    cnaData.data.alteration
-                ].indexOf(filterString.toLowerCase()) > -1
+                !!DiscreteCNAColumnFormatter.altToFilterString[cnaData.data.alteration] &&
+                DiscreteCNAColumnFormatter.altToFilterString[cnaData.data.alteration].indexOf(
+                    filterString.toLowerCase()
+                ) > -1
             );
         } else {
             return false;
@@ -119,8 +109,7 @@ export default class DiscreteCNAColumnFormatter {
 
         const sampleId = data[0].sampleId;
         const entrezGeneId = data[0].entrezGeneId;
-        const molecularProfile =
-            molecularProfileIdToMolecularProfile[data[0].molecularProfileId];
+        const molecularProfile = molecularProfileIdToMolecularProfile[data[0].molecularProfileId];
         if (molecularProfile) {
             return discreteCNACache.get({
                 sampleId,
@@ -132,29 +121,17 @@ export default class DiscreteCNAColumnFormatter {
         }
     }
 
-    protected static getTdValue(
-        cacheDatum: DiscreteCNACacheDataType | null
-    ): number | null {
-        if (
-            cacheDatum !== null &&
-            cacheDatum.status === 'complete' &&
-            cacheDatum.data !== null
-        ) {
+    protected static getTdValue(cacheDatum: DiscreteCNACacheDataType | null): number | null {
+        if (cacheDatum !== null && cacheDatum.status === 'complete' && cacheDatum.data !== null) {
             return cacheDatum.data.alteration;
         } else {
             return null;
         }
     }
 
-    protected static getTdContents(
-        cacheDatum: DiscreteCNACacheDataType | null
-    ) {
+    protected static getTdContents(cacheDatum: DiscreteCNACacheDataType | null) {
         let status: TableCellStatus | null = null;
-        if (
-            cacheDatum !== null &&
-            cacheDatum.status === 'complete' &&
-            cacheDatum.data !== null
-        ) {
+        if (cacheDatum !== null && cacheDatum.status === 'complete' && cacheDatum.data !== null) {
             const alteration = cacheDatum.data.alteration;
             if (alteration === 2) {
                 return (
@@ -217,11 +194,7 @@ export default class DiscreteCNAColumnFormatter {
                     </span>
                 );
             }
-        } else if (
-            cacheDatum &&
-            cacheDatum.status === 'complete' &&
-            cacheDatum.data === null
-        ) {
+        } else if (cacheDatum && cacheDatum.status === 'complete' && cacheDatum.data === null) {
             status = TableCellStatus.NA;
         } else if (cacheDatum && cacheDatum.status === 'error') {
             status = TableCellStatus.ERROR;
@@ -238,9 +211,7 @@ export default class DiscreteCNAColumnFormatter {
         }
     }
 
-    protected static getTooltipContents(
-        cacheDatum: DiscreteCNACacheDataType | null
-    ) {
+    protected static getTooltipContents(cacheDatum: DiscreteCNACacheDataType | null) {
         const altToText: { [a: number]: string } = {
             '-2': 'Deep deletion',
             '-1': 'Shallow deletion',
@@ -248,21 +219,13 @@ export default class DiscreteCNAColumnFormatter {
             '1': 'Low-level gain',
             '2': 'High-level amplification',
         };
-        if (
-            cacheDatum &&
-            cacheDatum.status === 'complete' &&
-            cacheDatum.data !== null
-        ) {
+        if (cacheDatum && cacheDatum.status === 'complete' && cacheDatum.data !== null) {
             return (
                 <div>
                     <span>{altToText[cacheDatum.data.alteration]}</span>
                 </div>
             );
-        } else if (
-            cacheDatum &&
-            cacheDatum.status === 'complete' &&
-            cacheDatum.data === null
-        ) {
+        } else if (cacheDatum && cacheDatum.status === 'complete' && cacheDatum.data === null) {
             return <span>CNA data is not available for this gene.</span>;
         } else if (cacheDatum && cacheDatum.status === 'error') {
             return <span>Error retrieving data.</span>;

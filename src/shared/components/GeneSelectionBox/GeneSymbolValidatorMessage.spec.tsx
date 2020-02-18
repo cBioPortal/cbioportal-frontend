@@ -78,10 +78,7 @@ describe('GeneSymbolValidatorMessage', () => {
         };
         props.validatingGenes = true;
         const wrapper = mount(<GeneSymbolValidatorMessage {...props} />);
-        assert.equal(
-            wrapper.find('#geneBoxValidationStatus').text(),
-            'Validating gene symbols...'
-        );
+        assert.equal(wrapper.find('#geneBoxValidationStatus').text(), 'Validating gene symbols...');
     });
 
     it('invalid genes with no suggestions', () => {
@@ -90,10 +87,7 @@ describe('GeneSymbolValidatorMessage', () => {
         };
         props.genes = { found: [], suggestions: [{ alias: 'TP5', genes: [] }] };
         const wrapper = mount(<GeneSymbolValidatorMessage {...props} />);
-        assert.equal(
-            wrapper.find('#geneBoxValidationStatus').text(),
-            'Invalid gene symbols.TP5'
-        );
+        assert.equal(wrapper.find('#geneBoxValidationStatus').text(), 'Invalid gene symbols.TP5');
     });
 
     it('invalid genes with suggestions', () => {

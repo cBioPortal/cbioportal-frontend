@@ -41,9 +41,7 @@ export function getMyVariantInfoAnnotation(
 
     if (mutation && indexedMyVariantInfoAnnotations) {
         const genomicLocation = extractGenomicLocation(mutation);
-        const key = genomicLocation
-            ? genomicLocationString(genomicLocation)
-            : undefined;
+        const key = genomicLocation ? genomicLocationString(genomicLocation) : undefined;
 
         if (key) {
             myVariantInfo = indexedMyVariantInfoAnnotations[key];
@@ -61,9 +59,7 @@ export function getVariantAnnotation(
 
     if (mutation && indexedVariantAnnotations) {
         const genomicLocation = extractGenomicLocation(mutation);
-        const key = genomicLocation
-            ? genomicLocationString(genomicLocation)
-            : undefined;
+        const key = genomicLocation ? genomicLocationString(genomicLocation) : undefined;
 
         if (key) {
             variantAnnotation = indexedVariantAnnotations[key];

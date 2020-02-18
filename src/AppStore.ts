@@ -1,9 +1,5 @@
 import { action, computed, observable } from 'mobx';
-import {
-    addServiceErrorHandler,
-    getBrowserWindow,
-    remoteData,
-} from 'cbioportal-frontend-commons';
+import { addServiceErrorHandler, getBrowserWindow, remoteData } from 'cbioportal-frontend-commons';
 import { initializeAPIClients } from './config/config';
 import * as _ from 'lodash';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
@@ -77,9 +73,7 @@ export class AppStore {
 
     readonly portalVersion = remoteData<string | undefined>({
         invoke: async () => {
-            const portalVersionResult = await internalClient.getInfoUsingGET(
-                {}
-            );
+            const portalVersionResult = await internalClient.getInfoUsingGET({});
             if (portalVersionResult && portalVersionResult.portalVersion) {
                 let version = undefined;
 
@@ -88,9 +82,7 @@ export class AppStore {
                     portalVersionResult.gitBranch &&
                     portalVersionResult.gitBranch.startsWith('release-')
                 ) {
-                    let branchVersion = portalVersionResult.gitBranch.split(
-                        '-'
-                    )[1];
+                    let branchVersion = portalVersionResult.gitBranch.split('-')[1];
                     if (branchVersion.split('.').length == 3) {
                         version = branchVersion;
                     }

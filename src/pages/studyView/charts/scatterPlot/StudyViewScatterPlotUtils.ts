@@ -20,10 +20,7 @@ export interface IStudyViewScatterPlotProps {
     width: number;
     height: number;
     data: IStudyViewScatterPlotData[];
-    onSelection: (
-        sampleIdentifiers: SampleIdentifier[],
-        keepCurrent: boolean
-    ) => void;
+    onSelection: (sampleIdentifiers: SampleIdentifier[], keepCurrent: boolean) => void;
 
     isLoading?: boolean;
     svgRef?: (svg: SVGElement | null) => void;
@@ -67,10 +64,7 @@ export function getDownsampledData(
 ) {
     if (sampleToAnalysisGroup) {
         // group data by analysis group
-        const groupedData = _.groupBy(
-            data,
-            d => sampleToAnalysisGroup[d.uniqueSampleKey]
-        );
+        const groupedData = _.groupBy(data, d => sampleToAnalysisGroup[d.uniqueSampleKey]);
         // downsample, and sort by number of points in the downsample group
         const downsampledGroups = _.mapValues(groupedData, dataForGroup => {
             return _.sortBy(
@@ -86,11 +80,7 @@ export function getDownsampledData(
     } else {
         // downsample, and sort by number of points in the downsample group
         return _.sortBy(
-            downsampleByGrouping(
-                data,
-                DOWNSAMPLE_PIXEL_DISTANCE_THRESHOLD,
-                dataSpaceToPixelSpace
-            ),
+            downsampleByGrouping(data, DOWNSAMPLE_PIXEL_DISTANCE_THRESHOLD, dataSpaceToPixelSpace),
             d => d.data.length
         );
     }
@@ -109,8 +99,7 @@ export function getBinnedData<D extends { x: number; y: number }>(
         return { x, y };
     };
 
-    const getAreaHash = (gridCoords: { x: number; y: number }) =>
-        `${gridCoords.x},${gridCoords.y}`;
+    const getAreaHash = (gridCoords: { x: number; y: number }) => `${gridCoords.x},${gridCoords.y}`;
 
     const bins = _.groupBy(unbinnedData, d => getAreaHash(getGridCoords(d)));
     return _.values(bins).map(data => {

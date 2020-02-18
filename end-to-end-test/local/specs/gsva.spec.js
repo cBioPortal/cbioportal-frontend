@@ -1,19 +1,13 @@
 var assert = require('assert');
-var goToUrlAndSetLocalStorage = require('../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var waitForStudyQueryPage = require('../../shared/specUtils')
-    .waitForStudyQueryPage;
-var waitForGeneQueryPage = require('../../shared/specUtils')
-    .waitForGeneQueryPage;
+var goToUrlAndSetLocalStorage = require('../../shared/specUtils').goToUrlAndSetLocalStorage;
+var waitForStudyQueryPage = require('../../shared/specUtils').waitForStudyQueryPage;
+var waitForGeneQueryPage = require('../../shared/specUtils').waitForGeneQueryPage;
 var waitForOncoprint = require('../../shared/specUtils').waitForOncoprint;
 var waitForPlotsTab = require('../../shared/specUtils').waitForPlotsTab;
-var waitForCoExpressionTab = require('../../shared/specUtils')
-    .waitForCoExpressionTab;
+var waitForCoExpressionTab = require('../../shared/specUtils').waitForCoExpressionTab;
 var reactSelectOption = require('../../shared/specUtils').reactSelectOption;
-var getReactSelectOptions = require('../../shared/specUtils')
-    .getReactSelectOptions;
-var selectReactSelectOption = require('../../shared/specUtils')
-    .selectReactSelectOption;
+var getReactSelectOptions = require('../../shared/specUtils').getReactSelectOptions;
+var selectReactSelectOption = require('../../shared/specUtils').selectReactSelectOption;
 var useExternalFrontend = require('../../shared/specUtils').useExternalFrontend;
 
 var { clickQueryByGeneButton, showGsva } = require('../../shared/specUtils');
@@ -43,9 +37,7 @@ describe('gsva feature', function() {
             it('shows GSVA-profile option when selecting study_es_0', () => {
                 checkTestStudy();
 
-                var gsvaProfileCheckbox = browser.$(
-                    '[data-test=GENESET_SCORE]'
-                );
+                var gsvaProfileCheckbox = browser.$('[data-test=GENESET_SCORE]');
                 assert(gsvaProfileCheckbox.isVisible());
             });
 
@@ -54,14 +46,8 @@ describe('gsva feature', function() {
                 checkGSVAprofile();
 
                 assert(browser.$('h2=Enter Gene Sets:').isVisible());
-                assert(
-                    browser
-                        .$('[data-test=GENESET_HIERARCHY_BUTTON]')
-                        .isVisible()
-                );
-                assert(
-                    browser.$('[data-test=GENESET_VOLCANO_BUTTON]').isVisible()
-                );
+                assert(browser.$('[data-test=GENESET_HIERARCHY_BUTTON]').isVisible());
+                assert(browser.$('[data-test=GENESET_VOLCANO_BUTTON]').isVisible());
                 assert(browser.$('[data-test=GENESETS_TEXT_AREA]').isVisible());
             });
 
@@ -108,10 +94,7 @@ describe('gsva feature', function() {
                 $('span*=All gene sets are valid').waitForExist();
 
                 var textArea = browser.$('[data-test=GENESETS_TEXT_AREA]');
-                assert.equal(
-                    textArea.getText(),
-                    'GO_ATP_DEPENDENT_CHROMATIN_REMODELING'
-                );
+                assert.equal(textArea.getText(), 'GO_ATP_DEPENDENT_CHROMATIN_REMODELING');
             });
 
             it('filters gene sets with the GSVA score input field', () => {
@@ -134,9 +117,7 @@ describe('gsva feature', function() {
 
                 browser.waitUntil(() => $$('*=GO_').length > before.length);
 
-                $('[id=geneset-hierarchy-search]').setValue(
-                    'GO_ACYLGLYCEROL_HOMEOSTASIS'
-                );
+                $('[id=geneset-hierarchy-search]').setValue('GO_ACYLGLYCEROL_HOMEOSTASIS');
                 assert($('*=GO_ACYLGLYCEROL_HOMEOSTASIS'));
             });
 
@@ -196,10 +177,7 @@ describe('gsva feature', function() {
                 $('span*=All gene sets are valid').waitForExist();
 
                 var textArea = browser.$('[data-test=GENESETS_TEXT_AREA]');
-                assert.equal(
-                    textArea.getText(),
-                    'GO_ATP_DEPENDENT_CHROMATIN_REMODELING'
-                );
+                assert.equal(textArea.getText(), 'GO_ATP_DEPENDENT_CHROMATIN_REMODELING');
             });
 
             it('selects gene sets from query page text area', () => {
@@ -274,15 +252,9 @@ describe('gsva feature', function() {
             it('has GSVA profile option in heatmap menu', () => {
                 var heatmapButton = browser.$('button[id=heatmapDropdown]');
                 heatmapButton.click();
-                var heatmapDropdown = browser.$$(
-                    '.dropdown-menu.heatmap .Select-control'
-                )[0];
+                var heatmapDropdown = browser.$$('.dropdown-menu.heatmap .Select-control')[0];
                 heatmapDropdown.click();
-                assert(
-                    $(
-                        'div=GSVA scores on oncogenic signatures gene sets'
-                    ).isVisible()
-                );
+                assert($('div=GSVA scores on oncogenic signatures gene sets').isVisible());
             });
         });
 
@@ -293,31 +265,23 @@ describe('gsva feature', function() {
             });
 
             it('shows gsva option in horizontal data type selection box', () => {
-                var horzDataSelect = $('[name=h-profile-type-selector]').$(
-                    '..'
-                );
+                var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
                 horzDataSelect.$('.Select-value-label').click();
                 assert(horzDataSelect.$('.Select-option=Gene Sets'));
             });
 
             it('shows gsva option in vertical data type selection box', () => {
-                var vertDataSelect = $('[name=v-profile-type-selector]').$(
-                    '..'
-                );
+                var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
                 vertDataSelect.$('.Select-value-label').click();
                 assert(vertDataSelect.$('.Select-option=Gene Sets'));
             });
 
             it('horizontal axis menu shows gsva score and pvalue in profile menu', () => {
-                var horzDataSelect = $('[name=h-profile-type-selector]').$(
-                    '..'
-                );
+                var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
                 horzDataSelect.$('.Select-value-label').click();
                 horzDataSelect.$('.Select-option=Gene Sets').click();
 
-                var horzProfileSelect = $('[name=h-profile-name-selector]').$(
-                    '..'
-                );
+                var horzProfileSelect = $('[name=h-profile-name-selector]').$('..');
                 horzProfileSelect.$('.Select-value-label').click();
 
                 assert(
@@ -333,15 +297,11 @@ describe('gsva feature', function() {
             });
 
             it('vertical axis menu shows gsva score and pvalue in profile menu', () => {
-                var vertDataSelect = $('[name=v-profile-type-selector]').$(
-                    '..'
-                );
+                var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
                 vertDataSelect.$('.Select-value-label').click();
                 vertDataSelect.$('.Select-option=Gene Sets').click();
 
-                var vertProfileSelect = $('[name=v-profile-name-selector]').$(
-                    '..'
-                );
+                var vertProfileSelect = $('[name=v-profile-name-selector]').$('..');
                 vertProfileSelect.$('.Select-value-label').click();
 
                 assert(
@@ -357,57 +317,37 @@ describe('gsva feature', function() {
             });
 
             it('horizontal axis menu shows gene set entry in entity menu', () => {
-                var horzDataSelect = $('[name=h-profile-type-selector]').$(
-                    '..'
-                );
+                var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
                 horzDataSelect.$('.Select-value-label').click();
                 horzDataSelect.$('.Select-option=Gene Sets').click();
 
-                var horzProfileSelect = $('[name=h-profile-name-selector]').$(
-                    '..'
-                );
+                var horzProfileSelect = $('[name=h-profile-name-selector]').$('..');
                 horzProfileSelect.$('.Select-value-label').click();
                 horzProfileSelect
-                    .$(
-                        '.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets'
-                    )
+                    .$('.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets')
                     .click();
 
                 var horzEntitySelect = $('[name=h-geneset-selector]').$('..');
                 horzEntitySelect.$('.Select-value-label').click();
 
-                assert(
-                    horzEntitySelect.$(
-                        '.Select-option=GO_ATP_DEPENDENT_CHROMATIN_REMODELING'
-                    )
-                );
+                assert(horzEntitySelect.$('.Select-option=GO_ATP_DEPENDENT_CHROMATIN_REMODELING'));
             });
 
             it('vertical axis menu shows gene set entry in entity menu', () => {
-                var vertDataSelect = $('[name=v-profile-type-selector]').$(
-                    '..'
-                );
+                var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
                 vertDataSelect.$('.Select-value-label').click();
                 vertDataSelect.$('.Select-option=Gene Sets').click();
 
-                var vertProfileSelect = $('[name=v-profile-name-selector]').$(
-                    '..'
-                );
+                var vertProfileSelect = $('[name=v-profile-name-selector]').$('..');
                 vertProfileSelect.$('.Select-value-label').click();
                 vertProfileSelect
-                    .$(
-                        '.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets'
-                    )
+                    .$('.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets')
                     .click();
 
                 var vertEntitySelect = $('[name=v-geneset-selector]').$('..');
                 vertEntitySelect.$('.Select-value-label').click();
 
-                assert(
-                    vertEntitySelect.$(
-                        '.Select-option=GO_ATP_DEPENDENT_CHROMATIN_REMODELING'
-                    )
-                );
+                assert(vertEntitySelect.$('.Select-option=GO_ATP_DEPENDENT_CHROMATIN_REMODELING'));
             });
         });
 
@@ -418,18 +358,14 @@ describe('gsva feature', function() {
             });
 
             it('shows buttons for genes', () => {
-                const genes = coexpressionTabUrl
-                    .match(/gene_list=(.*)\&/)[1]
-                    .split('%20');
+                const genes = coexpressionTabUrl.match(/gene_list=(.*)\&/)[1].split('%20');
                 var container = $('//*[@id="coexpressionTabGeneTabs"]');
                 var icons = genes.map(g => container.$('a=' + g));
                 assert.equal(genes.length, icons.length);
             });
 
             it('shows buttons for genes and gene sets', () => {
-                const geneSets = coexpressionTabUrl
-                    .match(/geneset_list=(.*)\&/)[1]
-                    .split('%20');
+                const geneSets = coexpressionTabUrl.match(/geneset_list=(.*)\&/)[1].split('%20');
                 var container = $('//*[@id="coexpressionTabGeneTabs"]');
                 var icons = geneSets.map(g => container.$('a=' + g));
                 assert.equal(geneSets.length, icons.length);
@@ -440,9 +376,7 @@ describe('gsva feature', function() {
                 icon.click();
                 $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
                 assert.equal(
-                    getReactSelectOptions(
-                        $('.coexpression-select-query-profile')
-                    ).length,
+                    getReactSelectOptions($('.coexpression-select-query-profile')).length,
                     2
                 );
                 assert(
@@ -464,9 +398,7 @@ describe('gsva feature', function() {
                 icon.click();
                 $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
                 assert.equal(
-                    getReactSelectOptions(
-                        $('.coexpression-select-subject-profile')
-                    ).length,
+                    getReactSelectOptions($('.coexpression-select-subject-profile')).length,
                     1
                 );
                 assert(
@@ -492,9 +424,7 @@ describe('gsva feature', function() {
                 icon.click();
                 $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
                 assert.equal(
-                    getReactSelectOptions(
-                        $('.coexpression-select-query-profile')
-                    ).length,
+                    getReactSelectOptions($('.coexpression-select-query-profile')).length,
                     2
                 );
                 assert(

@@ -30,23 +30,16 @@ export interface IMutualExclusivityTabProps {
 }
 
 @observer
-export default class MutualExclusivityTab extends React.Component<
-    IMutualExclusivityTabProps,
-    {}
-> {
+export default class MutualExclusivityTab extends React.Component<IMutualExclusivityTabProps, {}> {
     @observable mutualExclusivityFilter: boolean = true;
     @observable coOccurenceFilter: boolean = true;
     @observable significantPairsFilter: boolean = false;
 
     constructor(props: IMutualExclusivityTabProps) {
         super(props);
-        this.mutualExclusivityFilterChange = this.mutualExclusivityFilterChange.bind(
-            this
-        );
+        this.mutualExclusivityFilterChange = this.mutualExclusivityFilterChange.bind(this);
         this.coOccurenceFilterChange = this.coOccurenceFilterChange.bind(this);
-        this.significantPairsFilterChange = this.significantPairsFilterChange.bind(
-            this
-        );
+        this.significantPairsFilterChange = this.significantPairsFilterChange.bind(this);
     }
 
     @computed get data(): MutualExclusivity[] {
@@ -63,9 +56,7 @@ export default class MutualExclusivityTab extends React.Component<
     }
 
     @computed get isSampleAlteredFilteredMap(): SampleAlteredMap {
-        return getSampleAlteredFilteredMap(
-            this.props.isSampleAlteredMap.result!
-        );
+        return getSampleAlteredFilteredMap(this.props.isSampleAlteredMap.result!);
     }
 
     @computed get filteredTrackOqls(): string[] {
@@ -126,23 +117,15 @@ export default class MutualExclusivityTab extends React.Component<
                                     tabReflectsOql={true}
                                 />
                                 {this.filteredTrackOqls.length > 0 && (
-                                    <div
-                                        className="alert alert-warning"
-                                        role="alert"
-                                    >
+                                    <div className="alert alert-warning" role="alert">
                                         {this.filteredTrackOqlsMessage}
                                     </div>
                                 )}
-                                <AlterationFilterWarning
-                                    store={this.props.store}
-                                />
+                                <AlterationFilterWarning store={this.props.store} />
                             </div>
                         )}
 
-                        {getTrackPairsCountText(
-                            this.data,
-                            _.size(this.isSampleAlteredFilteredMap)
-                        )}
+                        {getTrackPairsCountText(this.data, _.size(this.isSampleAlteredFilteredMap))}
 
                         <div className={styles.Checkboxes}>
                             <Checkbox
@@ -170,17 +153,13 @@ export default class MutualExclusivityTab extends React.Component<
             } else {
                 return (
                     <div className={'tabMessageContainer'}>
-                        <div className={'alert alert-info'}>
-                            {this.notEnoughDataError}
-                        </div>
+                        <div className={'alert alert-info'}>{this.notEnoughDataError}</div>
                         {this.filteredTrackOqls.length > 0 && (
                             <div className="alert alert-warning" role="alert">
                                 {this.filteredTrackOqlsMessage}
                             </div>
                         )}
-                        {this.props.store && (
-                            <AlterationFilterWarning store={this.props.store} />
-                        )}
+                        {this.props.store && <AlterationFilterWarning store={this.props.store} />}
                     </div>
                 );
             }

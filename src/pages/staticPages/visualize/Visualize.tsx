@@ -13,9 +13,7 @@ export default class Visualize extends React.Component<{}, {}> {
         return (
             <PageLayout className={'whiteBackground staticPage'}>
                 <Helmet>
-                    <title>
-                        {'cBioPortal for Cancer Genomics::Visualize Your Data'}
-                    </title>
+                    <title>{'cBioPortal for Cancer Genomics::Visualize Your Data'}</title>
                 </Helmet>
 
                 <h1>Visualize Your Data</h1>
@@ -26,16 +24,13 @@ export default class Visualize extends React.Component<{}, {}> {
                 <ul>
                     <li>
                         The source code of cBioPortal is available on{' '}
-                        <a href="https://github.com/cBioPortal/cbioportal">
-                            GitHub
-                        </a>{' '}
-                        under the terms of Affero GPL V3.
+                        <a href="https://github.com/cBioPortal/cbioportal">GitHub</a> under the
+                        terms of Affero GPL V3.
                     </li>
                     <li>
-                        Please note that, installing a local version requires
-                        system administration skills, for example, installing
-                        and configuring Tomcat and MySQL. With limited
-                        resources, we cannot provide technical support on system
+                        Please note that, installing a local version requires system administration
+                        skills, for example, installing and configuring Tomcat and MySQL. With
+                        limited resources, we cannot provide technical support on system
                         administration.
                     </li>
                 </ul>
@@ -43,13 +38,10 @@ export default class Visualize extends React.Component<{}, {}> {
                 <h2>2. We host data for you (academic use)</h2>
                 <ul>
                     <li>
-                        Public data will be available to everyone. Suggestions
-                        on data sets are welcome.
+                        Public data will be available to everyone. Suggestions on data sets are
+                        welcome.
                     </li>
-                    <li>
-                        Private data will be accessible by you and your
-                        collaborators.
-                    </li>
+                    <li>Private data will be accessible by you and your collaborators.</li>
                     <li>
                         Please{' '}
                         <a href="mailto:cbioportal@cbio.mskcc.org?subject=Uploading public data">
@@ -65,10 +57,9 @@ export default class Visualize extends React.Component<{}, {}> {
                         <a href="http://thehyve.nl" target="_blank">
                             The Hyve
                         </a>{' '}
-                        is an open source software company that provides
-                        commercial support for cBioPortal. They can help with
-                        deployment, data loading, development, consulting and
-                        training. Please{' '}
+                        is an open source software company that provides commercial support for
+                        cBioPortal. They can help with deployment, data loading, development,
+                        consulting and training. Please{' '}
                         <a href="http://thehyve.nl/contact/" target="_blank">
                             contact The Hyve
                         </a>{' '}
@@ -78,14 +69,10 @@ export default class Visualize extends React.Component<{}, {}> {
 
                 <hr />
 
-                <h2>
-                    The following tools are for visualization and analysis of
-                    custom datasets
-                </h2>
+                <h2>The following tools are for visualization and analysis of custom datasets</h2>
 
                 <div className="alert alert-info" role="alert">
-                    When using these tools in your publication,{' '}
-                    <b>please cite</b>{' '}
+                    When using these tools in your publication, <b>please cite</b>{' '}
                     <a href={getNCBIlink('/pubmed/23550210')}>
                         Gao et al. <i>Sci. Signal.</i> 2013
                     </a>{' '}
@@ -119,8 +106,7 @@ export default class Visualize extends React.Component<{}, {}> {
                             <a href="mutation_mapper">MutationMapper</a>
                         </h2>
                         <p>
-                            Maps mutations on a linear protein and its domains
-                            (lollipop plots).{' '}
+                            Maps mutations on a linear protein and its domains (lollipop plots).{' '}
                             <a href="mutation_mapper">Try it!</a>
                         </p>
                         <a href="mutation_mapper">

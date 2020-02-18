@@ -41,16 +41,10 @@ export function generateQueryVariant(
     alterationType?: string
 ) {
     let query = {
-        id: generateQueryVariantId(
-            entrezGeneId,
-            tumorType,
-            alteration,
-            mutationType
-        ),
+        id: generateQueryVariantId(entrezGeneId, tumorType, alteration, mutationType),
         hugoSymbol: '',
         tumorType: tumorType as string, // generated api typings are wrong, it can accept null
-        alterationType:
-            alterationType || AlterationTypes[AlterationTypes.Mutation],
+        alterationType: alterationType || AlterationTypes[AlterationTypes.Mutation],
         entrezGeneId: entrezGeneId,
         alteration: alteration || '',
         consequence: mutationType || 'any',

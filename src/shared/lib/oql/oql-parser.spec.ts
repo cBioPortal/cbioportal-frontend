@@ -6,9 +6,7 @@ function testCallback(query: string, expectedParsedResult: OQLQuery) {
         assert.deepEqual(oql_parser.parse(query), expectedParsedResult);
     } catch (e) {
         if (e.name === 'SyntaxError') {
-            throw new Error(
-                `SyntaxError at character ${e.location.start.offset}: ${e.message}`
-            );
+            throw new Error(`SyntaxError at character ${e.location.start.offset}: ${e.message}`);
         } else {
             throw e;
         }
@@ -89,9 +87,7 @@ describe('OQL parser', () => {
     doTest('TP53: GERMLINE', [
         {
             gene: 'TP53',
-            alterations: [
-                { alteration_type: 'mut', info: {}, modifiers: ['GERMLINE'] },
-            ],
+            alterations: [{ alteration_type: 'mut', info: {}, modifiers: ['GERMLINE'] }],
         },
     ]);
     doTest('TP53: GERMLINE_SOMATIC', [
@@ -603,43 +599,40 @@ describe('OQL parser', () => {
             ] as Alteration[],
         },
     ]);
-    doTest(
-        'TP53:AMP_DRIVER DRIVER_AMP FUSION_DRIVER DRIVER_FUSION DRIVER_HOMDEL HETLOSS DRIVER',
-        [
-            {
-                gene: 'TP53',
-                alterations: [
-                    {
-                        alteration_type: 'cna',
-                        constr_rel: '=',
-                        constr_val: 'AMP',
-                        modifiers: ['DRIVER'],
-                    },
-                    {
-                        alteration_type: 'cna',
-                        constr_rel: '=',
-                        constr_val: 'AMP',
-                        modifiers: ['DRIVER'],
-                    },
-                    { alteration_type: 'fusion', modifiers: ['DRIVER'] },
-                    { alteration_type: 'fusion', modifiers: ['DRIVER'] },
-                    {
-                        alteration_type: 'cna',
-                        constr_rel: '=',
-                        constr_val: 'HOMDEL',
-                        modifiers: ['DRIVER'],
-                    },
-                    {
-                        alteration_type: 'cna',
-                        constr_rel: '=',
-                        constr_val: 'HETLOSS',
-                        modifiers: [],
-                    },
-                    { alteration_type: 'any', modifiers: ['DRIVER'] },
-                ] as Alteration[],
-            },
-        ]
-    );
+    doTest('TP53:AMP_DRIVER DRIVER_AMP FUSION_DRIVER DRIVER_FUSION DRIVER_HOMDEL HETLOSS DRIVER', [
+        {
+            gene: 'TP53',
+            alterations: [
+                {
+                    alteration_type: 'cna',
+                    constr_rel: '=',
+                    constr_val: 'AMP',
+                    modifiers: ['DRIVER'],
+                },
+                {
+                    alteration_type: 'cna',
+                    constr_rel: '=',
+                    constr_val: 'AMP',
+                    modifiers: ['DRIVER'],
+                },
+                { alteration_type: 'fusion', modifiers: ['DRIVER'] },
+                { alteration_type: 'fusion', modifiers: ['DRIVER'] },
+                {
+                    alteration_type: 'cna',
+                    constr_rel: '=',
+                    constr_val: 'HOMDEL',
+                    modifiers: ['DRIVER'],
+                },
+                {
+                    alteration_type: 'cna',
+                    constr_rel: '=',
+                    constr_val: 'HETLOSS',
+                    modifiers: [],
+                },
+                { alteration_type: 'any', modifiers: ['DRIVER'] },
+            ] as Alteration[],
+        },
+    ]);
     doTest('TP53:MISSENSE PROMOTER', [
         {
             gene: 'TP53',
@@ -804,9 +797,7 @@ describe('OQL parser', () => {
     doTest('TP53:PROT<=-2\n', [
         {
             gene: 'TP53',
-            alterations: [
-                { alteration_type: 'prot', constr_rel: '<=', constr_val: -2 },
-            ],
+            alterations: [{ alteration_type: 'prot', constr_rel: '<=', constr_val: -2 }],
         },
     ]);
 
@@ -859,9 +850,7 @@ describe('OQL parser', () => {
     doTest('BRAF:FUSION', [
         {
             gene: 'BRAF',
-            alterations: [
-                { alteration_type: 'fusion', modifiers: [] },
-            ] as Alteration[],
+            alterations: [{ alteration_type: 'fusion', modifiers: [] }] as Alteration[],
         },
     ]);
     doTest('MIR-493*:MUT=V600', [

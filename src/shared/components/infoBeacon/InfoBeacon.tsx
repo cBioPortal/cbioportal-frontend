@@ -77,11 +77,7 @@ export default class InfoBeacon extends React.Component<IInfoBeaconProps, {}> {
                     onClick={this.handleInteraction}
                     onMouseOver={this.handleInteraction}
                 >
-                    {this.infoShown &&
-                        ReactDOM.createPortal(
-                            this.props.children,
-                            document.body
-                        )}
+                    {this.infoShown && ReactDOM.createPortal(this.props.children, document.body)}
                 </div>
             );
         }
