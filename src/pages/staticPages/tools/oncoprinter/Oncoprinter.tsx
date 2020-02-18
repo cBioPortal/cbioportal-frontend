@@ -285,13 +285,17 @@ export default class Oncoprinter extends React.Component<
                 }
             },
             onSetHorzZoom: (z: number) => {
-                this.oncoprint.setHorzZoom(z);
+                this.oncoprint.setHorzZoomCentered(z);
             },
             onClickZoomIn: () => {
-                this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom() / 0.7);
+                this.oncoprint.setHorzZoomCentered(
+                    this.oncoprint.getHorzZoom() / 0.7
+                );
             },
             onClickZoomOut: () => {
-                this.oncoprint.setHorzZoom(this.oncoprint.getHorzZoom() * 0.7);
+                this.oncoprint.setHorzZoomCentered(
+                    this.oncoprint.getHorzZoom() * 0.7
+                );
             },
             onClickNGCHM: () => {}, // do nothing in oncoprinter mode
         };

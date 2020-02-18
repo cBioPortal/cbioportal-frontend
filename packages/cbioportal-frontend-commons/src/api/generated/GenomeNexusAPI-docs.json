@@ -74,6 +74,13 @@
             "type": "string"
           },
           {
+            "name": "token",
+            "in": "query",
+            "description": "Map of tokens. For example {\"source1\":\"put-your-token1-here\",\"source2\":\"put-your-token2-here\"}",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "fields",
             "in": "query",
             "description": "Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor",
@@ -133,6 +140,13 @@
             "type": "string"
           },
           {
+            "name": "token",
+            "in": "query",
+            "description": "Map of tokens. For example {\"source1\":\"put-your-token1-here\",\"source2\":\"put-your-token2-here\"}",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "fields",
             "in": "query",
             "description": "Comma separated list of fields to include (case-sensitive!). For example: annotation_summary",
@@ -183,6 +197,13 @@
             "name": "isoformOverrideSource",
             "in": "query",
             "description": "Isoform override source. For example uniprot",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "description": "Map of tokens. For example {\"source1\":\"put-your-token1-here\",\"source2\":\"put-your-token2-here\"}",
             "required": false,
             "type": "string"
           },
@@ -243,6 +264,13 @@
             "type": "string"
           },
           {
+            "name": "token",
+            "in": "query",
+            "description": "Map of tokens. For example {\"source1\":\"put-your-token1-here\",\"source2\":\"put-your-token2-here\"}",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "fields",
             "in": "query",
             "description": "Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor",
@@ -297,6 +325,13 @@
             "type": "string"
           },
           {
+            "name": "token",
+            "in": "query",
+            "description": "Map of tokens. For example {\"source1\":\"put-your-token1-here\",\"source2\":\"put-your-token2-here\"}",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "fields",
             "in": "query",
             "description": "Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor",
@@ -344,6 +379,13 @@
             "name": "isoformOverrideSource",
             "in": "query",
             "description": "Isoform override source. For example uniprot",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "description": "Map of tokens. For example {\"source1\":\"put-your-token1-here\",\"source2\":\"put-your-token2-here\"}",
             "required": false,
             "type": "string"
           },
@@ -1157,6 +1199,34 @@
         }
       }
     },
+    "ArticleAbstract": {
+      "type": "object",
+      "properties": {
+        "abstract": {
+          "type": "string"
+        },
+        "link": {
+          "type": "string"
+        }
+      }
+    },
+    "Citations": {
+      "type": "object",
+      "properties": {
+        "abstracts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ArticleAbstract"
+          }
+        },
+        "pmids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "ClinVar": {
       "type": "object",
       "properties": {
@@ -1356,6 +1426,26 @@
         "vartype": {
           "type": "string",
           "description": "vartype"
+        }
+      }
+    },
+    "Drug": {
+      "type": "object",
+      "properties": {
+        "drugName": {
+          "type": "string"
+        },
+        "ncitCode": {
+          "type": "string"
+        },
+        "synonyms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "uuid": {
+          "type": "string"
         }
       }
     },
@@ -1815,6 +1905,319 @@
         }
       }
     },
+    "Implication": {
+      "type": "object",
+      "properties": {
+        "alterations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "description": {
+          "type": "string"
+        },
+        "levelOfEvidence": {
+          "type": "string",
+          "enum": [
+            "LEVEL_0",
+            "LEVEL_1",
+            "LEVEL_2",
+            "LEVEL_2A",
+            "LEVEL_2B",
+            "LEVEL_3A",
+            "LEVEL_3B",
+            "LEVEL_4",
+            "LEVEL_R1",
+            "LEVEL_R2",
+            "LEVEL_R3",
+            "LEVEL_Px1",
+            "LEVEL_Px2",
+            "LEVEL_Px3",
+            "LEVEL_Dx1",
+            "LEVEL_Dx2",
+            "LEVEL_Dx3",
+            "NO"
+          ]
+        },
+        "tumorType": {
+          "$ref": "#/definitions/TumorType"
+        }
+      }
+    },
+    "IndicatorQueryResp": {
+      "type": "object",
+      "properties": {
+        "alleleExist": {
+          "type": "boolean",
+          "example": false
+        },
+        "dataVersion": {
+          "type": "string"
+        },
+        "diagnosticImplications": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Implication"
+          }
+        },
+        "diagnosticSummary": {
+          "type": "string"
+        },
+        "geneExist": {
+          "type": "boolean",
+          "example": false
+        },
+        "geneSummary": {
+          "type": "string"
+        },
+        "highestDiagnosticImplicationLevel": {
+          "type": "string",
+          "enum": [
+            "LEVEL_0",
+            "LEVEL_1",
+            "LEVEL_2",
+            "LEVEL_2A",
+            "LEVEL_2B",
+            "LEVEL_3A",
+            "LEVEL_3B",
+            "LEVEL_4",
+            "LEVEL_R1",
+            "LEVEL_R2",
+            "LEVEL_R3",
+            "LEVEL_Px1",
+            "LEVEL_Px2",
+            "LEVEL_Px3",
+            "LEVEL_Dx1",
+            "LEVEL_Dx2",
+            "LEVEL_Dx3",
+            "NO"
+          ]
+        },
+        "highestPrognosticImplicationLevel": {
+          "type": "string",
+          "enum": [
+            "LEVEL_0",
+            "LEVEL_1",
+            "LEVEL_2",
+            "LEVEL_2A",
+            "LEVEL_2B",
+            "LEVEL_3A",
+            "LEVEL_3B",
+            "LEVEL_4",
+            "LEVEL_R1",
+            "LEVEL_R2",
+            "LEVEL_R3",
+            "LEVEL_Px1",
+            "LEVEL_Px2",
+            "LEVEL_Px3",
+            "LEVEL_Dx1",
+            "LEVEL_Dx2",
+            "LEVEL_Dx3",
+            "NO"
+          ]
+        },
+        "highestResistanceLevel": {
+          "type": "string",
+          "enum": [
+            "LEVEL_0",
+            "LEVEL_1",
+            "LEVEL_2",
+            "LEVEL_2A",
+            "LEVEL_2B",
+            "LEVEL_3A",
+            "LEVEL_3B",
+            "LEVEL_4",
+            "LEVEL_R1",
+            "LEVEL_R2",
+            "LEVEL_R3",
+            "LEVEL_Px1",
+            "LEVEL_Px2",
+            "LEVEL_Px3",
+            "LEVEL_Dx1",
+            "LEVEL_Dx2",
+            "LEVEL_Dx3",
+            "NO"
+          ]
+        },
+        "highestSensitiveLevel": {
+          "type": "string",
+          "enum": [
+            "LEVEL_0",
+            "LEVEL_1",
+            "LEVEL_2",
+            "LEVEL_2A",
+            "LEVEL_2B",
+            "LEVEL_3A",
+            "LEVEL_3B",
+            "LEVEL_4",
+            "LEVEL_R1",
+            "LEVEL_R2",
+            "LEVEL_R3",
+            "LEVEL_Px1",
+            "LEVEL_Px2",
+            "LEVEL_Px3",
+            "LEVEL_Dx1",
+            "LEVEL_Dx2",
+            "LEVEL_Dx3",
+            "NO"
+          ]
+        },
+        "hotspot": {
+          "type": "boolean",
+          "example": false
+        },
+        "lastUpdate": {
+          "type": "string"
+        },
+        "mutationEffect": {
+          "$ref": "#/definitions/MutationEffectResp"
+        },
+        "oncogenic": {
+          "type": "string"
+        },
+        "otherSignificantResistanceLevels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "LEVEL_0",
+              "LEVEL_1",
+              "LEVEL_2",
+              "LEVEL_2A",
+              "LEVEL_2B",
+              "LEVEL_3A",
+              "LEVEL_3B",
+              "LEVEL_4",
+              "LEVEL_R1",
+              "LEVEL_R2",
+              "LEVEL_R3",
+              "LEVEL_Px1",
+              "LEVEL_Px2",
+              "LEVEL_Px3",
+              "LEVEL_Dx1",
+              "LEVEL_Dx2",
+              "LEVEL_Dx3",
+              "NO"
+            ]
+          }
+        },
+        "otherSignificantSensitiveLevels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "LEVEL_0",
+              "LEVEL_1",
+              "LEVEL_2",
+              "LEVEL_2A",
+              "LEVEL_2B",
+              "LEVEL_3A",
+              "LEVEL_3B",
+              "LEVEL_4",
+              "LEVEL_R1",
+              "LEVEL_R2",
+              "LEVEL_R3",
+              "LEVEL_Px1",
+              "LEVEL_Px2",
+              "LEVEL_Px3",
+              "LEVEL_Dx1",
+              "LEVEL_Dx2",
+              "LEVEL_Dx3",
+              "NO"
+            ]
+          }
+        },
+        "prognosticImplications": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Implication"
+          }
+        },
+        "prognosticSummary": {
+          "type": "string"
+        },
+        "query": {
+          "$ref": "#/definitions/Query"
+        },
+        "treatments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IndicatorQueryTreatment"
+          }
+        },
+        "tumorTypeSummary": {
+          "type": "string"
+        },
+        "variantExist": {
+          "type": "boolean",
+          "example": false
+        },
+        "variantSummary": {
+          "type": "string"
+        },
+        "vus": {
+          "type": "boolean",
+          "example": false
+        }
+      }
+    },
+    "IndicatorQueryTreatment": {
+      "type": "object",
+      "properties": {
+        "abstracts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ArticleAbstract"
+          }
+        },
+        "approvedIndications": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "drugs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Drug"
+          }
+        },
+        "fdaApproved": {
+          "type": "boolean",
+          "example": false
+        },
+        "level": {
+          "type": "string",
+          "enum": [
+            "LEVEL_0",
+            "LEVEL_1",
+            "LEVEL_2",
+            "LEVEL_2A",
+            "LEVEL_2B",
+            "LEVEL_3A",
+            "LEVEL_3B",
+            "LEVEL_4",
+            "LEVEL_R1",
+            "LEVEL_R2",
+            "LEVEL_R3",
+            "LEVEL_Px1",
+            "LEVEL_Px2",
+            "LEVEL_Px3",
+            "LEVEL_Dx1",
+            "LEVEL_Dx2",
+            "LEVEL_Dx3",
+            "NO"
+          ]
+        },
+        "pmids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "IntegerRange": {
       "type": "object",
       "properties": {
@@ -1852,6 +2255,26 @@
           }
         }
       }
+    },
+    "MainType": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "name": {
+          "type": "string"
+        },
+        "tumorForm": {
+          "type": "string",
+          "enum": [
+            "SOLID",
+            "LIQUID"
+          ]
+        }
+      },
+      "description": "OncoTree Cancer Type"
     },
     "MutationAssessor": {
       "type": "object",
@@ -1976,6 +2399,20 @@
         }
       }
     },
+    "MutationEffectResp": {
+      "type": "object",
+      "properties": {
+        "citations": {
+          "$ref": "#/definitions/Citations"
+        },
+        "description": {
+          "type": "string"
+        },
+        "knownEffect": {
+          "type": "string"
+        }
+      }
+    },
     "Mutdb": {
       "type": "object",
       "properties": {
@@ -2064,6 +2501,17 @@
       "properties": {
         "annotation": {
           "$ref": "#/definitions/MyVariantInfo"
+        },
+        "license": {
+          "type": "string"
+        }
+      }
+    },
+    "OncokbAnnotation": {
+      "type": "object",
+      "properties": {
+        "annotation": {
+          "$ref": "#/definitions/IndicatorQueryResp"
         },
         "license": {
           "type": "string"
@@ -2197,6 +2645,59 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "Query": {
+      "type": "object",
+      "properties": {
+        "alteration": {
+          "type": "string"
+        },
+        "alterationType": {
+          "type": "string"
+        },
+        "consequence": {
+          "type": "string"
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hgvs": {
+          "type": "string"
+        },
+        "hugoSymbol": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "proteinEnd": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "proteinStart": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "svType": {
+          "type": "string",
+          "enum": [
+            "DELETION",
+            "TRANSLOCATION",
+            "DUPLICATION",
+            "INSERTION",
+            "INVERSION",
+            "FUSION",
+            "UNKNOWN"
+          ]
+        },
+        "tumorType": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
         }
       }
     },
@@ -2386,6 +2887,51 @@
         }
       }
     },
+    "TumorType": {
+      "type": "object",
+      "properties": {
+        "children": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/TumorType"
+          }
+        },
+        "code": {
+          "type": "string"
+        },
+        "color": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "level": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "mainType": {
+          "$ref": "#/definitions/MainType"
+        },
+        "name": {
+          "type": "string"
+        },
+        "parent": {
+          "type": "string"
+        },
+        "tissue": {
+          "type": "string"
+        },
+        "tumorForm": {
+          "type": "string",
+          "enum": [
+            "SOLID",
+            "LIQUID"
+          ]
+        }
+      },
+      "description": "OncoTree Detailed Cancer Type"
+    },
     "UntranslatedRegion": {
       "type": "object",
       "required": [
@@ -2480,6 +3026,10 @@
         "my_variant_info": {
           "description": "My Variant Info Annotation",
           "$ref": "#/definitions/MyVariantInfoAnnotation"
+        },
+        "oncokb": {
+          "description": "Oncokb",
+          "$ref": "#/definitions/OncokbAnnotation"
         },
         "ptms": {
           "description": "Post Translational Modifications",
