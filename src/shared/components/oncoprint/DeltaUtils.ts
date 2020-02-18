@@ -1172,7 +1172,7 @@ function transitionClinicalTrack(
         rule_set_params.legend_label = nextSpec.label;
         rule_set_params.exclude_from_legend = !nextProps.showClinicalTrackLegends;
         rule_set_params.na_legend_label = nextSpec.na_legend_label;
-        const clinicalTrackParams = {
+        const clinicalTrackParams: UserTrackSpec<any> = {
             rule_set_params,
             data: nextSpec.data,
             data_id_key: 'uid',
@@ -1199,6 +1199,7 @@ function transitionClinicalTrack(
             target_group: CLINICAL_TRACK_GROUP_INDEX,
             onSortDirectionChange: nextProps.onTrackSortDirectionChange,
             custom_track_options: nextSpec.custom_options,
+            track_can_show_gaps: nextSpec.datatype === 'string',
         };
         trackSpecKeyToTrackId[nextSpec.key] = oncoprint.addTracks([
             clinicalTrackParams,

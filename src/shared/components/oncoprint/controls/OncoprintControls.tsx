@@ -1401,6 +1401,7 @@ export default class OncoprintControls extends React.Component<
                         onClick={this.toggleShowMinimap}
                     >
                         <img
+                            data-test="ShowMinimapButton"
                             src={require('./toggle-minimap.svg')}
                             alt="icon"
                             style={{ width: 15, height: 15 }}
