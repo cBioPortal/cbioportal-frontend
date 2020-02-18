@@ -65,6 +65,18 @@ export type Alleles = {
     'allele': string
 
 };
+export type ArticleAbstract = {
+    'abstract': string
+
+        'link': string
+
+};
+export type Citations = {
+    'abstracts': Array < ArticleAbstract >
+
+        'pmids': Array < string >
+
+};
 export type ClinVar = {
     '_license': string
 
@@ -153,6 +165,16 @@ export type Dbsnp = {
         'varSubtype': string
 
         'vartype': string
+
+};
+export type Drug = {
+    'drugName': string
+
+        'ncitCode': string
+
+        'synonyms': Array < string >
+
+        'uuid': string
 
 };
 export type EnsemblFilter = {
@@ -328,6 +350,80 @@ export type HotspotAnnotation = {
         'license': string
 
 };
+export type Implication = {
+    'alterations': Array < string >
+
+        'description': string
+
+        'levelOfEvidence': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
+
+        'tumorType': TumorType
+
+};
+export type IndicatorQueryResp = {
+    'alleleExist': boolean
+
+        'dataVersion': string
+
+        'diagnosticImplications': Array < Implication >
+
+        'diagnosticSummary': string
+
+        'geneExist': boolean
+
+        'geneSummary': string
+
+        'highestDiagnosticImplicationLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
+
+        'highestPrognosticImplicationLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
+
+        'highestResistanceLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
+
+        'highestSensitiveLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
+
+        'hotspot': boolean
+
+        'lastUpdate': string
+
+        'mutationEffect': MutationEffectResp
+
+        'oncogenic': string
+
+        'otherSignificantResistanceLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO" >
+
+        'otherSignificantSensitiveLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO" >
+
+        'prognosticImplications': Array < Implication >
+
+        'prognosticSummary': string
+
+        'query': Query
+
+        'treatments': Array < IndicatorQueryTreatment >
+
+        'tumorTypeSummary': string
+
+        'variantExist': boolean
+
+        'variantSummary': string
+
+        'vus': boolean
+
+};
+export type IndicatorQueryTreatment = {
+    'abstracts': Array < ArticleAbstract >
+
+        'approvedIndications': Array < string >
+
+        'drugs': Array < Drug >
+
+        'fdaApproved': boolean
+
+        'level': "LEVEL_0" | "LEVEL_1" | "LEVEL_2" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" | "NO"
+
+        'pmids': Array < string >
+
+};
 export type IntegerRange = {
     'end': number
 
@@ -340,6 +436,14 @@ export type IntergenicConsequences = {
         'variantAllele': string
 
         'consequenceTerms': Array < string >
+
+};
+export type MainType = {
+    'id': number
+
+        'name': string
+
+        'tumorForm': "SOLID" | "LIQUID"
 
 };
 export type MutationAssessor = {
@@ -398,6 +502,14 @@ export type MutationAssessorAnnotation = {
         'license': string
 
 };
+export type MutationEffectResp = {
+    'citations': Citations
+
+        'description': string
+
+        'knownEffect': string
+
+};
 export type Mutdb = {
     'alt': string
 
@@ -440,6 +552,12 @@ export type MyVariantInfo = {
 };
 export type MyVariantInfoAnnotation = {
     'annotation': MyVariantInfo
+
+        'license': string
+
+};
+export type OncokbAnnotation = {
+    'annotation': IndicatorQueryResp
 
         'license': string
 
@@ -495,6 +613,32 @@ export type PtmAnnotation = {
 };
 export type PtmFilter = {
     'transcriptIds': Array < string >
+
+};
+export type Query = {
+    'alteration': string
+
+        'alterationType': string
+
+        'consequence': string
+
+        'entrezGeneId': number
+
+        'hgvs': string
+
+        'hugoSymbol': string
+
+        'id': string
+
+        'proteinEnd': number
+
+        'proteinStart': number
+
+        'svType': "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION" | "UNKNOWN"
+
+        'tumorType': string
+
+        'type': string
 
 };
 export type Rcv = {
@@ -581,6 +725,28 @@ export type TranscriptConsequenceSummary = {
         'variantClassification': string
 
 };
+export type TumorType = {
+    'children': {}
+
+    'code': string
+
+        'color': string
+
+        'id': number
+
+        'level': number
+
+        'mainType': MainType
+
+        'name': string
+
+        'parent': string
+
+        'tissue': string
+
+        'tumorForm': "SOLID" | "LIQUID"
+
+};
 export type UntranslatedRegion = {
     'type': string
 
@@ -617,6 +783,8 @@ export type VariantAnnotation = {
         'mutation_assessor': MutationAssessorAnnotation
 
         'my_variant_info': MyVariantInfoAnnotation
+
+        'oncokb': OncokbAnnotation
 
         'ptms': PtmAnnotation
 
@@ -725,6 +893,7 @@ export default class GenomeNexusAPI {
     fetchVariantAnnotationPOSTURL(parameters: {
         'variants': Array < string > ,
         'isoformOverrideSource' ? : string,
+        'token' ? : string,
         'fields' ? : Array < string > ,
         $queryParameters ? : any
     }): string {
@@ -733,6 +902,10 @@ export default class GenomeNexusAPI {
 
         if (parameters['isoformOverrideSource'] !== undefined) {
             queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+        }
+
+        if (parameters['token'] !== undefined) {
+            queryParameters['token'] = parameters['token'];
         }
 
         if (parameters['fields'] !== undefined) {
@@ -755,11 +928,13 @@ export default class GenomeNexusAPI {
      * @name GenomeNexusAPI#fetchVariantAnnotationPOST
      * @param {} variants - List of variants. For example ["X:g.66937331T>A","17:g.41242962_41242963insGA"] (GRCh37) or ["1:g.182712A>C", "2:g.265023C>T", "3:g.319781del", "19:g.110753dup", "1:g.1385015_1387562del"] (GRCh38)
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
      */
     fetchVariantAnnotationPOSTWithHttpInfo(parameters: {
         'variants': Array < string > ,
         'isoformOverrideSource' ? : string,
+        'token' ? : string,
         'fields' ? : Array < string > ,
         $queryParameters ? : any,
         $domain ? : string
@@ -789,6 +964,10 @@ export default class GenomeNexusAPI {
                 queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
             }
 
+            if (parameters['token'] !== undefined) {
+                queryParameters['token'] = parameters['token'];
+            }
+
             if (parameters['fields'] !== undefined) {
                 queryParameters['fields'] = parameters['fields'];
             }
@@ -811,11 +990,13 @@ export default class GenomeNexusAPI {
      * @name GenomeNexusAPI#fetchVariantAnnotationPOST
      * @param {} variants - List of variants. For example ["X:g.66937331T>A","17:g.41242962_41242963insGA"] (GRCh37) or ["1:g.182712A>C", "2:g.265023C>T", "3:g.319781del", "19:g.110753dup", "1:g.1385015_1387562del"] (GRCh38)
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
      */
     fetchVariantAnnotationPOST(parameters: {
             'variants': Array < string > ,
             'isoformOverrideSource' ? : string,
+            'token' ? : string,
             'fields' ? : Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
@@ -828,6 +1009,7 @@ export default class GenomeNexusAPI {
     fetchVariantAnnotationByIdPOSTURL(parameters: {
         'variantIds': Array < string > ,
         'isoformOverrideSource' ? : string,
+        'token' ? : string,
         'fields' ? : Array < string > ,
         $queryParameters ? : any
     }): string {
@@ -836,6 +1018,10 @@ export default class GenomeNexusAPI {
 
         if (parameters['isoformOverrideSource'] !== undefined) {
             queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+        }
+
+        if (parameters['token'] !== undefined) {
+            queryParameters['token'] = parameters['token'];
         }
 
         if (parameters['fields'] !== undefined) {
@@ -858,11 +1044,13 @@ export default class GenomeNexusAPI {
      * @name GenomeNexusAPI#fetchVariantAnnotationByIdPOST
      * @param {} variantIds - List of variant IDs. For example ["rs116035550"]
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: annotation_summary
      */
     fetchVariantAnnotationByIdPOSTWithHttpInfo(parameters: {
         'variantIds': Array < string > ,
         'isoformOverrideSource' ? : string,
+        'token' ? : string,
         'fields' ? : Array < string > ,
         $queryParameters ? : any,
         $domain ? : string
@@ -892,6 +1080,10 @@ export default class GenomeNexusAPI {
                 queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
             }
 
+            if (parameters['token'] !== undefined) {
+                queryParameters['token'] = parameters['token'];
+            }
+
             if (parameters['fields'] !== undefined) {
                 queryParameters['fields'] = parameters['fields'];
             }
@@ -914,11 +1106,13 @@ export default class GenomeNexusAPI {
      * @name GenomeNexusAPI#fetchVariantAnnotationByIdPOST
      * @param {} variantIds - List of variant IDs. For example ["rs116035550"]
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: annotation_summary
      */
     fetchVariantAnnotationByIdPOST(parameters: {
             'variantIds': Array < string > ,
             'isoformOverrideSource' ? : string,
+            'token' ? : string,
             'fields' ? : Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
@@ -931,6 +1125,7 @@ export default class GenomeNexusAPI {
     fetchVariantAnnotationByIdGETURL(parameters: {
         'variantId': string,
         'isoformOverrideSource' ? : string,
+        'token' ? : string,
         'fields' ? : Array < string > ,
         $queryParameters ? : any
     }): string {
@@ -940,6 +1135,10 @@ export default class GenomeNexusAPI {
         path = path.replace('{variantId}', parameters['variantId'] + '');
         if (parameters['isoformOverrideSource'] !== undefined) {
             queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+        }
+
+        if (parameters['token'] !== undefined) {
+            queryParameters['token'] = parameters['token'];
         }
 
         if (parameters['fields'] !== undefined) {
@@ -962,11 +1161,13 @@ export default class GenomeNexusAPI {
      * @name GenomeNexusAPI#fetchVariantAnnotationByIdGET
      * @param {string} variantId - dbSNP id. For example rs116035550.
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: annotation_summary
      */
     fetchVariantAnnotationByIdGETWithHttpInfo(parameters: {
         'variantId': string,
         'isoformOverrideSource' ? : string,
+        'token' ? : string,
         'fields' ? : Array < string > ,
         $queryParameters ? : any,
         $domain ? : string
@@ -994,6 +1195,10 @@ export default class GenomeNexusAPI {
                 queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
             }
 
+            if (parameters['token'] !== undefined) {
+                queryParameters['token'] = parameters['token'];
+            }
+
             if (parameters['fields'] !== undefined) {
                 queryParameters['fields'] = parameters['fields'];
             }
@@ -1016,11 +1221,13 @@ export default class GenomeNexusAPI {
      * @name GenomeNexusAPI#fetchVariantAnnotationByIdGET
      * @param {string} variantId - dbSNP id. For example rs116035550.
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: annotation_summary
      */
     fetchVariantAnnotationByIdGET(parameters: {
         'variantId': string,
         'isoformOverrideSource' ? : string,
+        'token' ? : string,
         'fields' ? : Array < string > ,
         $queryParameters ? : any,
         $domain ? : string
@@ -1032,6 +1239,7 @@ export default class GenomeNexusAPI {
     fetchVariantAnnotationByGenomicLocationPOSTURL(parameters: {
         'genomicLocations': Array < GenomicLocation > ,
         'isoformOverrideSource' ? : string,
+        'token' ? : string,
         'fields' ? : Array < string > ,
         $queryParameters ? : any
     }): string {
@@ -1040,6 +1248,10 @@ export default class GenomeNexusAPI {
 
         if (parameters['isoformOverrideSource'] !== undefined) {
             queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+        }
+
+        if (parameters['token'] !== undefined) {
+            queryParameters['token'] = parameters['token'];
         }
 
         if (parameters['fields'] !== undefined) {
@@ -1062,11 +1274,13 @@ export default class GenomeNexusAPI {
      * @name GenomeNexusAPI#fetchVariantAnnotationByGenomicLocationPOST
      * @param {} genomicLocations - List of Genomic Locations
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
      */
     fetchVariantAnnotationByGenomicLocationPOSTWithHttpInfo(parameters: {
         'genomicLocations': Array < GenomicLocation > ,
         'isoformOverrideSource' ? : string,
+        'token' ? : string,
         'fields' ? : Array < string > ,
         $queryParameters ? : any,
         $domain ? : string
@@ -1096,6 +1310,10 @@ export default class GenomeNexusAPI {
                 queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
             }
 
+            if (parameters['token'] !== undefined) {
+                queryParameters['token'] = parameters['token'];
+            }
+
             if (parameters['fields'] !== undefined) {
                 queryParameters['fields'] = parameters['fields'];
             }
@@ -1118,11 +1336,13 @@ export default class GenomeNexusAPI {
      * @name GenomeNexusAPI#fetchVariantAnnotationByGenomicLocationPOST
      * @param {} genomicLocations - List of Genomic Locations
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
      */
     fetchVariantAnnotationByGenomicLocationPOST(parameters: {
             'genomicLocations': Array < GenomicLocation > ,
             'isoformOverrideSource' ? : string,
+            'token' ? : string,
             'fields' ? : Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
@@ -1135,6 +1355,7 @@ export default class GenomeNexusAPI {
     fetchVariantAnnotationByGenomicLocationGETURL(parameters: {
         'genomicLocation': string,
         'isoformOverrideSource' ? : string,
+        'token' ? : string,
         'fields' ? : Array < string > ,
         $queryParameters ? : any
     }): string {
@@ -1144,6 +1365,10 @@ export default class GenomeNexusAPI {
         path = path.replace('{genomicLocation}', parameters['genomicLocation'] + '');
         if (parameters['isoformOverrideSource'] !== undefined) {
             queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+        }
+
+        if (parameters['token'] !== undefined) {
+            queryParameters['token'] = parameters['token'];
         }
 
         if (parameters['fields'] !== undefined) {
@@ -1166,11 +1391,13 @@ export default class GenomeNexusAPI {
      * @name GenomeNexusAPI#fetchVariantAnnotationByGenomicLocationGET
      * @param {string} genomicLocation - A genomic location. For example 7,140453136,140453136,A,T
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
      */
     fetchVariantAnnotationByGenomicLocationGETWithHttpInfo(parameters: {
         'genomicLocation': string,
         'isoformOverrideSource' ? : string,
+        'token' ? : string,
         'fields' ? : Array < string > ,
         $queryParameters ? : any,
         $domain ? : string
@@ -1198,6 +1425,10 @@ export default class GenomeNexusAPI {
                 queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
             }
 
+            if (parameters['token'] !== undefined) {
+                queryParameters['token'] = parameters['token'];
+            }
+
             if (parameters['fields'] !== undefined) {
                 queryParameters['fields'] = parameters['fields'];
             }
@@ -1220,11 +1451,13 @@ export default class GenomeNexusAPI {
      * @name GenomeNexusAPI#fetchVariantAnnotationByGenomicLocationGET
      * @param {string} genomicLocation - A genomic location. For example 7,140453136,140453136,A,T
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
      */
     fetchVariantAnnotationByGenomicLocationGET(parameters: {
         'genomicLocation': string,
         'isoformOverrideSource' ? : string,
+        'token' ? : string,
         'fields' ? : Array < string > ,
         $queryParameters ? : any,
         $domain ? : string
@@ -1236,6 +1469,7 @@ export default class GenomeNexusAPI {
     fetchVariantAnnotationGETURL(parameters: {
         'variant': string,
         'isoformOverrideSource' ? : string,
+        'token' ? : string,
         'fields' ? : Array < string > ,
         $queryParameters ? : any
     }): string {
@@ -1245,6 +1479,10 @@ export default class GenomeNexusAPI {
         path = path.replace('{variant}', parameters['variant'] + '');
         if (parameters['isoformOverrideSource'] !== undefined) {
             queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+        }
+
+        if (parameters['token'] !== undefined) {
+            queryParameters['token'] = parameters['token'];
         }
 
         if (parameters['fields'] !== undefined) {
@@ -1267,11 +1505,13 @@ export default class GenomeNexusAPI {
      * @name GenomeNexusAPI#fetchVariantAnnotationGET
      * @param {string} variant - Variant. For example 17:g.41242962_41242963insGA
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
      */
     fetchVariantAnnotationGETWithHttpInfo(parameters: {
         'variant': string,
         'isoformOverrideSource' ? : string,
+        'token' ? : string,
         'fields' ? : Array < string > ,
         $queryParameters ? : any,
         $domain ? : string
@@ -1299,6 +1539,10 @@ export default class GenomeNexusAPI {
                 queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
             }
 
+            if (parameters['token'] !== undefined) {
+                queryParameters['token'] = parameters['token'];
+            }
+
             if (parameters['fields'] !== undefined) {
                 queryParameters['fields'] = parameters['fields'];
             }
@@ -1321,11 +1565,13 @@ export default class GenomeNexusAPI {
      * @name GenomeNexusAPI#fetchVariantAnnotationGET
      * @param {string} variant - Variant. For example 17:g.41242962_41242963insGA
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
      * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
      */
     fetchVariantAnnotationGET(parameters: {
         'variant': string,
         'isoformOverrideSource' ? : string,
+        'token' ? : string,
         'fields' ? : Array < string > ,
         $queryParameters ? : any,
         $domain ? : string
