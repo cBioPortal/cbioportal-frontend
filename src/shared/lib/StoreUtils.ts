@@ -5,86 +5,86 @@ import {
     fetchVariantAnnotationsIndexedByGenomicLocation as fetchDefaultVariantAnnotationsIndexedByGenomicLocation,
 } from 'react-mutation-mapper';
 import {
+    CancerStudy,
+    ClinicalData,
+    ClinicalDataMultiStudyFilter,
+    ClinicalDataSingleStudyFilter,
+    CopyNumberCountIdentifier,
+    CopyNumberSeg,
     default as CBioPortalAPI,
+    DiscreteCopyNumberData,
+    DiscreteCopyNumberFilter,
+    Gene,
+    GenePanel,
+    GenePanelData,
+    GenePanelDataFilter,
     MolecularProfile,
     Mutation,
     MutationFilter,
-    DiscreteCopyNumberData,
-    DiscreteCopyNumberFilter,
-    ClinicalData,
-    Sample,
-    CancerStudy,
-    CopyNumberCountIdentifier,
-    CopyNumberSeg,
-    ClinicalDataSingleStudyFilter,
-    ClinicalDataMultiStudyFilter,
     NumericGeneMolecularData,
-    SampleFilter,
-    Gene,
     ReferenceGenomeGene,
-    GenePanelDataFilter,
-    GenePanelToGene,
-    GenePanelData,
-    GenePanel,
+    Sample,
+    SampleFilter,
 } from 'shared/api/generated/CBioPortalAPI';
 import defaultClient from 'shared/api/cbioportalClientInstance';
+import client from 'shared/api/cbioportalClientInstance';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import g2sClient from 'shared/api/g2sClientInstance';
 import {
     Alignment,
-    Genome2StructureAPI,
-    Query,
-    OncoKbAPI,
-    OncoKbGene,
     CancerGene,
+    Genome2StructureAPI,
+    GenomeNexusAPI,
+    OncoKbAPI,
+    stringListToIndexSet,
 } from 'cbioportal-frontend-commons';
 import {
     CosmicMutation,
     default as CBioPortalAPIInternal,
-    GisticToGene,
     Gistic,
+    GisticToGene,
     MutSig,
 } from 'shared/api/generated/CBioPortalAPIInternal';
 import oncokbClient from 'shared/api/oncokbClientInstance';
 import genomeNexusClient from 'shared/api/genomeNexusClientInstance';
 import {
+    generateAnnotateStructuralVariantQuery,
+    generateCopyNumberAlterationQuery,
     generateIdToIndicatorMap,
-    generateQueryVariant,
-    generateEvidenceQuery,
-} from 'shared/lib/OncoKbUtils';
-import { getCivicVariants, getCivicGenes } from 'shared/lib/CivicUtils';
+    generateProteinChangeQuery,
+} from 'cbioportal-frontend-commons';
+import { getCivicGenes, getCivicVariants } from 'shared/lib/CivicUtils';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
-import { MobxPromise, MobxPromiseInputUnion } from 'mobxpromise';
+import { MobxPromise } from 'mobxpromise';
 import {
-    keywordToCosmic,
     geneToMyCancerGenome,
+    keywordToCosmic,
 } from 'shared/lib/AnnotationUtils';
 import { indexPdbAlignments } from 'shared/lib/PdbUtils';
-import { IOncoKbData } from 'shared/model/OncoKB';
 import { IGisticData } from 'shared/model/Gistic';
 import { IMutSigData } from 'shared/model/MutSig';
 import {
-    IMyCancerGenomeData,
     IMyCancerGenome,
+    IMyCancerGenomeData,
 } from 'shared/model/MyCancerGenome';
 import {
     IMutationalSignature,
     IMutationalSignatureMeta,
 } from 'shared/model/MutationalSignature';
-import { ICivicVariant, ICivicGene } from 'shared/model/Civic.ts';
+import { ICivicGene, ICivicVariant } from 'shared/model/Civic.ts';
 import {
     MOLECULAR_PROFILE_MUTATIONS_SUFFIX,
     MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX,
 } from 'shared/constants';
-import {
-    GenomeNexusAPI,
-    stringListToIndexSet,
-} from 'cbioportal-frontend-commons';
 import { AlterationTypeConstants } from '../../pages/resultsView/ResultsViewPageStore';
 import { normalizeMutations } from '../components/mutationMapper/MutationMapperUtils';
 import AppConfig from 'appConfig';
 import { getFrontendAssetUrl } from 'shared/api/urls';
-import client from 'shared/api/cbioportalClientInstance';
+import {
+    AnnotateCopyNumberAlterationQuery,
+    IndicatorQueryResp,
+} from 'cbioportal-frontend-commons';
+import { EvidenceType, IOncoKbData } from 'cbioportal-frontend-commons';
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
     uniqueSampleKeyToTumorType: {},
@@ -706,7 +706,7 @@ export function fetchMutationalSignatureMetaData(): IMutationalSignatureMeta[] {
 export async function fetchOncoKbCancerGenes(
     client: OncoKbAPI = oncokbClient
 ): Promise<CancerGene[]> {
-    return await client.utilsCancerGeneListGetUsingGET({});
+    return await client.utilsCancerGeneListGetUsingGET_1({});
 }
 
 export async function fetchOncoKbData(
@@ -732,27 +732,23 @@ export async function fetchOncoKbData(
         mutationDataResult,
         m => !!annotatedGenes[m.entrezGeneId]
     );
-    const queryVariants = _.uniqBy(
-        _.map(mutationsToQuery, (mutation: Mutation) => {
-            return generateQueryVariant(
-                mutation.gene.entrezGeneId,
-                cancerTypeForOncoKb(
+
+    return queryOncoKbData(
+        mutationsToQuery.map(mutation => {
+            return {
+                entrezGeneId: mutation.entrezGeneId,
+                alteration: mutation.proteinChange,
+                proteinPosStart: mutation.proteinPosStart,
+                proteinPosEnd: mutation.proteinPosEnd,
+                mutationType: mutation.mutationType,
+                tumorType: cancerTypeForOncoKb(
                     mutation.uniqueSampleKey,
                     uniqueSampleKeyToTumorType
                 ),
-                mutation.proteinChange,
-                mutation.mutationType,
-                mutation.proteinPosStart,
-                mutation.proteinPosEnd
-            );
+            };
         }),
-        'id'
-    );
-    return queryOncoKbData(
-        queryVariants,
         uniqueSampleKeyToTumorType,
-        client,
-        evidenceTypes
+        client
     );
 }
 
@@ -773,7 +769,7 @@ export async function fetchCnaOncoKbData(
             _.map(
                 alterationsToQuery,
                 (copyNumberData: DiscreteCopyNumberData) => {
-                    return generateQueryVariant(
+                    return generateCopyNumberAlterationQuery(
                         copyNumberData.gene.entrezGeneId,
                         cancerTypeForOncoKb(
                             copyNumberData.uniqueSampleKey,
@@ -782,14 +778,13 @@ export async function fetchCnaOncoKbData(
                         getAlterationString(copyNumberData.alteration)
                     );
                 }
-            ),
+            ).filter(query => query.copyNameAlterationType),
             'id'
         );
-        return queryOncoKbData(
+        return queryOncoKbCopyNumberAlterationData(
             queryVariants,
             uniqueSampleKeyToTumorType,
-            client,
-            undefined
+            client
         );
     }
 }
@@ -821,7 +816,7 @@ export async function fetchCnaOncoKbDataWithNumericGeneMolecularData(
         );
         const queryVariants = _.uniqBy(
             _.map(alterationsToQuery, (datum: NumericGeneMolecularData) => {
-                return generateQueryVariant(
+                return generateCopyNumberAlterationQuery(
                     datum.entrezGeneId,
                     cancerTypeForOncoKb(
                         datum.uniqueSampleKey,
@@ -829,14 +824,13 @@ export async function fetchCnaOncoKbDataWithNumericGeneMolecularData(
                     ),
                     getAlterationString(datum.value)
                 );
-            }),
-            (query: Query) => query.id
+            }).filter(query => query.copyNameAlterationType),
+            (query: AnnotateCopyNumberAlterationQuery) => query.id
         );
-        return queryOncoKbData(
+        return queryOncoKbCopyNumberAlterationData(
             queryVariants,
             uniqueSampleKeyToTumorType,
-            client,
-            evidenceTypes
+            client
         );
     }
 }
@@ -850,22 +844,106 @@ export function cancerTypeForOncoKb(
     return uniqueSampleKeyToTumorType[uniqueSampleKey] || null;
 }
 
+export type OncoKbAnnotationQuery = {
+    entrezGeneId: number;
+    mutationType?: string;
+    alteration: string;
+    proteinPosStart?: number;
+    proteinPosEnd?: number;
+    tumorType: string | null;
+};
+
+const fusionMutationType = 'Fusion';
 export async function queryOncoKbData(
-    queryVariants: Query[],
+    annotationQueries: OncoKbAnnotationQuery[],
     uniqueSampleKeyToTumorType: { [sampleId: string]: string },
     client: OncoKbAPI = oncokbClient,
-    evidenceTypes?: string
+    evidenceTypes?: EvidenceType[]
 ) {
-    const oncokbSearch = await client.searchPostUsingPOST({
-        body: generateEvidenceQuery(queryVariants, evidenceTypes),
-    });
+    const mutationQueryVariants = _.uniqBy(
+        _.map(
+            annotationQueries.filter(
+                mutation => mutation.mutationType !== fusionMutationType
+            ),
+            (mutation: OncoKbAnnotationQuery) => {
+                return generateProteinChangeQuery(
+                    mutation.entrezGeneId,
+                    mutation.tumorType,
+                    mutation.alteration,
+                    mutation.mutationType,
+                    mutation.proteinPosStart,
+                    mutation.proteinPosEnd,
+                    evidenceTypes
+                );
+            }
+        ),
+        'id'
+    );
+    const structuralQueryVariants = _.uniqBy(
+        _.map(
+            annotationQueries.filter(
+                mutation => mutation.mutationType === fusionMutationType
+            ),
+            (mutation: OncoKbAnnotationQuery) => {
+                return generateAnnotateStructuralVariantQuery(
+                    mutation.entrezGeneId,
+                    mutation.tumorType,
+                    mutation.alteration,
+                    mutation.mutationType,
+                    evidenceTypes
+                );
+            }
+        ),
+        'id'
+    );
+
+    const mutationQueryResult =
+        mutationQueryVariants.length === 0
+            ? []
+            : await client.annotateMutationsByProteinChangePostUsingPOST_1({
+                  body: mutationQueryVariants,
+              });
+
+    const structuralVariantQueryResult =
+        structuralQueryVariants.length === 0
+            ? []
+            : await client.annotateStructuralVariantsPostUsingPOST_1({
+                  body: structuralQueryVariants,
+              });
 
     const oncoKbData: IOncoKbData = {
         uniqueSampleKeyToTumorType: uniqueSampleKeyToTumorType,
-        indicatorMap: generateIdToIndicatorMap(oncokbSearch),
+        indicatorMap: generateIdToIndicatorMap(
+            mutationQueryResult.concat(structuralVariantQueryResult)
+        ),
     };
 
     return oncoKbData;
+}
+
+export async function queryOncoKbCopyNumberAlterationData(
+    queryVariants: AnnotateCopyNumberAlterationQuery[],
+    uniqueSampleKeyToTumorType: { [sampleId: string]: string },
+    client: OncoKbAPI = oncokbClient
+) {
+    const oncokbSearch =
+        queryVariants.length === 0
+            ? []
+            : await client.annotateCopyNumberAlterationsPostUsingPOST_1({
+                  body: queryVariants,
+              });
+
+    return toOncoKbData(uniqueSampleKeyToTumorType, oncokbSearch);
+}
+
+function toOncoKbData(
+    uniqueSampleKeyToTumorType: { [sampleId: string]: string },
+    indicatorQueryResps: IndicatorQueryResp[]
+): IOncoKbData {
+    return {
+        uniqueSampleKeyToTumorType: uniqueSampleKeyToTumorType,
+        indicatorMap: generateIdToIndicatorMap(indicatorQueryResps),
+    };
 }
 
 export async function fetchCivicGenes(

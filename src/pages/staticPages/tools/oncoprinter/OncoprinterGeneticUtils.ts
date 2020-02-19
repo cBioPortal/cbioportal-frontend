@@ -23,14 +23,18 @@ import {
     getProteinPositionFromProteinChange,
     OncoKbAPI,
     Query,
+    AnnotateCopyNumberAlterationQuery,
+    EvidenceType,
+    IOncoKbData,
 } from 'cbioportal-frontend-commons';
+import { generateCopyNumberAlterationQuery } from 'cbioportal-frontend-commons/src/lib/oncokb/OncoKbUtils';
 import {
+    cancerTypeForOncoKb,
     ONCOKB_DEFAULT,
+    queryOncoKbCopyNumberAlterationData,
     queryOncoKbData,
 } from '../../../../shared/lib/StoreUtils';
-import { generateQueryVariant } from '../../../../shared/lib/OncoKbUtils';
 import { default as oncokbClient } from '../../../../shared/api/oncokbClientInstance';
-import { IOncoKbData } from '../../../../shared/model/OncoKB';
 import MobxPromise from 'mobxpromise';
 import { getOncoKbOncogenic } from '../../../resultsView/ResultsViewPageStoreUtils';
 import { mutationCountByPositionKey } from '../../../resultsView/mutationCountHelpers';
@@ -228,21 +232,21 @@ export async function fetchOncoKbDataForMutations(
     if (mutationsToQuery.length === 0) {
         return ONCOKB_DEFAULT;
     }
-
-    const queryVariants = _.uniqBy(
-        _.map(mutationsToQuery, mutation => {
-            return generateQueryVariant(
-                mutation.entrezGeneId,
-                null,
-                mutation.proteinChange,
-                mutation.mutationType,
-                mutation.proteinPosStart,
-                mutation.proteinPosEnd
-            );
+    return queryOncoKbData(
+        mutationsToQuery.map(mutation => {
+            return {
+                entrezGeneId: mutation.entrezGeneId,
+                alteration: mutation.proteinChange,
+                proteinPosStart: mutation.proteinPosStart,
+                proteinPosEnd: mutation.proteinPosEnd,
+                mutationType: mutation.mutationType,
+                tumorType: null,
+            };
         }),
-        'id'
+        {},
+        client,
+        [EvidenceType.ONCOGENIC]
     );
-    return queryOncoKbData(queryVariants, {}, client, 'ONCOGENIC');
 }
 
 export async function fetchOncoKbDataForCna(
@@ -268,15 +272,16 @@ export async function fetchOncoKbDataForCna(
     }
     const queryVariants = (_.chain(alterationsToQuery)
         .map((datum: NumericGeneMolecularData) => {
-            return generateQueryVariant(
+            return generateCopyNumberAlterationQuery(
                 datum.entrezGeneId,
                 null,
-                getAlterationString(datum.value)
+                getAlterationString(datum.value),
+                [EvidenceType.ONCOGENIC]
             );
         })
         .uniqBy('id')
-        .value() as any) as Query[]; // lodash typings not perfect
-    return queryOncoKbData(queryVariants, {}, client, 'ONCOGENIC');
+        .value() as any) as AnnotateCopyNumberAlterationQuery[]; // lodash typings not perfect
+    return queryOncoKbCopyNumberAlterationData(queryVariants, {}, client);
 }
 
 function makeGeneticTrackDatum_Data(
