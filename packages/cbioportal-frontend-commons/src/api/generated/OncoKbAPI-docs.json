@@ -1,9 +1,9 @@
 {
   "swagger": "2.0",
   "info": {
-    "description": "These endpoints are designed for premium users. Please contact OncoKB team(contact@oncokb.org) if you want to be upgraded.",
+    "description": "These endpoints are for private use only.",
     "version": "v1.0.0",
-    "title": "OncoKB APIs for Premium Users",
+    "title": "OncoKB Private APIs",
     "contact": {
       "name": "OncoKB",
       "url": "https://www.oncokb.org",
@@ -68,7 +68,7 @@
         ],
         "summary": "annotateCopyNumberAlterationsGet",
         "description": "Annotate copy number alteration.",
-        "operationId": "annotateCopyNumberAlterationsGetUsingGET_1",
+        "operationId": "annotateCopyNumberAlterationsGetUsingGET",
         "consumes": [
           "application/json"
         ],
@@ -110,6 +110,13 @@
             "description": "OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "evidenceType",
+            "in": "query",
+            "description": "Evidence type to compute. This could help to improve the performance if you only look for sub-content. Example: ONCOGENIC. All available evidence type are GENE_SUMMARY, MUTATION_SUMMARY, TUMOR_TYPE_SUMMARY, PROGNOSTIC_SUMMARY, DIAGNOSTIC_SUMMARY, ONCOGENIC, MUTATION_EFFECT, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE. For multiple evidence types query, use ',' as separator.",
+            "required": false,
+            "type": "string"
           }
         ],
         "responses": {
@@ -133,7 +140,7 @@
         ],
         "summary": "annotateCopyNumberAlterationsPost",
         "description": "Annotate copy number alterations.",
-        "operationId": "annotateCopyNumberAlterationsPostUsingPOST_1",
+        "operationId": "annotateCopyNumberAlterationsPostUsingPOST",
         "consumes": [
           "application/json"
         ],
@@ -180,7 +187,7 @@
         ],
         "summary": "annotateMutationsByGenomicChangeGet",
         "description": "Annotate mutation by genomic change.",
-        "operationId": "annotateMutationsByGenomicChangeGetUsingGET_1",
+        "operationId": "annotateMutationsByGenomicChangeGetUsingGET",
         "consumes": [
           "application/json"
         ],
@@ -199,6 +206,13 @@
             "name": "tumorType",
             "in": "query",
             "description": "OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "evidenceType",
+            "in": "query",
+            "description": "Evidence type to compute. This could help to improve the performance if you only look for sub-content. Example: ONCOGENIC. All available evidence type are GENE_SUMMARY, MUTATION_SUMMARY, TUMOR_TYPE_SUMMARY, PROGNOSTIC_SUMMARY, DIAGNOSTIC_SUMMARY, ONCOGENIC, MUTATION_EFFECT, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE. For multiple evidence types query, use ',' as separator.",
             "required": false,
             "type": "string"
           }
@@ -224,7 +238,7 @@
         ],
         "summary": "annotateMutationsByGenomicChangePost",
         "description": "Annotate mutations by genomic change.",
-        "operationId": "annotateMutationsByGenomicChangePostUsingPOST_1",
+        "operationId": "annotateMutationsByGenomicChangePostUsingPOST",
         "consumes": [
           "application/json"
         ],
@@ -271,7 +285,7 @@
         ],
         "summary": "annotateMutationsByHGVSgGet",
         "description": "Annotate mutation by HGVSg.",
-        "operationId": "annotateMutationsByHGVSgGetUsingGET_1",
+        "operationId": "annotateMutationsByHGVSgGetUsingGET",
         "consumes": [
           "application/json"
         ],
@@ -290,6 +304,13 @@
             "name": "tumorType",
             "in": "query",
             "description": "OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "evidenceType",
+            "in": "query",
+            "description": "Evidence type to compute. This could help to improve the performance if you only look for sub-content. Example: ONCOGENIC. All available evidence type are GENE_SUMMARY, MUTATION_SUMMARY, TUMOR_TYPE_SUMMARY, PROGNOSTIC_SUMMARY, DIAGNOSTIC_SUMMARY, ONCOGENIC, MUTATION_EFFECT, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE. For multiple evidence types query, use ',' as separator.",
             "required": false,
             "type": "string"
           }
@@ -315,7 +336,7 @@
         ],
         "summary": "annotateMutationsByHGVSgPost",
         "description": "Annotate mutations by genomic change.",
-        "operationId": "annotateMutationsByHGVSgPostUsingPOST_1",
+        "operationId": "annotateMutationsByHGVSgPostUsingPOST",
         "consumes": [
           "application/json"
         ],
@@ -362,7 +383,7 @@
         ],
         "summary": "annotateMutationsByProteinChangeGet",
         "description": "Annotate mutation by protein change.",
-        "operationId": "annotateMutationsByProteinChangeGetUsingGET_1",
+        "operationId": "annotateMutationsByProteinChangeGetUsingGET",
         "consumes": [
           "application/json"
         ],
@@ -432,6 +453,13 @@
             "description": "OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "evidenceType",
+            "in": "query",
+            "description": "Evidence type to compute. This could help to improve the performance if you only look for sub-content. Example: ONCOGENIC. All available evidence type are GENE_SUMMARY, MUTATION_SUMMARY, TUMOR_TYPE_SUMMARY, PROGNOSTIC_SUMMARY, DIAGNOSTIC_SUMMARY, ONCOGENIC, MUTATION_EFFECT, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE. For multiple evidence types query, use ',' as separator.",
+            "required": false,
+            "type": "string"
           }
         ],
         "responses": {
@@ -455,7 +483,7 @@
         ],
         "summary": "annotateMutationsByProteinChangePost",
         "description": "Annotate mutations by protein change.",
-        "operationId": "annotateMutationsByProteinChangePostUsingPOST_1",
+        "operationId": "annotateMutationsByProteinChangePostUsingPOST",
         "consumes": [
           "application/json"
         ],
@@ -502,7 +530,7 @@
         ],
         "summary": "annotateStructuralVariantsGet",
         "description": "Annotate structural variant.",
-        "operationId": "annotateStructuralVariantsGetUsingGET_1",
+        "operationId": "annotateStructuralVariantsGetUsingGET",
         "consumes": [
           "application/json"
         ],
@@ -570,6 +598,13 @@
             "description": "OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "evidenceType",
+            "in": "query",
+            "description": "Evidence type to compute. This could help to improve the performance if you only look for sub-content. Example: ONCOGENIC. All available evidence type are GENE_SUMMARY, MUTATION_SUMMARY, TUMOR_TYPE_SUMMARY, PROGNOSTIC_SUMMARY, DIAGNOSTIC_SUMMARY, ONCOGENIC, MUTATION_EFFECT, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE. For multiple evidence types query, use ',' as separator.",
+            "required": false,
+            "type": "string"
           }
         ],
         "responses": {
@@ -593,7 +628,7 @@
         ],
         "summary": "annotateStructuralVariantsPost",
         "description": "Annotate structural variants.",
-        "operationId": "annotateStructuralVariantsPostUsingPOST_1",
+        "operationId": "annotateStructuralVariantsPostUsingPOST",
         "consumes": [
           "application/json"
         ],
@@ -1288,7 +1323,7 @@
           "Info"
         ],
         "summary": "infoGet",
-        "operationId": "infoGetUsingGET_1",
+        "operationId": "infoGetUsingGET",
         "consumes": [
           "application/json"
         ],
@@ -1312,7 +1347,7 @@
         ],
         "summary": "levelsGet",
         "description": "Get all levels.",
-        "operationId": "levelsGetUsingGET_1",
+        "operationId": "levelsGetUsingGET",
         "consumes": [
           "application/json"
         ],
@@ -1336,7 +1371,7 @@
         ],
         "summary": "levelsResistanceGet",
         "description": "Get all resistance levels.",
-        "operationId": "levelsResistanceGetUsingGET_1",
+        "operationId": "levelsResistanceGetUsingGET",
         "consumes": [
           "application/json"
         ],
@@ -1360,7 +1395,7 @@
         ],
         "summary": "levelsSensitiveGet",
         "description": "Get all sensitive levels.",
-        "operationId": "levelsSensitiveGetUsingGET_1",
+        "operationId": "levelsSensitiveGetUsingGET",
         "consumes": [
           "application/json"
         ],
@@ -1848,7 +1883,7 @@
         ],
         "summary": "utilsCancerGeneListGet",
         "description": "Get cancer gene list",
-        "operationId": "utilsCancerGeneListGetUsingGET_1",
+        "operationId": "utilsCancerGeneListGetUsingGET",
         "consumes": [
           "application/json"
         ],
@@ -1890,7 +1925,7 @@
         ],
         "summary": "utilsCancerGeneListTxtGet",
         "description": "Get cancer gene list in text file.",
-        "operationId": "utilsCancerGeneListTxtGetUsingGET_1",
+        "operationId": "utilsCancerGeneListTxtGetUsingGET",
         "consumes": [
           "application/json"
         ],
@@ -2107,6 +2142,30 @@
     "AnnotateMutationByGenomicChangeQuery": {
       "type": "object",
       "properties": {
+        "evidenceTypes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "GENE_SUMMARY",
+              "MUTATION_SUMMARY",
+              "TUMOR_TYPE_SUMMARY",
+              "GENE_TUMOR_TYPE_SUMMARY",
+              "PROGNOSTIC_SUMMARY",
+              "DIAGNOSTIC_SUMMARY",
+              "GENE_BACKGROUND",
+              "ONCOGENIC",
+              "MUTATION_EFFECT",
+              "VUS",
+              "PROGNOSTIC_IMPLICATION",
+              "DIAGNOSTIC_IMPLICATION",
+              "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY",
+              "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE",
+              "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY",
+              "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE"
+            ]
+          }
+        },
         "genomicLocation": {
           "type": "string"
         },
@@ -2645,6 +2704,30 @@
     "AnnotateStructuralVariantQuery": {
       "type": "object",
       "properties": {
+        "evidenceTypes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "GENE_SUMMARY",
+              "MUTATION_SUMMARY",
+              "TUMOR_TYPE_SUMMARY",
+              "GENE_TUMOR_TYPE_SUMMARY",
+              "PROGNOSTIC_SUMMARY",
+              "DIAGNOSTIC_SUMMARY",
+              "GENE_BACKGROUND",
+              "ONCOGENIC",
+              "MUTATION_EFFECT",
+              "VUS",
+              "PROGNOSTIC_IMPLICATION",
+              "DIAGNOSTIC_IMPLICATION",
+              "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY",
+              "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE",
+              "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY",
+              "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE"
+            ]
+          }
+        },
         "functionalFusion": {
           "type": "boolean"
         },
@@ -3211,6 +3294,30 @@
         "consequence": {
           "type": "string"
         },
+        "evidenceTypes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "GENE_SUMMARY",
+              "MUTATION_SUMMARY",
+              "TUMOR_TYPE_SUMMARY",
+              "GENE_TUMOR_TYPE_SUMMARY",
+              "PROGNOSTIC_SUMMARY",
+              "DIAGNOSTIC_SUMMARY",
+              "GENE_BACKGROUND",
+              "ONCOGENIC",
+              "MUTATION_EFFECT",
+              "VUS",
+              "PROGNOSTIC_IMPLICATION",
+              "DIAGNOSTIC_IMPLICATION",
+              "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY",
+              "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE",
+              "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY",
+              "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE"
+            ]
+          }
+        },
         "gene": {
           "$ref": "#/definitions/QueryGene"
         },
@@ -3239,11 +3346,20 @@
             "$ref": "#/definitions/ArticleAbstract"
           }
         },
+        "alterations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "approvedIndications": {
           "type": "array",
           "items": {
             "type": "string"
           }
+        },
+        "description": {
+          "type": "string"
         },
         "drugs": {
           "type": "array",
@@ -3276,6 +3392,9 @@
             "LEVEL_Dx3",
             "NO"
           ]
+        },
+        "levelAssociatedCancerType": {
+          "$ref": "#/definitions/TumorType"
         },
         "pmids": {
           "type": "array",
@@ -3489,6 +3608,30 @@
             "LOSS"
           ]
         },
+        "evidenceTypes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "GENE_SUMMARY",
+              "MUTATION_SUMMARY",
+              "TUMOR_TYPE_SUMMARY",
+              "GENE_TUMOR_TYPE_SUMMARY",
+              "PROGNOSTIC_SUMMARY",
+              "DIAGNOSTIC_SUMMARY",
+              "GENE_BACKGROUND",
+              "ONCOGENIC",
+              "MUTATION_EFFECT",
+              "VUS",
+              "PROGNOSTIC_IMPLICATION",
+              "DIAGNOSTIC_IMPLICATION",
+              "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY",
+              "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE",
+              "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY",
+              "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE"
+            ]
+          }
+        },
         "gene": {
           "$ref": "#/definitions/QueryGene"
         },
@@ -3503,6 +3646,30 @@
     "AnnotateMutationByHGVSgQuery": {
       "type": "object",
       "properties": {
+        "evidenceTypes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "GENE_SUMMARY",
+              "MUTATION_SUMMARY",
+              "TUMOR_TYPE_SUMMARY",
+              "GENE_TUMOR_TYPE_SUMMARY",
+              "PROGNOSTIC_SUMMARY",
+              "DIAGNOSTIC_SUMMARY",
+              "GENE_BACKGROUND",
+              "ONCOGENIC",
+              "MUTATION_EFFECT",
+              "VUS",
+              "PROGNOSTIC_IMPLICATION",
+              "DIAGNOSTIC_IMPLICATION",
+              "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY",
+              "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE",
+              "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY",
+              "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE"
+            ]
+          }
+        },
         "hgvsg": {
           "type": "string"
         },
