@@ -23,7 +23,6 @@ import 'react-table/react-table.css';
 
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import StructureViewerPanel from 'shared/components/structureViewer/StructureViewerPanel';
-import OncoKbEvidenceCache from 'shared/cache/OncoKbEvidenceCache';
 import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
@@ -60,7 +59,6 @@ export interface IMutationMapperProps {
     studyId?: string;
     myCancerGenomeData?: IMyCancerGenomeData;
     pdbHeaderCache?: PdbHeaderCache;
-    oncoKbEvidenceCache?: OncoKbEvidenceCache;
     genomeNexusCache?: GenomeNexusCache;
     genomeNexusMutationAssessorCache?: GenomeNexusMutationAssessorCache;
     genomeNexusMyVariantInfoCache?: GenomeNexusMyVariantInfoCache;

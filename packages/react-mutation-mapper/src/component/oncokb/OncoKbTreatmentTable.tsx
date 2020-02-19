@@ -1,10 +1,20 @@
-import { DefaultTooltip, ICache, LEVELS } from 'cbioportal-frontend-commons';
+import {
+    DefaultTooltip,
+    ICache,
+    LEVELS,
+    ArticleAbstract,
+    IndicatorQueryTreatment,
+} from 'cbioportal-frontend-commons';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import ReactTable from 'react-table';
 
-import { ArticleAbstract, OncoKbTreatment } from '../../model/OncoKb';
-import { levelIconClassNames, mergeAlterations } from '../../util/OncoKbUtils';
+import {
+    getTumorTypeName,
+    levelIconClassNames,
+    mergeAlterations,
+    normalizeLevel,
+} from '../../util/OncoKbUtils';
 import {
     defaultArraySortMethod,
     defaultSortMethod,
@@ -17,7 +27,7 @@ import mainStyles from './main.module.scss';
 import './oncoKbTreatmentTable.scss';
 
 type OncoKbTreatmentTableProps = {
-    treatments: OncoKbTreatment[];
+    treatments: IndicatorQueryTreatment[];
     pmidData: ICache<any>;
 };
 
@@ -69,25 +79,31 @@ export default class OncoKbTreatmentTable extends React.Component<
             accessor: 'level',
             maxWidth: 45,
             sortMethod: (a: string, b: string) =>
-                defaultSortMethod(LEVELS.all.indexOf(a), LEVELS.all.indexOf(b)),
-            Cell: (props: { value: string }) => (
-                <DefaultTooltip
-                    overlay={this.levelTooltipContent(props.value)}
-                    placement="left"
-                    trigger={['hover', 'focus']}
-                    destroyTooltipOnHide={true}
-                >
-                    <i
-                        className={levelIconClassNames(props.value)}
-                        style={{ margin: 'auto' }}
-                    />
-                </DefaultTooltip>
-            ),
+                defaultSortMethod(
+                    LEVELS.all.indexOf(normalizeLevel(a) || ''),
+                    LEVELS.all.indexOf(normalizeLevel(b) || '')
+                ),
+            Cell: (props: { value: string }) => {
+                const normalizedLevel = normalizeLevel(props.value) || '';
+                return (
+                    <DefaultTooltip
+                        overlay={this.levelTooltipContent(normalizedLevel)}
+                        placement="left"
+                        trigger={['hover', 'focus']}
+                        destroyTooltipOnHide={true}
+                    >
+                        <i
+                            className={levelIconClassNames(normalizedLevel)}
+                            style={{ margin: 'auto' }}
+                        />
+                    </DefaultTooltip>
+                );
+            },
         },
         {
-            id: 'variant',
+            id: 'alterations',
             Header: <span>Alteration(s)</span>,
-            accessor: 'variant',
+            accessor: 'alterations',
             minWidth: 80,
             sortMethod: (a: string[], b: string[]) =>
                 defaultArraySortMethod(a, b),
@@ -100,10 +116,12 @@ export default class OncoKbTreatmentTable extends React.Component<
         {
             id: 'treatment',
             Header: <span>Drug(s)</span>,
-            accessor: 'treatment',
-            Cell: (props: { original: OncoKbTreatment }) => (
+            accessor: 'drugs',
+            Cell: (props: { original: IndicatorQueryTreatment }) => (
                 <div style={{ whiteSpace: 'normal', lineHeight: '1rem' }}>
-                    {props.original.treatment}
+                    {props.original.drugs
+                        .map(drug => drug.drugName)
+                        .join(' + ')}
                 </div>
             ),
         },
@@ -116,11 +134,11 @@ export default class OncoKbTreatmentTable extends React.Component<
                     cancer type(s)
                 </span>
             ),
-            accessor: 'cancerType',
+            accessor: 'levelAssociatedCancerType',
             minWidth: 120,
-            Cell: (props: { original: OncoKbTreatment }) => (
+            Cell: (props: { original: IndicatorQueryTreatment }) => (
                 <div style={{ whiteSpace: 'normal', lineHeight: '1rem' }}>
-                    {props.original.cancerType}
+                    {getTumorTypeName(props.original.levelAssociatedCancerType)}
                 </div>
             ),
         },
@@ -129,13 +147,13 @@ export default class OncoKbTreatmentTable extends React.Component<
             Header: <span />,
             sortable: false,
             maxWidth: 25,
-            Cell: (props: { original: OncoKbTreatment }) =>
+            Cell: (props: { original: IndicatorQueryTreatment }) =>
                 (props.original.abstracts.length > 0 ||
                     props.original.pmids.length > 0) && (
                     <DefaultTooltip
                         overlay={this.treatmentTooltipContent(
                             props.original.abstracts,
-                            props.original.pmids,
+                            props.original.pmids.map(pmid => Number(pmid)),
                             this.props.pmidData,
                             props.original.description
                         )}

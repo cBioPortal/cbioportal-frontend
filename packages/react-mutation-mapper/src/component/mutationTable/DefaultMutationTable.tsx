@@ -1,4 +1,9 @@
-import { MyVariantInfo, VariantAnnotation } from 'cbioportal-frontend-commons';
+import {
+    IOncoKbData,
+    MyVariantInfo,
+    VariantAnnotation,
+    CancerGene,
+} from 'cbioportal-frontend-commons';
 import _ from 'lodash';
 import { action, computed } from 'mobx';
 import { observer } from 'mobx-react';
@@ -13,7 +18,6 @@ import { IHotspotIndex } from '../../model/CancerHotspot';
 import { DataFilterType } from '../../model/DataFilter';
 import { MobxCache } from '../../model/MobxCache';
 import { Mutation } from '../../model/Mutation';
-import { CancerGene, IOncoKbData } from '../../model/OncoKb';
 import { RemoteData } from '../../model/RemoteData';
 import { SimpleCache } from '../../model/SimpleCache';
 import {
@@ -39,7 +43,6 @@ export type DefaultMutationTableProps = {
     indexedVariantAnnotations?: RemoteData<
         { [genomicLocation: string]: VariantAnnotation } | undefined
     >;
-    oncoKbEvidenceCache?: SimpleCache;
     pubMedCache?: MobxCache;
     columns: Column<Partial<Mutation>>[];
     appendColumns?: boolean;
@@ -132,7 +135,6 @@ export default class DefaultMutationTable extends React.Component<
                         hotspotData={this.props.hotspotData}
                         oncoKbData={this.props.oncoKbData}
                         oncoKbCancerGenes={this.props.oncoKbCancerGenes}
-                        oncoKbEvidenceCache={this.props.oncoKbEvidenceCache}
                         pubMedCache={this.props.pubMedCache}
                     />
                 );

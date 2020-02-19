@@ -36,7 +36,6 @@ export default class StandaloneMutationMapper extends MutationMapper<
                 genomeNexusMyVariantInfoCache={
                     this.props.genomeNexusMyVariantInfoCache
                 }
-                oncoKbEvidenceCache={this.props.oncoKbEvidenceCache}
                 pubMedCache={this.props.pubMedCache}
                 dataStore={this.props.store.dataStore}
                 itemsLabelPlural={this.itemsLabelPlural}

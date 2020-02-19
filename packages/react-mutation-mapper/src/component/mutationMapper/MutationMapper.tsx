@@ -271,7 +271,6 @@ export default class MutationMapper<
                     hotspotData={this.store.indexedHotspotData}
                     oncoKbData={this.store.oncoKbData}
                     oncoKbCancerGenes={this.store.oncoKbCancerGenes}
-                    oncoKbEvidenceCache={this.store.oncoKbEvidenceCache}
                     indexedMyVariantInfoAnnotations={
                         this.store.indexedMyVariantInfoAnnotations
                     }
