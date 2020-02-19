@@ -10,15 +10,21 @@ import {
     GenomicLocation,
     OncoKbAPI,
     Query,
-    EvidenceQueries,
     VariantAnnotation,
     MyVariantInfo,
+    CancerGene,
+    IOncoKbData,
+    EvidenceType,
+    generateProteinChangeQuery,
+    generateAnnotateStructuralVariantQuery,
+    generateIdToIndicatorMap,
+    AnnotateMutationByProteinChangeQuery,
+    AnnotateStructuralVariantQuery,
 } from 'cbioportal-frontend-commons';
 
 import { AggregatedHotspots, Hotspot } from '../model/CancerHotspot';
 import { EnsemblTranscript } from '../model/EnsemblTranscript';
 import { Mutation } from '../model/Mutation';
-import { CancerGene, IOncoKbData } from '../model/OncoKb';
 import { PfamDomain } from '../model/Pfam';
 import { PostTranslationalModification } from '../model/PostTranslationalModification';
 import {
@@ -34,7 +40,6 @@ import {
 } from '../util/DataFetcherUtils';
 import { getMyVariantInfoAnnotationsFromIndexedVariantAnnotations } from '../util/VariantAnnotationUtils';
 import { uniqueGenomicLocations } from '../util/MutationUtils';
-import { getEvidenceQuery } from '../util/OncoKbUtils';
 
 export interface MutationMapperDataFetcherConfig {
     myGeneUrlTemplate?: string;
@@ -253,7 +258,7 @@ export class DefaultMutationMapperDataFetcher {
     public fetchOncoKbCancerGenes(
         client: OncoKbAPI = this.oncoKbClient
     ): Promise<CancerGene[]> {
-        return client.utilsCancerGeneListGetUsingGET({});
+        return client.utilsCancerGeneListGetUsingGET_1({});
     }
 
     public async fetchOncoKbData(
@@ -261,7 +266,7 @@ export class DefaultMutationMapperDataFetcher {
         annotatedGenes: { [entrezGeneId: number]: boolean } | Error,
         getTumorType: (mutation: Mutation) => string,
         getEntrezGeneId: (mutation: Mutation) => number,
-        evidenceTypes?: string,
+        evidenceTypes?: EvidenceType[],
         client: OncoKbAPI = this.oncoKbClient
     ): Promise<IOncoKbData | Error> {
         if (annotatedGenes instanceof Error) {
@@ -274,36 +279,78 @@ export class DefaultMutationMapperDataFetcher {
             mutations,
             m => !!annotatedGenes[getEntrezGeneId(m)]
         );
-        const queryVariants = _.uniqBy(
-            _.map(mutationsToQuery, (mutation: Mutation) => {
-                return getEvidenceQuery(
-                    mutation,
-                    getEntrezGeneId, // mutation.gene.entrezGeneId
-                    getTumorType // cancerTypeForOncoKb(mutation.uniqueSampleKey, uniqueSampleKeyToTumorType)
-                ) as Query;
-            }),
-            'id'
-        );
 
-        return this.queryOncoKbData(queryVariants, evidenceTypes, client);
+        return this.queryOncoKbData(
+            mutationsToQuery,
+            getTumorType,
+            getEntrezGeneId,
+            client,
+            evidenceTypes
+        );
     }
 
     public async queryOncoKbData(
-        queryVariants: Query[],
-        evidenceTypes?: string,
-        client: OncoKbAPI = this.oncoKbClient
+        queryVariants: Mutation[],
+        getTumorType: (mutation: Mutation) => string,
+        getEntrezGeneId: (mutation: Mutation) => number,
+        client: OncoKbAPI = this.oncoKbClient,
+        evidenceTypes?: EvidenceType[]
     ) {
-        const oncokbSearch = await client.searchPostUsingPOST({
-            body: {
-                ...generatePartialEvidenceQuery(evidenceTypes),
-                queries: queryVariants,
-            } as EvidenceQueries,
-        });
+        const mutationQueryVariants: AnnotateMutationByProteinChangeQuery[] = _.uniqBy(
+            _.map(
+                queryVariants.filter(
+                    mutation => mutation.mutationType !== 'Fusion'
+                ),
+                (mutation: Mutation) => {
+                    return generateProteinChangeQuery(
+                        getEntrezGeneId(mutation),
+                        getTumorType(mutation),
+                        mutation.proteinChange,
+                        mutation.mutationType,
+                        mutation.proteinPosStart,
+                        mutation.proteinPosEnd,
+                        evidenceTypes
+                    );
+                }
+            ),
+            'id'
+        );
+        const structuralQueryVariants: AnnotateStructuralVariantQuery[] = _.uniqBy(
+            _.map(
+                queryVariants.filter(
+                    mutation => mutation.mutationType === 'Fusion'
+                ),
+                (mutation: Mutation) => {
+                    return generateAnnotateStructuralVariantQuery(
+                        getEntrezGeneId(mutation),
+                        getTumorType(mutation),
+                        mutation.proteinChange,
+                        mutation.mutationType,
+                        evidenceTypes
+                    );
+                }
+            ),
+            'id'
+        );
+
+        const mutationQueryResult =
+            mutationQueryVariants.length === 0
+                ? []
+                : await client.annotateMutationsByProteinChangePostUsingPOST_1({
+                      body: mutationQueryVariants,
+                  });
+
+        const structuralVariantQueryResult =
+            structuralQueryVariants.length === 0
+                ? []
+                : await client.annotateStructuralVariantsPostUsingPOST_1({
+                      body: structuralQueryVariants,
+                  });
 
         return {
             // generateIdToIndicatorMap(oncokbSearch)
             indicatorMap: _.keyBy(
-                oncokbSearch,
+                mutationQueryResult.concat(structuralVariantQueryResult),
                 indicator => indicator.query.id
             ),
         };

@@ -12,6 +12,7 @@ describe('OncoKbUtils', () => {
             [666]: [
                 {
                     gene: {
+                        hugoGeneSymbol: 'EGFR',
                         entrezGeneId: 1956,
                     },
                     uniqueSampleKey: 'uniqueSampleKey_66',
@@ -22,6 +23,7 @@ describe('OncoKbUtils', () => {
                 },
                 {
                     gene: {
+                        hugoGeneSymbol: 'EGFR',
                         entrezGeneId: 1956,
                     },
                     uniqueSampleKey: 'uniqueSampleKey_67',
@@ -34,6 +36,7 @@ describe('OncoKbUtils', () => {
             [790]: [
                 {
                     gene: {
+                        hugoGeneSymbol: 'EGFR',
                         entrezGeneId: 1956,
                     },
                     uniqueSampleKey: 'uniqueSampleKey_0',
@@ -44,6 +47,7 @@ describe('OncoKbUtils', () => {
                 },
                 {
                     gene: {
+                        hugoGeneSymbol: 'EGFR',
                         entrezGeneId: 1956,
                     },
                     uniqueSampleKey: 'uniqueSampleKey_1',
@@ -56,6 +60,7 @@ describe('OncoKbUtils', () => {
             [858]: [
                 {
                     gene: {
+                        hugoGeneSymbol: 'EGFR',
                         entrezGeneId: 1956,
                     },
                     uniqueSampleKey: 'uniqueSampleKey_2',
@@ -66,6 +71,7 @@ describe('OncoKbUtils', () => {
                 },
                 {
                     gene: {
+                        hugoGeneSymbol: 'EGFR',
                         entrezGeneId: 1956,
                     },
                     uniqueSampleKey: 'uniqueSampleKey_3',
@@ -76,6 +82,7 @@ describe('OncoKbUtils', () => {
                 },
                 {
                     gene: {
+                        hugoGeneSymbol: 'EGFR',
                         entrezGeneId: 1956,
                     },
                     uniqueSampleKey: 'uniqueSampleKey_4',
@@ -86,6 +93,7 @@ describe('OncoKbUtils', () => {
                 },
                 {
                     gene: {
+                        hugoGeneSymbol: 'EGFR',
                         entrezGeneId: 1956,
                     },
                     uniqueSampleKey: 'uniqueSampleKey_5',

@@ -2902,13 +2902,6 @@
   dependencies:
     "@types/react" "*"
 
-"@types/react-table@^6.8.4":
-  version "6.8.4"
-  resolved "https://registry.yarnpkg.com/@types/react-table/-/react-table-6.8.4.tgz#bc242b25e17b0963f704bf9eef009747acda7775"
-  integrity sha512-zLsAtTC3Nwd9W/aU4TAgceQEm7L8Wha/60g8tlus8+tJylKmoaC026+8IYl2akHCLga8VtdCca3yBlq2nUWh3w==
-  dependencies:
-    "@types/react" "*"
-
 "@types/react-transition-group@^2.0.14":
   version "2.0.16"
   resolved "https://registry.yarnpkg.com/@types/react-transition-group/-/react-transition-group-2.0.16.tgz#2dcb9e396ab385ee19c4af1c9caa469a14cd042f"

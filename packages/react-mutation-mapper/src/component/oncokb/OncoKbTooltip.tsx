@@ -1,29 +1,24 @@
 import {
     ICache,
     ICacheData,
+    IndicatorQueryResp,
+    Query,
     TableCellStatus,
     TableCellStatusIndicator,
 } from 'cbioportal-frontend-commons';
 import * as React from 'react';
+import _ from 'lodash';
 import { observer } from 'mobx-react';
 
 import { MobxCache } from '../../model/MobxCache';
-import { IEvidence, IndicatorQueryResp, Query } from '../../model/OncoKb';
 import { SimpleCache } from '../../model/SimpleCache';
-import {
-    extractPmids,
-    generateOncogenicCitations,
-    generateTreatments,
-} from '../../util/OncoKbUtils';
+import { generateOncogenicCitations } from '../../util/OncoKbUtils';
 import OncoKbCard from './OncoKbCard';
 
 export interface IOncoKbTooltipProps {
     indicator?: IndicatorQueryResp;
-    evidenceCache?: SimpleCache;
-    evidenceQuery?: Query;
     pubMedCache?: MobxCache;
     handleFeedbackOpen?: () => void;
-    onLoadComplete?: () => void;
     hugoSymbol: string;
     isCancerGene: boolean;
     geneNotExist: boolean;
@@ -37,38 +32,27 @@ export default class OncoKbTooltip extends React.Component<
     IOncoKbTooltipProps,
     {}
 > {
-    public get evidenceCacheData(): ICacheData<IEvidence> | undefined {
-        let cacheData: ICacheData<IEvidence> | undefined;
-
-        if (
-            !this.props.geneNotExist &&
-            this.props.evidenceCache &&
-            this.props.evidenceQuery
-        ) {
-            const cache = this.props.evidenceCache.getData(
-                [this.props.evidenceQuery.id],
-                [this.props.evidenceQuery]
-            );
-
-            if (cache) {
-                cacheData = cache[this.props.evidenceQuery.id];
-            }
-        }
-
-        return cacheData;
-    }
-
     public get pmidData(): ICache<any> {
-        if (this.props.pubMedCache && this.evidenceCacheData) {
+        if (this.props.pubMedCache) {
             let mutationEffectPmids =
                 this.props.indicator && this.props.indicator.mutationEffect
                     ? this.props.indicator.mutationEffect.citations.pmids.map(
                           pmid => Number(pmid)
                       )
                     : [];
-            const refs = extractPmids(this.evidenceCacheData.data).concat(
-                mutationEffectPmids
-            );
+            const refs = (this.props.indicator
+                ? _.reduce(
+                      this.props.indicator.treatments,
+                      (acc, next) => {
+                          acc = acc.concat(
+                              next.pmids.map(pmid => Number(pmid))
+                          );
+                          return acc;
+                      },
+                      [] as number[]
+                  )
+                : []
+            ).concat(mutationEffectPmids);
 
             for (const ref of refs) {
                 this.props.pubMedCache.get(ref);
@@ -80,8 +64,6 @@ export default class OncoKbTooltip extends React.Component<
 
     public render() {
         let tooltipContent: JSX.Element = <span />;
-        const cacheData: ICacheData<IEvidence> | undefined = this
-            .evidenceCacheData;
 
         if (this.props.geneNotExist) {
             tooltipContent = (
@@ -95,16 +77,11 @@ export default class OncoKbTooltip extends React.Component<
             );
         }
 
-        if (!cacheData || !this.props.indicator) {
+        if (!this.props.indicator) {
             return tooltipContent;
         }
 
-        if (
-            cacheData.status === 'complete' &&
-            cacheData.data &&
-            !this.props.geneNotExist
-        ) {
-            const evidence = cacheData.data;
+        if (!this.props.geneNotExist) {
             const pmidData: ICache<any> = this.pmidData;
             tooltipContent = (
                 <OncoKbCard
@@ -122,9 +99,6 @@ export default class OncoKbTooltip extends React.Component<
                             : ''
                     }
                     oncogenicity={this.props.indicator.oncogenic}
-                    oncogenicityPmids={generateOncogenicCitations(
-                        evidence.oncogenicRefs
-                    )}
                     mutationEffect={
                         this.props.indicator.mutationEffect
                             ? this.props.indicator.mutationEffect.knownEffect
@@ -146,32 +120,13 @@ export default class OncoKbTooltip extends React.Component<
                             ? this.props.indicator.mutationEffect.description
                             : ''
                     }
-                    treatments={generateTreatments(evidence.treatments)}
+                    treatments={this.props.indicator.treatments}
                     pmidData={pmidData}
                     handleFeedbackOpen={this.props.handleFeedbackOpen}
                 />
             );
-        } else if (cacheData.status === 'pending') {
-            tooltipContent = (
-                <TableCellStatusIndicator status={TableCellStatus.LOADING} />
-            );
-        } else if (cacheData.status === 'error') {
-            tooltipContent = (
-                <TableCellStatusIndicator status={TableCellStatus.ERROR} />
-            );
         }
 
         return tooltipContent;
-    }
-
-    public componentDidUpdate() {
-        if (
-            this.evidenceCacheData &&
-            this.evidenceCacheData.status === 'complete' &&
-            this.evidenceCacheData.data &&
-            this.props.onLoadComplete
-        ) {
-            this.props.onLoadComplete();
-        }
     }
 }

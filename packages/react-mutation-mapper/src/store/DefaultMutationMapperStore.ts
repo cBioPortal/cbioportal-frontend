@@ -1,5 +1,8 @@
 import autobind from 'autobind-decorator';
 import {
+    CancerGene,
+    IndicatorQueryResp,
+    IOncoKbData,
     MyVariantInfo,
     remoteData,
     VariantAnnotation,
@@ -8,7 +11,6 @@ import _ from 'lodash';
 import { computed, observable } from 'mobx';
 import MobxPromise, { cached } from 'mobxpromise';
 
-import OncoKbEvidenceCache from '../cache/OncoKbEvidenceCache';
 import {
     AggregatedHotspots,
     GenomicLocation,
@@ -22,7 +24,6 @@ import { ApplyFilterFn, FilterApplier } from '../model/FilterApplier';
 import { Gene } from '../model/Gene';
 import { Mutation } from '../model/Mutation';
 import MutationMapperStore from '../model/MutationMapperStore';
-import { CancerGene, IndicatorQueryResp, IOncoKbData } from '../model/OncoKb';
 import { PfamDomain, PfamDomainRange } from '../model/Pfam';
 import { PostTranslationalModification } from '../model/PostTranslationalModification';
 import {
@@ -156,11 +157,6 @@ class DefaultMutationMapperStore implements MutationMapperStore {
             this.config.highlightFilters,
             this.config.groupFilters
         );
-    }
-
-    @cached
-    public get oncoKbEvidenceCache() {
-        return new OncoKbEvidenceCache(this.dataFetcher.oncoKbClient);
     }
 
     @computed

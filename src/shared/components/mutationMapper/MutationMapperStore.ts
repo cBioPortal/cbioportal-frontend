@@ -17,7 +17,11 @@ import genomeNexusClient from 'shared/api/genomeNexusClientInstance';
 import internalGenomeNexusClient from 'shared/api/genomeNexusInternalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
 import { Gene, Mutation } from 'shared/api/generated/CBioPortalAPI';
-import { IOncoKbData } from 'shared/model/OncoKB';
+import {
+    defaultOncoKbIndicatorFilter,
+    IOncoKbData,
+} from 'cbioportal-frontend-commons';
+
 import ResidueMappingCache from 'shared/cache/ResidueMappingCache';
 import {
     fetchPdbAlignmentData,
@@ -44,7 +48,6 @@ import {
     groupMutationsByProteinStartPos,
     countUniqueMutations,
 } from 'shared/lib/MutationUtils';
-import { defaultOncoKbIndicatorFilter } from 'shared/lib/OncoKbUtils';
 
 import { IMutationMapperConfig } from './MutationMapperConfig';
 import autobind from 'autobind-decorator';

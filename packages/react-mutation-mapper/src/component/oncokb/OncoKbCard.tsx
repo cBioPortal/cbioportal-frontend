@@ -1,11 +1,14 @@
-import { getNCBIlink } from 'cbioportal-frontend-commons';
+import {
+    getNCBIlink,
+    Citations,
+    IndicatorQueryTreatment,
+} from 'cbioportal-frontend-commons';
 import classnames from 'classnames';
 import { action, computed, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import { Collapse } from 'react-collapse';
 
-import { Citations, OncoKbTreatment } from '../../model/OncoKb';
 import { ICache } from '../../model/SimpleCache';
 import { levelIconClassNames } from '../../util/OncoKbUtils';
 import OncoKBSuggestAnnotationLinkout from './OncoKBSuggestAnnotationLinkout';
@@ -25,14 +28,13 @@ type OncoKbCardPropsBase = {
     gene: string;
     variant: string;
     oncogenicity: string;
-    oncogenicityPmids: number[];
     mutationEffect: string;
     mutationEffectCitations: Citations;
     geneSummary: string;
     variantSummary: string;
     tumorTypeSummary: string;
     biologicalSummary: string;
-    treatments: OncoKbTreatment[];
+    treatments: IndicatorQueryTreatment[];
     pmidData: ICache;
     handleFeedbackOpen?: React.EventHandler<any>;
 };

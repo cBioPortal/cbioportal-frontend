@@ -1,12 +1,13 @@
 import autobind from 'autobind-decorator';
-import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import {
+    DefaultTooltip,
+    IndicatorQueryResp,
+} from 'cbioportal-frontend-commons';
 import * as React from 'react';
 import { observable } from 'mobx';
 import { observer } from 'mobx-react';
 
 import { MobxCache } from '../../model/MobxCache';
-import { IndicatorQueryResp, Query } from '../../model/OncoKb';
-import { SimpleCache } from '../../model/SimpleCache';
 import {
     annotationIconClassNames,
     calcOncogenicScore,
@@ -24,8 +25,6 @@ import 'oncokb-styles/dist/oncokb.css';
 export interface IOncoKbProps {
     status: 'pending' | 'error' | 'complete';
     indicator?: IndicatorQueryResp;
-    evidenceCache?: SimpleCache;
-    evidenceQuery?: Query;
     pubMedCache?: MobxCache;
     isCancerGene: boolean;
     geneNotExist: boolean;
@@ -102,8 +101,8 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}> {
                             userEmailAddress={this.props.userEmailAddress}
                             hugoSymbol={this.props.hugoGeneSymbol}
                             alteration={
-                                this.props.evidenceQuery
-                                    ? this.props.evidenceQuery.alteration
+                                this.props.indicator
+                                    ? this.props.indicator.query.alteration
                                     : undefined
                             }
                             showFeedback={this.showFeedback}
@@ -111,10 +110,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}> {
                         />
                     </span>
                 );
-            } else if (
-                this.tooltipDataLoadComplete ||
-                (this.props.evidenceCache && this.props.evidenceQuery)
-            ) {
+            } else {
                 oncoKbContent = (
                     <DefaultTooltip
                         overlayClassName="oncokb-tooltip"
@@ -141,10 +137,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}> {
                 geneNotExist={this.props.geneNotExist}
                 isCancerGene={this.props.isCancerGene}
                 indicator={this.props.indicator || undefined}
-                evidenceCache={this.props.evidenceCache}
-                evidenceQuery={this.props.evidenceQuery}
                 pubMedCache={this.props.pubMedCache}
-                onLoadComplete={this.handleLoadComplete}
                 handleFeedbackOpen={
                     this.props.disableFeedback
                         ? undefined
@@ -152,16 +145,6 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}> {
                 }
             />
         );
-    }
-
-    // purpose of this callback is to trigger re-instantiation
-    // of the tooltip upon full load of the tooltip data
-    @autobind
-    private handleLoadComplete(): void {
-        // update only once to avoid unnecessary re-rendering
-        if (!this.tooltipDataLoadComplete) {
-            this.tooltipDataLoadComplete = true;
-        }
     }
 
     @autobind
