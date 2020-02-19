@@ -202,11 +202,8 @@ export function getProxyUrlIfNecessary(url: any) {
 }
 
 export function getOncoKbApiUrl() {
-    // temporary fix uses the public portals proxy for all
-    // instances that define a token (will only be internal)
     if (AppConfig.serverConfig.oncoKbTokenDefined) {
-        //return buildCBioPortalAPIUrl(`proxy/oncokb`);
-        return 'https://www.cbioportal.org/proxy/oncokb';
+        return buildCBioPortalAPIUrl(`proxy/oncokb`);
     }
     // TODO workaround for temporary backward compatibility
     //  remove this after documenting OncoKB token for all portal instances
