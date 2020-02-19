@@ -706,7 +706,7 @@ export function fetchMutationalSignatureMetaData(): IMutationalSignatureMeta[] {
 export async function fetchOncoKbCancerGenes(
     client: OncoKbAPI = oncokbClient
 ): Promise<CancerGene[]> {
-    return await client.utilsCancerGeneListGetUsingGET_1({});
+    return await client.utilsCancerGeneListGetUsingGET({});
 }
 
 export async function fetchOncoKbData(
