@@ -200,7 +200,7 @@ describe('oncoprint', function() {
             setDropdownOpen(
                 true,
                 mrnaElements.button_selector,
-                mrnaElements.dropdown_selector,
+                mrnaElements.dropdown_selector + ' li:nth-child(2)',
                 'couldnt open mrna dropdown - 2'
             );
 

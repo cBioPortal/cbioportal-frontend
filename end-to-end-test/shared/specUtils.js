@@ -105,7 +105,10 @@ function setDropdownOpen(
             }
         },
         10000,
-        failure_message,
+        failure_message ||
+            `Couldn't ${
+                open ? 'open' : 'close'
+            } dropdown: ${dropdown_selector}`,
         2000
     );
 }
