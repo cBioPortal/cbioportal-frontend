@@ -147,6 +147,10 @@ import {
 } from '../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
 import { IStudyViewScatterPlotData } from './charts/scatterPlot/StudyViewScatterPlotUtils';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
+import {
+    AlterationTypeConstants,
+    DataTypeConstants,
+} from 'pages/resultsView/ResultsViewPageStore';
 
 export type ChartUserSetting = {
     id: string;
@@ -2553,7 +2557,9 @@ export class StudyViewPageStore {
         await: () => [this.molecularProfiles],
         invoke: async () => {
             return Promise.resolve(
-                this.getMolecularProfilesByAlterationType('MUTATION_EXTENDED')
+                this.getMolecularProfilesByAlterationType(
+                    AlterationTypeConstants.MUTATION_EXTENDED
+                )
             );
         },
         onError: error => {},
@@ -2563,8 +2569,13 @@ export class StudyViewPageStore {
     readonly structuralVariantProfiles = remoteData({
         await: () => [this.molecularProfiles],
         invoke: async () => {
+            // TODO: currently only look for STRUCTURAL_VARIANT profiles with fusion datatype
+            // until database is support querying structural variant data
             return Promise.resolve(
-                this.getMolecularProfilesByAlterationType('STRUCTURAL_VARIANT')
+                this.getMolecularProfilesByAlterationType(
+                    AlterationTypeConstants.STRUCTURAL_VARIANT,
+                    AlterationTypeConstants.FUSION
+                )
             );
         },
         onError: error => {},
@@ -2576,8 +2587,8 @@ export class StudyViewPageStore {
         invoke: async () => {
             return Promise.resolve(
                 this.getMolecularProfilesByAlterationType(
-                    'COPY_NUMBER_ALTERATION',
-                    'DISCRETE'
+                    AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                    DataTypeConstants.DISCRETE
                 )
             );
         },
@@ -2589,17 +2600,23 @@ export class StudyViewPageStore {
         alterationType: string,
         dataType?: string
     ) {
+        let molecularProfiles: MolecularProfile[] = [];
         if (_.isEmpty(dataType)) {
-            return this.molecularProfiles.result.filter(
+            molecularProfiles = this.molecularProfiles.result.filter(
                 profile => profile.molecularAlterationType === alterationType
             );
         } else {
-            return this.molecularProfiles.result.filter(
+            molecularProfiles = this.molecularProfiles.result.filter(
                 profile =>
                     profile.molecularAlterationType === alterationType &&
                     profile.datatype === dataType
             );
         }
+
+        return _.chain(molecularProfiles)
+            .groupBy(molecularProfile => molecularProfile.studyId)
+            .flatMap(profiles => profiles[0])
+            .value();
     }
 
     private getDefaultClinicalDataBinFilter(attribute: ClinicalAttribute) {
