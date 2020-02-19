@@ -23,6 +23,7 @@ var getGroupHeaderOptionsElements = require('../../../shared/specUtils')
 var {
     clickQueryByGeneButton,
     clickModifyStudySelectionButton,
+    setDropdownOpen,
 } = require('../../../shared/specUtils.js');
 
 const ONCOPRINT_TIMEOUT = 60000;
@@ -170,8 +171,12 @@ describe('oncoprint', function() {
 
             // Open mrna track group menu
             var mrnaElements = getGroupHeaderOptionsElements(2);
-            browser.click(mrnaElements.button_selector);
-            browser.waitForVisible(mrnaElements.dropdown_selector, 1000); // wait for menu to appear
+            setDropdownOpen(
+                true,
+                mrnaElements.button_selector,
+                mrnaElements.dropdown_selector,
+                'couldnt open mrna dropdown - 1'
+            );
 
             // Confirm that 'Dont cluster' is bolded, reflecting current unclustered state
             assert.equal(
@@ -191,9 +196,13 @@ describe('oncoprint', function() {
             browser.click(mrnaElements.dropdown_selector + ' li:nth-child(1)'); // Click Cluster
             browser.pause(500); // give it time to sort
 
-            // Open menu again, which will have closed
-            browser.click(mrnaElements.button_selector);
-            browser.waitForVisible(mrnaElements.dropdown_selector, 1000); // wait for menu to appear
+            // Open menu again
+            setDropdownOpen(
+                true,
+                mrnaElements.button_selector,
+                mrnaElements.dropdown_selector,
+                'couldnt open mrna dropdown - 2'
+            );
 
             // Confirm that 'Cluster' is bolded, reflecting current clustered state
             assert.equal(
@@ -212,6 +221,14 @@ describe('oncoprint', function() {
             // Uncluster
             browser.click(mrnaElements.dropdown_selector + ' li:nth-child(2)'); // Click Don't clsuter
             browser.pause(500); // give it time to sort
+
+            // Ensure menu open
+            setDropdownOpen(
+                true,
+                mrnaElements.button_selector,
+                mrnaElements.dropdown_selector,
+                'couldnt open mrna dropdown - 3'
+            );
 
             // Confirm that 'Don't cluster' is bolded, reflecting current unclustered state
             assert.equal(
