@@ -8,7 +8,7 @@ import classnames from 'classnames';
 import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
 import { If, Then, Else } from 'react-if';
-import { buildCBioPortalPageUrl } from 'shared/api/urls';
+import { buildCBioPortalPageUrl, getStudySummaryUrl } from 'shared/api/urls';
 import { ChartMeta } from 'pages/studyView/StudyViewUtils';
 import {
     getVirtualStudyDescription,
@@ -54,7 +54,7 @@ export class StudySummaryRecord extends React.Component<CancerStudy, {}> {
                         </span>
                         <a
                             target="_blank"
-                            href={`study?id=${this.props.studyId}`}
+                            href={getStudySummaryUrl(this.props.studyId)}
                         >
                             <i
                                 className="fa fa-external-link"
