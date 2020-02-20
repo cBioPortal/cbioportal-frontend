@@ -81,11 +81,16 @@ export function handleCaseDO() {
         );
     }
 
-    (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute(
-        newParams,
-        '/patient',
-        true
-    );
+    // replace "#/" in the hash then reload the page
+    if (
+        routingStore.location.hash &&
+        routingStore.location.hash.includes('#/')
+    ) {
+        routingStore.push(routingStore.location.hash.replace('#/', ''));
+    }
+
+    // reload the page to update
+    getBrowserWindow().location.reload();
 }
 
 /*
