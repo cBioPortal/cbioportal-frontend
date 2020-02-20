@@ -25,7 +25,7 @@ interface TracksPropTypes {
     onSelectGenePanel?: (name: string) => void;
 }
 
-export const DEFAULT_GENOME_BUILD = 'GRCh37';
+export const DEFAULT_GENOME_BUILD = 'hg19';
 const noGenePanelMessage =
     'Gene panel information not found. Sample is presumed to be whole exome/genome sequenced.';
 

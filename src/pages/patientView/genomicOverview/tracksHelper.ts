@@ -91,6 +91,10 @@ export const genomeBuilds: Map<string, string> = new Map([
     ['hg38', 'GRCh38'],
     ['38', 'GRCh38'],
     ['mm10', 'GRCm38'],
+    // If the genome build is already Ensembl (e.g. VEP output), make sure the lookup doesn't fail
+    ['GRCh37', 'GRCh37'],
+    ['GRCh38', 'GRCh38'],
+    ['GRCm38', 'GRCm38'],
 ]);
 
 export type ChromosomeSizes = {
