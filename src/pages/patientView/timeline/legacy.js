@@ -4,6 +4,12 @@ import * as d3 from 'd3';
 
 import clinicalTimelineExports from './timeline-lib';
 
+const SAMPLE_ID_ALIASES = [
+    'SAMPLE_ID',
+    'SPECIMEN_REFERENCE_NUMBER',
+    'SpecimenReferenceNumber',
+];
+
 // TODO: these are some styling hacks for genie. Need to figure out how to add
 // proper support for this in the library (or the future reactified library)
 function addMoreGenieTimelineStylingHacks() {
@@ -52,9 +58,7 @@ function plotCaseLabelsInTimeline(
                 if (x.tooltip_tables.length === 1) {
                     var specRefNum = x.tooltip_tables[0].filter(function(x) {
                         return (
-                            x[0] === 'SpecimenReferenceNumber' ||
-                            x[0] === 'SPECIMEN_REFERENCE_NUMBER' ||
-                            x[0] === 'SAMPLE_ID'
+                            SAMPLE_ID_ALIASES.includes(x[0])
                         );
                     })[0];
                     if (specRefNum) {
@@ -174,9 +178,7 @@ export function buildTimeline(
 
             var specRefNum = _.filter(x.tooltip_tables[0], function(x) {
                 return (
-                    x[0] === 'SPECIMEN_REFERENCE_NUMBER' ||
-                    x[0] === 'SpecimenReferenceNumber' ||
-                    x[0] === 'SAMPLE_ID'
+                    SAMPLE_ID_ALIASES.includes(x[0])
                 );
             });
             if (specRefNum) {
@@ -319,15 +321,6 @@ export function buildTimeline(
                     enabled: true,
                 },
             ])
-            .addPostTimelineHook(
-                plotCaseLabelsInTimeline.bind(
-                    this,
-                    ['.timelineSeries_0', '.timelineSeries_1'],
-                    caseIds,
-                    clinicalDataMap,
-                    caseMetaData
-                )
-            )
             .addPostTimelineHook(addMoreGenieTimelineStylingHacks.bind(this));
     } else {
         window.pvTimeline = window.pvTimeline
@@ -347,16 +340,41 @@ export function buildTimeline(
                     ),
                     enabled: true,
                 },
-            ])
-            .addPostTimelineHook(
-                plotCaseLabelsInTimeline.bind(
-                    this,
-                    ['.timelineSeries_0'],
-                    caseIds,
-                    clinicalDataMap,
-                    caseMetaData
-                )
-            );
+            ]);
+    }
+    // find tracks that have a SAMPLE_ID in their tooltip, so we can replace
+    // them with the sample label icon (i.e. the circle with 1/2/3 in it)
+    var classNamesOfTracksContainingSamples = window.pvTimeline.data()
+    .reduce(function(previous, currentTrack, i) {
+        if (
+            currentTrack.times.length > 0 &&
+            _.every(
+                currentTrack.times.map(function(t) {
+                    return (
+                        t.tooltip_tables.length === 1 &&
+                        t.tooltip_tables[0].filter(function(a) {
+                            return SAMPLE_ID_ALIASES.includes(a[0]);
+                        }).length > 0
+                    );
+                })
+            )
+        ) {
+            return _.concat(previous, [i]);
+        } else {
+            return previous;
+        }
+    }, []).map((i) => `.timelineSeries_${i}`);
+    // replace tracks with number labels
+    if (classNamesOfTracksContainingSamples && classNamesOfTracksContainingSamples.length > 0) {
+        window.pvTimeline.addPostTimelineHook(
+            plotCaseLabelsInTimeline.bind(
+                this,
+                classNamesOfTracksContainingSamples,
+                caseIds,
+                clinicalDataMap,
+                caseMetaData
+            )
+        );
     }
     window.pvTimeline();
     $('#timeline-container').show();
