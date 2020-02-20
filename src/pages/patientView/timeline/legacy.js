@@ -57,9 +57,7 @@ function plotCaseLabelsInTimeline(
             var circle = d3.selectAll(timelineRow).filter(function(x) {
                 if (x.tooltip_tables.length === 1) {
                     var specRefNum = x.tooltip_tables[0].filter(function(x) {
-                        return (
-                            SAMPLE_ID_ALIASES.includes(x[0])
-                        );
+                        return SAMPLE_ID_ALIASES.includes(x[0]);
                     })[0];
                     if (specRefNum) {
                         return compareAgainstIds.indexOf(specRefNum[1]) !== -1;
@@ -177,9 +175,7 @@ export function buildTimeline(
             var sortOrder = Infinity;
 
             var specRefNum = _.filter(x.tooltip_tables[0], function(x) {
-                return (
-                    SAMPLE_ID_ALIASES.includes(x[0])
-                );
+                return SAMPLE_ID_ALIASES.includes(x[0]);
             });
             if (specRefNum) {
                 if (specRefNum.length > 1) {
@@ -204,7 +200,9 @@ export function buildTimeline(
     // for a test study where we have curated the DECEASED points in data rather
     // than computing it on the frontend. That might have to be the future way
     // of doing things
-    var isMskImpactJuneTestStudy = window.location.href.includes('mskimpact_test_june');
+    var isMskImpactJuneTestStudy = window.location.href.includes(
+        'mskimpact_test_june'
+    );
     if (!isMskImpactJuneTestStudy) {
         var i;
         var prefixes;
@@ -351,35 +349,43 @@ export function buildTimeline(
     }
     // find tracks that have a SAMPLE_ID in their tooltip, so we can replace
     // them with the sample label icon (i.e. the circle with 1/2/3 in it)
-    var tracksContainingSamples = window.pvTimeline.data()
-    .reduce(function(previous, currentTrack, i) {
-        if (
-            currentTrack.times.length > 0 &&
-            _.every(
-                currentTrack.times.map(function(t) {
-                    return (
-                        t.tooltip_tables.length > 0 &&
-                        _.every(
-                            t.tooltip_tables.map(table => (
-                                table.filter(function(a) {
-                                    return SAMPLE_ID_ALIASES.includes(a[0]);
-                                }).length > 0
-                            ))
-                        )
-                    );
-                })
-            )
-        ) {
-            return _.concat(previous, [
-                {'label': currentTrack.label, 'index': i, 'className': `.timelineSeries_${i}`}
-            ]);
-        } else {
-            return previous;
-        }
-    }, []);
+    var tracksContainingSamples = window.pvTimeline
+        .data()
+        .reduce(function(previous, currentTrack, i) {
+            if (
+                currentTrack.times.length > 0 &&
+                _.every(
+                    currentTrack.times.map(function(t) {
+                        return (
+                            t.tooltip_tables.length > 0 &&
+                            _.every(
+                                t.tooltip_tables.map(
+                                    table =>
+                                        table.filter(function(a) {
+                                            return SAMPLE_ID_ALIASES.includes(
+                                                a[0]
+                                            );
+                                        }).length > 0
+                                )
+                            )
+                        );
+                    })
+                )
+            ) {
+                return _.concat(previous, [
+                    {
+                        label: currentTrack.label,
+                        index: i,
+                        className: `.timelineSeries_${i}`,
+                    },
+                ]);
+            } else {
+                return previous;
+            }
+        }, []);
     // replace tracks with number labels
     if (tracksContainingSamples && tracksContainingSamples.length > 0) {
-        tracksContainingSamples.forEach((t) => {
+        tracksContainingSamples.forEach(t => {
             window.pvTimeline.toggleTrackCollapse(t.label);
         });
         window.pvTimeline.addPostTimelineHook(
