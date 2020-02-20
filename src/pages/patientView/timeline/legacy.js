@@ -197,53 +197,61 @@ export function buildTimeline(
         });
     }
 
-    // add DECEASED point to Status track using data from
-    // .*OS_MONTHS$ if .*OS_STATUS$ is DECEASED
-    var i;
-    var prefixes;
-    prefixes = Object.keys(patientInfo)
-        .filter(function(x) {
-            // find all keys postfixed with "OS_STATUS"
-            return /OS_STATUS$/.test(x);
-        })
-        .map(function(x) {
-            // get the prefixes
-            return x.substr(0, x.length - 'OS_STATUS'.length);
-        });
+    // add DECEASED point to Status track using data from .*OS_MONTHS$ if
+    // .*OS_STATUS$ is DECEASED
+    //
+    // TODO: we might want to remove this entirely. For now we only remove it
+    // for a test study where we have curated the DECEASED points in data rather
+    // than computing it on the frontend. That might have to be the future way
+    // of doing things
+    var isMskImpactJuneTestStudy = window.location.href.includes('mskimpact_test_june');
+    if (!isMskImpactJuneTestStudy) {
+        var i;
+        var prefixes;
+        prefixes = Object.keys(patientInfo)
+            .filter(function(x) {
+                // find all keys postfixed with "OS_STATUS"
+                return /OS_STATUS$/.test(x);
+            })
+            .map(function(x) {
+                // get the prefixes
+                return x.substr(0, x.length - 'OS_STATUS'.length);
+            });
 
-    for (i = 0; i < prefixes.length; i++) {
-        var prefix = prefixes[i];
-        if (
-            patientInfo[prefix + 'OS_STATUS'] === 'DECEASED' &&
-            prefix + 'OS_MONTHS' in patientInfo
-        ) {
-            var days = Math.round(
-                parseFloat(patientInfo[prefix + 'OS_MONTHS']) * 30.4
-            );
-            var timePoint = {
-                starting_time: days,
-                ending_time: days,
-                display: 'circle',
-                color: '#000',
-                tooltip_tables: [
-                    [['START_DATE', days], ['STATUS', 'DECEASED']],
-                ],
-            };
+        for (i = 0; i < prefixes.length; i++) {
+            var prefix = prefixes[i];
+            if (
+                patientInfo[prefix + 'OS_STATUS'] === 'DECEASED' &&
+                prefix + 'OS_MONTHS' in patientInfo
+            ) {
+                var days = Math.round(
+                    parseFloat(patientInfo[prefix + 'OS_MONTHS']) * 30.4
+                );
+                var timePoint = {
+                    starting_time: days,
+                    ending_time: days,
+                    display: 'circle',
+                    color: '#000',
+                    tooltip_tables: [
+                        [['START_DATE', days], ['STATUS', 'DECEASED']],
+                    ],
+                };
 
-            var trackData = timeData.filter(function(x) {
-                return x.label === 'Status';
-            })[0];
+                var trackData = timeData.filter(function(x) {
+                    return x.label === 'Status';
+                })[0];
 
-            if (trackData) {
-                trackData.times = trackData.times.concat(timePoint);
-            } else {
-                timeData = timeData.concat({
-                    label: 'Status',
-                    times: [timePoint],
-                });
+                if (trackData) {
+                    trackData.times = trackData.times.concat(timePoint);
+                } else {
+                    timeData = timeData.concat({
+                        label: 'Status',
+                        times: [timePoint],
+                    });
+                }
+                // Add timepoint only once in case of multiple prefixes
+                break;
             }
-            // Add timepoint only once in case of multiple prefixes
-            break;
         }
     }
 
@@ -331,7 +339,6 @@ export function buildTimeline(
             ])
             .splitByClinicalAttributes('Diagnosis', ['SUBTYPE'])
             .collapseAll()
-            .toggleTrackCollapse('Specimen')
             .enableTrackTooltips(false)
             .plugins([
                 {
@@ -344,32 +351,41 @@ export function buildTimeline(
     }
     // find tracks that have a SAMPLE_ID in their tooltip, so we can replace
     // them with the sample label icon (i.e. the circle with 1/2/3 in it)
-    var classNamesOfTracksContainingSamples = window.pvTimeline.data()
+    var tracksContainingSamples = window.pvTimeline.data()
     .reduce(function(previous, currentTrack, i) {
         if (
             currentTrack.times.length > 0 &&
             _.every(
                 currentTrack.times.map(function(t) {
                     return (
-                        t.tooltip_tables.length === 1 &&
-                        t.tooltip_tables[0].filter(function(a) {
-                            return SAMPLE_ID_ALIASES.includes(a[0]);
-                        }).length > 0
+                        t.tooltip_tables.length > 0 &&
+                        _.every(
+                            t.tooltip_tables.map(table => (
+                                table.filter(function(a) {
+                                    return SAMPLE_ID_ALIASES.includes(a[0]);
+                                }).length > 0
+                            ))
+                        )
                     );
                 })
             )
         ) {
-            return _.concat(previous, [i]);
+            return _.concat(previous, [
+                {'label': currentTrack.label, 'index': i, 'className': `.timelineSeries_${i}`}
+            ]);
         } else {
             return previous;
         }
-    }, []).map((i) => `.timelineSeries_${i}`);
+    }, []);
     // replace tracks with number labels
-    if (classNamesOfTracksContainingSamples && classNamesOfTracksContainingSamples.length > 0) {
+    if (tracksContainingSamples && tracksContainingSamples.length > 0) {
+        tracksContainingSamples.forEach((t) => {
+            window.pvTimeline.toggleTrackCollapse(t.label);
+        });
         window.pvTimeline.addPostTimelineHook(
             plotCaseLabelsInTimeline.bind(
                 this,
-                classNamesOfTracksContainingSamples,
+                tracksContainingSamples.map(t => t.className),
                 caseIds,
                 clinicalDataMap,
                 caseMetaData
