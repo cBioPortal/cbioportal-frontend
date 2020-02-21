@@ -82,7 +82,7 @@ export function nonMolecularProfileParams(
         profileFilter: store.dataTypePriorityCode,
         case_set_id: store.selectedSampleListId || '-1', // empty string won't work
         case_ids,
-        gene_list: encodeURIComponent(normalizeQuery(store.geneQuery) || ' '), // empty string won't work
+        gene_list: normalizeQuery(store.geneQuery) || ' ', // empty string won't work
         geneset_list: normalizeQuery(store.genesetQuery) || ' ', //empty string won't work
         tab_index: store.forDownloadTab
             ? 'tab_download'
