@@ -18,15 +18,15 @@
   "license": "AGPL-3.0-or-later",
   "repository": "cBioPortal/cbioportal-frontend",
   "scripts": {
-      "build": "cross-env NODE_ENV=production NODE_OPTIONS=--max-old-space-size=2048 yarn run rollup",
-      "start": "yarn run watch",
-      "watch": "yarn run rollup:watch",
-      "watchSSL": "yarn run watch",
-      "rollup": "rollup -c rollup.config.ts",
-      "rollup:watch": "rollup -c rollup.config.ts -w",
-      "prepare": "yarn run build",
-      "test": "cross-env CI=1 react-scripts-ts test --env=jsdom",
-      "test:watch": "yarn run test -- --watch"
+    "build": "cross-env NODE_ENV=production NODE_OPTIONS=--max-old-space-size=2048 yarn run rollup",
+    "start": "yarn run watch",
+    "watch": "yarn run rollup:watch",
+    "watchSSL": "yarn run watch",
+    "rollup": "rollup -c rollup.config.ts",
+    "rollup:watch": "rollup -c rollup.config.ts -w",
+    "prepare": "yarn run build",
+    "test": "cross-env CI=1 react-scripts-ts test --env=jsdom",
+    "test:watch": "yarn run test -- --watch"
   },
   "peerDependencies": {
     "mobx": "^3.0.0 || ^4.0.0 || ^5.0.0",
@@ -55,7 +55,6 @@
   },
   "devDependencies": {
     "@testing-library/react": "^9.3.2",
-    "@types/react-table": "^6.8.1",
     "react-scripts-ts": "^3.1.0"
   }
 }

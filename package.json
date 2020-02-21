@@ -104,6 +104,7 @@
     "@types/react-router": "3.0.2",
     "@types/react-sortable-hoc": "^0.6.5",
     "@types/react-spinkit": "^1.1.35",
+    "@types/react-table": "^6.8.7",
     "@types/react-transition-group": "^2.0.14",
     "@types/react-virtualized": "^9.18.7",
     "@types/recompose": "^0.20.4",
