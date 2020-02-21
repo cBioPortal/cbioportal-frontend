@@ -81,6 +81,23 @@ export function handleCaseDO() {
         );
     }
 
+    // Support for URLs like cbioportal.org/case.do#/patient?studyId=foo&caseId=bar
+    if (
+        routingStore.location.hash &&
+        routingStore.location.hash.startsWith('#/patient')
+    ) {
+        routingStore.location.hash = routingStore.location.hash!.replace(
+            /#\/patient\??/,
+            ''
+        );
+        // parse the url params from the hash and add them to new params
+        routingStore.location.hash
+            .split('&') // split the url params
+            .map(s => s.split('=')) // separate key value pairs
+            .forEach(pair => (newParams[pair[0]] = pair[1]));
+        routingStore.location.hash = '';
+    }
+
     (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute(
         newParams,
         '/patient',
