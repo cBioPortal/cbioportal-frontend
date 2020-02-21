@@ -310,7 +310,7 @@ describe('patient view page', function() {
                 const mutationsTable = '[data-test=patientview-mutation-table]';
                 browser
                     .moveToObject(
-                        `${mutationsTable} table td [data-test=not-profiled-icon]`
+                        `${mutationsTable} table td li:not(.invisible) [data-test=not-profiled-icon]`
                     )
                     .pause(500);
                 clickOnGenePanelLinks();
@@ -336,7 +336,7 @@ describe('patient view page', function() {
                     '[data-test=patientview-copynumber-table]';
                 browser
                     .moveToObject(
-                        `${copyNumberTable} table td [data-test=not-profiled-icon]`
+                        `${copyNumberTable} table td li:not(.invisible) [data-test=not-profiled-icon]`
                     )
                     .pause(500);
                 clickOnGenePanelLinks();
