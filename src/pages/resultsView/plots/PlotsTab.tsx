@@ -1,61 +1,61 @@
 import * as React from 'react';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, whyRun } from 'mobx';
 import { Observer, observer } from 'mobx-react';
 import './styles.scss';
 import {
     AlterationTypeConstants,
     ResultsViewPageStore,
 } from '../ResultsViewPageStore';
-import { FormControl, Button } from 'react-bootstrap';
+import { Button, FormControl } from 'react-bootstrap';
 import ReactSelect from 'react-select1';
 import Select from 'react-select';
 import _ from 'lodash';
 import {
+    axisHasNegativeNumbers,
+    boxPlotTooltip,
+    CLIN_ATTR_DATA_TYPE,
+    CNA_STROKE_WIDTH,
+    dataTypeDisplayOrder,
+    dataTypeToDisplayType,
+    GENESET_DATA_TYPE,
     getAxisLabel,
+    getBoxPlotDownloadData,
+    getCnaQueries,
+    getLimitValues,
+    getMutationQueries,
+    getScatterPlotDownloadData,
+    getWaterfallPlotDownloadData,
+    IAxisLogScaleParams,
+    IBoxScatterPlotPoint,
+    INumberAxisData,
+    IPlotSampleData,
     IScatterPlotData,
     isNumberData,
     isStringData,
+    IStringAxisData,
+    IWaterfallPlotData,
     logScalePossible,
     makeAxisDataPromise,
+    makeAxisLogScaleFunction,
+    makeBoxScatterPlotData,
+    makeClinicalAttributeOptions,
     makeScatterPlotData,
     makeScatterPlotPointAppearance,
-    dataTypeDisplayOrder,
-    dataTypeToDisplayType,
-    scatterPlotTooltip,
-    scatterPlotLegendData,
-    IStringAxisData,
-    INumberAxisData,
-    makeBoxScatterPlotData,
-    IPlotSampleData,
-    IBoxScatterPlotPoint,
-    boxPlotTooltip,
-    getCnaQueries,
-    getMutationQueries,
-    getScatterPlotDownloadData,
-    getBoxPlotDownloadData,
+    makeWaterfallPlotData,
     MutationSummary,
     mutationSummaryToAppearance,
-    CNA_STROKE_WIDTH,
     PLOT_SIDELENGTH,
-    CLIN_ATTR_DATA_TYPE,
-    sortMolecularProfilesForDisplay,
+    scatterPlotLegendData,
+    scatterPlotTooltip,
     scatterPlotZIndexSortBy,
-    GENESET_DATA_TYPE,
-    makeClinicalAttributeOptions,
-    makeWaterfallPlotData,
-    IWaterfallPlotData,
-    waterfallPlotTooltip,
-    getWaterfallPlotDownloadData,
-    WATERFALLPLOT_SIDELENGTH,
+    sortMolecularProfilesForDisplay,
     WATERFALLPLOT_BASE_SIDELENGTH,
+    WATERFALLPLOT_SIDELENGTH,
     WATERFALLPLOT_SIDELENGTH_SAMPLE_MULTIPLICATION_FACTOR,
-    IAxisLogScaleParams,
-    makeAxisLogScaleFunction,
-    axisHasNegativeNumbers,
-    getLimitValues,
     deriveDisplayTextFromGenericAssayType,
     NO_GENE_OPTION,
     bothAxesNoMolecularProfile,
+    waterfallPlotTooltip,
 } from './PlotsTabUtils';
 import {
     ClinicalAttribute,
@@ -81,18 +81,21 @@ import fileDownload from 'react-file-download';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
 import ScrollBar from '../../../shared/components/Scrollbar/ScrollBar';
 import {
-    scatterPlotSize,
     dataPointIsLimited,
+    scatterPlotSize,
 } from '../../../shared/components/plots/PlotUtils';
 import { getTablePlotDownloadData } from '../../../shared/components/plots/TablePlotUtils';
 import MultipleCategoryBarPlot from '../../../shared/components/plots/MultipleCategoryBarPlot';
 import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
 import onMobxPromise from '../../../shared/lib/onMobxPromise';
-import './styles.scss';
 import { showWaterfallPlot } from 'pages/resultsView/plots/PlotsTabUtils';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 import LastPlotsTabSelectionForDatatype from './LastPlotsTabSelectionForDatatype';
 import { generateQuickPlots } from './QuickPlots';
+import ResultsViewURLWrapper, {
+    ResultsViewURLQuery,
+} from '../ResultsViewURLWrapper';
+import { Mutable } from '../../../shared/lib/TypeScriptUtils';
 
 enum EventKey {
     horz_logScale,
@@ -169,6 +172,7 @@ export type UtilitiesMenuSelection = {
 
 export interface IPlotsTabProps {
     store: ResultsViewPageStore;
+    urlWrapper: ResultsViewURLWrapper;
 }
 
 export type PlotsTabDataSource = {
@@ -748,13 +752,242 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             set isGenericAssayType(i: any) {
                 this._isGenericAssayType = i;
             },
-            _selectedGeneOption: undefined,
-            _selectedGenesetOption: undefined,
-            _selectedGenericAssayOption: undefined,
-            _dataType: undefined,
-            _mutationCountBy: undefined,
-            _logScale: false,
-            _selectedDataSourceOption: undefined,
+
+            get _selectedGeneOption() {
+                const urlSelection =
+                    (vertical
+                        ? self.props.urlWrapper.query.plots_vert_selection
+                        : self.props.urlWrapper.query.plots_horz_selection) ||
+                    {};
+                const param = urlSelection.selectedGeneOption;
+
+                if (!param) {
+                    return undefined;
+                } else {
+                    const val = parseFloat(param);
+                    const geneOptions = vertical
+                        ? self.vertGeneOptions
+                        : self.horzGeneOptions.result || [];
+
+                    return geneOptions.find(o => o.value === val);
+                }
+            },
+            set _selectedGeneOption(o: any) {
+                const newParams: Mutable<Partial<ResultsViewURLQuery>> = {};
+                if (vertical) {
+                    newParams.plots_vert_selection = Object.assign(
+                        {},
+                        self.props.urlWrapper.query.plots_vert_selection,
+                        { selectedGeneOption: o && o.value }
+                    );
+                } else {
+                    newParams.plots_horz_selection = Object.assign(
+                        {},
+                        self.props.urlWrapper.query.plots_horz_selection,
+                        { selectedGeneOption: o && o.value }
+                    );
+                }
+                self.props.urlWrapper.updateURL(newParams);
+            },
+
+            get _selectedGenesetOption() {
+                const urlSelection =
+                    (vertical
+                        ? self.props.urlWrapper.query.plots_vert_selection
+                        : self.props.urlWrapper.query.plots_horz_selection) ||
+                    {};
+                const optionVal = urlSelection.selectedGenesetOption;
+
+                if (!optionVal) {
+                    return undefined;
+                } else {
+                    const genesetOptions =
+                        (vertical
+                            ? self.vertGenesetOptions
+                            : self.horzGenesetOptions.result) || [];
+
+                    return genesetOptions.find(o => o.value === optionVal);
+                }
+            },
+            set _selectedGenesetOption(o: any) {
+                const newParams: Mutable<Partial<ResultsViewURLQuery>> = {};
+                if (vertical) {
+                    newParams.plots_vert_selection = Object.assign(
+                        {},
+                        self.props.urlWrapper.query.plots_vert_selection,
+                        { selectedGenesetOption: o && o.value }
+                    );
+                } else {
+                    newParams.plots_horz_selection = Object.assign(
+                        {},
+                        self.props.urlWrapper.query.plots_horz_selection,
+                        { selectedGenesetOption: o && o.value }
+                    );
+                }
+                self.props.urlWrapper.updateURL(newParams);
+            },
+
+            get _selectedGenericAssayOption() {
+                const urlSelection =
+                    (vertical
+                        ? self.props.urlWrapper.query.plots_vert_selection
+                        : self.props.urlWrapper.query.plots_horz_selection) ||
+                    {};
+                const optionVal = urlSelection.selectedGenericAssayOption;
+
+                if (!optionVal) {
+                    return undefined;
+                } else {
+                    const treatmentOptions =
+                        (vertical
+                            ? self.vertGenericAssayOptions
+                            : self.horzGenericAssayOptions.result) || [];
+
+                    return treatmentOptions.find(o => o.value === optionVal);
+                }
+            },
+            set _selectedGenericAssayOption(o: any) {
+                const newParams: Mutable<Partial<ResultsViewURLQuery>> = {};
+                if (vertical) {
+                    newParams.plots_vert_selection = Object.assign(
+                        {},
+                        self.props.urlWrapper.query.plots_vert_selection,
+                        { selectedGenericAssayOption: o && o.value }
+                    );
+                } else {
+                    newParams.plots_horz_selection = Object.assign(
+                        {},
+                        self.props.urlWrapper.query.plots_horz_selection,
+                        { selectedGenericAssayOption: o && o.value }
+                    );
+                }
+                self.props.urlWrapper.updateURL(newParams);
+            },
+
+            get _selectedDataSourceOption() {
+                const urlSelection =
+                    (vertical
+                        ? self.props.urlWrapper.query.plots_vert_selection
+                        : self.props.urlWrapper.query.plots_horz_selection) ||
+                    {};
+                const optionVal = urlSelection.selectedDataSourceOption;
+
+                if (!optionVal) {
+                    return undefined;
+                } else {
+                    const dataSourceOptionsByType = self
+                        .dataTypeToDataSourceOptions.result!;
+                    if (
+                        this.dataType &&
+                        dataSourceOptionsByType &&
+                        dataSourceOptionsByType[this.dataType] &&
+                        dataSourceOptionsByType[this.dataType].length
+                    ) {
+                        // return computed default if _selectedDataSourceOption is undefined
+                        return dataSourceOptionsByType[this.dataType].find(
+                            o => o.value === optionVal
+                        );
+                    } else {
+                        return undefined;
+                    }
+                }
+            },
+            set _selectedDataSourceOption(o: any) {
+                const newParams: Mutable<Partial<ResultsViewURLQuery>> = {};
+                if (vertical) {
+                    newParams.plots_vert_selection = Object.assign(
+                        {},
+                        self.props.urlWrapper.query.plots_vert_selection,
+                        { selectedDataSourceOption: o && o.value }
+                    );
+                } else {
+                    newParams.plots_horz_selection = Object.assign(
+                        {},
+                        self.props.urlWrapper.query.plots_horz_selection,
+                        { selectedDataSourceOption: o && o.value }
+                    );
+                }
+                self.props.urlWrapper.updateURL(newParams);
+            },
+
+            get _dataType() {
+                const urlSelection =
+                    (vertical
+                        ? self.props.urlWrapper.query.plots_vert_selection
+                        : self.props.urlWrapper.query.plots_horz_selection) ||
+                    {};
+                return urlSelection.dataType;
+            },
+            set _dataType(d: string | undefined) {
+                const newParams: Mutable<Partial<ResultsViewURLQuery>> = {};
+                if (vertical) {
+                    newParams.plots_vert_selection = Object.assign(
+                        {},
+                        self.props.urlWrapper.query.plots_vert_selection,
+                        { dataType: d }
+                    );
+                } else {
+                    newParams.plots_horz_selection = Object.assign(
+                        {},
+                        self.props.urlWrapper.query.plots_horz_selection,
+                        { dataType: d }
+                    );
+                }
+                self.props.urlWrapper.updateURL(newParams);
+            },
+
+            get _mutationCountBy() {
+                const urlSelection =
+                    (vertical
+                        ? self.props.urlWrapper.query.plots_vert_selection
+                        : self.props.urlWrapper.query.plots_horz_selection) ||
+                    {};
+                return urlSelection.mutationCountBy as MutationCountBy;
+            },
+            set _mutationCountBy(c: MutationCountBy) {
+                const newParams: Mutable<Partial<ResultsViewURLQuery>> = {};
+                if (vertical) {
+                    newParams.plots_vert_selection = Object.assign(
+                        {},
+                        self.props.urlWrapper.query.plots_vert_selection,
+                        { mutationCountBy: c }
+                    );
+                } else {
+                    newParams.plots_horz_selection = Object.assign(
+                        {},
+                        self.props.urlWrapper.query.plots_horz_selection,
+                        { mutationCountBy: c }
+                    );
+                }
+                self.props.urlWrapper.updateURL(newParams);
+            },
+
+            get _logScale() {
+                const urlSelection =
+                    (vertical
+                        ? self.props.urlWrapper.query.plots_vert_selection
+                        : self.props.urlWrapper.query.plots_horz_selection) ||
+                    {};
+                const ret = urlSelection.logScale === 'true';
+                return ret;
+            },
+            set _logScale(l: boolean) {
+                const newParams: Mutable<Partial<ResultsViewURLQuery>> = {};
+                if (vertical) {
+                    newParams.plots_vert_selection = Object.assign(
+                        {},
+                        self.props.urlWrapper.query.plots_vert_selection,
+                        { logScale: l.toString() }
+                    );
+                } else {
+                    newParams.plots_horz_selection = Object.assign(
+                        {},
+                        self.props.urlWrapper.query.plots_horz_selection,
+                        { logScale: l.toString() }
+                    );
+                }
+                self.props.urlWrapper.updateURL(newParams);
+            },
             _isGenericAssayType: undefined,
         });
     }
@@ -1301,7 +1534,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             }
         }
         return (sameGenericAssayOption || []).concat((verticalOptions ||
-            []) as { value: string; label: string }[]);
+            []) as {
+            value: string;
+            label: string;
+        }[]);
     }
 
     private showGeneSelectBox(
