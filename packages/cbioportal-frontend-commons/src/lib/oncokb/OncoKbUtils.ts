@@ -151,7 +151,7 @@ export function generateCopyNumberAlterationQuery(
     evidenceTypes?: EvidenceType[]
 ): AnnotateCopyNumberAlterationQuery {
     return {
-        id: generateQueryVariantId(entrezGeneId, tumorType, alteration, 'cna'),
+        id: generateQueryVariantId(entrezGeneId, tumorType, alteration),
         copyNameAlterationType: alteration!.toUpperCase(),
         gene: {
             entrezGeneId: entrezGeneId,
