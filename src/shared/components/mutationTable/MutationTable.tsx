@@ -23,6 +23,7 @@ import GeneColumnFormatter from './column/GeneColumnFormatter';
 import ChromosomeColumnFormatter from './column/ChromosomeColumnFormatter';
 import ProteinChangeColumnFormatter from './column/ProteinChangeColumnFormatter';
 import MutationTypeColumnFormatter from './column/MutationTypeColumnFormatter';
+import VariantTypeColumnFormatter from './column/VariantTypeColumnFormatter';
 import FunctionalImpactColumnFormatter from './column/FunctionalImpactColumnFormatter';
 import CosmicColumnFormatter from './column/CosmicColumnFormatter';
 import MutationCountColumnFormatter from './column/MutationCountColumnFormatter';
@@ -141,6 +142,7 @@ export enum MutationTableColumnType {
     MUTATION_STATUS,
     VALIDATION_STATUS,
     MUTATION_TYPE,
+    VARIANT_TYPE,
     CENTER,
     TUMOR_ALLELE_FREQ,
     NORMAL_ALLELE_FREQ,
@@ -662,6 +664,23 @@ export default class MutationTable<
                 MutationTypeColumnFormatter.getDisplayValue(d)
                     .toUpperCase()
                     .indexOf(filterStringUpper) > -1,
+        };
+
+        this._columns[MutationTableColumnType.VARIANT_TYPE] = {
+            name: 'Variant Type',
+            render: VariantTypeColumnFormatter.renderFunction,
+            download: VariantTypeColumnFormatter.getTextValue,
+            sortBy: (d: Mutation[]) =>
+                VariantTypeColumnFormatter.getDisplayValue(d),
+            filter: (
+                d: Mutation[],
+                filterString: string,
+                filterStringUpper: string
+            ) =>
+                VariantTypeColumnFormatter.getDisplayValue(d)
+                    .toUpperCase()
+                    .indexOf(filterStringUpper) > -1,
+            visible: false,
         };
 
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT] = {
