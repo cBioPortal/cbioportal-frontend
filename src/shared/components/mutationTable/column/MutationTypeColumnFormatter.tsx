@@ -4,146 +4,97 @@ import {
     getCanonicalMutationType,
 } from 'cbioportal-frontend-commons';
 import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import {
+    ICategoricalColumn,
+    createToolTip,
+} from './CategoricalColumnFormatter';
 import styles from './mutationType.module.scss';
 
-interface IMutationTypeFormat {
-    label?: string;
-    longName?: string;
-    className: string;
-    mainType: string;
-    priority?: number;
-}
-
 /**
- * @author Selcuk Onur Sumer
+ * Mutation Column Formatter.
  */
 export default class MutationTypeColumnFormatter {
     public static get MAIN_MUTATION_TYPE_MAP(): {
-        [key: string]: IMutationTypeFormat;
+        [key: string]: ICategoricalColumn;
     } {
         return {
             missense: {
-                label: 'Missense',
-                longName: 'Missense',
-                className: 'missense-mutation',
-                mainType: 'missense',
-                priority: 1,
+                displayValue: 'Missense',
+                className: styles.missenseMutation,
             },
             inframe: {
-                label: 'IF',
-                longName: 'In-frame',
-                className: 'inframe-mutation',
-                mainType: 'inframe',
-                priority: 2,
+                displayValue: 'IF',
+                className: styles.inframeMutation,
             },
             truncating: {
-                label: 'Truncating',
-                longName: 'Truncating',
-                className: 'trunc-mutation',
-                mainType: 'truncating',
-                priority: 4,
+                displayValue: 'Truncating',
+                className: styles.truncMutation,
             },
             nonsense: {
-                label: 'Nonsense',
-                longName: 'Nonsense',
-                className: 'trunc-mutation',
-                mainType: 'truncating',
-                priority: 6,
+                displayValue: 'Nonsense',
+                className: styles.truncMutation,
             },
             nonstop: {
-                label: 'Nonstop',
-                longName: 'Nonstop',
-                className: 'trunc-mutation',
-                mainType: 'truncating',
-                priority: 7,
+                displayValue: 'Nonstop',
+                className: styles.truncMutation,
             },
             nonstart: {
-                label: 'Nonstart',
-                longName: 'Nonstart',
-                className: 'trunc-mutation',
-                mainType: 'truncating',
-                priority: 8,
+                displayValue: 'Nonstart',
+                className: styles.truncMutation,
             },
             frameshift: {
-                label: 'FS',
-                longName: 'Frame Shift',
-                className: 'trunc-mutation',
-                mainType: 'truncating',
-                priority: 4,
+                displayValue: 'FS',
+                className: styles.truncMutation,
             },
             frame_shift_del: {
-                label: 'FS del',
-                longName: 'Frame Shift Deletion',
-                className: 'trunc-mutation',
-                mainType: 'truncating',
-                priority: 4,
+                displayValue: 'FS del',
+                className: styles.truncMutation,
             },
             frame_shift_ins: {
-                label: 'FS ins',
-                longName: 'Frame Shift Insertion',
-                className: 'trunc-mutation',
-                mainType: 'truncating',
-                priority: 5,
+                displayValue: 'FS ins',
+                className: styles.trunMutation,
             },
             in_frame_ins: {
-                label: 'IF ins',
-                longName: 'In-frame Insertion',
-                className: 'inframe-mutation',
-                mainType: 'inframe',
-                priority: 3,
+                displayValue: 'IF ins',
+                className: styles.inframeMutation,
             },
             in_frame_del: {
-                label: 'IF del',
-                longName: 'In-frame Deletion',
-                className: 'inframe-mutation',
-                mainType: 'inframe',
-                priority: 2,
+                displayValue: 'IF del',
+                className: styles.inframeMutation,
             },
             splice_site: {
-                label: 'Splice',
-                longName: 'Splice site',
-                className: 'trunc-mutation',
-                mainType: 'truncating',
-                priority: 9,
+                displayValue: 'Splice',
+                className: styles.truncMutation,
             },
             fusion: {
-                label: 'Fusion',
-                longName: 'Fusion',
-                className: 'fusion',
-                mainType: 'other',
-                priority: 10,
+                displayValue: 'Fusion',
+                className: styles.fusion,
             },
             silent: {
-                label: 'Silent',
-                longName: 'Silent',
-                className: 'other-mutation',
-                mainType: 'other',
-                priority: 11,
+                displayValue: 'Silent',
+                className: styles.otherMutation,
             },
             other: {
-                label: 'Other',
-                longName: 'Other',
-                className: 'other-mutation',
-                mainType: 'other',
-                priority: 11,
+                displayValue: 'Other',
+                className: styles.otherMutation,
             },
         };
     }
 
     /**
-     * Determines the display value by using the impact field.
+     * Determines the display value.
      *
-     * @param data  column formatter data
-     * @returns {string}    mutation assessor text value
+     * @param data  mutation data.
+     * @returns {string} value to display within the column.
      */
     public static getDisplayValue(data: Mutation[]): string {
         const entry:
-            | IMutationTypeFormat
+            | ICategoricalColumn
             | undefined = MutationTypeColumnFormatter.getMapEntry(data);
 
         // first, try to find a mapped value
-        if (entry && entry.label) {
-            return entry.label;
+        if (entry && entry.displayValue) {
+            return entry.displayValue;
         }
         // if no mapped value, then return the text value as is
         else {
@@ -164,7 +115,7 @@ export default class MutationTypeColumnFormatter {
 
     public static getClassName(data: Mutation[]): string {
         const value:
-            | IMutationTypeFormat
+            | ICategoricalColumn
             | undefined = MutationTypeColumnFormatter.getMapEntry(data);
 
         if (value && value.className) {
@@ -206,24 +157,12 @@ export default class MutationTypeColumnFormatter {
 
         // use actual value for tooltip
         const toolTip: string = MutationTypeColumnFormatter.getTextValue(data);
-
-        let content = <span className={styles[className]}>{text}</span>;
+        let content = <span className={className}>{text}</span>;
 
         // add tooltip only if the display value differs from the actual text value!
         if (toolTip.toLowerCase() !== text.toLowerCase()) {
-            const arrowContent = <div className="rc-tooltip-arrow-inner" />;
-
-            content = (
-                <DefaultTooltip
-                    overlay={<span>{toolTip}</span>}
-                    placement="left"
-                    arrowContent={arrowContent}
-                >
-                    {content}
-                </DefaultTooltip>
-            );
+            content = createToolTip(content, toolTip);
         }
-
         return content;
     }
 }
