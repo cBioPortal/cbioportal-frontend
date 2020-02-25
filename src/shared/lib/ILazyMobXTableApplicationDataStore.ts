@@ -2,6 +2,7 @@ import { SortMetric } from './ISortMetric';
 import { observable, computed, action } from 'mobx';
 import { lazyMobXTableSort } from '../components/lazyMobXTable/LazyMobXTable';
 import { SHOW_ALL_PAGE_SIZE as PAGINATION_SHOW_ALL } from 'shared/components/paginationControls/PaginationControls';
+
 export interface ILazyMobXTableApplicationDataStore<T> {
     // setter
     setFilter: (
@@ -32,14 +33,62 @@ export interface ILazyMobXTableApplicationDataStore<T> {
     page: number;
 }
 
+export type DataFilterFunction<T> = (
+    d: T,
+    filterString?: string,
+    filterStringUpper?: string,
+    filterStringLower?: string
+) => boolean;
+
+// if not defined, use default values for sortMetric and sortAscending
+export function getSortedData<T>(
+    data: T[],
+    sortMetric: SortMetric<T> = () => 0,
+    sortAscending: boolean | undefined
+): T[] {
+    const ascending = sortAscending !== undefined ? sortAscending : true;
+
+    return lazyMobXTableSort(data, sortMetric, ascending);
+}
+
+export function getSortedFilteredData<T>(
+    sortedData: T[],
+    filterString: string,
+    dataFilter: DataFilterFunction<T>
+): T[] {
+    const filterStringUpper = filterString.toUpperCase();
+    const filterStringLower = filterString.toLowerCase();
+    return sortedData.filter((d: T) =>
+        dataFilter(d, filterString, filterStringUpper, filterStringLower)
+    );
+}
+
+export function getVisibileData<T>(
+    tableData: T[],
+    itemsPerPage: number,
+    page: number
+): T[] {
+    if (itemsPerPage === PAGINATION_SHOW_ALL) {
+        return tableData;
+    } else {
+        return tableData.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
+    }
+}
+
+export function getTableData<T>(
+    sortedFilteredData: T[],
+    sortedFilteredSelectedData: T[]
+): T[] {
+    if (sortedFilteredSelectedData.length) {
+        return sortedFilteredSelectedData;
+    } else {
+        return sortedFilteredData;
+    }
+}
+
 export class SimpleGetterLazyMobXTableApplicationDataStore<T>
     implements ILazyMobXTableApplicationDataStore<T> {
-    @observable protected dataFilter: (
-        d: T,
-        filterString?: string,
-        filterStringUpper?: string,
-        filterStringLower?: string
-    ) => boolean;
+    @observable protected dataFilter: DataFilterFunction<T>;
     @observable protected dataSelector: (d: T) => boolean;
     @observable public dataHighlighter: (d: T) => boolean;
 
@@ -53,24 +102,14 @@ export class SimpleGetterLazyMobXTableApplicationDataStore<T>
         return this.getData();
     }
     @computed get sortedData() {
-        // if not defined, use default values for sortMetric and sortAscending
-        const sortMetric = this.sortMetric || (() => 0);
-        const sortAscending =
-            this.sortAscending !== undefined ? this.sortAscending : true;
-
-        return lazyMobXTableSort(this.allData, sortMetric, sortAscending);
+        return getSortedData(this.allData, this.sortMetric, this.sortAscending);
     }
 
     @computed get sortedFilteredData() {
-        const filterStringUpper = this.filterString.toUpperCase();
-        const filterStringLower = this.filterString.toLowerCase();
-        return this.sortedData.filter((d: T) =>
-            this.dataFilter(
-                d,
-                this.filterString,
-                filterStringUpper,
-                filterStringLower
-            )
+        return getSortedFilteredData(
+            this.sortedData,
+            this.filterString,
+            this.dataFilter
         );
     }
 
@@ -79,22 +118,14 @@ export class SimpleGetterLazyMobXTableApplicationDataStore<T>
     }
 
     @computed get tableData() {
-        if (this.sortedFilteredSelectedData.length) {
-            return this.sortedFilteredSelectedData;
-        } else {
-            return this.sortedFilteredData;
-        }
+        return getTableData(
+            this.sortedFilteredData,
+            this.sortedFilteredSelectedData
+        );
     }
 
     @computed get visibleData(): T[] {
-        if (this.itemsPerPage === PAGINATION_SHOW_ALL) {
-            return this.tableData;
-        } else {
-            return this.tableData.slice(
-                this.page * this.itemsPerPage,
-                (this.page + 1) * this.itemsPerPage
-            );
-        }
+        return getVisibileData(this.tableData, this.itemsPerPage, this.page);
     }
 
     @computed get showingAllData() {
@@ -110,6 +141,10 @@ export class SimpleGetterLazyMobXTableApplicationDataStore<T>
         ) => boolean
     ) {
         this.dataFilter = fn;
+    }
+
+    public getFilter() {
+        return this.dataFilter;
     }
 
     @action public resetFilter() {
