@@ -2,8 +2,6 @@ export enum LevelOfEvidence {
     LEVEL_0 = 'LEVEL_0',
     LEVEL_1 = 'LEVEL_1',
     LEVEL_2 = 'LEVEL_2',
-    LEVEL_2A = 'LEVEL_2A',
-    LEVEL_2B = 'LEVEL_2B',
     LEVEL_3A = 'LEVEL_3A',
     LEVEL_3B = 'LEVEL_3B',
     LEVEL_4 = 'LEVEL_4',
