@@ -3,10 +3,12 @@ import React from 'react';
 import { assert } from 'chai';
 import _ from 'lodash';
 
-import { IndicatorQueryResp } from '../../model/OncoKb';
 import OncoKB, { sortValue as oncoKbAnnotationSortValue } from './OncoKB';
 import { defaultArraySortMethod } from '../../util/ReactTableUtils';
-import { LevelOfEvidence } from 'cbioportal-frontend-commons';
+import {
+    LevelOfEvidence,
+    IndicatorQueryResp,
+} from 'cbioportal-frontend-commons';
 
 function emptyQueryIndicator(): IndicatorQueryResp {
     return {
@@ -178,14 +180,14 @@ describe('OncoKB', () => {
         });
         queryB = initQueryIndicator({
             oncogenic: 'Oncogenic',
-            highestSensitiveLevel: LevelOfEvidence.LEVEL_2A,
+            highestSensitiveLevel: LevelOfEvidence.LEVEL_2,
         });
         array = [queryB, queryA];
         sortedArray = array.sort(oncoKbAnnotationSortMethod);
         assert.isAbove(
             sortedArray.indexOf(queryA),
             sortedArray.indexOf(queryB),
-            'A(LEVEL_1) should be higher than B(LEVEL_2A)'
+            'A(LEVEL_1) should be higher than B(LEVEL_2)'
         );
 
         queryA = initQueryIndicator({
@@ -206,7 +208,7 @@ describe('OncoKB', () => {
 
         queryA = initQueryIndicator({
             oncogenic: 'Oncogenic',
-            highestSensitiveLevel: LevelOfEvidence.LEVEL_2A,
+            highestSensitiveLevel: LevelOfEvidence.LEVEL_2,
             highestResistanceLevel: '',
         });
         queryB = initQueryIndicator({
@@ -219,7 +221,7 @@ describe('OncoKB', () => {
         assert.isAbove(
             sortedArray.indexOf(queryA),
             sortedArray.indexOf(queryB),
-            'A(LEVEL_2A) should be higher than B(LEVEL_R1)'
+            'A(LEVEL_2) should be higher than B(LEVEL_R1)'
         );
 
         queryA = initQueryIndicator({
@@ -227,7 +229,7 @@ describe('OncoKB', () => {
         });
         queryB = initQueryIndicator({
             oncogenic: 'Unknown',
-            highestSensitiveLevel: LevelOfEvidence.LEVEL_2A,
+            highestSensitiveLevel: LevelOfEvidence.LEVEL_2,
         });
         array = [queryB, queryA];
         sortedArray = array.sort(oncoKbAnnotationSortMethod);
@@ -274,7 +276,7 @@ describe('OncoKB', () => {
         });
         queryB = initQueryIndicator({
             variantExist: true,
-            highestSensitiveLevel: LevelOfEvidence.LEVEL_2A,
+            highestSensitiveLevel: LevelOfEvidence.LEVEL_2,
         });
         array = [queryB, queryA];
         sortedArray = array.sort(oncoKbAnnotationSortMethod);
@@ -289,14 +291,14 @@ describe('OncoKB', () => {
         });
         queryB = initQueryIndicator({
             variantExist: false,
-            highestSensitiveLevel: LevelOfEvidence.LEVEL_2A,
+            highestSensitiveLevel: LevelOfEvidence.LEVEL_2,
         });
         array = [queryB, queryA];
         sortedArray = array.sort(oncoKbAnnotationSortMethod);
         assert.isBelow(
             sortedArray.indexOf(queryA),
             sortedArray.indexOf(queryB),
-            'A should be lower than B[LEVEL_2A] even B variant does not exist.'
+            'A should be lower than B[LEVEL_2] even B variant does not exist.'
         );
 
         // Is Hotspot does not have any impact any more
@@ -307,7 +309,7 @@ describe('OncoKB', () => {
         queryB = initQueryIndicator({
             oncogenic: 'Oncogenic',
             hotspot: true,
-            highestSensitiveLevel: LevelOfEvidence.LEVEL_2A,
+            highestSensitiveLevel: LevelOfEvidence.LEVEL_2,
         });
         array = [queryB, queryA];
         sortedArray = array.sort(oncoKbAnnotationSortMethod);
@@ -324,14 +326,14 @@ describe('OncoKB', () => {
         queryB = initQueryIndicator({
             oncogenic: 'Oncogenic',
             hotspot: false,
-            highestSensitiveLevel: LevelOfEvidence.LEVEL_2A,
+            highestSensitiveLevel: LevelOfEvidence.LEVEL_2,
         });
         array = [queryB, queryA];
         sortedArray = array.sort(oncoKbAnnotationSortMethod);
         assert.isBelow(
             sortedArray.indexOf(queryA),
             sortedArray.indexOf(queryB),
-            'A should be lower than B[LEVEL_2A] even A is hotspot.'
+            'A should be lower than B[LEVEL_2] even A is hotspot.'
         );
     });
 });

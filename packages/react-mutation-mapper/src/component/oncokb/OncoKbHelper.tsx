@@ -2,7 +2,7 @@ import * as React from 'react';
 
 export default class OncoKbHelper {
     public static get LEVELS(): string[] {
-        return ['1', '2', '2A', '2B', '3A', '3B', '4', 'R1', 'R2'];
+        return ['1', '2', '3A', '3B', '4', 'R1', 'R2'];
     }
 
     public static get LEVEL_DESC(): { [level: string]: JSX.Element } {
@@ -10,7 +10,7 @@ export default class OncoKbHelper {
             '1': (
                 <span>
                     <b>FDA-recognized</b> biomarker predictive of response to an{' '}
-                    <b>FDA-approved</b> drug <b>in this indication</b>
+                    <b>FDA-approved drug</b> in this indication
                 </span>
             ),
             '2': (
@@ -20,31 +20,17 @@ export default class OncoKbHelper {
                     <b>FDA-approved drug</b> in this indication
                 </span>
             ),
-            '2A': (
-                <span>
-                    <b>Standard care</b> biomarker predictive of response to an{' '}
-                    <b>FDA-approved</b> drug <b>in this indication</b>
-                </span>
-            ),
-            '2B': (
-                <span>
-                    <b>Standard care</b> biomarker predictive of response to an{' '}
-                    <b>FDA-approved</b> drug <b>in another indication</b>, but
-                    not standard care for this indication
-                </span>
-            ),
             '3A': (
                 <span>
                     <b>Compelling clinical evidence</b> supports the biomarker
-                    as being predictive of response to a drug{' '}
-                    <b>in this indication</b>
+                    as being predictive of response to a drug in this indication
                 </span>
             ),
             '3B': (
                 <span>
-                    <b>Compelling clinical evidence</b> supports the biomarker
-                    as being predictive of response to a drug{' '}
-                    <b>in another indication</b>
+                    <b>Standard care</b> or <b>investigational</b> biomarker{' '}
+                    predictive of response to an <b>FDA-approved</b> or{' '}
+                    <b>investigational</b> drug in another indication
                 </span>
             ),
             '4': (

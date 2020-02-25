@@ -36,8 +36,6 @@ const SENSITIVITY_LEVEL_SCORE: { [level: string]: number } = {
     '4': 1,
     '3B': 2,
     '3A': 3,
-    '2B': 4,
-    '2A': 5,
     '2': 5,
     '1': 6,
 };
@@ -68,8 +66,6 @@ export function oncogenicXPosition(highestSensitiveLevel: string | null) {
     const map: { [id: string]: number } = {
         '1': 1,
         '2': 2,
-        '2A': 2,
-        '2B': 3,
         '3A': 4,
         '3B': 5,
         '4': 6,
