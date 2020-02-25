@@ -4,7 +4,7 @@ import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import { addGenesToQuery, ResultsViewTab } from '../ResultsViewPageHelpers';
 import PathwayMapper, { ICBioData } from 'pathway-mapper';
 import 'pathway-mapper/dist/base.css';
-import PathwayMapperTable from './PathwayMapperTable';
+import PathwayMapperTable, { IPathwayMapperTable } from './PathwayMapperTable';
 import { observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
 import {
@@ -214,7 +214,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
                                 addGenomicDataHandler={
                                     this.addGenomicDataHandler
                                 }
-                                tableComponent={PathwayMapperTable}
+                                tableComponent={this.renderTable}
                                 validGenes={this.validGenes}
                                 toast={toast}
                             />
@@ -322,5 +322,20 @@ export default class ResultsViewPathwayMapper extends React.Component<
                 toast.dismiss(tId);
             });
         }, 2000);
+    }
+
+    @autobind
+    private renderTable(
+        data: IPathwayMapperTable[],
+        selectedPathway: string,
+        onPathwaySelect: (pathway: string) => void
+    ) {
+        return (
+            <PathwayMapperTable
+                data={data}
+                selectedPathway={selectedPathway}
+                changePathway={onPathwaySelect}
+            />
+        );
     }
 }
