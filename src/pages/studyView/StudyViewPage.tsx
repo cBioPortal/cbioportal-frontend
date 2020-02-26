@@ -61,6 +61,7 @@ import './styles.scss';
 import autobind from 'autobind-decorator';
 import { BookmarkModal } from 'pages/resultsView/bookmark/BookmarkModal';
 import { ShareUrls } from 'pages/resultsView/querySummary/ShareUI';
+import request from 'superagent';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -211,12 +212,44 @@ export default class StudyViewPage extends React.Component<
         this.toggleBookmarkModal();
     }
 
-    @computed get bookmarkUrl() {
+    @computed get studyViewFullUrlWithFilter() {
         return `${window.location.protocol}//${window.location.host}${
             window.location.pathname
         }${window.location.search}#filterJson=${JSON.stringify(
             this.store.filters
         )}`;
+    }
+
+    async getBookmarkUrl(): Promise<ShareUrls> {
+        let bitlyResponse;
+
+        // now lets shorten with bityly, if we have key
+        // WE ARE DISABLING BITLY PENDING DISCUSSION
+        console.log(AppConfig.serverConfig.bitly_access_token);
+
+        if (AppConfig.serverConfig.bitly_access_token) {
+            try {
+                bitlyResponse = await request
+                    .post('https://api-ssl.bitly.com/v4/bitlinks')
+                    .send({
+                        long_url: this.studyViewFullUrlWithFilter,
+                    })
+                    .set({
+                        Authorization: `Bearer ${AppConfig.serverConfig.bitly_access_token}`,
+                    });
+            } catch (ex) {
+                // fail silently.  we can just reutrn sessionUrl without shortening
+            }
+        }
+
+        return Promise.resolve({
+            bitlyUrl:
+                bitlyResponse && bitlyResponse.body && bitlyResponse.body.link
+                    ? bitlyResponse.body.link
+                    : undefined,
+            fullUrl: this.studyViewFullUrlWithFilter,
+            sessionUrl: undefined,
+        });
     }
 
     private chartDataPromises = remoteData({
@@ -346,9 +379,7 @@ export default class StudyViewPage extends React.Component<
                     <BookmarkModal
                         onHide={this.toggleBookmarkModal}
                         title={'Bookmark this filter'}
-                        urlPromise={Promise.resolve({
-                            fullUrl: this.bookmarkUrl,
-                        } as ShareUrls)}
+                        urlPromise={this.getBookmarkUrl()}
                     />
                 )}
 
