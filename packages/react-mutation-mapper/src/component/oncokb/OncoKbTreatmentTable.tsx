@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import {
     DefaultTooltip,
     ICache,
@@ -27,6 +28,7 @@ import mainStyles from './main.module.scss';
 import './oncoKbTreatmentTable.scss';
 
 type OncoKbTreatmentTableProps = {
+    variant: string;
     treatments: IndicatorQueryTreatment[];
     pmidData: ICache<any>;
 };
@@ -107,11 +109,46 @@ export default class OncoKbTreatmentTable extends React.Component<
             minWidth: 80,
             sortMethod: (a: string[], b: string[]) =>
                 defaultArraySortMethod(a, b),
-            Cell: (props: { value: string[] }) => (
-                <div style={{ whiteSpace: 'normal', lineHeight: '1rem' }}>
-                    {mergeAlterations(props.value)}
-                </div>
-            ),
+            Cell: (props: { value: string[] }) => {
+                const mergedAlteration = mergeAlterations(props.value);
+                let content = <span>{mergedAlteration}</span>;
+                if (props.value.length > 5) {
+                    const lowerCasedQueryVariant = this.props.variant.toLowerCase();
+                    let matchedAlteration = _.find(
+                        props.value,
+                        alteration =>
+                            alteration.toLocaleLowerCase() ===
+                            lowerCasedQueryVariant
+                    );
+                    let pickedAlteration =
+                        matchedAlteration === undefined
+                            ? props.value[0]
+                            : matchedAlteration;
+                    content = (
+                        <span>
+                            {pickedAlteration} and{' '}
+                            <DefaultTooltip
+                                overlay={
+                                    <div style={{ maxWidth: '400px' }}>
+                                        {mergedAlteration}
+                                    </div>
+                                }
+                                placement="right"
+                                destroyTooltipOnHide={true}
+                            >
+                                <a>
+                                    {props.value.length - 1} other alterations
+                                </a>
+                            </DefaultTooltip>
+                        </span>
+                    );
+                }
+                return (
+                    <div style={{ whiteSpace: 'normal', lineHeight: '1rem' }}>
+                        {content}
+                    </div>
+                );
+            },
         },
         {
             id: 'treatment',

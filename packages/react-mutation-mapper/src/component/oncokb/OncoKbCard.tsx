@@ -231,6 +231,10 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps> {
                                                 0 && (
                                                 <div style={{ marginTop: 10 }}>
                                                     <OncoKbTreatmentTable
+                                                        variant={
+                                                            this.props
+                                                                .variant || ''
+                                                        }
                                                         pmidData={
                                                             this.props.pmidData!
                                                         }
