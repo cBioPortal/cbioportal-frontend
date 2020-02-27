@@ -252,6 +252,12 @@ export const DataTypeConstants = {
     LOG2VALUE: 'LOG2-VALUE',
 };
 
+export enum SampleListCategoryTypee {
+    'w_mut' = 'w_mut',
+    'w_cna' = 'w_cna',
+    'w_mut_cna' = 'w_mut_cna',
+}
+
 export enum SampleListCategoryType {
     'w_mut' = 'w_mut',
     'w_cna' = 'w_cna',
