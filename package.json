@@ -220,7 +220,7 @@
     "react-markdown": "^3.4.1",
     "react-mfb": "^0.6.0",
     "react-motion": "^0.4.7",
-    "react-mutation-mapper": "^0.5.1",
+    "react-mutation-mapper": "^0.5.2",
     "react-overlays": "0.7.4",
     "react-portal": "^4.2.0",
     "react-rangeslider": "^2.1.0",
