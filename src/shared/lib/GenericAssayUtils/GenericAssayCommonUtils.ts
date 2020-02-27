@@ -1,7 +1,3 @@
-import {
-    AlterationTypeConstants,
-    GenericAssayTypeConstants,
-} from '../../../pages/resultsView/ResultsViewPageStore';
 import client from 'shared/api/cbioportalClientInstance';
 import {
     GenericAssayMetaFilter,
@@ -18,10 +14,7 @@ export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAs
     molecularProfiles: MolecularProfile[]
 ) {
     const genericAssayProfiles = molecularProfiles.filter(profile => {
-        return (
-            profile.molecularAlterationType ===
-            AlterationTypeConstants.GENERIC_ASSAY
-        );
+        return profile.molecularAlterationType === 'GENERIC_ASSAY';
     });
 
     const genericAssayProfilesGroupByGenericAssayType = _.groupBy(
@@ -59,10 +52,7 @@ export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecular
     molecularProfiles: MolecularProfile[]
 ) {
     const genericAssayProfiles = molecularProfiles.filter(profile => {
-        return (
-            profile.molecularAlterationType ===
-            AlterationTypeConstants.GENERIC_ASSAY
-        );
+        return profile.molecularAlterationType === 'GENERIC_ASSAY';
     });
 
     const genericAssayMetaGroupByMolecularProfileId: {
