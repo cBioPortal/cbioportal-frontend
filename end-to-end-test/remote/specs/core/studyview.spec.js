@@ -285,7 +285,7 @@ describe('add chart should not be shown in other irrelevant tabs', () => {
     });
 });
 
-describe('check the filters are working properly', () => {
+describe.only('check the filters are working properly', () => {
     before(function() {
         const url = `${CBIOPORTAL_URL}/study?id=laml_tcga&filters=%7B%22clinicalDataFilters%22%3A%5B%7B%22attributeId%22%3A%22SEX%22%2C%22values%22%3A%5B%7B%22value%22%3A%22Female%22%7D%5D%7D%2C%7B%22attributeId%22%3A%22AGE%22%2C%22values%22%3A%5B%7B%22start%22%3A20%2C%22end%22%3A25%7D%2C%7B%22start%22%3A25%2C%22end%22%3A30%7D%2C%7B%22start%22%3A30%2C%22end%22%3A35%7D%2C%7B%22start%22%3A35%2C%22end%22%3A40%7D%2C%7B%22start%22%3A40%2C%22end%22%3A45%7D%2C%7B%22start%22%3A45%2C%22end%22%3A50%7D%2C%7B%22start%22%3A50%2C%22end%22%3A55%7D%2C%7B%22start%22%3A55%2C%22end%22%3A60%7D%2C%7B%22start%22%3A60%2C%22end%22%3A65%7D%2C%7B%22start%22%3A65%2C%22end%22%3A70%7D%2C%7B%22start%22%3A70%2C%22end%22%3A75%7D%2C%7B%22start%22%3A75%2C%22end%22%3A80%7D%5D%7D%5D%2C%22geneFilters%22%3A%5B%7B%22molecularProfileIds%22%3A%5B%22laml_tcga_mutations%22%5D%2C%22geneQueries%22%3A%5B%5B%22NPM1%22%2C%22FLT3%22%5D%5D%7D%2C%7B%22molecularProfileIds%22%3A%5B%22laml_tcga_gistic%22%5D%2C%22geneQueries%22%3A%5B%5B%22FUS%3AHOMDEL%22%2C%22KMT2A%3AAMP%22%5D%5D%7D%5D%7D`;
         goToUrlAndSetLocalStorage(url);

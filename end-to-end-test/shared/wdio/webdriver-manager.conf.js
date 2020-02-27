@@ -34,7 +34,7 @@ var config = {
     //     './specs/**/results.logic.spec.js'
     // ],
     specs: [
-        process.env.SPEC_FILE_PATTERN || './specs/**/*.spec.js', // './specs/**/screenshot.spec.js'
+        './remote/specs/core/studyview.spec.js', // './specs/**/screenshot.spec.js'
     ],
 
     // Patterns to exclude.
