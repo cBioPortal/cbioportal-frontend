@@ -211,7 +211,7 @@ export function makeHeatmapTrackTooltip(
                 data_header = 'METHYLATION: ';
                 break;
             case AlterationTypeConstants.GENERIC_ASSAY:
-                data_header = 'TREATMENT: ';
+                data_header = 'GENERIC ASSAY: ';
                 break;
         }
 
