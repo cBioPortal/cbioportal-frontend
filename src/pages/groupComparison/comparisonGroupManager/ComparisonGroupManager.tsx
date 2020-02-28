@@ -272,7 +272,7 @@ export default class ComparisonGroupManager extends React.Component<
                         this.props.store.updateComparisonGroupsFilter();
                     }}
                 >
-                    View
+                    Filter
                 </button>
             );
         } else {
