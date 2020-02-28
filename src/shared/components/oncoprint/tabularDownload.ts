@@ -11,7 +11,7 @@ export default function tabularDownload(
     geneticTracks: GeneticTrackSpec[],
     clinicalTracks: ClinicalTrackSpec[],
     heatmapTracks: IHeatmapTrackSpec[],
-    treatmentHeatmapTracks: IHeatmapTrackSpec[],
+    genericAssayHeatmapTracks: IHeatmapTrackSpec[],
     genesetTracks: IGenesetHeatmapTrackSpec[],
     uidOrder: string[],
     getCaseId: (uid: string) => string,
@@ -168,7 +168,7 @@ export default function tabularDownload(
 
     //Add heatmap data
     const exportedHeatmapTracks = (heatmapTracks as IBaseHeatmapTrackSpec[])
-        .concat(treatmentHeatmapTracks as IBaseHeatmapTrackSpec[])
+        .concat(genericAssayHeatmapTracks as IBaseHeatmapTrackSpec[])
         .concat(genesetTracks as IBaseHeatmapTrackSpec[]);
     for (const heatmapTrack of exportedHeatmapTracks) {
         const currentHeatmapGene = heatmapTrack.label;

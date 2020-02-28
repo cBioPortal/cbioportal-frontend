@@ -9,7 +9,7 @@ type Selection = {
     gene?: PlotsTabGeneOption | undefined;
     geneSet?: PlotsTabOption | undefined;
     source?: PlotsTabOption | undefined;
-    treatment?: PlotsTabOption | undefined;
+    genericAssay?: PlotsTabOption | undefined;
 };
 
 type FieldUpdater = (option: any) => void;
@@ -58,7 +58,8 @@ export default class LastPlotsTabSelectionForDatatype {
         selectionToUpdate.gene = newSelection.selectedGeneOption;
         selectionToUpdate.geneSet = newSelection.selectedGenesetOption;
         selectionToUpdate.source = newSelection.selectedDataSourceOption;
-        selectionToUpdate.treatment = newSelection.selectedTreatmentOption;
+        selectionToUpdate.genericAssay =
+            newSelection.selectedGenericAssayOption;
         return selectionToUpdate;
     }
 
@@ -74,7 +75,7 @@ export default class LastPlotsTabSelectionForDatatype {
         gene: FieldUpdater,
         geneSet: FieldUpdater,
         source: FieldUpdater,
-        treatment: FieldUpdater
+        genericAssay: FieldUpdater
     ): void {
         LastPlotsTabSelectionForDatatype.runSelectionUpdaters(
             this.horizontal,
@@ -82,7 +83,7 @@ export default class LastPlotsTabSelectionForDatatype {
             gene,
             geneSet,
             source,
-            treatment
+            genericAssay
         );
     }
 
@@ -98,7 +99,7 @@ export default class LastPlotsTabSelectionForDatatype {
         gene: FieldUpdater,
         geneSet: FieldUpdater,
         source: FieldUpdater,
-        treatment: FieldUpdater
+        genericAssay: FieldUpdater
     ): void {
         LastPlotsTabSelectionForDatatype.runSelectionUpdaters(
             this.vertical,
@@ -106,7 +107,7 @@ export default class LastPlotsTabSelectionForDatatype {
             gene,
             geneSet,
             source,
-            treatment
+            genericAssay
         );
     }
 
@@ -116,7 +117,7 @@ export default class LastPlotsTabSelectionForDatatype {
         gene: FieldUpdater,
         geneSet: FieldUpdater,
         source: FieldUpdater,
-        treatment: FieldUpdater
+        genericAssay: FieldUpdater
     ) {
         if (!axis.get(type)) {
             return;
@@ -126,7 +127,7 @@ export default class LastPlotsTabSelectionForDatatype {
             { saved: axis.get(type)!.gene, updater: gene },
             { saved: axis.get(type)!.geneSet, updater: geneSet },
             { saved: axis.get(type)!.source, updater: source },
-            { saved: axis.get(type)!.treatment, updater: treatment },
+            { saved: axis.get(type)!.genericAssay, updater: genericAssay },
         ];
 
         infoUpdaterPairs

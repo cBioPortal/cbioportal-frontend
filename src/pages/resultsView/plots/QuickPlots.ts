@@ -4,6 +4,7 @@ import {
     NONE_SELECTED_OPTION_STRING_VALUE,
     NONE_SELECTED_OPTION_LABEL,
 } from './PlotsTab';
+import { GenericAssayTypeConstants } from '../ResultsViewPageStore';
 
 export type ButtonInfo = {
     selected: boolean;
@@ -567,7 +568,9 @@ const quickPlots: QuickPlot[] = [
         isApplicableToQuery: (dataTypes: PlotsTabOption[]): boolean => {
             return (
                 dataTypes.find(
-                    dataType => dataType.value === 'GENERIC_ASSAY'
+                    dataType =>
+                        dataType.value ===
+                        GenericAssayTypeConstants.TREATMENT_RESPONSE
                 ) !== undefined
             );
         },
@@ -577,7 +580,8 @@ const quickPlots: QuickPlot[] = [
             dataTypes: PlotsTabOption[]
         ): ButtonInfo => {
             const selected =
-                vertical.type === 'GENERIC_ASSAY' &&
+                vertical.type ===
+                    GenericAssayTypeConstants.TREATMENT_RESPONSE &&
                 horizontal.type === NONE_SELECTED_OPTION_STRING_VALUE;
 
             return {
@@ -593,7 +597,9 @@ const quickPlots: QuickPlot[] = [
                     },
                     vertical: {
                         dataType: dataTypes.find(
-                            dataType => dataType.value === 'GENERIC_ASSAY'
+                            dataType =>
+                                dataType.value ===
+                                GenericAssayTypeConstants.TREATMENT_RESPONSE
                         ),
                         dataSource: undefined,
                     },

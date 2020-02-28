@@ -26,6 +26,7 @@ import {
     SampleIdentifier,
     SampleList,
     SampleMolecularIdentifier,
+    GenericAssayMeta,
 } from 'shared/api/generated/CBioPortalAPI';
 import client from 'shared/api/cbioportalClientInstance';
 import { action, computed, observable, ObservableMap, reaction } from 'mobx';
@@ -90,7 +91,7 @@ import {
 import GeneMolecularDataCache from '../../shared/cache/GeneMolecularDataCache';
 import GenesetMolecularDataCache from '../../shared/cache/GenesetMolecularDataCache';
 import GenesetCorrelatedGeneCache from '../../shared/cache/GenesetCorrelatedGeneCache';
-import TreatmentMolecularDataCache from '../../shared/cache/TreatmentMolecularDataCache';
+import GenericAssayMolecularDataCache from '../../shared/cache/GenericAssayMolecularDataCache';
 import GeneCache from '../../shared/cache/GeneCache';
 import GenesetCache from '../../shared/cache/GenesetCache';
 import { IOncoKbData } from 'cbioportal-frontend-commons';
@@ -136,6 +137,7 @@ import {
     isRNASeqProfile,
     makeEnrichmentDataPromise,
     OncoprintAnalysisCaseType,
+    parseGenericAssayGroups,
 } from './ResultsViewPageStoreUtils';
 import MobxPromiseCache from '../../shared/lib/MobxPromiseCache';
 import { isSampleProfiledInMultiple } from '../../shared/lib/isSampleProfiled';
@@ -204,11 +206,11 @@ import {
 import { IVirtualStudyProps } from 'pages/studyView/virtualStudy/VirtualStudy';
 import { decideMolecularProfileSortingOrder } from './download/DownloadUtils';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
-import {
-    fetchTreatmentByMolecularProfileIds,
-    Treatment,
-} from 'shared/lib/GenericAssayUtils/TreatmentUtils';
 import { ChartTypeEnum } from 'pages/studyView/StudyViewConfig';
+import {
+    fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAssayType,
+    fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
+} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -230,9 +232,7 @@ export const AlterationTypeConstants = {
     MUTATION_UNCALLED: 'MUTATION_UNCALLED',
 };
 
-// only show TREATMENT_RESPONSE in the plots tab for now
-// TODO: apply to all generic assay profiles when front-end implementation finish
-export const GenericAssayTypeConstants = {
+export const GenericAssayTypeConstants: { [s: string]: string } = {
     TREATMENT_RESPONSE: 'TREATMENT_RESPONSE',
 };
 
@@ -560,11 +560,10 @@ export class ResultsViewPageStore {
             : [];
     }
 
-    @computed get treatmentList() {
-        return this.urlWrapper.query.treatment_list &&
-            this.urlWrapper.query.treatment_list.trim().length
-            ? this.urlWrapper.query.treatment_list.trim().split(/;/)
-            : [];
+    @computed get selectedGenericAssayEntities() {
+        return parseGenericAssayGroups(
+            this.urlWrapper.query.generic_assay_groups
+        );
     }
 
     @computed
@@ -1467,7 +1466,7 @@ export class ResultsViewPageStore {
             this.studyToDataQueryFilter,
             this.genes,
             this.genesets,
-            this.treatmentsInStudies,
+            this.genericAssayEntitiesGroupByGenericAssayType,
         ],
         invoke: async () => {
             const ret: MolecularProfile[] = [];
@@ -3595,7 +3594,7 @@ export class ResultsViewPageStore {
                     );
                 }),
                 profile => {
-                    // Sort order: selected and [mrna, protein, methylation, treatment], unselected and [mrna, protein, meth, treatment]
+                    // Sort order: selected and [mrna, protein, methylation, generic assay], unselected and [mrna, protein, meth, generic assay]
                     if (
                         profile.molecularProfileId in
                         selectedMolecularProfileIds
@@ -3884,22 +3883,43 @@ export class ResultsViewPageStore {
         },
     });
 
-    readonly treatmentsInStudies = remoteData<Treatment[]>({
+    readonly genericAssayEntitiesGroupByGenericAssayType = remoteData<{
+        [genericAssayType: string]: GenericAssayMeta[];
+    }>({
         await: () => [this.molecularProfilesInStudies],
         invoke: async () => {
-            return await fetchTreatmentByMolecularProfileIds(
+            return await fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAssayType(
                 this.molecularProfilesInStudies.result
             );
         },
     });
 
-    readonly selectedTreatments = remoteData<Treatment[]>({
-        await: () => [this.treatmentsInStudies],
+    readonly genericAssayEntitiesGroupByMolecularProfileId = remoteData<{
+        [genericAssayType: string]: GenericAssayMeta[];
+    }>({
+        await: () => [this.molecularProfilesInStudies],
+        invoke: async () => {
+            return await fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId(
+                this.molecularProfilesInStudies.result
+            );
+        },
+    });
+
+    readonly selectedGenericAssayEntitiesGroupByGenericAssayType = remoteData<{
+        [genericAssayType: string]: GenericAssayMeta[];
+    }>({
+        await: () => [this.genericAssayEntitiesGroupByGenericAssayType],
         invoke: () => {
-            const treatmentIdFromUrl = this.treatmentList;
             return Promise.resolve(
-                _.filter(this.treatmentsInStudies.result!, (d: Treatment) =>
-                    treatmentIdFromUrl.includes(d.treatmentId)
+                _.mapValues(
+                    this.genericAssayEntitiesGroupByGenericAssayType.result,
+                    (value, key) => {
+                        const selectedEntityIds = this
+                            .selectedGenericAssayEntities[key];
+                        return value.filter(entity =>
+                            selectedEntityIds.includes(entity.stableId)
+                        );
+                    }
                 )
             );
         },
@@ -3930,21 +3950,30 @@ export class ResultsViewPageStore {
         },
     });
 
-    readonly treatmentLinkMap = remoteData<{ [treatmentId: string]: string }>({
-        await: () => [this.molecularProfilesInStudies],
+    readonly genericAssayEntitiesGroupByGenericAssayTypeLinkMap = remoteData<{
+        [genericAssayType: string]: { [stableId: string]: string };
+    }>({
+        await: () => [this.genericAssayEntitiesGroupByGenericAssayType],
         invoke: async () => {
             if (
-                this.molecularProfilesInStudies.result &&
-                this.molecularProfilesInStudies.result.length > 0
+                !_.isEmpty(
+                    this.genericAssayEntitiesGroupByGenericAssayType.result
+                )
             ) {
-                const treatments = await fetchTreatmentByMolecularProfileIds(
-                    this.molecularProfilesInStudies.result
+                return _.mapValues(
+                    this.genericAssayEntitiesGroupByGenericAssayType.result,
+                    genericAssayEntities => {
+                        const linkMap: { [stableId: string]: string } = {};
+                        genericAssayEntities.forEach(entity => {
+                            // if entity meta contains reference url, add the link into map
+                            linkMap[entity.stableId] =
+                                'URL' in entity.genericEntityMetaProperties
+                                    ? entity.genericEntityMetaProperties['URL']
+                                    : '';
+                        });
+                        return linkMap;
+                    }
                 );
-                const linkMap: { [treatmentId: string]: string } = {};
-                treatments.forEach(({ treatmentId, refLink }) => {
-                    linkMap[treatmentId] = refLink;
-                });
-                return linkMap;
             } else {
                 return {};
             }
@@ -5008,11 +5037,11 @@ export class ResultsViewPageStore {
             ),
     });
 
-    readonly treatmentMolecularDataCache = remoteData({
+    readonly genericAssayMolecularDataCache = remoteData({
         await: () => [this.molecularProfileIdToDataQueryFilter],
         invoke: () =>
             Promise.resolve(
-                new TreatmentMolecularDataCache(
+                new GenericAssayMolecularDataCache(
                     this.molecularProfileIdToDataQueryFilter.result!
                 )
             ),
