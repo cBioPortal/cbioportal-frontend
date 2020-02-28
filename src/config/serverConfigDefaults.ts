@@ -149,6 +149,9 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     query_product_limit: 1000000,
 
     skin_show_gsva: false,
+
+    generic_assay_display_text:
+        'TREATMENT_RESPONSE:Treatment Response,MUTATIONAL_SIGNATURE:Mutational Signature',
 };
 
 export default ServerConfigDefaults;

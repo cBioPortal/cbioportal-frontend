@@ -44,7 +44,7 @@
             border: 1px solid $borderColor;
             resize: vertical;
 
-            &.treatment-textarea {
+            &.generic-assay-textarea {
                 border-radius: 2px;
             }
         }
@@ -57,7 +57,7 @@
             margin-bottom: 0 !important;
         }
 
-        .treatment-selector {
+        .generic-assay-selector {
             button {
                 width: auto;
                 margin: 0;

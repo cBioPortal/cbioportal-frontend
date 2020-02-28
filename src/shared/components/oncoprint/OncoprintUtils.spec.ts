@@ -2,8 +2,8 @@ import {
     alterationInfoForCaseAggregatedDataByOQLLine,
     makeGeneticTrackWith,
     percentAltered,
-    extractTreatmentSelections,
-    getTreatmentTrackRuleSetParams,
+    extractGenericAssaySelections,
+    getGenericAssayTrackRuleSetParams,
 } from './OncoprintUtils';
 import { observable } from 'mobx';
 import * as _ from 'lodash';
@@ -504,10 +504,10 @@ describe('OncoprintUtils', () => {
         });
     });
 
-    describe('Treatment ruleset params', () => {
+    describe('generic assay ruleset params', () => {
         it('Is created from Track Spec param', () => {
-            const treatmentTracSpec = {
-                key: 'TREATMENTTRACK_1',
+            const genericAssayTracSpec = {
+                key: 'GENERICASSAYTRACK_1',
                 label: '',
                 molecularProfileId: 'profile1',
                 molecularAlterationType: 'GENERIC_ASSAY',
@@ -520,8 +520,6 @@ describe('OncoprintUtils', () => {
                 trackGroupIndex: 1,
                 onRemove: () => {},
             };
-
-            // const ruleSetParams = getTreatmentTrackRuleSetParams(treatmentTracSpec);
         });
     });
 });
@@ -560,9 +558,9 @@ describe('splitHeatmapTextField', () => {
     });
 });
 
-describe('getTreatmentTrackRuleSetParams', () => {
-    const treatmentTracSpec = ({
-        key: 'TREATMENTTRACK_1',
+describe('getGenericAssayTrackRuleSetParams', () => {
+    const genericAssayTracSpec = ({
+        key: 'GENERICASSAYTRACK_1',
         label: '',
         molecularProfileId: 'profile_1',
         molecularAlterationType: 'GENERIC_ASSAY',
@@ -584,8 +582,8 @@ describe('getTreatmentTrackRuleSetParams', () => {
             colors,
             value_stop_points,
             category_to_color,
-        } = getTreatmentTrackRuleSetParams(
-            treatmentTracSpec
+        } = getGenericAssayTrackRuleSetParams(
+            genericAssayTracSpec
         ) as IGradientAndCategoricalRuleSetParams;
 
         assert.equal(colors!.length, 2);
@@ -595,7 +593,7 @@ describe('getTreatmentTrackRuleSetParams', () => {
     });
 
     it('ASC SortOrder is default', () => {
-        const spec = Object.assign({}, treatmentTracSpec);
+        const spec = Object.assign({}, genericAssayTracSpec);
         spec.sortOrder = 'ASC';
 
         const {
@@ -603,15 +601,15 @@ describe('getTreatmentTrackRuleSetParams', () => {
             colors,
             value_stop_points,
             category_to_color,
-        } = getTreatmentTrackRuleSetParams(
-            treatmentTracSpec
+        } = getGenericAssayTrackRuleSetParams(
+            genericAssayTracSpec
         ) as IGradientAndCategoricalRuleSetParams;
 
         assert.deepEqual(value_range, [-100, 100]);
     });
 
     it('DESC SortOrder reverses value range', () => {
-        const spec = Object.assign({}, treatmentTracSpec);
+        const spec = Object.assign({}, genericAssayTracSpec);
         spec.sortOrder = 'DESC';
 
         const {
@@ -619,7 +617,7 @@ describe('getTreatmentTrackRuleSetParams', () => {
             colors,
             value_stop_points,
             category_to_color,
-        } = getTreatmentTrackRuleSetParams(
+        } = getGenericAssayTrackRuleSetParams(
             spec
         ) as IGradientAndCategoricalRuleSetParams;
 
@@ -627,7 +625,7 @@ describe('getTreatmentTrackRuleSetParams', () => {
     });
 
     it('DESC SortOrder reverses value_range and value_stop_points', () => {
-        const spec = Object.assign({}, treatmentTracSpec);
+        const spec = Object.assign({}, genericAssayTracSpec);
         spec.sortOrder = 'DESC';
 
         const {
@@ -635,7 +633,7 @@ describe('getTreatmentTrackRuleSetParams', () => {
             colors,
             value_stop_points,
             category_to_color,
-        } = getTreatmentTrackRuleSetParams(
+        } = getGenericAssayTrackRuleSetParams(
             spec
         ) as IGradientAndCategoricalRuleSetParams;
 
@@ -644,7 +642,7 @@ describe('getTreatmentTrackRuleSetParams', () => {
     });
 
     it('PivotThreshold adds middle value and color param', () => {
-        const spec = Object.assign({}, treatmentTracSpec);
+        const spec = Object.assign({}, genericAssayTracSpec);
         spec.pivotThreshold = 0;
 
         const {
@@ -652,7 +650,7 @@ describe('getTreatmentTrackRuleSetParams', () => {
             colors,
             value_stop_points,
             category_to_color,
-        } = getTreatmentTrackRuleSetParams(
+        } = getGenericAssayTrackRuleSetParams(
             spec
         ) as IGradientAndCategoricalRuleSetParams;
 
@@ -662,7 +660,7 @@ describe('getTreatmentTrackRuleSetParams', () => {
     });
 
     it('PivotThreshold to the left of min and max profile values is correctly integrated', () => {
-        const spec = Object.assign({}, treatmentTracSpec);
+        const spec = Object.assign({}, genericAssayTracSpec);
         spec.pivotThreshold = -200;
 
         const {
@@ -670,7 +668,7 @@ describe('getTreatmentTrackRuleSetParams', () => {
             colors,
             value_stop_points,
             category_to_color,
-        } = getTreatmentTrackRuleSetParams(
+        } = getGenericAssayTrackRuleSetParams(
             spec
         ) as IGradientAndCategoricalRuleSetParams;
 
@@ -680,7 +678,7 @@ describe('getTreatmentTrackRuleSetParams', () => {
     });
 
     it('PivotThreshold to the right of min and max profile values is correctly integrated', () => {
-        const spec = Object.assign({}, treatmentTracSpec);
+        const spec = Object.assign({}, genericAssayTracSpec);
         spec.pivotThreshold = 200;
 
         const {
@@ -688,7 +686,7 @@ describe('getTreatmentTrackRuleSetParams', () => {
             colors,
             value_stop_points,
             category_to_color,
-        } = getTreatmentTrackRuleSetParams(
+        } = getGenericAssayTrackRuleSetParams(
             spec
         ) as IGradientAndCategoricalRuleSetParams;
 
@@ -698,7 +696,7 @@ describe('getTreatmentTrackRuleSetParams', () => {
     });
 
     it('Categories are added when present on data points', () => {
-        const spec = Object.assign({}, treatmentTracSpec);
+        const spec = Object.assign({}, genericAssayTracSpec);
         spec.data = ([
             { profile_data: 3, study: 'study1', uid: 'uid', category: '>8.00' },
         ] as any) as IBaseHeatmapTrackDatum[];
@@ -708,7 +706,7 @@ describe('getTreatmentTrackRuleSetParams', () => {
             colors,
             value_stop_points,
             category_to_color,
-        } = getTreatmentTrackRuleSetParams(
+        } = getGenericAssayTrackRuleSetParams(
             spec
         ) as IGradientAndCategoricalRuleSetParams;
 
@@ -717,27 +715,31 @@ describe('getTreatmentTrackRuleSetParams', () => {
     });
 });
 
-describe('extractTreatmentSelections', () => {
-    const selectedTreatments: string[] = [];
-    const treatmentMap = {
-        treatmentA: { id: 'treatmentA', value: 'valueA', label: 'labelA' },
+describe('extractGenericAssaySelections', () => {
+    const selectedEntities: string[] = [];
+    const entityMap = {
+        genericAssayA: {
+            id: 'genericAssayA',
+            value: 'valueA',
+            label: 'labelA',
+        },
     };
 
-    it('Adds recognized treatments to selection', () => {
-        extractTreatmentSelections(
-            'treatmentA treatmentB',
-            selectedTreatments,
-            treatmentMap
+    it('Adds recognized generic assay entities to selection', () => {
+        extractGenericAssaySelections(
+            'genericAssayA genericAssayB',
+            selectedEntities,
+            entityMap
         );
-        assert.deepEqual(selectedTreatments, ['treatmentA']);
+        assert.deepEqual(selectedEntities, ['genericAssayA']);
     });
 
-    it('Removed recognized treatments from text field', () => {
-        const text = extractTreatmentSelections(
-            'treatmentC treatmentA treatmentB',
-            selectedTreatments,
-            treatmentMap
+    it('Removed recognized generic assay entities from text field', () => {
+        const text = extractGenericAssaySelections(
+            'genericAssayC genericAssayA genericAssayB',
+            selectedEntities,
+            entityMap
         );
-        assert.equal(text, 'treatmentC  treatmentB');
+        assert.equal(text, 'genericAssayC  genericAssayB');
     });
 });
