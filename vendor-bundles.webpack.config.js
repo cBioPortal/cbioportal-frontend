@@ -26,6 +26,9 @@ const config = {
             'd3',
             'datatables.net',
             'webpack-raphael',
+            'pluralize',
+            'react-if',
+            'react-select1',
         ],
     },
 
