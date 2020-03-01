@@ -150,6 +150,13 @@ import {
     AlterationTypeConstants,
     DataTypeConstants,
 } from 'pages/resultsView/ResultsViewPageStore';
+import {
+    survivalClinicalDataVocabulary,
+    generateStudyViewSurvivalPlotTitle,
+    getSurvivalAttributes,
+    plotsPriority,
+} from 'pages/resultsView/survival/SurvivalUtil';
+import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 
 export type ChartUserSetting = {
     id: string;
@@ -190,10 +197,6 @@ const DEFAULT_CHART_NAME = 'Custom Chart';
 
 export const MUTATION_COUNT = 'MUTATION_COUNT';
 export const FRACTION_GENOME_ALTERED = 'FRACTION_GENOME_ALTERED';
-export const OS_STATUS = 'OS_STATUS';
-export const OS_MONTHS = 'OS_MONTHS';
-export const DFS_STATUS = 'DFS_STATUS';
-export const DFS_MONTHS = 'DFS_MONTHS';
 
 export const SELECTED_ANALYSIS_GROUP_VALUE = 'Selected';
 export const UNSELECTED_ANALYSIS_GROUP_VALUE = 'Unselected';
@@ -201,7 +204,7 @@ export const UNSELECTED_ANALYSIS_GROUP_VALUE = 'Unselected';
 export type SurvivalType = {
     id: string;
     title: string;
-    associatedAttrs: ['OS_STATUS', 'OS_MONTHS'] | ['DFS_STATUS', 'DFS_MONTHS'];
+    associatedAttrs: string[];
     filter: string[];
     survivalData: PatientSurvival[];
 };
@@ -2783,10 +2786,7 @@ export class StudyViewPageStore {
 
     @computed get analysisGroupsPossible() {
         // analysis groups possible iff there are visible analysis groups-capable charts
-        const analysisGroupsCharts = [
-            UniqueKey.DISEASE_FREE_SURVIVAL,
-            UniqueKey.OVERALL_SURVIVAL,
-        ] as string[];
+        const analysisGroupsCharts = this.survivalPlotKeys;
         let ret = false;
         for (const chartMeta of this.visibleAttributes) {
             if (analysisGroupsCharts.includes(chartMeta.uniqueKey)) {
@@ -2795,6 +2795,16 @@ export class StudyViewPageStore {
             }
         }
         return ret;
+    }
+
+    @computed get survivalPlotKeys() {
+        if (this.survivalClinicalAttributesPrefix.result) {
+            return this.survivalClinicalAttributesPrefix.result.map(
+                prefix => `${prefix}_SURVIVAL`
+            );
+        } else {
+            return [];
+        }
     }
 
     @autobind
@@ -3421,25 +3431,13 @@ export class StudyViewPageStore {
 
     @action
     initializeChartStatsByClinicalAttributes() {
-        let osStatusFlag = false;
-        let osMonthsFlag = false;
-        let dfsStatusFlag = false;
-        let dfsMonthsFlag = false;
         let mutationCountFlag = false;
         let fractionGenomeAlteredFlag = false;
 
         this.clinicalAttributes.result.forEach((obj: ClinicalAttribute) => {
             const uniqueKey = getUniqueKey(obj);
             if (obj.priority !== '0') {
-                if (obj.clinicalAttributeId === OS_STATUS) {
-                    osStatusFlag = true;
-                } else if (obj.clinicalAttributeId === OS_MONTHS) {
-                    osMonthsFlag = true;
-                } else if (obj.clinicalAttributeId === DFS_STATUS) {
-                    dfsStatusFlag = true;
-                } else if (obj.clinicalAttributeId === DFS_MONTHS) {
-                    dfsMonthsFlag = true;
-                } else if (MUTATION_COUNT === obj.clinicalAttributeId) {
+                if (MUTATION_COUNT === obj.clinicalAttributeId) {
                     mutationCountFlag = true;
                 } else if (
                     FRACTION_GENOME_ALTERED === obj.clinicalAttributeId
@@ -3466,43 +3464,24 @@ export class StudyViewPageStore {
         const cancerTypeIds = _.uniq(
             this.queriedPhysicalStudies.result.map(study => study.cancerTypeId)
         );
+        const survivalUniqueKeys = this.survivalPlotKeys;
 
-        this.chartsType.set(UniqueKey.OVERALL_SURVIVAL, ChartTypeEnum.SURVIVAL);
-        this.chartsDimension.set(
-            UniqueKey.OVERALL_SURVIVAL,
-            STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SURVIVAL]
-        );
-        if (
-            osStatusFlag &&
-            osMonthsFlag &&
-            getDefaultPriorityByUniqueKey(UniqueKey.OVERALL_SURVIVAL) !== 0
-        ) {
-            // hide OVERALL_SURVIVAL chart if cancer type is mixed or have more than one cancer type
-            if (cancerTypeIds.length === 1 && cancerTypeIds[0] !== 'mixed') {
-                this.changeChartVisibility(UniqueKey.OVERALL_SURVIVAL, true);
+        survivalUniqueKeys.forEach(key => {
+            this.chartsType.set(key, ChartTypeEnum.SURVIVAL);
+            this.chartsDimension.set(
+                key,
+                STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SURVIVAL]
+            );
+            if (getDefaultPriorityByUniqueKey(key) !== 0) {
+                // hide *_SURVIVAL chart if cancer type is mixed or have more than one cancer type
+                if (
+                    cancerTypeIds.length === 1 &&
+                    cancerTypeIds[0] !== 'mixed'
+                ) {
+                    this.changeChartVisibility(key, true);
+                }
             }
-        }
-        this.chartsType.set(
-            UniqueKey.DISEASE_FREE_SURVIVAL,
-            ChartTypeEnum.SURVIVAL
-        );
-        this.chartsDimension.set(
-            UniqueKey.DISEASE_FREE_SURVIVAL,
-            STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SURVIVAL]
-        );
-        if (
-            dfsStatusFlag &&
-            dfsMonthsFlag &&
-            getDefaultPriorityByUniqueKey(UniqueKey.DISEASE_FREE_SURVIVAL) !== 0
-        ) {
-            // hide DISEASE_FREE_SURVIVAL chart if cancer type is mixed or have more than one cancer type
-            if (cancerTypeIds.length === 1 && cancerTypeIds[0] !== 'mixed') {
-                this.changeChartVisibility(
-                    UniqueKey.DISEASE_FREE_SURVIVAL,
-                    true
-                );
-            }
-        }
+        });
 
         this.chartsType.set(
             UniqueKey.MUTATION_COUNT_CNA_FRACTION,
@@ -3535,6 +3514,7 @@ export class StudyViewPageStore {
             );
         });
     }
+
     private getTableDimensionByNumberOfRecords(records: number) {
         return records <= STUDY_VIEW_CONFIG.thresholds.rowsInTableForOneGrid
             ? {
@@ -4122,43 +4102,25 @@ export class StudyViewPageStore {
     );
 
     @computed private get survivalPlots() {
-        let osStatusFlag = false;
-        let osMonthsFlag = false;
-        let dfsStatusFlag = false;
-        let dfsMonthsFlag = false;
-        let survivalTypes: SurvivalType[] = [];
-
-        this.clinicalAttributes.result.forEach(obj => {
-            if (obj.clinicalAttributeId === OS_STATUS) {
-                osStatusFlag = true;
-            } else if (obj.clinicalAttributeId === OS_MONTHS) {
-                osMonthsFlag = true;
-            } else if (obj.clinicalAttributeId === DFS_STATUS) {
-                dfsStatusFlag = true;
-            } else if (obj.clinicalAttributeId === DFS_MONTHS) {
-                dfsMonthsFlag = true;
+        let survivalTypes: SurvivalType[] = this.survivalClinicalAttributesPrefix.result.map(
+            prefix => {
+                let plotTitle =
+                    this.survivalDescriptions.result &&
+                    this.survivalDescriptions.result[prefix]
+                        ? generateStudyViewSurvivalPlotTitle(
+                              this.survivalDescriptions.result![prefix][0]
+                                  .displayName
+                          )
+                        : `${prefix} Survival`;
+                return {
+                    id: `${prefix}_SURVIVAL`,
+                    title: plotTitle,
+                    associatedAttrs: [`${prefix}_STATUS`, `${prefix}_MONTHS`],
+                    filter: survivalClinicalDataVocabulary[prefix],
+                    survivalData: [],
+                };
             }
-        });
-
-        if (osStatusFlag && osMonthsFlag) {
-            survivalTypes.push({
-                id: UniqueKey.OVERALL_SURVIVAL,
-                title: 'Overall Survival',
-                associatedAttrs: [OS_STATUS, OS_MONTHS],
-                filter: ['DECEASED'],
-                survivalData: [],
-            });
-        }
-        if (dfsStatusFlag && dfsMonthsFlag) {
-            survivalTypes.push({
-                id: UniqueKey.DISEASE_FREE_SURVIVAL,
-                title: 'Disease Free Survival',
-                associatedAttrs: [DFS_STATUS, DFS_MONTHS],
-                filter: ['Recurred/Progressed', 'Recurred'],
-                survivalData: [],
-            });
-        }
-
+        );
         return survivalTypes;
     }
 
@@ -5568,5 +5530,76 @@ export class StudyViewPageStore {
         },
         onError: error => Promise.resolve([]),
         default: [],
+    });
+
+    readonly survivalClinicalAttributesPrefix = remoteData({
+        await: () => [this.clinicalAttributes],
+        invoke: () => {
+            const attributes = getSurvivalAttributes(
+                this.clinicalAttributes.result!
+            );
+            // get paired attributes
+            const attributesPrefix = _.reduce(
+                attributes,
+                (attributesPrefix, attribute) => {
+                    let prefix = attribute.substring(
+                        0,
+                        attribute.indexOf('_STATUS')
+                    );
+                    if (!attributesPrefix.includes(prefix)) {
+                        if (attributes.includes(`${prefix}_MONTHS`)) {
+                            attributesPrefix.push(prefix);
+                        }
+                    }
+                    return attributesPrefix;
+                },
+                [] as string[]
+            );
+            // change prefix order based on priority
+            return Promise.resolve(
+                _.sortBy(attributesPrefix, prefix => {
+                    return plotsPriority[prefix] || 999;
+                })
+            );
+        },
+        default: [],
+    });
+
+    readonly survivalDescriptions = remoteData({
+        await: () => [
+            this.clinicalAttributes,
+            this.survivalClinicalAttributesPrefix,
+        ],
+        invoke: () => {
+            const survivalDescriptions = _.reduce(
+                this.survivalClinicalAttributesPrefix.result!,
+                (acc, prefix) => {
+                    const clinicalAttributeId = `${prefix}_STATUS`;
+                    const clinicalAttributeMap = _.groupBy(
+                        this.clinicalAttributes.result,
+                        'clinicalAttributeId'
+                    );
+                    if (
+                        clinicalAttributeMap &&
+                        clinicalAttributeMap[clinicalAttributeId] &&
+                        clinicalAttributeMap[clinicalAttributeId].length > 0
+                    ) {
+                        clinicalAttributeMap[clinicalAttributeId].map(attr => {
+                            if (!acc[prefix]) {
+                                acc[prefix] = [];
+                            }
+                            acc[prefix].push({
+                                studyName: attr.studyId,
+                                description: attr.description,
+                                displayName: attr.displayName,
+                            } as ISurvivalDescription);
+                        });
+                    }
+                    return acc;
+                },
+                {} as { [prefix: string]: ISurvivalDescription[] }
+            );
+            return Promise.resolve(survivalDescriptions);
+        },
     });
 }

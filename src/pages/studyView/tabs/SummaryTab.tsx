@@ -274,6 +274,14 @@ export class StudySummaryTab extends React.Component<
                     this.store.getSurvivalDownloadData(chartMeta);
                 props.patientToAnalysisGroup = this.store.patientToAnalysisGroup;
                 props.downloadTypes = ['Data', 'SVG', 'PDF'];
+                props.description = this.store.survivalDescriptions.result
+                    ? this.store.survivalDescriptions.result![
+                          chartMeta.uniqueKey.substring(
+                              0,
+                              chartMeta.uniqueKey.indexOf('_SURVIVAL')
+                          )
+                      ][0]
+                    : undefined;
                 break;
             }
             case SCATTER: {

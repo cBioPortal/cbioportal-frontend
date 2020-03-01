@@ -20,6 +20,7 @@ import {
 import FlexAlignedCheckbox from '../../../shared/components/FlexAlignedCheckbox';
 import CustomBinsModal from 'pages/studyView/charts/barChart/CustomBinsModal';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
+import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 
 export interface IChartHeaderProps {
     chartMeta: ChartMeta;
@@ -40,6 +41,7 @@ export interface IChartHeaderProps {
         | ((dataType?: DataType) => Promise<string | null>)
         | ((dataType?: DataType) => string);
     downloadTypes?: DownloadControlsButton[];
+    description?: ISurvivalDescription;
     openComparisonPage: (
         categorizationType?: NumericalGroupComparisonType
     ) => void;
@@ -415,6 +417,37 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                 {this.active && (
                     <div className={classnames(styles.controls, 'controls')}>
                         <div className="btn-group">
+                            <If condition={!!this.props.description}>
+                                <DefaultTooltip
+                                    mouseEnterDelay={0}
+                                    trigger={['hover']}
+                                    placement={this.tooltipPosition}
+                                    align={this.tooltipAlign}
+                                    overlay={getClinicalAttributeOverlay(
+                                        this.props.title,
+                                        this.props.description
+                                            ? this.props.description.description
+                                            : '',
+                                        this.props.chartMeta.uniqueKey
+                                    )}
+                                    destroyTooltipOnHide={true}
+                                >
+                                    <div
+                                        className={classnames(
+                                            'btn btn-xs btn-default',
+                                            styles.item
+                                        )}
+                                    >
+                                        <i
+                                            className={classnames(
+                                                'fa fa-xs fa-fw',
+                                                'fa-info-circle'
+                                            )}
+                                            aria-hidden="true"
+                                        />
+                                    </div>
+                                </DefaultTooltip>
+                            </If>
                             <If
                                 condition={
                                     !!this.props.chartMeta.clinicalAttribute ||

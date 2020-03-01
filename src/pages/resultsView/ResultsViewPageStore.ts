@@ -177,7 +177,6 @@ import {
     pickMutationEnrichmentProfiles,
     pickProteinEnrichmentProfiles,
 } from './enrichments/EnrichmentsUtil';
-import { SURVIVAL_CHART_ATTRIBUTES } from './survival/SurvivalChart';
 import sessionServiceClient from '../../shared/api/sessionServiceInstance';
 import { VirtualStudy } from 'shared/model/VirtualStudy';
 import { ISurvivalDescription } from './survival/SurvivalDescriptionTable';
@@ -211,6 +210,7 @@ import {
     fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAssayType,
     fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { getSurvivalAttributes } from './survival/SurvivalUtil';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -3154,29 +3154,51 @@ export class ResultsViewPageStore {
         }
     }
 
-    readonly survivalClinicalDataExists = remoteData<boolean>({
-        await: () => [this.studies, this.patients],
+    readonly survivalClinicalDataAttributes = remoteData({
+        await: () => [this.clinicalAttributes],
         invoke: async () => {
-            const count = await this.getClinicalDataCount(
-                'PATIENT',
-                this.studies.result!,
-                this.patients.result,
-                SURVIVAL_CHART_ATTRIBUTES
-            );
-            return count > 0;
+            return getSurvivalAttributes(this.clinicalAttributes.result!);
+        },
+    });
+
+    readonly survivalClinicalDataExists = remoteData<boolean>({
+        await: () => [
+            this.studies,
+            this.patients,
+            this.survivalClinicalDataAttributes,
+        ],
+        invoke: async () => {
+            if (!_.isEmpty(this.survivalClinicalDataAttributes.result)) {
+                const count = await this.getClinicalDataCount(
+                    'PATIENT',
+                    this.studies.result!,
+                    this.patients.result,
+                    this.survivalClinicalDataAttributes.result!
+                );
+                return count > 0;
+            }
+            return false;
         },
     });
 
     readonly survivalClinicalData = remoteData<ClinicalData[]>(
         {
-            await: () => [this.studies, this.patients],
-            invoke: () =>
-                this.getClinicalData(
-                    'PATIENT',
-                    this.studies.result!,
-                    this.patients.result,
-                    SURVIVAL_CHART_ATTRIBUTES
-                ),
+            await: () => [
+                this.studies,
+                this.patients,
+                this.survivalClinicalDataAttributes,
+            ],
+            invoke: () => {
+                if (!_.isEmpty(this.survivalClinicalDataAttributes.result)) {
+                    return this.getClinicalData(
+                        'PATIENT',
+                        this.studies.result!,
+                        this.patients.result,
+                        this.survivalClinicalDataAttributes.result!
+                    );
+                }
+                return Promise.resolve([]);
+            },
         },
         []
     );
@@ -3192,88 +3214,6 @@ export class ResultsViewPageStore {
             );
         },
     });
-
-    readonly overallAlteredPatientSurvivals = remoteData<PatientSurvival[]>(
-        {
-            await: () => [
-                this.survivalClinicalDataGroupByUniquePatientKey,
-                this.alteredPatientKeys,
-                this.patients,
-            ],
-            invoke: async () => {
-                return getPatientSurvivals(
-                    this.survivalClinicalDataGroupByUniquePatientKey.result,
-                    this.alteredPatientKeys.result!,
-                    'OS_STATUS',
-                    'OS_MONTHS',
-                    s => s === 'DECEASED'
-                );
-            },
-        },
-        []
-    );
-
-    readonly overallUnalteredPatientSurvivals = remoteData<PatientSurvival[]>(
-        {
-            await: () => [
-                this.survivalClinicalDataGroupByUniquePatientKey,
-                this.unalteredPatientKeys,
-                this.patients,
-            ],
-            invoke: async () => {
-                return getPatientSurvivals(
-                    this.survivalClinicalDataGroupByUniquePatientKey.result,
-                    this.unalteredPatientKeys.result!,
-                    'OS_STATUS',
-                    'OS_MONTHS',
-                    s => s === 'DECEASED'
-                );
-            },
-        },
-        []
-    );
-
-    readonly diseaseFreeAlteredPatientSurvivals = remoteData<PatientSurvival[]>(
-        {
-            await: () => [
-                this.survivalClinicalDataGroupByUniquePatientKey,
-                this.alteredPatientKeys,
-                this.patients,
-            ],
-            invoke: async () => {
-                return getPatientSurvivals(
-                    this.survivalClinicalDataGroupByUniquePatientKey.result,
-                    this.alteredPatientKeys.result!,
-                    'DFS_STATUS',
-                    'DFS_MONTHS',
-                    s => s === 'Recurred/Progressed' || s === 'Recurred'
-                );
-            },
-        },
-        []
-    );
-
-    readonly diseaseFreeUnalteredPatientSurvivals = remoteData<
-        PatientSurvival[]
-    >(
-        {
-            await: () => [
-                this.survivalClinicalDataGroupByUniquePatientKey,
-                this.unalteredPatientKeys,
-                this.patients,
-            ],
-            invoke: async () => {
-                return getPatientSurvivals(
-                    this.survivalClinicalDataGroupByUniquePatientKey.result,
-                    this.unalteredPatientKeys.result!,
-                    'DFS_STATUS',
-                    'DFS_MONTHS',
-                    s => s === 'Recurred/Progressed' || s === 'Recurred'
-                );
-            },
-        },
-        []
-    );
 
     readonly germlineConsentedSamples = remoteData<SampleIdentifier[]>(
         {
@@ -5093,66 +5033,4 @@ export class ResultsViewPageStore {
             ResultsViewComparisonSubTab.SURVIVAL
         );
     }
-
-    readonly overallSurvivalDescriptions = remoteData({
-        await: () => [this.clinicalAttributes, this.studyIdToStudy],
-        invoke: () => {
-            const overallSurvivalClinicalAttributeId = 'OS_STATUS';
-            const clinicalAttributeMap = _.groupBy(
-                this.clinicalAttributes.result,
-                'clinicalAttributeId'
-            );
-            const result: ISurvivalDescription[] = [];
-            const studyIdToStudy: { [studyId: string]: CancerStudy } = this
-                .studyIdToStudy.result;
-            if (
-                clinicalAttributeMap &&
-                clinicalAttributeMap[overallSurvivalClinicalAttributeId] &&
-                clinicalAttributeMap[overallSurvivalClinicalAttributeId]
-                    .length > 0
-            ) {
-                clinicalAttributeMap[
-                    overallSurvivalClinicalAttributeId
-                ].forEach(attr => {
-                    result.push({
-                        studyName: studyIdToStudy[attr.studyId].name,
-                        description: attr.description,
-                    } as ISurvivalDescription);
-                });
-                return Promise.resolve(result);
-            }
-            return Promise.resolve([]);
-        },
-    });
-
-    readonly diseaseFreeSurvivalDescriptions = remoteData({
-        await: () => [this.clinicalAttributes, this.studyIdToStudy],
-        invoke: () => {
-            const diseaseFreeSurvivalClinicalAttributeId = 'DFS_STATUS';
-            const clinicalAttributeMap = _.groupBy(
-                this.clinicalAttributes.result,
-                'clinicalAttributeId'
-            );
-            const result: ISurvivalDescription[] = [];
-            const studyIdToStudy: { [studyId: string]: CancerStudy } = this
-                .studyIdToStudy.result;
-            if (
-                clinicalAttributeMap &&
-                clinicalAttributeMap[diseaseFreeSurvivalClinicalAttributeId] &&
-                clinicalAttributeMap[diseaseFreeSurvivalClinicalAttributeId]
-                    .length > 0
-            ) {
-                clinicalAttributeMap[
-                    diseaseFreeSurvivalClinicalAttributeId
-                ].forEach(attr => {
-                    result.push({
-                        studyName: studyIdToStudy[attr.studyId].name,
-                        description: attr.description,
-                    } as ISurvivalDescription);
-                });
-                return Promise.resolve(result);
-            }
-            return Promise.resolve([]);
-        },
-    });
 }

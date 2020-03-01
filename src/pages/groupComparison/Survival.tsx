@@ -22,6 +22,13 @@ import {
 import ComparisonStore, {
     OverlapStrategy,
 } from '../../shared/lib/comparison/ComparisonStore';
+import {
+    survivalClinicalDataVocabulary,
+    survivalPlotTooltipxLabelWithEvent,
+    generateSurvivalPlotTitleFromDisplayName,
+} from 'pages/resultsView/survival/SurvivalUtil';
+import { observable, action } from 'mobx';
+import survivalPlotStyle from './styles.module.scss';
 
 export interface ISurvivalProps {
     store: ComparisonStore;
@@ -29,15 +36,20 @@ export interface ISurvivalProps {
 
 @observer
 export default class Survival extends React.Component<ISurvivalProps, {}> {
-    private overallSurvivalTitleText = 'Overall Survival Kaplan-Meier Estimate';
-    private diseaseFreeSurvivalTitleText =
-        'Disease/Progression-free Kaplan-Meier Estimate';
     private multipleDescriptionWarningMessageWithoutTooltip =
         'The survival data on patients from different cohorts may have been defined by ';
     private multipleDescriptionWarningMessageWithTooltip =
         'different criteria.';
     private differentDescriptionExistMessage =
         'Different descriptions of survival data were used for different studies.';
+
+    @observable
+    private selectedSurvivalPlotPrefix: string | undefined = undefined;
+
+    @action
+    private setSurvivalPlotPrefix(prefix: string) {
+        this.selectedSurvivalPlotPrefix = prefix;
+    }
 
     public readonly analysisGroupsComputations = remoteData({
         await: () => [
@@ -196,10 +208,9 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
 
     readonly survivalUI = MakeMobxView({
         await: () => [
-            this.props.store.overallPatientSurvivals,
-            this.props.store.diseaseFreePatientSurvivals,
-            this.props.store.overallSurvivalDescriptions,
-            this.props.store.diseaseFreeSurvivalDescriptions,
+            this.props.store.survivalDescriptions,
+            this.props.store.survivalClinicalAttributesPrefix,
+            this.props.store.patientSurvivals,
             this.props.store.activeStudiesClinicalAttributes,
             this.analysisGroupsComputations,
             this.props.store.overlapComputations,
@@ -207,259 +218,211 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
         ],
         render: () => {
             let content: any = [];
-            let overallNotAvailable: boolean = false;
-            let diseaseFreeNotAvailable: boolean = false;
+            let plotHeader: any = [];
             const analysisGroups = this.analysisGroupsComputations.result!
                 .analysisGroups;
             const patientToAnalysisGroups = this.analysisGroupsComputations
                 .result!.patientToAnalysisGroups;
-            const overallSurvivalDescription =
-                this.props.store.overallSurvivalDescriptions &&
-                this.props.store.overallSurvivalDescriptions.result!.length == 1
-                    ? this.props.store.overallSurvivalDescriptions.result![0]
-                          .description
-                    : '';
-            const diseaseFreeSurvivalDescription =
-                this.props.store.diseaseFreeSurvivalDescriptions &&
-                this.props.store.diseaseFreeSurvivalDescriptions.result!
-                    .length == 1
-                    ? this.props.store.diseaseFreeSurvivalDescriptions
-                          .result![0].description
-                    : '';
-
-            if (this.props.store.overallPatientSurvivals.result!.length > 0) {
-                if (
-                    this.props.store.overallSurvivalDescriptions &&
-                    this.props.store.overallSurvivalDescriptions.result!
-                        .length > 1
-                ) {
-                    let messageBeforeTooltip = this
-                        .multipleDescriptionWarningMessageWithoutTooltip;
-                    const uniqDescriptions = _.uniq(
-                        _.map(
-                            this.props.store.overallSurvivalDescriptions
-                                .result!,
-                            d => d.description
-                        )
-                    );
-                    if (uniqDescriptions.length > 1) {
-                        messageBeforeTooltip = `${this.differentDescriptionExistMessage} ${messageBeforeTooltip}`;
-                    }
-                    content.push(
-                        <div className={'tabMessageContainer'}>
-                            <div className={'alert alert-warning'} role="alert">
-                                {messageBeforeTooltip}
-                                <DefaultTooltip
-                                    placement="bottom"
-                                    overlay={
-                                        <SurvivalDescriptionTable
-                                            survivalDescriptionData={
-                                                this.props.store
-                                                    .overallSurvivalDescriptions
-                                                    .result!
-                                            }
-                                        />
-                                    }
-                                >
-                                    <a href="javascript:void(0)">
-                                        {
-                                            this
-                                                .multipleDescriptionWarningMessageWithTooltip
-                                        }
-                                    </a>
-                                </DefaultTooltip>
-                            </div>
-                        </div>
+            const attributeDescriptions: { [prefix: string]: string } = {};
+            const survivalTitleText: { [prefix: string]: string } = {};
+            this.props.store.survivalClinicalAttributesPrefix.result!.forEach(
+                prefix => {
+                    // get attribute description
+                    // if only have one description, use it as plot title description
+                    // if have more than one description, don't show description in title
+                    attributeDescriptions[prefix] =
+                        this.props.store.survivalDescriptions.result![prefix]
+                            .length === 1
+                            ? this.props.store.survivalDescriptions.result![
+                                  prefix
+                              ][0].description
+                            : '';
+                    // get survival plot titles
+                    // use first display name as title
+                    survivalTitleText[
+                        prefix
+                    ] = generateSurvivalPlotTitleFromDisplayName(
+                        this.props.store.survivalDescriptions.result![prefix][0]
+                            .displayName
                     );
                 }
-                content.push(
-                    <div style={{ marginBottom: 40 }}>
-                        <h4 className="forceHeaderStyle h4">
-                            {overallSurvivalDescription
-                                ? `${this.overallSurvivalTitleText} (${overallSurvivalDescription})`
-                                : this.overallSurvivalTitleText}
-                        </h4>
-                        <div style={{ width: '920px' }}>
-                            <SurvivalChart
-                                className="borderedChart"
-                                patientSurvivals={
-                                    this.props.store.overallPatientSurvivals
-                                        .result
-                                }
-                                analysisGroups={analysisGroups}
-                                patientToAnalysisGroups={
-                                    patientToAnalysisGroups
-                                }
-                                title={this.overallSurvivalTitleText}
-                                xAxisLabel="Months Survival"
-                                yAxisLabel="Overall Survival"
-                                totalCasesHeader="Number of Cases, Total"
-                                statusCasesHeader="Number of Cases, Deceased"
-                                medianMonthsHeader="Median Months Survival"
-                                yLabelTooltip="Survival estimate"
-                                xLabelWithEventTooltip="Time of death"
-                                xLabelWithoutEventTooltip="Time of last observation"
-                                fileName="Overall_Survival"
-                                showCurveInTooltip={true}
-                                legendLabelComponent={
-                                    this.props.store.overlapStrategy ===
-                                    OverlapStrategy.INCLUDE ? (
-                                        <SurvivalTabGroupLegendLabelComponent
-                                            maxLabelWidth={256}
-                                            uidToGroup={
-                                                this.props.store.uidToGroup
-                                                    .result!
-                                            }
-                                            dy="0.3em"
-                                        />
-                                    ) : (
-                                        <GroupLegendLabelComponent
-                                            maxLabelWidth={256}
-                                            uidToGroup={
-                                                this.props.store.uidToGroup
-                                                    .result!
-                                            }
-                                            dy="0.3em"
-                                        />
-                                    )
-                                }
-                                styleOpts={{
-                                    tooltipYOffset: -28,
-                                }}
-                            />
-                        </div>
-                    </div>
-                );
-            } else {
-                overallNotAvailable = true;
-            }
-
+            );
+            // set default plot if available
             if (
-                this.props.store.diseaseFreePatientSurvivals.result!.length > 0
+                this.selectedSurvivalPlotPrefix === undefined &&
+                !_.isEmpty(this.props.store.patientSurvivals.result)
             ) {
-                if (
-                    this.props.store.diseaseFreeSurvivalDescriptions &&
-                    this.props.store.diseaseFreeSurvivalDescriptions.result!
-                        .length > 1
-                ) {
-                    let messageBeforeTooltip = this
-                        .multipleDescriptionWarningMessageWithoutTooltip;
-                    const uniqDescriptions = _.uniq(
-                        _.map(
-                            this.props.store.diseaseFreeSurvivalDescriptions
-                                .result!,
-                            d => d.description
-                        )
-                    );
-                    if (uniqDescriptions.length > 1) {
-                        messageBeforeTooltip = `${this.differentDescriptionExistMessage} ${messageBeforeTooltip}`;
+                this.setSurvivalPlotPrefix(
+                    _.keys(this.props.store.patientSurvivals.result!)[0]
+                );
+            }
+
+            if (this.selectedSurvivalPlotPrefix) {
+                const value = this.props.store.patientSurvivals.result![
+                    this.selectedSurvivalPlotPrefix
+                ];
+                const key = this.selectedSurvivalPlotPrefix;
+                if (value.length > 0) {
+                    if (
+                        this.props.store.survivalDescriptions &&
+                        this.props.store.survivalDescriptions.result![key]
+                            .length > 1
+                    ) {
+                        let messageBeforeTooltip = this
+                            .multipleDescriptionWarningMessageWithoutTooltip;
+                        const uniqDescriptions = _.uniq(
+                            _.map(
+                                this.props.store.survivalDescriptions.result![
+                                    key
+                                ],
+                                d => d.description
+                            )
+                        );
+                        if (uniqDescriptions.length > 1) {
+                            messageBeforeTooltip = `${this.differentDescriptionExistMessage} ${messageBeforeTooltip}`;
+                        }
+
+                        plotHeader.push(
+                            <div className={'tabMessageContainer'}>
+                                <div
+                                    className={'alert alert-warning'}
+                                    role="alert"
+                                >
+                                    {messageBeforeTooltip}
+                                    <DefaultTooltip
+                                        placement="bottom"
+                                        overlay={
+                                            <SurvivalDescriptionTable
+                                                survivalDescriptionData={
+                                                    this.props.store
+                                                        .survivalDescriptions
+                                                        .result![key]
+                                                }
+                                            />
+                                        }
+                                    >
+                                        <a href="javascript:void(0)">
+                                            {
+                                                this
+                                                    .multipleDescriptionWarningMessageWithTooltip
+                                            }
+                                        </a>
+                                    </DefaultTooltip>
+                                </div>
+                            </div>
+                        );
                     }
                     content.push(
-                        <div className={'tabMessageContainer'}>
-                            <div className={'alert alert-warning'} role="alert">
-                                {messageBeforeTooltip}
-                                <DefaultTooltip
-                                    placement="bottom"
-                                    overlay={
-                                        <SurvivalDescriptionTable
-                                            survivalDescriptionData={
-                                                this.props.store
-                                                    .diseaseFreeSurvivalDescriptions
-                                                    .result!
-                                            }
-                                        />
+                        <div style={{ marginBottom: 40 }}>
+                            <h4 className="forceHeaderStyle h4">
+                                {survivalTitleText[key]}
+                            </h4>
+                            <p>{attributeDescriptions[key]}</p>
+                            <div style={{ width: '920px' }}>
+                                <SurvivalChart
+                                    className="borderedChart"
+                                    patientSurvivals={value}
+                                    analysisGroups={analysisGroups}
+                                    patientToAnalysisGroups={
+                                        patientToAnalysisGroups
                                     }
-                                >
-                                    <a href="javascript:void(0)">
-                                        {
-                                            this
-                                                .multipleDescriptionWarningMessageWithTooltip
-                                        }
-                                    </a>
-                                </DefaultTooltip>
+                                    title={survivalTitleText[key]}
+                                    xAxisLabel={`Months ${survivalTitleText[key]}`}
+                                    yAxisLabel={survivalTitleText[key]}
+                                    totalCasesHeader="Number of Cases, Total"
+                                    statusCasesHeader={`Number of Cases, ${_.startCase(
+                                        _.toLower(
+                                            survivalClinicalDataVocabulary[
+                                                key
+                                            ][0]
+                                        )
+                                    )}`}
+                                    medianMonthsHeader={`Median Months ${survivalTitleText[key]}`}
+                                    yLabelTooltip={`${_.startCase(
+                                        _.toLower(survivalTitleText[key])
+                                    )} estimate`}
+                                    xLabelWithEventTooltip={
+                                        survivalPlotTooltipxLabelWithEvent[key]
+                                    }
+                                    xLabelWithoutEventTooltip="Time of last observation"
+                                    fileName={survivalTitleText[key].replace(
+                                        ' ',
+                                        '_'
+                                    )}
+                                    showCurveInTooltip={true}
+                                    legendLabelComponent={
+                                        this.props.store.overlapStrategy ===
+                                        OverlapStrategy.INCLUDE ? (
+                                            <SurvivalTabGroupLegendLabelComponent
+                                                maxLabelWidth={256}
+                                                uidToGroup={
+                                                    this.props.store.uidToGroup
+                                                        .result!
+                                                }
+                                                dy="0.3em"
+                                            />
+                                        ) : (
+                                            <GroupLegendLabelComponent
+                                                maxLabelWidth={256}
+                                                uidToGroup={
+                                                    this.props.store.uidToGroup
+                                                        .result!
+                                                }
+                                                dy="0.3em"
+                                            />
+                                        )
+                                    }
+                                    styleOpts={{
+                                        tooltipYOffset: -28,
+                                    }}
+                                />
                             </div>
                         </div>
                     );
+                } else {
+                    content.push(
+                        <div className={'alert alert-info'}>
+                            {survivalTitleText[key]} not available
+                        </div>
+                    );
                 }
-                content.push(
-                    <div>
-                        <h4 className="forceHeaderStyle h4">
-                            {diseaseFreeSurvivalDescription
-                                ? `${this.diseaseFreeSurvivalTitleText} (${diseaseFreeSurvivalDescription})`
-                                : this.diseaseFreeSurvivalTitleText}
-                        </h4>
-                        <div style={{ width: '920px' }}>
-                            <SurvivalChart
-                                className="borderedChart"
-                                patientSurvivals={
-                                    this.props.store.diseaseFreePatientSurvivals
-                                        .result
-                                }
-                                analysisGroups={analysisGroups}
-                                patientToAnalysisGroups={
-                                    patientToAnalysisGroups
-                                }
-                                title={this.diseaseFreeSurvivalTitleText}
-                                xAxisLabel="Months Disease/Progression-free"
-                                yAxisLabel="Disease/Progression-free Survival"
-                                totalCasesHeader="Number of Cases, Total"
-                                statusCasesHeader="Number of Cases, Relapsed/Progressed"
-                                medianMonthsHeader="Median Months Disease-free"
-                                yLabelTooltip="Disease-free Estimate"
-                                xLabelWithEventTooltip="Time of Relapse"
-                                xLabelWithoutEventTooltip="Time of Last Observation"
-                                fileName="Disease_Free_Survival"
-                                showCurveInTooltip={true}
-                                legendLabelComponent={
-                                    this.props.store.overlapStrategy ===
-                                    OverlapStrategy.INCLUDE ? (
-                                        <SurvivalTabGroupLegendLabelComponent
-                                            maxLabelWidth={256}
-                                            uidToGroup={
-                                                this.props.store.uidToGroup
-                                                    .result!
-                                            }
-                                            dy="0.3em"
-                                        />
-                                    ) : (
-                                        <GroupLegendLabelComponent
-                                            maxLabelWidth={256}
-                                            uidToGroup={
-                                                this.props.store.uidToGroup
-                                                    .result!
-                                            }
-                                            dy="0.3em"
-                                        />
-                                    )
-                                }
-                                styleOpts={{
-                                    tooltipYOffset: -28,
-                                }}
-                            />
+            }
+            plotHeader.push(
+                <strong className={survivalPlotStyle['survivalTypeOptions']}>
+                    Survival types:{' '}
+                </strong>
+            );
+            _.forEach(survivalTitleText, (value, key) => {
+                plotHeader.push(
+                    <li
+                        onClick={() => this.setSurvivalPlotPrefix(key)}
+                        className={
+                            'plots-tab-pills ' +
+                            (key === this.selectedSurvivalPlotPrefix
+                                ? 'active'
+                                : '')
+                        }
+                    >
+                        <a>{value}</a>
+                    </li>
+                );
+            });
+            return (
+                <div>
+                    <div
+                        className={
+                            survivalPlotStyle['survivalPlotHeaderContainer']
+                        }
+                    >
+                        <div
+                            className={survivalPlotStyle['survivalPlotHeader']}
+                        >
+                            <ul className={'nav nav-pills'}>{plotHeader}</ul>
                         </div>
                     </div>
-                );
-            } else {
-                diseaseFreeNotAvailable = true;
-            }
-
-            if (overallNotAvailable) {
-                content.push(
-                    <div className={'alert alert-info'}>
-                        {this.overallSurvivalTitleText} not available
-                    </div>
-                );
-            }
-
-            if (diseaseFreeNotAvailable) {
-                content.push(
-                    <div className={'alert alert-info'}>
-                        {this.diseaseFreeSurvivalTitleText} not available
-                    </div>
-                );
-            }
-
-            return <div>{content}</div>;
+                    {content}
+                </div>
+            );
         },
         renderPending: () => (
             <LoadingIndicator center={true} isLoading={true} size={'big'} />
