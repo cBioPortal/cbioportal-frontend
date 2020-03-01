@@ -116,8 +116,12 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
         priority: {
             CANCER_TYPE: 3000,
             CANCER_TYPE_DETAILED: 2000,
+            // TODO should have a more generic way to define survival plots priority
             OS_SURVIVAL: 400,
             DFS_SURVIVAL: 300,
+            DSS_SURVIVAL: 250,
+            PFS_SURVIVAL: 250,
+            EFS_SURVIVAL: 250,
             MUTATION_COUNT_CNA_FRACTION: 200,
             MUTATED_GENES_TABLE: 90,
             FUSION_GENES_TABLE: 85,
