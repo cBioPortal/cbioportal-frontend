@@ -89,8 +89,6 @@ export enum UniqueKey {
     CUSTOM_SELECT = 'CUSTOM_SELECT',
     SELECTED_COMPARISON_GROUPS = 'SELECTED_COMPARISON_GROUPS',
     MUTATION_COUNT_CNA_FRACTION = 'MUTATION_COUNT_CNA_FRACTION',
-    DISEASE_FREE_SURVIVAL = 'DFS_SURVIVAL',
-    OVERALL_SURVIVAL = 'OS_SURVIVAL',
     CANCER_STUDIES = 'CANCER_STUDIES',
     MUTATION_COUNT = 'MUTATION_COUNT',
     FRACTION_GENOME_ALTERED = 'FRACTION_GENOME_ALTERED',
@@ -453,6 +451,29 @@ export function getClinicalAttributeOverlay(
                         ID: {clinicalAttributeId}
                     </span>
                 )}
+            </div>
+            {comparisonDescription !== comparisonDisplayName && (
+                <div>{description}</div>
+            )}
+        </div>
+    );
+}
+
+export function getDescriptionOverlay(
+    displayName: string,
+    description: string,
+    id?: string
+): JSX.Element {
+    const comparisonDisplayName = displayName.toLowerCase().trim();
+    let comparisonDescription = description
+        .toLowerCase()
+        .trim()
+        .replace(/.&/, '');
+    return (
+        <div style={{ maxWidth: '300px' }}>
+            <div>
+                <b>{displayName}</b>{' '}
+                {!!id && <span className={styles.titleMeta}>ID: {id}</span>}
             </div>
             {comparisonDescription !== comparisonDisplayName && (
                 <div>{description}</div>

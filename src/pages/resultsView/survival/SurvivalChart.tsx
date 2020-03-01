@@ -55,13 +55,6 @@ export enum LegendLocation {
     CHART = 'chart',
 }
 
-export const SURVIVAL_CHART_ATTRIBUTES = [
-    'OS_STATUS',
-    'OS_MONTHS',
-    'DFS_STATUS',
-    'DFS_MONTHS',
-];
-
 export interface ISurvivalChartProps {
     patientSurvivals: ReadonlyArray<PatientSurvival>;
     patientToAnalysisGroups: { [uniquePatientKey: string]: string[] };
@@ -89,6 +82,8 @@ export interface ISurvivalChartProps {
     className?: string;
     showCurveInTooltip?: boolean;
     legendLabelComponent?: any;
+    yAxisTickCount?: number;
+    xAxisTickCount?: number;
 }
 
 // Start to down sampling when there are more than 1000 dots in the plot.
@@ -293,6 +288,7 @@ export default class SurvivalChart
         showLogRankPVal: true,
         showNaPatientsHiddenToggle: false,
         showDownloadButtons: true,
+        yAxisTickCount: 11,
     };
 
     constructor(props: ISurvivalChartProps) {
@@ -520,8 +516,11 @@ export default class SurvivalChart
 
     @computed
     get xAxisTickCount() {
-        return this.getAxisTickCount(
-            this.showLegend ? this.styleOpts.legend.x : this.styleOpts.width
+        return (
+            this.props.xAxisTickCount ||
+            this.getAxisTickCount(
+                this.showLegend ? this.styleOpts.legend.x : this.styleOpts.width
+            )
         );
     }
 
@@ -643,7 +642,7 @@ export default class SurvivalChart
                         label={this.props.yAxisLabel}
                         dependentAxis={true}
                         tickFormat={(t: any) => `${t}%`}
-                        tickCount={11}
+                        tickCount={this.props.yAxisTickCount}
                         style={this.styleOpts.axis.y}
                         domain={[0, 100]}
                         crossAxis={false}

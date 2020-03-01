@@ -5,6 +5,7 @@ import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
 export interface ISurvivalDescription {
     studyName: string;
     description: string;
+    displayName: string;
 }
 
 export interface ISurvivalDescriptionTableProps {
