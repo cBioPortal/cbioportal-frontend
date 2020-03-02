@@ -2394,15 +2394,17 @@ export function bothAxesNoMolecularProfile(
     vertSelection: AxisMenuSelection
 ): boolean {
     const noMolecularProfileDataTypes = [
-        GenericAssayTypeConstants.TREATMENT_RESPONSE,
         CLIN_ATTR_DATA_TYPE,
         NONE_SELECTED_OPTION_STRING_VALUE,
     ];
     const horzDataType = horzSelection.dataType || '';
     const vertDataType = vertSelection.dataType || '';
+    // generic assay profile is not a molecular profile
     return (
-        noMolecularProfileDataTypes.includes(horzDataType) &&
-        noMolecularProfileDataTypes.includes(vertDataType)
+        (noMolecularProfileDataTypes.includes(horzDataType) ||
+            !!horzSelection.isGenericAssayType) &&
+        (noMolecularProfileDataTypes.includes(vertDataType) ||
+            !!vertSelection.isGenericAssayType)
     );
 }
 
