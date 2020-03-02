@@ -81,6 +81,11 @@ export const dataTypeToDisplayType: { [s: string]: string } = {
     [GENESET_DATA_TYPE]: 'Gene Sets',
 };
 
+export const NO_GENE_OPTION = {
+    value: NONE_SELECTED_OPTION_NUMERICAL_VALUE,
+    label: 'None',
+};
+
 export const mutationTypeToDisplayName: {
     [oncoprintMutationType: string]: string;
 } = {
@@ -1923,7 +1928,8 @@ export function makeBoxScatterPlotData(
     copyNumberAlterations?: {
         molecularProfileIds: string[];
         data: AnnotatedNumericGeneMolecularData[];
-    }
+    },
+    selectedGeneForStyling?: Gene
 ): IBoxScatterPlotData<IBoxScatterPlotPoint>[] {
     const boxScatterPlotPoints = makeScatterPlotData(
         horzData,
@@ -1931,7 +1937,8 @@ export function makeBoxScatterPlotData(
         uniqueSampleKeyToSample,
         coverageInformation,
         mutations,
-        copyNumberAlterations
+        copyNumberAlterations,
+        selectedGeneForStyling
     );
     const categoryToData = _.groupBy(boxScatterPlotPoints, p => p.category);
     let ret = _.entries(categoryToData).map(entry => ({
@@ -1957,7 +1964,8 @@ export function makeScatterPlotData(
     copyNumberAlterations?: {
         molecularProfileIds: string[];
         data: AnnotatedNumericGeneMolecularData[];
-    }
+    },
+    selectedGeneForStyling?: Gene
 ): IBoxScatterPlotPoint[];
 
 export function makeScatterPlotData(
@@ -1972,7 +1980,8 @@ export function makeScatterPlotData(
     copyNumberAlterations?: {
         molecularProfileIds: string[];
         data: AnnotatedNumericGeneMolecularData[];
-    }
+    },
+    selectedGeneForStyling?: Gene
 ): IScatterPlotData[];
 
 export function makeScatterPlotData(
@@ -1987,7 +1996,8 @@ export function makeScatterPlotData(
     copyNumberAlterations?: {
         molecularProfileIds: string[];
         data: AnnotatedNumericGeneMolecularData[];
-    }
+    },
+    selectedGeneForStyling?: Gene
 ): IScatterPlotData[] | IBoxScatterPlotPoint[] {
     const mutationsMap: {
         [uniqueSampleKey: string]: AnnotatedMutation[];
@@ -2050,8 +2060,12 @@ export function makeScatterPlotData(
         let profiledCna = undefined;
         if (mutations || copyNumberAlterations) {
             const profiledReport = makeScatterPlotData_profiledReport(
-                horzData.hugoGeneSymbol,
-                vertData.hugoGeneSymbol,
+                selectedGeneForStyling
+                    ? selectedGeneForStyling.hugoGeneSymbol
+                    : horzData.hugoGeneSymbol,
+                selectedGeneForStyling
+                    ? selectedGeneForStyling.hugoGeneSymbol
+                    : vertData.hugoGeneSymbol,
                 sampleCoverageInfo
             );
             if (mutations) {
@@ -2148,7 +2162,7 @@ export function makeWaterfallPlotData(
     axisData: INumberAxisData,
     uniqueSampleKeyToSample: { [uniqueSampleKey: string]: Sample },
     coverageInformation: CoverageInformation['samples'],
-    selectedGene: Gene,
+    selectedGene?: Gene | null,
     mutations?: {
         molecularProfileIds: string[];
         data: AnnotatedMutation[];
@@ -2182,7 +2196,11 @@ export function makeWaterfallPlotData(
 
         // For waterfall plot the datum styling looks at the currently selected gene
         // in the utilities menu. Below evalute which CNA to show for a sample.
-        if (sampleCopyNumberAlterations && sampleCopyNumberAlterations.length) {
+        if (
+            sampleCopyNumberAlterations &&
+            sampleCopyNumberAlterations.length &&
+            selectedGene
+        ) {
             // filter CNA's for the selected gene and return (a random) one with the highest value
             dispCna = _(sampleCopyNumberAlterations)
                 .filter(
@@ -2194,7 +2212,7 @@ export function makeWaterfallPlotData(
 
         // For waterfall plot the datum styling looks at the currently selected gene
         // in the utilities menu. Below evalute which mutation to show for a sample.
-        if (sampleMutations && sampleMutations.length) {
+        if (sampleMutations && sampleMutations.length && selectedGene) {
             const counts = _(sampleMutations)
                 .filter(
                     (d: AnnotatedMutation) =>
@@ -2224,7 +2242,7 @@ export function makeWaterfallPlotData(
         let profiledMutations: boolean | undefined = undefined;
         let profiledCna: boolean | undefined = undefined;
 
-        if (mutations || copyNumberAlterations) {
+        if ((mutations || copyNumberAlterations) && selectedGene) {
             const profiledReport = makeWaterfallPlotData_profiledReport(
                 selectedGene.hugoGeneSymbol,
                 sampleCoverageInfo
@@ -2329,40 +2347,12 @@ function makeWaterfallPlotData_profiledReport(
     return ret;
 }
 
-export function getCnaQueries(
-    horzSelection: AxisMenuSelection,
-    vertSelection: AxisMenuSelection,
-    utilitiesSelection: UtilitiesMenuSelection
-) {
+export function getCnaQueries(utilitiesSelection: UtilitiesMenuSelection) {
     const queries: { entrezGeneId: number }[] = [];
     if (
-        horzSelection.dataType !== CLIN_ATTR_DATA_TYPE &&
-        (horzSelection.dataType === undefined ||
-            !horzSelection.isGenericAssayType) &&
-        horzSelection.entrezGeneId !== undefined
-    ) {
-        queries.push({ entrezGeneId: horzSelection.entrezGeneId });
-    }
-    if (
-        vertSelection.dataType !== CLIN_ATTR_DATA_TYPE &&
-        (horzSelection.dataType === undefined ||
-            !horzSelection.isGenericAssayType) &&
-        vertSelection.entrezGeneId !== undefined
-    ) {
-        queries.push({ entrezGeneId: vertSelection.entrezGeneId });
-    }
-    if (
-        vertSelection.dataType ===
-            AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
-        (horzSelection.dataType === undefined ||
-            !horzSelection.isGenericAssayType) &&
-        vertSelection.entrezGeneId !== undefined
-    ) {
-        queries.push({ entrezGeneId: vertSelection.entrezGeneId });
-    }
-    if (
-        showWaterfallPlot(horzSelection, vertSelection) &&
-        utilitiesSelection.entrezGeneIdForMutCNAStyling !== undefined
+        utilitiesSelection.entrezGeneIdForMutCNAStyling !== undefined &&
+        utilitiesSelection.entrezGeneIdForMutCNAStyling !==
+            NONE_SELECTED_OPTION_NUMERICAL_VALUE
     ) {
         queries.push({
             entrezGeneId: utilitiesSelection.entrezGeneIdForMutCNAStyling,
@@ -2371,30 +2361,12 @@ export function getCnaQueries(
     return _.uniqBy(queries, 'entrezGeneId');
 }
 
-export function getMutationQueries(
-    horzSelection: AxisMenuSelection,
-    vertSelection: AxisMenuSelection,
-    utilitiesSelection: UtilitiesMenuSelection
-) {
+export function getMutationQueries(utilitiesSelection: UtilitiesMenuSelection) {
     const queries: { entrezGeneId: number }[] = [];
-    let horzEntrezGeneId: number | undefined;
     if (
-        horzSelection.dataType !== CLIN_ATTR_DATA_TYPE &&
-        horzSelection.entrezGeneId !== undefined
-    ) {
-        horzEntrezGeneId = horzSelection.entrezGeneId;
-        queries.push({ entrezGeneId: horzEntrezGeneId });
-    }
-    if (
-        vertSelection.dataType !== CLIN_ATTR_DATA_TYPE &&
-        vertSelection.entrezGeneId !== undefined &&
-        vertSelection.entrezGeneId !== horzEntrezGeneId
-    ) {
-        queries.push({ entrezGeneId: vertSelection.entrezGeneId });
-    }
-    if (
-        showWaterfallPlot(horzSelection, vertSelection) &&
-        utilitiesSelection.entrezGeneIdForMutCNAStyling !== undefined
+        utilitiesSelection.entrezGeneIdForMutCNAStyling !== undefined &&
+        utilitiesSelection.entrezGeneIdForMutCNAStyling !==
+            NONE_SELECTED_OPTION_NUMERICAL_VALUE
     ) {
         queries.push({
             entrezGeneId: utilitiesSelection.entrezGeneIdForMutCNAStyling,
@@ -2417,36 +2389,67 @@ export function showWaterfallPlot(
     );
 }
 
+export function bothAxesNoMolecularProfile(
+    horzSelection: AxisMenuSelection,
+    vertSelection: AxisMenuSelection
+): boolean {
+    const noMolecularProfileDataTypes = [
+        CLIN_ATTR_DATA_TYPE,
+        NONE_SELECTED_OPTION_STRING_VALUE,
+    ];
+    const horzDataType = horzSelection.dataType || '';
+    const vertDataType = vertSelection.dataType || '';
+    // generic assay profile is not a molecular profile
+    return (
+        (noMolecularProfileDataTypes.includes(horzDataType) ||
+            !!horzSelection.isGenericAssayType) &&
+        (noMolecularProfileDataTypes.includes(vertDataType) ||
+            !!vertSelection.isGenericAssayType)
+    );
+}
+
 export function getScatterPlotDownloadData(
     data: IScatterPlotData[],
     xAxisLabel: string,
     yAxisLabel: string,
-    entrezGeneIdToGene: { [entrezGeneId: number]: Gene }
+    entrezGeneIdToGene: { [entrezGeneId: number]: Gene },
+    viewMutationType?: boolean,
+    viewCopyNumber?: boolean
 ) {
     const dataRows: string[] = [];
-    let hasMutations = false;
     for (const datum of data) {
         const row: string[] = [];
         row.push(datum.sampleId);
         row.push(numeral(datum.x).format('0[.][000000]'));
         row.push(numeral(datum.y).format('0[.][000000]'));
-        if (datum.mutations.length) {
-            row.push(
-                mutationsProteinChanges(
-                    datum.mutations,
-                    entrezGeneIdToGene
-                ).join('; ')
-            );
-            hasMutations = true;
-        } else if (datum.profiledMutations === false) {
-            row.push('Not Profiled');
-            hasMutations = true;
+        if (viewMutationType) {
+            if (datum.mutations.length) {
+                row.push(
+                    mutationsProteinChanges(
+                        datum.mutations,
+                        entrezGeneIdToGene
+                    ).join('; ')
+                );
+            } else if (datum.profiledMutations === false) {
+                row.push('Not Profiled');
+            } else if (viewCopyNumber) {
+                // if there are no mutations but there is a CNA column to the right,
+                // add "-" to skip the Mutations column
+                row.push('-');
+            }
+        }
+        if (viewCopyNumber && datum.dispCna) {
+            const cna = (cnaToAppearance as any)[datum.dispCna.value];
+            row.push(`${datum.dispCna.hugoGeneSymbol}: ${cna.legendLabel}`);
         }
         dataRows.push(row.join('\t'));
     }
     const header = ['Sample Id', xAxisLabel, yAxisLabel];
-    if (hasMutations) {
+    if (viewMutationType) {
         header.push('Mutations');
+    }
+    if (viewCopyNumber) {
+        header.push('Copy Number Alterations');
     }
     return header.join('\t') + '\n' + dataRows.join('\n');
 }
@@ -2456,7 +2459,9 @@ export function getWaterfallPlotDownloadData(
     sortOrder: string,
     pivotThreshold: number,
     axisLabel: string,
-    entrezGeneIdToGene: { [enstrezGeneId: number]: Gene }
+    entrezGeneIdToGene: { [enstrezGeneId: number]: Gene },
+    viewMutationType?: boolean,
+    viewCopyNumber?: boolean
 ) {
     let dataPoints = _.cloneDeep(data);
     dataPoints = _.sortBy(dataPoints, (d: IWaterfallPlotData) => d.value);
@@ -2465,7 +2470,6 @@ export function getWaterfallPlotDownloadData(
     }
 
     const dataRows: string[] = [];
-    let hasMutations = false;
     for (const datum of dataPoints) {
         const row: string[] = [];
 
@@ -2473,17 +2477,25 @@ export function getWaterfallPlotDownloadData(
         row.push(numeral(datum.value).format('0[.][000000]'));
         row.push(numeral(pivotThreshold).format('0[.][000000]'));
         row.push(sortOrder || '');
-        if (datum.mutations.length) {
-            row.push(
-                mutationsProteinChanges(
-                    datum.mutations,
-                    entrezGeneIdToGene
-                ).join('; ')
-            ); // 4 concatenated mutations
-            hasMutations = true;
-        } else if (datum.profiledMutations === false) {
-            row.push('Not Profiled');
-            hasMutations = true;
+        if (viewMutationType) {
+            if (datum.mutations.length) {
+                row.push(
+                    mutationsProteinChanges(
+                        datum.mutations,
+                        entrezGeneIdToGene
+                    ).join('; ')
+                ); // 4 concatenated mutations
+            } else if (datum.profiledMutations === false) {
+                row.push('Not Profiled');
+            } else if (viewCopyNumber) {
+                // if there are no mutations but there is a CNA column to the right,
+                // add "-" to skip the Mutations column
+                row.push('-');
+            }
+        }
+        if (viewCopyNumber && datum.dispCna) {
+            const cna = (cnaToAppearance as any)[datum.dispCna.value];
+            row.push(`${datum.dispCna.hugoGeneSymbol}: ${cna.legendLabel}`);
         }
         dataRows.push(row.join('\t'));
     }
@@ -2493,8 +2505,11 @@ export function getWaterfallPlotDownloadData(
         'pivot threshold',
         'sort order',
     ];
-    if (hasMutations) {
+    if (viewMutationType) {
         header.push('Mutations');
+    }
+    if (viewCopyNumber) {
+        header.push('Copy Number Alterations');
     }
     return header.join('\t') + '\n' + dataRows.join('\n');
 }
@@ -2503,10 +2518,11 @@ export function getBoxPlotDownloadData(
     data: IBoxScatterPlotData<IBoxScatterPlotPoint>[],
     categoryLabel: string,
     valueLabel: string,
-    entrezGeneIdToGene: { [entrezGeneId: number]: Gene }
+    entrezGeneIdToGene: { [entrezGeneId: number]: Gene },
+    viewMutationType?: boolean,
+    viewCopyNumber?: boolean
 ) {
     const dataRows: string[] = [];
-    let hasMutations = false;
     for (const categoryDatum of data) {
         const category = categoryDatum.label;
         for (const datum of categoryDatum.data) {
@@ -2514,24 +2530,35 @@ export function getBoxPlotDownloadData(
             row.push(datum.sampleId);
             row.push(category);
             row.push(numeral(datum.value).format('0[.][000000]'));
-            if (datum.mutations.length) {
-                row.push(
-                    mutationsProteinChanges(
-                        datum.mutations,
-                        entrezGeneIdToGene
-                    ).join('; ')
-                );
-                hasMutations = true;
-            } else if (datum.profiledMutations === false) {
-                row.push('Not Profiled');
-                hasMutations = true;
+            if (viewMutationType) {
+                if (datum.mutations.length) {
+                    row.push(
+                        mutationsProteinChanges(
+                            datum.mutations,
+                            entrezGeneIdToGene
+                        ).join('; ')
+                    );
+                } else if (datum.profiledMutations === false) {
+                    row.push('Not Profiled');
+                } else if (viewCopyNumber) {
+                    // if there are no mutations but there is a CNA column to the right,
+                    // add "-" to skip the Mutations column
+                    row.push('-');
+                }
+            }
+            if (viewCopyNumber && datum.dispCna) {
+                const cna = (cnaToAppearance as any)[datum.dispCna.value];
+                row.push(`${datum.dispCna.hugoGeneSymbol}: ${cna.legendLabel}`);
             }
             dataRows.push(row.join('\t'));
         }
     }
     const header = ['Sample Id', categoryLabel, valueLabel];
-    if (hasMutations) {
+    if (viewMutationType) {
         header.push('Mutations');
+    }
+    if (viewCopyNumber) {
+        header.push('Copy Number Alterations');
     }
     return header.join('\t') + '\n' + dataRows.join('\n');
 }

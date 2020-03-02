@@ -54,10 +54,13 @@ import {
     axisHasNegativeNumbers,
     getLimitValues,
     deriveDisplayTextFromGenericAssayType,
+    NO_GENE_OPTION,
+    bothAxesNoMolecularProfile,
 } from './PlotsTabUtils';
 import {
     ClinicalAttribute,
     GenericAssayMeta,
+    Gene,
 } from '../../../shared/api/generated/CBioPortalAPI';
 import Timer = NodeJS.Timer;
 import ScatterPlot from 'shared/components/plots/ScatterPlot';
@@ -96,6 +99,7 @@ enum EventKey {
     utilities_horizontalBars,
     utilities_showRegressionLine,
     utilities_viewLimitValues,
+    utilities_viewMutationAndCNA,
 }
 
 export enum ViewType {
@@ -397,16 +401,19 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             // cant show either in table
             return PotentialViewType.None;
         }
-        // both axes molecular profile, same gene
-        if (this.sameGeneInBothAxes) {
+
+        // molecular profile in one or both axes
+        if (this.oneAxisMolecularProfile || this.bothAxesMolecularProfile) {
+            //  establish whether data may contain limit values
+            // (for now only supported for treatment data)
+            if (this.limitValuesCanBeShown) {
+                return PotentialViewType.LimitValMutationTypeAndCopyNumber;
+            }
             return PotentialViewType.MutationTypeAndCopyNumber;
         }
-        // both axes molecular profile, different gene
-        if (this.bothAxesMolecularProfile) {
-            return PotentialViewType.MutationSummary;
-        }
-        // one axis molecular profile
-        if (this.oneAxisMolecularProfile) {
+
+        // both axes no molecular profile
+        if (this.bothAxesNoMolecularProfile) {
             //  establish whether data may contain limit values
             // (for now only supported for generic assay data)
             if (this.limitValuesCanBeShown) {
@@ -423,6 +430,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
         // neither axis gene or generic assay
         return PotentialViewType.None;
+    }
+
+    @computed get bothAxesNoMolecularProfile() {
+        return bothAxesNoMolecularProfile(
+            this.horzSelection,
+            this.vertSelection
+        );
     }
 
     private searchCaseTimeout: Timer;
@@ -746,24 +760,22 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         const self = this;
         return observable({
             get entrezGeneIdForMutCNAStyling() {
-                if (
-                    self.showUtilitiesMenuGeneSelectBox &&
-                    this.selectedGeneOption
-                ) {
+                if (this.selectedGeneOption) {
                     return this.selectedGeneOption.value;
                 }
                 return undefined;
             },
             get selectedGeneOption() {
-                const geneOptions = self.horzGeneOptions.isComplete
-                    ? self.horzGeneOptions.result
+                const geneOptions = self.utilityMenuGeneOptions.isComplete
+                    ? self.utilityMenuGeneOptions.result
                     : [];
                 if (
                     this._selectedUtilitiesGeneOption === undefined &&
                     geneOptions.length
                 ) {
-                    // select default if _selectedUtilitiesGeneOption is undefined and there are genes to choose from
-                    return geneOptions[0];
+                    // select default if _selectedUtilitiesGeneOption is undefined and there are genes to choose from;
+                    // 'None' is the first option, therefore select the second option by default
+                    return geneOptions[1];
                 } else {
                     // otherwise, return stored value for this variable
                     return this._selectedUtilitiesGeneOption;
@@ -788,26 +800,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 this.vertSelection.logScale = !this.vertSelection.logScale;
                 break;
             case EventKey.utilities_viewCopyNumber:
-                // Styling by mutation type and CNA for waterfall plot
-                // is mutually exclusive. When selected the viewMutationType
-                // option is deselected when currently selected.
-                if (plotType === PlotType.WaterfallPlot) {
-                    this.viewCopyNumber = true;
-                    this.viewMutationType = false;
-                } else {
-                    this.viewCopyNumber = !this.viewCopyNumber;
-                }
+                this.viewCopyNumber = true;
+                this.viewMutationType = false;
                 break;
             case EventKey.utilities_viewMutationType:
-                // Styling by mutation type and CNA for waterfall plot
-                // is mutually exclusive. When selected the viewCopyNumber
-                // option is deselected when currently selected.
-                if (plotType === PlotType.WaterfallPlot) {
-                    this.viewCopyNumber = false;
-                    this.viewMutationType = true;
-                } else {
-                    this.viewMutationType = !this.viewMutationType;
-                }
+                this.viewCopyNumber = false;
+                this.viewMutationType = true;
                 break;
             case EventKey.utilities_showRegressionLine:
                 this.showRegressionLine = !this.showRegressionLine;
@@ -818,7 +816,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             case EventKey.utilities_viewLimitValues:
                 this.viewLimitValues = !this.viewLimitValues;
                 break;
+            case EventKey.utilities_viewMutationAndCNA:
+                this.viewCopyNumber = true;
+                this.viewMutationType = true;
         }
+    }
+
+    @computed get viewMutationAndCNA() {
+        return this.viewMutationType && this.viewCopyNumber;
     }
 
     @autobind
@@ -839,7 +844,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 this.scatterPlotData.result!,
                                 horzLabel,
                                 vertLabel,
-                                entrezGeneIdToGene
+                                entrezGeneIdToGene,
+                                this.viewMutationType,
+                                this.viewCopyNumber
                             ),
                             filename
                         );
@@ -851,7 +858,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 this.waterfallPlotSortOrder,
                                 this.waterfallPlotPivotThreshold,
                                 this.waterfallLabel.result!,
-                                entrezGeneIdToGene
+                                entrezGeneIdToGene,
+                                this.viewMutationType,
+                                this.viewCopyNumber
                             ),
                             filename
                         );
@@ -869,7 +878,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 this.boxPlotData.result!.data,
                                 categoryLabel,
                                 valueLabel,
-                                entrezGeneIdToGene
+                                entrezGeneIdToGene,
+                                this.viewMutationType,
+                                this.viewCopyNumber
                             ),
                             filename
                         );
@@ -965,6 +976,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.vertSelection.selectedGeneOption = option;
         this.viewLimitValues = true;
         this.selectionHistory.updateVerticalFromSelection(this.vertSelection);
+        this.updateUtilitiesMenuSelectedGene();
     }
 
     @autobind
@@ -973,6 +985,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.horzSelection.selectedGeneOption = option;
         this.viewLimitValues = true;
         this.selectionHistory.updateHorizontalFromSelection(this.horzSelection);
+        this.updateUtilitiesMenuSelectedGene();
     }
 
     @autobind
@@ -1022,7 +1035,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @autobind
     @action
     private onUtilitiesGeneSelect(option: any) {
+        const oldVal = this.utilitiesMenuSelection.selectedGeneOption!.value;
         this.utilitiesMenuSelection.selectedGeneOption = option;
+        if (option.value === NO_GENE_OPTION.value) {
+            // remove sample styling when selecting 'None' in gene menu
+            this.viewMutationType = false;
+            this.viewCopyNumber = false;
+        } else if (oldVal === NO_GENE_OPTION.value) {
+            // auto select sample styling when switching back from 'None' in gene menu
+            this.viewMutationType = true;
+        }
     }
 
     public test__selectGeneOption(vertical: boolean, optionValue: any) {
@@ -1122,9 +1144,19 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             []) as any[]);
     }
 
-    @computed get utilityMenuGeneOptions() {
-        return (this.horzGeneOptions.result || []) as any[];
-    }
+    @observable readonly utilityMenuGeneOptions = remoteData({
+        await: () => [this.horzGeneOptions],
+        invoke: () => {
+            if (this.horzGeneOptions.result) {
+                // add 'None' option to the top of the list to allow removing coloring of samples
+                return Promise.resolve([
+                    NO_GENE_OPTION,
+                    ...this.horzGeneOptions.result,
+                ]);
+            }
+            return Promise.resolve([]);
+        },
+    });
 
     @observable readonly horzGenesetOptions = remoteData({
         await: () => [this.props.store.genesets],
@@ -1300,13 +1332,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     private showDatasourceBox(dataType: string): boolean {
         return dataType !== NONE_SELECTED_OPTION_STRING_VALUE;
-    }
-
-    private showUtilitiesMenuGeneSelectBox(): boolean {
-        return (
-            this.plotType.isComplete &&
-            this.plotType.result === PlotType.WaterfallPlot
-        );
     }
 
     private showSortOrderButton(onVerticalAxis: boolean): boolean {
@@ -1496,6 +1521,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         ) {
             this.viewCopyNumber = false;
         }
+
         this.viewLimitValues = true;
         this.selectionHistory.runVerticalUpdaters(
             option.value,
@@ -1516,6 +1542,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         ) {
             this.onHorizontalAxisGeneSelect(oldVerticalGene);
         }
+
+        this.updateUtilitiesMenuSelectedGene();
     }
 
     @autobind
@@ -1536,6 +1564,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         ) {
             this.viewCopyNumber = false;
         }
+
         this.viewLimitValues = true;
         this.selectionHistory.runHorizontalUpdaters(
             option.value,
@@ -1556,6 +1585,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         ) {
             this.onVerticalAxisGeneSelect(oldHorizontalGene);
         }
+
+        this.updateUtilitiesMenuSelectedGene();
     }
 
     @autobind
@@ -1565,6 +1596,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.vertSelection.selectedGenericAssayOption = undefined;
         this.viewLimitValues = true;
         this.selectionHistory.updateVerticalFromSelection(this.vertSelection);
+        this.updateUtilitiesMenuSelectedGene();
     }
 
     @autobind
@@ -1574,6 +1606,49 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.horzSelection.selectedGenericAssayOption = undefined;
         this.viewLimitValues = true;
         this.selectionHistory.updateHorizontalFromSelection(this.horzSelection);
+        this.updateUtilitiesMenuSelectedGene();
+    }
+
+    @computed get hasMolecularProfile() {
+        return (dataType: string | undefined) =>
+            dataType !== CLIN_ATTR_DATA_TYPE &&
+            dataType !== AlterationTypeConstants.GENERIC_ASSAY;
+    }
+
+    @autobind
+    @action
+    updateUtilitiesMenuSelectedGene() {
+        if (this.oneAxisMolecularProfile) {
+            // for one gene, switch the new gene for coloring
+            const selectedGene = this.hasMolecularProfile(
+                this.horzSelection.dataType
+            )
+                ? this.horzSelection.selectedGeneOption
+                : this.vertSelection.selectedGeneOption;
+            this.utilitiesMenuSelection.selectedGeneOption = selectedGene;
+
+            // for two genes, if the current gene for coloring is not selected in either axis, switch to gene selection on x-axis
+        } else if (
+            this.bothAxesMolecularProfile &&
+            this.utilitiesMenuSelection.selectedGeneOption!.value !==
+                this.horzSelection.selectedGeneOption!.value &&
+            this.utilitiesMenuSelection.selectedGeneOption!.value !==
+                this.vertSelection.selectedGeneOption!.value
+        ) {
+            this.utilitiesMenuSelection.selectedGeneOption = this.horzSelection.selectedGeneOption;
+        }
+
+        // if selected gene for styling is switched fron 'None' to a new gene,
+        // turn on coloring samples by 'Mutations'
+        if (
+            this.utilitiesMenuSelection.selectedGeneOption &&
+            this.utilitiesMenuSelection.selectedGeneOption.value !==
+                NONE_SELECTED_OPTION_NUMERICAL_VALUE &&
+            !this.viewCopyNumber &&
+            !this.viewMutationType
+        ) {
+            this.viewMutationType = true;
+        }
     }
 
     @autobind
@@ -1581,6 +1656,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     public onVerticalAxisMutationCountBySelect(option: any) {
         this.vertSelection.mutationCountBy = option.value;
         this.viewLimitValues = true;
+        this.updateUtilitiesMenuSelectedGene();
     }
 
     @autobind
@@ -1588,6 +1664,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     public onHorizontalAxisMutationCountBySelect(option: any) {
         this.horzSelection.mutationCountBy = option.value;
         this.viewLimitValues = true;
+        this.updateUtilitiesMenuSelectedGene();
     }
 
     @autobind
@@ -1672,11 +1749,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return (
             !this.bothAxesMolecularProfile &&
             (this.horzSelection.dataType === undefined ||
-                ((this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE &&
+                ((this.horzSelection.dataType !==
+                    NONE_SELECTED_OPTION_STRING_VALUE &&
+                    this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE &&
                     this.horzSelection.dataType &&
                     !this.horzSelection.isGenericAssayType) ||
                     (this.vertSelection.dataType === undefined ||
-                        (this.vertSelection.dataType !== CLIN_ATTR_DATA_TYPE &&
+                        (this.vertSelection.dataType !==
+                            NONE_SELECTED_OPTION_STRING_VALUE &&
+                            this.vertSelection.dataType !==
+                                CLIN_ATTR_DATA_TYPE &&
                             !this.vertSelection.isGenericAssayType))))
         );
     }
@@ -1769,18 +1851,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     readonly cnaPromise = remoteData({
         await: () =>
             this.props.store.annotatedCnaCache.getAll(
-                getCnaQueries(
-                    this.horzSelection,
-                    this.vertSelection,
-                    this.utilitiesMenuSelection
-                )
+                getCnaQueries(this.utilitiesMenuSelection)
             ),
         invoke: () => {
-            const queries = getCnaQueries(
-                this.horzSelection,
-                this.vertSelection,
-                this.utilitiesMenuSelection
-            );
+            const queries = getCnaQueries(this.utilitiesMenuSelection);
             if (queries.length > 0) {
                 return Promise.resolve(
                     _.flatten(
@@ -1815,23 +1889,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     readonly mutationPromise = remoteData({
         await: () =>
             this.props.store.annotatedMutationCache.getAll(
-                getMutationQueries(
-                    this.horzSelection,
-                    this.vertSelection,
-                    this.utilitiesMenuSelection
-                )
+                getMutationQueries(this.utilitiesMenuSelection)
             ),
         invoke: () => {
             return Promise.resolve(
                 _.flatten(
                     this.props.store.annotatedMutationCache
-                        .getAll(
-                            getMutationQueries(
-                                this.horzSelection,
-                                this.vertSelection,
-                                this.utilitiesMenuSelection
-                            )
-                        )
+                        .getAll(getMutationQueries(this.utilitiesMenuSelection))
                         .map(p => p.result!)
                 ).filter(x => !!x)
             );
@@ -1991,25 +2055,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             );
         },
     });
-
-    @computed get waterfallPlotTitle(): string {
-        const selection = this.isHorizontalWaterfallPlot
-            ? this.horzSelection
-            : this.vertSelection;
-
-        const genericAssayEntityName = selection.selectedGenericAssayOption!
-            .label;
-        const profileName = selection.selectedDataSourceOption!.label;
-        const geneName = this.utilitiesMenuSelection.selectedGeneOption!.label;
-
-        let geneStyle = '';
-        if (this.viewMutationType) {
-            geneStyle = ` x ${geneName} mutation types`;
-        } else if (this.viewCopyNumber) {
-            geneStyle = ` x ${geneName} CNA types`;
-        }
-        return `${genericAssayEntityName} ${profileName}${geneStyle}`;
-    }
 
     @computed get waterfallPlotWidth(): number {
         const noSamples = this.waterfallPlotData.isComplete
@@ -3007,6 +3052,18 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         }
     });*/
 
+    @computed get selectedGeneForStyling(): Gene | undefined {
+        if (
+            !this.noGeneSelectedForStyling &&
+            this.utilitiesMenuSelection.selectedGeneOption
+        ) {
+            const ensemblGeneId = this.utilitiesMenuSelection.selectedGeneOption
+                .value;
+            return this.props.store.entrezGeneIdToGene.result![ensemblGeneId];
+        }
+        return undefined;
+    }
+
     readonly scatterPlotData = remoteData<IScatterPlotData[]>({
         await: () => [
             this.horzAxisDataPromise,
@@ -3051,7 +3108,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                       ).map(p => p.molecularProfileId),
                                       data: this.cnaPromise.result!,
                                   }
-                                : undefined
+                                : undefined,
+                            this.selectedGeneForStyling
                         )
                     );
                 } else {
@@ -3090,9 +3148,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 // naturally embedded in the genetic profile. Instead, the user selects
                 // the gene of interest from a select box in the Utilities menu.
                 const ensemblGeneId = this.utilitiesMenuSelection
-                    .selectedGeneOption!.value;
-                const selectedGene = this.props.store.entrezGeneIdToGene
-                    .result![ensemblGeneId];
+                    .selectedGeneOption
+                    ? this.utilitiesMenuSelection.selectedGeneOption.value
+                    : null;
+                const selectedGene = ensemblGeneId
+                    ? this.props.store.entrezGeneIdToGene.result![ensemblGeneId]
+                    : null;
 
                 if (isNumberData(axisData!)) {
                     return Promise.resolve({
@@ -3246,7 +3307,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                   ).map(p => p.molecularProfileId),
                                   data: this.cnaPromise.result!,
                               }
-                            : undefined
+                            : undefined,
+                        this.selectedGeneForStyling
                     ),
                 });
             }
@@ -3292,6 +3354,21 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 (!this.horzGenericAssayOptions.result ||
                     (this.horzGenericAssayOptions.result &&
                         this.horzGenericAssayOptions.result.length === 0)))
+        );
+    }
+
+    @computed get showUtilitiesMenu() {
+        return (
+            (this.plotDataExistsForTwoAxes || this.waterfallPlotIsShown) &&
+            (this.mutationDataCanBeShown || this.cnaDataCanBeShown)
+        );
+    }
+
+    @computed get noGeneSelectedForStyling(): boolean {
+        return (
+            !!this.utilitiesMenuSelection.selectedGeneOption &&
+            this.utilitiesMenuSelection.selectedGeneOption.value ===
+                NONE_SELECTED_OPTION_NUMERICAL_VALUE
         );
     }
 
@@ -3458,6 +3535,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         this.limitValueTypes,
                                         this.scatterPlotHighlight
                                     )}
+                                    legendTitle={
+                                        this.selectedGeneForStyling
+                                            ? this.selectedGeneForStyling
+                                                  .hugoGeneSymbol
+                                            : ''
+                                    }
                                 />
                             );
                             break;
@@ -3478,7 +3561,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             plotElt = (
                                 <PlotsTabWaterfallPlot
                                     svgId={SVG_ID}
-                                    title={this.waterfallPlotTitle}
                                     axisLabel={this.waterfallLabel.result!}
                                     data={this.waterfallPlotData.result.data}
                                     size={scatterPlotSize}
@@ -3523,6 +3605,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         this.limitValueTypes,
                                         this.scatterPlotHighlight
                                     )}
+                                    legendTitle={
+                                        this.selectedGeneForStyling
+                                            ? this.selectedGeneForStyling
+                                                  .hugoGeneSymbol
+                                            : ''
+                                    }
                                 />
                             );
                             break;
@@ -3592,6 +3680,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     legendLocationWidthThreshold={
                                         LEGEND_TO_BOTTOM_WIDTH_THRESHOLD
                                     }
+                                    legendTitle={
+                                        this.selectedGeneForStyling
+                                            ? this.selectedGeneForStyling
+                                                  .hugoGeneSymbol
+                                            : ''
+                                    }
                                 />
                             );
                             break;
@@ -3609,9 +3703,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     default:
                         return <span>Not implemented yet</span>;
                 }
-                const geneSelectShownClassName = this.isWaterfallPlot
-                    ? 'gene-select-shown'
-                    : '';
                 return (
                     <div>
                         <div
@@ -3622,172 +3713,197 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 style={{ position: 'relative', top: -5 }}
                                 getScrollEl={this.getScrollPane}
                             />
-                            {(this.plotDataExistsForTwoAxes ||
-                                this.waterfallPlotIsShown) &&
-                                (this.mutationDataCanBeShown ||
-                                    this.cnaDataCanBeShown) && (
+                            {this.showUtilitiesMenu && (
+                                <div
+                                    style={{
+                                        textAlign: 'left',
+                                        position: 'relative',
+                                        zIndex: 1,
+                                        marginTop: '-6px',
+                                        marginBottom: this.isWaterfallPlot
+                                            ? '9px'
+                                            : '-16px',
+                                        minWidth:
+                                            this.mutationDataCanBeShown &&
+                                            this.cnaDataCanBeShown
+                                                ? 600
+                                                : 0,
+                                    }}
+                                >
                                     <div
                                         style={{
-                                            textAlign: 'left',
+                                            display: 'inline-block',
                                             position: 'relative',
-                                            zIndex: 1,
-                                            marginTop: '-6px',
-                                            marginBottom: this.isWaterfallPlot
-                                                ? '9px'
-                                                : '-16px',
-                                            minWidth:
-                                                this.mutationDataCanBeShown &&
-                                                this.cnaDataCanBeShown
-                                                    ? 600
-                                                    : 0,
                                         }}
+                                        className="utilities-menu"
                                     >
+                                        <label className="legend-label">
+                                            Color samples by:
+                                        </label>
+                                        &nbsp;
                                         <div
                                             style={{
                                                 display: 'inline-block',
-                                                position: 'relative',
                                             }}
-                                            className="utilities-menu"
+                                            className="gene-select-background"
                                         >
-                                            <label className="legend-label">
-                                                Style samples by:
-                                            </label>
-                                            &nbsp;
-                                            <div
-                                                style={{
-                                                    display: 'inline-block',
-                                                }}
-                                                className={`gene-select-background ${geneSelectShownClassName}`}
-                                            >
-                                                {this.isWaterfallPlot && (
-                                                    <div className="checkbox gene-select-container">
-                                                        <label>Gene:</label>
-                                                        &nbsp;
-                                                        <ReactSelect
-                                                            className={
-                                                                'color-samples-toolbar-elt gene-select'
-                                                            }
-                                                            name={`utilities_geneSelectionBox`}
+                                            <div className="checkbox gene-select-container">
+                                                <label>Gene:</label>
+                                                &nbsp;
+                                                <ReactSelect
+                                                    className={
+                                                        'color-samples-toolbar-elt gene-select'
+                                                    }
+                                                    name={`utilities_geneSelectionBox`}
+                                                    value={
+                                                        this
+                                                            .utilitiesMenuSelection
+                                                            .selectedGeneOption
+                                                            ? this
+                                                                  .utilitiesMenuSelection
+                                                                  .selectedGeneOption
+                                                                  .value
+                                                            : undefined
+                                                    }
+                                                    onChange={
+                                                        this
+                                                            .onUtilitiesGeneSelect
+                                                    }
+                                                    isLoading={
+                                                        this.horzGeneOptions
+                                                            .isPending
+                                                    }
+                                                    options={
+                                                        this
+                                                            .utilityMenuGeneOptions
+                                                            .result
+                                                    }
+                                                    clearable={false}
+                                                    searchable={false}
+                                                    disabled={
+                                                        !this.mutationDataExists
+                                                            .isComplete ||
+                                                        !this.mutationDataExists
+                                                            .result
+                                                    }
+                                                />
+                                            </div>
+                                            {this.mutationDataCanBeShown && (
+                                                <div
+                                                    className={`checkbox color-samples-toolbar-elt`}
+                                                >
+                                                    <input
+                                                        id="ViewMutationType"
+                                                        data-test="ViewMutationType"
+                                                        type="radio"
+                                                        name="utilities_viewMutationType"
+                                                        value={
+                                                            EventKey.utilities_viewMutationType
+                                                        }
+                                                        checked={
+                                                            this
+                                                                .viewMutationType &&
+                                                            !this
+                                                                .viewMutationAndCNA
+                                                        }
+                                                        onClick={
+                                                            this.onInputClick
+                                                        }
+                                                        disabled={
+                                                            !this
+                                                                .mutationDataExists
+                                                                .isComplete ||
+                                                            !this
+                                                                .mutationDataExists
+                                                                .result ||
+                                                            this
+                                                                .noGeneSelectedForStyling
+                                                        }
+                                                    />
+                                                    <label htmlFor="ViewMutationType">
+                                                        Mutation Type *
+                                                    </label>
+                                                </div>
+                                            )}
+                                            {this.cnaDataCanBeShown && (
+                                                <div className="checkbox color-samples-toolbar-elt">
+                                                    <input
+                                                        id="ViewCopyNumber"
+                                                        data-test="ViewCopyNumber"
+                                                        type="radio"
+                                                        name="utilities_viewCopyNumber"
+                                                        value={
+                                                            EventKey.utilities_viewCopyNumber
+                                                        }
+                                                        checked={
+                                                            this
+                                                                .viewCopyNumber &&
+                                                            !this
+                                                                .viewMutationAndCNA
+                                                        }
+                                                        onClick={
+                                                            this.onInputClick
+                                                        }
+                                                        disabled={
+                                                            !this.cnaDataExists
+                                                                .isComplete ||
+                                                            !this.cnaDataExists
+                                                                .result ||
+                                                            this
+                                                                .noGeneSelectedForStyling
+                                                        }
+                                                    />
+                                                    <label htmlFor="ViewCopyNumber">
+                                                        Copy Number Alteration
+                                                    </label>
+                                                </div>
+                                            )}
+                                            {this.mutationDataCanBeShown &&
+                                                this.cnaDataCanBeShown &&
+                                                !this.isWaterfallPlot && (
+                                                    <div className="checkbox color-samples-toolbar-elt">
+                                                        <input
+                                                            id="ViewMutationAndCNA"
+                                                            data-test="ViewMutationAndCNA"
+                                                            type="radio"
+                                                            name="utilities_viewMutationAndCNA"
                                                             value={
-                                                                this
-                                                                    .utilitiesMenuSelection
-                                                                    .selectedGeneOption
-                                                                    ? this
-                                                                          .utilitiesMenuSelection
-                                                                          .selectedGeneOption
-                                                                          .value
-                                                                    : undefined
+                                                                EventKey.utilities_viewMutationAndCNA
                                                             }
-                                                            onChange={
+                                                            checked={
                                                                 this
-                                                                    .onUtilitiesGeneSelect
+                                                                    .viewMutationAndCNA
                                                             }
-                                                            isLoading={
+                                                            onClick={
                                                                 this
-                                                                    .horzGeneOptions
-                                                                    .isPending
+                                                                    .onInputClick
                                                             }
-                                                            options={
-                                                                this
-                                                                    .utilityMenuGeneOptions
-                                                            }
-                                                            clearable={false}
-                                                            searchable={false}
                                                             disabled={
                                                                 !this
                                                                     .mutationDataExists
                                                                     .isComplete ||
                                                                 !this
                                                                     .mutationDataExists
-                                                                    .result
+                                                                    .result ||
+                                                                !this
+                                                                    .cnaDataExists
+                                                                    .isComplete ||
+                                                                !this
+                                                                    .cnaDataExists
+                                                                    .result ||
+                                                                this
+                                                                    .noGeneSelectedForStyling
                                                             }
                                                         />
-                                                    </div>
-                                                )}
-                                                {this
-                                                    .mutationDataCanBeShown && (
-                                                    <div
-                                                        className={`checkbox color-samples-toolbar-elt`}
-                                                    >
-                                                        <label>
-                                                            <input
-                                                                data-test="ViewMutationType"
-                                                                type={
-                                                                    this
-                                                                        .plotType
-                                                                        .result ===
-                                                                    PlotType.WaterfallPlot
-                                                                        ? 'radio'
-                                                                        : 'checkbox'
-                                                                }
-                                                                name="utilities_viewMutationType"
-                                                                value={
-                                                                    EventKey.utilities_viewMutationType
-                                                                }
-                                                                checked={
-                                                                    this
-                                                                        .viewMutationType
-                                                                }
-                                                                onClick={
-                                                                    this
-                                                                        .onInputClick
-                                                                }
-                                                                disabled={
-                                                                    !this
-                                                                        .mutationDataExists
-                                                                        .isComplete ||
-                                                                    !this
-                                                                        .mutationDataExists
-                                                                        .result
-                                                                }
-                                                            />
-                                                            Mutation Type *
+                                                        <label htmlFor="ViewMutationAndCNA">
+                                                            Both
                                                         </label>
                                                     </div>
                                                 )}
-                                                {this.cnaDataCanBeShown && (
-                                                    <div className="checkbox color-samples-toolbar-elt">
-                                                        <label>
-                                                            <input
-                                                                data-test="ViewCopyNumber"
-                                                                type={
-                                                                    this
-                                                                        .plotType
-                                                                        .result ===
-                                                                    PlotType.WaterfallPlot
-                                                                        ? 'radio'
-                                                                        : 'checkbox'
-                                                                }
-                                                                name="utilities_viewCopyNumber"
-                                                                value={
-                                                                    EventKey.utilities_viewCopyNumber
-                                                                }
-                                                                checked={
-                                                                    this
-                                                                        .viewCopyNumber
-                                                                }
-                                                                onClick={
-                                                                    this
-                                                                        .onInputClick
-                                                                }
-                                                                disabled={
-                                                                    !this
-                                                                        .cnaDataExists
-                                                                        .isComplete ||
-                                                                    !this
-                                                                        .cnaDataExists
-                                                                        .result
-                                                                }
-                                                            />
-                                                            Copy Number
-                                                            Alteration
-                                                        </label>
-                                                    </div>
-                                                )}
-                                            </div>
                                         </div>
                                     </div>
-                                )}
+                                </div>
+                            )}
                             {this.plotExists && (
                                 <DownloadControls
                                     getSvg={this.getSvg}
