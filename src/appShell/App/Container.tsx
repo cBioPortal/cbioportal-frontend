@@ -1,4 +1,3 @@
-import * as _ from 'lodash';
 import * as React from 'react';
 
 import '../../globalStyles/prefixed-global.scss';
@@ -6,10 +5,8 @@ import PortalHeader from './PortalHeader';
 import { getBrowserWindow, isWebdriver } from 'cbioportal-frontend-commons';
 import { observer } from 'mobx-react';
 
-import LoadingIndicator from '../../shared/components/loadingIndicator/LoadingIndicator';
 import AppConfig from 'appConfig';
 import Helmet from 'react-helmet';
-import { computed } from 'mobx';
 import { If, Else, Then } from 'react-if';
 import UserMessager from 'shared/components/userMessager/UserMessage';
 import {
@@ -57,6 +54,31 @@ export default class Container extends React.Component<IContainerProps, {}> {
                                 review these instructions for how to do so.{' '}
                                 <a href="https://docs.cbioportal.org/2.1.2-deploy-without-docker/deploying#run-cbioportal-session-service">
                                     https://docs.cbioportal.org/2.1.2-deploy-without-docker/deploying#run-cbioportal-session-service
+                                </a>
+                            </p>
+                        }
+                    />
+                </div>
+            );
+        }
+
+        if (ServerConfigHelpers.oncoKbIsEnabledWithoutToken()) {
+            return (
+                <div className="contentWrapper">
+                    <ErrorScreen
+                        title={'OncoKB is enabled but token is not defined'}
+                        body={
+                            <p>
+                                As of version 3.2.6, all cBioPortal
+                                installations require an access token to use the
+                                latest OncoKB data. You should either disable
+                                OncoKB by setting the <code>show.oncokb</code>{' '}
+                                property to <code>false</code> or register an
+                                OncoKB account and set the{' '}
+                                <code>oncokb.token</code> property. Please
+                                review these instructions for how to do so.{' '}
+                                <a href="https://docs.cbioportal.org/2.4-integration-with-other-webservices/oncokb-data-access">
+                                    https://docs.cbioportal.org/2.4-integration-with-other-webservices/oncokb-data-access
                                 </a>
                             </p>
                         }
