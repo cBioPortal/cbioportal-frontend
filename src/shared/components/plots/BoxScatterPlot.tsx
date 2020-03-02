@@ -84,6 +84,7 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     boxCalculationFilter?: (d: D) => boolean; // determines which points are used for calculating the box
     containerRef?: (svgContainer: SVGElement | null) => void;
     compressXAxis?: boolean;
+    legendTitle?: string;
 }
 
 type BoxModel = {
@@ -96,7 +97,7 @@ type BoxModel = {
     y?: number;
 };
 
-const RIGHT_GUTTER = 120; // room for legend
+const RIGHT_GUTTER = 130; // room for legend
 const NUM_AXIS_TICKS = 8;
 const PLOT_DATA_PADDING_PIXELS = 100;
 const CATEGORY_LABEL_HORZ_ANGLE = 50;
@@ -216,6 +217,12 @@ export default class BoxScatterPlot<
 
     private get title() {
         if (this.props.title) {
+            const text = textTruncationUtils(
+                this.props.title,
+                this.chartWidth,
+                axisTickLabelStyles.fontFamily,
+                `${axisTickLabelStyles.fontSize}px`
+            );
             return (
                 <VictoryLabel
                     style={{
@@ -223,9 +230,9 @@ export default class BoxScatterPlot<
                         fontFamily: axisTickLabelStyles.fontFamily,
                         textAnchor: 'middle',
                     }}
-                    x={this.svgWidth / 2}
+                    x={this.chartWidth / 2}
                     y="1.2em"
-                    text={this.props.title}
+                    text={text}
                 />
             );
         } else {
@@ -311,6 +318,21 @@ export default class BoxScatterPlot<
                         this.legendLocation === 'right'
                             ? 100
                             : this.svgHeight - this.bottomLegendHeight
+                    }
+                    title={this.props.legendTitle}
+                    titleOrientation={
+                        this.legendLocation === 'right' ? 'top' : 'left'
+                    }
+                    style={{
+                        title: {
+                            fontSize: 15,
+                            fontWeight: 'bold',
+                        },
+                    }}
+                    titleComponent={
+                        <VictoryLabel
+                            dx={this.legendLocation === 'right' ? 0 : -10}
+                        />
                     }
                 />
             );
