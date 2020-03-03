@@ -3,15 +3,16 @@ import 'rc-tooltip/assets/bootstrap_white.css';
 import { Mutation } from 'shared/api/generated/CBioPortalAPI';
 import VariantCountCache from 'shared/cache/VariantCountCache';
 import FrequencyBar from 'shared/components/cohort/FrequencyBar';
-import Icon from 'shared/components/cohort/LetterIcon';
 import { IMutSigData as MutSigData } from 'shared/model/MutSig';
 import { VariantCount } from 'shared/api/generated/CBioPortalAPIInternal';
 import { CacheData } from 'shared/lib/LazyMobXCache';
 import { getPercentage } from 'shared/lib/FormatUtils';
+import { If, Then } from 'react-if';
 import {
     TableCellStatusIndicator,
     TableCellStatus,
 } from 'cbioportal-frontend-commons';
+import MutSigAnnotation from 'shared/components/annotation/MutSig';
 
 type AugVariantCountOutput = CacheData<VariantCount> & {
     hugoGeneSymbol: string;
@@ -23,9 +24,10 @@ export default class CohortColumnFormatter {
         mutSigData: MutSigData | undefined,
         variantCountCache: VariantCountCache
     ) {
-        const mutSigQValue:
-            | number
-            | null = CohortColumnFormatter.getMutSigQValue(data, mutSigData);
+        const mutSigQValue: number = CohortColumnFormatter.getMutSigQValue(
+            data,
+            mutSigData
+        );
         const variantCountData = CohortColumnFormatter.getVariantCountData(
             data,
             variantCountCache
@@ -36,8 +38,11 @@ export default class CohortColumnFormatter {
         return (
             <div>
                 {freqViz !== null && freqViz}
-                {mutSigQValue !== null &&
-                    CohortColumnFormatter.makeMutSigIcon(mutSigQValue)}
+                <If condition={mutSigQValue > 0}>
+                    <Then>
+                        <MutSigAnnotation qValue={mutSigQValue} />
+                    </Then>
+                </If>
             </div>
         );
     }
@@ -81,13 +86,13 @@ export default class CohortColumnFormatter {
     private static getMutSigQValue(
         data: Mutation[],
         mutSigData: MutSigData | undefined
-    ): number | null {
+    ): number {
         if (!mutSigData || data.length === 0) {
-            return null;
+            return -1;
         }
         const thisData = mutSigData[data[0].entrezGeneId];
         if (!thisData) {
-            return null;
+            return -1;
         }
         return thisData.qValue;
     }
@@ -124,13 +129,6 @@ export default class CohortColumnFormatter {
         if (status !== null) {
             return <TableCellStatusIndicator status={status} />;
         }
-    }
-
-    private static makeMutSigIcon(qValue: number) {
-        const tooltipCallback = () =>
-            CohortColumnFormatter.getMutSigTooltip(qValue);
-
-        return <Icon text="M" tooltip={tooltipCallback} />;
     }
 
     private static getBoldPercentage(proportion: number) {
@@ -177,15 +175,5 @@ export default class CohortColumnFormatter {
                 </div>
             );
         }
-    }
-
-    private static getMutSigTooltip(qValue: number) {
-        return (
-            <div>
-                <b>MutSig</b>
-                <br />
-                <span> Q-value: {(qValue || 0).toExponential(3)}</span>
-            </div>
-        );
     }
 }
