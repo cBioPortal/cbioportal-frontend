@@ -108,12 +108,12 @@ describe('MutationTypeColumnFormatter', () => {
         value: string
     ) {
         assert.isTrue(
-            component.find(`span.${styles[className]}`).exists(),
+            component.find(`span.${className}`).exists(),
             `Span has the correct class name for ${mutationType}`
         );
         assert.isTrue(
             component
-                .find(`span.${styles[className]}`)
+                .find(`span.${className}`)
                 .text()
                 .indexOf(value) > -1,
             `Display value is correct for ${mutationType}`
@@ -124,49 +124,55 @@ describe('MutationTypeColumnFormatter', () => {
         testRenderedValues(
             msVarComponent,
             'Missense_Variant',
-            'missense-mutation',
+            MutationTypeColumnFormatter.MAIN_MUTATION_TYPE_MAP.missense
+                .className,
             'Missense'
         );
         testRenderedValues(
             msMutComponent,
             'Missense_mutation',
-            'missense-mutation',
+            MutationTypeColumnFormatter.MAIN_MUTATION_TYPE_MAP.missense
+                .className,
             'Missense'
         );
         testRenderedValues(
             stopgainSnvComponent,
             'stopgain_SNV',
-            'trunc-mutation',
+            MutationTypeColumnFormatter.MAIN_MUTATION_TYPE_MAP.nonsense
+                .className,
             'Nonsense'
         );
         testRenderedValues(
             nonFsDelComponent,
             'NonFrameShift_deletion',
-            'inframe-mutation',
+            MutationTypeColumnFormatter.MAIN_MUTATION_TYPE_MAP.inframe
+                .className,
             'IF'
         );
         testRenderedValues(
             spliceComponent,
             'Splice Site',
-            'trunc-mutation',
+            MutationTypeColumnFormatter.MAIN_MUTATION_TYPE_MAP.splice_site
+                .className,
             'Splice'
         );
         testRenderedValues(
             fsDelComponent,
             'FrameShift_Deletion',
-            'trunc-mutation',
+            MutationTypeColumnFormatter.MAIN_MUTATION_TYPE_MAP.frame_shift_del
+                .className,
             'FS del'
         );
         testRenderedValues(
             unknownMutComponent,
             'a_strange_type_of_mutation',
-            'other-mutation',
+            MutationTypeColumnFormatter.MAIN_MUTATION_TYPE_MAP.other.className,
             'Other'
         );
         testRenderedValues(
             otherMutComponent,
             'other',
-            'other-mutation',
+            MutationTypeColumnFormatter.MAIN_MUTATION_TYPE_MAP.other.className,
             'Other'
         );
     });
