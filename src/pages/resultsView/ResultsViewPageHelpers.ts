@@ -1,6 +1,9 @@
 import * as _ from 'lodash';
 
 import { SamplesSpecificationElement } from './ResultsViewPageStore';
+import ResultsViewURLWrapper, {
+    ResultsViewURLQueryEnum,
+} from './ResultsViewURLWrapper';
 import { VirtualStudy } from '../../shared/model/VirtualStudy';
 
 export enum ResultsViewTab {
@@ -15,6 +18,7 @@ export enum ResultsViewTab {
     SURVIVAL = 'survival',
     CN_SEGMENTS = 'cnSegments',
     NETWORK = 'network',
+    PATHWAY_MAPPER = 'pathways',
     EXPRESSION = 'expression',
     DOWNLOAD = 'download',
 }
@@ -49,6 +53,7 @@ export const oldTabToNewTabRoute: { [legacyTabId: string]: ResultsViewTab } = {
     survival: ResultsViewTab.SURVIVAL,
     IGV: ResultsViewTab.CN_SEGMENTS,
     network: ResultsViewTab.NETWORK,
+    pathways: ResultsViewTab.PATHWAY_MAPPER,
     expression: ResultsViewTab.EXPRESSION,
     download: ResultsViewTab.DOWNLOAD,
 };
@@ -192,4 +197,22 @@ export function parseSamplesSpecifications(
     }
 
     return samplesSpecifications;
+}
+
+export function addGenesToQuery(
+    urlWrapper: ResultsViewURLWrapper,
+    selectedGenes: string[],
+    tab: ResultsViewTab = ResultsViewTab.ONCOPRINT
+) {
+    // add selected genes and go to the target tab
+    const geneList = urlWrapper.query[ResultsViewURLQueryEnum.gene_list];
+
+    urlWrapper.updateURL(
+        {
+            [ResultsViewURLQueryEnum.gene_list]: `${geneList}\n${selectedGenes.join(
+                ' '
+            )}`,
+        },
+        `results/${tab}`
+    );
 }

@@ -12,6 +12,7 @@ import DownloadTab from './download/DownloadTab';
 import AppConfig from 'appConfig';
 import CNSegments from './cnSegments/CNSegments';
 import './styles.scss';
+import ResultsViewPathwayMapper from './pathwayMapper/ResultsViewPathwayMapper';
 import ResultsViewOncoprint from 'shared/components/oncoprint/ResultsViewOncoprint';
 import QuerySummary from './querySummary/QuerySummary';
 import ExpressionWrapper from './expression/ExpressionWrapper';
@@ -52,7 +53,10 @@ import OQLTextArea, {
 } from 'shared/components/GeneSelectionBox/OQLTextArea';
 import SurvivalTransitionTab from './survival/SurvivalTransitionTab';
 
-function initStore(appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
+export function initStore(
+    appStore: AppStore,
+    urlWrapper: ResultsViewURLWrapper
+) {
     const resultsViewPageStore = new ResultsViewPageStore(appStore, urlWrapper);
 
     setWindowVariable('resultsViewPageStore', resultsViewPageStore);
@@ -388,6 +392,49 @@ export default class ResultsViewPage extends React.Component<
                                     http://www.pathwaycommons.org/pcviz/
                                 </a>
                             </div>
+                        </MSKTab>
+                    );
+                },
+            },
+            {
+                id: ResultsViewTab.PATHWAY_MAPPER,
+                hide: () =>
+                    !AppConfig.serverConfig.show_pathway_mapper ||
+                    !this.resultsViewPageStore.studies.isComplete,
+                getTab: () => {
+                    const showPM =
+                        store.sequencedSampleKeysByGene.isComplete &&
+                        store.oqlFilteredCaseAggregatedDataByOQLLine
+                            .isComplete &&
+                        store.genes.isComplete &&
+                        store.samples.isComplete &&
+                        store.patients.isComplete &&
+                        store.coverageInformation.isComplete &&
+                        store.sequencedSampleKeysByGene.isComplete &&
+                        store.sequencedPatientKeysByGene.isComplete &&
+                        store.selectedMolecularProfiles.isComplete &&
+                        store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine
+                            .isComplete;
+
+                    return (
+                        <MSKTab
+                            key={13}
+                            id={ResultsViewTab.PATHWAY_MAPPER}
+                            linkText={'Pathways'}
+                        >
+                            {showPM ? (
+                                <ResultsViewPathwayMapper
+                                    store={store}
+                                    appStore={this.props.appStore}
+                                    urlWrapper={this.urlWrapper}
+                                />
+                            ) : (
+                                <LoadingIndicator
+                                    isLoading={true}
+                                    size={'big'}
+                                    center={true}
+                                />
+                            )}
                         </MSKTab>
                     );
                 },

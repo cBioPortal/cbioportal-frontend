@@ -2,9 +2,9 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { Button } from 'react-bootstrap';
 import autobind from 'autobind-decorator';
-import { ResultsViewTab } from '../ResultsViewPageHelpers';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import { ResultsViewURLQueryEnum } from 'pages/resultsView/ResultsViewURLWrapper';
+
+import { addGenesToQuery } from '../ResultsViewPageHelpers';
 
 export interface IAddCheckedGenesProps {
     checkedGenes: string[];
@@ -17,17 +17,7 @@ export default class AddCheckedGenes extends React.Component<
 > {
     @autobind
     private onAddGenes() {
-        // add genes and go back to oncoprint tab
-        (window as any).urlWrapper.updateURL(
-            {
-                [ResultsViewURLQueryEnum.gene_list]: `${
-                    (window as any).urlWrapper.query[
-                        ResultsViewURLQueryEnum.gene_list
-                    ]
-                }\n${this.props.checkedGenes.join(' ')}`,
-            },
-            `results/${ResultsViewTab.ONCOPRINT}`
-        );
+        addGenesToQuery((window as any).urlWrapper, this.props.checkedGenes);
     }
 
     public render() {
