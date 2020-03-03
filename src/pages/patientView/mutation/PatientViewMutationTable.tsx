@@ -64,6 +64,7 @@ export default class PatientViewMutationTable extends MutationTable<
             MutationTableColumnType.CHROMOSOME,
             MutationTableColumnType.PROTEIN_CHANGE,
             MutationTableColumnType.MUTATION_TYPE,
+            MutationTableColumnType.VARIANT_TYPE,
             MutationTableColumnType.FUNCTIONAL_IMPACT,
             MutationTableColumnType.COSMIC,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
@@ -237,6 +238,7 @@ export default class PatientViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.MUTATION_STATUS].order = 90;
         this._columns[MutationTableColumnType.VALIDATION_STATUS].order = 100;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 110;
+        this._columns[MutationTableColumnType.VARIANT_TYPE].order = 115;
         this._columns[MutationTableColumnType.CENTER].order = 120;
         this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ].order = 130;
         this._columns[MutationTableColumnType.VAR_READS].order = 140;

@@ -23,6 +23,7 @@ import GeneColumnFormatter from './column/GeneColumnFormatter';
 import ChromosomeColumnFormatter from './column/ChromosomeColumnFormatter';
 import ProteinChangeColumnFormatter from './column/ProteinChangeColumnFormatter';
 import MutationTypeColumnFormatter from './column/MutationTypeColumnFormatter';
+import VariantTypeColumnFormatter from './column/VariantTypeColumnFormatter';
 import FunctionalImpactColumnFormatter from './column/FunctionalImpactColumnFormatter';
 import CosmicColumnFormatter from './column/CosmicColumnFormatter';
 import MutationCountColumnFormatter from './column/MutationCountColumnFormatter';
@@ -135,6 +136,7 @@ export enum MutationTableColumnType {
     MUTATION_STATUS,
     VALIDATION_STATUS,
     MUTATION_TYPE,
+    VARIANT_TYPE,
     CENTER,
     TUMOR_ALLELE_FREQ,
     NORMAL_ALLELE_FREQ,
@@ -201,9 +203,7 @@ export function defaultFilter(
         return data.reduce((match: boolean, next: Mutation) => {
             const val = (next as any)[dataField];
             if (val) {
-                return (
-                    match || val.toUpperCase().indexOf(filterStringUpper) > -1
-                );
+                return match || val.toUpperCase().includes(filterStringUpper);
             } else {
                 return match;
             }
@@ -607,7 +607,7 @@ export default class MutationTable<
             ) =>
                 GeneColumnFormatter.getTextValue(d)
                     .toUpperCase()
-                    .indexOf(filterStringUpper) > -1,
+                    .includes(filterStringUpper),
         };
 
         this._columns[MutationTableColumnType.CHROMOSOME] = {
@@ -628,7 +628,7 @@ export default class MutationTable<
             ) =>
                 (ChromosomeColumnFormatter.getData(d) + '')
                     .toUpperCase()
-                    .indexOf(filterStringUpper) > -1,
+                    .includes(filterStringUpper),
             visible: false,
             align: 'right',
         };
@@ -655,7 +655,24 @@ export default class MutationTable<
             ) =>
                 MutationTypeColumnFormatter.getDisplayValue(d)
                     .toUpperCase()
-                    .indexOf(filterStringUpper) > -1,
+                    .includes(filterStringUpper),
+        };
+
+        this._columns[MutationTableColumnType.VARIANT_TYPE] = {
+            name: 'Variant Type',
+            render: VariantTypeColumnFormatter.renderFunction,
+            download: VariantTypeColumnFormatter.getTextValue,
+            sortBy: (d: Mutation[]) =>
+                VariantTypeColumnFormatter.getDisplayValue(d),
+            filter: (
+                d: Mutation[],
+                filterString: string,
+                filterStringUpper: string
+            ) =>
+                VariantTypeColumnFormatter.getDisplayValue(d)
+                    .toUpperCase()
+                    .includes(filterStringUpper),
+            visible: false,
         };
 
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT] = {
