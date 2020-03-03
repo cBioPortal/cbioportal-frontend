@@ -112,11 +112,17 @@ export default class WebAPIPage extends React.Component<{}, {}> {
     }
 
     public render() {
+        let apiLink = AppConfig.apiRoot + 'api';
         return (
             <PageLayout className={'whiteBackground staticPage'}>
                 <Helmet>
                     <title>{'cBioPortal for Cancer Genomics::Helmet'}</title>
                 </Helmet>
+
+                <div className="alert alert-danger">
+                    This Web API will soon be deprecated. Please consider
+                    transitioning to our <a href={apiLink}>New API</a> instead!
+                </div>
 
                 <h1>Web API</h1>
 
