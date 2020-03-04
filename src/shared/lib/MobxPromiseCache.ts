@@ -1,5 +1,6 @@
 import { MobxPromise, MobxPromiseInputParams } from 'mobxpromise';
 import { logicalAnd } from './LogicUtils';
+import { remoteData } from 'cbioportal-frontend-commons';
 
 export function stringifyObjectUnique(obj: { [k: string]: any }) {
     const keys = Object.keys(obj);
@@ -31,7 +32,7 @@ export default class MobxPromiseCache<Query, Result> {
     public get(q: Query): MobxPromise<Result> {
         const key = this.queryToKey(q);
         if (!this.cache[key]) {
-            this.cache[key] = new MobxPromise<Result>(
+            this.cache[key] = remoteData<Result>(
                 this.queryToMobxPromiseInput(q)
             );
         }
