@@ -8,6 +8,7 @@ import {
     restoreRouteAfterRedirect,
     handleStudyDO,
     handleLinkOut,
+    handleEncodedRedirect,
 } from './shared/lib/redirectHelpers';
 import PageNotFound from './shared/components/pageNotFound/PageNotFound';
 
@@ -52,6 +53,7 @@ import { ResultsViewTab } from 'pages/resultsView/ResultsViewPageHelpers';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { PatientViewPageTabs } from 'pages/patientView/PatientViewPageTabs';
 import { GroupComparisonTab } from 'pages/groupComparison/GroupComparisonTabs';
+import { handleEncodedURLRedirect } from 'shared/lib/redirectHelpers';
 
 /**
  * Validates that the parameters either do not have
@@ -303,6 +305,11 @@ export const makeRoutes = routing => {
             <Route
                 path="/link.do"
                 onEnter={handleLinkOut}
+                component={getBlankPage()}
+            />
+            <Route
+                path="/encodedRedirect"
+                onEnter={handleEncodedRedirect}
                 component={getBlankPage()}
             />
 
