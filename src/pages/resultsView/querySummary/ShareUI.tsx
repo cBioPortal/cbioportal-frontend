@@ -7,6 +7,8 @@ import { BookmarkModal } from '../bookmark/BookmarkModal';
 import { action, observable } from 'mobx';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import request from 'superagent';
+import AppConfig from 'appConfig';
+import { getBitlyShortenedUrl } from '../../../shared/lib/bitly';
 
 interface IShareUI {
     sessionEnabled: boolean;
@@ -29,31 +31,14 @@ export class ShareUI extends React.Component<IShareUI, {}> {
     async getUrls(): Promise<ShareUrls> {
         let sessionUrl = win.location.href;
 
-        let bitlyResponse;
-
-        // now lets shorten with bityly, if we have key
-        // WE ARE DISABLING BITLY PENDING DISCUSSION
-        if (this.props.bitlyAccessToken) {
-            try {
-                bitlyResponse = await request
-                    .post('https://api-ssl.bitly.com/v4/bitlinks')
-                    .send({
-                        long_url: sessionUrl,
-                    })
-                    .set({
-                        Authorization: `Bearer ${this.props.bitlyAccessToken}`,
-                    });
-            } catch (ex) {
-                // fail silently.  we can just reutrn sessionUrl without shortening
-            }
-        }
+        const bitlyUrl = await getBitlyShortenedUrl(
+            sessionUrl,
+            this.props.bitlyAccessToken
+        );
 
         return {
-            bitlyUrl:
-                bitlyResponse && bitlyResponse.body && bitlyResponse.body.link
-                    ? bitlyResponse.body.link
-                    : undefined,
-            fullUrl: win.location.href,
+            bitlyUrl,
+            fullUrl: sessionUrl,
             sessionUrl: sessionUrl,
         };
     }
