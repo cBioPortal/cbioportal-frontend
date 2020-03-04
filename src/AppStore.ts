@@ -23,7 +23,11 @@ export class AppStore {
                 sendSentryMessage('ERRORHANDLER:' + error);
             } catch (ex) {}
 
-            if (error.status && /400|500|403/.test(error.status)) {
+            if (
+                error.status &&
+                parseInt(error.status) &&
+                parseInt(error.status) >= 400
+            ) {
                 sendSentryMessage('ERROR DIALOG SHOWN:' + error);
                 this.siteErrors.push({ errorObj: error, dismissed: false });
             }
