@@ -50,9 +50,9 @@
     "testModules": "lerna run test --ignore=cbioportal-frontend --stream",
     "test:watch": "yarn run test -- --watch",
     "test:debug": "yarn run test -- --debug --browsers=Chrome_with_debugging --single-run=false",
-    "prettierFixCurrentChanges": "STAGED_AND_CHANGED_FILES=$(git diff HEAD --name-only --cached --diff-filter=d) && yarn run prettier --write $(echo $STAGED_AND_CHANGED_FILES) && git add -f $(echo $STAGED_AND_CHANGED_FILES)",
-    "prettierCheckCircleCI": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && yarn run prettier -c $(git diff origin/$(echo $BRANCH_ENV) --name-only --diff-filter=d)",
-    "prettierFixLocal": "yarn run prettier --write $(git diff $(echo $BRANCH_ENV) --name-only --diff-filter=d)",
+    "prettierFixCurrentChanges": "STAGED_AND_CHANGED_FILES=$(git diff HEAD --name-only --cached --diff-filter=d) && ([ -z \"$STAGED_AND_CHANGED_FILES\" ] && echo \"Nothing to prettify\" || (yarn run prettier --write $(echo $STAGED_AND_CHANGED_FILES) && git add -f $(echo $STAGED_AND_CHANGED_FILES)))",
+    "prettierCheckCircleCI": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && CHANGED_FILES=$(git diff origin/$(echo $BRANCH_ENV) --name-only --diff-filter=d) && [ ! -z \"$CHANGED_FILES\" ] && yarn run prettier -c $(echo $CHANGED_FILES)",
+    "prettierFixLocal": "CHANGED_FILES=$(git diff $(echo $BRANCH_ENV) --name-only --diff-filter=d) && ([ ! -z \"$CHANGED_FILES\" ] && yarn run prettier --write $(echo $CHANGED_FILES) || echo \"Nothing to prettify\")",
     "prettierAll": "yarn run prettier --write $(git ls-files | grep '\\(.js\\|.ts\\|.scss\\|.css\\)')",
     "syncmock": "node src/test/fetchMockData.js --diff"
   },
