@@ -64,7 +64,7 @@ export class StudySummaryTab extends React.Component<
             },
             onDeleteChart: (chartMeta: ChartMeta) => {
                 this.store.resetFilterAndChangeChartVisibility(
-                    chartMeta,
+                    chartMeta.uniqueKey,
                     false
                 );
             },
@@ -283,13 +283,13 @@ export class StudySummaryTab extends React.Component<
                 props.promise = this.store.mutationCountVsCNADensityData;
                 props.onValueSelection = (bounds: RectangleBounds) => {
                     this.store.updateScatterPlotFilterByValues(
-                        props.chartMeta!,
+                        props.chartMeta!.uniqueKey,
                         bounds
                     );
                 };
                 props.onResetSelection = () => {
                     this.store.updateScatterPlotFilterByValues(
-                        props.chartMeta!
+                        props.chartMeta!.uniqueKey
                     );
                 };
                 props.sampleToAnalysisGroup = this.store.sampleToAnalysisGroup;
