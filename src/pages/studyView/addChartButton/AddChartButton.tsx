@@ -245,19 +245,10 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         );
         if (option !== undefined) {
             if (this.selectedAttrs.includes(key)) {
-                this.props.store.addCharts(
-                    _.reduce(
-                        this.selectedAttrs,
-                        (acc, next) => {
-                            if (next !== key) {
-                                acc.push(next);
-                            }
-                            return acc;
-                        },
-                        [] as string[]
-                    )
+                this.props.store.resetFilterAndChangeChartVisibility(
+                    key,
+                    false
                 );
-
                 let additionType = '';
                 if (this.props.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
                     additionType = ` ${ChartTypeNameEnum[option.chartType]}`;
