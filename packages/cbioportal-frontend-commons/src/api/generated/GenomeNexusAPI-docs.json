@@ -2171,11 +2171,20 @@
             "$ref": "#/definitions/ArticleAbstract"
           }
         },
+        "alterations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "approvedIndications": {
           "type": "array",
           "items": {
             "type": "string"
           }
+        },
+        "description": {
+          "type": "string"
         },
         "drugs": {
           "type": "array",
@@ -2209,6 +2218,9 @@
             "LEVEL_Dx3",
             "NO"
           ]
+        },
+        "levelAssociatedCancerType": {
+          "$ref": "#/definitions/TumorType"
         },
         "pmids": {
           "type": "array",
