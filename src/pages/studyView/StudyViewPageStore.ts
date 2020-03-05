@@ -1407,10 +1407,10 @@ export class StudyViewPageStore {
     @autobind
     @action
     updateScatterPlotFilterByValues(
-        chartMeta: ChartMeta,
+        chartUniqueKey: string,
         bounds?: RectangleBounds
     ) {
-        if (chartMeta.uniqueKey === UniqueKey.MUTATION_COUNT_CNA_FRACTION) {
+        if (chartUniqueKey === UniqueKey.MUTATION_COUNT_CNA_FRACTION) {
             if (bounds === undefined) {
                 this._clinicalDataFilterSet.delete(FRACTION_GENOME_ALTERED);
                 this._clinicalDataFilterSet.delete(MUTATION_COUNT);
@@ -1576,52 +1576,48 @@ export class StudyViewPageStore {
 
     @action
     resetFilterAndChangeChartVisibility(
-        chartMeta: ChartMeta,
+        chartUniqueKey: string,
         visible: boolean
     ) {
         if (!visible) {
-            switch (this.chartsType.get(chartMeta.uniqueKey)) {
+            switch (this.chartsType.get(chartUniqueKey)) {
+                case ChartTypeEnum.PIE_CHART:
+                case ChartTypeEnum.TABLE:
+                    this.updateClinicalDataFilterByValues(chartUniqueKey, []);
+                    break;
+                case ChartTypeEnum.BAR_CHART:
+                    this.updateClinicalDataIntervalFilters(chartUniqueKey, []);
+                    break;
+                case ChartTypeEnum.SCATTER:
+                    this.updateScatterPlotFilterByValues(chartUniqueKey);
+                    break;
                 case ChartTypeEnum.MUTATED_GENES_TABLE:
                 case ChartTypeEnum.FUSION_GENES_TABLE:
                 case ChartTypeEnum.CNA_GENES_TABLE:
-                    this.resetGeneFilter(chartMeta.uniqueKey);
-                    break;
-                case ChartTypeEnum.SCATTER:
-                    this._chartSampleIdentifiersFilterSet.delete(
-                        chartMeta.uniqueKey
-                    );
-                    if (
-                        chartMeta.uniqueKey ===
-                        UniqueKey.MUTATION_COUNT_CNA_FRACTION
-                    ) {
-                        this._clinicalDataFilterSet.delete(MUTATION_COUNT);
-                        this._clinicalDataFilterSet.delete(
-                            FRACTION_GENOME_ALTERED
-                        );
-                    }
+                    this.resetGeneFilter(chartUniqueKey);
                     break;
                 case ChartTypeEnum.SURVIVAL:
                     break;
                 default:
-                    if (chartMeta.uniqueKey === UniqueKey.WITH_MUTATION_DATA) {
+                    if (chartUniqueKey === UniqueKey.WITH_MUTATION_DATA) {
                         this._withMutationDataFilter = undefined;
                     }
-                    if (chartMeta.uniqueKey === UniqueKey.WITH_CNA_DATA) {
+                    if (chartUniqueKey === UniqueKey.WITH_CNA_DATA) {
                         this._withCNADataFilter = undefined;
                     }
-                    if (chartMeta.uniqueKey === UniqueKey.WITH_FUSION_DATA) {
+                    if (chartUniqueKey === UniqueKey.WITH_FUSION_DATA) {
                         this._withFusionDataFilter = undefined;
                     }
-                    this._clinicalDataFilterSet.delete(chartMeta.uniqueKey);
+                    this._clinicalDataFilterSet.delete(chartUniqueKey);
                     this._chartSampleIdentifiersFilterSet.delete(
-                        chartMeta.uniqueKey
+                        chartUniqueKey
                     );
-                    this.customChartFilterSet.delete(chartMeta.uniqueKey);
+                    this.customChartFilterSet.delete(chartUniqueKey);
 
                     break;
             }
         }
-        this.changeChartVisibility(chartMeta.uniqueKey, visible);
+        this.changeChartVisibility(chartUniqueKey, visible);
     }
 
     @autobind
