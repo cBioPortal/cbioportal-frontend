@@ -1219,25 +1219,14 @@ export function groupBySampleId(
     }));
 }
 
-export function mapSampleIdToClinicalData<T extends { [key: string]: any }>(
-    clinicalDataGroupedBySampleId: Array<T>,
-    indexKey: keyof T,
-    clinicalDataKey: keyof T
+export function mapSampleIdToClinicalData(
+    clinicalDataGroupedBySampleId: Array<{ id:string; clinicalData:ClinicalData[] }>
 ) {
-    const sampleIdToClinicalDataMap: {
-        [key: string]: Array<ClinicalData>;
-    } = {};
-    for (let i = 0; i < clinicalDataGroupedBySampleId.length; i++) {
-        const sampleIdKey: string = clinicalDataGroupedBySampleId[i][
-            indexKey
-        ] as string;
-        const clinicalAttributeArray: Array<
-            ClinicalData
-        > = clinicalDataGroupedBySampleId[i][clinicalDataKey] as Array<
-            ClinicalData
-        >;
-        sampleIdToClinicalDataMap[sampleIdKey] = clinicalAttributeArray;
-    }
+    const sampleIdToClinicalDataMap = _
+        .chain(clinicalDataGroupedBySampleId)
+        .keyBy('id')
+        .mapValues('clinicalData')
+        .value();
     return sampleIdToClinicalDataMap;
 }
 

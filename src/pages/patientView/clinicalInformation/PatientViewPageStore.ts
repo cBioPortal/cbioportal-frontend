@@ -712,9 +712,7 @@ export class PatientViewPageStore {
             await: () => [this.clinicalDataGroupedBySample],
             invoke: async () => {
                 return mapSampleIdToClinicalData(
-                    this.clinicalDataGroupedBySample.result,
-                    'id',
-                    'clinicalData'
+                    this.clinicalDataGroupedBySample.result
                 );
             },
         },

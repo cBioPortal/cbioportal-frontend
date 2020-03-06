@@ -2935,9 +2935,7 @@ export class ResultsViewPageStore {
             await: () => [this.facetsClinicalDataGroupedBySample],
             invoke: async () =>
                 mapSampleIdToClinicalData(
-                    this.facetsClinicalDataGroupedBySample.result,
-                    'id',
-                    'clinicalData'
+                    this.facetsClinicalDataGroupedBySample.result
                 ),
         },
         {}

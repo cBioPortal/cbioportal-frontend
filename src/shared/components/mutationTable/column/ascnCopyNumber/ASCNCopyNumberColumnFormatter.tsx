@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as _ from 'lodash';
 import { ClonalValue } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
 import ClonalColumnFormatter from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
 import { ClinicalData } from 'shared/api/generated/CBioPortalAPI';
@@ -32,27 +33,23 @@ function getAllTotalCopyNumberForMutation(
     sampleIdToClinicalDataMap: { [key: string]: ClinicalData[] } | undefined,
     sampleIds: string[]
 ) {
-    const sampleToCNA: { [key: string]: string } = {};
-    for (const mutation of data) {
-        const ascnCopyNumberValue = getAscnCopyNumberData(
-            mutation,
-            sampleIdToClinicalDataMap
-        );
-        if (
-            ascnCopyNumberValue !== ASCNCopyNumberValue.NA &&
-            hasASCNProperty(mutation, 'totalCopyNumber') &&
-            getWGD(sampleIdToClinicalDataMap, mutation.sampleId) !==
-                ASCNCopyNumberValue.NA &&
-            getASCNCopyNumberColor(ascnCopyNumberValue.toString()) !==
-                ASCN_BLACK
-        ) {
-            sampleToCNA[
-                mutation.sampleId
-            ] = mutation.alleleSpecificCopyNumber.totalCopyNumber.toString();
-        } else {
-            sampleToCNA[mutation.sampleId] = ASCNCopyNumberValue.NA;
-        }
-    }
+    const sampleToCNA: { [key: string]: string } = _
+        .chain(data)
+        .keyBy('sampleId')
+        .mapValues(function(mutation) 
+            {
+                let ascnCopyNumberValue = getAscnCopyNumberData(mutation, sampleIdToClinicalDataMap);
+                if (
+                    ascnCopyNumberValue !== ASCNCopyNumberValue.NA &&
+                    hasASCNProperty(mutation, 'totalCopyNumber') &&
+                    getWGD(sampleIdToClinicalDataMap, mutation.sampleId) !== ASCNCopyNumberValue.NA &&
+                    getASCNCopyNumberColor(ascnCopyNumberValue.toString()) !== ASCN_BLACK
+                ) {
+                    return mutation.alleleSpecificCopyNumber.totalCopyNumber.toString();
+                }
+                return ASCNCopyNumberValue.NA;
+            })
+        .value();
     return sampleToCNA;
 }
 
