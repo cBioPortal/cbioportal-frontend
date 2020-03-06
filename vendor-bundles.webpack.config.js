@@ -30,6 +30,7 @@ const config = {
             'pluralize',
             'react-if',
             'react-select1',
+            'igv',
         ],
     },
 

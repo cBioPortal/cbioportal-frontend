@@ -37,7 +37,7 @@ declare module 'contrast';
 declare module 'react-spinkit';
 declare module 'react-portal';
 declare module 'little-loader';
-declare module 'igv/dist/igv.min.js';
+declare module 'igv';
 declare module 'react-mfb';
 declare module 'regression';
 declare module 'react-select1';
