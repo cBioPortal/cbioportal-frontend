@@ -19,6 +19,7 @@ import {
     NumericGeneMolecularData,
 } from '../../../../shared/api/generated/CBioPortalAPI';
 import {
+    generateCopyNumberAlterationQuery,
     generateQueryVariantId,
     getProteinPositionFromProteinChange,
     OncoKbAPI,
@@ -27,7 +28,6 @@ import {
     EvidenceType,
     IOncoKbData,
 } from 'cbioportal-frontend-commons';
-import { generateCopyNumberAlterationQuery } from 'cbioportal-frontend-commons/src/lib/oncokb/OncoKbUtils';
 import {
     cancerTypeForOncoKb,
     ONCOKB_DEFAULT,

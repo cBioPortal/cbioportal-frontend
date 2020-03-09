@@ -152,7 +152,19 @@ jobs:
           at: /tmp/
       # check that no `.only` statements are still in the tests
       # Ignore doTest.only in oql parser
-      - run: "! grep '\\.only' $(find ./src ./end-to-end-test -type f -name '*spec*' | grep -v node_modules) | grep -v 'doTest.only = function' | grep -v expectedParsedResult"
+      - run:
+          name: "Check Forgotten `.only` Statements"
+          command: "! grep '\\.only' $(find ./src ./end-to-end-test -type f -name '*spec*' | grep -v node_modules) | grep -v 'doTest.only = function' | grep -v expectedParsedResult"
+
+  check_incorrect_import_statements:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: /tmp/
+      # make sure that there are no relative/incorrect package imports
+      - run:
+          name: "Check Incorrect Package Import Statements"
+          command: yarn run checkIncorrectImportStatements
 
   end_to_end_tests:
     <<: *defaults
@@ -274,10 +286,13 @@ workflows:
                 requires:
                     - install
             - api_sync:
-                  requires:
+                requires:
                     - install
             - check_forgotten_spec_only_statements:
-                  requires:
+                requires:
+                    - install
+            - check_incorrect_import_statements:
+                requires:
                     - install
     nightly:
        triggers:
