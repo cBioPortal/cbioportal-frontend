@@ -267,17 +267,19 @@ export default class ClinicalData extends React.Component<
                         })
                 );
 
-                let clinicalData = await client.fetchClinicalDataUsingPOST({
-                    clinicalDataType: attribute.patientAttribute
-                        ? 'PATIENT'
-                        : 'SAMPLE',
-                    clinicalDataMultiStudyFilter: {
-                        attributeIds: [attribute.clinicalAttributeId],
-                        identifiers: attribute.patientAttribute
-                            ? patientidentifiers
-                            : sampleIdentifiers,
-                    },
-                });
+                let clinicalData = await client
+                    .handleErrorsGlobally()
+                    .fetchClinicalDataUsingPOST({
+                        clinicalDataType: attribute.patientAttribute
+                            ? 'PATIENT'
+                            : 'SAMPLE',
+                        clinicalDataMultiStudyFilter: {
+                            attributeIds: [attribute.clinicalAttributeId],
+                            identifiers: attribute.patientAttribute
+                                ? patientidentifiers
+                                : sampleIdentifiers,
+                        },
+                    });
 
                 const shouldParseFloat =
                     attribute.datatype.toLowerCase() === 'number';

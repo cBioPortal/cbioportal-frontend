@@ -53,7 +53,9 @@ class StudyInfoOverlay extends React.Component<
 > {
     @observable readonly studyMetadata = remoteData({
         invoke: async () => {
-            return client.getTagsUsingGET({ studyId: this.props.studyId });
+            return client
+                .handleErrorsGlobally({ mode: 'dialog' })
+                .getTagsUsingGET({ studyId: this.props.studyId });
         },
         onError: error => {
             console.error('Error on getting study tags.', error);

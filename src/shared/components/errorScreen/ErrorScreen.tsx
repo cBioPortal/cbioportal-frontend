@@ -5,47 +5,155 @@ import './errorScreen.scss';
 import AppConfig from 'appConfig';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import { If, Then, Else } from 'react-if';
+import { Modal } from 'react-bootstrap';
+import { SiteError } from 'AppStore';
+import { computed, observable } from 'mobx';
+import {
+    formatErrorLog,
+    formatErrorMessages,
+    formatErrorTitle,
+} from 'shared/lib/errorFormatter';
+import _ from 'lodash';
+import bind from 'bind-decorator';
+import autobind from 'autobind-decorator';
 
 interface IErrorScreenProps {
     errorLog?: string;
     title?: string;
     body?: string | JSX.Element;
-    errorMessages?: string[];
+    errors?: SiteError[];
 }
+
+const Screen: React.FunctionComponent<{}> = ({ children }) => {
+    return (
+        <div className={'errorScreen'}>
+            <a className={'errorLogo'} href={buildCBioPortalPageUrl('/')}>
+                <img
+                    src={require('../../../globalStyles/images/cbioportal_logo.png')}
+                    alt="cBioPortal Logo"
+                />
+            </a>
+
+            <div style={{ padding: 20 }}>
+                <a href={buildCBioPortalPageUrl('/')}>Return to homepage</a>
+            </div>
+
+            {children}
+        </div>
+    );
+};
+
+const ErrorDialog: React.FunctionComponent<any> = ({
+    children,
+    dismissDialog,
+    title,
+}) => {
+    return (
+        <Modal show={true} onHide={dismissDialog}>
+            <Modal.Header closeButton>
+                <h4 className={'modal-title'}>{title}</h4>
+            </Modal.Header>
+            <Modal.Body>{children}</Modal.Body>
+        </Modal>
+    );
+};
 
 @observer
 export default class ErrorScreen extends React.Component<
     IErrorScreenProps,
     {}
 > {
+    @observable currentErrorIndex = 0;
+
+    @computed get currentError() {
+        if (!this.props.errors || this.props.errors.length === 0) {
+            return undefined;
+        } else {
+            if (this.currentErrorIndex >= this.props.errors.length) {
+                return this.props.errors[this.currentErrorIndex];
+            } else {
+                return this.props.errors[0];
+            }
+        }
+    }
+
+    @computed get errorMessage() {
+        return this.currentError
+            ? formatErrorMessages([this.currentError])
+            : undefined;
+    }
+
+    @computed get errorLog() {
+        return this.currentError
+            ? formatErrorLog([this.currentError])
+            : undefined;
+    }
+
+    @computed get errorUrl() {
+        try {
+            return this.currentError!.errorObj.response.req.url;
+        } catch (e) {
+            return undefined;
+        }
+    }
+
+    @computed get errorTitle() {
+        return this.currentError
+            ? formatErrorTitle([this.currentError])
+            : undefined;
+    }
+
+    @computed get mode() {
+        // if any of the errors are screen errors, we treat all as screen
+        return _.every(this.props.errors, err => err.mode === 'dialog')
+            ? 'dialog'
+            : 'screen';
+    }
+
     public render() {
+        if (this.mode === 'dialog') {
+            return (
+                <ErrorDialog
+                    title={
+                        this.errorTitle ||
+                        'Oops. There was an error retrieving data.'
+                    }
+                    dismissDialog={() => {
+                        if (this.currentError)
+                            this.currentError.dismissed = true;
+                    }}
+                >
+                    {this.content()}
+                </ErrorDialog>
+            );
+        } else {
+            return <Screen>{this.content()}</Screen>;
+        }
+    }
+
+    content() {
         const location = getBrowserWindow().location.href;
         const subject = 'cBioPortal user reported error';
 
         return (
-            <div className={'errorScreen'}>
-                <a className={'errorLogo'} href={buildCBioPortalPageUrl('/')}>
-                    <img
-                        src={require('../../../globalStyles/images/cbioportal_logo.png')}
-                        alt="cBioPortal Logo"
-                    />
-                </a>
+            <>
+                {this.errorTitle && this.mode === 'screen' && (
+                    <h4>{this.errorTitle}</h4>
+                )}
 
-                {this.props.title && <h4>{this.props.title}</h4>}
+                {this.errorUrl && (
+                    <div>
+                        <strong>Endpoint:</strong> {this.errorUrl}
+                    </div>
+                )}
 
-                {this.props.errorMessages && (
+                {this.errorMessage && (
                     <div
                         style={{ marginTop: 20 }}
                         className={'alert alert-danger'}
                         role="alert"
                     >
-                        <ul style={{ listStyleType: 'none' }}>
-                            {this.props.errorMessages.map(
-                                (errorMessage: string, index) => (
-                                    <li>{`${index + 1}: ${errorMessage}`}</li>
-                                )
-                            )}
-                        </ul>
+                        {this.errorMessage}
                     </div>
                 )}
 
@@ -59,9 +167,7 @@ export default class ErrorScreen extends React.Component<
                                 AppConfig.serverConfig.skin_email_contact
                             }?subject=${encodeURIComponent(
                                 subject
-                            )}&body=${encodeURIComponent(
-                                this.props.errorLog || ''
-                            )}`}
+                            )}&body=${encodeURIComponent(this.errorLog || '')}`}
                         >
                             {AppConfig.serverConfig.skin_email_contact}
                         </a>
@@ -72,12 +178,12 @@ export default class ErrorScreen extends React.Component<
                     <div style={{ marginTop: 20 }} className="form-group">
                         <label>Error log:</label>
                         <textarea
-                            value={this.props.errorLog}
+                            value={this.errorLog}
                             className={'form-control'}
                         ></textarea>
                     </div>
                 )}
-            </div>
+            </>
         );
     }
 }

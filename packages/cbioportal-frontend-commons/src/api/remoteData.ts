@@ -6,14 +6,6 @@ import {
     hasObservers,
 } from 'mobxpromise';
 
-type errorHandler = (error: Error) => void;
-
-let errorHandlers: errorHandler[] = [];
-
-export function addServiceErrorHandler(handler: errorHandler) {
-    errorHandlers.push(handler);
-}
-
 (MobxPromise as any).prototype.toJSON = function() {
     return JSON.stringify(this.result);
 };
@@ -38,10 +30,6 @@ export const remoteData: MobxPromiseFactory = function<R>(
         onError: error => {
             if (onError) {
                 onError(error);
-            } else if (!hasObservers(mobxPromise, 'error')) {
-                errorHandlers.forEach(handler => {
-                    handler(error);
-                });
             }
         },
     });

@@ -313,7 +313,7 @@ export default class GroupComparisonStore extends ComparisonStore {
                     }
                 }
             }
-            return client.fetchSamplesUsingPOST({
+            return client.handleErrorsGlobally().fetchSamplesUsingPOST({
                 sampleFilter: {
                     sampleIdentifiers,
                 } as SampleFilter,
@@ -327,7 +327,7 @@ export default class GroupComparisonStore extends ComparisonStore {
             await: () => [this._session],
             invoke: () => {
                 const studyIds = getStudyIds(this._session.result!.groups);
-                return client.fetchStudiesUsingPOST({
+                return client.handleErrorsGlobally().fetchStudiesUsingPOST({
                     studyIds,
                     projection: 'DETAILED',
                 });

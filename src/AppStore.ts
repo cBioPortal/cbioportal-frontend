@@ -1,39 +1,18 @@
 import { action, computed, observable } from 'mobx';
-import {
-    addServiceErrorHandler,
-    getBrowserWindow,
-    remoteData,
-} from 'cbioportal-frontend-commons';
-import { initializeAPIClients } from './config/config';
+import { remoteData } from 'cbioportal-frontend-commons';
 import * as _ from 'lodash';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
-import { sendSentryMessage } from './shared/lib/tracking';
+import autobind from 'autobind-decorator';
 
 export type SiteError = {
     errorObj: any;
     dismissed: boolean;
     title?: string;
+    mode?: 'dialog' | 'screen';
+    customMessage?: string;
 };
 
 export class AppStore {
-    constructor() {
-        getBrowserWindow().me = this;
-        addServiceErrorHandler((error: any) => {
-            try {
-                sendSentryMessage('ERRORHANDLER:' + error);
-            } catch (ex) {}
-
-            if (
-                error.status &&
-                parseInt(error.status) &&
-                parseInt(error.status) >= 400
-            ) {
-                sendSentryMessage('ERROR DIALOG SHOWN:' + error);
-                this.siteErrors.push({ errorObj: error, dismissed: false });
-            }
-        });
-    }
-
     @observable private _appReady = false;
 
     @observable siteErrors: SiteError[] = [];
@@ -54,12 +33,21 @@ export class AppStore {
         }
     }
 
-    @computed get undismissedSiteErrors() {
+    @computed get undismissedSiteErrors(): SiteError[] {
         return _.filter(this.siteErrors.slice(), err => !err.dismissed);
     }
 
     @computed get isErrorCondition() {
+        // does it have at least one error of type screen (total failure as opposed to recoverable
+        // which we will represent as dialog
         return this.undismissedSiteErrors.length > 0;
+    }
+
+    @computed get dialogErrors() {
+        return _.filter(
+            () => this.undismissedSiteErrors,
+            (err: SiteError) => err.mode === 'dialog'
+        );
     }
 
     @action
@@ -73,6 +61,18 @@ export class AppStore {
     @action
     public setAppReady() {
         this._appReady = true;
+    }
+
+    @autobind
+    handleServiceError(error: SiteError): void {
+        if (
+            error.errorObj.status &&
+            parseInt(error.errorObj.status) &&
+            parseInt(error.errorObj.status) >= 400
+        ) {
+            error.dismissed = false;
+            this.siteErrors.push(error);
+        }
     }
 
     public get appReady() {

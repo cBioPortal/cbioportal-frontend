@@ -110,6 +110,7 @@ superagent.Request.prototype.end = function(callback) {
         if (redirecting) {
             return;
         }
+
         if (response && response.statusCode === 401) {
             var storageKey = `redirect${Math.floor(
                 Math.random() * 1000000000000
@@ -131,6 +132,8 @@ superagent.Request.prototype.end = function(callback) {
         } else {
             callback(error, response);
         }
+
+        return this;
     });
 };
 

@@ -17,6 +17,8 @@ import {
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import ErrorScreen from 'shared/components/errorScreen/ErrorScreen';
 import { ServerConfigHelpers } from 'config/config';
+import { AppStore } from 'AppStore';
+import { Modal } from 'react-bootstrap';
 
 interface IContainerProps {
     location: Location;
@@ -104,37 +106,33 @@ export default class Container extends React.Component<IContainerProps, {}> {
                         <PortalHeader appStore={this.appStore} />
                     </div>
                 </div>
-                <If condition={this.appStore.isErrorCondition}>
-                    <Then>
-                        <div className="contentWrapper">
-                            <ErrorScreen
-                                title={
-                                    formatErrorTitle(
-                                        this.appStore.undismissedSiteErrors
-                                    ) ||
-                                    'Oops. There was an error retrieving data.'
-                                }
-                                body={
-                                    <a href={buildCBioPortalPageUrl('/')}>
-                                        Return to homepage
-                                    </a>
-                                }
-                                errorLog={formatErrorLog(
-                                    this.appStore.undismissedSiteErrors
-                                )}
-                                errorMessages={formatErrorMessages(
-                                    this.appStore.undismissedSiteErrors
-                                )}
-                            />
-                        </div>
-                    </Then>
-                    <Else>
-                        <div className="contentWrapper">
-                            {this.props.children}
-                        </div>
-                    </Else>
-                </If>
+                <div className="contentWrapper">
+                    <If condition={this.appStore.isErrorCondition}>
+                        <Then>{showSiteErrors(this.appStore)}</Then>
+                        <Else>
+                            <>
+                                {this.appStore.isDialogErrorCondition &&
+                                    showSiteErrors(this.appStore)}
+                                {this.props.children}
+                            </>
+                        </Else>
+                    </If>
+                </div>
             </div>
         );
+    }
+}
+
+function showSiteErrors(appStore: AppStore) {
+    if (appStore.isErrorCondition) {
+        return (
+            <ErrorScreen
+                title={'Oops. There was an error retrieving data.'}
+                errors={appStore.undismissedSiteErrors}
+                errorLog={formatErrorLog(appStore.undismissedSiteErrors)}
+            />
+        );
+    } else {
+        return null;
     }
 }
