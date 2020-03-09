@@ -5,6 +5,7 @@ import * as _ from 'lodash';
 import { GroupComparisonLoadingParams } from '../../pages/groupComparison/GroupComparisonLoading';
 import { GroupComparisonURLQuery } from '../../pages/groupComparison/GroupComparisonURLWrapper';
 import { PagePath } from 'shared/enums/PagePaths';
+import { EncodedURLParam } from '../lib/bitly';
 
 export function trimTrailingSlash(str: string) {
     return str.replace(/\/$/g, '');
@@ -276,6 +277,12 @@ export function getComparisonSessionServiceUrl() {
             'api-legacy/proxy/session/comparison_session'
         );
     }
+}
+
+export function getEncodedRedirectUrl(targetUrl: string) {
+    return buildCBioPortalPageUrl('/encodedRedirect', {
+        [EncodedURLParam]: btoa(targetUrl),
+    });
 }
 
 export function getConfigurationServiceApiUrl() {
