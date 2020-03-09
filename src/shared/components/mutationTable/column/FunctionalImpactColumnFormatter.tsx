@@ -24,6 +24,7 @@ import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAs
 import GenomeNexusCache, {
     GenomeNexusCacheDataType,
 } from 'shared/cache/GenomeNexusCache';
+import * as _ from 'lodash';
 
 type FunctionalImpactColumnTooltipProps = {
     active: 'mutationAssessor' | 'sift' | 'polyPhen2';
@@ -421,13 +422,18 @@ export default class FunctionalImpactColumnFormatter {
     }
 
     public static getSiftData(siftDataCache: VariantAnnotation | null) {
-        const siftScore =
-            siftDataCache && siftDataCache.transcript_consequences[0]
-                ? siftDataCache.transcript_consequences[0].sift_score
-                : undefined;
-        const siftPrediction = siftDataCache
-            ? siftDataCache.transcript_consequences[0].sift_prediction
-            : undefined;
+        let siftScore: number | undefined = undefined;
+        let siftPrediction: string | undefined = undefined;
+
+        if (
+            siftDataCache &&
+            !_.isEmpty(siftDataCache.transcript_consequences)
+        ) {
+            siftScore = siftDataCache.transcript_consequences[0].sift_score;
+            siftPrediction =
+                siftDataCache.transcript_consequences[0].sift_prediction;
+        }
+
         return {
             siftScore,
             siftPrediction,
@@ -435,12 +441,20 @@ export default class FunctionalImpactColumnFormatter {
     }
 
     public static getPolyphenData(polyphenDataCache: VariantAnnotation | null) {
-        const polyPhenScore = polyphenDataCache
-            ? polyphenDataCache.transcript_consequences[0].polyphen_score
-            : undefined;
-        const polyPhenPrediction = polyphenDataCache
-            ? polyphenDataCache.transcript_consequences[0].polyphen_prediction
-            : undefined;
+        let polyPhenScore: number | undefined = undefined;
+        let polyPhenPrediction: string | undefined = undefined;
+
+        if (
+            polyphenDataCache &&
+            !_.isEmpty(polyphenDataCache.transcript_consequences)
+        ) {
+            polyPhenScore =
+                polyphenDataCache.transcript_consequences[0].polyphen_score;
+            polyPhenPrediction =
+                polyphenDataCache.transcript_consequences[0]
+                    .polyphen_prediction;
+        }
+
         return {
             polyPhenScore,
             polyPhenPrediction,
