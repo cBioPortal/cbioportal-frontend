@@ -278,6 +278,7 @@ export default class CancerStudySelector extends React.Component<
 
                             return (
                                 <div
+                                    id="mainSearchBox"
                                     style={{
                                         display: 'flex',
                                         alignItems: 'center',
@@ -348,7 +349,10 @@ export default class CancerStudySelector extends React.Component<
                     <FlexRow className={styles.cancerStudySelectorBody}>
                         <If condition={this.store.maxTreeDepth > 0}>
                             <Then>
-                                <div className={styles.cancerTypeListContainer}>
+                                <div
+                                    id="cancerTypeListContainer"
+                                    className={styles.cancerTypeListContainer}
+                                >
                                     <this.CancerTypeList />
                                 </div>
                             </Then>
@@ -356,6 +360,7 @@ export default class CancerStudySelector extends React.Component<
                         <div
                             className={styles.cancerStudyListContainer}
                             data-test="cancerTypeListContainer"
+                            id="cancerStudyListContainer"
                         >
                             <div
                                 className="checkbox"

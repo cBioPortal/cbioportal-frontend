@@ -17,6 +17,7 @@ import autobind from 'autobind-decorator';
 import { ResultsViewTab } from 'pages/resultsView/ResultsViewPageHelpers';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import { createQueryStore } from 'shared/lib/createQueryStore';
+import HomePageTour from '../../tour/HomePageTour';
 
 (Chart as any).plugins.register({
     beforeDraw: function(chartInstance: any) {
@@ -77,7 +78,7 @@ export default class HomePage extends React.Component<
                         __html: AppConfig.serverConfig.skin_blurb!,
                     }}
                 ></div>
-
+                <HomePageTour />
                 <QueryAndDownloadTabs
                     getQueryStore={this.getQueryStore}
                     showQuickSearchTab={

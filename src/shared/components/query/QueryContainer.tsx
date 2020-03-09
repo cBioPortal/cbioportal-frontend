@@ -400,6 +400,7 @@ export default class QueryContainer extends React.Component<
                                         overlay={this.queryByGeneTooltipMessage}
                                     >
                                         <a
+                                            id="queryByGene"
                                             data-test="queryByGeneButton"
                                             onClick={() =>
                                                 this.store.hasSelectedStudies &&
@@ -438,6 +439,7 @@ export default class QueryContainer extends React.Component<
                                         }
                                     >
                                         <a
+                                            id="exploreSelectedStudies"
                                             onClick={() =>
                                                 !this
                                                     .exploreCohortsButtonDisabled &&
