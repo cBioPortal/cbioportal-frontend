@@ -602,7 +602,13 @@ class DefaultMutationMapperStore implements MutationMapperStore {
                                         this.indexedVariantAnnotations.result &&
                                         this.indexedVariantAnnotations.result[
                                             genomicLocationString(gl)
-                                        ]
+                                        ] &&
+                                        !_.isEmpty(
+                                            this.indexedVariantAnnotations
+                                                .result[
+                                                genomicLocationString(gl)
+                                            ].transcript_consequences
+                                        )
                                     ) {
                                         return this.indexedVariantAnnotations.result[
                                             genomicLocationString(gl)
