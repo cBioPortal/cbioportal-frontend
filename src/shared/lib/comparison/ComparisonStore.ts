@@ -14,10 +14,7 @@ import {
     partitionCasesByGroupMembership,
 } from '../../../pages/groupComparison/GroupComparisonUtils';
 import { GroupComparisonTab } from '../../../pages/groupComparison/GroupComparisonTabs';
-import {
-    remoteData,
-    stringListToIndexSet,
-} from '../../../../packages/cbioportal-frontend-commons/dist';
+import { remoteData, stringListToIndexSet } from 'cbioportal-frontend-commons';
 import {
     CancerStudy,
     ClinicalAttribute,
