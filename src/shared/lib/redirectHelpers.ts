@@ -4,6 +4,7 @@ import { QueryParams } from 'url';
 import { PatientViewUrlParams } from '../../pages/patientView/PatientViewPage';
 import AppConfig from 'appConfig';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
+import { EncodedURLParam } from './bitly';
 
 export function restoreRouteAfterRedirect(injected: {
     routing: ExtendedRouterStore;
@@ -167,4 +168,14 @@ export function handleIndexDO() {
             '/'
         );
     }
+}
+
+export function handleEncodedRedirect() {
+    const encodedURL = getBrowserWindow().routingStore.location.query[
+        EncodedURLParam
+    ];
+    const decodedURL = atob(encodedURL);
+    (getBrowserWindow().routingStore as ExtendedRouterStore).replace(
+        decodedURL
+    );
 }
