@@ -3684,50 +3684,6 @@ export class ResultsViewPageStore {
         return parsedQString.query.session_id;
     }
 
-    readonly bookmarkLinks = remoteData<BookmarkLinks>({
-        await: () => [this.studies],
-
-        invoke: async () => {
-            const win = window as any;
-
-            let longUrl = win.location.href;
-
-            let sessionResp;
-
-            // if we have a session service, lets get the url for the session
-            if (ServerConfigHelpers.sessionServiceIsEnabled()) {
-                longUrl = await new Promise((resolve, reject) => {
-                    win.getSessionServiceBookmark(
-                        window.location.href,
-                        $('#bookmark-result-tab').data('session'),
-                        function(url: string) {
-                            resolve(url);
-                        }
-                    );
-                });
-            }
-
-            const queryData = {
-                version: 3.0,
-                longUrl: longUrl,
-                session_id: longUrl.match(/session_id=(.*)$/)[1],
-                history: 0,
-                format: 'json',
-            };
-
-            const bitlyResponse = (await request
-                .get(getBitlyServiceUrl())
-                .query(queryData)) as any;
-
-            const parsedBitlyResponse = JSON.parse(bitlyResponse.body) as any;
-            return {
-                longUrl,
-                shortenedUrl: (_.values(parsedBitlyResponse.results)[0] as any)
-                    .shortUrl,
-            };
-        },
-    });
-
     readonly molecularProfileIdToDataQueryFilter = remoteData<{
         [molecularProfileId: string]: IDataQueryFilter;
     }>({
