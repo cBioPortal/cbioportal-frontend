@@ -90,7 +90,7 @@ export default class AnnotationColumnFormatter {
 
     // TODO after refactoring MyCancerGenome, replace this function with
     //  the function 'getAnnotationData' from
-    //  packages/react-mutation-mapper/src/component/column/Annotation.tsx
+    //  react-mutation-mapper -> src/component/column/Annotation.tsx
     public static getData(
         rowData: Mutation[] | undefined,
         oncoKbCancerGenes?: IOncoKbCancerGenesWrapper,
@@ -374,7 +374,7 @@ export default class AnnotationColumnFormatter {
         );
 
         // TODO after refactoring MyCancerGenome, instead of mainContent function use the component from
-        //  packages/react-mutation-mapper/src/component/column/Annotation.tsx
+        //  react-mutation-mapper -> src/component/column/Annotation.tsx
         return AnnotationColumnFormatter.mainContent(
             annotation,
             columnProps,
