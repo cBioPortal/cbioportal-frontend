@@ -54,6 +54,7 @@
     "prettierCheckCircleCI": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && CHANGED_FILES=$(git diff origin/$(echo $BRANCH_ENV) --name-only --diff-filter=d) && [ ! -z \"$CHANGED_FILES\" ] && yarn run prettier -c $(echo $CHANGED_FILES)",
     "prettierFixLocal": "CHANGED_FILES=$(git diff $(echo $BRANCH_ENV) --name-only --diff-filter=d) && ([ ! -z \"$CHANGED_FILES\" ] && yarn run prettier --write $(echo $CHANGED_FILES) || echo \"Nothing to prettify\")",
     "prettierAll": "yarn run prettier --write $(git ls-files | grep '\\(.js\\|.ts\\|.scss\\|.css\\)')",
+    "checkIncorrectImportStatements": "./scripts/check_incorrect_import_statements.sh",
     "syncmock": "node src/test/fetchMockData.js --diff"
   },
   "engines": {
