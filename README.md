@@ -104,7 +104,7 @@ yarn run test
 ```
 
 ## Check in cBioPortal context
-Go to http://cbioportal.org (`master` branch) or http://cbioportal.org/beta/ (`rc` branch)
+Go to https://cbioportal.org (`master` branch) or https://rc.cbioportal.org/ (`rc` branch)
 
 In your browser console set:
 ```
