@@ -96,6 +96,9 @@ const studyViewFrontEnd = {
         CANCER_TYPE_DETAILED: 2000,
         OS_SURVIVAL: 400,
         DFS_SURVIVAL: 300,
+        DSS_SURVIVAL: 250,
+        PFS_SURVIVAL: 250,
+        EFS_SURVIVAL: 250,
         MUTATION_COUNT_CNA_FRACTION: 200,
         MUTATED_GENES_TABLE: 90,
         FUSION_GENES_TABLE: 85,
@@ -154,8 +157,8 @@ const studyViewFrontEnd = {
                 h: 2,
             },
             [ChartTypeEnum.SURVIVAL]: {
-                w: 2,
-                h: 2,
+                w: 1,
+                h: 1,
             },
             [ChartTypeEnum.MUTATED_GENES_TABLE]: {
                 w: 2,

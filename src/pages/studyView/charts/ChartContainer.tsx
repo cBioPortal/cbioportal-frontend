@@ -53,6 +53,7 @@ import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import WindowStore from 'shared/components/window/WindowStore';
 import Timer = NodeJS.Timer;
 import { GeneTableColumnKey, GeneTable } from 'pages/studyView/table/GeneTable';
+import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -77,6 +78,7 @@ export interface IChartContainerProps {
     store: StudyViewPageStore;
     dimension: ChartDimension;
     title: string;
+    description?: ISurvivalDescription;
     promise: MobxPromise<any>;
     filters: any;
     studyViewFilters: StudyViewFilter;
@@ -557,8 +559,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             analysisGroups={data.analysisGroups}
                             legendLocation={LegendLocation.TOOLTIP}
                             title={this.props.title}
-                            xAxisLabel="Months Survival"
-                            yAxisLabel="Surviving"
                             totalCasesHeader="Number of Cases, Total"
                             statusCasesHeader="Number of Cases, Deceased"
                             medianMonthsHeader="Median Months Survival"
@@ -569,6 +569,12 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             showSlider={false}
                             showTable={false}
                             styleOpts={{
+                                padding: {
+                                    top: 15,
+                                    bottom: 30,
+                                    left: 45,
+                                    right: 20,
+                                },
                                 width: getWidthByDimension(
                                     this.props.dimension,
                                     this.borderWidth
@@ -597,6 +603,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 },
                             }}
                             fileName={this.props.title.replace(' ', '_')}
+                            // scatter the tick to avoid text overlaping on study view survival plots
+                            yAxisTickCount={2}
+                            xAxisTickCount={4}
                         />
                     );
                 } else {
@@ -701,6 +710,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     downloadTypes={this.props.downloadTypes}
                     openComparisonPage={this.openComparisonPage}
                     placement={this.placement}
+                    description={this.props.description}
                 />
                 <div
                     style={{

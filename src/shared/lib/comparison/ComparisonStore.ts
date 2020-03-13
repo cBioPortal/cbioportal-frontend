@@ -42,7 +42,6 @@ import autobind from 'autobind-decorator';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import request from 'superagent';
 import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
-import { SURVIVAL_CHART_ATTRIBUTES } from 'pages/resultsView/survival/SurvivalChart';
 import {
     getPatientIdentifiers,
     pickClinicalDataColors,
@@ -64,6 +63,12 @@ import { fetchAllReferenceGenomeGenes } from 'shared/lib/StoreUtils';
 import MobxPromise from 'mobxpromise';
 import ResultsViewURLWrapper from '../../../pages/resultsView/ResultsViewURLWrapper';
 import { ResultsViewPageStore } from '../../../pages/resultsView/ResultsViewPageStore';
+import {
+    survivalClinicalDataVocabulary,
+    plotsPriority,
+    getSurvivalAttributes,
+    DEFAULT_SURVIVAL_PRIORITY,
+} from 'pages/resultsView/survival/SurvivalUtil';
 
 export enum OverlapStrategy {
     INCLUDE = 'Include',
@@ -968,13 +973,28 @@ export default class ComparisonStore {
     });
 
     readonly survivalClinicalDataExists = remoteData<boolean>({
-        await: () => [this.activeSamplesNotOverlapRemoved],
+        await: () => [
+            this.activeSamplesNotOverlapRemoved,
+            this.survivalClinicalAttributesPrefix,
+        ],
         invoke: async () => {
             if (this.activeSamplesNotOverlapRemoved.result!.length === 0) {
                 return false;
             }
+            const attributeNames = _.reduce(
+                this.survivalClinicalAttributesPrefix.result!,
+                (attributeNames, prefix: string) => {
+                    attributeNames.push(prefix + '_STATUS');
+                    attributeNames.push(prefix + '_MONTHS');
+                    return attributeNames;
+                },
+                [] as string[]
+            );
+            if (attributeNames.length === 0) {
+                return false;
+            }
             const filter: ClinicalDataMultiStudyFilter = {
-                attributeIds: SURVIVAL_CHART_ATTRIBUTES,
+                attributeIds: attributeNames,
                 identifiers: this.activeSamplesNotOverlapRemoved.result!.map(
                     (s: any) => ({ entityId: s.patientId, studyId: s.studyId })
                 ),
@@ -994,13 +1014,30 @@ export default class ComparisonStore {
 
     readonly survivalClinicalData = remoteData<ClinicalData[]>(
         {
-            await: () => [this.activeSamplesNotOverlapRemoved],
+            await: () => [
+                this.activeSamplesNotOverlapRemoved,
+                this.survivalClinicalAttributesPrefix,
+            ],
             invoke: () => {
                 if (this.activeSamplesNotOverlapRemoved.result!.length === 0) {
                     return Promise.resolve([]);
                 }
+                const attributeNames: string[] = _.reduce(
+                    this.survivalClinicalAttributesPrefix.result!,
+                    (attributeNames, prefix: string) => {
+                        attributeNames.push(prefix + '_STATUS');
+                        attributeNames.push(prefix + '_MONTHS');
+                        return attributeNames;
+                    },
+                    [] as string[]
+                );
+                console.log(attributeNames);
+
+                if (attributeNames.length === 0) {
+                    return Promise.resolve([]);
+                }
                 const filter: ClinicalDataMultiStudyFilter = {
-                    attributeIds: SURVIVAL_CHART_ATTRIBUTES,
+                    attributeIds: attributeNames,
                     identifiers: this.activeSamplesNotOverlapRemoved.result!.map(
                         (s: any) => ({
                             entityId: s.patientId,
@@ -1032,6 +1069,38 @@ export default class ComparisonStore {
         []
     );
 
+    readonly survivalClinicalAttributesPrefix = remoteData({
+        await: () => [this.activeStudiesClinicalAttributes],
+        invoke: () => {
+            const attributes = getSurvivalAttributes(
+                this.activeStudiesClinicalAttributes.result!
+            );
+            // get paired attributes
+            const attributesPrefix = _.reduce(
+                attributes,
+                (attributesPrefix, attribute) => {
+                    let prefix = attribute.substring(
+                        0,
+                        attribute.indexOf('_STATUS')
+                    );
+                    if (!attributesPrefix.includes(prefix)) {
+                        if (attributes.includes(`${prefix}_MONTHS`)) {
+                            attributesPrefix.push(prefix);
+                        }
+                    }
+                    return attributesPrefix;
+                },
+                [] as string[]
+            );
+            // change prefix order based on priority
+            return Promise.resolve(
+                _.sortBy(attributesPrefix, prefix => {
+                    return plotsPriority[prefix] || DEFAULT_SURVIVAL_PRIORITY;
+                })
+            );
+        },
+    });
+
     readonly survivalClinicalDataGroupByUniquePatientKey = remoteData<{
         [key: string]: ClinicalData[];
     }>({
@@ -1044,43 +1113,34 @@ export default class ComparisonStore {
         },
     });
 
-    readonly overallPatientSurvivals = remoteData<PatientSurvival[]>(
-        {
-            await: () => [
-                this.survivalClinicalDataGroupByUniquePatientKey,
-                this.activePatientKeysNotOverlapRemoved,
-            ],
-            invoke: async () => {
-                return getPatientSurvivals(
-                    this.survivalClinicalDataGroupByUniquePatientKey.result,
-                    this.activePatientKeysNotOverlapRemoved.result!,
-                    'OS_STATUS',
-                    'OS_MONTHS',
-                    s => s === 'DECEASED'
-                );
-            },
+    readonly patientSurvivals = remoteData<{
+        [prefix: string]: PatientSurvival[];
+    }>({
+        await: () => [
+            this.survivalClinicalDataGroupByUniquePatientKey,
+            this.activePatientKeysNotOverlapRemoved,
+            this.survivalClinicalAttributesPrefix,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                _.reduce(
+                    this.survivalClinicalAttributesPrefix.result!,
+                    (acc, key) => {
+                        acc[key] = getPatientSurvivals(
+                            this.survivalClinicalDataGroupByUniquePatientKey
+                                .result,
+                            this.activePatientKeysNotOverlapRemoved.result!,
+                            `${key}_STATUS`,
+                            `${key}_MONTHS`,
+                            s => survivalClinicalDataVocabulary[key].includes(s)
+                        );
+                        return acc;
+                    },
+                    {} as { [prefix: string]: PatientSurvival[] }
+                )
+            );
         },
-        []
-    );
-
-    readonly diseaseFreePatientSurvivals = remoteData<PatientSurvival[]>(
-        {
-            await: () => [
-                this.survivalClinicalDataGroupByUniquePatientKey,
-                this.activePatientKeysNotOverlapRemoved,
-            ],
-            invoke: async () => {
-                return getPatientSurvivals(
-                    this.survivalClinicalDataGroupByUniquePatientKey.result,
-                    this.activePatientKeysNotOverlapRemoved.result!,
-                    'DFS_STATUS',
-                    'DFS_MONTHS',
-                    s => s === 'Recurred/Progressed' || s === 'Recurred'
-                );
-            },
-        },
-        []
-    );
+    });
 
     readonly uidToGroup = remoteData({
         await: () => [this._originalGroups],
@@ -1178,71 +1238,45 @@ export default class ComparisonStore {
         {}
     );
 
-    readonly overallSurvivalDescriptions = remoteData({
+    readonly survivalDescriptions = remoteData({
         await: () => [
             this.activeStudiesClinicalAttributes,
             this.activeStudyIdToStudy,
+            this.survivalClinicalAttributesPrefix,
         ],
         invoke: () => {
-            const overallSurvivalClinicalAttributeId = 'OS_STATUS';
-            const clinicalAttributeMap = _.groupBy(
-                this.activeStudiesClinicalAttributes.result,
-                'clinicalAttributeId'
+            const survivalDescriptions = _.reduce(
+                this.survivalClinicalAttributesPrefix.result!,
+                (acc, prefix) => {
+                    const clinicalAttributeId = `${prefix}_STATUS`;
+                    const clinicalAttributeMap = _.groupBy(
+                        this.activeStudiesClinicalAttributes.result,
+                        'clinicalAttributeId'
+                    );
+                    const studyIdToStudy: {
+                        [studyId: string]: CancerStudy;
+                    } = this.activeStudyIdToStudy.result;
+                    if (
+                        clinicalAttributeMap &&
+                        clinicalAttributeMap[clinicalAttributeId] &&
+                        clinicalAttributeMap[clinicalAttributeId].length > 0
+                    ) {
+                        clinicalAttributeMap[clinicalAttributeId].map(attr => {
+                            if (!acc[prefix]) {
+                                acc[prefix] = [];
+                            }
+                            acc[prefix].push({
+                                studyName: studyIdToStudy[attr.studyId].name,
+                                description: attr.description,
+                                displayName: attr.displayName,
+                            } as ISurvivalDescription);
+                        });
+                    }
+                    return acc;
+                },
+                {} as { [prefix: string]: ISurvivalDescription[] }
             );
-            const result: ISurvivalDescription[] = [];
-            const studyIdToStudy: { [studyId: string]: CancerStudy } = this
-                .activeStudyIdToStudy.result;
-            if (
-                clinicalAttributeMap &&
-                clinicalAttributeMap[overallSurvivalClinicalAttributeId] &&
-                clinicalAttributeMap[overallSurvivalClinicalAttributeId]
-                    .length > 0
-            ) {
-                clinicalAttributeMap[
-                    overallSurvivalClinicalAttributeId
-                ].forEach(attr => {
-                    result.push({
-                        studyName: studyIdToStudy[attr.studyId].name,
-                        description: attr.description,
-                    } as ISurvivalDescription);
-                });
-                return Promise.resolve(result);
-            }
-            return Promise.resolve([]);
-        },
-    });
-
-    readonly diseaseFreeSurvivalDescriptions = remoteData({
-        await: () => [
-            this.activeStudiesClinicalAttributes,
-            this.activeStudyIdToStudy,
-        ],
-        invoke: () => {
-            const diseaseFreeSurvivalClinicalAttributeId = 'DFS_STATUS';
-            const clinicalAttributeMap = _.groupBy(
-                this.activeStudiesClinicalAttributes.result,
-                'clinicalAttributeId'
-            );
-            const result: ISurvivalDescription[] = [];
-            const studyIdToStudy: { [studyId: string]: CancerStudy } = this
-                .activeStudyIdToStudy.result;
-            if (
-                clinicalAttributeMap &&
-                clinicalAttributeMap[diseaseFreeSurvivalClinicalAttributeId] &&
-                clinicalAttributeMap[diseaseFreeSurvivalClinicalAttributeId]
-                    .length > 0
-            ) {
-                clinicalAttributeMap[
-                    diseaseFreeSurvivalClinicalAttributeId
-                ].forEach(attr => {
-                    result.push({
-                        studyName: studyIdToStudy[attr.studyId].name,
-                        description: attr.description,
-                    } as ISurvivalDescription);
-                });
-                return Promise.resolve(result);
-            }
-            return Promise.resolve([]);
+            return Promise.resolve(survivalDescriptions);
         },
     });
 }
