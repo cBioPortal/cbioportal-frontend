@@ -407,10 +407,9 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                                             .trueHugoSymbol
                                     }{' '}
                                 </b>
-                                {
-                                    genomicGroupMatch.patientGenomic!
-                                        .trueProteinChange
-                                }
+                                {genomicGroupMatch.patientGenomic!.trueProteinChange.join(
+                                    ', '
+                                )}
                             </span>
                             <DefaultTooltip
                                 placement="bottomLeft"
