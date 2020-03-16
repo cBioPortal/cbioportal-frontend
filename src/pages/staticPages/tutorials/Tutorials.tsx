@@ -160,6 +160,23 @@ export default class Tutorials extends React.Component<{}, {}> {
                         Download tutorial
                     </a>
                 </h4>
+
+                <h2 id={'pathways'}>Tutorial #7: Pathways</h2>
+                <iframe
+                    src="https://docs.google.com/presentation/d/1O5WGucz0lrfdY25b5QS6zaID_26i434EYXBluqZfT2g/embed?startfalse&loop=false&delayms=60000"
+                    frameBorder="0"
+                    width="720"
+                    height="434"
+                    allowFullScreen={true}
+                ></iframe>
+                <h4>
+                    <a
+                        href={`${AppConfig.serverConfig
+                            .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 7 Pathways.pdf`}
+                    >
+                        Download tutorial
+                    </a>
+                </h4>
             </PageLayout>
         );
     }
