@@ -20,9 +20,7 @@ import * as _ from 'lodash';
 import { log } from 'shared/lib/consoleLog';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import { MapValues, Omit } from './TypeScriptUtils';
-
-export type BooleanString = string;
-export type NumberString = string;
+import { QueryParams } from 'url';
 
 export type Property<T, NestedObjectType = any> = {
     name: keyof T;
@@ -127,23 +125,48 @@ export default class URLWrapper<
 
                 runInAction(() => {
                     log('setting session', routeQuery.session_id);
-
-                    for (const property of this.properties) {
-                        // if property is not a session prop
-                        // it will always be represented in URL
-                        if (this.hasSessionId && property.isSessionProp) {
-                            // if there is a session, then sync it with session
-                            sessionQuery &&
-                                this.syncProperty(property, sessionQuery);
-                        } else {
-                            // @ts-ignore
-                            this.syncProperty(property, routeQuery);
-                        }
-                    }
+                    this.syncAllProperties(routeQuery, sessionQuery);
                 });
             },
             { fireImmediately: true }
         );
+    }
+
+    @action
+    protected updateRoute(
+        newParams: QueryParams,
+        path: string | undefined = undefined,
+        clear = false,
+        replace = false
+    ) {
+        this.routing.updateRoute(newParams, path, clear, replace);
+        // immediately sync properties from URL and session
+        this.syncAllProperties(
+            this.routing.location.query,
+            this._sessionData &&
+                (this._sessionData.query as MapValues<
+                    QueryParamsType,
+                    string | undefined
+                >)
+        );
+    }
+
+    @action
+    protected syncAllProperties(
+        routeQuery: MapValues<QueryParamsType, string | undefined>,
+        sessionQuery?: MapValues<QueryParamsType, string | undefined>
+    ) {
+        for (const property of this.properties) {
+            // if property is not a session prop
+            // it will always be represented in URL
+            if (this.hasSessionId && property.isSessionProp) {
+                // if there is a session, then sync it with session
+                sessionQuery && this.syncProperty(property, sessionQuery);
+            } else {
+                // @ts-ignore
+                this.syncProperty(property, routeQuery);
+            }
+        }
     }
 
     public get query(): Readonly<QueryParamsType> {
@@ -281,7 +304,7 @@ export default class URLWrapper<
                 };
 
                 // we need to make a new session
-                this.routing.updateRoute(
+                this.updateRoute(
                     Object.assign(
                         {},
                         this.stringifyProps(paramsMap.nonSessionProps),
@@ -306,8 +329,8 @@ export default class URLWrapper<
                         timeStamp === this._sessionData!.timeStamp
                     ) {
                         this._sessionData!.id = data.id;
-                        this.routing.updateRoute(
-                            { session_id: data.id },
+                        this.updateRoute(
+                            { session_id: data.id as string },
                             path,
                             false,
                             true // we don't want pending to show up in history
@@ -316,7 +339,7 @@ export default class URLWrapper<
                 });
             } else {
                 // we already have session, we just need to update path or non session params
-                this.routing.updateRoute(
+                this.updateRoute(
                     this.stringifyProps(paramsMap.nonSessionProps),
                     path,
                     clear,
@@ -327,7 +350,7 @@ export default class URLWrapper<
             // WE ARE NOT IN SESSION MODE
             //this._sessionData = undefined;
             //updatedParams.session_id = undefined;
-            this.routing.updateRoute(
+            this.updateRoute(
                 this.stringifyProps(updatedParams),
                 path,
                 clear,
