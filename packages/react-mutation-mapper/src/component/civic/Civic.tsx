@@ -1,12 +1,18 @@
-import * as React from 'react';
-import * as _ from 'lodash';
-import { observer } from 'mobx-react';
-import { errorIcon, loaderIcon } from 'react-mutation-mapper';
-import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import annotationStyles from './styles/annotation.module.scss';
-import { ICivicVariant, ICivicEntry } from 'shared/model/Civic.ts';
+import _ from 'lodash';
 import { observable } from 'mobx';
+import { observer } from 'mobx-react';
+import * as React from 'react';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
+
+import { ICivicEntry, ICivicVariantData } from '../../model/Civic';
+import { CIVIC_NA_VALUE } from '../../util/CivicUtils';
+import { errorIcon, loaderIcon } from '../StatusHelpers';
 import CivicCard from './CivicCard';
+
+import civicLogoSrc from '../../images/civic-logo.png';
+import civicLogoNoVariantsSrc from '../../images/civic-logo-no-variants.png';
+
+import annotationStyles from '../column/annotation.module.scss';
 
 export interface ICivicProps {
     civicEntry: ICivicEntry | null | undefined;
@@ -19,43 +25,41 @@ export function hideArrow(tooltipEl: any) {
     arrowEl.style.display = 'none';
 }
 
+export function sortValue(civicEntry: ICivicEntry | null | undefined): number {
+    let score = 0;
+
+    if (civicEntry) {
+        score = 1;
+    }
+
+    return score;
+}
+
+export function download(civicEntry: ICivicEntry | null | undefined): string {
+    if (!civicEntry) {
+        return CIVIC_NA_VALUE;
+    }
+
+    const variants: ICivicVariantData[] = _.values(civicEntry.variants);
+    const values: string[] = [];
+
+    if (variants && variants.length > 0 && variants[0].evidence) {
+        _.forEach(variants[0].evidence, (value, key) => {
+            values.push(`${key}: ${value}`);
+        });
+    }
+
+    // this indicates that we have an entry but the evidence is empty
+    if (values.length === 0) {
+        return CIVIC_NA_VALUE;
+    }
+
+    return values.join(', ');
+}
+
 @observer
 export default class Civic extends React.Component<ICivicProps, {}> {
     @observable tooltipDataLoadComplete: boolean = false;
-
-    public static sortValue(
-        civicEntry: ICivicEntry | null | undefined
-    ): number {
-        let score: number = 0;
-
-        if (civicEntry) {
-            score = 1;
-        }
-
-        return score;
-    }
-
-    public static download(civicEntry: ICivicEntry | null | undefined): string {
-        if (!civicEntry) {
-            return 'NA';
-        }
-
-        const variants = _.values(civicEntry.variants);
-        const values: string[] = [];
-
-        if (variants && variants.length > 0 && variants[0].evidence) {
-            _.toPairs(variants[0].evidence).forEach(pair => {
-                values.push(`${pair[0]}: ${pair[1]}`);
-            });
-        }
-
-        // TODO actually this indicates that we have an entry but the evidence is empty
-        if (values.length === 0) {
-            return 'NA';
-        }
-
-        return values.join(', ');
-    }
 
     constructor(props: ICivicProps) {
         super(props);
@@ -70,10 +74,9 @@ export default class Civic extends React.Component<ICivicProps, {}> {
 
         const civicImgWidth: number = 14;
         let civicImgHeight: number = 14;
-        let civicImgSrc = require('./images/civic-logo.png');
-        if (!this.props.hasCivicVariants) {
-            civicImgSrc = require('./images/civic-logo-no-variants.png');
-        }
+        let civicImgSrc = !this.props.hasCivicVariants
+            ? civicLogoNoVariantsSrc
+            : civicLogoSrc;
 
         if (this.props.civicStatus == 'error') {
             civicContent = errorIcon('Error fetching Civic data');
@@ -93,8 +96,6 @@ export default class Civic extends React.Component<ICivicProps, {}> {
                     </span>
                 );
 
-                const arrowContent = <div className="rc-tooltip-arrow-inner" />;
-
                 civicContent = (
                     <DefaultTooltip
                         overlay={this.cardContent.bind(
@@ -103,7 +104,6 @@ export default class Civic extends React.Component<ICivicProps, {}> {
                         )}
                         placement="right"
                         trigger={['hover', 'focus']}
-                        arrowContent={arrowContent}
                         onPopupAlign={hideArrow}
                         destroyTooltipOnHide={false}
                     >

@@ -7,7 +7,7 @@ import _ from 'lodash';
 import ErrorMessage from '../ErrorMessage';
 import Spinner from 'react-spinkit';
 import { MobxPromise } from 'mobxpromise';
-import { getMobxPromiseGroupStatus } from '../../lib/getMobxPromiseGroupStatus';
+import { getMobxPromiseGroupStatus } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
 import Timer = NodeJS.Timer;
 

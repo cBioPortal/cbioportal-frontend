@@ -22,7 +22,7 @@ import {
 } from '../../../shared/lib/alterationCountHelpers';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
 import MobxPromise from 'mobxpromise/dist/src/MobxPromise';
-import { getMobxPromiseGroupStatus } from '../../../shared/lib/getMobxPromiseGroupStatus';
+import { getMobxPromiseGroupStatus } from 'cbioportal-frontend-commons';
 import NotUsingGenePanelWarning from '../NotUsingGenePanelWarning';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 

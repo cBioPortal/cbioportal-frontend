@@ -15,6 +15,7 @@ import ClinVar from '../column/ClinVar';
 import Gnomad, { getMyVariantInfoData } from '../column/Gnomad';
 import { MutationFilterValue } from '../../filter/MutationFilter';
 import { IHotspotIndex } from '../../model/CancerHotspot';
+import { ICivicGene, ICivicVariant } from '../../model/Civic';
 import { DataFilterType } from '../../model/DataFilter';
 import { MobxCache } from '../../model/MobxCache';
 import { Mutation } from '../../model/Mutation';
@@ -43,6 +44,9 @@ export type DefaultMutationTableProps = {
     indexedVariantAnnotations?: RemoteData<
         { [genomicLocation: string]: VariantAnnotation } | undefined
     >;
+    enableCivic?: boolean;
+    civicGenes?: RemoteData<ICivicGene | undefined>;
+    civicVariants?: RemoteData<ICivicVariant | undefined>;
     pubMedCache?: MobxCache;
     columns: Column<Partial<Mutation>>[];
     appendColumns?: boolean;
@@ -67,6 +71,7 @@ export default class DefaultMutationTable extends React.Component<
             this.props.oncoKbCancerGenes,
             this.props.hotspotData,
             this.props.oncoKbData,
+            this.props.civicVariants,
         ];
     }
 
@@ -91,7 +96,9 @@ export default class DefaultMutationTable extends React.Component<
                       mutation,
                       this.props.oncoKbCancerGenes,
                       this.props.hotspotData,
-                      this.props.oncoKbData
+                      this.props.oncoKbData,
+                      this.props.civicGenes,
+                      this.props.civicVariants
                   );
     }
 
@@ -132,10 +139,13 @@ export default class DefaultMutationTable extends React.Component<
                         mutation={column.original}
                         enableOncoKb={true}
                         enableHotspot={true}
+                        enableCivic={this.props.enableCivic || false}
                         hotspotData={this.props.hotspotData}
                         oncoKbData={this.props.oncoKbData}
                         oncoKbCancerGenes={this.props.oncoKbCancerGenes}
                         pubMedCache={this.props.pubMedCache}
+                        civicGenes={this.props.civicGenes}
+                        civicVariants={this.props.civicVariants}
                     />
                 );
             case MutationColumn.GNOMAD:

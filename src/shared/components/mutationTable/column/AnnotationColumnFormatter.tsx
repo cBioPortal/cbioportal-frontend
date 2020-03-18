@@ -2,15 +2,19 @@ import * as React from 'react';
 import { If } from 'react-if';
 import * as _ from 'lodash';
 import {
+    Civic,
+    civicDownload,
+    civicSortValue,
+    getCivicEntry,
     HotspotAnnotation,
     hotspotAnnotationSortValue,
+    ICivicEntry,
     OncoKB,
     oncoKbAnnotationDownload,
     oncoKbAnnotationSortValue,
 } from 'react-mutation-mapper';
 import OncokbPubMedCache from 'shared/cache/PubMedCache';
 import MyCancerGenome from 'shared/components/annotation/MyCancerGenome';
-import Civic from 'shared/components/annotation/Civic';
 import {
     IMyCancerGenomeData,
     IMyCancerGenome,
@@ -21,24 +25,18 @@ import {
     CancerGene,
     generateQueryVariantId,
     IndicatorQueryResp,
-    Query,
 } from 'cbioportal-frontend-commons';
 import { is3dHotspot, isRecurrentHotspot } from 'shared/lib/AnnotationUtils';
 import {
-    ICivicVariant,
-    ICivicGene,
-    ICivicEntry,
-    ICivicVariantData,
-    ICivicGeneData,
     ICivicGeneDataWrapper,
     ICivicVariantDataWrapper,
-} from 'shared/model/Civic.ts';
-import { buildCivicEntry } from 'shared/lib/CivicUtils';
+} from 'shared/model/Civic';
 import {
     IOncoKbCancerGenesWrapper,
     IOncoKbData,
     IOncoKbDataWrapper,
 } from 'cbioportal-frontend-commons';
+import { getMobxPromiseGroupStatus } from 'cbioportal-frontend-commons';
 
 export interface IAnnotationColumnProps {
     enableOncoKb: boolean;
@@ -90,6 +88,9 @@ export default class AnnotationColumnFormatter {
         };
     }
 
+    // TODO after refactoring MyCancerGenome, replace this function with
+    //  the function 'getAnnotationData' from
+    //  react-mutation-mapper -> src/component/column/Annotation.tsx
     public static getData(
         rowData: Mutation[] | undefined,
         oncoKbCancerGenes?: IOncoKbCancerGenesWrapper,
@@ -135,7 +136,7 @@ export default class AnnotationColumnFormatter {
                     civicGenes.result &&
                     civicVariants &&
                     civicVariants.result
-                        ? AnnotationColumnFormatter.getCivicEntry(
+                        ? getCivicEntry(
                               mutation,
                               civicGenes.result,
                               civicVariants.result
@@ -146,10 +147,7 @@ export default class AnnotationColumnFormatter {
                     civicGenes.status &&
                     civicVariants &&
                     civicVariants.status
-                        ? AnnotationColumnFormatter.getCivicStatus(
-                              civicGenes.status,
-                              civicVariants.status
-                          )
+                        ? getMobxPromiseGroupStatus(civicGenes, civicVariants)
                         : 'pending',
                 hasCivicVariants: true,
                 myCancerGenomeLinks: myCancerGenomeData
@@ -213,50 +211,6 @@ export default class AnnotationColumnFormatter {
         }
 
         return value as IAnnotation;
-    }
-
-    /**
-     * Returns an ICivicEntry if the civicGenes and civicVariants have information about the gene and the mutation (variant) specified. Otherwise it returns null.
-     */
-    public static getCivicEntry(
-        mutation: Mutation,
-        civicGenes: ICivicGene,
-        civicVariants: ICivicVariant
-    ): ICivicEntry | null {
-        let geneSymbol: string = mutation.gene.hugoGeneSymbol;
-        let civicEntry = null;
-        //Only search for matching Civic variants if the gene mutation exists in the Civic API
-        if (
-            civicGenes[geneSymbol] &&
-            civicVariants[geneSymbol] &&
-            civicVariants[geneSymbol][mutation.proteinChange]
-        ) {
-            let geneVariants: { [name: string]: ICivicVariantData } = {
-                [mutation.proteinChange]:
-                    civicVariants[geneSymbol][mutation.proteinChange],
-            };
-            let geneEntry: ICivicGeneData = civicGenes[geneSymbol];
-            civicEntry = buildCivicEntry(geneEntry, geneVariants);
-        }
-
-        return civicEntry;
-    }
-
-    public static getCivicStatus(
-        civicGenesStatus: 'pending' | 'error' | 'complete',
-        civicVariantsStatus: 'pending' | 'error' | 'complete'
-    ): 'pending' | 'error' | 'complete' {
-        if (civicGenesStatus === 'error' || civicVariantsStatus === 'error') {
-            return 'error';
-        }
-        if (
-            civicGenesStatus === 'complete' &&
-            civicVariantsStatus === 'complete'
-        ) {
-            return 'complete';
-        }
-
-        return 'pending';
     }
 
     public static getIndicatorData(
@@ -362,7 +316,7 @@ export default class AnnotationColumnFormatter {
 
         return _.flatten([
             oncoKbAnnotationSortValue(annotationData.oncoKbIndicator),
-            Civic.sortValue(annotationData.civicEntry),
+            civicSortValue(annotationData.civicEntry),
             MyCancerGenome.sortValue(annotationData.myCancerGenomeLinks),
             hotspotAnnotationSortValue(
                 annotationData.isHotspot,
@@ -395,7 +349,7 @@ export default class AnnotationColumnFormatter {
             `OncoKB: ${oncoKbAnnotationDownload(
                 annotationData.oncoKbIndicator
             )}`,
-            `CIViC: ${Civic.download(annotationData.civicEntry)}`,
+            `CIViC: ${civicDownload(annotationData.civicEntry)}`,
             `MyCancerGenome: ${MyCancerGenome.download(
                 annotationData.myCancerGenomeLinks
             )}`,
@@ -419,6 +373,8 @@ export default class AnnotationColumnFormatter {
             columnProps.studyIdToStudy
         );
 
+        // TODO after refactoring MyCancerGenome, instead of mainContent function use the component from
+        //  react-mutation-mapper -> src/component/column/Annotation.tsx
         return AnnotationColumnFormatter.mainContent(
             annotation,
             columnProps,

@@ -1,10 +1,6 @@
 import * as request from 'superagent';
-import {
-    ICivicGene,
-    ICivicGeneData,
-    ICivicVariant,
-    ICivicVariantData,
-} from 'shared/model/Civic.ts';
+
+import { ICivicGeneData, ICivicVariantData } from '../model/Civic';
 
 type CivicAPIGene = {
     id: number;
@@ -17,12 +13,6 @@ type CivicAPIGene = {
 type CivicAPIGeneVariant = {
     name: string;
     id: number;
-    [propName: string]: any;
-};
-
-type CivicAPIVariant = {
-    description: string;
-    evidence_items: Array<Evidence>;
     [propName: string]: any;
 };
 

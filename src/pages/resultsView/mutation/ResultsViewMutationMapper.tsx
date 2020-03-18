@@ -4,7 +4,10 @@ import { DataFilterType, onFilterOptionSelect } from 'react-mutation-mapper';
 import { observer } from 'mobx-react';
 import { action, computed } from 'mobx';
 
-import { EnsemblTranscript } from 'cbioportal-frontend-commons';
+import {
+    EnsemblTranscript,
+    getMobxPromiseGroupStatus,
+} from 'cbioportal-frontend-commons';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import CancerTypeCache from 'shared/cache/CancerTypeCache';
 import MutationCountCache from 'shared/cache/MutationCountCache';
@@ -19,7 +22,6 @@ import { MUTATION_STATUS_FILTER_ID } from 'shared/components/mutationMapper/Muta
 import MutationRateSummary from 'pages/resultsView/mutation/MutationRateSummary';
 import ResultsViewMutationMapperStore from 'pages/resultsView/mutation/ResultsViewMutationMapperStore';
 import ResultsViewMutationTable from 'pages/resultsView/mutation/ResultsViewMutationTable';
-import { getMobxPromiseGroupStatus } from 'shared/lib/getMobxPromiseGroupStatus';
 
 export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     store: ResultsViewMutationMapperStore;
