@@ -53,7 +53,6 @@ import {
     generateIdToIndicatorMap,
     generateProteinChangeQuery,
 } from 'cbioportal-frontend-commons';
-import { getCivicGenes, getCivicVariants } from 'shared/lib/CivicUtils';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
 import { MobxPromise } from 'mobxpromise';
 import {
@@ -71,7 +70,6 @@ import {
     IMutationalSignature,
     IMutationalSignatureMeta,
 } from 'shared/model/MutationalSignature';
-import { ICivicGene, ICivicVariant } from 'shared/model/Civic.ts';
 import {
     MOLECULAR_PROFILE_MUTATIONS_SUFFIX,
     MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX,
@@ -944,72 +942,6 @@ function toOncoKbData(
         uniqueSampleKeyToTumorType: uniqueSampleKeyToTumorType,
         indicatorMap: generateIdToIndicatorMap(indicatorQueryResps),
     };
-}
-
-export async function fetchCivicGenes(
-    mutationData?: MobxPromise<Mutation[]>,
-    uncalledMutationData?: MobxPromise<Mutation[]>
-) {
-    const mutationDataResult = concatMutationData(
-        mutationData,
-        uncalledMutationData
-    );
-
-    if (mutationDataResult.length === 0) {
-        return {};
-    }
-
-    let entrezGeneSymbols: Set<number> = new Set([]);
-
-    mutationDataResult.forEach(function(mutation: Mutation) {
-        entrezGeneSymbols.add(mutation.gene.entrezGeneId);
-    });
-
-    let civicGenes: ICivicGene = await getCivicGenes(
-        Array.from(entrezGeneSymbols)
-    );
-
-    return civicGenes;
-}
-
-export async function fetchCnaCivicGenes(
-    discreteCNAData: MobxPromise<DiscreteCopyNumberData[]>
-) {
-    if (discreteCNAData.result && discreteCNAData.result.length > 0) {
-        let entrezGeneSymbols: Set<number> = new Set([]);
-
-        discreteCNAData.result.forEach(function(cna: DiscreteCopyNumberData) {
-            entrezGeneSymbols.add(cna.gene.entrezGeneId);
-        });
-
-        let querySymbols: Array<number> = Array.from(entrezGeneSymbols);
-
-        let civicGenes: ICivicGene = await getCivicGenes(querySymbols);
-
-        return civicGenes;
-    } else {
-        return {};
-    }
-}
-
-export async function fetchCivicVariants(
-    civicGenes: ICivicGene,
-    mutationData?: MobxPromise<Mutation[]>,
-    uncalledMutationData?: MobxPromise<Mutation[]>
-) {
-    let civicVariants: ICivicVariant = {};
-    const mutationDataResult = concatMutationData(
-        mutationData,
-        uncalledMutationData
-    );
-
-    if (mutationDataResult.length > 0) {
-        civicVariants = await getCivicVariants(civicGenes, mutationDataResult);
-    } else if (!_.isEmpty(civicGenes)) {
-        civicVariants = await getCivicVariants(civicGenes);
-    }
-
-    return civicVariants;
 }
 
 export async function fetchDiscreteCNAData(

@@ -14,13 +14,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import { labelMobxPromises, MobxPromise, cached } from 'mobxpromise';
 import { IOncoKbData } from 'cbioportal-frontend-commons';
-
-import { ICivicGene, ICivicVariant } from 'shared/model/Civic';
-import {
-    fetchCosmicData,
-    fetchCivicGenes,
-    fetchCivicVariants,
-} from 'shared/lib/StoreUtils';
+import { fetchCosmicData } from 'shared/lib/StoreUtils';
 import MutationCountCache from 'shared/cache/MutationCountCache';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
@@ -92,43 +86,6 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
         await: () => [this.mutationData],
         invoke: () => fetchCosmicData(this.mutationData),
     });
-
-    readonly civicGenes = remoteData<ICivicGene | undefined>(
-        {
-            await: () => [this.mutationData, this.clinicalDataForSamples],
-            invoke: async () =>
-                this.mutationMapperConfig.show_civic
-                    ? fetchCivicGenes(this.mutationData)
-                    : {},
-            onError: (err: Error) => {
-                // fail silently
-            },
-        },
-        undefined
-    );
-
-    readonly civicVariants = remoteData<ICivicVariant | undefined>(
-        {
-            await: () => [this.civicGenes, this.mutationData],
-            invoke: async () => {
-                if (
-                    this.mutationMapperConfig.show_civic &&
-                    this.civicGenes.result
-                ) {
-                    return fetchCivicVariants(
-                        this.civicGenes.result as ICivicGene,
-                        this.mutationData
-                    );
-                } else {
-                    return {};
-                }
-            },
-            onError: (err: Error) => {
-                // fail silently
-            },
-        },
-        undefined
-    );
 
     @cached get downloadDataFetcher(): MutationTableDownloadDataFetcher {
         return new MutationTableDownloadDataFetcher(

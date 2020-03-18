@@ -33,9 +33,12 @@ import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
 import GenomeNexusMyVariantInfoCache from 'shared/cache/GenomeNexusMyVariantInfoCache';
 import { IOncoKbData } from 'cbioportal-frontend-commons';
-
-import { IHotspotIndex, indexHotspotsData } from 'react-mutation-mapper';
-import { ICivicVariant, ICivicGene } from 'shared/model/Civic.ts';
+import {
+    ICivicVariant,
+    ICivicGene,
+    IHotspotIndex,
+    indexHotspotsData,
+} from 'react-mutation-mapper';
 import { ClinicalInformationData } from 'shared/model/ClinicalInformation';
 import VariantCountCache from 'shared/cache/VariantCountCache';
 import CopyNumberCountCache from './CopyNumberCountCache';
@@ -68,9 +71,6 @@ import {
     fetchCopyNumberSegments,
     fetchClinicalDataForPatient,
     makeStudyToCancerTypeMap,
-    fetchCivicGenes,
-    fetchCnaCivicGenes,
-    fetchCivicVariants,
     groupBySampleId,
     findSamplesWithoutCancerTypeClinicalData,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData,
@@ -82,6 +82,11 @@ import {
     fetchGenePanel,
     noGenePanelUsed,
 } from 'shared/lib/StoreUtils';
+import {
+    fetchCivicGenes,
+    fetchCivicVariants,
+    fetchCnaCivicGenes,
+} from 'shared/lib/CivicUtils';
 import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
 import {
     CancerGene,

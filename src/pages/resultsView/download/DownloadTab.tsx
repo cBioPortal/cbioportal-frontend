@@ -51,7 +51,11 @@ import styles from './styles.module.scss';
 import classNames from 'classnames';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
 import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/WindowWidthBox';
-import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
+import {
+    DefaultTooltip,
+    getMobxPromiseGroupStatus,
+    remoteData,
+} from 'cbioportal-frontend-commons';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import onMobxPromise from 'shared/lib/onMobxPromise';
 import {
@@ -59,7 +63,6 @@ import {
     Sample,
     CancerStudy,
 } from 'shared/api/generated/CBioPortalAPI';
-import { getMobxPromiseGroupStatus } from '../../../shared/lib/getMobxPromiseGroupStatus';
 import ErrorMessage from '../../../shared/components/ErrorMessage';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 import { CUSTOM_CASE_LIST_ID } from 'shared/components/query/QueryStore';
