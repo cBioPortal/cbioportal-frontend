@@ -25,21 +25,22 @@ import {
     CancerGene,
     generateQueryVariantId,
     IndicatorQueryResp,
+    IOncoKbCancerGenesWrapper,
+    IOncoKbData,
+    IOncoKbDataWrapper,
+    getMobxPromiseGroupStatus
 } from 'cbioportal-frontend-commons';
 import { is3dHotspot, isRecurrentHotspot } from 'shared/lib/AnnotationUtils';
 import {
     ICivicGeneDataWrapper,
     ICivicVariantDataWrapper,
 } from 'shared/model/Civic';
-import {
-    IOncoKbCancerGenesWrapper,
-    IOncoKbData,
-    IOncoKbDataWrapper,
-} from 'cbioportal-frontend-commons';
-import { getMobxPromiseGroupStatus } from 'cbioportal-frontend-commons';
+import ClinicalTrialsCache from '../../../cache/ClinicalTrialsCache';
+import ClinicalTrialsCard from '../../ClinicalTrials/ClinicalTrialsCard';
 
 export interface IAnnotationColumnProps {
     enableOncoKb: boolean;
+    enableClinicalTrials: boolean;
     enableMyCancerGenome: boolean;
     enableHotspot: boolean;
     enableCivic: boolean;
@@ -48,6 +49,7 @@ export interface IAnnotationColumnProps {
     oncoKbData?: IOncoKbDataWrapper;
     oncoKbCancerGenes?: IOncoKbCancerGenesWrapper;
     pubMedCache?: OncokbPubMedCache;
+    trialsCache?: ClinicalTrialsCache;
     userEmailAddress?: string;
     civicGenes?: ICivicGeneDataWrapper;
     civicVariants?: ICivicVariantDataWrapper;
@@ -378,14 +380,16 @@ export default class AnnotationColumnFormatter {
         return AnnotationColumnFormatter.mainContent(
             annotation,
             columnProps,
-            columnProps.pubMedCache
+            columnProps.pubMedCache,
+            columnProps.trialsCache
         );
     }
 
     public static mainContent(
         annotation: IAnnotation,
         columnProps: IAnnotationColumnProps,
-        pubMedCache?: OncokbPubMedCache
+        pubMedCache?: OncokbPubMedCache,
+        trialsCache?: ClinicalTrialsCache
     ) {
         return (
             <span style={{ display: 'flex', minWidth: 100 }}>
@@ -398,6 +402,23 @@ export default class AnnotationColumnFormatter {
                         indicator={annotation.oncoKbIndicator}
                         pubMedCache={pubMedCache}
                         userEmailAddress={columnProps.userEmailAddress}
+                    />
+                </If>
+                <If
+                    condition={
+                        (columnProps.enableClinicalTrials &&
+                            columnProps.enableOncoKb &&
+                            annotation.oncoKbGeneExist &&
+                            annotation.isOncoKbCancerGene) ||
+                        false
+                    }
+                >
+                    <ClinicalTrialsCard
+                        hugoGeneSymbol={annotation.hugoGeneSymbol}
+                        status={annotation.oncoKbStatus}
+                        hideClosedTrials={true}
+                        indicator={annotation.oncoKbIndicator}
+                        trialsCache={trialsCache}
                     />
                 </If>
                 <If condition={columnProps.enableCivic || false}>

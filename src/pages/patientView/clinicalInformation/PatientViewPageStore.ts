@@ -117,6 +117,7 @@ import { getVariantAlleleFrequency } from '../../../shared/lib/MutationUtils';
 import { AppStore, SiteError } from 'AppStore';
 import { getGeneFilterDefault } from './PatientViewPageStoreUtil';
 import { checkNonProfiledGenesExist } from '../PatientViewPageUtils';
+import ClinicalTrialsCache from '../../../shared/cache/ClinicalTrialsCache';
 
 type PageMode = 'patient' | 'sample';
 
@@ -1493,4 +1494,8 @@ export class PatientViewPageStore {
         },
         []
     );
+
+    @cached get trialsCache() {
+        return new ClinicalTrialsCache();
+    }
 }

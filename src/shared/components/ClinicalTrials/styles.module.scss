@@ -1,0 +1,40 @@
+$oncokb-dark-blue: #1c75cd;
+$oncokb-orange: #ffa500;
+
+.card {
+    margin: -11px;
+    width: 600px;
+    font-size: 14px;
+    line-height: 18px;
+}
+
+.orange-icon {
+    color: $oncokb-orange;
+}
+
+.oncokb-logo {
+    height: 19px;
+    margin-left: 10px;
+    margin-top: -4px;
+}
+
+.title {
+    line-height: 25px;
+    font-size: 22px;
+    background-color: $oncokb-dark-blue;
+    color: #fff;
+    text-align: center;
+    padding: 5px 10px;
+}
+
+.treatment-pill-tag {
+    margin-bottom: 5px;
+    margin-right: 5px;
+    cursor: pointer;
+}
+
+.clinical-trial-card {
+    max-width: 600px;
+    max-height: 600px;
+    overflow-y: auto;
+}
