@@ -194,6 +194,8 @@ var config = {
                                 '@babel/preset-env',
                                 '@babel/preset-react',
                             ],
+                            plugins: ['syntax-dynamic-import'],
+
                             cacheDirectory: babelCacheFolder,
                         },
                     },
