@@ -42,7 +42,7 @@ describe('plots tab screenshot tests', function() {
             });
         });
 
-        waitForNetworkQuiet();
+        waitForNetworkQuiet(10000);
 
         browser.waitForExist('input[data-test="ViewCopyNumber"]');
         browser.click('input[data-test="ViewCopyNumber"]');
