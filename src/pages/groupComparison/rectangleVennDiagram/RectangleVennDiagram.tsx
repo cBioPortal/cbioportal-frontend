@@ -373,6 +373,9 @@ export default class RectangleVennDiagram extends React.Component<
                         pointerEvents="none"
                         textAnchor="middle"
                         alignmentBaseline="middle"
+                        data-test={`${
+                            this.props.caseType
+                        }${region.combination.join(',')}VennLabel`}
                     >
                         {textContents}
                     </text>,
