@@ -282,8 +282,15 @@ export default class ClinicalData extends React.Component<
                     },
                 });
 
-                const shouldParseFloat =
-                    attribute.datatype.toLowerCase() === 'number';
+                let normalizedCategory: { [id: string]: string } = {};
+                for (const d of clinicalData) {
+                    const lowerCaseValue = d.value.toLowerCase();
+                    if (normalizedCategory[lowerCaseValue] === undefined) {
+                        //consider first value as category value
+                        normalizedCategory[lowerCaseValue] = d.value;
+                    }
+                }
+
                 axisData.datatype = attribute.datatype.toLowerCase();
                 const axisData_Data = axisData.data;
                 if (attribute.patientAttribute) {
@@ -293,7 +300,8 @@ export default class ClinicalData extends React.Component<
                         for (const sample of samples) {
                             axisData_Data.push({
                                 uniqueSampleKey: sample.uniqueSampleKey,
-                                value: d.value,
+                                value:
+                                    normalizedCategory[d.value.toLowerCase()],
                             });
                         }
                     }
@@ -302,11 +310,11 @@ export default class ClinicalData extends React.Component<
                     for (const d of clinicalData) {
                         axisData_Data.push({
                             uniqueSampleKey: d.uniqueSampleKey,
-                            value: d.value,
+                            value: normalizedCategory[d.value.toLowerCase()],
                         });
                     }
                 }
-                if (shouldParseFloat) {
+                if (attribute.datatype.toLowerCase() === 'number') {
                     for (const d of axisData_Data) {
                         d.value = parseFloat(d.value as string); // we know its a string bc all clinical data comes back as string
                     }
