@@ -8,6 +8,7 @@ import {
 } from 'cbioportal-frontend-commons';
 
 import { Hotspot, IHotspotIndex } from './CancerHotspot';
+import { ICivicGene, ICivicVariant } from './Civic';
 import DataStore from './DataStore';
 import { Gene } from './Gene';
 import { EnsemblTranscript } from './EnsemblTranscript';
@@ -57,6 +58,8 @@ export interface MutationMapperStore {
     oncoKbCancerGenes: RemoteData<CancerGene[] | Error | undefined>;
     oncoKbData: RemoteData<IOncoKbData | Error | undefined>;
     oncoKbDataByPosition: { [pos: number]: IndicatorQueryResp[] };
+    civicGenes?: RemoteData<ICivicGene | undefined>;
+    civicVariants?: RemoteData<ICivicVariant | undefined>;
     indexedVariantAnnotations: RemoteData<
         { [genomicLocation: string]: VariantAnnotation } | undefined
     >;

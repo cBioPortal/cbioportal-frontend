@@ -17,6 +17,7 @@ import {
     Hotspot,
     IHotspotIndex,
 } from '../model/CancerHotspot';
+import { ICivicGene, ICivicVariant } from '../model/Civic';
 import { DataFilter, DataFilterType } from '../model/DataFilter';
 import DataStore from '../model/DataStore';
 import { EnsemblTranscript } from '../model/EnsemblTranscript';
@@ -32,6 +33,7 @@ import {
     groupHotspotsByMutations,
     indexHotspotsData,
 } from '../util/CancerHotspotsUtils';
+import { fetchCivicGenes, fetchCivicVariants } from '../util/CivicUtils';
 import { ONCOKB_DEFAULT_DATA } from '../util/DataFetcherUtils';
 import {
     applyDataFilters,
@@ -61,6 +63,7 @@ interface DefaultMutationMapperStoreConfig {
     filterMutationsBySelectedTranscript?: boolean;
     genomeNexusUrl?: string;
     oncoKbUrl?: string;
+    enableCivic?: boolean;
     cachePostMethodsOnClients?: boolean;
     apiCacheLimit?: number;
     getMutationCount?: (mutation: Partial<Mutation>) => number;
@@ -828,43 +831,68 @@ class DefaultMutationMapperStore implements MutationMapperStore {
         }
     }
 
+    readonly civicGenes: MobxPromise<ICivicGene | undefined> = remoteData({
+        await: () => [this.mutationData],
+        invoke: async () =>
+            this.config.enableCivic
+                ? fetchCivicGenes(
+                      this.mutationData.result || [],
+                      this.getDefaultEntrezGeneId
+                  )
+                : {},
+        onError: () => {
+            // fail silently
+        },
+    });
+
+    readonly civicVariants = remoteData<ICivicVariant | undefined>({
+        await: () => [this.civicGenes, this.mutationData],
+        invoke: async () => {
+            if (this.config.enableCivic && this.civicGenes.result) {
+                return fetchCivicVariants(
+                    this.civicGenes.result as ICivicGene,
+                    this.mutationData.result || []
+                );
+            } else {
+                return {};
+            }
+        },
+        onError: () => {
+            // fail silently
+        },
+    });
+
     readonly indexedVariantAnnotations: MobxPromise<
         { [genomicLocation: string]: VariantAnnotation } | undefined
-    > = remoteData(
-        {
-            invoke: async () =>
-                this.getMutations()
-                    ? await this.dataFetcher.fetchVariantAnnotationsIndexedByGenomicLocation(
-                          this.getMutations(),
-                          this.annotationFields,
-                          this.isoformOverrideSource
-                      )
-                    : undefined,
-            onError: () => {
-                // fail silently, leave the error handling responsibility to the data consumer
-            },
+    > = remoteData({
+        invoke: async () =>
+            this.getMutations()
+                ? await this.dataFetcher.fetchVariantAnnotationsIndexedByGenomicLocation(
+                      this.getMutations(),
+                      this.annotationFields,
+                      this.isoformOverrideSource
+                  )
+                : undefined,
+        onError: () => {
+            // fail silently, leave the error handling responsibility to the data consumer
         },
-        undefined
-    );
+    });
 
     readonly indexedMyVariantInfoAnnotations: MobxPromise<
         { [genomicLocation: string]: MyVariantInfo } | undefined
-    > = remoteData(
-        {
-            await: () => [this.mutationData],
-            invoke: async () =>
-                this.getMutations()
-                    ? await this.dataFetcher.fetchMyVariantInfoAnnotationsIndexedByGenomicLocation(
-                          this.getMutations(),
-                          this.isoformOverrideSource
-                      )
-                    : undefined,
-            onError: () => {
-                // fail silently, leave the error handling responsibility to the data consumer
-            },
+    > = remoteData({
+        await: () => [this.mutationData],
+        invoke: async () =>
+            this.getMutations()
+                ? await this.dataFetcher.fetchMyVariantInfoAnnotationsIndexedByGenomicLocation(
+                      this.getMutations(),
+                      this.isoformOverrideSource
+                  )
+                : undefined,
+        onError: () => {
+            // fail silently, leave the error handling responsibility to the data consumer
         },
-        undefined
-    );
+    });
 
     @computed
     get mutationsByTranscriptId(): { [transcriptId: string]: Mutation[] } {

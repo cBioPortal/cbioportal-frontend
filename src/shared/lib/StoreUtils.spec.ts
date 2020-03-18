@@ -5,9 +5,6 @@ import {
     mergeMutationsIncludingUncalled,
     generateMutationIdByEvent,
     generateMutationIdByGeneAndProteinChangeAndEvent,
-    fetchCivicGenes,
-    fetchCnaCivicGenes,
-    fetchCivicVariants,
     findSamplesWithoutCancerTypeClinicalData,
     fetchSamplesWithoutCancerTypeClinicalData,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData,
@@ -470,34 +467,6 @@ describe('StoreUtils', () => {
                     done();
                 })
                 .catch(done);
-        });
-    });
-
-    describe('fetchCivicData', () => {
-        it("won't fetch civic genes if there are no mutations", done => {
-            fetchCivicGenes(emptyMutationData, emptyUncalledMutationData).then(
-                (data: any) => {
-                    assert.deepEqual(data, {});
-                    done();
-                }
-            );
-        });
-
-        it("won't fetch civic variants if there are no mutations", done => {
-            fetchCivicVariants(
-                {},
-                emptyMutationData,
-                emptyUncalledMutationData
-            ).then((data: any) => {
-                assert.deepEqual(data, {});
-                done();
-            });
-        });
-        it("won't fetch civic variants if there are no civic genes", done => {
-            fetchCivicVariants({}).then((data: any) => {
-                assert.deepEqual(data, {});
-                done();
-            });
         });
     });
 

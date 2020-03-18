@@ -1,6 +1,15 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import { oncoKbAnnotationSortValue } from 'react-mutation-mapper';
+import {
+    buildCivicEntry,
+    civicSortValue,
+    ICivicEntry,
+    ICivicGene,
+    ICivicGeneData,
+    ICivicVariant,
+    ICivicVariantData,
+    oncoKbAnnotationSortValue,
+} from 'react-mutation-mapper';
 import {
     CancerStudy,
     DiscreteCopyNumberData,
@@ -10,28 +19,20 @@ import {
     IAnnotationColumnProps,
     default as DefaultAnnotationColumnFormatter,
 } from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
-import Civic from 'shared/components/annotation/Civic';
 import {
     CancerGene,
-    generateQueryVariant,
     generateQueryVariantId,
     IndicatorQueryResp,
     IOncoKbCancerGenesWrapper,
     IOncoKbData,
     IOncoKbDataWrapper,
-    Query,
 } from 'cbioportal-frontend-commons';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
 import {
-    ICivicVariant,
-    ICivicGene,
-    ICivicEntry,
-    ICivicVariantData,
-    ICivicGeneData,
     ICivicGeneDataWrapper,
     ICivicVariantDataWrapper,
 } from 'shared/model/Civic.ts';
-import { buildCivicEntry, getCivicCNAVariants } from 'shared/lib/CivicUtils';
+import { getCivicCNAVariants } from 'shared/lib/CivicUtils';
 
 /**
  * @author Selcuk Onur Sumer
@@ -253,7 +254,7 @@ export default class AnnotationColumnFormatter {
 
         return _.flatten([
             oncoKbAnnotationSortValue(annotationData.oncoKbIndicator),
-            Civic.sortValue(annotationData.civicEntry),
+            civicSortValue(annotationData.civicEntry),
             annotationData.isOncoKbCancerGene ? 1 : 0,
         ]);
     }
