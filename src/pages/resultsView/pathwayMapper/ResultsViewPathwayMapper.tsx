@@ -2,7 +2,6 @@ import * as React from 'react';
 import _ from 'lodash';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import { addGenesToQuery, ResultsViewTab } from '../ResultsViewPageHelpers';
-import PathwayMapper, { ICBioData } from 'pathway-mapper';
 import 'pathway-mapper/dist/base.css';
 import PathwayMapperTable, { IPathwayMapperTable } from './PathwayMapperTable';
 import { observer } from 'mobx-react';
@@ -30,6 +29,7 @@ import 'cytoscape-panzoom/cytoscape.js-panzoom.css';
 import 'cytoscape-navigator/cytoscape.js-navigator.css';
 import 'react-toastify/dist/ReactToastify.css';
 import styles from './pathwayMapper.module.scss';
+import PathwayMapper, { ICBioData } from 'pathway-mapper';
 
 interface IResultsViewPathwayMapperProps {
     store: ResultsViewPageStore;
@@ -96,7 +96,19 @@ export default class ResultsViewPathwayMapper extends React.Component<
             },
             { fireImmediately: true }
         );
+
+        // @ts-ignore
+        import(/* webpackChunkName: "pathway-mapper" */ 'pathway-mapper').then(
+            (module: any) => {
+                this.PathwayMapperComponent = (module as any)
+                    .default as PathwayMapper;
+            }
+        );
     }
+
+    @observable.ref PathwayMapperComponent:
+        | PathwayMapper
+        | undefined = undefined;
 
     @computed get alterationFrequencyData(): ICBioData[] {
         return this.alterationFrequencyDataForQueryGenes.concat(
@@ -187,6 +199,10 @@ export default class ResultsViewPathwayMapper extends React.Component<
             this.dismissActiveToasts();
         }
 
+        if (!this.PathwayMapperComponent) {
+            return null;
+        }
+
         return (
             <div className="pathwayMapper">
                 <div
@@ -201,8 +217,9 @@ export default class ResultsViewPathwayMapper extends React.Component<
                                 store={this.props.store}
                                 tabReflectsOql={true}
                             />
-
-                            <PathwayMapper
+                            {/*
+                                  // @ts-ignore */}
+                            <this.PathwayMapperComponent
                                 isCBioPortal={true}
                                 isCollaborative={false}
                                 genes={this.props.store.genes.result as any}
