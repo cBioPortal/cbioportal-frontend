@@ -439,7 +439,7 @@ export default class OncoprintWebGLCellView {
                 int upper_excl = ${columnsRightAfterGapsSize};
                 int numGaps = 0;
                 
-                for (int loopDummyVar = 0; loopDummyVar < 1/0; loopDummyVar++) {
+                for (int loopDummyVar = 0; loopDummyVar == 0; loopDummyVar += 0) {
                     if (lower_incl >= upper_excl) {
                         break;
                     }
