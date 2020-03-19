@@ -206,6 +206,8 @@ export default class OQLTextArea extends React.Component<
         );
     }
 
+    timeout: any = undefined;
+
     @autobind
     @action
     afterGeneSymbolValidation(
@@ -219,17 +221,21 @@ export default class OQLTextArea extends React.Component<
             this.props.callback(oql, validationResult, this.geneQuery);
         }
 
+        clearTimeout(this.timeout);
+
         if (
             oql.error !== undefined &&
             (this.props.focus === undefined ||
                 this.props.focus === Focus.ShouldFocus) &&
             this.textAreaRef.current
         ) {
-            this.textAreaRef.current.focus();
-            this.textAreaRef.current.setSelectionRange(
-                oql.error.start,
-                oql.error.end
-            );
+            this.timeout = setTimeout(() => {
+                this.textAreaRef.current!.focus();
+                this.textAreaRef.current!.setSelectionRange(
+                    oql.error!.start,
+                    oql.error!.end
+                );
+            }, 2000);
         }
     }
 
