@@ -263,7 +263,7 @@ export default class OncoprintWebGLCellView {
         const new_canvas = old_canvas.cloneNode() as HTMLCanvasElement;
         const parent_node = old_canvas.parentNode;
         parent_node.removeChild(old_canvas);
-        parent_node.prepend(new_canvas); // keep on bottom since we need overlays to not be hidden
+        parent_node.insertBefore(new_canvas, parent_node.childNodes[0]); // keep on bottom since we need overlays to not be hidden
         this.$canvas = $(new_canvas);
         this.ctx = null;
     }
