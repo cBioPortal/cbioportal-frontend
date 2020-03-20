@@ -52,6 +52,7 @@ import OQLTextArea, {
     GeneBoxType,
 } from 'shared/components/GeneSelectionBox/OQLTextArea';
 import SurvivalTransitionTab from './survival/SurvivalTransitionTab';
+import browser from 'bowser';
 
 export function initStore(
     appStore: AppStore,
@@ -399,6 +400,7 @@ export default class ResultsViewPage extends React.Component<
             {
                 id: ResultsViewTab.PATHWAY_MAPPER,
                 hide: () =>
+                    browser.name === 'Internet Explorer' ||
                     !AppConfig.serverConfig.show_pathway_mapper ||
                     !this.resultsViewPageStore.studies.isComplete,
                 getTab: () => {
