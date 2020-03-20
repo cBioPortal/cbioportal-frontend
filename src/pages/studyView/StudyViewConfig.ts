@@ -98,7 +98,6 @@ const studyViewFrontEnd = {
         DFS_SURVIVAL: 300,
         DSS_SURVIVAL: 250,
         PFS_SURVIVAL: 250,
-        EFS_SURVIVAL: 250,
         MUTATION_COUNT_CNA_FRACTION: 200,
         MUTATED_GENES_TABLE: 90,
         FUSION_GENES_TABLE: 85,
