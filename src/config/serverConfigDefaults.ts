@@ -157,6 +157,8 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
 
     generic_assay_display_text:
         'TREATMENT_RESPONSE:Treatment Response,MUTATIONAL_SIGNATURE:Mutational Signature',
+
+    saml_logout_local: false,
 };
 
 export default ServerConfigDefaults;
