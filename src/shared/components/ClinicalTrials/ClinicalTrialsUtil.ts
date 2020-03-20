@@ -1,4 +1,4 @@
-import { IDrug, ITrial } from '../../model/ClinicalTrial';
+import { IArm, IDrug, ITrial } from '../../model/ClinicalTrial';
 import * as _ from 'lodash';
 
 const activeTrialStatus = ['active', 'recruiting', 'not yet recruiting'];
@@ -25,10 +25,15 @@ export function matchTrials(trialsData: ITrial[], treatment: string) {
         drugNames.push(treatment);
     }
     trialsData.forEach((trial: ITrial) => {
-        const trialDrugNames = trial.drugs.map((drug: IDrug) => drug.drugName);
-        if (_.difference(drugNames, trialDrugNames).length === 0) {
-            trials.push(trial);
-        }
+        _.some(trial.arms, (arm: IArm) => {
+            let isMatched = false;
+            const armDrugNames = arm.drugs.map((drug: IDrug) => drug.drugName);
+            if (_.difference(drugNames, armDrugNames).length === 0) {
+                trials.push(trial);
+                isMatched = true;
+            }
+            return isMatched;
+        });
     });
     return trials;
 }

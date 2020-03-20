@@ -1,8 +1,13 @@
 export type ITrial = {
     briefTitle: string;
     currentTrialStatus: string;
-    drugs: IDrug[];
+    arms: IArm[];
     nctId: string;
+};
+
+export type IArm = {
+    armDescription: string;
+    drugs: IDrug[];
 };
 
 export type IDrug = {
