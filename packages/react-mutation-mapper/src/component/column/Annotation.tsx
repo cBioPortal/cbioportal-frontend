@@ -1,3 +1,9 @@
+import {
+    CancerGene,
+    getMobxPromiseGroupStatus,
+    IndicatorQueryResp,
+    IOncoKbData,
+} from 'cbioportal-frontend-commons';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
 import * as React from 'react';
@@ -6,30 +12,27 @@ import { IHotspotIndex } from '../../model/CancerHotspot';
 import { ICivicEntry, ICivicGene, ICivicVariant } from '../../model/Civic';
 import { MobxCache } from '../../model/MobxCache';
 import { Mutation } from '../../model/Mutation';
+import { IMyCancerGenomeData } from '../../model/MyCancerGenome';
 import { RemoteData } from '../../model/RemoteData';
 import {
     is3dHotspot,
     isRecurrentHotspot,
 } from '../../util/CancerHotspotsUtils';
 import { getCivicEntry } from '../../util/CivicUtils';
+import { getMyCancerGenomeLinks } from '../../util/MyCancerGenomeUtils';
 import { getIndicatorData } from '../../util/OncoKbUtils';
 import { defaultArraySortMethod } from '../../util/ReactTableUtils';
 import Civic, { sortValue as civicSortValue } from '../civic/Civic';
+import MyCancerGenome from '../myCancerGenome/MyCancerGenome';
 import OncoKB, { sortValue as oncoKbSortValue } from '../oncokb/OncoKB';
 import HotspotAnnotation, {
     sortValue as hotspotSortValue,
 } from './HotspotAnnotation';
-import {
-    CancerGene,
-    getMobxPromiseGroupStatus,
-    IndicatorQueryResp,
-    IOncoKbData,
-} from 'cbioportal-frontend-commons';
 
 export type AnnotationProps = {
     mutation: Mutation;
     enableOncoKb: boolean;
-    // enableMyCancerGenome: boolean;
+    enableMyCancerGenome: boolean;
     enableHotspot: boolean;
     enableCivic: boolean;
     hotspotData?: RemoteData<IHotspotIndex | undefined>;
@@ -38,7 +41,7 @@ export type AnnotationProps = {
     pubMedCache?: MobxCache;
     resolveEntrezGeneId?: (mutation: Mutation) => number;
     resolveTumorType?: (mutation: Mutation) => string;
-    // myCancerGenomeData?: IMyCancerGenomeData;
+    myCancerGenomeData?: IMyCancerGenomeData;
     civicGenes?: RemoteData<ICivicGene | undefined>;
     civicVariants?: RemoteData<ICivicVariant | undefined>;
     // studyIdToStudy?: {[studyId:string]:CancerStudy};
@@ -53,7 +56,7 @@ export interface IAnnotation {
     oncoKbStatus: 'pending' | 'error' | 'complete';
     oncoKbGeneExist: boolean;
     isOncoKbCancerGene: boolean;
-    // myCancerGenomeLinks: string[];
+    myCancerGenomeLinks: string[];
     civicEntry?: ICivicEntry | null;
     civicStatus: 'pending' | 'error' | 'complete';
     hasCivicVariants: boolean;
@@ -69,7 +72,7 @@ const DEFAULT_ANNOTATION_DATA: IAnnotation = {
     hotspotStatus: 'complete',
     hugoGeneSymbol: '',
     hasCivicVariants: true,
-    // myCancerGenomeLinks: [],
+    myCancerGenomeLinks: [],
     civicStatus: 'complete',
 };
 
@@ -85,7 +88,7 @@ export function getAnnotationData(
     mutation?: Mutation,
     oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>,
     hotspotData?: RemoteData<IHotspotIndex | undefined>,
-    // myCancerGenomeData?:IMyCancerGenomeData,
+    myCancerGenomeData?: IMyCancerGenomeData,
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>,
     civicGenes?: RemoteData<ICivicGene | undefined>,
     civicVariants?: RemoteData<ICivicVariant | undefined>,
@@ -143,8 +146,9 @@ export function getAnnotationData(
                     ? getMobxPromiseGroupStatus(civicGenes, civicVariants)
                     : 'pending',
             hasCivicVariants: true,
-            // myCancerGenomeLinks: myCancerGenomeData ?
-            //     AnnotationColumnFormatter.getMyCancerGenomeLinks(mutation, myCancerGenomeData) : [],
+            myCancerGenomeLinks: myCancerGenomeData
+                ? getMyCancerGenomeLinks(mutation, myCancerGenomeData)
+                : [],
             isHotspot:
                 hotspotData &&
                 hotspotData.result &&
@@ -250,12 +254,11 @@ export default class Annotation extends React.Component<AnnotationProps, {}> {
                         hasCivicVariants={annotation.hasCivicVariants}
                     />
                 )}
-                {
-                    //    this.props.enableMyCancerGenome &&
-                    //    <MyCancerGenome
-                    //        linksHTML={annotation.myCancerGenomeLinks}
-                    //    />
-                }
+                {this.props.enableMyCancerGenome && (
+                    <MyCancerGenome
+                        linksHTML={annotation.myCancerGenomeLinks}
+                    />
+                )}
                 {this.props.enableHotspot && (
                     <HotspotAnnotation
                         isHotspot={annotation.isHotspot}
@@ -272,6 +275,7 @@ export default class Annotation extends React.Component<AnnotationProps, {}> {
             mutation,
             oncoKbCancerGenes,
             hotspotData,
+            myCancerGenomeData,
             oncoKbData,
             resolveEntrezGeneId,
             resolveTumorType,
@@ -283,6 +287,7 @@ export default class Annotation extends React.Component<AnnotationProps, {}> {
             mutation,
             oncoKbCancerGenes,
             hotspotData,
+            myCancerGenomeData,
             oncoKbData,
             civicGenes,
             civicVariants,

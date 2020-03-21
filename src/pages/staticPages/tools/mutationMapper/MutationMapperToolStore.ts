@@ -23,7 +23,6 @@ import {
 } from 'shared/api/generated/CBioPortalAPI';
 import {
     fetchGenes,
-    fetchMyCancerGenomeData,
     fetchOncoKbData,
     ONCOKB_DEFAULT,
     getCanonicalTranscriptsByHugoSymbol,
@@ -386,10 +385,6 @@ export default class MutationMapperToolStore {
 
     @cached get pdbHeaderCache() {
         return new PdbHeaderCache();
-    }
-
-    @computed get myCancerGenomeData() {
-        return fetchMyCancerGenomeData();
     }
 
     @cached get downloadDataFetcher() {

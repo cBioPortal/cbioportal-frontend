@@ -55,7 +55,6 @@ import {
     fetchCopyNumberSegmentsForSamples,
     fetchGenes,
     fetchGermlineConsentedSamples,
-    fetchMyCancerGenomeData,
     fetchOncoKbCancerGenes,
     fetchOncoKbData,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData,
@@ -2798,10 +2797,6 @@ export class ResultsViewPageStore {
 
     @computed get downloadFilenamePrefix() {
         return generateDownloadFilenamePrefixByStudies(this.studies.result);
-    }
-
-    @computed get myCancerGenomeData() {
-        return fetchMyCancerGenomeData();
     }
 
     // TODO: refactor b/c we already have sample lists summary so

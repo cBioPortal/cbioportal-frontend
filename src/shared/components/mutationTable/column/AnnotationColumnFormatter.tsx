@@ -6,19 +6,19 @@ import {
     civicDownload,
     civicSortValue,
     getCivicEntry,
+    getMyCancerGenomeLinks,
     HotspotAnnotation,
     hotspotAnnotationSortValue,
     ICivicEntry,
+    IMyCancerGenomeData,
+    MyCancerGenome,
+    myCancerGenomeSortValue,
+    myCancerGenomeDownload,
     OncoKB,
     oncoKbAnnotationDownload,
     oncoKbAnnotationSortValue,
 } from 'react-mutation-mapper';
 import OncokbPubMedCache from 'shared/cache/PubMedCache';
-import MyCancerGenome from 'shared/components/annotation/MyCancerGenome';
-import {
-    IMyCancerGenomeData,
-    IMyCancerGenome,
-} from 'shared/model/MyCancerGenome';
 import { IHotspotDataWrapper } from 'shared/model/CancerHotspots';
 import { CancerStudy, Mutation } from 'shared/api/generated/CBioPortalAPI';
 import {
@@ -151,10 +151,7 @@ export default class AnnotationColumnFormatter {
                         : 'pending',
                 hasCivicVariants: true,
                 myCancerGenomeLinks: myCancerGenomeData
-                    ? AnnotationColumnFormatter.getMyCancerGenomeLinks(
-                          mutation,
-                          myCancerGenomeData
-                      )
+                    ? getMyCancerGenomeLinks(mutation, myCancerGenomeData)
                     : [],
                 isHotspot:
                     hotspotData &&
@@ -244,57 +241,6 @@ export default class AnnotationColumnFormatter {
         return indicator;
     }
 
-    public static getMyCancerGenomeLinks(
-        mutation: Mutation,
-        myCancerGenomeData: IMyCancerGenomeData
-    ): string[] {
-        const myCancerGenomes: IMyCancerGenome[] | null =
-            myCancerGenomeData[mutation.gene.hugoGeneSymbol];
-        let links: string[] = [];
-
-        if (myCancerGenomes) {
-            // further filtering required by alteration field
-            links = AnnotationColumnFormatter.filterByAlteration(
-                mutation,
-                myCancerGenomes
-            ).map((myCancerGenome: IMyCancerGenome) => myCancerGenome.linkHTML);
-        }
-
-        return links;
-    }
-
-    // TODO for now ignoring anything but protein change position, this needs to be improved!
-    public static filterByAlteration(
-        mutation: Mutation,
-        myCancerGenomes: IMyCancerGenome[]
-    ): IMyCancerGenome[] {
-        return myCancerGenomes.filter((myCancerGenome: IMyCancerGenome) => {
-            const proteinChangeRegExp: RegExp = /^[A-Za-z][0-9]+[A-Za-z]/;
-            const numericalRegExp: RegExp = /[0-9]+/;
-
-            const matched = myCancerGenome.alteration
-                .trim()
-                .match(proteinChangeRegExp);
-
-            if (matched && mutation.proteinChange) {
-                const mutationPos = mutation.proteinChange.match(
-                    numericalRegExp
-                );
-                const alterationPos = myCancerGenome.alteration.match(
-                    numericalRegExp
-                );
-
-                return (
-                    mutationPos &&
-                    alterationPos &&
-                    mutationPos[0] === alterationPos[0]
-                );
-            }
-
-            return false;
-        });
-    }
-
     public static sortValue(
         data: Mutation[],
         oncoKbCancerGenes?: IOncoKbCancerGenesWrapper,
@@ -317,7 +263,7 @@ export default class AnnotationColumnFormatter {
         return _.flatten([
             oncoKbAnnotationSortValue(annotationData.oncoKbIndicator),
             civicSortValue(annotationData.civicEntry),
-            MyCancerGenome.sortValue(annotationData.myCancerGenomeLinks),
+            myCancerGenomeSortValue(annotationData.myCancerGenomeLinks),
             hotspotAnnotationSortValue(
                 annotationData.isHotspot,
                 annotationData.is3dHotspot
@@ -350,7 +296,7 @@ export default class AnnotationColumnFormatter {
                 annotationData.oncoKbIndicator
             )}`,
             `CIViC: ${civicDownload(annotationData.civicEntry)}`,
-            `MyCancerGenome: ${MyCancerGenome.download(
+            `MyCancerGenome: ${myCancerGenomeDownload(
                 annotationData.myCancerGenomeLinks
             )}`,
             `CancerHotspot: ${annotationData.isHotspot ? 'yes' : 'no'}`,

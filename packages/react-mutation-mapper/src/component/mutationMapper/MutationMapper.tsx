@@ -274,6 +274,7 @@ export default class MutationMapper<
                     hotspotData={this.store.indexedHotspotData}
                     oncoKbData={this.store.oncoKbData}
                     oncoKbCancerGenes={this.store.oncoKbCancerGenes}
+                    myCancerGenomeData={this.store.myCancerGenomeData}
                     enableCivic={this.props.enableCivic}
                     civicGenes={this.store.civicGenes}
                     civicVariants={this.store.civicVariants}
