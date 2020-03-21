@@ -40,22 +40,20 @@ export type SurvivalPlotFilters = {
 // TODO should remove this if we want to be generic
 export const survivalClinicalDataVocabulary: { [prefix: string]: string[] } = {
     OS: ['DECEASED'],
-    PFS: ['CENSORED'],
-    DFS: ['Recurred/Progressed', 'Recurred'],
-    DSS: ['DEAD WITH TUMOR'],
-    EFS: ['Censored'],
+    PFS: ['Progressed', 'Recurred/Progressed', 'PROGRESSION', 'Yes', '1'],
+    DFS: ['Recurred/Progressed', 'Recurred', 'Progressed', 'Yes', '1'],
+    DSS: ['DECEASED', 'Yes', 'DEAD OF MELANOMA', 'DEAD WITH TUMOR', '1'],
 };
 
 // TODO should remove this if we want to be generic
 export const survivalPlotTooltipxLabelWithEvent: {
     [prefix: string]: string;
 } = {
-    // TODO text for PFS DSS EFS?
+    // TODO text for PFS DSS?
     OS: 'Time of Death',
     PFS: 'Time of Death',
     DFS: 'Time of relapse',
     DSS: 'Time of Death',
-    EFS: 'Time of Death',
 };
 
 // TODO should remove this if we want to be generic
@@ -64,7 +62,6 @@ export const plotsPriority: { [prefix: string]: number } = {
     DFS: 2,
     PFS: 3,
     DSS: 4,
-    EFS: 5,
 };
 
 export const DEFAULT_SURVIVAL_PRIORITY = 999;
