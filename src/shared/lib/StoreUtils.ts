@@ -55,17 +55,10 @@ import {
 } from 'cbioportal-frontend-commons';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
 import { MobxPromise } from 'mobxpromise';
-import {
-    geneToMyCancerGenome,
-    keywordToCosmic,
-} from 'shared/lib/AnnotationUtils';
+import { keywordToCosmic } from 'shared/lib/AnnotationUtils';
 import { indexPdbAlignments } from 'shared/lib/PdbUtils';
 import { IGisticData } from 'shared/model/Gistic';
 import { IMutSigData } from 'shared/model/MutSig';
-import {
-    IMyCancerGenome,
-    IMyCancerGenomeData,
-} from 'shared/model/MyCancerGenome';
 import {
     IMutationalSignature,
     IMutationalSignatureMeta,
@@ -686,11 +679,6 @@ export async function fetchGenePanel(
         )
     );
     return _.keyBy(remoteData, genePanel => genePanel.genePanelId);
-}
-
-export function fetchMyCancerGenomeData(): IMyCancerGenomeData {
-    const data: IMyCancerGenome[] = require('../../../resources/mycancergenome.json');
-    return geneToMyCancerGenome(data);
 }
 
 export function fetchMutationalSignatureData(): IMutationalSignature[] {

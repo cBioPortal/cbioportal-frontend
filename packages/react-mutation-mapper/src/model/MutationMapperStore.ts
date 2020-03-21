@@ -13,10 +13,10 @@ import DataStore from './DataStore';
 import { Gene } from './Gene';
 import { EnsemblTranscript } from './EnsemblTranscript';
 import { Mutation } from './Mutation';
+import { IMyCancerGenomeData } from './MyCancerGenome';
 import { PfamDomain } from './Pfam';
 import { PostTranslationalModification } from './PostTranslationalModification';
 import { RemoteData } from './RemoteData';
-import { SimpleCache } from './SimpleCache';
 
 export interface MutationMapperStore {
     gene: Gene;
@@ -60,6 +60,7 @@ export interface MutationMapperStore {
     oncoKbDataByPosition: { [pos: number]: IndicatorQueryResp[] };
     civicGenes?: RemoteData<ICivicGene | undefined>;
     civicVariants?: RemoteData<ICivicVariant | undefined>;
+    myCancerGenomeData?: IMyCancerGenomeData;
     indexedVariantAnnotations: RemoteData<
         { [genomicLocation: string]: VariantAnnotation } | undefined
     >;

@@ -477,7 +477,6 @@ export default class MutationMapperTool extends React.Component<
                             }
                             pubMedCache={this.store.pubMedCache}
                             pdbHeaderCache={this.store.pdbHeaderCache}
-                            myCancerGenomeData={this.store.myCancerGenomeData}
                             showTranscriptDropDown={true}
                             showOnlyAnnotatedTranscriptsInDropdown={
                                 !this.store.hasInputWithProteinChanges

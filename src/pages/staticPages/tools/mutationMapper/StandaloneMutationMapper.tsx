@@ -40,7 +40,7 @@ export default class StandaloneMutationMapper extends MutationMapper<
                 dataStore={this.props.store.dataStore}
                 itemsLabelPlural={this.itemsLabelPlural}
                 downloadDataFetcher={this.props.downloadDataFetcher}
-                myCancerGenomeData={this.props.myCancerGenomeData}
+                myCancerGenomeData={this.props.store.myCancerGenomeData}
                 hotspotData={this.props.store.indexedHotspotData}
                 oncoKbData={this.props.store.oncoKbData}
                 civicVariants={this.props.store.civicVariants}
