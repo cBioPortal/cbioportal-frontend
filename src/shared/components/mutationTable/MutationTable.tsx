@@ -36,7 +36,6 @@ import AnnotationColumnFormatter, {
     IAnnotation,
 } from './column/AnnotationColumnFormatter';
 import ExonColumnFormatter from './column/ExonColumnFormatter';
-import { IMyCancerGenomeData } from 'shared/model/MyCancerGenome';
 import { IHotspotDataWrapper } from 'shared/model/CancerHotspots';
 import {
     ICivicVariantDataWrapper,
@@ -64,6 +63,7 @@ import {
     IOncoKbCancerGenesWrapper,
     IOncoKbDataWrapper,
 } from 'cbioportal-frontend-commons';
+import { IMyCancerGenomeData } from 'react-mutation-mapper';
 import HgvscColumnFormatter from './column/HgvscColumnFormatter';
 import HgvsgColumnFormatter from './column/HgvsgColumnFormatter';
 import GnomadColumnFormatter from './column/GnomadColumnFormatter';
