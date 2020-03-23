@@ -134,26 +134,6 @@ export default class MutationMapperToolStore {
         {}
     );
 
-    readonly oncoKbData = remoteData<IOncoKbData | Error>(
-        {
-            await: () => [
-                this.mutations,
-                this.oncoKbAnnotatedGenes,
-                this.uniqueSampleKeyToTumorType,
-            ],
-            invoke: () =>
-                fetchOncoKbData(
-                    this.uniqueSampleKeyToTumorType.result!,
-                    this.oncoKbAnnotatedGenes.result!,
-                    this.mutations
-                ),
-            onError: (err: Error) => {
-                // fail silently, leave the error handling responsibility to the data consumer
-            },
-        },
-        ONCOKB_DEFAULT
-    );
-
     readonly uniqueSampleKeyToTumorType = remoteData<{
         [uniqueSampleKey: string]: string;
     }>({
@@ -283,7 +263,6 @@ export default class MutationMapperToolStore {
                                     this.indexedHotspotData,
                                     this.indexedVariantAnnotations,
                                     this.oncoKbCancerGenes,
-                                    this.oncoKbData,
                                     this.uniqueSampleKeyToTumorType.result || {}
                                 );
                                 return map;

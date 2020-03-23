@@ -66,6 +66,7 @@ interface DefaultMutationMapperStoreConfig {
     genomeNexusUrl?: string;
     oncoKbUrl?: string;
     enableCivic?: boolean;
+    enableOncoKb?: boolean;
     cachePostMethodsOnClients?: boolean;
     apiCacheLimit?: number;
     getMutationCount?: (mutation: Partial<Mutation>) => number;
@@ -804,12 +805,14 @@ class DefaultMutationMapperStore implements MutationMapperStore {
         {
             await: () => [this.mutationData, this.oncoKbAnnotatedGenes],
             invoke: () =>
-                this.dataFetcher.fetchOncoKbData(
-                    this.mutations,
-                    this.oncoKbAnnotatedGenes.result!,
-                    this.getDefaultTumorType,
-                    this.getDefaultEntrezGeneId
-                ),
+                this.config.enableOncoKb
+                    ? this.dataFetcher.fetchOncoKbData(
+                          this.mutations,
+                          this.oncoKbAnnotatedGenes.result!,
+                          this.getDefaultTumorType,
+                          this.getDefaultEntrezGeneId
+                      )
+                    : Promise.resolve(ONCOKB_DEFAULT_DATA),
             onError: () => {
                 // fail silently, leave the error handling responsibility to the data consumer
             },

@@ -49,7 +49,7 @@ export default class StandaloneMutationMapper extends MutationMapper<
                 enableFunctionalImpact={this.props.enableGenomeNexus}
                 enableHotspot={this.props.enableHotspot}
                 enableMyCancerGenome={this.props.enableMyCancerGenome}
-                enableCivic={true}
+                enableCivic={this.props.enableCivic}
             />
         );
     }

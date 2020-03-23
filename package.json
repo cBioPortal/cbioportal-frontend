@@ -131,7 +131,7 @@
     "bootstrap-sass": "3.3.7",
     "bowser": "^1.7.1",
     "bundle-loader": "^0.5.4",
-    "cbioportal-frontend-commons": "0.2.4",
+    "cbioportal-frontend-commons": "0.2.5",
     "chart.js": "^2.6.0",
     "classnames": "^2.2.5",
     "clinical-timeline": "0.0.19",
