@@ -8,6 +8,15 @@ export {
     getClinVarId,
 } from './component/clinvar/ClinVarId';
 export {
+    AnnotationProps,
+    default as Annotation,
+    DEFAULT_ANNOTATION_DATA,
+    GenericAnnotation,
+    getAnnotationData,
+    IAnnotation,
+    sortValue as annotationSortValue,
+} from './component/column/Annotation';
+export {
     default as ClinVar,
     sortValue as clinVarSortValue,
 } from './component/column/ClinVar';

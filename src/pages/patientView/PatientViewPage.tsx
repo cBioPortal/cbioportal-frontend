@@ -1115,6 +1115,11 @@ export default class PatientViewPage extends React.Component<
                                             .isComplete && (
                                             <div data-test="patientview-copynumber-table">
                                                 <CopyNumberTableWrapper
+                                                    uniqueSampleKeyToTumorType={
+                                                        this
+                                                            .patientViewPageStore
+                                                            .uniqueSampleKeyToTumorType
+                                                    }
                                                     studyIdToStudy={
                                                         this
                                                             .patientViewPageStore

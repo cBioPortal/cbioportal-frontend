@@ -64,8 +64,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
         >,
         public uniqueSampleKeyToTumorType: {
             [uniqueSampleKey: string]: string;
-        },
-        public oncoKbData: MobxPromise<IOncoKbData | Error>
+        }
     ) {
         super(
             mutationMapperConfig,
@@ -75,7 +74,6 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
             indexedHotspotData,
             indexedVariantAnnotations,
             oncoKbCancerGenes,
-            oncoKbData,
             uniqueSampleKeyToTumorType
         );
 
