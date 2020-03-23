@@ -13,7 +13,7 @@ import {
     TableHeaderProps,
 } from 'react-virtualized';
 import 'react-virtualized/styles.css';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, toJS } from 'mobx';
 import styles from './tables.module.scss';
 import * as _ from 'lodash';
 import { observer } from 'mobx-react';
@@ -36,7 +36,6 @@ export type IFixedHeaderTableProps<T> = {
     rowHeight?: number;
     showSelectSamples?: boolean;
     afterSelectingRows?: () => void;
-    showControls?: boolean;
     // used only when showControlsAtTop === true (show controls at bottom otherwise)
     showControlsAtTop?: boolean;
     showAddRemoveAllButtons?: boolean;
@@ -128,12 +127,19 @@ export default class FixedHeaderTable<T> extends React.Component<
         const tableDataStore = new FixedHeaderTableDataStore(() => {
             return this.props.data;
         }, this.props.fixedTopRowsData || []);
+        const filterString = toJS(this._store.filterString);
         this._store.setProps({
             columns: nextProps.columns,
             dataStore: tableDataStore,
             initialSortColumn: this._sortBy,
             initialSortDirection: this._sortDirection,
         });
+        // From https://github.com/cBioPortal/cbioportal-frontend/blob/e88efa37d15f0a59cbe75c8239ffad7c9d45af76/src/shared/components/lazyMobXTable/LazyMobXTable.tsx#L704
+        // Looks like filter on the table is cleared whenever table is managing its own data store.
+        // To fix the issue set filter whenever a new tableDataStore is created
+        if (filterString !== undefined) {
+            this._store.setFilterString(filterString);
+        }
     }
 
     initDataStore() {
@@ -363,9 +369,7 @@ export default class FixedHeaderTable<T> extends React.Component<
     public render() {
         return (
             <div className={styles.studyViewTablesTable}>
-                {this.props.showControls &&
-                    this.props.showControlsAtTop &&
-                    this.getControls()}
+                {this.props.showControlsAtTop && this.getControls()}
                 <RVTable
                     width={this.props.width!}
                     height={this.props.height!}
@@ -396,9 +400,7 @@ export default class FixedHeaderTable<T> extends React.Component<
                         );
                     })}
                 </RVTable>
-                {this.props.showControls &&
-                    !this.props.showControlsAtTop &&
-                    this.getControls()}
+                {!this.props.showControlsAtTop && this.getControls()}
             </div>
         );
     }
