@@ -1,5 +1,6 @@
 import * as _ from 'lodash';
 import {
+    extractGenomicLocation,
     getColorForProteinImpactType as getDefaultColorForProteinImpactType,
     IProteinImpactTypeColors,
 } from 'react-mutation-mapper';
@@ -245,28 +246,6 @@ export function updateMissingGeneInfo(
             }
         }
     });
-}
-
-// TODO remove when done refactoring mutation mapper
-export function extractGenomicLocation(mutation: Mutation) {
-    if (
-        mutation.gene &&
-        mutation.chr &&
-        mutation.startPosition &&
-        mutation.endPosition &&
-        mutation.referenceAllele &&
-        mutation.variantAllele
-    ) {
-        return {
-            chromosome: mutation.chr.replace('chr', ''),
-            start: mutation.startPosition,
-            end: mutation.endPosition,
-            referenceAllele: mutation.referenceAllele,
-            variantAllele: mutation.variantAllele,
-        };
-    } else {
-        return undefined;
-    }
 }
 
 // TODO remove when done refactoring mutation mapper

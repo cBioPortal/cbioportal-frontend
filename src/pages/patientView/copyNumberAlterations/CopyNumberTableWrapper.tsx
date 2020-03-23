@@ -21,17 +21,11 @@ import PubMedCache from 'shared/cache/PubMedCache';
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
 import { IGisticData } from 'shared/model/Gistic';
 import CopyNumberCountCache from '../clinicalInformation/CopyNumberCountCache';
-import {
-    ICivicGeneDataWrapper,
-    ICivicVariantDataWrapper,
-} from 'shared/model/Civic.ts';
 import HeaderIconMenu from '../mutation/HeaderIconMenu';
 import GeneFilterMenu, { GeneFilterOption } from '../mutation/GeneFilterMenu';
 import PanelColumnFormatter from 'shared/components/mutationTable/column/PanelColumnFormatter';
-import {
-    IOncoKbCancerGenesWrapper,
-    IOncoKbDataWrapper,
-} from 'cbioportal-frontend-commons';
+import { ICivicGene, ICivicVariant, RemoteData } from 'react-mutation-mapper';
+import { CancerGene, IOncoKbData } from 'cbioportal-frontend-commons';
 
 class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {}
 
@@ -42,11 +36,12 @@ type ICopyNumberTableWrapperProps = {
     sampleIds: string[];
     sampleManager: SampleManager | null;
     sampleToGenePanelId: { [sampleId: string]: string | undefined };
+    uniqueSampleKeyToTumorType?: { [sampleId: string]: string };
     genePanelIdToEntrezGeneIds: { [genePanelId: string]: number[] };
-    cnaOncoKbData?: IOncoKbDataWrapper;
-    cnaCivicGenes?: ICivicGeneDataWrapper;
-    cnaCivicVariants?: ICivicVariantDataWrapper;
-    oncoKbCancerGenes?: IOncoKbCancerGenesWrapper;
+    cnaOncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
+    cnaCivicGenes?: RemoteData<ICivicGene | undefined>;
+    cnaCivicVariants?: RemoteData<ICivicVariant | undefined>;
+    oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>;
     enableOncoKb?: boolean;
     enableCivic?: boolean;
     pubMedCache?: PubMedCache;
@@ -205,6 +200,8 @@ export default class CopyNumberTableWrapper extends React.Component<
             name: 'Annotation',
             render: (d: DiscreteCopyNumberData[]) =>
                 AnnotationColumnFormatter.renderFunction(d, {
+                    uniqueSampleKeyToTumorType: this.props
+                        .uniqueSampleKeyToTumorType,
                     oncoKbData: this.props.cnaOncoKbData,
                     oncoKbCancerGenes: this.props.oncoKbCancerGenes,
                     enableOncoKb: this.props.enableOncoKb as boolean,
@@ -222,6 +219,7 @@ export default class CopyNumberTableWrapper extends React.Component<
                     d,
                     this.props.oncoKbCancerGenes,
                     this.props.cnaOncoKbData,
+                    this.props.uniqueSampleKeyToTumorType,
                     this.props.cnaCivicGenes,
                     this.props.cnaCivicVariants
                 );

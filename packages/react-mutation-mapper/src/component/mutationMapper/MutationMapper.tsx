@@ -70,6 +70,7 @@ export type MutationMapperProps = {
     // TODO annotateMutations?: boolean;
     genomeNexusUrl?: string;
     oncoKbUrl?: string;
+    enableOncoKb?: boolean;
     enableCivic?: boolean;
     cachePostMethodsOnClients?: boolean;
     apiCacheLimit?: number;
@@ -109,6 +110,7 @@ export function initDefaultMutationMapperStore(props: MutationMapperProps) {
             genomeNexusUrl: props.genomeNexusUrl,
             oncoKbUrl: props.oncoKbUrl,
             enableCivic: props.enableCivic,
+            enableOncoKb: props.enableOncoKb,
             cachePostMethodsOnClients: props.cachePostMethodsOnClients,
             apiCacheLimit: props.apiCacheLimit,
             getMutationCount: props.getMutationCount,
@@ -133,6 +135,7 @@ export default class MutationMapper<
         showOnlyAnnotatedTranscriptsInDropdown: false,
         showTranscriptDropDown: false,
         enableCivic: true,
+        enableOncoKb: true,
         filterMutationsBySelectedTranscript: false,
         cachePostMethodsOnClients: true,
     };

@@ -5,9 +5,9 @@ import { initMutation } from 'test/MutationMockUtils';
 
 describe('AnnotationUtils', () => {
     const hotspotMutation1 = initMutation({
+        chr: '17',
         gene: {
             hugoGeneSymbol: 'TP53',
-            chromosome: '17',
         },
         startPosition: 66,
         endPosition: 66,
@@ -20,9 +20,9 @@ describe('AnnotationUtils', () => {
     });
 
     const hotspotMutation2 = initMutation({
+        chr: '17',
         gene: {
             hugoGeneSymbol: 'TP53',
-            chromosome: '17',
         },
         startPosition: 66,
         endPosition: 66,
@@ -34,9 +34,9 @@ describe('AnnotationUtils', () => {
     });
 
     const hotspotMutation3 = initMutation({
+        chr: '3',
         gene: {
             hugoGeneSymbol: 'PIK3CA',
-            chromosome: '3',
         },
         startPosition: 666,
         endPosition: 668,
@@ -49,9 +49,9 @@ describe('AnnotationUtils', () => {
     });
 
     const hotspot3dMutation = initMutation({
+        chr: '4',
         gene: {
             hugoGeneSymbol: 'SMURF1',
-            chromosome: '4',
         },
         startPosition: 111,
         endPosition: 111,
@@ -64,9 +64,9 @@ describe('AnnotationUtils', () => {
     });
 
     const notHotspotMutation = initMutation({
+        chr: '4',
         gene: {
             hugoGeneSymbol: 'SMURF1',
-            chromosome: '4',
         },
         startPosition: 222,
         endPosition: 222,
