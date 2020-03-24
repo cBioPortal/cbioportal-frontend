@@ -111,8 +111,8 @@ export default class ClinicalTrialsCard extends React.Component<
                             )}
                             align={{
                                 points: ['tl', 'tr'],
-                                offset: [0, 0],
-                                targetOffset: ['0%', '0%'],
+                                offset: [0, -200],
+                                targetOffset: [0, 0],
                                 overflow: { adjustX: false, adjustY: false },
                             }}
                             placement="topRight"
