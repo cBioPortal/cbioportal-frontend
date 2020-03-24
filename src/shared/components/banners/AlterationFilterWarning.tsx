@@ -111,6 +111,9 @@ export default class AlterationFilterWarning extends React.Component<
 
             if (vusCount > 0) {
                 const is = vusCount === 1 ? 'is' : 'are';
+                const does = vusCount === 1 ? 'does' : 'do';
+                const anAlteration =
+                    vusCount === 1 ? 'an alteration' : 'alterations';
                 if (this.props.isUnaffected && this.excludeVUS) {
                     return (
                         <div className="alert alert-unaffected">
@@ -143,10 +146,10 @@ export default class AlterationFilterWarning extends React.Component<
                                 ? `${vusCount} ${getVusDescription(
                                       vusTypes,
                                       vusCount !== 1
-                                  )} ${is} ${
+                                  )} ${
                                       this.props.mutationsTabModeSettings
-                                          ? 'hidden below.'
-                                          : 'excluded from analysis.'
+                                          ? `${is} hidden below.`
+                                          : `${does} not count as ${anAlteration} for this analysis.`
                                   }`
                                 : `${vusCount} ${getVusDescription(
                                       vusTypes,
@@ -206,6 +209,9 @@ export default class AlterationFilterWarning extends React.Component<
 
             if (germlineCount > 0) {
                 const is = germlineCount === 1 ? 'is' : 'are';
+                const does = germlineCount === 1 ? 'does' : 'do';
+                const anAlteration =
+                    germlineCount === 1 ? 'an alteration' : 'alterations';
                 if (this.props.isUnaffected && this.excludeGermline) {
                     return (
                         <div className="alert alert-unaffected">
@@ -232,10 +238,10 @@ export default class AlterationFilterWarning extends React.Component<
                                 }}
                             />
                             {this.excludeGermline
-                                ? `${germlineCount} germline mutations ${is} ${
+                                ? `${germlineCount} germline mutations ${
                                       this.props.mutationsTabModeSettings
-                                          ? 'hidden below.'
-                                          : 'excluded from analysis.'
+                                          ? `${is} hidden below.`
+                                          : `${does} not count as ${anAlteration} for this analysis.`
                                   }`
                                 : `${germlineCount} germline mutations ${is} ${
                                       this.props.mutationsTabModeSettings
