@@ -544,6 +544,7 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
     }
 
     @autobind
+    @action
     togglePreSelectRow(uniqueKey: string) {
         const record = _.find(this.selectedRowsKeys, key => key === uniqueKey);
         if (_.isUndefined(record)) {
