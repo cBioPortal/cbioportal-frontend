@@ -109,7 +109,13 @@ export default class ClinicalTrialsCard extends React.Component<
                                 this.props.indicator.query,
                                 treatmentButtonList
                             )}
-                            placement="right"
+                            align={{
+                                points: ['tl', 'tr'],
+                                offset: [0, 0],
+                                targetOffset: ['0%', '0%'],
+                                overflow: { adjustX: false, adjustY: false },
+                            }}
+                            placement="topRight"
                             trigger={['hover', 'focus']}
                             onPopupAlign={hideArrow}
                             destroyTooltipOnHide={true}
