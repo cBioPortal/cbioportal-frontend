@@ -223,6 +223,18 @@ export default class PatientViewPage extends React.Component<
         }
     }
 
+    @computed get showWholeSlideViewerTab() {
+        return (
+            this.patientViewPageStore.clinicalDataForSamples.isComplete &&
+            _.some(
+                this.patientViewPageStore.clinicalDataForSamples.result,
+                s => {
+                    return s.clinicalAttributeId === 'MSK_SLIDE_ID';
+                }
+            )
+        );
+    }
+
     @action private onCnaTableColumnVisibilityToggled(
         columnId: string,
         columnVisibility?: IColumnVisibilityDef[]
@@ -1361,8 +1373,7 @@ export default class PatientViewPage extends React.Component<
                                     </div>
                                 </MSKTab>
 
-                                {this.patientViewPageStore.studyId ===
-                                    'mskimpact' &&
+                                {this.showWholeSlideViewerTab &&
                                     this.wholeSlideViewerUrl.result && (
                                         <MSKTab
                                             key={6}
