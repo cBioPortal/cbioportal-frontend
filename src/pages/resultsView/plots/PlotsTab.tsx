@@ -847,6 +847,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 }
             },
             set _selectedGenericAssayOption(o: any) {
+                console.log(
+                    `setting ${vertical ? 'vertical' : 'horizontal'} to ${o &&
+                        o.value}`
+                );
                 const newParams: Mutable<Partial<ResultsViewURLQuery>> = {};
                 if (vertical) {
                     newParams.plots_vert_selection = Object.assign(
@@ -1922,19 +1926,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @autobind
     @action
     private swapHorzVertSelections() {
-        const keys: (keyof AxisMenuSelection)[] = [
+        const keysToSwap: (keyof AxisMenuSelection)[] = [
             'dataType',
             'selectedDataSourceOption',
             'logScale',
             'mutationCountBy',
         ];
-        // have to store all values for swap because values depend on each other in derived data way so the copy can mess up if you do it one by one
-        const horz = keys.map(k => this.horzSelection[k]);
-        const vert = keys.map(k => this.vertSelection[k]);
-        for (let i = 0; i < keys.length; i++) {
-            this.horzSelection[keys[i]] = vert[i];
-            this.vertSelection[keys[i]] = horz[i];
-        }
 
         // only swap genes if vertSelection is not set to "Same gene"
         if (
@@ -1942,10 +1939,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.vertSelection.selectedGeneOption.value !==
                 SAME_SELECTED_OPTION_NUMERICAL_VALUE
         ) {
-            const horzOption = this.horzSelection.selectedGeneOption;
-            const vertOption = this.vertSelection.selectedGeneOption;
-            this.horzSelection.selectedGeneOption = vertOption;
-            this.vertSelection.selectedGeneOption = horzOption;
+            keysToSwap.push('selectedGeneOption');
         }
 
         // only swap gene sets if vertSelection is not set to "Same gene set"
@@ -1954,10 +1948,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.vertSelection.selectedGenesetOption.value !==
                 SAME_SELECTED_OPTION_STRING_VALUE
         ) {
-            const horzOption = this.horzSelection.selectedGenesetOption;
-            const vertOption = this.vertSelection.selectedGenesetOption;
-            this.horzSelection.selectedGenesetOption = vertOption;
-            this.vertSelection.selectedGenesetOption = horzOption;
+            keysToSwap.push('selectedGenesetOption');
         }
 
         // only swap generic assay if vertSelection is not set to "Same generic assay"
@@ -1966,10 +1957,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.vertSelection.selectedGenericAssayOption.value !==
                 SAME_SELECTED_OPTION_STRING_VALUE
         ) {
-            const horzOption = this.horzSelection.selectedGenericAssayOption;
-            const vertOption = this.vertSelection.selectedGenericAssayOption;
-            this.horzSelection.selectedGenericAssayOption = vertOption;
-            this.vertSelection.selectedGenericAssayOption = horzOption;
+            keysToSwap.push('selectedGenericAssayOption');
+        }
+
+        // have to store all values for swap because values depend on each other in derived data way so the copy can mess up if you do it one by one
+        const horz = keysToSwap.map(k => this.horzSelection[k]);
+        const vert = keysToSwap.map(k => this.vertSelection[k]);
+        for (let i = 0; i < keysToSwap.length; i++) {
+            this.horzSelection[keysToSwap[i]] = vert[i];
+            this.vertSelection[keysToSwap[i]] = horz[i];
         }
     }
 
