@@ -1,12 +1,8 @@
 import { RouterStore } from 'mobx-react-router';
-import { action, computed, observable, runInAction } from 'mobx';
+import { action } from 'mobx';
 import * as _ from 'lodash';
 import URL, { QueryParams } from 'url';
-import { remoteData } from 'cbioportal-frontend-commons';
 import sessionClient from '../api/sessionServiceInstance';
-import AppConfig from 'appConfig';
-import { ServerConfigHelpers } from '../../config/config';
-import hashString from './hashString';
 
 export function getSessionKey(hash: string) {
     return `session_${hash}`;
