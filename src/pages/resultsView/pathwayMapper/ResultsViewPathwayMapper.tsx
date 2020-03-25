@@ -53,6 +53,13 @@ export default class ResultsViewPathwayMapper extends React.Component<
     @observable
     private activeToasts: React.ReactText[];
 
+    @observable
+    private message: string;
+
+    private readonly DEFAULT_MESSAGE = 'Welcome to Pathways tab...';
+    private readonly LOADING_MESSAGE = 'Loading alteration data...';
+    @observable
+    private isMessageShown = false;
     private toastReaction: IReactionDisposer;
 
     private readonly validNonQueryGenes = remoteData<string[]>({
@@ -64,14 +71,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
         onResult: (genes: string[]) => {
             // show loading text only if there are actually new genes to load
             if (genes.length > 0) {
-                const tId = toast('Loading alteration data...', {
-                    autoClose: false,
-                    draggable: false,
-                    position: 'bottom-left',
-                    className: styles.toast,
-                });
-
-                this.activeToasts.push(tId);
+                this.showMessage(this.LOADING_MESSAGE);
             }
         },
     });
@@ -184,9 +184,15 @@ export default class ResultsViewPathwayMapper extends React.Component<
         // Alteration data of non-query genes are loaded.
         if (this.isNewStoreReady) {
             this.addGenomicData(this.alterationFrequencyData);
-            this.dismissActiveToasts();
+            if (this.message == this.LOADING_MESSAGE) {
+                this.dismissActiveToasts();
+            }
         }
 
+        const isWarningMessage =
+            this.message &&
+            this.message != this.LOADING_MESSAGE &&
+            this.message != this.DEFAULT_MESSAGE;
         return (
             <div className="pathwayMapper">
                 <div
@@ -201,6 +207,46 @@ export default class ResultsViewPathwayMapper extends React.Component<
                                 store={this.props.store}
                                 tabReflectsOql={true}
                             />
+                            <div
+                                className={
+                                    'alert ' +
+                                    (isWarningMessage
+                                        ? 'alert-warning'
+                                        : 'alert-success')
+                                }
+                                style={{
+                                    marginLeft: '1%',
+                                    marginBottom: '0px',
+                                    color: this.message ? 'black' : 'gray',
+                                    maxHeight: '35px',
+                                    overflowY: 'auto',
+                                }}
+                            >
+                                <button
+                                    type="button"
+                                    className="close"
+                                    onClick={() => {
+                                        this.message = null;
+                                    }}
+                                    style={{
+                                        display: this.message
+                                            ? 'block'
+                                            : 'none',
+                                    }}
+                                >
+                                    &times;
+                                </button>
+                                {isWarningMessage && (
+                                    <i
+                                        className="fa fa-md fa-exclamation-triangle"
+                                        style={{
+                                            marginRight: '6px',
+                                            marginBottom: '1px',
+                                        }}
+                                    ></i>
+                                )}
+                                {this.message || this.DEFAULT_MESSAGE}
+                            </div>
 
                             <PathwayMapper
                                 isCBioPortal={true}
@@ -217,6 +263,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
                                 tableComponent={this.renderTable}
                                 validGenes={this.validGenes}
                                 toast={toast}
+                                showMessage={this.showMessage}
                             />
                             <ToastContainer
                                 closeButton={<i className="fa fa-times" />}
@@ -318,12 +365,14 @@ export default class ResultsViewPathwayMapper extends React.Component<
     private dismissActiveToasts() {
         // Toasts are removed with delay
         setTimeout(() => {
-            this.activeToasts.forEach(tId => {
-                toast.dismiss(tId);
-            });
+            this.message = null;
         }, 2000);
     }
 
+    @autobind
+    private showMessage(message: string) {
+        this.message = message;
+    }
     @autobind
     private renderTable(
         data: IPathwayMapperTable[],
