@@ -5,8 +5,8 @@ import { Mutation } from 'shared/api/generated/CBioPortalAPI';
 import {
     TableCellStatusIndicator,
     TableCellStatus,
-    VariantAnnotation,
 } from 'cbioportal-frontend-commons';
+import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import GenomeNexusCache, {
     GenomeNexusCacheDataType,
 } from 'shared/cache/GenomeNexusCache';
