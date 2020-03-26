@@ -136,11 +136,11 @@ import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyM
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import {
     DataType as DownloadDataType,
-    CancerGene,
     remoteData,
     stringListToSet,
     pluralize,
 } from 'cbioportal-frontend-commons';
+import { CancerGene } from 'oncokb-ts-api-client';
 
 import { AppStore } from 'AppStore';
 import { getGeneCNAOQL } from 'pages/studyView/TableUtils';

@@ -3,15 +3,17 @@ import request from 'superagent';
 import Response = request.Response;
 
 import {
-    CancerGene,
     IOncoKbData,
     EvidenceType,
-    OncoKbAPI,
     generateProteinChangeQuery,
     generateAnnotateStructuralVariantQuery,
+} from 'cbioportal-frontend-commons';
+import {
     AnnotateMutationByProteinChangeQuery,
     AnnotateStructuralVariantQuery,
-} from 'cbioportal-frontend-commons';
+    CancerGene,
+    OncoKbAPI,
+} from 'oncokb-ts-api-client';
 import {
     EnsemblFilter,
     EnsemblTranscript,

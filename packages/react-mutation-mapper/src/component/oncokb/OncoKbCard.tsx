@@ -1,8 +1,5 @@
-import {
-    getNCBIlink,
-    Citations,
-    IndicatorQueryTreatment,
-} from 'cbioportal-frontend-commons';
+import { getNCBIlink } from 'cbioportal-frontend-commons';
+import { Citations, IndicatorQueryTreatment } from 'oncokb-ts-api-client';
 import classnames from 'classnames';
 import { action, computed, observable } from 'mobx';
 import { observer } from 'mobx-react';

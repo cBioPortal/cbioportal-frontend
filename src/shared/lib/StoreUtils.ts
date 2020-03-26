@@ -30,11 +30,7 @@ import defaultClient from 'shared/api/cbioportalClientInstance';
 import client from 'shared/api/cbioportalClientInstance';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import g2sClient from 'shared/api/g2sClientInstance';
-import {
-    CancerGene,
-    OncoKbAPI,
-    stringListToIndexSet,
-} from 'cbioportal-frontend-commons';
+import { stringListToIndexSet } from 'cbioportal-frontend-commons';
 import {
     Alignment,
     Genome2StructureAPI,
@@ -76,7 +72,9 @@ import { getFrontendAssetUrl } from 'shared/api/urls';
 import {
     AnnotateCopyNumberAlterationQuery,
     IndicatorQueryResp,
-} from 'cbioportal-frontend-commons';
+    CancerGene,
+    OncoKbAPI,
+} from 'oncokb-ts-api-client';
 import { EvidenceType, IOncoKbData } from 'cbioportal-frontend-commons';
 
 export const ONCOKB_DEFAULT: IOncoKbData = {

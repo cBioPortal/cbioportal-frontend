@@ -27,11 +27,12 @@ import {
     fetchPdbAlignmentData,
     indexPdbAlignmentData,
 } from 'shared/lib/StoreUtils';
-import { CancerGene, remoteData } from 'cbioportal-frontend-commons';
+import { remoteData } from 'cbioportal-frontend-commons';
 import {
     EnsemblTranscript,
     VariantAnnotation,
 } from 'genome-nexus-ts-api-client';
+import { CancerGene } from 'oncokb-ts-api-client';
 import { IPdbChain, PdbAlignmentIndex } from 'shared/model/Pdb';
 import {
     calcPdbIdNumericalValue,
