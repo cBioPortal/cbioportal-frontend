@@ -20,11 +20,10 @@ import {
 } from 'shared/api/generated/CBioPortalAPI';
 import { IAnnotationColumnProps } from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
 import {
-    CancerGene,
     generateQueryVariantId,
-    IndicatorQueryResp,
     IOncoKbData,
 } from 'cbioportal-frontend-commons';
+import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
 import { getCivicCNAVariants } from 'shared/lib/CivicUtils';
 

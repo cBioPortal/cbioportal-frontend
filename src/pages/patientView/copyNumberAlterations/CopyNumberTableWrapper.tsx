@@ -25,7 +25,8 @@ import HeaderIconMenu from '../mutation/HeaderIconMenu';
 import GeneFilterMenu, { GeneFilterOption } from '../mutation/GeneFilterMenu';
 import PanelColumnFormatter from 'shared/components/mutationTable/column/PanelColumnFormatter';
 import { ICivicGene, ICivicVariant, RemoteData } from 'react-mutation-mapper';
-import { CancerGene, IOncoKbData } from 'cbioportal-frontend-commons';
+import { IOncoKbData } from 'cbioportal-frontend-commons';
+import { CancerGene } from 'oncokb-ts-api-client';
 
 class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {}
 

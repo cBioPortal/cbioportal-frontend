@@ -1,4 +1,4 @@
-import { IndicatorQueryResp } from '../../api/generated/OncoKbAPI';
+import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 
 export type Query = {
     id: string;

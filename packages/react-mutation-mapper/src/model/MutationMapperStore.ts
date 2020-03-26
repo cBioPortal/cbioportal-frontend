@@ -1,8 +1,4 @@
-import {
-    CancerGene,
-    IndicatorQueryResp,
-    IOncoKbData,
-} from 'cbioportal-frontend-commons';
+import { IOncoKbData } from 'cbioportal-frontend-commons';
 import {
     EnsemblTranscript,
     MyVariantInfo,
@@ -10,6 +6,7 @@ import {
     PostTranslationalModification,
     VariantAnnotation,
 } from 'genome-nexus-ts-api-client';
+import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import { Hotspot, IHotspotIndex } from './CancerHotspot';
 import { ICivicGene, ICivicVariant } from './Civic';
 import DataStore from './DataStore';
