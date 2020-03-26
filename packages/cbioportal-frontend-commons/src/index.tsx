@@ -33,20 +33,6 @@ export {
 } from './components/TableCellStatus';
 export { default as WindowWrapper } from './components/WindowWrapper';
 
-export {
-    default as OncoKbAPI,
-    CancerGene,
-    IndicatorQueryResp,
-    Query,
-    ArticleAbstract,
-    Citations,
-    IndicatorQueryTreatment,
-    AnnotateCopyNumberAlterationQuery,
-    AnnotateMutationByProteinChangeQuery,
-    AnnotateStructuralVariantQuery,
-    TumorType,
-} from './api/generated/OncoKbAPI';
-export * from './api/model/oncokb';
 export * from './api/remoteData';
 
 export * from './lib/ColumnVisibilityResolver';

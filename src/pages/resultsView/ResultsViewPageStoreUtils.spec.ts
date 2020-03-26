@@ -38,7 +38,7 @@ import {
     MergedTrackLineFilterOutput,
 } from '../../shared/lib/oql/oqlfilter';
 import { observable } from 'mobx';
-import { IndicatorQueryResp } from 'cbioportal-frontend-commons';
+import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import { AnnotatedMutation } from './ResultsViewPageStore';
 import * as _ from 'lodash';
 import sinon from 'sinon';

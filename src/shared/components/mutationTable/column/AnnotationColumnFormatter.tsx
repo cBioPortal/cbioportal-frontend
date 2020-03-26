@@ -16,7 +16,8 @@ import {
 } from 'react-mutation-mapper';
 import OncokbPubMedCache from 'shared/cache/PubMedCache';
 import { CancerStudy, Mutation } from 'shared/api/generated/CBioPortalAPI';
-import { CancerGene, IOncoKbData } from 'cbioportal-frontend-commons';
+import { IOncoKbData } from 'cbioportal-frontend-commons';
+import { CancerGene } from 'oncokb-ts-api-client';
 
 export interface IAnnotationColumnProps extends AnnotationProps {
     pubMedCache?: OncokbPubMedCache;

@@ -17,8 +17,8 @@ import {
     OncoprinterGeneticInputLineType2,
     parseGeneticInput,
 } from './OncoprinterGeneticUtils';
-import { CancerGene, remoteData } from 'cbioportal-frontend-commons';
-import { IOncoKbData } from 'cbioportal-frontend-commons';
+import { IOncoKbData, remoteData } from 'cbioportal-frontend-commons';
+import { CancerGene } from 'oncokb-ts-api-client';
 
 import {
     fetchOncoKbCancerGenes,

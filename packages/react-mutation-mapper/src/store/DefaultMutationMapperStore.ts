@@ -1,10 +1,6 @@
 import autobind from 'autobind-decorator';
-import {
-    CancerGene,
-    IndicatorQueryResp,
-    IOncoKbData,
-    remoteData,
-} from 'cbioportal-frontend-commons';
+import { IOncoKbData, remoteData } from 'cbioportal-frontend-commons';
+import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import {
     EnsemblTranscript,
     MyVariantInfo,

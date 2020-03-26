@@ -52,10 +52,10 @@ import { IColumnVisibilityControlsProps } from '../columnVisibilityControls/Colu
 import MobxPromise from 'mobxpromise';
 import {
     generateQueryVariantId,
-    CancerGene,
     IOncoKbData,
 } from 'cbioportal-frontend-commons';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
+import { CancerGene } from 'oncokb-ts-api-client';
 import {
     getAnnotationData,
     IAnnotation,

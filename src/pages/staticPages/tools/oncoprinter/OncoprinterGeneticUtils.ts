@@ -22,12 +22,13 @@ import {
     generateCopyNumberAlterationQuery,
     generateQueryVariantId,
     getProteinPositionFromProteinChange,
-    OncoKbAPI,
-    Query,
-    AnnotateCopyNumberAlterationQuery,
     EvidenceType,
     IOncoKbData,
 } from 'cbioportal-frontend-commons';
+import {
+    AnnotateCopyNumberAlterationQuery,
+    OncoKbAPI,
+} from 'oncokb-ts-api-client';
 import {
     cancerTypeForOncoKb,
     ONCOKB_DEFAULT,
