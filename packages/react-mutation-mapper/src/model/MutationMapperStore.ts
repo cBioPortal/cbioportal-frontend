@@ -1,21 +1,21 @@
-// TODO use generated genome nexus models as well
 import {
     CancerGene,
-    MyVariantInfo,
-    VariantAnnotation,
     IndicatorQueryResp,
     IOncoKbData,
 } from 'cbioportal-frontend-commons';
-
+import {
+    EnsemblTranscript,
+    MyVariantInfo,
+    PfamDomain,
+    PostTranslationalModification,
+    VariantAnnotation,
+} from 'genome-nexus-ts-api-client';
 import { Hotspot, IHotspotIndex } from './CancerHotspot';
 import { ICivicGene, ICivicVariant } from './Civic';
 import DataStore from './DataStore';
 import { Gene } from './Gene';
-import { EnsemblTranscript } from './EnsemblTranscript';
 import { Mutation } from './Mutation';
 import { IMyCancerGenomeData } from './MyCancerGenome';
-import { PfamDomain } from './Pfam';
-import { PostTranslationalModification } from './PostTranslationalModification';
 import { RemoteData } from './RemoteData';
 
 export interface MutationMapperStore {

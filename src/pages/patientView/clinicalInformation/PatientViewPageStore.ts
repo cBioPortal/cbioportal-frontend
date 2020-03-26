@@ -93,8 +93,8 @@ import {
     CancerGene,
     getBrowserWindow,
     stringListToSet,
-    VariantAnnotation,
 } from 'cbioportal-frontend-commons';
+import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownloadDataFetcher';
 import { getNavCaseIdsCache } from '../../../shared/lib/handleLongUrls';
 import {

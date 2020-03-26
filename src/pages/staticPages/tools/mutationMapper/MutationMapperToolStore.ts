@@ -10,12 +10,11 @@ import {
 
 import AppConfig from 'appConfig';
 
+import { CancerGene, remoteData } from 'cbioportal-frontend-commons';
 import {
-    CancerGene,
     EnsemblTranscript,
-    remoteData,
     VariantAnnotation,
-} from 'cbioportal-frontend-commons';
+} from 'genome-nexus-ts-api-client';
 import {
     ClinicalData,
     Gene,

@@ -1,4 +1,5 @@
 import autobind from 'autobind-decorator';
+import { PfamDomain, PfamDomainRange } from 'genome-nexus-ts-api-client';
 import _ from 'lodash';
 import { action, computed, observable } from 'mobx';
 import { observer } from 'mobx-react';
@@ -13,7 +14,6 @@ import { LollipopPlacement, LollipopSpec } from '../../model/LollipopSpec';
 import { MobxCache } from '../../model/MobxCache';
 import { Mutation } from '../../model/Mutation';
 import { MutationMapperStore } from '../../model/MutationMapperStore';
-import { PfamDomain, PfamDomainRange } from '../../model/Pfam';
 import { SequenceSpec } from '../../model/SequenceSpec';
 import { DefaultLollipopPlotControlsConfig } from '../../store/DefaultLollipopPlotControlsConfig';
 import {

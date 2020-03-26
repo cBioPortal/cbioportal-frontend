@@ -1,0 +1,37 @@
+{
+  "name": "genome-nexus-ts-api-client",
+  "description": "Genome Nexus API Client for TypeScript",
+  "version": "1.1.2-beta.0",
+  "main": "dist/index.js",
+  "module": "dist/index.es.js",
+  "jsnext:main": "dist/index.es.js",
+  "typings": "dist/index.d.ts",
+  "styles": "dist/styles.css",
+  "engines": {
+    "node": ">=8.12.0",
+    "yarn": ">=1.21.1"
+  },
+  "files": [
+    "dist"
+  ],
+  "author": "cBioPortal",
+  "license": "AGPL-3.0-or-later",
+  "repository": "cBioPortal/cbioportal-frontend",
+  "scripts": {
+    "build": "cross-env NODE_ENV=production NODE_OPTIONS=--max-old-space-size=2048 yarn run rollup",
+    "start": "yarn run watch",
+    "watch": "yarn run rollup:watch",
+    "watchSSL": "yarn run watch",
+    "rollup": "rollup -c rollup.config.ts",
+    "rollup:watch": "rollup -c rollup.config.ts -w",
+    "prepare": "yarn run build",
+    "test": "cross-env CI=1 react-scripts-ts test --env=jsdom",
+    "test:watch": "yarn run test -- --watch"
+  },
+  "dependencies": {
+    "superagent": "^3.8.3",
+    "typescript": "3.2.2"
+  },
+  "devDependencies": {
+  }
+}

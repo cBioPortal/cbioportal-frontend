@@ -7,11 +7,8 @@ import {
     MolecularProfile,
     SampleIdentifier,
 } from 'shared/api/generated/CBioPortalAPI';
-import {
-    CancerGene,
-    remoteData,
-    VariantAnnotation,
-} from 'cbioportal-frontend-commons';
+import { CancerGene, remoteData } from 'cbioportal-frontend-commons';
+import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { labelMobxPromises, MobxPromise, cached } from 'mobxpromise';
 import { IOncoKbData } from 'cbioportal-frontend-commons';
 import { fetchCosmicData } from 'shared/lib/StoreUtils';

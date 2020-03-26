@@ -1,6 +1,6 @@
 import { fetchVariantAnnotationsByMutation } from 'shared/lib/StoreUtils';
 import { genomicLocationString } from 'shared/lib/MutationUtils';
-import { VariantAnnotation } from 'cbioportal-frontend-commons';
+import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { extractGenomicLocation } from 'react-mutation-mapper';
 import { Mutation } from 'shared/api/generated/CBioPortalAPI';
 import LazyMobXCache, { CacheData } from 'shared/lib/LazyMobXCache';

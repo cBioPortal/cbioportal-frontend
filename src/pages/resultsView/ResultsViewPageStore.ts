@@ -37,8 +37,8 @@ import {
     IndicatorQueryResp,
     remoteData,
     stringListToSet,
-    VariantAnnotation,
 } from 'cbioportal-frontend-commons';
+import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { cached, labelMobxPromises, MobxPromise } from 'mobxpromise';
 import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';

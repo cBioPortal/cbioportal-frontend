@@ -4,10 +4,12 @@ import { toJS } from 'mobx';
 import {
     getMutationTypeFromProteinChange,
     getProteinPositionFromProteinChange,
+} from 'cbioportal-frontend-commons';
+import {
     TranscriptConsequenceSummary,
     VariantAnnotation,
     VariantAnnotationSummary,
-} from 'cbioportal-frontend-commons';
+} from 'genome-nexus-ts-api-client';
 
 import { Mutation } from '../model/Mutation';
 import { genomicLocationString, extractGenomicLocation } from './MutationUtils';

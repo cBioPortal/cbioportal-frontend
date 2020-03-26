@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { PostTranslationalModification } from '../model/PostTranslationalModification';
+import { PostTranslationalModification } from 'genome-nexus-ts-api-client';
 
 export const PTM_COLORS: { [type: string]: string } = {
     Phosphorylation: '#2DCF00',
