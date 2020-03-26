@@ -1,52 +1,16 @@
 import { assert } from 'chai';
-import { QueryStore, normalizeQuery } from './QueryStore';
 import {
-    nonMolecularProfileParams,
-    profileAvailability,
     categorizedSamplesCount,
+    profileAvailability,
 } from './QueryStoreUtils';
 import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewPageStore';
 import {
     MolecularProfile,
     SampleList,
 } from '../../api/generated/CBioPortalAPI';
-import Sinon from 'sinon';
 import { VirtualStudy } from 'shared/model/VirtualStudy';
 
 describe('QueryStoreUtils', () => {
-    describe('nonMolecularProfileParams', () => {
-        let selectableStudiesSetStub: any;
-
-        before(() => {});
-
-        after(() => {
-            if (selectableStudiesSetStub) {
-                selectableStudiesSetStub.restore();
-            }
-        });
-
-        it.skip('returns url-encoded, normalized query for gene_list parameter', () => {
-            let store = new QueryStore();
-
-            let queries = [
-                'TP53:MUT',
-                'tp53:mut',
-                'TP53:mut',
-                'TP53:exp>0',
-                'PIM2: exp > 0',
-                'TP53: EXP<=0',
-                'TP53: MUT; PTEN:amp',
-            ];
-            for (let query of queries) {
-                store.geneQuery = query;
-                assert.equal(
-                    nonMolecularProfileParams(store).gene_list,
-                    encodeURIComponent(normalizeQuery(query)),
-                    `got encoded, normalized query for query ${query}`
-                );
-            }
-        });
-    });
     describe('profileAvailability', () => {
         it('returns correct profile availability result in case of zero profiles', () => {
             assert.deepEqual(profileAvailability([]), {

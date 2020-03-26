@@ -246,7 +246,10 @@ export default class ResultsViewPage extends React.Component<
                             id={ResultsViewTab.PLOTS}
                             linkText={'Plots'}
                         >
-                            <PlotsTab store={store} />
+                            <PlotsTab
+                                store={store}
+                                urlWrapper={this.urlWrapper}
+                            />
                         </MSKTab>
                     );
                 },
