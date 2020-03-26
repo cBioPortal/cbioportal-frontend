@@ -15,12 +15,6 @@ import { GenePanelList } from 'pages/studyView/table/StudyViewGenePanelModal';
 import { CSSProperties } from 'react';
 import * as _ from 'lodash';
 
-export type AlteredGenesTableUserSelectionWithIndex = {
-    entrezGeneId: number;
-    hugoGeneSymbol: string;
-    rowIndex: number;
-};
-
 export function getGeneCNAOQL(hugoGeneSymbol: string, alteration: number) {
     return [hugoGeneSymbol, getCNAByAlteration(alteration)].join(':');
 }
@@ -127,28 +121,36 @@ export function getCancerGeneFilterToggleIcon(
     );
 }
 
-type FreqColumnType = 'mutation' | 'fusion' | 'cna';
+export enum FreqColumnTypeEnum {
+    MUTATION = 'mutations',
+    FUSION = 'fusions',
+    CNA = 'copy number alterations',
+    DATA = 'data',
+}
+
+export enum SelectionOperatorEnum {
+    INTERSECTION = 'Intersection',
+    UNION = 'Union',
+}
 
 export function getFreqColumnRender(
-    type: FreqColumnType,
+    type: FreqColumnTypeEnum,
     numberOfProfiledCases: number,
     numberOfAlteredCases: number,
     matchingGenePanelIds: string[],
     toggleModal?: (panelName: string) => void,
     style?: CSSProperties
 ) {
-    const detailedTypeInfo =
-        type === 'mutation'
-            ? 'mutations'
-            : type === 'cna'
-            ? 'copy number alterations'
-            : 'fusions';
+    let tooltipContent = '# of samples profiled';
+    if (type !== 'data') {
+        tooltipContent += ` for ${type} in this gene: ${numberOfProfiledCases.toLocaleString()}`;
+    }
     const addTotalProfiledOverlay = () => (
         <span
             style={{ display: 'flex', flexDirection: 'column' }}
             data-test="freq-cell-tooltip"
         >
-            <span>{`# of samples profiled for ${detailedTypeInfo} in this gene: ${numberOfProfiledCases.toLocaleString()}`}</span>
+            <span>{tooltipContent}</span>
             <GenePanelList
                 genePanelIds={matchingGenePanelIds}
                 toggleModal={toggleModal!}
@@ -169,4 +171,12 @@ export function getFreqColumnRender(
             </span>
         </DefaultTooltip>
     );
+}
+
+export function getTooltip(type: FreqColumnTypeEnum, isPergentage: boolean) {
+    let tooltipContent = `${isPergentage ? 'Percentage' : 'Number'} of samples`;
+    if (type !== 'data') {
+        tooltipContent += ` with one or more ${type}`;
+    }
+    return tooltipContent;
 }
