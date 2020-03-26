@@ -10,7 +10,8 @@ import {
     Mutation,
     SampleIdentifier,
 } from 'shared/api/generated/CBioPortalAPI';
-import { GenomicLocation, stringListToSet } from 'cbioportal-frontend-commons';
+import { stringListToSet } from 'cbioportal-frontend-commons';
+import { GenomicLocation } from 'genome-nexus-ts-api-client';
 import {
     MUTATION_STATUS_GERMLINE,
     MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX,

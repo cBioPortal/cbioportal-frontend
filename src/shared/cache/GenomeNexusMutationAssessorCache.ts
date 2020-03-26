@@ -3,7 +3,7 @@ import { genomicLocationString } from 'shared/lib/MutationUtils';
 import { Mutation } from 'shared/api/generated/CBioPortalAPI';
 import LazyMobXCache, { CacheData } from 'shared/lib/LazyMobXCache';
 import AppConfig from 'appConfig';
-import { VariantAnnotation } from 'cbioportal-frontend-commons';
+import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { extractGenomicLocation } from 'react-mutation-mapper';
 
 export type GenomeNexusCacheDataType = CacheData<VariantAnnotation>;

@@ -40,6 +40,7 @@
     "autobind-decorator": "^2.1.0",
     "cbioportal-frontend-commons": "^0.2.6",
     "classnames": "^2.2.5",
+    "genome-nexus-ts-api-client": "^0.1.0",
     "jquery": "^3.2.1",
     "lodash": "^4.17.11",
     "mobxpromise": "github:cbioportal/mobxpromise#v1.0.2",

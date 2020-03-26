@@ -3,11 +3,13 @@ import { Circle } from 'better-react-spinkit';
 import classNames from 'classnames';
 import {
     DefaultTooltip,
-    MutationAssessor as MutationAssessorData,
     TableCellStatusIndicator,
     TableCellStatus,
-    VariantAnnotation,
 } from 'cbioportal-frontend-commons';
+import {
+    MutationAssessor as MutationAssessorData,
+    VariantAnnotation,
+} from 'genome-nexus-ts-api-client';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {
     Mutation,

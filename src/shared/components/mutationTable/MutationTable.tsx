@@ -51,11 +51,11 @@ import { IPaginationControlsProps } from '../paginationControls/PaginationContro
 import { IColumnVisibilityControlsProps } from '../columnVisibilityControls/ColumnVisibilityControls';
 import MobxPromise from 'mobxpromise';
 import {
-    VariantAnnotation,
     generateQueryVariantId,
     CancerGene,
     IOncoKbData,
 } from 'cbioportal-frontend-commons';
+import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import {
     getAnnotationData,
     IAnnotation,

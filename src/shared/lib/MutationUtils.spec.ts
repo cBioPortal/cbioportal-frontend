@@ -18,7 +18,7 @@ import {
 } from '../api/generated/CBioPortalAPI';
 import { initMutation } from 'test/MutationMockUtils';
 import { MUTATION_STATUS_GERMLINE } from 'shared/constants';
-import { GenomicLocation } from 'cbioportal-frontend-commons';
+import { GenomicLocation } from 'genome-nexus-ts-api-client';
 
 describe('MutationUtils', () => {
     let somaticMutations: Mutation[];

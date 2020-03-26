@@ -4,10 +4,10 @@ import 'rc-tooltip/assets/bootstrap_white.css';
 import { Mutation } from 'shared/api/generated/CBioPortalAPI';
 import {
     DefaultTooltip,
-    MyVariantInfoAnnotation,
     TableCellStatusIndicator,
     TableCellStatus,
 } from 'cbioportal-frontend-commons';
+import { MyVariantInfoAnnotation } from 'genome-nexus-ts-api-client';
 import GenomeNexusMyVariantInfoCache, {
     GenomeNexusCacheDataType,
 } from 'shared/cache/GenomeNexusMyVariantInfoCache';

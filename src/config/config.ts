@@ -27,11 +27,13 @@ import CBioPortalAPI from '../shared/api/generated/CBioPortalAPI';
 import CBioPortalAPIInternal from '../shared/api/generated/CBioPortalAPIInternal';
 import {
     cachePostMethodsOnClient,
+    OncoKbAPI,
+} from 'cbioportal-frontend-commons';
+import {
     Genome2StructureAPI,
     GenomeNexusAPI,
     GenomeNexusAPIInternal,
-    OncoKbAPI,
-} from 'cbioportal-frontend-commons';
+} from 'genome-nexus-ts-api-client';
 import { CivicAPI } from 'react-mutation-mapper';
 import AppConfig from 'appConfig';
 import { sendSentryMessage } from '../shared/lib/tracking';

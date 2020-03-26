@@ -31,13 +31,15 @@ import client from 'shared/api/cbioportalClientInstance';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import g2sClient from 'shared/api/g2sClientInstance';
 import {
-    Alignment,
     CancerGene,
-    Genome2StructureAPI,
-    GenomeNexusAPI,
     OncoKbAPI,
     stringListToIndexSet,
 } from 'cbioportal-frontend-commons';
+import {
+    Alignment,
+    Genome2StructureAPI,
+    GenomeNexusAPI,
+} from 'genome-nexus-ts-api-client';
 import {
     CosmicMutation,
     default as CBioPortalAPIInternal,

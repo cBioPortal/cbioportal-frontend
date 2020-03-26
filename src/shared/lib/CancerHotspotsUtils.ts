@@ -3,7 +3,7 @@ import { Mutation } from 'shared/api/generated/CBioPortalAPI';
 import {
     GenomeNexusAPIInternal,
     GenomicLocation,
-} from 'cbioportal-frontend-commons';
+} from 'genome-nexus-ts-api-client';
 import genomeNexusInternalClient from 'shared/api/genomeNexusInternalClientInstance';
 import { concatMutationData } from './StoreUtils';
 import { uniqueGenomicLocations } from './MutationUtils';
