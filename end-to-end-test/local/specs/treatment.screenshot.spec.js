@@ -64,6 +64,7 @@ describe('treatment feature', () => {
         });
 
         it('when option deselected, hides `value >8.00` in figure legend and sub-threshold data points in plot', () => {
+            $('[data-test=ViewLimitValues]').waitForExist();
             $('[data-test=ViewLimitValues]').click();
             var res = browser.checkElement('[id=plots-tab-plot-svg]');
             assertScreenShotMatch(res);
