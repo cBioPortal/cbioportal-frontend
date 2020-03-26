@@ -5,7 +5,7 @@ import {
     ChartContainer,
     IChartContainerProps,
 } from 'pages/studyView/charts/ChartContainer';
-import { observable } from 'mobx';
+import { observable, toJS } from 'mobx';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import {
     ClinicalDataFilterValue,
@@ -107,18 +107,8 @@ export class StudySummaryTab extends React.Component<
                 .setComparisonConfirmationModal,
         };
 
-        const {
-            BAR_CHART,
-            SURVIVAL,
-            CNA_GENES_TABLE,
-            TABLE,
-            SCATTER,
-            PIE_CHART,
-            MUTATED_GENES_TABLE,
-            FUSION_GENES_TABLE,
-        } = ChartTypeEnum;
         switch (this.store.chartsType.get(chartMeta.uniqueKey)) {
-            case PIE_CHART: {
+            case ChartTypeEnum.PIE_CHART: {
                 //if the chart is one of the custom charts then get the appropriate promise
                 if (this.store.isCustomChart(chartMeta.uniqueKey)) {
                     props.filters = this.store.getCustomChartFilters(
@@ -151,7 +141,7 @@ export class StudySummaryTab extends React.Component<
                 ];
                 break;
             }
-            case BAR_CHART: {
+            case ChartTypeEnum.BAR_CHART: {
                 props.promise = this.store.getClinicalDataBin(chartMeta);
                 props.filters = this.store.getClinicalDataFiltersByUniqueKey(
                     chartMeta.uniqueKey
@@ -170,7 +160,7 @@ export class StudySummaryTab extends React.Component<
                 props.downloadTypes = ['Data', 'SVG', 'PDF'];
                 break;
             }
-            case TABLE: {
+            case ChartTypeEnum.TABLE: {
                 if (this.store.isCustomChart(chartMeta.uniqueKey)) {
                     props.filters = this.store.getCustomChartFilters(
                         props.chartMeta!.uniqueKey
@@ -196,7 +186,7 @@ export class StudySummaryTab extends React.Component<
                 props.downloadTypes = ['Data'];
                 break;
             }
-            case MUTATED_GENES_TABLE: {
+            case ChartTypeEnum.MUTATED_GENES_TABLE: {
                 props.filters = this.store.getGeneFiltersByUniqueKey(
                     chartMeta.uniqueKey
                 );
@@ -206,21 +196,18 @@ export class StudySummaryTab extends React.Component<
                     this.store.resetGeneFilter(chartMeta.uniqueKey);
                 props.selectedGenes = this.store.selectedGenes;
                 props.onGeneSelect = this.store.onCheckGene;
-                (props.title =
-                    props.title +
-                    (!this.store.molecularProfileSampleCounts.isComplete ||
-                    this.store.molecularProfileSampleCounts.result === undefined
-                        ? ''
-                        : ` (${this.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples} profiled samples)`)),
-                    (props.getData = () =>
-                        this.store.getMutatedGenesDownloadData());
+                props.title = this.store.getChartTitle(
+                    ChartTypeEnum.MUTATED_GENES_TABLE,
+                    props.title
+                );
+                props.getData = () => this.store.getMutatedGenesDownloadData();
                 props.genePanelCache = this.store.genePanelCache;
                 props.downloadTypes = ['Data'];
                 props.filterByCancerGenes = this.store.filterMutatedGenesTableByCancerGenes;
                 props.onChangeCancerGeneFilter = this.store.updateMutatedGenesTableByCancerGenesFilter;
                 break;
             }
-            case FUSION_GENES_TABLE: {
+            case ChartTypeEnum.FUSION_GENES_TABLE: {
                 props.filters = this.store.getGeneFiltersByUniqueKey(
                     chartMeta.uniqueKey
                 );
@@ -230,21 +217,18 @@ export class StudySummaryTab extends React.Component<
                     this.store.resetGeneFilter(chartMeta.uniqueKey);
                 props.selectedGenes = this.store.selectedGenes;
                 props.onGeneSelect = this.store.onCheckGene;
-                (props.title =
-                    props.title +
-                    (!this.store.molecularProfileSampleCounts.isComplete ||
-                    this.store.molecularProfileSampleCounts.result === undefined
-                        ? ''
-                        : ` (${this.store.molecularProfileSampleCounts.result.numberOfFusionProfiledSamples} profiled samples)`)),
-                    (props.getData = () =>
-                        this.store.getFusionGenesDownloadData());
+                props.title = this.store.getChartTitle(
+                    ChartTypeEnum.FUSION_GENES_TABLE,
+                    props.title
+                );
+                props.getData = () => this.store.getFusionGenesDownloadData();
                 props.genePanelCache = this.store.genePanelCache;
                 props.downloadTypes = ['Data'];
                 props.filterByCancerGenes = this.store.filterFusionGenesTableByCancerGenes;
                 props.onChangeCancerGeneFilter = this.store.updateFusionGenesTableByCancerGenesFilter;
                 break;
             }
-            case CNA_GENES_TABLE: {
+            case ChartTypeEnum.CNA_GENES_TABLE: {
                 props.filters = this.store.getGeneFiltersByUniqueKey(
                     chartMeta.uniqueKey
                 );
@@ -254,21 +238,27 @@ export class StudySummaryTab extends React.Component<
                     this.store.resetGeneFilter(chartMeta.uniqueKey);
                 props.selectedGenes = this.store.selectedGenes;
                 props.onGeneSelect = this.store.onCheckGene;
-                (props.title =
-                    props.title +
-                    (!this.store.molecularProfileSampleCounts.isComplete ||
-                    this.store.molecularProfileSampleCounts.result === undefined
-                        ? ''
-                        : ` (${this.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples} profiled samples)`)),
-                    (props.getData = () =>
-                        this.store.getGenesCNADownloadData());
+                props.title = this.store.getChartTitle(
+                    ChartTypeEnum.CNA_GENES_TABLE,
+                    props.title
+                );
+                props.getData = () => this.store.getGenesCNADownloadData();
                 props.genePanelCache = this.store.genePanelCache;
                 props.downloadTypes = ['Data'];
                 props.filterByCancerGenes = this.store.filterCNAGenesTableByCancerGenes;
                 props.onChangeCancerGeneFilter = this.store.updateCNAGenesTableByCancerGenesFilter;
                 break;
             }
-            case SURVIVAL: {
+            case ChartTypeEnum.GENOMIC_PROFILES_TABLE: {
+                props.filters = toJS(this.store.genomicProfilesFilter);
+                props.promise = this.store.molecularProfileSampleCounts;
+                props.onValueSelection = this.store.addGenomicProfilesFilter;
+                props.onResetSelection = () => {
+                    this.store.genomicProfilesFilter = [];
+                };
+                break;
+            }
+            case ChartTypeEnum.SURVIVAL: {
                 props.promise = this.store.survivalPlotData;
                 props.getData = () =>
                     this.store.getSurvivalDownloadData(chartMeta);
@@ -284,7 +274,7 @@ export class StudySummaryTab extends React.Component<
                     : undefined;
                 break;
             }
-            case SCATTER: {
+            case ChartTypeEnum.SCATTER: {
                 props.filters = this.store.getScatterPlotFiltersByUniqueKey(
                     props.chartMeta!.uniqueKey
                 );
@@ -351,111 +341,8 @@ export class StudySummaryTab extends React.Component<
     }
 
     render() {
-        const numberOfMutationProfiledSamples: number | undefined = this.props
-            .store.molecularProfileSampleCounts.isComplete
-            ? this.props.store.molecularProfileSampleCounts.result
-                  .numberOfMutationProfiledSamples
-            : undefined;
-        const numberOfCNAProfiledSamples: number | undefined = this.props.store
-            .molecularProfileSampleCounts.isComplete
-            ? this.props.store.molecularProfileSampleCounts.result
-                  .numberOfCNAProfiledSamples
-            : undefined;
         return (
             <div>
-                <div className="secondaryNavigation">
-                    <div className={styles.quickFilters}>
-                        <strong>Quick Filters:</strong>
-
-                        <LoadingIndicator
-                            isLoading={
-                                this.props.store.molecularProfileSampleCounts
-                                    .isPending ||
-                                this.props.store.molecularProfileSampleCounts
-                                    .isPending
-                            }
-                        />
-
-                        {this.props.store.mutationProfiles.result.length >
-                            0 && (
-                            <div data-test="with-mutation-data">
-                                {this.props.store.molecularProfileSampleCounts
-                                    .isComplete && (
-                                    <LabeledCheckbox
-                                        inputProps={{
-                                            className:
-                                                styles.selectedInfoCheckbox,
-                                        }}
-                                        checked={
-                                            !!this.props.store.filters
-                                                .withMutationData
-                                        }
-                                        onChange={
-                                            this.props.store
-                                                .toggleWithMutationDataFilter
-                                        }
-                                        disabled={
-                                            this.props.store
-                                                .molecularProfileSampleCounts
-                                                .result
-                                                .numberOfMutationProfiledSamples ===
-                                            undefined
-                                        }
-                                    >
-                                        {numberOfMutationProfiledSamples ===
-                                        undefined
-                                            ? '0 samples'
-                                            : numberOfMutationProfiledSamples.toLocaleString() +
-                                              (numberOfMutationProfiledSamples ===
-                                              1
-                                                  ? ' sample'
-                                                  : ' samples')}{' '}
-                                        with mutation data
-                                    </LabeledCheckbox>
-                                )}
-                            </div>
-                        )}
-
-                        {this.props.store.cnaProfiles.result.length > 0 && (
-                            <div data-test="with-cna-data">
-                                {this.props.store.molecularProfileSampleCounts
-                                    .isComplete && (
-                                    <LabeledCheckbox
-                                        inputProps={{
-                                            className:
-                                                styles.selectedInfoCheckbox,
-                                        }}
-                                        checked={
-                                            !!this.props.store.filters
-                                                .withCNAData
-                                        }
-                                        onChange={
-                                            this.props.store
-                                                .toggleWithCNADataFilter
-                                        }
-                                        disabled={
-                                            this.props.store
-                                                .molecularProfileSampleCounts
-                                                .result
-                                                .numberOfCNAProfiledSamples ===
-                                            undefined
-                                        }
-                                    >
-                                        {numberOfCNAProfiledSamples ===
-                                        undefined
-                                            ? '0 samples'
-                                            : numberOfCNAProfiledSamples.toLocaleString() +
-                                              (numberOfCNAProfiledSamples === 1
-                                                  ? ' sample'
-                                                  : ' samples')}{' '}
-                                        with CNA data
-                                    </LabeledCheckbox>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                </div>
-
                 <LoadingIndicator
                     isLoading={this.store.loadingInitialDataForSummaryTab}
                     size={'big'}
