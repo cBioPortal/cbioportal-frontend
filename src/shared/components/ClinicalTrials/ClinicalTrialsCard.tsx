@@ -14,8 +14,12 @@ import ClinicalTrialsCache from '../../cache/ClinicalTrialsCache';
 import { IMatchedTrials, ITrial } from '../../model/ClinicalTrial';
 import ClinicalTrialsTable from './ClinicalTrialTable';
 import { errorIcon, loaderIcon } from 'react-mutation-mapper';
-import { PillTag } from '../PillTag/PillTag';
 import { hideArrow, isActiveTrial, matchTrials } from './ClinicalTrialsUtil';
+import {
+    levelIconClassNames,
+    normalizeLevel,
+} from '../../../../packages/react-mutation-mapper/src/util/OncoKbUtils';
+import { TreatmentTag } from './TreatmentTag';
 
 export interface IClinicalTrialsCardProps {
     status: 'pending' | 'error' | 'complete';
@@ -62,6 +66,8 @@ export default class ClinicalTrialsCard extends React.Component<
                 const treatmentButtonList: JSX.Element[] = [];
 
                 treatments.forEach((treatment: IndicatorQueryTreatment) => {
+                    const normalizedLevel =
+                        normalizeLevel(treatment.level) || '';
                     const treatmentText = treatment.drugs
                         .map(drug => drug.drugName)
                         .join(' + ');
@@ -79,6 +85,16 @@ export default class ClinicalTrialsCard extends React.Component<
                             treatment: treatmentText,
                             trials: trials,
                         };
+                        const treatmentTagContent: JSX.Element = (
+                            <span style={{ display: 'inline-flex' }}>
+                                <i
+                                    className={`${levelIconClassNames(
+                                        normalizedLevel
+                                    )} ${styles['level-icon']}`}
+                                />
+                                <span>{`${treatmentText}: ${trials.length}`}</span>
+                            </span>
+                        );
                         treatmentButtonList.push(
                             <div
                                 className={styles['treatment-pill-tag']}
@@ -86,10 +102,10 @@ export default class ClinicalTrialsCard extends React.Component<
                                     (this.selectedTreatment = treatmentText)
                                 }
                             >
-                                <PillTag
+                                <TreatmentTag
                                     border="1px solid #1c75cd"
                                     defaultContentColor="#1c75cd"
-                                    content={`${treatmentText}: ${trials.length}`}
+                                    content={treatmentTagContent}
                                     backgroundColor={
                                         treatmentText === this.selectedTreatment
                                             ? '#1c75cd'
@@ -171,7 +187,11 @@ export default class ClinicalTrialsCard extends React.Component<
                             Clinical Trials of{' '}
                             <span className={styles['orange-icon']}>
                                 {this.selectedTreatment}
-                            </span>{' '}
+                            </span>
+                            {'  for '}
+                            <span className={styles['orange-icon']}>
+                                {evidenceQuery.tumorType}
+                            </span>
                             :{' '}
                             {
                                 this.matchedTrials[this.selectedTreatment]

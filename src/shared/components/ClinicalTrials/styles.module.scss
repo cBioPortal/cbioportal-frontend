@@ -38,3 +38,22 @@ $oncokb-orange: #ffa500;
     max-height: 600px;
     overflow-y: auto;
 }
+
+.tag-main {
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    font-size: 13px;
+    display: flex;
+    align-content: center;
+}
+
+.tag-content {
+    margin: 5px 10px 0 10px;
+}
+
+.level-icon {
+    margin: auto;
+    border: 1px solid #fff;
+    border-radius: 10px;
+}
