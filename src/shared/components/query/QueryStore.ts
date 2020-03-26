@@ -42,7 +42,6 @@ import { buildCBioPortalPageUrl, redirectToStudyView } from '../../api/urls';
 import StudyListLogic from './StudyListLogic';
 import chunkMapReduce from 'shared/lib/chunkMapReduce';
 import {
-    NonMolecularProfileQueryParams,
     currentQueryParams,
     profileAvailability,
     categorizedSamplesCount,
@@ -151,12 +150,6 @@ export enum Focus {
 
 // mobx observable
 export class QueryStore {
-    public initialQueryParams: {
-        pathname: string;
-        nonMolecularProfileParams: NonMolecularProfileQueryParams;
-        molecularProfileIds: ReadonlyArray<string>;
-    };
-
     constructor(urlWithInitialParams?: string) {
         this.initialize(urlWithInitialParams);
     }
