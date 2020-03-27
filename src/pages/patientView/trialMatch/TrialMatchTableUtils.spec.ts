@@ -87,7 +87,7 @@ describe('TrialMatchTableUtils', () => {
                             matches: [
                                 {
                                     trueHugoSymbol: 'EGFR',
-                                    trueProteinChange: 'L747_P753delinsS',
+                                    trueProteinChange: ['L747_P753delinsS'],
                                     sampleIds: ['P-0000628-T01-IM3'],
                                 },
                             ],
@@ -128,7 +128,7 @@ describe('TrialMatchTableUtils', () => {
                             matches: [
                                 {
                                     trueHugoSymbol: 'EGFR',
-                                    trueProteinChange: 'L747_P753delinsS',
+                                    trueProteinChange: ['L747_P753delinsS'],
                                     sampleIds: [
                                         'P-0000628-T01-IM3',
                                         'P-0000628-T02-IM5',
@@ -136,7 +136,7 @@ describe('TrialMatchTableUtils', () => {
                                 },
                                 {
                                     trueHugoSymbol: 'EGFR',
-                                    trueProteinChange: 'T790M',
+                                    trueProteinChange: ['T790M'],
                                     sampleIds: ['P-0000628-T02-IM5'],
                                 },
                             ],
@@ -371,14 +371,16 @@ describe('TrialMatchTableUtils', () => {
                             genomicAlteration: ['NTRK3 Fusions'],
                             patientGenomic: {
                                 trueHugoSymbol: 'NTRK3',
-                                trueProteinChange: 'NTRK3-ETV6 fusion - Archer',
+                                trueProteinChange: [
+                                    'NTRK3-ETV6 fusion - Archer',
+                                ],
                             },
                         },
                         {
                             genomicAlteration: ['NTRK3 Fusions'],
                             patientGenomic: {
                                 trueHugoSymbol: 'NTRK3',
-                                trueProteinChange: 'ETV6-NTRK3 fusion',
+                                trueProteinChange: ['ETV6-NTRK3 fusion'],
                             },
                         },
                     ],
@@ -405,14 +407,16 @@ describe('TrialMatchTableUtils', () => {
                             genomicAlteration: ['NTRK3 Fusions'],
                             patientGenomic: {
                                 trueHugoSymbol: 'NTRK3',
-                                trueProteinChange: 'NTRK3-ETV6 fusion - Archer',
+                                trueProteinChange: [
+                                    'NTRK3-ETV6 fusion - Archer',
+                                ],
                             },
                         },
                         {
                             genomicAlteration: ['NTRK3 Fusions'],
                             patientGenomic: {
                                 trueHugoSymbol: 'NTRK3',
-                                trueProteinChange: 'ETV6-NTRK3 fusion',
+                                trueProteinChange: ['ETV6-NTRK3 fusion'],
                             },
                         },
                     ],
@@ -441,14 +445,16 @@ describe('TrialMatchTableUtils', () => {
                             genomicAlteration: ['NTRK3 Fusions'],
                             patientGenomic: {
                                 trueHugoSymbol: 'NTRK3',
-                                trueProteinChange: 'NTRK3-ETV6 fusion - Archer',
+                                trueProteinChange: [
+                                    'NTRK3-ETV6 fusion - Archer',
+                                ],
                             },
                         },
                         {
                             genomicAlteration: ['NTRK3 Fusions'],
                             patientGenomic: {
                                 trueHugoSymbol: 'NTRK3',
-                                trueProteinChange: 'ETV6-NTRK3 fusion',
+                                trueProteinChange: ['ETV6-NTRK3 fusion'],
                             },
                         },
                     ],
