@@ -33,14 +33,14 @@ describe('Oncoprint TooltipUtils', () => {
                     ],
                     false
                 ),
-                '<span>sampleID</span>'
+                '<span class="nobreak">sampleID</span>'
             );
             assert.equal(
                 getCaseViewElt(
                     [{ patient: 'patientID', study_id: 'studyID' }],
                     false
                 ),
-                '<span>patientID</span>'
+                '<span class="nobreak">patientID</span>'
             );
         });
         it('shows link if single input and linkout', () => {
@@ -95,7 +95,7 @@ describe('Oncoprint TooltipUtils', () => {
                     ],
                     false
                 ),
-                '<span>3 samples</span>'
+                '<span class="nobreak">3 samples</span>'
             );
             assert.equal(
                 getCaseViewElt(
@@ -106,7 +106,7 @@ describe('Oncoprint TooltipUtils', () => {
                     ],
                     false
                 ),
-                '<span>3 patients</span>'
+                '<span class="nobreak">3 patients</span>'
             );
         });
         it('shows link if multiple input and linkout', () => {
@@ -1120,6 +1120,7 @@ describe('Oncoprint TooltipUtils', () => {
                     profiled,
                     notProfiled,
                 ]);
+
                 assert.isTrue(
                     tooltipOutput
                         .html()
@@ -1156,7 +1157,7 @@ describe('Oncoprint TooltipUtils', () => {
                     tooltipOutput
                         .html()
                         .indexOf(
-                            'Profiled in: Profile (2), Profile2 (2), Profile3 (1)'
+                            'Profiled in: <span class="nobreak">Profile (2)</span>, <span class="nobreak">Profile2 (2)</span>, <span class="nobreak">Profile3 (1)</span>'
                         ) > -1,
                     'all the counts are correct (order is arbitrary)'
                 );
@@ -1164,7 +1165,7 @@ describe('Oncoprint TooltipUtils', () => {
                     tooltipOutput
                         .html()
                         .indexOf(
-                            'Not profiled in: Profile2 (1), Profile3 (2), Profile (1)'
+                            'Not profiled in: <span class="nobreak">Profile2 (1)</span>, <span class="nobreak">Profile3 (2)</span>, <span class="nobreak">Profile (1)</span>'
                         ) > -1,
                     'all the counts are correct (order is arbitrary)'
                 );
@@ -1196,7 +1197,7 @@ describe('Oncoprint TooltipUtils', () => {
                     tooltipOutput
                         .html()
                         .indexOf(
-                            'Profiled in: Profile (4), Profile2 (4), Profile3 (3)'
+                            'Profiled in: <span class="nobreak">Profile (4)</span>, <span class="nobreak">Profile2 (4)</span>, <span class="nobreak">Profile3 (3)</span>'
                         ) > -1,
                     'all the counts are correct (order is arbitrary)'
                 );
@@ -1204,7 +1205,7 @@ describe('Oncoprint TooltipUtils', () => {
                     tooltipOutput
                         .html()
                         .indexOf(
-                            'Not profiled in: Profile2 (2), Profile3 (3), Profile (2)'
+                            'Not profiled in: <span class="nobreak">Profile2 (2)</span>, <span class="nobreak">Profile3 (3)</span>, <span class="nobreak">Profile (2)</span>'
                         ) > -1,
                     'all the counts are correct (order is arbitrary)'
                 );
@@ -2326,7 +2327,7 @@ describe('Oncoprint TooltipUtils', () => {
                 assert.isTrue(
                     sampleTooltipResult
                         .html()
-                        .indexOf('<span>sampleID</span>') > -1
+                        .indexOf('<span class="nobreak">sampleID</span>') > -1
                 );
             });
             it('should show the given patient id', () => {
@@ -2340,7 +2341,7 @@ describe('Oncoprint TooltipUtils', () => {
                 assert.isTrue(
                     patientTooltipResult
                         .html()
-                        .indexOf('<span>patientID</span>') > -1
+                        .indexOf('<span class="nobreak">patientID</span>') > -1
                 );
             });
             it('should show the correct output for a single value', () => {
@@ -2355,7 +2356,7 @@ describe('Oncoprint TooltipUtils', () => {
                     tooltipResult
                         .html()
                         .indexOf(
-                            `label1234: <span style="white-space:nowrap; display:inline-block;"><b>a</b></span>`
+                            `label1234: <span class="nobreak"><b>a</b></span>`
                         ) > -1
                 );
             });
@@ -2371,7 +2372,7 @@ describe('Oncoprint TooltipUtils', () => {
                     tooltipResult
                         .html()
                         .indexOf(
-                            `label1234:<br><span style="white-space:nowrap; display:inline-block;"><b>a</b>: 1 sample</span><br><span style="white-space:nowrap; display:inline-block;"><b>b</b>: 3 samples</span>`
+                            `label1234:<br><span class="nobreak"><b>a</b>: 1 sample</span><br><span class="nobreak"><b>b</b>: 3 samples</span>`
                         ) > -1
                 );
             });
@@ -2397,7 +2398,7 @@ describe('Oncoprint TooltipUtils', () => {
                     tooltipResult
                         .html()
                         .indexOf(
-                            `label1234: <span style="white-space:nowrap; display:inline-block;"><b>a</b> (4 samples)</span><br>`
+                            `label1234: <span class="nobreak"><b>a</b> (4 samples)</span><br>`
                         ) > -1
                 );
             });
@@ -2424,7 +2425,7 @@ describe('Oncoprint TooltipUtils', () => {
                     tooltipResult
                         .html()
                         .indexOf(
-                            `label1234:<br><span style="white-space:nowrap; display:inline-block;"><b>a</b>: 4 samples</span><br><span style="white-space:nowrap; display:inline-block;"><b>b</b>: 6 samples</span><br><span style="white-space:nowrap; display:inline-block;"><b>c</b>: 1 sample</span>`
+                            `label1234:<br><span class="nobreak"><b>a</b>: 4 samples</span><br><span class="nobreak"><b>b</b>: 6 samples</span><br><span class="nobreak"><b>c</b>: 1 sample</span>`
                         ) > -1
                 );
             });
