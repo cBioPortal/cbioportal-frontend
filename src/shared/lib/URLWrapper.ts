@@ -1,11 +1,9 @@
 import { remoteData } from 'cbioportal-frontend-commons';
 import {
     action,
-    autorun,
     computed,
     extendObservable,
     intercept,
-    IObservableObject,
     IReactionDisposer,
     observable,
     reaction,
@@ -20,16 +18,15 @@ import ExtendedRouterStore, {
 import hashString from 'shared/lib/hashString';
 import * as _ from 'lodash';
 import { log } from 'shared/lib/consoleLog';
-import { QueryParams } from 'url';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
-import { Omit } from './TypeScriptUtils';
+import { MapValues, Omit } from './TypeScriptUtils';
+import { QueryParams } from 'url';
 
-export type BooleanString = string;
-export type NumberString = string;
-
-export type Property<T> = {
+export type Property<T, NestedObjectType = any> = {
     name: keyof T;
     isSessionProp: boolean;
+    doubleURIEncode?: boolean;
+    nestedObjectProps?: { [prop in keyof NestedObjectType]: any };
     aliases?: string[];
 };
 
@@ -45,9 +42,9 @@ export function needToLoadSession(
 }
 
 export default class URLWrapper<
-    QueryParamsType extends { [key: string]: string | undefined }
+    QueryParamsType extends { [key: string]: string | Object | undefined }
 > {
-    public query: QueryParamsType;
+    protected _query: QueryParamsType;
     public reactionDisposer: IReactionDisposer;
     protected pathContext: string;
     protected readonly properties: Property<QueryParamsType>[];
@@ -77,39 +74,29 @@ export default class URLWrapper<
         // even if they are not represented in browser url at the moment
         // they need to be there so that they will observable in the future upon assignment
         for (const property of this.properties) {
-            let value = (routing.location.query as QueryParamsType)[
+            let value: string | undefined | Object = (routing.location
+                .query as MapValues<QueryParamsType, string | undefined>)[
                 property.name
             ];
-            if (_.isString(value)) {
+            if (_.isString(value) && property.doubleURIEncode) {
                 // @ts-ignore
                 value = decodeURIComponent(value);
             }
-            initValues[property.name] = value;
+            if (property.nestedObjectProps) {
+                // nested object
+                value = value ? JSON.parse(value as string) : {};
+                for (const subprop of _.keys(property.nestedObjectProps!)) {
+                    (value as any)[subprop] =
+                        (value as any)[subprop] || undefined; // need to be there so that they will be observable in the future upon assignment
+                }
+            }
+            initValues[property.name] = value as any;
         }
 
         // consumers of wrapper read from this query
-        this.query = observable<QueryParamsType>(initValues as QueryParamsType);
-
-        //per reaction below, any update to URL will result in all properties being reset.
-        //to avoid update signal when properties haven't actually changed (set to existing value)
-        //we intercept changes and cancel them when old === new
-        intercept(this.query, change => {
-            if (
-                change.newValue ===
-                this.query[change.name as keyof QueryParamsType]
-            ) {
-                // if same value, cancel change to prevent unnecessary changing data
-                return null;
-            } else {
-                log(
-                    'changing',
-                    change.name,
-                    change.newValue,
-                    this.query[change.name as keyof QueryParamsType]
-                );
-                return change;
-            }
-        });
+        this._query = observable<QueryParamsType>(
+            initValues as QueryParamsType
+        );
 
         // whenever a change is made either to the url querystring or to internal representation of
         // query (when in session mode),
@@ -138,26 +125,99 @@ export default class URLWrapper<
 
                 runInAction(() => {
                     log('setting session', routeQuery.session_id);
-
-                    for (const property of this.properties) {
-                        // if property is not a session prop
-                        // it will always be represented in URL
-                        if (this.hasSessionId && property.isSessionProp) {
-                            // if there is a session, then sync it with session
-                            sessionQuery &&
-                                this.syncProperty(property, sessionQuery);
-                        } else {
-                            // @ts-ignore
-                            this.syncProperty(property, routeQuery);
-                        }
-                    }
+                    this.syncAllProperties(routeQuery, sessionQuery);
                 });
             },
             { fireImmediately: true }
         );
     }
 
+    @action
+    protected updateRoute(
+        newParams: QueryParams,
+        path: string | undefined = undefined,
+        clear = false,
+        replace = false
+    ) {
+        this.routing.updateRoute(newParams, path, clear, replace);
+        // immediately sync properties from URL and session
+        this.syncAllProperties(
+            this.routing.location.query,
+            this._sessionData &&
+                (this._sessionData.query as MapValues<
+                    QueryParamsType,
+                    string | undefined
+                >)
+        );
+    }
+
+    @action
+    protected syncAllProperties(
+        routeQuery: MapValues<QueryParamsType, string | undefined>,
+        sessionQuery?: MapValues<QueryParamsType, string | undefined>
+    ) {
+        for (const property of this.properties) {
+            // if property is not a session prop
+            // it will always be represented in URL
+            if (this.hasSessionId && property.isSessionProp) {
+                // if there is a session, then sync it with session
+                sessionQuery && this.syncProperty(property, sessionQuery);
+            } else {
+                // @ts-ignore
+                this.syncProperty(property, routeQuery);
+            }
+        }
+    }
+
+    public get query(): Readonly<QueryParamsType> {
+        // use typescript to make it readonly
+        return this._query;
+    }
+
     //@observable _sessionId: string;
+
+    @computed get aliasToPropertyName() {
+        const ret: { [alias: string]: keyof QueryParamsType } = {};
+        for (const property of this.properties) {
+            if (property.aliases) {
+                for (const alias of property.aliases) {
+                    ret[alias] = property.name;
+                }
+            }
+        }
+        return ret;
+    }
+
+    protected getProperty(
+        name: string
+    ): Omit<Property<QueryParamsType>, 'name'> {
+        if (name in this.propertiesMap) {
+            return this.propertiesMap[name];
+        } else {
+            const propName = this.aliasToPropertyName[name];
+            return this.propertiesMap[propName];
+        }
+    }
+
+    protected stringifyProps<T extends Partial<QueryParamsType>>(
+        props: T
+    ): MapValues<T, string | undefined> {
+        return _.mapValues(props, (value, key) => {
+            const property = this.getProperty(key);
+            let ret: string | undefined;
+
+            if (property && property.nestedObjectProps) {
+                ret = JSON.stringify(value) as string;
+            } else {
+                ret = value as string | undefined;
+            }
+
+            if (ret && property && property.doubleURIEncode) {
+                ret = encodeURIComponent(ret);
+            }
+            return ret;
+        });
+    }
 
     @action
     public updateURL(
@@ -176,7 +236,10 @@ export default class URLWrapper<
         const paramsMap = _.reduce(
             mergedParams,
             (
-                acc: { sessionProps: any; nonSessionProps: any },
+                acc: {
+                    sessionProps: Partial<QueryParamsType>;
+                    nonSessionProps: Partial<QueryParamsType>;
+                },
                 value,
                 paramKey
             ) => {
@@ -191,14 +254,17 @@ export default class URLWrapper<
                 }
                 return acc;
             },
-            { sessionProps: {}, nonSessionProps: {} }
+            {
+                sessionProps: {} as Partial<QueryParamsType>,
+                nonSessionProps: {} as Partial<QueryParamsType>,
+            }
         );
 
         const url = _.reduce(
-            paramsMap.sessionProps,
+            this.stringifyProps(paramsMap.sessionProps),
             (agg: string[], val, key) => {
                 if (val !== undefined) {
-                    agg.push(`${key}=${encodeURIComponent(val)}`);
+                    agg.push(`${key}=${encodeURIComponent(val!)}`);
                 }
                 return agg;
             },
@@ -231,17 +297,21 @@ export default class URLWrapper<
 
                 this._sessionData = {
                     id: 'pending',
-                    query: paramsMap.sessionProps,
+                    query: this.stringifyProps(paramsMap.sessionProps),
                     path: path || this.pathName,
                     version: 3,
                     timeStamp,
                 };
 
                 // we need to make a new session
-                this.routing.updateRoute(
-                    Object.assign({}, paramsMap.nonSessionProps, {
-                        session_id: 'pending',
-                    }),
+                this.updateRoute(
+                    Object.assign(
+                        {},
+                        this.stringifyProps(paramsMap.nonSessionProps),
+                        {
+                            session_id: 'pending',
+                        }
+                    ),
                     path,
                     true,
                     false
@@ -249,16 +319,18 @@ export default class URLWrapper<
 
                 log('updating URL (non session)', updatedParams);
 
-                this.saveRemoteSession(paramsMap.sessionProps).then(data => {
+                this.saveRemoteSession(
+                    this.stringifyProps(paramsMap.sessionProps)
+                ).then(data => {
                     // make sure that we have sessionData and that timestamp on the session hasn't
                     // been changed since it started
                     if (
                         this._sessionData &&
-                        timeStamp === this._sessionData.timeStamp
+                        timeStamp === this._sessionData!.timeStamp
                     ) {
-                        this._sessionData.id = data.id;
-                        this.routing.updateRoute(
-                            { session_id: data.id },
+                        this._sessionData!.id = data.id;
+                        this.updateRoute(
+                            { session_id: data.id as string },
                             path,
                             false,
                             true // we don't want pending to show up in history
@@ -267,8 +339,8 @@ export default class URLWrapper<
                 });
             } else {
                 // we already have session, we just need to update path or non session params
-                this.routing.updateRoute(
-                    Object.assign({}, paramsMap.nonSessionProps),
+                this.updateRoute(
+                    this.stringifyProps(paramsMap.nonSessionProps),
                     path,
                     clear,
                     replace
@@ -278,11 +350,19 @@ export default class URLWrapper<
             // WE ARE NOT IN SESSION MODE
             //this._sessionData = undefined;
             //updatedParams.session_id = undefined;
-            this.routing.updateRoute(updatedParams, path, clear, replace);
+            this.updateRoute(
+                this.stringifyProps(updatedParams),
+                path,
+                clear,
+                replace
+            );
         }
     }
 
-    saveRemoteSession(sessionProps: Partial<QueryParamsType>) {
+    saveRemoteSession(
+        sessionProps: MapValues<Partial<QueryParamsType>, string | undefined>
+    ) {
+        // url encode props to match with convention of
         return saveRemoteSession(sessionProps);
     }
 
@@ -306,7 +386,7 @@ export default class URLWrapper<
         return this.sessionId !== undefined;
     }
 
-    getRemoteSession(sessionId: string) {
+    getRemoteSession() {
         return getRemoteSession(this.sessionId);
     }
 
@@ -325,7 +405,7 @@ export default class URLWrapper<
             if (this.needToLoadSession) {
                 log('fetching remote session', this.sessionId);
 
-                let sessionData = await this.getRemoteSession(this.sessionId);
+                let sessionData = await this.getRemoteSession();
 
                 // if it has no version, it's a legacy session and needs to be normalized
                 if (sessionData.version === undefined) {
@@ -356,17 +436,17 @@ export default class URLWrapper<
 
     private syncProperty(
         property: Property<QueryParamsType>,
-        query: QueryParamsType
+        queryFromUrl: MapValues<QueryParamsType, string | undefined>
     ) {
         // first determine what value should be
         // resolving to aliases IF they exist
 
         let value = undefined;
-        if (query[property.name] !== undefined) {
-            value = query[property.name];
+        if (queryFromUrl[property.name] !== undefined) {
+            value = queryFromUrl[property.name];
         } else if (property.aliases && property.aliases.length) {
             for (const alias of property.aliases) {
-                value = query[alias];
+                value = queryFromUrl[alias];
                 // once you've set it, don't bother with any other aliases
                 if (value !== undefined) break;
             }
@@ -375,21 +455,40 @@ export default class URLWrapper<
         this.trySyncProperty(property, value);
     }
 
+    @action
     private trySyncProperty(
         property: Property<QueryParamsType>,
         value: string | undefined
     ) {
-        const processedValue =
-            typeof value === 'string' ? decodeURIComponent(value) : undefined;
-
-        if (property.name in this.query) {
-            // @ts-ignore
-            this.query[property.name] = processedValue;
+        let processedValue: string | undefined;
+        // decode from URI
+        if (property.doubleURIEncode && value !== undefined) {
+            processedValue = decodeURIComponent(value);
         } else {
-            extendObservable(this.query, { [property.name]: processedValue });
+            processedValue = value;
         }
 
-        return processedValue !== undefined;
+        // handle nested objects differently
+        if (property.nestedObjectProps) {
+            processedValue = processedValue || JSON.stringify({});
+            // json parse nested object
+            const urlNestedObject = JSON.parse(processedValue);
+            const existingNestedObject: any = this._query[property.name];
+            // update changed properties individually
+            for (const subprop of _.keys(property.nestedObjectProps)) {
+                const value = urlNestedObject[subprop];
+                if (existingNestedObject[subprop] !== value) {
+                    // @ts-ignore
+                    existingNestedObject[subprop] = value;
+                }
+            }
+        } else {
+            if (this._query[property.name] !== processedValue) {
+                // update value if its changed
+                // @ts-ignore
+                this._query[property.name] = processedValue;
+            }
+        }
     }
 
     public getSessionProps() {
@@ -403,12 +502,15 @@ export default class URLWrapper<
     }
 
     @computed get hash(): number {
+        const stringifiedProps = this.stringifyProps(this.query);
         const stringified = _.reduce(
             this.properties,
             (acc, nextVal) => {
                 // @ts-ignore
                 if (nextVal.isSessionProp)
-                    acc = `${acc},${nextVal.name}:${this.query[nextVal.name]}`;
+                    acc = `${acc},${nextVal.name}:${
+                        stringifiedProps[nextVal.name]
+                    }`;
                 return acc;
             },
             ''

@@ -194,14 +194,10 @@ import {
     getPriorityByClinicalAttribute,
     getUniqueKey,
     StudyWithSamples,
-    UniqueKey,
+    SpecialChartsUniqueKeyEnum,
     getUniqueKeyFromMolecularProfileIds,
     ChartMetaDataTypeEnum,
 } from 'pages/studyView/StudyViewUtils';
-import {
-    FRACTION_GENOME_ALTERED,
-    MUTATION_COUNT,
-} from 'pages/studyView/StudyViewPageStore';
 import { IVirtualStudyProps } from 'pages/studyView/virtualStudy/VirtualStudy';
 import { decideMolecularProfileSortingOrder } from './download/DownloadUtils';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
@@ -2429,28 +2425,44 @@ export class ResultsViewPageStore {
         const scatterRequiredParams = _.reduce(
             this.clinicalAttributes.result,
             (acc, next) => {
-                if (MUTATION_COUNT === next.clinicalAttributeId) {
-                    acc[MUTATION_COUNT] = true;
+                if (
+                    SpecialChartsUniqueKeyEnum.MUTATION_COUNT ===
+                    next.clinicalAttributeId
+                ) {
+                    acc[SpecialChartsUniqueKeyEnum.MUTATION_COUNT] = true;
                 }
-                if (FRACTION_GENOME_ALTERED === next.clinicalAttributeId) {
-                    acc[FRACTION_GENOME_ALTERED] = true;
+                if (
+                    SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED ===
+                    next.clinicalAttributeId
+                ) {
+                    acc[
+                        SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED
+                    ] = true;
                 }
                 return acc;
             },
-            { [MUTATION_COUNT]: false, [FRACTION_GENOME_ALTERED]: false }
+            {
+                [SpecialChartsUniqueKeyEnum.MUTATION_COUNT]: false,
+                [SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED]: false,
+            }
         );
 
         if (
-            scatterRequiredParams[MUTATION_COUNT] &&
-            scatterRequiredParams[FRACTION_GENOME_ALTERED]
+            scatterRequiredParams[SpecialChartsUniqueKeyEnum.MUTATION_COUNT] &&
+            scatterRequiredParams[
+                SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED
+            ]
         ) {
-            _chartMetaSet[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = {
+            _chartMetaSet[
+                SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION
+            ] = {
                 dataType: ChartMetaDataTypeEnum.GENOMIC,
                 patientAttribute: false,
-                uniqueKey: UniqueKey.MUTATION_COUNT_CNA_FRACTION,
+                uniqueKey:
+                    SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION,
                 displayName: 'Mutation Count vs Fraction of Genome Altered',
                 priority: getDefaultPriorityByUniqueKey(
-                    UniqueKey.MUTATION_COUNT_CNA_FRACTION
+                    SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION
                 ),
                 renderWhenDataChange: false,
                 description: '',

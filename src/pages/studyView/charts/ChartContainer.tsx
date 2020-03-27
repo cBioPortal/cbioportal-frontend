@@ -34,7 +34,7 @@ import {
     getWidthByDimension,
     mutationCountVsCnaTooltip,
     MutationCountVsCnaYBinsMin,
-    UniqueKey,
+    SpecialChartsUniqueKeyEnum,
     NumericalGroupComparisonType,
 } from '../StudyViewUtils';
 import { GenePanel } from '../../../shared/api/generated/CBioPortalAPI';
@@ -52,8 +52,12 @@ import { Modal } from 'react-bootstrap';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import WindowStore from 'shared/components/window/WindowStore';
 import Timer = NodeJS.Timer;
-import { GeneTableColumnKey, GeneTable } from 'pages/studyView/table/GeneTable';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
+import {
+    MultiSelectionTableColumnKey,
+    MultiSelectionTable,
+} from 'pages/studyView/table/MultiSelectionTable';
+import { FreqColumnTypeEnum } from '../TableUtils';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -351,18 +355,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @computed
     get chart() {
-        const {
-            BAR_CHART,
-            SURVIVAL,
-            CNA_GENES_TABLE,
-            TABLE,
-            SCATTER,
-            PIE_CHART,
-            MUTATED_GENES_TABLE,
-            FUSION_GENES_TABLE,
-        } = ChartTypeEnum;
         switch (this.chartType) {
-            case PIE_CHART: {
+            case ChartTypeEnum.PIE_CHART: {
                 return () => (
                     <PieChart
                         width={getWidthByDimension(
@@ -384,7 +378,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     />
                 );
             }
-            case BAR_CHART: {
+            case ChartTypeEnum.BAR_CHART: {
                 return () => (
                     <BarChart
                         width={getWidthByDimension(
@@ -402,7 +396,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     />
                 );
             }
-            case TABLE: {
+            case ChartTypeEnum.TABLE: {
                 return () => (
                     <ClinicalTable
                         data={this.props.promise.result}
@@ -422,10 +416,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     />
                 );
             }
-            case MUTATED_GENES_TABLE: {
+            case ChartTypeEnum.MUTATED_GENES_TABLE: {
                 return () => (
-                    <GeneTable
-                        tableType={'mutation'}
+                    <MultiSelectionTable
+                        tableType={FreqColumnTypeEnum.MUTATION}
                         promise={this.props.promise}
                         width={getWidthByDimension(
                             this.props.dimension,
@@ -435,7 +429,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.props.dimension,
                             this.chartHeaderHeight
                         )}
-                        numOfSelectedSamples={100}
                         filters={this.props.filters}
                         onUserSelection={this.handlers.onValueSelection}
                         onGeneSelect={this.props.onGeneSelect}
@@ -449,19 +442,22 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.props.onChangeCancerGeneFilter!
                         }
                         columns={[
-                            { columnKey: GeneTableColumnKey.GENE },
-                            { columnKey: GeneTableColumnKey.NUMBER_MUTATIONS },
-                            { columnKey: GeneTableColumnKey.NUMBER },
-                            { columnKey: GeneTableColumnKey.FREQ },
+                            { columnKey: MultiSelectionTableColumnKey.GENE },
+                            {
+                                columnKey:
+                                    MultiSelectionTableColumnKey.NUMBER_MUTATIONS,
+                            },
+                            { columnKey: MultiSelectionTableColumnKey.NUMBER },
+                            { columnKey: MultiSelectionTableColumnKey.FREQ },
                         ]}
-                        defaultSortBy={GeneTableColumnKey.FREQ}
+                        defaultSortBy={MultiSelectionTableColumnKey.FREQ}
                     />
                 );
             }
-            case FUSION_GENES_TABLE: {
+            case ChartTypeEnum.FUSION_GENES_TABLE: {
                 return () => (
-                    <GeneTable
-                        tableType={'fusion'}
+                    <MultiSelectionTable
+                        tableType={FreqColumnTypeEnum.FUSION}
                         promise={this.props.promise}
                         width={getWidthByDimension(
                             this.props.dimension,
@@ -471,7 +467,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.props.dimension,
                             this.chartHeaderHeight
                         )}
-                        numOfSelectedSamples={100}
                         filters={this.props.filters}
                         onUserSelection={this.handlers.onValueSelection}
                         onGeneSelect={this.props.onGeneSelect}
@@ -485,19 +480,22 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.props.onChangeCancerGeneFilter!
                         }
                         columns={[
-                            { columnKey: GeneTableColumnKey.GENE },
-                            { columnKey: GeneTableColumnKey.NUMBER_FUSIONS },
-                            { columnKey: GeneTableColumnKey.NUMBER },
-                            { columnKey: GeneTableColumnKey.FREQ },
+                            { columnKey: MultiSelectionTableColumnKey.GENE },
+                            {
+                                columnKey:
+                                    MultiSelectionTableColumnKey.NUMBER_FUSIONS,
+                            },
+                            { columnKey: MultiSelectionTableColumnKey.NUMBER },
+                            { columnKey: MultiSelectionTableColumnKey.FREQ },
                         ]}
-                        defaultSortBy={GeneTableColumnKey.FREQ}
+                        defaultSortBy={MultiSelectionTableColumnKey.FREQ}
                     />
                 );
             }
-            case CNA_GENES_TABLE: {
+            case ChartTypeEnum.CNA_GENES_TABLE: {
                 return () => (
-                    <GeneTable
-                        tableType={'cna'}
+                    <MultiSelectionTable
+                        tableType={FreqColumnTypeEnum.CNA}
                         promise={this.props.promise}
                         width={getWidthByDimension(
                             this.props.dimension,
@@ -507,7 +505,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.props.dimension,
                             this.chartHeaderHeight
                         )}
-                        numOfSelectedSamples={100}
                         filters={this.props.filters}
                         onUserSelection={this.handlers.onValueSelection}
                         onGeneSelect={this.props.onGeneSelect}
@@ -522,31 +519,73 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         }
                         columns={[
                             {
-                                columnKey: GeneTableColumnKey.GENE,
+                                columnKey: MultiSelectionTableColumnKey.GENE,
                                 columnWidthRatio: 0.24,
                             },
                             {
-                                columnKey: GeneTableColumnKey.CYTOBAND,
+                                columnKey:
+                                    MultiSelectionTableColumnKey.CYTOBAND,
                                 columnWidthRatio: 0.24,
                             },
                             {
-                                columnKey: GeneTableColumnKey.CNA,
+                                columnKey: MultiSelectionTableColumnKey.CNA,
                                 columnWidthRatio: 0.18,
                             },
                             {
-                                columnKey: GeneTableColumnKey.NUMBER,
+                                columnKey: MultiSelectionTableColumnKey.NUMBER,
                                 columnWidthRatio: 0.17,
                             },
                             {
-                                columnKey: GeneTableColumnKey.FREQ,
+                                columnKey: MultiSelectionTableColumnKey.FREQ,
                                 columnWidthRatio: 0.17,
                             },
                         ]}
-                        defaultSortBy={GeneTableColumnKey.FREQ}
+                        defaultSortBy={MultiSelectionTableColumnKey.FREQ}
                     />
                 );
             }
-            case SURVIVAL: {
+            case ChartTypeEnum.GENOMIC_PROFILES_TABLE: {
+                return () => (
+                    <MultiSelectionTable
+                        tableType={FreqColumnTypeEnum.DATA}
+                        promise={this.props.promise}
+                        width={getWidthByDimension(
+                            this.props.dimension,
+                            this.borderWidth
+                        )}
+                        height={getTableHeightByDimension(
+                            this.props.dimension,
+                            this.chartHeaderHeight
+                        )}
+                        filters={this.props.filters}
+                        onUserSelection={this.handlers.onValueSelection}
+                        onGeneSelect={this.props.onGeneSelect}
+                        selectedGenes={this.props.selectedGenes}
+                        genePanelCache={this.props.genePanelCache}
+                        cancerGeneFilterEnabled={
+                            this.props.cancerGeneFilterEnabled
+                        }
+                        filterByCancerGenes={this.props.filterByCancerGenes!}
+                        onChangeCancerGeneFilter={
+                            this.props.onChangeCancerGeneFilter!
+                        }
+                        columns={[
+                            {
+                                columnKey:
+                                    MultiSelectionTableColumnKey.MOLECULAR_PROFILE,
+                            },
+                            {
+                                columnKey: MultiSelectionTableColumnKey.NUMBER,
+                            },
+                            {
+                                columnKey: MultiSelectionTableColumnKey.FREQ,
+                            },
+                        ]}
+                        defaultSortBy={MultiSelectionTableColumnKey.FREQ}
+                    />
+                );
+            }
+            case ChartTypeEnum.SURVIVAL: {
                 if (this.survivalChartData) {
                     const data = this.survivalChartData;
                     return () => (
@@ -612,7 +651,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     return null;
                 }
             }
-            case SCATTER: {
+            case ChartTypeEnum.SCATTER: {
                 return () => (
                     <div
                         style={{
