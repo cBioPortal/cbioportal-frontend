@@ -277,7 +277,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
             this.validNonQueryGenes.result.length > 0
         ) {
             // fake the URL wrapper, we only need the query parameters with additional genes
-            const query: { [key: string]: string | undefined } = _.cloneDeep(
+            const query: { [key: string]: any } = _.cloneDeep(
                 this.props.urlWrapper.query
             );
             query.gene_list = this.validNonQueryGenes.result.join(' ');

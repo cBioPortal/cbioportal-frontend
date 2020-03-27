@@ -1,7 +1,4 @@
-import URLWrapper, {
-    BooleanString,
-    NumberString,
-} from '../../shared/lib/URLWrapper';
+import URLWrapper from '../../shared/lib/URLWrapper';
 import ExtendedRouterStore from '../../shared/lib/ExtendedRouterStore';
 import { computed } from 'mobx';
 import autobind from 'autobind-decorator';
@@ -11,6 +8,26 @@ import {
     ResultsViewTab,
 } from 'pages/resultsView/ResultsViewPageHelpers';
 import AppConfig from 'appConfig';
+
+type PlotsSelectionParam = {
+    selectedGeneOption: string;
+    selectedGenesetOption: string;
+    selectedGenericAssayOption: string;
+    dataType: string;
+    selectedDataSourceOption: string;
+    mutationCountBy: string;
+    logScale: string;
+};
+
+const PlotsSelectionParamProps: PlotsSelectionParam = {
+    selectedGeneOption: '',
+    selectedGenesetOption: '',
+    selectedGenericAssayOption: '',
+    dataType: '',
+    selectedDataSourceOption: '',
+    mutationCountBy: '',
+    logScale: '',
+};
 
 export enum ResultsViewURLQueryEnum {
     clinicallist = 'clinicallist',
@@ -32,8 +49,12 @@ export enum ResultsViewURLQueryEnum {
     oncoprint_sort_by_drivers = 'oncoprint_sort_by_drivers',
     exclude_germline_mutations = 'exclude_germline_mutations',
     patient_enrichments = 'patient_enrichments',
+
     comparison_subtab = 'comparison_subtab',
     comparison_overlapStrategy = 'comparison_overlapStrategy',
+
+    plots_horz_selection = 'plots_horz_selection',
+    plots_vert_selection = 'plots_vert_selection',
 
     genetic_profile_ids_PROFILE_MUTATION_EXTENDED = 'genetic_profile_ids_PROFILE_MUTATION_EXTENDED',
     genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION = 'genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION',
@@ -44,8 +65,16 @@ export enum ResultsViewURLQueryEnum {
     genetic_profile_ids = 'genetic_profile_ids',
 }
 
+type StringValuedParams = Exclude<
+    keyof typeof ResultsViewURLQueryEnum,
+    'plots_horz_selection' | 'plots_vert_selection'
+>;
+
 export type ResultsViewURLQuery = {
-    [key in keyof typeof ResultsViewURLQueryEnum]: string;
+    [key in StringValuedParams]: string;
+} & {
+    plots_horz_selection: PlotsSelectionParam;
+    plots_vert_selection: PlotsSelectionParam;
 };
 
 export default class ResultsViewURLWrapper extends URLWrapper<
@@ -67,11 +96,22 @@ export default class ResultsViewURLWrapper extends URLWrapper<
                 generic_assay_groups: { isSessionProp: false },
                 exclude_germline_mutations: { isSessionProp: false },
                 patient_enrichments: { isSessionProp: false },
+
                 comparison_subtab: { isSessionProp: false },
                 comparison_overlapStrategy: { isSessionProp: false },
 
+                // plots
+                plots_horz_selection: {
+                    isSessionProp: false,
+                    nestedObjectProps: PlotsSelectionParamProps,
+                },
+                plots_vert_selection: {
+                    isSessionProp: false,
+                    nestedObjectProps: PlotsSelectionParamProps,
+                },
+
                 // session props here
-                gene_list: { isSessionProp: true },
+                gene_list: { isSessionProp: true, doubleURIEncode: true },
                 cancer_study_list: {
                     isSessionProp: true,
                     aliases: ['cancer_study_id'],

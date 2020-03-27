@@ -5,7 +5,7 @@ import { computed } from 'mobx';
 import styles from './styles.module.scss';
 import { ClinicalDataFilterValue } from 'shared/api/generated/CBioPortalAPIInternal';
 import {
-    UniqueKey,
+    SpecialChartsUniqueKeyEnum,
     DataType,
     getUniqueKeyFromMolecularProfileIds,
     ChartType,
@@ -51,6 +51,8 @@ export interface IUserSelectionsProps {
     clearAllFilters: () => void;
     clinicalAttributeIdToDataType: { [key: string]: string };
     onBookmarkClick: () => void;
+    molecularProfileNameSet: { [key: string]: string };
+    removeGenomicProfileFilter: (value: string) => void;
 }
 
 @observer
@@ -311,64 +313,15 @@ export default class UserSelections extends React.Component<
                         <div className={styles.parentGroupLogic}>
                             <GroupLogic
                                 components={geneFilter.geneQueries.map(
-                                    geneQuery => {
+                                    queries => {
                                         return (
                                             <GroupLogic
-                                                components={geneQuery.map(
-                                                    oql => {
-                                                        let color = DEFAULT_NA_COLOR;
-                                                        let displayGeneSymbol = oql;
-                                                        switch (
-                                                            chartMeta.chartType
-                                                        ) {
-                                                            case ChartTypeEnum.MUTATED_GENES_TABLE:
-                                                                color = MUT_COLOR_MISSENSE;
-                                                                break;
-                                                            case ChartTypeEnum.FUSION_GENES_TABLE:
-                                                                color = MUT_COLOR_FUSION;
-                                                                break;
-                                                            case ChartTypeEnum.CNA_GENES_TABLE: {
-                                                                const oqlParts = oql
-                                                                    .trim()
-                                                                    .split(':');
-                                                                if (
-                                                                    oqlParts.length ===
-                                                                    2
-                                                                ) {
-                                                                    displayGeneSymbol =
-                                                                        oqlParts[0];
-                                                                    let tagColor = getCNAColorByAlteration(
-                                                                        oqlParts[1]
-                                                                    );
-                                                                    if (
-                                                                        tagColor
-                                                                    ) {
-                                                                        color = tagColor;
-                                                                    }
-                                                                }
-                                                                break;
-                                                            }
-                                                        }
-                                                        return (
-                                                            <PillTag
-                                                                content={
-                                                                    displayGeneSymbol
-                                                                }
-                                                                backgroundColor={
-                                                                    color
-                                                                }
-                                                                onDelete={() =>
-                                                                    this.props.removeGeneFilter(
-                                                                        chartMeta.uniqueKey,
-                                                                        oql
-                                                                    )
-                                                                }
-                                                            />
-                                                        );
-                                                    }
+                                                components={this.groupedGeneQueries(
+                                                    queries,
+                                                    chartMeta
                                                 )}
                                                 operation="or"
-                                                group={geneQuery.length > 1}
+                                                group={queries.length > 1}
                                             />
                                         );
                                     }
@@ -384,7 +337,86 @@ export default class UserSelections extends React.Component<
             components
         );
 
+        if (!_.isEmpty(this.props.filter.genomicProfiles)) {
+            components.push(
+                <div className={styles.parentGroupLogic}>
+                    <GroupLogic
+                        components={this.props.filter.genomicProfiles.map(
+                            genomicProfiles => {
+                                return (
+                                    <GroupLogic
+                                        components={this.groupedGenomicProfiles(
+                                            genomicProfiles
+                                        )}
+                                        operation="or"
+                                        group={genomicProfiles.length > 1}
+                                    />
+                                );
+                            }
+                        )}
+                        operation={'and'}
+                        group={false}
+                    />
+                </div>
+            );
+        }
         return components;
+    }
+
+    private groupedGeneQueries(
+        geneQueries: string[],
+        chartMeta: ChartMeta & { chartType: ChartType }
+    ): JSX.Element[] {
+        return geneQueries.map(oql => {
+            let color = DEFAULT_NA_COLOR;
+            let displayGeneSymbol = oql;
+            switch (chartMeta.chartType) {
+                case ChartTypeEnum.MUTATED_GENES_TABLE:
+                    color = MUT_COLOR_MISSENSE;
+                    break;
+                case ChartTypeEnum.FUSION_GENES_TABLE:
+                    color = MUT_COLOR_FUSION;
+                    break;
+                case ChartTypeEnum.CNA_GENES_TABLE: {
+                    const oqlParts = oql.trim().split(':');
+                    if (oqlParts.length === 2) {
+                        displayGeneSymbol = oqlParts[0];
+                        let tagColor = getCNAColorByAlteration(oqlParts[1]);
+                        if (tagColor) {
+                            color = tagColor;
+                        }
+                    }
+                    break;
+                }
+            }
+            return (
+                <PillTag
+                    content={displayGeneSymbol}
+                    backgroundColor={color}
+                    onDelete={() =>
+                        this.props.removeGeneFilter(chartMeta.uniqueKey, oql)
+                    }
+                />
+            );
+        });
+    }
+
+    private groupedGenomicProfiles(genomicProfiles: string[]): JSX.Element[] {
+        return genomicProfiles.map(profile => {
+            return (
+                <PillTag
+                    content={
+                        this.props.molecularProfileNameSet[profile] || profile
+                    }
+                    backgroundColor={
+                        STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent
+                    }
+                    onDelete={() =>
+                        this.props.removeGenomicProfileFilter(profile)
+                    }
+                />
+            );
+        });
     }
 
     render() {
