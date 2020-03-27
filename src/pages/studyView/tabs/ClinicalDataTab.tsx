@@ -11,7 +11,7 @@ import {
     getClinicalAttributeOverlay,
     getUniqueKey,
     ChartMeta,
-    UniqueKey,
+    SpecialChartsUniqueKeyEnum,
     DataType,
 } from '../StudyViewUtils';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
@@ -117,7 +117,8 @@ export class ClinicalDataTab extends React.Component<
                 _.find(
                     this.props.store.visibleAttributes,
                     chartMeta =>
-                        chartMeta.uniqueKey === UniqueKey.CANCER_STUDIES
+                        chartMeta.uniqueKey ===
+                        SpecialChartsUniqueKeyEnum.CANCER_STUDIES
                 ) !== undefined
             ) {
                 defaultColumns.push({

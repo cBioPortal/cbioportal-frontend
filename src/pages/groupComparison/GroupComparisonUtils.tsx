@@ -491,20 +491,13 @@ export function getDefaultGroupName(
         .flatMapDeep(geneFilter => geneFilter.geneQueries)
         .value();
 
-    const withData: string[] = [];
-    if (filters.withMutationData) {
-        withData.push('with mutation data');
-    }
-    if (filters.withCNAData) {
-        withData.push('with CNA data');
-    }
+    const genomicProfileFilters = _.flatMapDeep(filters.genomicProfiles || []);
 
-    const allFilters = geneFilters
+    return geneFilters
         .concat(equalityFilters)
         .concat(customChartValues)
-        .concat(withData);
-
-    return allFilters.join(', '); // comma separate each attributes values
+        .concat(genomicProfileFilters)
+        .join(', '); // comma separate each attributes values
 }
 
 export function getTabId(pathname: string) {
