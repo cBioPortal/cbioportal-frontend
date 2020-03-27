@@ -56,7 +56,6 @@ import {
 import numeral from 'numeral';
 import GenesetMolecularDataCache from '../../../shared/cache/GenesetMolecularDataCache';
 import { GenesetMolecularData } from '../../../shared/api/generated/CBioPortalAPIInternal';
-import { MUTATION_COUNT } from '../../studyView/StudyViewPageStore';
 import ClinicalDataCache from '../../../shared/cache/ClinicalDataCache';
 import GenericAssayMolecularDataCache, {
     GenericAssayDataEnhanced,
@@ -68,6 +67,7 @@ import {
 import { isSampleProfiled } from '../../../shared/lib/isSampleProfiled';
 import Pluralize from 'pluralize';
 import AppConfig from 'appConfig';
+import { SpecialChartsUniqueKeyEnum } from 'pages/studyView/StudyViewUtils';
 
 export const CLIN_ATTR_DATA_TYPE = 'clinical_attribute';
 export const GENESET_DATA_TYPE = 'GENESET_SCORE';
@@ -1912,7 +1912,10 @@ export function logScalePossible(axisSelection: AxisMenuSelection) {
         );
     } else {
         // clinical attribute
-        return axisSelection.dataSourceId === MUTATION_COUNT;
+        return (
+            axisSelection.dataSourceId ===
+            SpecialChartsUniqueKeyEnum.MUTATION_COUNT
+        );
     }
 }
 

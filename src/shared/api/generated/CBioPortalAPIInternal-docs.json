@@ -1439,7 +1439,10 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/MolecularProfileSampleCount"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenomicDataCount"
+              }
             }
           }
         }
@@ -2269,6 +2272,22 @@
       },
       "title": "GenesetMolecularData"
     },
+    "GenomicDataCount": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "label": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "title": "GenomicDataCount"
+    },
     "Gistic": {
       "type": "object",
       "required": [
@@ -2464,40 +2483,6 @@
         }
       },
       "title": "MolecularProfileCasesGroupFilter"
-    },
-    "MolecularProfileSampleCount": {
-      "type": "object",
-      "properties": {
-        "numberOfCNAProfiledSamples": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "numberOfCNAUnprofiledSamples": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "numberOfCNSegmentSamples": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "numberOfFusionProfiledSamples": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "numberOfFusionUnprofiledSamples": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "numberOfMutationProfiledSamples": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "numberOfMutationUnprofiledSamples": {
-          "type": "integer",
-          "format": "int32"
-        }
-      },
-      "title": "MolecularProfileSampleCount"
     },
     "MrnaPercentile": {
       "type": "object",
@@ -2773,6 +2758,15 @@
             "$ref": "#/definitions/GeneFilter"
           }
         },
+        "genomicProfiles": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
         "sampleIdentifiers": {
           "type": "array",
           "items": {
@@ -2784,15 +2778,6 @@
           "items": {
             "type": "string"
           }
-        },
-        "withCNAData": {
-          "type": "boolean"
-        },
-        "withFusionData": {
-          "type": "boolean"
-        },
-        "withMutationData": {
-          "type": "boolean"
         }
       },
       "title": "StudyViewFilter"

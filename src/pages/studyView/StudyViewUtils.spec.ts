@@ -68,7 +68,7 @@ import {
     Gene,
 } from 'shared/api/generated/CBioPortalAPI';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
-import { UniqueKey } from './StudyViewUtils';
+import { SpecialChartsUniqueKeyEnum } from './StudyViewUtils';
 import { Layout } from 'react-grid-layout';
 import sinon from 'sinon';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
@@ -185,6 +185,7 @@ describe('StudyViewUtils', () => {
                     '',
                     studies as any,
                     {} as any,
+                    {} as any,
                     {} as any
                 ).startsWith(
                     '4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)'
@@ -248,28 +249,27 @@ describe('StudyViewUtils', () => {
                     yStart: 0,
                 },
                 numberOfSamplesPerPatient: [],
-                withCNAData: false,
-                withMutationData: false,
-                withFusionData: false,
+                genomicProfiles: [],
             } as StudyViewFilterWithSampleIdentifierFilters;
 
-            let genes = [
-                { entrezGeneId: 1, hugoGeneSymbol: 'GENE1' },
-                { entrezGeneId: 2, hugoGeneSymbol: 'GENE2' },
-            ] as Gene[];
-
             assert.isTrue(
-                getVirtualStudyDescription('', studies as any, filter, {
-                    attribute1: 'attribute1 name',
-                    attribute2: 'attribute2 name',
-                    attribute3: 'attribute3 name',
-                    cancer_study_sequenced: ' Mutated Genes',
-                    cancer_study_fusion: 'Fusion Genes',
-                    cancer_study_cna: 'CNA Genes',
-                }).startsWith(
+                getVirtualStudyDescription(
+                    '',
+                    studies as any,
+                    filter,
+                    {
+                        attribute1: 'attribute1 name',
+                        attribute2: 'attribute2 name',
+                        attribute3: 'attribute3 name',
+                        cancer_study_sequenced: ' Mutated Genes',
+                        cancer_study_fusion: 'Fusion Genes',
+                        cancer_study_cna: 'CNA Genes',
+                    },
+                    {} as any
+                ).startsWith(
                     '4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)' +
                         '\n\nFilters:\n-  Mutated Genes:\n  - GENE1\n- Fusion Genes:\n  - GENE1\n- CNA Genes:' +
-                        '\n  - GENE2:HOMDEL\nWith Mutation data: NO\nWith CNA data: NO\n- attribute1 name: value1\n' +
+                        '\n  - GENE2:HOMDEL\n- attribute1 name: value1\n' +
                         '- attribute2 name: 10 < x ≤ 0\n- attribute3 name: 2 samples\n\nCreated on'
                 )
             );
@@ -281,6 +281,7 @@ describe('StudyViewUtils', () => {
                     studies as any,
                     {} as any,
                     {} as any,
+                    {} as any,
                     'user1'
                 ).startsWith(
                     '4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)'
@@ -290,6 +291,7 @@ describe('StudyViewUtils', () => {
                 getVirtualStudyDescription(
                     '',
                     studies as any,
+                    {} as any,
                     {} as any,
                     {} as any,
                     'user1'
@@ -319,7 +321,8 @@ describe('StudyViewUtils', () => {
                         attribute1: 'attribute1 name',
                         attribute2: 'attribute2 name',
                         attribute3: 'attribute3 name',
-                    }
+                    },
+                    {} as any
                 ).startsWith('test\n\nCreated on')
             );
         });
@@ -2194,7 +2197,7 @@ describe('StudyViewUtils', () => {
 
         it('no filters selected', done => {
             getSamplesByExcludingFiltersOnChart(
-                UniqueKey.CANCER_STUDIES,
+                SpecialChartsUniqueKeyEnum.CANCER_STUDIES,
                 emptyStudyViewFilter,
                 {},
                 [{ sampleId: 'sample1', studyId: 'study1' }],
@@ -2218,10 +2221,10 @@ describe('StudyViewUtils', () => {
 
         it('has filter for one chart', done => {
             getSamplesByExcludingFiltersOnChart(
-                UniqueKey.MUTATION_COUNT,
+                SpecialChartsUniqueKeyEnum.MUTATION_COUNT,
                 emptyStudyViewFilter,
                 {
-                    [UniqueKey.CANCER_STUDIES]: [
+                    [SpecialChartsUniqueKeyEnum.CANCER_STUDIES]: [
                         { sampleId: 'sample1', studyId: 'study1' },
                     ],
                 },
@@ -2249,7 +2252,7 @@ describe('StudyViewUtils', () => {
 
         it('no filters selected and queriedSampleIdentifiers is empty', done => {
             getSamplesByExcludingFiltersOnChart(
-                UniqueKey.CANCER_STUDIES,
+                SpecialChartsUniqueKeyEnum.CANCER_STUDIES,
                 emptyStudyViewFilter,
                 {},
                 [],
@@ -2271,10 +2274,10 @@ describe('StudyViewUtils', () => {
 
         it('has filter for one chart and queriedSampleIdentifiers is empty', done => {
             getSamplesByExcludingFiltersOnChart(
-                UniqueKey.MUTATION_COUNT,
+                SpecialChartsUniqueKeyEnum.MUTATION_COUNT,
                 emptyStudyViewFilter,
                 {
-                    [UniqueKey.CANCER_STUDIES]: [
+                    [SpecialChartsUniqueKeyEnum.CANCER_STUDIES]: [
                         { sampleId: 'sample1', studyId: 'study1' },
                     ],
                 },

@@ -118,3 +118,23 @@ $study-view-table-icon-size: 10px;
     margin-top: auto !important;
     margin-bottom: auto !important;
 }
+
+.union {
+    background: url('../../../globalStyles/images/union.svg');
+    -webkit-background-size: 18px 18px;
+    background-size: 18px 18px;
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+    vertical-align: text-top;
+}
+
+.intersection {
+    background: url('../../../globalStyles/images/intersection.svg');
+    -webkit-background-size: 18px 18px;
+    background-size: 18px 18px;
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+    vertical-align: text-top;
+}
