@@ -38,7 +38,17 @@ describe('posting query parameters (instead of GET) to query page', function() {
 
                 // make sure param in query is passed to url and encoded
                 return _.every(query, (item, key) => {
-                    return url.includes(`${key}=${encodeURIComponent(item)}`);
+                    if (key === 'gene_list') {
+                        return url.includes(
+                            `${key}=${encodeURIComponent(
+                                encodeURIComponent(item)
+                            )}`
+                        );
+                    } else {
+                        return url.includes(
+                            `${key}=${encodeURIComponent(item)}`
+                        );
+                    }
                 });
             });
 
