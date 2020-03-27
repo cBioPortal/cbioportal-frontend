@@ -274,6 +274,14 @@ export type GenesetMolecularData = {
         'value': string
 
 };
+export type GenomicDataCount = {
+    'count': number
+
+        'label': string
+
+        'value': string
+
+};
 export type Gistic = {
     'amp': boolean
 
@@ -352,22 +360,6 @@ export type MolecularProfileCasesGroupFilter = {
     'molecularProfileCaseIdentifiers': Array < MolecularProfileCaseIdentifier >
 
         'name': string
-
-};
-export type MolecularProfileSampleCount = {
-    'numberOfCNAProfiledSamples': number
-
-        'numberOfCNAUnprofiledSamples': number
-
-        'numberOfCNSegmentSamples': number
-
-        'numberOfFusionProfiledSamples': number
-
-        'numberOfFusionUnprofiledSamples': number
-
-        'numberOfMutationProfiledSamples': number
-
-        'numberOfMutationUnprofiledSamples': number
 
 };
 export type MrnaPercentile = {
@@ -489,15 +481,12 @@ export type StudyViewFilter = {
 
         'geneFilters': Array < GeneFilter >
 
+        'genomicProfiles': Array < Array < string >
+        >
+
         'sampleIdentifiers': Array < SampleIdentifier >
 
         'studyIds': Array < string >
-
-        'withCNAData': boolean
-
-        'withFusionData': boolean
-
-        'withMutationData': boolean
 
 };
 export type VariantCount = {
@@ -3311,14 +3300,15 @@ export default class CBioPortalAPIInternal {
      * @param {} studyViewFilter - Study view filter
      */
     fetchMolecularProfileSampleCountsUsingPOST(parameters: {
-        'studyViewFilter': StudyViewFilter,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < MolecularProfileSampleCount > {
-        return this.fetchMolecularProfileSampleCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
+            'studyViewFilter': StudyViewFilter,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < GenomicDataCount >
+        > {
+            return this.fetchMolecularProfileSampleCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
     getSignificantCopyNumberRegionsUsingGETURL(parameters: {
         'studyId': string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",

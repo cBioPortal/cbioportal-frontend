@@ -8,6 +8,7 @@ import {
     StudyViewFilter,
     ClinicalDataBinFilter,
     ClinicalDataFilterValue,
+    GenomicDataCount,
 } from 'shared/api/generated/CBioPortalAPIInternal';
 import {
     CancerStudy,
@@ -17,6 +18,8 @@ import {
     Sample,
     ClinicalData,
     ClinicalDataMultiStudyFilter,
+    MolecularProfile,
+    GenePanelData,
 } from 'shared/api/generated/CBioPortalAPI';
 import * as React from 'react';
 import { buildCBioPortalPageUrl } from '../../shared/api/urls';
@@ -39,6 +42,7 @@ import MobxPromise from 'mobxpromise';
 import {
     getTextWidth,
     stringListToIndexSet,
+    stringListToSet,
 } from 'cbioportal-frontend-commons';
 import {
     CNA_COLOR_AMP,
@@ -55,6 +59,11 @@ import {
 import { SessionGroupData } from 'shared/api/ComparisonGroupClient';
 import { IStudyViewScatterPlotData } from './charts/scatterPlot/StudyViewScatterPlotUtils';
 import { CNA_TO_ALTERATION } from 'pages/resultsView/enrichments/EnrichmentsUtil';
+import {
+    AlterationTypeConstants,
+    DataTypeConstants,
+} from 'pages/resultsView/ResultsViewPageStore';
+import { decideMolecularProfileSortingOrder } from 'pages/resultsView/download/DownloadUtils';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -73,6 +82,13 @@ export enum DataType {
     NUMBER = 'NUMBER',
 }
 
+export enum CNAProfilesEnum {
+    cna = 'cna',
+    gistic = 'gistic',
+    rae = 'rae',
+    cna_consensus = 'cna_consensus',
+}
+
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT';
 export type ChartType =
     | 'PIE_CHART'
@@ -82,19 +98,18 @@ export type ChartType =
     | 'SCATTER'
     | 'MUTATED_GENES_TABLE'
     | 'FUSION_GENES_TABLE'
+    | 'GENOMIC_PROFILES_TABLE'
     | 'CNA_GENES_TABLE'
     | 'NONE';
 
-export enum UniqueKey {
+export enum SpecialChartsUniqueKeyEnum {
     CUSTOM_SELECT = 'CUSTOM_SELECT',
     SELECTED_COMPARISON_GROUPS = 'SELECTED_COMPARISON_GROUPS',
     MUTATION_COUNT_CNA_FRACTION = 'MUTATION_COUNT_CNA_FRACTION',
     CANCER_STUDIES = 'CANCER_STUDIES',
     MUTATION_COUNT = 'MUTATION_COUNT',
     FRACTION_GENOME_ALTERED = 'FRACTION_GENOME_ALTERED',
-    WITH_MUTATION_DATA = 'WITH_MUTATION_DATA',
-    WITH_FUSION_DATA = 'WITH_FUSION_DATA',
-    WITH_CNA_DATA = 'WITH_CNA_DATA',
+    GENOMIC_PROFILES_SAMPLE_COUNT = 'GENOMIC_PROFILES_SAMPLE_COUNT',
 }
 
 export type AnalysisGroup = {
@@ -134,6 +149,10 @@ export type StudyViewFilterWithSampleIdentifierFilters = StudyViewFilter & {
     sampleIdentifiersSet: { [id: string]: SampleIdentifier[] };
 };
 
+export type GenomicDataCountWithSampleUniqueKeys = GenomicDataCount & {
+    sampleUniqueKeys: string[];
+};
+
 export enum Datalabel {
     YES = 'YES',
     NO = 'NO',
@@ -149,7 +168,7 @@ export type RectangleBounds = {
 
 export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [
     {
-        uniqueKey: UniqueKey.CANCER_STUDIES,
+        uniqueKey: SpecialChartsUniqueKeyEnum.CANCER_STUDIES,
         displayName: 'Cancer Studies',
         description: 'Cancer Studies',
         dataType: ChartMetaDataTypeEnum.CLINICAL,
@@ -163,45 +182,17 @@ export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [
         priority: 70,
     },
     {
-        uniqueKey: UniqueKey.WITH_MUTATION_DATA,
-        displayName: 'With Mutation Data',
-        description: 'With Mutation Data',
-        chartType: ChartTypeEnum.PIE_CHART,
+        uniqueKey: SpecialChartsUniqueKeyEnum.GENOMIC_PROFILES_SAMPLE_COUNT,
+        displayName: 'Genomic Profile Sample Counts',
+        description: '',
+        chartType: ChartTypeEnum.GENOMIC_PROFILES_TABLE,
         dataType: ChartMetaDataTypeEnum.GENOMIC,
         patientAttribute: false,
         dimension: {
-            w: 1,
-            h: 1,
+            w: 2,
+            h: 2,
         },
-        priority: 0,
-        renderWhenDataChange: false,
-    },
-    {
-        uniqueKey: UniqueKey.WITH_FUSION_DATA,
-        displayName: 'With Fusion Data',
-        description: 'With Fusion Data',
-        chartType: ChartTypeEnum.PIE_CHART,
-        dataType: ChartMetaDataTypeEnum.GENOMIC,
-        patientAttribute: false,
-        dimension: {
-            w: 1,
-            h: 1,
-        },
-        priority: 0,
-        renderWhenDataChange: false,
-    },
-    {
-        uniqueKey: UniqueKey.WITH_CNA_DATA,
-        displayName: 'With CNA Data',
-        description: 'With CNA Data',
-        chartType: ChartTypeEnum.PIE_CHART,
-        dataType: ChartMetaDataTypeEnum.GENOMIC,
-        patientAttribute: false,
-        dimension: {
-            w: 1,
-            h: 1,
-        },
-        priority: 0,
+        priority: 70,
         renderWhenDataChange: false,
     },
 ];
@@ -671,6 +662,7 @@ export function getVirtualStudyDescription(
     studyWithSamples: StudyWithSamples[],
     filter: StudyViewFilterWithSampleIdentifierFilters,
     attributeNamesSet: { [id: string]: string },
+    molecularProfileNameSet: { [id: string]: string },
     user?: string
 ) {
     let descriptionLines: string[] = [];
@@ -719,17 +711,19 @@ export function getVirtualStudyDescription(
                 );
             });
 
-            if (filter.withMutationData !== undefined) {
-                filterLines.push(
-                    `With Mutation data: ${
-                        filter.withMutationData ? 'YES' : 'NO'
-                    }`
-                );
-            }
-
-            if (filter.withCNAData !== undefined) {
-                filterLines.push(
-                    `With CNA data: ${filter.withCNAData ? 'YES' : 'NO'}`
+            if (!_.isEmpty(filter.genomicProfiles)) {
+                filterLines.push('- Genomic Profile Sample Counts:');
+                filterLines = filterLines.concat(
+                    filter.genomicProfiles
+                        .map(profiles =>
+                            profiles
+                                .map(
+                                    profile => molecularProfileNameSet[profile]
+                                )
+                                .join(', ')
+                                .trim()
+                        )
+                        .map(line => '  - ' + line)
                 );
             }
 
@@ -773,8 +767,7 @@ export function isFiltered(
         _.isEmpty(filter) ||
         (_.isEmpty(filter.clinicalDataFilters) &&
             _.isEmpty(filter.geneFilters) &&
-            filter.withMutationData === undefined &&
-            filter.withCNAData === undefined)
+            _.isEmpty(filter.genomicProfiles))
     );
 
     if (filter.sampleIdentifiersSet) {
@@ -1275,12 +1268,10 @@ export function toFixedDigit(value: number, fractionDigits: number = 2) {
 
 export function getChartMetaDataType(uniqueKey: string): ChartMetaDataType {
     const GENOMIC_DATA_TYPES = [
-        UniqueKey.MUTATION_COUNT_CNA_FRACTION,
-        UniqueKey.MUTATION_COUNT,
-        UniqueKey.FRACTION_GENOME_ALTERED,
-        UniqueKey.WITH_MUTATION_DATA,
-        UniqueKey.WITH_CNA_DATA,
-        UniqueKey.WITH_FUSION_DATA,
+        SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION,
+        SpecialChartsUniqueKeyEnum.MUTATION_COUNT,
+        SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED,
+        SpecialChartsUniqueKeyEnum.GENOMIC_PROFILES_SAMPLE_COUNT,
     ];
     return _.includes(GENOMIC_DATA_TYPES, uniqueKey)
         ? ChartMetaDataTypeEnum.GENOMIC
@@ -2494,7 +2485,7 @@ export function updateSavedUserPreferenceChartIds(
     let numberOfClinicalAttributeCharts = 0;
     let numberOfChartRequiringUpdates = 0;
     const specialChartKeySet = _.reduce(
-        UniqueKey,
+        SpecialChartsUniqueKeyEnum,
         (acc, next) => {
             acc[next] = true;
             return acc;
@@ -2532,4 +2523,69 @@ export function updateSavedUserPreferenceChartIds(
         });
     }
     return chartSettings;
+}
+
+export function getMolecularProfileOptions(
+    molecularProfiles: MolecularProfile[],
+    molecularProfileSampleSet: { [id: string]: string[] }
+): GenomicDataCountWithSampleUniqueKeys[] {
+    return _.chain(molecularProfiles)
+        .groupBy(molecularProfile =>
+            molecularProfile.molecularProfileId.replace(
+                molecularProfile.studyId + '_',
+                ''
+            )
+        )
+        .map((profiles, value) => {
+            const uniqueProfiledSamples = _.chain(profiles)
+                .flatMap(
+                    molecularProfile =>
+                        molecularProfileSampleSet[
+                            molecularProfile.molecularProfileId
+                        ] || []
+                )
+                .uniq()
+                .value();
+            return {
+                value: value,
+                label: profiles[0].name,
+                count: uniqueProfiledSamples.length,
+                sampleUniqueKeys: uniqueProfiledSamples,
+            };
+        })
+        .filter(record => record.count > 0)
+        .value();
+}
+
+export function getCNASamplesCount(molecularProfileSampleCountSet: {
+    [id: string]: number;
+}) {
+    return (
+        molecularProfileSampleCountSet[CNAProfilesEnum.cna] ||
+        molecularProfileSampleCountSet[CNAProfilesEnum.gistic] ||
+        molecularProfileSampleCountSet[CNAProfilesEnum.rae] ||
+        molecularProfileSampleCountSet[CNAProfilesEnum.cna_consensus] ||
+        0
+    );
+}
+
+export function getMolecularProfileSamplesSet(
+    samples: Sample[],
+    genePanelData: GenePanelData[]
+) {
+    const sampleKeySet = _.keyBy(samples, sample => sample.uniqueSampleKey);
+
+    return _.reduce(
+        genePanelData,
+        (acc: { [id: string]: string[] }, next) => {
+            if (sampleKeySet[next.uniqueSampleKey] !== undefined) {
+                if (acc[next.molecularProfileId] === undefined) {
+                    acc[next.molecularProfileId] = [];
+                }
+                acc[next.molecularProfileId].push(next.uniqueSampleKey);
+            }
+            return acc;
+        },
+        {}
+    );
 }

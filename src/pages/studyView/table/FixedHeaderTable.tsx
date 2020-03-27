@@ -23,6 +23,8 @@ import autobind from 'autobind-decorator';
 import { inputBoxChangeTimeoutEvent } from '../../../shared/lib/EventUtils';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { SimpleGetterLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
+import { SelectionOperatorEnum } from '../TableUtils';
+import { DropdownButton, MenuItem } from 'react-bootstrap';
 
 export type IFixedHeaderTableProps<T> = {
     columns: Column<T>[];
@@ -30,12 +32,14 @@ export type IFixedHeaderTableProps<T> = {
     data: T[];
     sortBy?: string;
     sortDirection?: SortDirection;
+    defaultSelectionOperator?: SelectionOperatorEnum;
     width?: number;
     height?: number;
     headerHeight?: number;
     rowHeight?: number;
-    showSelectSamples?: boolean;
+    numberOfSelectedRows: number;
     afterSelectingRows?: () => void;
+    toggleSelectionOperator?: () => void;
     // used only when showControlsAtTop === true (show controls at bottom otherwise)
     showControlsAtTop?: boolean;
     showAddRemoveAllButtons?: boolean;
@@ -89,9 +93,7 @@ export default class FixedHeaderTable<T> extends React.Component<
     @observable private _sortDirection: SortDirection;
 
     public static defaultProps = {
-        showControls: true,
         showControlsAtTop: false,
-        showSelectSamples: false,
         showAddRemoveAllButtons: false,
         autoFocusSearchAfterRendering: false,
         width: 398,
@@ -100,6 +102,7 @@ export default class FixedHeaderTable<T> extends React.Component<
         rowHeight: 25,
         showSelectableNumber: false,
         sortBy: '',
+        numberOfSelectedRows: 0,
     };
 
     constructor(props: IFixedHeaderTableProps<T>) {
@@ -212,9 +215,21 @@ export default class FixedHeaderTable<T> extends React.Component<
     }
 
     @autobind
+    @action
     afterSelectingRows() {
-        if (_.isFunction(this.props.afterSelectingRows)) {
+        if (this.props.afterSelectingRows) {
             this.props.afterSelectingRows();
+        }
+    }
+
+    @autobind
+    @action
+    changeSelectionType(selectionOperator?: SelectionOperatorEnum) {
+        if (
+            this.props.toggleSelectionOperator &&
+            this.props.defaultSelectionOperator !== selectionOperator
+        ) {
+            this.props.toggleSelectionOperator();
         }
     }
 
@@ -295,6 +310,36 @@ export default class FixedHeaderTable<T> extends React.Component<
         }
     }
 
+    private getSelectionOptions() {
+        return Object.keys(SelectionOperatorEnum).map(selectionType => {
+            const selectionOperation =
+                SelectionOperatorEnum[
+                    selectionType as keyof typeof SelectionOperatorEnum
+                ];
+            return (
+                <MenuItem
+                    onClick={() => this.changeSelectionType(selectionOperation)}
+                    active={
+                        this.props.defaultSelectionOperator === selectionType
+                    }
+                >
+                    <DefaultTooltip
+                        overlay={`${selectionOperation} of samples in the newly selected rows`}
+                    >
+                        <div>
+                            {selectionOperation}{' '}
+                            <i
+                                className={
+                                    styles[selectionOperation.toLowerCase()]
+                                }
+                            ></i>
+                        </div>
+                    </DefaultTooltip>
+                </MenuItem>
+            );
+        });
+    }
+
     getControls() {
         return (
             <div className={classnames(styles.controls)}>
@@ -337,17 +382,37 @@ export default class FixedHeaderTable<T> extends React.Component<
                     </div>
                 </If>
 
-                <If condition={this.props.showSelectSamples}>
-                    <button
-                        className={classnames(
-                            'btn btn-primary btn-xs',
-                            styles.controlsBtn
-                        )}
-                        data-test="fixed-header-table-select-sample"
-                        onClick={this.afterSelectingRows}
-                    >
-                        Select Samples
-                    </button>
+                <If condition={this.props.numberOfSelectedRows > 0}>
+                    <div className="btn-group">
+                        <button
+                            className="btn btn-default btn-xs"
+                            onClick={this.afterSelectingRows}
+                        >
+                            Select Samples{' '}
+                            <If condition={this.props.numberOfSelectedRows > 1}>
+                                <i
+                                    style={{ marginTop: '-2px' }}
+                                    className={
+                                        this.props.defaultSelectionOperator ===
+                                        SelectionOperatorEnum.INTERSECTION
+                                            ? styles.intersection
+                                            : styles.union
+                                    }
+                                ></i>
+                            </If>
+                        </button>
+
+                        <If condition={this.props.numberOfSelectedRows > 1}>
+                            <DropdownButton
+                                bsSize="xsmall"
+                                title={''}
+                                id={`selectButton`}
+                                pullRight={true}
+                            >
+                                {this.getSelectionOptions()}
+                            </DropdownButton>
+                        </If>
+                    </div>
                 </If>
                 {this.props.showControlsAtTop && (
                     <input
