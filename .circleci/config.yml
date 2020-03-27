@@ -166,6 +166,16 @@ jobs:
           name: "Check Incorrect Package Import Statements"
           command: yarn run checkIncorrectImportStatements
 
+  check_missing_package_version_update:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: /tmp/
+      # make sure that version has been updated for the packages that has changed
+      - run:
+          name: "Check Missing Package Version Update"
+          command: yarn run checkMissingPackageVersionUpdate
+
   end_to_end_tests:
     <<: *defaults
     environment:
@@ -292,6 +302,9 @@ workflows:
                 requires:
                     - install
             - check_incorrect_import_statements:
+                requires:
+                    - install
+            - check_missing_package_version_update:
                 requires:
                     - install
     nightly:
