@@ -55,8 +55,8 @@ export default class URLWrapper<
         protected routing: ExtendedRouterStore,
         // pass it in in a map so that typescript can ensure that every property is accounted for
         protected propertiesMap: {
-            [property in keyof QueryParamsType]: Omit<
-                Property<QueryParamsType>,
+            [property in keyof Required<QueryParamsType>]: Omit<
+                Property<QueryParamsType, Required<QueryParamsType[property]>>,
                 'name'
             >;
         },
