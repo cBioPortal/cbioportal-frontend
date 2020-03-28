@@ -24,6 +24,9 @@ import { OncokbCancerGene } from 'pages/studyView/StudyViewPageStore';
 import {
     getFreqColumnRender,
     getGeneColumnHeaderRender,
+    getTooltip,
+    FreqColumnTypeEnum,
+    SelectionOperatorEnum,
 } from 'pages/studyView/TableUtils';
 import { GeneCell } from 'pages/studyView/table/GeneCell';
 import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
@@ -32,12 +35,12 @@ import MobxPromise from 'mobxpromise';
 import {
     stringListToIndexSet,
     stringListToSet,
+    EllipsisTextTooltip,
 } from 'cbioportal-frontend-commons';
 import ifNotDefined from 'shared/lib/ifNotDefined';
 
-export type GeneTableRow = OncokbCancerGene & {
-    entrezGeneId: number;
-    hugoGeneSymbol: string;
+export type MultiSelectionTableRow = OncokbCancerGene & {
+    label: string;
     matchingGenePanelIds: Array<string>;
     numberOfAlteredCases: number;
     numberOfProfiledCases: number;
@@ -48,8 +51,9 @@ export type GeneTableRow = OncokbCancerGene & {
     uniqueKey: string;
 };
 
-export enum GeneTableColumnKey {
+export enum MultiSelectionTableColumnKey {
     GENE = 'Gene',
+    MOLECULAR_PROFILE = 'Molecular Profile',
     NUMBER_FUSIONS = '# Fusion',
     NUMBER_MUTATIONS = '# Mut',
     CYTOBAND = 'Cytoband',
@@ -58,45 +62,52 @@ export enum GeneTableColumnKey {
     FREQ = 'Freq',
 }
 
-export type GeneTableColumn = {
-    columnKey: GeneTableColumnKey;
+export type MultiSelectionTableColumn = {
+    columnKey: MultiSelectionTableColumnKey;
     columnWidthRatio?: number;
 };
 
-export type GeneTableProps = {
-    tableType: 'mutation' | 'fusion' | 'cna';
-    promise: MobxPromise<GeneTableRow[]>;
+export type MultiSelectionTableProps = {
+    tableType: FreqColumnTypeEnum;
+    promise: MobxPromise<MultiSelectionTableRow[]>;
     width: number;
     height: number;
     filters: string[][];
-    onUserSelection: (value: string[]) => void;
-    numOfSelectedSamples: number;
+    onUserSelection: (value: string[][]) => void;
     onGeneSelect: (hugoGeneSymbol: string) => void;
     selectedGenes: string[];
     cancerGeneFilterEnabled?: boolean;
     genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
     filterByCancerGenes: boolean;
     onChangeCancerGeneFilter: (filtered: boolean) => void;
-    defaultSortBy: GeneTableColumnKey;
-    columns: GeneTableColumn[];
+    defaultSortBy: MultiSelectionTableColumnKey;
+    columns: MultiSelectionTableColumn[];
 };
 
-const DEFAULT_COLUMN_WIDTH_RATIO: { [key in GeneTableColumnKey]: number } = {
-    [GeneTableColumnKey.GENE]: 0.35,
-    [GeneTableColumnKey.NUMBER_MUTATIONS]: 0.25,
-    [GeneTableColumnKey.NUMBER_FUSIONS]: 0.25,
-    [GeneTableColumnKey.NUMBER]: 0.25,
-    [GeneTableColumnKey.FREQ]: 0.15,
-    [GeneTableColumnKey.CYTOBAND]: 0.25,
-    [GeneTableColumnKey.CNA]: 0.14,
+const DEFAULT_COLUMN_WIDTH_RATIO: {
+    [key in MultiSelectionTableColumnKey]: number;
+} = {
+    [MultiSelectionTableColumnKey.GENE]: 0.35,
+    [MultiSelectionTableColumnKey.MOLECULAR_PROFILE]: 0.6,
+    [MultiSelectionTableColumnKey.NUMBER_MUTATIONS]: 0.25,
+    [MultiSelectionTableColumnKey.NUMBER_FUSIONS]: 0.25,
+    [MultiSelectionTableColumnKey.NUMBER]: 0.25,
+    [MultiSelectionTableColumnKey.FREQ]: 0.15,
+    [MultiSelectionTableColumnKey.CYTOBAND]: 0.25,
+    [MultiSelectionTableColumnKey.CNA]: 0.14,
 };
 
-class GeneTableComponent extends FixedHeaderTable<GeneTableRow> {}
+class MultiSelectionTableComponent extends FixedHeaderTable<
+    MultiSelectionTableRow
+> {}
 
 @observer
-export class GeneTable extends React.Component<GeneTableProps, {}> {
+export class MultiSelectionTable extends React.Component<
+    MultiSelectionTableProps,
+    {}
+> {
     @observable protected selectedRowsKeys: string[] = [];
-    @observable protected sortBy: GeneTableColumnKey;
+    @observable protected sortBy: MultiSelectionTableColumnKey;
     @observable private sortDirection: SortDirection;
     @observable private modalSettings: {
         modalOpen: boolean;
@@ -110,20 +121,22 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
         cancerGeneFilterEnabled: false,
     };
 
-    constructor(props: GeneTableProps, context: any) {
+    constructor(props: MultiSelectionTableProps, context: any) {
         super(props, context);
         this.sortBy = this.props.defaultSortBy;
     }
 
     getDefaultColumnDefinition = (
-        columnKey: GeneTableColumnKey,
+        columnKey: MultiSelectionTableColumnKey,
         columnWidth: number,
         cellMargin: number
     ) => {
         const defaults: {
-            [key in GeneTableColumnKey]: Column<GeneTableRow>;
+            [key in MultiSelectionTableColumnKey]: Column<
+                MultiSelectionTableRow
+            >;
         } = {
-            [GeneTableColumnKey.GENE]: {
+            [MultiSelectionTableColumnKey.GENE]: {
                 name: columnKey,
                 headerRender: () => {
                     return getGeneColumnHeaderRender(
@@ -134,12 +147,12 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                         this.toggleCancerGeneFilter
                     );
                 },
-                render: (data: GeneTableRow) => {
+                render: (data: MultiSelectionTableRow) => {
                     return (
                         <GeneCell
                             tableType={this.props.tableType}
                             selectedGenes={this.props.selectedGenes}
-                            hugoGeneSymbol={data.hugoGeneSymbol}
+                            hugoGeneSymbol={data.label}
                             qValue={data.qValue}
                             isCancerGene={data.isCancerGene}
                             oncokbAnnotated={data.oncokbAnnotated}
@@ -151,28 +164,57 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                         />
                     );
                 },
-                sortBy: (data: GeneTableRow) => data.hugoGeneSymbol,
+                sortBy: (data: MultiSelectionTableRow) => data.label,
                 defaultSortDirection: 'asc' as 'asc',
                 filter: (
-                    data: GeneTableRow,
+                    data: MultiSelectionTableRow,
                     filterString: string,
                     filterStringUpper: string
                 ) => {
-                    return data.hugoGeneSymbol
-                        .toUpperCase()
-                        .includes(filterStringUpper);
+                    return data.label.toUpperCase().includes(filterStringUpper);
                 },
                 width: columnWidth,
             },
-            [GeneTableColumnKey.NUMBER]: {
+            [MultiSelectionTableColumnKey.MOLECULAR_PROFILE]: {
                 name: columnKey,
-                tooltip: (
-                    <span>Number of samples with one or more mutations</span>
-                ),
+                headerRender: () => {
+                    return (
+                        <div
+                            style={{ marginLeft: cellMargin }}
+                            className={styles.displayFlex}
+                            data-test="profile-column-header"
+                        >
+                            {columnKey}
+                        </div>
+                    );
+                },
+                render: (data: MultiSelectionTableRow) => {
+                    return (
+                        <div className={styles.labelContent}>
+                            <EllipsisTextTooltip
+                                text={data.label}
+                            ></EllipsisTextTooltip>
+                        </div>
+                    );
+                },
+                sortBy: (data: MultiSelectionTableRow) => data.label,
+                defaultSortDirection: 'asc' as 'asc',
+                filter: (
+                    data: MultiSelectionTableRow,
+                    filterString: string,
+                    filterStringUpper: string
+                ) => {
+                    return data.label.toUpperCase().includes(filterStringUpper);
+                },
+                width: columnWidth,
+            },
+            [MultiSelectionTableColumnKey.NUMBER]: {
+                name: columnKey,
+                tooltip: <span>{getTooltip(this.props.tableType, false)}</span>,
                 headerRender: () => {
                     return <div style={{ marginLeft: cellMargin }}>#</div>;
                 },
-                render: (data: GeneTableRow) => (
+                render: (data: MultiSelectionTableRow) => (
                     <LabeledCheckbox
                         checked={this.isChecked(data.uniqueKey)}
                         disabled={this.isDisabled(data.uniqueKey)}
@@ -196,40 +238,43 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                         </span>
                     </LabeledCheckbox>
                 ),
-                sortBy: (data: GeneTableRow) => data.numberOfAlteredCases,
+                sortBy: (data: MultiSelectionTableRow) =>
+                    data.numberOfAlteredCases,
                 defaultSortDirection: 'desc' as 'desc',
-                filter: (data: GeneTableRow, filterString: string) => {
+                filter: (
+                    data: MultiSelectionTableRow,
+                    filterString: string
+                ) => {
                     return _.toString(data.numberOfAlteredCases).includes(
                         filterString
                     );
                 },
                 width: columnWidth,
             },
-            [GeneTableColumnKey.FREQ]: {
+            [MultiSelectionTableColumnKey.FREQ]: {
                 name: columnKey,
-                tooltip: (
-                    <span>
-                        Percentage of samples with one or more mutations
-                    </span>
-                ),
+                tooltip: <span>{getTooltip(this.props.tableType, true)}</span>,
                 headerRender: () => {
                     return <div style={{ marginLeft: cellMargin }}>Freq</div>;
                 },
-                render: (data: GeneTableRow) => {
+                render: (data: MultiSelectionTableRow) => {
                     return getFreqColumnRender(
                         this.props.tableType,
                         data.numberOfProfiledCases,
                         data.numberOfAlteredCases,
-                        data.matchingGenePanelIds,
+                        data.matchingGenePanelIds || [],
                         this.toggleModal,
                         { marginLeft: cellMargin }
                     );
                 },
-                sortBy: (data: GeneTableRow) =>
+                sortBy: (data: MultiSelectionTableRow) =>
                     (data.numberOfAlteredCases / data.numberOfProfiledCases) *
                     100,
                 defaultSortDirection: 'desc' as 'desc',
-                filter: (data: GeneTableRow, filterString: string) => {
+                filter: (
+                    data: MultiSelectionTableRow,
+                    filterString: string
+                ) => {
                     return _.toString(
                         getFrequencyStr(
                             data.numberOfAlteredCases /
@@ -239,13 +284,13 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                 },
                 width: columnWidth,
             },
-            [GeneTableColumnKey.NUMBER_MUTATIONS]: {
+            [MultiSelectionTableColumnKey.NUMBER_MUTATIONS]: {
                 name: columnKey,
                 tooltip: <span>Total number of mutations</span>,
                 headerRender: () => {
                     return <div style={{ marginLeft: cellMargin }}># Mut</div>;
                 },
-                render: (data: GeneTableRow) => (
+                render: (data: MultiSelectionTableRow) => (
                     <span
                         style={{
                             flexDirection: 'row-reverse',
@@ -256,20 +301,23 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                         {data.totalCount.toLocaleString()}
                     </span>
                 ),
-                sortBy: (data: GeneTableRow) => data.totalCount,
+                sortBy: (data: MultiSelectionTableRow) => data.totalCount,
                 defaultSortDirection: 'desc' as 'desc',
-                filter: (data: GeneTableRow, filterString: string) => {
+                filter: (
+                    data: MultiSelectionTableRow,
+                    filterString: string
+                ) => {
                     return _.toString(data.totalCount).includes(filterString);
                 },
                 width: columnWidth,
             },
-            [GeneTableColumnKey.NUMBER_FUSIONS]: {
-                name: GeneTableColumnKey.NUMBER_FUSIONS,
+            [MultiSelectionTableColumnKey.NUMBER_FUSIONS]: {
+                name: MultiSelectionTableColumnKey.NUMBER_FUSIONS,
                 tooltip: <span>Total number of mutations</span>,
                 headerRender: () => {
                     return <span># Fusion</span>;
                 },
-                render: (data: GeneTableRow) => (
+                render: (data: MultiSelectionTableRow) => (
                     <span
                         style={{
                             flexDirection: 'row-reverse',
@@ -280,22 +328,25 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                         {data.totalCount.toLocaleString()}
                     </span>
                 ),
-                sortBy: (data: GeneTableRow) => data.totalCount,
+                sortBy: (data: MultiSelectionTableRow) => data.totalCount,
                 defaultSortDirection: 'desc' as 'desc',
-                filter: (data: GeneTableRow, filterString: string) => {
+                filter: (
+                    data: MultiSelectionTableRow,
+                    filterString: string
+                ) => {
                     return _.toString(data.totalCount).includes(filterString);
                 },
                 width: columnWidth,
             },
-            [GeneTableColumnKey.CNA]: {
-                name: GeneTableColumnKey.CNA,
+            [MultiSelectionTableColumnKey.CNA]: {
+                name: MultiSelectionTableColumnKey.CNA,
                 tooltip: (
                     <span>
                         Copy number alteration, only amplifications and deep
                         deletions are shown
                     </span>
                 ),
-                render: (data: GeneTableRow) => (
+                render: (data: MultiSelectionTableRow) => (
                     <span
                         style={{
                             color: getCNAColorByAlteration(
@@ -307,10 +358,10 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                         {getCNAByAlteration(data.alteration!)}
                     </span>
                 ),
-                sortBy: (data: GeneTableRow) => data.alteration!,
+                sortBy: (data: MultiSelectionTableRow) => data.alteration!,
                 defaultSortDirection: 'asc' as 'asc',
                 filter: (
-                    data: GeneTableRow,
+                    data: MultiSelectionTableRow,
                     filterString: string,
                     filterStringUpper: string
                 ) => {
@@ -320,14 +371,16 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                 },
                 width: columnWidth,
             },
-            [GeneTableColumnKey.CYTOBAND]: {
-                name: GeneTableColumnKey.CYTOBAND,
+            [MultiSelectionTableColumnKey.CYTOBAND]: {
+                name: MultiSelectionTableColumnKey.CYTOBAND,
                 tooltip: <span>Cytoband</span>,
-                render: (data: GeneTableRow) => <span>{data.cytoband}</span>,
-                sortBy: (data: GeneTableRow) => data.cytoband!,
+                render: (data: MultiSelectionTableRow) => (
+                    <span>{data.cytoband}</span>
+                ),
+                sortBy: (data: MultiSelectionTableRow) => data.cytoband!,
                 defaultSortDirection: 'asc' as 'asc',
                 filter: (
-                    data: GeneTableRow,
+                    data: MultiSelectionTableRow,
                     filterString: string,
                     filterStringUpper: string
                 ) => {
@@ -344,24 +397,25 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
     };
 
     getDefaultCellMargin = (
-        columnKey: GeneTableColumnKey,
+        columnKey: MultiSelectionTableColumnKey,
         columnWidth: number
     ) => {
-        const defaults: { [key in GeneTableColumnKey]: number } = {
-            [GeneTableColumnKey.GENE]: 0,
-            [GeneTableColumnKey.NUMBER_MUTATIONS]: correctMargin(
+        const defaults: { [key in MultiSelectionTableColumnKey]: number } = {
+            [MultiSelectionTableColumnKey.GENE]: 0,
+            [MultiSelectionTableColumnKey.MOLECULAR_PROFILE]: 0,
+            [MultiSelectionTableColumnKey.NUMBER_MUTATIONS]: correctMargin(
                 getFixedHeaderNumberCellMargin(
                     columnWidth,
                     this.totalCountLocaleString
                 )
             ),
-            [GeneTableColumnKey.NUMBER_FUSIONS]: correctMargin(
+            [MultiSelectionTableColumnKey.NUMBER_FUSIONS]: correctMargin(
                 getFixedHeaderNumberCellMargin(
                     columnWidth,
                     this.totalCountLocaleString
                 )
             ),
-            [GeneTableColumnKey.NUMBER]: correctMargin(
+            [MultiSelectionTableColumnKey.NUMBER]: correctMargin(
                 (columnWidth -
                     10 -
                     (getFixedHeaderTableMaxLengthStringPixel(
@@ -370,7 +424,7 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                         20)) /
                     2
             ),
-            [GeneTableColumnKey.FREQ]: correctMargin(
+            [MultiSelectionTableColumnKey.FREQ]: correctMargin(
                 getFixedHeaderNumberCellMargin(
                     columnWidth,
                     getFrequencyStr(
@@ -385,8 +439,8 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                     )
                 )
             ),
-            [GeneTableColumnKey.CYTOBAND]: 0,
-            [GeneTableColumnKey.CNA]: 0,
+            [MultiSelectionTableColumnKey.CYTOBAND]: 0,
+            [MultiSelectionTableColumnKey.CNA]: 0,
         };
         return defaults[columnKey];
     };
@@ -428,7 +482,7 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                 );
                 return acc;
             },
-            {} as { [key in GeneTableColumnKey]: number }
+            {} as { [key in MultiSelectionTableColumnKey]: number }
         );
     }
 
@@ -443,7 +497,7 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
                 );
                 return acc;
             },
-            {} as { [key in GeneTableColumnKey]: number }
+            {} as { [key in MultiSelectionTableColumnKey]: number }
         );
     }
 
@@ -475,7 +529,7 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
         const order = stringListToIndexSet(this.flattenedFilters);
         return _.chain(this.tableData)
             .filter(data => this.flattenedFilters.includes(data.uniqueKey))
-            .sortBy<GeneTableRow>(data =>
+            .sortBy<MultiSelectionTableRow>(data =>
                 ifNotDefined(order[data.uniqueKey], Number.POSITIVE_INFINITY)
             )
             .value();
@@ -553,16 +607,53 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
             this.selectedRowsKeys = _.xorBy(this.selectedRowsKeys, [record]);
         }
     }
+    @observable private _selectionType: SelectionOperatorEnum;
 
     @autobind
     @action
     afterSelectingRows() {
-        this.props.onUserSelection(this.selectedRowsKeys);
+        if (this.selectionType === SelectionOperatorEnum.UNION) {
+            this.props.onUserSelection([this.selectedRowsKeys]);
+        } else {
+            this.props.onUserSelection(
+                this.selectedRowsKeys.map(selectedRowsKey => [selectedRowsKey])
+            );
+        }
         this.selectedRowsKeys = [];
     }
 
+    @computed get selectionType() {
+        if (this._selectionType) {
+            return this._selectionType;
+        }
+        switch (
+            (localStorage.getItem(this.props.tableType) || '').toUpperCase()
+        ) {
+            case SelectionOperatorEnum.INTERSECTION:
+                return SelectionOperatorEnum.INTERSECTION;
+            case SelectionOperatorEnum.UNION:
+                return SelectionOperatorEnum.UNION;
+            default:
+                return this.props.tableType === FreqColumnTypeEnum.DATA
+                    ? SelectionOperatorEnum.INTERSECTION
+                    : SelectionOperatorEnum.UNION;
+        }
+    }
+
     @autobind
-    isSelectedRow(data: GeneTableRow) {
+    @action
+    toggleSelectionOperator() {
+        const selectionType = this._selectionType || this.selectionType;
+        if (selectionType === SelectionOperatorEnum.INTERSECTION) {
+            this._selectionType = SelectionOperatorEnum.UNION;
+        } else {
+            this._selectionType = SelectionOperatorEnum.INTERSECTION;
+        }
+        localStorage.setItem(this.props.tableType, this.selectionType);
+    }
+
+    @autobind
+    isSelectedRow(data: MultiSelectionTableRow) {
         return this.isChecked(data.uniqueKey);
     }
 
@@ -580,7 +671,7 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
     }
 
     @autobind
-    selectedRowClassName(data: GeneTableRow) {
+    selectedRowClassName(data: MultiSelectionTableRow) {
         const index = this.filterKeyToIndexSet[data.uniqueKey];
         if (index === undefined) {
             return this.props.filters.length % 2 === 0
@@ -594,31 +685,34 @@ export class GeneTable extends React.Component<GeneTableProps, {}> {
 
     @autobind
     @action
-    afterSorting(sortBy: GeneTableColumnKey, sortDirection: SortDirection) {
+    afterSorting(
+        sortBy: MultiSelectionTableColumnKey,
+        sortDirection: SortDirection
+    ) {
         this.sortBy = sortBy;
         this.sortDirection = sortDirection;
     }
 
     public render() {
-        const tableId = `${this.props.tableType}-genes-table`;
+        const tableId = `${this.props.tableType}-table`;
         return (
             <div data-test={tableId} key={tableId}>
                 {this.props.promise.isComplete && (
-                    <GeneTableComponent
+                    <MultiSelectionTableComponent
                         width={this.props.width}
                         height={this.props.height}
                         data={this.selectableTableData}
                         columns={this.tableColumns}
-                        showSelectSamples={
-                            true && this.selectedRowsKeys.length > 0
-                        }
                         isSelectedRow={this.isSelectedRow}
                         afterSelectingRows={this.afterSelectingRows}
+                        defaultSelectionOperator={this.selectionType}
+                        toggleSelectionOperator={this.toggleSelectionOperator}
                         sortBy={this.sortBy}
                         sortDirection={this.sortDirection}
                         afterSorting={this.afterSorting}
                         fixedTopRowsData={this.preSelectedRows}
                         highlightedRowClassName={this.selectedRowClassName}
+                        numberOfSelectedRows={this.selectedRowsKeys.length}
                     />
                 )}
                 {this.props.genePanelCache ? (
