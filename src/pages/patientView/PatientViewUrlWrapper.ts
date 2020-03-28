@@ -6,6 +6,17 @@ export type PatientViewUrlQuery = {
     studyId: string;
     caseId?: string;
     sampleId?: string;
+    genomicEvolutionSettings: {
+        clusterHeatmap?: string;
+        transposeHeatmap?: string;
+        showMutationLabelsInHeatmap?: string;
+
+        showOnlySelectedMutationsInChart?: string;
+        logScaleChart?: string;
+        yAxisDataRangeInChart?: string;
+
+        showOnlySelectedMutationsInTable?: string;
+    };
 };
 
 export default class PatientViewUrlWrapper extends URLWrapper<
@@ -16,6 +27,20 @@ export default class PatientViewUrlWrapper extends URLWrapper<
             studyId: { isSessionProp: false },
             caseId: { isSessionProp: false },
             sampleId: { isSessionProp: false },
+            genomicEvolutionSettings: {
+                isSessionProp: false,
+                nestedObjectProps: {
+                    clusterHeatmap: '',
+                    transposeHeatmap: '',
+                    showMutationLabelsInHeatmap: '',
+
+                    showOnlySelectedMutationsInChart: '',
+                    logScaleChart: '',
+                    yAxisDataRangeInChart: '',
+
+                    showOnlySelectedMutationsInTable: '',
+                },
+            },
         });
     }
 
