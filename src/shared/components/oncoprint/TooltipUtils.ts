@@ -31,15 +31,16 @@ const customDriverTiersImg = require('../../../rootImages/driver_tiers.png');
 export const TOOLTIP_DIV_CLASS = 'oncoprint__tooltip';
 
 const tooltipTextElementNaN = 'N/A';
+import './styles.scss';
 
 function sampleViewAnchorTag(study_id: string, sample_id: string) {
-    return `<a href="${getSampleViewUrl(
+    return `<a class="nobreak" href="${getSampleViewUrl(
         study_id,
         sample_id
     )}" target="_blank">${sample_id}</a>`;
 }
 function patientViewAnchorTag(study_id: string, patient_id: string) {
-    return `<a href="${getPatientViewUrl(
+    return `<a class="nobreak" href="${getPatientViewUrl(
         study_id,
         patient_id
     )}" target="_blank">${patient_id}</a>`;
@@ -51,7 +52,7 @@ function makeGenePanelPopupLink(
     numSamples?: number
 ) {
     let anchor = $(
-        `<span style="white-space:nowrap; display:inline-block;"><a href="#" ${
+        `<span class="nobreak"><a href="#" ${
             !profiled ? 'style="color:red;"' : ''
         } oncontextmenu="return false;">${gene_panel_id}</a>${
             numSamples ? ` (${numSamples})` : ''
@@ -106,7 +107,7 @@ export function makeClinicalTrackTooltip(
             const d = dataUnderMouse[0];
             for (let i = 0; i < track.countsCategoryLabels.length; i++) {
                 ret +=
-                    '<span style="color:' +
+                    '<span class="nobreak" style="color:' +
                     track.countsCategoryFills[i] +
                     ';font-weight:bold;">' +
                     track.countsCategoryLabels[i] +
@@ -140,7 +141,7 @@ export function makeClinicalTrackTooltip(
                 }
                 ret +=
                     track.label +
-                    ': <span style="white-space:nowrap; display:inline-block;"><b>' +
+                    ': <span class="nobreak"><b>' +
                     displayVal +
                     `${
                         count > 1 ? ` (average of ${count} values)` : ''
@@ -151,7 +152,7 @@ export function makeClinicalTrackTooltip(
                     for (let i = 0; i < attr_vals.length; i++) {
                         const val = attr_vals[i];
                         ret +=
-                            '<span style="white-space:nowrap; display:inline-block;"><b>' +
+                            '<span class="nobreak"><b>' +
                             val +
                             '</b>: ' +
                             attr_val_counts[val] +
@@ -163,7 +164,7 @@ export function makeClinicalTrackTooltip(
                     let displayVal = attr_vals[0];
                     ret +=
                         track.label +
-                        ': <span style="white-space:nowrap; display:inline-block;"><b>' +
+                        ': <span class="nobreak"><b>' +
                         displayVal +
                         `</b>${
                             dataUnderMouse.length > 1
@@ -389,7 +390,7 @@ export function getCaseViewElt(
     if (dataUnderMouse[0].sample) {
         if (dataUnderMouse.length > 1) {
             caseIdElt = caseViewLinkout
-                ? `<a href=${getSampleViewUrl(
+                ? `<a class="nobreak" href=${getSampleViewUrl(
                       dataUnderMouse[0].study_id,
                       dataUnderMouse[0].sample,
                       dataUnderMouse.map(d => ({
@@ -399,19 +400,19 @@ export function getCaseViewElt(
                   )} target="_blank">View these ${
                       dataUnderMouse.length
                   } samples<a/>`
-                : `<span>${dataUnderMouse.length} samples</span>`;
+                : `<span class="nobreak">${dataUnderMouse.length} samples</span>`;
         } else {
             caseIdElt = caseViewLinkout
                 ? sampleViewAnchorTag(
                       dataUnderMouse[0].study_id,
                       dataUnderMouse[0].sample
                   )
-                : `<span>${dataUnderMouse[0].sample}</span>`;
+                : `<span class="nobreak">${dataUnderMouse[0].sample}</span>`;
         }
     } else if (dataUnderMouse[0].patient) {
         if (dataUnderMouse.length > 1) {
             caseIdElt = caseViewLinkout
-                ? `<a href=${getPatientViewUrl(
+                ? `<a class="nobreak" href=${getPatientViewUrl(
                       dataUnderMouse[0].study_id,
                       dataUnderMouse[0].patient,
                       dataUnderMouse.map(d => ({
@@ -421,14 +422,14 @@ export function getCaseViewElt(
                   )} target="_blank">View these ${
                       dataUnderMouse.length
                   } patients<a/>`
-                : `<span>${dataUnderMouse.length} patients</span>`;
+                : `<span class="nobreak">${dataUnderMouse.length} patients</span>`;
         } else {
             caseIdElt = caseViewLinkout
                 ? patientViewAnchorTag(
                       dataUnderMouse[0].study_id,
                       dataUnderMouse[0].patient
                   )
-                : `<span>${dataUnderMouse[0].patient}</span>`;
+                : `<span class="nobreak">${dataUnderMouse[0].patient}</span>`;
         }
     } else {
         caseIdElt = '';
@@ -479,12 +480,9 @@ export function makeGeneticTrackTooltip(
                     ],
                     value: count,
                 }) => {
-                    var ret = $('<span>').css({
-                        'white-space': 'nowrap',
-                        display: 'inline-block',
-                    });
+                    var ret = $('<span>').addClass('nobreak');
                     ret.append(
-                        `<b>${hugo_gene_symbol} ${amino_acid_change}</b>`
+                        `<b class="nobreak">${hugo_gene_symbol} ${amino_acid_change}</b>`
                     );
                     if (cancer_hotspots_hotspot) {
                         ret.append(
@@ -533,8 +531,10 @@ export function makeGeneticTrackTooltip(
                     key: [hugo_gene_symbol, cna, oncokb_oncogenic],
                     value: count,
                 }) => {
-                    var ret = $('<span>');
-                    ret.append(`<b>${hugo_gene_symbol} ${cna}</b>`);
+                    var ret = $('<span>').addClass('nobreak');
+                    ret.append(
+                        `<b class="nobreak">${hugo_gene_symbol} ${cna}</b>`
+                    );
                     if (oncokb_oncogenic) {
                         ret.append(
                             `<img src=${oncokbImg} title="${oncokb_oncogenic}" style="height:11px; width:11px;margin-left:3px"/>`
@@ -559,8 +559,10 @@ export function makeGeneticTrackTooltip(
         return countsMap
             .entries()
             .map(({ key: [hugo_gene_symbol, direction], value: count }) => {
-                var ret = $('<span>');
-                ret.append(`<b>${hugo_gene_symbol} ${direction}</b>`);
+                var ret = $('<span>').addClass('nobreak');
+                ret.append(
+                    `<b class="nobreak">${hugo_gene_symbol} ${direction}</b>`
+                );
                 // finally, add the number of samples with this, if multipleSamplesUnderMouse
                 if (multipleSamplesUnderMouse) {
                     ret.append(`&nbsp;(${count})`);
@@ -862,11 +864,11 @@ export function makeGeneticTrackTooltip(
                                         molecularProfileMap[molecularProfileId]
                                             .name;
                                 }
-                                return `${displayName}${
+                                return `<span class="nobreak">${displayName}${
                                     dataUnderMouse.length > 1
                                         ? ` (${e.value})`
                                         : ''
-                                }`;
+                                }</span>`;
                             })
                             .join(', ')
                 );
@@ -874,7 +876,7 @@ export function makeGeneticTrackTooltip(
             }
             if (notProfiledInEntries.length) {
                 ret.append(
-                    "<span style='color:red; font-weight:bold'>Not profiled in: " +
+                    `<span class="nobreak" style='color:red; font-weight:bold'>Not profiled in: ` +
                         notProfiledInEntries
                             .map(e => {
                                 const molecularProfileId = e.key[0];
@@ -887,11 +889,11 @@ export function makeGeneticTrackTooltip(
                                         molecularProfileMap[molecularProfileId]
                                             .name;
                                 }
-                                return `${displayName}${
+                                return `<span class="nobreak">${displayName}${
                                     dataUnderMouse.length > 1
                                         ? ` (${e.value})`
                                         : ''
-                                }`;
+                                }</span>`;
                             })
                             .join(', ') +
                         '</span>'

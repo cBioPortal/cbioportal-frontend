@@ -76,7 +76,7 @@ export interface IGenomicMatch {
 
 export interface IPatientGenomic {
     trueHugoSymbol: string;
-    trueProteinChange: string;
+    trueProteinChange: string[];
 }
 
 export interface IClinicalGroupMatch {
