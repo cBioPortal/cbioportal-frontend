@@ -201,13 +201,12 @@ export function groupPositiveTrialMatchesByMatchType(
         matchesGroupedByMatchType,
         (matchTypeGroup: ITrialMatch[], matchType: string) => {
             if (matchType === 'MUTATION') {
-                const matchesGroupedByPatientGenomic = _.groupBy(
+                const matchesGroupedByHugoSymbol = _.groupBy(
                     matchTypeGroup,
-                    (trial: ITrialMatch) =>
-                        trial.trueHugoSymbol! + trial.trueProteinChange!
+                    (trial: ITrialMatch) => trial.trueHugoSymbol!
                 );
                 _.forEach(
-                    matchesGroupedByPatientGenomic,
+                    matchesGroupedByHugoSymbol,
                     (patientGenomicGroup: ITrialMatch[]) => {
                         const mutationGroupMatch: IGenomicGroupMatch = {
                             genomicAlteration: _.uniq(
@@ -219,8 +218,12 @@ export function groupPositiveTrialMatchesByMatchType(
                             patientGenomic: {
                                 trueHugoSymbol: patientGenomicGroup[0]
                                     .trueHugoSymbol!,
-                                trueProteinChange: patientGenomicGroup[0]
-                                    .trueProteinChange!,
+                                trueProteinChange: _.uniq(
+                                    patientGenomicGroup.map(
+                                        (match: ITrialMatch) =>
+                                            match.trueProteinChange!
+                                    )
+                                ).sort(),
                             },
                         };
                         matches.MUTATION.push(mutationGroupMatch);
