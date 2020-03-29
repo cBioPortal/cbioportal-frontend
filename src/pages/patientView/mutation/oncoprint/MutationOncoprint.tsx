@@ -42,11 +42,13 @@ import PatientViewMutationsDataStore from '../PatientViewMutationsDataStore';
 import { Mutation } from '../../../../shared/api/generated/CBioPortalAPI';
 import ReactDOM from 'react-dom';
 import Timeout = NodeJS.Timeout;
+import PatientViewUrlWrapper from '../../PatientViewUrlWrapper';
 
 export interface IMutationOncoprintProps {
     store: PatientViewPageStore;
     dataStore: PatientViewMutationsDataStore;
     sampleManager: SampleManager | null;
+    urlWrapper: PatientViewUrlWrapper;
 }
 
 export enum MutationOncoprintMode {
@@ -68,11 +70,64 @@ export default class MutationOncoprint extends React.Component<
 > {
     private oncoprint: OncoprintJS | null = null;
     private oncoprintComponent: Oncoprint | null = null;
-    @observable private showMutationLabels = true;
+
+    private get showMutationLabels() {
+        const urlValue = this.props.urlWrapper.query.genomicEvolutionSettings
+            .showMutationLabelsInHeatmap;
+        return !urlValue || urlValue === 'true'; // default true
+    }
+    private set showMutationLabels(o: boolean) {
+        this.props.urlWrapper.updateURL({
+            genomicEvolutionSettings: Object.assign(
+                {},
+                this.props.urlWrapper.query.genomicEvolutionSettings,
+                {
+                    showMutationLabelsInHeatmap: o.toString(),
+                }
+            ),
+        });
+    }
+
+    private get clustered() {
+        const urlValue = this.props.urlWrapper.query.genomicEvolutionSettings
+            .clusterHeatmap;
+        return !urlValue || urlValue === 'true'; // default true
+    }
+    private set clustered(o: boolean) {
+        this.props.urlWrapper.updateURL({
+            genomicEvolutionSettings: Object.assign(
+                {},
+                this.props.urlWrapper.query.genomicEvolutionSettings,
+                {
+                    clusterHeatmap: o.toString(),
+                }
+            ),
+        });
+    }
+
+    private get mode(): MutationOncoprintMode {
+        const transposed =
+            this.props.urlWrapper.query.genomicEvolutionSettings
+                .transposeHeatmap === 'true';
+        return transposed
+            ? MutationOncoprintMode.MUTATION_TRACKS
+            : MutationOncoprintMode.SAMPLE_TRACKS;
+    }
+    private set mode(m: MutationOncoprintMode) {
+        this.props.urlWrapper.updateURL({
+            genomicEvolutionSettings: Object.assign(
+                {},
+                this.props.urlWrapper.query.genomicEvolutionSettings,
+                {
+                    transposeHeatmap: (
+                        m === MutationOncoprintMode.MUTATION_TRACKS
+                    ).toString(),
+                }
+            ),
+        });
+    }
+
     @observable private horzZoomSliderState = 100;
-    @observable clustered = true;
-    @observable private mode: MutationOncoprintMode =
-        MutationOncoprintMode.SAMPLE_TRACKS;
     @observable minZoom = 0;
 
     private minZoomUpdater: Timeout;
