@@ -20,9 +20,11 @@ import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledC
 import PatientViewMutationTable from './PatientViewMutationTable';
 import { GeneFilterOption } from './GeneFilterMenu';
 import { isFusion } from '../../../shared/lib/MutationUtils';
+import PatientViewUrlWrapper from '../PatientViewUrlWrapper';
 
 export interface IPatientViewMutationsTabProps {
     store: PatientViewPageStore;
+    urlWrapper: PatientViewUrlWrapper;
     mutationTableColumnVisibility?: { [columnId: string]: boolean };
     onMutationTableColumnVisibilityToggled: (
         columnId: string,
@@ -30,46 +32,6 @@ export interface IPatientViewMutationsTabProps {
     ) => void;
     sampleManager: SampleManager | null;
 }
-
-const DROPDOWN_STYLES = {
-    control: (provided: any) => ({
-        ...provided,
-        height: 36,
-        minHeight: 36,
-        border: '1px solid rgb(204,204,204)',
-    }),
-    menu: (provided: any) => ({
-        ...provided,
-        maxHeight: 400,
-    }),
-    menuList: (provided: any) => ({
-        ...provided,
-        maxHeight: 400,
-    }),
-    placeholder: (provided: any) => ({
-        ...provided,
-        color: '#000000',
-    }),
-    dropdownIndicator: (provided: any) => ({
-        ...provided,
-        color: '#000000',
-    }),
-    option: (provided: any, state: any) => {
-        return {
-            ...provided,
-            cursor: 'pointer',
-        };
-    },
-};
-
-const DROPDOWN_THEME = (theme: any) => ({
-    ...theme,
-    colors: {
-        ...theme.colors,
-        neutral80: 'black',
-        //primary: theme.colors.primary50
-    },
-});
 
 enum PlotTab {
     LINE_CHART = 'lineChart',
@@ -85,11 +47,44 @@ export default class PatientViewMutationsTab extends React.Component<
     {}
 > {
     private dataStore = new PatientViewMutationsDataStore(
-        () => this.mergedMutations
+        () => this.mergedMutations,
+        this.props.urlWrapper
     );
     private vafLineChartSvg: SVGElement | null = null;
-    @observable vafLineChartLogScale = false;
-    @observable vafLineChartZeroToOneYAxis = true;
+    get vafLineChartLogScale() {
+        return (
+            this.props.urlWrapper.query.genomicEvolutionSettings
+                .logScaleChart === 'true'
+        );
+    }
+    set vafLineChartLogScale(o: boolean) {
+        this.props.urlWrapper.updateURL({
+            genomicEvolutionSettings: Object.assign(
+                {},
+                this.props.urlWrapper.query.genomicEvolutionSettings,
+                {
+                    logScaleChart: o.toString(),
+                }
+            ),
+        });
+    }
+
+    get vafLineChartZeroToOneYAxis() {
+        const urlValue = this.props.urlWrapper.query.genomicEvolutionSettings
+            .yAxisDataRangeInChart;
+        return !urlValue || urlValue === 'true'; // default true
+    }
+    set vafLineChartZeroToOneYAxis(o: boolean) {
+        this.props.urlWrapper.updateURL({
+            genomicEvolutionSettings: Object.assign(
+                {},
+                this.props.urlWrapper.query.genomicEvolutionSettings,
+                {
+                    yAxisDataRangeInChart: o.toString(),
+                }
+            ),
+        });
+    }
     // TODO: replace this with URL stuff
     @observable private _plotTab =
         localStorage.getItem(LOCAL_STORAGE_PLOT_TAB_KEY) || PlotTab.LINE_CHART;
@@ -356,6 +351,7 @@ export default class PatientViewMutationsTab extends React.Component<
                                 store={this.props.store}
                                 dataStore={this.dataStore}
                                 sampleManager={this.props.sampleManager}
+                                urlWrapper={this.props.urlWrapper}
                             />
                         </div>
                     </MSKTab>

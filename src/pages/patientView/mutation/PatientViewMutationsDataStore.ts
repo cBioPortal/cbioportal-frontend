@@ -2,6 +2,7 @@ import { SimpleGetterLazyMobXTableApplicationDataStore } from '../../../shared/l
 import { Mutation } from '../../../shared/api/generated/CBioPortalAPI';
 import { action, computed, observable } from 'mobx';
 import _ from 'lodash';
+import PatientViewUrlWrapper from '../PatientViewUrlWrapper';
 
 function mutationMatch(d: Mutation[], id: Mutation) {
     return (
@@ -19,19 +20,23 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
 > {
     @observable.ref private mouseOverMutation: Readonly<Mutation> | null = null;
     private selectedMutationsMap = observable.map<Mutation>();
-    @observable private _onlyShowSelectedInTable = false;
-    @observable private _onlyShowSelectedInVAFChart = false;
 
     public getMouseOverMutation() {
         return this.mouseOverMutation;
     }
 
     public get onlyShowSelectedInTable() {
-        return this._onlyShowSelectedInTable;
+        return (
+            this.urlWrapper.query.genomicEvolutionSettings
+                .showOnlySelectedMutationsInTable === 'true'
+        );
     }
 
     public get onlyShowSelectedInVAFChart() {
-        return this._onlyShowSelectedInVAFChart;
+        return (
+            this.urlWrapper.query.genomicEvolutionSettings
+                .showOnlySelectedMutationsInChart === 'true'
+        );
     }
 
     @action
@@ -41,12 +46,28 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
 
     @action
     public setOnlyShowSelectedInTable(o: boolean) {
-        this._onlyShowSelectedInTable = o;
+        this.urlWrapper.updateURL({
+            genomicEvolutionSettings: Object.assign(
+                {},
+                this.urlWrapper.query.genomicEvolutionSettings,
+                {
+                    showOnlySelectedMutationsInTable: o.toString(),
+                }
+            ),
+        });
     }
 
     @action
     public setOnlyShowSelectedInVAFChart(o: boolean) {
-        this._onlyShowSelectedInVAFChart = o;
+        this.urlWrapper.updateURL({
+            genomicEvolutionSettings: Object.assign(
+                {},
+                this.urlWrapper.query.genomicEvolutionSettings,
+                {
+                    showOnlySelectedMutationsInChart: o.toString(),
+                }
+            ),
+        });
     }
 
     @action
@@ -90,7 +111,7 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
 
             // filter out non-selected mutations
             const selectedFilter =
-                !this._onlyShowSelectedInTable ||
+                !this.onlyShowSelectedInTable ||
                 this.selectedMutations.length === 0 ||
                 _.some(this.selectedMutations, m => mutationMatch(d, m));
 
@@ -98,7 +119,10 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
         });
     }
 
-    constructor(getData: () => Mutation[][]) {
+    constructor(
+        getData: () => Mutation[][],
+        private urlWrapper: PatientViewUrlWrapper
+    ) {
         super(getData);
 
         this.dataHighlighter = (mergedMutation: Mutation[]) => {

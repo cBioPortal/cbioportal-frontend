@@ -1273,6 +1273,7 @@ export default class PatientViewPage extends React.Component<
                                                         .onMutationTableColumnVisibilityToggled
                                                 }
                                                 sampleManager={sampleManager}
+                                                urlWrapper={this.urlWrapper}
                                             />
                                         </MSKTab>
                                     )}
