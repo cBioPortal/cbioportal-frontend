@@ -10,7 +10,7 @@ import SelectAllDeselectAll from './SelectAllDeselectAll';
 import ComparisonStore, {
     OverlapStrategy,
 } from '../../../shared/lib/comparison/ComparisonStore';
-import { computed, observable } from 'mobx';
+import { action, computed, observable } from 'mobx';
 import { ComparisonGroup } from '../GroupComparisonUtils';
 import CollapsedGroupsButton from './CollapsedGroupsButton';
 
@@ -29,6 +29,7 @@ export default class GroupSelector extends React.Component<
     private dragging = false;
 
     @autobind
+    @action
     private toggleCollapsedGroups() {
         this.collapsedGroupsShown = !this.collapsedGroupsShown;
     }
