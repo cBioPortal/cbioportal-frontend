@@ -34,6 +34,7 @@ export interface IGeneSymbolValidatorProps {
     ) => void;
     wrap?: boolean;
     replaceGene: (oldSymbol: string, newSymbol: string) => void;
+    highlightError?: (oql: OQL) => void;
 }
 
 export type GeneValidationResult = {
@@ -153,20 +154,7 @@ export default class GeneSymbolValidator extends React.Component<
         if (!this.oql.error) {
             return this.oql;
         }
-
-        if (this.props.focus !== null && this.props.focus !== undefined) {
-            if (this.props.focus === Focus.Unfocused) {
-                return new Error(
-                    "Please click 'Submit' to see location of error."
-                );
-            } else {
-                return new Error(
-                    'OQL syntax error at selected character; please fix and submit again.'
-                );
-            }
-        }
-
-        return new Error(this.oql.error.message);
+        return new Error(`OQL error at character ${this.oql.error.start}`);
     }
 
     render() {
@@ -189,6 +177,10 @@ export default class GeneSymbolValidator extends React.Component<
                         ? new Error('ERROR')
                         : this.genes.result
                 }
+                highlightError={() => {
+                    this.props.highlightError &&
+                        this.props.highlightError(this.oql);
+                }}
                 oql={this.oqlOrError}
                 validatingGenes={
                     this.props.skipGeneValidation ? false : this.genes.isPending
