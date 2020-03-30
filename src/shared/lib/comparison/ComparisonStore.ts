@@ -177,6 +177,7 @@ export default class ComparisonStore {
     // < / >
 
     readonly origin = remoteData({
+        // the studies that the comparison groups come from
         await: () => [this._session],
         invoke: () => Promise.resolve(this._session.result!.origin),
     });

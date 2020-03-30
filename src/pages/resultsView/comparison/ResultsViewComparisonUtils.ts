@@ -28,6 +28,8 @@ export const UNALTERED_COLOR = '#3366cc';
 export const ALTERED_GROUP_NAME = 'Altered group';
 export const UNALTERED_GROUP_NAME = 'Unaltered group';
 
+// compute/add members to SessionGroupData to make them
+//  into complete ComparisonGroup objects
 export function completeSessionGroups(
     patientLevel: boolean,
     groups: SessionGroupData[],
