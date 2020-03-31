@@ -16,6 +16,8 @@ import { ServerConfigHelpers } from 'config/config';
 import sessionServiceClient from 'shared/api/sessionServiceInstance';
 import { trackEvent } from 'shared/lib/tracking';
 import { PagePath } from 'shared/enums/PagePaths';
+import { QueryStore } from '../QueryStore';
+import { CancerStudy } from 'shared/api/generated/CBioPortalAPI';
 
 export const SHOW_MORE_SIZE: number = 20;
 const DEFAULT_PAGE_SIZE: number = 3;
@@ -45,8 +47,12 @@ type GeneStudyQuery = {
     name?: string;
 };
 
+type QuickSearchProps = {
+    studies: CancerStudy[];
+};
+
 @observer
-export default class QuickSearch extends React.Component {
+export default class QuickSearch extends React.Component<QuickSearchProps, {}> {
     private select: any;
     @observable private studyPageMultiplier: number = 0;
     @observable private genePageMultiplier: number = 0;
@@ -58,6 +64,14 @@ export default class QuickSearch extends React.Component {
 
     @computed get menuIsOpen() {
         return this.isFocusing && this.inputValue.length > 0;
+    }
+
+    @computed
+    get studies(): Map<string, string> {
+        return this.props.studies.reduce((prev, curr) => {
+            prev.set(curr.studyId, curr.name);
+            return prev;
+        }, new Map<string, string>());
     }
 
     @autobind
@@ -97,11 +111,13 @@ export default class QuickSearch extends React.Component {
         };
     }
 
+    @autobind
     private sampleToOption(sample: any, index: number): Option {
         return {
             value: sample.sampleId,
             type: OptionType.SAMPLE,
             studyId: sample.studyId,
+            studyName: this.studies.get(sample.studyId),
             patientId: sample.patientId,
             sampleType: sample.sampleType,
             index,
@@ -529,7 +545,7 @@ function formatMyLabel(data: any) {
     } else if (data.type === OptionType.SAMPLE) {
         label = data.value;
         typeStyle = 'warning';
-        details = data.sampleType;
+        details = `${data.studyName ? data.studyName : data.studyId}`;
         clickInfo = 'Select a sample to open its summary';
     } else {
         label =
