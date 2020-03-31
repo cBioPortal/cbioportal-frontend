@@ -11,7 +11,7 @@ require.extensions['.txt'] = function(module, filename) {
 
 const debug = process.env.DEBUG;
 const defaultTimeoutInterval = 180000;
-var defaultMaxInstances = 3;
+var defaultMaxInstances = 1;
 
 var diffDir = process.env.SCREENSHOT_DIRECTORY + '/diff' || 'screenshots/diff/';
 var refDir =

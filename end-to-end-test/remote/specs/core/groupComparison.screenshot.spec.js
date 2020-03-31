@@ -72,7 +72,7 @@ describe('group comparison page screenshot tests', function() {
             browser.click('a.tabAnchor_clinical');
             waitForNetworkQuiet();
             browser.waitForVisible(
-                'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="PlotsTabPlotDiv"]',
+                'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]',
                 20000
             );
             browser.moveToObject('body', 0, 0);
@@ -88,7 +88,7 @@ describe('group comparison page screenshot tests', function() {
                 'div[data-test="ComparisonPageClinicalTabDiv"] input[data-test="SwapAxes"]'
             );
             browser.waitForVisible(
-                'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="PlotsTabPlotDiv"]',
+                'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]',
                 20000
             );
             browser.moveToObject('body', 0, 0);
@@ -104,7 +104,7 @@ describe('group comparison page screenshot tests', function() {
                 'div[data-test="ComparisonPageClinicalTabDiv"] input[data-test="logScale"]'
             );
             browser.waitForVisible(
-                'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="PlotsTabPlotDiv"]',
+                'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]',
                 20000
             );
             browser.moveToObject('body', 0, 0);
@@ -123,7 +123,7 @@ describe('group comparison page screenshot tests', function() {
             });
             waitForNetworkQuiet();
             browser.waitForVisible(
-                'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="PlotsTabPlotDiv"]',
+                'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]',
                 20000
             );
             browser.moveToObject('body', 0, 0);
@@ -141,7 +141,7 @@ describe('group comparison page screenshot tests', function() {
             plotTypeSelector.setValue('Bar chart');
             browser.click('[data-test="plotTypeSelector"] .Select-option');
             browser.waitForVisible(
-                'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="PlotsTabPlotDiv"]',
+                'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]',
                 20000
             );
             browser.moveToObject('body', 0, 0);
@@ -159,7 +159,7 @@ describe('group comparison page screenshot tests', function() {
             plotTypeSelector.setValue('Stacked bar chart');
             browser.click('[data-test="plotTypeSelector"] .Select-option');
             browser.waitForVisible(
-                'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="PlotsTabPlotDiv"]',
+                'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]',
                 20000
             );
             browser.moveToObject('body', 0, 0);
@@ -175,7 +175,7 @@ describe('group comparison page screenshot tests', function() {
                 'div[data-test="ComparisonPageClinicalTabDiv"] input[data-test="SwapAxes"]'
             );
             browser.waitForVisible(
-                'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="PlotsTabPlotDiv"]',
+                'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]',
                 20000
             );
             browser.moveToObject('body', 0, 0);
@@ -194,7 +194,7 @@ describe('group comparison page screenshot tests', function() {
                 'div[data-test="ComparisonPageClinicalTabDiv"] input[data-test="HorizontalBars"]'
             );
             browser.waitForVisible(
-                'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="PlotsTabPlotDiv"]',
+                'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]',
                 20000
             );
             browser.moveToObject('body', 0, 0);
@@ -354,12 +354,14 @@ describe('group comparison page screenshot tests', function() {
 
         it('group comparison page mutation enrichments tab two groups', function() {
             // deselect two groups
-            browser.click('button[data-test="groupSelectorButtonA"]');
+            browser.click('button[data-test="groupSelectorButtonGARS mutant"]');
             browser.waitForExist(
-                'button[data-test="groupSelectorButtonD"]',
+                'button[data-test="groupSelectorButtonZNF517 mutant"]',
                 10000
             );
-            browser.click('button[data-test="groupSelectorButtonD"]');
+            browser.click(
+                'button[data-test="groupSelectorButtonZNF517 mutant"]'
+            );
             // go back to mutations tab
             browser.waitForExist('.tabAnchor_mutations', 10000);
             browser.click('.tabAnchor_mutations');
@@ -445,7 +447,7 @@ describe('group comparison page screenshot tests', function() {
         });
         it('group comparison page delete group from session', function() {
             browser.click(
-                'button[data-test="groupSelectorButtonA"] [data-test="deleteButton"]'
+                'button[data-test="groupSelectorButtonGARS mutant"] [data-test="deleteButton"]'
             );
             var res = checkElementWithMouseDisabled('div.mainContainer');
             assertScreenShotMatch(res);
@@ -476,7 +478,7 @@ describe('group comparison page screenshot tests', function() {
 
             it('group comparison page overlap tab disjoint venn diagram view with a group selected view', function() {
                 browser.waitForVisible('svg#comparison-tab-overlap-svg', 6000);
-                browser.leftClick('rect[data-test="sample0VennRegion"]');
+                browser.leftClick('text[data-test="sample0VennLabel"]');
                 var res = checkElementWithTemporaryClass(
                     'div[data-test="ComparisonPageOverlapTabDiv"]',
                     'div[data-test="ComparisonPageOverlapTabDiv"]',
@@ -525,7 +527,7 @@ describe('group comparison page screenshot tests', function() {
             });
 
             it('group comparison page overlap tab venn diagram view with overlap and session selected view', function() {
-                browser.leftClick('rect[data-test="sample0,1,2VennRegion"]');
+                browser.leftClick('text[data-test="sample0,1,2VennLabel"]');
                 var res = checkElementWithTemporaryClass(
                     'div[data-test="ComparisonPageOverlapTabDiv"]',
                     'div[data-test="ComparisonPageOverlapTabDiv"]',
@@ -536,7 +538,9 @@ describe('group comparison page screenshot tests', function() {
             });
 
             it('group comparison page overlap tab venn diagram view with overlap deselect active group', function() {
-                browser.click('button[data-test="groupSelectorButtonC"]');
+                browser.click(
+                    'button[data-test="groupSelectorButtonZFPM1 mutant"]'
+                );
                 browser.waitForVisible(
                     'div[data-test="ComparisonPageOverlapTabDiv"]',
                     20000
@@ -552,10 +556,11 @@ describe('group comparison page screenshot tests', function() {
         });
 
         describe('venn diagram with complex overlaps', function() {
-            const buttonA = 'button[data-test="groupSelectorButtonA"]';
-            const buttonB = 'button[data-test="groupSelectorButtonB"]';
-            const buttonC = 'button[data-test="groupSelectorButtonC"]';
-            const buttonD = 'button[data-test="groupSelectorButtonD"]';
+            const buttonA = 'button[data-test="groupSelectorButtonAll Cases"]';
+            const buttonB = 'button[data-test="groupSelectorButtonMetastasis"]';
+            const buttonC =
+                'button[data-test="groupSelectorButtonoverlapping patients"]';
+            const buttonD = 'button[data-test="groupSelectorButtonPrimary"]';
 
             before(function() {
                 goToUrlAndSetLocalStorage(
@@ -708,7 +713,7 @@ describe('group comparison page screenshot tests', function() {
         });
 
         it('group comparison page overlap tab upset deselect active group', function() {
-            browser.click('button[data-test="groupSelectorButtonD"]');
+            browser.click('button[data-test="groupSelectorButtontestGroup4"]');
             var res = checkElementWithTemporaryClass(
                 'div[data-test="ComparisonPageOverlapTabDiv"]',
                 'div[data-test="ComparisonPageOverlapTabDiv"]',

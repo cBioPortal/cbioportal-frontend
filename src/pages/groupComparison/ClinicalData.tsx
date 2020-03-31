@@ -732,8 +732,9 @@ export default class ClinicalData extends React.Component<
 
                 return (
                     <div
-                        data-test="PlotsTabPlotDiv"
+                        data-test="ClinicalTabPlotDiv"
                         className="borderedChart posRelative"
+                        style={{ marginBottom: 10 }}
                     >
                         <ScrollBar
                             style={{ position: 'relative', top: -5 }}
