@@ -32,16 +32,8 @@ import MutationStatusColumnFormatter from './column/MutationStatusColumnFormatte
 import ValidationStatusColumnFormatter from './column/ValidationStatusColumnFormatter';
 import StudyColumnFormatter from './column/StudyColumnFormatter';
 import { ICosmicData } from 'shared/model/Cosmic';
-import AnnotationColumnFormatter, {
-    IAnnotation,
-} from './column/AnnotationColumnFormatter';
+import AnnotationColumnFormatter from './column/AnnotationColumnFormatter';
 import ExonColumnFormatter from './column/ExonColumnFormatter';
-import { IMyCancerGenomeData } from 'shared/model/MyCancerGenome';
-import { IHotspotDataWrapper } from 'shared/model/CancerHotspots';
-import {
-    ICivicVariantDataWrapper,
-    ICivicGeneDataWrapper,
-} from 'shared/model/Civic';
 import { IMutSigData } from 'shared/model/MutSig';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
@@ -61,9 +53,18 @@ import MobxPromise from 'mobxpromise';
 import {
     VariantAnnotation,
     generateQueryVariantId,
-    IOncoKbCancerGenesWrapper,
-    IOncoKbDataWrapper,
+    CancerGene,
+    IOncoKbData,
 } from 'cbioportal-frontend-commons';
+import {
+    getAnnotationData,
+    IAnnotation,
+    ICivicGene,
+    ICivicVariant,
+    IHotspotIndex,
+    IMyCancerGenomeData,
+    RemoteData,
+} from 'react-mutation-mapper';
 import HgvscColumnFormatter from './column/HgvscColumnFormatter';
 import HgvsgColumnFormatter from './column/HgvsgColumnFormatter';
 import GnomadColumnFormatter from './column/GnomadColumnFormatter';
@@ -78,7 +79,7 @@ export interface IMutationTableProps {
         [molecularProfileId: string]: MolecularProfile;
     };
     discreteCNACache?: DiscreteCNACache;
-    oncoKbCancerGenes?: IOncoKbCancerGenesWrapper;
+    oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>;
     mrnaExprRankCache?: MrnaExprRankCache;
     variantCountCache?: VariantCountCache;
     pubMedCache?: PubMedCache;
@@ -93,14 +94,14 @@ export interface IMutationTableProps {
     enableCivic?: boolean;
     enableFunctionalImpact?: boolean;
     myCancerGenomeData?: IMyCancerGenomeData;
-    hotspotData?: IHotspotDataWrapper;
+    hotspotData?: RemoteData<IHotspotIndex | undefined>;
     indexedVariantAnnotations?: MobxPromise<
         { [genomicLocation: string]: VariantAnnotation } | undefined
     >;
     cosmicData?: ICosmicData;
-    oncoKbData?: IOncoKbDataWrapper;
-    civicGenes?: ICivicGeneDataWrapper;
-    civicVariants?: ICivicVariantDataWrapper;
+    oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
+    civicGenes?: RemoteData<ICivicGene | undefined>;
+    civicVariants?: RemoteData<ICivicVariant | undefined>;
     mrnaExprRankMolecularProfileId?: string;
     discreteCNAMolecularProfileId?: string;
     columns?: MutationTableColumnType[];
@@ -245,6 +246,28 @@ export default class MutationTable<
     @autobind
     private tableRef(t: LazyMobXTable<Mutation[]> | null) {
         this.table = t;
+    }
+
+    @autobind
+    private resolveTumorType(mutation: Mutation) {
+        // first, try to get it from uniqueSampleKeyToTumorType map
+        if (this.props.uniqueSampleKeyToTumorType) {
+            return this.props.uniqueSampleKeyToTumorType[
+                mutation.uniqueSampleKey
+            ];
+        }
+
+        // second, try the study cancer type
+        if (this.props.studyIdToStudy) {
+            const studyMetaData = this.props.studyIdToStudy[mutation.studyId];
+
+            if (studyMetaData.cancerTypeId !== 'mixed') {
+                return studyMetaData.cancerType.name;
+            }
+        }
+
+        // return Unknown, this should not happen...
+        return 'Unknown';
     }
 
     protected generateColumns() {
@@ -736,7 +759,7 @@ export default class MutationTable<
                         .enableMyCancerGenome as boolean,
                     enableHotspot: this.props.enableHotspot as boolean,
                     userEmailAddress: this.props.userEmailAddress,
-                    studyIdToStudy: this.props.studyIdToStudy,
+                    resolveTumorType: this.resolveTumorType,
                 }),
             filter: (
                 d: Mutation[],
@@ -746,15 +769,15 @@ export default class MutationTable<
                 let ret = false;
                 switch (filterStringUpper) {
                     case 'HOTSPOT':
-                        const annotation: IAnnotation = AnnotationColumnFormatter.getData(
-                            d,
+                        const annotation: IAnnotation = getAnnotationData(
+                            d ? d[0] : undefined,
                             this.props.oncoKbCancerGenes,
                             this.props.hotspotData,
                             this.props.myCancerGenomeData,
                             this.props.oncoKbData,
                             this.props.civicGenes,
                             this.props.civicVariants,
-                            this.props.studyIdToStudy
+                            this.resolveTumorType
                         );
 
                         ret = annotation.isHotspot;
@@ -793,7 +816,8 @@ export default class MutationTable<
                     this.props.myCancerGenomeData,
                     this.props.oncoKbData,
                     this.props.civicGenes,
-                    this.props.civicVariants
+                    this.props.civicVariants,
+                    this.resolveTumorType
                 );
             },
             sortBy: (d: Mutation[]) => {
@@ -804,7 +828,8 @@ export default class MutationTable<
                     this.props.myCancerGenomeData,
                     this.props.oncoKbData,
                     this.props.civicGenes,
-                    this.props.civicVariants
+                    this.props.civicVariants,
+                    this.resolveTumorType
                 );
             },
         };

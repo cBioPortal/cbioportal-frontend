@@ -2,10 +2,6 @@ import { IHotspotIndex, isHotspot } from 'react-mutation-mapper/';
 
 import { CosmicMutation } from 'shared/api/generated/CBioPortalAPIInternal';
 import { ICosmicData } from 'shared/model/Cosmic';
-import {
-    IMyCancerGenome,
-    IMyCancerGenomeData,
-} from 'shared/model/MyCancerGenome';
 import { Mutation } from 'shared/api/generated/CBioPortalAPI';
 import { normalizeMutation } from '../components/mutationMapper/MutationMapperUtils';
 import { Hotspot } from 'cbioportal-frontend-commons';
@@ -30,24 +26,6 @@ export function keywordToCosmic(
         }
 
         map[cosmic.keyword].push(cosmic);
-    });
-
-    return map;
-}
-
-export function geneToMyCancerGenome(
-    myCancerGenomes: IMyCancerGenome[]
-): IMyCancerGenomeData {
-    // key: hugo gene symbol
-    // value: IMyCancerGenome[]
-    const map: IMyCancerGenomeData = {};
-
-    myCancerGenomes.forEach((myCancerGenome: IMyCancerGenome) => {
-        if (!(myCancerGenome.hugoGeneSymbol in map)) {
-            map[myCancerGenome.hugoGeneSymbol] = [];
-        }
-
-        map[myCancerGenome.hugoGeneSymbol].push(myCancerGenome);
     });
 
     return map;

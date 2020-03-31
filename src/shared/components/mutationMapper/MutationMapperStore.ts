@@ -70,7 +70,6 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
             { [genomicLocation: string]: VariantAnnotation } | undefined
         >,
         public oncoKbCancerGenes: MobxPromise<CancerGene[] | Error>,
-        public oncoKbData: MobxPromise<IOncoKbData | Error>,
         public uniqueSampleKeyToTumorType: { [uniqueSampleKey: string]: string }
     ) {
         super(
@@ -81,6 +80,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
                 filterMutationsBySelectedTranscript:
                     mutationMapperStoreConfig.filterMutationsBySelectedTranscript,
                 enableCivic: mutationMapperConfig.show_civic,
+                enableOncoKb: mutationMapperConfig.show_oncokb,
             },
             getMutations
         );

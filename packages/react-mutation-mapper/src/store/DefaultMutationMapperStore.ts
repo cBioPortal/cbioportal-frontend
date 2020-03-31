@@ -25,6 +25,7 @@ import { ApplyFilterFn, FilterApplier } from '../model/FilterApplier';
 import { Gene } from '../model/Gene';
 import { Mutation } from '../model/Mutation';
 import MutationMapperStore from '../model/MutationMapperStore';
+import { IMyCancerGenomeData } from '../model/MyCancerGenome';
 import { PfamDomain, PfamDomainRange } from '../model/Pfam';
 import { PostTranslationalModification } from '../model/PostTranslationalModification';
 import {
@@ -45,6 +46,7 @@ import {
     groupMutationsByProteinStartPos,
     uniqueGenomicLocations,
 } from '../util/MutationUtils';
+import { getMyCancerGenomeData } from '../util/MyCancerGenomeUtils';
 import {
     defaultOncoKbIndicatorFilter,
     groupOncoKbIndicatorDataByMutations,
@@ -64,6 +66,7 @@ interface DefaultMutationMapperStoreConfig {
     genomeNexusUrl?: string;
     oncoKbUrl?: string;
     enableCivic?: boolean;
+    enableOncoKb?: boolean;
     cachePostMethodsOnClients?: boolean;
     apiCacheLimit?: number;
     getMutationCount?: (mutation: Partial<Mutation>) => number;
@@ -161,6 +164,8 @@ class DefaultMutationMapperStore implements MutationMapperStore {
             this.config.groupFilters
         );
     }
+
+    public readonly myCancerGenomeData: IMyCancerGenomeData = getMyCancerGenomeData();
 
     @computed
     public get mutations(): Mutation[] {
@@ -800,12 +805,14 @@ class DefaultMutationMapperStore implements MutationMapperStore {
         {
             await: () => [this.mutationData, this.oncoKbAnnotatedGenes],
             invoke: () =>
-                this.dataFetcher.fetchOncoKbData(
-                    this.mutations,
-                    this.oncoKbAnnotatedGenes.result!,
-                    this.getDefaultTumorType,
-                    this.getDefaultEntrezGeneId
-                ),
+                this.config.enableOncoKb
+                    ? this.dataFetcher.fetchOncoKbData(
+                          this.mutations,
+                          this.oncoKbAnnotatedGenes.result!,
+                          this.getDefaultTumorType,
+                          this.getDefaultEntrezGeneId
+                      )
+                    : Promise.resolve(ONCOKB_DEFAULT_DATA),
             onError: () => {
                 // fail silently, leave the error handling responsibility to the data consumer
             },
