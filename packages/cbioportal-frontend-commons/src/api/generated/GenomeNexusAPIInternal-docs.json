@@ -37,6 +37,10 @@
     {
       "name": "my-variant-info-controller",
       "description": "My Variant Info Controller"
+    },
+    {
+      "name": "nucleotide-context-controller",
+      "description": "Nucleotide Context Controller"
     }
   ],
   "schemes": [
@@ -705,6 +709,78 @@
             "description": "OK",
             "schema": {
               "$ref": "#/definitions/MyVariantInfo"
+            }
+          }
+        }
+      }
+    },
+    "/nucleotide_context": {
+      "post": {
+        "tags": [
+          "nucleotide-context-controller"
+        ],
+        "summary": "Retrieves nucleotide context information for the provided list of variants",
+        "operationId": "postNucleotideContextAnnotation",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "variants",
+            "description": "List of variants. For example [\"7:g.140453136A>T\",\"12:g.25398285C>A\"]",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/NucleotideContext"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/nucleotide_context/{variant}": {
+      "get": {
+        "tags": [
+          "nucleotide-context-controller"
+        ],
+        "summary": "Retrieves nucleotide context information for the provided list of variants",
+        "operationId": "fetchNucleotideContextAnnotationGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "variant",
+            "in": "path",
+            "description": "A variant. For example 7:g.140453136A>T",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/NucleotideContext"
             }
           }
         }
@@ -1693,6 +1769,30 @@
         }
       }
     },
+    "NucleotideContext": {
+      "type": "object",
+      "required": [
+        "seq"
+      ],
+      "properties": {
+        "hgvs": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "molecule": {
+          "type": "string"
+        },
+        "query": {
+          "type": "string"
+        },
+        "seq": {
+          "type": "string",
+          "description": "Nucleotide context sequence"
+        }
+      }
+    },
     "ProteinLocation": {
       "type": "object",
       "required": [
@@ -1834,6 +1934,18 @@
         "transcriptId"
       ],
       "properties": {
+        "aminoAcidAlt": {
+          "type": "string",
+          "description": "Alt Amino Acid"
+        },
+        "aminoAcidRef": {
+          "type": "string",
+          "description": "Reference Amino Acid"
+        },
+        "aminoAcids": {
+          "type": "string",
+          "description": "Amino acids change"
+        },
         "codonChange": {
           "type": "string",
           "description": "Codon change"
