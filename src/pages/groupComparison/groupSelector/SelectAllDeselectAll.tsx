@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { SortableElement } from 'react-sortable-hoc';
-import GroupComparisonStore from '../GroupComparisonStore';
+import ComparisonStore from '../../../shared/lib/comparison/ComparisonStore';
 
 export interface ISelectionButtonProps {
-    store: GroupComparisonStore;
+    store: ComparisonStore;
 }
 
 @observer

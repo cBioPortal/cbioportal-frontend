@@ -1,4 +1,4 @@
-import { CancerGene, IndicatorQueryResp } from '../../api/generated/OncoKbAPI';
+import { IndicatorQueryResp } from '../../api/generated/OncoKbAPI';
 
 export type Query = {
     id: string;
@@ -9,17 +9,6 @@ export type Query = {
 
 export interface IOncoKbData {
     indicatorMap: { [id: string]: IndicatorQueryResp } | null;
-    uniqueSampleKeyToTumorType?: { [sampleId: string]: string } | null;
-}
-
-export interface IOncoKbDataWrapper {
-    status: 'pending' | 'error' | 'complete';
-    result?: IOncoKbData | Error;
-}
-
-export interface IOncoKbCancerGenesWrapper {
-    status: 'pending' | 'error' | 'complete';
-    result?: CancerGene[] | Error;
 }
 
 export enum EvidenceType {

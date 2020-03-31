@@ -16,6 +16,7 @@ export type GeneSymbolValidatorMessageProps = {
     genes: GeneValidationResult | Error;
     wrapTheContent?: boolean;
     replaceGene: ReplaceGene;
+    highlightError?: () => void;
 };
 
 export type ReplaceGene = (oldSymbol: string, newSymbol: string) => void;
@@ -99,7 +100,17 @@ const GeneSymbolValidatorMessageChild = (
         return (
             <div className={styles.GeneSymbolValidator}>
                 <span className={styles.errorMessage}>
-                    {`Cannot validate gene symbols because of invalid OQL. ${props.oql.message}`}
+                    {`Cannot validate gene symbols because of invalid OQL.`}
+                    &nbsp;&nbsp;
+                    <a
+                        className={'underline'}
+                        onMouseDown={e => {
+                            e.preventDefault();
+                            props.highlightError!();
+                        }}
+                    >
+                        Click to highlight error
+                    </a>
                 </span>
             </div>
         );

@@ -11,7 +11,6 @@ import GroupComparisonStore from './GroupComparisonStore';
 
 export interface IOverlapUpsetProps {
     store: ComparisonStore;
-    disableGroupCreation?: boolean;
     sideBySide: boolean;
     maxWidth: number;
     samplesVennPartition: {
@@ -64,7 +63,7 @@ export default class OverlapUpset extends React.Component<
         group: SessionGroupData,
         saveToUser: boolean
     ) {
-        (this.props.store as GroupComparisonStore).addGroup(group, saveToUser);
+        this.props.store.addGroup(group, saveToUser);
         this.sampleSelection = [];
     }
 
@@ -74,7 +73,7 @@ export default class OverlapUpset extends React.Component<
         group: SessionGroupData,
         saveToUser: boolean
     ) {
-        (this.props.store as GroupComparisonStore).addGroup(group, saveToUser);
+        this.props.store.addGroup(group, saveToUser);
         this.patientSelection = [];
     }
 
@@ -104,17 +103,14 @@ export default class OverlapUpset extends React.Component<
                         caseType="sample"
                         title="Samples overlap"
                         onChangeSelectedCombinations={
-                            !this.props.disableGroupCreation
-                                ? this.changeSelectedSampleRegions
-                                : undefined
+                            this.changeSelectedSampleRegions
                         }
                         selectedCombinations={this.sampleSelection}
                     />
-                    {!this.props.disableGroupCreation &&
-                        this.sampleUpset &&
+                    {this.sampleUpset &&
                         this.props.samplesVennPartition.length > 0 && (
                             <CreateGroupFromOverlap
-                                store={this.props.store as GroupComparisonStore}
+                                store={this.props.store}
                                 includedRegions={this.sampleSelection}
                                 submitGroup={this.submitSampleOverlapGroup}
                                 allGroupsInPlot={Object.keys(
@@ -139,17 +135,14 @@ export default class OverlapUpset extends React.Component<
                         caseType="patient"
                         title="Patients overlap"
                         onChangeSelectedCombinations={
-                            !this.props.disableGroupCreation
-                                ? this.changeSelectedPatientRegions
-                                : undefined
+                            this.changeSelectedPatientRegions
                         }
                         selectedCombinations={this.patientSelection}
                     />
-                    {!this.props.disableGroupCreation &&
-                        this.patientUpset &&
+                    {this.patientUpset &&
                         this.props.patientsVennPartition.length > 0 && (
                             <CreateGroupFromOverlap
-                                store={this.props.store as GroupComparisonStore}
+                                store={this.props.store}
                                 includedRegions={this.patientSelection}
                                 submitGroup={this.submitPatientOverlapGroup}
                                 allGroupsInPlot={Object.keys(

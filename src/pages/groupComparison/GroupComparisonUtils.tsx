@@ -726,13 +726,13 @@ export interface IOverlapComputations<
 }
 
 export function getOverlapComputations<
-    T extends Pick<ComparisonGroup, 'studies' | 'uid'>
+    T extends Pick<ComparisonGroup, 'studies' | 'uid' | 'name'>
 >(
     groups: T[],
-    isGroupSelected: (uid: string) => boolean
+    isGroupSelected: (name: string) => boolean
 ): IOverlapComputations<T> {
     let filteredGroups: T[] = groups.filter(group =>
-        isGroupSelected(group.uid)
+        isGroupSelected(group.name)
     );
 
     const totalSampleOverlap = new ComplexKeySet();
