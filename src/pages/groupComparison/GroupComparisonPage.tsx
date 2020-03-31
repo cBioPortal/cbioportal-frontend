@@ -317,6 +317,13 @@ export default class GroupComparisonPage extends React.Component<
         },
     });
 
+    @autobind private isGroupDeletable() {
+        return (
+            this.store._originalGroups.isComplete &&
+            this.store._originalGroups.result!.length > 2
+        );
+    }
+
     render() {
         if (!this.store) {
             return null;
@@ -346,7 +353,10 @@ export default class GroupComparisonPage extends React.Component<
                         </div>
                         <div>
                             <div className={styles.headerControls}>
-                                <GroupSelector store={this.store} />
+                                <GroupSelector
+                                    store={this.store}
+                                    isGroupDeletable={this.isGroupDeletable}
+                                />
                             </div>
                         </div>
                     </div>
