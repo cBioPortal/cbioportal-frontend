@@ -50,7 +50,9 @@ import { remoteData, stringListToSet } from 'cbioportal-frontend-commons';
 import MobxPromiseCache from '../../../shared/lib/MobxPromiseCache';
 import { MobxPromise } from 'mobxpromise';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import BoxScatterPlot from '../../../shared/components/plots/BoxScatterPlot';
+import BoxScatterPlot, {
+    IBoxScatterPlotData,
+} from '../../../shared/components/plots/BoxScatterPlot';
 import { ViewType, PlotType } from '../plots/PlotsTab';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 
@@ -361,17 +363,29 @@ export default class ExpressionWrapper extends React.Component<
 
             // sort box order
             if (this.sortBy === 'alphabetic') {
-                return Promise.resolve(_.sortBy<any>(sortedData, d => d.label));
+                return Promise.resolve(
+                    _.sortBy<any>(
+                        sortedData,
+                        (d: IBoxScatterPlotData<IBoxScatterPlotPoint>) =>
+                            d.label
+                    )
+                );
             } else {
                 return Promise.resolve(
-                    _.sortBy<any>(sortedData, d => {
-                        //Note: we have to use slice to convert Seamless immutable array to real array, otherwise jStat chokes
-                        return jStat.median(
-                            Array.prototype.slice.apply(
-                                d.data.map((v: any) => v.value as number)
-                            )
-                        );
-                    })
+                    _.sortBy<any>(
+                        sortedData,
+                        (d: IBoxScatterPlotData<IBoxScatterPlotPoint>) => {
+                            //Note: we have to use slice to convert Seamless immutable array to real array, otherwise jStat chokes
+                            return jStat.median(
+                                Array.prototype.slice.apply(
+                                    d.data.map(
+                                        (v: IBoxScatterPlotPoint) =>
+                                            v.value as number
+                                    )
+                                )
+                            );
+                        }
+                    )
                 );
             }
         },
