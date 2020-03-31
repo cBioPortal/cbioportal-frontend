@@ -373,6 +373,18 @@ export type MyVariantInfo = {
         'version': number
 
 };
+export type NucleotideContext = {
+    'hgvs': string
+
+        'id': string
+
+        'molecule': string
+
+        'query': string
+
+        'seq': string
+
+};
 export type ProteinLocation = {
     'transcriptId': string
 
@@ -428,7 +440,13 @@ export type Snpeff = {
 
 };
 export type TranscriptConsequenceSummary = {
-    'codonChange': string
+    'aminoAcidAlt': string
+
+        'aminoAcidRef': string
+
+        'aminoAcids': string
+
+        'codonChange': string
 
         'consequenceTerms': string
 
@@ -1910,6 +1928,159 @@ export default class GenomeNexusAPIInternal {
         $domain ? : string
     }): Promise < MyVariantInfo > {
         return this.fetchMyVariantInfoAnnotationGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    postNucleotideContextAnnotationURL(parameters: {
+        'variants': Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/nucleotide_context';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves nucleotide context information for the provided list of variants
+     * @method
+     * @name GenomeNexusAPIInternal#postNucleotideContextAnnotation
+     * @param {} variants - List of variants. For example ["7:g.140453136A>T","12:g.25398285C>A"]
+     */
+    postNucleotideContextAnnotationWithHttpInfo(parameters: {
+        'variants': Array < string > ,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/nucleotide_context';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['variants'] !== undefined) {
+                body = parameters['variants'];
+            }
+
+            if (parameters['variants'] === undefined) {
+                reject(new Error('Missing required  parameter: variants'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Retrieves nucleotide context information for the provided list of variants
+     * @method
+     * @name GenomeNexusAPIInternal#postNucleotideContextAnnotation
+     * @param {} variants - List of variants. For example ["7:g.140453136A>T","12:g.25398285C>A"]
+     */
+    postNucleotideContextAnnotation(parameters: {
+            'variants': Array < string > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < NucleotideContext >
+        > {
+            return this.postNucleotideContextAnnotationWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchNucleotideContextAnnotationGETURL(parameters: {
+        'variant': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/nucleotide_context/{variant}';
+
+        path = path.replace('{variant}', parameters['variant'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves nucleotide context information for the provided list of variants
+     * @method
+     * @name GenomeNexusAPIInternal#fetchNucleotideContextAnnotationGET
+     * @param {string} variant - A variant. For example 7:g.140453136A>T
+     */
+    fetchNucleotideContextAnnotationGETWithHttpInfo(parameters: {
+        'variant': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/nucleotide_context/{variant}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            path = path.replace('{variant}', parameters['variant'] + '');
+
+            if (parameters['variant'] === undefined) {
+                reject(new Error('Missing required  parameter: variant'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Retrieves nucleotide context information for the provided list of variants
+     * @method
+     * @name GenomeNexusAPIInternal#fetchNucleotideContextAnnotationGET
+     * @param {string} variant - A variant. For example 7:g.140453136A>T
+     */
+    fetchNucleotideContextAnnotationGET(parameters: {
+        'variant': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < NucleotideContext > {
+        return this.fetchNucleotideContextAnnotationGETWithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
