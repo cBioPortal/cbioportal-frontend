@@ -99,7 +99,7 @@ class GroupSelectorButton extends React.Component<
                 style={{
                     backgroundColor: group.color,
                 }}
-                data-test={`groupSelectorButton${group.ordinal}`}
+                data-test={`groupSelectorButton${group.name}`}
             >
                 <span style={{ display: 'flex', alignItems: 'center' }}>
                     <div
