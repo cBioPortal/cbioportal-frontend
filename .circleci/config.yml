@@ -39,8 +39,6 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
           yarn run e2e
         when: always
         environment:
-          JUNIT_REPORT_PATH: ./remote/junit/
-          SCREENSHOT_DIRECTORY: ./remote/screenshots
           FRONTEND_TEST_USE_LOCAL_DIST: true
           NO_PARALLEL: true
     - run:
@@ -62,6 +60,62 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
     - store_artifacts:
         path: /tmp/repo/end-to-end-test/shared/imageCompare.html
         destination: /imageCompare.html
+
+
+run_IE11_e2e_and_save_artifacts: &run_IE11_e2e_and_save_artifacts
+  steps:
+    - run:
+        name: "Install yarn at specific version"
+        command:
+          sudo npm install --global yarn@1.21.1
+    - attach_workspace:
+        at: /tmp/
+    - run:
+        name: "Spin up frontend over ssl if necessary and run end to end tests"
+        command: |
+          yarn serveDist & \
+          cd end-to-end-test && \
+          yarn install --frozen-lockfile && \
+          ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome '2.42' && \
+          ./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome '2.42' & \
+          ./scripts/env_vars.sh && \
+          eval "$(./scripts/env_vars.sh)" && \
+          curl $CBIOPORTAL_URL > /dev/null && \
+          sleep 5s && \
+          curl $CBIOPORTAL_URL > /dev/null && \
+          sleep 5s && \
+          curl $CBIOPORTAL_URL > /dev/null && \
+          sleep 20s && \
+          (curl --insecure https://localhost:3000 || curl http://localhost:3000) > /dev/null && \
+          sleep 1s && \
+          cd end-to-end-test && \
+          echo "CBIOPORTAL_URL=$CBIOPORTAL_URL"
+          yarn run e2e
+        when: always
+        environment:
+          FRONTEND_TEST_USE_LOCAL_DIST: true
+          NO_PARALLEL: true
+    - run:
+        name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
+        command: 'for f in end-to-end-test/remote/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
+    -  store_artifacts:
+         path: /tmp/repo/end-to-end-test/ie11/screenshots
+         destination: /screenshots
+    -  store_artifacts:
+         path: /tmp/repo/end-to-end-test/shared/image-compare
+         destination: /image-compare
+    -  store_artifacts:
+         path: /tmp/repo/end-to-end-test/ie11/error
+         destination: /errorShots
+    - store_test_results:
+        path: /tmp/repo/end-to-end-test/ie11/junit
+    - store_artifacts:
+        path: /tmp/repo/end-to-end-test/ie11/junit
+    - store_artifacts:
+        path: /tmp/repo/end-to-end-test/shared/imageCompare.html
+        destination: /imageCompare.html
+
+
 
 version: 2
 jobs:
@@ -166,11 +220,34 @@ jobs:
           name: "Check Incorrect Package Import Statements"
           command: yarn run checkIncorrectImportStatements
 
+  check_missing_package_version_update:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: /tmp/
+      # make sure that version has been updated for the packages that has changed
+      - run:
+          name: "Check Missing Package Version Update"
+          command: yarn run checkMissingPackageVersionUpdate
+
   end_to_end_tests:
     <<: *defaults
     environment:
       SPEC_FILE_PATTERN: ./remote/specs/core/**/*.spec.js
+      JUNIT_REPORT_PATH: ./remote/junit/
+      SCREENSHOT_DIRECTORY: ./remote/screenshots
     <<: *run_e2e_and_save_artifacts
+
+  end_to_end_tests_IE11:
+    <<: *defaults
+    environment:
+      SPEC_FILE_PATTERN: ./ie11/specs/ie.js
+      JUNIT_REPORT_PATH: ./ie11/junit/
+      SCREENSHOT_DIRECTORY: ./ie11/screenshots
+      TEST_IE11: true
+      TEST_BROWSERSTACK: true
+      PROTOCOL: http
+    <<: *run_IE11_e2e_and_save_artifacts
 
   end_to_end_tests_localdb:
     working_directory: /tmp/repo
@@ -282,6 +359,9 @@ workflows:
             - end_to_end_tests:
                 requires:
                     - install
+            - end_to_end_tests_IE11:
+                requires:
+                    - install
             - end_to_end_tests_localdb:
                 requires:
                     - install
@@ -292,6 +372,9 @@ workflows:
                 requires:
                     - install
             - check_incorrect_import_statements:
+                requires:
+                    - install
+            - check_missing_package_version_update:
                 requires:
                     - install
     nightly:
