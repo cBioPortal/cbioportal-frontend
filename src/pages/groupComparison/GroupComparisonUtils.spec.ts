@@ -41,10 +41,10 @@ describe('GroupComparisonUtils', () => {
     describe('getOverlapComputations', () => {
         function assertEqualOverlapComputations(
             expected: IOverlapComputations<
-                Pick<ComparisonGroup, 'studies' | 'uid'>
+                Pick<ComparisonGroup, 'studies' | 'uid' | 'name'>
             >,
             actual: IOverlapComputations<
-                Pick<ComparisonGroup, 'studies' | 'uid'>
+                Pick<ComparisonGroup, 'studies' | 'uid' | 'name'>
             >
         ) {
             assertDeepEqualInAnyOrder(expected.groups, actual.groups, 'groups');
@@ -105,6 +105,7 @@ describe('GroupComparisonUtils', () => {
         it('one group', () => {
             const group0 = {
                 uid: 'group0',
+                name: 'group0',
                 studies: [
                     {
                         id: 'study1',
@@ -135,6 +136,7 @@ describe('GroupComparisonUtils', () => {
         it('two disjoint groups', () => {
             const group0 = {
                 uid: 'group0',
+                name: 'group0',
                 studies: [
                     {
                         id: 'study1',
@@ -150,6 +152,7 @@ describe('GroupComparisonUtils', () => {
             };
             const group1 = {
                 uid: 'group1',
+                name: 'group1',
                 studies: [
                     {
                         id: 'study1',
@@ -180,6 +183,7 @@ describe('GroupComparisonUtils', () => {
         it('two overlapping groups', () => {
             const group0 = {
                 uid: 'group0',
+                name: 'group0',
                 studies: [
                     {
                         id: 'study1',
@@ -195,6 +199,7 @@ describe('GroupComparisonUtils', () => {
             };
             const group1 = {
                 uid: 'group1',
+                name: 'group1',
                 studies: [
                     {
                         id: 'study1',
@@ -214,6 +219,7 @@ describe('GroupComparisonUtils', () => {
                     groups: [
                         {
                             uid: 'group0',
+                            name: 'group0',
                             studies: [
                                 {
                                     id: 'study1',
@@ -229,6 +235,7 @@ describe('GroupComparisonUtils', () => {
                         },
                         {
                             uid: 'group1',
+                            name: 'group1',
                             studies: [
                                 {
                                     id: 'study1',
@@ -272,6 +279,7 @@ describe('GroupComparisonUtils', () => {
         it('one group containing another group', () => {
             const group0 = {
                 uid: 'group0',
+                name: 'group0',
                 studies: [
                     {
                         id: 'study1',
@@ -287,6 +295,7 @@ describe('GroupComparisonUtils', () => {
             };
             const group1 = {
                 uid: 'group1',
+                name: 'group1',
                 studies: [
                     {
                         id: 'study1',
@@ -302,6 +311,7 @@ describe('GroupComparisonUtils', () => {
                         group0,
                         {
                             uid: 'group1',
+                            name: 'group1',
                             studies: [],
                         },
                     ],
@@ -318,6 +328,7 @@ describe('GroupComparisonUtils', () => {
         it('one group containing two other overlapping groups', () => {
             const group0 = {
                 uid: 'group0',
+                name: 'group0',
                 studies: [
                     {
                         id: 'study1',
@@ -333,6 +344,7 @@ describe('GroupComparisonUtils', () => {
             };
             const group1 = {
                 uid: 'group1',
+                name: 'group1',
                 studies: [
                     {
                         id: 'study1',
@@ -348,6 +360,7 @@ describe('GroupComparisonUtils', () => {
             };
             const group2 = {
                 uid: 'group2',
+                name: 'group2',
                 studies: [
                     {
                         id: 'study1',
@@ -371,10 +384,12 @@ describe('GroupComparisonUtils', () => {
                         group0,
                         {
                             uid: 'group1',
+                            name: 'group1',
                             studies: [],
                         },
                         {
                             uid: 'group2',
+                            name: 'group2',
                             studies: [],
                         },
                     ],
@@ -391,6 +406,7 @@ describe('GroupComparisonUtils', () => {
         it('A contains B contains C', () => {
             const group0 = {
                 uid: 'group0',
+                name: 'group0',
                 studies: [
                     {
                         id: 'study1',
@@ -406,6 +422,7 @@ describe('GroupComparisonUtils', () => {
             };
             const group1 = {
                 uid: 'group1',
+                name: 'group1',
                 studies: [
                     {
                         id: 'study1',
@@ -421,6 +438,7 @@ describe('GroupComparisonUtils', () => {
             };
             const group2 = {
                 uid: 'group2',
+                name: 'group2',
                 studies: [
                     {
                         id: 'study1',
@@ -439,10 +457,12 @@ describe('GroupComparisonUtils', () => {
                         group0,
                         {
                             uid: 'group1',
+                            name: 'group1',
                             studies: [],
                         },
                         {
                             uid: 'group2',
+                            name: 'group2',
                             studies: [],
                         },
                     ],
@@ -459,6 +479,7 @@ describe('GroupComparisonUtils', () => {
         it('one group containing two disjoint groups', () => {
             const group0 = {
                 uid: 'group0',
+                name: 'group0',
                 studies: [
                     {
                         id: 'study1',
@@ -474,6 +495,7 @@ describe('GroupComparisonUtils', () => {
             };
             const group1 = {
                 uid: 'group1',
+                name: 'group1',
                 studies: [
                     {
                         id: 'study1',
@@ -489,6 +511,7 @@ describe('GroupComparisonUtils', () => {
             };
             const group2 = {
                 uid: 'group2',
+                name: 'group2',
                 studies: [
                     {
                         id: 'study1',
@@ -512,10 +535,12 @@ describe('GroupComparisonUtils', () => {
                         group0,
                         {
                             uid: 'group1',
+                            name: 'group1',
                             studies: [],
                         },
                         {
                             uid: 'group2',
+                            name: 'group2',
                             studies: [],
                         },
                     ],
@@ -532,6 +557,7 @@ describe('GroupComparisonUtils', () => {
         it('two disjoint groups together covering one group', () => {
             const group0 = {
                 uid: 'group0',
+                name: 'group0',
                 studies: [
                     {
                         id: 'study1',
@@ -547,6 +573,7 @@ describe('GroupComparisonUtils', () => {
             };
             const group1 = {
                 uid: 'group1',
+                name: 'group1',
                 studies: [
                     {
                         id: 'study1',
@@ -562,6 +589,7 @@ describe('GroupComparisonUtils', () => {
             };
             const group2 = {
                 uid: 'group2',
+                name: 'group2',
                 studies: [
                     {
                         id: 'study1',
@@ -584,6 +612,7 @@ describe('GroupComparisonUtils', () => {
                     groups: [
                         {
                             uid: 'group0',
+                            name: 'group0',
                             studies: [],
                         },
                         group1,
@@ -602,6 +631,7 @@ describe('GroupComparisonUtils', () => {
         it('two overlapping groups together covering one group', () => {
             const group0 = {
                 uid: 'group0',
+                name: 'group0',
                 studies: [
                     {
                         id: 'study1',
@@ -617,6 +647,7 @@ describe('GroupComparisonUtils', () => {
             };
             const group1 = {
                 uid: 'group1',
+                name: 'group1',
                 studies: [
                     {
                         id: 'study1',
@@ -632,6 +663,7 @@ describe('GroupComparisonUtils', () => {
             };
             const group2 = {
                 uid: 'group2',
+                name: 'group2',
                 studies: [
                     {
                         id: 'study1',
@@ -654,10 +686,12 @@ describe('GroupComparisonUtils', () => {
                     groups: [
                         {
                             uid: 'group0',
+                            name: 'group0',
                             studies: [],
                         },
                         {
                             uid: 'group1',
+                            name: 'group1',
                             studies: [
                                 {
                                     id: 'study1',
@@ -668,6 +702,7 @@ describe('GroupComparisonUtils', () => {
                         },
                         {
                             uid: 'group2',
+                            name: 'group2',
                             studies: [
                                 {
                                     id: 'study1',
@@ -705,6 +740,7 @@ describe('GroupComparisonUtils', () => {
         it('three disjoint groups', () => {
             const group0 = {
                 uid: 'group0',
+                name: 'group0',
                 studies: [
                     {
                         id: 'study1',
@@ -720,6 +756,7 @@ describe('GroupComparisonUtils', () => {
             };
             const group1 = {
                 uid: 'group1',
+                name: 'group1',
                 studies: [
                     {
                         id: 'study1',
@@ -735,6 +772,7 @@ describe('GroupComparisonUtils', () => {
             };
             const group2 = {
                 uid: 'group2',
+                name: 'group2',
                 studies: [
                     {
                         id: 'study1',

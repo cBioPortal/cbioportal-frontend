@@ -23,7 +23,6 @@ import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 
 export interface IOverlapProps {
     store: ComparisonStore;
-    resultsViewMode?: boolean;
 }
 
 const SVG_ID = 'comparison-tab-overlap-svg';
@@ -328,7 +327,6 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                     plotElt = (
                         <OverlapUpset
                             store={this.props.store}
-                            disableGroupCreation={this.props.resultsViewMode}
                             sideBySide={this.areUpsetPlotsSidebySide}
                             maxWidth={this.maxWidth}
                             samplesVennPartition={
@@ -346,7 +344,6 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                     plotElt = (
                         <Venn
                             svgId={SVG_ID}
-                            disableGroupCreation={this.props.resultsViewMode}
                             sampleGroups={this.sampleGroupsWithCases.result!}
                             patientGroups={this.patientGroupsWithCases.result!}
                             uidToGroup={this.uidToGroup.result!}

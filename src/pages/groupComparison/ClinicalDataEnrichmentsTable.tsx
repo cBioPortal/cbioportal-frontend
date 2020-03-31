@@ -25,7 +25,10 @@ const COLUMNS = [
     {
         name: ClinicalDataEnrichmentTableColumnType.CLINICAL_ATTRIBUTE_NAME,
         render: (d: ClinicalDataEnrichmentWithQ) => (
-            <span style={{ fontWeight: d.qValue < 0.05 ? 'bold' : 'normal' }}>
+            <span
+                data-test={d.clinicalAttribute.displayName}
+                style={{ fontWeight: d.qValue < 0.05 ? 'bold' : 'normal' }}
+            >
                 {d.clinicalAttribute.displayName}
             </span>
         ),

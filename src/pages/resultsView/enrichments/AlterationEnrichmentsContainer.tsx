@@ -31,7 +31,6 @@ import {
 import { MiniOncoprint } from 'shared/components/miniOncoprint/MiniOncoprint';
 import GeneBarPlot from './GeneBarPlot';
 import WindowStore from 'shared/components/window/WindowStore';
-import './styles.scss';
 import ReactSelect from 'react-select';
 
 export interface IAlterationEnrichmentContainerProps {

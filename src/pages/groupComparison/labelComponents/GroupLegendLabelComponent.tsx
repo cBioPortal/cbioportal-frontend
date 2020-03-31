@@ -56,8 +56,14 @@ export const SurvivalTabGroupLegendLabelComponent: React.FunctionComponent<
     const groupUids = JSON.parse(text!) as string[];
     const groups = groupUids.map(uid => uidToGroup[uid]);
     const groupOrdinals = groups.map(group => group.ordinal);
-    const textToTruncate = `Only ${groupOrdinals
-        .map(o => `(${o})`)
+    const textToTruncate = `Only ${groups
+        .map(group => {
+            if (group.ordinal) {
+                return `(${group.ordinal})`;
+            } else {
+                return group.name;
+            }
+        })
         .join(', ')}`;
     return (
         <TruncatedTextWithTooltipSVG

@@ -3,7 +3,10 @@ import {
     QueryStore,
 } from 'shared/components/query/QueryStore';
 import { ResultsViewTab } from 'pages/resultsView/ResultsViewPageHelpers';
-import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
+import ResultsViewURLWrapper, {
+    ResultsViewURLQuery,
+} from 'pages/resultsView/ResultsViewURLWrapper';
+import ifNotDefined from './ifNotDefined';
 
 export function createQueryStore(
     currentQuery?: any,
@@ -21,6 +24,20 @@ export function createQueryStore(
         query.cancer_study_list =
             query.cancer_study_list || query.cancer_study_id;
         delete query.cancer_study_id;
+
+        // check if user-created comparison groups should be reset
+        if (currentQuery) {
+            const importantQueryDetailsChanged =
+                currentQuery.cancer_study_id !== query.cancer_study_id ||
+                currentQuery.cancer_study_list !== query.cancer_study_list ||
+                ifNotDefined(currentQuery.case_ids, '') !==
+                    ifNotDefined(query.case_ids, '') ||
+                currentQuery.case_set_id !== query.case_set_id;
+
+            if (importantQueryDetailsChanged) {
+                (query as any).comparison_createdGroupsSessionId = undefined;
+            }
+        }
 
         const tab =
             queryStore.physicalStudyIdsInSelection.length > 1 &&
