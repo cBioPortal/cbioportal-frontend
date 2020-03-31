@@ -19,8 +19,8 @@ import { ICivicGene, ICivicVariant } from '../../model/Civic';
 import { DataFilterType } from '../../model/DataFilter';
 import { MobxCache } from '../../model/MobxCache';
 import { Mutation } from '../../model/Mutation';
+import { IMyCancerGenomeData } from '../../model/MyCancerGenome';
 import { RemoteData } from '../../model/RemoteData';
-import { SimpleCache } from '../../model/SimpleCache';
 import {
     findNonTextInputFilters,
     TEXT_INPUT_FILTER_ID,
@@ -37,6 +37,7 @@ import './defaultMutationTable.scss';
 export type DefaultMutationTableProps = {
     hotspotData?: RemoteData<IHotspotIndex | undefined>;
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
+    myCancerGenomeData?: IMyCancerGenomeData;
     oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>;
     indexedMyVariantInfoAnnotations?: RemoteData<
         { [genomicLocation: string]: MyVariantInfo } | undefined
@@ -96,6 +97,7 @@ export default class DefaultMutationTable extends React.Component<
                       mutation,
                       this.props.oncoKbCancerGenes,
                       this.props.hotspotData,
+                      this.props.myCancerGenomeData,
                       this.props.oncoKbData,
                       this.props.civicGenes,
                       this.props.civicVariants
@@ -140,6 +142,7 @@ export default class DefaultMutationTable extends React.Component<
                         enableOncoKb={true}
                         enableHotspot={true}
                         enableCivic={this.props.enableCivic || false}
+                        enableMyCancerGenome={true}
                         hotspotData={this.props.hotspotData}
                         oncoKbData={this.props.oncoKbData}
                         oncoKbCancerGenes={this.props.oncoKbCancerGenes}

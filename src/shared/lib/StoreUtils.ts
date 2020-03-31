@@ -55,17 +55,10 @@ import {
 } from 'cbioportal-frontend-commons';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
 import { MobxPromise } from 'mobxpromise';
-import {
-    geneToMyCancerGenome,
-    keywordToCosmic,
-} from 'shared/lib/AnnotationUtils';
+import { keywordToCosmic } from 'shared/lib/AnnotationUtils';
 import { indexPdbAlignments } from 'shared/lib/PdbUtils';
 import { IGisticData } from 'shared/model/Gistic';
 import { IMutSigData } from 'shared/model/MutSig';
-import {
-    IMyCancerGenome,
-    IMyCancerGenomeData,
-} from 'shared/model/MyCancerGenome';
 import {
     IMutationalSignature,
     IMutationalSignatureMeta,
@@ -85,7 +78,6 @@ import {
 import { EvidenceType, IOncoKbData } from 'cbioportal-frontend-commons';
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
-    uniqueSampleKeyToTumorType: {},
     indicatorMap: {},
 };
 
@@ -688,11 +680,6 @@ export async function fetchGenePanel(
     return _.keyBy(remoteData, genePanel => genePanel.genePanelId);
 }
 
-export function fetchMyCancerGenomeData(): IMyCancerGenomeData {
-    const data: IMyCancerGenome[] = require('../../../resources/mycancergenome.json');
-    return geneToMyCancerGenome(data);
-}
-
 export function fetchMutationalSignatureData(): IMutationalSignature[] {
     return require('../../../resources/samplemutsigdata.json');
 }
@@ -745,7 +732,6 @@ export async function fetchOncoKbData(
                 ),
             };
         }),
-        uniqueSampleKeyToTumorType,
         client
     );
 }
@@ -779,11 +765,7 @@ export async function fetchCnaOncoKbData(
             ).filter(query => query.copyNameAlterationType),
             'id'
         );
-        return queryOncoKbCopyNumberAlterationData(
-            queryVariants,
-            uniqueSampleKeyToTumorType,
-            client
-        );
+        return queryOncoKbCopyNumberAlterationData(queryVariants, client);
     }
 }
 
@@ -825,11 +807,7 @@ export async function fetchCnaOncoKbDataWithNumericGeneMolecularData(
             }).filter(query => query.copyNameAlterationType),
             (query: AnnotateCopyNumberAlterationQuery) => query.id
         );
-        return queryOncoKbCopyNumberAlterationData(
-            queryVariants,
-            uniqueSampleKeyToTumorType,
-            client
-        );
+        return queryOncoKbCopyNumberAlterationData(queryVariants, client);
     }
 }
 
@@ -854,7 +832,6 @@ export type OncoKbAnnotationQuery = {
 const fusionMutationType = 'Fusion';
 export async function queryOncoKbData(
     annotationQueries: OncoKbAnnotationQuery[],
-    uniqueSampleKeyToTumorType: { [sampleId: string]: string },
     client: OncoKbAPI = oncokbClient,
     evidenceTypes?: EvidenceType[]
 ) {
@@ -910,7 +887,6 @@ export async function queryOncoKbData(
               });
 
     const oncoKbData: IOncoKbData = {
-        uniqueSampleKeyToTumorType: uniqueSampleKeyToTumorType,
         indicatorMap: generateIdToIndicatorMap(
             mutationQueryResult.concat(structuralVariantQueryResult)
         ),
@@ -921,7 +897,6 @@ export async function queryOncoKbData(
 
 export async function queryOncoKbCopyNumberAlterationData(
     queryVariants: AnnotateCopyNumberAlterationQuery[],
-    uniqueSampleKeyToTumorType: { [sampleId: string]: string },
     client: OncoKbAPI = oncokbClient
 ) {
     const oncokbSearch =
@@ -931,15 +906,11 @@ export async function queryOncoKbCopyNumberAlterationData(
                   body: queryVariants,
               });
 
-    return toOncoKbData(uniqueSampleKeyToTumorType, oncokbSearch);
+    return toOncoKbData(oncokbSearch);
 }
 
-function toOncoKbData(
-    uniqueSampleKeyToTumorType: { [sampleId: string]: string },
-    indicatorQueryResps: IndicatorQueryResp[]
-): IOncoKbData {
+function toOncoKbData(indicatorQueryResps: IndicatorQueryResp[]): IOncoKbData {
     return {
-        uniqueSampleKeyToTumorType: uniqueSampleKeyToTumorType,
         indicatorMap: generateIdToIndicatorMap(indicatorQueryResps),
     };
 }
