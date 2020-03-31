@@ -20,9 +20,10 @@ import {
 import InfoIcon from '../../shared/components/InfoIcon';
 import FlexAlignedCheckbox from '../../shared/components/FlexAlignedCheckbox';
 import { serializeEvent } from 'shared/lib/tracking';
+import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 
 export interface ICreateGroupFromOverlapProps {
-    store: GroupComparisonStore;
+    store: ComparisonStore;
     includedRegions: string[][]; // group.uid[][]
     allGroupsInPlot: string[]; // uid[]
     submitGroup: (group: SessionGroupData, saveToUser: boolean) => void;

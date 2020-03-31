@@ -1,4 +1,7 @@
 .Container {
+    :global(.borderedChart) {
+        height: 100%;
+    }
 }
 
 .ChartsPanel {
