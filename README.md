@@ -322,6 +322,22 @@ Remember that the packages are used by other projects and compatibility needs to
 
 Whenever you need to update code under packages, you should also consider updating the version number in the corresponding `package.json` as well as the dependencies of other packages depending on the package you updated. For example if you update the `cbioportal-frontend-commons` version from `0.1.1` to `0.1.2`, corresponding `cbioportal-frontend-commons` dependency in the `package.json` for `react-mutation-mapper` and `cbioportal-frontend` should also be updated to the new version.
 
+#### Update API clients
+
+The API clients are part of cbioportal-frontend-commons, so all packages need to be updated when there's a change. To do so first update the API:
+
+```
+yarn run updateAPI
+```
+
+then update all package versions with:
+
+```
+yarn run updatePackageVersion
+```
+
+After that update the versions of all packages in the root `package.json`
+
 ## Components
 
 Components under `packages` should only depend on either external node modules or workspaces under `packages`.
