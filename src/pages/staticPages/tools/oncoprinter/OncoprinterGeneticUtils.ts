@@ -243,7 +243,6 @@ export async function fetchOncoKbDataForMutations(
                 tumorType: null,
             };
         }),
-        {},
         client,
         [EvidenceType.ONCOGENIC]
     );
@@ -281,7 +280,7 @@ export async function fetchOncoKbDataForCna(
         })
         .uniqBy('id')
         .value() as any) as AnnotateCopyNumberAlterationQuery[]; // lodash typings not perfect
-    return queryOncoKbCopyNumberAlterationData(queryVariants, {}, client);
+    return queryOncoKbCopyNumberAlterationData(queryVariants, client);
 }
 
 function makeGeneticTrackDatum_Data(

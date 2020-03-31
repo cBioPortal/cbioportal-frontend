@@ -123,7 +123,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 dataStore={this.props.store.dataStore}
                 itemsLabelPlural={this.itemsLabelPlural}
                 downloadDataFetcher={this.props.store.downloadDataFetcher}
-                myCancerGenomeData={this.props.myCancerGenomeData}
+                myCancerGenomeData={this.props.store.myCancerGenomeData}
                 hotspotData={this.props.store.indexedHotspotData}
                 indexedVariantAnnotations={
                     this.props.store.indexedVariantAnnotations

@@ -3,35 +3,29 @@ import * as _ from 'lodash';
 import {
     buildCivicEntry,
     civicSortValue,
+    DEFAULT_ANNOTATION_DATA,
+    GenericAnnotation,
+    IAnnotation,
     ICivicEntry,
     ICivicGene,
     ICivicGeneData,
     ICivicVariant,
     ICivicVariantData,
     oncoKbAnnotationSortValue,
+    RemoteData,
 } from 'react-mutation-mapper';
 import {
     CancerStudy,
     DiscreteCopyNumberData,
 } from 'shared/api/generated/CBioPortalAPI';
-import {
-    IAnnotation,
-    IAnnotationColumnProps,
-    default as DefaultAnnotationColumnFormatter,
-} from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
+import { IAnnotationColumnProps } from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
 import {
     CancerGene,
     generateQueryVariantId,
     IndicatorQueryResp,
-    IOncoKbCancerGenesWrapper,
     IOncoKbData,
-    IOncoKbDataWrapper,
 } from 'cbioportal-frontend-commons';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
-import {
-    ICivicGeneDataWrapper,
-    ICivicVariantDataWrapper,
-} from 'shared/model/Civic.ts';
 import { getCivicCNAVariants } from 'shared/lib/CivicUtils';
 
 /**
@@ -40,10 +34,11 @@ import { getCivicCNAVariants } from 'shared/lib/CivicUtils';
 export default class AnnotationColumnFormatter {
     public static getData(
         copyNumberData: DiscreteCopyNumberData[] | undefined,
-        oncoKbCancerGenes?: IOncoKbCancerGenesWrapper,
-        oncoKbData?: IOncoKbDataWrapper,
-        civicGenes?: ICivicGeneDataWrapper,
-        civicVariants?: ICivicVariantDataWrapper,
+        oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>,
+        oncoKbData?: RemoteData<IOncoKbData | Error | undefined>,
+        uniqueSampleKeyToTumorType?: { [sampleId: string]: string },
+        civicGenes?: RemoteData<ICivicGene | undefined>,
+        civicVariants?: RemoteData<ICivicVariant | undefined>,
         studyIdToStudy?: { [studyId: string]: CancerStudy }
     ) {
         let value: IAnnotation;
@@ -86,6 +81,7 @@ export default class AnnotationColumnFormatter {
                     oncoKbIndicator = AnnotationColumnFormatter.getIndicatorData(
                         copyNumberData,
                         oncoKbData.result,
+                        uniqueSampleKeyToTumorType,
                         studyIdToStudy
                     );
                 }
@@ -136,7 +132,7 @@ export default class AnnotationColumnFormatter {
                 is3dHotspot: false,
             };
         } else {
-            value = DefaultAnnotationColumnFormatter.DEFAULT_ANNOTATION_DATA;
+            value = DEFAULT_ANNOTATION_DATA;
         }
 
         return value;
@@ -206,10 +202,11 @@ export default class AnnotationColumnFormatter {
     public static getIndicatorData(
         copyNumberData: DiscreteCopyNumberData[],
         oncoKbData: IOncoKbData,
+        uniqueSampleKeyToTumorType?: { [sampleId: string]: string },
         studyIdToStudy?: { [studyId: string]: CancerStudy }
     ): IndicatorQueryResp | undefined {
         if (
-            oncoKbData.uniqueSampleKeyToTumorType === null ||
+            uniqueSampleKeyToTumorType === null ||
             oncoKbData.indicatorMap === null
         ) {
             return undefined;
@@ -217,9 +214,7 @@ export default class AnnotationColumnFormatter {
 
         const id = generateQueryVariantId(
             copyNumberData[0].gene.entrezGeneId,
-            oncoKbData.uniqueSampleKeyToTumorType![
-                copyNumberData[0].uniqueSampleKey
-            ],
+            uniqueSampleKeyToTumorType![copyNumberData[0].uniqueSampleKey],
             getAlterationString(copyNumberData[0].alteration)
         );
 
@@ -239,15 +234,17 @@ export default class AnnotationColumnFormatter {
 
     public static sortValue(
         data: DiscreteCopyNumberData[],
-        oncoKbCancerGenes?: IOncoKbCancerGenesWrapper,
-        oncoKbData?: IOncoKbDataWrapper,
-        civicGenes?: ICivicGeneDataWrapper,
-        civicVariants?: ICivicVariantDataWrapper
+        oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>,
+        oncoKbData?: RemoteData<IOncoKbData | Error | undefined>,
+        uniqueSampleKeyToTumorType?: { [sampleId: string]: string },
+        civicGenes?: RemoteData<ICivicGene | undefined>,
+        civicVariants?: RemoteData<ICivicVariant | undefined>
     ): number[] {
         const annotationData: IAnnotation = AnnotationColumnFormatter.getData(
             data,
             oncoKbCancerGenes,
             oncoKbData,
+            uniqueSampleKeyToTumorType,
             civicGenes,
             civicVariants
         );
@@ -267,15 +264,12 @@ export default class AnnotationColumnFormatter {
             data,
             columnProps.oncoKbCancerGenes,
             columnProps.oncoKbData,
+            columnProps.uniqueSampleKeyToTumorType,
             columnProps.civicGenes,
             columnProps.civicVariants,
             columnProps.studyIdToStudy
         );
 
-        return DefaultAnnotationColumnFormatter.mainContent(
-            annotation,
-            columnProps,
-            columnProps.pubMedCache
-        );
+        return <GenericAnnotation {...columnProps} annotation={annotation} />;
     }
 }
