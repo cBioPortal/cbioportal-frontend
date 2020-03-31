@@ -192,6 +192,12 @@ export function makeUniqueColorGetter(init_used_colors?: string[]) {
         // return unused color
         var next_color = colors[index % colors.length];
         while (used_colors[next_color]) {
+            if (index < colors.length) {
+                // if we haven't gone through the whole list yet, then just continue through the list instead of darkening
+                index += 1;
+                next_color = colors[index % colors.length];
+                continue;
+            }
             var darker_next_color = darkenHexColor(next_color);
             if (darker_next_color === next_color) {
                 break;

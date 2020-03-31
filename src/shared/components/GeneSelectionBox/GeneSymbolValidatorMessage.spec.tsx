@@ -56,7 +56,7 @@ describe('GeneSymbolValidatorMessage', () => {
         wrapper.setProps({ oql: new Error('Error') });
         assert.equal(
             wrapper.find('#geneBoxValidationStatus').text(),
-            'Cannot validate gene symbols because of invalid OQL. Error'
+            'Cannot validate gene symbols because of invalid OQL.  Click to highlight error'
         );
     });
 

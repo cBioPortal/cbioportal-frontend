@@ -99,20 +99,18 @@ function runResultsTestSuite(prefix) {
         browser.waitForVisible(
             'div[data-test="ComparisonPageOverlapTabContent"]'
         );
-        var res = browser.checkElement(
-            'div[data-test="ComparisonPageOverlapTabDiv"]',
-            { hide: ['.qtip'] }
-        );
+        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} comparison tab clinical`, function() {
         browser.click('.comparisonTabSubTabs .tabAnchor_clinical');
         browser.waitForVisible('div[data-test="ComparisonPageClinicalTabDiv"]');
-        var res = browser.checkElement(
-            'div[data-test="ComparisonPageClinicalTabDiv"]',
-            { hide: ['.qtip'] }
-        );
+        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
 
@@ -121,10 +119,9 @@ function runResultsTestSuite(prefix) {
         browser.waitForVisible(
             'div[data-test="GroupComparisonMutationEnrichments"]'
         );
-        var res = browser.checkElement(
-            'div[data-test="GroupComparisonMutationEnrichments"]',
-            { hide: ['.qtip'] }
-        );
+        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
 
@@ -135,10 +132,9 @@ function runResultsTestSuite(prefix) {
         browser.waitForVisible(
             'div[data-test="GroupComparisonMutationEnrichments"]'
         );
-        var res = browser.checkElement(
-            'div[data-test="GroupComparisonMutationEnrichments"]',
-            { hide: ['.qtip'] }
-        );
+        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
 
@@ -149,10 +145,9 @@ function runResultsTestSuite(prefix) {
         );
         browser.click('b=ETV5');
         browser.waitForVisible('div[data-test="MiniBoxPlot"]');
-        var res = browser.checkElement(
-            'div[data-test="GroupComparisonMRNAEnrichments"]',
-            { hide: ['.qtip'] }
-        );
+        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
 
@@ -162,12 +157,9 @@ function runResultsTestSuite(prefix) {
             '[data-test="ComparisonPageSurvivalTabDiv"] svg',
             10000
         );
-        var res = browser.checkElement(
-            '[data-test="ComparisonPageSurvivalTabDiv"]',
-            {
-                hide: ['.qtip'],
-            }
-        );
+        var res = browser.checkElement('[data-test="ComparisonTabDiv"]', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
 
@@ -367,10 +359,9 @@ describe('enrichments tab screenshot tests', function() {
         browser.waitForVisible('b=MERTK', 10000);
         browser.click('b=MERTK');
         browser.waitForVisible('div[data-test="MiniBoxPlot"]', 20000);
-        var res = browser.checkElement(
-            'div[data-test="GroupComparisonMRNAEnrichments"]',
-            { hide: ['.qtip'] }
-        );
+        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
 });

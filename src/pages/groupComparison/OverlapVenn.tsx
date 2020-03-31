@@ -24,7 +24,6 @@ export interface IVennProps {
     }[];
     uidToGroup: { [uid: string]: ComparisonGroup };
     store: ComparisonStore;
-    disableGroupCreation?: boolean;
     onLayoutFailure: () => void;
 }
 
@@ -59,7 +58,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
         group: SessionGroupData,
         saveToUser: boolean
     ) {
-        (this.props.store as GroupComparisonStore).addGroup(group, saveToUser);
+        this.props.store.addGroup(group, saveToUser);
         this.sampleSelection.regions = [];
     }
 
@@ -69,7 +68,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
         group: SessionGroupData,
         saveToUser: boolean
     ) {
-        (this.props.store as GroupComparisonStore).addGroup(group, saveToUser);
+        this.props.store.addGroup(group, saveToUser);
         this.patientSelection.regions = [];
     }
 
@@ -166,9 +165,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
                         height={VENN_PLOT_HEIGHT}
                         selection={this.sampleSelection}
                         onChangeSelectedRegions={
-                            !this.props.disableGroupCreation
-                                ? this.changeSelectedSampleRegions
-                                : undefined
+                            this.changeSelectedSampleRegions
                         }
                         caseType="sample"
                         onLayoutFailure={this.props.onLayoutFailure}
@@ -197,9 +194,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
                         height={VENN_PLOT_HEIGHT}
                         selection={this.patientSelection}
                         onChangeSelectedRegions={
-                            !this.props.disableGroupCreation
-                                ? this.changeSelectedPatientRegions
-                                : undefined
+                            this.changeSelectedPatientRegions
                         }
                         caseType="patient"
                         onLayoutFailure={this.props.onLayoutFailure}
@@ -225,9 +220,9 @@ export default class Venn extends React.Component<IVennProps, {}> {
                         />
                     )}
                 </svg>
-                {!this.props.disableGroupCreation && [
+                {[
                     <CreateGroupFromOverlap
-                        store={this.props.store as GroupComparisonStore}
+                        store={this.props.store}
                         includedRegions={this.sampleSelectedRegionsUids}
                         style={{
                             position: 'absolute',
@@ -240,7 +235,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
                         width={VENN_PLOT_WIDTH}
                     />,
                     <CreateGroupFromOverlap
-                        store={this.props.store as GroupComparisonStore}
+                        store={this.props.store}
                         includedRegions={this.patientSelectedRegionsUids}
                         style={{
                             position: 'absolute',

@@ -37,7 +37,7 @@ export interface IRectangleVennDiagramProps {
     width: number;
     height: number;
     uidToGroup: { [uid: string]: ComparisonGroup };
-    onChangeSelectedRegions?: (selectedRegions: number[][]) => void;
+    onChangeSelectedRegions: (selectedRegions: number[][]) => void;
     selection: {
         regions: number[][]; // we do it like this so that updating it doesn't update all props
     };
@@ -67,13 +67,12 @@ export default class RectangleVennDiagram extends React.Component<
 
     private regionClickHandlers = MemoizedHandlerFactory(
         (e: any, params: { combination: number[] }) => {
-            this.props.onChangeSelectedRegions &&
-                this.props.onChangeSelectedRegions(
-                    toggleRegionSelected(
-                        params.combination,
-                        this.props.selection.regions
-                    )
-                );
+            this.props.onChangeSelectedRegions(
+                toggleRegionSelected(
+                    params.combination,
+                    this.props.selection.regions
+                )
+            );
         }
     );
 
@@ -251,7 +250,6 @@ export default class RectangleVennDiagram extends React.Component<
                             fill={region.color}
                             style={{
                                 cursor:
-                                    this.props.onChangeSelectedRegions &&
                                     region.sizeOfRegion > 0
                                         ? 'pointer'
                                         : 'default',
@@ -375,6 +373,9 @@ export default class RectangleVennDiagram extends React.Component<
                         pointerEvents="none"
                         textAnchor="middle"
                         alignmentBaseline="middle"
+                        data-test={`${
+                            this.props.caseType
+                        }${region.combination.join(',')}VennLabel`}
                     >
                         {textContents}
                     </text>,
@@ -393,8 +394,7 @@ export default class RectangleVennDiagram extends React.Component<
     }
 
     @autobind private resetSelection() {
-        this.props.onChangeSelectedRegions &&
-            this.props.onChangeSelectedRegions([]);
+        this.props.onChangeSelectedRegions([]);
     }
 
     @autobind private resetTooltip() {

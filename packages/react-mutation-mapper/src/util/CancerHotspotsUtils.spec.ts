@@ -173,7 +173,7 @@ describe('CancerHotspotsUtils', () => {
             assert.isFalse(
                 isHotspot(
                     {
-                        gene: { chromosome: '1' },
+                        chr: '1',
                         startPosition: 2,
                         endPosition: 2,
                         referenceAllele: 'A',
@@ -185,7 +185,7 @@ describe('CancerHotspotsUtils', () => {
             assert.isTrue(
                 isHotspot(
                     {
-                        gene: { chromosome: '4' },
+                        chr: '4',
                         startPosition: 111,
                         endPosition: 111,
                         referenceAllele: 'T',
@@ -197,7 +197,7 @@ describe('CancerHotspotsUtils', () => {
             assert.isFalse(
                 isHotspot(
                     {
-                        gene: { chromosome: 'asdkfjpaosid' },
+                        chr: 'asdkfjpaosid',
                         startPosition: -1,
                         endPosition: -1,
                         referenceAllele: 'A',
@@ -213,35 +213,35 @@ describe('CancerHotspotsUtils', () => {
     describe('filterHotspots', () => {
         const mutations = [
             {
-                gene: { chromosome: '17' },
+                chr: '17',
                 startPosition: 66,
                 endPosition: 66,
                 referenceAllele: 'A',
                 variantAllele: 'T',
             },
             {
-                gene: { chromosome: '3' },
+                chr: '3',
                 startPosition: 666,
                 endPosition: 668,
                 referenceAllele: 'G',
                 variantAllele: 'CAT',
             },
             {
-                gene: { chromosome: '4' },
+                chr: '4',
                 startPosition: 111,
                 endPosition: 111,
                 referenceAllele: 'T',
                 variantAllele: 'C',
             },
             {
-                gene: { chromosome: '1' },
+                chr: '1',
                 startPosition: 2,
                 endPosition: 2,
                 referenceAllele: 'A',
                 variantAllele: 'T',
             },
             {
-                gene: { chromosome: 'NA' },
+                chr: 'NA',
                 startPosition: -1,
                 endPosition: -1,
                 referenceAllele: 'A',
@@ -292,7 +292,7 @@ describe('CancerHotspotsUtils', () => {
         const mutationsByPosition = {
             [1]: [
                 {
-                    gene: { chromosome: '17' },
+                    chr: '17',
                     startPosition: 66,
                     endPosition: 66,
                     referenceAllele: 'A',
@@ -301,21 +301,21 @@ describe('CancerHotspotsUtils', () => {
             ] as any[],
             [2]: [
                 {
-                    gene: { chromosome: '3' },
+                    chr: '3',
                     startPosition: 666,
                     endPosition: 668,
                     referenceAllele: 'G',
                     variantAllele: 'CAT',
                 },
                 {
-                    gene: { chromosome: '4' },
+                    chr: '4',
                     startPosition: 111,
                     endPosition: 111,
                     referenceAllele: 'T',
                     variantAllele: 'C',
                 },
                 {
-                    gene: { chromosome: 'NA' },
+                    chr: 'NA',
                     startPosition: -1,
                     endPosition: -1,
                     referenceAllele: 'A',
@@ -324,7 +324,7 @@ describe('CancerHotspotsUtils', () => {
             ] as any[],
             [4]: [
                 {
-                    gene: { chromosome: '1' },
+                    chr: '1',
                     startPosition: 2,
                     endPosition: 2,
                     referenceAllele: 'A',
