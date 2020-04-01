@@ -5,7 +5,7 @@ import {
     GenePanelData,
     MolecularProfile,
     Sample,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import {
     generateCaseAlterationData,
     generateDownloadData,

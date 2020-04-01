@@ -27,7 +27,7 @@ import {
     SampleList,
     SampleMolecularIdentifier,
     GenericAssayMeta,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import client from 'shared/api/cbioportalClientInstance';
 import { action, computed, observable, ObservableMap, reaction } from 'mobx';
 import {
@@ -101,7 +101,7 @@ import {
     GenesetDataFilterCriteria,
     GenesetMolecularData,
     MolecularProfileCasesGroupFilter,
-} from '../../shared/api/generated/CBioPortalAPIInternal';
+} from 'cbioportal-ts-api-client';
 import internalClient from '../../shared/api/cbioportalInternalClientInstance';
 import { getAlterationString } from '../../shared/lib/CopyNumberUtils';
 import memoize from 'memoize-weak-decorator';

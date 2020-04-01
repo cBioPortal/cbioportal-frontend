@@ -4,7 +4,7 @@ import {
     MolecularProfile,
     Mutation,
     MutationFilter,
-} from '../api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import { IDataQueryFilter } from '../lib/StoreUtils';
 import _ from 'lodash';
 

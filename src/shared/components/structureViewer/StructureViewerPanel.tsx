@@ -16,7 +16,7 @@ import { ResidueMapping } from 'genome-nexus-ts-api-client';
 import { CacheData } from 'shared/lib/LazyMobXCache';
 import { ILazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import MutationMapperDataStore from 'shared/components/mutationMapper/MutationMapperDataStore';
-import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 import { IPdbChain, PdbAlignmentIndex } from 'shared/model/Pdb';
 import {
     groupMutationsByProteinStartPos,

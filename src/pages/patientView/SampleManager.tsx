@@ -1,15 +1,11 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import SampleInline from './patientHeader/SampleInline';
-import { ClinicalDataBySampleId } from '../../shared/api/api-types-extended';
-import { ClinicalData } from 'shared/api/generated/CBioPortalAPI';
+import { ClinicalData, ClinicalDataBySampleId } from 'cbioportal-ts-api-client';
 import { cleanAndDerive } from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import styles from './patientHeader/style/clinicalAttributes.scss';
 import naturalSort from 'javascript-natural-sort';
-import {
-    ClinicalEvent,
-    ClinicalEventData,
-} from '../../shared/api/generated/CBioPortalAPI';
+import { ClinicalEvent, ClinicalEventData } from 'cbioportal-ts-api-client';
 import { SampleLabelHTML } from 'shared/components/sampleLabel/SampleLabel';
 
 // sort samples based on event, clinical data and id

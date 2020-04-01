@@ -7,7 +7,7 @@ import {
 } from 'shared/components/mutationTable/MutationTable';
 import CancerTypeColumnFormatter from 'shared/components/mutationTable/column/CancerTypeColumnFormatter';
 import TumorAlleleFreqColumnFormatter from 'shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter';
-import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 import ExonColumnFormatter from 'shared/components/mutationTable/column/ExonColumnFormatter';
 import GnomadColumnFormatter from 'shared/components/mutationTable/column/GnomadColumnFormatter';
 

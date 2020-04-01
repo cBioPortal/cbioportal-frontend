@@ -9,7 +9,7 @@ import {
     MolecularProfile,
     Mutation,
     SampleIdentifier,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import { stringListToSet } from 'cbioportal-frontend-commons';
 import { GenomicLocation } from 'genome-nexus-ts-api-client';
 import {

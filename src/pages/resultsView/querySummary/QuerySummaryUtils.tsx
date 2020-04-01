@@ -1,10 +1,6 @@
 import { getPercentage } from '../../../shared/lib/FormatUtils';
 import * as React from 'react';
-import {
-    SampleList,
-    Sample,
-    CancerStudy,
-} from 'shared/api/generated/CBioPortalAPI';
+import { SampleList, Sample, CancerStudy } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import { buildCBioPortalPageUrl } from '../../../shared/api/urls';
 

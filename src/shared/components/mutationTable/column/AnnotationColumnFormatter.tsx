@@ -15,7 +15,7 @@ import {
     oncoKbAnnotationDownload,
 } from 'react-mutation-mapper';
 import OncokbPubMedCache from 'shared/cache/PubMedCache';
-import { CancerStudy, Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { CancerStudy, Mutation } from 'cbioportal-ts-api-client';
 import { IOncoKbData } from 'cbioportal-frontend-commons';
 import { CancerGene } from 'oncokb-ts-api-client';
 

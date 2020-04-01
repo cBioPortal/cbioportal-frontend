@@ -1,6 +1,6 @@
 import { CustomChartIdentifier, CustomGroup } from '../../StudyViewPageStore';
 import * as _ from 'lodash';
-import { Sample } from '../../../../shared/api/generated/CBioPortalAPI';
+import { Sample } from 'cbioportal-ts-api-client';
 import { ClinicalDataType, ClinicalDataTypeEnum } from '../../StudyViewUtils';
 import Pluralize from 'pluralize';
 

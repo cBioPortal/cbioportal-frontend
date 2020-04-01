@@ -17,7 +17,7 @@ import {
     Gene,
     Mutation,
     NumericGeneMolecularData,
-} from '../../../../shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import {
     generateCopyNumberAlterationQuery,
     generateQueryVariantId,

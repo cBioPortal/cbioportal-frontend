@@ -61,12 +61,8 @@ import {
     Sample,
     StudyViewFilter,
     ClinicalDataFilterValue,
-} from 'shared/api/generated/CBioPortalAPIInternal';
-import {
-    CancerStudy,
-    ClinicalAttribute,
-    Gene,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
+import { CancerStudy, ClinicalAttribute, Gene } from 'cbioportal-ts-api-client';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { SpecialChartsUniqueKeyEnum } from './StudyViewUtils';
 import { Layout } from 'react-grid-layout';

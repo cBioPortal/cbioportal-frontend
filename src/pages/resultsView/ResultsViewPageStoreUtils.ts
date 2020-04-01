@@ -12,7 +12,7 @@ import {
     PatientIdentifier,
     PatientFilter,
     ReferenceGenomeGene,
-} from '../../shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import { action, computed } from 'mobx';
 import AccessorsForOqlFilter, {
     getSimplifiedMutationType,

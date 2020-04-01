@@ -11,7 +11,7 @@ import {
     CancerStudy,
     MolecularProfile,
     Mutation,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import SampleColumnFormatter from './column/SampleColumnFormatter';
 import TumorAlleleFreqColumnFormatter from './column/TumorAlleleFreqColumnFormatter';
 import NormalAlleleFreqColumnFormatter from './column/NormalAlleleFreqColumnFormatter';

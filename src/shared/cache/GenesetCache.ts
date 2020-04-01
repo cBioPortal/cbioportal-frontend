@@ -1,5 +1,5 @@
 import LazyMobXCache from '../lib/LazyMobXCache';
-import { Geneset } from '../api/generated/CBioPortalAPIInternal';
+import { Geneset } from 'cbioportal-ts-api-client';
 import internalClient from '../api/cbioportalInternalClientInstance';
 
 type Query = {

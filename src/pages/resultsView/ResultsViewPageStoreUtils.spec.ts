@@ -8,7 +8,7 @@ import {
     Patient,
     Sample,
     CancerStudy,
-} from '../../shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import {
     annotateMolecularDatum,
     annotateMutationPutativeDriver,

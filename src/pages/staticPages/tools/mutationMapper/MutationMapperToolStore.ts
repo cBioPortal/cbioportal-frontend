@@ -16,11 +16,7 @@ import {
     VariantAnnotation,
 } from 'genome-nexus-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
-import {
-    ClinicalData,
-    Gene,
-    Mutation,
-} from 'shared/api/generated/CBioPortalAPI';
+import { ClinicalData, Gene, Mutation } from 'cbioportal-ts-api-client';
 import {
     fetchGenes,
     fetchOncoKbData,

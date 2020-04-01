@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import * as React from 'react';
-import { MolecularProfile } from '../../api/generated/CBioPortalAPI';
+import { MolecularProfile } from 'cbioportal-ts-api-client';
 import FontAwesome from 'react-fontawesome';
 import * as styles_any from './styles/styles.module.scss';
 import { observer } from 'mobx-react';

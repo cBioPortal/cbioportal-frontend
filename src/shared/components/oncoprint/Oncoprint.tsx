@@ -7,10 +7,7 @@ import OncoprintJS, {
     InitParams,
     ColumnLabel,
 } from 'oncoprintjs';
-import {
-    GenePanelData,
-    MolecularProfile,
-} from '../../api/generated/CBioPortalAPI';
+import { GenePanelData, MolecularProfile } from 'cbioportal-ts-api-client';
 import { observer } from 'mobx-react';
 import { computed } from 'mobx';
 import { transition } from './DeltaUtils';

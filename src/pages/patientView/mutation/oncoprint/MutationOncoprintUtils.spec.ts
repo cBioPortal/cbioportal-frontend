@@ -1,8 +1,5 @@
 import { assert } from 'chai';
-import {
-    Mutation,
-    Sample,
-} from '../../../../shared/api/generated/CBioPortalAPI';
+import { Mutation, Sample } from 'cbioportal-ts-api-client';
 import { CoverageInformation } from '../../../resultsView/ResultsViewPageStoreUtils';
 import { makeMutationHeatmapData } from './MutationOncoprintUtils';
 import { MutationOncoprintMode } from './MutationOncoprint';

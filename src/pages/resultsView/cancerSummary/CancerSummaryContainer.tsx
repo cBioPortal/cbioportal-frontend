@@ -14,7 +14,7 @@ import {
 import Loader, {
     default as LoadingIndicator,
 } from '../../../shared/components/loadingIndicator/LoadingIndicator';
-import { CancerStudy, Gene } from '../../../shared/api/generated/CBioPortalAPI';
+import { CancerStudy, Gene } from 'cbioportal-ts-api-client';
 import './styles.scss';
 import {
     getAlterationCountsForCancerTypesByGene,
