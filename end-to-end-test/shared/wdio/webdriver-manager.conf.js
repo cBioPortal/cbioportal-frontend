@@ -34,7 +34,8 @@ var config = {
     //     './specs/**/results.logic.spec.js'
     // ],
     specs: [
-        process.env.SPEC_FILE_PATTERN || './specs/**/*.spec.js', // './specs/**/screenshot.spec.js'
+        process.env.SPEC_FILE_PATTERN ||
+            './local/specs/core/**/querypage.spec.js',
     ],
 
     // Patterns to exclude.
@@ -80,6 +81,19 @@ var config = {
             resolution: '1600x1200',
         },
     ],
+
+    IECapabilties: [
+        {
+            os: 'Windows',
+            os_version: '10',
+            browser: 'IE',
+            browser_version: '11.0',
+            'browserstack.selenium_version': '3.5.2',
+            resolution: '1600x1200',
+            'browserstack.local': true,
+        },
+    ],
+
     //
     // ===================
     // Test Configurations
@@ -319,21 +333,17 @@ var config = {
     // }
 };
 
-const doBrowserstack = false;
+if (process.env.TEST_IE11 === 'true') {
+    config.capabilities = config.IECapabilties;
+}
 
-if (doBrowserstack) {
-    config.capabilities[0]['browserstack.local'] = true;
-
+if (process.env.TEST_BROWSERSTACK === 'true') {
     config.services = ['visual-regression', 'browserstack'];
-
     config.browserstackLocal = true;
-
     config.user = process.env.BROWSERSTACK_USER;
     config.key = process.env.BROWSERSTACK_KEY;
 }
 
-// config.specs = [
-//     './remote/specs/**/mutationTable.spec.js'
-// ];
+//config.specs = ['./remote/specs/core/ie.js'];
 
 exports.config = config;

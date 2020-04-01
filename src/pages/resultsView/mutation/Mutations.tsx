@@ -157,9 +157,6 @@ export default class Mutations extends React.Component<
                                 this.props.store.genomeNexusMyVariantInfoCache
                             }
                             pdbHeaderCache={this.props.store.pdbHeaderCache}
-                            myCancerGenomeData={
-                                this.props.store.myCancerGenomeData
-                            }
                             userEmailAddress={this.props.appStore.userName!}
                         />
                     </MSKTab>

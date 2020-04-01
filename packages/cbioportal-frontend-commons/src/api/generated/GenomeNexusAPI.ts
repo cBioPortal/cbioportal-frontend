@@ -562,6 +562,24 @@ export type MyVariantInfoAnnotation = {
         'license': string
 
 };
+export type NucleotideContext = {
+    'hgvs': string
+
+        'id': string
+
+        'molecule': string
+
+        'query': string
+
+        'seq': string
+
+};
+export type NucleotideContextAnnotation = {
+    'annotation': NucleotideContext
+
+        'license': string
+
+};
 export type OncokbAnnotation = {
     'annotation': IndicatorQueryResp
 
@@ -706,7 +724,13 @@ export type TranscriptConsequence = {
 
 };
 export type TranscriptConsequenceSummary = {
-    'codonChange': string
+    'aminoAcidAlt': string
+
+        'aminoAcidRef': string
+
+        'aminoAcids': string
+
+        'codonChange': string
 
         'consequenceTerms': string
 
@@ -790,6 +814,8 @@ export type VariantAnnotation = {
 
         'my_variant_info': MyVariantInfoAnnotation
 
+        'nucleotide_context': NucleotideContextAnnotation
+
         'oncokb': OncokbAnnotation
 
         'ptms': PtmAnnotation
@@ -799,6 +825,8 @@ export type VariantAnnotation = {
         'start': number
 
         'strand': number
+
+        'successfully_annotated': boolean
 
         'transcript_consequences': Array < TranscriptConsequence >
 

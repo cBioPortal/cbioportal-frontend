@@ -139,12 +139,12 @@ export function getColorForProteinImpactType(
     }
 }
 
-export function extractGenomicLocation(mutation: Partial<Mutation>) {
-    const chromosome =
-        mutation.chromosome ||
-        // TODO workaround for cbioportal API mutation type,
-        //  we should either remove this condition or add a custom getChromosome(mutation: Mutation) function
-        (mutation.gene && (mutation as any).gene.chromosome);
+export function extractGenomicLocation(
+    mutation: Partial<Mutation & { chr: string }>
+) {
+    // TODO workaround for cbioportal API mutation type,
+    //  add a custom getChromosome(mutation: Mutation) function?
+    const chromosome = mutation.chromosome || mutation.chr;
 
     if (
         chromosome &&
