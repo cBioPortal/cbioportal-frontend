@@ -55,7 +55,6 @@ import {
     fetchCopyNumberSegmentsForSamples,
     fetchGenes,
     fetchGermlineConsentedSamples,
-    fetchMyCancerGenomeData,
     fetchOncoKbCancerGenes,
     fetchOncoKbData,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData,
@@ -2800,10 +2799,6 @@ export class ResultsViewPageStore {
         return generateDownloadFilenamePrefixByStudies(this.studies.result);
     }
 
-    @computed get myCancerGenomeData() {
-        return fetchMyCancerGenomeData();
-    }
-
     // TODO: refactor b/c we already have sample lists summary so
     readonly sampleLists = remoteData<SampleList[]>({
         await: () => [this.studyToSampleListId],
@@ -3002,8 +2997,7 @@ export class ResultsViewPageStore {
                                     this.germlineConsentedSamples,
                                     this.indexedHotspotData,
                                     this.indexedVariantAnnotations,
-                                    this.uniqueSampleKeyToTumorType.result!,
-                                    this.oncoKbData
+                                    this.uniqueSampleKeyToTumorType.result!
                                 );
                                 return map;
                             },
@@ -4250,33 +4244,6 @@ export class ResultsViewPageStore {
         },
     });
 
-    readonly oncoKbData = remoteData<IOncoKbData | Error>(
-        {
-            await: () => [
-                this.mutations,
-                this.clinicalDataForSamples,
-                this.studiesForSamplesWithoutCancerTypeClinicalData,
-                this.uniqueSampleKeyToTumorType,
-                this.oncoKbAnnotatedGenes,
-            ],
-            invoke: () => {
-                if (AppConfig.serverConfig.show_oncokb) {
-                    return fetchOncoKbData(
-                        this.uniqueSampleKeyToTumorType.result!,
-                        this.oncoKbAnnotatedGenes.result!,
-                        this.mutations
-                    );
-                } else {
-                    return Promise.resolve(ONCOKB_DEFAULT);
-                }
-            },
-            onError: (err: Error) => {
-                // fail silently, leave the error handling responsibility to the data consumer
-            },
-        },
-        ONCOKB_DEFAULT
-    );
-
     //we need seperate oncokb data because oncoprint requires onkb queries across cancertype
     //mutations tab the opposite
     readonly oncoKbDataForOncoprint = remoteData<IOncoKbData | Error>(
@@ -4391,7 +4358,7 @@ export class ResultsViewPageStore {
                 return Promise.resolve(new Error());
             } else {
                 return Promise.resolve((mutation: Mutation) => {
-                    const uniqueSampleKeyToTumorType = oncoKbDataForOncoprint.uniqueSampleKeyToTumorType!;
+                    const uniqueSampleKeyToTumorType = {};
                     const id = generateQueryVariantId(
                         mutation.entrezGeneId,
                         cancerTypeForOncoKb(
@@ -4420,7 +4387,7 @@ export class ResultsViewPageStore {
             } else {
                 return Promise.resolve((data: NumericGeneMolecularData) => {
                     if (this.driverAnnotationSettings.oncoKb) {
-                        const uniqueSampleKeyToTumorType = cnaOncoKbDataForOncoprint.uniqueSampleKeyToTumorType!;
+                        const uniqueSampleKeyToTumorType = {};
                         const id = generateQueryVariantId(
                             data.entrezGeneId,
                             cancerTypeForOncoKb(

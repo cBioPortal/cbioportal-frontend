@@ -218,19 +218,15 @@ export default class OQLTextArea extends React.Component<
         if (this.props.callback) {
             this.props.callback(oql, validationResult, this.geneQuery);
         }
+    }
 
-        if (
-            oql.error !== undefined &&
-            (this.props.focus === undefined ||
-                this.props.focus === Focus.ShouldFocus) &&
-            this.textAreaRef.current
-        ) {
-            this.textAreaRef.current.focus();
-            this.textAreaRef.current.setSelectionRange(
-                oql.error.start,
-                oql.error.end
-            );
-        }
+    @autobind
+    highlightError(oql: OQL) {
+        this.textAreaRef.current!.focus();
+        this.textAreaRef.current!.setSelectionRange(
+            oql.error!.start,
+            oql.error!.end
+        );
     }
 
     @computed
@@ -297,6 +293,7 @@ export default class OQLTextArea extends React.Component<
                         errorMessageOnly={
                             this.props.location === GeneBoxType.STUDY_VIEW_PAGE
                         }
+                        highlightError={this.highlightError}
                     >
                         {this.props.children}
                     </GeneSymbolValidator>
