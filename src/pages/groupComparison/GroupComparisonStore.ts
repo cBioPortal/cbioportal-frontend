@@ -31,7 +31,6 @@ export default class GroupComparisonStore extends ComparisonStore {
         | GroupComparisonTab
         | undefined = undefined;
     @observable private sessionId: string;
-    @observable public newSessionPending = false;
 
     constructor(
         sessionId: string,
@@ -126,31 +125,8 @@ export default class GroupComparisonStore extends ComparisonStore {
         return !this.unselectedGroups.includes(name);
     }
 
-    public get isLoggedIn() {
-        return this.appStore.isLoggedIn;
-    }
-
-    public async addGroup(group: SessionGroupData, saveToUser: boolean) {
-        this.newSessionPending = true;
-        if (saveToUser && this.isLoggedIn) {
-            await comparisonClient.addGroup(group);
-        }
-        const newSession = _.cloneDeep(this._session.result!);
-        newSession.groups.push(group);
-
-        this.saveAndGoToSession(newSession);
-    }
-
-    public async deleteGroup(name: string) {
-        this.newSessionPending = true;
-        const newSession = _.cloneDeep(this._session.result!);
-        newSession.groups = newSession.groups.filter(g => g.name !== name);
-
-        this.saveAndGoToSession(newSession);
-    }
-
     @action
-    private async saveAndGoToSession(newSession: Session) {
+    protected async saveAndGoToSession(newSession: Session) {
         const { id } = await comparisonClient.addComparisonSession(newSession);
         this.urlWrapper.updateURL({ sessionId: id });
     }
@@ -180,11 +156,6 @@ export default class GroupComparisonStore extends ComparisonStore {
         },
     });
 
-    readonly origin = remoteData({
-        await: () => [this._session],
-        invoke: () => Promise.resolve(this._session.result!.origin),
-    });
-
     @computed get sessionClinicalAttributeName() {
         if (this._session.isComplete) {
             return this._session.result.clinicalAttributeName;
@@ -192,23 +163,6 @@ export default class GroupComparisonStore extends ComparisonStore {
             return undefined;
         }
     }
-
-    readonly existingGroupNames = remoteData({
-        await: () => [this._originalGroups, this.origin],
-        invoke: async () => {
-            const ret = {
-                session: this._originalGroups.result!.map(g => g.name),
-                user: [] as string[],
-            };
-            if (this.isLoggedIn) {
-                // need to add all groups belonging to this user for this origin
-                ret.user = (await comparisonClient.getGroupsForStudies(
-                    this.origin.result!
-                )).map(g => g.data.name);
-            }
-            return ret;
-        },
-    });
 
     readonly _unsortedOriginalGroups = remoteData<ComparisonGroup[]>({
         await: () => [this._session, this.sampleSet],
