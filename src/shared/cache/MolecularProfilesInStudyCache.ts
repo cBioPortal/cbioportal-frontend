@@ -2,7 +2,7 @@ import LazyMobXCache, { AugmentedData } from '../lib/LazyMobXCache';
 import {
     MolecularProfile,
     MolecularProfileFilter,
-} from '../api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import client from '../api/cbioportalClientInstance';
 import * as _ from 'lodash';
 

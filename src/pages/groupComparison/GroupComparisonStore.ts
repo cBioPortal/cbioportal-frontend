@@ -7,7 +7,7 @@ import {
 } from './GroupComparisonUtils';
 import { GroupComparisonTab } from './GroupComparisonTabs';
 import { remoteData, stringListToIndexSet } from 'cbioportal-frontend-commons';
-import { SampleFilter } from '../../shared/api/generated/CBioPortalAPI';
+import { SampleFilter } from 'cbioportal-ts-api-client';
 import { action, computed, observable } from 'mobx';
 import client from '../../shared/api/cbioportalClientInstance';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 import {
     ICategoricalColumn,
     createToolTip,

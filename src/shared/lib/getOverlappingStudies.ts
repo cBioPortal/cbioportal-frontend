@@ -1,4 +1,4 @@
-import { CancerStudy } from '../api/generated/CBioPortalAPI';
+import { CancerStudy } from 'cbioportal-ts-api-client';
 import * as _ from 'lodash';
 
 export default function getOverlappingStudies(

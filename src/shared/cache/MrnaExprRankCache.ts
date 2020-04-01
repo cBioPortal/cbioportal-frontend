@@ -4,7 +4,7 @@ import {
     SampleAndGene,
 } from 'shared/lib/SampleGeneCache';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
-import { MrnaPercentile } from 'shared/api/generated/CBioPortalAPIInternal';
+import { MrnaPercentile } from 'cbioportal-ts-api-client';
 import { CacheData } from 'shared/lib/LazyMobXCache';
 
 export type MrnaExprRankCacheDataType = CacheData<MrnaPercentile>;

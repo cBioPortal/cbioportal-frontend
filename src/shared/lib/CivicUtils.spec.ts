@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import { MobxPromise } from 'mobxpromise';
 import { getCivicEntry } from 'react-mutation-mapper';
 
-import { Mutation } from '../api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 import { fetchCivicGenes, fetchCivicVariants } from './CivicUtils';
 import {
     getCivicGenes,

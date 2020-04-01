@@ -4,7 +4,7 @@ import {
     MolecularProfile,
     Mutation,
     SampleIdentifier,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import {
     germlineMutationRate,
     somaticMutationRate,

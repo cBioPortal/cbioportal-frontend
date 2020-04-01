@@ -6,7 +6,7 @@ import {
     CancerStudy,
     MolecularProfile,
     SampleIdentifier,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { CancerGene } from 'oncokb-ts-api-client';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';

@@ -4,10 +4,7 @@ import {
     ICivicEntry,
     ICivicVariantData,
 } from 'react-mutation-mapper';
-import {
-    DiscreteCopyNumberData,
-    Mutation,
-} from 'shared/api/generated/CBioPortalAPI';
+import { DiscreteCopyNumberData, Mutation } from 'cbioportal-ts-api-client';
 
 export function getCivicVariantData(): ICivicVariantData {
     return {

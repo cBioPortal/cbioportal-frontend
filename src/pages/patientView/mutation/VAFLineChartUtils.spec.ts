@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { Mutation, Sample } from '../../../shared/api/generated/CBioPortalAPI';
+import { Mutation, Sample } from 'cbioportal-ts-api-client';
 import { MutationStatus } from './PatientViewMutationsTabUtils';
 import { generateMutationIdByGeneAndProteinChangeAndEvent } from '../../../shared/lib/StoreUtils';
 import { CoverageInformation } from '../../resultsView/ResultsViewPageStoreUtils';

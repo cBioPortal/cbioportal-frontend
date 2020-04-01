@@ -16,7 +16,7 @@ import {
 import genomeNexusClient from 'shared/api/genomeNexusClientInstance';
 import internalGenomeNexusClient from 'shared/api/genomeNexusInternalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
-import { Gene, Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { Gene, Mutation } from 'cbioportal-ts-api-client';
 import {
     defaultOncoKbIndicatorFilter,
     IOncoKbData,

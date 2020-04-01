@@ -1,8 +1,5 @@
 import * as React from 'react';
-import {
-    ClinicalAttribute,
-    ClinicalData,
-} from '../../../shared/api/generated/CBioPortalAPI';
+import { ClinicalAttribute, ClinicalData } from 'cbioportal-ts-api-client';
 import LazyMobXTable, {
     Column,
 } from 'shared/components/lazyMobXTable/LazyMobXTable';

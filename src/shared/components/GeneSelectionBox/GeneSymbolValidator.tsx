@@ -7,7 +7,7 @@ import {
     Focus,
 } from 'shared/components/query/QueryStore';
 import { action, computed } from '../../../../node_modules/mobx';
-import { Gene } from 'shared/api/generated/CBioPortalAPI';
+import { Gene } from 'cbioportal-ts-api-client';
 import 'react-select1/dist/react-select.css';
 import { remoteData } from 'cbioportal-frontend-commons';
 import client from 'shared/api/cbioportalClientInstance';

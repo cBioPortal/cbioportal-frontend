@@ -1,5 +1,5 @@
 import MobxPromise from 'mobxpromise';
-import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 import {
     GenomeNexusAPIInternal,
     GenomicLocation,

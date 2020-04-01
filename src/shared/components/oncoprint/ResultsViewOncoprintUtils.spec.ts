@@ -3,7 +3,7 @@ import {
     GenePanelData,
     MolecularProfile,
     GenericAssayMeta,
-} from '../../api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import {
     AlterationTypeConstants,
     GenericAssayTypeConstants,

@@ -2,7 +2,7 @@ import * as React from 'react';
 import {
     TypeOfCancer as CancerType,
     CancerStudy,
-} from '../../../api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import * as styles_any from './styles.module.scss';
 import classNames from 'classnames';
 import FontAwesome from 'react-fontawesome';

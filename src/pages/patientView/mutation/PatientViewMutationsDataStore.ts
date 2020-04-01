@@ -1,5 +1,5 @@
 import { SimpleGetterLazyMobXTableApplicationDataStore } from '../../../shared/lib/ILazyMobXTableApplicationDataStore';
-import { Mutation } from '../../../shared/api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 import { action, computed, observable } from 'mobx';
 import _ from 'lodash';
 import PatientViewUrlWrapper from '../PatientViewUrlWrapper';

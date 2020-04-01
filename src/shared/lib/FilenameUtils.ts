@@ -1,4 +1,4 @@
-import { CancerStudy } from 'shared/api/generated/CBioPortalAPI';
+import { CancerStudy } from 'cbioportal-ts-api-client';
 
 export function generateDownloadFilenamePrefixByStudies(
     studies?: CancerStudy[]

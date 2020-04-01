@@ -1,8 +1,5 @@
 import { assert, expect } from 'chai';
-import {
-    Geneset,
-    GenesetHierarchyInfo,
-} from 'shared/api/generated/CBioPortalAPIInternal';
+import { Geneset, GenesetHierarchyInfo } from 'cbioportal-ts-api-client';
 import { ObservableMap } from 'mobx';
 import {
     getGenesetsFromHierarchy,

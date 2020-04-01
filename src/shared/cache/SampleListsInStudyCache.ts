@@ -1,5 +1,5 @@
 import client from '../api/cbioportalClientInstance';
-import { SampleList } from 'shared/api/generated/CBioPortalAPI';
+import { SampleList } from 'cbioportal-ts-api-client';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 
 async function fetch(studyId: string) {

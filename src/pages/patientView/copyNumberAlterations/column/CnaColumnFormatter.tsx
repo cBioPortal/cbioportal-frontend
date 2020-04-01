@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { DiscreteCopyNumberData } from 'shared/api/generated/CBioPortalAPI';
+import { DiscreteCopyNumberData } from 'cbioportal-ts-api-client';
 
 export enum AlterationTypes {
     'DeepDel' = -2,
