@@ -2519,6 +2519,41 @@
         }
       }
     },
+    "NucleotideContext": {
+      "type": "object",
+      "required": [
+        "seq"
+      ],
+      "properties": {
+        "hgvs": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "molecule": {
+          "type": "string"
+        },
+        "query": {
+          "type": "string"
+        },
+        "seq": {
+          "type": "string",
+          "description": "Nucleotide context sequence"
+        }
+      }
+    },
+    "NucleotideContextAnnotation": {
+      "type": "object",
+      "properties": {
+        "annotation": {
+          "$ref": "#/definitions/NucleotideContext"
+        },
+        "license": {
+          "type": "string"
+        }
+      }
+    },
     "OncokbAnnotation": {
       "type": "object",
       "properties": {
@@ -2850,6 +2885,18 @@
         "transcriptId"
       ],
       "properties": {
+        "aminoAcidAlt": {
+          "type": "string",
+          "description": "Alt Amino Acid"
+        },
+        "aminoAcidRef": {
+          "type": "string",
+          "description": "Reference Amino Acid"
+        },
+        "aminoAcids": {
+          "type": "string",
+          "description": "Amino acids change"
+        },
         "codonChange": {
           "type": "string",
           "description": "Codon change"
@@ -3039,6 +3086,10 @@
           "description": "My Variant Info Annotation",
           "$ref": "#/definitions/MyVariantInfoAnnotation"
         },
+        "nucleotide_context": {
+          "description": "Nucleotide Context Annotation",
+          "$ref": "#/definitions/NucleotideContextAnnotation"
+        },
         "oncokb": {
           "description": "Oncokb",
           "$ref": "#/definitions/OncokbAnnotation"
@@ -3060,6 +3111,11 @@
           "type": "integer",
           "format": "int32",
           "description": "Strand (negative or positive)"
+        },
+        "successfully_annotated": {
+          "type": "boolean",
+          "example": false,
+          "description": "Status flag indicating whether variant was succesfully annotated"
         },
         "transcript_consequences": {
           "type": "array",

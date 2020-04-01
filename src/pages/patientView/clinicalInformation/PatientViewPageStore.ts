@@ -34,8 +34,10 @@ import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAs
 import GenomeNexusMyVariantInfoCache from 'shared/cache/GenomeNexusMyVariantInfoCache';
 import { IOncoKbData } from 'cbioportal-frontend-commons';
 import {
+    getMyCancerGenomeData,
     ICivicVariant,
     ICivicGene,
+    IMyCancerGenomeData,
     IHotspotIndex,
     indexHotspotsData,
 } from 'react-mutation-mapper';
@@ -51,7 +53,6 @@ import {
     fetchOncoKbData,
     fetchCnaOncoKbData,
     mergeMutations,
-    fetchMyCancerGenomeData,
     fetchMutationalSignatureData,
     fetchMutationalSignatureMetaData,
     fetchCosmicData,
@@ -319,9 +320,7 @@ export class PatientViewPageStore {
         return memoryCachedIds ? memoryCachedIds : this._patientIdsInCohort;
     }
 
-    @computed get myCancerGenomeData() {
-        return fetchMyCancerGenomeData();
-    }
+    readonly myCancerGenomeData: IMyCancerGenomeData = getMyCancerGenomeData();
 
     readonly mutationalSignatureData = remoteData({
         invoke: async () => fetchMutationalSignatureData(),
