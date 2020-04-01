@@ -1,5 +1,5 @@
 import AccessorsForOqlFilter from './AccessorsForOqlFilter';
-import { NumericGeneMolecularData } from '../../api/generated/CBioPortalAPI';
+import { NumericGeneMolecularData } from 'cbioportal-ts-api-client';
 import {
     AlterationTypeConstants,
     AnnotatedMutation,

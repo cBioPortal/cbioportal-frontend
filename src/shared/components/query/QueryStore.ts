@@ -17,8 +17,8 @@ import {
     Gene,
     Sample,
     SampleFilter,
-} from '../../api/generated/CBioPortalAPI';
-import { Geneset } from '../../api/generated/CBioPortalAPIInternal';
+} from 'cbioportal-ts-api-client';
+import { Geneset } from 'cbioportal-ts-api-client';
 import CancerStudyTreeData from './CancerStudyTreeData';
 import {
     getBrowserWindow,

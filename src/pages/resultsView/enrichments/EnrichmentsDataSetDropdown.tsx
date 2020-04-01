@@ -2,10 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { computed } from 'mobx';
 import styles from './styles.module.scss';
-import {
-    MolecularProfile,
-    CancerStudy,
-} from 'shared/api/generated/CBioPortalAPI';
+import { MolecularProfile, CancerStudy } from 'cbioportal-ts-api-client';
 import autobind from 'autobind-decorator';
 import MolecularProfileSelector from '../../../shared/components/MolecularProfileSelector';
 import { MobxPromise } from 'mobxpromise';

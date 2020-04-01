@@ -12,7 +12,7 @@ import {
 } from './OverlapUtils';
 import { assertDeepEqualInAnyOrder } from '../../shared/lib/SpecUtils';
 import ComplexKeyGroupsMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap';
-import { Sample } from '../../shared/api/generated/CBioPortalAPI';
+import { Sample } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 
 describe('OverlapUtils', () => {

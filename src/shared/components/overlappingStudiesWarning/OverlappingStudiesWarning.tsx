@@ -1,6 +1,6 @@
 import * as React from 'react';
 import getOverlappingStudies from '../../lib/getOverlappingStudies';
-import { CancerStudy } from '../../api/generated/CBioPortalAPI';
+import { CancerStudy } from 'cbioportal-ts-api-client';
 
 export default class OverlappingStudiesWarning extends React.Component<
     { studies: CancerStudy[] },

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ClinicalDataBySampleId } from 'shared/api/api-types-extended';
+import { ClinicalDataBySampleId } from 'cbioportal-ts-api-client';
 import SampleInline from 'pages/patientView/patientHeader/SampleInline';
 
 const color = '#cccccc';

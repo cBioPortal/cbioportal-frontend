@@ -11,10 +11,7 @@ import {
     VariantAnnotation,
 } from 'genome-nexus-ts-api-client';
 import 'rc-tooltip/assets/bootstrap_white.css';
-import {
-    Mutation,
-    DiscreteCopyNumberData,
-} from 'shared/api/generated/CBioPortalAPI';
+import { Mutation, DiscreteCopyNumberData } from 'cbioportal-ts-api-client';
 import MutationAssessor from 'shared/components/annotation/genomeNexus/MutationAssessor';
 import Sift from 'shared/components/annotation/genomeNexus/Sift';
 import PolyPhen2 from 'shared/components/annotation/genomeNexus/PolyPhen2';

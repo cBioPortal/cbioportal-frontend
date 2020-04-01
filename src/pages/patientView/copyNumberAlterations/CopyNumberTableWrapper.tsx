@@ -8,7 +8,7 @@ import {
     DiscreteCopyNumberData,
     Gene,
     ReferenceGenomeGene,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import { Column } from 'shared/components/lazyMobXTable/LazyMobXTable';
 import MrnaExprColumnFormatter from 'shared/components/mutationTable/column/MrnaExprColumnFormatter';
 import { IColumnVisibilityControlsProps } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';

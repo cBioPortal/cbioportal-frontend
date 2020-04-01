@@ -1,5 +1,6 @@
 import * as _ from 'lodash';
 import {
+    CBioPortalAPIInternal,
     ClinicalData,
     MolecularProfile,
     Sample,
@@ -13,10 +14,9 @@ import {
     GenePanelData,
     GenePanel,
     ReferenceGenomeGene,
-} from '../../../shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import client from '../../../shared/api/cbioportalClientInstance';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
-import { default as CBioPortalAPIInternal } from 'shared/api/generated/CBioPortalAPIInternal';
 import { computed, observable, action, runInAction } from 'mobx';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { IGisticData } from 'shared/model/Gistic';

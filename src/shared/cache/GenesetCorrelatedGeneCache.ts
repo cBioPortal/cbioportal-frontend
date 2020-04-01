@@ -1,4 +1,4 @@
-import { GenesetCorrelation } from '../api/generated/CBioPortalAPIInternal';
+import { GenesetCorrelation } from 'cbioportal-ts-api-client';
 import client from 'shared/api/cbioportalInternalClientInstance';
 import _ from 'lodash';
 import { IDataQueryFilter } from '../lib/StoreUtils';

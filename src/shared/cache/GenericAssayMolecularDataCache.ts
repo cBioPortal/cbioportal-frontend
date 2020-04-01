@@ -1,7 +1,7 @@
 import LazyMobXCache, { AugmentedData } from '../lib/LazyMobXCache';
 import _ from 'lodash';
 import { IDataQueryFilter } from '../lib/StoreUtils';
-import { GenericAssayData } from 'shared/api/generated/CBioPortalAPI';
+import { GenericAssayData } from 'cbioportal-ts-api-client';
 import { fetchGenericAssayData } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 export type GenericAssayDataEnhanced = GenericAssayData & {

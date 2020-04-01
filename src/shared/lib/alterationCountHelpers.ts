@@ -7,7 +7,7 @@ import {
     IAlterationCountMap,
     IAlterationData,
 } from '../../pages/resultsView/cancerSummary/CancerSummaryContent';
-import { Sample, MolecularProfile } from '../api/generated/CBioPortalAPI';
+import { Sample, MolecularProfile } from 'cbioportal-ts-api-client';
 import * as _ from 'lodash';
 import { CoverageInformation } from 'pages/resultsView/ResultsViewPageStoreUtils';
 import { isSampleProfiledInMultiple } from './isSampleProfiled';

@@ -2,8 +2,8 @@ import {
     MolecularProfile,
     Mutation,
     NumericGeneMolecularData,
-} from '../../../shared/api/generated/CBioPortalAPI';
-import { GenesetMolecularData } from '../../../shared/api/generated/CBioPortalAPIInternal';
+} from 'cbioportal-ts-api-client';
+import { GenesetMolecularData } from 'cbioportal-ts-api-client';
 import { CoverageInformation } from '../ResultsViewPageStoreUtils';
 import { isSampleProfiled } from '../../../shared/lib/isSampleProfiled';
 

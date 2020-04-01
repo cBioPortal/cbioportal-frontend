@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import wordwrap from 'word-wrap';
 import { ThreeBounce } from 'better-react-spinkit';
-import { CancerStudy } from 'shared/api/generated/CBioPortalAPI';
+import { CancerStudy } from 'cbioportal-ts-api-client';
 import { ChartTooltipItem } from 'chart.js';
 const convertCssColorNameToHex = require('convert-css-color-name-to-hex');
 import Chart from 'chart.js';

@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import * as React from 'react';
 import ReactDOM from 'react-dom';
-import { TypeOfCancer as CancerType } from '../../api/generated/CBioPortalAPI';
+import { TypeOfCancer as CancerType } from 'cbioportal-ts-api-client';
 import { FlexCol, FlexRow } from '../flexbox/FlexBox';
 import * as styles_any from './styles/styles.module.scss';
 import classNames from 'classnames';

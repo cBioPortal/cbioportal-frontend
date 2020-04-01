@@ -2,7 +2,7 @@ import * as React from 'react';
 import {
     AlterationEnrichment,
     ExpressionEnrichment,
-} from 'shared/api/generated/CBioPortalAPIInternal';
+} from 'cbioportal-ts-api-client';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import { ExpressionEnrichmentRow } from 'shared/model/ExpressionEnrichmentRow';
 import { tsvFormat } from 'd3-dsv';
@@ -10,7 +10,7 @@ import { BoxPlotModel, calculateBoxPlotModel } from 'shared/lib/boxPlotUtils';
 import {
     MolecularProfile,
     NumericGeneMolecularData,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import seedrandom from 'seedrandom';
 import { roundLogRatio, formatLogOddsRatio } from 'shared/lib/FormatUtils';
 import * as _ from 'lodash';

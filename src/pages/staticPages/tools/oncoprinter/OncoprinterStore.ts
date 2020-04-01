@@ -30,10 +30,7 @@ import {
     countMutations,
     mutationCountByPositionKey,
 } from '../../../resultsView/mutationCountHelpers';
-import {
-    Mutation,
-    MutationCountByPosition,
-} from '../../../../shared/api/generated/CBioPortalAPI';
+import { Mutation, MutationCountByPosition } from 'cbioportal-ts-api-client';
 import { SampleAlteredMap } from '../../../resultsView/ResultsViewPageStoreUtils';
 import { AlteredStatus } from 'pages/resultsView/mutualExclusivity/MutualExclusivityUtil';
 import {

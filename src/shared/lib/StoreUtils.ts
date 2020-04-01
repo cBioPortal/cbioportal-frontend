@@ -11,7 +11,7 @@ import {
     ClinicalDataSingleStudyFilter,
     CopyNumberCountIdentifier,
     CopyNumberSeg,
-    default as CBioPortalAPI,
+    CBioPortalAPI,
     DiscreteCopyNumberData,
     DiscreteCopyNumberFilter,
     Gene,
@@ -25,7 +25,7 @@ import {
     ReferenceGenomeGene,
     Sample,
     SampleFilter,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import defaultClient from 'shared/api/cbioportalClientInstance';
 import client from 'shared/api/cbioportalClientInstance';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
@@ -38,11 +38,11 @@ import {
 } from 'genome-nexus-ts-api-client';
 import {
     CosmicMutation,
-    default as CBioPortalAPIInternal,
+    CBioPortalAPIInternal,
     Gistic,
     GisticToGene,
     MutSig,
-} from 'shared/api/generated/CBioPortalAPIInternal';
+} from 'cbioportal-ts-api-client';
 import oncokbClient from 'shared/api/oncokbClientInstance';
 import genomeNexusClient from 'shared/api/genomeNexusClientInstance';
 import {

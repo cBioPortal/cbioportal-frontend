@@ -41,7 +41,7 @@ import OverlapExclusionIndicator from './OverlapExclusionIndicator';
 import { RESERVED_CLINICAL_VALUE_COLORS } from '../../shared/lib/Colors';
 import ErrorMessage from '../../shared/components/ErrorMessage';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
-import { Sample } from 'shared/api/generated/CBioPortalAPI';
+import { Sample } from 'cbioportal-ts-api-client';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 
 export interface IClinicalDataProps {

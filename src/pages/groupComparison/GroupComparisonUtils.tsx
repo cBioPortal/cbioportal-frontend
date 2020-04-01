@@ -3,12 +3,12 @@ import {
     PatientIdentifier,
     Sample,
     SampleIdentifier,
-} from '../../shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import {
     ClinicalDataEnrichment,
     StudyViewFilter,
-} from '../../shared/api/generated/CBioPortalAPIInternal';
+} from 'cbioportal-ts-api-client';
 import { AlterationEnrichmentWithQ } from '../resultsView/enrichments/EnrichmentsUtil';
 import {
     GroupData,

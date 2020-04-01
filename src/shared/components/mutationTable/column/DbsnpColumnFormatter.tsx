@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Circle } from 'better-react-spinkit';
 import 'rc-tooltip/assets/bootstrap_white.css';
-import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 import {
     DefaultTooltip,
     TableCellStatusIndicator,

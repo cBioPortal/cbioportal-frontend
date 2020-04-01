@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as styles_any from './styles/styles.module.scss';
 import { ObservableMap, expr, toJS, computed, observable } from 'mobx';
 import { observer, Observer } from 'mobx-react';
-import { Gistic } from '../../api/generated/CBioPortalAPIInternal';
+import { Gistic } from 'cbioportal-ts-api-client';
 import EnhancedReactTable from '../enhancedReactTable/EnhancedReactTable';
 import { IColumnFormatterData } from '../enhancedReactTable/IColumnFormatter';
 import { Td } from 'reactable';

@@ -1,4 +1,4 @@
-import { StudyViewFilter } from '../api/generated/CBioPortalAPIInternal';
+import { StudyViewFilter } from 'cbioportal-ts-api-client';
 
 export interface VirtualStudyData {
     name: string;

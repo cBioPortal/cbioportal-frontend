@@ -11,7 +11,7 @@ import {
     groupDataByGroupFilters,
 } from 'react-mutation-mapper';
 import { SimpleLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
-import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 import {
     countDuplicateMutations,
     groupMutationsByGeneAndPatientAndProteinChange,
