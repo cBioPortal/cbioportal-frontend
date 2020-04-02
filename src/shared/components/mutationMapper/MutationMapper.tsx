@@ -27,7 +27,6 @@ import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
 import GenomeNexusMyVariantInfoCache from 'shared/cache/GenomeNexusMyVariantInfoCache';
-import { IMyCancerGenomeData } from 'shared/model/MyCancerGenome';
 import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
 import {
     DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
@@ -57,7 +56,6 @@ export interface IMutationMapperProps {
     mainLoadingIndicator?: JSX.Element;
     geneSummaryLoadingIndicator?: JSX.Element;
     studyId?: string;
-    myCancerGenomeData?: IMyCancerGenomeData;
     pdbHeaderCache?: PdbHeaderCache;
     genomeNexusCache?: GenomeNexusCache;
     genomeNexusMutationAssessorCache?: GenomeNexusMutationAssessorCache;

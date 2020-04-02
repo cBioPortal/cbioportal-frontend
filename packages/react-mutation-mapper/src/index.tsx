@@ -8,6 +8,15 @@ export {
     getClinVarId,
 } from './component/clinvar/ClinVarId';
 export {
+    AnnotationProps,
+    default as Annotation,
+    DEFAULT_ANNOTATION_DATA,
+    GenericAnnotation,
+    getAnnotationData,
+    IAnnotation,
+    sortValue as annotationSortValue,
+} from './component/column/Annotation';
+export {
     default as ClinVar,
     sortValue as clinVarSortValue,
 } from './component/column/ClinVar';
@@ -20,6 +29,11 @@ export {
     default as Gnomad,
     sortValue as gnomadSortValue,
 } from './component/column/Gnomad';
+export {
+    default as MyCancerGenome,
+    download as myCancerGenomeDownload,
+    sortValue as myCancerGenomeSortValue,
+} from './component/myCancerGenome/MyCancerGenome';
 export { default as MutationStatus } from './component/column/MutationStatus';
 export {
     default as ProteinChange,
@@ -125,6 +139,7 @@ export { DomainSpec } from './model/DomainSpec';
 export { ApplyFilterFn, FilterApplier } from './model/FilterApplier';
 export { IProteinImpactTypeColors } from './model/ProteinImpact';
 export { LollipopSpec } from './model/LollipopSpec';
+export * from './model/MyCancerGenome';
 export { Mutation } from './model/Mutation';
 export { MutationMapperStore } from './model/MutationMapperStore';
 export { RemoteData } from './model/RemoteData';
@@ -138,6 +153,7 @@ export * from './util/DataFetcherUtils';
 export * from './util/FilterUtils';
 export * from './util/FormatUtils';
 export * from './util/MutationAnnotator';
+export * from './util/MyCancerGenomeUtils';
 export * from './util/ReactTableUtils';
 export {
     MUTATION_TYPE_PRIORITY,

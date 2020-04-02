@@ -367,7 +367,6 @@ describe('StoreUtils', () => {
         it("won't fetch onkokb data if there are no mutations", done => {
             fetchOncoKbData({}, [], emptyMutationData).then((data: any) => {
                 assert.deepEqual(data, {
-                    uniqueSampleKeyToTumorType: {},
                     indicatorMap: {},
                 });
                 done();
