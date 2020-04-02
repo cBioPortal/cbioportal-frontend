@@ -131,7 +131,7 @@ export { OncoKbFilter } from './filter/OncoKbFilter';
 export { PositionFilter } from './filter/PositionFilter';
 export { ProteinImpactTypeFilter } from './filter/ProteinImpactTypeFilter';
 
-export { IHotspotIndex } from './model/CancerHotspot';
+export { AggregatedHotspots, IHotspotIndex } from './model/CancerHotspot';
 export * from './model/Civic';
 export { DataFilter, DataFilterType } from './model/DataFilter';
 export { DataStore } from './model/DataStore';
@@ -141,6 +141,7 @@ export { IProteinImpactTypeColors } from './model/ProteinImpact';
 export { LollipopSpec } from './model/LollipopSpec';
 export * from './model/MyCancerGenome';
 export { Mutation } from './model/Mutation';
+export { MutationMapperDataFetcher } from './model/MutationMapperDataFetcher';
 export { MutationMapperStore } from './model/MutationMapperStore';
 export { RemoteData } from './model/RemoteData';
 export { SequenceSpec } from './model/SequenceSpec';
@@ -163,12 +164,14 @@ export {
     groupMutationsByProteinStartPos,
     mutationTypeSort,
     getColorForProteinImpactType,
+    uniqueGenomicLocations,
 } from './util/MutationUtils';
 export {
     defaultOncoKbFilter,
     groupOncoKbIndicatorDataByMutations,
 } from './util/OncoKbUtils';
 export * from './util/TrackUtils';
+export * from './util/VariantAnnotationUtils';
 
 export {
     default as DefaultMutationMapperDataFetcher,

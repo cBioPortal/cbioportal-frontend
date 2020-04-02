@@ -25,7 +25,8 @@ import DataStore from '../model/DataStore';
 import { ApplyFilterFn, FilterApplier } from '../model/FilterApplier';
 import { Gene } from '../model/Gene';
 import { Mutation } from '../model/Mutation';
-import MutationMapperStore from '../model/MutationMapperStore';
+import { MutationMapperDataFetcher } from '../model/MutationMapperDataFetcher';
+import { MutationMapperStore } from '../model/MutationMapperStore';
 import { IMyCancerGenomeData } from '../model/MyCancerGenome';
 import {
     defaultHotspotFilter,
@@ -70,6 +71,11 @@ interface DefaultMutationMapperStoreConfig {
     apiCacheLimit?: number;
     getMutationCount?: (mutation: Partial<Mutation>) => number;
     getTumorType?: (mutation: Partial<Mutation>) => string;
+    filterApplier?: FilterApplier;
+    filterAppliersOverride?: {
+        [filterType: string]: ApplyFilterFn;
+    };
+    dataFetcher?: MutationMapperDataFetcher;
     dataFilters?: DataFilter[];
     selectionFilters?: DataFilter[];
     highlightFilters?: DataFilter[];
@@ -83,22 +89,8 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     constructor(
         public gene: Gene,
         protected config: DefaultMutationMapperStoreConfig,
-        protected getMutations: () => Mutation[],
-        protected filterApplier?: FilterApplier,
-        protected filterAppliersOverride?: {
-            [filterType: string]: ApplyFilterFn;
-        }
-    ) {
-        if (!this.filterApplier) {
-            this.filterApplier = new DefaultMutationMapperFilterApplier(
-                this.indexedHotspotData,
-                this.oncoKbData,
-                this.getDefaultTumorType,
-                this.getDefaultEntrezGeneId,
-                this.filterAppliersOverride
-            );
-        }
-    }
+        protected getMutations: () => Mutation[]
+    ) {}
 
     @computed
     public get activeTranscript(): string | undefined {
@@ -192,13 +184,31 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     }
 
     @computed
-    public get dataFetcher(): DefaultMutationMapperDataFetcher {
-        return new DefaultMutationMapperDataFetcher({
-            genomeNexusUrl: this.config.genomeNexusUrl,
-            oncoKbUrl: this.config.oncoKbUrl,
-            cachePostMethodsOnClients: this.config.cachePostMethodsOnClients,
-            apiCacheLimit: this.config.apiCacheLimit,
-        });
+    public get filterApplier() {
+        return (
+            this.config.filterApplier ||
+            new DefaultMutationMapperFilterApplier(
+                this.indexedHotspotData,
+                this.oncoKbData,
+                this.getDefaultTumorType,
+                this.getDefaultEntrezGeneId,
+                this.config.filterAppliersOverride
+            )
+        );
+    }
+
+    @computed
+    public get dataFetcher(): MutationMapperDataFetcher {
+        return (
+            this.config.dataFetcher ||
+            new DefaultMutationMapperDataFetcher({
+                genomeNexusUrl: this.config.genomeNexusUrl,
+                oncoKbUrl: this.config.oncoKbUrl,
+                cachePostMethodsOnClients: this.config
+                    .cachePostMethodsOnClients,
+                apiCacheLimit: this.config.apiCacheLimit,
+            })
+        );
     }
 
     @computed
@@ -609,28 +619,23 @@ class DefaultMutationMapperStore implements MutationMapperStore {
                             [],
                             uniqueGenomicLocations(this.getMutations()).map(
                                 (gl: GenomicLocation) => {
+                                    const variantAnnotation = this
+                                        .indexedVariantAnnotations.result
+                                        ? this.indexedVariantAnnotations.result[
+                                              genomicLocationString(gl)
+                                          ]
+                                        : undefined;
+
                                     if (
-                                        this.indexedVariantAnnotations.result &&
-                                        this.indexedVariantAnnotations.result[
-                                            genomicLocationString(gl)
-                                        ] &&
+                                        variantAnnotation &&
                                         !_.isEmpty(
-                                            this.indexedVariantAnnotations
-                                                .result[
-                                                genomicLocationString(gl)
-                                            ].transcript_consequences
+                                            variantAnnotation.transcript_consequences
                                         )
                                     ) {
-                                        return this.indexedVariantAnnotations.result[
-                                            genomicLocationString(gl)
-                                        ].transcript_consequences
-                                            .map(
-                                                (tc: {
-                                                    transcript_id: string;
-                                                }) => tc.transcript_id
-                                            )
+                                        return variantAnnotation.transcript_consequences
+                                            .map(tc => tc.transcript_id)
                                             .filter((transcriptId: string) =>
-                                                this.transcriptsWithProteinLength.result!!.includes(
+                                                this.transcriptsWithProteinLength.result!.includes(
                                                     transcriptId
                                                 )
                                             );

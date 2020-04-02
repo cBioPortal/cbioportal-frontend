@@ -28,6 +28,7 @@ import {
 
 import { AggregatedHotspots, Hotspot } from '../model/CancerHotspot';
 import { Mutation } from '../model/Mutation';
+import { MutationMapperDataFetcher } from '../model/MutationMapperDataFetcher';
 import {
     DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE,
     DEFAULT_MY_GENE_URL_TEMPLATE,
@@ -52,7 +53,8 @@ export interface MutationMapperDataFetcherConfig {
     oncoKbUrl?: string;
 }
 
-export class DefaultMutationMapperDataFetcher {
+export class DefaultMutationMapperDataFetcher
+    implements MutationMapperDataFetcher {
     public oncoKbClient: OncoKbAPI;
     public genomeNexusClient: GenomeNexusAPI;
     public genomeNexusInternalClient: GenomeNexusAPIInternal;
