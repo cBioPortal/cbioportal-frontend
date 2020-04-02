@@ -816,7 +816,13 @@ export class StudyViewPageStore {
         ClinicalDataFilter
     >();
 
-    @observable genomicProfilesFilter: string[][] = [];
+    @observable private _genomicProfilesFilter: string[][] = [];
+    @computed.struct get genomicProfilesFilter() {
+        return this._genomicProfilesFilter;
+    }
+    @action public setGenomicProfilesFilter(p: string[][]) {
+        this._genomicProfilesFilter = p;
+    }
 
     private _customBinsFromScatterPlotSelectionSet = observable.shallowMap<
         number[]
@@ -911,7 +917,7 @@ export class StudyViewPageStore {
         }
 
         if (filters.genomicProfiles !== undefined) {
-            this.genomicProfilesFilter = filters.genomicProfiles;
+            this.setGenomicProfilesFilter(filters.genomicProfiles);
         }
 
         if (!_.isEqual(toJS(this.initialFiltersQuery), filters)) {
@@ -1208,7 +1214,7 @@ export class StudyViewPageStore {
         this.numberOfSelectedSamplesInCustomSelection = 0;
         this.removeComparisonGroupSelectionFilter();
         this._customBinsFromScatterPlotSelectionSet.clear();
-        this.genomicProfilesFilter = [];
+        this.setGenomicProfilesFilter([]);
     }
 
     @computed
@@ -1420,7 +1426,7 @@ export class StudyViewPageStore {
     @action
     addGenomicProfilesFilter(chartMeta: ChartMeta, profiles: string[][]) {
         let genomicProfilesFilter = toJS(this.genomicProfilesFilter) || [];
-        this.genomicProfilesFilter = genomicProfilesFilter.concat(profiles);
+        this.setGenomicProfilesFilter(genomicProfilesFilter.concat(profiles));
     }
 
     @autobind
@@ -1468,7 +1474,7 @@ export class StudyViewPageStore {
             },
             []
         );
-        this.genomicProfilesFilter = genomicProfilesFilter;
+        this.setGenomicProfilesFilter(genomicProfilesFilter);
     }
 
     @autobind
@@ -1579,7 +1585,7 @@ export class StudyViewPageStore {
                     this.resetGeneFilter(chartUniqueKey);
                     break;
                 case ChartTypeEnum.GENOMIC_PROFILES_TABLE:
-                    this.genomicProfilesFilter = [];
+                    this.setGenomicProfilesFilter([]);
                     break;
                 case ChartTypeEnum.SURVIVAL:
                     break;
