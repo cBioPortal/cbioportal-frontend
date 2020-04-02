@@ -13,7 +13,6 @@ interface IHoverablePointProps {
     y?: number;
 }
 
-@observer
 export default class HoverablePoint extends React.Component<
     IHoverablePointProps,
     {}
