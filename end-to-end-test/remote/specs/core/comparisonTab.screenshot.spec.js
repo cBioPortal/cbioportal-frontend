@@ -209,7 +209,9 @@ describe('results view comparison tab screenshot tests', function() {
         });
 
         it('results view comparison tab mutation enrichments tab several groups', function() {
-            browser.click('.comparisonTabSubTabs .tabAnchor_mutations');
+            goToUrlAndSetLocalStorage(
+                `${CBIOPORTAL_URL}/results/comparison?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_set_id=coadread_tcga_pub_nonhypermut&comparison_selectedGroups=%5B"KRAS"%2C"NRAS"%2C"BRAF"%5D&comparison_subtab=mutations&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations`
+            );
             browser.waitForVisible(
                 'div[data-test="GroupComparisonMutationEnrichments"]',
                 10000
@@ -329,26 +331,8 @@ describe('results view comparison tab screenshot tests', function() {
                 'div[data-test="GroupComparisonMRNAEnrichments"]',
                 10000
             );
-            browser.waitForVisible('b=ETV5', 10000);
-            browser.click('b=ETV5');
-            browser.waitForVisible('div[data-test="MiniBoxPlot"]', 20000);
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
-            assertScreenShotMatch(res);
-        });
-
-        it('results view comparison tab protein enrichments tab several groups', function() {
-            goToUrlAndSetLocalStorage(
-                `${CBIOPORTAL_URL}/results/comparison?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=blca_tcga_pub_2017&case_set_id=blca_tcga_pub_2017_all&comparison_selectedGroups=%5B"Altered%20group"%2C"Unaltered%20group"%2C"KRAS"%2C"NRAS"%5D&comparison_subtab=protein&data_priority=0&gene_list=KRAS%2520NRAS%2520BRAF&gene_set_choice=user-defined-list&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=blca_tcga_pub_2017_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=blca_tcga_pub_2017_rna_seq_v2_mrna_median_Zscores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=blca_tcga_pub_2017_mutations&genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION=blca_tcga_pub_2017_rppa_Zscores&profileFilter=0&tab_index=tab_visualize`
-            );
-            browser.waitForVisible(
-                'div[data-test="GroupComparisonProteinEnrichments"]',
-                10000
-            );
-            browser.waitForVisible('b=MAPK9', 10000);
-            browser.click('b=MAPK9');
+            browser.waitForVisible('b=TYMP', 10000);
+            browser.click('b=TYMP');
             browser.waitForVisible('div[data-test="MiniBoxPlot"]', 20000);
             browser.moveToObject('body', 0, 0);
             var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
@@ -358,19 +342,9 @@ describe('results view comparison tab screenshot tests', function() {
         });
 
         it('results view comparison tab mutation enrichments tab two groups', function() {
-            // deselect two groups
-            browser.click('button[data-test="groupSelectorButtonKRAS"]');
-            browser.waitForExist(
-                'button[data-test="groupSelectorButtonNRAS"]',
-                10000
+            goToUrlAndSetLocalStorage(
+                `${CBIOPORTAL_URL}/results/comparison?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_set_id=coadread_tcga_pub_nonhypermut&comparison_selectedGroups=%5B"Altered%20group"%2C"Unaltered%20group"%5D&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&comparison_subtab=mutations`
             );
-            browser.click('button[data-test="groupSelectorButtonNRAS"]');
-            // go back to mutations tab
-            browser.waitForExist(
-                '.comparisonTabSubTabs .tabAnchor_mutations',
-                10000
-            );
-            browser.click('.comparisonTabSubTabs .tabAnchor_mutations');
             browser.waitForVisible(
                 'div[data-test="GroupComparisonMutationEnrichments"]',
                 10000
@@ -416,8 +390,26 @@ describe('results view comparison tab screenshot tests', function() {
                 'div[data-test="GroupComparisonMRNAEnrichments"]',
                 10000
             );
-            browser.waitForVisible('b=NAGPA', 10000);
-            browser.click('b=NAGPA');
+            browser.waitForVisible('b=MERTK', 10000);
+            browser.click('b=MERTK');
+            browser.moveToObject('body', 0, 0);
+            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
+                hide: ['.qtip'],
+            });
+            assertScreenShotMatch(res);
+        });
+
+        it('results view comparison tab protein enrichments tab several groups', function() {
+            goToUrlAndSetLocalStorage(
+                `${CBIOPORTAL_URL}/results/comparison?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=blca_tcga_pub_2017&case_set_id=blca_tcga_pub_2017_all&comparison_selectedGroups=%5B"KRAS"%2C"NRAS"%2C"BRAF"%5D&comparison_subtab=protein&data_priority=0&gene_list=KRAS%2520NRAS%2520BRAF&gene_set_choice=user-defined-list&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=blca_tcga_pub_2017_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=blca_tcga_pub_2017_rna_seq_v2_mrna_median_Zscores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=blca_tcga_pub_2017_mutations&genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION=blca_tcga_pub_2017_rppa_Zscores&profileFilter=0&tab_index=tab_visualize`
+            );
+            browser.waitForVisible(
+                'div[data-test="GroupComparisonProteinEnrichments"]',
+                10000
+            );
+            browser.waitForVisible('b=SCD', 10000);
+            browser.click('b=SCD');
+            browser.waitForVisible('div[data-test="MiniBoxPlot"]', 20000);
             browser.moveToObject('body', 0, 0);
             var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
                 hide: ['.qtip'],
@@ -426,13 +418,15 @@ describe('results view comparison tab screenshot tests', function() {
         });
 
         it('results view comparison tab protein enrichments tab two groups', function() {
-            browser.click('.comparisonTabSubTabs .tabAnchor_protein');
+            // deselect a group
+            browser.click('button[data-test="groupSelectorButtonBRAF"]');
+
             browser.waitForVisible(
                 'div[data-test="GroupComparisonProteinEnrichments"]',
                 10000
             );
-            browser.waitForVisible('b=SQSTM1', 10000);
-            browser.click('b=SQSTM1');
+            browser.waitForVisible('b=FASN', 10000);
+            browser.click('b=FASN');
             browser.moveToObject('body', 0, 0);
             var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
                 hide: ['.qtip'],
