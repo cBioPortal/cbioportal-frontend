@@ -2242,21 +2242,25 @@ export function getChartSettingsMap(
     return chartSettingsMap;
 }
 
+function formatNumber(d: number) {
+    return Number.isInteger(d) ? d.toFixed(0) : d.toFixed(2);
+}
+
 export function getBinName(
     dataBin: Pick<DataBin, 'specialValue' | 'start' | 'end'>
 ) {
     // specialValue can be any non-numeric character. ex: "=<", ">", "NA"
     if (dataBin.specialValue !== undefined) {
         if (dataBin.start !== undefined) {
-            return dataBin.specialValue + dataBin.start;
+            return dataBin.specialValue + formatNumber(dataBin.start);
         }
         if (dataBin.end !== undefined) {
-            return dataBin.specialValue + dataBin.end;
+            return dataBin.specialValue + formatNumber(dataBin.end);
         }
         return dataBin.specialValue;
     }
     if (dataBin.start !== undefined && dataBin.end !== undefined) {
-        return `${dataBin.start}-${dataBin.end}`;
+        return `${formatNumber(dataBin.start)}-${formatNumber(dataBin.end)}`;
     }
     return '';
 }
@@ -2396,7 +2400,9 @@ export function getGroupsFromQuartiles(
         }
 
         return getGroupParameters(
-            `${quartile[0].value}-${quartile[quartile.length - 1].value}`,
+            `${formatNumber(parseFloat(quartile[0].value))}-${formatNumber(
+                parseFloat(quartile[quartile.length - 1].value)
+            )}`,
             sampleIdentifiers,
             origin
         );
