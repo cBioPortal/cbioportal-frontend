@@ -303,6 +303,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 }}
             >
                 <MSKTabs
+                    unmountOnHide={false}
                     activeTabId={this.activeId}
                     onTabClick={this.updateActiveId}
                     className="addChartTabs mainTabs"
@@ -398,7 +399,7 @@ export default class AddChartButton extends React.Component<
                 onVisibleChange={visible => (this.showTooltip = !!visible)}
                 trigger={['click']}
                 placement={'bottomRight'}
-                destroyTooltipOnHide={true}
+                destroyTooltipOnHide={false}
                 overlay={() => (
                     <AddChartTabs
                         store={this.props.store}
