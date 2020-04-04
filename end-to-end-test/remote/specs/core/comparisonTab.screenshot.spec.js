@@ -10,8 +10,21 @@ var checkElementWithTemporaryClass = require('../../../shared/specUtils')
     .checkElementWithTemporaryClass;
 var checkElementWithMouseDisabled = require('../../../shared/specUtils')
     .checkElementWithMouseDisabled;
+var setDropdownOpen = require('../../../shared/specUtils').setDropdownOpen;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
+
+function selectClinicalTabPlotType(type) {
+    setDropdownOpen(
+        true,
+        '[data-test="plotTypeSelector"] .Select-arrow-zone',
+        '[data-test="plotTypeSelector"] .Select-menu',
+        "Couldn't open clinical tab chart type dropdown"
+    );
+    browser.click(
+        `[data-test="plotTypeSelector"] .Select-option[aria-label="${type}"]`
+    );
+}
 
 describe('results view comparison tab screenshot tests', function() {
     describe('general screenshot tests', function() {
@@ -138,11 +151,7 @@ describe('results view comparison tab screenshot tests', function() {
         });
 
         it('results view comparison tab clinical tab bar chart Chi squared test', function() {
-            var plotTypeSelector = $(
-                '[data-test="plotTypeSelector"] .Select-input input'
-            );
-            plotTypeSelector.setValue('Bar chart');
-            browser.click('[data-test="plotTypeSelector"] .Select-option');
+            selectClinicalTabPlotType('Bar chart');
             browser.waitForVisible(
                 'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]',
                 20000
@@ -156,11 +165,7 @@ describe('results view comparison tab screenshot tests', function() {
         });
 
         it('results view comparison tab clinical tab stacked bar chart Chi squared test', function() {
-            var plotTypeSelector = $(
-                '[data-test="plotTypeSelector"] .Select-input input'
-            );
-            plotTypeSelector.setValue('Stacked bar chart');
-            browser.click('[data-test="plotTypeSelector"] .Select-option');
+            selectClinicalTabPlotType('Stacked bar chart');
             browser.waitForVisible(
                 'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]',
                 20000
