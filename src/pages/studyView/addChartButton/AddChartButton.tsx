@@ -303,6 +303,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 }}
             >
                 <MSKTabs
+                    unmountOnHide={false}
                     activeTabId={this.activeId}
                     onTabClick={this.updateActiveId}
                     className="addChartTabs mainTabs"
@@ -312,6 +313,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         id={TabKeysEnum.CLINICAL}
                         linkText={TabNamesEnum.CLINICAL}
                         hide={this.props.disableClinicalTab}
+                        className="addClinicalChartTab"
                     >
                         <AddChartByType
                             options={this.clinicalDataOptions}
@@ -326,6 +328,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         id={TabKeysEnum.GENOMIC}
                         linkText={TabNamesEnum.GENOMIC}
                         hide={this.props.disableGenomicTab}
+                        className="addGenomicChartTab"
                     >
                         <AddChartByType
                             options={this.genomicDataOptions}
@@ -340,6 +343,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         id={TabKeysEnum.CUSTOM_DATA}
                         linkText={TabNamesEnum.CUSTOM_DATA}
                         hide={this.props.disableCustomTab}
+                        className="custom"
                     >
                         <CustomCaseSelection
                             allSamples={this.props.store.samples.result}
@@ -398,7 +402,7 @@ export default class AddChartButton extends React.Component<
                 onVisibleChange={visible => (this.showTooltip = !!visible)}
                 trigger={['click']}
                 placement={'bottomRight'}
-                destroyTooltipOnHide={true}
+                destroyTooltipOnHide={false}
                 overlay={() => (
                     <AddChartTabs
                         store={this.props.store}
