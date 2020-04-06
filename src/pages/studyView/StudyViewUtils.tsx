@@ -2533,7 +2533,7 @@ export function updateSavedUserPreferenceChartIds(
 
 export function getMolecularProfileOptions(
     molecularProfiles: MolecularProfile[],
-    molecularProfileSampleSet: { [id: string]: string[] }
+    sampleUniqueKeysByMolecularProfileIdSet: { [id: string]: string[] }
 ): GenomicDataCountWithSampleUniqueKeys[] {
     return _.chain(molecularProfiles)
         .groupBy(molecularProfile =>
@@ -2546,7 +2546,7 @@ export function getMolecularProfileOptions(
             const uniqueProfiledSamples = _.chain(profiles)
                 .flatMap(
                     molecularProfile =>
-                        molecularProfileSampleSet[
+                        sampleUniqueKeysByMolecularProfileIdSet[
                             molecularProfile.molecularProfileId
                         ] || []
                 )
