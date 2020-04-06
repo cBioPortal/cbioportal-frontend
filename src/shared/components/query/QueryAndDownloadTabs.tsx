@@ -139,7 +139,11 @@ export default class QueryAndDownloadTabs extends React.Component<
                         }}
                     >
                         <div>
-                            <QuickSearch />
+                            {this.store.cancerStudies.isComplete && (
+                                <QuickSearch
+                                    studies={this.store.cancerStudies.result}
+                                />
+                            )}
                         </div>
                     </MSKTab>
                     <MSKTab
