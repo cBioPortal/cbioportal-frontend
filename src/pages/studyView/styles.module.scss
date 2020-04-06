@@ -93,8 +93,6 @@
 }
 
 .studyFilterResult {
-    transition: all 500ms;
-    transform: scale(0); /* Standard syntax */
     display: flex;
     z-index: 2;
     > div {
