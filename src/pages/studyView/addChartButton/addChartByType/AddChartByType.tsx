@@ -202,24 +202,37 @@ export default class AddChartByType extends React.Component<
                 style={{ display: 'flex', flexDirection: 'column' }}
                 data-test="add-by-type"
             >
-                <AddChartTableComponent
-                    width={380}
-                    height={this.tableHeight}
-                    columns={this._columns}
-                    data={this.options}
-                    showControlsAtTop={true}
-                    addAll={this.addAll}
-                    removeAll={this.removeAll}
-                    showSelectableNumber={true}
-                    showAddRemoveAllButtons={true}
-                    autoFocusSearchAfterRendering={true}
-                    removeAllDisabled={!_.some(this.options, o => o.selected)}
-                />
+                {this.props.freqPromise.isComplete && (
+                    <AddChartTableComponent
+                        width={380}
+                        height={this.tableHeight}
+                        columns={this._columns}
+                        data={this.options}
+                        showControlsAtTop={true}
+                        addAll={this.addAll}
+                        removeAll={this.removeAll}
+                        showSelectableNumber={true}
+                        showAddRemoveAllButtons={true}
+                        autoFocusSearchAfterRendering={true}
+                        removeAllDisabled={
+                            !_.some(this.options, o => o.selected)
+                        }
+                    />
+                )}
                 {this.props.freqPromise.isPending && (
-                    <span>
+                    <div
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            height: 100,
+                        }}
+                    >
                         <LoadingIndicator isLoading={true} />
+                        <br />
                         Calculating data availability...
-                    </span>
+                    </div>
                 )}
             </div>
         );
