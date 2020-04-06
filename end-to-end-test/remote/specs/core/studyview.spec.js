@@ -154,12 +154,13 @@ describe('study laml_tcga tests', () => {
             }
             browser.click(ADD_CHART_GENOMIC_TAB);
 
-            const chosenCheckbox = browser.elements(
-                '.addChartTabs .add-chart-option input'
-            ).value[0];
-            const isSelected = chosenCheckbox.isSelected();
+            const chosenCheckbox =
+                '.addChartTabs .addGenomicChartTab .add-chart-option:nth-child(1) input';
+            browser.waitForExist(chosenCheckbox, 10000);
 
-            chosenCheckbox.click();
+            const isSelected = browser.isSelected(chosenCheckbox);
+
+            browser.click(chosenCheckbox);
             assert(
                 numOfChartsBeforeAdding ===
                     getNumberOfStudyViewCharts() + (isSelected ? 1 : -1)
