@@ -313,6 +313,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         id={TabKeysEnum.CLINICAL}
                         linkText={TabNamesEnum.CLINICAL}
                         hide={this.props.disableClinicalTab}
+                        className="addClinicalChartTab"
                     >
                         <AddChartByType
                             options={this.clinicalDataOptions}
@@ -327,6 +328,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         id={TabKeysEnum.GENOMIC}
                         linkText={TabNamesEnum.GENOMIC}
                         hide={this.props.disableGenomicTab}
+                        className="addGenomicChartTab"
                     >
                         <AddChartByType
                             options={this.genomicDataOptions}
@@ -341,6 +343,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         id={TabKeysEnum.CUSTOM_DATA}
                         linkText={TabNamesEnum.CUSTOM_DATA}
                         hide={this.props.disableCustomTab}
+                        className="custom"
                     >
                         <CustomCaseSelection
                             allSamples={this.props.store.samples.result}

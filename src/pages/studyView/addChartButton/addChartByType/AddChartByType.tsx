@@ -220,11 +220,19 @@ export default class AddChartByType extends React.Component<
                     />
                 )}
                 {this.props.freqPromise.isPending && (
-                    <span>
+                    <div
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            height: 100,
+                        }}
+                    >
                         <LoadingIndicator isLoading={true} />
                         <br />
                         Calculating data availability...
-                    </span>
+                    </div>
                 )}
             </div>
         );
