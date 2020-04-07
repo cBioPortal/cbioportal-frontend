@@ -257,8 +257,26 @@ export function getSampleIdentifiers(
     );
 }
 
-export function getNumSamples(group: Pick<SessionGroupData, 'studies'>) {
-    return _.sum(group.studies.map(study => study.samples.length));
+export function getNumSamples(
+    group: Pick<SessionGroupData, 'studies'>,
+    filter?: (studyId: string, sampleId: string) => boolean
+) {
+    return _.sum(
+        group.studies.map(study => {
+            if (filter) {
+                const studyId = study.id;
+                let count = 0;
+                for (const sampleId of study.samples) {
+                    if (filter(studyId, sampleId)) {
+                        count += 1;
+                    }
+                }
+                return count;
+            } else {
+                return study.samples.length;
+            }
+        })
+    );
 }
 
 export function getNumPatients(
