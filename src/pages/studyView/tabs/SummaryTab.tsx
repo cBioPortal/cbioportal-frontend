@@ -254,7 +254,7 @@ export class StudySummaryTab extends React.Component<
                 props.promise = this.store.molecularProfileSampleCounts;
                 props.onValueSelection = this.store.addGenomicProfilesFilter;
                 props.onResetSelection = () => {
-                    this.store.genomicProfilesFilter = [];
+                    this.store.setGenomicProfilesFilter([]);
                 };
                 break;
             }
