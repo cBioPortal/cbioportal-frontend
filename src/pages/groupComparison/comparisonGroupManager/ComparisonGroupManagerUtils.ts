@@ -4,10 +4,7 @@ import {
     SessionGroupData,
 } from '../../../shared/api/ComparisonGroupClient';
 import { StudyViewPageStore } from '../../studyView/StudyViewPageStore';
-import {
-    PatientIdentifier,
-    SampleIdentifier,
-} from '../../../shared/api/generated/CBioPortalAPI';
+import { PatientIdentifier, SampleIdentifier } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import {
     getSampleIdentifiers,

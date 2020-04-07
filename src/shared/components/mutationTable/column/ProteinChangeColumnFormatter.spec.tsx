@@ -3,7 +3,7 @@ import ProteinChangeColumnFormatter from './ProteinChangeColumnFormatter';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import styles from './proteinChange.module.scss';
 import { initMutation } from 'test/MutationMockUtils';
-import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 import { mount, ReactWrapper } from 'enzyme';
 
 /**

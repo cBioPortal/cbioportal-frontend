@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { computed } from 'mobx';
 import { observer, Observer } from 'mobx-react';
-import { MolecularProfile } from '../../../shared/api/generated/CBioPortalAPI';
+import { MolecularProfile } from 'cbioportal-ts-api-client';
 import { GeneticEntity } from '../ResultsViewPageStore';
 import { getSampleViewUrl } from '../../../shared/api/urls';
 import './styles.scss';

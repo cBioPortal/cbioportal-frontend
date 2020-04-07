@@ -1,5 +1,6 @@
 import * as _ from 'lodash';
 import {
+    CBioPortalAPIInternal,
     ClinicalData,
     MolecularProfile,
     Sample,
@@ -13,10 +14,9 @@ import {
     GenePanelData,
     GenePanel,
     ReferenceGenomeGene,
-} from '../../../shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import client from '../../../shared/api/cbioportalClientInstance';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
-import { default as CBioPortalAPIInternal } from 'shared/api/generated/CBioPortalAPIInternal';
 import { computed, observable, action, runInAction } from 'mobx';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { IGisticData } from 'shared/model/Gistic';
@@ -89,12 +89,9 @@ import {
     fetchCnaCivicGenes,
 } from 'shared/lib/CivicUtils';
 import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
-import {
-    CancerGene,
-    getBrowserWindow,
-    stringListToSet,
-    VariantAnnotation,
-} from 'cbioportal-frontend-commons';
+import { getBrowserWindow, stringListToSet } from 'cbioportal-frontend-commons';
+import { VariantAnnotation } from 'genome-nexus-ts-api-client';
+import { CancerGene } from 'oncokb-ts-api-client';
 import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownloadDataFetcher';
 import { getNavCaseIdsCache } from '../../../shared/lib/handleLongUrls';
 import {

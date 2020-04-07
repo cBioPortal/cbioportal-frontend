@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react';
 import * as React from 'react';
-import { MolecularProfile } from '../api/generated/CBioPortalAPI';
+import { MolecularProfile } from 'cbioportal-ts-api-client';
 import Select from 'react-select1';
 import { getProfileOptions } from 'pages/resultsView/coExpression/CoExpressionTabUtils';
 

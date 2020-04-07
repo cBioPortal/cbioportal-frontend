@@ -1,11 +1,6 @@
 import _ from 'lodash';
-import {
-    DefaultTooltip,
-    ICache,
-    LEVELS,
-    ArticleAbstract,
-    IndicatorQueryTreatment,
-} from 'cbioportal-frontend-commons';
+import { DefaultTooltip, ICache, LEVELS } from 'cbioportal-frontend-commons';
+import { ArticleAbstract, IndicatorQueryTreatment } from 'oncokb-ts-api-client';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import ReactTable from 'react-table';

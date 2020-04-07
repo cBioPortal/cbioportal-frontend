@@ -12,7 +12,7 @@ import {
     NumericGeneMolecularData,
     MolecularProfile,
     Mutation,
-} from '../../api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import AccessorsForOqlFilter from './AccessorsForOqlFilter';
 import * as _ from 'lodash';
 import { assert } from 'chai';

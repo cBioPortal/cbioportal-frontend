@@ -20,7 +20,7 @@ import {
     Mutation,
     ClinicalData,
     Sample,
-} from '../api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import { initMutation } from 'test/MutationMockUtils';
 
 describe('StoreUtils', () => {

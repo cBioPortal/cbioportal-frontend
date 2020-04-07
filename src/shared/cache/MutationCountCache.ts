@@ -3,7 +3,7 @@ import LazyMobXCache from '../lib/LazyMobXCache';
 import {
     ClinicalData,
     ClinicalDataMultiStudyFilter,
-} from '../api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 
 type Query = {

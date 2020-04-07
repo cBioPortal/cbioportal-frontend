@@ -4,7 +4,6 @@ import SampleManager from './SampleManager';
 import TumorColumnFormatter from './mutation/column/TumorColumnFormatter';
 import { checkNonProfiledGenesExist } from './PatientViewPageUtils';
 import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';
-import { ClinicalDataBySampleId } from 'shared/api/api-types-extended';
 
 describe('PatientViewPageUtils', () => {
     describe('checkNonProfiledGenesExist()', () => {

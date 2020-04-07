@@ -1,4 +1,4 @@
-import { MyVariantInfo, VariantAnnotation } from 'cbioportal-frontend-commons';
+import { MyVariantInfo, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { Mutation } from '../model/Mutation';
 import { extractGenomicLocation, genomicLocationString } from './MutationUtils';
 

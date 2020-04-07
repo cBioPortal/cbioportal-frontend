@@ -1,6 +1,6 @@
 import AlleleFreqColumnFormatter from './AlleleFreqColumnFormatter';
 import { initMutation } from 'test/MutationMockUtils';
-import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 import {
     MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX,
     MOLECULAR_PROFILE_MUTATIONS_SUFFIX,

@@ -3,7 +3,7 @@ import {
     DefaultTooltip,
     getCanonicalMutationType,
 } from 'cbioportal-frontend-commons';
-import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 import {
     ICategoricalColumn,
     createToolTip,

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import { CancerStudy } from 'shared/api/generated/CBioPortalAPI';
+import { CancerStudy } from 'cbioportal-ts-api-client';
 import { ThreeBounce } from 'better-react-spinkit';
 import request from 'superagent';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';

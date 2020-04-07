@@ -11,7 +11,7 @@ import {
     CancerStudy,
     MolecularProfile,
     Mutation,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import SampleColumnFormatter from './column/SampleColumnFormatter';
 import TumorAlleleFreqColumnFormatter from './column/TumorAlleleFreqColumnFormatter';
 import NormalAlleleFreqColumnFormatter from './column/NormalAlleleFreqColumnFormatter';
@@ -51,11 +51,11 @@ import { IPaginationControlsProps } from '../paginationControls/PaginationContro
 import { IColumnVisibilityControlsProps } from '../columnVisibilityControls/ColumnVisibilityControls';
 import MobxPromise from 'mobxpromise';
 import {
-    VariantAnnotation,
     generateQueryVariantId,
-    CancerGene,
     IOncoKbData,
 } from 'cbioportal-frontend-commons';
+import { VariantAnnotation } from 'genome-nexus-ts-api-client';
+import { CancerGene } from 'oncokb-ts-api-client';
 import {
     getAnnotationData,
     IAnnotation,

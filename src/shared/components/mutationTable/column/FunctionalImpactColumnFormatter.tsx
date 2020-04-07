@@ -3,16 +3,15 @@ import { Circle } from 'better-react-spinkit';
 import classNames from 'classnames';
 import {
     DefaultTooltip,
-    MutationAssessor as MutationAssessorData,
     TableCellStatusIndicator,
     TableCellStatus,
-    VariantAnnotation,
 } from 'cbioportal-frontend-commons';
-import 'rc-tooltip/assets/bootstrap_white.css';
 import {
-    Mutation,
-    DiscreteCopyNumberData,
-} from 'shared/api/generated/CBioPortalAPI';
+    MutationAssessor as MutationAssessorData,
+    VariantAnnotation,
+} from 'genome-nexus-ts-api-client';
+import 'rc-tooltip/assets/bootstrap_white.css';
+import { Mutation, DiscreteCopyNumberData } from 'cbioportal-ts-api-client';
 import MutationAssessor from 'shared/components/annotation/genomeNexus/MutationAssessor';
 import Sift from 'shared/components/annotation/genomeNexus/Sift';
 import PolyPhen2 from 'shared/components/annotation/genomeNexus/PolyPhen2';

@@ -17,7 +17,7 @@ import sessionServiceClient from 'shared/api/sessionServiceInstance';
 import { trackEvent } from 'shared/lib/tracking';
 import { PagePath } from 'shared/enums/PagePaths';
 import { QueryStore } from '../QueryStore';
-import { CancerStudy } from 'shared/api/generated/CBioPortalAPI';
+import { CancerStudy } from 'cbioportal-ts-api-client';
 
 export const SHOW_MORE_SIZE: number = 20;
 const DEFAULT_PAGE_SIZE: number = 3;
