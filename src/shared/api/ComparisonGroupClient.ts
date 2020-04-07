@@ -5,7 +5,7 @@ import {
     getComparisonSessionServiceUrl,
 } from './urls';
 import { VirtualStudy, VirtualStudyData } from '../model/VirtualStudy';
-import { ClinicalAttribute } from './generated/CBioPortalAPI';
+import { ClinicalAttribute } from 'cbioportal-ts-api-client';
 import PromisePlus from '../lib/PromisePlus';
 import { Omit } from '../lib/TypeScriptUtils';
 

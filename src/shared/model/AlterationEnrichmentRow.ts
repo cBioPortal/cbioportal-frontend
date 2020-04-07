@@ -1,4 +1,4 @@
-import { CountSummary } from 'shared/api/generated/CBioPortalAPIInternal';
+import { CountSummary } from 'cbioportal-ts-api-client';
 
 export interface AlterationEnrichmentRow {
     checked: boolean;

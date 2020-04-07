@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 
 /**
  * Utility functions to generate mock data.

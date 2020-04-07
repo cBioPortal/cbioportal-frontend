@@ -15,7 +15,7 @@ import {
     Gene,
     MolecularProfile,
     GenePanelData,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import {
     ICaseAlteration,
     IOqlData,

@@ -9,7 +9,7 @@ import {
     ClinicalDataBinFilter,
     ClinicalDataFilterValue,
     GenomicDataCount,
-} from 'shared/api/generated/CBioPortalAPIInternal';
+} from 'cbioportal-ts-api-client';
 import {
     CancerStudy,
     ClinicalAttribute,
@@ -20,7 +20,7 @@ import {
     ClinicalDataMultiStudyFilter,
     MolecularProfile,
     GenePanelData,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import * as React from 'react';
 import { buildCBioPortalPageUrl } from '../../shared/api/urls';
 import { BarDatum } from './charts/barChart/BarChart';

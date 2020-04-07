@@ -2,7 +2,7 @@ import * as React from 'react';
 import { map } from 'lodash';
 import { computed } from 'mobx';
 import SampleManager from 'pages/patientView/SampleManager';
-import { ClinicalDataBySampleId } from 'shared/api/api-types-extended';
+import { ClinicalDataBySampleId } from 'cbioportal-ts-api-client';
 import TumorColumnFormatter from 'pages/patientView/mutation/column/TumorColumnFormatter';
 import autobind from 'autobind-decorator';
 

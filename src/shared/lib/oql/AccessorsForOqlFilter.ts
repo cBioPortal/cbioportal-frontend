@@ -2,7 +2,7 @@ import {
     Mutation,
     MolecularProfile,
     NumericGeneMolecularData,
-} from '../../api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import * as _ from 'lodash';
 import {
     AlterationTypeConstants,

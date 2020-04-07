@@ -1,9 +1,8 @@
 import {
-    CancerGene,
     getMobxPromiseGroupStatus,
-    IndicatorQueryResp,
     IOncoKbData,
 } from 'cbioportal-frontend-commons';
+import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
 import * as React from 'react';

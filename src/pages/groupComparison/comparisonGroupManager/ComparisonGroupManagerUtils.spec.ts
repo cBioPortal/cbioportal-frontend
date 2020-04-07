@@ -1,9 +1,6 @@
 import chai, { assert, expect } from 'chai';
 import deepEqualInAnyOrder from 'deep-equal-in-any-order';
-import {
-    PatientIdentifier,
-    SampleIdentifier,
-} from '../../../shared/api/generated/CBioPortalAPI';
+import { PatientIdentifier, SampleIdentifier } from 'cbioportal-ts-api-client';
 import { getStudiesAttr } from './ComparisonGroupManagerUtils';
 chai.use(deepEqualInAnyOrder);
 

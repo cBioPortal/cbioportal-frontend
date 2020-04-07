@@ -1,4 +1,4 @@
-import { MyVariantInfo, VariantAnnotation } from 'cbioportal-frontend-commons';
+import { MyVariantInfo, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import * as React from 'react';
 
 import { Mutation } from '../../model/Mutation';

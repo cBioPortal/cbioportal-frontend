@@ -1,4 +1,4 @@
-import { Mutation } from '../../api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 
 export function normalizeMutation<T extends Pick<Mutation, 'chr'>>(
     mutation: T

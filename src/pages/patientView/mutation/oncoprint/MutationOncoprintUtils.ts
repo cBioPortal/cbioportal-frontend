@@ -1,7 +1,4 @@
-import {
-    Mutation,
-    Sample,
-} from '../../../../shared/api/generated/CBioPortalAPI';
+import { Mutation, Sample } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import { generateMutationIdByGeneAndProteinChangeAndEvent } from '../../../../shared/lib/StoreUtils';
 import {

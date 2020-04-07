@@ -3,9 +3,9 @@ import {
     DSData,
 } from '../../../../shared/components/plots/downsampleByGrouping';
 import _ from 'lodash';
-import { SampleIdentifier } from 'shared/api/generated/CBioPortalAPIInternal';
+import { SampleIdentifier } from 'cbioportal-ts-api-client';
 import { AnalysisGroup } from 'pages/studyView/StudyViewUtils';
-import { ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
+import { ClinicalAttribute } from 'cbioportal-ts-api-client';
 
 export interface IStudyViewScatterPlotData {
     x: number;

@@ -1,6 +1,6 @@
 import client from 'shared/api/genomeNexusClientInstance';
 import LazyMobXCache from 'shared/lib/LazyMobXCache';
-import { PdbHeader } from 'cbioportal-frontend-commons';
+import { PdbHeader } from 'genome-nexus-ts-api-client';
 
 function fetch(pdbIds: string[]): Promise<PdbHeader[]> {
     if (pdbIds.length === 0) {

@@ -2,7 +2,7 @@ import {
     Genome2StructureAPI,
     Alignment,
     ResidueMapping,
-} from 'cbioportal-frontend-commons';
+} from 'genome-nexus-ts-api-client';
 import g2sClient from 'shared/api/g2sClientInstance';
 import { CacheData } from 'shared/lib/LazyMobXCache';
 import { remoteData } from 'cbioportal-frontend-commons';

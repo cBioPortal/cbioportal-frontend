@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import BarGraph from '../barGraph/BarGraph';
 import { observer } from 'mobx-react';
-import { TypeOfCancer as CancerType } from '../../api/generated/CBioPortalAPI';
+import { TypeOfCancer as CancerType } from 'cbioportal-ts-api-client';
 import Testimonials from '../testimonials/Testimonials';
 import AppConfig from 'appConfig';
 import { QueryStore } from 'shared/components/query/QueryStore';

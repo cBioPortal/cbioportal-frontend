@@ -14,17 +14,13 @@ import {
     oncoKbAnnotationSortValue,
     RemoteData,
 } from 'react-mutation-mapper';
-import {
-    CancerStudy,
-    DiscreteCopyNumberData,
-} from 'shared/api/generated/CBioPortalAPI';
+import { CancerStudy, DiscreteCopyNumberData } from 'cbioportal-ts-api-client';
 import { IAnnotationColumnProps } from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
 import {
-    CancerGene,
     generateQueryVariantId,
-    IndicatorQueryResp,
     IOncoKbData,
 } from 'cbioportal-frontend-commons';
+import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
 import { getCivicCNAVariants } from 'shared/lib/CivicUtils';
 

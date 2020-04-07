@@ -16,7 +16,7 @@ import {
 import genomeNexusClient from 'shared/api/genomeNexusClientInstance';
 import internalGenomeNexusClient from 'shared/api/genomeNexusInternalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
-import { Gene, Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { Gene, Mutation } from 'cbioportal-ts-api-client';
 import {
     defaultOncoKbIndicatorFilter,
     IOncoKbData,
@@ -27,12 +27,12 @@ import {
     fetchPdbAlignmentData,
     indexPdbAlignmentData,
 } from 'shared/lib/StoreUtils';
+import { remoteData } from 'cbioportal-frontend-commons';
 import {
-    CancerGene,
     EnsemblTranscript,
-    remoteData,
     VariantAnnotation,
-} from 'cbioportal-frontend-commons';
+} from 'genome-nexus-ts-api-client';
+import { CancerGene } from 'oncokb-ts-api-client';
 import { IPdbChain, PdbAlignmentIndex } from 'shared/model/Pdb';
 import {
     calcPdbIdNumericalValue,
