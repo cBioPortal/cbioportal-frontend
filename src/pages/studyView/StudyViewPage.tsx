@@ -485,58 +485,35 @@ export default class StudyViewPage extends React.Component<
                                                     }
                                                 />
                                             );
-
                                             return (
-                                                <CSSTransition
-                                                    classNames="studyFilterResult"
-                                                    in={true}
-                                                    appear
-                                                    timeout={{ enter: 200 }}
+                                                <div
+                                                    className={
+                                                        styles.studyFilterResult
+                                                    }
                                                 >
-                                                    {() => {
-                                                        return (
-                                                            <div
+                                                    <If
+                                                        condition={
+                                                            this.store
+                                                                .selectedSamples
+                                                                .isComplete
+                                                        }
+                                                    >
+                                                        <Then>
+                                                            {summary}
+                                                            {buttons}
+                                                        </Then>
+                                                        <Else>
+                                                            <LoadingIndicator
+                                                                isLoading={true}
+                                                                size={'small'}
                                                                 className={
-                                                                    styles.studyFilterResult
+                                                                    styles.selectedInfoLoadingIndicator
                                                                 }
-                                                            >
-                                                                <If
-                                                                    condition={
-                                                                        this
-                                                                            .store
-                                                                            .selectedSamples
-                                                                            .isComplete
-                                                                    }
-                                                                >
-                                                                    <Then>
-                                                                        {
-                                                                            summary
-                                                                        }
-                                                                        {
-                                                                            buttons
-                                                                        }
-                                                                    </Then>
-                                                                    <Else>
-                                                                        <LoadingIndicator
-                                                                            isLoading={
-                                                                                true
-                                                                            }
-                                                                            size={
-                                                                                'small'
-                                                                            }
-                                                                            className={
-                                                                                styles.selectedInfoLoadingIndicator
-                                                                            }
-                                                                        />
-                                                                        {
-                                                                            buttons
-                                                                        }
-                                                                    </Else>
-                                                                </If>
-                                                            </div>
-                                                        );
-                                                    }}
-                                                </CSSTransition>
+                                                            />
+                                                            {buttons}
+                                                        </Else>
+                                                    </If>
+                                                </div>
                                             );
                                         }}
                                     </Observer>
