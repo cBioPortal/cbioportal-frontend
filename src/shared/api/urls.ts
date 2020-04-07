@@ -6,6 +6,7 @@ import { GroupComparisonLoadingParams } from '../../pages/groupComparison/GroupC
 import { GroupComparisonURLQuery } from '../../pages/groupComparison/GroupComparisonURLWrapper';
 import { PagePath } from 'shared/enums/PagePaths';
 import { EncodedURLParam } from '../lib/bitly';
+import { referenceGenome } from 'shared/lib/referenceGenomeUtils';
 
 export function trimTrailingSlash(str: string) {
     return str.replace(/\/$/g, '');
@@ -216,7 +217,10 @@ export function getGenomeNexusApiUrl() {
 }
 
 export function buildGenomeNexusHgvsgUrl(hgvsg: string) {
-    return `${AppConfig.serverConfig.genomenexus_website_url}/variant/${hgvsg}`;
+    return getBrowserWindow().localStorage.getItem('referenceGenomeId') ===
+        referenceGenome.GRCH38
+        ? `${AppConfig.serverConfig.genomenexus_url_grch38}/variant/${hgvsg}`
+        : `${AppConfig.serverConfig.genomenexus_website_url}/variant/${hgvsg}`;
 }
 
 export function getSessionUrl() {
