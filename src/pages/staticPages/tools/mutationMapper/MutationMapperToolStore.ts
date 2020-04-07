@@ -14,9 +14,12 @@ import { remoteData } from 'cbioportal-frontend-commons';
 import {
     EnsemblTranscript,
     VariantAnnotation,
+    GenomeNexusAPI,
+    GenomeNexusAPIInternal,
 } from 'genome-nexus-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
 import { ClinicalData, Gene, Mutation } from 'cbioportal-ts-api-client';
+
 import {
     fetchGenes,
     fetchOncoKbData,
@@ -24,6 +27,7 @@ import {
     getCanonicalTranscriptsByHugoSymbol,
     fetchOncoKbCancerGenes,
     fetchVariantAnnotationsIndexedByGenomicLocation,
+    fetchVariantAnnotationsByMutation,
 } from 'shared/lib/StoreUtils';
 import {
     getClinicalData,
@@ -42,10 +46,15 @@ import MutationMapperStore from 'shared/components/mutationMapper/MutationMapper
 import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownloadDataFetcher';
 import { normalizeMutations } from '../../../../shared/components/mutationMapper/MutationMapperUtils';
 import { IOncoKbData } from 'cbioportal-frontend-commons';
+import { IMutationMapperConfig } from 'shared/components/mutationMapper/MutationMapperConfig';
+import defaultGenomeNexusClient from 'shared/api/genomeNexusClientInstance';
+import defaultGenomeNexusInternalClient from 'shared/api/genomeNexusInternalClientInstance';
 
 export default class MutationMapperToolStore {
     @observable mutationData: Partial<MutationInput>[] | undefined;
     @observable criticalErrors: Error[] = [];
+    // if we use grch37(default), grch38GenomeNexusUrl will be undefined
+    @observable grch38GenomeNexusUrl: string | undefined = undefined;
 
     readonly genes = remoteData<Gene[]>(
         {
@@ -64,7 +73,8 @@ export default class MutationMapperToolStore {
                 if (this.hugoGeneSymbols.result) {
                     return getCanonicalTranscriptsByHugoSymbol(
                         this.hugoGeneSymbols.result,
-                        this.isoformOverrideSource
+                        this.isoformOverrideSource,
+                        this.genomeNexusClient
                     );
                 } else {
                     return undefined;
@@ -79,6 +89,18 @@ export default class MutationMapperToolStore {
 
     @computed get isoformOverrideSource(): string {
         return AppConfig.serverConfig.isoformOverrideSource;
+    }
+
+    @computed get genomeNexusClient() {
+        return this.grch38GenomeNexusUrl
+            ? new GenomeNexusAPI(this.grch38GenomeNexusUrl)
+            : defaultGenomeNexusClient;
+    }
+
+    @computed get genomeNexusInternalClient() {
+        return this.grch38GenomeNexusUrl
+            ? new GenomeNexusAPIInternal(this.grch38GenomeNexusUrl)
+            : defaultGenomeNexusInternalClient;
     }
 
     readonly hugoGeneSymbols = remoteData(
@@ -195,7 +217,8 @@ export default class MutationMapperToolStore {
                 await fetchVariantAnnotationsIndexedByGenomicLocation(
                     this.rawMutations,
                     ['annotation_summary', 'hotspots'],
-                    AppConfig.serverConfig.isoformOverrideSource
+                    AppConfig.serverConfig.isoformOverrideSource,
+                    this.genomeNexusClient
                 ),
             onError: (err: Error) => {
                 this.criticalErrors.push(err);
@@ -207,7 +230,11 @@ export default class MutationMapperToolStore {
     readonly hotspotData = remoteData({
         await: () => [this.mutations],
         invoke: () => {
-            return fetchHotspotsData(this.mutations);
+            return fetchHotspotsData(
+                this.mutations,
+                undefined,
+                this.genomeNexusInternalClient
+            );
         },
     });
 
@@ -259,7 +286,10 @@ export default class MutationMapperToolStore {
                                     this.indexedHotspotData,
                                     this.indexedVariantAnnotations,
                                     this.oncoKbCancerGenes,
-                                    this.uniqueSampleKeyToTumorType.result || {}
+                                    this.uniqueSampleKeyToTumorType.result ||
+                                        {},
+                                    this.genomeNexusClient,
+                                    this.genomeNexusInternalClient
                                 );
                                 return map;
                             },
@@ -342,20 +372,33 @@ export default class MutationMapperToolStore {
         );
     }
 
+    public setGenomeNexusUrl(grch38GenomeNexusUrl: string | undefined) {
+        this.grch38GenomeNexusUrl = grch38GenomeNexusUrl;
+    }
+
     @cached get pubMedCache() {
         return new PubMedCache();
     }
 
     @cached get genomeNexusCache() {
-        return new GenomeNexusCache();
+        return new GenomeNexusCache(
+            this.fetchFactory(['annotation_summary'], this.genomeNexusClient)
+        );
     }
 
     @cached get genomeNexusMutationAssessorCache() {
-        return new GenomeNexusMutationAssessorCache();
+        return new GenomeNexusMutationAssessorCache(
+            this.fetchFactory(
+                ['annotation_summary', 'mutation_assessor'],
+                this.genomeNexusClient
+            )
+        );
     }
 
     @cached get genomeNexusMyVariantInfoCache() {
-        return new GenomeNexusMyVariantInfoCache();
+        return new GenomeNexusMyVariantInfoCache(
+            this.fetchFactory(['my_variant_info'], this.genomeNexusClient)
+        );
     }
 
     @cached get pdbHeaderCache() {
@@ -374,5 +417,20 @@ export default class MutationMapperToolStore {
 
     @action public clearCriticalErrors() {
         this.criticalErrors = [];
+    }
+
+    private fetchFactory(fields: string[], client: GenomeNexusAPI) {
+        return function(queries: Mutation[]): Promise<VariantAnnotation[]> {
+            if (queries.length > 0) {
+                return fetchVariantAnnotationsByMutation(
+                    queries,
+                    fields,
+                    AppConfig.serverConfig.isoformOverrideSource,
+                    client
+                );
+            } else {
+                return Promise.resolve([]);
+            }
+        };
     }
 }
