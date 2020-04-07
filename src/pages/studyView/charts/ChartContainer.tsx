@@ -11,10 +11,7 @@ import {
     StudyViewPageStore,
     SurvivalType,
 } from 'pages/studyView/StudyViewPageStore';
-import {
-    DataBin,
-    StudyViewFilter,
-} from 'shared/api/generated/CBioPortalAPIInternal';
+import { DataBin, StudyViewFilter } from 'cbioportal-ts-api-client';
 import PieChart from 'pages/studyView/charts/pieChart/PieChart';
 import classnames from 'classnames';
 import ClinicalTable from 'pages/studyView/table/ClinicalTable';
@@ -37,7 +34,7 @@ import {
     SpecialChartsUniqueKeyEnum,
     NumericalGroupComparisonType,
 } from '../StudyViewUtils';
-import { GenePanel } from '../../../shared/api/generated/CBioPortalAPI';
+import { GenePanel } from 'cbioportal-ts-api-client';
 import { makeSurvivalChartData } from './survival/StudyViewSurvivalUtils';
 import StudyViewDensityScatterPlot from './scatterPlot/StudyViewDensityScatterPlot';
 import {

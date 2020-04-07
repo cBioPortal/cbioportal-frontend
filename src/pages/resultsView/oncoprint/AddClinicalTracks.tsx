@@ -8,7 +8,7 @@ import classNames from 'classnames';
 import { serializeEvent } from '../../../shared/lib/tracking';
 import autobind from 'autobind-decorator';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
-import { ClinicalAttribute } from '../../../shared/api/generated/CBioPortalAPI';
+import { ClinicalAttribute } from 'cbioportal-ts-api-client';
 import {
     clinicalAttributeIsINCOMPARISONGROUP,
     clinicalAttributeIsPROFILEDIN,

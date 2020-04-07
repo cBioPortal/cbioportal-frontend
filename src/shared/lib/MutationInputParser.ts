@@ -1,9 +1,5 @@
 import * as _ from 'lodash';
-import {
-    ClinicalData,
-    Gene,
-    Mutation,
-} from 'shared/api/generated/CBioPortalAPI';
+import { ClinicalData, Gene, Mutation } from 'cbioportal-ts-api-client';
 
 const LITERAL_TO_HEADER: { [attrName: string]: string } = {
     aminoAcidChange: 'amino_acid_change',

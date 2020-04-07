@@ -20,7 +20,7 @@ import {
     Gene,
     MolecularProfile,
     GenericAssayMeta,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import {
     DefaultTooltip,

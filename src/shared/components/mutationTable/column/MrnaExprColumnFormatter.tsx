@@ -9,10 +9,7 @@ import {
     MrnaExprRankCacheDataType,
     default as MrnaExprRankCache,
 } from 'shared/cache/MrnaExprRankCache';
-import {
-    Mutation,
-    DiscreteCopyNumberData,
-} from 'shared/api/generated/CBioPortalAPI';
+import { Mutation, DiscreteCopyNumberData } from 'cbioportal-ts-api-client';
 
 export default class MrnaExprColumnFormatter {
     protected static getCircleX(

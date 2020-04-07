@@ -16,7 +16,7 @@ import {
     Mutation,
     NumericGeneMolecularData,
     Sample,
-} from '../../../shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import {
     remoteData,
     stringListToIndexSet,
@@ -55,7 +55,7 @@ import {
 } from '../ResultsViewPageStore';
 import numeral from 'numeral';
 import GenesetMolecularDataCache from '../../../shared/cache/GenesetMolecularDataCache';
-import { GenesetMolecularData } from '../../../shared/api/generated/CBioPortalAPIInternal';
+import { GenesetMolecularData } from 'cbioportal-ts-api-client';
 import ClinicalDataCache from '../../../shared/cache/ClinicalDataCache';
 import GenericAssayMolecularDataCache, {
     GenericAssayDataEnhanced,

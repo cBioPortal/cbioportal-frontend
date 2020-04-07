@@ -18,11 +18,7 @@ import {
     getLimitValues,
     deriveDisplayTextFromGenericAssayType,
 } from './PlotsTabUtils';
-import {
-    Mutation,
-    Sample,
-    Gene,
-} from '../../../shared/api/generated/CBioPortalAPI';
+import { Mutation, Sample, Gene } from 'cbioportal-ts-api-client';
 import {
     AlterationTypeConstants,
     AnnotatedNumericGeneMolecularData,

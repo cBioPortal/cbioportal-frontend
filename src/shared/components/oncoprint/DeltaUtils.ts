@@ -27,7 +27,7 @@ import {
     makeGeneticTrackTooltip,
     makeHeatmapTrackTooltip,
 } from './TooltipUtils';
-import { MolecularProfile } from '../../api/generated/CBioPortalAPI';
+import { MolecularProfile } from 'cbioportal-ts-api-client';
 import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
 import ifNotDefined from '../../lib/ifNotDefined';
 

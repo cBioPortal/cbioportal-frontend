@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
-import { MolecularProfile } from '../../shared/api/generated/CBioPortalAPI';
+import { MolecularProfile } from 'cbioportal-ts-api-client';
 import { MakeMobxView } from '../../shared/components/MobxView';
 import EnrichmentsDataSetDropdown from '../resultsView/enrichments/EnrichmentsDataSetDropdown';
 import LoadingIndicator from '../../shared/components/loadingIndicator/LoadingIndicator';

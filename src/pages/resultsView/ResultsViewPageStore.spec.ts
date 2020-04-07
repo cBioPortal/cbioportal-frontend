@@ -3,11 +3,7 @@ import {
     buildDefaultOQLProfile,
     extendSamplesWithCancerType,
 } from './ResultsViewPageStore';
-import {
-    CancerStudy,
-    ClinicalData,
-    Sample,
-} from '../../shared/api/generated/CBioPortalAPI';
+import { CancerStudy, ClinicalData, Sample } from 'cbioportal-ts-api-client';
 
 describe('buildDefaultOQLProfile', () => {
     it('produces correct default queryies based on alteration profiles and zscore/rppa', () => {

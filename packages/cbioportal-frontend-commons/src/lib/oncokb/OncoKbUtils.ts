@@ -4,9 +4,9 @@ import {
     AnnotateMutationByProteinChangeQuery,
     AnnotateStructuralVariantQuery,
     IndicatorQueryResp,
-} from '../../api/generated/OncoKbAPI';
+    LevelOfEvidence,
+} from 'oncokb-ts-api-client';
 import { EvidenceType } from './OncoKB';
-import { LevelOfEvidence } from '../../api/model/oncokb';
 
 export const LEVELS = {
     sensitivity: ['4', '3B', '3A', '2', '1', '0'],

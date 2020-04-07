@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import { getPatientSurvivals } from './SurvivalStoreHelper';
-import { Patient } from 'shared/api/generated/CBioPortalAPI';
+import { Patient } from 'cbioportal-ts-api-client';
 
 const exampleClinicalData = {
     '1': [

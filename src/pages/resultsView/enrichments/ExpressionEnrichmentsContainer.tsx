@@ -5,7 +5,7 @@ import ExpressionEnrichmentTable, {
     ExpressionEnrichmentTableColumnType,
 } from 'pages/resultsView/enrichments/ExpressionEnrichmentsTable';
 import styles from './styles.module.scss';
-import { MolecularProfile, Sample } from 'shared/api/generated/CBioPortalAPI';
+import { MolecularProfile, Sample } from 'cbioportal-ts-api-client';
 import {
     ExpressionEnrichmentWithQ,
     getExpressionRowData,

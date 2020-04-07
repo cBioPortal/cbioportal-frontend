@@ -5,7 +5,7 @@ import * as styles_any from './styles/styles.module.scss';
 import { action, ObservableMap, expr, toJS, computed, observable } from 'mobx';
 import { observer, Observer } from 'mobx-react';
 import EnhancedReactTable from '../enhancedReactTable/EnhancedReactTable';
-import { MutSig } from '../../api/generated/CBioPortalAPIInternal';
+import { MutSig } from 'cbioportal-ts-api-client';
 import { IColumnFormatterData } from '../enhancedReactTable/IColumnFormatter';
 import { IColumnDefMap } from '../enhancedReactTable/IEnhancedReactTableProps';
 import { Td } from 'reactable';

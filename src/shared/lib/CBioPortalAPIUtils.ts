@@ -3,7 +3,7 @@ import {
     Mutation,
     Patient,
     Sample,
-} from '../api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 
 export function isMutation(
     datum: Mutation | NumericGeneMolecularData

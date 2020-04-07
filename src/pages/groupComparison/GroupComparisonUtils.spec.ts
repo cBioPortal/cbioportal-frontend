@@ -30,7 +30,7 @@ import {
 } from './GroupComparisonUtils';
 import deepEqualInAnyOrder from 'deep-equal-in-any-order';
 import ComplexKeySet from '../../shared/lib/complexKeyDataStructures/ComplexKeySet';
-import { Sample } from '../../shared/api/generated/CBioPortalAPI';
+import { Sample } from 'cbioportal-ts-api-client';
 import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { assertDeepEqualInAnyOrder } from '../../shared/lib/SpecUtils';
 import ComplexKeyGroupsMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap';

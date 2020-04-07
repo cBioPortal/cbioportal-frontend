@@ -7,7 +7,7 @@ import { NodeMetadata } from './CancerStudyTreeData';
 import {
     TypeOfCancer as CancerType,
     CancerStudy,
-} from '../../api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import { QueryStore } from './QueryStore';
 import { computed, action } from 'mobx';
 import {
