@@ -206,6 +206,7 @@ import {
     fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { getSurvivalAttributes } from './survival/SurvivalUtil';
+import ComplexKeySet from '../../shared/lib/complexKeyDataStructures/ComplexKeySet';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -1089,6 +1090,7 @@ export class ResultsViewPageStore {
     readonly clinicalAttributeIdToAvailableSampleCount = remoteData({
         await: () => [
             this.samples,
+            this.sampleSet,
             this.studies,
             this.clinicalAttributes,
             this.studyToDataQueryFilter,
@@ -1163,10 +1165,14 @@ export class ResultsViewPageStore {
                 ret[attr.clinicalAttributeId] = this.samples.result!.length;
             }
             // add counts for "ComparisonGroup" clinical attributes
+            const sampleSet = this.sampleSet.result!;
             for (const attr of this.clinicalAttributes_comparisonGroupMembership
                 .result!) {
                 ret[attr.clinicalAttributeId] = getNumSamples(
-                    attr.comparisonGroup!.data
+                    attr.comparisonGroup!.data,
+                    (studyId, sampleId) => {
+                        return sampleSet.has({ studyId, sampleId });
+                    }
                 );
             }
             return ret;
@@ -3293,6 +3299,20 @@ export class ResultsViewPageStore {
         },
         []
     );
+
+    readonly sampleSet = remoteData({
+        await: () => [this.samples],
+        invoke: () => {
+            return Promise.resolve(
+                ComplexKeySet.from(
+                    this.samples.result!.map(s => ({
+                        studyId: s.studyId,
+                        sampleId: s.sampleId,
+                    }))
+                )
+            );
+        },
+    });
 
     readonly sampleKeyToSample = remoteData({
         await: () => [this.samples],
