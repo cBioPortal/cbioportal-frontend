@@ -261,6 +261,29 @@ export function mergeAlterations(alterations: string | string[]) {
     return regular.join(', ');
 }
 
+/**
+ * Return the positional variant of the missense mutation
+ * @param alteration The missense mutation
+ */
+export function getPositionalVariant(alteration: string) {
+    const regExp = new RegExp('^([A-Z]+)([0-9]+)([A-Z]*)$');
+    const result = regExp.exec(alteration);
+
+    // Only if the alteration is missense mutation or positional variant
+    // result[0]: matched alteration
+    // result[1]: reference alleles (there could be multiple reference alleles, we only return the first allele)
+    // result[2]: position(protein start/end)
+    // result[3]: variant alleles (empty if the alteration is positional variant already)
+    if (
+        _.isArray(result) &&
+        result.length === 4 &&
+        (!result[3] || result[1].length === result[3].length)
+    ) {
+        return `${result[1][0]}${result[2]}`;
+    }
+    return undefined;
+}
+
 export function getTumorTypeName(tumorType?: TumorType) {
     if (!tumorType) {
         return '';

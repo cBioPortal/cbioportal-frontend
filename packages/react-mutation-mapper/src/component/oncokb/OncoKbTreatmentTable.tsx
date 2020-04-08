@@ -6,6 +6,7 @@ import * as React from 'react';
 import ReactTable from 'react-table';
 
 import {
+    getPositionalVariant,
     getTumorTypeName,
     levelIconClassNames,
     mergeAlterations,
@@ -115,6 +116,11 @@ export default class OncoKbTreatmentTable extends React.Component<
                             alteration.toLocaleLowerCase() ===
                             lowerCasedQueryVariant
                     );
+                    if (!matchedAlteration) {
+                        matchedAlteration = getPositionalVariant(
+                            this.props.variant
+                        );
+                    }
                     let pickedAlteration =
                         matchedAlteration === undefined
                             ? props.value[0]
@@ -205,12 +211,6 @@ export default class OncoKbTreatmentTable extends React.Component<
                 <ReactTable
                     data={this.props.treatments}
                     columns={this.columns}
-                    defaultSorted={[
-                        {
-                            id: 'level',
-                            desc: true,
-                        },
-                    ]}
                     showPagination={false}
                     pageSize={this.props.treatments.length}
                     className="-striped -highlight"
