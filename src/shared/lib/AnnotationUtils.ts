@@ -1,10 +1,10 @@
-import { IHotspotIndex, isHotspot } from 'react-mutation-mapper/';
+import { Hotspot } from 'genome-nexus-ts-api-client';
+import { IHotspotIndex, isHotspot } from 'react-mutation-mapper';
 
-import { CosmicMutation } from 'shared/api/generated/CBioPortalAPIInternal';
+import { CosmicMutation } from 'cbioportal-ts-api-client';
 import { ICosmicData } from 'shared/model/Cosmic';
-import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 import { normalizeMutation } from '../components/mutationMapper/MutationMapperUtils';
-import { Hotspot } from 'cbioportal-frontend-commons';
 
 /**
  * Utility functions related to annotation data.

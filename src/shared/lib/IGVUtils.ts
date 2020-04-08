@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { CopyNumberSeg } from 'shared/api/generated/CBioPortalAPI';
+import { CopyNumberSeg } from 'cbioportal-ts-api-client';
 import { TrackProps } from 'shared/components/igv/IntegrativeGenomicsViewer';
 
 export const WHOLE_GENOME = 'all';

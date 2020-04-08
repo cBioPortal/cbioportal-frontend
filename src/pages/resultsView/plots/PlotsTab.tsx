@@ -61,7 +61,7 @@ import {
     ClinicalAttribute,
     GenericAssayMeta,
     Gene,
-} from '../../../shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import Timer = NodeJS.Timer;
 import ScatterPlot from 'shared/components/plots/ScatterPlot';
 import WaterfallPlot from 'shared/components/plots/WaterfallPlot';

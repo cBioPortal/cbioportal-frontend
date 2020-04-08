@@ -3,7 +3,7 @@ import { observer } from 'mobx-react';
 import EnrichmentsDataSetDropdown from '../resultsView/enrichments/EnrichmentsDataSetDropdown';
 import AlterationEnrichmentContainer from '../resultsView/enrichments/AlterationEnrichmentsContainer';
 import autobind from 'autobind-decorator';
-import { MolecularProfile } from '../../shared/api/generated/CBioPortalAPI';
+import { MolecularProfile } from 'cbioportal-ts-api-client';
 import { MakeMobxView } from '../../shared/components/MobxView';
 import LoadingIndicator from '../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../shared/components/ErrorMessage';

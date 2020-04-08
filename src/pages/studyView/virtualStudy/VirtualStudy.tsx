@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import styles from './styles.module.scss';
 import { observer } from 'mobx-react';
 import { computed, observable, action } from 'mobx';
-import { CancerStudy, Sample } from 'shared/api/generated/CBioPortalAPI';
+import { CancerStudy, Sample } from 'cbioportal-ts-api-client';
 import classnames from 'classnames';
 import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';

@@ -11,7 +11,7 @@ import {
 } from '../GroupComparisonUtils';
 import ErrorIcon from '../../../shared/components/ErrorIcon';
 import ComplexKeyMap from '../../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
-import { Sample } from '../../../shared/api/generated/CBioPortalAPI';
+import { Sample } from 'cbioportal-ts-api-client';
 import { SortableElement } from 'react-sortable-hoc';
 import { getTextColor, renderGroupNameWithOrdinal } from '../OverlapUtils';
 import { TOOLTIP_MOUSE_ENTER_DELAY_MS } from 'cbioportal-frontend-commons';

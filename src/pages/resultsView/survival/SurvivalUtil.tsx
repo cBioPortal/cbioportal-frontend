@@ -2,7 +2,7 @@ import { PatientSurvival } from '../../../shared/model/PatientSurvival';
 import { tsvFormat } from 'd3-dsv';
 import jStat from 'jStat';
 import * as _ from 'lodash';
-import { ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
+import { ClinicalAttribute } from 'cbioportal-ts-api-client';
 
 export type ScatterData = {
     x: number;

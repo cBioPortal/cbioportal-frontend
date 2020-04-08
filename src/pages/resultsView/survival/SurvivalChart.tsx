@@ -46,7 +46,7 @@ import { AnalysisGroup } from '../../studyView/StudyViewUtils';
 import { AbstractChart } from '../../studyView/charts/ChartContainer';
 import { toSvgDomNodeWithLegend } from '../../studyView/StudyViewUtils';
 import classnames from 'classnames';
-import { ClinicalAttribute } from '../../../shared/api/generated/CBioPortalAPI';
+import { ClinicalAttribute } from 'cbioportal-ts-api-client';
 import TruncatedTextWithTooltipSVG from '../../../shared/components/TruncatedTextWithTooltipSVG';
 import { EditableSpan, pluralize } from 'cbioportal-frontend-commons';
 

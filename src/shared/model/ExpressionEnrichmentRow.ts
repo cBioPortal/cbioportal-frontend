@@ -1,4 +1,4 @@
-import { GroupStatistics } from 'shared/api/generated/CBioPortalAPIInternal';
+import { GroupStatistics } from 'cbioportal-ts-api-client';
 
 export interface ExpressionEnrichmentRow {
     checked: boolean;

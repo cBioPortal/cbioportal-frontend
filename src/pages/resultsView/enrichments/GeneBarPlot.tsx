@@ -10,7 +10,7 @@ import OQLTextArea, {
 } from 'shared/components/GeneSelectionBox/OQLTextArea';
 import _ from 'lodash';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
-import { Gene } from 'shared/api/generated/CBioPortalAPI';
+import { Gene } from 'cbioportal-ts-api-client';
 import {
     getEnrichmentBarPlotData,
     getGeneListOptions,

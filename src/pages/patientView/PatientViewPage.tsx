@@ -1,11 +1,11 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import GenomicOverview from './genomicOverview/GenomicOverview';
-import { CancerStudy, ClinicalData } from 'shared/api/generated/CBioPortalAPI';
+import { CancerStudy, ClinicalData } from 'cbioportal-ts-api-client';
 import {
     ClinicalDataBySampleId,
     RequestStatus,
-} from '../../shared/api/api-types-extended';
+} from 'cbioportal-ts-api-client';
 import FeatureTitle from '../../shared/components/featureTitle/FeatureTitle';
 import { Else, If, Then } from 'react-if';
 import SampleManager from './SampleManager';

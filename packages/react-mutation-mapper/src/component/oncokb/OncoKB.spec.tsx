@@ -5,10 +5,7 @@ import _ from 'lodash';
 
 import OncoKB, { sortValue as oncoKbAnnotationSortValue } from './OncoKB';
 import { defaultArraySortMethod } from '../../util/ReactTableUtils';
-import {
-    LevelOfEvidence,
-    IndicatorQueryResp,
-} from 'cbioportal-frontend-commons';
+import { LevelOfEvidence, IndicatorQueryResp } from 'oncokb-ts-api-client';
 
 function emptyQueryIndicator(): IndicatorQueryResp {
     return {
