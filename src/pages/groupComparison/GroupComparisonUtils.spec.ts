@@ -30,7 +30,7 @@ import {
 } from './GroupComparisonUtils';
 import deepEqualInAnyOrder from 'deep-equal-in-any-order';
 import ComplexKeySet from '../../shared/lib/complexKeyDataStructures/ComplexKeySet';
-import { Sample } from '../../shared/api/generated/CBioPortalAPI';
+import { Sample } from 'cbioportal-ts-api-client';
 import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { assertDeepEqualInAnyOrder } from '../../shared/lib/SpecUtils';
 import ComplexKeyGroupsMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap';
@@ -2260,10 +2260,10 @@ describe('GroupComparisonUtils', () => {
 
     describe('getNumSamples', () => {
         it('empty for empty', () => {
-            assert.deepEqual(getNumSamples({ studies: [] }), 0);
+            assert.equal(getNumSamples({ studies: [] }), 0);
         });
         it('nonempty', () => {
-            assert.deepEqual(
+            assert.equal(
                 getNumSamples({
                     studies: [
                         { id: 'study1', samples: ['sample1', 'sample2'] },
@@ -2275,6 +2275,26 @@ describe('GroupComparisonUtils', () => {
                     ],
                 }),
                 6
+            );
+        });
+        it('filtered', () => {
+            assert.equal(
+                getNumSamples(
+                    {
+                        studies: [
+                            { id: 'study1', samples: ['sample1', 'sample2'] },
+                            {
+                                id: 'study2',
+                                samples: ['sample1', 'sample2', 'sample3'],
+                            },
+                            { id: 'study3', samples: ['sample1'] },
+                        ],
+                    },
+                    (studyId, sampleId) => {
+                        return sampleId === 'sample1';
+                    }
+                ),
+                3
             );
         });
     });

@@ -6,7 +6,7 @@ import React from 'react';
 import { assert } from 'chai';
 import { shallow, mount } from 'enzyme';
 import sinon from 'sinon';
-import { DiscreteCopyNumberData } from '../../../../shared/api/generated/CBioPortalAPI';
+import { DiscreteCopyNumberData } from 'cbioportal-ts-api-client';
 
 describe('CnaColumnFormatter', () => {
     before(() => {});

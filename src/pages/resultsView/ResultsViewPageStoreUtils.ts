@@ -12,7 +12,7 @@ import {
     PatientIdentifier,
     PatientFilter,
     ReferenceGenomeGene,
-} from '../../shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import { action, computed } from 'mobx';
 import AccessorsForOqlFilter, {
     getSimplifiedMutationType,
@@ -36,7 +36,8 @@ import {
     ResultsViewPageStore,
     AlterationTypeConstants,
 } from './ResultsViewPageStore';
-import { IndicatorQueryResp, remoteData } from 'cbioportal-frontend-commons';
+import { remoteData } from 'cbioportal-frontend-commons';
+import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import _ from 'lodash';
 import client from 'shared/api/cbioportalClientInstance';
 import { VirtualStudy } from 'shared/model/VirtualStudy';

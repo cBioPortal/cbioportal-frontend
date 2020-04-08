@@ -9,7 +9,7 @@ import {
     DiscreteCNACacheDataType,
     default as DiscreteCNACache,
 } from 'shared/cache/DiscreteCNACache';
-import { MolecularProfile, Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { MolecularProfile, Mutation } from 'cbioportal-ts-api-client';
 
 export default class DiscreteCNAColumnFormatter {
     private static altToFilterString: { [a: number]: string } = {

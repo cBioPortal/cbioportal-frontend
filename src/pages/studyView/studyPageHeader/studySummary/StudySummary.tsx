@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { CancerStudy } from '../../../../shared/api/generated/CBioPortalAPI';
+import { CancerStudy } from 'cbioportal-ts-api-client';
 import { computed, observable, action } from 'mobx';
 import { observer } from 'mobx-react';
 import classnames from 'classnames';

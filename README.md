@@ -324,7 +324,7 @@ Whenever you need to update code under packages, you should also consider updati
 
 #### Update API clients
 
-The API clients are part of cbioportal-frontend-commons, so all packages need to be updated when there's a change. To do so first update the API:
+The API clients now live in separate packages, so all packages need to be updated when there's a change. To do so first update the API:
 
 ```
 yarn run updateAPI
@@ -335,8 +335,6 @@ then update all package versions with:
 ```
 yarn run updatePackageVersion
 ```
-
-After that update the versions of all packages in the root `package.json`
 
 ## Components
 

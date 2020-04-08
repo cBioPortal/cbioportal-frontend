@@ -11,10 +11,7 @@ import './styles.scss';
 import SampleManager from '../SampleManager';
 
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
-import {
-    ClinicalEvent,
-    ClinicalEventData,
-} from '../../../shared/api/generated/CBioPortalAPI';
+import { ClinicalEvent, ClinicalEventData } from 'cbioportal-ts-api-client';
 import { DownloadControls } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
 

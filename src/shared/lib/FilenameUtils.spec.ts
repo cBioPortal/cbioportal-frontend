@@ -4,7 +4,7 @@ import {
     generateDownloadFilenamePrefixByStudies,
     generateDownloadFilenamePrefixByStudyIds,
 } from './FilenameUtils';
-import { CancerStudy } from 'shared/api/generated/CBioPortalAPI';
+import { CancerStudy } from 'cbioportal-ts-api-client';
 
 describe('FilenameUtils', () => {
     describe('generateDownloadFilenamePrefixByStudyIds', () => {

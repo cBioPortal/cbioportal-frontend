@@ -26,7 +26,7 @@ import {
     ClinicalDataFilterValue,
     GeneFilter,
     GenomicDataCount,
-} from 'shared/api/generated/CBioPortalAPIInternal';
+} from 'cbioportal-ts-api-client';
 import {
     CancerStudy,
     ClinicalAttribute,
@@ -39,7 +39,7 @@ import {
     MolecularProfile,
     MolecularProfileFilter,
     Patient,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import { fetchCopyNumberSegmentsForSamples } from 'shared/lib/StoreUtils';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
@@ -136,11 +136,11 @@ import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyM
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import {
     DataType as DownloadDataType,
-    CancerGene,
     remoteData,
     stringListToSet,
     pluralize,
 } from 'cbioportal-frontend-commons';
+import { CancerGene } from 'oncokb-ts-api-client';
 
 import { AppStore } from 'AppStore';
 import { getGeneCNAOQL } from 'pages/studyView/TableUtils';

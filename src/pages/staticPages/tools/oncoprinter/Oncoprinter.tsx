@@ -6,7 +6,7 @@ import OncoprintControls, {
     IOncoprintControlsHandlers,
     IOncoprintControlsState,
 } from 'shared/components/oncoprint/controls/OncoprintControls';
-import { Sample } from '../../../../shared/api/generated/CBioPortalAPI';
+import { Sample } from 'cbioportal-ts-api-client';
 import { percentAltered } from '../../../../shared/components/oncoprint/OncoprintUtils';
 import AppConfig from 'appConfig';
 import OncoprintJS from 'oncoprintjs';

@@ -4,7 +4,7 @@ import {
     Mutation,
     NumericGeneMolecularData,
     Gene,
-} from '../../../shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import { observer, Observer } from 'mobx-react';
 import CoExpressionTableGenes from './CoExpressionTableGenes';
 import CoExpressionTableGenesets from './CoExpressionTableGenesets';
@@ -28,7 +28,7 @@ import { CoverageInformation } from '../ResultsViewPageStoreUtils';
 import _ from 'lodash';
 import { calculateQValues } from '../../../shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 import { CoExpressionWithQ } from './CoExpressionTabUtils';
-import { GenesetMolecularData } from '../../../shared/api/generated/CBioPortalAPIInternal';
+import { GenesetMolecularData } from 'cbioportal-ts-api-client';
 import { GeneticEntity } from '../ResultsViewPageStore';
 
 export interface ICoExpressionVizProps {

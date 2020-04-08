@@ -4,8 +4,8 @@ import {
     getProteinPositionFromProteinChange,
 } from 'cbioportal-frontend-commons';
 import * as _ from 'lodash';
-import { Mutation } from 'shared/api/generated/CBioPortalAPI';
-import { CosmicMutation } from 'shared/api/generated/CBioPortalAPIInternal';
+import { Mutation } from 'cbioportal-ts-api-client';
+import { CosmicMutation } from 'cbioportal-ts-api-client';
 import CosmicMutationTable from 'shared/components/cosmic/CosmicMutationTable';
 import styles from './cosmic.module.scss';
 import { ICosmicData } from 'shared/model/Cosmic';

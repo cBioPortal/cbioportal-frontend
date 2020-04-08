@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import { DataFilterType } from 'react-mutation-mapper';
 
-import { Mutation } from '../../api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 import MutationMapperDataStore from './MutationMapperDataStore';
 
 describe('MutationMapperDataStore', () => {
