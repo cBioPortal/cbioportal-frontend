@@ -6,13 +6,14 @@ import ResourceLink from '../../../shared/components/resources/ResourceLink';
 import _ from 'lodash';
 import { StudyViewPageStore } from '../StudyViewPageStore';
 import { ResourceData } from 'cbioportal-ts-api-client';
+import styles from '../../../shared/components/resources/styles.module.scss';
 
 export interface IResourcesTabProps {
     store: StudyViewPageStore;
     openResource: (resource: ResourceData) => void;
 }
 
-export const RESOURCES_TAB_NAME = 'Files and Links';
+export const RESOURCES_TAB_NAME = 'Files & Links';
 
 @observer
 export default class ResourcesTab extends React.Component<
@@ -28,7 +29,7 @@ export default class ResourcesTab extends React.Component<
             if (this.props.store.studyResourceData.result!.length > 0) {
                 return (
                     <div className="resourcesSection">
-                        <h4>
+                        <h4 className={styles.blackHeader}>
                             Study Resources for{' '}
                             {this.props.store.studies.result![0].name}
                         </h4>
@@ -56,7 +57,7 @@ export default class ResourcesTab extends React.Component<
                 <FeatureTitle
                     title={RESOURCES_TAB_NAME}
                     isLoading={this.studyResources.isPending}
-                    className="pull-left"
+                    className={'pull-left'}
                 />
                 <br />
                 <br />
