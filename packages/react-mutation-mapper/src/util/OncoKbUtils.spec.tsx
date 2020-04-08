@@ -3,6 +3,7 @@ import { assert } from 'chai';
 import { Mutation } from '../model/Mutation';
 import {
     defaultOncoKbIndicatorFilter,
+    getPositionalVariant,
     groupOncoKbIndicatorDataByMutations,
 } from './OncoKbUtils';
 
@@ -176,6 +177,67 @@ describe('OncoKbUtils', () => {
             assert.isUndefined(
                 grouped[666],
                 'none should be picked by the indicator filter as oncogenic at position 666'
+            );
+        });
+    });
+
+    describe('getPositionalVariant', () => {
+        it('Missense with one amino acid change', () => {
+            const missenseAlteration = 'V600E';
+            const expectedPositionalVariant = 'V600';
+            assert.equal(
+                getPositionalVariant(missenseAlteration),
+                expectedPositionalVariant,
+                'V600 should be returned'
+            );
+        });
+        it('Missense with multiple amino acid changes', () => {
+            const missenseAlteration = 'VK600EI';
+            const expectedPositionalVariant = 'V600';
+            assert.equal(
+                getPositionalVariant(missenseAlteration),
+                expectedPositionalVariant,
+                'V600 should be returned'
+            );
+        });
+        it('Input is positional alteration', () => {
+            const oneAAAlteration = 'V600';
+            const twoAAAlteration = 'VK600';
+            const expectedPositionalVariant = 'V600';
+            assert.equal(
+                getPositionalVariant(oneAAAlteration),
+                expectedPositionalVariant,
+                'V600 should be returned'
+            );
+            assert.equal(
+                getPositionalVariant(twoAAAlteration),
+                expectedPositionalVariant,
+                'V600 should be returned'
+            );
+        });
+        it('Undefined returned for delins missense alteration', () => {
+            // the structure is too complex to parse, we simply skip for this scenario
+            const missenseAlteration = 'M277_D278delinsIY';
+            assert.equal(
+                getPositionalVariant(missenseAlteration),
+                undefined,
+                'undefined should be returned'
+            );
+        });
+        it('Undefined returned for other type of alteration', () => {
+            const inframeDeletion = 'N486_T491delinsK';
+            assert.equal(
+                getPositionalVariant(inframeDeletion),
+                undefined,
+                'undefined should be returned'
+            );
+        });
+        it('Undefined returned for empty string', () => {
+            const missenseAlteration = '';
+            assert.equal(
+                getPositionalVariant(missenseAlteration),
+                undefined,
+                'V600 should be returned'
             );
         });
     });
