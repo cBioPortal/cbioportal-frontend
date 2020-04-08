@@ -36,19 +36,17 @@ export default class ResourceLink extends React.Component<
             case 'wav':
                 className = 'fa fa-file-audio-o';
                 break;
-            case undefined:
-                className = 'fa fa-external-link';
-                break;
-            default:
-                className = 'fa fa-file-o';
-                break;
         }
-        return (
-            <i
-                className={`${className} fa-sm`}
-                style={{ marginRight: 5, color: 'black' }}
-            />
-        );
+        if (className) {
+            return (
+                <i
+                    className={`${className} fa-sm`}
+                    style={{ marginRight: 5, color: 'black' }}
+                />
+            );
+        } else {
+            return null;
+        }
     }
 
     @autobind
@@ -59,24 +57,22 @@ export default class ResourceLink extends React.Component<
     render() {
         return (
             <div>
-                <a href={this.props.resource.url} target={'_blank'}>
+                <a onClick={this.openResource}>
                     {this.icon}
                     {this.props.resource.resourceDefinition.displayName ||
                         this.props.resource.url}
                 </a>
-                <button
-                    className="btn btn-link"
-                    style={{ marginLeft: 10, fontSize: 10 }}
-                    onClick={this.openResource}
+                <a
+                    href={this.props.resource.url}
+                    style={{ marginLeft: 16, fontSize: 10 }}
+                    target={'_blank'}
                 >
                     <i
-                        className={`fa fa-folder-open-o fa-sm`}
+                        className={`fa fa-external-link fa-sm`}
                         style={{ marginRight: 5, color: 'black' }}
                     />
-                    {this.props.isTabOpen(this.props.resource.resourceId)
-                        ? 'Go to tab'
-                        : 'Open in tab'}
-                </button>
+                    Open in new window
+                </a>
             </div>
         );
     }
