@@ -1,8 +1,6 @@
 import autobind from 'autobind-decorator';
-import {
-    DefaultTooltip,
-    IndicatorQueryResp,
-} from 'cbioportal-frontend-commons';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import * as React from 'react';
 import { observable } from 'mobx';
 import { observer } from 'mobx-react';

@@ -1,12 +1,14 @@
 import autobind from 'autobind-decorator';
+import { IOncoKbData, remoteData } from 'cbioportal-frontend-commons';
+import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import {
-    CancerGene,
-    IndicatorQueryResp,
-    IOncoKbData,
+    EnsemblTranscript,
     MyVariantInfo,
-    remoteData,
+    PfamDomain,
+    PfamDomainRange,
+    PostTranslationalModification,
     VariantAnnotation,
-} from 'cbioportal-frontend-commons';
+} from 'genome-nexus-ts-api-client';
 import _ from 'lodash';
 import { computed, observable } from 'mobx';
 import MobxPromise, { cached } from 'mobxpromise';
@@ -20,14 +22,11 @@ import {
 import { ICivicGene, ICivicVariant } from '../model/Civic';
 import { DataFilter, DataFilterType } from '../model/DataFilter';
 import DataStore from '../model/DataStore';
-import { EnsemblTranscript } from '../model/EnsemblTranscript';
 import { ApplyFilterFn, FilterApplier } from '../model/FilterApplier';
 import { Gene } from '../model/Gene';
 import { Mutation } from '../model/Mutation';
 import MutationMapperStore from '../model/MutationMapperStore';
 import { IMyCancerGenomeData } from '../model/MyCancerGenome';
-import { PfamDomain, PfamDomainRange } from '../model/Pfam';
-import { PostTranslationalModification } from '../model/PostTranslationalModification';
 import {
     defaultHotspotFilter,
     groupCancerHotspotDataByPosition,

@@ -13,7 +13,7 @@ import {
     default as DiscreteCNACache,
     fetch as fetchDiscreteCNAData,
 } from 'shared/cache/DiscreteCNACache';
-import { Mutation, MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
+import { Mutation, MolecularProfile } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import {
     default as GenomeNexusMutationAssessorCache,

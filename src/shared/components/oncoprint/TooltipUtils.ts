@@ -6,7 +6,7 @@ import {
     GenePanelData,
     MolecularProfile,
     Mutation,
-} from '../../api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import client from 'shared/api/cbioportalClientInstance';
 import { ClinicalTrackSpec, GeneticTrackDatum } from './Oncoprint';
 import {

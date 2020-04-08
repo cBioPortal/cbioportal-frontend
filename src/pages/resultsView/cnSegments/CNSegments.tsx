@@ -11,7 +11,7 @@ import {
     CopyNumberSeg,
     Gene,
     ReferenceGenomeGene,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import IntegrativeGenomicsViewer from 'shared/components/igv/IntegrativeGenomicsViewer';
 import CNSegmentsDownloader from 'shared/components/cnSegments/CNSegmentsDownloader';
 import WindowStore from 'shared/components/window/WindowStore';

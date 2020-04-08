@@ -62,7 +62,7 @@ import {
     MolecularProfile,
     Sample,
     CancerStudy,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import ErrorMessage from '../../../shared/components/ErrorMessage';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 import { CUSTOM_CASE_LIST_ID } from 'shared/components/query/QueryStore';

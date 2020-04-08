@@ -3,9 +3,12 @@ import * as _ from 'lodash';
 import { If } from 'react-if';
 import Tracks from './Tracks';
 import { ThumbnailExpandVAFPlot } from '../vafPlot/ThumbnailExpandVAFPlot';
-import { Mutation, Sample } from '../../../shared/api/generated/CBioPortalAPI';
+import {
+    ClinicalDataBySampleId,
+    Mutation,
+    Sample,
+} from 'cbioportal-ts-api-client';
 import SampleManager from '../SampleManager';
-import { ClinicalDataBySampleId } from '../../../shared/api/api-types-extended';
 import { MutationFrequenciesBySample } from '../vafPlot/VAFPlot';
 import { computed } from 'mobx';
 import {

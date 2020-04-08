@@ -1,4 +1,4 @@
-import { Mutation } from '../../shared/api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 import { getSimplifiedMutationType } from '../../shared/lib/oql/AccessorsForOqlFilter';
 
 export function countMutations(

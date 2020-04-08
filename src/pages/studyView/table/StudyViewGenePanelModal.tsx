@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { GenePanel } from 'shared/api/generated/CBioPortalAPI';
+import { GenePanel } from 'cbioportal-ts-api-client';
 import { observer } from 'mobx-react';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import GenePanelModal from 'shared/components/GenePanelModal/GenePanelModal';

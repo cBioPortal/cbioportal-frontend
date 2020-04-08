@@ -1,5 +1,5 @@
 import autobind from 'autobind-decorator';
-import { MyVariantInfo, VariantAnnotation } from 'cbioportal-frontend-commons';
+import { MyVariantInfo, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 

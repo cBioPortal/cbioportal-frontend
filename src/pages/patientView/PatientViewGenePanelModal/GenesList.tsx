@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { GenePanel, GenePanelToGene } from 'shared/api/generated/CBioPortalAPI';
+import { GenePanel, GenePanelToGene } from 'cbioportal-ts-api-client';
 import { observer } from 'mobx-react';
 import { SimpleCopyDownloadControls } from 'shared/components/copyDownloadControls/SimpleCopyDownloadControls';
 import { serializeData } from 'shared/lib/Serializer';

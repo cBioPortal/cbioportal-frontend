@@ -13,7 +13,7 @@ import {
 } from 'mobx';
 import { observer, Observer } from 'mobx-react';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
-import { Geneset } from '../../api/generated/CBioPortalAPIInternal';
+import { Geneset } from 'cbioportal-ts-api-client';
 import { IColumnFormatterData } from '../enhancedReactTable/IColumnFormatter';
 import { IColumnDefMap } from '../enhancedReactTable/IEnhancedReactTableProps';
 import { Td } from 'reactable';

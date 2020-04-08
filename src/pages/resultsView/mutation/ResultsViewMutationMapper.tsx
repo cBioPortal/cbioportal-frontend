@@ -4,10 +4,8 @@ import { DataFilterType, onFilterOptionSelect } from 'react-mutation-mapper';
 import { observer } from 'mobx-react';
 import { action, computed } from 'mobx';
 
-import {
-    EnsemblTranscript,
-    getMobxPromiseGroupStatus,
-} from 'cbioportal-frontend-commons';
+import { getMobxPromiseGroupStatus } from 'cbioportal-frontend-commons';
+import { EnsemblTranscript } from 'genome-nexus-ts-api-client';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import CancerTypeCache from 'shared/cache/CancerTypeCache';
 import MutationCountCache from 'shared/cache/MutationCountCache';

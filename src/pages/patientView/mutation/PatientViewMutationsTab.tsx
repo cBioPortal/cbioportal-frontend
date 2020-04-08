@@ -12,7 +12,7 @@ import VAFLineChart, { SHOW_ONLY_SELECTED_LABEL } from './VAFLineChart';
 import { action, computed, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import PatientViewMutationsDataStore from './PatientViewMutationsDataStore';
-import { Mutation } from '../../../shared/api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 import ReactSelect from 'react-select';
 import MutationOncoprint from './oncoprint/MutationOncoprint';
 import { DownloadControls } from 'cbioportal-frontend-commons';

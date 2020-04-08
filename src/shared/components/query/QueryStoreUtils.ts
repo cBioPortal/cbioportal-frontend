@@ -3,10 +3,7 @@ import {
     normalizeQuery,
     QueryStore,
 } from './QueryStore';
-import {
-    MolecularProfile,
-    SampleList,
-} from 'shared/api/generated/CBioPortalAPI';
+import { MolecularProfile, SampleList } from 'cbioportal-ts-api-client';
 import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
 import * as _ from 'lodash';
 import { VirtualStudy } from 'shared/model/VirtualStudy';

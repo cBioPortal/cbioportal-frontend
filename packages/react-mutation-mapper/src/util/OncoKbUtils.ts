@@ -1,11 +1,10 @@
 import _ from 'lodash';
 import {
     generateQueryVariantId,
-    IndicatorQueryResp,
     IOncoKbData,
     LEVELS,
-    TumorType,
 } from 'cbioportal-frontend-commons';
+import { IndicatorQueryResp, TumorType } from 'oncokb-ts-api-client';
 
 import { Mutation } from '../model/Mutation';
 

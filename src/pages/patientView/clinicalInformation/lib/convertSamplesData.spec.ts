@@ -1,11 +1,10 @@
 import mockClinicalData from '../../../../shared/api/mock/Clinical_data_study_ucec_tcga_pub.json';
-import { ClinicalData } from '../../../../shared/api/generated/CBioPortalAPI';
+import { ClinicalData, ClinicalDataBySampleId } from 'cbioportal-ts-api-client';
 import {
     default as convertSampleData,
     IConvertedSamplesData,
 } from './convertSamplesData';
 import { groupBySampleId } from '../../../../shared/lib/StoreUtils';
-import { ClinicalDataBySampleId } from '../../../../shared/api/api-types-extended';
 import { assert } from 'chai';
 
 describe('convertSamplesData', () => {

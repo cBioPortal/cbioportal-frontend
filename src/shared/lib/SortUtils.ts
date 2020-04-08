@@ -1,4 +1,4 @@
-import { ClinicalAttribute } from '../api/generated/CBioPortalAPI';
+import { ClinicalAttribute } from 'cbioportal-ts-api-client';
 
 export function sortByClinicalAttributePriorityThenName(
     a: ClinicalAttribute,
