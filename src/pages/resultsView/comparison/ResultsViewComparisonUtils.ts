@@ -5,7 +5,7 @@ import {
     getNumSamples,
 } from '../../groupComparison/GroupComparisonUtils';
 import { getStudiesAttr } from '../../groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
-import { Sample } from '../../../shared/api/generated/CBioPortalAPI';
+import { Sample } from 'cbioportal-ts-api-client';
 import { IQueriedMergedTrackCaseData } from '../ResultsViewPageStore';
 import {
     isMergedTrackFilter,

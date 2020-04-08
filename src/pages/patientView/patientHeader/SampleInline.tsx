@@ -4,7 +4,7 @@ import {
     DefaultTooltip,
     placeArrowBottomLeft,
 } from 'cbioportal-frontend-commons';
-import { ClinicalDataBySampleId } from 'shared/api/api-types-extended';
+import { ClinicalDataBySampleId } from 'cbioportal-ts-api-client';
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import './styles.scss';
 

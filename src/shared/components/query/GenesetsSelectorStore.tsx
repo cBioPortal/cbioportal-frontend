@@ -1,8 +1,5 @@
 import * as React from 'react';
-import {
-    Geneset,
-    GenesetHierarchyInfo,
-} from 'shared/api/generated/CBioPortalAPIInternal';
+import { Geneset, GenesetHierarchyInfo } from 'cbioportal-ts-api-client';
 import * as _ from 'lodash';
 import { ObservableMap } from 'mobx/lib/mobx';
 

@@ -8,7 +8,7 @@ import * as _ from 'lodash';
 import { remoteData } from 'cbioportal-frontend-commons';
 import CBioPortalAPIInternal, {
     GenesetHierarchyInfo,
-} from 'shared/api/generated/CBioPortalAPIInternal';
+} from 'cbioportal-ts-api-client';
 import { observer } from 'mobx-react';
 import { observable, ObservableMap } from 'mobx';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';

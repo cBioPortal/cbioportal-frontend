@@ -1,4 +1,4 @@
-import { Genome2StructureAPI } from 'cbioportal-frontend-commons';
+import { Genome2StructureAPI } from 'genome-nexus-ts-api-client';
 
 const client = new Genome2StructureAPI();
 

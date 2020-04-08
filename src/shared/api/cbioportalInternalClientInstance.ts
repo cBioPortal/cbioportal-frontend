@@ -1,4 +1,4 @@
-import CBioPortalAPIInternal from './generated/CBioPortalAPIInternal';
+import { CBioPortalAPIInternal } from 'cbioportal-ts-api-client';
 
 const internalClient = new CBioPortalAPIInternal();
 

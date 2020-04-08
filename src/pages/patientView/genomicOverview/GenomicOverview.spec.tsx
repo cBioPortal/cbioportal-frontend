@@ -5,7 +5,7 @@ import { shallow, mount, ShallowWrapper, ReactWrapper } from 'enzyme';
 import sinon from 'sinon';
 import SampleManager from '../SampleManager';
 import { ThumbnailExpandVAFPlot } from '../vafPlot/ThumbnailExpandVAFPlot';
-import { Mutation } from '../../../shared/api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 import { MutationFrequenciesBySample } from '../vafPlot/VAFPlot';
 
 describe('GenomicOverview', () => {

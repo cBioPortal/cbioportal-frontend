@@ -5,8 +5,9 @@ import ReactTable, { Column } from 'react-table';
 import { computed } from 'mobx';
 import { observer } from 'mobx-react';
 
+import { PostTranslationalModification } from 'genome-nexus-ts-api-client';
+
 import { Cache, MobxCache } from '../../model/MobxCache';
-import { PostTranslationalModification } from '../../model/PostTranslationalModification';
 import PtmReferenceList from './PtmReferenceList';
 
 export type PtmSummaryTableProps = {

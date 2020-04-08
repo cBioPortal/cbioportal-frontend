@@ -1,4 +1,5 @@
-import { ICache, ArticleAbstract } from 'cbioportal-frontend-commons';
+import { ICache } from 'cbioportal-frontend-commons';
+import { ArticleAbstract } from 'oncokb-ts-api-client';
 import * as React from 'react';
 import * as _ from 'lodash';
 

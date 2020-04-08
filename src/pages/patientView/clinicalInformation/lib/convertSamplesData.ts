@@ -1,9 +1,9 @@
 import {
     ClinicalData,
+    ClinicalDataBySampleId,
     ClinicalAttribute,
     Sample,
-} from '../../../../shared/api/generated/CBioPortalAPI';
-import { ClinicalDataBySampleId } from '../../../../shared/api/api-types-extended';
+} from 'cbioportal-ts-api-client';
 
 export interface IColumn {
     id: string;

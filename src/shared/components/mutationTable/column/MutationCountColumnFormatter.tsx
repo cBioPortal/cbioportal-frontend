@@ -1,6 +1,6 @@
 import * as React from 'react';
 import LazyLoadedTableCell from 'shared/lib/LazyLoadedTableCell';
-import { Mutation, ClinicalData } from '../../../api/generated/CBioPortalAPI';
+import { Mutation, ClinicalData } from 'cbioportal-ts-api-client';
 import MutationCountCache from '../../../cache/MutationCountCache';
 import MutationTable, { IMutationTableProps } from '../MutationTable';
 import generalStyles from './styles.module.scss';

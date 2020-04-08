@@ -13,7 +13,7 @@ import {
     unionSamples,
 } from './GroupComparisonUtils';
 import ComplexKeyGroupsMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap';
-import { Sample } from '../../shared/api/generated/CBioPortalAPI';
+import { Sample } from 'cbioportal-ts-api-client';
 
 export function regionIsSelected<T extends string | number>(
     regionComb: T[],

@@ -1,13 +1,15 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import { ClinicalDataBySampleId } from '../../../shared/api/api-types-extended';
 import convertSamplesData, {
     IConvertedSamplesData,
 } from './lib/convertSamplesData';
 import LazyMobXTable, {
     Column,
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
-import { ClinicalAttribute } from '../../../shared/api/generated/CBioPortalAPI';
+import {
+    ClinicalAttribute,
+    ClinicalDataBySampleId,
+} from 'cbioportal-ts-api-client';
 import styles from './style/sampleTable.module.scss';
 import { SHOW_ALL_PAGE_SIZE } from '../../../shared/components/paginationControls/PaginationControls';
 import { sortByClinicalAttributePriorityThenName } from '../../../shared/lib/SortUtils';

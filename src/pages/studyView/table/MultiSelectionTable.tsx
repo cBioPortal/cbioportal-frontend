@@ -10,7 +10,7 @@ import {
 } from '../../../shared/components/lazyMobXTable/LazyMobXTable';
 import { StudyViewGenePanelModal } from './StudyViewGenePanelModal';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
-import { GenePanel } from 'shared/api/generated/CBioPortalAPI';
+import { GenePanel } from 'cbioportal-ts-api-client';
 import {
     correctColumnWidth,
     correctMargin,

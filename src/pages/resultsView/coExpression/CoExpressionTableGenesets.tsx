@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { Geneset } from '../../../shared/api/generated/CBioPortalAPIInternal';
-import { Gene } from '../../../shared/api/generated/CBioPortalAPI';
+import { Geneset } from 'cbioportal-ts-api-client';
+import { Gene } from 'cbioportal-ts-api-client';
 import { correlationColor, correlationSortBy } from './CoExpressionTableUtils';
 import LazyMobXTable from '../../../shared/components/lazyMobXTable/LazyMobXTable';
 import { CoExpressionDataStore, TableMode } from './CoExpressionViz';

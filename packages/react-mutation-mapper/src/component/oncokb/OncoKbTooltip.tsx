@@ -1,18 +1,10 @@
-import {
-    ICache,
-    ICacheData,
-    IndicatorQueryResp,
-    Query,
-    TableCellStatus,
-    TableCellStatusIndicator,
-} from 'cbioportal-frontend-commons';
+import { ICache } from 'cbioportal-frontend-commons';
+import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import * as React from 'react';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
 
 import { MobxCache } from '../../model/MobxCache';
-import { SimpleCache } from '../../model/SimpleCache';
-import { generateOncogenicCitations } from '../../util/OncoKbUtils';
 import OncoKbCard from './OncoKbCard';
 
 export interface IOncoKbTooltipProps {

@@ -2,7 +2,7 @@ import * as React from 'react';
 import {
     DiscreteCopyNumberData,
     CopyNumberCount,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import FrequencyBar from 'shared/components/cohort/FrequencyBar';
 import { IGisticData, IGisticSummary } from 'shared/model/Gistic';
 import { getPercentage } from 'shared/lib/FormatUtils';

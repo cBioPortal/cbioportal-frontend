@@ -4,7 +4,6 @@ import {
     MOLECULAR_PROFILE_MUTATIONS_SUFFIX,
     MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX,
 } from '../../../../shared/constants';
-import { ClinicalDataBySampleId } from 'shared/api/api-types-extended';
 import { GenePanelIdSpecialValue } from 'shared/lib/StoreUtils';
 
 describe('TumorColumnFormatter', () => {

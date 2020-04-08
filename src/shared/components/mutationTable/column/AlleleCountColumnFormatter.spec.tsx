@@ -3,7 +3,7 @@ import React from 'react';
 import { assert } from 'chai';
 import { shallow, mount } from 'enzyme';
 import sinon from 'sinon';
-import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 import { initMutation } from 'test/MutationMockUtils';
 
 describe('AlleleCountColumnFormatter', () => {

@@ -1,4 +1,5 @@
-import { DefaultTooltip, MyVariantInfo } from 'cbioportal-frontend-commons';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { MyVariantInfo } from 'genome-nexus-ts-api-client';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 

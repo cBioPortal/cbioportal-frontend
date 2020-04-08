@@ -4,7 +4,7 @@ import {
     MolecularProfile,
     Sample,
     GenericAssayMeta,
-} from '../../api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import { SpecialAttribute } from '../../cache/ClinicalDataCache';
 import _ from 'lodash';
 import naturalSort from 'javascript-natural-sort';

@@ -1,4 +1,4 @@
-import { Patient, ClinicalData } from 'shared/api/generated/CBioPortalAPI';
+import { Patient, ClinicalData } from 'cbioportal-ts-api-client';
 import { PatientSurvival } from '../../shared/model/PatientSurvival';
 
 export function getPatientSurvivals(

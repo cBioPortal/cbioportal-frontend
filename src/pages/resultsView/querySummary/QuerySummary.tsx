@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
 
-import { CancerStudy } from '../../../shared/api/generated/CBioPortalAPI';
+import { CancerStudy } from 'cbioportal-ts-api-client';
 import classNames from 'classnames';
 import './styles.scss';
 import {
