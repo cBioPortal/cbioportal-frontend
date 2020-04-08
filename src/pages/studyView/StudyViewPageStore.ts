@@ -816,7 +816,13 @@ export class StudyViewPageStore {
         ClinicalDataFilter
     >();
 
-    @observable genomicProfilesFilter: string[][] = [];
+    @observable private _genomicProfilesFilter: string[][] = [];
+    @computed.struct get genomicProfilesFilter() {
+        return this._genomicProfilesFilter;
+    }
+    @action public setGenomicProfilesFilter(p: string[][]) {
+        this._genomicProfilesFilter = p;
+    }
 
     private _customBinsFromScatterPlotSelectionSet = observable.shallowMap<
         number[]
@@ -911,7 +917,7 @@ export class StudyViewPageStore {
         }
 
         if (filters.genomicProfiles !== undefined) {
-            this.genomicProfilesFilter = filters.genomicProfiles;
+            this.setGenomicProfilesFilter(filters.genomicProfiles);
         }
 
         if (!_.isEqual(toJS(this.initialFiltersQuery), filters)) {
@@ -1208,7 +1214,7 @@ export class StudyViewPageStore {
         this.numberOfSelectedSamplesInCustomSelection = 0;
         this.removeComparisonGroupSelectionFilter();
         this._customBinsFromScatterPlotSelectionSet.clear();
-        this.genomicProfilesFilter = [];
+        this.setGenomicProfilesFilter([]);
     }
 
     @computed
@@ -1420,7 +1426,7 @@ export class StudyViewPageStore {
     @action
     addGenomicProfilesFilter(chartMeta: ChartMeta, profiles: string[][]) {
         let genomicProfilesFilter = toJS(this.genomicProfilesFilter) || [];
-        this.genomicProfilesFilter = genomicProfilesFilter.concat(profiles);
+        this.setGenomicProfilesFilter(genomicProfilesFilter.concat(profiles));
     }
 
     @autobind
@@ -1468,7 +1474,7 @@ export class StudyViewPageStore {
             },
             []
         );
-        this.genomicProfilesFilter = genomicProfilesFilter;
+        this.setGenomicProfilesFilter(genomicProfilesFilter);
     }
 
     @autobind
@@ -1579,7 +1585,7 @@ export class StudyViewPageStore {
                     this.resetGeneFilter(chartUniqueKey);
                     break;
                 case ChartTypeEnum.GENOMIC_PROFILES_TABLE:
-                    this.genomicProfilesFilter = [];
+                    this.setGenomicProfilesFilter([]);
                     break;
                 case ChartTypeEnum.SURVIVAL:
                     break;
@@ -4848,14 +4854,25 @@ export class StudyViewPageStore {
         default: [],
     });
 
+    readonly sampleUniqueKeysByMolecularProfileIdSet = remoteData<{
+        [id: string]: string[];
+    }>({
+        await: () => [this.selectedSamples, this.filteredGenePanelData],
+        invoke: async () => {
+            return getMolecularProfileSamplesSet(
+                this.selectedSamples.result,
+                this.filteredGenePanelData.result
+            );
+        },
+    });
+
     readonly molecularProfileSampleCounts = remoteData<
         MultiSelectionTableRow[]
     >({
         await: () => [
             this.molecularProfiles,
             this.initialMolecularProfileSampleCounts,
-            this.selectedSamples,
-            this.filteredGenePanelData,
+            this.sampleUniqueKeysByMolecularProfileIdSet,
         ],
         invoke: async () => {
             let molecularProfileOptions: GenomicDataCountWithSampleUniqueKeys[] = [];
@@ -4865,10 +4882,7 @@ export class StudyViewPageStore {
             } else {
                 molecularProfileOptions = getMolecularProfileOptions(
                     this.molecularProfiles.result,
-                    getMolecularProfileSamplesSet(
-                        this.selectedSamples.result,
-                        this.filteredGenePanelData.result
-                    )
+                    this.sampleUniqueKeysByMolecularProfileIdSet.result!
                 );
             }
 
@@ -5023,6 +5037,7 @@ export class StudyViewPageStore {
             this.clinicalAttributeIdToClinicalAttribute,
             this.clinicalAttributesCounts,
             this.mutationCountVsFractionGenomeAlteredDataSet,
+            this.sampleUniqueKeysByMolecularProfileIdSet,
         ],
         invoke: async () => {
             if (!_.isEmpty(this.chartMetaSet)) {
@@ -5046,6 +5061,61 @@ export class StudyViewPageStore {
                     },
                     {}
                 );
+                const molecularProfileSamplesSet = this
+                    .sampleUniqueKeysByMolecularProfileIdSet.result!;
+                if (!_.isEmpty(this.mutationProfiles.result)) {
+                    const uniqueKey = getUniqueKeyFromMolecularProfileIds(
+                        this.mutationProfiles.result.map(
+                            profile => profile.molecularProfileId
+                        )
+                    );
+                    // samples countaing this data would be the samples profiled for these molecular profiles
+                    ret[uniqueKey] = _.sumBy(
+                        this.mutationProfiles.result,
+                        profile =>
+                            (
+                                molecularProfileSamplesSet[
+                                    profile.molecularProfileId
+                                ] || []
+                            ).length
+                    );
+                }
+
+                if (!_.isEmpty(this.structuralVariantProfiles.result)) {
+                    const uniqueKey = getUniqueKeyFromMolecularProfileIds(
+                        this.structuralVariantProfiles.result.map(
+                            profile => profile.molecularProfileId
+                        )
+                    );
+                    // samples countaing this data would be the samples profiled for these molecular profiles
+                    ret[uniqueKey] = _.sumBy(
+                        this.structuralVariantProfiles.result,
+                        profile =>
+                            (
+                                molecularProfileSamplesSet[
+                                    profile.molecularProfileId
+                                ] || []
+                            ).length
+                    );
+                }
+
+                if (!_.isEmpty(this.cnaProfiles.result)) {
+                    const uniqueKey = getUniqueKeyFromMolecularProfileIds(
+                        this.cnaProfiles.result.map(
+                            profile => profile.molecularProfileId
+                        )
+                    );
+                    // samples countaing this data would be the samples profiled for these molecular profiles
+                    ret[uniqueKey] = _.sumBy(
+                        this.cnaProfiles.result,
+                        profile =>
+                            (
+                                molecularProfileSamplesSet[
+                                    profile.molecularProfileId
+                                ] || []
+                            ).length
+                    );
+                }
 
                 if (
                     SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION in
