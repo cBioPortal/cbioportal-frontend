@@ -2,6 +2,7 @@ import {
     getMobxPromiseGroupStatus,
     IOncoKbData,
 } from 'cbioportal-frontend-commons';
+import { Mutation } from 'cbioportal-utils';
 import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
@@ -10,7 +11,6 @@ import * as React from 'react';
 import { IHotspotIndex } from '../../model/CancerHotspot';
 import { ICivicEntry, ICivicGene, ICivicVariant } from '../../model/Civic';
 import { MobxCache } from '../../model/MobxCache';
-import { Mutation } from '../../model/Mutation';
 import { IMyCancerGenomeData } from '../../model/MyCancerGenome';
 import { RemoteData } from '../../model/RemoteData';
 import {

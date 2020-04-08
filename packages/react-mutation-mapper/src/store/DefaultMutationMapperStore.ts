@@ -1,8 +1,17 @@
 import autobind from 'autobind-decorator';
 import { IOncoKbData, remoteData } from 'cbioportal-frontend-commons';
+import {
+    genomicLocationString,
+    getMutationsToTranscriptId,
+    groupMutationsByProteinStartPos,
+    uniqueGenomicLocations,
+} from 'cbioportal-utils';
+import { Gene, Mutation } from 'cbioportal-utils';
 import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import {
     EnsemblTranscript,
+    GenomicLocation,
+    Hotspot,
     MyVariantInfo,
     PfamDomain,
     PfamDomainRange,
@@ -13,18 +22,11 @@ import _ from 'lodash';
 import { computed, observable } from 'mobx';
 import MobxPromise, { cached } from 'mobxpromise';
 
-import {
-    AggregatedHotspots,
-    GenomicLocation,
-    Hotspot,
-    IHotspotIndex,
-} from '../model/CancerHotspot';
+import { AggregatedHotspots, IHotspotIndex } from '../model/CancerHotspot';
 import { ICivicGene, ICivicVariant } from '../model/Civic';
 import { DataFilter, DataFilterType } from '../model/DataFilter';
 import DataStore from '../model/DataStore';
 import { ApplyFilterFn, FilterApplier } from '../model/FilterApplier';
-import { Gene } from '../model/Gene';
-import { Mutation } from '../model/Mutation';
 import { MutationMapperDataFetcher } from '../model/MutationMapperDataFetcher';
 import { MutationMapperStore } from '../model/MutationMapperStore';
 import { IMyCancerGenomeData } from '../model/MyCancerGenome';
@@ -40,12 +42,6 @@ import {
     applyDataFilters,
     groupDataByProteinImpactType,
 } from '../util/FilterUtils';
-import { getMutationsToTranscriptId } from '../util/MutationAnnotator';
-import {
-    genomicLocationString,
-    groupMutationsByProteinStartPos,
-    uniqueGenomicLocations,
-} from '../util/MutationUtils';
 import { getMyCancerGenomeData } from '../util/MyCancerGenomeUtils';
 import {
     defaultOncoKbIndicatorFilter,

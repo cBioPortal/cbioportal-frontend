@@ -2,10 +2,9 @@ import {
     getTextWidth,
     longestCommonStartingSubstring,
 } from 'cbioportal-frontend-commons';
+import { countMutationsByProteinChange, Mutation } from 'cbioportal-utils';
 
 import { LollipopSpec } from '../model/LollipopSpec';
-import { Mutation } from '../model/Mutation';
-import { countMutationsByProteinChange } from './MutationUtils';
 
 export function lollipopLabelText(
     mutationsAtPosition: Mutation[],

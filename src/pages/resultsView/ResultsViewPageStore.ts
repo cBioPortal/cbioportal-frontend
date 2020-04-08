@@ -35,11 +35,11 @@ import client from 'shared/api/cbioportalClientInstance';
 import { action, computed, observable, ObservableMap, reaction } from 'mobx';
 import {
     generateQueryVariantId,
-    getProteinPositionFromProteinChange,
     IOncoKbData,
     remoteData,
     stringListToSet,
 } from 'cbioportal-frontend-commons';
+import { getProteinPositionFromProteinChange } from 'cbioportal-utils';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import { cached, labelMobxPromises, MobxPromise } from 'mobxpromise';
