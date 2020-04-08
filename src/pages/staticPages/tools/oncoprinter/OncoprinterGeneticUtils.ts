@@ -21,10 +21,10 @@ import {
 import {
     generateCopyNumberAlterationQuery,
     generateQueryVariantId,
-    getProteinPositionFromProteinChange,
     EvidenceType,
     IOncoKbData,
 } from 'cbioportal-frontend-commons';
+import { getProteinPositionFromProteinChange } from 'cbioportal-utils';
 import {
     AnnotateCopyNumberAlterationQuery,
     OncoKbAPI,

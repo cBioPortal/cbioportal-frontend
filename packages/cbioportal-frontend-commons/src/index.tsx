@@ -40,7 +40,6 @@ export * from './lib/findFirstMostCommonElt';
 export { default as getBrowserWindow } from './lib/getBrowserWindow';
 export * from './lib/getCanonicalMutationType';
 export * from './lib/getMobxPromiseGroupStatus';
-export * from './lib/ProteinChangeUtils';
 export * from './lib/apiClientCache';
 export { default as SimpleCache, ICache, ICacheData } from './lib/SimpleCache';
 export * from './lib/SvgComponentUtils';

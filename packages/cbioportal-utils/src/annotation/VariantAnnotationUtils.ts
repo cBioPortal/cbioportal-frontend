@@ -1,6 +1,10 @@
 import { MyVariantInfo, VariantAnnotation } from 'genome-nexus-ts-api-client';
+
 import { Mutation } from '../model/Mutation';
-import { extractGenomicLocation, genomicLocationString } from './MutationUtils';
+import {
+    extractGenomicLocation,
+    genomicLocationString,
+} from '../mutation/MutationUtils';
 
 export function getMyVariantInfoAnnotationsFromIndexedVariantAnnotations(indexedVariantAnnotations?: {
     [genomicLocation: string]: VariantAnnotation;

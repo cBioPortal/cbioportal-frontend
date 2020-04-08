@@ -4,9 +4,8 @@ import {
     IOncoKbData,
     LEVELS,
 } from 'cbioportal-frontend-commons';
+import { Mutation } from 'cbioportal-utils';
 import { IndicatorQueryResp, TumorType } from 'oncokb-ts-api-client';
-
-import { Mutation } from '../model/Mutation';
 
 // oncogenic value => oncogenic class name
 const ONCOGENIC_CLASS_NAMES: { [oncogenic: string]: string } = {

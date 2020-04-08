@@ -2,10 +2,11 @@ import autobind from 'autobind-decorator';
 import _ from 'lodash';
 import { action, computed, observable } from 'mobx';
 
+import { Mutation } from 'cbioportal-utils';
+
 import { DataFilter, DataFilterType } from '../model/DataFilter';
 import DataStore from '../model/DataStore';
 import { FilterApplier } from '../model/FilterApplier';
-import { Mutation } from '../model/Mutation';
 import {
     applyDataFiltersOnDatum,
     groupDataByGroupFilters,

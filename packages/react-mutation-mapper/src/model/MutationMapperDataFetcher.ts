@@ -1,9 +1,11 @@
 import { EvidenceType, IOncoKbData } from 'cbioportal-frontend-commons';
+import { Mutation } from 'cbioportal-utils';
 import {
     EnsemblFilter,
     EnsemblTranscript,
     GenomeNexusAPI,
     GenomeNexusAPIInternal,
+    Hotspot,
     MyVariantInfo,
     PfamDomain,
     PostTranslationalModification,
@@ -12,8 +14,7 @@ import {
 import { CancerGene, OncoKbAPI } from 'oncokb-ts-api-client';
 import request from 'superagent';
 
-import { Mutation } from '../model/Mutation';
-import { AggregatedHotspots, Hotspot } from './CancerHotspot';
+import { AggregatedHotspots } from './CancerHotspot';
 
 export interface MutationMapperDataFetcher {
     fetchSwissProtAccession(entrezGeneId: number): Promise<any>;
