@@ -14,3 +14,12 @@
         }
     }
 }
+
+:global(.cbioportal-frontend) h1.blackHeader,
+h2.blackHeader,
+h3.blackHeader,
+h4.blackHeader,
+h5.blackHeader,
+h6.blackHeader {
+    color: black !important;
+}

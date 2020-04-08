@@ -10,6 +10,7 @@ import { MakeMobxView } from '../../../shared/components/MobxView';
 import ResourceLink from '../../../shared/components/resources/ResourceLink';
 import _ from 'lodash';
 import { ResourceData } from 'cbioportal-ts-api-client';
+import styles from '../../../shared/components/resources/styles.module.scss';
 
 export interface IResourcesTabProps {
     sampleManager: SampleManager | null;
@@ -17,7 +18,7 @@ export interface IResourcesTabProps {
     openResource: (resource: ResourceData) => void;
 }
 
-export const RESOURCES_TAB_NAME = 'Files and Links';
+export const RESOURCES_TAB_NAME = 'Files & Links';
 
 @observer
 export default class ResourcesTab extends React.Component<
@@ -51,7 +52,7 @@ export default class ResourcesTab extends React.Component<
             ) {
                 return (
                     <div className="resourcesSection">
-                        <h4>Sample Resources</h4>
+                        <h4 className={styles.blackHeader}>Sample Resources</h4>
                         <SampleResourcesTable
                             data={this.sampleRows.result!}
                             sampleManager={this.props.sampleManager!}
@@ -72,7 +73,7 @@ export default class ResourcesTab extends React.Component<
             if (this.props.store.patientResourceData.result!.length > 0) {
                 return (
                     <div className="resourcesSection">
-                        <h4>
+                        <h4 className={styles.blackHeader}>
                             Patient Resources for {this.props.store.patientId}
                         </h4>
                         {_.sortBy(
@@ -102,7 +103,7 @@ export default class ResourcesTab extends React.Component<
             if (this.props.store.studyResourceData.result!.length > 0) {
                 return (
                     <div className="resourcesSection">
-                        <h4>
+                        <h4 className={styles.blackHeader}>
                             Study Resources for{' '}
                             {this.props.store.studies.result![0].name}
                         </h4>
@@ -134,7 +135,7 @@ export default class ResourcesTab extends React.Component<
                         this.patientResources.isPending ||
                         this.studyResources.isPending
                     }
-                    className="pull-left"
+                    className={'pull-left'}
                 />
                 <br />
                 <br />
