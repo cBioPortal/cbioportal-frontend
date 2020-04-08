@@ -4,7 +4,7 @@ import {
     TableCellStatus,
     TableCellStatusIndicator,
 } from 'cbioportal-frontend-commons';
-import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 
 export function getFormattedFrequencyValue(frequency: number) {
     return frequency < 0.01 ? frequency.toFixed(4) : frequency.toFixed(2);

@@ -16,7 +16,7 @@ import AppConfig from 'appConfig';
 import { ServerConfigHelpers } from '../../../config/config';
 import OQLTextArea, { GeneBoxType } from '../GeneSelectionBox/OQLTextArea';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
-import { Gene } from 'shared/api/generated/CBioPortalAPI';
+import { Gene } from 'cbioportal-ts-api-client';
 import { bind } from 'bind-decorator';
 import GenesetsValidator from './GenesetsValidator';
 import FontAwesome from 'react-fontawesome';

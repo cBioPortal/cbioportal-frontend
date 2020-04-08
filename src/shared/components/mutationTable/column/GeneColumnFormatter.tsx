@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Mutation, Gene } from 'shared/api/generated/CBioPortalAPI';
+import { Mutation, Gene } from 'cbioportal-ts-api-client';
 
 /**
  * @author Selcuk Onur Sumer

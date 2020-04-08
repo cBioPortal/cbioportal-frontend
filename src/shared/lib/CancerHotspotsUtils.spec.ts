@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 
-import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 import { filterMutationsOnNonHotspotGenes } from './CancerHotspotsUtils';
 
 describe('CancerHotspotsUtils', () => {

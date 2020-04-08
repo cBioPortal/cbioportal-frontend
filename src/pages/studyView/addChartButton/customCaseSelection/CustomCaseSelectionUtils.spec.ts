@@ -13,7 +13,7 @@ import {
     validateLines,
 } from './CustomCaseSelectionUtils';
 import { ClinicalDataTypeEnum } from '../../StudyViewUtils';
-import { Sample } from '../../../../shared/api/generated/CBioPortalAPI';
+import { Sample } from 'cbioportal-ts-api-client';
 
 describe('CustomCaseSelectionUtils', () => {
     describe('getGroups', () => {

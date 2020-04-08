@@ -33,49 +33,6 @@ export {
 } from './components/TableCellStatus';
 export { default as WindowWrapper } from './components/WindowWrapper';
 
-export {
-    default as GenomeNexusAPI,
-    AlleleCount,
-    AlleleFrequency,
-    AlleleNumber,
-    ClinVar,
-    Dbsnp,
-    EnsemblFilter,
-    EnsemblTranscript,
-    GenomicLocation,
-    Gnomad,
-    Hotspot,
-    Homozygotes,
-    MutationAssessor,
-    MyVariantInfoAnnotation,
-    MyVariantInfo,
-    PdbHeader,
-    TranscriptConsequenceSummary,
-    VariantAnnotation,
-    VariantAnnotationSummary,
-} from './api/generated/GenomeNexusAPI';
-export {
-    default as GenomeNexusAPIInternal,
-} from './api/generated/GenomeNexusAPIInternal';
-export {
-    default as Genome2StructureAPI,
-    Alignment,
-    ResidueMapping,
-} from './api/generated/Genome2StructureAPI';
-export {
-    default as OncoKbAPI,
-    CancerGene,
-    IndicatorQueryResp,
-    Query,
-    ArticleAbstract,
-    Citations,
-    IndicatorQueryTreatment,
-    AnnotateCopyNumberAlterationQuery,
-    AnnotateMutationByProteinChangeQuery,
-    AnnotateStructuralVariantQuery,
-    TumorType,
-} from './api/generated/OncoKbAPI';
-export * from './api/model/oncokb';
 export * from './api/remoteData';
 
 export * from './lib/ColumnVisibilityResolver';

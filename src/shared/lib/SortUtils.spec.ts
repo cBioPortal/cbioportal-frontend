@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { ClinicalAttribute } from '../api/generated/CBioPortalAPI';
+import { ClinicalAttribute } from 'cbioportal-ts-api-client';
 import { sortByClinicalAttributePriorityThenName } from './SortUtils';
 
 describe('SortUtils functions', () => {

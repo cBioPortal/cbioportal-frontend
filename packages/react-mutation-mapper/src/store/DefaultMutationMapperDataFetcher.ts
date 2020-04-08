@@ -3,30 +3,31 @@ import request from 'superagent';
 import Response = request.Response;
 
 import {
-    EnsemblFilter,
-    generatePartialEvidenceQuery,
-    GenomeNexusAPI,
-    GenomeNexusAPIInternal,
-    GenomicLocation,
-    OncoKbAPI,
-    Query,
-    VariantAnnotation,
-    MyVariantInfo,
-    CancerGene,
     IOncoKbData,
     EvidenceType,
     generateProteinChangeQuery,
     generateAnnotateStructuralVariantQuery,
-    generateIdToIndicatorMap,
+} from 'cbioportal-frontend-commons';
+import {
     AnnotateMutationByProteinChangeQuery,
     AnnotateStructuralVariantQuery,
-} from 'cbioportal-frontend-commons';
+    CancerGene,
+    OncoKbAPI,
+} from 'oncokb-ts-api-client';
+import {
+    EnsemblFilter,
+    EnsemblTranscript,
+    GenomeNexusAPI,
+    GenomeNexusAPIInternal,
+    GenomicLocation,
+    PfamDomain,
+    PostTranslationalModification,
+    VariantAnnotation,
+    MyVariantInfo,
+} from 'genome-nexus-ts-api-client';
 
 import { AggregatedHotspots, Hotspot } from '../model/CancerHotspot';
-import { EnsemblTranscript } from '../model/EnsemblTranscript';
 import { Mutation } from '../model/Mutation';
-import { PfamDomain } from '../model/Pfam';
-import { PostTranslationalModification } from '../model/PostTranslationalModification';
 import {
     DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE,
     DEFAULT_MY_GENE_URL_TEMPLATE,

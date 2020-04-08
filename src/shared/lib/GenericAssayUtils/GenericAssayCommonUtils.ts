@@ -7,8 +7,8 @@ import {
     GenericAssayMetaFilter,
     GenericAssayDataFilter,
     GenericAssayMeta,
-} from 'shared/api/generated/CBioPortalAPI';
-import { MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
+import { MolecularProfile } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import { IDataQueryFilter } from '../StoreUtils';
 

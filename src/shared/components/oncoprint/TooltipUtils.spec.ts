@@ -13,7 +13,7 @@ import {
     AnnotatedMutation,
 } from '../../../pages/resultsView/ResultsViewPageStore';
 import $ from 'jquery';
-import { MolecularProfile, Mutation } from '../../api/generated/CBioPortalAPI';
+import { MolecularProfile, Mutation } from 'cbioportal-ts-api-client';
 import { getPatientViewUrl, getSampleViewUrl } from '../../api/urls';
 
 describe('Oncoprint TooltipUtils', () => {

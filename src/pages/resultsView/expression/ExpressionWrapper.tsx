@@ -7,7 +7,7 @@ import {
     Gene,
     NumericGeneMolecularData,
     MolecularProfile,
-} from '../../../shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import { computed, observable } from 'mobx';
 import {
     ExpressionStyle,

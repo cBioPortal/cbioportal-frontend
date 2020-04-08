@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import { observer } from 'mobx-react';
 import { computed } from 'mobx';
 import styles from './styles.module.scss';
-import { ClinicalDataFilterValue } from 'shared/api/generated/CBioPortalAPIInternal';
+import { ClinicalDataFilterValue } from 'cbioportal-ts-api-client';
 import {
     SpecialChartsUniqueKeyEnum,
     DataType,

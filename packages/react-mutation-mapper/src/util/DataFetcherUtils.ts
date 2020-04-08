@@ -1,10 +1,12 @@
 import {
-    GenomeNexusAPI,
-    GenomeNexusAPIInternal,
-    OncoKbAPI,
     cachePostMethodsOnClient,
     IOncoKbData,
 } from 'cbioportal-frontend-commons';
+import {
+    GenomeNexusAPI,
+    GenomeNexusAPIInternal,
+} from 'genome-nexus-ts-api-client';
+import { OncoKbAPI } from 'oncokb-ts-api-client';
 import _ from 'lodash';
 
 import { Mutation } from '../model/Mutation';

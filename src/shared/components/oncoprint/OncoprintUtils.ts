@@ -50,7 +50,7 @@ import {
     Patient,
     Sample,
     Gene,
-} from '../../api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import {
     clinicalAttributeIsPROFILEDIN,
     SpecialAttribute,

@@ -17,7 +17,7 @@ import ScatterPlotTooltip from '../../../../shared/components/plots/ScatterPlotT
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { AbstractChart } from '../ChartContainer';
 import { interpolatePlasma } from 'd3-scale-chromatic';
-import { DensityPlotBin } from '../../../../shared/api/generated/CBioPortalAPIInternal';
+import { DensityPlotBin } from 'cbioportal-ts-api-client';
 import { RectangleBounds } from 'pages/studyView/StudyViewUtils';
 
 export type IStudyViewDensityScatterPlotDatum = DensityPlotBin & {

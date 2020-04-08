@@ -28,11 +28,7 @@ import OncoprintControls, {
     IOncoprintControlsState,
     ISelectOption,
 } from 'shared/components/oncoprint/controls/OncoprintControls';
-import {
-    Gene,
-    MolecularProfile,
-    Sample,
-} from '../../api/generated/CBioPortalAPI';
+import { Gene, MolecularProfile, Sample } from 'cbioportal-ts-api-client';
 import {
     ResultsViewPageStore,
     AlterationTypeConstants,
