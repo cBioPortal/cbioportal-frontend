@@ -11,7 +11,7 @@ import {
     ClinicalDataSingleStudyFilter,
     CopyNumberCountIdentifier,
     CopyNumberSeg,
-    default as CBioPortalAPI,
+    CBioPortalAPI,
     DiscreteCopyNumberData,
     DiscreteCopyNumberFilter,
     Gene,
@@ -25,26 +25,24 @@ import {
     ReferenceGenomeGene,
     Sample,
     SampleFilter,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import defaultClient from 'shared/api/cbioportalClientInstance';
 import client from 'shared/api/cbioportalClientInstance';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import g2sClient from 'shared/api/g2sClientInstance';
+import { stringListToIndexSet } from 'cbioportal-frontend-commons';
 import {
     Alignment,
-    CancerGene,
     Genome2StructureAPI,
     GenomeNexusAPI,
-    OncoKbAPI,
-    stringListToIndexSet,
-} from 'cbioportal-frontend-commons';
+} from 'genome-nexus-ts-api-client';
 import {
     CosmicMutation,
-    default as CBioPortalAPIInternal,
+    CBioPortalAPIInternal,
     Gistic,
     GisticToGene,
     MutSig,
-} from 'shared/api/generated/CBioPortalAPIInternal';
+} from 'cbioportal-ts-api-client';
 import oncokbClient from 'shared/api/oncokbClientInstance';
 import genomeNexusClient from 'shared/api/genomeNexusClientInstance';
 import {
@@ -74,7 +72,9 @@ import { getFrontendAssetUrl } from 'shared/api/urls';
 import {
     AnnotateCopyNumberAlterationQuery,
     IndicatorQueryResp,
-} from 'cbioportal-frontend-commons';
+    CancerGene,
+    OncoKbAPI,
+} from 'oncokb-ts-api-client';
 import { EvidenceType, IOncoKbData } from 'cbioportal-frontend-commons';
 
 export const ONCOKB_DEFAULT: IOncoKbData = {

@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import getOverlappingStudies from './getOverlappingStudies';
-import { CancerStudy } from '../api/generated/CBioPortalAPI';
+import { CancerStudy } from 'cbioportal-ts-api-client';
 
 describe('getOverlappingStudies', () => {
     it('finds overlapping studies based on pub/nonpub signature in studyId', () => {

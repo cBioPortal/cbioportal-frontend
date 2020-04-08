@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { CancerStudy } from '../../api/generated/CBioPortalAPI';
+import { CancerStudy } from 'cbioportal-ts-api-client';
 import { Link } from 'react-router';
 
 export class StudyLink extends React.Component<

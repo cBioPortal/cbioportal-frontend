@@ -1,4 +1,4 @@
-import CBioPortalAPI from './shared/api/generated/CBioPortalAPI';
+import { CBioPortalAPI } from 'cbioportal-ts-api-client';
 import request from 'superagent';
 
 let clientStubs: any[];

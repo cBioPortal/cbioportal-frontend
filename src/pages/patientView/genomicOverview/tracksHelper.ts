@@ -3,10 +3,7 @@ import $ from 'jquery';
 import * as _ from 'lodash';
 import 'qtip2';
 import 'qtip2/dist/jquery.qtip.css';
-import {
-    Mutation,
-    ReferenceGenomeGene,
-} from 'shared/api/generated/CBioPortalAPI';
+import { Mutation, ReferenceGenomeGene } from 'cbioportal-ts-api-client';
 import { DEFAULT_GENOME_BUILD } from 'pages/patientView/genomicOverview/Tracks';
 import { default as chromosomeSizes } from './chromosomeSizes.json';
 import { IIconData } from './GenomicOverviewUtils.js';

@@ -25,7 +25,7 @@ import {
     ReferenceGenomeGene,
     Sample,
     SampleFilter,
-} from '../../api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import { action, autorun, computed, IReactionDisposer, observable } from 'mobx';
 import client from '../../api/cbioportalClientInstance';
 import comparisonClient from '../../api/comparisonGroupClientInstance';
@@ -50,7 +50,7 @@ import {
     AlterationEnrichment,
     Group,
     MolecularProfileCasesGroupFilter,
-} from '../../api/generated/CBioPortalAPIInternal';
+} from 'cbioportal-ts-api-client';
 import { Session, SessionGroupData } from '../../api/ComparisonGroupClient';
 import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 import ComplexKeyMap from '../complexKeyDataStructures/ComplexKeyMap';

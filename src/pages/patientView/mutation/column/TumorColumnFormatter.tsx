@@ -3,7 +3,7 @@ import 'rc-tooltip/assets/bootstrap_white.css';
 import SampleManager from '../../SampleManager';
 import { isUncalled } from 'shared/lib/MutationUtils';
 import _ from 'lodash';
-import { ClinicalDataBySampleId } from 'shared/api/api-types-extended';
+import { ClinicalDataBySampleId } from 'cbioportal-ts-api-client';
 import { noGenePanelUsed } from 'shared/lib/StoreUtils';
 import SampleInline from 'pages/patientView/patientHeader/SampleInline';
 import SampleLabelNotProfiled from 'shared/components/sampleLabel/SampleLabelNotProfiled';

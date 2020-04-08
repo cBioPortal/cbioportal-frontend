@@ -4,9 +4,11 @@ import { observer } from 'mobx-react';
 import * as React from 'react';
 import Select from 'react-select';
 
-import { VariantAnnotation } from 'cbioportal-frontend-commons';
+import {
+    EnsemblTranscript,
+    VariantAnnotation,
+} from 'genome-nexus-ts-api-client';
 
-import { EnsemblTranscript } from '../../model/EnsemblTranscript';
 import { RemoteData } from '../../model/RemoteData';
 import { Mutation } from '../../model/Mutation';
 import styles from './transcriptDropdown.module.scss';

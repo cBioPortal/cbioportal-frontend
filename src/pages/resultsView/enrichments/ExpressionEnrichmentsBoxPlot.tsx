@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { observable, computed } from 'mobx';
 import styles from './styles.module.scss';
-import { MolecularProfile, Sample } from 'shared/api/generated/CBioPortalAPI';
+import { MolecularProfile, Sample } from 'cbioportal-ts-api-client';
 import {
     ExpressionEnrichmentWithQ,
     getAlterationsTooltipContent,

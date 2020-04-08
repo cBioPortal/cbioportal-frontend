@@ -13,7 +13,7 @@ import {
     Mutation,
     Patient,
     Sample,
-} from '../../api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import {
     ClinicalTrackDatum,
     GeneticTrackDatum,
@@ -27,7 +27,7 @@ import {
     SimplifiedMutationType,
 } from '../../lib/oql/AccessorsForOqlFilter';
 import _ from 'lodash';
-import { MutationSpectrum } from '../../api/generated/CBioPortalAPIInternal';
+import { MutationSpectrum } from 'cbioportal-ts-api-client';
 import {
     CoverageInformation,
     ExtendedClinicalAttribute,

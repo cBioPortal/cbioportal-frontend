@@ -7,7 +7,7 @@ import {
     default as MutationTable,
 } from 'shared/components/mutationTable/MutationTable';
 import SampleManager from '../SampleManager';
-import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 import AlleleCountColumnFormatter from 'shared/components/mutationTable/column/AlleleCountColumnFormatter';
 import AlleleFreqColumnFormatter from './column/AlleleFreqColumnFormatter';
 import TumorColumnFormatter from './column/TumorColumnFormatter';

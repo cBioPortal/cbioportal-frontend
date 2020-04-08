@@ -3,12 +3,12 @@ import * as ReactDOM from 'react-dom';
 import * as _ from 'lodash';
 import * as tracksHelper from './tracksHelper';
 import {
+    ClinicalDataBySampleId,
     CopyNumberSeg,
     Mutation,
     Sample,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import SampleManager from '../SampleManager';
-import { ClinicalDataBySampleId } from '../../../shared/api/api-types-extended';
 import { IKeyedIconData, IIconData } from './GenomicOverviewUtils';
 import { observable, action } from 'mobx';
 import autobind from 'autobind-decorator';

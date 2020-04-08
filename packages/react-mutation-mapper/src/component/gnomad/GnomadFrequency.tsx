@@ -1,13 +1,13 @@
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import {
     AlleleCount,
     AlleleFrequency,
     AlleleNumber,
-    DefaultTooltip,
     Gnomad,
     Homozygotes,
     MyVariantInfo,
     VariantAnnotation,
-} from 'cbioportal-frontend-commons';
+} from 'genome-nexus-ts-api-client';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
 import * as React from 'react';

@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 
-import { CopyNumberSeg } from 'shared/api/generated/CBioPortalAPI';
+import { CopyNumberSeg } from 'cbioportal-ts-api-client';
 import {
     calcSegmentTrackHeight,
     generateSegmentFeatures,

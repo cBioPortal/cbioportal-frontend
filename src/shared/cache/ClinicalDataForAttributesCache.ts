@@ -4,7 +4,7 @@ import {
     ClinicalDataIdentifier,
     ClinicalData,
     ClinicalDataMultiStudyFilter,
-} from '../api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 
 function key(d: { studyId?: string; entityId: string }, m?: string) {

@@ -3,7 +3,7 @@ import {
     CancerStudy,
     MolecularProfile,
     Mutation,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import TruncatedText from '../../TruncatedText';
 import { getStudySummaryUrl } from '../../../api/urls';
 

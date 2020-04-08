@@ -1,10 +1,10 @@
 import * as React from 'react';
 import 'rc-tooltip/assets/bootstrap_white.css';
-import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 import VariantCountCache from 'shared/cache/VariantCountCache';
 import FrequencyBar from 'shared/components/cohort/FrequencyBar';
 import { IMutSigData as MutSigData } from 'shared/model/MutSig';
-import { VariantCount } from 'shared/api/generated/CBioPortalAPIInternal';
+import { VariantCount } from 'cbioportal-ts-api-client';
 import { CacheData } from 'shared/lib/LazyMobXCache';
 import { getPercentage } from 'shared/lib/FormatUtils';
 import { If, Then } from 'react-if';

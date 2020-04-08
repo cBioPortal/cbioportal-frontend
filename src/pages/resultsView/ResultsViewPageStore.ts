@@ -27,18 +27,17 @@ import {
     SampleList,
     SampleMolecularIdentifier,
     GenericAssayMeta,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import client from 'shared/api/cbioportalClientInstance';
 import { action, computed, observable, ObservableMap, reaction } from 'mobx';
 import {
-    CancerGene,
     generateQueryVariantId,
     getProteinPositionFromProteinChange,
-    IndicatorQueryResp,
     remoteData,
     stringListToSet,
-    VariantAnnotation,
 } from 'cbioportal-frontend-commons';
+import { VariantAnnotation } from 'genome-nexus-ts-api-client';
+import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import { cached, labelMobxPromises, MobxPromise } from 'mobxpromise';
 import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
@@ -102,7 +101,7 @@ import {
     GenesetDataFilterCriteria,
     GenesetMolecularData,
     MolecularProfileCasesGroupFilter,
-} from '../../shared/api/generated/CBioPortalAPIInternal';
+} from 'cbioportal-ts-api-client';
 import internalClient from '../../shared/api/cbioportalInternalClientInstance';
 import { getAlterationString } from '../../shared/lib/CopyNumberUtils';
 import memoize from 'memoize-weak-decorator';

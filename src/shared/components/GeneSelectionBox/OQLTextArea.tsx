@@ -10,7 +10,7 @@ import {
     reaction,
     IReactionDisposer,
 } from 'mobx';
-import { Gene } from 'shared/api/generated/CBioPortalAPI';
+import { Gene } from 'cbioportal-ts-api-client';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import {
     GeneReplacement,
