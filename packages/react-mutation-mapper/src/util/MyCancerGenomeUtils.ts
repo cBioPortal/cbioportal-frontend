@@ -1,5 +1,6 @@
+import { Mutation } from 'cbioportal-utils';
+
 import { IMyCancerGenome, IMyCancerGenomeData } from '../model/MyCancerGenome';
-import { Mutation } from '../model/Mutation';
 
 import myCancerGenomeJson from '../resources/mycancergenome.json';
 

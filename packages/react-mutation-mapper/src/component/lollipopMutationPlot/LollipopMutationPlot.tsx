@@ -1,4 +1,5 @@
 import autobind from 'autobind-decorator';
+import { Mutation } from 'cbioportal-utils';
 import { PfamDomain, PfamDomainRange } from 'genome-nexus-ts-api-client';
 import _ from 'lodash';
 import { action, computed, observable } from 'mobx';
@@ -12,7 +13,6 @@ import { DomainSpec } from '../../model/DomainSpec';
 import { LollipopPlotControlsConfig } from '../../model/LollipopPlotControlsConfig';
 import { LollipopPlacement, LollipopSpec } from '../../model/LollipopSpec';
 import { MobxCache } from '../../model/MobxCache';
-import { Mutation } from '../../model/Mutation';
 import { MutationMapperStore } from '../../model/MutationMapperStore';
 import { SequenceSpec } from '../../model/SequenceSpec';
 import { DefaultLollipopPlotControlsConfig } from '../../store/DefaultLollipopPlotControlsConfig';
@@ -26,7 +26,7 @@ import {
 import {
     DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
     getColorForProteinImpactType,
-} from '../../util/MutationUtils';
+} from '../../util/MutationTypeUtils';
 import { generatePfamDomainColorMap } from '../../util/PfamUtils';
 import { initDefaultTrackVisibility } from '../../util/TrackUtils';
 import DefaultLollipopPlotLegend from './DefaultLollipopPlotLegend';

@@ -1,8 +1,6 @@
 import * as React from 'react';
-import {
-    DefaultTooltip,
-    getProteinPositionFromProteinChange,
-} from 'cbioportal-frontend-commons';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { getProteinPositionFromProteinChange } from 'cbioportal-utils';
 import * as _ from 'lodash';
 import { Mutation } from 'cbioportal-ts-api-client';
 import { CosmicMutation } from 'cbioportal-ts-api-client';

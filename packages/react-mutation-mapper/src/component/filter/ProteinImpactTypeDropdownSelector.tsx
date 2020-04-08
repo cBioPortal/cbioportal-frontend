@@ -4,7 +4,7 @@ import { observer } from 'mobx-react';
 import * as React from 'react';
 
 import { IProteinImpactTypeColors } from '../../model/ProteinImpact';
-import { DEFAULT_PROTEIN_IMPACT_TYPE_COLORS } from '../../util/MutationUtils';
+import { DEFAULT_PROTEIN_IMPACT_TYPE_COLORS } from '../../util/MutationTypeUtils';
 import DropdownSelector, { DropdownSelectorProps } from './DropdownSelector';
 import {
     getProteinImpactTypeColorMap,

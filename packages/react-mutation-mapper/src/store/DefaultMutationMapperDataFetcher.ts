@@ -9,6 +9,11 @@ import {
     generateAnnotateStructuralVariantQuery,
 } from 'cbioportal-frontend-commons';
 import {
+    getMyVariantInfoAnnotationsFromIndexedVariantAnnotations,
+    Mutation,
+    uniqueGenomicLocations,
+} from 'cbioportal-utils';
+import {
     AnnotateMutationByProteinChangeQuery,
     AnnotateStructuralVariantQuery,
     CancerGene,
@@ -20,14 +25,14 @@ import {
     GenomeNexusAPI,
     GenomeNexusAPIInternal,
     GenomicLocation,
+    Hotspot,
     PfamDomain,
     PostTranslationalModification,
     VariantAnnotation,
     MyVariantInfo,
 } from 'genome-nexus-ts-api-client';
 
-import { AggregatedHotspots, Hotspot } from '../model/CancerHotspot';
-import { Mutation } from '../model/Mutation';
+import { AggregatedHotspots } from '../model/CancerHotspot';
 import { MutationMapperDataFetcher } from '../model/MutationMapperDataFetcher';
 import {
     DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE,
@@ -40,8 +45,6 @@ import {
     initOncoKbClient,
     ONCOKB_DEFAULT_DATA,
 } from '../util/DataFetcherUtils';
-import { getMyVariantInfoAnnotationsFromIndexedVariantAnnotations } from '../util/VariantAnnotationUtils';
-import { uniqueGenomicLocations } from '../util/MutationUtils';
 
 export interface MutationMapperDataFetcherConfig {
     myGeneUrlTemplate?: string;

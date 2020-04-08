@@ -140,7 +140,6 @@ export { ApplyFilterFn, FilterApplier } from './model/FilterApplier';
 export { IProteinImpactTypeColors } from './model/ProteinImpact';
 export { LollipopSpec } from './model/LollipopSpec';
 export * from './model/MyCancerGenome';
-export { Mutation } from './model/Mutation';
 export { MutationMapperDataFetcher } from './model/MutationMapperDataFetcher';
 export { MutationMapperStore } from './model/MutationMapperStore';
 export { RemoteData } from './model/RemoteData';
@@ -153,25 +152,18 @@ export * from './util/CivicUtils';
 export * from './util/DataFetcherUtils';
 export * from './util/FilterUtils';
 export * from './util/FormatUtils';
-export * from './util/MutationAnnotator';
 export * from './util/MyCancerGenomeUtils';
 export * from './util/ReactTableUtils';
 export {
     MUTATION_TYPE_PRIORITY,
-    genomicLocationString,
-    extractGenomicLocation,
-    countMutationsByProteinChange,
-    groupMutationsByProteinStartPos,
     mutationTypeSort,
     getColorForProteinImpactType,
-    uniqueGenomicLocations,
-} from './util/MutationUtils';
+} from './util/MutationTypeUtils';
 export {
     defaultOncoKbFilter,
     groupOncoKbIndicatorDataByMutations,
 } from './util/OncoKbUtils';
 export * from './util/TrackUtils';
-export * from './util/VariantAnnotationUtils';
 
 export {
     default as DefaultMutationMapperDataFetcher,

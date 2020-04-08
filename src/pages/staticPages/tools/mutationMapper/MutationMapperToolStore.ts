@@ -3,10 +3,9 @@ import * as _ from 'lodash';
 import { cached } from 'mobxpromise';
 import {
     annotateMutations,
-    IHotspotIndex,
-    indexHotspotsData,
     resolveDefaultsForMissingValues,
-} from 'react-mutation-mapper';
+} from 'cbioportal-utils';
+import { IHotspotIndex, indexHotspotsData } from 'react-mutation-mapper';
 
 import AppConfig from 'appConfig';
 

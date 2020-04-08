@@ -1,12 +1,13 @@
+import { Mutation } from 'cbioportal-utils';
+import { Hotspot } from 'genome-nexus-ts-api-client';
 import * as React from 'react';
 import * as _ from 'lodash';
 import { observer } from 'mobx-react';
 import { computed } from 'mobx';
 
 import { HotspotFilterValue } from '../../filter/HotspotFilter';
-import { Hotspot, IHotspotIndex } from '../../model/CancerHotspot';
+import { IHotspotIndex } from '../../model/CancerHotspot';
 import { DataFilterType } from '../../model/DataFilter';
-import { Mutation } from '../../model/Mutation';
 import MutationMapperStore from '../../model/MutationMapperStore';
 import HotspotInfo from '../hotspot/HotspotInfo';
 import {
