@@ -44,6 +44,13 @@ enum ColumnWidth {
     STATUS = 140,
 }
 
+enum AlterationType {
+    MUTATION = 'Mutation',
+    CNA = 'Copy Number Alteration',
+    MSI = 'Microsatellite Instability',
+    WILDTYPE = 'Wildtype',
+}
+
 class TrialMatchTableComponent extends LazyMobXTable<IDetailedTrialMatch> {}
 
 @observer
@@ -473,7 +480,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                             {this.getDescriptionForNotMatches(
                                 mutationAndCnagenemicAlterations,
                                 3,
-                                'mutation'
+                                AlterationType.MUTATION
                             )}
                         </span>
                         <DefaultTooltip
@@ -502,7 +509,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                             {this.getDescriptionForNotMatches(
                                 notMatches.WILDTYPE[0].genomicAlteration,
                                 3,
-                                'wildtype'
+                                AlterationType.WILDTYPE
                             )}
                         </span>
                         <DefaultTooltip
@@ -581,7 +588,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
             [...genomicAlteration].map((s: string) => s.split(' ')[0])
         );
         let genomicAlterationContent = '';
-        if (type === 'mutation') {
+        if (type === AlterationType.MUTATION) {
             if (hugoSymbolSet.size === 1) {
                 genomicAlterationContent =
                     [...hugoSymbolSet].join(', ') +
@@ -596,7 +603,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                 genomicAlterationContent = `${hugoSymbolSet.size} genes`;
             }
             return `Negative for alterations in ${genomicAlterationContent}`;
-        } else if (type === 'wildtype') {
+        } else if (type === AlterationType.WILDTYPE) {
             if (hugoSymbolSet.size <= threshold) {
                 genomicAlterationContent = [...hugoSymbolSet].join(', ');
             } else {
