@@ -7,10 +7,7 @@ import {
 } from 'pages/studyView/charts/ChartContainer';
 import { observable, toJS } from 'mobx';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
-import {
-    ClinicalDataFilterValue,
-    DataBin,
-} from 'shared/api/generated/CBioPortalAPIInternal';
+import { ClinicalDataFilterValue, DataBin } from 'cbioportal-ts-api-client';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ReactGridLayout from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';

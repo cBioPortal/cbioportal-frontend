@@ -5,7 +5,7 @@ import {
     Mutation,
     NumericGeneMolecularData,
     MolecularProfile,
-} from '../../../shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import { CoverageInformation } from '../ResultsViewPageStoreUtils';
 import { isSampleProfiled } from '../../../shared/lib/isSampleProfiled';
 import { getOncoprintMutationType } from '../../../shared/components/oncoprint/DataUtils';

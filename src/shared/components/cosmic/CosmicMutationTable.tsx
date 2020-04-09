@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { calcProteinChangeSortValue } from 'cbioportal-frontend-commons';
-import { CosmicMutation } from 'shared/api/generated/CBioPortalAPIInternal';
+import { CosmicMutation } from 'cbioportal-ts-api-client';
 import {
     Column,
     default as LazyMobXTable,

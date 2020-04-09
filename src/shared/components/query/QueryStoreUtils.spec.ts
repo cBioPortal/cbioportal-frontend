@@ -4,10 +4,7 @@ import {
     profileAvailability,
 } from './QueryStoreUtils';
 import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewPageStore';
-import {
-    MolecularProfile,
-    SampleList,
-} from '../../api/generated/CBioPortalAPI';
+import { MolecularProfile, SampleList } from 'cbioportal-ts-api-client';
 import { VirtualStudy } from 'shared/model/VirtualStudy';
 
 describe('QueryStoreUtils', () => {

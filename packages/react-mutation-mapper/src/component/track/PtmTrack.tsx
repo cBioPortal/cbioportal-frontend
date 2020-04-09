@@ -8,12 +8,12 @@ import {
     DefaultTooltip,
     EllipsisTextTooltip,
 } from 'cbioportal-frontend-commons';
+import { PostTranslationalModification } from 'genome-nexus-ts-api-client';
 
 import { MobxCache } from '../../model/MobxCache';
 import MutationMapperStore from '../../model/MutationMapperStore';
 import { compareByPtmTypePriority, ptmColor } from '../../util/PtmUtils';
 import PtmAnnotationTable from '../ptm/PtmAnnotationTable';
-import { PostTranslationalModification } from '../../model/PostTranslationalModification';
 import { default as Track, TrackProps } from './Track';
 import { TrackItemSpec } from './TrackCircle';
 

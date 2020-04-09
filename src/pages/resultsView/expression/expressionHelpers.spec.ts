@@ -10,10 +10,7 @@ import {
     mutationsKeyedBySampleId,
     coverageInformation,
 } from './expressionHelpers.sample.js';
-import {
-    Mutation,
-    NumericGeneMolecularData,
-} from '../../../shared/api/generated/CBioPortalAPI';
+import { Mutation, NumericGeneMolecularData } from 'cbioportal-ts-api-client';
 
 describe('getMolecularDataBuckets', () => {
     let expectedResult: any;

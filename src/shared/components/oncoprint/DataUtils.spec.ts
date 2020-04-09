@@ -24,8 +24,8 @@ import {
     Mutation,
     Patient,
     Sample,
-} from '../../api/generated/CBioPortalAPI';
-import { MutationSpectrum } from '../../api/generated/CBioPortalAPIInternal';
+} from 'cbioportal-ts-api-client';
+import { MutationSpectrum } from 'cbioportal-ts-api-client';
 import { SpecialAttribute } from '../../cache/ClinicalDataCache';
 
 /* Type assertions are used throughout this file to force functions to accept

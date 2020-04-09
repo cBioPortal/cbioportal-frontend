@@ -3,7 +3,7 @@ import {
     CoverageInformation,
     CoverageInformationForCase,
 } from '../../pages/resultsView/ResultsViewPageStoreUtils';
-import { GenePanelData } from '../api/generated/CBioPortalAPI';
+import { GenePanelData } from 'cbioportal-ts-api-client';
 
 export function isSampleProfiled(
     uniqueSampleKey: string,

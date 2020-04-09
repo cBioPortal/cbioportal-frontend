@@ -7,11 +7,11 @@ import {
     MolecularProfile,
     Patient,
     Sample,
-} from '../api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import {
     MutationSpectrum,
     MutationSpectrumFilter,
-} from '../api/generated/CBioPortalAPIInternal';
+} from 'cbioportal-ts-api-client';
 import { MobxPromise } from 'mobxpromise';
 import {
     CoverageInformation,

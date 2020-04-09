@@ -4,7 +4,7 @@ import {
     DiscreteCopyNumberData,
     CopyNumberCount,
     CopyNumberCountIdentifier,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import React from 'react';
 import { assert } from 'chai';
 import { shallow, mount, ReactWrapper } from 'enzyme';

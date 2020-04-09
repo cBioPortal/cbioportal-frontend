@@ -9,10 +9,7 @@ import {
     AnnotatedMutation,
     ExtendedAlteration,
 } from '../../../pages/resultsView/ResultsViewPageStore';
-import {
-    NumericGeneMolecularData,
-    Mutation,
-} from '../../api/generated/CBioPortalAPI';
+import { NumericGeneMolecularData, Mutation } from 'cbioportal-ts-api-client';
 import { Alteration } from 'shared/lib/oql/oql-parser';
 
 type OQLAlterationFilterString = string;

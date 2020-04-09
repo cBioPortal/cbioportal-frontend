@@ -1,4 +1,4 @@
-import { Alignment } from 'cbioportal-frontend-commons';
+import { Alignment } from 'genome-nexus-ts-api-client';
 
 export interface IPdbPosition {
     position: number;

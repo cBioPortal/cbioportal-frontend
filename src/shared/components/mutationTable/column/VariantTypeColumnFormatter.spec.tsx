@@ -1,5 +1,5 @@
 import VariantTypeColumnFormatter from './VariantTypeColumnFormatter';
-import { Mutation } from 'shared/api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 import { initMutation } from 'test/MutationMockUtils';
 import React from 'react';
 import { assert } from 'chai';

@@ -3,7 +3,7 @@ import { observer } from 'mobx-react';
 import { action, computed, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 
-import { CopyNumberSeg } from 'shared/api/generated/CBioPortalAPI';
+import { CopyNumberSeg } from 'cbioportal-ts-api-client';
 import IntegrativeGenomicsViewer from 'shared/components/igv/IntegrativeGenomicsViewer';
 import {
     calcSegmentTrackHeight,

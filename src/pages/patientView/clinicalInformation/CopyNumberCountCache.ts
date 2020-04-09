@@ -2,7 +2,7 @@ import LazyMobXCache from '../../../shared/lib/LazyMobXCache';
 import {
     CopyNumberCount,
     CopyNumberCountIdentifier,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 import client from 'shared/api/cbioportalClientInstance';
 
 function getKey<T extends { entrezGeneId: number; alteration: number }>(

@@ -8,7 +8,7 @@ import { FlexRow, FlexCol } from '../flexbox/FlexBox';
 import SectionHeader from '../sectionHeader/SectionHeader';
 import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewPageStore';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import { MolecularProfile } from '../../api/generated/CBioPortalAPI';
+import { MolecularProfile } from 'cbioportal-ts-api-client';
 
 const styles = styles_any as {
     DataTypePrioritySelector: string;

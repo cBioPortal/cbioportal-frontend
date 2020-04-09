@@ -1,5 +1,4 @@
-import { ClinicalData } from 'shared/api/generated/CBioPortalAPI';
-import { ClinicalDataBySampleId } from 'shared/api/api-types-extended';
+import { ClinicalData, ClinicalDataBySampleId } from 'cbioportal-ts-api-client';
 
 export type ClinicalInformationData = {
     patient?: {

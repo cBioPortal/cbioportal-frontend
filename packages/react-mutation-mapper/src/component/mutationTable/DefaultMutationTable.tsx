@@ -1,9 +1,6 @@
-import {
-    IOncoKbData,
-    MyVariantInfo,
-    VariantAnnotation,
-    CancerGene,
-} from 'cbioportal-frontend-commons';
+import { IOncoKbData } from 'cbioportal-frontend-commons';
+import { MyVariantInfo, VariantAnnotation } from 'genome-nexus-ts-api-client';
+import { CancerGene } from 'oncokb-ts-api-client';
 import _ from 'lodash';
 import { action, computed } from 'mobx';
 import { observer } from 'mobx-react';

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { MolecularProfile } from '../../../shared/api/generated/CBioPortalAPI';
+import { MolecularProfile } from 'cbioportal-ts-api-client';
 import { action, computed, observable } from 'mobx';
 import { observer, Observer } from 'mobx-react';
 import {
@@ -14,7 +14,7 @@ import {
     CoExpression,
     CoExpressionFilter,
     Geneset,
-} from '../../../shared/api/generated/CBioPortalAPIInternal';
+} from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import { MSKTab, MSKTabs } from '../../../shared/components/MSKTabs/MSKTabs';
 import CoExpressionViz from './CoExpressionViz';

@@ -9,7 +9,7 @@ import {
     DiscreteCopyNumberData,
     DiscreteCopyNumberFilter,
     MolecularProfile,
-} from 'shared/api/generated/CBioPortalAPI';
+} from 'cbioportal-ts-api-client';
 
 export type DiscreteCNACacheDataType = CacheData<DiscreteCopyNumberData>;
 type Query = { studyId: string; sampleId: string; entrezGeneId: number };

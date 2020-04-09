@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 
 import { countMutations } from './mutationCountHelpers';
-import { Mutation } from '../../shared/api/generated/CBioPortalAPI';
+import { Mutation } from 'cbioportal-ts-api-client';
 
 describe('#countMutations', () => {
     it('produces keyed table of position identifiers', () => {
