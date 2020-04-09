@@ -8,7 +8,9 @@ import AppConfig from 'appConfig';
 
 export type GenomeNexusCacheDataType = CacheData<VariantAnnotation>;
 
-export function fetch(queries: Mutation[]): Promise<VariantAnnotation[]> {
+export function defaultGNFetch(
+    queries: Mutation[]
+): Promise<VariantAnnotation[]> {
     if (queries.length > 0) {
         return fetchVariantAnnotationsByMutation(
             queries,
@@ -35,12 +37,12 @@ export default class GenomeNexusCache extends LazyMobXCache<
     VariantAnnotation,
     Mutation
 > {
-    constructor() {
+    constructor(customFetch?: any) {
         super(
             (m: Mutation) => queryToKey(m), // queryToKey
             (v: VariantAnnotation) =>
                 genomicLocationString(v.annotation_summary.genomicLocation), // dataToKey
-            fetch
+            customFetch || defaultGNFetch
         );
     }
 }
