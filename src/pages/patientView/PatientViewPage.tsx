@@ -1,7 +1,11 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import GenomicOverview from './genomicOverview/GenomicOverview';
-import { CancerStudy, ClinicalData, ResourceData } from 'cbioportal-ts-api-client';
+import {
+    CancerStudy,
+    ClinicalData,
+    ResourceData,
+} from 'cbioportal-ts-api-client';
 import {
     ClinicalDataBySampleId,
     RequestStatus,
@@ -838,6 +842,7 @@ export default class PatientViewPage extends React.Component<
                                     this.urlWrapper.setTab(id)
                                 }
                                 className="mainTabs"
+                                getPaginationWidth={WindowStore.getWindowWidth}
                             >
                                 <MSKTab
                                     key={0}
