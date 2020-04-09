@@ -69,7 +69,6 @@ export default class Mutations extends React.Component<
                         activeTabId={activeTabId}
                         onTabClick={(id: string) => this.handleTabChange(id)}
                         className="pillTabs resultsPageMutationsGeneTabs"
-                        enablePagination={false}
                         arrowStyle={{ 'line-height': 0.8 }}
                         tabButtonStyle="pills"
                         unmountOnHide={true}
