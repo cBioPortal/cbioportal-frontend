@@ -67,6 +67,7 @@ import OpenResourceTab from '../../shared/components/resources/OpenResourceTab';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
 import { ResourceData } from 'cbioportal-ts-api-client';
+import WindowStore from '../../shared/components/window/WindowStore';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -488,6 +489,9 @@ export default class StudyViewPage extends React.Component<
                                     }
                                     className="mainTabs"
                                     unmountOnHide={false}
+                                    getPaginationWidth={() =>
+                                        WindowStore.getWindowWidth() - 900
+                                    } // dont run into other study view UI
                                 >
                                     <MSKTab
                                         key={0}
