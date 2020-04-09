@@ -31,6 +31,8 @@ import { remoteData } from 'cbioportal-frontend-commons';
 import {
     EnsemblTranscript,
     VariantAnnotation,
+    GenomeNexusAPI,
+    GenomeNexusAPIInternal,
 } from 'genome-nexus-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
 import { IPdbChain, PdbAlignmentIndex } from 'shared/model/Pdb';
@@ -70,7 +72,11 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
             { [genomicLocation: string]: VariantAnnotation } | undefined
         >,
         public oncoKbCancerGenes: MobxPromise<CancerGene[] | Error>,
-        public uniqueSampleKeyToTumorType: { [uniqueSampleKey: string]: string }
+        public uniqueSampleKeyToTumorType: {
+            [uniqueSampleKey: string]: string;
+        },
+        private genomenexus_client?: GenomeNexusAPI,
+        private genomenexus_internal_client?: GenomeNexusAPIInternal
     ) {
         super(
             gene,
@@ -103,8 +109,8 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
                     this.mutationMapperConfig.genomenexus_url || undefined,
                 oncoKbUrl: getOncoKbApiUrl() || undefined,
             },
-            genomeNexusClient,
-            internalGenomeNexusClient,
+            this.genomenexus_client || genomeNexusClient,
+            this.genomenexus_internal_client || internalGenomeNexusClient,
             oncoKBClient
         );
     }
