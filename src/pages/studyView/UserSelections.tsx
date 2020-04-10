@@ -3,12 +3,13 @@ import * as _ from 'lodash';
 import { observer } from 'mobx-react';
 import { computed } from 'mobx';
 import styles from './styles.module.scss';
-import { ClinicalDataFilterValue } from 'cbioportal-ts-api-client';
+import { DataFilterValue } from 'cbioportal-ts-api-client';
 import {
     SpecialChartsUniqueKeyEnum,
     DataType,
     getUniqueKeyFromMolecularProfileIds,
     ChartType,
+    getGenomicChartUniqueKey,
 } from 'pages/studyView/StudyViewUtils';
 import {
     ChartMeta,
@@ -42,10 +43,14 @@ export interface IUserSelectionsProps {
     attributesMetaSet: { [id: string]: ChartMeta & { chartType: ChartType } };
     updateClinicalDataFilterByValues: (
         uniqueKey: string,
-        values: ClinicalDataFilterValue[]
+        values: DataFilterValue[]
     ) => void;
     updateCustomChartFilter: (uniqueKey: string, values: string[]) => void;
     removeGeneFilter: (uniqueKey: string, oql: string) => void;
+    updateGenomicDataIntervalFilter: (
+        uniqueKey: string,
+        values: DataFilterValue[]
+    ) => void;
     removeCustomSelectionFilter: () => void;
     removeComparisonGroupSelectionFilter: () => void;
     clearAllFilters: () => void;
@@ -237,6 +242,54 @@ export default class UserSelections extends React.Component<
                             </div>
                         );
                     }
+                }
+                return acc;
+            },
+            components
+        );
+
+        // Genomic Bar chart filters
+        _.reduce(
+            this.props.filter.genomicDataFilters || [],
+            (acc, genomicDataIntervalFilter) => {
+                const uniqueKey = getGenomicChartUniqueKey(
+                    genomicDataIntervalFilter.hugoGeneSymbol,
+                    genomicDataIntervalFilter.profileType
+                );
+                const chartMeta = this.props.attributesMetaSet[uniqueKey];
+                if (chartMeta) {
+                    acc.push(
+                        <div className={styles.parentGroupLogic}>
+                            <GroupLogic
+                                components={[
+                                    <span
+                                        className={
+                                            styles.filterClinicalAttrName
+                                        }
+                                    >
+                                        {chartMeta.displayName}
+                                    </span>,
+                                    <PillTag
+                                        content={intervalFiltersDisplayValue(
+                                            genomicDataIntervalFilter.values
+                                        )}
+                                        backgroundColor={
+                                            STUDY_VIEW_CONFIG.colors.theme
+                                                .clinicalFilterContent
+                                        }
+                                        onDelete={() =>
+                                            this.props.updateGenomicDataIntervalFilter(
+                                                chartMeta.uniqueKey,
+                                                []
+                                            )
+                                        }
+                                    />,
+                                ]}
+                                operation={':'}
+                                group={false}
+                            />
+                        </div>
+                    );
                 }
                 return acc;
             },
