@@ -43,7 +43,11 @@ import {
     MolecularProfileFilter,
     Patient,
 } from 'cbioportal-ts-api-client';
-import { fetchCopyNumberSegmentsForSamples } from 'shared/lib/StoreUtils';
+import {
+    fetchCopyNumberSegmentsForSamples,
+    updateSurvivalAttributes,
+    updateSurvivalAttributesMeta,
+} from 'shared/lib/StoreUtils';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
 import {
@@ -564,6 +568,8 @@ export class StudyViewPageStore {
                                     },
                                 }
                             );
+
+                            data = updateSurvivalAttributes(data);
                         }
                     }
 
@@ -692,6 +698,8 @@ export class StudyViewPageStore {
                                 })),
                             },
                         });
+
+                        data = updateSurvivalAttributes(data);
 
                         if (isPatientAttribute) {
                             const patientKeyToData = _.keyBy(
@@ -1018,12 +1026,16 @@ export class StudyViewPageStore {
                 this.updateStoreByFilters(filters);
             } catch (e) {}
         } else if (query.filterAttributeId && query.filterValues) {
-            const clinicalAttributes = _.uniqBy(
+            let clinicalAttributes = _.uniqBy(
                 await defaultClient.fetchClinicalAttributesUsingPOST({
                     studyIds: studyIds,
                 }),
                 clinicalAttribute =>
                     `${clinicalAttribute.patientAttribute}-${clinicalAttribute.clinicalAttributeId}`
+            );
+
+            clinicalAttributes = updateSurvivalAttributesMeta(
+                clinicalAttributes
             );
 
             const matchedAttr = _.find(
@@ -2853,14 +2865,17 @@ export class StudyViewPageStore {
 
     readonly clinicalAttributes = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
-        invoke: async () =>
-            _.uniqBy(
+        invoke: async () => {
+            let meta = _.uniqBy(
                 await defaultClient.fetchClinicalAttributesUsingPOST({
                     studyIds: this.queriedPhysicalStudyIds.result,
                 }),
                 clinicalAttribute =>
                     `${clinicalAttribute.patientAttribute}-${clinicalAttribute.clinicalAttributeId}`
-            ),
+            );
+            meta = updateSurvivalAttributesMeta(meta);
+            return Promise.resolve(meta);
+        },
         default: [],
         onError: error => {},
         onResult: clinicalAttributes => {
@@ -4665,6 +4680,8 @@ export class StudyViewPageStore {
                         },
                     }
                 );
+
+                clinicalDataList = updateSurvivalAttributes(clinicalDataList);
             }
         }
 
@@ -5033,6 +5050,8 @@ export class StudyViewPageStore {
                     clinicalDataType: ClinicalDataTypeEnum.PATIENT,
                     clinicalDataMultiStudyFilter: filter,
                 });
+
+                data = updateSurvivalAttributes(data);
 
                 return _.groupBy(data, 'uniquePatientKey');
             }

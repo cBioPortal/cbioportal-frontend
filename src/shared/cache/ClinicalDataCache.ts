@@ -22,6 +22,7 @@ import client from '../api/cbioportalClientInstance';
 import internalClient from '../api/cbioportalInternalClientInstance';
 import { Group } from '../api/ComparisonGroupClient';
 import ComplexKeySet from '../lib/complexKeyDataStructures/ComplexKeySet';
+import { updateSurvivalAttributes } from 'shared/lib/StoreUtils';
 
 export enum SpecialAttribute {
     MutationSpectrum = 'NO_CONTEXT_MUTATION_SIGNATURE',
@@ -231,6 +232,7 @@ async function fetch(
                               })),
                     },
                 });
+                ret = updateSurvivalAttributes(ret);
             }
             break;
     }

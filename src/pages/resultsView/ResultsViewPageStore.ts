@@ -64,6 +64,8 @@ import {
     IDataQueryFilter,
     isMutationProfile,
     ONCOKB_DEFAULT,
+    updateSurvivalAttributes,
+    updateSurvivalAttributesMeta,
 } from 'shared/lib/StoreUtils';
 import { IHotspotIndex, indexHotspotsData } from 'react-mutation-mapper';
 import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
@@ -1030,11 +1032,14 @@ export class ResultsViewPageStore {
             this.patients,
         ],
         invoke: async () => {
-            const serverAttributes = await client.fetchClinicalAttributesUsingPOST(
+            let serverAttributes = await client.fetchClinicalAttributesUsingPOST(
                 {
                     studyIds: this.studyIds.result!,
                 }
             );
+
+            serverAttributes = updateSurvivalAttributesMeta(serverAttributes);
+
             const specialAttributes = [
                 {
                     clinicalAttributeId: SpecialAttribute.MutationSpectrum,
@@ -3199,14 +3204,16 @@ export class ResultsViewPageStore {
                 this.patients,
                 this.survivalClinicalDataAttributes,
             ],
-            invoke: () => {
+            invoke: async () => {
                 if (!_.isEmpty(this.survivalClinicalDataAttributes.result)) {
-                    return this.getClinicalData(
+                    let clinicalData = await this.getClinicalData(
                         'PATIENT',
                         this.studies.result!,
                         this.patients.result,
                         this.survivalClinicalDataAttributes.result!
                     );
+                    clinicalData = updateSurvivalAttributes(clinicalData);
+                    Promise.resolve(clinicalData);
                 }
                 return Promise.resolve([]);
             },

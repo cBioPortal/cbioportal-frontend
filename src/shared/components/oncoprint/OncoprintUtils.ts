@@ -863,6 +863,16 @@ export function makeClinicalTracksMobxPromise(
                     ret.na_tooltip_value = 'No';
                     ret.na_legend_label = 'No';
                 }
+                if (attribute.clinicalAttributeId.endsWith('_STATUS')) {
+                    console.log('in this function');
+                    console.log(ret.na_tooltip_value);
+
+                    if (ret.na_tooltip_value === '1') {
+                        ret.na_tooltip_value += ' (Event)';
+                    } else if (ret.na_tooltip_value === '0') {
+                        ret.na_tooltip_value += ' (No event)';
+                    }
+                }
                 if (attribute.datatype === 'NUMBER') {
                     ret.datatype = 'number';
                     if (

@@ -25,6 +25,7 @@ import {
     ReferenceGenomeGene,
     Sample,
     SampleFilter,
+    ClinicalAttribute,
 } from 'cbioportal-ts-api-client';
 import defaultClient from 'shared/api/cbioportalClientInstance';
 import client from 'shared/api/cbioportalClientInstance';
@@ -274,12 +275,14 @@ export async function fetchClinicalDataInStudy(
     client: CBioPortalAPI = defaultClient
 ) {
     if (clinicalDataSingleStudyFilter) {
-        return await client.fetchAllClinicalDataInStudyUsingPOST({
+        let clinicalData = await client.fetchAllClinicalDataInStudyUsingPOST({
             studyId: studyId,
             clinicalDataType: clinicalDataType,
             clinicalDataSingleStudyFilter: clinicalDataSingleStudyFilter,
             projection: 'SUMMARY',
         });
+        clinicalData = updateSurvivalAttributes(clinicalData);
+        return clinicalData;
     } else {
         return [];
     }
@@ -291,11 +294,15 @@ export async function fetchClinicalDataForPatient(
     client: CBioPortalAPI = defaultClient
 ) {
     if (studyId && patientId) {
-        return await client.getAllClinicalDataOfPatientInStudyUsingGET({
-            projection: 'DETAILED',
-            studyId,
-            patientId,
-        });
+        let clinicalData = await client.getAllClinicalDataOfPatientInStudyUsingGET(
+            {
+                projection: 'DETAILED',
+                studyId,
+                patientId,
+            }
+        );
+        clinicalData = updateSurvivalAttributes(clinicalData);
+        return clinicalData;
     } else {
         return [];
     }
@@ -1250,4 +1257,56 @@ export async function getHierarchyData(
         pvalueThreshold,
         sampleListId,
     });
+}
+
+const vocabulary = [
+    'DECEASED',
+    'Recurred/Progressed',
+    'Recurred',
+    'Progressed',
+    'Yes',
+    'yes',
+    '1',
+    'PROGRESSION',
+    'Event',
+    'DEAD OF MELANOMA',
+    'DEAD WITH TUMOR',
+    'Metastatic',
+    'Relapse',
+    'Localized',
+];
+const nullVocabulary = ['NA', 'unknown', 'Unknown/NA', 'UNSPECIFIED', ''];
+
+export function updateSurvivalAttributes(allData: any[]): any[] {
+    const newAllData = _.map(allData, (data: ClinicalData) => {
+        if (data.clinicalAttributeId.endsWith('_STATUS')) {
+            data.value = updateSurvivalValue(data.value);
+        }
+        return data;
+    });
+    return newAllData;
+}
+
+export function updateSurvivalAttributesMeta(allData: any[]): any[] {
+    const newAllData = _.map(allData, (data: ClinicalAttribute) => {
+        if (
+            data.clinicalAttributeId.endsWith('_STATUS') &&
+            !data.description.includes(' (1 means event occured; 0 means not).')
+        ) {
+            data.description =
+                data.description + ' (1 means event occured; 0 means not).';
+        }
+        return data;
+    });
+    return newAllData;
+}
+
+export function updateSurvivalValue(value: string): string {
+    if (vocabulary.includes(value)) {
+        return '1';
+    } else if (nullVocabulary.includes(value)) {
+        return value;
+    } else {
+        return '0';
+    }
 }

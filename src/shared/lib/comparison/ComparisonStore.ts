@@ -59,7 +59,11 @@ import { AppStore } from '../../../AppStore';
 import { GACustomFieldsEnum, trackEvent } from 'shared/lib/tracking';
 import ifNotDefined from '../ifNotDefined';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
-import { fetchAllReferenceGenomeGenes } from 'shared/lib/StoreUtils';
+import {
+    fetchAllReferenceGenomeGenes,
+    updateSurvivalAttributes,
+    updateSurvivalAttributesMeta,
+} from 'shared/lib/StoreUtils';
 import MobxPromise from 'mobxpromise';
 import ResultsViewURLWrapper from '../../../pages/resultsView/ResultsViewURLWrapper';
 import { ResultsViewPageStore } from '../../../pages/resultsView/ResultsViewPageStore';
@@ -1083,7 +1087,7 @@ export default class ComparisonStore {
                 this.activeSamplesNotOverlapRemoved,
                 this.survivalClinicalAttributesPrefix,
             ],
-            invoke: () => {
+            invoke: async () => {
                 if (this.activeSamplesNotOverlapRemoved.result!.length === 0) {
                     return Promise.resolve([]);
                 }
@@ -1110,10 +1114,14 @@ export default class ComparisonStore {
                         })
                     ),
                 };
-                return client.fetchClinicalDataUsingPOST({
+                let clinicalData = await client.fetchClinicalDataUsingPOST({
                     clinicalDataType: 'PATIENT',
                     clinicalDataMultiStudyFilter: filter,
                 });
+
+                clinicalData = updateSurvivalAttributes(clinicalData);
+
+                return Promise.resolve(clinicalData);
             },
         },
         []
@@ -1122,13 +1130,15 @@ export default class ComparisonStore {
     readonly activeStudiesClinicalAttributes = remoteData<ClinicalAttribute[]>(
         {
             await: () => [this.activeStudyIds],
-            invoke: () => {
+            invoke: async () => {
                 if (this.activeStudyIds.result!.length === 0) {
                     return Promise.resolve([]);
                 }
-                return client.fetchClinicalAttributesUsingPOST({
+                let meta = await client.fetchClinicalAttributesUsingPOST({
                     studyIds: this.activeStudyIds.result!,
                 });
+                meta = updateSurvivalAttributesMeta(meta);
+                return Promise.resolve(meta);
             },
         },
         []

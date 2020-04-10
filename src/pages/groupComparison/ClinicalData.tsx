@@ -43,6 +43,7 @@ import ErrorMessage from '../../shared/components/ErrorMessage';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { Sample } from 'cbioportal-ts-api-client';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
+import { updateSurvivalAttributes } from 'shared/lib/StoreUtils';
 
 export interface IClinicalDataProps {
     store: ComparisonStore;
@@ -281,6 +282,8 @@ export default class ClinicalData extends React.Component<
                             : sampleIdentifiers,
                     },
                 });
+
+                clinicalData = updateSurvivalAttributes(clinicalData);
 
                 let normalizedCategory: { [id: string]: string } = {};
                 for (const d of clinicalData) {

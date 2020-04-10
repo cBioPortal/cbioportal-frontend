@@ -39,10 +39,10 @@ export type SurvivalPlotFilters = {
 
 // TODO should remove this if we want to be generic
 export const survivalClinicalDataVocabulary: { [prefix: string]: string[] } = {
-    OS: ['DECEASED'],
-    PFS: ['Progressed', 'Recurred/Progressed', 'PROGRESSION', 'Yes', '1'],
-    DFS: ['Recurred/Progressed', 'Recurred', 'Progressed', 'Yes', '1'],
-    DSS: ['DECEASED', 'Yes', 'DEAD OF MELANOMA', 'DEAD WITH TUMOR', '1'],
+    OS: ['1'],
+    PFS: ['1'],
+    DFS: ['1'],
+    DSS: ['1'],
 };
 
 // TODO should remove this if we want to be generic

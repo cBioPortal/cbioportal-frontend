@@ -71,6 +71,7 @@ import {
     DataTypeConstants,
 } from 'pages/resultsView/ResultsViewPageStore';
 import { decideMolecularProfileSortingOrder } from 'pages/resultsView/download/DownloadUtils';
+import { updateSurvivalAttributes } from 'shared/lib/StoreUtils';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -2482,6 +2483,8 @@ export async function getClinicalDataBySamples(samples: Sample[]) {
         } as ClinicalDataMultiStudyFilter,
     });
 
+    sampleClinicalData = updateSurvivalAttributes(sampleClinicalData);
+
     _.forEach(sampleClinicalData, item => {
         clinicalData[item.uniqueSampleKey] = {
             ...(clinicalData[item.uniqueSampleKey] || {}),
@@ -2500,6 +2503,8 @@ export async function getClinicalDataBySamples(samples: Sample[]) {
             }),
         } as ClinicalDataMultiStudyFilter,
     });
+
+    patientClinicalData = updateSurvivalAttributes(patientClinicalData);
 
     const patientSamplesMap = _.groupBy(
         samples,

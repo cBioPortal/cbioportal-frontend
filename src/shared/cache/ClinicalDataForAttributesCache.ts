@@ -6,6 +6,7 @@ import {
     ClinicalDataMultiStudyFilter,
 } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
+import { updateSurvivalAttributes } from 'shared/lib/StoreUtils';
 
 function key(d: { studyId?: string; entityId: string }, m?: string) {
     const studyId = d.studyId ? d.studyId : m;
@@ -20,8 +21,8 @@ async function fetch(
     const studyToIdentifiers = _.groupBy(queries, 'studyId');
     const studies = Object.keys(studyToIdentifiers);
     const results: ClinicalData[][] = await Promise.all(
-        studies.map(studyId => {
-            return client.fetchClinicalDataUsingPOST({
+        studies.map(async studyId => {
+            let clinicalData = await client.fetchClinicalDataUsingPOST({
                 clinicalDataType,
                 clinicalDataMultiStudyFilter: {
                     attributeIds,
@@ -29,6 +30,8 @@ async function fetch(
                 },
                 projection,
             });
+            clinicalData = updateSurvivalAttributes(clinicalData);
+            return Promise.resolve(clinicalData);
         })
     );
     return results.map((data: ClinicalData[], index: number) => ({
