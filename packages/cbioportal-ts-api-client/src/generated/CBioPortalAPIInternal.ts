@@ -29,6 +29,18 @@ export type ClinicalAttribute = {
         'studyId': string
 
 };
+export type ClinicalDataBin = {
+    'attributeId': string
+
+        'count': number
+
+        'end': number
+
+        'specialValue': string
+
+        'start': number
+
+};
 export type ClinicalDataBinCountFilter = {
     'attributes': Array < ClinicalDataBinFilter >
 
@@ -45,8 +57,6 @@ export type ClinicalDataBinFilter = {
         'end': number
 
         'start': number
-
-        'values': Array < ClinicalDataFilterValue >
 
 };
 export type ClinicalDataCount = {
@@ -80,15 +90,7 @@ export type ClinicalDataEnrichment = {
 export type ClinicalDataFilter = {
     'attributeId': string
 
-        'values': Array < ClinicalDataFilterValue >
-
-};
-export type ClinicalDataFilterValue = {
-    'end': number
-
-        'start': number
-
-        'value': string
+        'values': Array < DataFilterValue >
 
 };
 export type CoExpression = {
@@ -159,16 +161,12 @@ export type DataAccessToken = {
         'username': string
 
 };
-export type DataBin = {
-    'attributeId': string
-
-        'count': number
-
-        'end': number
-
-        'specialValue': string
+export type DataFilterValue = {
+    'end': number
 
         'start': number
+
+        'value': string
 
 };
 export type DensityPlotBin = {
@@ -274,12 +272,54 @@ export type GenesetMolecularData = {
         'value': string
 
 };
+export type GenomicDataBin = {
+    'count': number
+
+        'end': number
+
+        'hugoGeneSymbol': string
+
+        'profileType': string
+
+        'specialValue': string
+
+        'start': number
+
+};
+export type GenomicDataBinCountFilter = {
+    'genomicDataBinFilters': Array < GenomicDataBinFilter >
+
+        'studyViewFilter': StudyViewFilter
+
+};
+export type GenomicDataBinFilter = {
+    'customBins': Array < number >
+
+        'disableLogScale': boolean
+
+        'end': number
+
+        'hugoGeneSymbol': string
+
+        'profileType': string
+
+        'start': number
+
+};
 export type GenomicDataCount = {
     'count': number
 
         'label': string
 
         'value': string
+
+};
+export type GenomicDataFilter = {
+    'hugoGeneSymbol': string
+
+        'profileType': string
+
+        'values': Array < DataFilterValue >
 
 };
 export type Gistic = {
@@ -481,6 +521,8 @@ export type StudyViewFilter = {
 
         'geneFilters': Array < GeneFilter >
 
+        'genomicDataFilters': Array < GenomicDataFilter >
+
         'genomicProfiles': Array < Array < string >
         >
 
@@ -647,7 +689,7 @@ export default class CBioPortalAPIInternal {
             'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
             $queryParameters ? : any,
                 $domain ? : string
-        }): Promise < Array < DataBin >
+        }): Promise < Array < ClinicalDataBin >
         > {
             return this.fetchClinicalDataBinCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
@@ -2526,6 +2568,95 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < GenesetMolecularData >
         > {
             return this.fetchGeneticDataItemsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchGenomicDataBinCountsUsingPOSTURL(parameters: {
+        'dataBinMethod' ? : "STATIC" | "DYNAMIC",
+        'genomicDataBinCountFilter': GenomicDataBinCountFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/genomic-data-bin-counts/fetch';
+        if (parameters['dataBinMethod'] !== undefined) {
+            queryParameters['dataBinMethod'] = parameters['dataBinMethod'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch genomic data bin counts by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchGenomicDataBinCountsUsingPOST
+     * @param {string} dataBinMethod - Method for data binning
+     * @param {} genomicDataBinCountFilter - Genomic data bin count filter
+     */
+    fetchGenomicDataBinCountsUsingPOSTWithHttpInfo(parameters: {
+        'dataBinMethod' ? : "STATIC" | "DYNAMIC",
+        'genomicDataBinCountFilter': GenomicDataBinCountFilter,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/genomic-data-bin-counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['dataBinMethod'] !== undefined) {
+                queryParameters['dataBinMethod'] = parameters['dataBinMethod'];
+            }
+
+            if (parameters['genomicDataBinCountFilter'] !== undefined) {
+                body = parameters['genomicDataBinCountFilter'];
+            }
+
+            if (parameters['genomicDataBinCountFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: genomicDataBinCountFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch genomic data bin counts by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchGenomicDataBinCountsUsingPOST
+     * @param {string} dataBinMethod - Method for data binning
+     * @param {} genomicDataBinCountFilter - Genomic data bin count filter
+     */
+    fetchGenomicDataBinCountsUsingPOST(parameters: {
+            'dataBinMethod' ? : "STATIC" | "DYNAMIC",
+            'genomicDataBinCountFilter': GenomicDataBinCountFilter,
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < GenomicDataBin >
+        > {
+            return this.fetchGenomicDataBinCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };

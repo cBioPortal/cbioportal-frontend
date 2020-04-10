@@ -33,7 +33,7 @@ describe('Mutation Mapper Tool', function() {
 
             waitForGenomeNexusAnnotation();
 
-            // mutations table should be visiable after oncokb icon shows up,
+            // mutations table should be visible after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
             browser.waitForVisible(
                 'tr:nth-child(1) [data-test=oncogenic-icon-image]',
@@ -60,7 +60,7 @@ describe('Mutation Mapper Tool', function() {
             assert.ok(brca1.length > 0);
             browser.elements('.nav-pill').click('a*=BRCA1');
 
-            // mutations table should be visiable after oncokb icon shows up,
+            // mutations table should be visible after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
             browser.waitForVisible('[data-test=oncogenic-icon-image]', 60000);
 
@@ -92,7 +92,7 @@ describe('Mutation Mapper Tool', function() {
 
             waitForGenomeNexusAnnotation();
 
-            // mutations table should be visiable after oncokb icon shows up,
+            // mutations table should be visible after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
             browser.waitForVisible('[data-test=oncogenic-icon-image]', 60000);
 
@@ -118,7 +118,7 @@ describe('Mutation Mapper Tool', function() {
 
             waitForGenomeNexusAnnotation();
 
-            // mutations table should be visiable after oncokb icon shows up,
+            // mutations table should be visible after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
             browser.waitForVisible('[data-test=oncogenic-icon-image]', 60000);
             // it should have 124 egfr mutations
@@ -158,7 +158,7 @@ describe('Mutation Mapper Tool', function() {
 
             waitForGenomeNexusAnnotation();
 
-            // mutations table should be visiable after oncokb icon shows up,
+            // mutations table should be visible after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
             browser.waitForVisible('[data-test=oncogenic-icon-image]', 60000);
             // it should have 122 egfr mutations
@@ -198,7 +198,7 @@ describe('Mutation Mapper Tool', function() {
 
             waitForGenomeNexusAnnotation();
 
-            // mutations table should be visiable after oncokb icon shows up,
+            // mutations table should be visible after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
             browser.waitForVisible(
                 'tr:nth-child(1) [data-test=oncogenic-icon-image]',
@@ -294,6 +294,110 @@ describe('Mutation Mapper Tool', function() {
                 './/*[text()[contains(.,"12 Mutations")]]'
             );
             assert.ok(mutationCount.length > 0);
+        });
+    });
+
+    describe('GRCh38 example genomic changes input', () => {
+        beforeEach(() => {
+            var url = `${CBIOPORTAL_URL}/mutation_mapper`;
+            goToUrlAndSetLocalStorage(url);
+            browser.waitForVisible(
+                '[data-test=MutationMapperToolGRCh38Button]',
+                10000
+            );
+        });
+
+        it('should correctly annotate the genomic changes example with GRCh38 and display the results', () => {
+            // choose GRCh38
+            browser.click('[data-test=MutationMapperToolGRCh38Button]');
+            // the page will reloda after change genome build, wait until loading finished
+            browser.waitForVisible(
+                '[data-test=GenomicChangesExampleButton]',
+                10000
+            );
+            browser.click('[data-test=GenomicChangesExampleButton]');
+            browser.click('[data-test=MutationMapperToolVisualizeButton]');
+
+            waitForGenomeNexusAnnotation();
+
+            // mutations table should be visible after oncokb icon shows up,
+            // also need to wait for mutations to be sorted properly
+            browser.waitForVisible(
+                'tr:nth-child(1) [data-test=oncogenic-icon-image]',
+                60000
+            );
+
+            const mutationsT790M = browser.getText(
+                './/*[text()[contains(.,"T790M")]]'
+            );
+            assert.equal(
+                mutationsT790M.length,
+                2,
+                'there should be two samples with a T790M mutation'
+            );
+
+            // check total number of mutations (this gets Showing 1-25 of 122
+            // Mutations)
+            let mutationCount = browser.getText(
+                './/*[text()[contains(.,"122 Mutations")]]'
+            );
+            assert.ok(mutationCount.length > 0);
+
+            const brca1 = browser.getText('.//*[text()[contains(.,"BRCA1")]]');
+            assert.ok(brca1.length > 0);
+            browser.elements('.nav-pill').click('a*=BRCA1');
+
+            // mutations table should be visible after oncokb icon shows up,
+            // also need to wait for mutations to be sorted properly
+            browser.waitForVisible('[data-test=oncogenic-icon-image]', 60000);
+
+            // check total number of mutations (this gets Showing 1-25 of 85
+            // Mutations)
+            mutationCount = browser.getText(
+                './/*[text()[contains(.,"85 Mutations")]]'
+            );
+            assert.ok(mutationCount.length > 0);
+
+            const brca2 = browser.getText('.//*[text()[contains(.,"BRCA2")]]');
+            assert.ok(brca2.length > 0);
+            browser.elements('.nav-pill').click('a*=BRCA2');
+            // check total number of mutations (this gets Showing 1-25 of 113
+            // Mutations)
+            browser.waitForText('.//*[text()[contains(.,"113 Mutations")]]');
+
+            const pten = browser.getText('.//*[text()[contains(.,"PTEN")]]');
+            assert.ok(pten.length > 0);
+            browser.elements('.nav-pill').click('a*=PTEN');
+            // check total number of mutations (this gets Showing 1-25 of 136
+            // Mutations)
+            browser.waitForText('.//*[text()[contains(.,"136 Mutations")]]');
+        });
+
+        it('should show dbSNP with GRCh38 instance', () => {
+            // dbSNP is getting from myVariant Info
+            // choose GRCh38
+            browser.click('[data-test=MutationMapperToolGRCh38Button]');
+            // the page will reloda after change genome build, wait until loading finished
+            browser.waitForVisible(
+                '[data-test=GenomicChangesExampleButton]',
+                10000
+            );
+            browser.click('[data-test=GenomicChangesExampleButton]');
+            browser.click('[data-test=MutationMapperToolVisualizeButton]');
+
+            waitForGenomeNexusAnnotation();
+
+            // mutations table should be visible after oncokb icon shows up,
+            // also need to wait for mutations to be sorted properly
+            browser.waitForVisible('[data-test=oncogenic-icon-image]', 60000);
+
+            // click on column button
+            browser.click('button*=Columns');
+            // scroll down to activated "dbSNP" selection
+            browser.scroll(1000, 1000);
+            // click "dbSNP"
+            browser.click('//*[text()="dbSNP"]');
+            browser.waitForText('.//*[text()[contains(.,"rs121434568")]]');
         });
     });
 });
