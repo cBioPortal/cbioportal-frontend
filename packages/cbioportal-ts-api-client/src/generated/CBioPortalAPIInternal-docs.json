@@ -139,7 +139,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/DataBin"
+                "$ref": "#/definitions/ClinicalDataBin"
               }
             }
           }
@@ -1076,6 +1076,55 @@
         }
       }
     },
+    "/genomic-data-bin-counts/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch genomic data bin counts by study view filter",
+        "operationId": "fetchGenomicDataBinCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "dataBinMethod",
+            "in": "query",
+            "description": "Method for data binning",
+            "required": false,
+            "type": "string",
+            "default": "DYNAMIC",
+            "enum": [
+              "STATIC",
+              "DYNAMIC"
+            ]
+          },
+          {
+            "in": "body",
+            "name": "genomicDataBinCountFilter",
+            "description": "Genomic data bin count filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GenomicDataBinCountFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenomicDataBin"
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -1730,6 +1779,28 @@
       },
       "title": "ClinicalAttribute"
     },
+    "ClinicalDataBin": {
+      "type": "object",
+      "properties": {
+        "attributeId": {
+          "type": "string"
+        },
+        "count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "end": {
+          "type": "number"
+        },
+        "specialValue": {
+          "type": "string"
+        },
+        "start": {
+          "type": "number"
+        }
+      },
+      "title": "ClinicalDataBin"
+    },
     "ClinicalDataBinCountFilter": {
       "type": "object",
       "properties": {
@@ -1765,12 +1836,6 @@
         },
         "start": {
           "type": "number"
-        },
-        "values": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ClinicalDataFilterValue"
-          }
         }
       },
       "title": "ClinicalDataBinFilter"
@@ -1851,26 +1916,11 @@
         "values": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ClinicalDataFilterValue"
+            "$ref": "#/definitions/DataFilterValue"
           }
         }
       },
       "title": "ClinicalDataFilter"
-    },
-    "ClinicalDataFilterValue": {
-      "type": "object",
-      "properties": {
-        "end": {
-          "type": "number"
-        },
-        "start": {
-          "type": "number"
-        },
-        "value": {
-          "type": "string"
-        }
-      },
-      "title": "ClinicalDataFilterValue"
     },
     "CoExpression": {
       "type": "object",
@@ -2031,27 +2081,20 @@
       },
       "title": "DataAccessToken"
     },
-    "DataBin": {
+    "DataFilterValue": {
       "type": "object",
       "properties": {
-        "attributeId": {
-          "type": "string"
-        },
-        "count": {
-          "type": "integer",
-          "format": "int32"
-        },
         "end": {
           "type": "number"
         },
-        "specialValue": {
-          "type": "string"
-        },
         "start": {
           "type": "number"
+        },
+        "value": {
+          "type": "string"
         }
       },
-      "title": "DataBin"
+      "title": "DataFilterValue"
     },
     "DensityPlotBin": {
       "type": "object",
@@ -2272,6 +2315,73 @@
       },
       "title": "GenesetMolecularData"
     },
+    "GenomicDataBin": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "end": {
+          "type": "number"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "profileType": {
+          "type": "string"
+        },
+        "specialValue": {
+          "type": "string"
+        },
+        "start": {
+          "type": "number"
+        }
+      },
+      "title": "GenomicDataBin"
+    },
+    "GenomicDataBinCountFilter": {
+      "type": "object",
+      "properties": {
+        "genomicDataBinFilters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GenomicDataBinFilter"
+          }
+        },
+        "studyViewFilter": {
+          "$ref": "#/definitions/StudyViewFilter"
+        }
+      },
+      "title": "GenomicDataBinCountFilter"
+    },
+    "GenomicDataBinFilter": {
+      "type": "object",
+      "properties": {
+        "customBins": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "disableLogScale": {
+          "type": "boolean"
+        },
+        "end": {
+          "type": "number"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "profileType": {
+          "type": "string"
+        },
+        "start": {
+          "type": "number"
+        }
+      },
+      "title": "GenomicDataBinFilter"
+    },
     "GenomicDataCount": {
       "type": "object",
       "properties": {
@@ -2287,6 +2397,24 @@
         }
       },
       "title": "GenomicDataCount"
+    },
+    "GenomicDataFilter": {
+      "type": "object",
+      "properties": {
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "profileType": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataFilterValue"
+          }
+        }
+      },
+      "title": "GenomicDataFilter"
     },
     "Gistic": {
       "type": "object",
@@ -2756,6 +2884,12 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/GeneFilter"
+          }
+        },
+        "genomicDataFilters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GenomicDataFilter"
           }
         },
         "genomicProfiles": {

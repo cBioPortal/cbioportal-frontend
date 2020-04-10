@@ -11,7 +11,7 @@ import {
     StudyViewPageStore,
     SurvivalType,
 } from 'pages/studyView/StudyViewPageStore';
-import { DataBin, StudyViewFilter } from 'cbioportal-ts-api-client';
+import { ClinicalDataBin, StudyViewFilter } from 'cbioportal-ts-api-client';
 import PieChart from 'pages/studyView/charts/pieChart/PieChart';
 import classnames from 'classnames';
 import ClinicalTable from 'pages/studyView/table/ClinicalTable';
@@ -146,7 +146,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             onValueSelection: action((values: string[]) => {
                 this.props.onValueSelection(this.props.chartMeta, values);
             }),
-            onDataBinSelection: action((dataBins: DataBin[]) => {
+            onDataBinSelection: action((dataBins: ClinicalDataBin[]) => {
                 this.props.onDataBinSelection(this.props.chartMeta, dataBins);
             }),
             onToggleLogScale: action(() => {
