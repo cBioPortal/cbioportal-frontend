@@ -7,7 +7,7 @@ import {
 } from 'shared/cache/MutationCountCache';
 import {
     default as GenomeNexusCache,
-    fetch as fetchGenomeNexusData,
+    defaultGNFetch as fetchGenomeNexusData,
 } from 'shared/cache/GenomeNexusCache';
 import {
     default as DiscreteCNACache,
@@ -17,11 +17,11 @@ import { Mutation, MolecularProfile } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import {
     default as GenomeNexusMutationAssessorCache,
-    fetch as fetchGenomeNexusMutationAssessorData,
+    defaultGNFetch as fetchGenomeNexusMutationAssessorData,
 } from 'shared/cache/GenomeNexusMutationAssessorCache';
 import {
     default as GenomeNexusMyVariantInfoCache,
-    fetch as fetchGenomeNexusMyVariantInfoData,
+    defaultGNFetch as fetchGenomeNexusMyVariantInfoData,
 } from 'shared/cache/GenomeNexusMyVariantInfoCache';
 
 export class MutationTableDownloadDataFetcher

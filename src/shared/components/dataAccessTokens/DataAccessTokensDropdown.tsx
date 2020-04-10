@@ -53,7 +53,10 @@ export class DataAccessTokensDropdown extends React.Component<
                 action: (
                     <a
                         href={buildCBioPortalPageUrl(
-                            this.props.appStore.logoutUrl
+                            this.props.appStore.logoutUrl,
+                            {
+                                local: AppConfig.serverConfig.saml_logout_local.toString(),
+                            }
                         )}
                     >
                         Sign out

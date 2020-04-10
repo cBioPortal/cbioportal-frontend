@@ -7,6 +7,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     dat_method: 'none',
     disabled_tabs: '',
     genomenexus_url: 'https://v1.genomenexus.org',
+    genomenexus_url_grch38: 'https://grch38.genomenexus.org',
     genomenexus_website_url: 'https://www.genomenexus.org',
     g2s_url: 'https://g2s.genomenexus.org',
     mycancergenome_show: false,
@@ -39,6 +40,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     show_oncokb: true,
     show_civic: false,
     show_pathway_mapper: true,
+    show_mutation_mapper_tool_grch38: true,
     skin_description:
         'The cBioPortal for Cancer Genomics provides visualization, analysis and download of large-scale cancer genomics data sets',
     show_genomenexus: true,
@@ -151,12 +153,17 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     ensembl_transcript_url:
         'http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=<%= transcriptId %>',
 
+    ensembl_transcript_grch38_url:
+        'http://ensembl.org/homo_sapiens/Transcript/Summary?t=<%= transcriptId %>',
+
     query_product_limit: 1000000,
 
     skin_show_gsva: false,
 
     generic_assay_display_text:
         'TREATMENT_RESPONSE:Treatment Response,MUTATIONAL_SIGNATURE:Mutational Signature',
+
+    saml_logout_local: false,
 };
 
 export default ServerConfigDefaults;

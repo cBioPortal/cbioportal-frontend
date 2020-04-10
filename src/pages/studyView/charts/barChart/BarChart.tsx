@@ -9,7 +9,7 @@ import {
 import { computed, observable } from 'mobx';
 import _ from 'lodash';
 import CBIOPORTAL_VICTORY_THEME from 'shared/theme/cBioPoralTheme';
-import { ClinicalDataFilterValue, DataBin } from 'cbioportal-ts-api-client';
+import { DataFilterValue, ClinicalDataBin } from 'cbioportal-ts-api-client';
 import { AbstractChart } from 'pages/studyView/charts/ChartContainer';
 import autobind from 'autobind-decorator';
 import BarChartAxisLabel from './BarChartAxisLabel';
@@ -33,17 +33,17 @@ import WindowStore from 'shared/components/window/WindowStore';
 import ReactDOM from 'react-dom';
 
 export interface IBarChartProps {
-    data: DataBin[];
+    data: ClinicalDataBin[];
     width: number;
     height: number;
-    filters: ClinicalDataFilterValue[];
-    onUserSelection: (dataBins: DataBin[]) => void;
+    filters: DataFilterValue[];
+    onUserSelection: (dataBins: ClinicalDataBin[]) => void;
 }
 
 export type BarDatum = {
     x: number;
     y: number;
-    dataBin: DataBin;
+    dataBin: ClinicalDataBin;
 };
 
 function generateTheme() {
@@ -87,8 +87,8 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
     }
 
     private isDataBinSelected(
-        dataBin: DataBin,
-        filters: ClinicalDataFilterValue[]
+        dataBin: ClinicalDataBin,
+        filters: DataFilterValue[]
     ) {
         return _.some(filters, filter => {
             let isFiltered = false;

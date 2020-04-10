@@ -44,6 +44,13 @@ enum ColumnWidth {
     STATUS = 140,
 }
 
+enum AlterationType {
+    MUTATION = 'Mutation',
+    CNA = 'Copy Number Alteration',
+    MSI = 'Microsatellite Instability',
+    WILDTYPE = 'Wildtype',
+}
+
 class TrialMatchTableComponent extends LazyMobXTable<IDetailedTrialMatch> {}
 
 @observer
@@ -473,8 +480,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                             {this.getDescriptionForNotMatches(
                                 mutationAndCnagenemicAlterations,
                                 3,
-                                'Negative for alterations in',
-                                ''
+                                AlterationType.MUTATION
                             )}
                         </span>
                         <DefaultTooltip
@@ -503,8 +509,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                             {this.getDescriptionForNotMatches(
                                 notMatches.WILDTYPE[0].genomicAlteration,
                                 3,
-                                "Tumor doesn't have",
-                                'defined by the trial'
+                                AlterationType.WILDTYPE
                             )}
                         </span>
                         <DefaultTooltip
@@ -577,19 +582,36 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
     public getDescriptionForNotMatches(
         genomicAlteration: string[],
         threshold: number,
-        preContent: string,
-        postContent: string
+        type: string
     ) {
         const hugoSymbolSet = new Set(
             [...genomicAlteration].map((s: string) => s.split(' ')[0])
         );
         let genomicAlterationContent = '';
-        if (hugoSymbolSet.size <= threshold) {
-            genomicAlterationContent = [...hugoSymbolSet].join(', ');
-        } else {
-            genomicAlterationContent = `${hugoSymbolSet.size} genes`;
+        if (type === AlterationType.MUTATION) {
+            if (hugoSymbolSet.size === 1) {
+                genomicAlterationContent =
+                    [...hugoSymbolSet].join(', ') +
+                    ' ' +
+                    [...genomicAlteration]
+                        .map((s: string) => s.split(' ')[1].replace(/!/g, ''))
+                        .join(', ');
+                return `Negative for ${genomicAlterationContent}`;
+            } else if (hugoSymbolSet.size <= threshold) {
+                genomicAlterationContent = [...hugoSymbolSet].join(', ');
+            } else {
+                genomicAlterationContent = `${hugoSymbolSet.size} genes`;
+            }
+            return `Negative for alterations in ${genomicAlterationContent}`;
+        } else if (type === AlterationType.WILDTYPE) {
+            if (hugoSymbolSet.size <= threshold) {
+                genomicAlterationContent = [...hugoSymbolSet].join(', ');
+            } else {
+                genomicAlterationContent = `${hugoSymbolSet.size} genes`;
+            }
+            return `Tumor doesn't have ${genomicAlterationContent} defined by the trial`;
         }
-        return `${preContent} ${genomicAlterationContent} ${postContent}`;
+        return '';
     }
 
     render() {
