@@ -7,7 +7,11 @@ import {
 } from 'pages/studyView/charts/ChartContainer';
 import { observable, toJS } from 'mobx';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
-import { ClinicalDataFilterValue, DataBin } from 'cbioportal-ts-api-client';
+import {
+    DataFilterValue,
+    ClinicalDataBin,
+    GenomicDataBin,
+} from 'cbioportal-ts-api-client';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ReactGridLayout from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
@@ -47,10 +51,13 @@ export class StudySummaryTab extends React.Component<
             onValueSelection: (chartMeta: ChartMeta, values: string[]) => {
                 this.store.updateClinicalDataFilterByValues(
                     chartMeta.uniqueKey,
-                    values.map(value => ({ value } as ClinicalDataFilterValue))
+                    values.map(value => ({ value } as DataFilterValue))
                 );
             },
-            onDataBinSelection: (chartMeta: ChartMeta, dataBins: DataBin[]) => {
+            onDataBinSelection: (
+                chartMeta: ChartMeta,
+                dataBins: ClinicalDataBin[]
+            ) => {
                 this.store.updateClinicalDataIntervalFilters(
                     chartMeta.uniqueKey,
                     dataBins
@@ -82,6 +89,15 @@ export class StudySummaryTab extends React.Component<
             },
             resetGeneFilter: (chartMeta: ChartMeta) => {
                 this.store.resetGeneFilter(chartMeta.uniqueKey);
+            },
+            onGenomicDataBinSelection: (
+                chartMeta: ChartMeta,
+                dataBins: GenomicDataBin[]
+            ) => {
+                this.store.updateGenomicDataIntervalFilters(
+                    chartMeta.uniqueKey,
+                    dataBins
+                );
             },
         };
     }
@@ -139,12 +155,28 @@ export class StudySummaryTab extends React.Component<
                 break;
             }
             case ChartTypeEnum.BAR_CHART: {
-                props.promise = this.store.getClinicalDataBin(chartMeta);
-                props.filters = this.store.getClinicalDataFiltersByUniqueKey(
-                    chartMeta.uniqueKey
-                );
-                props.onDataBinSelection = this.handlers.onDataBinSelection;
-                props.onResetSelection = this.handlers.onDataBinSelection;
+                //if the chart is one of the custom charts then get the appropriate promise
+                if (this.store.isGeneSpecificChart(chartMeta.uniqueKey)) {
+                    props.promise = this.store.getGenomicChartDataBin(
+                        chartMeta
+                    );
+                    props.filters = this.store.getGenomicDataIntervalFiltersByUniqueKey(
+                        props.chartMeta!.uniqueKey
+                    );
+                    props.onDataBinSelection = this.handlers.onGenomicDataBinSelection;
+                    props.onResetSelection = this.handlers.onGenomicDataBinSelection;
+                    props.getData = () =>
+                        this.store.getChartDownloadableData(chartMeta);
+                } else {
+                    props.promise = this.store.getClinicalDataBin(chartMeta);
+                    props.filters = this.store.getClinicalDataFiltersByUniqueKey(
+                        chartMeta.uniqueKey
+                    );
+                    props.onDataBinSelection = this.handlers.onDataBinSelection;
+                    props.onResetSelection = this.handlers.onDataBinSelection;
+                    props.getData = () =>
+                        this.store.getChartDownloadableData(chartMeta);
+                }
                 props.onToggleLogScale = this.handlers.onToggleLogScale;
                 props.showLogScaleToggle = this.store.isLogScaleToggleVisible(
                     chartMeta.uniqueKey,
@@ -153,7 +185,6 @@ export class StudySummaryTab extends React.Component<
                 props.logScaleChecked = this.store.isLogScaleChecked(
                     chartMeta.uniqueKey
                 );
-                props.getData = () => this.store.getClinicalData(chartMeta);
                 props.downloadTypes = ['Data', 'SVG', 'PDF'];
                 break;
             }
@@ -179,7 +210,8 @@ export class StudySummaryTab extends React.Component<
                     props.onResetSelection = this.handlers.onValueSelection;
                 }
                 props.onChangeChartType = this.handlers.onChangeChartType;
-                props.getData = () => this.store.getClinicalData(chartMeta);
+                props.getData = () =>
+                    this.store.getChartDownloadableData(chartMeta);
                 props.downloadTypes = ['Data'];
                 break;
             }

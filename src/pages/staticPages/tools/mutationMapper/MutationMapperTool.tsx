@@ -3,7 +3,13 @@ import { inject, observer } from 'mobx-react';
 import { action, computed, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import { Collapse } from 'react-collapse';
-import { ControlLabel, FormControl, FormGroup } from 'react-bootstrap';
+import {
+    ControlLabel,
+    FormControl,
+    FormGroup,
+    ButtonGroup,
+    Radio,
+} from 'react-bootstrap';
 import { PageLayout } from 'shared/components/PageLayout/PageLayout';
 import Helmet from 'react-helmet';
 
@@ -18,10 +24,17 @@ import MutationMapperToolStore from './MutationMapperToolStore';
 
 import AppConfig from 'appConfig';
 import { getOncoKbApiUrl } from 'shared/api/urls';
+import { getBrowserWindow } from 'cbioportal-frontend-commons';
+import { referenceGenome } from 'shared/lib/referenceGenomeUtils';
 
 interface IMutationMapperToolProps {
     routing: any;
 }
+
+const ONCOKB_URL = 'https://www.oncokb.org/';
+const CIVIC_URL = 'https://civicdb.org/';
+const CANCER_HOTSPOTS_URL = 'https://www.cancerhotspots.org/';
+const MY_CANCER_GENOME_URL = 'https://www.mycancergenome.org/';
 
 @inject('routing')
 @observer
@@ -38,6 +51,7 @@ export default class MutationMapperTool extends React.Component<
     @observable inputFileContent: string | undefined;
     @observable showIncorrectInput = false;
     @observable lastParsedInputContent: string | undefined;
+    @observable referenceGenomeSelection: string = referenceGenome.GRCH37;
 
     private store: MutationMapperToolStore = new MutationMapperToolStore();
 
@@ -45,6 +59,17 @@ export default class MutationMapperTool extends React.Component<
         super(props);
 
         this.userSelectionStore = new MutationMapperUserSelectionStore();
+        // set genomenexus url to grch38 instance if "show_mutation_mapper_tool_grch38" is true and choose "GRCh38", otherwise use default url
+        if (
+            AppConfig.serverConfig.show_mutation_mapper_tool_grch38 &&
+            getBrowserWindow().localStorage.getItem('referenceGenomeId') ===
+                referenceGenome.GRCH38
+        ) {
+            this.store.setGenomeNexusUrl(
+                AppConfig.serverConfig.genomenexus_url_grch38!
+            );
+            this.referenceGenomeSelection = referenceGenome.GRCH38;
+        }
 
         this.handleTabChange.bind(this);
     }
@@ -79,6 +104,7 @@ export default class MutationMapperTool extends React.Component<
                     />
                     {this.store.mutationsNotAnnotated.length > 0 &&
                         this.inputParseWarning()}
+                    {this.shouldShowGrch38Warning && this.grch38Warning}
                     {this.store.mutationData && this.mainTabs()}
                 </div>
             </PageLayout>
@@ -206,6 +232,7 @@ export default class MutationMapperTool extends React.Component<
         if (this.inputControlsVisible) {
             return (
                 <div className="standalone-mutation-input">
+                    {this.referenceGenomeSelector}
                     <p>
                         Please input <b>tab-delimited</b> or{' '}
                         <b>space-delimited</b> mutation data. (Load example
@@ -246,9 +273,6 @@ export default class MutationMapperTool extends React.Component<
                             </a>
                         </span>
                         )
-                        <br />
-                        <br />
-                        The annotations are based on genome build GRCh37 (hg19).
                     </p>
 
                     {this.dataFormatToggler()}
@@ -449,6 +473,60 @@ export default class MutationMapperTool extends React.Component<
         );
     }
 
+    @computed get referenceGenomeSelector() {
+        // show reference genome selector if "show_mutation_mapper_tool_grch38" is true
+        if (AppConfig.serverConfig.show_mutation_mapper_tool_grch38) {
+            return (
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <strong style={{ paddingRight: '5px' }}>
+                        Select Reference Genome:{' '}
+                    </strong>
+                    <ButtonGroup>
+                        <Radio
+                            checked={
+                                this.referenceGenomeSelection ===
+                                referenceGenome.GRCH37
+                            }
+                            onChange={() => {
+                                this.handleReferenceGenomeSelectionChange(
+                                    referenceGenome.GRCH37
+                                );
+                            }}
+                            inline
+                            data-value={referenceGenome.GRCH37}
+                            data-test="MutationMapperToolGRCh37Button"
+                        >
+                            {referenceGenome.GRCH37}
+                        </Radio>
+                        <Radio
+                            checked={
+                                this.referenceGenomeSelection ===
+                                referenceGenome.GRCH38
+                            }
+                            onChange={() => {
+                                this.handleReferenceGenomeSelectionChange(
+                                    referenceGenome.GRCH38
+                                );
+                            }}
+                            inline
+                            data-value={referenceGenome.GRCH38}
+                            data-test="MutationMapperToolGRCh38Button"
+                        >
+                            {referenceGenome.GRCH38}{' '}
+                            <strong className={'beta-text'}>Beta!</strong>
+                        </Radio>
+                    </ButtonGroup>
+                </div>
+            );
+        } else {
+            return (
+                <div>
+                    The annotations are based on genome build GRCh37 (hg19).
+                </div>
+            );
+        }
+    }
+
     protected generateTabs(genes: string[]) {
         const tabs: JSX.Element[] = [];
 
@@ -459,9 +537,11 @@ export default class MutationMapperTool extends React.Component<
                 tabs.push(
                     <MSKTab key={gene} id={gene} linkText={gene}>
                         <StandaloneMutationMapper
-                            {...convertToMutationMapperProps(
-                                AppConfig.serverConfig
-                            )}
+                            {...convertToMutationMapperProps({
+                                ...AppConfig.serverConfig,
+                                //override ensemblLink
+                                ensembl_transcript_url: this.ensemblLink,
+                            })}
                             oncoKbPublicApiUrl={getOncoKbApiUrl()}
                             store={mutationMapperStore}
                             trackVisibility={
@@ -572,18 +652,79 @@ export default class MutationMapperTool extends React.Component<
     @autobind
     @action
     protected handleLoadExamplePartiallyAnnotated() {
-        this.inputText = require('raw-loader!./resources/standaloneMutationDataExample.txt');
+        if (this.referenceGenomeSelection === referenceGenome.GRCH37) {
+            this.inputText = require('raw-loader!./resources/standaloneMutationDataExampleGrch37.txt');
+        } else {
+            this.inputText = require('raw-loader!./resources/standaloneMutationDataExampleGrch38.txt');
+        }
     }
 
     @autobind
     @action
     protected handleLoadExampleGenomicCoordinates() {
-        this.inputText = require('raw-loader!./resources/standaloneMutationDataExampleWithGenomicCoordinatesOnly.txt');
+        if (this.referenceGenomeSelection === referenceGenome.GRCH37) {
+            this.inputText = require('raw-loader!./resources/standaloneMutationDataExampleWithGenomicCoordinatesOnlyGrch37.txt');
+        } else {
+            this.inputText = require('raw-loader!./resources/standaloneMutationDataExampleWithGenomicCoordinatesOnlyGrch38.txt');
+        }
     }
 
     @autobind
     @action
     protected handleLoadExampleGeneAndProteinChange() {
         this.inputText = require('raw-loader!./resources/standaloneMutationDataExampleWithGeneAndProteinChangeOnly.txt');
+    }
+
+    @autobind
+    @action
+    protected handleReferenceGenomeSelectionChange(selection: string) {
+        // store the reference genome selection to localStorage
+        getBrowserWindow().localStorage.setItem('referenceGenomeId', selection);
+        // reload the page to initialize genome nexus api instance with correct url
+        getBrowserWindow().location.reload();
+    }
+
+    @computed get grch38Warning() {
+        return (
+            <div className="alert alert-info" role="alert">
+                <i
+                    className={'banner-icon fa fa-md fa-exclamation-triangle'}
+                    style={{
+                        verticalAlign: 'middle !important',
+                        marginRight: 6,
+                        marginBottom: 1,
+                    }}
+                />
+                Genome build GRCh38 is currently in beta. Several annotation
+                sources displayed on the page might not have official GRCh38
+                support i.e.&nbsp;
+                <a href={ONCOKB_URL}>OncoKB</a>,&nbsp;
+                <a href={CIVIC_URL}>CIViC</a>,&nbsp;
+                <a href={CANCER_HOTSPOTS_URL}>Cancer Hotspots</a>,&nbsp;
+                <a href={MY_CANCER_GENOME_URL}>My Cancer Genome</a> and&nbsp;
+                <a href={AppConfig.serverConfig.g2s_url!}>3D structures</a>.
+                Although most of the time the canonical transcript for a gene
+                will be the same between GRCh37 and GRCh38 be sure to look at
+                the results from these annotation sources carefully.
+            </div>
+        );
+    }
+
+    @computed get isGrch38() {
+        return this.referenceGenomeSelection === referenceGenome.GRCH38;
+    }
+
+    @computed get ensemblLink() {
+        return this.isGrch38
+            ? AppConfig.serverConfig.ensembl_transcript_grch38_url
+            : AppConfig.serverConfig.ensembl_transcript_url;
+    }
+
+    @computed get shouldShowGrch38Warning() {
+        return (
+            this.isGrch38 &&
+            !this.inputControlsVisible &&
+            this.store.mutations.isComplete
+        );
     }
 }
