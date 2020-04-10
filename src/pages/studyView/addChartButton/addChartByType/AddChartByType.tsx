@@ -9,7 +9,7 @@ import { Column } from '../../../../shared/components/lazyMobXTable/LazyMobXTabl
 import { getFrequencyStr } from '../../StudyViewUtils';
 import LoadingIndicator from '../../../../shared/components/loadingIndicator/LoadingIndicator';
 import MobxPromise from 'mobxpromise';
-import { ClinicalDataCountSet } from '../../StudyViewUtils';
+import { ChartDataCountSet } from '../../StudyViewUtils';
 import FixedHeaderTable from '../../table/FixedHeaderTable';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
@@ -20,12 +20,14 @@ import ifNotDefined from '../../../../shared/lib/ifNotDefined';
 export type AddChartOption = Omit<ChartOption, 'chartType'>;
 export interface IAddChartByTypeProps {
     options: Omit<AddChartOption, 'freq'>[];
-    freqPromise: MobxPromise<ClinicalDataCountSet>;
+    freqPromise: MobxPromise<ChartDataCountSet>;
     onAddAll: (keys: string[]) => void;
     onClearAll: (keys: string[]) => void;
     onToggleOption: (key: string) => void;
     optionsGivenInSortedOrder?: boolean;
     frequencyHeaderTooltip?: string;
+    firstColumnHeaderName?: string;
+    hideControls?: boolean;
 }
 
 class AddChartTableComponent extends FixedHeaderTable<AddChartOption> {}
@@ -37,6 +39,11 @@ export default class AddChartByType extends React.Component<
     IAddChartByTypeProps,
     {}
 > {
+    public static defaultProps = {
+        firstColumnHeaderName: 'Name',
+        hideControls: false,
+    };
+
     @computed
     get options() {
         if (this.props.freqPromise.isComplete) {
@@ -79,7 +86,7 @@ export default class AddChartByType extends React.Component<
 
     private _columns: Column<AddChartOption>[] = [
         {
-            name: 'Name',
+            name: this.props.firstColumnHeaderName!,
             render: (option: AddChartOption) => {
                 return (
                     <div
@@ -217,6 +224,7 @@ export default class AddChartByType extends React.Component<
                         removeAllDisabled={
                             !_.some(this.options, o => o.selected)
                         }
+                        hideControls={this.props.hideControls}
                     />
                 )}
                 {this.props.freqPromise.isPending && (
