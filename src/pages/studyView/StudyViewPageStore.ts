@@ -4027,7 +4027,7 @@ export class StudyViewPageStore {
                         this.addGeneSpecificCharts(
                             [
                                 {
-                                    name: molecularProfileOption.label,
+                                    name: `${genomicDataFilter.hugoGeneSymbol} : ${molecularProfileOption.label}`,
                                     description:
                                         molecularProfileOption.description,
                                     profileType: genomicDataFilter.profileType,
