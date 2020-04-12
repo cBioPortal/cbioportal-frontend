@@ -184,15 +184,11 @@ export default class ResultsViewPathwayMapper extends React.Component<
         // Alteration data of non-query genes are loaded.
         if (this.isNewStoreReady) {
             this.addGenomicData(this.alterationFrequencyData);
-            if (this.message == this.LOADING_MESSAGE) {
-                this.dismissActiveToasts();
+            if (this.message === this.LOADING_MESSAGE) {
+                this.dismissMessage();
             }
         }
 
-        const isWarningMessage =
-            this.message &&
-            this.message != this.LOADING_MESSAGE &&
-            this.message != this.DEFAULT_MESSAGE;
         return (
             <div className="pathwayMapper">
                 <div
@@ -207,46 +203,12 @@ export default class ResultsViewPathwayMapper extends React.Component<
                                 store={this.props.store}
                                 tabReflectsOql={true}
                             />
-                            <div
-                                className={
-                                    'alert ' +
-                                    (isWarningMessage
-                                        ? 'alert-warning'
-                                        : 'alert-success')
-                                }
-                                style={{
-                                    marginLeft: '1%',
-                                    marginBottom: '0px',
-                                    color: this.message ? 'black' : 'gray',
-                                    maxHeight: '35px',
-                                    overflowY: 'auto',
-                                }}
-                            >
-                                <button
-                                    type="button"
-                                    className="close"
-                                    onClick={() => {
-                                        this.message = null;
-                                    }}
-                                    style={{
-                                        display: this.message
-                                            ? 'block'
-                                            : 'none',
-                                    }}
-                                >
-                                    &times;
-                                </button>
-                                {isWarningMessage && (
-                                    <i
-                                        className="fa fa-md fa-exclamation-triangle"
-                                        style={{
-                                            marginRight: '6px',
-                                            marginBottom: '1px',
-                                        }}
-                                    ></i>
-                                )}
-                                {this.message || this.DEFAULT_MESSAGE}
-                            </div>
+
+                            <PathwayMapperMessageBox
+                                message={this.message}
+                                DEFAULT_MESSAGE={this.DEFAULT_MESSAGE}
+                                LOADING_MESSAGE={this.LOADING_MESSAGE}
+                            />
 
                             <PathwayMapper
                                 isCBioPortal={true}
@@ -362,7 +324,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
     }
 
     @autobind
-    private dismissActiveToasts() {
+    private dismissMessage() {
         // Toasts are removed with delay
         setTimeout(() => {
             this.message = null;
@@ -388,3 +350,58 @@ export default class ResultsViewPathwayMapper extends React.Component<
         );
     }
 }
+interface PathwayMapperMessageBoxProps {
+    message: string;
+    DEFAULT_MESSAGE: string;
+    LOADING_MESSAGE: string;
+}
+const PathwayMapperMessageBox: React.SFC<
+    PathwayMapperMessageBoxProps
+> = props => {
+    const [message, setMessage] = React.useState(props.message);
+    React.useEffect(() => {
+        setMessage(props.message);
+    }, [props]);
+    const isWarningMessage =
+        message &&
+        message !== props.LOADING_MESSAGE &&
+        message !== props.DEFAULT_MESSAGE;
+    return (
+        <div
+            className={
+                'alert ' +
+                (isWarningMessage ? 'alert-warning' : 'alert-success')
+            }
+            style={{
+                marginLeft: '1%',
+                marginBottom: '0px',
+                color: message ? 'black' : 'gray',
+                maxHeight: '35px',
+                overflowY: 'auto',
+            }}
+        >
+            <button
+                type="button"
+                className="close"
+                onClick={() => {
+                    setMessage(null);
+                }}
+                style={{
+                    display: message ? 'block' : 'none',
+                }}
+            >
+                &times;
+            </button>
+            {isWarningMessage && (
+                <i
+                    className="fa fa-md fa-exclamation-triangle"
+                    style={{
+                        marginRight: '6px',
+                        marginBottom: '1px',
+                    }}
+                ></i>
+            )}
+            {message || props.DEFAULT_MESSAGE}
+        </div>
+    );
+};
