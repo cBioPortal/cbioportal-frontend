@@ -386,7 +386,9 @@ export default class StudyViewPage extends React.Component<
                 {this.store.queriedSampleIdentifiers.isComplete &&
                     this.store.invalidSampleIds.isComplete &&
                     this.store.unknownQueriedIds.isComplete &&
-                    this.store.displayedStudies.isComplete && (
+                    this.store.displayedStudies.isComplete &&
+                    this.store.queriedPhysicalStudies.isComplete &&
+                    this.store.queriedPhysicalStudies.result.length > 0 && (
                         <div>
                             <StudyPageHeader
                                 store={this.store}
