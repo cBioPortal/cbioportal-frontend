@@ -2405,11 +2405,14 @@ export class StudyViewPageStore {
     readonly molecularProfiles = remoteData<MolecularProfile[]>({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: async () => {
-            return await defaultClient.fetchMolecularProfilesUsingPOST({
-                molecularProfileFilter: {
-                    studyIds: this.queriedPhysicalStudyIds.result,
-                } as MolecularProfileFilter,
-            });
+            if (this.queriedPhysicalStudyIds.result.length > 0) {
+                return await defaultClient.fetchMolecularProfilesUsingPOST({
+                    molecularProfileFilter: {
+                        studyIds: this.queriedPhysicalStudyIds.result,
+                    } as MolecularProfileFilter,
+                });
+            }
+            return [];
         },
         onError: error => {},
         default: [],
@@ -2853,14 +2856,18 @@ export class StudyViewPageStore {
 
     readonly clinicalAttributes = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
-        invoke: async () =>
-            _.uniqBy(
-                await defaultClient.fetchClinicalAttributesUsingPOST({
-                    studyIds: this.queriedPhysicalStudyIds.result,
-                }),
-                clinicalAttribute =>
-                    `${clinicalAttribute.patientAttribute}-${clinicalAttribute.clinicalAttributeId}`
-            ),
+        invoke: async () => {
+            if (this.queriedPhysicalStudyIds.result.length > 0) {
+                return _.uniqBy(
+                    await defaultClient.fetchClinicalAttributesUsingPOST({
+                        studyIds: this.queriedPhysicalStudyIds.result,
+                    }),
+                    clinicalAttribute =>
+                        `${clinicalAttribute.patientAttribute}-${clinicalAttribute.clinicalAttributeId}`
+                );
+            }
+            return [];
+        },
         default: [],
         onError: error => {},
         onResult: clinicalAttributes => {
@@ -3405,12 +3412,22 @@ export class StudyViewPageStore {
     get loadingInitialDataForSummaryTab() {
         let pending =
             this.defaultVisibleAttributes.isPending ||
-            this.initialVisibleAttributesClinicalDataBinCountData.isPending ||
-            this.initialVisibleAttributesClinicalDataCountData.isPending ||
+            this.clinicalAttributes.isPending ||
             this.mutationProfiles.isPending ||
             this.cnaProfiles.isPending ||
             this.structuralVariantProfiles.isPending ||
             this.survivalClinicalAttributesPrefix.isPending;
+
+        if (
+            this.clinicalAttributes.isComplete &&
+            !_.isEmpty(this.clinicalAttributes.result)
+        ) {
+            pending =
+                pending ||
+                this.initialVisibleAttributesClinicalDataBinCountData
+                    .isPending ||
+                this.initialVisibleAttributesClinicalDataCountData.isPending;
+        }
 
         if (this._loadUserSettingsInitially) {
             pending = pending || this.fetchUserSettings.isPending;
@@ -4089,9 +4106,15 @@ export class StudyViewPageStore {
                 studyViewFilter.studyIds = this.queriedPhysicalStudyIds.result;
             }
 
-            return internalClient.fetchFilteredSamplesUsingPOST({
-                studyViewFilter: studyViewFilter,
-            });
+            if (
+                !_.isEmpty(studyViewFilter.sampleIdentifiers) ||
+                !_.isEmpty(studyViewFilter.studyIds)
+            ) {
+                return internalClient.fetchFilteredSamplesUsingPOST({
+                    studyViewFilter: studyViewFilter,
+                });
+            }
+            return Promise.resolve([]);
         },
         onError: error => {},
         default: [],
