@@ -515,12 +515,17 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
 
             React.Children.forEach(
                 this.props.children,
-                (tab: MSKTab | null) => {
+                (tab: MSKTab | null, index: number) => {
                     if (!tab || !(tab.props.id in this.tabIdToNavTabWidth)) {
                         // skip a null child or a tab that hasnt been rendered yet
                         return;
                     }
                     width += this.tabIdToNavTabWidth[tab.props.id];
+
+                    if (index === 0) {
+                        // page break not allowed at first tab
+                        return;
+                    }
 
                     const padding = 50;
                     // add a page break, and reset the width for the next page

@@ -67,7 +67,7 @@ import OpenResourceTab from '../../shared/components/resources/OpenResourceTab';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
 import { ResourceData } from 'cbioportal-ts-api-client';
-import WindowStore from '../../shared/components/window/WindowStore';
+import $ from 'jquery';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -114,6 +114,11 @@ export default class StudyViewPage extends React.Component<
         StudyViewPageTabKeyEnum.CLINICAL_DATA,
     ];
     private queryReaction: IReactionDisposer;
+
+    private toolbar: any;
+    private toolbarLeftUpdater: any;
+    @observable private toolbarLeft: number = 0;
+
     @observable showCustomSelectTooltip = false;
     @observable showGroupsTooltip = false;
     @observable private showReturnToDefaultChartListModal: boolean = false;
@@ -205,6 +210,17 @@ export default class StudyViewPage extends React.Component<
             false,
             true
         );
+
+        this.toolbarLeftUpdater = setInterval(() => {
+            if (this.toolbar) {
+                this.toolbarLeft = $(this.toolbar).position().left;
+            }
+        }, 500);
+    }
+
+    @autobind
+    private toolbarRef(ref: any) {
+        this.toolbar = ref;
     }
 
     private handleTabChange(id: string) {
@@ -489,9 +505,9 @@ export default class StudyViewPage extends React.Component<
                                     }
                                     className="mainTabs"
                                     unmountOnHide={false}
-                                    getPaginationWidth={() =>
-                                        WindowStore.getWindowWidth() - 900
-                                    } // dont run into other study view UI
+                                    getPaginationWidth={() => {
+                                        return this.toolbarLeft;
+                                    }} // dont run into other study view UI
                                 >
                                     <MSKTab
                                         key={0}
@@ -564,7 +580,10 @@ export default class StudyViewPage extends React.Component<
                                     {this.openResourceTabs.component}
                                 </MSKTabs>
 
-                                <div className={styles.absolutePanel}>
+                                <div
+                                    ref={this.toolbarRef}
+                                    className={styles.absolutePanel}
+                                >
                                     <Observer>
                                         {() => {
                                             // create element here to get correct mobx subscriber list
@@ -800,6 +819,7 @@ export default class StudyViewPage extends React.Component<
     componentWillUnmount(): void {
         this.queryReaction();
         this.store.destroy();
+        clearInterval(this.toolbarLeftUpdater);
     }
 
     render() {
