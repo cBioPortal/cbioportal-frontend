@@ -14,7 +14,7 @@ import {
     ReferenceGenomeGene,
     ResourceData,
     Sample,
-    SampleMolecularIdentifier
+    SampleMolecularIdentifier,
 } from 'cbioportal-ts-api-client';
 import client from '../../../shared/api/cbioportalClientInstance';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
@@ -120,6 +120,12 @@ import { AppStore, SiteError } from 'AppStore';
 import { getGeneFilterDefault } from './PatientViewPageStoreUtil';
 import { checkNonProfiledGenesExist } from '../PatientViewPageUtils';
 import autobind from 'autobind-decorator';
+import {
+    getPatientResourceData,
+    getResourceDefinitionsForStudy,
+    getSampleResourceData,
+    getStudyResourceData,
+} from '../../../shared/components/resources/mockResourcesAPI';
 
 type PageMode = 'patient' | 'sample';
 
@@ -452,10 +458,17 @@ export class PatientViewPageStore {
     );
 
     readonly resourceDefinitions = remoteData({
-        invoke: () =>
-            client.getAllResourceDefinitionsInStudyUsingGET({
+        invoke: async () => {
+            const defs = await client.getAllResourceDefinitionsInStudyUsingGET({
                 studyId: this.studyId,
-            }),
+            });
+            defs.push(
+                ...(await getResourceDefinitionsForStudy({
+                    studyId: this.studyId,
+                }))
+            );
+            return defs;
+        },
         onResult: defs => {
             if (defs) {
                 for (const def of defs)
@@ -482,6 +495,12 @@ export class PatientViewPageStore {
                             projection: 'DETAILED',
                         })
                         .then(data => ret.push(...data))
+                );
+                promises.push(
+                    getStudyResourceData({
+                        studyId: this.studyId,
+                        resourceId: resource.resourceId,
+                    }).then(data => ret.push(...(data as any)))
                 );
             }
             return Promise.all(promises).then(() => ret);
@@ -519,6 +538,19 @@ export class PatientViewPageStore {
                                 ret[sample.sampleId].push(...data);
                             })
                     );
+                    promises.push(
+                        getSampleResourceData(
+                            {
+                                studyId: this.studyId,
+                                sampleId: sample.sampleId,
+                                resourceId: resource.resourceId,
+                            },
+                            sample
+                        ).then(data => {
+                            ret[sample.sampleId] = ret[sample.sampleId] || [];
+                            ret[sample.sampleId].push(...(data as any));
+                        })
+                    );
                 }
             }
             return Promise.all(promises).then(() => ret);
@@ -543,6 +575,13 @@ export class PatientViewPageStore {
                             projection: 'DETAILED',
                         })
                         .then(data => ret.push(...data))
+                );
+                promises.push(
+                    getPatientResourceData({
+                        studyId: this.studyId,
+                        patientId: this.patientId,
+                        resourceId: resource.resourceId,
+                    }).then(data => ret.push(...(data as any)))
                 );
             }
             return Promise.all(promises).then(() => ret);
