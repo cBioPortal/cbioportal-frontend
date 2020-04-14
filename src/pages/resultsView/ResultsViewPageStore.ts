@@ -4429,15 +4429,17 @@ export class ResultsViewPageStore {
     >({
         await: () => [this.mutations],
         invoke: () => {
-            const mutationPositionIdentifiers = countMutations(
-                this.mutations.result!
+            const mutationPositionIdentifiers = _.values(
+                countMutations(this.mutations.result!)
             );
 
-            return client.fetchMutationCountsByPositionUsingPOST({
-                mutationPositionIdentifiers: _.values(
-                    mutationPositionIdentifiers
-                ),
-            });
+            if (mutationPositionIdentifiers.length > 0) {
+                return client.fetchMutationCountsByPositionUsingPOST({
+                    mutationPositionIdentifiers,
+                });
+            } else {
+                return Promise.resolve([]);
+            }
         },
     });
 
@@ -4467,18 +4469,24 @@ export class ResultsViewPageStore {
     readonly cosmicCountData = remoteData<CosmicMutation[]>({
         await: () => [this.mutations],
         invoke: () => {
-            return internalClient.fetchCosmicCountsUsingPOST({
-                keywords: _.uniq(
-                    this.mutations
-                        .result!.filter((m: Mutation) => {
-                            // keyword is what we use to query COSMIC count with, so we need
-                            //  the unique list of mutation keywords to query. If a mutation has
-                            //  no keyword, it cannot be queried for.
-                            return !!m.keyword;
-                        })
-                        .map((m: Mutation) => m.keyword)
-                ),
-            });
+            const keywords = _.uniq(
+                this.mutations
+                    .result!.filter((m: Mutation) => {
+                        // keyword is what we use to query COSMIC count with, so we need
+                        //  the unique list of mutation keywords to query. If a mutation has
+                        //  no keyword, it cannot be queried for.
+                        return !!m.keyword;
+                    })
+                    .map((m: Mutation) => m.keyword)
+            );
+
+            if (keywords.length > 0) {
+                return internalClient.fetchCosmicCountsUsingPOST({
+                    keywords,
+                });
+            } else {
+                return Promise.resolve([]);
+            }
         },
     });
 
