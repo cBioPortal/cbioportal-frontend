@@ -38,9 +38,14 @@ import {
     IOncoKbData,
     remoteData,
     stringListToSet,
+    getBrowserWindow,
 } from 'cbioportal-frontend-commons';
 import { getProteinPositionFromProteinChange } from 'cbioportal-utils';
-import { VariantAnnotation } from 'genome-nexus-ts-api-client';
+import {
+    VariantAnnotation,
+    GenomeNexusAPI,
+    GenomeNexusAPIInternal,
+} from 'genome-nexus-ts-api-client';
 import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import { cached, labelMobxPromises, MobxPromise } from 'mobxpromise';
 import PubMedCache from 'shared/cache/PubMedCache';
@@ -68,6 +73,7 @@ import {
     IDataQueryFilter,
     isMutationProfile,
     ONCOKB_DEFAULT,
+    getGenomeNexusUrl,
 } from 'shared/lib/StoreUtils';
 import { IHotspotIndex, indexHotspotsData } from 'react-mutation-mapper';
 import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
@@ -183,6 +189,8 @@ import {
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { getSurvivalAttributes } from './survival/SurvivalUtil';
 import ComplexKeySet from '../../shared/lib/complexKeyDataStructures/ComplexKeySet';
+import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mutationMapper/MutationMapperUtils';
+import { getGenomeNexusHgvsgUrl } from 'shared/api/urls';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -2808,7 +2816,10 @@ export class ResultsViewPageStore {
                                     this.germlineConsentedSamples,
                                     this.indexedHotspotData,
                                     this.indexedVariantAnnotations,
-                                    this.uniqueSampleKeyToTumorType.result!
+                                    this.uniqueSampleKeyToTumorType.result!,
+                                    this.generateGenomeNexusHgvsgUrl,
+                                    this.genomeNexusClient,
+                                    this.genomeNexusInternalClient
                                 );
                                 return map;
                             },
@@ -3191,6 +3202,33 @@ export class ResultsViewPageStore {
         },
         []
     );
+
+    @computed get referenceGenomeBuild() {
+        if (!this.studies.isComplete) {
+            throw new Error('Failed to get studies');
+        }
+        return getGenomeNexusUrl(this.studies.result);
+    }
+
+    @autobind
+    generateGenomeNexusHgvsgUrl(hgvsg: string) {
+        return getGenomeNexusHgvsgUrl(hgvsg, this.referenceGenomeBuild);
+    }
+
+    @computed get ensemblLink() {
+        return this.referenceGenomeBuild ===
+            AppConfig.serverConfig.genomenexus_url_grch38
+            ? AppConfig.serverConfig.ensembl_transcript_grch38_url
+            : AppConfig.serverConfig.ensembl_transcript_url;
+    }
+
+    @computed get genomeNexusClient() {
+        return new GenomeNexusAPI(this.referenceGenomeBuild);
+    }
+
+    @computed get genomeNexusInternalClient() {
+        return new GenomeNexusAPIInternal(this.referenceGenomeBuild);
+    }
 
     //this is only required to show study name and description on the results page
     //CancerStudy objects for all the cohortIds
@@ -3985,7 +4023,8 @@ export class ResultsViewPageStore {
                     ? await fetchVariantAnnotationsIndexedByGenomicLocation(
                           this.mutations.result,
                           ['annotation_summary', 'hotspots'],
-                          AppConfig.serverConfig.isoformOverrideSource
+                          AppConfig.serverConfig.isoformOverrideSource,
+                          this.genomeNexusClient
                       )
                     : undefined,
             onError: (err: Error) => {
@@ -3999,7 +4038,11 @@ export class ResultsViewPageStore {
     readonly hotspotData = remoteData({
         await: () => [this.mutations],
         invoke: () => {
-            return fetchHotspotsData(this.mutations);
+            return fetchHotspotsData(
+                this.mutations,
+                undefined,
+                this.genomeNexusInternalClient
+            );
         },
     });
 
@@ -4326,15 +4369,30 @@ export class ResultsViewPageStore {
      * For annotations of Genome Nexus we want to fetch lazily
      */
     @cached get genomeNexusCache() {
-        return new GenomeNexusCache();
+        return new GenomeNexusCache(
+            createVariantAnnotationsByMutationFetcher(
+                ['annotation_summary'],
+                this.genomeNexusClient
+            )
+        );
     }
 
     @cached get genomeNexusMutationAssessorCache() {
-        return new GenomeNexusMutationAssessorCache();
+        return new GenomeNexusMutationAssessorCache(
+            createVariantAnnotationsByMutationFetcher(
+                ['annotation_summary', 'mutation_assessor'],
+                this.genomeNexusClient
+            )
+        );
     }
 
     @cached get genomeNexusMyVariantInfoCache() {
-        return new GenomeNexusMyVariantInfoCache();
+        return new GenomeNexusMyVariantInfoCache(
+            createVariantAnnotationsByMutationFetcher(
+                ['my_variant_info'],
+                this.genomeNexusClient
+            )
+        );
     }
 
     @cached get pubMedCache() {

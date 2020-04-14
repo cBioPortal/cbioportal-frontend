@@ -10,6 +10,7 @@ import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownlo
 export interface IStandaloneMutationMapperProps extends IMutationMapperProps {
     // add standalone view specific props here if needed
     downloadDataFetcher?: MutationTableDownloadDataFetcher;
+    generateGenomeNexusHgvsgUrl: (hgvsg: string) => string;
 }
 @observer
 export default class StandaloneMutationMapper extends MutationMapper<
@@ -50,6 +51,9 @@ export default class StandaloneMutationMapper extends MutationMapper<
                 enableHotspot={this.props.enableHotspot}
                 enableMyCancerGenome={this.props.enableMyCancerGenome}
                 enableCivic={this.props.enableCivic}
+                generateGenomeNexusHgvsgUrl={
+                    this.props.generateGenomeNexusHgvsgUrl
+                }
             />
         );
     }
