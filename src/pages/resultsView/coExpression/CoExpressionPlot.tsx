@@ -215,6 +215,7 @@ export default class CoExpressionPlot extends React.Component<
             {
                 geneticEntityName: this.props.xAxisGeneticEntity
                     .geneticEntityName,
+                cytoband: this.props.xAxisGeneticEntity.cytoband,
             },
             this.axisLogScaleFunction,
             this.props.molecularProfileX.name
