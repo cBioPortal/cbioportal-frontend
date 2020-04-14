@@ -32,7 +32,7 @@ import {
 const THREE_GENE_TWO_SAMPLE_CNA_DATA = ([
     {
         __id: 4,
-        oncoKbOncogenic: '',
+        oncoKbOncogenic: 'oncogenic',
         sampleId: 'TCGA-02-0001-01',
         entrezGeneId: 672,
         value: 1,
