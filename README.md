@@ -320,20 +320,20 @@ import {something} from 'cbioportal-frontend-commons'
 
 Remember that the packages are used by other projects and compatibility needs to be carefully managed. 
 
-Whenever you need to update code under packages, you should also consider updating the version number in the corresponding `package.json` as well as the dependencies of other packages depending on the package you updated. For example if you update the `cbioportal-frontend-commons` version from `0.1.1` to `0.1.2`, corresponding `cbioportal-frontend-commons` dependency in the `package.json` for `react-mutation-mapper` and `cbioportal-frontend` should also be updated to the new version.
+When you update code under packages a new version of changed packages automatically published once the code is merged to master. However, in a rare case when you would like to set a custom package version, you can run
+ 
+```
+yarn run updatePackageVersion
+```
+
+Alternatively you can manually set a custom version. When updating manually you should update the version number in the corresponding `package.json` as well as the dependencies of other packages depending on the package you update. For example if you update the `cbioportal-frontend-commons` version from `0.1.1` to `0.1.2-beta.0`, corresponding `cbioportal-frontend-commons` dependency in the `package.json` for `react-mutation-mapper` and `cbioportal-frontend` should also be updated to the new version.
+
+Note that when setting a custom version if you want the next published package version to be, for example, `1.0.6`, then you should set the new version to `1.0.6-beta.1` or a similar prerelease version. If you set the custom version to `1.0.6`, the next published version will be `1.0.7` not `1.0.6`. This is because the auto publish script runs in any case to detect changes in all packages including custom versioned packages.
 
 #### Update API clients
 
-The API clients now live in separate packages, so all packages need to be updated when there's a change. To do so first update the API:
-
 ```
 yarn run updateAPI
-```
-
-then update all package versions with:
-
-```
-yarn run updatePackageVersion
 ```
 
 ## Components
