@@ -118,7 +118,7 @@ export default class AccessorsForOqlFilter
     private isMutation(d: Datum): d is Mutation {
         return (
             this.molecularAlterationType(d.molecularProfileId) ===
-            'MUTATION_EXTENDED'
+            AlterationTypeConstants.MUTATION_EXTENDED
         );
     }
 
@@ -136,7 +136,7 @@ export default class AccessorsForOqlFilter
     public cna(d: Datum) {
         if (
             this.molecularAlterationType(d.molecularProfileId) ===
-            'COPY_NUMBER_ALTERATION'
+            AlterationTypeConstants.COPY_NUMBER_ALTERATION
         ) {
             return cna_profile_data_to_string[
                 (d as NumericGeneMolecularData).value
@@ -200,7 +200,7 @@ export default class AccessorsForOqlFilter
     public exp(d: Datum) {
         if (
             this.molecularAlterationType(d.molecularProfileId) ===
-            'MRNA_EXPRESSION'
+            AlterationTypeConstants.MRNA_EXPRESSION
         ) {
             return (d as NumericGeneMolecularData).value;
         } else {
@@ -211,7 +211,7 @@ export default class AccessorsForOqlFilter
     public prot(d: Datum) {
         if (
             this.molecularAlterationType(d.molecularProfileId) ===
-            'PROTEIN_LEVEL'
+            AlterationTypeConstants.PROTEIN_LEVEL
         ) {
             return (d as NumericGeneMolecularData).value;
         } else {
