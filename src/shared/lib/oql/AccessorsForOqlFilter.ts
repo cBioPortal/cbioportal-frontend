@@ -11,6 +11,7 @@ import {
     AnnotatedNumericGeneMolecularData,
 } from '../../../pages/resultsView/ResultsViewPageStore';
 import { isNotGermlineMutation } from '../MutationUtils';
+import { IAccessorsForOqlFilter } from './oqlfilter';
 
 export const cna_profile_data_to_string: any = {
     '-2': 'homdel',
@@ -95,7 +96,14 @@ export function getSimplifiedMutationType(
     return ret;
 }
 
-export default class AccessorsForOqlFilter {
+export type Datum =
+    | Mutation
+    | NumericGeneMolecularData
+    | AnnotatedMutation
+    | AnnotatedNumericGeneMolecularData;
+
+export default class AccessorsForOqlFilter
+    implements IAccessorsForOqlFilter<Datum> {
     private molecularProfileIdToMolecularProfile: {
         [molecularProfileId: string]: MolecularProfile;
     };
@@ -107,7 +115,14 @@ export default class AccessorsForOqlFilter {
         );
     }
 
-    public gene(d: Mutation) {
+    private isMutation(d: Datum): d is Mutation {
+        return (
+            this.molecularAlterationType(d.molecularProfileId) ===
+            'MUTATION_EXTENDED'
+        );
+    }
+
+    public gene(d: Datum) {
         return d.gene.hugoGeneSymbol;
     }
 
@@ -118,22 +133,21 @@ export default class AccessorsForOqlFilter {
         return profile && profile.molecularAlterationType;
     }
 
-    public cna(d: NumericGeneMolecularData) {
+    public cna(d: Datum) {
         if (
             this.molecularAlterationType(d.molecularProfileId) ===
             'COPY_NUMBER_ALTERATION'
         ) {
-            return cna_profile_data_to_string[d.value];
+            return cna_profile_data_to_string[
+                (d as NumericGeneMolecularData).value
+            ];
         } else {
             return null;
         }
     }
 
-    public mut_type(d: Mutation) {
-        if (
-            this.molecularAlterationType(d.molecularProfileId) ===
-            'MUTATION_EXTENDED'
-        ) {
+    public mut_type(d: Datum) {
+        if (this.isMutation(d)) {
             if (d.mutationType && d.mutationType.toLowerCase() === 'fusion') {
                 return null;
             } else if (
@@ -149,11 +163,8 @@ export default class AccessorsForOqlFilter {
         }
     }
 
-    public mut_status(d: Mutation) {
-        if (
-            this.molecularAlterationType(d.molecularProfileId) ===
-            AlterationTypeConstants.MUTATION_EXTENDED
-        ) {
+    public mut_status(d: Datum) {
+        if (this.isMutation(d)) {
             if (isNotGermlineMutation(d)) {
                 return 'somatic';
             } else {
@@ -164,15 +175,12 @@ export default class AccessorsForOqlFilter {
         }
     }
 
-    public mut_position(d: Mutation) {
-        if (
-            this.molecularAlterationType(d.molecularProfileId) ===
-            'MUTATION_EXTENDED'
-        ) {
+    public mut_position(d: Datum) {
+        if (this.isMutation(d)) {
             var start = d.proteinPosStart;
             var end = d.proteinPosEnd;
             if (start !== null && end !== null) {
-                return [start, end];
+                return [start, end] as [number, number];
             } else {
                 return null;
             }
@@ -181,46 +189,47 @@ export default class AccessorsForOqlFilter {
         }
     }
 
-    public mut_amino_acid_change(d: Mutation) {
-        if (
-            this.molecularAlterationType(d.molecularProfileId) ===
-            'MUTATION_EXTENDED'
-        ) {
+    public mut_amino_acid_change(d: Datum) {
+        if (this.isMutation(d)) {
             return d.proteinChange;
         } else {
             return null;
         }
     }
 
-    public exp(d: NumericGeneMolecularData) {
+    public exp(d: Datum) {
         if (
             this.molecularAlterationType(d.molecularProfileId) ===
             'MRNA_EXPRESSION'
         ) {
-            return d.value;
+            return (d as NumericGeneMolecularData).value;
         } else {
             return null;
         }
     }
 
-    public prot(d: NumericGeneMolecularData) {
+    public prot(d: Datum) {
         if (
             this.molecularAlterationType(d.molecularProfileId) ===
             'PROTEIN_LEVEL'
         ) {
-            return d.value;
+            return (d as NumericGeneMolecularData).value;
         } else {
             return null;
         }
     }
 
-    public fusion(d: Mutation) {
-        return getSimplifiedMutationType(d.mutationType) === 'fusion'
-            ? true
-            : null;
+    public fusion(d: Datum) {
+        if (this.isMutation(d)) {
+            return getSimplifiedMutationType(d.mutationType) === 'fusion'
+                ? true
+                : null;
+        } else {
+            return null;
+        }
     }
 
-    public is_driver(d: AnnotatedMutation | AnnotatedNumericGeneMolecularData) {
+    public is_driver(d: Datum) {
         if (
             this.molecularAlterationType(d.molecularProfileId) ===
             AlterationTypeConstants.MUTATION_EXTENDED
