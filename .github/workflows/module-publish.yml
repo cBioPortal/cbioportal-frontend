@@ -25,7 +25,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - run: yarn policies set-version 1.21.1
       - run: yarn
-      - run: yarn updatePackageVersions
+      - run: yarn updatePackageVersion
       - run: yarn buildModules
       - run: yarn publishModules
         env:
