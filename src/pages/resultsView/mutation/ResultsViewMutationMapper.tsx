@@ -137,6 +137,9 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 enableMyCancerGenome={this.props.enableMyCancerGenome}
                 enableCivic={this.props.enableCivic}
                 totalNumberOfExons={this.totalExonNumber}
+                generateGenomeNexusHgvsgUrl={
+                    this.props.store.generateGenomeNexusHgvsgUrl
+                }
             />
         );
     }

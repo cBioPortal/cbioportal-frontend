@@ -25,7 +25,7 @@ import MutationMapperToolStore from './MutationMapperToolStore';
 import AppConfig from 'appConfig';
 import { getOncoKbApiUrl } from 'shared/api/urls';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
-import { referenceGenome } from 'shared/lib/referenceGenomeUtils';
+import { REFERENCE_GENOME } from 'shared/lib/referenceGenomeUtils';
 
 interface IMutationMapperToolProps {
     routing: any;
@@ -51,7 +51,7 @@ export default class MutationMapperTool extends React.Component<
     @observable inputFileContent: string | undefined;
     @observable showIncorrectInput = false;
     @observable lastParsedInputContent: string | undefined;
-    @observable referenceGenomeSelection: string = referenceGenome.GRCH37;
+    @observable referenceGenomeSelection: string = REFERENCE_GENOME.grch37.NCBI;
 
     private store: MutationMapperToolStore = new MutationMapperToolStore();
 
@@ -63,12 +63,12 @@ export default class MutationMapperTool extends React.Component<
         if (
             AppConfig.serverConfig.show_mutation_mapper_tool_grch38 &&
             getBrowserWindow().localStorage.getItem('referenceGenomeId') ===
-                referenceGenome.GRCH38
+                REFERENCE_GENOME.grch38.NCBI
         ) {
             this.store.setGenomeNexusUrl(
                 AppConfig.serverConfig.genomenexus_url_grch38!
             );
-            this.referenceGenomeSelection = referenceGenome.GRCH38;
+            this.referenceGenomeSelection = REFERENCE_GENOME.grch38.NCBI;
         }
 
         this.handleTabChange.bind(this);
@@ -484,34 +484,34 @@ export default class MutationMapperTool extends React.Component<
                         <Radio
                             checked={
                                 this.referenceGenomeSelection ===
-                                referenceGenome.GRCH37
+                                REFERENCE_GENOME.grch37.NCBI
                             }
                             onChange={() => {
                                 this.handleReferenceGenomeSelectionChange(
-                                    referenceGenome.GRCH37
+                                    REFERENCE_GENOME.grch37.NCBI
                                 );
                             }}
                             inline
-                            data-value={referenceGenome.GRCH37}
+                            data-value={REFERENCE_GENOME.grch37.NCBI}
                             data-test="MutationMapperToolGRCh37Button"
                         >
-                            {referenceGenome.GRCH37}
+                            {REFERENCE_GENOME.grch37.NCBI}
                         </Radio>
                         <Radio
                             checked={
                                 this.referenceGenomeSelection ===
-                                referenceGenome.GRCH38
+                                REFERENCE_GENOME.grch38.NCBI
                             }
                             onChange={() => {
                                 this.handleReferenceGenomeSelectionChange(
-                                    referenceGenome.GRCH38
+                                    REFERENCE_GENOME.grch38.NCBI
                                 );
                             }}
                             inline
-                            data-value={referenceGenome.GRCH38}
+                            data-value={REFERENCE_GENOME.grch38.NCBI}
                             data-test="MutationMapperToolGRCh38Button"
                         >
-                            {referenceGenome.GRCH38}{' '}
+                            {REFERENCE_GENOME.grch38.NCBI}{' '}
                             <strong className={'beta-text'}>Beta!</strong>
                         </Radio>
                     </ButtonGroup>
@@ -559,6 +559,9 @@ export default class MutationMapperTool extends React.Component<
                             showTranscriptDropDown={true}
                             showOnlyAnnotatedTranscriptsInDropdown={
                                 !this.store.hasInputWithProteinChanges
+                            }
+                            generateGenomeNexusHgvsgUrl={
+                                this.store.generateGenomeNexusHgvsgUrl
                             }
                         />
                     </MSKTab>
@@ -651,7 +654,7 @@ export default class MutationMapperTool extends React.Component<
     @autobind
     @action
     protected handleLoadExamplePartiallyAnnotated() {
-        if (this.referenceGenomeSelection === referenceGenome.GRCH37) {
+        if (this.referenceGenomeSelection === REFERENCE_GENOME.grch37.NCBI) {
             this.inputText = require('raw-loader!./resources/standaloneMutationDataExampleGrch37.txt');
         } else {
             this.inputText = require('raw-loader!./resources/standaloneMutationDataExampleGrch38.txt');
@@ -661,7 +664,7 @@ export default class MutationMapperTool extends React.Component<
     @autobind
     @action
     protected handleLoadExampleGenomicCoordinates() {
-        if (this.referenceGenomeSelection === referenceGenome.GRCH37) {
+        if (this.referenceGenomeSelection === REFERENCE_GENOME.grch37.NCBI) {
             this.inputText = require('raw-loader!./resources/standaloneMutationDataExampleWithGenomicCoordinatesOnlyGrch37.txt');
         } else {
             this.inputText = require('raw-loader!./resources/standaloneMutationDataExampleWithGenomicCoordinatesOnlyGrch38.txt');
@@ -710,7 +713,7 @@ export default class MutationMapperTool extends React.Component<
     }
 
     @computed get isGrch38() {
-        return this.referenceGenomeSelection === referenceGenome.GRCH38;
+        return this.referenceGenomeSelection === REFERENCE_GENOME.grch38.NCBI;
     }
 
     @computed get ensemblLink() {
