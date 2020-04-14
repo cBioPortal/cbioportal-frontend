@@ -465,11 +465,15 @@ function isDatumWantedByAnyTypeWithModifiersCommand<T>(
         var datumWanted = null;
         switch (modifier) {
             case 'DRIVER':
-                datumWanted = isDatumWantedByOQLAlterationModifier(
-                    modifier,
-                    datum,
-                    accessors
-                );
+                const cnaValue = accessors.cna(datum);
+                datumWanted =
+                    cnaValue !== 'gain' && // dont include gains or hetloss here
+                    cnaValue !== 'hetloss' &&
+                    isDatumWantedByOQLAlterationModifier(
+                        modifier,
+                        datum,
+                        accessors
+                    );
         }
         if (datumWanted === true) {
             isWantedBySome = true;
