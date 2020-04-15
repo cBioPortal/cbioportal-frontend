@@ -24,13 +24,13 @@ export function getUniquePrecision(
 }
 
 export function axisLabel(
-    geneticEntity: { geneticEntityName: string },
+    geneticEntity: { geneticEntityName: string; cytoband?: string },
     logScale: IAxisLogScaleParams | undefined,
     profileName: string
 ) {
     return `${profileName}: ${geneticEntity.geneticEntityName} ${
-        logScale ? `(${logScale.label}) ` : ''
-    }`;
+        geneticEntity.cytoband ? `(${geneticEntity.cytoband}) ` : ''
+    }${logScale ? `(${logScale.label}) ` : ''}`;
 }
 
 export function isNotProfiled(d: { profiledX: boolean; profiledY: boolean }) {
