@@ -28,7 +28,17 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
         );
         assertScreenShotMatch(res);
     });
+    it('pvge show timeline', function() {
+        browser.click('button[data-test="ToggleTimeline"]');
+        browser.waitForVisible('div#timeline');
+        const res = browser.checkElement(
+            'div[data-test="GenomicEvolutionTab"]',
+            { hide: ['.qtip'] }
+        );
+        assertScreenShotMatch(res);
+    });
     it('pvge one mutation selected with line chart', function() {
+        browser.click('button[data-test="ToggleTimeline"]'); // toggle timeline off
         browser.click(
             'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(1)'
         );
