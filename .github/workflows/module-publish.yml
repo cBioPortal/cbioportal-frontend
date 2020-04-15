@@ -12,6 +12,8 @@ on:
 
 jobs:
   build:
+    # do not attempt versioning on forked repos, only trigger on the main repo
+    if: github.repository == 'cBioPortal/cbioportal-frontend'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
