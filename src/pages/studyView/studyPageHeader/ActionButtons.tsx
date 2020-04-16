@@ -113,6 +113,9 @@ export default class ActionButtons extends React.Component<
                     molecularProfileNameSet={
                         this.props.store.molecularProfileNameSet.result || {}
                     }
+                    caseListNameSet={
+                        this.props.store.caseListNameSet.result || {}
+                    }
                 />
             );
         }

@@ -582,6 +582,47 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     />
                 );
             }
+            case ChartTypeEnum.CASE_LIST_TABLE: {
+                return () => (
+                    <MultiSelectionTable
+                        tableType={FreqColumnTypeEnum.DATA}
+                        promise={this.props.promise}
+                        width={getWidthByDimension(
+                            this.props.dimension,
+                            this.borderWidth
+                        )}
+                        height={getTableHeightByDimension(
+                            this.props.dimension,
+                            this.chartHeaderHeight
+                        )}
+                        filters={this.props.filters}
+                        onUserSelection={this.handlers.onValueSelection}
+                        onGeneSelect={this.props.onGeneSelect}
+                        selectedGenes={this.props.selectedGenes}
+                        genePanelCache={this.props.genePanelCache}
+                        cancerGeneFilterEnabled={
+                            this.props.cancerGeneFilterEnabled
+                        }
+                        filterByCancerGenes={this.props.filterByCancerGenes!}
+                        onChangeCancerGeneFilter={
+                            this.props.onChangeCancerGeneFilter!
+                        }
+                        columns={[
+                            {
+                                columnKey:
+                                    MultiSelectionTableColumnKey.CASE_LIST,
+                            },
+                            {
+                                columnKey: MultiSelectionTableColumnKey.NUMBER,
+                            },
+                            {
+                                columnKey: MultiSelectionTableColumnKey.FREQ,
+                            },
+                        ]}
+                        defaultSortBy={MultiSelectionTableColumnKey.FREQ}
+                    />
+                );
+            }
             case ChartTypeEnum.SURVIVAL: {
                 if (this.survivalChartData) {
                     const data = this.survivalChartData;

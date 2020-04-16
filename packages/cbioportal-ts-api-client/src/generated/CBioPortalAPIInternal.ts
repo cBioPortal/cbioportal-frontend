@@ -13,6 +13,14 @@ export type AlterationEnrichment = {
         'pValue': number
 
 };
+export type CaseListDataCount = {
+    'count': number
+
+        'label': string
+
+        'value': string
+
+};
 export type ClinicalAttribute = {
     'clinicalAttributeId': string
 
@@ -517,7 +525,10 @@ export type ServerStatusMessage = {
 
 };
 export type StudyViewFilter = {
-    'clinicalDataFilters': Array < ClinicalDataFilter >
+    'caseLists': Array < Array < string >
+        >
+
+        'clinicalDataFilters': Array < ClinicalDataFilter >
 
         'geneFilters': Array < GeneFilter >
 
@@ -2782,6 +2793,83 @@ export default class CBioPortalAPIInternal {
             return response.body;
         });
     };
+    fetchMolecularProfileSampleCountsUsingPOSTURL(parameters: {
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/molecular-profile-sample-counts/fetch';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch sample counts by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchMolecularProfileSampleCountsUsingPOST
+     * @param {} studyViewFilter - Study view filter
+     */
+    fetchMolecularProfileSampleCountsUsingPOSTWithHttpInfo(parameters: {
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/molecular-profile-sample-counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['studyViewFilter'] !== undefined) {
+                body = parameters['studyViewFilter'];
+            }
+
+            if (parameters['studyViewFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: studyViewFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch sample counts by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchMolecularProfileSampleCountsUsingPOST
+     * @param {} studyViewFilter - Study view filter
+     */
+    fetchMolecularProfileSampleCountsUsingPOST(parameters: {
+            'studyViewFilter': StudyViewFilter,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < GenomicDataCount >
+        > {
+            return this.fetchMolecularProfileSampleCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
     fetchCoExpressionsUsingPOSTURL(parameters: {
         'molecularProfileIdA': string,
         'molecularProfileIdB': string,
@@ -3363,12 +3451,12 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
-    fetchMolecularProfileSampleCountsUsingPOSTURL(parameters: {
+    fetchCaseListCountsUsingPOSTURL(parameters: {
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/sample-counts/fetch';
+        let path = '/sample-lists-counts/fetch';
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -3381,12 +3469,12 @@ export default class CBioPortalAPIInternal {
     };
 
     /**
-     * Fetch sample counts by study view filter
+     * Fetch case list sample counts by study view filter
      * @method
-     * @name CBioPortalAPIInternal#fetchMolecularProfileSampleCountsUsingPOST
+     * @name CBioPortalAPIInternal#fetchCaseListCountsUsingPOST
      * @param {} studyViewFilter - Study view filter
      */
-    fetchMolecularProfileSampleCountsUsingPOSTWithHttpInfo(parameters: {
+    fetchCaseListCountsUsingPOSTWithHttpInfo(parameters: {
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any,
         $domain ? : string
@@ -3394,7 +3482,7 @@ export default class CBioPortalAPIInternal {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
-        let path = '/sample-counts/fetch';
+        let path = '/sample-lists-counts/fetch';
         let body: any;
         let queryParameters: any = {};
         let headers: any = {};
@@ -3425,18 +3513,18 @@ export default class CBioPortalAPIInternal {
     };
 
     /**
-     * Fetch sample counts by study view filter
+     * Fetch case list sample counts by study view filter
      * @method
-     * @name CBioPortalAPIInternal#fetchMolecularProfileSampleCountsUsingPOST
+     * @name CBioPortalAPIInternal#fetchCaseListCountsUsingPOST
      * @param {} studyViewFilter - Study view filter
      */
-    fetchMolecularProfileSampleCountsUsingPOST(parameters: {
+    fetchCaseListCountsUsingPOST(parameters: {
             'studyViewFilter': StudyViewFilter,
             $queryParameters ? : any,
             $domain ? : string
-        }): Promise < Array < GenomicDataCount >
+        }): Promise < Array < CaseListDataCount >
         > {
-            return this.fetchMolecularProfileSampleCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.fetchCaseListCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
