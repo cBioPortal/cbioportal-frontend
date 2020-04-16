@@ -328,12 +328,6 @@ export function buildTimeline(
                     ),
                     enabled: true,
                 },
-                {
-                    obj: new clinicalTimelineExports.clinicalTimelineZoom(
-                        'Zoom'
-                    ),
-                    enabled: true,
-                },
             ])
             .addPostTimelineHook(addMoreGenieTimelineStylingHacks.bind(this));
     } else {
@@ -350,12 +344,6 @@ export function buildTimeline(
                 {
                     obj: new clinicalTimelineExports.trimClinicalTimeline(
                         'Trim Timeline'
-                    ),
-                    enabled: true,
-                },
-                {
-                    obj: new clinicalTimelineExports.clinicalTimelineZoom(
-                        'Zoom Timeline'
                     ),
                     enabled: true,
                 },
