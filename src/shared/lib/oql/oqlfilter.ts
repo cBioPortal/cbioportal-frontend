@@ -1,21 +1,111 @@
 /* eslint camelcase: "off" */
 // Heavily dependent on OQL PEGjs specification
 import * as _ from 'lodash';
-import oql_parser from './oql-parser';
+import oql_parser, {
+    AminoAcid,
+    AnyTypeWithModifiersCommand,
+    CNACommand,
+    EXPCommand,
+    FUSIONCommand,
+    MutationModifier,
+    MUTCommand,
+    PROTCommand,
+} from './oql-parser';
 import { annotateAlterationTypes } from './annotateAlterationTypes';
+import { SingleGeneQuery, MergedGeneQuery } from './oql-parser';
+import {
+    AnnotatedMutation,
+    ExtendedAlteration,
+} from '../../../pages/resultsView/ResultsViewPageStore';
+import { NumericGeneMolecularData, Mutation } from 'cbioportal-ts-api-client';
+import { Alteration } from 'shared/lib/oql/oql-parser';
+import AccessorsForOqlFilter, {
+    Datum,
+    SimplifiedMutationType,
+} from './AccessorsForOqlFilter';
 
-function isDatatypeStatement(line) {
+export interface IAccessorsForOqlFilter<T> {
+    // a null return for an attribute means that attribute
+    //  does not apply to the given element. (i.e N/A, not applicable).
+    // For example, `cna` applied to a mutation should give null
+
+    // returns lower case gene symbol
+    gene: (d: T) => string;
+
+    // returns 'amp', 'homdel', 'hetloss', or 'gain',
+    //  or null
+    cna: (d: T) => 'amp' | 'homdel' | 'hetloss' | 'gain' | null;
+
+    // returns 'missense', 'nonsense', 'nonstart', 'nonstop', 'frameshift', 'inframe', 'splice', 'trunc', or 'promoter'
+    //  or null
+    mut_type: (d: T) => SimplifiedMutationType | 'promoter' | null;
+
+    // returns a 2-element array of integers, the start position to the end position
+    // or null
+    mut_position: (d: T) => [number, number] | null;
+
+    // returns "germline" or "somatic"
+    // or null
+    mut_status: (d: T) => 'germline' | 'somatic' | null;
+
+    // returns a string, the amino acid change,
+    // or null
+    mut_amino_acid_change: (d: T) => string | null;
+
+    // returns mrna expression,
+    // or null
+    exp: (d: T) => number | null;
+
+    // returns protein expression,
+    // or null
+    prot: (d: T) => number | null;
+
+    // returns true, false, or null
+    fusion: (d: T) => boolean | null;
+
+    // returns true, false, or null
+    is_driver: (d: T) => boolean | null;
+}
+
+type OQLAlterationFilterString = string;
+
+export type OQLLineFilterOutput<T> = {
+    gene: string;
+    parsed_oql_line: SingleGeneQuery;
+    oql_line: string;
+    data: T[];
+};
+
+export type MergedTrackLineFilterOutput<T> = {
+    list: OQLLineFilterOutput<T>[];
+    label?: string;
+};
+export type UnflattenedOQLLineFilterOutput<T> =
+    | OQLLineFilterOutput<T>
+    | MergedTrackLineFilterOutput<T>;
+
+function isDatatypeStatement(line: OQLLineFilterOutput<any>) {
     return line.gene !== undefined && line.gene.toUpperCase() === 'DATATYPES';
 }
-function isMergedTrackLine(line) {
-    return line.list !== undefined;
+function isMergedTrackLine(
+    line: OQLLineFilterOutput<any> | MergedTrackLineFilterOutput<any>
+): line is MergedTrackLineFilterOutput<any> {
+    return (line as any).list !== undefined;
 }
 
-export function isMergedTrackFilter(oqlFilter) {
-    return oqlFilter.list !== undefined;
+function isMergedGeneQuery(
+    line: SingleGeneQuery | MergedGeneQuery
+): line is MergedGeneQuery {
+    return !!(line as any).list;
 }
 
-function parseMergedTrackOQLQuery(oql_query, opt_default_oql = '') {
+export function isMergedTrackFilter<T>(
+    oqlFilter: UnflattenedOQLLineFilterOutput<T>
+): oqlFilter is MergedTrackLineFilterOutput<T> {
+    return (oqlFilter as any).list !== undefined;
+}
+
+function parseMergedTrackOQLQuery(oql_query: string, opt_default_oql = '') {
     /* In: - oql_query, a string, an OQL query
      - opt_default_oql, a string, default OQL to add to any empty line
      Out: An array, with each element being a parsed single-gene or
@@ -30,7 +120,7 @@ function parseMergedTrackOQLQuery(oql_query, opt_default_oql = '') {
      * Out:
      *     (SingleGeneLine|MergedTrackLine)[]
      */
-    function applyDatatypes(oql_lines, initial_dt) {
+    function applyDatatypes(oql_lines: any, initial_dt: any) {
         /* In:
          *     - dt_state: Alterations
          *     - line: DatatypeStatement | MergedTrackLine | SingleGeneLine
@@ -40,7 +130,7 @@ function parseMergedTrackOQLQuery(oql_query, opt_default_oql = '') {
          *         query_line: [SingleGeneLine|MergedTrackLine] | []
          *     }
          */
-        function evaluateDt(dt_state, line) {
+        function evaluateDt(dt_state: any, line: any) {
             if (isDatatypeStatement(line)) {
                 return {
                     dt_state: line.alterations,
@@ -78,7 +168,7 @@ function parseMergedTrackOQLQuery(oql_query, opt_default_oql = '') {
          *         query: (SingleGeneLine|MergedTrackLine)[]
          *     }
          */
-        function appendDtResult({ dt_state, query }, line) {
+        function appendDtResult({ dt_state, query }: any, line: any) {
             const { dt_state: new_dt_state, query_line } = evaluateDt(
                 dt_state,
                 line
@@ -98,9 +188,9 @@ function parseMergedTrackOQLQuery(oql_query, opt_default_oql = '') {
     const parsed = oql_parser.parse(oql_query);
     let parsed_with_datatypes = applyDatatypes(parsed, false);
     if (opt_default_oql.length > 0) {
-        const default_alterations = oql_parser.parse(
+        const default_alterations = (oql_parser.parse(
             `DUMMYGENE:${opt_default_oql};`
-        )[0].alterations;
+        )![0] as SingleGeneQuery).alterations;
         parsed_with_datatypes = applyDatatypes(
             parsed_with_datatypes,
             default_alterations
@@ -109,7 +199,10 @@ function parseMergedTrackOQLQuery(oql_query, opt_default_oql = '') {
     return parsed_with_datatypes;
 }
 
-export function parseOQLQuery(oql_query, opt_default_oql = '') {
+export function parseOQLQuery(
+    oql_query: string,
+    opt_default_oql?: OQLAlterationFilterString
+): SingleGeneQuery[] {
     /* In: - oql_query, a string, an OQL query
      - opt_default_oql, a string, default OQL to add to any empty line
      Out: An array, with each element being a parsed single-gene OQL line,
@@ -119,8 +212,10 @@ export function parseOQLQuery(oql_query, opt_default_oql = '') {
     /* In: SingleGeneLine | MergedTrackLine
      * Out: SingleGeneLine[]
      */
-    function extractGeneLines(line) {
-        return isMergedTrackLine(line) ? line.list : [line];
+    function extractGeneLines<T>(
+        line: SingleGeneQuery | MergedGeneQuery
+    ): SingleGeneQuery[] {
+        return isMergedGeneQuery(line) ? line.list : [line];
     }
 
     const parsed_with_datatypes = parseMergedTrackOQLQuery(
@@ -130,7 +225,7 @@ export function parseOQLQuery(oql_query, opt_default_oql = '') {
     return _.flatMap(parsed_with_datatypes, extractGeneLines);
 }
 
-export function doesQueryContainOQL(oql_query) {
+export function doesQueryContainOQL(oql_query: string): boolean {
     /* In: oql_query, a string, an OQL query (which could just be genes with no specified alterations)
         Out: boolean, true iff the query has explicit OQL (e.g. `BRCA1: MUT` as opposed to just `BRCA1`)
      */
@@ -146,7 +241,7 @@ export function doesQueryContainOQL(oql_query) {
     return ret;
 }
 
-export function doesQueryContainMutationOQL(oql_query) {
+export function doesQueryContainMutationOQL(oql_query: string): boolean {
     /* In: oql_query, a string, an OQL query (which could just be genes with no specified alterations)
      Out: boolean, true iff the query has explicit mutation OQL (e.g. `BRCA1: MISSENSE` or `BRCA: _GERMLINE` as opposed to just `BRCA1` or `BRCA1: MUT`)
      */
@@ -180,12 +275,12 @@ export function doesQueryContainMutationOQL(oql_query) {
     return ret;
 }
 
-export function parsedOQLAlterationToSourceOQL(alteration) {
+export function parsedOQLAlterationToSourceOQL(alteration: Alteration): string {
+    let ret: string;
     switch (alteration.alteration_type) {
         case 'cna':
-            var ret;
             if (alteration.constr_rel === '=') {
-                ret = alteration.constr_val;
+                ret = alteration.constr_val!;
             } else {
                 ret = [
                     'CNA',
@@ -199,14 +294,13 @@ export function parsedOQLAlterationToSourceOQL(alteration) {
             }
             return ret;
         case 'mut':
-            var ret;
             var underscoreBeforeModifiers = true;
             if (alteration.constr_rel) {
                 if (alteration.constr_type === 'position') {
                     ret = [
                         'MUT',
                         alteration.constr_rel,
-                        alteration.info.amino_acid,
+                        (alteration.info as any).amino_acid as AminoAcid,
                         alteration.constr_val,
                     ].join('');
                 } else {
@@ -244,67 +338,23 @@ export function parsedOQLAlterationToSourceOQL(alteration) {
             return alteration.modifiers.join('_');
     }
 }
-export function unparseOQLQueryLine(parsed_oql_query_line) {
-    var ret = '';
-    var gene = parsed_oql_query_line.gene;
-    var alterations = parsed_oql_query_line.alterations;
-    ret += gene;
-    if (alterations.length > 0) {
+export function unparseOQLQueryLine(parsed_oql_line: SingleGeneQuery): string {
+    let ret = parsed_oql_line.gene;
+    const alterations = parsed_oql_line.alterations;
+    if (alterations && alterations.length > 0) {
         ret += ': ' + alterations.map(parsedOQLAlterationToSourceOQL).join(' ');
         ret += ';';
     }
     return ret;
 }
 
-/* For the methods isDatumWantedByOQL, ..., the AccessorsForOqlFilter argument is as follows:
- * null always means the accessor does not apply to the given element. for example, `cna` applied to a mutation should give null
- * AccessorsForOqlFilter = {
- *	'gene': function(d) {
- *	    // returns lower case gene symbol
- *	},
- *	'cna': function(d) {
- *	    // returns 'amp', 'homdel', 'hetloss', or 'gain',
- *	    //  or null
- *	},
- *	'mut_type': function(d) {
- *	    // returns 'missense', 'nonsense', 'nonstart', 'nonstop', 'frameshift', 'inframe', 'splice', 'trunc', or 'promoter'
- *	    //  or null
- *	},
- *	'mut_position': function(d) {
- *	    // returns a 2-element array of integers, the start position to the end position
- *	    // or null
- *	},
- *  'mut_status': function(d) {
- *      // returns "germline" or "somatic"
- *      // or null
- *  },
- *	'mut_amino_acid_change': function(d) {
- *	    // returns a string, the amino acid change,
- *	    // or null
- *	},
- *	'exp': function(d) {
- *	    // returns a double, mrna expression,
- *	    // or null
- *	},
- *	'prot': function(d) {
- *	    // returns a double, protein expression,
- *	    // or null
- *	},
- *	'fusion': function(d) {
- *	    // returns true, false, or null
- *	},
- *  'is_driver': function(d) {
- *      // returns true, false, or null
- *  },
- * }
- */
-var isDatumWantedByOQL = function(parsed_oql_query, datum, accessors) {
-    /*  In: - parsed_oql_query, the result of parseOQLQuery above
-     *	- datum, a datum
-     *	- AccessorsForOqlFilter, an object as described above with methods that apply to datum
-     *  Out: Boolean, whether datum is wanted by this OQL query
-     */
-    var gene = accessors.gene(datum).toUpperCase();
+function isDatumWantedByOQL<T>(
+    parsed_oql_query: SingleGeneQuery[],
+    datum: T,
+    accessors: IAccessorsForOqlFilter<T>
+): boolean {
+    //  Out: Boolean, whether datum is wanted by this OQL query
+    const gene = accessors.gene(datum).toUpperCase();
     // if the datum doesn't have a gene associated with it, it's unwanted.
     if (!gene) {
         return false;
@@ -317,20 +367,15 @@ var isDatumWantedByOQL = function(parsed_oql_query, datum, accessors) {
         .reduce(function(acc, next) {
             return acc || next;
         }, false);
-};
+}
 
-var isDatumWantedByOQLLine = function(
-    query_line,
-    datum,
-    datum_gene,
-    accessors
+function isDatumWantedByOQLLine<T>(
+    query_line: SingleGeneQuery,
+    datum: T,
+    datum_gene: string, // lower case gene in datum - passed instead of reaccessed as an optimization
+    accessors: IAccessorsForOqlFilter<T>
 ) {
-    /*  Helper method for isDatumWantedByOQL
-     *  In: - query_line, one element of a parseOQLQuery output array
-     *	- datum, see isDatumWantedByOQL
-     *	- datum_gene, the lower case gene in datum - passed instead of reaccessed as an optimization
-     *	- AccessorsForOqlFilter, see isDatumWantedByOQL
-     */
+    //  Helper method for isDatumWantedByOQL
     var line_gene = query_line.gene.toUpperCase();
     // If the line doesn't have the same gene, the datum is not wanted by this line
     if (line_gene !== datum_gene) {
@@ -338,7 +383,8 @@ var isDatumWantedByOQLLine = function(
     }
     // Otherwise, a datum is wanted iff it's wanted by at least one command.
     if (!query_line.alterations) {
-        return 1;
+        // if no alterations specified, then the datum is wanted
+        return true;
     }
     return (
         query_line.alterations
@@ -367,13 +413,14 @@ var isDatumWantedByOQLLine = function(
                 }
             }, -1) === 1 // start off with unwanted
     );
-};
+}
 
-var isDatumWantedByOQLAlterationCommand = function(alt_cmd, datum, accessors) {
-    /*  Helper method for isDatumWantedByOQLLine
-     *  In: - alt_cmd, a parsed oql alteration
-     *	- datum, see isDatumWantedByOQL
-     *	- AccessorsForOqlFilter, see isDatumWantedByOQL
+function isDatumWantedByOQLAlterationCommand<T>(
+    alt_cmd: Alteration,
+    datum: T,
+    accessors: IAccessorsForOqlFilter<T>
+): number {
+    /*
      *  Out: 1 if the datum is addressed by this command and wanted,
      *	0 if the datum is not addressed by this command,
      *	-1 if the datum is addressed by this command and rejected
@@ -400,30 +447,33 @@ var isDatumWantedByOQLAlterationCommand = function(alt_cmd, datum, accessors) {
             );
     }
     return 0;
-};
+}
 
-var isDatumWantedByAnyTypeWithModifiersCommand = function(
-    alt_cmd,
-    datum,
-    accessors
+function isDatumWantedByAnyTypeWithModifiersCommand<T>(
+    alt_cmd: AnyTypeWithModifiersCommand,
+    datum: T,
+    accessors: IAccessorsForOqlFilter<T>
 ) {
     // if any modifier is false, its not wanted (-1)
     // else if any modifier is true, its wanted (1)
     // else its not addressed (0)
-    var isWantedBySome = false;
-    var isUnwantedBySome = false;
+    let isWantedBySome = false;
+    let isUnwantedBySome = false;
 
     for (var i = 0; i < alt_cmd.modifiers.length; i++) {
         var modifier = alt_cmd.modifiers[i];
         var datumWanted = null;
         switch (modifier) {
             case 'DRIVER':
-            default:
-                datumWanted = isDatumWantedByOQLAlterationModifier(
-                    modifier,
-                    datum,
-                    accessors
-                );
+                const cnaValue = accessors.cna(datum);
+                datumWanted =
+                    cnaValue !== 'gain' && // dont include gains or hetloss here
+                    cnaValue !== 'hetloss' &&
+                    isDatumWantedByOQLAlterationModifier(
+                        modifier,
+                        datum,
+                        accessors
+                    );
         }
         if (datumWanted === true) {
             isWantedBySome = true;
@@ -440,10 +490,14 @@ var isDatumWantedByAnyTypeWithModifiersCommand = function(
     } else {
         return 0;
     }
-};
+}
 
 // this command can ONLY return null or TRUE
-var isDatumWantedByFUSIONCommand = function(alt_cmd, datum, accessors) {
+function isDatumWantedByFUSIONCommand<T>(
+    alt_cmd: FUSIONCommand,
+    datum: T,
+    accessors: IAccessorsForOqlFilter<T>
+) {
     /* Helper method for isDatumWantedByOQLAlterationCommand
      * In/Out: See isDatumWantedByOQLAlterationCommand
      */
@@ -466,9 +520,13 @@ var isDatumWantedByFUSIONCommand = function(alt_cmd, datum, accessors) {
         }
         return 2 * +match - 1; // map 0,1 to -1,1
     }
-};
+}
 
-var isDatumWantedByOQLCNACommand = function(alt_cmd, datum, accessors) {
+function isDatumWantedByOQLCNACommand<T>(
+    alt_cmd: CNACommand,
+    datum: T,
+    accessors: IAccessorsForOqlFilter<T>
+) {
     /*  Helper method for isDatumWantedByOQLAlterationCommand
      *  In/Out: See isDatumWantedByOQLAlterationCommand
      */
@@ -479,27 +537,38 @@ var isDatumWantedByOQLCNACommand = function(alt_cmd, datum, accessors) {
     } else {
         // Otherwise, return -1 if it doesnt match, 1 if it matches
         var match = true;
-        if (alt_cmd.constr_rel === '=') {
-            match = d_cna === alt_cmd.constr_val.toLowerCase();
-        } else if (alt_cmd.constr_rel) {
-            var integer_copy_number = {
-                amp: 2,
-                gain: 1,
-                hetloss: -1,
-                homdel: -2,
-            };
-            var d_int_cna = integer_copy_number[d_cna];
-            var alt_int_cna =
-                integer_copy_number[alt_cmd.constr_val.toLowerCase()];
-            if (alt_cmd.constr_rel === '>') {
-                match = d_int_cna > alt_int_cna;
-            } else if (alt_cmd.constr_rel === '>=') {
-                match = d_int_cna >= alt_int_cna;
-            } else if (alt_cmd.constr_rel === '<') {
-                match = d_int_cna < alt_int_cna;
-            } else if (alt_cmd.constr_rel === '<=') {
-                match = d_int_cna <= alt_int_cna;
-            }
+        switch (alt_cmd.constr_rel) {
+            case '=':
+                match = d_cna === alt_cmd.constr_val!.toLowerCase();
+                break;
+            case undefined:
+                break;
+            default:
+                var integer_copy_number = {
+                    amp: 2,
+                    gain: 1,
+                    hetloss: -1,
+                    homdel: -2,
+                };
+                var d_int_cna = integer_copy_number[d_cna];
+                var alt_int_cna =
+                    integer_copy_number[
+                        alt_cmd.constr_val!.toLowerCase() as
+                            | 'amp'
+                            | 'gain'
+                            | 'hetloss'
+                            | 'homdel'
+                    ];
+                if (alt_cmd.constr_rel === '>') {
+                    match = d_int_cna > alt_int_cna;
+                } else if (alt_cmd.constr_rel === '>=') {
+                    match = d_int_cna >= alt_int_cna;
+                } else if (alt_cmd.constr_rel === '<') {
+                    match = d_int_cna < alt_int_cna;
+                } else if (alt_cmd.constr_rel === '<=') {
+                    match = d_int_cna <= alt_int_cna;
+                }
+                break;
         }
 
         // now filter by modifiers with AND logic
@@ -515,8 +584,13 @@ var isDatumWantedByOQLCNACommand = function(alt_cmd, datum, accessors) {
         }
         return 2 * +match - 1; // map 0,1 to -1,1
     }
-};
-var isDatumWantedByOQLMUTCommand = function(alt_cmd, datum, accessors) {
+}
+
+function isDatumWantedByOQLMUTCommand<T>(
+    alt_cmd: MUTCommand<any>,
+    datum: T,
+    accessors: IAccessorsForOqlFilter<T>
+) {
     /*  Helper method for isDatumWantedByOQLAlterationCommand
      *  In/Out: See isDatumWantedByOQLAlterationCommand
      */
@@ -525,7 +599,7 @@ var isDatumWantedByOQLMUTCommand = function(alt_cmd, datum, accessors) {
         // If no mut data on the datum, it's not addressed
         return 0;
     } else {
-        d_mut_type = d_mut_type.toLowerCase();
+        d_mut_type = d_mut_type.toLowerCase() as any;
 
         var matches = false;
         // If no constraint relation ('=' or '!='), then every mutation matches
@@ -564,13 +638,12 @@ var isDatumWantedByOQLMUTCommand = function(alt_cmd, datum, accessors) {
             }
         } else if (alt_cmd.constr_type === 'name') {
             // Matching on amino acid change code
-            var d_mut_name = accessors
-                .mut_amino_acid_change(datum)
-                .toLowerCase();
+            var d_mut_name = accessors.mut_amino_acid_change(datum);
             if (!d_mut_name) {
                 // If no amino acid change data, reject
                 return -1;
             }
+            d_mut_name = d_mut_name.toLowerCase();
             var target_name = alt_cmd.constr_val.toLowerCase();
             matches = target_name === d_mut_name;
             if (alt_cmd.constr_rel === '!=') {
@@ -592,9 +665,13 @@ var isDatumWantedByOQLMUTCommand = function(alt_cmd, datum, accessors) {
 
         return 2 * +matches - 1; // return 1 if true, -1 if false
     }
-};
+}
 
-var isDatumWantedByOQLMutationModifier = function(modifier, datum, accessors) {
+function isDatumWantedByOQLMutationModifier<T>(
+    modifier: MutationModifier,
+    datum: T,
+    accessors: IAccessorsForOqlFilter<T>
+) {
     switch (modifier) {
         case 'GERMLINE':
         case 'SOMATIC':
@@ -606,12 +683,12 @@ var isDatumWantedByOQLMutationModifier = function(modifier, datum, accessors) {
                 accessors
             );
     }
-};
+}
 
-var isDatumWantedByOQLAlterationModifier = function(
-    modifier,
-    datum,
-    accessors
+function isDatumWantedByOQLAlterationModifier<T>(
+    modifier: any,
+    datum: T,
+    accessors: IAccessorsForOqlFilter<T>
 ) {
     switch (modifier) {
         case 'DRIVER':
@@ -619,9 +696,13 @@ var isDatumWantedByOQLAlterationModifier = function(
         default:
             return false;
     }
-};
+}
 
-var isDatumWantedByOQLEXPOrPROTCommand = function(alt_cmd, datum, accessors) {
+function isDatumWantedByOQLEXPOrPROTCommand<T>(
+    alt_cmd: EXPCommand | PROTCommand,
+    datum: T,
+    accessors: IAccessorsForOqlFilter<T>
+) {
     /*  Helper method for isDatumWantedByOQLAlterationCommand
      *  In/Out: See isDatumWantedByOQLAlterationCommand
      */
@@ -654,24 +735,22 @@ var isDatumWantedByOQLEXPOrPROTCommand = function(alt_cmd, datum, accessors) {
         }
 
         if (match > 0) {
-            datum.alterationSubType =
+            (datum as any).alterationSubType =
                 direction && direction > 0 ? 'high' : 'low';
         }
 
         return match;
     }
-};
+}
 
-function filterData(
-    oql_query,
-    data,
-    _accessors,
+function filterData<T extends Datum>(
+    oql_query: string,
+    data: Datum[],
+    _accessors: AccessorsForOqlFilter,
     opt_default_oql = '',
-    opt_by_oql_line
+    opt_by_oql_line?: any
 ) {
-    /* In:	- oql_query, a string
-     *	- data, a list of data
-     *	- AccessorsForOqlFilter, AccessorsForOqlFilter as defined above,
+    /*
      *	- opt_default_oql, an optional argument, string, default oql to insert to empty oql lines
      *	- opt_by_oql_line, optional argument, boolean or string, see Out for description
      *  Out: the given data, filtered by the given oql query.
@@ -703,16 +782,16 @@ function filterData(
     // }
 
     for (var i = 0; i < data.length; i++) {
-        data[
+        (data[
             i
-        ].molecularProfileAlterationType = accessors.molecularAlterationType(
+        ] as any).molecularProfileAlterationType = accessors.molecularAlterationType(
             data[i].molecularProfileId
         );
-        annotateAlterationTypes(data[i], accessors);
+        annotateAlterationTypes(data[i] as any, accessors);
     }
 
-    function applyToGeneLines(geneLineFunction) {
-        return line => {
+    function applyToGeneLines(geneLineFunction: any) {
+        return function(line: any): any {
             if (isMergedTrackLine(line)) {
                 return {
                     ...line,
@@ -729,7 +808,7 @@ function filterData(
             ? parseMergedTrackOQLQuery
             : parseOQLQuery;
     const parsed_query = queryParsingFunction(oql_query, opt_default_oql).map(
-        applyToGeneLines(q_line => ({
+        applyToGeneLines((q_line: any) => ({
             ...q_line,
             gene: q_line.gene.toUpperCase(),
         }))
@@ -737,7 +816,7 @@ function filterData(
 
     if (opt_by_oql_line) {
         return parsed_query.map(
-            applyToGeneLines(query_line => ({
+            applyToGeneLines((query_line: SingleGeneQuery) => ({
                 gene: query_line.gene,
                 parsed_oql_line: query_line,
                 oql_line: unparseOQLQueryLine(query_line),
@@ -758,12 +837,14 @@ function filterData(
     }
 }
 
-export function filterCBioPortalWebServiceData(
-    oql_query,
-    data,
-    accessors,
-    opt_default_oql
-) {
+export function filterCBioPortalWebServiceData<
+    T extends Mutation | NumericGeneMolecularData
+>(
+    oql_query: string,
+    data: T[],
+    accessors: any,
+    default_oql?: string
+): (T & ExtendedAlteration)[] {
     /* Wrapper method for filterData that has the cBioPortal default accessor functions
      * Note that for use, the input data must have the field 'genetic_alteration_type,' which
      * takes one of the following values:
@@ -773,14 +854,29 @@ export function filterCBioPortalWebServiceData(
      *	- PROTEIN_LEVEL
      */
 
-    return filterData(oql_query, data, accessors, opt_default_oql);
+    return filterData(oql_query, data, accessors, default_oql);
 }
 
 export function filterCBioPortalWebServiceDataByOQLLine(
-    oql_query,
-    data,
-    accessors,
-    opt_default_oql
+    oql_query: string,
+    data: (AnnotatedMutation | NumericGeneMolecularData)[],
+    accessors: any,
+    default_oql?: string
+): OQLLineFilterOutput<ExtendedAlteration & AnnotatedMutation>[];
+export function filterCBioPortalWebServiceDataByOQLLine(
+    oql_query: string,
+    data: (Mutation | NumericGeneMolecularData)[],
+    accessors: any,
+    default_oql?: string
+): OQLLineFilterOutput<ExtendedAlteration>[];
+
+export function filterCBioPortalWebServiceDataByOQLLine(
+    oql_query: string,
+    data:
+        | ((AnnotatedMutation | NumericGeneMolecularData)[])
+        | ((Mutation | NumericGeneMolecularData)[]),
+    accessors: any,
+    default_oql?: string
 ) {
     /* Wrapper method for filterData that has the cBioPortal default accessor functions
      * Note that for use, the input data must have the field 'genetic_alteration_type,' which
@@ -791,15 +887,15 @@ export function filterCBioPortalWebServiceDataByOQLLine(
      *	- PROTEIN_LEVEL
      */
 
-    return filterData(oql_query, data, accessors, opt_default_oql, 'gene');
+    return filterData(oql_query, data, accessors, default_oql, 'gene');
 }
 
 export function filterCBioPortalWebServiceDataByUnflattenedOQLLine(
-    oql_query,
-    data,
-    accessors,
-    opt_default_oql
-) {
+    oql_query: string,
+    data: (AnnotatedMutation | NumericGeneMolecularData)[],
+    accessors: any,
+    default_oql?: string
+): UnflattenedOQLLineFilterOutput<ExtendedAlteration & AnnotatedMutation>[] {
     /* Wrapper method for filterData that has the cBioPortal default accessor functions
      * Note that for use, the input data must have the field 'genetic_alteration_type,' which
      * takes one of the following values:
@@ -809,99 +905,10 @@ export function filterCBioPortalWebServiceDataByUnflattenedOQLLine(
      *	- PROTEIN_LEVEL
      */
 
-    return filterData(
-        oql_query,
-        data,
-        accessors,
-        opt_default_oql,
-        'mergedtrack'
-    );
+    return filterData(oql_query, data, accessors, default_oql, 'mergedtrack');
 }
 
-// export function filterCBioPortalWebServiceData(oql_query, data, opt_default_oql, opt_by_oql_line, opt_mark_oql_regulation_direction) {
-//     /* Wrapper method for filterData that has the cBioPortal default accessor functions
-//      * Note that for use, the input data must have the field 'genetic_alteration_type,' which
-//      * takes one of the following values:
-//      *	- MUTATION_EXTENDED
-//      *	- COPY_NUMBER_ALTERATION
-//      *	- MRNA_EXPRESSION
-//      *	- PROTEIN_LEVEL
-//      */
-//     var cna_profile_data_to_string = {
-//         "-2": "homdel",
-//         "-1": "hetloss",
-//         "0": null,
-//         "1": "gain",
-//         "2": "amp"
-//     };
-//     var AccessorsForOqlFilter = {
-//         'gene': function(d) { return d.hugo_gene_symbol; },
-//         'cna': function(d) {
-//             if (d.genetic_alteration_type === 'COPY_NUMBER_ALTERATION') {
-//                 return cna_profile_data_to_string[d.profile_data];
-//             } else {
-//                 return null;
-//             }
-//         },
-//         'mut_type': function(d) {
-//             if (d.genetic_alteration_type === 'MUTATION_EXTENDED') {
-//                 if (d.simplified_mutation_type === "fusion") {
-//                     return null;
-//                 } else if (d.amino_acid_change.toLowerCase() === "promoter") {
-//                     return "promoter";
-//                 } else {
-//                     return d.simplified_mutation_type;
-//                 }
-//             } else {
-//                 return null;
-//             }
-//         },
-//         'mut_position': function(d) {
-//             if (d.genetic_alteration_type === 'MUTATION_EXTENDED') {
-//                 var start = d.protein_start_position;
-//                 var end = d.protein_end_position;
-//                 if (start !== null && end !== null) {
-//                     return [parseInt(start, 10), parseInt(end, 10)];
-//                 } else {
-//                     return null;
-//                 }
-//             } else {
-//                 return null;
-//             }
-//         },
-//         'mut_amino_acid_change': function(d) {
-//             if (d.genetic_alteration_type === 'MUTATION_EXTENDED') {
-//                 return d.amino_acid_change;
-//             } else {
-//                 return null;
-//             }
-//         },
-//         'exp': function(d) {
-//             if (d.genetic_alteration_type === 'MRNA_EXPRESSION') {
-//                 return parseFloat(d.profile_data);
-//             } else {
-//                 return null;
-//             }
-//         },
-//         'prot': function(d) {
-//             if (d.genetic_alteration_type === 'PROTEIN_LEVEL') {
-//                 return parseFloat(d.profile_data);
-//             } else {
-//                 return null;
-//             }
-//         },
-//         'fusion': function(d) {
-//             if (d.genetic_alteration_type === 'MUTATION_EXTENDED') {
-//                 return (d.simplified_mutation_type === "fusion");
-//             } else {
-//                 return null;
-//             }
-//         }
-//     };
-//     return filterData(oql_query, data, AccessorsForOqlFilter, opt_default_oql, opt_by_oql_line, opt_mark_oql_regulation_direction);
-// }
-
-export function uniqueGenesInOQLQuery(oql_query) {
+export function uniqueGenesInOQLQuery(oql_query: string): string[] {
     var parse_result = parseOQLQuery(oql_query);
     var genes = parse_result
         .filter(function(q_line) {
@@ -910,19 +917,9 @@ export function uniqueGenesInOQLQuery(oql_query) {
         .map(function(q_line) {
             return q_line.gene.toUpperCase();
         });
-    var unique_genes_set = {};
+    var unique_genes_set: { [gene: string]: boolean } = {};
     for (var i = 0; i < genes.length; i++) {
         unique_genes_set[genes[i]] = true;
     }
     return Object.keys(unique_genes_set);
-}
-
-function isValid(oql_query) {
-    var ret = true;
-    try {
-        oql_parser.parse(oql_query);
-    } catch (e) {
-        ret = false;
-    }
-    return ret;
 }
