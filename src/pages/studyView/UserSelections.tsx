@@ -57,7 +57,9 @@ export interface IUserSelectionsProps {
     clinicalAttributeIdToDataType: { [key: string]: string };
     onBookmarkClick: () => void;
     molecularProfileNameSet: { [key: string]: string };
+    caseListNameSet: { [key: string]: string };
     removeGenomicProfileFilter: (value: string) => void;
+    removeCaseListsFilter: (value: string) => void;
 }
 
 @observer
@@ -413,6 +415,30 @@ export default class UserSelections extends React.Component<
                 </div>
             );
         }
+
+        if (!_.isEmpty(this.props.filter.caseLists)) {
+            components.push(
+                <div className={styles.parentGroupLogic}>
+                    <GroupLogic
+                        components={this.props.filter.caseLists.map(
+                            caseLists => {
+                                return (
+                                    <GroupLogic
+                                        components={this.groupedCaseLists(
+                                            caseLists
+                                        )}
+                                        operation="or"
+                                        group={caseLists.length > 1}
+                                    />
+                                );
+                            }
+                        )}
+                        operation={'and'}
+                        group={false}
+                    />
+                </div>
+            );
+        }
         return components;
     }
 
@@ -467,6 +493,20 @@ export default class UserSelections extends React.Component<
                     onDelete={() =>
                         this.props.removeGenomicProfileFilter(profile)
                     }
+                />
+            );
+        });
+    }
+
+    private groupedCaseLists(caseLists: string[]): JSX.Element[] {
+        return caseLists.map(caseList => {
+            return (
+                <PillTag
+                    content={this.props.caseListNameSet[caseList] || caseList}
+                    backgroundColor={
+                        STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent
+                    }
+                    onDelete={() => this.props.removeCaseListsFilter(caseList)}
                 />
             );
         });
