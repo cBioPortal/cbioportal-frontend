@@ -14,7 +14,7 @@ import {
     ReferenceGenomeGene,
     ResourceData,
     Sample,
-    SampleMolecularIdentifier
+    SampleMolecularIdentifier,
 } from 'cbioportal-ts-api-client';
 import client from '../../../shared/api/cbioportalClientInstance';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
