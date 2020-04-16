@@ -6139,10 +6139,10 @@ cli@0.6.x:
     exit "0.1.2"
     glob "~ 3.2.1"
 
-clinical-timeline@0.0.19:
-  version "0.0.19"
-  resolved "https://registry.yarnpkg.com/clinical-timeline/-/clinical-timeline-0.0.19.tgz#7f3222fd72d05c43a3967785a555a6fb666fd58c"
-  integrity sha512-Omuh7c9Lfy/7sy6BXd7vQXctDzrcLKQ902hy/AUYkByO03wN8HPIBVvM8fy62gA9RT/5Tu9QbLkAG1BREaHcTw==
+clinical-timeline@0.0.30:
+  version "0.0.30"
+  resolved "https://registry.yarnpkg.com/clinical-timeline/-/clinical-timeline-0.0.30.tgz#989e7cbb92f21d47f6148e4ea84cf667c9399dd3"
+  integrity sha512-NYiN/pqae8X+XWi/sVDs6MtEGiMHxKxSIDNpbYLSnXZ8jGlb5cOC21WqBj7rl1ZKOD2y1kd36REBL8WNA2V28g==
   dependencies:
     d3 "^3.5.17"
 
