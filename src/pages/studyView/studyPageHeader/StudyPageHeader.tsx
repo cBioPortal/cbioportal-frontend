@@ -93,6 +93,12 @@ export default class StudyPageHeader extends React.Component<
                         removeGenomicProfileFilter={
                             this.props.store.removeGenomicProfileFilter
                         }
+                        caseListNameSet={
+                            this.props.store.caseListNameSet.result || {}
+                        }
+                        removeCaseListsFilter={
+                            this.props.store.removeCaseListsFilter
+                        }
                     />
                 )}
             </div>
