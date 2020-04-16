@@ -5,9 +5,9 @@ import LazyMobXTable, { Column } from '../lazyMobXTable/LazyMobXTable';
 import SampleManager from '../../../pages/patientView/SampleManager';
 import { computed } from 'mobx';
 import ResourceLink from './ResourceLink';
-import { stringListToIndexSet } from '../../../../packages/cbioportal-frontend-commons/dist';
 import _ from 'lodash';
 import { ResourcesTableRowData } from './ResourcesTableUtils';
+import { stringListToIndexSet } from 'cbioportal-frontend-commons';
 
 export interface ISampleResourcesTableProps {
     data: ResourcesTableRowData[];
