@@ -1964,22 +1964,6 @@ describe('ResultsViewPageStoreUtils', () => {
             ]);
         });
 
-        it('when there only a subset of studies in studySampleMap compared to queriedIds', async () => {
-            let test = await fetchQueriedStudies(
-                {
-                    physical_study_1: {
-                        studyId: 'physical_study_1',
-                    } as CancerStudy,
-                },
-                ['physical_study_1', 'physical_study_2'],
-                virtualStudies
-            );
-            assert.deepEqual(_.map(test, obj => obj.studyId), [
-                'physical_study_1',
-                'physical_study_2',
-            ]);
-        });
-
         //this case is not possible because id in these scenarios are first identified in QueryBuilder.java and
         //returned to query selector page
         it('when virtual study query having private study or unknow virtual study id', async () => {

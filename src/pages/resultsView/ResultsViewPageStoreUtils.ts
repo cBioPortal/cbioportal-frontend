@@ -397,34 +397,21 @@ export function annotateMolecularDatum(
 }
 
 export async function fetchQueriedStudies(
-    filteredPhysicalStudies: { [id: string]: CancerStudy },
+    allPhysicalStudies: { [id: string]: CancerStudy },
     queriedIds: string[],
     queriedVirtualStudies: VirtualStudy[]
 ): Promise<CancerStudy[]> {
     const queriedStudies: CancerStudy[] = [];
     let unknownIds: { [id: string]: boolean } = {};
     for (const id of queriedIds) {
-        if (filteredPhysicalStudies[id]) {
-            queriedStudies.push(filteredPhysicalStudies[id]);
+        if (allPhysicalStudies[id]) {
+            queriedStudies.push(allPhysicalStudies[id]);
         } else {
             unknownIds[id] = true;
         }
     }
 
     if (!_.isEmpty(unknownIds)) {
-        await client
-            .fetchStudiesUsingPOST({
-                studyIds: Object.keys(unknownIds),
-                projection: 'DETAILED',
-            })
-            .then(studies => {
-                studies.forEach(study => {
-                    queriedStudies.push(study);
-                    delete unknownIds[study.studyId];
-                });
-            })
-            .catch(() => {}); //this is for private instances. it throws error when the study is not found
-
         queriedVirtualStudies
             .filter((vs: VirtualStudy) => unknownIds[vs.id])
             .forEach(virtualStudy => {
