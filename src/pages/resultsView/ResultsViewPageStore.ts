@@ -2714,6 +2714,12 @@ export class ResultsViewPageStore {
         []
     );
 
+    readonly everyStudyIdToStudy = remoteData({
+        await: () => [this.allStudies],
+        invoke: () =>
+            Promise.resolve(_.keyBy(this.allStudies.result!, s => s.studyId)),
+    });
+
     readonly queriedVirtualStudies = remoteData(
         {
             await: () => [this.allStudies],
@@ -3401,11 +3407,11 @@ export class ResultsViewPageStore {
     //this is only required to show study name and description on the results page
     //CancerStudy objects for all the cohortIds
     readonly queriedStudies = remoteData({
-        await: () => [this.studyIdToStudy, this.queriedVirtualStudies],
+        await: () => [this.everyStudyIdToStudy, this.queriedVirtualStudies],
         invoke: async () => {
             if (!_.isEmpty(this.cancerStudyIds)) {
                 return fetchQueriedStudies(
-                    this.studyIdToStudy.result,
+                    this.everyStudyIdToStudy.result!,
                     this.cancerStudyIds,
                     this.queriedVirtualStudies.result
                         ? this.queriedVirtualStudies.result
