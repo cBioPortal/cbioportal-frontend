@@ -20,6 +20,8 @@ var screenDir =
     process.env.SCREENSHOT_DIRECTORY + '/screen' || 'screenshots/screen/';
 var errorDir = process.env.SCREENSHOT_DIRECTORY + '/error' || './errorShots/';
 
+const fileDir = path.resolve('chromeDownloads');
+
 var config = {
     //
     // ==================
@@ -66,12 +68,17 @@ var config = {
     //
     capabilities: [
         {
-            //browserName: 'chrome',
+            browserName: 'chrome',
             chromeOptions: {
                 args: [
                     '--disable-composited-antialiasing',
                     '--allow-insecure-localhost',
                 ],
+                prefs: {
+                    directory_upgrade: true,
+                    prompt_for_download: false,
+                    'download.default_directory': fileDir,
+                },
             },
 
             os: 'OS X',
