@@ -625,6 +625,7 @@ export default class DownloadTab extends React.Component<
                                     'table-striped',
                                     styles.downloadCopyTable
                                 )}
+                                data-test="downloadFileTable"
                             >
                                 <tbody>
                                     {hasValidData(this.cnaData.result!) &&
@@ -765,6 +766,7 @@ export default class DownloadTab extends React.Component<
                         <i
                             className="fa fa-cloud-download"
                             style={{ marginRight: 5 }}
+                            data-test="cloudDownload"
                         />
                         Tab Delimited Format
                     </a>
