@@ -86,14 +86,9 @@ export default class PatientViewMutationsTab extends React.Component<
         );
     }
     set vafLineChartLogScale(o: boolean) {
-        this.props.urlWrapper.updateURL({
-            genomicEvolutionSettings: Object.assign(
-                {},
-                this.props.urlWrapper.query.genomicEvolutionSettings,
-                {
-                    logScaleChart: o.toString(),
-                }
-            ),
+        this.props.urlWrapper.updateURL(currentParams => {
+            currentParams.genomicEvolutionSettings.logScaleChart = o.toString();
+            return currentParams;
         });
     }
 
@@ -103,14 +98,9 @@ export default class PatientViewMutationsTab extends React.Component<
         return !urlValue || urlValue === 'true'; // default true
     }
     set vafLineChartZeroToOneYAxis(o: boolean) {
-        this.props.urlWrapper.updateURL({
-            genomicEvolutionSettings: Object.assign(
-                {},
-                this.props.urlWrapper.query.genomicEvolutionSettings,
-                {
-                    yAxisDataRangeInChart: o.toString(),
-                }
-            ),
+        this.props.urlWrapper.updateURL(currentParams => {
+            currentParams.genomicEvolutionSettings.yAxisDataRangeInChart = o.toString();
+            return currentParams;
         });
     }
     // TODO: replace this with URL stuff

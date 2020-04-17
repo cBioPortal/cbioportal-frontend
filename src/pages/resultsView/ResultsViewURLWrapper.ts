@@ -9,7 +9,7 @@ import {
 } from 'pages/resultsView/ResultsViewPageHelpers';
 import AppConfig from 'appConfig';
 
-type PlotsSelectionParam = {
+export type PlotsSelectionParam = {
     selectedGeneOption: string;
     selectedGenesetOption: string;
     selectedGenericAssayOption: string;
