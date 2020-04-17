@@ -93,6 +93,7 @@ import AlterationFilterWarning from '../../../shared/components/banners/Alterati
 import LastPlotsTabSelectionForDatatype from './LastPlotsTabSelectionForDatatype';
 import { generateQuickPlots } from './QuickPlots';
 import ResultsViewURLWrapper, {
+    PlotsSelectionParam,
     ResultsViewURLQuery,
 } from '../ResultsViewURLWrapper';
 import { Mutable } from '../../../shared/lib/TypeScriptUtils';
@@ -773,21 +774,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 }
             },
             set _selectedGeneOption(o: any) {
-                const newParams: Mutable<Partial<ResultsViewURLQuery>> = {};
-                if (vertical) {
-                    newParams.plots_vert_selection = Object.assign(
-                        {},
-                        self.props.urlWrapper.query.plots_vert_selection,
-                        { selectedGeneOption: o && o.value }
-                    );
-                } else {
-                    newParams.plots_horz_selection = Object.assign(
-                        {},
-                        self.props.urlWrapper.query.plots_horz_selection,
-                        { selectedGeneOption: o && o.value }
-                    );
-                }
-                self.props.urlWrapper.updateURL(newParams);
+                self.props.urlWrapper.updateURL(currentParams => {
+                    if (vertical) {
+                        currentParams.plots_vert_selection.selectedGeneOption =
+                            o && o.value;
+                    } else {
+                        currentParams.plots_horz_selection.selectedGeneOption =
+                            o && o.value;
+                    }
+                    return currentParams;
+                });
             },
 
             get _selectedGenesetOption() {
@@ -810,21 +806,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 }
             },
             set _selectedGenesetOption(o: any) {
-                const newParams: Mutable<Partial<ResultsViewURLQuery>> = {};
-                if (vertical) {
-                    newParams.plots_vert_selection = Object.assign(
-                        {},
-                        self.props.urlWrapper.query.plots_vert_selection,
-                        { selectedGenesetOption: o && o.value }
-                    );
-                } else {
-                    newParams.plots_horz_selection = Object.assign(
-                        {},
-                        self.props.urlWrapper.query.plots_horz_selection,
-                        { selectedGenesetOption: o && o.value }
-                    );
-                }
-                self.props.urlWrapper.updateURL(newParams);
+                self.props.urlWrapper.updateURL(currentParams => {
+                    if (vertical) {
+                        currentParams.plots_vert_selection.selectedGenesetOption =
+                            o && o.value;
+                    } else {
+                        currentParams.plots_horz_selection.selectedGenesetOption =
+                            o && o.value;
+                    }
+                    return currentParams;
+                });
             },
 
             get _selectedGenericAssayOption() {
@@ -847,25 +838,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 }
             },
             set _selectedGenericAssayOption(o: any) {
-                console.log(
-                    `setting ${vertical ? 'vertical' : 'horizontal'} to ${o &&
-                        o.value}`
-                );
-                const newParams: Mutable<Partial<ResultsViewURLQuery>> = {};
-                if (vertical) {
-                    newParams.plots_vert_selection = Object.assign(
-                        {},
-                        self.props.urlWrapper.query.plots_vert_selection,
-                        { selectedGenericAssayOption: o && o.value }
-                    );
-                } else {
-                    newParams.plots_horz_selection = Object.assign(
-                        {},
-                        self.props.urlWrapper.query.plots_horz_selection,
-                        { selectedGenericAssayOption: o && o.value }
-                    );
-                }
-                self.props.urlWrapper.updateURL(newParams);
+                self.props.urlWrapper.updateURL(currentParams => {
+                    if (vertical) {
+                        currentParams.plots_vert_selection.selectedGenericAssayOption =
+                            o && o.value;
+                    } else {
+                        currentParams.plots_horz_selection.selectedGenericAssayOption =
+                            o && o.value;
+                    }
+                    return currentParams;
+                });
             },
 
             get _selectedDataSourceOption() {
@@ -897,21 +879,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 }
             },
             set _selectedDataSourceOption(o: any) {
-                const newParams: Mutable<Partial<ResultsViewURLQuery>> = {};
-                if (vertical) {
-                    newParams.plots_vert_selection = Object.assign(
-                        {},
-                        self.props.urlWrapper.query.plots_vert_selection,
-                        { selectedDataSourceOption: o && o.value }
-                    );
-                } else {
-                    newParams.plots_horz_selection = Object.assign(
-                        {},
-                        self.props.urlWrapper.query.plots_horz_selection,
-                        { selectedDataSourceOption: o && o.value }
-                    );
-                }
-                self.props.urlWrapper.updateURL(newParams);
+                self.props.urlWrapper.updateURL(currentParams => {
+                    if (vertical) {
+                        currentParams.plots_vert_selection.selectedDataSourceOption =
+                            o && o.value;
+                    } else {
+                        currentParams.plots_horz_selection.selectedDataSourceOption =
+                            o && o.value;
+                    }
+                    return currentParams;
+                });
             },
 
             get _dataType() {
@@ -923,21 +900,18 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 return urlSelection.dataType;
             },
             set _dataType(d: string | undefined) {
-                const newParams: Mutable<Partial<ResultsViewURLQuery>> = {};
-                if (vertical) {
-                    newParams.plots_vert_selection = Object.assign(
-                        {},
-                        self.props.urlWrapper.query.plots_vert_selection,
-                        { dataType: d }
-                    );
-                } else {
-                    newParams.plots_horz_selection = Object.assign(
-                        {},
-                        self.props.urlWrapper.query.plots_horz_selection,
-                        { dataType: d }
-                    );
-                }
-                self.props.urlWrapper.updateURL(newParams);
+                self.props.urlWrapper.updateURL(currentParams => {
+                    if (vertical) {
+                        (currentParams.plots_vert_selection as Partial<
+                            PlotsSelectionParam
+                        >).dataType = d;
+                    } else {
+                        (currentParams.plots_horz_selection as Partial<
+                            PlotsSelectionParam
+                        >).dataType = d;
+                    }
+                    return currentParams;
+                });
             },
 
             get _mutationCountBy() {
@@ -949,21 +923,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 return urlSelection.mutationCountBy as MutationCountBy;
             },
             set _mutationCountBy(c: MutationCountBy) {
-                const newParams: Mutable<Partial<ResultsViewURLQuery>> = {};
-                if (vertical) {
-                    newParams.plots_vert_selection = Object.assign(
-                        {},
-                        self.props.urlWrapper.query.plots_vert_selection,
-                        { mutationCountBy: c }
-                    );
-                } else {
-                    newParams.plots_horz_selection = Object.assign(
-                        {},
-                        self.props.urlWrapper.query.plots_horz_selection,
-                        { mutationCountBy: c }
-                    );
-                }
-                self.props.urlWrapper.updateURL(newParams);
+                self.props.urlWrapper.updateURL(currentParams => {
+                    if (vertical) {
+                        currentParams.plots_vert_selection.mutationCountBy = c;
+                    } else {
+                        currentParams.plots_horz_selection.mutationCountBy = c;
+                    }
+                    return currentParams;
+                });
             },
 
             get _logScale() {
@@ -976,21 +943,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 return ret;
             },
             set _logScale(l: boolean) {
-                const newParams: Mutable<Partial<ResultsViewURLQuery>> = {};
-                if (vertical) {
-                    newParams.plots_vert_selection = Object.assign(
-                        {},
-                        self.props.urlWrapper.query.plots_vert_selection,
-                        { logScale: l.toString() }
-                    );
-                } else {
-                    newParams.plots_horz_selection = Object.assign(
-                        {},
-                        self.props.urlWrapper.query.plots_horz_selection,
-                        { logScale: l.toString() }
-                    );
-                }
-                self.props.urlWrapper.updateURL(newParams);
+                self.props.urlWrapper.updateURL(currentParams => {
+                    if (vertical) {
+                        currentParams.plots_vert_selection.logScale = l.toString();
+                    } else {
+                        currentParams.plots_horz_selection.logScale = l.toString();
+                    }
+                    return currentParams;
+                });
             },
             _isGenericAssayType: undefined,
         });

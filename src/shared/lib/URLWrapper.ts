@@ -8,6 +8,7 @@ import {
     observable,
     reaction,
     runInAction,
+    toJS,
 } from 'mobx';
 import ExtendedRouterStore, {
     getRemoteSession,
@@ -221,16 +222,25 @@ export default class URLWrapper<
 
     @action
     public updateURL(
-        updatedParams: Partial<QueryParamsType>,
+        _updatedParams:
+            | Partial<QueryParamsType>
+            | ((currentQuery: QueryParamsType) => Partial<QueryParamsType>),
         path: string | undefined = undefined,
         clear = false,
         replace = false
     ) {
+        const updatedParams: Partial<QueryParamsType> =
+            typeof _updatedParams === 'function'
+                ? _updatedParams(toJS(this.query))
+                : _updatedParams;
+
         // get the names of the props that are designated as session props
         const sessionProps = this.getSessionProps();
 
         // overwrite params onto the existing params
-        const mergedParams = _.assign({}, this.query, updatedParams);
+        const mergedParams = clear
+            ? updatedParams
+            : _.assign({}, this.query, updatedParams);
 
         //put params in buckets according to whether they are session or non session
         const paramsMap = _.reduce(
@@ -273,10 +283,12 @@ export default class URLWrapper<
 
         log('url length', url.length);
 
-        // determine which of the MODIFIED params are session props
+        // determine which of the MODIFIED params are session props. This is important, so that we don't unnecessarily create new sessions
         const sessionParametersChanged = _.some(
             _.keys(updatedParams),
-            key => key in sessionProps
+            key =>
+                key in sessionProps &&
+                !_.isEqual(updatedParams[key], this.query[key])
         );
 
         // we need session if url is longer than this
@@ -314,7 +326,7 @@ export default class URLWrapper<
                     ),
                     path,
                     true,
-                    false
+                    replace
                 );
 
                 log('updating URL (non session)', updatedParams);
