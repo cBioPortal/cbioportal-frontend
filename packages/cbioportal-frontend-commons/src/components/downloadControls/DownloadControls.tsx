@@ -26,7 +26,9 @@ export type DownloadControlsButton =
     | 'Data'
     | 'Summary Data'
     | 'Full Data';
+
 export type DataType = 'summary' | 'full';
+
 interface IDownloadControlsProps {
     getSvg?: () => SVGElement | null | PromiseLike<SVGElement | null>;
     getData?: (
@@ -40,6 +42,7 @@ interface IDownloadControlsProps {
     type?: 'button' | 'buttonGroup' | 'dropdown';
     style?: CSSProperties;
     className?: any;
+    dataExtension?: string;
 }
 
 function makeButton(spec: ButtonSpec) {
@@ -150,11 +153,27 @@ export default class DownloadControls extends React.Component<
                 if (isPromiseLike<string | null>(result)) {
                     result.then(data => {
                         if (data) {
-                            fileDownload(data, `${this.props.filename}.txt`);
+                            fileDownload(
+                                data,
+                                `${this.props.filename}.` +
+                                    `${
+                                        this.props.dataExtension
+                                            ? this.props.dataExtension
+                                            : 'txt'
+                                    }`
+                            );
                         }
                     });
                 } else {
-                    fileDownload(result, `${this.props.filename}.txt`);
+                    fileDownload(
+                        result,
+                        `${this.props.filename}.` +
+                            `${
+                                this.props.dataExtension
+                                    ? this.props.dataExtension
+                                    : 'txt'
+                            }`
+                    );
                 }
             }
         }
