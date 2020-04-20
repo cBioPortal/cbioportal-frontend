@@ -276,12 +276,11 @@ export default class PatientViewPage extends React.Component<
         );
     }
 
-    private shouldShowResources(
-        patientViewPageStore: PatientViewPageStore
-    ): boolean {
-        if (patientViewPageStore.resourceIdToResourceData.isComplete) {
+    @computed
+    private get shouldShowResources(): boolean {
+        if (this.patientViewPageStore.resourceIdToResourceData.isComplete) {
             return _.some(
-                patientViewPageStore.resourceIdToResourceData.result,
+                this.patientViewPageStore.resourceIdToResourceData.result,
                 data => data.length > 0
             );
         } else {
@@ -289,16 +288,16 @@ export default class PatientViewPage extends React.Component<
         }
     }
 
-    private shouldShowPathologyReport(
-        patientViewPageStore: PatientViewPageStore
-    ): boolean {
+    @computed
+    private get shouldShowPathologyReport(): boolean {
         return (
-            patientViewPageStore.pathologyReport.isComplete &&
-            patientViewPageStore.pathologyReport.result.length > 0
+            this.patientViewPageStore.pathologyReport.isComplete &&
+            this.patientViewPageStore.pathologyReport.result.length > 0
         );
     }
 
-    hideTissueImageTab() {
+    @computed
+    private get hideTissueImageTab() {
         return (
             this.patientViewPageStore.hasTissueImageIFrameUrl.isPending ||
             this.patientViewPageStore.hasTissueImageIFrameUrl.isError ||
@@ -307,13 +306,12 @@ export default class PatientViewPage extends React.Component<
         );
     }
 
-    private shouldShowTrialMatch(
-        patientViewPageStore: PatientViewPageStore
-    ): boolean {
+    @computed
+    private get shouldShowTrialMatch(): boolean {
         return (
             getBrowserWindow().localStorage.trialmatch === 'true' &&
-            patientViewPageStore.detailedTrialMatches.isComplete &&
-            patientViewPageStore.detailedTrialMatches.result.length > 0
+            this.patientViewPageStore.detailedTrialMatches.isComplete &&
+            this.patientViewPageStore.detailedTrialMatches.result.length > 0
         );
     }
 
@@ -1438,11 +1436,7 @@ export default class PatientViewPage extends React.Component<
                                     key={4}
                                     id={PatientViewPageTabs.FilesAndLinks}
                                     linkText={RESOURCES_TAB_NAME}
-                                    hide={
-                                        !this.shouldShowResources(
-                                            this.patientViewPageStore
-                                        )
-                                    }
+                                    hide={!this.shouldShowResources}
                                 >
                                     <div>
                                         <ResourcesTab
@@ -1457,11 +1451,7 @@ export default class PatientViewPage extends React.Component<
                                     key={3}
                                     id={PatientViewPageTabs.PathologyReport}
                                     linkText="Pathology Report"
-                                    hide={
-                                        !this.shouldShowPathologyReport(
-                                            this.patientViewPageStore
-                                        )
-                                    }
+                                    hide={!this.shouldShowPathologyReport}
                                 >
                                     <div>
                                         <PathologyReport
@@ -1480,7 +1470,7 @@ export default class PatientViewPage extends React.Component<
                                     key={5}
                                     id={PatientViewPageTabs.TissueImage}
                                     linkText="Tissue Image"
-                                    hide={this.hideTissueImageTab()}
+                                    hide={this.hideTissueImageTab}
                                 >
                                     <div>
                                         <IFrameLoader
@@ -1520,9 +1510,7 @@ export default class PatientViewPage extends React.Component<
                                         </MSKTab>
                                     )}
 
-                                {this.shouldShowTrialMatch(
-                                    this.patientViewPageStore
-                                ) && (
+                                {this.shouldShowTrialMatch && (
                                     <MSKTab
                                         key={7}
                                         id={PatientViewPageTabs.TrialMatchTab}
