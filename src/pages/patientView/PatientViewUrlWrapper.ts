@@ -7,6 +7,8 @@ export type PatientViewUrlQuery = {
     caseId?: string;
     sampleId?: string;
     genomicEvolutionSettings: {
+        showTimeline?: string;
+
         clusterHeatmap?: string;
         transposeHeatmap?: string;
         showMutationLabelsInHeatmap?: string;
@@ -30,6 +32,8 @@ export default class PatientViewUrlWrapper extends URLWrapper<
             genomicEvolutionSettings: {
                 isSessionProp: false,
                 nestedObjectProps: {
+                    showTimeline: '',
+
                     clusterHeatmap: '',
                     transposeHeatmap: '',
                     showMutationLabelsInHeatmap: '',
