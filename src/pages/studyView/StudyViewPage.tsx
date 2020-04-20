@@ -63,7 +63,7 @@ import { BookmarkModal } from 'pages/resultsView/bookmark/BookmarkModal';
 import { ShareUrls } from 'pages/resultsView/querySummary/ShareUI';
 import { getBitlyShortenedUrl } from '../../shared/lib/bitly';
 import { MakeMobxView } from '../../shared/components/MobxView';
-import OpenResourceTab from '../../shared/components/resources/OpenResourceTab';
+import ResourceTab from '../../shared/components/resources/ResourceTab';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
 import { ResourceData } from 'cbioportal-ts-api-client';
@@ -419,7 +419,7 @@ export default class StudyViewPage extends React.Component<
         );
     }
 
-    readonly openResourceTabs = MakeMobxView({
+    readonly resourceTabs = MakeMobxView({
         await: () => [
             this.store.resourceDefinitions,
             this.store.resourceIdToResourceData,
@@ -432,25 +432,30 @@ export default class StudyViewPage extends React.Component<
             const resourceDataById = this.store.resourceIdToResourceData
                 .result!;
 
-            const tabs: JSX.Element[] = [];
-            sorted.forEach(def => {
-                const data = resourceDataById[def.resourceId];
-                if (data && data.length > 0) {
-                    tabs.push(
-                        <MSKTab
-                            key={getStudyViewResourceTabId(def.resourceId)}
-                            id={getStudyViewResourceTabId(def.resourceId)}
-                            linkText={def.displayName}
-                            onClickClose={this.closeResourceTab}
-                        >
-                            <OpenResourceTab
-                                resourceData={resourceDataById[def.resourceId]}
-                                urlWrapper={this.urlWrapper}
-                            />
-                        </MSKTab>
-                    );
-                }
-            });
+            const tabs: JSX.Element[] = sorted.reduce(
+                (list, def) => {
+                    const data = resourceDataById[def.resourceId];
+                    if (data && data.length > 0) {
+                        list.push(
+                            <MSKTab
+                                key={getStudyViewResourceTabId(def.resourceId)}
+                                id={getStudyViewResourceTabId(def.resourceId)}
+                                linkText={def.displayName}
+                                onClickClose={this.closeResourceTab}
+                            >
+                                <ResourceTab
+                                    resourceData={
+                                        resourceDataById[def.resourceId]
+                                    }
+                                    urlWrapper={this.urlWrapper}
+                                />
+                            </MSKTab>
+                        );
+                    }
+                    return list;
+                },
+                [] as JSX.Element[]
+            );
             return tabs;
         },
     });
@@ -577,7 +582,7 @@ export default class StudyViewPage extends React.Component<
                                         </div>
                                     </MSKTab>
 
-                                    {this.openResourceTabs.component}
+                                    {this.resourceTabs.component}
                                 </MSKTabs>
 
                                 <div

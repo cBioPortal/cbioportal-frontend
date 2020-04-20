@@ -52,15 +52,12 @@ export default class PatientViewUrlWrapper extends URLWrapper<
         });
     }
 
-    public setTab(tab: string): void {
+    public setActiveTab(tab: string): void {
         this.updateURL({}, `${PagePath.Patient}/${tab}`);
     }
 
-    @computed public get tabId() {
-        const regex = new RegExp(`${PagePath.Patient}\/(.+)`);
-        const regexMatch = regex.exec(this.pathName);
-        const tabInPath = regexMatch && regexMatch[1];
-        return tabInPath || PatientViewPageTabs.Summary;
+    @computed public get activeTabId() {
+        return this.pathName.split('/').pop() || PatientViewPageTabs.Summary;
     }
 
     public setResourceUrl(resourceUrl: string) {

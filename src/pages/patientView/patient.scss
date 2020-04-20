@@ -1,3 +1,5 @@
+@import '../../globalStyles/mixins.scss';
+
 .patientPageHeader {
     .cohortNav {
         text-align: right;
@@ -69,9 +71,7 @@
 
 .resourcesTab {
     .resourcesSection {
-        padding: 10px;
-        border-radius: 5px;
-        border: 1px dashed #ddd;
+        @include dashed-border-section;
         margin-bottom: 30px;
 
         &:last-child {

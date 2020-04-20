@@ -10,7 +10,6 @@ import { MakeMobxView } from '../../../shared/components/MobxView';
 import ResourceLink from '../../../shared/components/resources/ResourceLink';
 import _ from 'lodash';
 import { ResourceData } from 'cbioportal-ts-api-client';
-import styles from '../../../shared/components/resources/styles.module.scss';
 
 export interface IResourcesTabProps {
     sampleManager: SampleManager | null;
@@ -52,7 +51,7 @@ export default class ResourcesTab extends React.Component<
             ) {
                 return (
                     <div className="resourcesSection">
-                        <h4 className={styles.blackHeader}>Sample Resources</h4>
+                        <h4 className="blackHeader">Sample Resources</h4>
                         <SampleResourcesTable
                             data={this.sampleRows.result!}
                             sampleManager={this.props.sampleManager!}
@@ -73,7 +72,7 @@ export default class ResourcesTab extends React.Component<
             if (this.props.store.patientResourceData.result!.length > 0) {
                 return (
                     <div className="resourcesSection">
-                        <h4 className={styles.blackHeader}>
+                        <h4 className="blackHeader">
                             Patient Resources for {this.props.store.patientId}
                         </h4>
                         {_.sortBy(
@@ -103,7 +102,7 @@ export default class ResourcesTab extends React.Component<
             if (this.props.store.studyResourceData.result!.length > 0) {
                 return (
                     <div className="resourcesSection">
-                        <h4 className={styles.blackHeader}>
+                        <h4 className="blackHeader">
                             Study Resources for{' '}
                             {this.props.store.studies.result![0].name}
                         </h4>
