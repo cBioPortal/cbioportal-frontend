@@ -76,7 +76,7 @@ import {
 } from './PatientViewPageTabs';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
 import { MakeMobxView } from '../../shared/components/MobxView';
-import OpenResourceTab from '../../shared/components/resources/OpenResourceTab';
+import ResourceTab from '../../shared/components/resources/ResourceTab';
 
 export interface IPatientViewPageProps {
     params: any; // react route
@@ -125,8 +125,8 @@ export default class PatientViewPage extends React.Component<
         getBrowserWindow().patientViewPageStore = this.patientViewPageStore;
 
         const openResourceId =
-            this.urlWrapper.tabId &&
-            extractResourceIdFromTabId(this.urlWrapper.tabId);
+            this.urlWrapper.activeTabId &&
+            extractResourceIdFromTabId(this.urlWrapper.activeTabId);
         if (openResourceId) {
             this.patientViewPageStore.setResourceTabOpen(openResourceId, true);
         }
@@ -434,7 +434,7 @@ export default class PatientViewPage extends React.Component<
         }
     }
 
-    readonly openResourceTabs = MakeMobxView({
+    readonly resourceTabs = MakeMobxView({
         await: () => [
             this.patientViewPageStore.resourceDefinitions,
             this.patientViewPageStore.resourceIdToResourceData,
@@ -447,25 +447,32 @@ export default class PatientViewPage extends React.Component<
             const resourceDataById = this.patientViewPageStore
                 .resourceIdToResourceData.result!;
 
-            const tabs: JSX.Element[] = [];
-            sorted.forEach(def => {
-                const data = resourceDataById[def.resourceId];
-                if (data && data.length > 0) {
-                    tabs.push(
-                        <MSKTab
-                            key={getPatientViewResourceTabId(def.resourceId)}
-                            id={getPatientViewResourceTabId(def.resourceId)}
-                            linkText={def.displayName}
-                            onClickClose={this.closeResourceTab}
-                        >
-                            <OpenResourceTab
-                                resourceData={resourceDataById[def.resourceId]}
-                                urlWrapper={this.urlWrapper}
-                            />
-                        </MSKTab>
-                    );
-                }
-            });
+            const tabs: JSX.Element[] = sorted.reduce(
+                (list, def) => {
+                    const data = resourceDataById[def.resourceId];
+                    if (data && data.length > 0) {
+                        list.push(
+                            <MSKTab
+                                key={getPatientViewResourceTabId(
+                                    def.resourceId
+                                )}
+                                id={getPatientViewResourceTabId(def.resourceId)}
+                                linkText={def.displayName}
+                                onClickClose={this.closeResourceTab}
+                            >
+                                <ResourceTab
+                                    resourceData={
+                                        resourceDataById[def.resourceId]
+                                    }
+                                    urlWrapper={this.urlWrapper}
+                                />
+                            </MSKTab>
+                        );
+                    }
+                    return list;
+                },
+                [] as JSX.Element[]
+            );
             return tabs;
         },
     });
@@ -473,29 +480,31 @@ export default class PatientViewPage extends React.Component<
     @autobind
     @action
     private openResource(resource: ResourceData) {
-        // open tab
+        // first we make the resource tab visible
         this.patientViewPageStore.setResourceTabOpen(resource.resourceId, true);
-        // go to tab
-        this.urlWrapper.setTab(
+        // next, navigate to that tab
+        this.urlWrapper.setActiveTab(
             getPatientViewResourceTabId(resource.resourceId)
         );
-        // deep link
+        // finally, within that tab, navigate to the specific target link, e.g. if there are multiple for the same resource
         this.urlWrapper.setResourceUrl(resource.url);
     }
 
     @autobind
     @action
     private closeResourceTab(tabId: string) {
-        // close tab
         const resourceId = extractResourceIdFromTabId(tabId);
         if (resourceId) {
+            // hide the resource tab
             this.patientViewPageStore.setResourceTabOpen(resourceId, false);
-            // go to resources tab if we're currently on that tab
+
+            // then, if we were currently on that tab..
             if (
-                this.urlWrapper.tabId ===
+                this.urlWrapper.activeTabId ===
                 getPatientViewResourceTabId(resourceId)
             ) {
-                this.urlWrapper.setTab(PatientViewPageTabs.FilesAndLinks);
+                // ..navigate to the files & links tab
+                this.urlWrapper.setActiveTab(PatientViewPageTabs.FilesAndLinks);
             }
         }
     }
@@ -835,9 +844,9 @@ export default class PatientViewPage extends React.Component<
                         <Then>
                             <MSKTabs
                                 id="patientViewPageTabs"
-                                activeTabId={this.urlWrapper.tabId}
+                                activeTabId={this.urlWrapper.activeTabId}
                                 onTabClick={(id: string) =>
-                                    this.urlWrapper.setTab(id)
+                                    this.urlWrapper.setActiveTab(id)
                                 }
                                 className="mainTabs"
                                 getPaginationWidth={WindowStore.getWindowWidth}
@@ -1542,7 +1551,7 @@ export default class PatientViewPage extends React.Component<
 
                                 {/*</MSKTab>*/}
 
-                                {this.openResourceTabs.component}
+                                {this.resourceTabs.component}
 
                                 {AppConfig.serverConfig.custom_tabs &&
                                     AppConfig.serverConfig.custom_tabs

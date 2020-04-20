@@ -402,15 +402,15 @@ export class StudyViewPageStore {
         }
     }
 
-    private _isResourceTabOpen = observable.map<boolean>();
+    private openResourceTabMap = observable.map<boolean>();
     @autobind
     public isResourceTabOpen(resourceId: string) {
-        return !!this._isResourceTabOpen.get(resourceId);
+        return !!this.openResourceTabMap.get(resourceId);
     }
     @autobind
     @action
     public setResourceTabOpen(resourceId: string, open: boolean) {
-        this._isResourceTabOpen.set(resourceId, open);
+        this.openResourceTabMap.set(resourceId, open);
     }
 
     @observable.ref

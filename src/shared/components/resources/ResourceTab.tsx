@@ -10,7 +10,7 @@ import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { ResourceData } from 'cbioportal-ts-api-client';
 import { buildPDFUrl, getFileExtension } from './ResourcesTableUtils';
 
-export interface IOpenResourceTabProps {
+export interface IResourceTabProps {
     resourceData: ResourceData[];
     urlWrapper: {
         setResourceUrl: (resourceUrl: string) => void;
@@ -19,8 +19,8 @@ export interface IOpenResourceTabProps {
 }
 
 @observer
-export default class OpenResourceTab extends React.Component<
-    IOpenResourceTabProps,
+export default class ResourceTab extends React.Component<
+    IResourceTabProps,
     {}
 > {
     @computed get iframeHeight() {
