@@ -1821,6 +1821,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @autobind
     @action
     updateUtilitiesMenuSelectedGene() {
+        const currentSelectedGeneId = this.utilitiesMenuSelection
+            .selectedGeneOption
+            ? this.utilitiesMenuSelection.selectedGeneOption.value
+            : undefined;
         if (this.oneAxisMolecularProfile) {
             // for one gene, switch the new gene for coloring
             const selectedGene = this.hasMolecularProfile(
@@ -1833,9 +1837,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             // for two genes, if the current gene for coloring is not selected in either axis, switch to gene selection on x-axis
         } else if (
             this.bothAxesMolecularProfile &&
-            this.utilitiesMenuSelection.selectedGeneOption!.value !==
+            currentSelectedGeneId !==
                 this.horzSelection.selectedGeneOption!.value &&
-            this.utilitiesMenuSelection.selectedGeneOption!.value !==
+            currentSelectedGeneId !==
                 this.vertSelection.selectedGeneOption!.value
         ) {
             this.utilitiesMenuSelection.selectedGeneOption = this.horzSelection.selectedGeneOption;
