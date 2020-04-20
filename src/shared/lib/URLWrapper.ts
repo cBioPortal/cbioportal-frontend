@@ -172,6 +172,13 @@ export default class URLWrapper<
 
     public get query(): Readonly<QueryParamsType> {
         // use typescript to make it readonly
+
+        // NOTE: `query` always contains every URL property (including nested properties) declared, even
+        //  if it's not present in the URL. If it's not present in the URL, that property will have
+        //  value undefined in the `query` object.
+
+        // `query` ONLY reflects properties that are passed through in `propertiesMap` in the constructor.
+
         return this._query;
     }
 
