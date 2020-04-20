@@ -10,9 +10,6 @@ export interface IMolecularProfileSelector {
     value: string;
     onChange: (option: { label: string; value: string }) => void;
     molecularProfiles: MolecularProfile[];
-    molecularProfileIdToProfiledSampleCount?: {
-        [molecularProfileId: string]: number;
-    };
 }
 
 @observer
@@ -26,10 +23,7 @@ export default class MolecularProfileSelector extends React.Component<
                 name={this.props.name}
                 value={this.props.value}
                 onChange={this.props.onChange}
-                options={getProfileOptions(
-                    this.props.molecularProfiles,
-                    this.props.molecularProfileIdToProfiledSampleCount
-                )}
+                options={getProfileOptions(this.props.molecularProfiles)}
                 searchable={false}
                 clearable={false}
                 className={this.props.className}
