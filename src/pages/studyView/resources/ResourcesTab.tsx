@@ -6,7 +6,6 @@ import ResourceLink from '../../../shared/components/resources/ResourceLink';
 import _ from 'lodash';
 import { StudyViewPageStore } from '../StudyViewPageStore';
 import { ResourceData } from 'cbioportal-ts-api-client';
-import styles from '../../../shared/components/resources/styles.module.scss';
 
 export interface IResourcesTabProps {
     store: StudyViewPageStore;
@@ -29,7 +28,7 @@ export default class ResourcesTab extends React.Component<
             if (this.props.store.studyResourceData.result!.length > 0) {
                 return (
                     <div className="resourcesSection">
-                        <h4 className={styles.blackHeader}>
+                        <h4 className="blackHeader">
                             Study Resources for{' '}
                             {this.props.store.studies.result![0].name}
                         </h4>

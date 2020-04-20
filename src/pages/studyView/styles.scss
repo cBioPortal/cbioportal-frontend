@@ -1,3 +1,5 @@
+@import '../../globalStyles/mixins.scss';
+
 $selectHeight: 30px;
 $selectHeightInner: $selectHeight - 2px;
 
@@ -109,9 +111,7 @@ iframe.mdacc-heatmap-iframe {
 
 .resourcesTab {
     .resourcesSection {
-        padding: 10px;
-        border-radius: 5px;
-        border: 1px dashed #ddd;
+        @include dashed-border-section;
         margin-bottom: 30px;
 
         &:last-child {

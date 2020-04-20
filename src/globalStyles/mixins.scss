@@ -1,0 +1,7 @@
+@import './variables.scss';
+
+@mixin dashed-border-section {
+    padding: 10px;
+    border-radius: $cornerBorderRadius;
+    border: 1px dashed $borderColor;
+}

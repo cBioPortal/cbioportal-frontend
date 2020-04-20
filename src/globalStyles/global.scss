@@ -1,6 +1,7 @@
 @import './variables.scss';
 @import './custom-icons.scss';
 @import './header.scss';
+@import './mixins.scss';
 
 /* locks scroll bar on to prevent horizontal jump when content render */
 body {
@@ -495,9 +496,7 @@ h3 {
 }
 
 .borderedChart {
-    padding: 10px;
-    border-radius: $cornerBorderRadius;
-    border: 1px dashed $borderColor;
+    @include dashed-border-section;
     position: relative;
     max-width: 100%;
 
@@ -611,4 +610,13 @@ h3.hr {
     overflow: hidden;
     -ms-text-overflow: ellipsis;
     text-overflow: ellipsis;
+}
+
+.cbioportal-frontend h1.blackHeader,
+h2.blackHeader,
+h3.blackHeader,
+h4.blackHeader,
+h5.blackHeader,
+h6.blackHeader {
+    color: black !important;
 }
