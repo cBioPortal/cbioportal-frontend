@@ -21,6 +21,9 @@ import PatientViewMutationTable from './PatientViewMutationTable';
 import { GeneFilterOption } from './GeneFilterMenu';
 import { isFusion } from '../../../shared/lib/MutationUtils';
 import PatientViewUrlWrapper from '../PatientViewUrlWrapper';
+import WindowStore from '../../../shared/components/window/WindowStore';
+import Timeline from '../timeline/Timeline';
+import classnames from 'classnames';
 
 export interface IPatientViewMutationsTabProps {
     store: PatientViewPageStore;
@@ -36,6 +39,7 @@ export interface IPatientViewMutationsTabProps {
 enum PlotTab {
     LINE_CHART = 'lineChart',
     HEATMAP = 'heatmap',
+    TIMELINE = 'timeline',
 }
 
 export const LOCAL_STORAGE_PLOT_TAB_KEY =
@@ -46,6 +50,30 @@ export default class PatientViewMutationsTab extends React.Component<
     IPatientViewMutationsTabProps,
     {}
 > {
+    get showTimeline() {
+        return (
+            this.props.urlWrapper.query.genomicEvolutionSettings
+                .showTimeline === 'true'
+        );
+    }
+    set showTimeline(o: boolean) {
+        this.props.urlWrapper.updateURL({
+            genomicEvolutionSettings: Object.assign(
+                {},
+                this.props.urlWrapper.query.genomicEvolutionSettings,
+                {
+                    showTimeline: o.toString(),
+                }
+            ),
+        });
+    }
+
+    @autobind
+    @action
+    private toggleTimeline() {
+        this.showTimeline = !this.showTimeline;
+    }
+
     private dataStore = new PatientViewMutationsDataStore(
         () => this.mergedMutations,
         this.props.urlWrapper
@@ -327,13 +355,62 @@ export default class PatientViewMutationsTab extends React.Component<
         ),
     });
 
+    readonly timeline = MakeMobxView({
+        await: () => [this.props.store.clinicalEvents],
+        render: () => {
+            if (
+                this.props.sampleManager !== null &&
+                this.props.store.clinicalEvents.result!.length > 0
+            ) {
+                return (
+                    <div
+                        className="borderedChart"
+                        style={{
+                            marginBottom: 20,
+                            padding: this.showTimeline ? 10 : 5,
+                            width: WindowStore.size.width - 50,
+                        }}
+                    >
+                        <button
+                            className="btn btn-xs btn-default"
+                            style={{
+                                paddingTop: 0,
+                                paddingBottom: 0,
+                                marginLeft: this.showTimeline ? -5 : 0, // negative margins hardcoded in to make button not move when its clicked
+                                marginTop: this.showTimeline ? -10 : 0, // ^^
+                            }}
+                            onClick={this.toggleTimeline}
+                            data-test="ToggleTimeline"
+                        >
+                            {this.showTimeline
+                                ? 'Hide Timeline'
+                                : 'Show Timeline'}
+                        </button>
+                        {this.showTimeline && (
+                            <div style={{ marginTop: 10 }}>
+                                <Timeline
+                                    store={this.props.store}
+                                    width={WindowStore.size.width - 100}
+                                    sampleManager={this.props.sampleManager}
+                                />
+                            </div>
+                        )}
+                    </div>
+                );
+            } else {
+                return null;
+            }
+        },
+    });
+
     readonly tabUI = MakeMobxView({
-        await: () => [this.table, this.vafLineChart],
+        await: () => [this.table, this.vafLineChart, this.timeline],
         renderPending: () => (
             <LoadingIndicator isLoading={true} size="big" center={true} />
         ),
         render: () => (
             <div data-test="GenomicEvolutionTab">
+                {this.timeline.component}
                 <MSKTabs
                     activeTabId={this.plotTab}
                     onTabClick={this.setPlotTab}
@@ -341,12 +418,12 @@ export default class PatientViewMutationsTab extends React.Component<
                     unmountOnHide={false}
                 >
                     <MSKTab id={PlotTab.LINE_CHART} linkText="Line Chart">
-                        <div style={{ paddingBottom: 20 }}>
+                        <div style={{ paddingBottom: 10 }}>
                             {this.vafLineChart.component}
                         </div>
                     </MSKTab>
                     <MSKTab id={PlotTab.HEATMAP} linkText="Heatmap">
-                        <div style={{ paddingBottom: 20 }}>
+                        <div style={{ paddingBottom: 10 }}>
                             <MutationOncoprint
                                 store={this.props.store}
                                 dataStore={this.dataStore}
@@ -356,7 +433,7 @@ export default class PatientViewMutationsTab extends React.Component<
                         </div>
                     </MSKTab>
                 </MSKTabs>
-                <div style={{ marginTop: 30 }}>{this.table.component}</div>
+                <div style={{ marginTop: 20 }}>{this.table.component}</div>
             </div>
         ),
     });
