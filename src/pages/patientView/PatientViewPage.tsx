@@ -235,6 +235,27 @@ export default class PatientViewPage extends React.Component<
         );
     }
 
+    @computed get slideScoreViewerTab() {
+        return (
+            this.patientViewPageStore.clinicalDataPatient.isComplete &&
+            this.patientViewPageStore.clinicalDataPatient.result.filter(
+                cd => {
+                    return cd.clinicalAttributeId === 'DIAGNOSIS';
+                }
+            ).length > 0
+        );
+    }
+
+    @computed get slideScoreViewerUrl() {
+        return (
+            this.patientViewPageStore.clinicalDataPatient.result.filter(
+                cd => {
+                    return cd.clinicalAttributeId === 'DIAGNOSIS';
+                }
+            )[0].value
+        );
+    }
+
     @action private onCnaTableColumnVisibilityToggled(
         columnId: string,
         columnVisibility?: IColumnVisibilityDef[]
@@ -1402,7 +1423,32 @@ export default class PatientViewPage extends React.Component<
                                                 />
                                             </div>
                                         </MSKTab>
-                                    )}
+                                    )
+                                }
+
+                                {this.slideScoreViewerTab && (
+                                        <MSKTab
+                                            key={6}
+                                            id={
+                                                PatientViewPageTabs.SlideScoreImage
+                                            }
+                                            linkText="Slide Score"
+                                            unmountOnHide={false}
+                                        >
+                                            <div>
+                                                <IFrameLoader
+                                                    height={
+                                                        WindowStore.size
+                                                            .height - 220
+                                                    }
+                                                    url={
+                                                        this.slideScoreViewerUrl
+                                                    }
+                                                />
+                                            </div>
+                                        </MSKTab>
+                                    )
+                                }
 
                                 {this.shouldShowTrialMatch(
                                     this.patientViewPageStore
