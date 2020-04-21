@@ -7,11 +7,12 @@ import './styles.scss';
 import autobind from 'autobind-decorator';
 import Spinner from 'react-spinkit';
 import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
-import { observable } from 'mobx';
-import { ReactChild } from 'react';
+import { autorun, IReactionDisposer, observable, reaction } from 'mobx';
+import { ReactChild, ReactChildren } from 'react';
 import { observer } from 'mobx-react';
 import { JsxElement } from 'typescript';
 import MemoizedHandlerFactory from '../../lib/MemoizedHandlerFactory';
+import WindowStore from '../window/WindowStore';
 
 export interface IMSKTabProps {
     inactive?: boolean;
@@ -26,6 +27,7 @@ export interface IMSKTabProps {
     unmountOnHide?: boolean;
     onTabDidMount?: (tab: HTMLDivElement) => void;
     onTabUnmount?: (tab: HTMLDivElement) => void;
+    onClickClose?: (tabId: string) => void;
 }
 
 @observer
@@ -50,10 +52,6 @@ export class DeferredRender extends React.Component<
 }
 
 export class MSKTab extends React.Component<IMSKTabProps, {}> {
-    constructor(props: IMSKTabProps) {
-        super(props);
-    }
-
     public div: HTMLDivElement;
 
     componentDidMount() {
@@ -104,7 +102,7 @@ interface IMSKTabsProps {
     activeTabId?: string;
     onTabClick?: (tabId: string, datum: any) => void;
     getTabHref?: (tabId: string) => string;
-    enablePagination?: boolean;
+    getPaginationWidth?: () => number;
     // only used when pagination is true to style arrows
     arrowStyle?: { [k: string]: string | number | boolean };
     tabButtonStyle?: string;
@@ -116,6 +114,9 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
     private shownTabs: string[] = [];
     private navTabsRef: HTMLUListElement;
     private tabRefs: { id: string; element: HTMLLIElement }[] = [];
+    private tabIdToNavTabWidth: { [tabId: string]: number } = {};
+    private needToRecomputeNavTabWidths = true;
+    private widthReaction: IReactionDisposer;
 
     public static defaultProps: Partial<IMSKTabsProps> = {
         unmountOnHide: true,
@@ -185,22 +186,6 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
         this.setState({
             currentPage: this.state.currentPage - 1,
         } as IMSKTabsState);
-    }
-
-    initOnResize(width: number, height: number) {
-        let timeout: number | null = null;
-
-        return (evt: any) => {
-            if (timeout !== null) {
-                window.clearTimeout(timeout);
-                timeout = null;
-            }
-
-            timeout = window.setTimeout(() => {
-                // re-init paging for the resized container size
-                this.initPaging();
-            }, 600);
-        };
     }
 
     render() {
@@ -298,15 +283,6 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
         const pages = this.tabPages(children, effectiveActiveTab);
         const pageCount = this.state.pageBreaks.length + 1;
 
-        // we need a little style tweak to prevent initial overflow flashing when paging enabled
-        // TODO disabling maxHeight tweak due to inconsistencies for now
-        const navBarStyle = this.props.enablePagination
-            ? {
-                  border: 0,
-                  overflow: 'hidden' as 'hidden',
-              }
-            : {};
-
         const prev =
             this.state.currentPage > 1 ? (
                 <li key="prevPage" style={{ cursor: 'pointer' }}>
@@ -337,17 +313,10 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
             <ul
                 ref={this.navTabsRefHandler.bind(this)}
                 className={classnames('nav', `nav-${navButtonStyle}`)}
-                style={navBarStyle}
             >
                 {prev}
                 {pages[this.state.currentPage - 1]}
                 {next}
-                {
-                    // TODO this doesn't always calculate the page size properly after resize, disabling for now
-                    // this.props.enablePagination && (
-                    //     <ReactResizeDetector handleWidth={true} onResize={this.initOnResize.bind(this)()} />
-                    // )
-                }
             </ul>
         );
     }
@@ -371,12 +340,28 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
 
                 // find out if we need to add another page
                 if (
-                    this.props.enablePagination &&
+                    this.props.getPaginationWidth &&
                     this.state.pageBreaks.length > 0 &&
                     this.state.pageBreaks[currentPage - 1] === tab.props.id
                 ) {
                     currentPage++;
                     pages[currentPage - 1] = [];
+                }
+
+                let closeButton: JSX.Element | null = null;
+                if (tab.props.onClickClose) {
+                    const onClickClose = tab.props.onClickClose;
+                    closeButton = (
+                        <div
+                            className="closeButton"
+                            onClick={e => {
+                                e.stopPropagation();
+                                onClickClose(tab.props.id);
+                            }}
+                        >
+                            <i className="fa fa-md fa-times-circle" />
+                        </div>
+                    );
                 }
 
                 pages[currentPage - 1].push(
@@ -400,6 +385,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                             style={tab.props.anchorStyle}
                         >
                             {tab.props.linkText}
+                            {closeButton}
                         </a>
                     </li>
                 );
@@ -409,17 +395,60 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
         return pages;
     }
 
-    componentDidMount() {
-        setTimeout(() => {
-            // if there are page breaks, it means that page calculations already performed
-            if (this.state.pageBreaks.length === 0) {
-                this.initPaging();
-            }
-        }, 1);
+    static getVisibleTabIds(tabs: MSKTab[]) {
+        return React.Children.map(tabs, tab =>
+            tab && !tab.props.hide ? tab.props.id : null
+        ).filter(x => x !== null);
     }
 
+    componentWillReceiveProps(nextProps: Readonly<IMSKTabsProps>): void {
+        if (
+            !_.isEqual(
+                MSKTabs.getVisibleTabIds((nextProps as any).children),
+                MSKTabs.getVisibleTabIds((this.props as any).children)
+            )
+        ) {
+            // visible tabs have changed -> need to recompute nav tab widths, which will also initiate repagination
+            this.needToRecomputeNavTabWidths = true;
+        }
+    }
+
+    componentDidMount() {
+        this.computeNavTabWidths();
+        this.needToRecomputeNavTabWidths = false;
+
+        this.widthReaction = autorun(() => {
+            if (this.props.getPaginationWidth) {
+                this.props.getPaginationWidth(); // react to changes in pagination width
+                this.initPaging();
+            }
+        });
+    }
+
+    componentWillUnmount() {
+        this.widthReaction();
+    }
+
+    componentDidUpdate() {
+        // recompute pagination and paginate to current tab
+        if (this.needToRecomputeNavTabWidths) {
+            this.computeNavTabWidths();
+            this.needToRecomputeNavTabWidths = false;
+            this.initPaging();
+        }
+    }
+
+    computeNavTabWidths() {
+        //this.tabIdToNavTabWidth = {};
+        _.each(this.tabRefs, ref => {
+            this.tabIdToNavTabWidth[ref.id] = ref.element.offsetWidth;
+        });
+        (window as any).test = this.tabIdToNavTabWidth;
+    }
+
+    @autobind
     initPaging() {
-        if (this.props.enablePagination) {
+        if (this.props.getPaginationWidth) {
             // find page breaks: depends on width of the container
             const pageBreaks: string[] = this.findPageBreaks();
 
@@ -460,25 +489,42 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
 
     findPageBreaks() {
         const pageBreaks: string[] = [];
-        const containerWidth: number =
-            (this.navTabsRef && this.navTabsRef.offsetWidth) || 0;
+
+        if (this.needToRecomputeNavTabWidths) {
+            return []; // no page breaks if we still need to recompute widths - need to render them all at once to get width
+        }
+
+        const containerWidth =
+            (this.props.getPaginationWidth &&
+                this.props.getPaginationWidth()) ||
+            0;
+
         // do not attempt paging if container width is zero
         if (containerWidth > 0) {
             let width = 0;
 
-            _.each(this.tabRefs, ref => {
-                width += ref.element.offsetWidth;
+            React.Children.forEach(
+                this.props.children,
+                (tab: MSKTab | null, index: number) => {
+                    if (!tab || !(tab.props.id in this.tabIdToNavTabWidth)) {
+                        // skip a null child or a tab that hasnt been rendered yet
+                        return;
+                    }
+                    width += this.tabIdToNavTabWidth[tab.props.id];
 
-                // TODO 160 and 100 are magic numbers, something is not right with the width calculation...
-                // in the first page we will only have the right arrow, so we don't need the full padding
-                const padding = pageBreaks.length > 0 ? 160 : 100;
+                    if (index === 0) {
+                        // page break not allowed at first tab
+                        return;
+                    }
 
-                // add a page break, and reset the width for the next page
-                if (width > containerWidth - padding) {
-                    pageBreaks.push(ref.id);
-                    width = ref.element.offsetWidth;
+                    const padding = 50;
+                    // add a page break, and reset the width for the next page
+                    if (width > containerWidth - padding) {
+                        pageBreaks.push(tab.props.id);
+                        width = this.tabIdToNavTabWidth[tab.props.id];
+                    }
                 }
-            });
+            );
         }
 
         return pageBreaks;

@@ -1,3 +1,5 @@
+@import '../../globalStyles/mixins.scss';
+
 .patientPageHeader {
     .cohortNav {
         text-align: right;
@@ -65,4 +67,15 @@
 .cbioportal-frontend .secondaryNavigation.vafVizNavTabs li a.tabAnchor {
     //font-size: 17px !important;
     //margin-right:30px !important;
+}
+
+.resourcesTab {
+    .resourcesSection {
+        @include dashed-border-section;
+        margin-bottom: 30px;
+
+        &:last-child {
+            margin-bottom: 0px;
+        }
+    }
 }

@@ -12,13 +12,13 @@ export type MobxView = {
       }
     | {
           status: 'complete';
-          component: JSX.Element;
+          component: ValidRender;
       });
 
 type MobxView_await = () => { status: 'complete' | 'error' | 'pending' }[];
 type MobxView_render = () => ValidRender;
-export type MobxViewAlwaysComponent = MobxView & { component: JSX.Element };
-type ValidRender = JSX.Element | undefined | null;
+export type MobxViewAlwaysComponent = MobxView & { component: ValidRender };
+type ValidRender = JSX.Element[] | JSX.Element | undefined | null;
 
 export function MakeMobxView(params: {
     await: MobxView_await;

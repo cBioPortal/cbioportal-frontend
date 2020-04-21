@@ -2,25 +2,31 @@ import * as _ from 'lodash';
 import {
     CBioPortalAPIInternal,
     ClinicalData,
-    MolecularProfile,
-    Sample,
-    Mutation,
-    DiscreteCopyNumberFilter,
-    DiscreteCopyNumberData,
-    MutationFilter,
-    CopyNumberCount,
     ClinicalDataMultiStudyFilter,
-    SampleMolecularIdentifier,
-    GenePanelData,
+    CopyNumberCount,
+    DiscreteCopyNumberData,
+    DiscreteCopyNumberFilter,
     GenePanel,
+    GenePanelData,
+    MolecularProfile,
+    Mutation,
+    MutationFilter,
     ReferenceGenomeGene,
+    ResourceData,
+    Sample,
+    SampleMolecularIdentifier,
 } from 'cbioportal-ts-api-client';
 import client from '../../../shared/api/cbioportalClientInstance';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
 import { computed, observable, action, runInAction } from 'mobx';
-import { remoteData } from 'cbioportal-frontend-commons';
+import {
+    getBrowserWindow,
+    IOncoKbData,
+    remoteData,
+    stringListToSet,
+} from 'cbioportal-frontend-commons';
 import { IGisticData } from 'shared/model/Gistic';
-import { labelMobxPromises, cached } from 'mobxpromise';
+import { cached, labelMobxPromises } from 'mobxpromise';
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
 import request from 'superagent';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
@@ -32,13 +38,12 @@ import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
 import GenomeNexusMyVariantInfoCache from 'shared/cache/GenomeNexusMyVariantInfoCache';
-import { IOncoKbData } from 'cbioportal-frontend-commons';
 import {
     getMyCancerGenomeData,
-    ICivicVariant,
     ICivicGene,
-    IMyCancerGenomeData,
+    ICivicVariant,
     IHotspotIndex,
+    IMyCancerGenomeData,
     indexHotspotsData,
 } from 'react-mutation-mapper';
 import { ClinicalInformationData } from 'shared/model/ClinicalInformation';
@@ -48,40 +53,40 @@ import CancerTypeCache from 'shared/cache/CancerTypeCache';
 import MutationCountCache from 'shared/cache/MutationCountCache';
 import AppConfig from 'appConfig';
 import {
-    findMolecularProfileIdDiscrete,
-    ONCOKB_DEFAULT,
-    fetchOncoKbData,
+    concatMutationData,
+    fetchClinicalData,
+    fetchClinicalDataForPatient,
     fetchCnaOncoKbData,
-    mergeMutations,
+    fetchCopyNumberData,
+    fetchCopyNumberSegments,
+    fetchCosmicData,
+    fetchDiscreteCNAData,
+    fetchGenePanel,
+    fetchGenePanelData,
+    fetchGisticData,
     fetchMutationalSignatureData,
     fetchMutationalSignatureMetaData,
-    fetchCosmicData,
     fetchMutationData,
-    fetchDiscreteCNAData,
-    generateUniqueSampleKeyToTumorTypeMap,
-    findMutationMolecularProfile,
-    findUncalledMutationMolecularProfileId,
-    mergeMutationsIncludingUncalled,
-    fetchGisticData,
-    fetchCopyNumberData,
     fetchMutSigData,
-    findMrnaRankMolecularProfileId,
-    mergeDiscreteCNAData,
-    fetchSamplesForPatient,
-    fetchClinicalData,
-    fetchCopyNumberSegments,
-    fetchClinicalDataForPatient,
-    makeStudyToCancerTypeMap,
-    groupBySampleId,
-    findSamplesWithoutCancerTypeClinicalData,
-    fetchStudiesForSamplesWithoutCancerTypeClinicalData,
-    concatMutationData,
     fetchOncoKbCancerGenes,
-    fetchVariantAnnotationsIndexedByGenomicLocation,
+    fetchOncoKbData,
     fetchReferenceGenomeGenes,
-    fetchGenePanelData,
-    fetchGenePanel,
+    fetchSamplesForPatient,
+    fetchStudiesForSamplesWithoutCancerTypeClinicalData,
+    fetchVariantAnnotationsIndexedByGenomicLocation,
+    findMolecularProfileIdDiscrete,
+    findMrnaRankMolecularProfileId,
+    findMutationMolecularProfile,
+    findSamplesWithoutCancerTypeClinicalData,
+    findUncalledMutationMolecularProfileId,
+    generateUniqueSampleKeyToTumorTypeMap,
+    groupBySampleId,
+    makeStudyToCancerTypeMap,
+    mergeDiscreteCNAData,
+    mergeMutations,
+    mergeMutationsIncludingUncalled,
     noGenePanelUsed,
+    ONCOKB_DEFAULT,
 } from 'shared/lib/StoreUtils';
 import {
     fetchCivicGenes,
@@ -89,14 +94,13 @@ import {
     fetchCnaCivicGenes,
 } from 'shared/lib/CivicUtils';
 import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
-import { getBrowserWindow, stringListToSet } from 'cbioportal-frontend-commons';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
 import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownloadDataFetcher';
 import { getNavCaseIdsCache } from '../../../shared/lib/handleLongUrls';
 import {
-    fetchTrialsById,
     fetchTrialMatchesUsingPOST,
+    fetchTrialsById,
 } from '../../../shared/api/MatchMinerAPI';
 import {
     IDetailedTrialMatch,
@@ -115,6 +119,7 @@ import { getVariantAlleleFrequency } from '../../../shared/lib/MutationUtils';
 import { AppStore, SiteError } from 'AppStore';
 import { getGeneFilterDefault } from './PatientViewPageStoreUtil';
 import { checkNonProfiledGenesExist } from '../PatientViewPageUtils';
+import autobind from 'autobind-decorator';
 
 type PageMode = 'patient' | 'sample';
 
@@ -232,6 +237,17 @@ export class PatientViewPageStore {
     @observable studyId = '';
 
     @observable _sampleId = '';
+
+    private openResourceTabMap = observable.map<boolean>();
+    @autobind
+    public isResourceTabOpen(resourceId: string) {
+        return !!this.openResourceTabMap.get(resourceId);
+    }
+    @autobind
+    @action
+    public setResourceTabOpen(resourceId: string, open: boolean) {
+        this.openResourceTabMap.set(resourceId, open);
+    }
 
     @observable
     public mutationTableGeneFilterOption: GeneFilterOption = getGeneFilterDefault(
@@ -434,6 +450,124 @@ export class PatientViewPageStore {
         },
         []
     );
+
+    readonly resourceDefinitions = remoteData({
+        invoke: () =>
+            client.getAllResourceDefinitionsInStudyUsingGET({
+                studyId: this.studyId,
+            }),
+        onResult: defs => {
+            // open resources which have `openByDefault` set to true
+            if (defs) {
+                for (const def of defs)
+                    if (def.openByDefault)
+                        this.setResourceTabOpen(def.resourceId, true);
+            }
+        },
+    });
+
+    readonly studyResourceData = remoteData<ResourceData[]>({
+        await: () => [this.resourceDefinitions],
+        invoke: () => {
+            const ret: ResourceData[] = [];
+            const studyResourceDefinitions = this.resourceDefinitions.result!.filter(
+                d => d.resourceType === 'STUDY'
+            );
+            const promises = [];
+            for (const resource of studyResourceDefinitions) {
+                promises.push(
+                    client
+                        .getAllStudyResourceDataInStudyUsingGET({
+                            studyId: this.studyId,
+                            resourceId: resource.resourceId,
+                            projection: 'DETAILED',
+                        })
+                        .then(data => ret.push(...data))
+                );
+            }
+            return Promise.all(promises).then(() => ret);
+        },
+    });
+
+    readonly sampleResourceData = remoteData<{
+        [sampleId: string]: ResourceData[];
+    }>({
+        await: () => [this.resourceDefinitions, this.samples],
+        invoke: () => {
+            const sampleResourceDefinitions = this.resourceDefinitions.result!.filter(
+                d => d.resourceType === 'SAMPLE'
+            );
+            if (!sampleResourceDefinitions.length) {
+                return Promise.resolve({});
+            }
+
+            const samples = this.samples.result!;
+            const ret: { [sampleId: string]: ResourceData[] } = {};
+            const promises = [];
+            for (const sample of samples) {
+                for (const resource of sampleResourceDefinitions) {
+                    promises.push(
+                        client
+                            .getAllResourceDataOfSampleInStudyUsingGET({
+                                sampleId: sample.sampleId,
+                                studyId: this.studyId,
+                                resourceId: resource.resourceId,
+                                projection: 'DETAILED',
+                            })
+                            .then(data => {
+                                ret[sample.sampleId] =
+                                    ret[sample.sampleId] || [];
+                                ret[sample.sampleId].push(...data);
+                            })
+                    );
+                }
+            }
+            return Promise.all(promises).then(() => ret);
+        },
+    });
+
+    readonly patientResourceData = remoteData<ResourceData[]>({
+        await: () => [this.resourceDefinitions],
+        invoke: () => {
+            const ret: ResourceData[] = [];
+            const patientResourceDefinitions = this.resourceDefinitions.result!.filter(
+                d => d.resourceType === 'PATIENT'
+            );
+            const promises = [];
+            for (const resource of patientResourceDefinitions) {
+                promises.push(
+                    client
+                        .getAllResourceDataOfPatientInStudyUsingGET({
+                            studyId: this.studyId,
+                            patientId: this.patientId,
+                            resourceId: resource.resourceId,
+                            projection: 'DETAILED',
+                        })
+                        .then(data => ret.push(...data))
+                );
+            }
+            return Promise.all(promises).then(() => ret);
+        },
+    });
+
+    readonly resourceIdToResourceData = remoteData<{
+        [resourceId: string]: ResourceData[];
+    }>({
+        await: () => [
+            this.sampleResourceData,
+            this.patientResourceData,
+            this.studyResourceData,
+        ],
+        invoke: () => {
+            const allData: ResourceData[] = _.flatMap(
+                this.sampleResourceData.result!,
+                v => v
+            )
+                .concat(this.patientResourceData.result!)
+                .concat(this.studyResourceData.result!);
+            return Promise.resolve(_.groupBy(allData, d => d.resourceId));
+        },
+    });
 
     readonly pathologyReport = remoteData(
         {
