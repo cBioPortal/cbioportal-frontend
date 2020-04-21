@@ -283,15 +283,6 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
         const pages = this.tabPages(children, effectiveActiveTab);
         const pageCount = this.state.pageBreaks.length + 1;
 
-        // we need a little style tweak to prevent initial overflow flashing when paging enabled
-        // TODO disabling maxHeight tweak due to inconsistencies for now
-        const navBarStyle = this.props.getPaginationWidth
-            ? {
-                  border: 0,
-                  overflow: 'hidden' as 'hidden',
-              }
-            : {};
-
         const prev =
             this.state.currentPage > 1 ? (
                 <li key="prevPage" style={{ cursor: 'pointer' }}>
@@ -322,7 +313,6 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
             <ul
                 ref={this.navTabsRefHandler.bind(this)}
                 className={classnames('nav', `nav-${navButtonStyle}`)}
-                style={navBarStyle}
             >
                 {prev}
                 {pages[this.state.currentPage - 1]}
