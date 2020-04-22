@@ -219,7 +219,6 @@ export default class CancerSummaryContainer extends React.Component<
                         </div>
                         <MSKTabs
                             onTabClick={this.handleTabClick}
-                            enablePagination={false}
                             unmountOnHide={true}
                             arrowStyle={{ 'line-height': 0.8 }}
                             tabButtonStyle="pills"
