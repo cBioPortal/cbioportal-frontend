@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { observer } from 'mobx-react';
+import { Observer, observer } from 'mobx-react';
 import { MSKTab, MSKTabs } from '../../../shared/components/MSKTabs/MSKTabs';
 import AddChartByType from '../../studyView/addChartButton/addChartByType/AddChartByType';
 import { action, computed, observable } from 'mobx';
@@ -208,7 +208,8 @@ export default class AddClinicalTracks extends React.Component<
         showLastRenderWhenPending: true,
     });
 
-    @computed get dropdown() {
+    @autobind
+    private getDropdown() {
         if (
             this.props.store.comparisonGroups.isComplete &&
             this.props.store.comparisonGroups.result!.length > 0
@@ -261,7 +262,7 @@ export default class AddClinicalTracks extends React.Component<
                 onVisibleChange={this.onDropdownChange}
                 placement={'bottomRight'}
                 destroyTooltipOnHide={true}
-                overlay={this.dropdown}
+                overlay={<Observer>{this.getDropdown}</Observer>}
                 align={{
                     overflow: { adjustX: true, adjustY: false },
                 }}
