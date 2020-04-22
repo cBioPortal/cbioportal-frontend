@@ -760,6 +760,28 @@ export class ResultsViewPageStore {
         },
     });
 
+    @computed.struct get comparisonGroupsReferencedInURL() {
+        const clinicalTracksParam = this.urlWrapper.query.clinicallist;
+        if (clinicalTracksParam) {
+            const groupIds = clinicalTracksParam
+                .split(',') // split by comma
+                .filter((clinicalAttributeId: string) =>
+                    clinicalAttributeIsINCOMPARISONGROUP({
+                        clinicalAttributeId,
+                    })
+                ) // filter for comparison group tracks
+                .map((clinicalAttributeId: string) =>
+                    convertComparisonGroupClinicalAttribute(
+                        clinicalAttributeId,
+                        false
+                    )
+                ); // convert track ids to group ids
+            return groupIds;
+        } else {
+            return [];
+        }
+    }
+
     readonly comparisonGroups = remoteData<Group[]>({
         await: () => [this.studyIds],
         invoke: async () => {
@@ -776,25 +798,8 @@ export class ResultsViewPageStore {
                 }
             }
             // add any groups that are referenced in URL
-            const clinicalTracksParam = this.urlWrapper.query.clinicallist;
-            if (clinicalTracksParam) {
-                const groupIds = clinicalTracksParam
-                    .split(',') // split by comma
-                    .filter((clinicalAttributeId: string) =>
-                        clinicalAttributeIsINCOMPARISONGROUP({
-                            clinicalAttributeId,
-                        })
-                    ) // filter for comparison group tracks
-                    .map((clinicalAttributeId: string) =>
-                        convertComparisonGroupClinicalAttribute(
-                            clinicalAttributeId,
-                            false
-                        )
-                    ); // convert track ids to group ids
-
-                for (const id of groupIds) {
-                    ret.push(await comparisonClient.getGroup(id));
-                }
+            for (const id of this.comparisonGroupsReferencedInURL) {
+                ret.push(await comparisonClient.getGroup(id));
             }
             return ret;
         },
