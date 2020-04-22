@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { MolecularProfile } from 'cbioportal-ts-api-client';
+import { MolecularProfile, Sample } from 'cbioportal-ts-api-client';
 import { action, computed, observable } from 'mobx';
 import { observer, Observer } from 'mobx-react';
 import {
@@ -188,7 +188,7 @@ export default class CoExpressionTab extends React.Component<
         await: () => [
             this.props.store.coexpressionTabMolecularProfiles,
             this.isSelectedGeneticEntityAGeneSet,
-            this.props.store.molecularProfileIdToProfiledSampleCount,
+            this.props.store.molecularProfileIdToProfiledSamples,
         ],
         invoke: () => {
             let filteredProfiles: MolecularProfile[] = [];
@@ -204,8 +204,7 @@ export default class CoExpressionTab extends React.Component<
             return Promise.resolve(
                 getProfileOptions(
                     filteredProfiles,
-                    this.props.store.molecularProfileIdToProfiledSampleCount
-                        .result!
+                    this.props.store.molecularProfileIdToProfiledSamples.result!
                 )
             );
         },
@@ -214,14 +213,13 @@ export default class CoExpressionTab extends React.Component<
     readonly yProfileOptions = remoteData<{ label: string; value: string }[]>({
         await: () => [
             this.props.store.coexpressionTabMolecularProfiles,
-            this.props.store.molecularProfileIdToProfiledSampleCount,
+            this.props.store.molecularProfileIdToProfiledSamples,
         ],
         invoke: () => {
             return Promise.resolve(
                 getProfileOptions(
                     this.props.store.coexpressionTabMolecularProfiles.result!,
-                    this.props.store.molecularProfileIdToProfiledSampleCount
-                        .result!
+                    this.props.store.molecularProfileIdToProfiledSamples.result!
                 )
             );
         },
@@ -261,16 +259,46 @@ export default class CoExpressionTab extends React.Component<
 
     private coExpressionCache: CoExpressionCache = new CoExpressionCache(
         q => ({
-            await: () => [this.props.store.entrezGeneIdToReferenceGene],
+            await: () => [
+                this.props.store.entrezGeneIdToReferenceGene,
+                this.props.store.molecularProfileIdToProfiledSamples,
+            ],
             invoke: async () => {
                 let threshold = 0.3;
                 if (q.allData) {
                     threshold = 0;
                 }
+
+                const profileXSamples = this.props.store
+                    .molecularProfileIdToProfiledSamples.result![
+                    q.profileX.molecularProfileId
+                ];
+                const profileYSamples = this.props.store
+                    .molecularProfileIdToProfiledSamples.result![
+                    q.profileY.molecularProfileId
+                ];
+
+                let dataFilter: IDataQueryFilter = {};
+                if (
+                    q.profileX.molecularProfileId ===
+                    q.profileY.molecularProfileId
+                ) {
+                    dataFilter = this.props.store.studyToDataQueryFilter
+                        .result![q.profileX.studyId];
+                } else {
+                    const commonSamples = _.intersectionWith(
+                        profileXSamples,
+                        profileYSamples,
+                        (a: Sample, b: Sample) =>
+                            a.uniqueSampleKey === b.uniqueSampleKey
+                    );
+                    dataFilter.sampleIds = commonSamples.map(
+                        sample => sample.sampleId
+                    );
+                }
+
                 const dataQueryFilter = this.createDataQueryFilterForCoExpression(
-                    this.props.store.studyToDataQueryFilter.result![
-                        q.profileX.studyId
-                    ],
+                    dataFilter,
                     q.geneticEntityId,
                     q.geneticEntityType
                 );
@@ -590,7 +618,7 @@ export default class CoExpressionTab extends React.Component<
 
         const status = getMobxPromiseGroupStatus(
             this.props.store.genes,
-            this.props.store.molecularProfileIdToProfiledSampleCount,
+            this.props.store.molecularProfileIdToProfiledSamples,
             this.props.store.coexpressionTabMolecularProfiles
         );
 

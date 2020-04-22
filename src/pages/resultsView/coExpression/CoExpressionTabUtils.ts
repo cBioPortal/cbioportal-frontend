@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { MolecularProfile } from 'cbioportal-ts-api-client';
+import { MolecularProfile, Sample } from 'cbioportal-ts-api-client';
 import {
     AlterationTypeConstants,
     GeneticEntityType,
@@ -76,17 +76,16 @@ export function getGenesetProfiles(profiles: MolecularProfile[]) {
 
 export function getProfileOptions(
     profiles: MolecularProfile[],
-    molecularProfileIdToProfiledSampleCount?: {
-        [molecularProfileId: string]: number;
+    molecularProfileIdToProfiledSamples?: {
+        [molecularProfileId: string]: Sample[];
     }
 ) {
     return profiles.map(profile => {
         let label = profile.name;
-        if (molecularProfileIdToProfiledSampleCount) {
+        if (molecularProfileIdToProfiledSamples) {
             const profiledSampleCount =
-                molecularProfileIdToProfiledSampleCount[
-                    profile.molecularProfileId
-                ];
+                molecularProfileIdToProfiledSamples[profile.molecularProfileId]
+                    .length;
             label += ` (${profiledSampleCount} sample${
                 profiledSampleCount !== 1 ? 's' : ''
             })`;
