@@ -724,7 +724,7 @@ export function makeEnrichmentDataPromise<
         qValue?: number;
     }
 >(params: {
-    store?: ResultsViewPageStore;
+    storeForExcludingQueryGenes?: ResultsViewPageStore;
     await: MobxPromise_await;
     referenceGenesPromise: MobxPromise<{
         [hugoGeneSymbol: string]: ReferenceGenomeGene;
@@ -735,8 +735,10 @@ export function makeEnrichmentDataPromise<
     return remoteData({
         await: () => {
             const ret = params.await();
-            if (params.store) {
-                ret.push(params.store.selectedMolecularProfiles);
+            if (params.storeForExcludingQueryGenes) {
+                ret.push(
+                    params.storeForExcludingQueryGenes.selectedMolecularProfiles
+                );
             }
             ret.push(params.referenceGenesPromise);
             return ret;
@@ -748,14 +750,14 @@ export function makeEnrichmentDataPromise<
                 // filter out query genes, if looking at a queried profile
                 // its important that we filter out *before* calculating Q values
                 if (
-                    params.store &&
-                    params.store.selectedMolecularProfiles.result!.findIndex(
+                    params.storeForExcludingQueryGenes &&
+                    params.storeForExcludingQueryGenes.selectedMolecularProfiles.result!.findIndex(
                         molecularProfile =>
                             profileMap[molecularProfile.studyId] !== undefined
                     ) > -1
                 ) {
                     const queryGenes = _.keyBy(
-                        params.store.hugoGeneSymbols,
+                        params.storeForExcludingQueryGenes.hugoGeneSymbols,
                         x => x.toUpperCase()
                     );
                     data = data.filter(

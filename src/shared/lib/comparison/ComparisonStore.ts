@@ -559,7 +559,7 @@ export default class ComparisonStore {
 
     //
     public readonly mutationEnrichmentData = makeEnrichmentDataPromise({
-        store: this.resultsViewStore,
+        storeForExcludingQueryGenes: this.resultsViewStore,
         await: () => [
             this.selectedStudyMutationEnrichmentProfileMap,
             this.activeGroups,
@@ -694,7 +694,7 @@ export default class ComparisonStore {
     });
 
     public readonly copyNumberEnrichmentData = makeEnrichmentDataPromise({
-        store: this.resultsViewStore,
+        storeForExcludingQueryGenes: this.resultsViewStore,
         await: () => [
             this.copyNumberHomdelEnrichmentData,
             this.copyNumberAmpEnrichmentData,
@@ -732,7 +732,6 @@ export default class ComparisonStore {
     }
 
     readonly mRNAEnrichmentData = makeEnrichmentDataPromise({
-        store: this.resultsViewStore,
         await: () => [this.selectedmRNAEnrichmentProfileMap, this.activeGroups],
         getSelectedProfileMap: () =>
             this.selectedmRNAEnrichmentProfileMap.result!, // returns an empty array if the selected study doesn't have any mRNA profiles
@@ -775,7 +774,6 @@ export default class ComparisonStore {
     });
 
     readonly proteinEnrichmentData = makeEnrichmentDataPromise({
-        store: this.resultsViewStore,
         await: () => [
             this.selectedProteinEnrichmentProfileMap,
             this.activeGroups,
