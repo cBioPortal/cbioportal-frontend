@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { action, computed } from 'mobx';
-import { observer } from 'mobx-react';
+import { Observer, observer } from 'mobx-react';
 import styles from './styles.module.scss';
 import { ChartOption } from '../AddChartButton';
 import * as _ from 'lodash';
@@ -89,32 +89,38 @@ export default class AddChartByType extends React.Component<
             name: this.props.firstColumnHeaderName!,
             render: (option: AddChartOption) => {
                 return (
-                    <div
-                        className={classnames(
-                            styles.option,
-                            'add-chart-option'
+                    <Observer>
+                        {() => (
+                            <div
+                                className={classnames(
+                                    styles.option,
+                                    'add-chart-option'
+                                )}
+                                data-test={`add-chart-option-${option.label
+                                    .toLowerCase()
+                                    .replace(/\s/g, '-')}`}
+                            >
+                                <LabeledCheckbox
+                                    checked={option.selected}
+                                    disabled={option.disabled}
+                                    labelProps={{
+                                        className: classnames(
+                                            styles.label,
+                                            option.disabled
+                                                ? styles.labelDisabled
+                                                : ''
+                                        ),
+                                    }}
+                                    inputProps={{
+                                        className: styles.input,
+                                    }}
+                                    onChange={() => this.onOptionChange(option)}
+                                >
+                                    <EllipsisTextTooltip text={option.label} />
+                                </LabeledCheckbox>
+                            </div>
                         )}
-                        data-test={`add-chart-option-${option.label
-                            .toLowerCase()
-                            .replace(/\s/g, '-')}`}
-                    >
-                        <LabeledCheckbox
-                            checked={option.selected}
-                            disabled={option.disabled}
-                            labelProps={{
-                                className: classnames(
-                                    styles.label,
-                                    option.disabled ? styles.labelDisabled : ''
-                                ),
-                            }}
-                            inputProps={{
-                                className: styles.input,
-                            }}
-                            onChange={() => this.onOptionChange(option)}
-                        >
-                            <EllipsisTextTooltip text={option.label} />
-                        </LabeledCheckbox>
-                    </div>
+                    </Observer>
                 );
             },
             filter: (d: AddChartOption, f: string, filterStringUpper: string) =>

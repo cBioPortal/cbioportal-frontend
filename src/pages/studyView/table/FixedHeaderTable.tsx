@@ -16,7 +16,7 @@ import 'react-virtualized/styles.css';
 import { action, computed, observable, toJS } from 'mobx';
 import styles from './tables.module.scss';
 import * as _ from 'lodash';
-import { observer } from 'mobx-react';
+import { Observer, observer } from 'mobx-react';
 import classnames from 'classnames';
 import { If } from 'react-if';
 import autobind from 'autobind-decorator';
@@ -442,36 +442,46 @@ export default class FixedHeaderTable<T> extends React.Component<
                 {!this.props.hideControls &&
                     this.props.showControlsAtTop &&
                     this.getControls()}
-                <RVTable
-                    width={this.props.width!}
-                    height={this.props.height!}
-                    headerHeight={this.props.headerHeight!}
-                    rowHeight={this.props.rowHeight!}
-                    rowCount={this._store.dataStore.sortedFilteredData.length}
-                    rowGetter={this.rowGetter}
-                    className={styles.studyViewTablesBody}
-                    rowClassName={this.rowClassName}
-                    headerClassName={styles.headerColumn}
-                    sort={this.sort}
-                    sortDirection={RVSDTtoStrType[this._sortDirection]}
-                    sortBy={this._sortBy}
-                >
-                    {this.props.columns.map((column, index) => {
-                        return (
-                            <RVColumn
-                                key={column.name}
-                                label={column.name}
-                                dataKey={column.name}
-                                width={Number(column.width)}
-                                className={styles.columnCell}
-                                headerRenderer={this.columnHeaders[index]}
-                                cellRenderer={(props: TableCellProps) => {
-                                    return column.render(props.rowData);
-                                }}
-                            />
-                        );
-                    })}
-                </RVTable>
+                <Observer>
+                    {() => (
+                        <RVTable
+                            width={this.props.width!}
+                            height={this.props.height!}
+                            headerHeight={this.props.headerHeight!}
+                            rowHeight={this.props.rowHeight!}
+                            rowCount={
+                                this._store.dataStore.sortedFilteredData.length
+                            }
+                            rowGetter={this.rowGetter}
+                            className={styles.studyViewTablesBody}
+                            rowClassName={this.rowClassName}
+                            headerClassName={styles.headerColumn}
+                            sort={this.sort}
+                            sortDirection={RVSDTtoStrType[this._sortDirection]}
+                            sortBy={this._sortBy}
+                        >
+                            {this.props.columns.map((column, index) => {
+                                return (
+                                    <RVColumn
+                                        key={column.name}
+                                        label={column.name}
+                                        dataKey={column.name}
+                                        width={Number(column.width)}
+                                        className={styles.columnCell}
+                                        headerRenderer={
+                                            this.columnHeaders[index]
+                                        }
+                                        cellRenderer={(
+                                            props: TableCellProps
+                                        ) => {
+                                            return column.render(props.rowData);
+                                        }}
+                                    />
+                                );
+                            })}
+                        </RVTable>
+                    )}
+                </Observer>
                 {!this.props.hideControls &&
                     !this.props.showControlsAtTop &&
                     this.getControls()}

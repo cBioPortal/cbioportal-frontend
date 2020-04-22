@@ -22,7 +22,13 @@ import OncoprintDropdownCount from './OncoprintDropdownCount';
 
 export interface IAddClinicalTrackProps {
     store: ResultsViewPageStore;
-    selectedClinicalAttributeIds: (string | SpecialAttribute)[];
+
+    // We pass this in as a getter rather than passing the value itself because
+    //  mobx considers every prop changed if one prop changes, so it would do
+    //  unnecessary recomputation -> some rendering jitters whenever
+    //  selected clinical attributes would change. This way, that doesn't happen.
+    getSelectedClinicalAttributeIds: () => (string | SpecialAttribute)[];
+
     onChangeSelectedClinicalTracks: (
         ids: (string | SpecialAttribute)[]
     ) => void;
@@ -52,7 +58,7 @@ export default class AddClinicalTracks extends React.Component<
     private addAll(clinicalAttributeIds: string[]) {
         this.props.onChangeSelectedClinicalTracks(
             _.union(
-                this.props.selectedClinicalAttributeIds,
+                this.props.getSelectedClinicalAttributeIds(),
                 clinicalAttributeIds
             )
         );
@@ -63,7 +69,7 @@ export default class AddClinicalTracks extends React.Component<
     private clear(clinicalAttributeIds: string[]) {
         this.props.onChangeSelectedClinicalTracks(
             _.difference(
-                this.props.selectedClinicalAttributeIds,
+                this.props.getSelectedClinicalAttributeIds(),
                 clinicalAttributeIds
             )
         );
@@ -75,13 +81,13 @@ export default class AddClinicalTracks extends React.Component<
         this.props.onChangeSelectedClinicalTracks(
             toggleIncluded(
                 clinicalAttributeId,
-                this.props.selectedClinicalAttributeIds
+                this.props.getSelectedClinicalAttributeIds()
             )
         );
     }
 
     @computed get selectedClinicalAttributeIds() {
-        return _.keyBy(this.props.selectedClinicalAttributeIds);
+        return _.keyBy(this.props.getSelectedClinicalAttributeIds());
     }
 
     readonly options = remoteData({
