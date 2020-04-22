@@ -6,6 +6,7 @@ import autobind from 'autobind-decorator';
 import * as _ from 'lodash';
 import styles from './styles.module.scss';
 import classNames from 'classnames';
+import { getBrowserWindow } from 'cbioportal-frontend-commons';
 
 export interface IUserMessage {
     dateStart?: number;
@@ -18,16 +19,29 @@ function makeMessageKey(id: string) {
     return `portalMessageKey-${id}`;
 }
 
-const MESSAGE_DATA: IUserMessage[] = [
-    // ADD MESSAGE IN FOLLOWING FORMAT
-    // UNIQUE ID IS IMPORTANT B/C WE REMEMBER A MESSAGE HAS BEEN SHOWN
-    // BASED ON USERS LOCALSTORAGE
-    // {
-    //     dateEnd:100000000000000,
-    //     content: `<p>Some markup and message here</p>`,
-    //     id:'some very unique ID here, e.g. 3.0-intro',
-    // }
-];
+// ADD MESSAGE IN FOLLOWING FORMAT
+// UNIQUE ID IS IMPORTANT B/C WE REMEMBER A MESSAGE HAS BEEN SHOWN
+// BASED ON USERS LOCALSTORAGE
+let MESSAGE_DATA: IUserMessage[];
+
+if (
+    [
+        'www.cbioportal.org',
+        'cbioportal.mskcc.org',
+        'genie.cbioportal.org',
+    ].includes(getBrowserWindow().location.hostname)
+) {
+    MESSAGE_DATA = [
+        // ADD MESSAGE IN FOLLOWING FORMAT
+        // UNIQUE ID IS IMPORTANT B/C WE REMEMBER A MESSAGE HAS BEEN SHOWN
+        // BASED ON USERS LOCALSTORAGE
+        {
+            dateEnd: 100000000000000,
+            content: `Join our new webinar series to learn how to use cBioPortal effectively. First webinar <strong>April 30th 11am-12pm EDT</strong>. <a class="btn btn-primary btn-xs" target="_blank" href="https://dfci.zoom.us/webinar/register/8215875781986/WN_An_3l0XYQHCoinWvclUrlw">Click for More Info!</a>`,
+            id: '2020_spring_webinar',
+        },
+    ];
+}
 
 @observer
 export default class UserMessager extends React.Component<
