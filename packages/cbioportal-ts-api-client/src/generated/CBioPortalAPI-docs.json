@@ -84,7 +84,15 @@
       "description": " "
     },
     {
-      "name": "Reference Genome Genes",
+      "name": "R. Reference Genome Genes",
+      "description": " "
+    },
+    {
+      "name": "S. Resource Definitions",
+      "description": " "
+    },
+    {
+      "name": "T. Resource Data",
       "description": " "
     }
   ],
@@ -2243,7 +2251,7 @@
     "/reference-genome-genes/{genomeName}": {
       "get": {
         "tags": [
-          "Reference Genome Genes"
+          "R. Reference Genome Genes"
         ],
         "summary": "Get all reference genes",
         "operationId": "getAllReferenceGenomeGenesUsingGET",
@@ -2275,7 +2283,7 @@
     "/reference-genome-genes/{genomeName}/fetch": {
       "post": {
         "tags": [
-          "Reference Genome Genes"
+          "R. Reference Genome Genes"
         ],
         "summary": "Fetch genes of reference genome of interest",
         "operationId": "fetchReferenceGenomeGenesUsingPOST",
@@ -2322,7 +2330,7 @@
     "/reference-genome-genes/{genomeName}/{geneId}": {
       "get": {
         "tags": [
-          "Reference Genome Genes"
+          "R. Reference Genome Genes"
         ],
         "summary": "Get a gene of a reference genome of interest",
         "operationId": "getReferenceGenomeGeneUsingGET",
@@ -3844,6 +3852,113 @@
         }
       }
     },
+    "/studies/{studyId}/patients/{patientId}/resource-data": {
+      "get": {
+        "tags": [
+          "T. Resource Data"
+        ],
+        "summary": "Get all resource data of a patient in a study",
+        "operationId": "getAllResourceDataOfPatientInStudyUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "patientId",
+            "in": "path",
+            "description": "Patient ID e.g. TCGA-OR-A5J2",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "resourceId",
+            "in": "query",
+            "description": "Resource ID",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Page size of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "format": "int32"
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32"
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Name of the property that the result list is sorted by",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "ResourceId",
+              "url"
+            ]
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "description": "Direction of the sort",
+            "required": false,
+            "type": "string",
+            "default": "ASC",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ResourceData"
+              }
+            }
+          }
+        }
+      }
+    },
     "/studies/{studyId}/patients/{patientId}/samples": {
       "get": {
         "tags": [
@@ -3939,6 +4054,240 @@
               "items": {
                 "$ref": "#/definitions/Sample"
               }
+            }
+          }
+        }
+      }
+    },
+    "/studies/{studyId}/resource-data": {
+      "get": {
+        "tags": [
+          "T. Resource Data"
+        ],
+        "summary": "Get all resource data for a study",
+        "operationId": "getAllStudyResourceDataInStudyUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "resourceId",
+            "in": "query",
+            "description": "Resource ID",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Page size of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "format": "int32"
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32"
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Name of the property that the result list is sorted by",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "ResourceId",
+              "url"
+            ]
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "description": "Direction of the sort",
+            "required": false,
+            "type": "string",
+            "default": "ASC",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ResourceData"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/studies/{studyId}/resource-definitions": {
+      "get": {
+        "tags": [
+          "S. Resource Definitions"
+        ],
+        "summary": "Get all resoruce definitions in the specified study",
+        "operationId": "getAllResourceDefinitionsInStudyUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Page size of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "format": "int32"
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32"
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Name of the property that the result list is sorted by",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "resourceId",
+              "displayName",
+              "description",
+              "resourceType",
+              "priority",
+              "openByDefault",
+              "studyId"
+            ]
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "description": "Direction of the sort",
+            "required": false,
+            "type": "string",
+            "default": "ASC",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ResourceDefinition"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/studies/{studyId}/resource-definitions/{resourceId}": {
+      "get": {
+        "tags": [
+          "S. Resource Definitions"
+        ],
+        "summary": "Get specified resource definition",
+        "operationId": "getResourceDefinitionInStudyUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "resourceId",
+            "in": "path",
+            "description": "Resource ID",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ResourceDefinition"
             }
           }
         }
@@ -4380,6 +4729,113 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/CopyNumberSeg"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/studies/{studyId}/samples/{sampleId}/resource-data": {
+      "get": {
+        "tags": [
+          "T. Resource Data"
+        ],
+        "summary": "Get all resource data of a sample in a study",
+        "operationId": "getAllResourceDataOfSampleInStudyUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "sampleId",
+            "in": "path",
+            "description": "Sample ID e.g. TCGA-OR-A5J2-01",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "resourceId",
+            "in": "query",
+            "description": "Resource ID",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Page size of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "format": "int32"
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32"
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Name of the property that the result list is sorted by",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "ResourceId",
+              "url"
+            ]
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "description": "Direction of the sort",
+            "required": false,
+            "type": "string",
+            "default": "ASC",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ResourceData"
               }
             }
           }
@@ -5658,6 +6114,79 @@
         }
       },
       "title": "ReferenceGenomeGene"
+    },
+    "ResourceData": {
+      "type": "object",
+      "required": [
+        "resourceId",
+        "studyId",
+        "url"
+      ],
+      "properties": {
+        "patientId": {
+          "type": "string"
+        },
+        "resourceDefinition": {
+          "$ref": "#/definitions/ResourceDefinition"
+        },
+        "resourceId": {
+          "type": "string"
+        },
+        "sampleId": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        },
+        "uniquePatientKey": {
+          "type": "string"
+        },
+        "uniqueSampleKey": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "title": "ResourceData"
+    },
+    "ResourceDefinition": {
+      "type": "object",
+      "required": [
+        "displayName",
+        "resourceId",
+        "resourceType",
+        "studyId"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "openByDefault": {
+          "type": "boolean"
+        },
+        "priority": {
+          "type": "string"
+        },
+        "resourceId": {
+          "type": "string"
+        },
+        "resourceType": {
+          "type": "string",
+          "enum": [
+            "STUDY",
+            "SAMPLE",
+            "PATIENT"
+          ]
+        },
+        "studyId": {
+          "type": "string"
+        }
+      },
+      "title": "ResourceDefinition"
     },
     "Sample": {
       "type": "object",

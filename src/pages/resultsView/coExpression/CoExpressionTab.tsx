@@ -569,7 +569,6 @@ export default class CoExpressionTab extends React.Component<
                         className="coexpressionTabGeneTabs pillTabs"
                         unmountOnHide={true}
                         tabButtonStyle="pills"
-                        enablePagination={false}
                         arrowStyle={{ 'line-height': 0.8 }}
                     >
                         {this.props.store.geneticEntities.result!.map(
