@@ -38,7 +38,7 @@ export function buildCBioPortalAPIUrl(
 
     return URL.format({
         protocol: apiRootUrl.protocol || getBrowserWindow().location.protocol,
-        host: apiRootUrl.host,
+        host: apiRootUrl.host!,
         ...params,
     });
 }
