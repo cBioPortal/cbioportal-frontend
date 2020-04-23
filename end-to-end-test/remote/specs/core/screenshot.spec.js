@@ -127,7 +127,7 @@ function runResultsTestSuite(prefix) {
 
     it(`${prefix} comparison tab mutation enrichments patient mode`, function() {
         browser.execute(function() {
-            resultsViewPageStore.setUsePatientLevelEnrichments(true);
+            comparisonTab.store.setUsePatientLevelEnrichments(true);
         });
         browser.waitForVisible(
             'div[data-test="GroupComparisonMutationEnrichments"]'
