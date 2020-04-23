@@ -32,4 +32,14 @@ export default class WindowWrapper {
             height: this.windowObj.innerHeight,
         };
     }
+
+    @autobind
+    public getWindowWidth() {
+        return this.size.width;
+    }
+
+    @autobind
+    public getWindowHeight() {
+        return this.size.height;
+    }
 }

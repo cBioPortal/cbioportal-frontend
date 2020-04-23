@@ -731,7 +731,6 @@ export default class ExpressionWrapper extends React.Component<
                     <MSKTabs
                         onTabClick={this.handleTabClick}
                         arrowStyle={{ 'line-height': 0.8 }}
-                        enablePagination={false}
                         unmountOnHide={true}
                         tabButtonStyle="pills"
                         activeTabId={
