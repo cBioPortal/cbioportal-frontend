@@ -104,6 +104,10 @@ export class CopyDownloadQueryLinks extends React.Component<
                                         this.props.virtualStudyParams
                                             .molecularProfileNameSet
                                     }
+                                    caseListNameSet={
+                                        this.props.virtualStudyParams
+                                            .caseListNameSet
+                                    }
                                 />
                             )
                         }

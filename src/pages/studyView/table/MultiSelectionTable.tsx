@@ -54,6 +54,7 @@ export type MultiSelectionTableRow = OncokbCancerGene & {
 export enum MultiSelectionTableColumnKey {
     GENE = 'Gene',
     MOLECULAR_PROFILE = 'Molecular Profile',
+    CASE_LIST = 'Name',
     NUMBER_FUSIONS = '# Fusion',
     NUMBER_MUTATIONS = '# Mut',
     CYTOBAND = 'Cytoband',
@@ -89,6 +90,7 @@ const DEFAULT_COLUMN_WIDTH_RATIO: {
 } = {
     [MultiSelectionTableColumnKey.GENE]: 0.35,
     [MultiSelectionTableColumnKey.MOLECULAR_PROFILE]: 0.6,
+    [MultiSelectionTableColumnKey.CASE_LIST]: 0.6,
     [MultiSelectionTableColumnKey.NUMBER_MUTATIONS]: 0.25,
     [MultiSelectionTableColumnKey.NUMBER_FUSIONS]: 0.25,
     [MultiSelectionTableColumnKey.NUMBER]: 0.25,
@@ -176,6 +178,39 @@ export class MultiSelectionTable extends React.Component<
                 width: columnWidth,
             },
             [MultiSelectionTableColumnKey.MOLECULAR_PROFILE]: {
+                name: columnKey,
+                headerRender: () => {
+                    return (
+                        <div
+                            style={{ marginLeft: cellMargin }}
+                            className={styles.displayFlex}
+                            data-test="profile-column-header"
+                        >
+                            {columnKey}
+                        </div>
+                    );
+                },
+                render: (data: MultiSelectionTableRow) => {
+                    return (
+                        <div className={styles.labelContent}>
+                            <EllipsisTextTooltip
+                                text={data.label}
+                            ></EllipsisTextTooltip>
+                        </div>
+                    );
+                },
+                sortBy: (data: MultiSelectionTableRow) => data.label,
+                defaultSortDirection: 'asc' as 'asc',
+                filter: (
+                    data: MultiSelectionTableRow,
+                    filterString: string,
+                    filterStringUpper: string
+                ) => {
+                    return data.label.toUpperCase().includes(filterStringUpper);
+                },
+                width: columnWidth,
+            },
+            [MultiSelectionTableColumnKey.CASE_LIST]: {
                 name: columnKey,
                 headerRender: () => {
                     return (
@@ -403,6 +438,7 @@ export class MultiSelectionTable extends React.Component<
         const defaults: { [key in MultiSelectionTableColumnKey]: number } = {
             [MultiSelectionTableColumnKey.GENE]: 0,
             [MultiSelectionTableColumnKey.MOLECULAR_PROFILE]: 0,
+            [MultiSelectionTableColumnKey.CASE_LIST]: 0,
             [MultiSelectionTableColumnKey.NUMBER_MUTATIONS]: correctMargin(
                 getFixedHeaderNumberCellMargin(
                     columnWidth,

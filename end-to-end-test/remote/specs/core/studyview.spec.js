@@ -226,7 +226,7 @@ describe('study laml_tcga tests', () => {
                 browser.click(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON);
 
                 browser.waitForVisible(
-                    "[data-test='chart-container-CUSTOM_FILTERS_2']"
+                    "[data-test='chart-container-CUSTOM_FILTERS_3']"
                 );
 
                 // it should not impact any other charts
@@ -235,7 +235,7 @@ describe('study laml_tcga tests', () => {
                 // make sure the title is reflected
                 assert(
                     getTextFromElement(
-                        "[data-test='chart-container-CUSTOM_FILTERS_2'] .chartTitle"
+                        "[data-test='chart-container-CUSTOM_FILTERS_3'] .chartTitle"
                     ) === 'Custom Chart 1'
                 );
 

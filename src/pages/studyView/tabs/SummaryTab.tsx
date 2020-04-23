@@ -287,6 +287,15 @@ export class StudySummaryTab extends React.Component<
                 };
                 break;
             }
+            case ChartTypeEnum.CASE_LIST_TABLE: {
+                props.filters = toJS(this.store.caseListsFilter);
+                props.promise = this.store.caseListSampleCounts;
+                props.onValueSelection = this.store.addCaseListsFilter;
+                props.onResetSelection = () => {
+                    this.store.setCaseListsFilter([]);
+                };
+                break;
+            }
             case ChartTypeEnum.SURVIVAL: {
                 props.promise = this.store.survivalPlotData;
                 props.getData = () =>
