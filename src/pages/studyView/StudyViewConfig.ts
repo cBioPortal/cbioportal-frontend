@@ -68,6 +68,7 @@ export enum ChartTypeEnum {
     FUSION_GENES_TABLE = 'FUSION_GENES_TABLE',
     CNA_GENES_TABLE = 'CNA_GENES_TABLE',
     GENOMIC_PROFILES_TABLE = 'GENOMIC_PROFILES_TABLE',
+    CASE_LIST_TABLE = 'CASE_LIST_TABLE',
     NONE = 'NONE',
 }
 
@@ -81,6 +82,7 @@ export enum ChartTypeNameEnum {
     FUSION_GENES_TABLE = 'table',
     CNA_GENES_TABLE = 'table',
     GENOMIC_PROFILES_TABLE = 'table',
+    CASE_LIST_TABLE = 'table',
     NONE = 'none',
 }
 
@@ -97,6 +99,7 @@ const studyViewFrontEnd = {
         CANCER_TYPE: 3000,
         CANCER_TYPE_DETAILED: 2000,
         GENOMIC_PROFILES_SAMPLE_COUNT: 1000,
+        CASE_LISTS_SAMPLE_COUNT: 1000,
         OS_SURVIVAL: 400,
         DFS_SURVIVAL: 300,
         DSS_SURVIVAL: 250,
@@ -175,6 +178,10 @@ const studyViewFrontEnd = {
                 h: 2,
             },
             [ChartTypeEnum.GENOMIC_PROFILES_TABLE]: {
+                w: 2,
+                h: 2,
+            },
+            [ChartTypeEnum.CASE_LIST_TABLE]: {
                 w: 2,
                 h: 2,
             },
