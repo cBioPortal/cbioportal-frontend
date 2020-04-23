@@ -552,7 +552,7 @@ describe('ResultsViewPageStoreUtils', () => {
                         'missense'
                     ),
                     mutationType: 'missense',
-                }
+                } as any
             );
         });
         it('annotates with cbioportal, cosmic', () => {
@@ -576,7 +576,7 @@ describe('ResultsViewPageStoreUtils', () => {
                         'in_frame_ins'
                     ),
                     mutationType: 'in_frame_ins',
-                },
+                } as any,
                 'cbioportal count'
             );
 
@@ -600,7 +600,7 @@ describe('ResultsViewPageStoreUtils', () => {
                         'in_frame_ins'
                     ),
                     mutationType: 'in_frame_ins',
-                },
+                } as any,
                 'cosmic count'
             );
         });
@@ -625,7 +625,7 @@ describe('ResultsViewPageStoreUtils', () => {
                         'asdfasdf'
                     ),
                     mutationType: 'asdfasdf',
-                },
+                } as any,
                 'tier'
             );
 
@@ -648,7 +648,7 @@ describe('ResultsViewPageStoreUtils', () => {
                         'missense'
                     ),
                     mutationType: 'missense',
-                },
+                } as any,
                 'binary'
             );
         });
@@ -675,7 +675,7 @@ describe('ResultsViewPageStoreUtils', () => {
                         'asdfasdf'
                     ),
                     mutationType: 'asdfasdf',
-                }
+                } as any
             );
         });
         it('annotates with none', () => {
@@ -698,7 +698,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     oncoKbOncogenic: '',
                     simplifiedMutationType: getSimplifiedMutationType('cvzxcv'),
                     mutationType: 'cvzxcv',
-                }
+                } as any
             );
         });
     });
@@ -1147,7 +1147,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     oncoKbOncogenic: 'Likely Oncogenic',
                     hugoGeneSymbol: 'genesymbol',
                     entrezGeneId: 9,
-                }
+                } as any
             );
         });
         it('annotates single element correctly in case of Predicted Oncogenic', () => {
@@ -1175,7 +1175,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     oncoKbOncogenic: 'Predicted Oncogenic',
                     hugoGeneSymbol: 'genesymbol',
                     entrezGeneId: 9,
-                }
+                } as any
             );
         });
         it('annotates single element correctly in case of Oncogenic', () => {
@@ -1201,7 +1201,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     oncoKbOncogenic: 'Oncogenic',
                     hugoGeneSymbol: 'genesymbol',
                     entrezGeneId: 9,
-                }
+                } as any
             );
         });
         it('annotates single element correctly in case of Likely Neutral, Inconclusive, Unknown, asdfasd, undefined, empty', () => {
@@ -1227,7 +1227,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     oncoKbOncogenic: '',
                     hugoGeneSymbol: 'genesymbol',
                     entrezGeneId: 9,
-                }
+                } as any
             );
             assert.deepEqual(
                 annotateMolecularDatum(
@@ -1251,7 +1251,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     oncoKbOncogenic: '',
                     hugoGeneSymbol: 'genesymbol',
                     entrezGeneId: 9,
-                }
+                } as any
             );
             assert.deepEqual(
                 annotateMolecularDatum(
@@ -1275,7 +1275,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     oncoKbOncogenic: '',
                     hugoGeneSymbol: 'genesymbol',
                     entrezGeneId: 9,
-                }
+                } as any
             );
             assert.deepEqual(
                 annotateMolecularDatum(
@@ -1299,7 +1299,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     oncoKbOncogenic: '',
                     hugoGeneSymbol: 'genesymbol',
                     entrezGeneId: 9,
-                }
+                } as any
             );
             assert.deepEqual(
                 annotateMolecularDatum(
@@ -1323,7 +1323,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     oncoKbOncogenic: '',
                     hugoGeneSymbol: 'genesymbol',
                     entrezGeneId: 9,
-                }
+                } as any
             );
             assert.deepEqual(
                 annotateMolecularDatum(
@@ -1347,7 +1347,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     oncoKbOncogenic: '',
                     hugoGeneSymbol: 'genesymbol',
                     entrezGeneId: 9,
-                }
+                } as any
             );
         });
         it('annotates non-copy number data with empty string', () => {
@@ -1373,7 +1373,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     oncoKbOncogenic: '',
                     hugoGeneSymbol: 'genesymbol',
                     entrezGeneId: 9,
-                }
+                } as any
             );
             assert.deepEqual(
                 annotateMolecularDatum(
@@ -1397,7 +1397,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     oncoKbOncogenic: '',
                     hugoGeneSymbol: 'genesymbol',
                     entrezGeneId: 9,
-                }
+                } as any
             );
             assert.deepEqual(
                 annotateMolecularDatum(
@@ -1421,7 +1421,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     oncoKbOncogenic: '',
                     hugoGeneSymbol: 'genesymbol',
                     entrezGeneId: 9,
-                }
+                } as any
             );
             assert.deepEqual(
                 annotateMolecularDatum(
@@ -1445,7 +1445,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     oncoKbOncogenic: '',
                     hugoGeneSymbol: 'genesymbol',
                     entrezGeneId: 9,
-                }
+                } as any
             );
         });
     });

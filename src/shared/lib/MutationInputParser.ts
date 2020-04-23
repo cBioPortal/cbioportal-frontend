@@ -107,7 +107,7 @@ export function parseLine(
                 mutation.gene = (mutation.gene || {}) as Gene;
                 mutation.gene[key] = value;
             } else {
-                mutation[key as keyof MutationInput] = value;
+                mutation[key as keyof MutationInput] = value as any;
             }
         }
     });
@@ -274,7 +274,7 @@ export function mutationInputToMutation(
                 mutation[key as keyof Mutation] = parseField(
                     mutationInput,
                     key
-                );
+                ) as any;
             }
         });
 

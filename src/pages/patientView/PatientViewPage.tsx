@@ -1343,11 +1343,6 @@ export default class PatientViewPage extends React.Component<
                                                         onColumnToggled: this
                                                             .onCnaTableColumnVisibilityToggled,
                                                     }}
-                                                    sampleToMutationGenePanelId={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .sampleToMutationGenePanelId
-                                                    }
                                                     onSelectGenePanel={
                                                         this
                                                             .toggleGenePanelModal
