@@ -179,6 +179,7 @@ describe('StudyViewUtils', () => {
                     studies as any,
                     {} as any,
                     {} as any,
+                    {} as any,
                     {} as any
                 ).startsWith(
                     '4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)'
@@ -244,6 +245,7 @@ describe('StudyViewUtils', () => {
                 },
                 numberOfSamplesPerPatient: [],
                 genomicProfiles: [],
+                caseLists: [],
             } as StudyViewFilterWithSampleIdentifierFilters;
 
             assert.isTrue(
@@ -259,6 +261,7 @@ describe('StudyViewUtils', () => {
                         cancer_study_fusion: 'Fusion Genes',
                         cancer_study_cna: 'CNA Genes',
                     },
+                    {} as any,
                     {} as any
                 ).startsWith(
                     '4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)' +
@@ -276,6 +279,7 @@ describe('StudyViewUtils', () => {
                     {} as any,
                     {} as any,
                     {} as any,
+                    {} as any,
                     'user1'
                 ).startsWith(
                     '4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)'
@@ -285,6 +289,7 @@ describe('StudyViewUtils', () => {
                 getVirtualStudyDescription(
                     '',
                     studies as any,
+                    {} as any,
                     {} as any,
                     {} as any,
                     {} as any,
@@ -316,6 +321,7 @@ describe('StudyViewUtils', () => {
                         attribute2: 'attribute2 name',
                         attribute3: 'attribute3 name',
                     },
+                    {} as any,
                     {} as any
                 ).startsWith('test\n\nCreated on')
             );
