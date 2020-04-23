@@ -27,6 +27,7 @@ export interface IVirtualStudyProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;
     attributesMetaSet: { [id: string]: ChartMeta };
     molecularProfileNameSet: { [key: string]: string };
+    caseListNameSet: { [key: string]: string };
     name?: string;
     description?: string;
     user?: string;
@@ -107,6 +108,7 @@ export default class VirtualStudy extends React.Component<
                 this.props.filter,
                 this.attributeNamesSet,
                 this.props.molecularProfileNameSet,
+                this.props.caseListNameSet,
                 this.props.user
             );
     }

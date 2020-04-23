@@ -1165,6 +1165,43 @@
         }
       }
     },
+    "/molecular-profile-sample-counts/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch sample counts by study view filter",
+        "operationId": "fetchMolecularProfileSampleCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenomicDataCount"
+              }
+            }
+          }
+        }
+      }
+    },
     "/molecular-profiles/co-expressions/fetch": {
       "post": {
         "tags": [
@@ -1460,13 +1497,13 @@
         }
       }
     },
-    "/sample-counts/fetch": {
+    "/sample-lists-counts/fetch": {
       "post": {
         "tags": [
           "Study View"
         ],
-        "summary": "Fetch sample counts by study view filter",
-        "operationId": "fetchMolecularProfileSampleCountsUsingPOST",
+        "summary": "Fetch case list sample counts by study view filter",
+        "operationId": "fetchCaseListCountsUsingPOST",
         "consumes": [
           "application/json"
         ],
@@ -1490,7 +1527,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/GenomicDataCount"
+                "$ref": "#/definitions/CaseListDataCount"
               }
             }
           }
@@ -1745,6 +1782,22 @@
         }
       },
       "title": "AlterationEnrichment"
+    },
+    "CaseListDataCount": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "label": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "title": "CaseListDataCount"
     },
     "ClinicalAttribute": {
       "type": "object",
@@ -2874,6 +2927,15 @@
     "StudyViewFilter": {
       "type": "object",
       "properties": {
+        "caseLists": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
         "clinicalDataFilters": {
           "type": "array",
           "items": {
