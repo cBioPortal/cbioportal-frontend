@@ -636,7 +636,7 @@ export default class BoxScatterPlot<
                     Object.assign({}, d, {
                         [dataAxis]: d.value,
                         [categoryAxis]: categoryCoord,
-                    } as { x: number; y: number } & IBaseBoxScatterPlotPoint)
+                    } as { x: number; y: number })
                 );
             }
         }

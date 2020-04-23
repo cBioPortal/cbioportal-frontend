@@ -203,7 +203,7 @@ export class QueryStore {
                     );
                 }
             }),
-            action(error => {
+            action((error: any) => {
                 //TODO: how to handle if there is an error
             })
         );
@@ -217,7 +217,7 @@ export class QueryStore {
                     x => x !== id
                 );
             }),
-            action(error => {
+            action((error: any) => {
                 //TODO: how to handle if there is an error
             })
         );
@@ -261,13 +261,6 @@ export class QueryStore {
             }
         }
         return Object.keys(ret);
-    }
-
-    copyFrom(other: CancerStudyQueryParams) {
-        // download tab does not appear anywhere except home page
-        this.forDownloadTab = false;
-
-        for (let key of QueryParamsKeys) this[key] = other[key];
     }
 
     @computed get stateToSerialize() {

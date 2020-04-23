@@ -44,7 +44,7 @@ type CachePromise<D, M> = {
 function isAugmentedData<D, M>(
     data: D | AugmentedData<D, M>
 ): data is AugmentedData<D, M> {
-    return data.hasOwnProperty('meta');
+    return (data as Object).hasOwnProperty('meta');
 }
 
 export default class LazyMobXCache<Data, Query, Metadata = any> {
