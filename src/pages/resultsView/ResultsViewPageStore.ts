@@ -4285,20 +4285,20 @@ export class ResultsViewPageStore {
         },
     });
 
-    readonly molecularProfileIdToProfiledSampleCount = remoteData({
+    readonly molecularProfileIdToProfiledSamples = remoteData({
         await: () => [
             this.samples,
             this.coverageInformation,
             this.molecularProfilesInStudies,
         ],
         invoke: () => {
-            const ret: { [molecularProfileId: string]: number } = {};
+            const ret: { [molecularProfileId: string]: Sample[] } = {};
             const profileIds = this.molecularProfilesInStudies.result.map(
                 x => x.molecularProfileId
             );
             const coverageInformation = this.coverageInformation.result!;
             for (const profileId of profileIds) {
-                ret[profileId] = 0;
+                ret[profileId] = [];
             }
             let profiledReport: boolean[] = [];
             for (const sample of this.samples.result!) {
@@ -4309,7 +4309,7 @@ export class ResultsViewPageStore {
                 );
                 for (let i = 0; i < profileIds.length; i++) {
                     if (profiledReport[i]) {
-                        ret[profileIds[i]] += 1;
+                        ret[profileIds[i]].push(sample);
                     }
                 }
             }

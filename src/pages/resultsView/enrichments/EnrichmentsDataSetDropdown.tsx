@@ -17,9 +17,6 @@ export interface IEnrichmentsDataSetDropdownProps {
     selectedProfileByStudyId: {
         [id: string]: Pick<MolecularProfile, 'molecularProfileId'>;
     };
-    molecularProfileIdToProfiledSampleCount?: MobxPromise<{
-        [molecularProfileId: string]: number;
-    }>;
     studies: CancerStudy[];
     alwaysShow?: boolean;
 }
@@ -83,11 +80,7 @@ export default class EnrichmentsDataSetDropdown extends React.Component<
     }
 
     public render() {
-        if (
-            this.props.dataSets.isPending ||
-            (this.props.molecularProfileIdToProfiledSampleCount &&
-                this.props.molecularProfileIdToProfiledSampleCount.isPending)
-        ) {
+        if (this.props.dataSets.isPending) {
             return <LoadingIndicator isLoading={true} />;
         }
         if (this.showEnrichmentsDataSetDropdown || !!this.props.alwaysShow) {
@@ -118,14 +111,6 @@ export default class EnrichmentsDataSetDropdown extends React.Component<
                                         .molecularProfileId
                                 }
                                 molecularProfiles={molecularProfiles}
-                                molecularProfileIdToProfiledSampleCount={
-                                    this.props
-                                        .molecularProfileIdToProfiledSampleCount
-                                        ? this.props
-                                              .molecularProfileIdToProfiledSampleCount
-                                              .result
-                                        : undefined
-                                }
                                 onChange={(o: any) => this.change(studyId, o)}
                             />
                         </div>
