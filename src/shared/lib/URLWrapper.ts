@@ -241,7 +241,7 @@ export default class URLWrapper<
                     nonSessionProps: Partial<QueryParamsType>;
                 },
                 value,
-                paramKey
+                paramKey: keyof QueryParamsType
             ) => {
                 if (paramKey in sessionProps) {
                     acc.sessionProps[paramKey] = mergedParams[paramKey];

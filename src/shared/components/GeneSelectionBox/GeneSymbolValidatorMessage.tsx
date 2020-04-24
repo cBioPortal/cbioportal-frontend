@@ -231,7 +231,7 @@ const GeneSymbolValidatorMessageChild = (
     );
 };
 
-class GeneSymbolValidatorMessage extends React.Component<
+export default class GeneSymbolValidatorMessage extends React.Component<
     GeneSymbolValidatorMessageProps,
     {}
 > {
@@ -254,5 +254,3 @@ class GeneSymbolValidatorMessage extends React.Component<
         );
     }
 }
-
-export default React.memo(GeneSymbolValidatorMessage);
