@@ -1964,8 +1964,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         const horz = keysToSwap.map(k => this.horzSelection[k]);
         const vert = keysToSwap.map(k => this.vertSelection[k]);
         for (let i = 0; i < keysToSwap.length; i++) {
-            this.horzSelection[keysToSwap[i]] = vert[i];
-            this.vertSelection[keysToSwap[i]] = horz[i];
+            (this.horzSelection as any)[keysToSwap[i]] = vert[i];
+            (this.vertSelection as any)[keysToSwap[i]] = horz[i];
         }
     }
 

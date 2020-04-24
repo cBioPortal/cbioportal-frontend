@@ -30,6 +30,6 @@
   },
   "dependencies": {
     "superagent": "^3.8.3",
-    "typescript": "3.2.2"
+    "typescript": "3.8.3"
   }
 }

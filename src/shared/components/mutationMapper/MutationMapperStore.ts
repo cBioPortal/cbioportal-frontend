@@ -11,6 +11,7 @@ import {
     groupDataByProteinImpactType,
     groupOncoKbIndicatorDataByMutations,
     IHotspotIndex,
+    Mutation as MutationMapperMutation,
 } from 'react-mutation-mapper';
 
 import genomeNexusClient from 'shared/api/genomeNexusClientInstance';
@@ -251,7 +252,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
     }
 
     @computed get mutationsByTranscriptId(): {
-        [transcriptId: string]: Mutation[];
+        [transcriptId: string]: MutationMapperMutation[];
     } {
         if (
             this.indexedVariantAnnotations.result &&

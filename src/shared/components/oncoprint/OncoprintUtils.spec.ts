@@ -5,7 +5,7 @@ import {
     extractGenericAssaySelections,
     getGenericAssayTrackRuleSetParams,
 } from './OncoprintUtils';
-import { observable } from 'mobx';
+import { IKeyValueMap, observable } from 'mobx';
 import * as _ from 'lodash';
 import { assert } from 'chai';
 import { IQueriedMergedTrackCaseData } from '../../../pages/resultsView/ResultsViewPageStore';
@@ -408,7 +408,7 @@ describe('OncoprintUtils', () => {
                 ...preExpandStoreProperties,
                 expansionIndexMap: observable.shallowMap({
                     [trackKey]: [0, 1],
-                }),
+                } as IKeyValueMap<number[]>),
             };
             // when
             const trackFunction = makeGeneticTrackWith({

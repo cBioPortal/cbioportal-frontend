@@ -53,7 +53,7 @@
     "react-table": "^6.10.0",
     "seamless-immutable": "^7.1.4",
     "superagent": "^3.8.3",
-    "typescript": "^3.2.2"
+    "typescript": "3.8.3"
   },
   "devDependencies": {
     "@testing-library/react": "^9.3.2",
