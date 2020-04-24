@@ -1,7 +1,6 @@
-import { calcProteinChangeSortValue } from 'cbioportal-frontend-commons';
+import { calcProteinChangeSortValue, Mutation } from 'cbioportal-utils';
 import * as React from 'react';
 
-import { Mutation } from '../../model/Mutation';
 import { defaultSortMethod } from '../../util/ReactTableUtils';
 import styles from './proteinChange.module.scss';
 

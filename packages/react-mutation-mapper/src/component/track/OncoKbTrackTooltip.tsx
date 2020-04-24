@@ -2,9 +2,9 @@ import * as React from 'react';
 import * as _ from 'lodash';
 
 import { LEVELS } from 'cbioportal-frontend-commons';
+import { Mutation } from 'cbioportal-utils';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 
-import { Mutation } from '../../model/Mutation';
 import OncoKbSummaryTable from '../oncokb/OncoKbSummaryTable';
 
 type OncoKbTrackTooltipProps = {

@@ -5,7 +5,7 @@ import * as React from 'react';
 import { CSSProperties } from 'react';
 
 import { IProteinImpactTypeColors } from '../../model/ProteinImpact';
-import { DEFAULT_PROTEIN_IMPACT_TYPE_COLORS } from '../../util/MutationUtils';
+import { DEFAULT_PROTEIN_IMPACT_TYPE_COLORS } from '../../util/MutationTypeUtils';
 import { BadgeLabel } from './BadgeLabel';
 import BadgeSelector, {
     BadgeSelectorOption,

@@ -1,17 +1,17 @@
 import { IOncoKbData } from 'cbioportal-frontend-commons';
+import { Gene, Mutation } from 'cbioportal-utils';
 import {
     EnsemblTranscript,
+    Hotspot,
     MyVariantInfo,
     PfamDomain,
     PostTranslationalModification,
     VariantAnnotation,
 } from 'genome-nexus-ts-api-client';
 import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
-import { Hotspot, IHotspotIndex } from './CancerHotspot';
+import { IHotspotIndex } from './CancerHotspot';
 import { ICivicGene, ICivicVariant } from './Civic';
 import DataStore from './DataStore';
-import { Gene } from './Gene';
-import { Mutation } from './Mutation';
 import { IMyCancerGenomeData } from './MyCancerGenome';
 import { RemoteData } from './RemoteData';
 

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { calcProteinChangeSortValue } from 'cbioportal-frontend-commons';
+import { calcProteinChangeSortValue } from 'cbioportal-utils';
 import { CosmicMutation } from 'cbioportal-ts-api-client';
 import {
     Column,

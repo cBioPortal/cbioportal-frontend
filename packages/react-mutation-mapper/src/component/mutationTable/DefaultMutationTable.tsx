@@ -1,4 +1,5 @@
 import { IOncoKbData } from 'cbioportal-frontend-commons';
+import { Mutation } from 'cbioportal-utils';
 import { MyVariantInfo, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
 import _ from 'lodash';
@@ -15,7 +16,6 @@ import { IHotspotIndex } from '../../model/CancerHotspot';
 import { ICivicGene, ICivicVariant } from '../../model/Civic';
 import { DataFilterType } from '../../model/DataFilter';
 import { MobxCache } from '../../model/MobxCache';
-import { Mutation } from '../../model/Mutation';
 import { IMyCancerGenomeData } from '../../model/MyCancerGenome';
 import { RemoteData } from '../../model/RemoteData';
 import {

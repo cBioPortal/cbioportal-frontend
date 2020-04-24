@@ -1,7 +1,8 @@
 import { assert } from 'chai';
 
+import { Mutation } from 'cbioportal-utils';
+
 import { lollipopLabelText } from './LollipopPlotUtils';
-import { Mutation } from '../model/Mutation';
 
 describe('LollipopPlotUtils', () => {
     let mutationsAtPosition: Mutation[];

@@ -1,9 +1,9 @@
+import { Mutation } from 'cbioportal-utils';
 import _ from 'lodash';
 import * as React from 'react';
 
 import ColumnHeader from '../column/ColumnHeader';
 import { Column } from 'react-table';
-import { Mutation } from '../../model/Mutation';
 import ProteinChange, {
     proteinChangeSortMethod,
 } from '../column/ProteinChange';

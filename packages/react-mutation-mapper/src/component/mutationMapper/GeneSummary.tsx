@@ -1,12 +1,12 @@
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import { getNCBIlink } from 'cbioportal-frontend-commons';
+import { Mutation } from 'cbioportal-utils';
 import {
     EnsemblTranscript,
     VariantAnnotation,
 } from 'genome-nexus-ts-api-client';
 
-import { Mutation } from '../../model/Mutation';
 import { RemoteData } from '../../model/RemoteData';
 import { getUrl } from '../../util/DataFetcherUtils';
 import TranscriptDropdown from './TranscriptDropdown';
