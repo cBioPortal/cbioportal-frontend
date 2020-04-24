@@ -170,7 +170,6 @@ import {
 } from 'pages/resultsView/survival/SurvivalUtil';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
-import client from '../../shared/api/cbioportalClientInstance';
 
 export type ChartUserSetting = {
     id: string;
@@ -2478,46 +2477,32 @@ export class StudyViewPageStore {
         default: [],
     });
 
-    readonly allPhysicalStudies = remoteData({
-        invoke: async () => {
-            if (this.studyIds.length > 0) {
-                return defaultClient
-                    .fetchStudiesUsingPOST({
-                        studyIds: toJS(this.studyIds),
-                        projection: 'SUMMARY',
-                    })
-                    .then(studies => {
-                        return studies;
-                    })
-                    .catch(error => {
-                        return defaultClient.getAllStudiesUsingGET({
-                            projection: 'SUMMARY',
-                        });
-                    });
-            }
-            return [];
+    readonly allStudies = remoteData(
+        {
+            invoke: async () =>
+                await defaultClient.getAllStudiesUsingGET({
+                    projection: 'SUMMARY',
+                }),
         },
-        default: [],
-    });
+        []
+    );
 
-    readonly physicalStudiesSet = remoteData<{ [id: string]: CancerStudy }>({
-        await: () => [this.allPhysicalStudies],
-        invoke: async () => {
-            return _.keyBy(this.allPhysicalStudies.result, s => s.studyId);
-        },
-        default: {},
+    readonly everyStudyIdToStudy = remoteData({
+        await: () => [this.allStudies],
+        invoke: () =>
+            Promise.resolve(_.keyBy(this.allStudies.result!, s => s.studyId)),
     });
 
     // contains queried physical studies
     readonly filteredPhysicalStudies = remoteData({
-        await: () => [this.physicalStudiesSet],
+        await: () => [this.everyStudyIdToStudy],
         invoke: async () => {
-            const physicalStudiesSet = this.physicalStudiesSet.result;
+            const everyStudyIdToStudy = this.everyStudyIdToStudy.result!;
             return _.reduce(
                 this.studyIds,
                 (acc: CancerStudy[], next) => {
-                    if (physicalStudiesSet[next]) {
-                        acc.push(physicalStudiesSet[next]);
+                    if (everyStudyIdToStudy[next]) {
+                        acc.push(everyStudyIdToStudy[next]);
                     }
                     return acc;
                 },
@@ -2570,35 +2555,12 @@ export class StudyViewPageStore {
             this.filteredVirtualStudies,
         ],
         invoke: async () => {
-            let physicalStudiesSet = this.physicalStudiesSet.result;
+            let everyStudyIdToStudy = this.everyStudyIdToStudy.result!;
 
-            const virtualStudyRelatedPhysicalStudiesIds = _.uniq(
-                _.flatten(
-                    this.filteredVirtualStudies.result.map((vs: VirtualStudy) =>
-                        vs.data.studies.map(study => study.id)
-                    )
-                )
-            );
-            const unsettledPhysicalStudies = _.without(
-                virtualStudyRelatedPhysicalStudiesIds,
-                ..._.keys(physicalStudiesSet)
-            );
-            if (unsettledPhysicalStudies.length > 0) {
-                const virtualStudyRelatedPhysicalStudies = await defaultClient.fetchStudiesUsingPOST(
-                    {
-                        studyIds: unsettledPhysicalStudies,
-                        projection: 'SUMMARY',
-                    }
-                );
-                physicalStudiesSet = _.merge(
-                    physicalStudiesSet,
-                    _.keyBy(virtualStudyRelatedPhysicalStudies, 'studyId')
-                );
-            }
             let studies = _.reduce(
                 this.filteredPhysicalStudies.result,
                 (acc, next) => {
-                    acc[next.studyId] = physicalStudiesSet[next.studyId];
+                    acc[next.studyId] = everyStudyIdToStudy[next.studyId];
                     return acc;
                 },
                 {} as { [id: string]: CancerStudy }
@@ -2606,8 +2568,8 @@ export class StudyViewPageStore {
 
             this.filteredVirtualStudies.result.forEach(virtualStudy => {
                 virtualStudy.data.studies.forEach(study => {
-                    if (!studies[study.id] && physicalStudiesSet[study.id]) {
-                        studies[study.id] = physicalStudiesSet[study.id];
+                    if (!studies[study.id] && everyStudyIdToStudy[study.id]) {
+                        studies[study.id] = everyStudyIdToStudy[study.id];
                     }
                 });
             });
@@ -2742,6 +2704,7 @@ export class StudyViewPageStore {
         await: () => [
             this.filteredPhysicalStudies,
             this.filteredVirtualStudies,
+            this.everyStudyIdToStudy,
         ],
         invoke: async () => {
             let studies: CancerStudy[] = [];
@@ -2749,10 +2712,10 @@ export class StudyViewPageStore {
                 const originStudyIds = this.filteredVirtualStudies.result[0]
                     .data.origin;
                 const virtualStudyIds: string[] = [];
-                const physicalStudiesSet = this.physicalStudiesSet.result;
+                const everyStudyIdToStudy = this.everyStudyIdToStudy.result!;
                 _.each(originStudyIds, studyId => {
-                    if (physicalStudiesSet[studyId]) {
-                        studies.push(physicalStudiesSet[studyId]);
+                    if (everyStudyIdToStudy[studyId]) {
+                        studies.push(everyStudyIdToStudy[studyId]);
                     } else {
                         virtualStudyIds.push(studyId);
                     }
@@ -2932,7 +2895,7 @@ export class StudyViewPageStore {
             const ret: ResourceDefinition[] = [];
             for (const studyId of this.studyIds) {
                 promises.push(
-                    client
+                    defaultClient
                         .getAllResourceDefinitionsInStudyUsingGET({ studyId })
                         .then(data => {
                             ret.push(...data);
@@ -2960,7 +2923,7 @@ export class StudyViewPageStore {
             const promises = [];
             for (const resource of studyResourceDefinitions) {
                 promises.push(
-                    client
+                    defaultClient
                         .getAllStudyResourceDataInStudyUsingGET({
                             studyId: resource.studyId,
                             resourceId: resource.resourceId,
@@ -5747,7 +5710,7 @@ export class StudyViewPageStore {
     @computed
     public get downloadFilenamePrefix() {
         return generateDownloadFilenamePrefixByStudies(
-            _.values(this.physicalStudiesSet.result)
+            this.displayedStudies.result
         );
     }
 
