@@ -77,14 +77,9 @@ export default class MutationOncoprint extends React.Component<
         return !urlValue || urlValue === 'true'; // default true
     }
     private set showMutationLabels(o: boolean) {
-        this.props.urlWrapper.updateURL({
-            genomicEvolutionSettings: Object.assign(
-                {},
-                this.props.urlWrapper.query.genomicEvolutionSettings,
-                {
-                    showMutationLabelsInHeatmap: o.toString(),
-                }
-            ),
+        this.props.urlWrapper.updateURL(currentParams => {
+            currentParams.genomicEvolutionSettings.showMutationLabelsInHeatmap = o.toString();
+            return currentParams;
         });
     }
 
@@ -94,14 +89,9 @@ export default class MutationOncoprint extends React.Component<
         return !urlValue || urlValue === 'true'; // default true
     }
     private set clustered(o: boolean) {
-        this.props.urlWrapper.updateURL({
-            genomicEvolutionSettings: Object.assign(
-                {},
-                this.props.urlWrapper.query.genomicEvolutionSettings,
-                {
-                    clusterHeatmap: o.toString(),
-                }
-            ),
+        this.props.urlWrapper.updateURL(currentParams => {
+            currentParams.genomicEvolutionSettings.clusterHeatmap = o.toString();
+            return currentParams;
         });
     }
 
@@ -114,16 +104,11 @@ export default class MutationOncoprint extends React.Component<
             : MutationOncoprintMode.SAMPLE_TRACKS;
     }
     private set mode(m: MutationOncoprintMode) {
-        this.props.urlWrapper.updateURL({
-            genomicEvolutionSettings: Object.assign(
-                {},
-                this.props.urlWrapper.query.genomicEvolutionSettings,
-                {
-                    transposeHeatmap: (
-                        m === MutationOncoprintMode.MUTATION_TRACKS
-                    ).toString(),
-                }
-            ),
+        this.props.urlWrapper.updateURL(currentParams => {
+            currentParams.genomicEvolutionSettings.transposeHeatmap = (
+                m === MutationOncoprintMode.MUTATION_TRACKS
+            ).toString();
+            return currentParams;
         });
     }
 
