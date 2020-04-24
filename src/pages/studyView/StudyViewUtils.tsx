@@ -106,6 +106,7 @@ export type ChartType =
     | 'MUTATED_GENES_TABLE'
     | 'FUSION_GENES_TABLE'
     | 'GENOMIC_PROFILES_TABLE'
+    | 'CASE_LIST_TABLE'
     | 'CNA_GENES_TABLE'
     | 'NONE';
 
@@ -117,6 +118,7 @@ export enum SpecialChartsUniqueKeyEnum {
     MUTATION_COUNT = 'MUTATION_COUNT',
     FRACTION_GENOME_ALTERED = 'FRACTION_GENOME_ALTERED',
     GENOMIC_PROFILES_SAMPLE_COUNT = 'GENOMIC_PROFILES_SAMPLE_COUNT',
+    CASE_LISTS_SAMPLE_COUNT = 'CASE_LISTS_SAMPLE_COUNT',
 }
 
 export type AnalysisGroup = {
@@ -193,6 +195,20 @@ export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [
         description: '',
         chartType: ChartTypeEnum.GENOMIC_PROFILES_TABLE,
         dataType: ChartMetaDataTypeEnum.GENOMIC,
+        patientAttribute: false,
+        dimension: {
+            w: 2,
+            h: 2,
+        },
+        priority: 70,
+        renderWhenDataChange: false,
+    },
+    {
+        uniqueKey: SpecialChartsUniqueKeyEnum.CASE_LISTS_SAMPLE_COUNT,
+        displayName: 'Case Lists',
+        description: '',
+        chartType: ChartTypeEnum.CASE_LIST_TABLE,
+        dataType: ChartMetaDataTypeEnum.CLINICAL,
         patientAttribute: false,
         dimension: {
             w: 2,
@@ -676,6 +692,7 @@ export function getVirtualStudyDescription(
     filter: StudyViewFilterWithSampleIdentifierFilters,
     attributeNamesSet: { [id: string]: string },
     molecularProfileNameSet: { [id: string]: string },
+    caseListNameSet: { [key: string]: string },
     user?: string
 ) {
     let descriptionLines: string[] = [];
@@ -740,6 +757,20 @@ export function getVirtualStudyDescription(
                 );
             }
 
+            if (!_.isEmpty(filter.caseLists)) {
+                filterLines.push('- Case List Sample Counts:');
+                filterLines = filterLines.concat(
+                    filter.caseLists
+                        .map(caseList =>
+                            caseList
+                                .map(caseList => caseListNameSet[caseList])
+                                .join(', ')
+                                .trim()
+                        )
+                        .map(line => '  - ' + line)
+                );
+            }
+
             _.each(filter.clinicalDataFilters || [], clinicalDataFilter => {
                 let name = attributeNamesSet[clinicalDataFilter.attributeId];
                 filterLines.push(
@@ -794,7 +825,8 @@ export function isFiltered(
         (_.isEmpty(filter.clinicalDataFilters) &&
             _.isEmpty(filter.geneFilters) &&
             _.isEmpty(filter.genomicProfiles) &&
-            _.isEmpty(filter.genomicDataFilters))
+            _.isEmpty(filter.genomicDataFilters) &&
+            _.isEmpty(filter.caseLists))
     );
 
     if (filter.sampleIdentifiersSet) {
