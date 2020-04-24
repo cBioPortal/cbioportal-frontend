@@ -24,6 +24,7 @@ export interface IResultsPageSettingsProps {
 enum EVENT_KEY {
     hidePutativePassengers = '0',
     showGermlineMutations = '1',
+    hideUnprofiledSamples = '1.1',
 
     dataTypeSample = '2',
     dataTypePatient = '3',
@@ -34,13 +35,6 @@ export default class ResultsPageSettings extends React.Component<
     IResultsPageSettingsProps,
     {}
 > {
-    @autobind private onChange(v: {
-        label: string;
-        value: OncoprintAnalysisCaseType;
-    }) {
-        this.props.store.setOncoprintAnalysisCaseType(v.value);
-    }
-
     private driverSettingsState: IDriverAnnotationControlsState &
         IObservableObject;
     private driverSettingsHandlers: IDriverAnnotationControlsHandlers;
@@ -59,6 +53,11 @@ export default class ResultsPageSettings extends React.Component<
             case EVENT_KEY.hidePutativePassengers:
                 this.props.store.driverAnnotationSettings.excludeVUS = !this
                     .props.store.driverAnnotationSettings.excludeVUS;
+                break;
+            case EVENT_KEY.hideUnprofiledSamples:
+                this.props.store.setHideUnprofiledSamples(
+                    !this.props.store.hideUnprofiledSamples
+                );
                 break;
             case EVENT_KEY.showGermlineMutations:
                 this.props.store.setExcludeGermlineMutations(
@@ -96,7 +95,8 @@ export default class ResultsPageSettings extends React.Component<
                     style={{ color: 'rgb(54, 134, 194)' }}
                     tooltip={
                         <span>
-                            These settings affect every tab except{' '}
+                            Putative driver vs VUS setings apply to every tab
+                            except{' '}
                             {boldedTabList(['Co-expression', 'CN Segments'])}
                         </span>
                     }
@@ -113,20 +113,6 @@ export default class ResultsPageSettings extends React.Component<
                 <h5 style={{ marginTop: 'auto', marginBottom: 'auto' }}>
                     Filter Data
                 </h5>
-                <InfoIcon
-                    divStyle={{ display: 'inline-block', marginLeft: 6 }}
-                    style={{ color: 'rgb(54, 134, 194)' }}
-                    tooltip={
-                        <span>
-                            These settings affect every tab except{' '}
-                            {boldedTabList([
-                                'Plots',
-                                'Co-expression',
-                                'CN Segments',
-                            ])}
-                        </span>
-                    }
-                />
                 <div style={{ marginLeft: 10 }}>
                     <div className="checkbox">
                         <label>
@@ -159,6 +145,19 @@ export default class ResultsPageSettings extends React.Component<
                                 onClick={this.onInputClick}
                             />{' '}
                             Exclude germline mutations
+                        </label>
+                    </div>
+                    <div className="checkbox">
+                        <label>
+                            <input
+                                data-test="HideUnprofiled"
+                                type="checkbox"
+                                value={EVENT_KEY.hideUnprofiledSamples}
+                                checked={this.props.store.hideUnprofiledSamples}
+                                onClick={this.onInputClick}
+                            />{' '}
+                            Exclude samples that are not profiled for all genes
+                            in all queried profiles
                         </label>
                     </div>
                 </div>

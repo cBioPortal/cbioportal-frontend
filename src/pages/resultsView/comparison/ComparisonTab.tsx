@@ -24,11 +24,11 @@ import { GroupComparisonTab } from '../../groupComparison/GroupComparisonTabs';
 import Survival from '../../groupComparison/Survival';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
-import NotUsingGenePanelWarning from '../NotUsingGenePanelWarning';
 import _ from 'lodash';
 import groupComparisonStyles from '../../../pages/groupComparison/styles.module.scss';
 import styles from '../../groupComparison/styles.module.scss';
 import GroupSelector from '../../groupComparison/groupSelector/GroupSelector';
+import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 
 export interface IComparisonTabProps {
     urlWrapper: ResultsViewURLWrapper;
@@ -149,11 +149,6 @@ export default class ComparisonTab extends React.Component<
                                     : ''
                             }
                         >
-                            <div className="tabMessageContainer">
-                                <NotUsingGenePanelWarning
-                                    store={this.props.store}
-                                />
-                            </div>
                             <Survival store={this.store} />
                         </MSKTab>
                     )}
@@ -250,6 +245,18 @@ export default class ComparisonTab extends React.Component<
                     size={'big'}
                 />
                 <div
+                    className={'tabMessageContainer'}
+                    style={{ marginBottom: 10 }}
+                >
+                    <OqlStatusBanner
+                        className="comparison-oql-status-banner"
+                        store={this.props.store}
+                        tabReflectsOql={true}
+                    />
+                    <AlterationFilterWarning store={this.props.store} />
+                    <CaseFilterWarning store={this.props.store} />
+                </div>
+                <div
                     style={{
                         display: 'flex',
                         justifyContent: 'space-between',
@@ -264,17 +271,6 @@ export default class ComparisonTab extends React.Component<
                         />
                     </div>
                     <div>{this.overlapStrategySelector.component}</div>
-                </div>
-                <div
-                    className={'tabMessageContainer'}
-                    style={{ marginBottom: 10 }}
-                >
-                    <OqlStatusBanner
-                        className="comparison-oql-status-banner"
-                        store={this.props.store}
-                        tabReflectsOql={true}
-                    />
-                    <AlterationFilterWarning store={this.props.store} />
                 </div>
                 {this.tabs.component}
             </div>

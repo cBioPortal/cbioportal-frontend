@@ -18,6 +18,8 @@ import AlterationFilterWarning from '../../../shared/components/banners/Alterati
 import { ResultsViewURLQueryEnum } from 'pages/resultsView/ResultsViewURLWrapper';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import autobind from 'autobind-decorator';
+import { OncoprintAnalysisCaseType } from '../ResultsViewPageStoreUtils';
+import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 
 interface ICancerSummaryContainerProps {
     store: ResultsViewPageStore;
@@ -61,7 +63,8 @@ export default class CancerSummaryContainer extends React.Component<
                 return 'studyId';
             } else {
                 const cancerTypes = _.chain(
-                    this.props.store.samplesExtendedWithClinicalData.result!
+                    this.props.store.filteredSamplesExtendedWithClinicalData
+                        .result!
                 )
                     .map((sample: ExtendedSample) => sample.cancerType)
                     .uniq()
@@ -94,7 +97,7 @@ export default class CancerSummaryContainer extends React.Component<
 
         const alterationCountsForCancerTypesByGene = getAlterationCountsForCancerTypesByGene(
             this.props.store.oqlFilteredAlterationsByGeneBySampleKey.result!,
-            this.props.store.samplesExtendedWithClinicalData.result!,
+            this.props.store.filteredSamplesExtendedWithClinicalData.result!,
             this.groupAlterationsBy,
             this.props.store.selectedMolecularProfileIdsByAlterationType
                 .result!,
@@ -148,7 +151,8 @@ export default class CancerSummaryContainer extends React.Component<
             const groupedAlterationDataForAllGenes = getAlterationCountsForCancerTypesForAllGenes(
                 this.props.store.oqlFilteredAlterationsByGeneBySampleKey
                     .result!,
-                this.props.store.samplesExtendedWithClinicalData.result!,
+                this.props.store.filteredSamplesExtendedWithClinicalData
+                    .result!,
                 this.groupAlterationsBy,
                 this.props.store.selectedMolecularProfileIdsByAlterationType
                     .result!,
@@ -196,10 +200,10 @@ export default class CancerSummaryContainer extends React.Component<
 
     public render() {
         const status = getRemoteDataGroupStatus(
-            this.props.store.samplesExtendedWithClinicalData,
+            this.props.store.filteredSamplesExtendedWithClinicalData,
             this.props.store.oqlFilteredAlterationsByGeneBySampleKey,
             this.props.store.studies,
-            this.props.store.sequencedSampleKeysByGene,
+            this.props.store.filteredSequencedSampleKeysByGene,
             this.props.store.selectedMolecularProfileIdsByAlterationType,
             this.props.store.coverageInformation
         );
@@ -230,6 +234,7 @@ export default class CancerSummaryContainer extends React.Component<
                                 tabReflectsOql={true}
                             />
                             <AlterationFilterWarning store={this.props.store} />
+                            <CaseFilterWarning store={this.props.store} />
                         </div>
                         <MSKTabs
                             onTabClick={this.handleTabClick}
