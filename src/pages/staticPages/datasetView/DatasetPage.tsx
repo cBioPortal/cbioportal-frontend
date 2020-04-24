@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import DatasetList from './DatasetList';
-import { observer } from 'mobx-react';
+import { inject, observer } from 'mobx-react';
 import client from 'shared/api/cbioportalClientInstance';
 import { remoteData } from 'cbioportal-frontend-commons';
 import AppConfig from 'appConfig';
@@ -9,12 +9,23 @@ import styles from './styles.module.scss';
 import { PageLayout } from '../../../shared/components/PageLayout/PageLayout';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import Helmet from 'react-helmet';
+import request from 'superagent';
+import { getStudyDownloadListUrl } from 'shared/api/urls';
+import { AppStore } from 'AppStore';
 
 export class DatasetPageStore {
     readonly data = remoteData({
         invoke: () => {
             return client.getAllStudiesUsingGET({ projection: 'DETAILED' });
         },
+    });
+
+    readonly downloadList = remoteData(() => {
+        if (AppConfig.serverConfig.app_name === 'public-portal') {
+            return request(getStudyDownloadListUrl()).then(resp => resp.body);
+        } else {
+            return Promise.resolve([]);
+        }
     });
 }
 
@@ -60,15 +71,22 @@ export default class DatasetPage extends React.Component<{}, {}> {
 
                     <h1>Datasets</h1>
 
-                    {this.store.data.isComplete && (
-                        <div className={styles.dataSets}>
-                            {header}
-                            <DatasetList datasets={this.store.data.result} />
-                            {footer}
-                        </div>
-                    )}
+                    {this.store.data.isComplete &&
+                        this.store.downloadList.isComplete && (
+                            <div className={styles.dataSets}>
+                                {header}
+                                <DatasetList
+                                    downloadables={
+                                        this.store.downloadList.result
+                                    }
+                                    datasets={this.store.data.result}
+                                />
+                                {footer}
+                            </div>
+                        )}
 
-                    {this.store.data.isPending && (
+                    {(this.store.data.isPending ||
+                        this.store.downloadList.isPending) && (
                         <LoadingIndicator
                             isLoading={true}
                             size={'big'}
