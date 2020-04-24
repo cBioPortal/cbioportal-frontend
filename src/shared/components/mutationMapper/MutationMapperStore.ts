@@ -7,12 +7,14 @@ import {
     DataFilterType,
     DefaultMutationMapperDataFetcher,
     DefaultMutationMapperStore,
-    getMutationsToTranscriptId,
     groupDataByProteinImpactType,
     groupOncoKbIndicatorDataByMutations,
     IHotspotIndex,
-    Mutation as MutationMapperMutation,
 } from 'react-mutation-mapper';
+import {
+    getMutationsToTranscriptId,
+    Mutation as SimpleMutation,
+} from 'cbioportal-utils';
 
 import genomeNexusClient from 'shared/api/genomeNexusClientInstance';
 import internalGenomeNexusClient from 'shared/api/genomeNexusInternalClientInstance';
@@ -252,7 +254,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
     }
 
     @computed get mutationsByTranscriptId(): {
-        [transcriptId: string]: MutationMapperMutation[];
+        [transcriptId: string]: SimpleMutation[];
     } {
         if (
             this.indexedVariantAnnotations.result &&

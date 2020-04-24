@@ -4,10 +4,8 @@ import { observer } from 'mobx-react';
 import * as React from 'react';
 import ReactTable, { Column } from 'react-table';
 
-import {
-    calcProteinChangeSortValue,
-    EllipsisTextTooltip,
-} from 'cbioportal-frontend-commons';
+import { EllipsisTextTooltip } from 'cbioportal-frontend-commons';
+import { calcProteinChangeSortValue } from 'cbioportal-utils';
 
 import {
     defaultSortMethod,

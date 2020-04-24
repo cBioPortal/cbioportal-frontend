@@ -4,14 +4,16 @@ import * as React from 'react';
 import { ReactNode } from 'react';
 import { TableProps } from 'react-table';
 
+import { Mutation } from 'cbioportal-utils';
+
 import { DefaultPubMedCache } from '../../cache/DefaultPubMedCache';
-import FilterResetPanel from './FilterResetPanel';
+import { FilterResetPanel } from './FilterResetPanel';
 import { DataFilter } from '../../model/DataFilter';
 import { ApplyFilterFn, FilterApplier } from '../../model/FilterApplier';
 import { LollipopPlotControlsConfig } from '../../model/LollipopPlotControlsConfig';
 import { MobxCache } from '../../model/MobxCache';
-import { Mutation } from '../../model/Mutation';
-import MutationMapperStore from '../../model/MutationMapperStore';
+import { MutationMapperDataFetcher } from '../../model/MutationMapperDataFetcher';
+import { MutationMapperStore } from '../../model/MutationMapperStore';
 import { DefaultLollipopPlotControlsConfig } from '../../store/DefaultLollipopPlotControlsConfig';
 import DefaultMutationMapperStore from '../../store/DefaultMutationMapperStore';
 import { initDefaultTrackVisibility } from '../../util/TrackUtils';
@@ -68,6 +70,7 @@ export type MutationMapperProps = {
     mutationRates?: MutationRate[];
     pubMedCache?: MobxCache;
     // TODO annotateMutations?: boolean;
+    dataFetcher?: MutationMapperDataFetcher;
     genomeNexusUrl?: string;
     oncoKbUrl?: string;
     enableOncoKb?: boolean;
@@ -115,14 +118,15 @@ export function initDefaultMutationMapperStore(props: MutationMapperProps) {
             apiCacheLimit: props.apiCacheLimit,
             getMutationCount: props.getMutationCount,
             getTumorType: props.getTumorType,
+            dataFetcher: props.dataFetcher,
+            filterApplier: props.filterApplier,
+            filterAppliersOverride: props.filterAppliersOverride,
             dataFilters: props.dataFilters,
             selectionFilters: props.selectionFilters,
             highlightFilters: props.highlightFilters,
             groupFilters: props.groupFilters,
         },
-        () => (props.data || []) as Mutation[],
-        props.filterApplier,
-        props.filterAppliersOverride
+        () => (props.data || []) as Mutation[]
     );
 }
 

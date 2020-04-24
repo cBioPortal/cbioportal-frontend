@@ -2,6 +2,7 @@ import {
     getProteinImpactType,
     ProteinImpactType,
 } from 'cbioportal-frontend-commons';
+import { Mutation } from 'cbioportal-utils';
 import _ from 'lodash';
 
 import { MutationFilter, MutationFilterValue } from '../filter/MutationFilter';
@@ -11,7 +12,6 @@ import { ProteinImpactTypeFilter } from '../filter/ProteinImpactTypeFilter';
 import DataStore from '../model/DataStore';
 import { DataFilter, DataFilterType } from '../model/DataFilter';
 import { ApplyFilterFn } from '../model/FilterApplier';
-import { Mutation } from '../model/Mutation';
 
 export const TEXT_INPUT_FILTER_ID = '_mutationTableTextInputFilter_';
 
