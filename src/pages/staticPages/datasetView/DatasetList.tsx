@@ -5,7 +5,7 @@ import { ThreeBounce } from 'better-react-spinkit';
 import request from 'superagent';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
 import { getStudyDownloadListUrl } from '../../../shared/api/urls';
-import { getNCBIlink } from 'cbioportal-frontend-commons';
+import { getBrowserWindow, getNCBIlink } from 'cbioportal-frontend-commons';
 import { StudyLink } from '../../../shared/components/StudyLink/StudyLink';
 import { StudyDataDownloadLink } from '../../../shared/components/StudyDataDownloadLink/StudyDataDownloadLink';
 
@@ -30,10 +30,7 @@ interface IDataTableRow {
 interface IDataSetsTableProps {
     className?: string;
     datasets: CancerStudy[];
-}
-
-interface IDataSetsTableState {
-    downloadable: string[];
+    downloadables: string[];
 }
 
 interface ICancerStudyCellProps {
@@ -70,24 +67,9 @@ class ReferenceCell extends React.Component<IReferenceCellProps, {}> {
 }
 
 export default class DataSetsPageTable extends React.Component<
-    IDataSetsTableProps,
-    IDataSetsTableState
+    IDataSetsTableProps
 > {
     chartTarget: HTMLElement;
-
-    constructor(props: IDataSetsTableProps) {
-        super(props);
-
-        this.state = {
-            downloadable: [],
-        };
-    }
-
-    componentDidMount() {
-        request(getStudyDownloadListUrl()).then((response: any) =>
-            this.setState({ downloadable: response.body })
-        );
-    }
 
     render() {
         if (this.props.datasets) {
@@ -142,7 +124,7 @@ export default class DataSetsPageTable extends React.Component<
                                 download: false,
                                 type: 'download',
                                 render: (data: IDataTableRow) => {
-                                    const studyIsDownloadable = this.state.downloadable.includes(
+                                    const studyIsDownloadable = this.props.downloadables.includes(
                                         data.studyId
                                     );
                                     if (studyIsDownloadable) {
