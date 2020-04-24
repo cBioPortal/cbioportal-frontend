@@ -3550,6 +3550,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 this.vertGenericAssayOptions.length === 0) ||
             (this.horzSelection.dataType &&
                 this.horzSelection.isGenericAssayType &&
+                this.horzGenericAssayOptions.isComplete &&
                 (!this.horzGenericAssayOptions.result ||
                     (this.horzGenericAssayOptions.result &&
                         this.horzGenericAssayOptions.result.length === 0)))
