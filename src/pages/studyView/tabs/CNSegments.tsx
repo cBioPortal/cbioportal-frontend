@@ -86,8 +86,8 @@ export default class CNSegments extends React.Component<
     }
 
     @computed get genome() {
-        const study = this.props.store.allPhysicalStudies.result
-            ? this.props.store.allPhysicalStudies.result[0]
+        const study = this.props.store.queriedPhysicalStudies.result
+            ? this.props.store.queriedPhysicalStudies.result[0]
             : undefined;
         return study ? study.referenceGenome : DEFAULT_GENOME;
     }
