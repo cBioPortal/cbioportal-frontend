@@ -1,6 +1,7 @@
 import { assert } from 'chai';
 
-import { Mutation } from '../model/Mutation';
+import { Mutation } from 'cbioportal-utils';
+
 import {
     defaultOncoKbIndicatorFilter,
     getPositionalVariant,

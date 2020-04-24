@@ -1,12 +1,11 @@
 import autobind from 'autobind-decorator';
+import { getMyVariantInfoAnnotation, Mutation } from 'cbioportal-utils';
 import { MyVariantInfo, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
-import { Mutation } from '../../model/Mutation';
 import { RemoteData } from '../../model/RemoteData';
 import { defaultSortMethod } from '../../util/ReactTableUtils';
-import { getMyVariantInfoAnnotation } from '../../util/VariantAnnotationUtils';
 import GnomadFrequency, {
     calculateAlleleFrequency,
 } from '../gnomad/GnomadFrequency';

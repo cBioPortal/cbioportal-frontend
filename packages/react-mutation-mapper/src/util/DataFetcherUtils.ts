@@ -3,15 +3,16 @@ import {
     IOncoKbData,
 } from 'cbioportal-frontend-commons';
 import {
+    indexAnnotationsByGenomicLocation,
+    Mutation,
+    uniqueGenomicLocations,
+} from 'cbioportal-utils';
+import {
     GenomeNexusAPI,
     GenomeNexusAPIInternal,
 } from 'genome-nexus-ts-api-client';
 import { OncoKbAPI } from 'oncokb-ts-api-client';
 import _ from 'lodash';
-
-import { Mutation } from '../model/Mutation';
-import { uniqueGenomicLocations } from './MutationUtils';
-import { indexAnnotationsByGenomicLocation } from './MutationAnnotator';
 
 export const DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE =
     'https://www.cbioportal.org/getMutationAligner.json?pfamAccession=<%= pfamDomainId %>';

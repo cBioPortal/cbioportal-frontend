@@ -1,17 +1,15 @@
-import { VariantAnnotation } from 'cbioportal-frontend-commons';
 import { assert } from 'chai';
-import sinon from 'sinon';
 import * as _ from 'lodash';
 
+import { Mutation } from '../model/Mutation';
 import {
     annotateMutations,
+    indexAnnotationsByGenomicLocation,
     resolveMissingProteinPositions,
 } from './MutationAnnotator';
-import { Mutation } from '../model/Mutation';
-import { fetchVariantAnnotationsIndexedByGenomicLocation } from './DataFetcherUtils';
 
 describe('MutationAnnotator', () => {
-    const fetchStubResponse = [
+    const variantAnnotations = [
         {
             variant: 'X:g.66937331T>A',
             colocatedVariants: [
@@ -2206,140 +2204,73 @@ describe('MutationAnnotator', () => {
     });
 
     describe('annotateMutations', () => {
-        it("won't annotate mutation data if there are no mutations", done => {
-            const fetchStub = sinon.stub();
-            fetchStub.returns(undefined);
+        it("won't annotate mutation data if there are no mutations", () => {
+            const indexedVariantAnnotations = indexAnnotationsByGenomicLocation(
+                []
+            );
+            const data = annotateMutations([], indexedVariantAnnotations);
 
-            const genomeNexusClient: any = {
-                fetchVariantAnnotationByGenomicLocationPOST: fetchStub,
-            };
-
-            fetchVariantAnnotationsIndexedByGenomicLocation(
-                [],
-                ['annotation_summary'],
-                'uniprot',
-                genomeNexusClient
-            ).then(
-                (indexedVariantAnnotations: {
-                    [genomicLocation: string]: VariantAnnotation;
-                }) => {
-                    const data = annotateMutations(
-                        [],
-                        indexedVariantAnnotations
-                    );
-                    assert.equal(
-                        data.length,
-                        0,
-                        'annotated mutation data should be empty'
-                    );
-                    assert.isFalse(
-                        fetchStub.called,
-                        'variant annotation fetcher should NOT be called'
-                    );
-                    done();
-                }
+            assert.equal(
+                data.length,
+                0,
+                'annotated mutation data should be empty'
             );
         });
 
-        it("won't annotate mutation data if there are no mutations with genomic coordinate information", done => {
-            const fetchStub = sinon.stub();
-            fetchStub.returns(undefined);
-
-            const genomeNexusClient: any = {
-                fetchVariantAnnotationByGenomicLocationPOST: fetchStub,
-            };
-
-            fetchVariantAnnotationsIndexedByGenomicLocation(
+        it("won't annotate mutation data if there are no mutations with genomic coordinate information", () => {
+            const indexedVariantAnnotations = indexAnnotationsByGenomicLocation(
+                []
+            );
+            const data = annotateMutations(
                 _.cloneDeep(mutationsWithNoGenomicLocation),
-                ['annotation_summary'],
-                'uniprot',
-                genomeNexusClient
-            ).then(
-                (indexedVariantAnnotations: {
-                    [genomicLocation: string]: VariantAnnotation;
-                }) => {
-                    const data = annotateMutations(
-                        _.cloneDeep(mutationsWithNoGenomicLocation),
-                        indexedVariantAnnotations
-                    );
+                indexedVariantAnnotations
+            );
 
-                    assert.deepEqual(
-                        data,
-                        mutationsWithNoGenomicLocation,
-                        'annotated mutation data should be identical to the initial input'
-                    );
-                    assert.isFalse(
-                        fetchStub.called,
-                        'variant annotation fetcher should NOT be called'
-                    );
-                    done();
-                }
+            assert.deepEqual(
+                data,
+                mutationsWithNoGenomicLocation,
+                'annotated mutation data should be identical to the initial input'
             );
         });
 
-        it('annotates mutation data when the genomic coordinate information is present', done => {
-            const fetchStub = sinon.stub();
-            fetchStub.returns(fetchStubResponse);
-
-            const genomeNexusClient: any = {
-                fetchVariantAnnotationByGenomicLocationPOST: fetchStub,
-            };
-
-            fetchVariantAnnotationsIndexedByGenomicLocation(
-                _.cloneDeep(mutationsWithGenomicLocation),
-                ['annotation_summary'],
-                'uniprot',
-                genomeNexusClient
-            ).then(
-                (indexedVariantAnnotations: {
-                    [genomicLocation: string]: VariantAnnotation;
-                }) => {
-                    const data = annotateMutations(
-                        mutationsWithGenomicLocation,
-                        indexedVariantAnnotations
-                    );
-
-                    assert.notDeepEqual(
-                        data,
-                        mutationsWithGenomicLocation,
-                        'annotated mutation data should be different than the initial input'
-                    );
-                    assert.isTrue(
-                        fetchStub.called,
-                        'variant annotation fetcher should be called'
-                    );
-
-                    assert.equal(data[0].gene!.hugoGeneSymbol, 'AR');
-                    assert.isTrue(data[0].proteinChange!.includes('L729I'));
-                    assert.isTrue(data[0].mutationType!.includes('Missense'));
-
-                    assert.equal(data[1].gene!.hugoGeneSymbol, 'BRCA1');
-                    assert.isTrue(
-                        data[1].proteinChange!.includes('Q1395Lfs*11')
-                    );
-                    assert.isTrue(
-                        data[1].mutationType!.includes('Frame_Shift_Ins')
-                    );
-
-                    assert.equal(data[2].gene!.hugoGeneSymbol, 'BRCA2');
-                    assert.isTrue(data[2].proteinChange!.includes('E1441*'));
-                    assert.isTrue(data[2].mutationType!.includes('Nonsense'));
-
-                    assert.equal(data[3].gene!.hugoGeneSymbol, 'POLE');
-                    assert.isTrue(data[3].proteinChange!.includes('N1869K'));
-                    assert.isTrue(data[3].mutationType!.includes('Missense'));
-
-                    assert.equal(data[4].gene!.hugoGeneSymbol, 'TP53');
-                    assert.isTrue(data[4].proteinChange!.includes('R248W'));
-                    assert.isTrue(data[4].mutationType!.includes('Missense'));
-
-                    assert.equal(data[5].gene!.hugoGeneSymbol, 'PTEN');
-                    assert.isTrue(data[5].proteinChange!.includes('R130Q'));
-                    assert.isTrue(data[5].mutationType!.includes('Missense'));
-
-                    done();
-                }
+        it('annotates mutation data when the genomic coordinate information is present', () => {
+            const indexedVariantAnnotations = indexAnnotationsByGenomicLocation(
+                variantAnnotations as any[]
             );
+            const data = annotateMutations(
+                mutationsWithGenomicLocation,
+                indexedVariantAnnotations
+            );
+
+            assert.notDeepEqual(
+                data,
+                mutationsWithGenomicLocation,
+                'annotated mutation data should be different than the initial input'
+            );
+
+            assert.equal(data[0].gene!.hugoGeneSymbol, 'AR');
+            assert.isTrue(data[0].proteinChange!.includes('L729I'));
+            assert.isTrue(data[0].mutationType!.includes('Missense'));
+
+            assert.equal(data[1].gene!.hugoGeneSymbol, 'BRCA1');
+            assert.isTrue(data[1].proteinChange!.includes('Q1395Lfs*11'));
+            assert.isTrue(data[1].mutationType!.includes('Frame_Shift_Ins'));
+
+            assert.equal(data[2].gene!.hugoGeneSymbol, 'BRCA2');
+            assert.isTrue(data[2].proteinChange!.includes('E1441*'));
+            assert.isTrue(data[2].mutationType!.includes('Nonsense'));
+
+            assert.equal(data[3].gene!.hugoGeneSymbol, 'POLE');
+            assert.isTrue(data[3].proteinChange!.includes('N1869K'));
+            assert.isTrue(data[3].mutationType!.includes('Missense'));
+
+            assert.equal(data[4].gene!.hugoGeneSymbol, 'TP53');
+            assert.isTrue(data[4].proteinChange!.includes('R248W'));
+            assert.isTrue(data[4].mutationType!.includes('Missense'));
+
+            assert.equal(data[5].gene!.hugoGeneSymbol, 'PTEN');
+            assert.isTrue(data[5].proteinChange!.includes('R130Q'));
+            assert.isTrue(data[5].mutationType!.includes('Missense'));
         });
     });
 

@@ -2,9 +2,9 @@ import {
     DefaultTooltip,
     getCanonicalMutationType,
 } from 'cbioportal-frontend-commons';
+import { Mutation } from 'cbioportal-utils';
 import * as React from 'react';
 
-import { Mutation } from '../../model/Mutation';
 import styles from './mutationType.module.scss';
 
 type MutationTypeProps = {
