@@ -112,6 +112,7 @@ import MobxPromise from 'mobxpromise';
 import { SpecialAttribute } from '../../../shared/cache/ClinicalDataCache';
 import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledCheckbox';
 import CBIOPORTAL_VICTORY_THEME from '../../../shared/theme/cBioPoralTheme';
+import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 
 enum EventKey {
     horz_logScale,
@@ -385,14 +386,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         if (
             !this.dataTypeOptions.isComplete ||
             !this.dataTypeToDataSourceOptions.isComplete ||
-            !this.props.store.samplesByDetailedCancerType.isComplete ||
+            !this.props.store.filteredSamplesByDetailedCancerType.isComplete ||
             !this.props.store.mutations.isComplete
         ) {
             return <LoadingIndicator isLoading={true} size={'small'} />;
         }
 
         const cancerTypes = Object.keys(
-            this.props.store.samplesByDetailedCancerType.result
+            this.props.store.filteredSamplesByDetailedCancerType.result
         );
         const mutationCount = this.props.store.mutations.result.length;
         const horizontalSource = this.horzSelection.selectedDataSourceOption
@@ -2310,13 +2311,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.horzSelection,
             this.clinicalAttributeIdToClinicalAttribute,
             this.props.store.molecularProfileIdToMolecularProfile,
-            this.props.store.patientKeyToSamples,
+            this.props.store.patientKeyToFilteredSamples,
             this.props.store.entrezGeneIdToGene,
             this.props.store.clinicalDataCache,
             this.props.store.mutationCache,
             this.props.store.numericGeneMolecularDataCache,
             this.props.store.coverageInformation,
-            this.props.store.samples,
+            this.props.store.filteredSamples,
             this.props.store.genesetMolecularDataCache,
             this.props.store.genericAssayMolecularDataCache
         );
@@ -2327,13 +2328,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.vertSelection,
             this.clinicalAttributeIdToClinicalAttribute,
             this.props.store.molecularProfileIdToMolecularProfile,
-            this.props.store.patientKeyToSamples,
+            this.props.store.patientKeyToFilteredSamples,
             this.props.store.entrezGeneIdToGene,
             this.props.store.clinicalDataCache,
             this.props.store.mutationCache,
             this.props.store.numericGeneMolecularDataCache,
             this.props.store.coverageInformation,
-            this.props.store.samples,
+            this.props.store.filteredSamples,
             this.props.store.genesetMolecularDataCache,
             this.props.store.genericAssayMolecularDataCache
         );
@@ -4531,6 +4532,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         store={this.props.store}
                         isUnaffected={true}
                     />
+                    <CaseFilterWarning store={this.props.store} />
                 </div>
                 <div className={'plotsTab'}>
                     <div className="quickPlotsContainer">

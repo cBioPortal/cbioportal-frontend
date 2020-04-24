@@ -294,6 +294,23 @@ export function getNumPatients(
     return _.sum(group.studies.map(study => study.patients.length));
 }
 
+export function filterStudiesAttr(
+    studiesAttr: SessionGroupData['studies'],
+    filter: (s: SampleIdentifier) => boolean
+) {
+    return studiesAttr
+        .map(studyObj => {
+            const studyId = studyObj.id;
+            return {
+                id: studyId,
+                samples: studyObj.samples.filter(sampleId =>
+                    filter({ studyId, sampleId })
+                ),
+            };
+        })
+        .filter(studyObj => studyObj.samples.length > 0);
+}
+
 export function finalizeStudiesAttr(
     groupData: Pick<SessionGroupData, 'studies'>,
     sampleSet: ComplexKeyMap<Sample>

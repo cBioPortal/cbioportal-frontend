@@ -62,6 +62,7 @@ export enum ResultsViewURLQueryEnum {
     oncoprint_sort_by_mutation_type = 'oncoprint_sort_by_mutation_type',
     oncoprint_sort_by_drivers = 'oncoprint_sort_by_drivers',
     exclude_germline_mutations = 'exclude_germline_mutations',
+    hide_unprofiled_samples = 'hide_unprofiled_samples',
     patient_enrichments = 'patient_enrichments',
 
     comparison_subtab = 'comparison_subtab',
@@ -114,6 +115,7 @@ export default class ResultsViewURLWrapper extends URLWrapper<
                 oncoprint_sort_by_drivers: { isSessionProp: false },
                 generic_assay_groups: { isSessionProp: false },
                 exclude_germline_mutations: { isSessionProp: false },
+                hide_unprofiled_samples: { isSessionProp: false },
                 patient_enrichments: { isSessionProp: false },
 
                 comparison_subtab: { isSessionProp: false },

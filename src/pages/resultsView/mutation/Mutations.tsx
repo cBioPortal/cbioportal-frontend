@@ -17,6 +17,7 @@ import {
     getMutationAlignerUrlTemplate,
     getOncoKbApiUrl,
 } from 'shared/api/urls';
+import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 
 export interface IMutationsPageProps {
     routing?: any;
@@ -134,6 +135,7 @@ export default class Mutations extends React.Component<
                                     hugoGeneSymbol: gene,
                                 }}
                             />
+                            <CaseFilterWarning store={this.props.store} />
                         </div>
                         <ResultsViewMutationMapper
                             {...convertToMutationMapperProps({
