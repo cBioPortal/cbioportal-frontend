@@ -52,10 +52,6 @@ import OQLTextArea, {
     GeneBoxType,
 } from 'shared/components/GeneSelectionBox/OQLTextArea';
 import browser from 'bowser';
-import { GroupComparisonTab } from '../groupComparison/GroupComparisonTabs';
-import NotUsingGenePanelWarning from './NotUsingGenePanelWarning';
-import Survival from '../groupComparison/Survival';
-import ResultsViewComparisonStore from './comparison/ResultsViewComparisonStore';
 import { QueryStore } from '../../shared/components/query/QueryStore';
 
 export function initStore(
@@ -393,15 +389,15 @@ export default class ResultsViewPage extends React.Component<
                     !this.resultsViewPageStore.studies.isComplete,
                 getTab: () => {
                     const showPM =
-                        store.sequencedSampleKeysByGene.isComplete &&
+                        store.filteredSequencedSampleKeysByGene.isComplete &&
                         store.oqlFilteredCaseAggregatedDataByOQLLine
                             .isComplete &&
                         store.genes.isComplete &&
                         store.samples.isComplete &&
                         store.patients.isComplete &&
                         store.coverageInformation.isComplete &&
-                        store.sequencedSampleKeysByGene.isComplete &&
-                        store.sequencedPatientKeysByGene.isComplete &&
+                        store.filteredSequencedSampleKeysByGene.isComplete &&
+                        store.filteredSequencedPatientKeysByGene.isComplete &&
                         store.selectedMolecularProfiles.isComplete &&
                         store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine
                             .isComplete;

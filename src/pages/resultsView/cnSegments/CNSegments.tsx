@@ -27,6 +27,9 @@ import {
     IProgressIndicatorItem,
 } from 'shared/components/progressIndicator/ProgressIndicator';
 import { remoteData } from 'cbioportal-frontend-commons';
+import OqlStatusBanner from 'shared/components/banners/OqlStatusBanner';
+import AlterationFilterWarning from 'shared/components/banners/AlterationFilterWarning';
+import CaseFilterWarning from 'shared/components/banners/CaseFilterWarning';
 
 @observer
 export default class CNSegments extends React.Component<
@@ -154,6 +157,9 @@ export default class CNSegments extends React.Component<
                     promise={this.props.store.cnSegments}
                     filename={this.filename}
                 />
+                <div className={'tabMessageContainer'}>
+                    <CaseFilterWarning store={this.props.store} />
+                </div>
                 <Nav
                     bsStyle="pills"
                     activeKey={this.activeLocus}

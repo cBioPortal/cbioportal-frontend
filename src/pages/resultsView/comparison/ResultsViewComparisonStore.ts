@@ -26,7 +26,10 @@ import {
     SessionGroupData,
 } from '../../../shared/api/ComparisonGroupClient';
 import comparisonClient from '../../../shared/api/comparisonGroupClientInstance';
-import { ComparisonGroup } from '../../groupComparison/GroupComparisonUtils';
+import {
+    ComparisonGroup,
+    filterStudiesAttr,
+} from '../../groupComparison/GroupComparisonUtils';
 
 export default class ResultsViewComparisonStore extends ComparisonStore {
     @observable private _currentTabId:

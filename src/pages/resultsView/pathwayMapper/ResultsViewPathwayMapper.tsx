@@ -30,7 +30,8 @@ import 'cytoscape-navigator/cytoscape.js-navigator.css';
 import 'react-toastify/dist/ReactToastify.css';
 import styles from './pathwayMapper.module.scss';
 import PathwayMapper, { ICBioData } from 'pathway-mapper';
-import AlterationFilterWarning from 'shared/components/banners/AlterationFilterWarning';
+import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
+import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 
 interface IResultsViewPathwayMapperProps {
     store: ResultsViewPageStore;
@@ -126,8 +127,8 @@ export default class ResultsViewPathwayMapper extends React.Component<
                     this.props.store.samples.result,
                     this.props.store.patients.result,
                     this.props.store.coverageInformation.result,
-                    this.props.store.sequencedSampleKeysByGene.result!,
-                    this.props.store.sequencedPatientKeysByGene.result!,
+                    this.props.store.filteredSequencedSampleKeysByGene.result!,
+                    this.props.store.filteredSequencedPatientKeysByGene.result!,
                     this.props.store.selectedMolecularProfiles.result!,
                     alterationData,
                     true,
@@ -153,8 +154,9 @@ export default class ResultsViewPathwayMapper extends React.Component<
                         this.storeForAllData!.samples.result,
                         this.storeForAllData!.patients.result,
                         this.storeForAllData!.coverageInformation.result,
-                        this.storeForAllData!.sequencedSampleKeysByGene.result!,
-                        this.storeForAllData!.sequencedPatientKeysByGene
+                        this.storeForAllData!.filteredSequencedSampleKeysByGene
+                            .result!,
+                        this.storeForAllData!.filteredSequencedPatientKeysByGene
                             .result!,
                         this.storeForAllData!.selectedMolecularProfiles.result!,
                         alterationData,
@@ -187,8 +189,9 @@ export default class ResultsViewPathwayMapper extends React.Component<
             this.storeForAllData.samples.isComplete &&
             this.storeForAllData.patients.isComplete &&
             this.storeForAllData.coverageInformation.isComplete &&
-            this.storeForAllData.sequencedSampleKeysByGene.isComplete &&
-            this.storeForAllData.sequencedPatientKeysByGene.isComplete &&
+            this.storeForAllData.filteredSequencedSampleKeysByGene.isComplete &&
+            this.storeForAllData.filteredSequencedPatientKeysByGene
+                .isComplete &&
             this.storeForAllData.selectedMolecularProfiles.isComplete
         );
     }
@@ -213,6 +216,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
                         tabReflectsOql={true}
                     />
                     <AlterationFilterWarning store={this.props.store} />
+                    <CaseFilterWarning store={this.props.store} />
                 </div>
                 <div
                     data-test="pathwayMapperTabDiv"
