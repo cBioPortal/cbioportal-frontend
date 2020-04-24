@@ -67,8 +67,9 @@ export default class EditableSpan extends React.Component<
             // ...dont type unless at least one character selected to be replaced
             const selection = window.getSelection();
             if (
-                !selection.containsNode(this.spanElt, true) ||
-                !selection.toString().length
+                selection &&
+                (!selection.containsNode(this.spanElt, true) ||
+                    !selection.toString().length)
             ) {
                 evt.preventDefault();
             }
