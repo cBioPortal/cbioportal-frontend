@@ -46,27 +46,17 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
 
     @action
     public setOnlyShowSelectedInTable(o: boolean) {
-        this.urlWrapper.updateURL({
-            genomicEvolutionSettings: Object.assign(
-                {},
-                this.urlWrapper.query.genomicEvolutionSettings,
-                {
-                    showOnlySelectedMutationsInTable: o.toString(),
-                }
-            ),
+        this.urlWrapper.updateURL(currentParams => {
+            currentParams.genomicEvolutionSettings.showOnlySelectedMutationsInTable = o.toString();
+            return currentParams;
         });
     }
 
     @action
     public setOnlyShowSelectedInVAFChart(o: boolean) {
-        this.urlWrapper.updateURL({
-            genomicEvolutionSettings: Object.assign(
-                {},
-                this.urlWrapper.query.genomicEvolutionSettings,
-                {
-                    showOnlySelectedMutationsInChart: o.toString(),
-                }
-            ),
+        this.urlWrapper.updateURL(currentParams => {
+            currentParams.genomicEvolutionSettings.showOnlySelectedMutationsInChart = o.toString();
+            return currentParams;
         });
     }
 
