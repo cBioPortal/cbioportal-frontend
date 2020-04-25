@@ -1,10 +1,6 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { toJS } from 'mobx';
 
-import {
-    getMutationTypeFromProteinChange,
-    getProteinPositionFromProteinChange,
-} from 'cbioportal-frontend-commons';
 import {
     TranscriptConsequenceSummary,
     VariantAnnotation,
@@ -13,6 +9,10 @@ import {
 
 import { Mutation } from '../model/Mutation';
 import { genomicLocationString, extractGenomicLocation } from './MutationUtils';
+import {
+    getMutationTypeFromProteinChange,
+    getProteinPositionFromProteinChange,
+} from './ProteinChangeUtils';
 
 export function resolveDefaultsForMissingValues(
     mutations: Partial<Mutation>[]

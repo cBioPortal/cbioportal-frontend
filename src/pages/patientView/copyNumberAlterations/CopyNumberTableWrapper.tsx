@@ -59,7 +59,6 @@ type ICopyNumberTableWrapperProps = {
     showGeneFilterMenu?: boolean;
     currentGeneFilter: GeneFilterOption;
     onFilterGenes?: (option: GeneFilterOption) => void;
-    sampleToMutationGenePanelId?: { [sampleId: string]: string };
     onSelectGenePanel?: (name: string) => void;
     disableTooltip?: boolean;
 };

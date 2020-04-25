@@ -1,7 +1,7 @@
 {
   "name": "oncokb-ts-api-client",
   "description": "OncoKB API Client for TypeScript",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
@@ -30,6 +30,6 @@
   },
   "dependencies": {
     "superagent": "^3.8.3",
-    "typescript": "3.2.2"
+    "typescript": "3.8.3"
   }
 }

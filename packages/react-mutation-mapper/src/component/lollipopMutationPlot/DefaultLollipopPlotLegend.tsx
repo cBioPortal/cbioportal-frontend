@@ -4,7 +4,7 @@ import {
     MUT_COLOR_MISSENSE,
     MUT_COLOR_OTHER,
     MUT_COLOR_TRUNC,
-} from '../../util/MutationUtils';
+} from '../../util/MutationTypeUtils';
 
 type DefaultLollipopPlotLegendProps = {
     missenseColor?: string;

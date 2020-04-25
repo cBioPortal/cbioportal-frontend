@@ -1,6 +1,5 @@
 import * as _ from 'lodash';
 import {
-    extractGenomicLocation,
     getColorForProteinImpactType as getDefaultColorForProteinImpactType,
     IProteinImpactTypeColors,
 } from 'react-mutation-mapper';
@@ -11,6 +10,7 @@ import {
     SampleIdentifier,
 } from 'cbioportal-ts-api-client';
 import { stringListToSet } from 'cbioportal-frontend-commons';
+import { extractGenomicLocation } from 'cbioportal-utils';
 import { GenomicLocation } from 'genome-nexus-ts-api-client';
 import {
     MUTATION_STATUS_GERMLINE,

@@ -1,8 +1,17 @@
 import autobind from 'autobind-decorator';
 import { IOncoKbData, remoteData } from 'cbioportal-frontend-commons';
+import {
+    genomicLocationString,
+    getMutationsToTranscriptId,
+    groupMutationsByProteinStartPos,
+    uniqueGenomicLocations,
+} from 'cbioportal-utils';
+import { Gene, Mutation } from 'cbioportal-utils';
 import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import {
     EnsemblTranscript,
+    GenomicLocation,
+    Hotspot,
     MyVariantInfo,
     PfamDomain,
     PfamDomainRange,
@@ -13,19 +22,13 @@ import _ from 'lodash';
 import { computed, observable } from 'mobx';
 import MobxPromise, { cached } from 'mobxpromise';
 
-import {
-    AggregatedHotspots,
-    GenomicLocation,
-    Hotspot,
-    IHotspotIndex,
-} from '../model/CancerHotspot';
+import { AggregatedHotspots, IHotspotIndex } from '../model/CancerHotspot';
 import { ICivicGene, ICivicVariant } from '../model/Civic';
 import { DataFilter, DataFilterType } from '../model/DataFilter';
 import DataStore from '../model/DataStore';
 import { ApplyFilterFn, FilterApplier } from '../model/FilterApplier';
-import { Gene } from '../model/Gene';
-import { Mutation } from '../model/Mutation';
-import MutationMapperStore from '../model/MutationMapperStore';
+import { MutationMapperDataFetcher } from '../model/MutationMapperDataFetcher';
+import { MutationMapperStore } from '../model/MutationMapperStore';
 import { IMyCancerGenomeData } from '../model/MyCancerGenome';
 import {
     defaultHotspotFilter,
@@ -39,12 +42,6 @@ import {
     applyDataFilters,
     groupDataByProteinImpactType,
 } from '../util/FilterUtils';
-import { getMutationsToTranscriptId } from '../util/MutationAnnotator';
-import {
-    genomicLocationString,
-    groupMutationsByProteinStartPos,
-    uniqueGenomicLocations,
-} from '../util/MutationUtils';
 import { getMyCancerGenomeData } from '../util/MyCancerGenomeUtils';
 import {
     defaultOncoKbIndicatorFilter,
@@ -70,6 +67,11 @@ interface DefaultMutationMapperStoreConfig {
     apiCacheLimit?: number;
     getMutationCount?: (mutation: Partial<Mutation>) => number;
     getTumorType?: (mutation: Partial<Mutation>) => string;
+    filterApplier?: FilterApplier;
+    filterAppliersOverride?: {
+        [filterType: string]: ApplyFilterFn;
+    };
+    dataFetcher?: MutationMapperDataFetcher;
     dataFilters?: DataFilter[];
     selectionFilters?: DataFilter[];
     highlightFilters?: DataFilter[];
@@ -83,22 +85,8 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     constructor(
         public gene: Gene,
         protected config: DefaultMutationMapperStoreConfig,
-        protected getMutations: () => Mutation[],
-        protected filterApplier?: FilterApplier,
-        protected filterAppliersOverride?: {
-            [filterType: string]: ApplyFilterFn;
-        }
-    ) {
-        if (!this.filterApplier) {
-            this.filterApplier = new DefaultMutationMapperFilterApplier(
-                this.indexedHotspotData,
-                this.oncoKbData,
-                this.getDefaultTumorType,
-                this.getDefaultEntrezGeneId,
-                this.filterAppliersOverride
-            );
-        }
-    }
+        protected getMutations: () => Mutation[]
+    ) {}
 
     @computed
     public get activeTranscript(): string | undefined {
@@ -192,13 +180,31 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     }
 
     @computed
-    public get dataFetcher(): DefaultMutationMapperDataFetcher {
-        return new DefaultMutationMapperDataFetcher({
-            genomeNexusUrl: this.config.genomeNexusUrl,
-            oncoKbUrl: this.config.oncoKbUrl,
-            cachePostMethodsOnClients: this.config.cachePostMethodsOnClients,
-            apiCacheLimit: this.config.apiCacheLimit,
-        });
+    public get filterApplier() {
+        return (
+            this.config.filterApplier ||
+            new DefaultMutationMapperFilterApplier(
+                this.indexedHotspotData,
+                this.oncoKbData,
+                this.getDefaultTumorType,
+                this.getDefaultEntrezGeneId,
+                this.config.filterAppliersOverride
+            )
+        );
+    }
+
+    @computed
+    public get dataFetcher(): MutationMapperDataFetcher {
+        return (
+            this.config.dataFetcher ||
+            new DefaultMutationMapperDataFetcher({
+                genomeNexusUrl: this.config.genomeNexusUrl,
+                oncoKbUrl: this.config.oncoKbUrl,
+                cachePostMethodsOnClients: this.config
+                    .cachePostMethodsOnClients,
+                apiCacheLimit: this.config.apiCacheLimit,
+            })
+        );
     }
 
     @computed
@@ -392,53 +398,57 @@ class DefaultMutationMapperStore implements MutationMapperStore {
         {
             await: () => [this.canonicalTranscript, this.allTranscripts],
             invoke: () =>
-                new Promise((resolve, reject) => {
-                    const regions =
-                        this.allTranscripts.result &&
-                        this.activeTranscript &&
-                        this.transcriptsByTranscriptId[this.activeTranscript]
-                            ? this.transcriptsByTranscriptId[
-                                  this.activeTranscript
-                              ].pfamDomains
-                            : undefined;
+                new Promise<{ [pfamAccession: string]: string } | undefined>(
+                    (resolve, reject) => {
+                        const regions =
+                            this.allTranscripts.result &&
+                            this.activeTranscript &&
+                            this.transcriptsByTranscriptId[
+                                this.activeTranscript
+                            ]
+                                ? this.transcriptsByTranscriptId[
+                                      this.activeTranscript
+                                  ].pfamDomains
+                                : undefined;
 
-                    const responsePromises: Promise<Response>[] = [];
-                    for (let i = 0; regions && i < regions.length; i++) {
-                        // have to do a for loop because seamlessImmutable will make result of .map immutable,
-                        // and that causes infinite loop here
-                        // TODO fix `as any`
-                        responsePromises.push(
-                            this.dataFetcher.fetchMutationAlignerLink(
-                                regions[i].pfamDomainId
-                            ) as any
-                        );
-                    }
-                    const allResponses = Promise.all(responsePromises);
-                    allResponses.then(responses => {
-                        // TODO fix `as any`
-                        const data = responses.map(r =>
-                            JSON.parse(r.text as any)
-                        );
-                        const ret: { [pfamAccession: string]: string } = {};
-                        let mutationAlignerData: any;
-                        let pfamAccession: string | null;
-                        for (let i = 0; i < data.length; i++) {
-                            mutationAlignerData = data[i];
-                            pfamAccession = regions
-                                ? regions[i].pfamDomainId
-                                : null;
-                            if (
-                                pfamAccession &&
-                                mutationAlignerData.linkToMutationAligner
-                            ) {
-                                ret[pfamAccession] =
-                                    mutationAlignerData.linkToMutationAligner;
-                            }
+                        const responsePromises: Promise<Response>[] = [];
+                        for (let i = 0; regions && i < regions.length; i++) {
+                            // have to do a for loop because seamlessImmutable will make result of .map immutable,
+                            // and that causes infinite loop here
+                            // TODO fix `as any`
+                            responsePromises.push(
+                                this.dataFetcher.fetchMutationAlignerLink(
+                                    regions[i].pfamDomainId
+                                ) as any
+                            );
                         }
-                        resolve(ret);
-                    });
-                    allResponses.catch(reject);
-                }),
+                        const allResponses = Promise.all(responsePromises);
+                        allResponses.then(responses => {
+                            // TODO fix `as any`
+                            const data = responses.map(r =>
+                                JSON.parse(r.text as any)
+                            );
+                            const ret: { [pfamAccession: string]: string } = {};
+                            let mutationAlignerData: any;
+                            let pfamAccession: string | null;
+                            for (let i = 0; i < data.length; i++) {
+                                mutationAlignerData = data[i];
+                                pfamAccession = regions
+                                    ? regions[i].pfamDomainId
+                                    : null;
+                                if (
+                                    pfamAccession &&
+                                    mutationAlignerData.linkToMutationAligner
+                                ) {
+                                    ret[pfamAccession] =
+                                        mutationAlignerData.linkToMutationAligner;
+                                }
+                            }
+                            resolve(ret);
+                        });
+                        allResponses.catch(reject);
+                    }
+                ),
         },
         {}
     );
@@ -605,28 +615,23 @@ class DefaultMutationMapperStore implements MutationMapperStore {
                             [],
                             uniqueGenomicLocations(this.getMutations()).map(
                                 (gl: GenomicLocation) => {
+                                    const variantAnnotation = this
+                                        .indexedVariantAnnotations.result
+                                        ? this.indexedVariantAnnotations.result[
+                                              genomicLocationString(gl)
+                                          ]
+                                        : undefined;
+
                                     if (
-                                        this.indexedVariantAnnotations.result &&
-                                        this.indexedVariantAnnotations.result[
-                                            genomicLocationString(gl)
-                                        ] &&
+                                        variantAnnotation &&
                                         !_.isEmpty(
-                                            this.indexedVariantAnnotations
-                                                .result[
-                                                genomicLocationString(gl)
-                                            ].transcript_consequences
+                                            variantAnnotation.transcript_consequences
                                         )
                                     ) {
-                                        return this.indexedVariantAnnotations.result[
-                                            genomicLocationString(gl)
-                                        ].transcript_consequences
-                                            .map(
-                                                (tc: {
-                                                    transcript_id: string;
-                                                }) => tc.transcript_id
-                                            )
+                                        return variantAnnotation.transcript_consequences
+                                            .map(tc => tc.transcript_id)
                                             .filter((transcriptId: string) =>
-                                                this.transcriptsWithProteinLength.result!!.includes(
+                                                this.transcriptsWithProteinLength.result!.includes(
                                                     transcriptId
                                                 )
                                             );
