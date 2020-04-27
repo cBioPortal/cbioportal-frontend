@@ -1538,14 +1538,6 @@ export default class ResultsViewOncoprint extends React.Component<
         if (
             this.oncoprint &&
             !this.oncoprint.webgl_unavailable &&
-            (this.genericAssayEntitiesSelectOptionsGroupByGenericAssayType
-                .isComplete ||
-                this.genericAssayEntitiesSelectOptionsGroupByGenericAssayType
-                    .isError) &&
-            (this.genericAssayEntitiesSelectOptionsGroupByMolecularProfileId
-                .isComplete ||
-                this.genericAssayEntitiesSelectOptionsGroupByMolecularProfileId
-                    .isError) &&
             this.props.store.molecularProfileIdToMolecularProfile.result
         ) {
             return (
@@ -1558,15 +1550,13 @@ export default class ResultsViewOncoprint extends React.Component<
                             this.props.store
                                 .molecularProfileIdToMolecularProfile.result
                         }
-                        genericAssayEntitiesSelectOptionsGroupByGenericAssayType={
+                        genericAssayEntitiesSelectOptionsGroupByGenericAssayTypePromise={
                             this
                                 .genericAssayEntitiesSelectOptionsGroupByGenericAssayType
-                                .result
                         }
-                        genericAssayEntitiesSelectOptionsGroupByMolecularProfileId={
+                        genericAssayEntitiesSelectOptionsGroupByMolecularProfileIdPromise={
                             this
                                 .genericAssayEntitiesSelectOptionsGroupByMolecularProfileId
-                                .result
                         }
                         selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl={
                             this
