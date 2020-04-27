@@ -5002,7 +5002,14 @@ export class StudyViewPageStore {
 
     public async getMutatedGenesDownloadData() {
         if (this.mutatedGeneTableRowData.result) {
-            let header = ['Gene', 'MutSig(Q-value)', '# Mut', '#', 'Freq'];
+            let header = [
+                'Gene',
+                'MutSig(Q-value)',
+                '# Mut',
+                '#',
+                'Profiled Samples',
+                'Freq',
+            ];
             if (this.oncokbCancerGeneFilterEnabled) {
                 header.push('Is Cancer Gene (source: OncoKB)');
             }
@@ -5017,6 +5024,7 @@ export class StudyViewPageStore {
                             : getQValue(record.qValue),
                         record.totalCount,
                         record.numberOfAlteredCases,
+                        record.numberOfProfiledCases,
                         getFrequencyStr(
                             (record.numberOfAlteredCases /
                                 record.numberOfProfiledCases) *
@@ -5041,7 +5049,13 @@ export class StudyViewPageStore {
 
     public getFusionGenesDownloadData() {
         if (this.fusionGeneTableRowData.result) {
-            const header = ['Gene', '# Fusion', '#', 'Freq'];
+            const header = [
+                'Gene',
+                '# Fusion',
+                '#',
+                'Profiled Samples',
+                'Freq',
+            ];
             if (this.oncokbCancerGeneFilterEnabled) {
                 header.push('Is Cancer Gene (source: OncoKB)');
             }
@@ -5053,6 +5067,7 @@ export class StudyViewPageStore {
                         record.label,
                         record.totalCount,
                         record.numberOfAlteredCases,
+                        record.numberOfProfiledCases,
                         getFrequencyStr(
                             (record.numberOfAlteredCases /
                                 record.numberOfProfiledCases) *
@@ -5082,6 +5097,7 @@ export class StudyViewPageStore {
                 'Gistic(Q-value)',
                 'Cytoband',
                 'CNA',
+                'Profiled Samples',
                 '#',
                 'Freq',
             ];
@@ -5100,6 +5116,7 @@ export class StudyViewPageStore {
                         record.cytoband,
                         getCNAByAlteration(record.alteration!),
                         record.numberOfAlteredCases,
+                        record.numberOfProfiledCases,
                         getFrequencyStr(
                             (record.numberOfAlteredCases /
                                 record.numberOfProfiledCases) *
