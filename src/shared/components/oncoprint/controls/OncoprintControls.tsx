@@ -760,6 +760,11 @@ export default class OncoprintControls extends React.Component<
         return 'Select all';
     }
 
+    @autobind
+    private getSelectedClinicalAttributeIds() {
+        return this.props.state.selectedClinicalAttributeIds;
+    }
+
     private getClinicalTracksMenu() {
         // TODO: put onFocus handler on CheckedSelect when possible
         // TODO: pass unmodified string array as value prop when possible
@@ -772,8 +777,8 @@ export default class OncoprintControls extends React.Component<
             return (
                 <AddClinicalTracks
                     store={this.props.store}
-                    selectedClinicalAttributeIds={
-                        this.props.state.selectedClinicalAttributeIds
+                    getSelectedClinicalAttributeIds={
+                        this.getSelectedClinicalAttributeIds as () => string[]
                     }
                     onChangeSelectedClinicalTracks={
                         this.props.handlers.onChangeSelectedClinicalTracks
