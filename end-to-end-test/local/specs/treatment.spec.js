@@ -140,6 +140,10 @@ describe('treatment feature', function() {
                     $('.oncoprint__controls__heatmap_menu'),
                     'IC50 values of compounds on cellular phenotype readout'
                 );
+                // wait for generic assay data loading complete
+                $(
+                    '.oncoprint__controls__heatmap_menu .generic-assay-selector'
+                ).waitForExist();
                 var treatments = getSelectCheckedOptions(
                     $(
                         '.oncoprint__controls__heatmap_menu .generic-assay-selector'
@@ -154,6 +158,10 @@ describe('treatment feature', function() {
                     $('.oncoprint__controls__heatmap_menu'),
                     'IC50 values of compounds on cellular phenotype readout'
                 );
+                // wait for generic assay data loading complete
+                $(
+                    '.oncoprint__controls__heatmap_menu .generic-assay-selector'
+                ).waitForExist();
                 var treatments = getSelectCheckedOptions(
                     $(
                         '.oncoprint__controls__heatmap_menu .generic-assay-selector'
@@ -173,6 +181,11 @@ describe('treatment feature', function() {
                     $('.oncoprint__controls__heatmap_menu'),
                     'IC50 values of compounds on cellular phenotype readout'
                 );
+                // wait for generic assay data loading complete
+                $(
+                    '.oncoprint__controls__heatmap_menu .generic-assay-selector'
+                ).waitForExist();
+
                 var searchBox = $(
                     '.oncoprint__controls__heatmap_menu .generic-assay-selector .default-checked-select'
                 ).$('input');
@@ -202,6 +215,10 @@ describe('treatment feature', function() {
                     $('.oncoprint__controls__heatmap_menu'),
                     'IC50 values of compounds on cellular phenotype readout'
                 );
+                // wait for generic assay data loading complete
+                $(
+                    '.oncoprint__controls__heatmap_menu .generic-assay-selector'
+                ).waitForExist();
 
                 var searchBox = $(
                     '.oncoprint__controls__heatmap_menu .generic-assay-selector .default-checked-select'
@@ -233,6 +250,11 @@ describe('treatment feature', function() {
                     $('.oncoprint__controls__heatmap_menu'),
                     'IC50 values of compounds on cellular phenotype readout'
                 );
+                // wait for generic assay data loading complete
+                $(
+                    '.oncoprint__controls__heatmap_menu .generic-assay-selector'
+                ).waitForExist();
+
                 assert($('div.icon*=17-AAG').isExisting());
                 var selectMenuEntry = selectCheckedOption(
                     $(
