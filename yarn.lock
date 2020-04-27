@@ -11743,10 +11743,9 @@ ignore@^4.0.3:
   resolved "https://registry.yarnpkg.com/ignore/-/ignore-4.0.6.tgz#750e3db5862087b4737ebac8207ffd1ef27b25fc"
   integrity sha512-cyFDKrqc/YdcWFniJhzI42+AzS+gNwmUzOSFcRCQYwySuBBBy/KjuxWLZ/FHEH6Moq1NizMOBWyTcv8O4OZIMg==
 
-igv@2.4.0:
-  version "2.4.0"
-  resolved "https://registry.yarnpkg.com/igv/-/igv-2.4.0.tgz#98491653cd141e21786e2bacf5e5f1f48d964709"
-  integrity sha512-4zPwBAxQe5RRWb/9MB4jRBocX2A9ul/1MxXfMe8JDZ+pAM8e3ztZsyjDbTzPyKp/GddVWLCkCPnGR2M39eHEag==
+"igv@git+https://github.com/cBioPortal/igv.js#b99b8cca8fa5315c4c17d2e93a030129f25af136":
+  version "2.5.3-fork.0"
+  resolved "git+https://github.com/cBioPortal/igv.js#b99b8cca8fa5315c4c17d2e93a030129f25af136"
 
 image-palette@^2.1.0:
   version "2.1.0"
