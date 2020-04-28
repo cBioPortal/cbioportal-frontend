@@ -317,6 +317,9 @@ export default class PatientViewMutationsTab extends React.Component<
                     cosmicData={this.props.store.cosmicData.result}
                     oncoKbData={this.props.store.oncoKbData}
                     oncoKbCancerGenes={this.props.store.oncoKbCancerGenes}
+                    usingPublicOncoKbInstance={
+                        this.props.store.usingPublicOncoKbInstance
+                    }
                     civicGenes={this.props.store.civicGenes}
                     civicVariants={this.props.store.civicVariants}
                     userEmailAddress={ServerConfigHelpers.getUserEmailAddress()}

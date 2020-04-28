@@ -280,6 +280,9 @@ export default class MutationMapper<
                     reactTableProps={this.props.customMutationTableProps}
                     hotspotData={this.store.indexedHotspotData}
                     oncoKbData={this.store.oncoKbData}
+                    usingPublicOncoKbInstance={
+                        this.store.usingPublicOncoKbInstance
+                    }
                     oncoKbCancerGenes={this.store.oncoKbCancerGenes}
                     myCancerGenomeData={this.store.myCancerGenomeData}
                     enableCivic={this.props.enableCivic}
