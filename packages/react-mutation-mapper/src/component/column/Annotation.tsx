@@ -29,6 +29,7 @@ import OncoKB, { sortValue as oncoKbSortValue } from '../oncokb/OncoKB';
 import HotspotAnnotation, {
     sortValue as hotspotSortValue,
 } from './HotspotAnnotation';
+import { USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB } from '../../util/DataFetcherUtils';
 
 export type AnnotationProps = {
     mutation?: Mutation;
@@ -39,6 +40,7 @@ export type AnnotationProps = {
     hotspotData?: RemoteData<IHotspotIndex | undefined>;
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>;
+    usingPublicOncoKbInstance: boolean;
     pubMedCache?: MobxCache;
     resolveEntrezGeneId?: (mutation: Mutation) => number;
     resolveTumorType?: (mutation: Mutation) => string;
@@ -66,6 +68,7 @@ export interface IAnnotation {
     oncoKbStatus: 'pending' | 'error' | 'complete';
     oncoKbGeneExist: boolean;
     isOncoKbCancerGene: boolean;
+    usingPublicOncoKbInstance: boolean;
     myCancerGenomeLinks: string[];
     civicEntry?: ICivicEntry | null;
     civicStatus: 'pending' | 'error' | 'complete';
@@ -77,6 +80,7 @@ export const DEFAULT_ANNOTATION_DATA: IAnnotation = {
     oncoKbStatus: 'complete',
     oncoKbGeneExist: false,
     isOncoKbCancerGene: false,
+    usingPublicOncoKbInstance: false,
     isHotspot: false,
     is3dHotspot: false,
     hotspotStatus: 'complete',
@@ -100,6 +104,7 @@ export function getAnnotationData(
     hotspotData?: RemoteData<IHotspotIndex | undefined>,
     myCancerGenomeData?: IMyCancerGenomeData,
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>,
+    usingPublicOncoKbInstance?: boolean,
     civicGenes?: RemoteData<ICivicGene | undefined>,
     civicVariants?: RemoteData<ICivicVariant | undefined>,
     resolveTumorType: (mutation: Mutation) => string = getDefaultTumorType,
@@ -136,6 +141,9 @@ export function getAnnotationData(
             hugoGeneSymbol,
             oncoKbGeneExist,
             isOncoKbCancerGene,
+            usingPublicOncoKbInstance: usingPublicOncoKbInstance
+                ? usingPublicOncoKbInstance
+                : USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
             civicEntry:
                 civicGenes &&
                 civicGenes.result &&
@@ -245,6 +253,9 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
         <span style={{ display: 'flex', minWidth: 100 }}>
             {enableOncoKb && (
                 <OncoKB
+                    usingPublicOncoKbInstance={
+                        annotation.usingPublicOncoKbInstance
+                    }
                     hugoGeneSymbol={annotation.hugoGeneSymbol}
                     geneNotExist={!annotation.oncoKbGeneExist}
                     isCancerGene={annotation.isOncoKbCancerGene}
@@ -290,6 +301,7 @@ export default class Annotation extends React.Component<AnnotationProps, {}> {
             hotspotData,
             myCancerGenomeData,
             oncoKbData,
+            usingPublicOncoKbInstance,
             resolveEntrezGeneId,
             resolveTumorType,
             civicGenes,
@@ -302,6 +314,7 @@ export default class Annotation extends React.Component<AnnotationProps, {}> {
             hotspotData,
             myCancerGenomeData,
             oncoKbData,
+            usingPublicOncoKbInstance,
             civicGenes,
             civicVariants,
             resolveTumorType,

@@ -37,7 +37,7 @@ import {
     GenomeNexusAPI,
     GenomeNexusAPIInternal,
 } from 'genome-nexus-ts-api-client';
-import { CancerGene } from 'oncokb-ts-api-client';
+import { CancerGene, OncoKBInfo } from 'oncokb-ts-api-client';
 import { IPdbChain, PdbAlignmentIndex } from 'shared/model/Pdb';
 import {
     calcPdbIdNumericalValue,
@@ -58,6 +58,10 @@ import { IMutationMapperConfig } from './MutationMapperConfig';
 import autobind from 'autobind-decorator';
 import { normalizeMutation, normalizeMutations } from './MutationMapperUtils';
 import { getOncoKbApiUrl } from 'shared/api/urls';
+import {
+    ONCOKB_DEFAULT_INFO,
+    USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
+} from 'react-mutation-mapper';
 
 export interface IMutationMapperStoreConfig {
     filterMutationsBySelectedTranscript?: boolean;
@@ -116,6 +120,20 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
             this.genomenexusInternalClient || defaultInternalGenomeNexusClient,
             oncoKBClient
         );
+    }
+
+    readonly oncoKbInfo: MobxPromise<OncoKBInfo> = remoteData(
+        {
+            invoke: () => this.dataFetcher.fetchOncoKbInfo(),
+            onError: () => ONCOKB_DEFAULT_INFO,
+        },
+        ONCOKB_DEFAULT_INFO
+    );
+
+    @computed get usingPublicOncoKbInstance() {
+        return this.oncoKbInfo.result
+            ? this.oncoKbInfo.result.publicInstance
+            : USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB;
     }
 
     readonly mutationData = remoteData(
