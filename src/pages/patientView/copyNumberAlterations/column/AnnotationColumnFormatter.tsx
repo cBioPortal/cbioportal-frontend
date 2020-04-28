@@ -11,6 +11,7 @@ import {
     ICivicGeneData,
     ICivicVariant,
     ICivicVariantData,
+    USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
     oncoKbAnnotationSortValue,
     RemoteData,
 } from 'react-mutation-mapper';
@@ -32,6 +33,7 @@ export default class AnnotationColumnFormatter {
         copyNumberData: DiscreteCopyNumberData[] | undefined,
         oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>,
         oncoKbData?: RemoteData<IOncoKbData | Error | undefined>,
+        usingPublicOncoKbInstance?: boolean,
         uniqueSampleKeyToTumorType?: { [sampleId: string]: string },
         civicGenes?: RemoteData<ICivicGene | undefined>,
         civicVariants?: RemoteData<ICivicVariant | undefined>,
@@ -90,6 +92,10 @@ export default class AnnotationColumnFormatter {
                 oncoKbIndicator,
                 oncoKbGeneExist,
                 isOncoKbCancerGene,
+                usingPublicOncoKbInstance:
+                    usingPublicOncoKbInstance === undefined
+                        ? USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB
+                        : usingPublicOncoKbInstance,
                 civicEntry:
                     civicGenes &&
                     civicGenes.result &&
@@ -231,6 +237,7 @@ export default class AnnotationColumnFormatter {
     public static sortValue(
         data: DiscreteCopyNumberData[],
         oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>,
+        usingPublicOncoKbInstance?: boolean,
         oncoKbData?: RemoteData<IOncoKbData | Error | undefined>,
         uniqueSampleKeyToTumorType?: { [sampleId: string]: string },
         civicGenes?: RemoteData<ICivicGene | undefined>,
@@ -240,6 +247,7 @@ export default class AnnotationColumnFormatter {
             data,
             oncoKbCancerGenes,
             oncoKbData,
+            usingPublicOncoKbInstance,
             uniqueSampleKeyToTumorType,
             civicGenes,
             civicVariants
@@ -260,6 +268,7 @@ export default class AnnotationColumnFormatter {
             data,
             columnProps.oncoKbCancerGenes,
             columnProps.oncoKbData,
+            columnProps.usingPublicOncoKbInstance,
             columnProps.uniqueSampleKeyToTumorType,
             columnProps.civicGenes,
             columnProps.civicVariants,

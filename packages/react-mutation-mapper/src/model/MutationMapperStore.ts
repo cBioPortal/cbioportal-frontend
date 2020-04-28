@@ -8,7 +8,11 @@ import {
     PostTranslationalModification,
     VariantAnnotation,
 } from 'genome-nexus-ts-api-client';
-import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
+import {
+    CancerGene,
+    IndicatorQueryResp,
+    OncoKBInfo,
+} from 'oncokb-ts-api-client';
 import { IHotspotIndex } from './CancerHotspot';
 import { ICivicGene, ICivicVariant } from './Civic';
 import DataStore from './DataStore';
@@ -55,6 +59,8 @@ export interface MutationMapperStore {
     oncoKbCancerGenes: RemoteData<CancerGene[] | Error | undefined>;
     oncoKbData: RemoteData<IOncoKbData | Error | undefined>;
     oncoKbDataByPosition: { [pos: number]: IndicatorQueryResp[] };
+    oncoKbInfo: RemoteData<OncoKBInfo | undefined>;
+    usingPublicOncoKbInstance: boolean;
     civicGenes?: RemoteData<ICivicGene | undefined>;
     civicVariants?: RemoteData<ICivicVariant | undefined>;
     myCancerGenomeData?: IMyCancerGenomeData;

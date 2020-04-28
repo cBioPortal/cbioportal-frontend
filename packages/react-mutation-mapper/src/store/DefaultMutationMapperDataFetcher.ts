@@ -45,6 +45,7 @@ import {
     initOncoKbClient,
     ONCOKB_DEFAULT_DATA,
 } from '../util/DataFetcherUtils';
+import { OncoKBInfo } from 'oncokb-ts-api-client';
 
 export interface MutationMapperDataFetcherConfig {
     myGeneUrlTemplate?: string;
@@ -265,6 +266,12 @@ export class DefaultMutationMapperDataFetcher
         client: OncoKbAPI = this.oncoKbClient
     ): Promise<CancerGene[]> {
         return client.utilsCancerGeneListGetUsingGET_1({});
+    }
+
+    public fetchOncoKbInfo(
+        client: OncoKbAPI = this.oncoKbClient
+    ): Promise<OncoKBInfo> {
+        return client.infoGetUsingGET_1({});
     }
 
     public async fetchOncoKbData(
