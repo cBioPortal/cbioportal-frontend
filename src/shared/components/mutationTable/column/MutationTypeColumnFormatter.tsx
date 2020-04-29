@@ -52,7 +52,7 @@ export default class MutationTypeColumnFormatter {
             },
             frame_shift_ins: {
                 displayValue: 'FS ins',
-                className: styles.trunMutation,
+                className: styles.truncMutation,
             },
             in_frame_ins: {
                 displayValue: 'IF ins',
