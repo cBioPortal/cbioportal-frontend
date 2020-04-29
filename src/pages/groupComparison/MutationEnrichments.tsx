@@ -8,7 +8,6 @@ import AlterationEnrichmentContainer from '../resultsView/enrichments/Alteration
 import autobind from 'autobind-decorator';
 import { MakeMobxView } from '../../shared/components/MobxView';
 import { MakeEnrichmentsTabUI } from './GroupComparisonUtils';
-import { remoteData } from 'cbioportal-frontend-commons';
 import _ from 'lodash';
 import { AlterationContainerType } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
@@ -40,34 +39,11 @@ export default class MutationEnrichments extends React.Component<
         true
     );
 
-    private readonly mutationEnrichmentAnalysisGroups = remoteData({
-        await: () => [this.props.store.enrichmentAnalysisGroups],
-        invoke: () => {
-            return Promise.resolve(
-                _.map(
-                    this.props.store.enrichmentAnalysisGroups.result,
-                    group => {
-                        return {
-                            ...group,
-                            description: `Number (percentage) of ${
-                                this.props.store.usePatientLevelEnrichments
-                                    ? 'patients'
-                                    : 'samples'
-                            } in ${
-                                group.name
-                            } that have a mutation in the listed gene.`,
-                        };
-                    }
-                )
-            );
-        },
-    });
-
     readonly enrichmentsUI = MakeMobxView({
         await: () => [
             this.props.store.mutationEnrichmentData,
             this.props.store.selectedStudyMutationEnrichmentProfileMap,
-            this.mutationEnrichmentAnalysisGroups,
+            this.props.store.mutationEnrichmentAnalysisGroups,
             this.props.store.studies,
         ],
         render: () => {
@@ -96,7 +72,10 @@ export default class MutationEnrichments extends React.Component<
                     />
                     <AlterationEnrichmentContainer
                         data={this.props.store.mutationEnrichmentData.result!}
-                        groups={this.mutationEnrichmentAnalysisGroups.result}
+                        groups={
+                            this.props.store.mutationEnrichmentAnalysisGroups
+                                .result
+                        }
                         alteredVsUnalteredMode={false}
                         headerName={headerName}
                         containerType={AlterationContainerType.MUTATION}
