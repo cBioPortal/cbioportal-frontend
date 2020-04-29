@@ -32,16 +32,11 @@ import { MiniOncoprint } from 'shared/components/miniOncoprint/MiniOncoprint';
 import GeneBarPlot from './GeneBarPlot';
 import WindowStore from 'shared/components/window/WindowStore';
 import ReactSelect from 'react-select';
+import { EnrichmentAnalysisComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
-    groups: {
-        name: string;
-        description: string;
-        nameOfEnrichmentDirection?: string;
-        count: number;
-        color?: string;
-    }[];
+    groups: Omit<EnrichmentAnalysisComparisonGroup, 'samples'>[];
     alteredVsUnalteredMode?: boolean;
     headerName: string;
     store?: ResultsViewPageStore;
