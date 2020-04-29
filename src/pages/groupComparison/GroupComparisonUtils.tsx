@@ -43,6 +43,15 @@ export type ComparisonGroup = Omit<SessionGroupData, 'studies' | 'color'> & {
     nameOfEnrichmentDirection?: string;
 };
 
+export type EnrichmentAnalysisComparisonGroup = {
+    name: string;
+    description: string;
+    count: number;
+    color: string;
+    samples: Sample[];
+    nameOfEnrichmentDirection: string | undefined;
+};
+
 export type StudyViewComparisonGroup = Omit<GroupData, 'studies' | 'color'> & {
     uid: string; // unique in the session
     studies: { id: string; samples: string[]; patients: string[] }[]; // include patients, filter out nonexistent samples

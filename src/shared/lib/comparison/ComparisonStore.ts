@@ -12,6 +12,7 @@ import {
     IOverlapComputations,
     isGroupEmpty,
     partitionCasesByGroupMembership,
+    EnrichmentAnalysisComparisonGroup,
 } from '../../../pages/groupComparison/GroupComparisonUtils';
 import { GroupComparisonTab } from '../../../pages/groupComparison/GroupComparisonTabs';
 import { remoteData, stringListToIndexSet } from 'cbioportal-frontend-commons';
@@ -557,58 +558,86 @@ export default class ComparisonStore {
         this._proteinEnrichmentProfileMap = profileMap;
     }
 
-    //
+    readonly mutationEnrichmentAnalysisGroups = remoteData({
+        await: () => [
+            this.enrichmentAnalysisGroups,
+            this.selectedStudyMutationEnrichmentProfileMap,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                this.enrichmentAnalysisGroups.result!.reduce(
+                    (acc: EnrichmentAnalysisComparisonGroup[], group) => {
+                        // filter samples having mutation profile
+                        const filteredSamples = group.samples.filter(
+                            sample =>
+                                this.selectedStudyMutationEnrichmentProfileMap
+                                    .result![sample.studyId] !== undefined
+                        );
+                        if (filteredSamples.length > 0) {
+                            acc.push({
+                                ...group,
+                                count: filteredSamples.length,
+                                samples: filteredSamples,
+                                description: `Number (percentage) of ${
+                                    this.usePatientLevelEnrichments
+                                        ? 'patients'
+                                        : 'samples'
+                                } in ${
+                                    group.name
+                                } that have a mutation in the listed gene.`,
+                            });
+                        }
+                        return acc;
+                    },
+                    []
+                )
+            );
+        },
+    });
+
+    readonly mutationEnrichmentDataRequestGroups = remoteData({
+        await: () => [
+            this.mutationEnrichmentAnalysisGroups,
+            this.selectedStudyMutationEnrichmentProfileMap,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                this.mutationEnrichmentAnalysisGroups.result!.map(group => {
+                    const molecularProfileCaseIdentifiers = group.samples.map(
+                        sample => ({
+                            caseId: this.usePatientLevelEnrichments
+                                ? sample.patientId
+                                : sample.sampleId,
+                            molecularProfileId: this
+                                .selectedStudyMutationEnrichmentProfileMap
+                                .result![sample.studyId].molecularProfileId,
+                        })
+                    );
+                    return {
+                        name: group.name,
+                        molecularProfileCaseIdentifiers,
+                    };
+                })
+            );
+        },
+    });
+
     public readonly mutationEnrichmentData = makeEnrichmentDataPromise({
         storeForExcludingQueryGenes: this.resultsViewStore,
-        await: () => [
-            this.selectedStudyMutationEnrichmentProfileMap,
-            this.activeGroups,
-        ],
+        await: () => [this.mutationEnrichmentDataRequestGroups],
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         getSelectedProfileMap: () =>
             this.selectedStudyMutationEnrichmentProfileMap.result!,
         fetchData: () => {
-            let molecularProfiles = this
-                .selectedStudyMutationEnrichmentProfileMap.result!;
-            let studyMolecularProfileMap = _.keyBy(
-                molecularProfiles,
-                molecularProfile => molecularProfile.studyId
-            );
-            if (this.activeGroups.result!.length > 1) {
-                let groups: MolecularProfileCasesGroupFilter[] = _.map(
-                    this.activeGroups.result,
-                    group => {
-                        const molecularProfileCaseIdentifiers = _.flatMap(
-                            group.studies,
-                            study => {
-                                return _.map(
-                                    this.usePatientLevelEnrichments
-                                        ? study.patients
-                                        : study.samples,
-                                    caseId => {
-                                        return {
-                                            caseId,
-                                            molecularProfileId:
-                                                studyMolecularProfileMap[
-                                                    study.id
-                                                ].molecularProfileId,
-                                        };
-                                    }
-                                );
-                            }
-                        );
-                        return {
-                            name: group.nameWithOrdinal,
-                            molecularProfileCaseIdentifiers,
-                        };
-                    }
-                );
-
+            if (
+                this.mutationEnrichmentDataRequestGroups.result &&
+                this.mutationEnrichmentDataRequestGroups.result.length > 1
+            ) {
                 return internalClient.fetchMutationEnrichmentsUsingPOST({
                     enrichmentType: this.usePatientLevelEnrichments
                         ? 'PATIENT'
                         : 'SAMPLE',
-                    groups,
+                    groups: this.mutationEnrichmentDataRequestGroups.result!,
                 });
             } else {
                 return Promise.resolve([]);
@@ -616,42 +645,67 @@ export default class ComparisonStore {
         },
     });
 
-    readonly copyNumberEnrichmentDataRequestGroups = remoteData({
+    readonly copyNumberEnrichmentAnalysisGroups = remoteData({
         await: () => [
             this.selectedStudyCopyNumberEnrichmentProfileMap,
-            this.activeGroups,
+            this.enrichmentAnalysisGroups,
         ],
-        invoke: async () => {
-            let molecularProfile = this
-                .selectedStudyCopyNumberEnrichmentProfileMap.result!;
-            let groups: MolecularProfileCasesGroupFilter[] = _.map(
-                this.activeGroups.result,
-                group => {
-                    const molecularProfileCaseIdentifiers = _.flatMap(
-                        group.studies,
-                        study => {
-                            return _.map(
-                                this.usePatientLevelEnrichments
-                                    ? study.patients
-                                    : study.samples,
-                                caseId => {
-                                    return {
-                                        caseId,
-                                        molecularProfileId:
-                                            molecularProfile[study.id]
-                                                .molecularProfileId,
-                                    };
-                                }
-                            );
+        invoke: () => {
+            return Promise.resolve(
+                this.enrichmentAnalysisGroups.result!.reduce(
+                    (acc: EnrichmentAnalysisComparisonGroup[], group) => {
+                        // filter samples having mutation profile
+                        const filteredSamples = group.samples.filter(
+                            sample =>
+                                this.selectedStudyCopyNumberEnrichmentProfileMap
+                                    .result![sample.studyId] !== undefined
+                        );
+                        if (filteredSamples.length > 0) {
+                            acc.push({
+                                ...group,
+                                count: filteredSamples.length,
+                                samples: filteredSamples,
+                                description: `Number (percentage) of ${
+                                    this.usePatientLevelEnrichments
+                                        ? 'patients'
+                                        : 'samples'
+                                } in ${
+                                    group.name
+                                } that have the listed alteration in the listed gene.`,
+                            });
                         }
+                        return acc;
+                    },
+                    []
+                )
+            );
+        },
+    });
+
+    readonly copyNumberEnrichmentDataRequestGroups = remoteData({
+        await: () => [
+            this.copyNumberEnrichmentAnalysisGroups,
+            this.selectedStudyCopyNumberEnrichmentProfileMap,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                this.copyNumberEnrichmentAnalysisGroups.result!.map(group => {
+                    const molecularProfileCaseIdentifiers = group.samples.map(
+                        sample => ({
+                            caseId: this.usePatientLevelEnrichments
+                                ? sample.patientId
+                                : sample.sampleId,
+                            molecularProfileId: this
+                                .selectedStudyCopyNumberEnrichmentProfileMap
+                                .result![sample.studyId].molecularProfileId,
+                        })
                     );
                     return {
-                        name: group.nameWithOrdinal,
+                        name: group.name,
                         molecularProfileCaseIdentifiers,
                     };
-                }
+                })
             );
-            return groups;
         },
     });
 
@@ -731,41 +785,84 @@ export default class ComparisonStore {
         });
     }
 
-    readonly mRNAEnrichmentData = makeEnrichmentDataPromise({
-        await: () => [this.selectedmRNAEnrichmentProfileMap, this.activeGroups],
-        getSelectedProfileMap: () =>
-            this.selectedmRNAEnrichmentProfileMap.result!, // returns an empty array if the selected study doesn't have any mRNA profiles
-        referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
-        fetchData: () => {
+    readonly mrnaEnrichmentAnalysisGroups = remoteData({
+        await: () => [
+            this.selectedmRNAEnrichmentProfileMap,
+            this.enrichmentAnalysisGroups,
+        ],
+        invoke: () => {
             let studyIds = Object.keys(
                 this.selectedmRNAEnrichmentProfileMap.result!
             );
             // assumes single study for now
             if (studyIds.length === 1) {
-                const molecularProfileId = this.selectedmRNAEnrichmentProfileMap
-                    .result![studyIds[0]].molecularProfileId;
-                const groups: MolecularProfileCasesGroupFilter[] = _.map(
-                    this.activeGroups.result,
-                    group => {
-                        const molecularProfileCaseIdentifiers = _.flatMap(
-                            group.studies,
-                            study => {
-                                return _.map(study.samples, sampleId => ({
-                                    caseId: sampleId,
-                                    molecularProfileId,
-                                }));
+                return Promise.resolve(
+                    this.enrichmentAnalysisGroups.result!.reduce(
+                        (acc: EnrichmentAnalysisComparisonGroup[], group) => {
+                            // filter samples having mutation profile
+                            const filteredSamples = group.samples.filter(
+                                sample =>
+                                    this.selectedmRNAEnrichmentProfileMap
+                                        .result![sample.studyId] !== undefined
+                            );
+                            if (filteredSamples.length > 0) {
+                                acc.push({
+                                    ...group,
+                                    count: filteredSamples.length,
+                                    samples: filteredSamples,
+                                    description: `samples in ${group.name}`,
+                                });
                             }
-                        );
-                        return {
-                            name: group.nameWithOrdinal,
-                            molecularProfileCaseIdentifiers,
-                        };
-                    }
+                            return acc;
+                        },
+                        []
+                    )
                 );
+            } else {
+                return Promise.resolve([]);
+            }
+        },
+    });
 
+    readonly mrnaEnrichmentDataRequestGroups = remoteData({
+        await: () => [
+            this.mrnaEnrichmentAnalysisGroups,
+            this.selectedmRNAEnrichmentProfileMap,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                this.mrnaEnrichmentAnalysisGroups.result!.map(group => {
+                    const molecularProfileCaseIdentifiers = group.samples.map(
+                        sample => ({
+                            caseId: sample.sampleId,
+                            molecularProfileId: this
+                                .selectedmRNAEnrichmentProfileMap.result![
+                                sample.studyId
+                            ].molecularProfileId,
+                        })
+                    );
+                    return {
+                        name: group.name,
+                        molecularProfileCaseIdentifiers,
+                    };
+                })
+            );
+        },
+    });
+
+    readonly mRNAEnrichmentData = makeEnrichmentDataPromise({
+        await: () => [this.mrnaEnrichmentDataRequestGroups],
+        getSelectedProfileMap: () =>
+            this.selectedmRNAEnrichmentProfileMap.result!, // returns an empty array if the selected study doesn't have any mRNA profiles
+        referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
+        fetchData: () => {
+            if (
+                this.mrnaEnrichmentDataRequestGroups.result &&
+                this.mrnaEnrichmentDataRequestGroups.result.length > 1
+            ) {
                 return internalClient.fetchExpressionEnrichmentsUsingPOST({
                     enrichmentType: 'SAMPLE',
-                    groups,
+                    groups: this.mrnaEnrichmentDataRequestGroups.result!,
                 });
             } else {
                 return Promise.resolve([]);
@@ -773,44 +870,84 @@ export default class ComparisonStore {
         },
     });
 
-    readonly proteinEnrichmentData = makeEnrichmentDataPromise({
+    readonly proteinEnrichmentAnalysisGroups = remoteData({
         await: () => [
             this.selectedProteinEnrichmentProfileMap,
-            this.activeGroups,
+            this.enrichmentAnalysisGroups,
         ],
-        referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
-        getSelectedProfileMap: () =>
-            this.selectedProteinEnrichmentProfileMap.result!, // returns an empty array if the selected study doesn't have any mRNA profiles
-        fetchData: () => {
+        invoke: () => {
             let studyIds = Object.keys(
                 this.selectedProteinEnrichmentProfileMap.result!
             );
             // assumes single study for now
             if (studyIds.length === 1) {
-                const molecularProfileId = this
-                    .selectedProteinEnrichmentProfileMap.result![studyIds[0]]
-                    .molecularProfileId;
-                const groups: MolecularProfileCasesGroupFilter[] = _.map(
-                    this.activeGroups.result,
-                    group => {
-                        const molecularProfileCaseIdentifiers = _.flatMap(
-                            group.studies,
-                            study => {
-                                return _.map(study.samples, sampleId => ({
-                                    caseId: sampleId,
-                                    molecularProfileId,
-                                }));
+                return Promise.resolve(
+                    this.enrichmentAnalysisGroups.result!.reduce(
+                        (acc: EnrichmentAnalysisComparisonGroup[], group) => {
+                            // filter samples having mutation profile
+                            const filteredSamples = group.samples.filter(
+                                sample =>
+                                    this.selectedProteinEnrichmentProfileMap
+                                        .result![sample.studyId] !== undefined
+                            );
+                            if (filteredSamples.length > 0) {
+                                acc.push({
+                                    ...group,
+                                    count: filteredSamples.length,
+                                    samples: filteredSamples,
+                                    description: `samples in ${group.name}`,
+                                });
                             }
-                        );
-                        return {
-                            name: group.nameWithOrdinal,
-                            molecularProfileCaseIdentifiers,
-                        };
-                    }
+                            return acc;
+                        },
+                        []
+                    )
                 );
+            } else {
+                return Promise.resolve([]);
+            }
+        },
+    });
+
+    readonly proteinEnrichmentDataRequestGroups = remoteData({
+        await: () => [
+            this.proteinEnrichmentAnalysisGroups,
+            this.selectedProteinEnrichmentProfileMap,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                this.proteinEnrichmentAnalysisGroups.result!.map(group => {
+                    const molecularProfileCaseIdentifiers = group.samples.map(
+                        sample => ({
+                            caseId: sample.sampleId,
+                            molecularProfileId: this
+                                .selectedProteinEnrichmentProfileMap.result![
+                                sample.studyId
+                            ].molecularProfileId,
+                        })
+                    );
+                    return {
+                        name: group.name,
+                        molecularProfileCaseIdentifiers,
+                    };
+                })
+            );
+        },
+    });
+
+    readonly proteinEnrichmentData = makeEnrichmentDataPromise({
+        await: () => [this.proteinEnrichmentDataRequestGroups],
+        referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
+        getSelectedProfileMap: () =>
+            this.selectedProteinEnrichmentProfileMap.result!, // returns an empty array if the selected study doesn't have any mRNA profiles
+        fetchData: () => {
+            if (
+                this.proteinEnrichmentDataRequestGroups.result &&
+                this.proteinEnrichmentDataRequestGroups.result.length > 1
+            ) {
                 return internalClient.fetchExpressionEnrichmentsUsingPOST({
                     enrichmentType: 'SAMPLE',
-                    groups,
+                    groups: this.proteinEnrichmentDataRequestGroups.result!,
                 });
             } else {
                 return Promise.resolve([]);

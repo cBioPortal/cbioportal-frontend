@@ -8,7 +8,6 @@ import ExpressionEnrichmentContainer from '../resultsView/enrichments/Expression
 import Loader from '../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../shared/components/ErrorMessage';
 import { MakeEnrichmentsTabUI } from './GroupComparisonUtils';
-import { remoteData } from 'cbioportal-frontend-commons';
 import * as _ from 'lodash';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 
@@ -29,23 +28,6 @@ export default class ProteinEnrichments extends React.Component<
         this.props.store.setProteinEnrichmentProfileMap(profileMap);
     }
 
-    private readonly proteinEnrichmentAnalysisGroups = remoteData({
-        await: () => [this.props.store.enrichmentAnalysisGroups],
-        invoke: () => {
-            return Promise.resolve(
-                _.map(
-                    this.props.store.enrichmentAnalysisGroups.result,
-                    group => {
-                        return {
-                            ...group,
-                            description: `samples in ${group.name}`,
-                        };
-                    }
-                )
-            );
-        },
-    });
-
     readonly tabUI = MakeEnrichmentsTabUI(
         () => this.props.store,
         () => this.enrichmentsUI,
@@ -59,7 +41,7 @@ export default class ProteinEnrichments extends React.Component<
         await: () => [
             this.props.store.proteinEnrichmentData,
             this.props.store.selectedProteinEnrichmentProfileMap,
-            this.proteinEnrichmentAnalysisGroups,
+            this.props.store.proteinEnrichmentAnalysisGroups,
             this.props.store.studies,
         ],
         render: () => {
@@ -84,7 +66,10 @@ export default class ProteinEnrichments extends React.Component<
                     />
                     <ExpressionEnrichmentContainer
                         data={this.props.store.proteinEnrichmentData.result!}
-                        groups={this.proteinEnrichmentAnalysisGroups.result}
+                        groups={
+                            this.props.store.proteinEnrichmentAnalysisGroups
+                                .result
+                        }
                         selectedProfile={selectedProfile}
                         alteredVsUnalteredMode={false}
                         sampleKeyToSample={
