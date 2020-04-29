@@ -22,6 +22,8 @@ import client from '../api/cbioportalClientInstance';
 import internalClient from '../api/cbioportalInternalClientInstance';
 import { Group } from '../api/ComparisonGroupClient';
 import ComplexKeySet from '../lib/complexKeyDataStructures/ComplexKeySet';
+import { makeUniqueColorGetter } from '../components/plots/PlotUtils';
+import { RESERVED_CLINICAL_VALUE_COLORS } from '../lib/Colors';
 
 export enum SpecialAttribute {
     MutationSpectrum = 'NO_CONTEXT_MUTATION_SIGNATURE',
@@ -239,7 +241,10 @@ async function fetch(
 
 export default class ClinicalDataCache extends MobxPromiseCache<
     ExtendedClinicalAttribute,
-    OncoprintClinicalData
+    {
+        categoryToColor?: { [value: string]: string };
+        data: OncoprintClinicalData;
+    }
 > {
     constructor(
         samplesPromise: MobxPromise<Sample[]>,
@@ -259,15 +264,38 @@ export default class ClinicalDataCache extends MobxPromiseCache<
                     studyIdToStudyPromise,
                     coverageInformationPromise,
                 ],
-                invoke: () =>
-                    fetch(
+                invoke: async () => {
+                    const data = await fetch(
                         q,
                         samplesPromise.result!,
                         patientsPromise.result!,
                         studyToMutationMolecularProfilePromise.result!,
                         studyIdToStudyPromise.result!,
                         coverageInformationPromise.result!
-                    ),
+                    );
+                    let categoryToColor;
+                    if (q.datatype === 'STRING') {
+                        const colorGetter = makeUniqueColorGetter(
+                            _.values(RESERVED_CLINICAL_VALUE_COLORS)
+                        );
+                        categoryToColor = _.cloneDeep(
+                            RESERVED_CLINICAL_VALUE_COLORS
+                        );
+                        for (const d of data) {
+                            if (
+                                !((d as ClinicalData).value in categoryToColor)
+                            ) {
+                                categoryToColor[
+                                    (d as ClinicalData).value
+                                ] = colorGetter();
+                            }
+                        }
+                    }
+                    return {
+                        data,
+                        categoryToColor,
+                    };
+                },
             }),
             q =>
                 `${q.clinicalAttributeId},${(q.molecularProfileIds || []).join(

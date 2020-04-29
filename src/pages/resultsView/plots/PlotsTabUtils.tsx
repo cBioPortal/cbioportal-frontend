@@ -689,17 +689,14 @@ function scatterPlotCnaLegendData(data: IPlotSampleData[], plotType: PlotType) {
 function makeAxisDataPromise_Clinical(
     attribute: ClinicalAttribute,
     clinicalDataCache: ClinicalDataCache,
-    patientKeyToSamples: MobxPromise<{ [uniquePatientKey: string]: Sample[] }>,
-    studyToMutationMolecularProfile: MobxPromise<{
-        [studyId: string]: MolecularProfile;
-    }>
+    patientKeyToSamples: MobxPromise<{ [uniquePatientKey: string]: Sample[] }>
 ): MobxPromise<IAxisData> {
     const promise = clinicalDataCache.get(attribute);
     let ret: MobxPromise<IAxisData> = remoteData({
         await: () => [promise, patientKeyToSamples],
         invoke: () => {
             const _patientKeyToSamples = patientKeyToSamples.result!;
-            const data: ClinicalData[] = promise.result! as ClinicalData[]; // we know it won't be MutationSpectrum
+            const data: ClinicalData[] = promise.result!.data as ClinicalData[]; // we know it won't be MutationSpectrum
             const axisData: IAxisData = {
                 data: [],
                 datatype: attribute.datatype.toLowerCase(),
@@ -1021,9 +1018,6 @@ export function makeAxisDataPromise(
         { entrezGeneId: number; molecularProfileId: string },
         NumericGeneMolecularData[]
     >,
-    studyToMutationMolecularProfile: MobxPromise<{
-        [studyId: string]: MolecularProfile;
-    }>,
     coverageInformation: MobxPromise<CoverageInformation>,
     samples: MobxPromise<Sample[]>,
     genesetMolecularDataCachePromise: MobxPromise<GenesetMolecularDataCache>,
@@ -1073,8 +1067,7 @@ export function makeAxisDataPromise(
                 ret = makeAxisDataPromise_Clinical(
                     attribute,
                     clinicalDataCache,
-                    patientKeyToSamples,
-                    studyToMutationMolecularProfile
+                    patientKeyToSamples
                 );
             }
             break;
