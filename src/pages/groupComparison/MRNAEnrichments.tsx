@@ -8,7 +8,6 @@ import LoadingIndicator from '../../shared/components/loadingIndicator/LoadingIn
 import ErrorMessage from '../../shared/components/ErrorMessage';
 import ExpressionEnrichmentContainer from '../resultsView/enrichments/ExpressionEnrichmentsContainer';
 import { MakeEnrichmentsTabUI } from './GroupComparisonUtils';
-import { remoteData } from 'cbioportal-frontend-commons';
 import * as _ from 'lodash';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 
@@ -29,23 +28,6 @@ export default class MRNAEnrichments extends React.Component<
         this.props.store.setMRNAEnrichmentProfileMap(profileMap);
     }
 
-    private readonly mrnaEnrichmentAnalysisGroups = remoteData({
-        await: () => [this.props.store.enrichmentAnalysisGroups],
-        invoke: () => {
-            return Promise.resolve(
-                _.map(
-                    this.props.store.enrichmentAnalysisGroups.result,
-                    group => {
-                        return {
-                            ...group,
-                            description: `samples in ${group.name}`,
-                        };
-                    }
-                )
-            );
-        },
-    });
-
     readonly tabUI = MakeEnrichmentsTabUI(
         () => this.props.store,
         () => this.enrichmentsUI,
@@ -59,7 +41,7 @@ export default class MRNAEnrichments extends React.Component<
         await: () => [
             this.props.store.mRNAEnrichmentData,
             this.props.store.selectedmRNAEnrichmentProfileMap,
-            this.mrnaEnrichmentAnalysisGroups,
+            this.props.store.mrnaEnrichmentAnalysisGroups,
             this.props.store.studies,
             this.props.store.sampleKeyToSample,
         ],
@@ -85,7 +67,9 @@ export default class MRNAEnrichments extends React.Component<
                     />
                     <ExpressionEnrichmentContainer
                         data={this.props.store.mRNAEnrichmentData.result!}
-                        groups={this.mrnaEnrichmentAnalysisGroups.result}
+                        groups={
+                            this.props.store.mrnaEnrichmentAnalysisGroups.result
+                        }
                         selectedProfile={selectedProfile}
                         alteredVsUnalteredMode={false}
                         sampleKeyToSample={
