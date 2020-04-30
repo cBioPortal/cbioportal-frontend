@@ -210,9 +210,9 @@ export default class GroupComparisonPage extends React.Component<
     });
 
     readonly studyLink = MakeMobxView({
-        await: () => [this.store.studies],
+        await: () => [this.store.displayedStudies],
         render: () => {
-            const studies = this.store.studies.result!;
+            const studies = this.store.displayedStudies.result!;
             let studyHeader = <span />;
             switch (studies.length) {
                 case 0:
