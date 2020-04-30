@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "description": "OncoKB, a comprehensive and curated precision oncology knowledge base, offers oncologists detailed, evidence-based information about individual somatic mutations and structural alterations present in patient tumors with the goal of supporting optimal treatment decisions.",
-    "version": "v1.0.1",
+    "version": "v1.0.2",
     "title": "OncoKB APIs",
     "contact": {
       "name": "OncoKB",
@@ -1013,6 +1013,9 @@
     "OncoKBInfo": {
       "type": "object",
       "properties": {
+        "apiVersion": {
+          "type": "string"
+        },
         "dataVersion": {
           "$ref": "#/definitions/Version"
         },
@@ -1027,6 +1030,9 @@
         },
         "oncoTreeVersion": {
           "type": "string"
+        },
+        "publicInstance": {
+          "type": "boolean"
         }
       }
     },

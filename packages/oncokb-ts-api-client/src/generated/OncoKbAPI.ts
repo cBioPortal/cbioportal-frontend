@@ -92,13 +92,17 @@ export type MainType = {
 
 };
 export type OncoKBInfo = {
-    'dataVersion': Version
+    'apiVersion': string
+
+        'dataVersion': Version
 
         'levels': Array < InfoLevel >
 
         'ncitVersion': string
 
         'oncoTreeVersion': string
+
+        'publicInstance': boolean
 
 };
 export type Implication = {
