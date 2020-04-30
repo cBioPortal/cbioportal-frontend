@@ -175,7 +175,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                 </h4>
                 <hr />
                 <h1 id={'webinars'}>Webinars</h1>
-                Join are webinar series{' '}
+                Join our webinar series{' '}
                 <strong>every Thursday 11am-12pm EDT</strong>, register{' '}
                 <a
                     target="_blank"
