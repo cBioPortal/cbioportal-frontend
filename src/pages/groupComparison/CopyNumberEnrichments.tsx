@@ -8,7 +8,6 @@ import { MakeMobxView } from '../../shared/components/MobxView';
 import LoadingIndicator from '../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../shared/components/ErrorMessage';
 import { MakeEnrichmentsTabUI } from './GroupComparisonUtils';
-import { remoteData } from 'cbioportal-frontend-commons';
 import _ from 'lodash';
 import { AlterationContainerType } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
@@ -40,33 +39,10 @@ export default class CopyNumberEnrichments extends React.Component<
         true
     );
 
-    private readonly copyNumberEnrichmentAnalysisGroups = remoteData({
-        await: () => [this.props.store.enrichmentAnalysisGroups],
-        invoke: () => {
-            return Promise.resolve(
-                _.map(
-                    this.props.store.enrichmentAnalysisGroups.result,
-                    group => {
-                        return {
-                            ...group,
-                            description: `Number (percentage) of ${
-                                this.props.store.usePatientLevelEnrichments
-                                    ? 'patients'
-                                    : 'samples'
-                            } in ${
-                                group.name
-                            } that have the listed alteration in the listed gene.`,
-                        };
-                    }
-                )
-            );
-        },
-    });
-
     readonly enrichmentsUI = MakeMobxView({
         await: () => [
             this.props.store.copyNumberEnrichmentData,
-            this.copyNumberEnrichmentAnalysisGroups,
+            this.props.store.copyNumberEnrichmentAnalysisGroups,
             this.props.store.selectedStudyCopyNumberEnrichmentProfileMap,
             this.props.store.studies,
         ],
@@ -97,7 +73,10 @@ export default class CopyNumberEnrichments extends React.Component<
 
                     <AlterationEnrichmentContainer
                         data={this.props.store.copyNumberEnrichmentData.result!}
-                        groups={this.copyNumberEnrichmentAnalysisGroups.result}
+                        groups={
+                            this.props.store.copyNumberEnrichmentAnalysisGroups
+                                .result
+                        }
                         alteredVsUnalteredMode={false}
                         headerName={headerName}
                         showCNAInTable={true}
