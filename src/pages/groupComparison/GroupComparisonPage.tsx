@@ -35,6 +35,7 @@ import GroupComparisonURLWrapper, {
 import styles from './styles.module.scss';
 import 'cbioportal-frontend-commons/dist/styles.css';
 import { OverlapStrategy } from '../../shared/lib/comparison/ComparisonStore';
+import { buildCBioPortalPageUrl } from 'shared/api/urls';
 
 export interface IGroupComparisonPageProps {
     routing: any;
@@ -209,9 +210,9 @@ export default class GroupComparisonPage extends React.Component<
     });
 
     readonly studyLink = MakeMobxView({
-        await: () => [this.store.studies],
+        await: () => [this.store.displayedStudies],
         render: () => {
-            const studies = this.store.studies.result!;
+            const studies = this.store.displayedStudies.result!;
             let studyHeader = <span />;
             switch (studies.length) {
                 case 0:
@@ -230,9 +231,11 @@ export default class GroupComparisonPage extends React.Component<
                     studyHeader = (
                         <h4>
                             <a
-                                href={`study?id=${studies
-                                    .map(study => study.studyId)
-                                    .join(',')}`}
+                                href={buildCBioPortalPageUrl(`study`, {
+                                    id: studies
+                                        .map(study => study.studyId)
+                                        .join(','),
+                                })}
                                 target="_blank"
                             >
                                 Multiple studies
