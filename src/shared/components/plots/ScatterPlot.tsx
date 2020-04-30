@@ -87,6 +87,7 @@ const RIGHT_PADDING = 120; // room for correlation info and legend
 const NUM_AXIS_TICKS = 8;
 const PLOT_DATA_PADDING_PIXELS = 50;
 const LEFT_PADDING = 25;
+const LEGEND_ITEMS_PER_ROW = 4;
 
 @observer
 export default class ScatterPlot<
@@ -181,11 +182,11 @@ export default class ScatterPlot<
         }
     }
 
-    @computed get legendX() {
+    @computed get sideLegendX() {
         return this.props.chartWidth - 20;
     }
 
-    @computed get legendY() {
+    @computed get sideLegendY() {
         const correlationInfo = 90;
         const regressionEqation = 45;
 
@@ -196,18 +197,97 @@ export default class ScatterPlot<
         }
     }
 
+    @computed get legendLocation() {
+        if (this.props.legendData && this.props.legendData.length > 7) {
+            return 'bottom';
+        } else {
+            return 'right';
+        }
+    }
+
+    @computed get bottomLegendHeight() {
+        //height of legend in case its on bottom
+        if (!this.props.legendData || this.legendLocation !== 'bottom') {
+            return 0;
+        } else {
+            const numRows = Math.ceil(
+                this.props.legendData.length / LEGEND_ITEMS_PER_ROW
+            );
+            return 23.7 * numRows;
+        }
+    }
+
     private get legend() {
-        const x = this.legendX;
+        //const x = this.legendX;
+        /*if (this.props.legendData && this.props.legendData.length) {
+            if (this.props.legendData.length > 7) {
+            } else {
+                return (
+                    <VictoryLegend
+                        orientation="vertical"
+                        data={this.props.legendData}
+                        x={x}
+                        y={this.legendY}
+                        width={RIGHT_PADDING}
+                        title={this.props.legendTitle}
+                        style={{ title: { fontSize: 15, fontWeight: 'bold' } }}
+                    />
+                );
+            }
+        } else {
+            return null;
+        }*/
+
         if (this.props.legendData && this.props.legendData.length) {
+            let legendData = this.props.legendData;
+            if (this.legendLocation === 'bottom') {
+                // if legend is at bottom then flatten labels
+                legendData = legendData.map(x => {
+                    let name = x.name;
+                    if (Array.isArray(x.name)) {
+                        name = (name as string[]).join(' '); // flatten labels by joining with space
+                    }
+                    return {
+                        name,
+                        symbol: x.symbol,
+                    };
+                });
+            }
             return (
                 <VictoryLegend
-                    orientation="vertical"
-                    data={this.props.legendData}
-                    x={x}
-                    y={this.legendY}
-                    width={RIGHT_PADDING}
+                    orientation={
+                        this.legendLocation === 'right'
+                            ? 'vertical'
+                            : 'horizontal'
+                    }
+                    itemsPerRow={
+                        this.legendLocation === 'right'
+                            ? undefined
+                            : LEGEND_ITEMS_PER_ROW
+                    }
+                    rowGutter={this.legendLocation === 'right' ? undefined : -5}
+                    data={legendData}
+                    x={this.legendLocation === 'right' ? this.sideLegendX : 0}
+                    y={
+                        this.legendLocation === 'right'
+                            ? this.sideLegendY
+                            : this.svgHeight - this.bottomLegendHeight
+                    }
                     title={this.props.legendTitle}
-                    style={{ title: { fontSize: 15, fontWeight: 'bold' } }}
+                    titleOrientation={
+                        this.legendLocation === 'right' ? 'top' : 'left'
+                    }
+                    style={{
+                        title: {
+                            fontSize: 15,
+                            fontWeight: 'bold',
+                        },
+                    }}
+                    titleComponent={
+                        <VictoryLabel
+                            dx={this.legendLocation === 'right' ? 0 : -10}
+                        />
+                    }
                 />
             );
         } else {
@@ -216,7 +296,7 @@ export default class ScatterPlot<
     }
 
     private get correlationInfo() {
-        const x = this.legendX;
+        const x = this.sideLegendX;
         return (
             <g>
                 <VictoryLabel
@@ -282,14 +362,19 @@ export default class ScatterPlot<
                 <line
                     stroke={REGRESSION_STROKE}
                     strokeWidth={REGRESSION_STROKE_WIDTH}
-                    x1={this.legendX + legendPadding}
+                    x1={this.sideLegendX + legendPadding}
                     y1={REGRESSION_EQUATION_Y}
-                    x2={this.legendX + legendPadding + lineLength}
+                    x2={this.sideLegendX + legendPadding + lineLength}
                     y2={REGRESSION_EQUATION_Y}
                     dy="0"
                 />
                 <VictoryLabel
-                    x={this.legendX + legendPadding + lineLength + linePadding}
+                    x={
+                        this.sideLegendX +
+                        legendPadding +
+                        lineLength +
+                        linePadding
+                    }
                     y={REGRESSION_EQUATION_Y}
                     dy="0"
                     textAnchor="start"
@@ -297,7 +382,12 @@ export default class ScatterPlot<
                     style={GUTTER_TEXT_STYLE}
                 />
                 <VictoryLabel
-                    x={this.legendX + legendPadding + lineLength + linePadding}
+                    x={
+                        this.sideLegendX +
+                        legendPadding +
+                        lineLength +
+                        linePadding
+                    }
                     y={REGRESSION_EQUATION_Y}
                     dy="2"
                     textAnchor="start"
@@ -405,7 +495,7 @@ export default class ScatterPlot<
     }
 
     @computed get svgHeight() {
-        return this.props.chartHeight;
+        return this.props.chartHeight + this.bottomLegendHeight;
     }
 
     @bind

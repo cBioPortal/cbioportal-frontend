@@ -53,7 +53,7 @@ import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicato
 import BoxScatterPlot, {
     IBoxScatterPlotData,
 } from '../../../shared/components/plots/BoxScatterPlot';
-import { ViewType, PlotType } from '../plots/PlotsTab';
+import { ColoringType, PlotType } from '../plots/PlotsTab';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 
 export interface ExpressionWrapperProps {
@@ -609,13 +609,13 @@ export default class ExpressionWrapper extends React.Component<
 
     @computed get viewType() {
         if (this.showMutations && this.showCna) {
-            return ViewType.MutationTypeAndCopyNumber;
+            return ColoringType.MutationTypeAndCopyNumber;
         } else if (this.showMutations) {
-            return ViewType.MutationType;
+            return ColoringType.MutationType;
         } else if (this.showCna) {
-            return ViewType.CopyNumber;
+            return ColoringType.CopyNumber;
         } else {
-            return ViewType.None;
+            return ColoringType.None;
         }
     }
 

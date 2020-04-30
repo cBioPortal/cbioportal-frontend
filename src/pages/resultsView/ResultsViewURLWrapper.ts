@@ -58,6 +58,7 @@ export enum ResultsViewURLQueryEnum {
 
     plots_horz_selection = 'plots_horz_selection',
     plots_vert_selection = 'plots_vert_selection',
+    plots_coloring_selection = 'plots_coloring_selection',
 
     genetic_profile_ids_PROFILE_MUTATION_EXTENDED = 'genetic_profile_ids_PROFILE_MUTATION_EXTENDED',
     genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION = 'genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION',
@@ -114,6 +115,7 @@ export default class ResultsViewURLWrapper extends URLWrapper<
                     isSessionProp: false,
                     nestedObjectProps: PlotsSelectionParamProps,
                 },
+                plots_coloring_selection: { isSessionProp: false },
 
                 // session props here
                 gene_list: { isSessionProp: true, doubleURIEncode: true },
