@@ -62,6 +62,7 @@ import {
     ClinicalAttribute,
     GenericAssayMeta,
     Gene,
+    ClinicalData,
 } from 'cbioportal-ts-api-client';
 import Timer = NodeJS.Timer;
 import ScatterPlot from 'shared/components/plots/ScatterPlot';
@@ -98,6 +99,9 @@ import ResultsViewURLWrapper, {
     ResultsViewURLQuery,
 } from '../ResultsViewURLWrapper';
 import { Mutable } from '../../../shared/lib/TypeScriptUtils';
+import MobxPromise from 'mobxpromise';
+import { SpecialAttribute } from '../../../shared/cache/ClinicalDataCache';
+import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledCheckbox';
 
 enum EventKey {
     horz_logScale,
@@ -107,7 +111,14 @@ enum EventKey {
     utilities_viewLimitValues,
 }
 
-export enum ViewType {
+export enum GenomicColoringType {
+    MutationType = 'Mutation',
+    CopyNumber = 'CNA',
+    MutationTypeAndCopyNumber = 'MutationAndCNA',
+}
+
+export enum ColoringType {
+    ClinicalData,
     MutationType,
     MutationTypeAndCopyNumber,
     CopyNumber,
@@ -120,7 +131,7 @@ export enum ViewType {
     None,
 }
 
-export enum PotentialViewType {
+export enum PotentialColoringType {
     MutationTypeAndCopyNumber,
     MutationSummary,
     None,
@@ -149,12 +160,6 @@ export enum MutationCountBy {
     MutatedVsWildType = 'MutatedVsWildType',
 }
 
-export enum GenomicColoringType {
-    Mutation = 'Mutation',
-    CNA = 'CNA',
-    MutationAndCNA = 'MutationAndCNA',
-}
-
 export type AxisMenuSelection = {
     entrezGeneId?: number;
     genesetId?: string;
@@ -170,15 +175,19 @@ export type AxisMenuSelection = {
     logScale: boolean;
 };
 
-export type ColoringMenuSelection = {
-    selectedOption?: {
-        label: string;
-        value: string;
-        info: {
-            gene: number;
-            genomicColoringType?: GenomicColoringType;
-        };
+export type ColoringMenuOmnibarOption = {
+    label: string;
+    value: string;
+    info: {
+        entrezGeneId?: number;
+        genomicColoringType?: GenomicColoringType;
+        clinicalAttribute?: ClinicalAttribute;
     };
+};
+
+export type ColoringMenuSelection = {
+    selectedOption: ColoringMenuOmnibarOption | undefined;
+    logScale?: boolean;
     defaultGene?: number;
     defaultGenomicColoringType?: GenomicColoringType;
 };
@@ -267,22 +276,22 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return this.scrollPane;
     }
 
-    @computed get viewMutationType() {
+    @computed get colorByMutationType() {
         return (
             this.coloringMenuSelection.selectedOption &&
             [
-                GenomicColoringType.Mutation,
-                GenomicColoringType.MutationAndCNA,
+                GenomicColoringType.MutationType,
+                GenomicColoringType.MutationTypeAndCopyNumber,
             ].includes(this.coloringMenuSelection.selectedOption.info
                 .genomicColoringType as any)
         );
     }
-    @computed get viewCopyNumber() {
+    @computed get colorByCopyNumber() {
         return (
             this.coloringMenuSelection.selectedOption &&
             [
-                GenomicColoringType.CNA,
-                GenomicColoringType.MutationAndCNA,
+                GenomicColoringType.CopyNumber,
+                GenomicColoringType.MutationTypeAndCopyNumber,
             ].includes(this.coloringMenuSelection.selectedOption.info
                 .genomicColoringType as any)
         );
@@ -290,64 +299,71 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     // determine whether formatting for points in the scatter plot (based on
     // mutations type, CNA, ...) will actually be shown in the plot (depends
     // on user choice via check boxes).
-    @computed get viewType(): ViewType {
-        let ret: ViewType = ViewType.None;
-        switch (this.potentialViewType) {
-            case PotentialViewType.MutationTypeAndCopyNumber:
-                if (this.viewMutationType && this.viewCopyNumber) {
-                    ret = ViewType.MutationTypeAndCopyNumber;
-                } else if (this.viewMutationType) {
-                    ret = ViewType.MutationType;
-                } else if (this.viewCopyNumber) {
-                    ret = ViewType.CopyNumber;
+    @computed get coloringType(): ColoringType {
+        if (
+            this.coloringMenuSelection.selectedOption &&
+            this.coloringMenuSelection.selectedOption.info.clinicalAttribute
+        ) {
+            return ColoringType.ClinicalData;
+        }
+
+        let ret: ColoringType = ColoringType.None;
+        switch (this.potentialColoringType) {
+            case PotentialColoringType.MutationTypeAndCopyNumber:
+                if (this.colorByMutationType && this.colorByCopyNumber) {
+                    ret = ColoringType.MutationTypeAndCopyNumber;
+                } else if (this.colorByMutationType) {
+                    ret = ColoringType.MutationType;
+                } else if (this.colorByCopyNumber) {
+                    ret = ColoringType.CopyNumber;
                 } else {
-                    ret = ViewType.None;
+                    ret = ColoringType.None;
                 }
                 break;
-            case PotentialViewType.MutationSummary:
-                if (this.viewMutationType) {
-                    ret = ViewType.MutationSummary;
+            case PotentialColoringType.MutationSummary:
+                if (this.colorByMutationType) {
+                    ret = ColoringType.MutationSummary;
                 } else {
-                    ret = ViewType.None;
+                    ret = ColoringType.None;
                 }
                 break;
-            case PotentialViewType.LimitValMutationTypeAndCopyNumber:
+            case PotentialColoringType.LimitValMutationTypeAndCopyNumber:
                 if (
-                    this.viewMutationType &&
-                    this.viewCopyNumber &&
+                    this.colorByMutationType &&
+                    this.colorByCopyNumber &&
                     this.viewLimitValues
                 ) {
-                    ret = ViewType.LimitValMutationTypeAndCopyNumber;
-                } else if (this.viewMutationType && this.viewCopyNumber) {
-                    ret = ViewType.MutationTypeAndCopyNumber;
-                } else if (this.viewMutationType && this.viewLimitValues) {
-                    ret = ViewType.LimitValMutationType;
-                } else if (this.viewCopyNumber && this.viewLimitValues) {
-                    ret = ViewType.LimitValCopyNumber;
-                } else if (this.viewMutationType) {
-                    ret = ViewType.MutationType;
-                } else if (this.viewCopyNumber) {
-                    ret = ViewType.CopyNumber;
+                    ret = ColoringType.LimitValMutationTypeAndCopyNumber;
+                } else if (this.colorByMutationType && this.colorByCopyNumber) {
+                    ret = ColoringType.MutationTypeAndCopyNumber;
+                } else if (this.colorByMutationType && this.viewLimitValues) {
+                    ret = ColoringType.LimitValMutationType;
+                } else if (this.colorByCopyNumber && this.viewLimitValues) {
+                    ret = ColoringType.LimitValCopyNumber;
+                } else if (this.colorByMutationType) {
+                    ret = ColoringType.MutationType;
+                } else if (this.colorByCopyNumber) {
+                    ret = ColoringType.CopyNumber;
                 } else if (this.viewLimitValues) {
-                    ret = ViewType.LimitVal;
+                    ret = ColoringType.LimitVal;
                 } else {
-                    ret = ViewType.None;
+                    ret = ColoringType.None;
                 }
                 break;
-            case PotentialViewType.LimitValMutationSummary:
-                if (this.viewMutationType && this.viewLimitValues) {
-                    ret = ViewType.LimitValMutationSummary;
-                } else if (this.viewMutationType) {
-                    ret = ViewType.MutationSummary;
+            case PotentialColoringType.LimitValMutationSummary:
+                if (this.colorByMutationType && this.viewLimitValues) {
+                    ret = ColoringType.LimitValMutationSummary;
+                } else if (this.colorByMutationType) {
+                    ret = ColoringType.MutationSummary;
                 } else if (this.viewLimitValues) {
-                    ret = ViewType.LimitVal;
+                    ret = ColoringType.LimitVal;
                 } else {
-                    ret = ViewType.None;
+                    ret = ColoringType.None;
                 }
                 break;
-            case PotentialViewType.LimitVal:
+            case PotentialColoringType.LimitVal:
                 if (this.viewLimitValues) {
-                    ret = ViewType.LimitVal;
+                    ret = ColoringType.LimitVal;
                 }
                 break;
         }
@@ -431,10 +447,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     // for points in the scatter plot (based on mutations type, CNA, ...)
     // NOTE1: the order of these statements is critical for correct resolution
     // NOTE2: limit values are only supported for generic assay outcome profiles
-    @computed get potentialViewType(): PotentialViewType {
+    @computed get potentialColoringType(): PotentialColoringType {
         if (this.plotType.result === PlotType.DiscreteVsDiscrete) {
             // cant show either in table
-            return PotentialViewType.None;
+            return PotentialColoringType.None;
         }
 
         // molecular profile in one or both axes
@@ -442,9 +458,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             //  establish whether data may contain limit values
             // (for now only supported for treatment data)
             if (this.limitValuesCanBeShown) {
-                return PotentialViewType.LimitValMutationTypeAndCopyNumber;
+                return PotentialColoringType.LimitValMutationTypeAndCopyNumber;
             }
-            return PotentialViewType.MutationTypeAndCopyNumber;
+            return PotentialColoringType.MutationTypeAndCopyNumber;
         }
 
         // both axes no molecular profile
@@ -452,19 +468,19 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             //  establish whether data may contain limit values
             // (for now only supported for generic assay data)
             if (this.limitValuesCanBeShown) {
-                return PotentialViewType.LimitValMutationTypeAndCopyNumber;
+                return PotentialColoringType.LimitValMutationTypeAndCopyNumber;
             }
-            return PotentialViewType.MutationTypeAndCopyNumber;
+            return PotentialColoringType.MutationTypeAndCopyNumber;
         }
 
         //  establish whether data may contain limit values
         // (for now only supported for generic assay data)
         if (this.limitValuesCanBeShown) {
-            return PotentialViewType.LimitVal;
+            return PotentialColoringType.LimitVal;
         }
 
         // neither axis gene or generic assay
-        return PotentialViewType.None;
+        return PotentialColoringType.None;
     }
 
     @computed get bothAxesNoMolecularProfile() {
@@ -990,48 +1006,70 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 const options = self.coloringMenuOmnibarOptions.isComplete
                     ? self.coloringMenuOmnibarOptions.result
                     : [];
-                if (this._selectedOption === undefined && options.length) {
+                if (this._selectedOptionValue === undefined && options.length) {
                     // If no option selected,
-                    let option;
+                    let option:
+                        | ColoringMenuOmnibarOption
+                        | undefined = undefined;
+
                     // Look for a gene option that has the default gene and coloring type type
                     option = options.find(option => {
                         return (
-                            option.info.gene === this.defaultGene &&
+                            option.info.entrezGeneId !== undefined &&
+                            option.info.entrezGeneId === this.defaultGene &&
                             option.info.genomicColoringType ===
                                 this.defaultGenomicColoringType
                         );
                     });
 
                     if (!option) {
-                        // Otherwise, look for an option that has the default gene
+                        // Otherwise, look for a gene option that has the default gene
                         options.find(option => {
                             return (
-                                option.info.gene ===
-                                this.defaultGenomicColoringType
+                                option.info.entrezGeneId !== undefined &&
+                                option.info.entrezGeneId ===
+                                    this.defaultGenomicColoringType
                             );
                         });
                     }
 
                     if (!option) {
-                        // Otherwise, find first real option
+                        // Otherwise, find first gene option
                         option = options.find(
                             o =>
-                                o.info.gene !==
-                                NONE_SELECTED_OPTION_NUMERICAL_VALUE
+                                o.info.entrezGeneId !== undefined &&
+                                o.info.entrezGeneId !==
+                                    NONE_SELECTED_OPTION_NUMERICAL_VALUE
                         );
                     }
                     return option;
                 } else {
                     // otherwise, return stored value for this variable
-                    return this._selectedOption;
+                    return options.find(
+                        o => o.value === this._selectedOptionValue
+                    );
                 }
             },
-            set selectedOption(o: any) {
-                this._selectedOption = o;
+            set selectedOption(o: ColoringMenuOmnibarOption | undefined) {
+                this._selectedOptionValue = o && o.value;
             },
+            get _selectedOptionValue() {
+                return self.props.urlWrapper.query.plots_coloring_selection;
+            },
+            set _selectedOptionValue(v: string | undefined) {
+                self.props.urlWrapper.updateURL({
+                    plots_coloring_selection: v,
+                });
+            },
+            get logScale() {
+                return this._logScale;
+            },
+            set logScale(s: boolean) {
+                this._logScale = s;
+            },
+            _logScale: false, // TODO: put in URL
             defaultGene: undefined,
             defaultGenomicColoringType: undefined,
-            _selectedOption: undefined,
         });
     }
     @autobind
@@ -1052,7 +1090,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     ) {
         // retain current gene, but update coloring type
         const currentGene = this.coloringMenuSelection.selectedOption
-            ? this.coloringMenuSelection.selectedOption.info.gene
+            ? this.coloringMenuSelection.selectedOption.info.entrezGeneId
             : undefined;
         this.coloringMenuSelection.selectedOption = undefined;
         this.coloringMenuSelection.defaultGene = currentGene;
@@ -1082,8 +1120,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         }
     }
 
-    @computed get viewMutationAndCNA() {
-        return this.viewMutationType && this.viewCopyNumber;
+    @computed get colorByMutationTypeAndCNA() {
+        return this.colorByMutationType && this.colorByCopyNumber;
     }
 
     @autobind
@@ -1105,8 +1143,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 horzLabel,
                                 vertLabel,
                                 entrezGeneIdToGene,
-                                this.viewMutationType,
-                                this.viewCopyNumber
+                                this.colorByMutationType,
+                                this.colorByCopyNumber
                             ),
                             filename
                         );
@@ -1119,8 +1157,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 this.waterfallPlotPivotThreshold,
                                 this.waterfallLabel.result!,
                                 entrezGeneIdToGene,
-                                this.viewMutationType,
-                                this.viewCopyNumber
+                                this.colorByMutationType,
+                                this.colorByCopyNumber
                             ),
                             filename
                         );
@@ -1139,8 +1177,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 categoryLabel,
                                 valueLabel,
                                 entrezGeneIdToGene,
-                                this.viewMutationType,
-                                this.viewCopyNumber
+                                this.colorByMutationType,
+                                this.colorByCopyNumber
                             ),
                             filename
                         );
@@ -1395,59 +1433,91 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             []) as any[]);
     }
 
-    readonly coloringMenuOmnibarOptions = remoteData({
-        await: () => [this.props.store.genes],
+    readonly coloringMenuOmnibarOptions = remoteData<
+        ColoringMenuOmnibarOption[]
+    >({
+        await: () => [
+            this.props.store.genes,
+            this.props.store.clinicalAttributes,
+        ],
         invoke: () => {
-            const geneOptions = _.reduce(
-                this.props.store.genes.result!,
-                (options, nextGene) => {
-                    if (this.mutationDataCanBeShown) {
-                        options.push({
-                            label: `${nextGene.hugoGeneSymbol}: Mutations`,
-                            info: {
-                                gene: nextGene.entrezGeneId,
-                                type: GenomicColoringType.Mutation,
-                            },
-                        });
-                    }
-                    if (this.cnaDataCanBeShown) {
-                        options.push({
-                            label: `${nextGene.hugoGeneSymbol}: Copy Number Alterations`,
-                            info: {
-                                gene: nextGene.entrezGeneId,
-                                type: GenomicColoringType.CNA,
-                            },
-                        });
-                    }
-                    if (
-                        this.mutationDataCanBeShown &&
-                        this.cnaDataCanBeShown &&
-                        !this.isWaterfallPlot
-                    ) {
-                        options.push({
-                            label: `${nextGene.hugoGeneSymbol}: Mutations and Copy Number Alterations`,
-                            info: {
-                                gene: nextGene.entrezGeneId,
-                                type: GenomicColoringType.MutationAndCNA,
-                            },
-                        });
-                    }
-                    return options;
-                },
-                [] as any[]
+            const allOptions: Omit<ColoringMenuOmnibarOption, 'value'>[] = [];
+
+            // add gene options
+            allOptions.push(
+                ...this.props.store.genes.result!.reduce(
+                    (options, nextGene) => {
+                        if (this.mutationDataCanBeShown) {
+                            options.push({
+                                label: `${nextGene.hugoGeneSymbol}: Mutations`,
+                                info: {
+                                    entrezGeneId: nextGene.entrezGeneId,
+                                    genomicColoringType:
+                                        GenomicColoringType.MutationType,
+                                },
+                            });
+                        }
+                        if (this.cnaDataCanBeShown) {
+                            options.push({
+                                label: `${nextGene.hugoGeneSymbol}: Copy Number Alterations`,
+                                info: {
+                                    entrezGeneId: nextGene.entrezGeneId,
+                                    genomicColoringType:
+                                        GenomicColoringType.CopyNumber,
+                                },
+                            });
+                        }
+                        if (
+                            this.mutationDataCanBeShown &&
+                            this.cnaDataCanBeShown &&
+                            !this.isWaterfallPlot
+                        ) {
+                            options.push({
+                                label: `${nextGene.hugoGeneSymbol}: Mutations and Copy Number Alterations`,
+                                info: {
+                                    entrezGeneId: nextGene.entrezGeneId,
+                                    genomicColoringType:
+                                        GenomicColoringType.MutationTypeAndCopyNumber,
+                                },
+                            });
+                        }
+                        return options;
+                    },
+                    [] as typeof allOptions
+                )
             );
 
-            if (geneOptions.length > 0) {
+            allOptions.push(
+                ...this.props.store.clinicalAttributes
+                    .result!.filter(a => {
+                        return (
+                            a.clinicalAttributeId !==
+                            SpecialAttribute.MutationSpectrum
+                        );
+                    })
+                    .map(clinicalAttribute => {
+                        return {
+                            label: clinicalAttribute.displayName,
+                            info: {
+                                clinicalAttribute,
+                            },
+                        };
+                    })
+            );
+
+            if (allOptions.length > 0) {
                 // add 'None' option to the top of the list to allow removing coloring of samples
-                geneOptions.unshift({
+                allOptions.unshift({
                     label: 'None',
                     info: {
-                        gene: NONE_SELECTED_OPTION_NUMERICAL_VALUE,
+                        entrezGeneId: NONE_SELECTED_OPTION_NUMERICAL_VALUE,
                     },
                 });
             }
+
+            // add derived `value` to options so they can be tracked correctly in ReactSelect
             return Promise.resolve(
-                geneOptions.map(option => ({
+                allOptions.map(option => ({
                     ...option,
                     value: getColoringMenuOptionValue(option),
                 }))
@@ -1816,11 +1886,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         // supported by the waterfall plot
         if (
             this.waterfallPlotIsShown &&
-            this.viewMutationType &&
-            this.viewCopyNumber
+            this.colorByMutationType &&
+            this.colorByCopyNumber
         ) {
             this.updateColoringMenuGenomicColoringType(
-                GenomicColoringType.Mutation
+                GenomicColoringType.MutationType
             );
         }
 
@@ -1861,11 +1931,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         }
         if (
             this.waterfallPlotIsShown &&
-            this.viewMutationType &&
-            this.viewCopyNumber
+            this.colorByMutationType &&
+            this.colorByCopyNumber
         ) {
             this.updateColoringMenuGenomicColoringType(
-                GenomicColoringType.Mutation
+                GenomicColoringType.MutationType
             );
         }
 
@@ -1923,7 +1993,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @action
     autoChooseColoringMenuGene() {
         const currentSelectedGeneId = this.coloringMenuSelection.selectedOption
-            ? this.coloringMenuSelection.selectedOption.info.gene
+            ? this.coloringMenuSelection.selectedOption.info.entrezGeneId
             : undefined;
         if (this.oneAxisMolecularProfile) {
             // for one gene, switch the new gene for coloring
@@ -1951,13 +2021,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         // turn on coloring samples by 'Mutations'
         if (
             this.coloringMenuSelection.selectedOption &&
-            this.coloringMenuSelection.selectedOption.info.gene !==
+            this.coloringMenuSelection.selectedOption.info.entrezGeneId !==
                 NONE_SELECTED_OPTION_NUMERICAL_VALUE &&
-            !this.viewCopyNumber &&
-            !this.viewMutationType
+            !this.colorByCopyNumber &&
+            !this.colorByMutationType
         ) {
             this.updateColoringMenuGenomicColoringType(
-                GenomicColoringType.Mutation
+                GenomicColoringType.MutationType
             );
         }
     }
@@ -2076,10 +2146,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @computed get cnaDataCanBeShown() {
         return !!(
             this.cnaDataExists.result &&
-            (this.potentialViewType ===
-                PotentialViewType.MutationTypeAndCopyNumber ||
-                this.potentialViewType ===
-                    PotentialViewType.LimitValMutationTypeAndCopyNumber)
+            (this.potentialColoringType ===
+                PotentialColoringType.MutationTypeAndCopyNumber ||
+                this.potentialColoringType ===
+                    PotentialColoringType.LimitValMutationTypeAndCopyNumber)
         );
     }
 
@@ -2144,10 +2214,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @computed get cnaDataShown() {
         return !!(
             this.cnaDataExists.result &&
-            (this.viewType === ViewType.CopyNumber ||
-                this.viewType === ViewType.MutationTypeAndCopyNumber ||
-                this.viewType === ViewType.LimitValCopyNumber ||
-                this.viewType === ViewType.LimitValMutationTypeAndCopyNumber)
+            (this.coloringType === ColoringType.CopyNumber ||
+                this.coloringType === ColoringType.MutationTypeAndCopyNumber ||
+                this.coloringType === ColoringType.LimitValCopyNumber ||
+                this.coloringType ===
+                    ColoringType.LimitValMutationTypeAndCopyNumber)
         );
     }
 
@@ -2175,17 +2246,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @computed get mutationDataCanBeShown() {
         return !!(
             this.mutationDataExists.result &&
-            this.potentialViewType !== PotentialViewType.None &&
-            this.potentialViewType !== PotentialViewType.LimitVal
+            this.potentialColoringType !== PotentialColoringType.None &&
+            this.potentialColoringType !== PotentialColoringType.LimitVal
         );
     }
 
     @computed get mutationDataShown() {
         return !!(
             this.mutationDataExists.result &&
-            (this.viewType === ViewType.MutationType ||
-                this.viewType === ViewType.MutationSummary ||
-                this.viewType === ViewType.MutationTypeAndCopyNumber)
+            (this.coloringType === ColoringType.MutationType ||
+                this.coloringType === ColoringType.MutationSummary ||
+                this.coloringType === ColoringType.MutationTypeAndCopyNumber)
         );
     }
 
@@ -2391,27 +2462,31 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @computed get scatterPlotAppearance() {
         return makeScatterPlotPointAppearance(
-            this.viewType,
+            this.coloringType,
             this.mutationDataExists,
             this.cnaDataExists,
-            this.props.store.driverAnnotationSettings.driversAnnotated
+            this.props.store.driverAnnotationSettings.driversAnnotated,
+            this.coloringMenuSelection.selectedOption,
+            this.props.store.clinicalDataCache,
+            this.coloringLogScale
         );
     }
 
     @computed get scatterPlotFill() {
-        switch (this.viewType) {
-            case ViewType.CopyNumber:
+        switch (this.coloringType) {
+            case ColoringType.CopyNumber:
                 return '#000000';
-            case ViewType.MutationTypeAndCopyNumber:
-            case ViewType.MutationType:
-            case ViewType.MutationSummary:
-            case ViewType.LimitVal:
-            case ViewType.LimitValMutationType:
-            case ViewType.LimitValMutationSummary:
-            case ViewType.LimitValMutationTypeAndCopyNumber:
+            case ColoringType.ClinicalData:
+            case ColoringType.MutationTypeAndCopyNumber:
+            case ColoringType.MutationType:
+            case ColoringType.MutationSummary:
+            case ColoringType.LimitVal:
+            case ColoringType.LimitValMutationType:
+            case ColoringType.LimitValMutationSummary:
+            case ColoringType.LimitValMutationTypeAndCopyNumber:
                 return (d: IPlotSampleData) =>
                     this.scatterPlotAppearance(d).fill!;
-            case ViewType.None:
+            case ColoringType.None:
                 return mutationSummaryToAppearance[MutationSummary.Neither]
                     .fill;
         }
@@ -2419,8 +2494,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @computed get scatterPlotFillOpacity() {
         if (
-            this.viewType === ViewType.CopyNumber ||
-            this.viewType === ViewType.LimitValCopyNumber
+            this.coloringType === ColoringType.CopyNumber ||
+            this.coloringType === ColoringType.LimitValCopyNumber
         ) {
             return 0;
         } else {
@@ -2435,10 +2510,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @computed get scatterPlotStrokeWidth() {
         if (
-            this.viewType === ViewType.CopyNumber ||
-            this.viewType === ViewType.MutationTypeAndCopyNumber ||
-            this.viewType === ViewType.LimitValCopyNumber ||
-            this.viewType === ViewType.LimitValMutationTypeAndCopyNumber
+            this.coloringType === ColoringType.CopyNumber ||
+            this.coloringType === ColoringType.MutationTypeAndCopyNumber ||
+            this.coloringType === ColoringType.LimitValCopyNumber ||
+            this.coloringType === ColoringType.LimitValMutationTypeAndCopyNumber
         ) {
             return CNA_STROKE_WIDTH;
         } else {
@@ -2462,17 +2537,18 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         // and copy number are mutually exclusive. Therefore,
         // combined viewTypes (such as MutationTypeAndCopyNumber)
         // do not exist for this plot type and are not evaluated.
-        switch (this.viewType) {
-            case ViewType.CopyNumber:
-            case ViewType.LimitValCopyNumber:
+        switch (this.coloringType) {
+            case ColoringType.CopyNumber:
+            case ColoringType.LimitValCopyNumber:
                 return this.scatterPlotStroke(d);
-            case ViewType.MutationType:
-            case ViewType.MutationSummary:
-            case ViewType.LimitValMutationType:
-            case ViewType.LimitValMutationSummary:
+            case ColoringType.MutationType:
+            case ColoringType.MutationSummary:
+            case ColoringType.LimitValMutationType:
+            case ColoringType.LimitValMutationSummary:
+            case ColoringType.ClinicalData:
                 return this.scatterPlotAppearance(d).fill!;
-            case ViewType.LimitVal:
-            case ViewType.None:
+            case ColoringType.LimitVal:
+            case ColoringType.None:
             default:
                 return mutationSummaryToAppearance[MutationSummary.Neither]
                     .fill;
@@ -2481,12 +2557,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @autobind
     private waterfallPlotLimitValueSymbolVisibility(d: IPlotSampleData) {
-        switch (this.viewType) {
-            case ViewType.LimitVal:
-            case ViewType.LimitValMutationType:
-            case ViewType.LimitValMutationSummary:
-            case ViewType.LimitValCopyNumber:
-            case ViewType.LimitValMutationTypeAndCopyNumber:
+        switch (this.coloringType) {
+            case ColoringType.LimitVal:
+            case ColoringType.LimitValMutationType:
+            case ColoringType.LimitValMutationSummary:
+            case ColoringType.LimitValCopyNumber:
+            case ColoringType.LimitValMutationTypeAndCopyNumber:
                 return dataPointIsLimited(d);
             default:
                 return false;
@@ -2495,19 +2571,33 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @autobind
     private scatterPlotTooltip(d: IScatterPlotData) {
-        return scatterPlotTooltip(d);
+        return scatterPlotTooltip(
+            d,
+            this.coloringMenuSelection.selectedOption &&
+                this.coloringMenuSelection.selectedOption.info.clinicalAttribute
+        );
     }
 
     @autobind
     private waterfallPlotTooltip(d: IWaterfallPlotData) {
-        return waterfallPlotTooltip(d);
+        return waterfallPlotTooltip(
+            d,
+            this.coloringMenuSelection.selectedOption &&
+                this.coloringMenuSelection.selectedOption.info.clinicalAttribute
+        );
     }
 
     @computed get boxPlotTooltip() {
         return (d: IBoxScatterPlotPoint) => {
             let content;
             if (this.boxPlotData.isComplete) {
-                content = boxPlotTooltip(d, this.boxPlotData.result.horizontal);
+                content = boxPlotTooltip(
+                    d,
+                    this.boxPlotData.result.horizontal,
+                    this.coloringMenuSelection.selectedOption &&
+                        this.coloringMenuSelection.selectedOption.info
+                            .clinicalAttribute
+                );
             } else {
                 content = (
                     <span>
@@ -2613,9 +2703,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     .isComplete) ||
             (axisSelection.dataType &&
                 axisSelection.isGenericAssayType &&
-                !this.genericEntitiesGroupByEntityId.isComplete &&
-                !this.props.store.molecularProfileIdToMolecularProfile
-                    .isComplete)
+                !this.horzGenericAssayOptions.isComplete)
         ) {
             return <LoadingIndicator isLoading={true} />;
         }
@@ -3358,25 +3446,53 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             !this.noGeneSelectedForStyling &&
             this.coloringMenuSelection.selectedOption
         ) {
-            const entrezGeneId = this.coloringMenuSelection.selectedOption.info
-                .gene;
+            let entrezGeneId = this.coloringMenuSelection.selectedOption.info
+                .entrezGeneId;
+            if (entrezGeneId === undefined) {
+                entrezGeneId = NONE_SELECTED_OPTION_NUMERICAL_VALUE;
+            }
             return this.props.store.entrezGeneIdToGene.result![entrezGeneId];
         }
         return undefined;
     }
 
     readonly scatterPlotData = remoteData<IScatterPlotData[]>({
-        await: () => [
-            this.horzAxisDataPromise,
-            this.vertAxisDataPromise,
-            this.props.store.sampleKeyToSample,
-            this.props.store.coverageInformation,
-            this.mutationPromise,
-            this.props.store.studyToMutationMolecularProfile,
-            this.cnaPromise,
-            this.props.store.studyToMolecularProfileDiscrete,
-        ],
+        await: () => {
+            const ret: MobxPromise<any>[] = [
+                this.horzAxisDataPromise,
+                this.vertAxisDataPromise,
+                this.props.store.sampleKeyToSample,
+                this.props.store.coverageInformation,
+                this.mutationPromise,
+                this.props.store.studyToMutationMolecularProfile,
+                this.cnaPromise,
+                this.props.store.studyToMolecularProfileDiscrete,
+            ];
+            if (
+                this.coloringMenuSelection.selectedOption &&
+                this.coloringMenuSelection.selectedOption.info.clinicalAttribute
+            ) {
+                ret.push(
+                    this.props.store.clinicalDataCache.get(
+                        this.coloringMenuSelection.selectedOption.info
+                            .clinicalAttribute
+                    )
+                );
+            }
+            return ret;
+        },
         invoke: () => {
+            let clinicalData;
+            if (
+                this.coloringMenuSelection.selectedOption &&
+                this.coloringMenuSelection.selectedOption.info.clinicalAttribute
+            ) {
+                const promise = this.props.store.clinicalDataCache.get(
+                    this.coloringMenuSelection.selectedOption.info
+                        .clinicalAttribute
+                );
+                clinicalData = promise.result!.data as ClinicalData[];
+            }
             const horzAxisData = this.horzAxisDataPromise.result;
             const vertAxisData = this.vertAxisDataPromise.result;
             if (!horzAxisData || !vertAxisData) {
@@ -3410,7 +3526,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                       data: this.cnaPromise.result!,
                                   }
                                 : undefined,
-                            this.selectedGeneForStyling
+                            this.selectedGeneForStyling,
+                            clinicalData && {
+                                clinicalAttribute: this.coloringMenuSelection
+                                    .selectedOption!.info.clinicalAttribute!,
+                                data: clinicalData,
+                            }
                         )
                     );
                 } else {
@@ -3421,17 +3542,42 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     });
 
     readonly waterfallPlotData = remoteData<{ data: IWaterfallPlotData[] }>({
-        await: () => [
-            this.horzAxisDataPromise,
-            this.vertAxisDataPromise,
-            this.props.store.sampleKeyToSample,
-            this.props.store.coverageInformation,
-            this.mutationPromise,
-            this.props.store.studyToMutationMolecularProfile,
-            this.cnaPromise,
-            this.props.store.studyToMolecularProfileDiscrete,
-        ],
+        await: () => {
+            const ret: MobxPromise<any>[] = [
+                this.horzAxisDataPromise,
+                this.vertAxisDataPromise,
+                this.props.store.sampleKeyToSample,
+                this.props.store.coverageInformation,
+                this.mutationPromise,
+                this.props.store.studyToMutationMolecularProfile,
+                this.cnaPromise,
+                this.props.store.studyToMolecularProfileDiscrete,
+            ];
+            if (
+                this.coloringMenuSelection.selectedOption &&
+                this.coloringMenuSelection.selectedOption.info.clinicalAttribute
+            ) {
+                ret.push(
+                    this.props.store.clinicalDataCache.get(
+                        this.coloringMenuSelection.selectedOption.info
+                            .clinicalAttribute
+                    )
+                );
+            }
+            return ret;
+        },
         invoke: () => {
+            let clinicalData;
+            if (
+                this.coloringMenuSelection.selectedOption &&
+                this.coloringMenuSelection.selectedOption.info.clinicalAttribute
+            ) {
+                const promise = this.props.store.clinicalDataCache.get(
+                    this.coloringMenuSelection.selectedOption.info
+                        .clinicalAttribute
+                );
+                clinicalData = promise.result!.data as ClinicalData[];
+            }
             const horzAxisData = this.horzAxisDataPromise.result;
             const vertAxisData = this.vertAxisDataPromise.result;
 
@@ -3449,7 +3595,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 // naturally embedded in the genetic profile. Instead, the user selects
                 // the gene of interest from a select box in the Utilities menu.
                 const entrezGeneId = this.coloringMenuSelection.selectedOption
-                    ? this.coloringMenuSelection.selectedOption.info.gene
+                    ? this.coloringMenuSelection.selectedOption.info
+                          .entrezGeneId
                     : null;
                 const selectedGene = entrezGeneId
                     ? this.props.store.entrezGeneIdToGene.result![entrezGeneId]
@@ -3482,7 +3629,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                       ).map(p => p.molecularProfileId),
                                       data: this.cnaPromise.result!,
                                   }
-                                : undefined
+                                : undefined,
+                            clinicalData && {
+                                clinicalAttribute: this.coloringMenuSelection
+                                    .selectedOption!.info.clinicalAttribute!,
+                                data: clinicalData,
+                            }
                         ),
                     });
                 } else {
@@ -3548,17 +3700,42 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         horizontal: boolean;
         data: IBoxScatterPlotData<IBoxScatterPlotPoint>[];
     }>({
-        await: () => [
-            this.horzAxisDataPromise,
-            this.vertAxisDataPromise,
-            this.props.store.sampleKeyToSample,
-            this.props.store.coverageInformation,
-            this.mutationPromise,
-            this.props.store.studyToMutationMolecularProfile,
-            this.cnaPromise,
-            this.props.store.studyToMolecularProfileDiscrete,
-        ],
+        await: () => {
+            const ret: MobxPromise<any>[] = [
+                this.horzAxisDataPromise,
+                this.vertAxisDataPromise,
+                this.props.store.sampleKeyToSample,
+                this.props.store.coverageInformation,
+                this.mutationPromise,
+                this.props.store.studyToMutationMolecularProfile,
+                this.cnaPromise,
+                this.props.store.studyToMolecularProfileDiscrete,
+            ];
+            if (
+                this.coloringMenuSelection.selectedOption &&
+                this.coloringMenuSelection.selectedOption.info.clinicalAttribute
+            ) {
+                ret.push(
+                    this.props.store.clinicalDataCache.get(
+                        this.coloringMenuSelection.selectedOption.info
+                            .clinicalAttribute
+                    )
+                );
+            }
+            return ret;
+        },
         invoke: () => {
+            let clinicalData;
+            if (
+                this.coloringMenuSelection.selectedOption &&
+                this.coloringMenuSelection.selectedOption.info.clinicalAttribute
+            ) {
+                const promise = this.props.store.clinicalDataCache.get(
+                    this.coloringMenuSelection.selectedOption.info
+                        .clinicalAttribute
+                );
+                clinicalData = promise.result!.data as ClinicalData[];
+            }
             const horzAxisData = this.horzAxisDataPromise.result;
             const vertAxisData = this.vertAxisDataPromise.result;
             if (!horzAxisData || !vertAxisData) {
@@ -3608,7 +3785,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                   data: this.cnaPromise.result!,
                               }
                             : undefined,
-                        this.selectedGeneForStyling
+                        this.selectedGeneForStyling,
+                        clinicalData && {
+                            clinicalAttribute: this.coloringMenuSelection
+                                .selectedOption!.info.clinicalAttribute!,
+                            data: clinicalData,
+                        }
                     ),
                 });
             }
@@ -3617,7 +3799,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @computed get zIndexSortBy() {
         return scatterPlotZIndexSortBy<IPlotSampleData>(
-            this.viewType,
+            this.coloringType,
             this.scatterPlotHighlight
         );
     }
@@ -3668,20 +3850,54 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @computed get noGeneSelectedForStyling(): boolean {
         return (
             !!this.coloringMenuSelection.selectedOption &&
-            this.coloringMenuSelection.selectedOption.info.gene ===
+            this.coloringMenuSelection.selectedOption.info.entrezGeneId ===
                 NONE_SELECTED_OPTION_NUMERICAL_VALUE
         );
     }
 
+    @computed get coloringClinicalDataPromise() {
+        if (
+            this.coloringMenuSelection.selectedOption &&
+            this.coloringMenuSelection.selectedOption.info.clinicalAttribute
+        ) {
+            return this.props.store.clinicalDataCache.get(
+                this.coloringMenuSelection.selectedOption.info.clinicalAttribute
+            );
+        } else {
+            return undefined;
+        }
+    }
+
+    @computed get coloringLogScalePossible() {
+        // coloring log scale possible if:
+        return !!(
+            this.coloringClinicalDataPromise && // using clinical data coloring
+            this.coloringClinicalDataPromise.isComplete && // clinical data loaded
+            this.coloringClinicalDataPromise.result!
+                .logScaleNumericalValueToColor
+        ); // log scale available
+    }
+
+    @computed get coloringLogScale() {
+        // color log scale if:
+        return !!(
+            this.coloringLogScalePossible && this.coloringMenuSelection.logScale
+        ); // log scale selected
+    }
+
     @computed get plot() {
-        const promises = [
+        const promises: MobxPromise<any>[] = [
             this.plotType,
             this.horzAxisDataPromise,
             this.vertAxisDataPromise,
             this.horzLabel,
             this.vertLabel,
             this.genericEntitiesGroupByEntityId,
+            this.horzGenericAssayOptions,
         ];
+        if (this.coloringClinicalDataPromise) {
+            promises.push(this.coloringClinicalDataPromise);
+        }
         const groupStatus = getMobxPromiseGroupStatus(...promises);
         const isPercentage =
             this.discreteVsDiscretePlotType ===
@@ -3826,7 +4042,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     }
                                     legendData={scatterPlotLegendData(
                                         this.scatterPlotData.result,
-                                        this.viewType,
+                                        this.coloringType,
                                         PlotType.ScatterPlot,
                                         this.mutationDataExists,
                                         this.cnaDataExists,
@@ -3834,7 +4050,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                             .driverAnnotationSettings
                                             .driversAnnotated,
                                         this.limitValueTypes,
-                                        this.scatterPlotHighlight
+                                        this.scatterPlotHighlight,
+                                        this.coloringClinicalDataPromise &&
+                                            this.coloringClinicalDataPromise
+                                                .result!,
+                                        this.coloringLogScale
                                     )}
                                     legendTitle={
                                         this.selectedGeneForStyling
@@ -3896,7 +4116,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     }
                                     legendData={scatterPlotLegendData(
                                         this.waterfallPlotData.result.data,
-                                        this.viewType,
+                                        this.coloringType,
                                         PlotType.WaterfallPlot,
                                         this.mutationDataExists,
                                         this.cnaDataExists,
@@ -3904,7 +4124,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                             .driverAnnotationSettings
                                             .driversAnnotated,
                                         this.limitValueTypes,
-                                        this.scatterPlotHighlight
+                                        this.scatterPlotHighlight,
+                                        this.coloringClinicalDataPromise &&
+                                            this.coloringClinicalDataPromise
+                                                .result!,
+                                        this.coloringLogScale
                                     )}
                                     legendTitle={
                                         this.selectedGeneForStyling
@@ -3968,7 +4192,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                 d => d.data
                                             )
                                         ),
-                                        this.viewType,
+                                        this.coloringType,
                                         PlotType.BoxPlot,
                                         this.mutationDataExists,
                                         this.cnaDataExists,
@@ -3976,7 +4200,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                             .driverAnnotationSettings
                                             .driversAnnotated,
                                         this.limitValueTypes,
-                                        this.scatterPlotHighlight
+                                        this.scatterPlotHighlight,
+                                        this.coloringClinicalDataPromise &&
+                                            this.coloringClinicalDataPromise
+                                                .result!,
+                                        this.coloringLogScale
                                     )}
                                     legendLocationWidthThreshold={
                                         LEGEND_TO_BOTTOM_WIDTH_THRESHOLD
@@ -4033,10 +4261,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 >
                                     <div
                                         style={{
-                                            display: 'inline-block',
+                                            display: 'inline-flex',
                                             position: 'relative',
+                                            alignItems: 'center',
                                         }}
-                                        className="utilities-menu"
+                                        className="coloring-menu"
                                     >
                                         <label className="legend-label">
                                             Color samples by:
@@ -4087,6 +4316,24 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                 />
                                             </div>
                                         </div>
+                                        {this.coloringLogScalePossible && (
+                                            <LabeledCheckbox
+                                                checked={
+                                                    this.coloringMenuSelection
+                                                        .logScale
+                                                }
+                                                onChange={() =>
+                                                    (this.coloringMenuSelection.logScale = !this
+                                                        .coloringMenuSelection
+                                                        .logScale)
+                                                }
+                                                inputProps={{
+                                                    style: { marginTop: 4 },
+                                                }}
+                                            >
+                                                Log Scale
+                                            </LabeledCheckbox>
+                                        )}
                                     </div>
                                 </div>
                             )}

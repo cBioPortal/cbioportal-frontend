@@ -24,6 +24,7 @@ import { Group } from '../api/ComparisonGroupClient';
 import ComplexKeySet from '../lib/complexKeyDataStructures/ComplexKeySet';
 import { makeUniqueColorGetter } from '../components/plots/PlotUtils';
 import { RESERVED_CLINICAL_VALUE_COLORS } from '../lib/Colors';
+import { interpolateReds } from 'd3-scale-chromatic';
 
 export enum SpecialAttribute {
     MutationSpectrum = 'NO_CONTEXT_MUTATION_SIGNATURE',
@@ -65,6 +66,14 @@ export function clinicalAttributeIsLocallyComputed(attribute: {
         ) > -1
     );
 }
+
+export type ClinicalDataCacheEntry = {
+    categoryToColor?: { [value: string]: string };
+    numericalValueToColor?: (x: number) => string;
+    logScaleNumericalValueToColor?: (x: number) => string;
+    numericalValueRange?: [number, number];
+    data: OncoprintClinicalData;
+};
 
 type OncoprintClinicalData = ClinicalData[] | MutationSpectrum[];
 
@@ -147,7 +156,7 @@ async function fetch(
     studyToMutationMolecularProfile: { [studyId: string]: MolecularProfile },
     studyIdToStudy: { [studyId: string]: CancerStudy },
     coverageInformation: CoverageInformation
-) {
+): Promise<OncoprintClinicalData> {
     let ret: OncoprintClinicalData;
     let studyToSamples: { [studyId: string]: Sample[] };
     switch (attribute.clinicalAttributeId) {
@@ -241,10 +250,7 @@ async function fetch(
 
 export default class ClinicalDataCache extends MobxPromiseCache<
     ExtendedClinicalAttribute,
-    {
-        categoryToColor?: { [value: string]: string };
-        data: OncoprintClinicalData;
-    }
+    ClinicalDataCacheEntry
 > {
     constructor(
         samplesPromise: MobxPromise<Sample[]>,
@@ -265,7 +271,7 @@ export default class ClinicalDataCache extends MobxPromiseCache<
                     coverageInformationPromise,
                 ],
                 invoke: async () => {
-                    const data = await fetch(
+                    const data: OncoprintClinicalData = await fetch(
                         q,
                         samplesPromise.result!,
                         patientsPromise.result!,
@@ -274,6 +280,9 @@ export default class ClinicalDataCache extends MobxPromiseCache<
                         coverageInformationPromise.result!
                     );
                     let categoryToColor;
+                    let numericalValueToColor;
+                    let logScaleNumericalValueToColor;
+                    let numericalValueRange;
                     if (q.datatype === 'STRING') {
                         const colorGetter = makeUniqueColorGetter(
                             _.values(RESERVED_CLINICAL_VALUE_COLORS)
@@ -290,10 +299,50 @@ export default class ClinicalDataCache extends MobxPromiseCache<
                                 ] = colorGetter();
                             }
                         }
+                    } else if (q.datatype === 'NUMBER') {
+                        // TODO: calculate gradient with data
+                        const numbers = (data as ClinicalData[]).reduce(
+                            (nums, d) => {
+                                if (d.value && !isNaN(d.value as any)) {
+                                    nums.push(parseFloat(d.value));
+                                }
+                                return nums;
+                            },
+                            [] as number[]
+                        );
+                        const min = _.min(numbers)!;
+                        const max = _.max(numbers)!;
+                        if (min !== undefined && max !== undefined) {
+                            numericalValueToColor = (x: number) =>
+                                interpolateReds((x - min) / (max - min));
+
+                            if (min >= 0) {
+                                const safeLog = (x: number) => {
+                                    return Math.log(Math.max(0.01, x));
+                                };
+                                const logMin = safeLog(min);
+                                const logMax = safeLog(max);
+                                logScaleNumericalValueToColor = (x: number) => {
+                                    return interpolateReds(
+                                        (safeLog(x) - logMin) /
+                                            (logMax - logMin)
+                                    );
+                                };
+                            }
+                            numericalValueRange = [min, max] as [
+                                number,
+                                number
+                            ];
+                        } else {
+                            numericalValueToColor = (x: number) => '#000000';
+                        }
                     }
                     return {
                         data,
                         categoryToColor,
+                        numericalValueToColor,
+                        numericalValueRange,
+                        logScaleNumericalValueToColor,
                     };
                 },
             }),
