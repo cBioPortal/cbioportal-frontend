@@ -47,7 +47,7 @@ export default class PortalHeader extends React.Component<
 
             {
                 id: 'tutorials',
-                text: 'Tutorials',
+                text: 'Tutorials/Webinars',
                 address: '/tutorials',
                 internal: true,
                 hide: () =>
