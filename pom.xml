@@ -26,7 +26,7 @@
                         </goals>
 
                         <configuration>
-                            <nodeVersion>v8.12.0</nodeVersion>
+                            <nodeVersion>v12.16.3</nodeVersion>
                             <yarnVersion>v1.21.1</yarnVersion>
                         </configuration>
 
