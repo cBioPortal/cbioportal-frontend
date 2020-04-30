@@ -5,7 +5,7 @@ import {
     NONE_SELECTED_OPTION_STRING_VALUE,
     ViewType,
     PlotType,
-    UtilitiesMenuSelection,
+    ColoringMenuSelection,
 } from './PlotsTab';
 import { MobxPromise } from 'mobxpromise';
 import {
@@ -278,6 +278,12 @@ export function isNumberData(d: IAxisData): d is INumberAxisData {
 }
 export function isNone(d: IAxisData): d is IAxisData {
     return d.datatype === 'none';
+}
+
+export function getColoringMenuOptionValue(
+    option: Required<ColoringMenuSelection>['selectedOption']
+) {
+    return `${option.info.gene}_${option.info.genomicColoringType}`;
 }
 
 export function scatterPlotZIndexSortBy<
@@ -2343,29 +2349,29 @@ function makeWaterfallPlotData_profiledReport(
     return ret;
 }
 
-export function getCnaQueries(utilitiesSelection: UtilitiesMenuSelection) {
+export function getCnaQueries(utilitiesSelection: ColoringMenuSelection) {
     const queries: { entrezGeneId: number }[] = [];
     if (
-        utilitiesSelection.entrezGeneIdForMutCNAStyling !== undefined &&
-        utilitiesSelection.entrezGeneIdForMutCNAStyling !==
+        utilitiesSelection.selectedOption !== undefined &&
+        utilitiesSelection.selectedOption.info.gene !==
             NONE_SELECTED_OPTION_NUMERICAL_VALUE
     ) {
         queries.push({
-            entrezGeneId: utilitiesSelection.entrezGeneIdForMutCNAStyling,
+            entrezGeneId: utilitiesSelection.selectedOption.info.gene,
         });
     }
     return _.uniqBy(queries, 'entrezGeneId');
 }
 
-export function getMutationQueries(utilitiesSelection: UtilitiesMenuSelection) {
+export function getMutationQueries(utilitiesSelection: ColoringMenuSelection) {
     const queries: { entrezGeneId: number }[] = [];
     if (
-        utilitiesSelection.entrezGeneIdForMutCNAStyling !== undefined &&
-        utilitiesSelection.entrezGeneIdForMutCNAStyling !==
+        utilitiesSelection.selectedOption !== undefined &&
+        utilitiesSelection.selectedOption.info.gene !==
             NONE_SELECTED_OPTION_NUMERICAL_VALUE
     ) {
         queries.push({
-            entrezGeneId: utilitiesSelection.entrezGeneIdForMutCNAStyling,
+            entrezGeneId: utilitiesSelection.selectedOption.info.gene,
         });
     }
     return _.uniqBy(queries, 'entrezGeneId');
