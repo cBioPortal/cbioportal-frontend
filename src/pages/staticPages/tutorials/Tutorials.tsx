@@ -19,38 +19,57 @@ export default class Tutorials extends React.Component<{}, {}> {
                     </title>
                 </Helmet>
                 <h1>Tutorials and Webinars</h1>
-                <h2>Step-by-step Guide to cBioPortal: a Protocol Paper</h2>
-                <p>
-                    Gao, Aksoy, Dogrusoz, Dresdner, Gross, Sumer, Sun, Jacobsen,
-                    Sinha, Larsson, Cerami, Sander, Schultz. <br />
-                    <b>
-                        Integrative analysis of complex cancer genomics and
-                        clinical profiles using the cBioPortal.
-                    </b>{' '}
-                    <br />
-                    <i>Sci. Signal.</i> 6, pl1 (2013). [
-                    <a href={getNCBIlink('/pubmed/23550210')}>Reprint</a>].
-                </p>
-                <hr />
-                <h2 className={'tutorialsFolderText'}>
-                    View tutorial slides below or download from{' '}
-                    <a href="https://drive.google.com/drive/u/0/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
-                        Google Drive
-                    </a>{' '}
-                    or{' '}
+                View tutorial and webinar slides below or download from{' '}
+                <a href="https://drive.google.com/drive/u/0/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                    Google Drive
+                </a>{' '}
+                or{' '}
+                <a
+                    href={`${AppConfig.serverConfig
+                        .skin_documentation_baseurl!.replace(
+                            'raw.githubusercontent.com',
+                            'www.github.com'
+                        )
+                        .replace('/master/', '/tree/master/')}tutorials`}
+                >
+                    GitHub
+                </a>
+                .<h1 id={'webinars'}>Webinars</h1>
+                Join our webinar series{' '}
+                <strong>every Thursday 11am-12pm EDT</strong>, register{' '}
+                <a
+                    target="_blank"
+                    href="https://dfci.zoom.us/webinar/register/7315875611981/WN_An_3l0XYQHCoinWvclUrlw"
+                >
+                    here
+                </a>
+                .
+                <h2 id={'webinar-1'}>Webinar #1: Introduction to cBioPortal</h2>
+                <iframe
+                    src="https://www.youtube.com/embed/fPIAxH--cSo"
+                    frameBorder="0"
+                    width="720"
+                    height="434"
+                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen={true}
+                ></iframe>
+                <h4>
+                    <a
+                        target="_blank"
+                        href="https://www.bilibili.com/video/BV1tf4y1m7Lp"
+                    >
+                        Watch on bilibili.com
+                    </a>
+                    <span> | </span>
                     <a
                         href={`${AppConfig.serverConfig
-                            .skin_documentation_baseurl!.replace(
-                                'raw.githubusercontent.com',
-                                'www.github.com'
-                            )
-                            .replace('/master/', '/tree/master/')}tutorials`}
+                            .skin_documentation_baseurl!}tutorials/cBioPortal Webinar 1 Introduction to cBioPortal.pdf`}
                     >
-                        GitHub
+                        Download slides
                     </a>
-                    .
-                </h2>
+                </h4>
                 <hr />
+                <h1 id={'tutorials'}>Tutorials</h1>
                 <h2 id={'single-study-exploration'}>
                     Tutorial #1: Single Study Exploration
                 </h2>
@@ -174,33 +193,18 @@ export default class Tutorials extends React.Component<{}, {}> {
                     </a>
                 </h4>
                 <hr />
-                <h1 id={'webinars'}>Webinars</h1>
-                Join our webinar series{' '}
-                <strong>every Thursday 11am-12pm EDT</strong>, register{' '}
-                <a
-                    target="_blank"
-                    href="https://dfci.zoom.us/webinar/register/7315875611981/WN_An_3l0XYQHCoinWvclUrlw"
-                >
-                    here
-                </a>
-                .
-                <h2 id={'webinar-1'}>Webinar #1: Introduction to cBioPortal</h2>
-                <iframe
-                    src="https://www.youtube.com/embed/fPIAxH--cSo"
-                    frameBorder="0"
-                    width="720"
-                    height="434"
-                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen={true}
-                ></iframe>
-                <h4>
-                    <a
-                        href={`${AppConfig.serverConfig
-                            .skin_documentation_baseurl!}tutorials/cBioPortal Webinar 1 Introduction to cBioPortal.pdf`}
-                    >
-                        Download slides
-                    </a>
-                </h4>
+                <h2>Step-by-step Guide to cBioPortal: a Protocol Paper</h2>
+                <p>
+                    Gao, Aksoy, Dogrusoz, Dresdner, Gross, Sumer, Sun, Jacobsen,
+                    Sinha, Larsson, Cerami, Sander, Schultz. <br />
+                    <b>
+                        Integrative analysis of complex cancer genomics and
+                        clinical profiles using the cBioPortal.
+                    </b>{' '}
+                    <br />
+                    <i>Sci. Signal.</i> 6, pl1 (2013). [
+                    <a href={getNCBIlink('/pubmed/23550210')}>Reprint</a>].
+                </p>
             </PageLayout>
         );
     }
