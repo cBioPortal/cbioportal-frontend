@@ -7,7 +7,7 @@ import {
 } from './GroupComparisonUtils';
 import { GroupComparisonTab } from './GroupComparisonTabs';
 import { remoteData, stringListToIndexSet } from 'cbioportal-frontend-commons';
-import { SampleFilter } from 'cbioportal-ts-api-client';
+import { SampleFilter, CancerStudy } from 'cbioportal-ts-api-client';
 import { action, computed, observable } from 'mobx';
 import client from '../../shared/api/cbioportalClientInstance';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
@@ -25,6 +25,8 @@ import GroupComparisonURLWrapper from './GroupComparisonURLWrapper';
 import ComparisonStore, {
     OverlapStrategy,
 } from '../../shared/lib/comparison/ComparisonStore';
+import { VirtualStudy } from 'shared/model/VirtualStudy';
+import sessionServiceClient from 'shared/api//sessionServiceInstance';
 
 export default class GroupComparisonStore extends ComparisonStore {
     @observable private _currentTabId:
@@ -276,15 +278,108 @@ export default class GroupComparisonStore extends ComparisonStore {
         },
     });
 
+    readonly allStudies = remoteData(
+        {
+            invoke: async () =>
+                await client.getAllStudiesUsingGET({
+                    projection: 'SUMMARY',
+                }),
+        },
+        []
+    );
+
+    readonly allStudyIdToStudy = remoteData({
+        await: () => [this.allStudies],
+        invoke: () =>
+            Promise.resolve(_.keyBy(this.allStudies.result!, s => s.studyId)),
+    });
+
+    // contains queried physical studies
+    private readonly queriedPhysicalStudies = remoteData({
+        await: () => [this._session],
+        invoke: async () => {
+            const originStudies = this._session.result!.origin;
+            const everyStudyIdToStudy = this.allStudyIdToStudy.result!;
+            return _.reduce(
+                originStudies,
+                (acc: CancerStudy[], next) => {
+                    if (everyStudyIdToStudy[next]) {
+                        acc.push(everyStudyIdToStudy[next]);
+                    }
+                    return acc;
+                },
+                []
+            );
+        },
+        default: [],
+    });
+
+    // virtual studies in session
+    private readonly queriedVirtualStudies = remoteData({
+        await: () => [this.queriedPhysicalStudies, this._session],
+        invoke: async () => {
+            const originStudies = this._session.result!.origin;
+            if (
+                this.queriedPhysicalStudies.result.length ===
+                originStudies.length
+            ) {
+                return [];
+            }
+            let filteredVirtualStudies: VirtualStudy[] = [];
+            let validFilteredPhysicalStudyIds = this.queriedPhysicalStudies.result.map(
+                study => study.studyId
+            );
+
+            let virtualStudyIds = originStudies.filter(
+                id => !validFilteredPhysicalStudyIds.includes(id)
+            );
+
+            await Promise.all(
+                virtualStudyIds.map(id =>
+                    sessionServiceClient
+                        .getVirtualStudy(id)
+                        .then(res => {
+                            filteredVirtualStudies.push(res);
+                        })
+                        .catch(error => {
+                            /*do nothing*/
+                        })
+                )
+            );
+            return filteredVirtualStudies;
+        },
+        default: [],
+    });
+
+    // all queried studies, includes both physcial and virtual studies
+    // this is used in page header name
+    readonly displayedStudies = remoteData({
+        await: () => [this.queriedVirtualStudies, this.queriedPhysicalStudies],
+        invoke: async () => {
+            return [
+                ...this.queriedPhysicalStudies.result,
+                ...this.queriedVirtualStudies.result.map(virtualStudy => {
+                    return {
+                        name: virtualStudy.data.name,
+                        description: virtualStudy.data.description,
+                        studyId: virtualStudy.id,
+                    } as CancerStudy;
+                }),
+            ];
+        },
+        default: [],
+    });
+
     readonly studies = remoteData(
         {
-            await: () => [this._session],
+            await: () => [this._session, this.allStudyIdToStudy],
             invoke: () => {
                 const studyIds = getStudyIds(this._session.result!.groups);
-                return client.fetchStudiesUsingPOST({
-                    studyIds,
-                    projection: 'DETAILED',
-                });
+                return Promise.resolve(
+                    studyIds.map(
+                        studyId => this.allStudyIdToStudy.result![studyId]
+                    )
+                );
             },
         },
         []
