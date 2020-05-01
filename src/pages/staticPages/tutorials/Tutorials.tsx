@@ -53,21 +53,35 @@ export default class Tutorials extends React.Component<{}, {}> {
                     allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen={true}
                 ></iframe>
-                <h4>
-                    <a
-                        target="_blank"
-                        href="https://www.bilibili.com/video/BV1tf4y1m7Lp"
-                    >
-                        Watch on bilibili.com
-                    </a>
-                    <span> | </span>
-                    <a
-                        href={`${AppConfig.serverConfig
-                            .skin_documentation_baseurl!}tutorials/cBioPortal Webinar 1 Introduction to cBioPortal.pdf`}
-                    >
-                        Download slides
-                    </a>
-                </h4>
+                <div>
+                    <span style={{ fontSize: 'large' }}>Watch on </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a
+                            target="_blank"
+                            href="https://www.youtube.com/embed/fPIAxH--cSo"
+                        >
+                            YouTube.com
+                        </a>
+                    </h4>
+                    <span style={{ fontSize: 'large' }}> or </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a
+                            target="_blank"
+                            href="https://www.bilibili.com/video/bv1tf4y1m7lp"
+                        >
+                            bilibili.com
+                        </a>
+                    </h4>
+                    <span style={{ color: '#eee' }}> | </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a
+                            href={`${AppConfig.serverConfig
+                                .skin_documentation_baseurl!}tutorials/cBioPortal Webinar 1 Introduction to cBioPortal.pdf`}
+                        >
+                            Download slides
+                        </a>
+                    </h4>
+                </div>
                 <hr />
                 <h1 id={'tutorials'}>Tutorials</h1>
                 <h2 id={'single-study-exploration'}>
