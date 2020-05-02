@@ -37,7 +37,7 @@ if (
         // BASED ON USERS LOCALSTORAGE
         {
             dateEnd: 100000000000000,
-            content: `Join our new webinar series to learn how to use cBioPortal effectively. Second webinar <strong>Thursday May 7th 11am-12pm EDT</strong>. <a class="btn btn-primary btn-xs" target="_blank" href="https://dfci.zoom.us/webinar/register/7315875611981/WN_An_3l0XYQHCoinWvclUrlw">Click for More Info!</a>`,
+            content: `Join our new webinar series to learn how to use cBioPortal effectively. Second webinar <strong>Thursday May 7th 11am-12pm EDT</strong>. <a class="btn btn-primary btn-xs" target="_blank" href="https://dfci.zoom.us/webinar/register/7315875611981/WN_An_3l0XYQHCoinWvclUrlw">Click for More Info!</a> or <a class="btn btn-primary btn-xs" href="/tutorials#webinars">View Recorded Webinars</a>`,
             id: '2020_spring_webinar',
         },
     ];
