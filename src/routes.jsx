@@ -179,6 +179,7 @@ export const makeRoutes = routing => {
                 component={GroupComparisonLoading}
             />
 
+            {/* Redirect legacy survival route directly to survival tab in comparison */}
             <Route
                 path="/results/survival"
                 onEnter={() => {
@@ -189,6 +190,19 @@ export const makeRoutes = routing => {
                 }}
                 component={getBlankPage()}
             />
+
+            {/* Redirect legacy enrichments route directly to survival tab in comparison */}
+            <Route
+                path="/results/enrichments"
+                onEnter={() => {
+                    redirectTo(
+                        { comparison_subtab: 'mutations' },
+                        '/results/comparison'
+                    );
+                }}
+                component={getBlankPage()}
+            />
+
             <Route
                 path="/results(/:tab)"
                 onEnter={() => {}}
