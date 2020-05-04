@@ -65,7 +65,7 @@ export default class ValidationStatusColumnFormatter {
 
             if (format) {
                 content = (
-                    <span className={styles[format.className]}>
+                    <span className={(styles as any)[format.className]}>
                         {format.text}
                     </span>
                 );

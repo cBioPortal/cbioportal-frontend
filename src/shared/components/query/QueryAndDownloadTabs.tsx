@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as styles_any from './styles/styles.module.scss';
+import styles from './styles/styles.module.scss';
 import { observer } from 'mobx-react';
 import QueryContainer from './QueryContainer';
 import { QueryStore } from './QueryStore';
@@ -12,10 +12,6 @@ import { trackEvent } from 'shared/lib/tracking';
 import { If } from 'react-if';
 import AppConfig from 'appConfig';
 import { ModifyQueryParams } from 'pages/resultsView/ResultsViewPageStore';
-
-const styles = styles_any as {
-    QueryAndDownloadTabs: string;
-};
 
 const DOWNLOAD = 'download';
 const ADVANCED = 'advanced';

@@ -1,13 +1,7 @@
 import * as React from 'react';
 import FontAwesome from 'react-fontawesome';
-import * as styles_any from './styles.module.scss';
+import styles from './styles.module.scss';
 import classNames from 'classnames';
-
-const styles = styles_any as {
-    error: string;
-    message: string;
-    icon: string;
-};
 
 interface ISectionHeaderProps
     extends React.DetailedHTMLProps<

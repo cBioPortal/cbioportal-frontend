@@ -193,9 +193,9 @@ export default class OQLTextArea extends React.Component<
                 classNames.push(styles.default);
                 break;
         }
-        this.geneQuery
-            ? classNames.push(styles.notEmpty)
-            : classNames.push(styles.empty);
+        if (!this.geneQuery) {
+            classNames.push(styles.empty);
+        }
         return classNames;
     }
 

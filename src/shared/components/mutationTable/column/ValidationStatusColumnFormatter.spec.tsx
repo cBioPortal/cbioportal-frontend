@@ -82,12 +82,12 @@ describe('MutationStatusColumnFormatter', () => {
         value: string
     ) {
         assert.isTrue(
-            component.find(`span.${styles[className]}`).exists(),
+            component.find(`span.${(styles as any)[className]}`).exists(),
             `Span has the correct class name for ${value}`
         );
         assert.isTrue(
             component
-                .find(`span.${styles[className]}`)
+                .find(`span.${(styles as any)[className]}`)
                 .text()
                 .indexOf(value) > -1,
             `Display value is correct for ${value}`
