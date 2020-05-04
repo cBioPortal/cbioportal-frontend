@@ -97,7 +97,11 @@ function setDropdownOpen(
 ) {
     browser.waitUntil(
         () => {
-            if (open === browser.isVisible(dropdown_selector)) {
+            // check if exists first because sometimes we get errors with isVisible if it doesn't exist
+            const isOpen = browser.isExisting(dropdown_selector)
+                ? browser.isVisible(dropdown_selector)
+                : false;
+            if (open === isOpen) {
                 return true;
             } else {
                 browser.click(button_selector);
