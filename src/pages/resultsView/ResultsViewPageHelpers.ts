@@ -47,7 +47,6 @@ export const oldTabToNewTabRoute: { [legacyTabId: string]: ResultsViewTab } = {
     plots: ResultsViewTab.PLOTS,
     mutations: ResultsViewTab.MUTATIONS,
     co_expression: ResultsViewTab.COEXPRESSION,
-    enrichments: ResultsViewTab.COMPARISON,
     IGV: ResultsViewTab.CN_SEGMENTS,
     network: ResultsViewTab.NETWORK,
     pathways: ResultsViewTab.PATHWAY_MAPPER,
