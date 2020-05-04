@@ -51,7 +51,9 @@ export default class MutationAssessor extends React.Component<
                 <span
                     className={classNames(
                         annotationStyles['annotation-item-text'],
-                        mutationAssessorColumn[`ma-${maData.functionalImpact}`]
+                        (mutationAssessorColumn as any)[
+                            `ma-${maData.functionalImpact}`
+                        ]
                     )}
                 >
                     <i className="fa fa-circle" aria-hidden="true"></i>
@@ -100,7 +102,7 @@ export default class MutationAssessor extends React.Component<
                             <td>
                                 <span
                                     className={
-                                        mutationAssessorColumn[
+                                        (mutationAssessorColumn as any)[
                                             `ma-${maData.functionalImpact}`
                                         ]
                                     }

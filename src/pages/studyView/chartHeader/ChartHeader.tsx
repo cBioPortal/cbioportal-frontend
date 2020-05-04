@@ -546,7 +546,6 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                     data-test="chart-header-hamburger-icon"
                                     className={classnames(
                                         'dropdown btn-group',
-                                        styles.chartMenu,
                                         { show: this.menuOpen }
                                     )}
                                 >

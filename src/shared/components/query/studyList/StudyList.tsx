@@ -26,37 +26,8 @@ import { StudyLink } from '../../StudyLink/StudyLink';
 import StudyTagsTooltip from '../../studyTagsTooltip/StudyTagsTooltip';
 
 const styles = {
-    ...(styles_any as {
-        StudyList: string;
-        SelectedStudyList: string;
-
-        CancerType: string;
-        CancerTypeName: string;
-        SelectAll: string;
-
-        Study: string;
-        StudyName: string;
-        DeletedStudy: string;
-        StudyMeta: string;
-        StudySamples: string;
-        StudyLinks: string;
-
-        icon: string;
-        iconWithTooltip: string;
-        trashIcon: string;
-        summaryIcon: string;
-        infoCircleIcon: string;
-        tooltip: string;
-
-        disabled: string;
-        enabled: string;
-        indentArrow: string;
-
-        closeSelected: string;
-        deselectAll: string;
-        highlighted: string;
-    }),
-    Level: (level: number) => styles_any[`Level${level}`],
+    ...styles_any,
+    Level: (level: number) => (styles_any as any)[`Level${level}`],
 };
 
 export interface IStudyListProps {
@@ -136,8 +107,8 @@ export default class StudyList extends QueryStoreComponent<
         if (cancerType != this.rootCancerType) {
             let liClassName = classNames(
                 styles.CancerType,
-                styles.Level(currentLevel),
-                this.logic.isHighlighted(cancerType) && styles.highlighted
+                styles.Level(currentLevel)
+                // this.logic.isHighlighted(cancerType) && styles.highlighted
             );
 
             if (currentLevel === 3)
@@ -152,9 +123,8 @@ export default class StudyList extends QueryStoreComponent<
                 <li className={liClassName}>
                     <CancerTreeCheckbox view={this.view} node={cancerType}>
                         {indentArrow}
-                        <span className={styles.CancerTypeName}>
-                            {cancerType.name}
-                        </span>
+
+                        <span>{cancerType.name}</span>
                         {!!!this.store.forDownloadTab && (
                             <span className={styles.SelectAll}>
                                 {_.intersection(
@@ -185,8 +155,8 @@ export default class StudyList extends QueryStoreComponent<
 
     renderCancerStudy = (study: CancerStudy, arrayIndex: number) => {
         let liClassName = classNames(
-            styles.Study,
-            this.logic.isHighlighted(study) && styles.highlighted
+            styles.Study
+            // this.logic.isHighlighted(study) && styles.highlighted
         );
 
         const isOverlap = study.studyId in this.store.getOverlappingStudiesMap;
