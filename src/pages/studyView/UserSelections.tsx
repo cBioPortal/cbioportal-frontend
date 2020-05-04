@@ -526,7 +526,6 @@ export default class UserSelections extends React.Component<
                         data-test="clear-all-filters"
                         className={classnames(
                             'btn btn-default btn-sm',
-                            styles.summaryHeaderBtn,
                             styles.summaryClearAllBtn
                         )}
                         onClick={this.props.clearAllFilters}

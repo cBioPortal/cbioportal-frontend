@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import * as React from 'react';
 import LabeledCheckbox from '../labeledCheckbox/LabeledCheckbox';
-import * as styles_any from './styles/styles.module.scss';
+import styles from './styles/styles.module.scss';
 import {
     action,
     ObservableMap,
@@ -32,13 +32,6 @@ import {
 } from 'victory';
 import { QueryStoreComponent } from './QueryStore';
 import CBIOPORTAL_VICTORY_THEME from '../../theme/cBioPoralTheme';
-
-const styles = styles_any as {
-    GenesetsVolcanoSelectorWindow: string;
-    selectButton: string;
-    selectionColumnHeader: string;
-    selectionColumnCell: string;
-};
 
 class GenesetsVolcanoTable extends LazyMobXTable<Geneset> {}
 

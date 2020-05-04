@@ -49,8 +49,9 @@ export default class LoadingIndicator extends React.Component<ILoader, {}> {
 
         const parentStyles = {
             [styles.centered]: this.props.center,
-            [styles['centered-relative-to-container']]: this.props
-                .centerRelativeToContainer,
+            // (centered-relative-to-container style is currently commented out)
+            // [styles['centered-relative-to-container']]: this.props
+            //     .centerRelativeToContainer,
             [styles['centered-with-children']]:
                 (this.props.center || this.props.centerRelativeToContainer) &&
                 React.Children.count(this.props.children) > 0,
