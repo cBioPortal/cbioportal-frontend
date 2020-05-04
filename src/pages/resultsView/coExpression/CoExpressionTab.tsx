@@ -303,11 +303,12 @@ export default class CoExpressionTab extends React.Component<
                     q.geneticEntityType
                 );
                 if (dataQueryFilter != undefined) {
-                    // temporarily point coexpression traffic to master cbioportal instance
-                    const $domain =
-                        window.location.hostname === 'www.cbioportal.org'
-                            ? 'https://master.cbioportal.org/api'
-                            : undefined;
+                    let $domain = undefined;
+                    // IF WE WANT TO DIRECT COEXPRESSION TRAFFIC
+                    // $domain =
+                    //     window.location.hostname === 'www.cbioportal.org'
+                    //         ? 'https://master.cbioportal.org/api'
+                    //         : undefined;
 
                     const data = await internalClient.fetchCoExpressionsUsingPOST(
                         {
