@@ -9,6 +9,7 @@ import {
     handleStudyDO,
     handleLinkOut,
     handleEncodedRedirect,
+    redirectTo,
 } from './shared/lib/redirectHelpers';
 import PageNotFound from './shared/components/pageNotFound/PageNotFound';
 
@@ -176,6 +177,17 @@ export const makeRoutes = routing => {
                     $(document).scrollTop(0);
                 }}
                 component={GroupComparisonLoading}
+            />
+
+            <Route
+                path="/results/survival"
+                onEnter={() => {
+                    redirectTo(
+                        { comparison_subtab: 'survival' },
+                        '/results/comparison'
+                    );
+                }}
+                component={getBlankPage()}
             />
             <Route
                 path="/results(/:tab)"
