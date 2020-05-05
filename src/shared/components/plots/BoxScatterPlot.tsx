@@ -4,6 +4,7 @@ import { computed, observable, action } from 'mobx';
 import { bind } from 'bind-decorator';
 import CBIOPORTAL_VICTORY_THEME, {
     axisTickLabelStyles,
+    legendLabelStyles,
 } from '../../theme/cBioPoralTheme';
 import ifNotDefined from '../../lib/ifNotDefined';
 import { BoxPlotModel, calculateBoxPlotModel } from '../../lib/boxPlotUtils';
@@ -104,7 +105,6 @@ const PLOT_DATA_PADDING_PIXELS = 100;
 const CATEGORY_LABEL_HORZ_ANGLE = 50;
 const DEFAULT_LEFT_PADDING = 25;
 const DEFAULT_BOTTOM_PADDING = 10;
-const LEGEND_ITEM_WIDTH_ALLOWANCE = 150;
 const BOTTOM_LEGEND_PADDING = 15;
 const RIGHT_PADDING_FOR_LONG_LABELS = 50;
 const HORIZONTAL_OFFSET = 8;
@@ -285,9 +285,28 @@ export default class BoxScatterPlot<
         }
     }
 
+    @computed get maxLegendLabelWidth() {
+        if (this.props.legendData) {
+            return Math.max(
+                ...this.props.legendData.map(d => {
+                    return getTextWidth(
+                        Array.isArray(d.name)
+                            ? (d.name as string[]).join(' ')
+                            : d.name,
+                        legendLabelStyles.fontFamily,
+                        legendLabelStyles.fontSize + 'px'
+                    );
+                })
+            );
+        }
+
+        // this result doesnt matter but it keeps us from dividing by zero
+        return this.svgWidth;
+    }
+
     @computed get legendItemsPerRow() {
         return clamp(
-            Math.floor(this.svgWidth / LEGEND_ITEM_WIDTH_ALLOWANCE),
+            Math.floor(this.svgWidth / this.maxLegendLabelWidth),
             1,
             5
         );

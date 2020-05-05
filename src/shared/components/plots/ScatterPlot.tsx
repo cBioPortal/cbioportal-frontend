@@ -5,6 +5,7 @@ import bind from 'bind-decorator';
 import { computed, observable } from 'mobx';
 import CBIOPORTAL_VICTORY_THEME, {
     baseLabelStyles,
+    legendLabelStyles,
 } from '../../theme/cBioPoralTheme';
 import Timer = NodeJS.Timer;
 import {
@@ -31,7 +32,7 @@ import {
     IPlotSampleData,
 } from 'pages/resultsView/plots/PlotsTabUtils';
 import ifNotDefined from '../../lib/ifNotDefined';
-import { textTruncationUtils } from 'cbioportal-frontend-commons';
+import { getTextWidth, textTruncationUtils } from 'cbioportal-frontend-commons';
 
 export interface IBaseScatterPlotData {
     x: number;
@@ -87,7 +88,6 @@ const RIGHT_PADDING = 120; // room for correlation info and legend
 const NUM_AXIS_TICKS = 8;
 const PLOT_DATA_PADDING_PIXELS = 50;
 const LEFT_PADDING = 25;
-const LEGEND_ITEM_WIDTH_ALLOWANCE = 150;
 
 @observer
 export default class ScatterPlot<
@@ -217,9 +217,28 @@ export default class ScatterPlot<
         }
     }
 
+    @computed get maxLegendLabelWidth() {
+        if (this.props.legendData) {
+            return Math.max(
+                ...this.props.legendData.map(d => {
+                    return getTextWidth(
+                        Array.isArray(d.name)
+                            ? (d.name as string[]).join(' ')
+                            : d.name,
+                        legendLabelStyles.fontFamily,
+                        legendLabelStyles.fontSize + 'px'
+                    );
+                })
+            );
+        }
+
+        // this result doesnt matter but it keeps us from dividing by zero
+        return this.svgWidth;
+    }
+
     @computed get legendItemsPerRow() {
         return clamp(
-            Math.floor(this.svgWidth / LEGEND_ITEM_WIDTH_ALLOWANCE),
+            Math.floor(this.svgWidth / this.maxLegendLabelWidth),
             1,
             5
         );
