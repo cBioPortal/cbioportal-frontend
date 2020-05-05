@@ -3,7 +3,10 @@ import * as React from 'react';
 import { observer, Observer } from 'mobx-react';
 import bind from 'bind-decorator';
 import { computed, observable } from 'mobx';
-import CBIOPORTAL_VICTORY_THEME from '../../theme/cBioPoralTheme';
+import CBIOPORTAL_VICTORY_THEME, {
+    baseLabelStyles,
+    legendLabelStyles,
+} from '../../theme/cBioPoralTheme';
 import Timer = NodeJS.Timer;
 import {
     VictoryChart,
@@ -22,7 +25,7 @@ import {
     limitValueAppearance,
     IValue1D,
 } from 'pages/resultsView/plots/PlotsTabUtils';
-import { textTruncationUtils } from 'cbioportal-frontend-commons';
+import { getTextWidth, textTruncationUtils } from 'cbioportal-frontend-commons';
 import { clamp } from '../../lib/NumberUtils';
 
 // TODO make distinction between public and internal interface for waterfall plot data
@@ -78,7 +81,6 @@ export const LEGEND_Y = 30;
 const RIGHT_PADDING = 120; // room for correlation info and legend
 const NUM_AXIS_TICKS = 8;
 const LEFT_PADDING = 25;
-const LEGEND_ITEM_WIDTH_ALLOWANCE = 150;
 const LABEL_OFFSET_FRACTION = 0.02;
 const SEARCH_LABEL_SIZE_MULTIPLIER = 1.5;
 const TOOLTIP_OFFSET_Y = 28.5;
@@ -231,9 +233,28 @@ export default class WaterfallPlot<
         }
     }
 
+    @computed get maxLegendLabelWidth() {
+        if (this.props.legendData) {
+            return Math.max(
+                ...this.props.legendData.map(d => {
+                    return getTextWidth(
+                        Array.isArray(d.name)
+                            ? (d.name as string[]).join(' ')
+                            : d.name,
+                        legendLabelStyles.fontFamily,
+                        legendLabelStyles.fontSize + 'px'
+                    );
+                })
+            );
+        }
+
+        // this result doesnt matter but it keeps us from dividing by zero
+        return this.svgWidth;
+    }
+
     @computed get legendItemsPerRow() {
         return clamp(
-            Math.floor(this.svgWidth / LEGEND_ITEM_WIDTH_ALLOWANCE),
+            Math.floor(this.svgWidth / this.maxLegendLabelWidth),
             1,
             5
         );

@@ -536,7 +536,7 @@ function scatterPlotMutationSummaryLegendData(
             };
         });
     if (showNotProfiledElement) {
-        const stroke = plotType === notProfiledMutationsAppearance.stroke;
+        const stroke = notProfiledMutationsAppearance.stroke;
 
         legendData.push({
             name: NOT_PROFILED_MUTATION_LEGEND_LABEL,
@@ -628,10 +628,7 @@ function scatterPlotMutationLegendData(
     if (showNotProfiledElement) {
         const legendSymbol =
             plotType === PlotType.WaterfallPlot ? 'square' : 'circle';
-        const stroke =
-            plotType === PlotType.WaterfallPlot
-                ? notProfiledMutationsAppearance.fill
-                : notProfiledMutationsAppearance.stroke;
+        const stroke = notProfiledMutationsAppearance.stroke;
         legendData.push({
             name: NOT_PROFILED_MUTATION_LEGEND_LABEL,
             symbol: {
