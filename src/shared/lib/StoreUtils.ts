@@ -76,6 +76,7 @@ import {
     OncoKbAPI,
 } from 'oncokb-ts-api-client';
 import { EvidenceType, IOncoKbData } from 'cbioportal-frontend-commons';
+import { REFERENCE_GENOME } from './referenceGenomeUtils';
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
     indicatorMap: {},
@@ -1250,4 +1251,26 @@ export async function getHierarchyData(
         pvalueThreshold,
         sampleListId,
     });
+}
+
+export function getGenomeNexusUrl(studies: CancerStudy[]) {
+    // default reference genome is GRCh37
+    // if the study is based on GRCh38, return GRCh38 genome nexus url
+    if (studies) {
+        if (
+            _.every(
+                studies,
+                study =>
+                    new RegExp(REFERENCE_GENOME.grch38.NCBI, 'i').test(
+                        study.referenceGenome
+                    ) ||
+                    new RegExp(REFERENCE_GENOME.grch38.UCSC, 'i').test(
+                        study.referenceGenome
+                    )
+            )
+        ) {
+            return AppConfig.serverConfig.genomenexus_url_grch38!;
+        }
+    }
+    return AppConfig.serverConfig.genomenexus_url!;
 }

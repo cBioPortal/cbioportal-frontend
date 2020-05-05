@@ -340,6 +340,9 @@ export default class PatientViewMutationsTab extends React.Component<
                     genePanelIdToEntrezGeneIds={
                         this.props.store.genePanelIdToEntrezGeneIds.result!
                     }
+                    generateGenomeNexusHgvsgUrl={
+                        this.props.store.generateGenomeNexusHgvsgUrl
+                    }
                 />
             </div>
         ),
