@@ -185,6 +185,11 @@ export type ColoringMenuOmnibarOption = {
     };
 };
 
+export type ColoringMenuOmnibarGroup = {
+    label: string;
+    options: ColoringMenuOmnibarOption[];
+};
+
 export type ColoringMenuSelection = {
     selectedOption: ColoringMenuOmnibarOption | undefined;
     logScale?: boolean;
@@ -1004,7 +1009,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return observable({
             get selectedOption() {
                 const options = self.coloringMenuOmnibarOptions.isComplete
-                    ? self.coloringMenuOmnibarOptions.result
+                    ? (_.flatMap(
+                          self.coloringMenuOmnibarOptions.result,
+                          groupOrSingle => {
+                              if ((groupOrSingle as any).options) {
+                                  return (groupOrSingle as ColoringMenuOmnibarGroup)
+                                      .options;
+                              } else {
+                                  return groupOrSingle as ColoringMenuOmnibarOption;
+                              }
+                          }
+                      ) as ColoringMenuOmnibarOption[])
                     : [];
                 if (this._selectedOptionValue === undefined && options.length) {
                     // If no option selected,
@@ -1434,18 +1449,23 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     }
 
     readonly coloringMenuOmnibarOptions = remoteData<
-        ColoringMenuOmnibarOption[]
+        (ColoringMenuOmnibarOption | ColoringMenuOmnibarGroup)[]
     >({
         await: () => [
             this.props.store.genes,
             this.props.store.clinicalAttributes,
         ],
         invoke: () => {
-            const allOptions: Omit<ColoringMenuOmnibarOption, 'value'>[] = [];
+            const allOptions: (
+                | Omit<ColoringMenuOmnibarOption, 'value'>
+                | Omit<ColoringMenuOmnibarGroup, 'options'> & {
+                      options: Omit<ColoringMenuOmnibarOption, 'value'>[];
+                  })[] = [];
 
             // add gene options
-            allOptions.push(
-                ...this.props.store.genes.result!.reduce(
+            allOptions.push({
+                label: 'Genes',
+                options: this.props.store.genes.result!.reduce(
                     (options, nextGene) => {
                         if (this.mutationDataCanBeShown) {
                             options.push({
@@ -1483,12 +1503,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         }
                         return options;
                     },
-                    [] as typeof allOptions
-                )
-            );
+                    [] as Omit<ColoringMenuOmnibarOption, 'value'>[]
+                ),
+            });
 
-            allOptions.push(
-                ...this.props.store.clinicalAttributes
+            allOptions.push({
+                label: 'Clinical Attributes',
+                options: this.props.store.clinicalAttributes
                     .result!.filter(a => {
                         return (
                             a.clinicalAttributeId !==
@@ -1502,8 +1523,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 clinicalAttribute,
                             },
                         };
-                    })
-            );
+                    }),
+            });
 
             if (allOptions.length > 0) {
                 // add 'None' option to the top of the list to allow removing coloring of samples
@@ -1516,12 +1537,22 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             }
 
             // add derived `value` to options so they can be tracked correctly in ReactSelect
-            return Promise.resolve(
-                allOptions.map(option => ({
-                    ...option,
-                    value: getColoringMenuOptionValue(option),
-                }))
-            );
+            allOptions.forEach(groupOrSingle => {
+                if ((groupOrSingle as any).options) {
+                    (groupOrSingle as ColoringMenuOmnibarGroup).options.forEach(
+                        (option: any) => {
+                            option.value = getColoringMenuOptionValue(option);
+                        }
+                    );
+                } else {
+                    (groupOrSingle as ColoringMenuOmnibarOption).value = getColoringMenuOptionValue(
+                        groupOrSingle as ColoringMenuOmnibarOption
+                    );
+                }
+            });
+            return Promise.resolve(allOptions as (
+                | ColoringMenuOmnibarOption
+                | ColoringMenuOmnibarGroup)[]);
         },
     });
 
@@ -4278,7 +4309,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                             className="gene-select-background"
                                         >
                                             <div className="checkbox gene-select-container">
-                                                <ReactSelect
+                                                <Select
                                                     className={
                                                         'color-samples-toolbar-elt gene-select'
                                                     }
@@ -4287,11 +4318,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                         this
                                                             .coloringMenuSelection
                                                             .selectedOption
-                                                            ? this
-                                                                  .coloringMenuSelection
-                                                                  .selectedOption
-                                                                  .value
-                                                            : undefined
                                                     }
                                                     onChange={
                                                         this
