@@ -9,9 +9,12 @@ import {
 } from 'cbioportal-ts-api-client';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { CancerGene } from 'oncokb-ts-api-client';
-import { VariantAnnotation } from 'genome-nexus-ts-api-client';
+import {
+    VariantAnnotation,
+    GenomeNexusAPI,
+    GenomeNexusAPIInternal,
+} from 'genome-nexus-ts-api-client';
 import { labelMobxPromises, MobxPromise, cached } from 'mobxpromise';
-import { IOncoKbData } from 'cbioportal-frontend-commons';
 import { fetchCosmicData } from 'shared/lib/StoreUtils';
 import MutationCountCache from 'shared/cache/MutationCountCache';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
@@ -62,7 +65,10 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
         >,
         public uniqueSampleKeyToTumorType: {
             [uniqueSampleKey: string]: string;
-        }
+        },
+        public generateGenomeNexusHgvsgUrl: (hgvsg: string) => string,
+        protected genomenexusClient?: GenomeNexusAPI,
+        protected genomenexusInternalClient?: GenomeNexusAPIInternal
     ) {
         super(
             mutationMapperConfig,
@@ -72,7 +78,9 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
             indexedHotspotData,
             indexedVariantAnnotations,
             oncoKbCancerGenes,
-            uniqueSampleKeyToTumorType
+            uniqueSampleKeyToTumorType,
+            genomenexusClient,
+            genomenexusInternalClient
         );
 
         labelMobxPromises(this);

@@ -37,6 +37,7 @@ function getTable(
                 MutationTableColumnType.COPY_NUM,
             ]}
             data={[]}
+            generateGenomeNexusHgvsgUrl={(s: string) => s}
         />
     );
 }

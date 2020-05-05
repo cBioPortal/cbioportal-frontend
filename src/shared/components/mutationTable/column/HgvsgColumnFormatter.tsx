@@ -2,21 +2,29 @@ import * as React from 'react';
 import { Mutation } from 'cbioportal-ts-api-client';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { generateHgvsgByMutation } from 'shared/lib/MutationUtils';
-import { buildGenomeNexusHgvsgUrl } from 'shared/api/urls';
 
 import hgvsgStyles from './hgvsg.module.scss';
 
 export default class HgvsgColumnFormatter {
-    public static renderFunction(data: Mutation[]) {
-        return HgvsgColumnFormatter.getHgvsgDataViz(data[0]);
+    public static renderFunction(
+        data: Mutation[],
+        generateGenomeNexusHgvsgUrl: (hgvsg: string) => string
+    ) {
+        return HgvsgColumnFormatter.getHgvsgDataViz(
+            data[0],
+            generateGenomeNexusHgvsgUrl
+        );
     }
 
-    private static getHgvsgDataViz(mutation: Mutation) {
+    private static getHgvsgDataViz(
+        mutation: Mutation,
+        generateGenomeNexusHgvsgUrl: (hgvsg: string) => string
+    ) {
         let hgvsg = HgvsgColumnFormatter.getData(mutation);
         if (!hgvsg) {
             return <span />;
         } else {
-            let genomeNexusUrl = buildGenomeNexusHgvsgUrl(hgvsg);
+            const genomeNexusUrl = generateGenomeNexusHgvsgUrl(hgvsg);
             return (
                 <DefaultTooltip
                     placement="topLeft"
