@@ -23,6 +23,7 @@ import {
     IValue1D,
 } from 'pages/resultsView/plots/PlotsTabUtils';
 import { textTruncationUtils } from 'cbioportal-frontend-commons';
+import { clamp } from '../../lib/NumberUtils';
 
 // TODO make distinction between public and internal interface for waterfall plot data
 export interface IBaseWaterfallPlotData extends IValue1D {
@@ -77,7 +78,7 @@ export const LEGEND_Y = 30;
 const RIGHT_PADDING = 120; // room for correlation info and legend
 const NUM_AXIS_TICKS = 8;
 const LEFT_PADDING = 25;
-const LEGEND_ITEMS_PER_ROW = 4;
+const LEGEND_ITEM_WIDTH_ALLOWANCE = 150;
 const LABEL_OFFSET_FRACTION = 0.02;
 const SEARCH_LABEL_SIZE_MULTIPLIER = 1.5;
 const TOOLTIP_OFFSET_Y = 28.5;
@@ -224,10 +225,18 @@ export default class WaterfallPlot<
             return 0;
         } else {
             const numRows = Math.ceil(
-                this.props.legendData.length / LEGEND_ITEMS_PER_ROW
+                this.props.legendData.length / this.legendItemsPerRow
             );
             return 23.7 * numRows;
         }
+    }
+
+    @computed get legendItemsPerRow() {
+        return clamp(
+            Math.floor(this.svgWidth / LEGEND_ITEM_WIDTH_ALLOWANCE),
+            1,
+            5
+        );
     }
 
     private get legend() {
@@ -256,11 +265,11 @@ export default class WaterfallPlot<
                     itemsPerRow={
                         this.legendLocation === 'right'
                             ? undefined
-                            : LEGEND_ITEMS_PER_ROW
+                            : this.legendItemsPerRow
                     }
                     rowGutter={this.legendLocation === 'right' ? undefined : -5}
                     data={legendData}
-                    x={this.legendLocation === 'right' ? this.legendX : 50}
+                    x={this.legendLocation === 'right' ? this.legendX : 0}
                     y={
                         this.legendLocation === 'right'
                             ? 100
@@ -324,7 +333,7 @@ export default class WaterfallPlot<
     }
 
     @computed get svgHeight() {
-        if (this.props.horizontal) {
+        if (this.legendLocation === 'bottom') {
             return this.props.chartHeight + this.bottomLegendHeight;
         }
         return this.props.chartHeight;
@@ -332,8 +341,10 @@ export default class WaterfallPlot<
 
     @computed get legendLocation() {
         if (
-            this.props.legendLocationWidthThreshold !== undefined &&
-            this.props.chartWidth > this.props.legendLocationWidthThreshold
+            (this.props.legendLocationWidthThreshold !== undefined && // if chart meets width threshold
+                this.props.chartWidth >
+                    this.props.legendLocationWidthThreshold) ||
+            (this.props.legendData && this.props.legendData.length > 7) // too many legend data
         ) {
             return 'bottom';
         } else {
