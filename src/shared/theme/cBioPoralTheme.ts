@@ -60,6 +60,8 @@ export const axisTickLabelStyles = assign({}, baseLabelStyles, {
     padding: 2,
 });
 
+export const legendLabelStyles = assign({}, baseLabelStyles);
+
 // *
 // * Strokes
 // *
@@ -276,7 +278,7 @@ const CBIOPORTAL_VICTORY_THEME = {
                 strokeWidth: 1,
                 stroke: 'black',
             },
-            labels: baseLabelStyles,
+            labels: legendLabelStyles,
             title: assign({}, baseLabelStyles, { padding: 5 }),
         },
     },
