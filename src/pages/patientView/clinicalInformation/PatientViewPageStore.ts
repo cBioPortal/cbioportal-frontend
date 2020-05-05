@@ -33,11 +33,16 @@ import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import {
     getDarwinUrl,
     getDigitalSlideArchiveMetaUrl,
+    getGenomeNexusHgvsgUrl,
 } from '../../../shared/api/urls';
 import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
 import GenomeNexusMyVariantInfoCache from 'shared/cache/GenomeNexusMyVariantInfoCache';
+import {
+    GenomeNexusAPI,
+    GenomeNexusAPIInternal,
+} from 'genome-nexus-ts-api-client';
 import {
     getMyCancerGenomeData,
     ICivicGene,
@@ -87,6 +92,7 @@ import {
     mergeMutationsIncludingUncalled,
     noGenePanelUsed,
     ONCOKB_DEFAULT,
+    getGenomeNexusUrl,
 } from 'shared/lib/StoreUtils';
 import {
     fetchCivicGenes,
@@ -120,6 +126,7 @@ import { AppStore, SiteError } from 'AppStore';
 import { getGeneFilterDefault } from './PatientViewPageStoreUtil';
 import { checkNonProfiledGenesExist } from '../PatientViewPageUtils';
 import autobind from 'autobind-decorator';
+import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mutationMapper/MutationMapperUtils';
 
 type PageMode = 'patient' | 'sample';
 
@@ -641,7 +648,8 @@ export class PatientViewPageStore {
                         this.uncalledMutationData
                     ),
                     ['annotation_summary', 'hotspots'],
-                    AppConfig.serverConfig.isoformOverrideSource
+                    AppConfig.serverConfig.isoformOverrideSource,
+                    this.genomeNexusClient
                 ),
             onError: (err: Error) => {
                 // fail silently, leave the error handling responsibility to the data consumer
@@ -655,7 +663,8 @@ export class PatientViewPageStore {
         invoke: async () => {
             return fetchHotspotsData(
                 this.mutationData,
-                this.uncalledMutationData
+                this.uncalledMutationData,
+                this.genomeNexusInternalClient
             );
         },
         onError: () => {
@@ -1516,15 +1525,30 @@ export class PatientViewPageStore {
     }
 
     @cached get genomeNexusCache() {
-        return new GenomeNexusCache();
+        return new GenomeNexusCache(
+            createVariantAnnotationsByMutationFetcher(
+                ['annotation_summary'],
+                this.genomeNexusClient
+            )
+        );
     }
 
     @cached get genomeNexusMyVariantInfoCache() {
-        return new GenomeNexusMyVariantInfoCache();
+        return new GenomeNexusMyVariantInfoCache(
+            createVariantAnnotationsByMutationFetcher(
+                ['my_variant_info'],
+                this.genomeNexusClient
+            )
+        );
     }
 
     @cached get genomeNexusMutationAssessorCache() {
-        return new GenomeNexusMutationAssessorCache();
+        return new GenomeNexusMutationAssessorCache(
+            createVariantAnnotationsByMutationFetcher(
+                ['annotation_summary', 'mutation_assessor'],
+                this.genomeNexusClient
+            )
+        );
     }
 
     @cached get pubMedCache() {
@@ -1623,4 +1647,24 @@ export class PatientViewPageStore {
         },
         []
     );
+
+    @computed get referenceGenomeBuild() {
+        if (!this.studies.isComplete) {
+            throw new Error('Failed to get studies');
+        }
+        return getGenomeNexusUrl(this.studies.result);
+    }
+
+    @autobind
+    generateGenomeNexusHgvsgUrl(hgvsg: string) {
+        return getGenomeNexusHgvsgUrl(hgvsg, this.referenceGenomeBuild);
+    }
+
+    @computed get genomeNexusClient() {
+        return new GenomeNexusAPI(this.referenceGenomeBuild);
+    }
+
+    @computed get genomeNexusInternalClient() {
+        return new GenomeNexusAPIInternal(this.referenceGenomeBuild);
+    }
 }

@@ -16,8 +16,8 @@ import {
     Mutation as SimpleMutation,
 } from 'cbioportal-utils';
 
-import genomeNexusClient from 'shared/api/genomeNexusClientInstance';
-import internalGenomeNexusClient from 'shared/api/genomeNexusInternalClientInstance';
+import defaultGenomeNexusClient from 'shared/api/genomeNexusClientInstance';
+import defaultInternalGenomeNexusClient from 'shared/api/genomeNexusInternalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
 import { Gene, Mutation } from 'cbioportal-ts-api-client';
 import {
@@ -78,8 +78,8 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
         public uniqueSampleKeyToTumorType: {
             [uniqueSampleKey: string]: string;
         },
-        private genomenexus_client?: GenomeNexusAPI,
-        private genomenexus_internal_client?: GenomeNexusAPIInternal
+        protected genomenexusClient?: GenomeNexusAPI,
+        protected genomenexusInternalClient?: GenomeNexusAPIInternal
     ) {
         super(
             gene,
@@ -112,8 +112,8 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
                     this.mutationMapperConfig.genomenexus_url || undefined,
                 oncoKbUrl: getOncoKbApiUrl() || undefined,
             },
-            this.genomenexus_client || genomeNexusClient,
-            this.genomenexus_internal_client || internalGenomeNexusClient,
+            this.genomenexusClient || defaultGenomeNexusClient,
+            this.genomenexusInternalClient || defaultInternalGenomeNexusClient,
             oncoKBClient
         );
     }

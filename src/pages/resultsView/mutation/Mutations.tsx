@@ -133,9 +133,12 @@ export default class Mutations extends React.Component<
                             />
                         </div>
                         <ResultsViewMutationMapper
-                            {...convertToMutationMapperProps(
-                                AppConfig.serverConfig
-                            )}
+                            {...convertToMutationMapperProps({
+                                ...AppConfig.serverConfig,
+                                //override ensemblLink
+                                ensembl_transcript_url: this.props.store
+                                    .ensemblLink,
+                            })}
                             oncoKbPublicApiUrl={getOncoKbApiUrl()}
                             store={mutationMapperStore}
                             trackVisibility={
@@ -157,6 +160,9 @@ export default class Mutations extends React.Component<
                             }
                             pdbHeaderCache={this.props.store.pdbHeaderCache}
                             userEmailAddress={this.props.appStore.userName!}
+                            generateGenomeNexusHgvsgUrl={
+                                this.props.store.generateGenomeNexusHgvsgUrl
+                            }
                         />
                     </MSKTab>
                 );

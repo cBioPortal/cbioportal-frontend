@@ -43,11 +43,16 @@ import GenomeNexusMyVariantInfoCache from 'shared/cache/GenomeNexusMyVariantInfo
 import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
 import MutationMapperStore from 'shared/components/mutationMapper/MutationMapperStore';
 import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownloadDataFetcher';
-import { normalizeMutations } from '../../../../shared/components/mutationMapper/MutationMapperUtils';
+import {
+    normalizeMutations,
+    createVariantAnnotationsByMutationFetcher,
+} from '../../../../shared/components/mutationMapper/MutationMapperUtils';
 import { IOncoKbData } from 'cbioportal-frontend-commons';
 import { IMutationMapperConfig } from 'shared/components/mutationMapper/MutationMapperConfig';
 import defaultGenomeNexusClient from 'shared/api/genomeNexusClientInstance';
 import defaultGenomeNexusInternalClient from 'shared/api/genomeNexusInternalClientInstance';
+import autobind from 'autobind-decorator';
+import { getGenomeNexusHgvsgUrl } from 'shared/api/urls';
 
 export default class MutationMapperToolStore {
     @observable mutationData: Partial<MutationInput>[] | undefined;
@@ -375,19 +380,27 @@ export default class MutationMapperToolStore {
         this.grch38GenomeNexusUrl = grch38GenomeNexusUrl;
     }
 
+    @autobind
+    generateGenomeNexusHgvsgUrl(hgvsg: string) {
+        return getGenomeNexusHgvsgUrl(hgvsg, this.grch38GenomeNexusUrl);
+    }
+
     @cached get pubMedCache() {
         return new PubMedCache();
     }
 
     @cached get genomeNexusCache() {
         return new GenomeNexusCache(
-            this.fetchFactory(['annotation_summary'], this.genomeNexusClient)
+            createVariantAnnotationsByMutationFetcher(
+                ['annotation_summary'],
+                this.genomeNexusClient
+            )
         );
     }
 
     @cached get genomeNexusMutationAssessorCache() {
         return new GenomeNexusMutationAssessorCache(
-            this.fetchFactory(
+            createVariantAnnotationsByMutationFetcher(
                 ['annotation_summary', 'mutation_assessor'],
                 this.genomeNexusClient
             )
@@ -396,7 +409,10 @@ export default class MutationMapperToolStore {
 
     @cached get genomeNexusMyVariantInfoCache() {
         return new GenomeNexusMyVariantInfoCache(
-            this.fetchFactory(['my_variant_info'], this.genomeNexusClient)
+            createVariantAnnotationsByMutationFetcher(
+                ['my_variant_info'],
+                this.genomeNexusClient
+            )
         );
     }
 
@@ -416,20 +432,5 @@ export default class MutationMapperToolStore {
 
     @action public clearCriticalErrors() {
         this.criticalErrors = [];
-    }
-
-    private fetchFactory(fields: string[], client: GenomeNexusAPI) {
-        return function(queries: Mutation[]): Promise<VariantAnnotation[]> {
-            if (queries.length > 0) {
-                return fetchVariantAnnotationsByMutation(
-                    queries,
-                    fields,
-                    AppConfig.serverConfig.isoformOverrideSource,
-                    client
-                );
-            } else {
-                return Promise.resolve([]);
-            }
-        };
     }
 }

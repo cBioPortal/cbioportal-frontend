@@ -1196,6 +1196,11 @@ export default class PatientViewPage extends React.Component<
                                                         this.genePanelModal
                                                             .isOpen
                                                     }
+                                                    generateGenomeNexusHgvsgUrl={
+                                                        this
+                                                            .patientViewPageStore
+                                                            .generateGenomeNexusHgvsgUrl
+                                                    }
                                                 />
                                             </div>
                                         )}
