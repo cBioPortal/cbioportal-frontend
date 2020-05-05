@@ -41,6 +41,7 @@ import * as ReactDOM from 'react-dom';
 import classnames from 'classnames';
 import WindowStore from '../window/WindowStore';
 import { textTruncationUtils } from 'cbioportal-frontend-commons';
+import { clamp } from '../../lib/NumberUtils';
 
 export interface IBaseBoxScatterPlotPoint {
     value: number;
@@ -285,9 +286,10 @@ export default class BoxScatterPlot<
     }
 
     @computed get legendItemsPerRow() {
-        return Math.max(
+        return clamp(
+            Math.floor(this.svgWidth / LEGEND_ITEM_WIDTH_ALLOWANCE),
             1,
-            Math.floor(this.svgWidth / LEGEND_ITEM_WIDTH_ALLOWANCE)
+            5
         );
     }
 

@@ -24,7 +24,7 @@ import {
     separateScatterDataByAppearance,
     dataPointIsLimited,
 } from './PlotUtils';
-import { toConditionalPrecision } from '../../lib/NumberUtils';
+import { clamp, toConditionalPrecision } from '../../lib/NumberUtils';
 import { getRegressionComputations } from './ScatterPlotUtils';
 import {
     IAxisLogScaleParams,
@@ -218,9 +218,10 @@ export default class ScatterPlot<
     }
 
     @computed get legendItemsPerRow() {
-        return Math.max(
+        return clamp(
+            Math.floor(this.svgWidth / LEGEND_ITEM_WIDTH_ALLOWANCE),
             1,
-            Math.floor(this.svgWidth / LEGEND_ITEM_WIDTH_ALLOWANCE)
+            5
         );
     }
 
