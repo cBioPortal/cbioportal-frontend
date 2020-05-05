@@ -87,7 +87,7 @@ const RIGHT_PADDING = 120; // room for correlation info and legend
 const NUM_AXIS_TICKS = 8;
 const PLOT_DATA_PADDING_PIXELS = 50;
 const LEFT_PADDING = 25;
-const LEGEND_ITEMS_PER_ROW = 4;
+const LEGEND_ITEM_WIDTH_ALLOWANCE = 150;
 
 @observer
 export default class ScatterPlot<
@@ -211,33 +211,20 @@ export default class ScatterPlot<
             return 0;
         } else {
             const numRows = Math.ceil(
-                this.props.legendData.length / LEGEND_ITEMS_PER_ROW
+                this.props.legendData.length / this.legendItemsPerRow
             );
             return 23.7 * numRows;
         }
     }
 
-    private get legend() {
-        //const x = this.legendX;
-        /*if (this.props.legendData && this.props.legendData.length) {
-            if (this.props.legendData.length > 7) {
-            } else {
-                return (
-                    <VictoryLegend
-                        orientation="vertical"
-                        data={this.props.legendData}
-                        x={x}
-                        y={this.legendY}
-                        width={RIGHT_PADDING}
-                        title={this.props.legendTitle}
-                        style={{ title: { fontSize: 15, fontWeight: 'bold' } }}
-                    />
-                );
-            }
-        } else {
-            return null;
-        }*/
+    @computed get legendItemsPerRow() {
+        return Math.max(
+            1,
+            Math.floor(this.svgWidth / LEGEND_ITEM_WIDTH_ALLOWANCE)
+        );
+    }
 
+    private get legend() {
         if (this.props.legendData && this.props.legendData.length) {
             let legendData = this.props.legendData;
             if (this.legendLocation === 'bottom') {
@@ -263,7 +250,7 @@ export default class ScatterPlot<
                     itemsPerRow={
                         this.legendLocation === 'right'
                             ? undefined
-                            : LEGEND_ITEMS_PER_ROW
+                            : this.legendItemsPerRow
                     }
                     rowGutter={this.legendLocation === 'right' ? undefined : -5}
                     data={legendData}
