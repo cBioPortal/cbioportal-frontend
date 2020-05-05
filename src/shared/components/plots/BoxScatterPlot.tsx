@@ -103,7 +103,7 @@ const PLOT_DATA_PADDING_PIXELS = 100;
 const CATEGORY_LABEL_HORZ_ANGLE = 50;
 const DEFAULT_LEFT_PADDING = 25;
 const DEFAULT_BOTTOM_PADDING = 10;
-const LEGEND_ITEMS_PER_ROW = 4;
+const LEGEND_ITEM_WIDTH_ALLOWANCE = 150;
 const BOTTOM_LEGEND_PADDING = 15;
 const RIGHT_PADDING_FOR_LONG_LABELS = 50;
 const HORIZONTAL_OFFSET = 8;
@@ -262,8 +262,9 @@ export default class BoxScatterPlot<
 
     @computed get legendLocation() {
         if (
-            this.props.legendLocationWidthThreshold !== undefined &&
-            this.chartWidth > this.props.legendLocationWidthThreshold
+            (this.props.legendLocationWidthThreshold !== undefined && // if chart meets width threshold
+                this.chartWidth > this.props.legendLocationWidthThreshold) ||
+            (this.props.legendData && this.props.legendData.length > 7) // too many legend data
         ) {
             return 'bottom';
         } else {
@@ -277,10 +278,17 @@ export default class BoxScatterPlot<
             return 0;
         } else {
             const numRows = Math.ceil(
-                this.props.legendData.length / LEGEND_ITEMS_PER_ROW
+                this.props.legendData.length / this.legendItemsPerRow
             );
             return 23.7 * numRows;
         }
+    }
+
+    @computed get legendItemsPerRow() {
+        return Math.max(
+            1,
+            Math.floor(this.svgWidth / LEGEND_ITEM_WIDTH_ALLOWANCE)
+        );
     }
 
     private get legend() {
@@ -309,7 +317,7 @@ export default class BoxScatterPlot<
                     itemsPerRow={
                         this.legendLocation === 'right'
                             ? undefined
-                            : LEGEND_ITEMS_PER_ROW
+                            : this.legendItemsPerRow
                     }
                     rowGutter={this.legendLocation === 'right' ? undefined : -5}
                     data={legendData}
