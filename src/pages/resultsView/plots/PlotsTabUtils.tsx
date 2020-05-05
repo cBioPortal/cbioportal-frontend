@@ -300,6 +300,7 @@ export function scatterPlotZIndexSortBy<
         | 'dispMutationSummary'
         | 'profiledMutations'
         | 'dispCna'
+        | 'dispClinicalValue'
         | 'profiledCna'
     >
 >(viewType: ColoringType, highlight?: (d: D) => boolean) {
@@ -334,6 +335,18 @@ export function scatterPlotZIndexSortBy<
 
     let sortBy;
     switch (viewType) {
+        case ColoringType.ClinicalData:
+            sortBy = [
+                sortByHighlight,
+                (d: D) => {
+                    if (d.dispClinicalValue === undefined) {
+                        return Number.NEGATIVE_INFINITY;
+                    } else {
+                        return 1;
+                    }
+                },
+            ];
+            break;
         case ColoringType.MutationTypeAndCopyNumber:
             sortBy = [sortByHighlight, sortByMutation, sortByCna];
             break;
