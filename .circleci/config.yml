@@ -6,7 +6,7 @@ defaults: &defaults
   working_directory: /tmp/repo
   docker:
     # specify the version you desire here
-    - image: circleci/node:8.12.0-browsers
+    - image: circleci/node:12.16.0-browsers
 
 run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
   steps:
@@ -122,6 +122,7 @@ jobs:
   install:
     <<: *defaults
     steps:
+      - checkout
       - run:
           name: "Install yarn at specific version"
           command:
@@ -131,7 +132,6 @@ jobs:
           command: |
             node --version
             yarn --version
-      - checkout
       # cache build artifacts. Use concatenation of all source files as cache
       # key. If there are no changes to src/ and yarn.lock, no need to rebuild
       - run:
