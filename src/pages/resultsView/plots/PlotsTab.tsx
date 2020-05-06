@@ -1027,10 +1027,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         | ColoringMenuOmnibarOption
                         | undefined = undefined;
 
-                    // Look for a gene option that has the default gene and coloring type type
+                    // Look for a gene option that has the default gene and coloring type
                     option = options.find(option => {
                         return (
                             option.info.entrezGeneId !== undefined &&
+                            option.info.entrezGeneId !==
+                                NONE_SELECTED_OPTION_NUMERICAL_VALUE &&
                             option.info.entrezGeneId === this.defaultGene &&
                             option.info.genomicColoringType ===
                                 this.defaultGenomicColoringType
@@ -1039,10 +1041,24 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
                     if (!option) {
                         // Otherwise, look for a gene option that has the default gene
-                        options.find(option => {
+                        option = options.find(option => {
                             return (
                                 option.info.entrezGeneId !== undefined &&
-                                option.info.entrezGeneId ===
+                                option.info.entrezGeneId !==
+                                    NONE_SELECTED_OPTION_NUMERICAL_VALUE &&
+                                option.info.entrezGeneId === this.defaultGene
+                            );
+                        });
+                    }
+
+                    if (!option) {
+                        // Otherwise, look for a gene option that has the default coloring type
+                        option = options.find(option => {
+                            return (
+                                option.info.entrezGeneId !== undefined &&
+                                option.info.entrezGeneId !==
+                                    NONE_SELECTED_OPTION_NUMERICAL_VALUE &&
+                                option.info.genomicColoringType ===
                                     this.defaultGenomicColoringType
                             );
                         });
@@ -1084,7 +1100,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             },
             _logScale: false, // TODO: put in URL
             defaultGene: undefined,
-            defaultGenomicColoringType: undefined,
+            defaultGenomicColoringType:
+                GenomicColoringType.MutationTypeAndCopyNumber,
         });
     }
     @autobind
@@ -2058,7 +2075,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             !this.colorByMutationType
         ) {
             this.updateColoringMenuGenomicColoringType(
-                GenomicColoringType.MutationType
+                GenomicColoringType.MutationTypeAndCopyNumber
             );
         }
     }
