@@ -101,7 +101,7 @@ run_cbioportal_container() {
 
     sleeptime=0
     maxtime=180
-    while ! docker run --rm --net=$DOCKER_NETWORK_NAME $BACKEND_IMAGE_NAME ping -c 1 "$E2E_CBIOPORTAL_HOST_NAME" &> /dev/null; do
+    while ! docker run --rm --net=$DOCKER_NETWORK_NAME busybox ping -c 1 "$E2E_CBIOPORTAL_HOST_NAME" &> /dev/null; do
         echo Waiting for cbioportal to initialize...
         sleeptime=$sleeptime+10
         if (($sleeptime > $maxtime)); then
