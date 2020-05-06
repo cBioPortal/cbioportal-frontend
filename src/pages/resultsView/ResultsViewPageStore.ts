@@ -193,6 +193,7 @@ import ComplexKeySet from '../../shared/lib/complexKeyDataStructures/ComplexKeyS
 import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mutationMapper/MutationMapperUtils';
 import { getGenomeNexusHgvsgUrl } from 'shared/api/urls';
 import ResultsViewComparisonStore from './comparison/ResultsViewComparisonStore';
+import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -4515,5 +4516,11 @@ export class ResultsViewPageStore {
 
     @action clearErrors() {
         this.ajaxErrors = [];
+    }
+
+    @computed get isMixedReferenceGenome() {
+        if (this.studies.result) {
+            return isMixedReferenceGenome(this.studies.result);
+        }
     }
 }

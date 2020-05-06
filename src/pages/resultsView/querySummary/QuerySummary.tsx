@@ -33,6 +33,7 @@ import { buildCBioPortalPageUrl } from '../../../shared/api/urls';
 import ResultsPageSettings from '../settings/ResultsPageSettings';
 import { createQueryStore } from 'shared/lib/createQueryStore';
 import _ from 'lodash';
+import { mixedReferenceGenomeWarning } from 'shared/lib/referenceGenomeUtils';
 
 interface QuerySummaryProps {
     routingStore: ExtendedRouterStore;
@@ -166,6 +167,8 @@ export default class QuerySummary extends React.Component<
                             )}{' '}
                             samples)
                         </a>
+                        {this.props.store.isMixedReferenceGenome &&
+                            mixedReferenceGenomeWarning()}
                     </h3>
                     <span>
                         Querying {this.studyPageFilteredCasesLink} in{' '}

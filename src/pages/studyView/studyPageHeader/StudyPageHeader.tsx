@@ -44,6 +44,9 @@ export default class StudyPageHeader extends React.Component<
                             this.props.store
                                 .showOriginStudiesInSummaryDescription
                         }
+                        isMixedReferenceGenome={
+                            this.props.store.isMixedReferenceGenome
+                        }
                     />
                     <RightPanel store={this.props.store} />
                 </div>
