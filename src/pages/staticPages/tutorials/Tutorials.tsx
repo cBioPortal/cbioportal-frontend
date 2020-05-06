@@ -67,7 +67,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                     <h4 style={{ display: 'inline' }}>
                         <a
                             target="_blank"
-                            href="https://www.bilibili.com/video/bv1tf4y1m7lp"
+                            href="https://www.bilibili.com/video/BV1tf4y1m7Lp"
                         >
                             bilibili.com
                         </a>

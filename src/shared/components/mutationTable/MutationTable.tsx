@@ -121,6 +121,7 @@ export interface IMutationTableProps {
     onRowClick?: (d: Mutation[]) => void;
     onRowMouseEnter?: (d: Mutation[]) => void;
     onRowMouseLeave?: (d: Mutation[]) => void;
+    generateGenomeNexusHgvsgUrl: (hgvsg: string) => string;
 }
 
 export enum MutationTableColumnType {
@@ -836,7 +837,11 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.HGVSG] = {
             name: 'HGVSg',
-            render: (d: Mutation[]) => HgvsgColumnFormatter.renderFunction(d),
+            render: (d: Mutation[]) =>
+                HgvsgColumnFormatter.renderFunction(
+                    d,
+                    this.props.generateGenomeNexusHgvsgUrl
+                ),
             download: (d: Mutation[]) => HgvsgColumnFormatter.download(d),
             sortBy: (d: Mutation[]) => HgvsgColumnFormatter.getSortValue(d),
             visible: false,
