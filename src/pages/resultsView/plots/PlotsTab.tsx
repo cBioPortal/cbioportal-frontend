@@ -1,5 +1,12 @@
 import * as React from 'react';
-import { action, computed, observable, whyRun } from 'mobx';
+import {
+    action,
+    autorun,
+    computed,
+    IReactionDisposer,
+    observable,
+    whyRun,
+} from 'mobx';
 import { Observer, observer } from 'mobx-react';
 import './styles.scss';
 import {
@@ -111,12 +118,6 @@ enum EventKey {
     utilities_viewLimitValues,
 }
 
-export enum GenomicColoringType {
-    MutationType = 'Mutation',
-    CopyNumber = 'CNA',
-    MutationTypeAndCopyNumber = 'MutationAndCNA',
-}
-
 export enum ColoringType {
     ClinicalData,
     MutationType,
@@ -180,7 +181,6 @@ export type ColoringMenuOmnibarOption = {
     value: string;
     info: {
         entrezGeneId?: number;
-        genomicColoringType?: GenomicColoringType;
         clinicalAttribute?: ClinicalAttribute;
     };
 };
@@ -193,8 +193,11 @@ export type ColoringMenuOmnibarGroup = {
 export type ColoringMenuSelection = {
     selectedOption: ColoringMenuOmnibarOption | undefined;
     logScale?: boolean;
-    defaultGene?: number;
-    defaultGenomicColoringType?: GenomicColoringType;
+    default: {
+        entrezGeneId?: number;
+    };
+    colorByMutationType: boolean;
+    colorByCopyNumber: boolean;
 };
 
 export interface IPlotsTabProps {
@@ -281,26 +284,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return this.scrollPane;
     }
 
-    @computed get colorByMutationType() {
-        return (
-            this.coloringMenuSelection.selectedOption &&
-            [
-                GenomicColoringType.MutationType,
-                GenomicColoringType.MutationTypeAndCopyNumber,
-            ].includes(this.coloringMenuSelection.selectedOption.info
-                .genomicColoringType as any)
-        );
-    }
-    @computed get colorByCopyNumber() {
-        return (
-            this.coloringMenuSelection.selectedOption &&
-            [
-                GenomicColoringType.CopyNumber,
-                GenomicColoringType.MutationTypeAndCopyNumber,
-            ].includes(this.coloringMenuSelection.selectedOption.info
-                .genomicColoringType as any)
-        );
-    }
     // determine whether formatting for points in the scatter plot (based on
     // mutations type, CNA, ...) will actually be shown in the plot (depends
     // on user choice via check boxes).
@@ -313,20 +296,23 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         }
 
         let ret: ColoringType = ColoringType.None;
+        const colorByMutationType = this.coloringMenuSelection
+            .colorByMutationType;
+        const colorByCopyNumber = this.coloringMenuSelection.colorByCopyNumber;
         switch (this.potentialColoringType) {
             case PotentialColoringType.MutationTypeAndCopyNumber:
-                if (this.colorByMutationType && this.colorByCopyNumber) {
+                if (colorByMutationType && colorByCopyNumber) {
                     ret = ColoringType.MutationTypeAndCopyNumber;
-                } else if (this.colorByMutationType) {
+                } else if (colorByMutationType) {
                     ret = ColoringType.MutationType;
-                } else if (this.colorByCopyNumber) {
+                } else if (colorByCopyNumber) {
                     ret = ColoringType.CopyNumber;
                 } else {
                     ret = ColoringType.None;
                 }
                 break;
             case PotentialColoringType.MutationSummary:
-                if (this.colorByMutationType) {
+                if (colorByMutationType) {
                     ret = ColoringType.MutationSummary;
                 } else {
                     ret = ColoringType.None;
@@ -334,20 +320,20 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 break;
             case PotentialColoringType.LimitValMutationTypeAndCopyNumber:
                 if (
-                    this.colorByMutationType &&
-                    this.colorByCopyNumber &&
+                    colorByMutationType &&
+                    colorByCopyNumber &&
                     this.viewLimitValues
                 ) {
                     ret = ColoringType.LimitValMutationTypeAndCopyNumber;
-                } else if (this.colorByMutationType && this.colorByCopyNumber) {
+                } else if (colorByMutationType && colorByCopyNumber) {
                     ret = ColoringType.MutationTypeAndCopyNumber;
-                } else if (this.colorByMutationType && this.viewLimitValues) {
+                } else if (colorByMutationType && this.viewLimitValues) {
                     ret = ColoringType.LimitValMutationType;
-                } else if (this.colorByCopyNumber && this.viewLimitValues) {
+                } else if (colorByCopyNumber && this.viewLimitValues) {
                     ret = ColoringType.LimitValCopyNumber;
-                } else if (this.colorByMutationType) {
+                } else if (colorByMutationType) {
                     ret = ColoringType.MutationType;
-                } else if (this.colorByCopyNumber) {
+                } else if (colorByCopyNumber) {
                     ret = ColoringType.CopyNumber;
                 } else if (this.viewLimitValues) {
                     ret = ColoringType.LimitVal;
@@ -356,9 +342,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 }
                 break;
             case PotentialColoringType.LimitValMutationSummary:
-                if (this.colorByMutationType && this.viewLimitValues) {
+                if (colorByMutationType && this.viewLimitValues) {
                     ret = ColoringType.LimitValMutationSummary;
-                } else if (this.colorByMutationType) {
+                } else if (colorByMutationType) {
                     ret = ColoringType.MutationSummary;
                 } else if (this.viewLimitValues) {
                     ret = ColoringType.LimitVal;
@@ -497,6 +483,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     private searchCaseTimeout: Timer;
     private searchMutationTimeout: Timer;
+    private coloringSelectionValidator: IReactionDisposer;
 
     constructor(props: IPlotsTabProps) {
         super(props);
@@ -508,7 +495,23 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.searchCaseInput = '';
         this.searchMutationInput = '';
 
+        this.coloringSelectionValidator = autorun(() => {
+            if (
+                this.coloringMenuSelection.colorByMutationType &&
+                this.coloringMenuSelection.colorByCopyNumber &&
+                this.waterfallPlotIsShown
+            ) {
+                // simultaneous selection of viewCNA and viewMutationType is not
+                // supported by the waterfall plot
+                this.coloringMenuSelection.colorByCopyNumber = false;
+            }
+        });
+
         (window as any).resultsViewPlotsTab = this;
+    }
+
+    componentWillUnmount() {
+        this.coloringSelectionValidator();
     }
 
     @autobind
@@ -1027,42 +1030,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         | ColoringMenuOmnibarOption
                         | undefined = undefined;
 
-                    // Look for a gene option that has the default gene and coloring type
+                    // Look for a gene option that has the default gene
                     option = options.find(option => {
                         return (
                             option.info.entrezGeneId !== undefined &&
                             option.info.entrezGeneId !==
                                 NONE_SELECTED_OPTION_NUMERICAL_VALUE &&
-                            option.info.entrezGeneId === this.defaultGene &&
-                            option.info.genomicColoringType ===
-                                this.defaultGenomicColoringType
+                            option.info.entrezGeneId ===
+                                this.default.entrezGeneId
                         );
                     });
-
-                    if (!option) {
-                        // Otherwise, look for a gene option that has the default gene
-                        option = options.find(option => {
-                            return (
-                                option.info.entrezGeneId !== undefined &&
-                                option.info.entrezGeneId !==
-                                    NONE_SELECTED_OPTION_NUMERICAL_VALUE &&
-                                option.info.entrezGeneId === this.defaultGene
-                            );
-                        });
-                    }
-
-                    if (!option) {
-                        // Otherwise, look for a gene option that has the default coloring type
-                        option = options.find(option => {
-                            return (
-                                option.info.entrezGeneId !== undefined &&
-                                option.info.entrezGeneId !==
-                                    NONE_SELECTED_OPTION_NUMERICAL_VALUE &&
-                                option.info.genomicColoringType ===
-                                    this.defaultGenomicColoringType
-                            );
-                        });
-                    }
 
                     if (!option) {
                         // Otherwise, find first gene option
@@ -1099,34 +1076,18 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 this._logScale = s;
             },
             _logScale: false, // TODO: put in URL
-            defaultGene: undefined,
-            defaultGenomicColoringType:
-                GenomicColoringType.MutationTypeAndCopyNumber,
+            colorByMutationType: true,
+            colorByCopyNumber: true,
+            default: {
+                entrezGeneId: undefined,
+            },
         });
     }
     @autobind
     @action
     private updateColoringMenuGene(entrezGeneId: number) {
-        // retain current coloring type, but update gene
-        const currentType = this.coloringMenuSelection.selectedOption
-            ? this.coloringMenuSelection.selectedOption.info.genomicColoringType
-            : undefined;
         this.coloringMenuSelection.selectedOption = undefined;
-        this.coloringMenuSelection.defaultGene = entrezGeneId;
-        this.coloringMenuSelection.defaultGenomicColoringType = currentType;
-    }
-    @autobind
-    @action
-    private updateColoringMenuGenomicColoringType(
-        genomicColoringType: GenomicColoringType
-    ) {
-        // retain current gene, but update coloring type
-        const currentGene = this.coloringMenuSelection.selectedOption
-            ? this.coloringMenuSelection.selectedOption.info.entrezGeneId
-            : undefined;
-        this.coloringMenuSelection.selectedOption = undefined;
-        this.coloringMenuSelection.defaultGene = currentGene;
-        this.coloringMenuSelection.defaultGenomicColoringType = genomicColoringType;
+        this.coloringMenuSelection.default.entrezGeneId = entrezGeneId;
     }
 
     @autobind
@@ -1152,10 +1113,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         }
     }
 
-    @computed get colorByMutationTypeAndCNA() {
-        return this.colorByMutationType && this.colorByCopyNumber;
-    }
-
     @autobind
     private downloadData() {
         onMobxPromise<any>(
@@ -1175,8 +1132,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 horzLabel,
                                 vertLabel,
                                 entrezGeneIdToGene,
-                                this.colorByMutationType,
-                                this.colorByCopyNumber
+                                this.coloringMenuSelection.colorByMutationType,
+                                this.coloringMenuSelection.colorByCopyNumber
                             ),
                             filename
                         );
@@ -1189,8 +1146,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 this.waterfallPlotPivotThreshold,
                                 this.waterfallLabel.result!,
                                 entrezGeneIdToGene,
-                                this.colorByMutationType,
-                                this.colorByCopyNumber
+                                this.coloringMenuSelection.colorByMutationType,
+                                this.coloringMenuSelection.colorByCopyNumber
                             ),
                             filename
                         );
@@ -1209,8 +1166,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 categoryLabel,
                                 valueLabel,
                                 entrezGeneIdToGene,
-                                this.colorByMutationType,
-                                this.colorByCopyNumber
+                                this.coloringMenuSelection.colorByMutationType,
+                                this.coloringMenuSelection.colorByCopyNumber
                             ),
                             filename
                         );
@@ -1482,46 +1439,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             // add gene options
             allOptions.push({
                 label: 'Genes',
-                options: this.props.store.genes.result!.reduce(
-                    (options, nextGene) => {
-                        if (this.mutationDataCanBeShown) {
-                            options.push({
-                                label: `${nextGene.hugoGeneSymbol}: Mutations`,
-                                info: {
-                                    entrezGeneId: nextGene.entrezGeneId,
-                                    genomicColoringType:
-                                        GenomicColoringType.MutationType,
-                                },
-                            });
-                        }
-                        if (this.cnaDataCanBeShown) {
-                            options.push({
-                                label: `${nextGene.hugoGeneSymbol}: Copy Number Alterations`,
-                                info: {
-                                    entrezGeneId: nextGene.entrezGeneId,
-                                    genomicColoringType:
-                                        GenomicColoringType.CopyNumber,
-                                },
-                            });
-                        }
-                        if (
-                            this.mutationDataCanBeShown &&
-                            this.cnaDataCanBeShown &&
-                            !this.isWaterfallPlot
-                        ) {
-                            options.push({
-                                label: `${nextGene.hugoGeneSymbol}: Mutations and Copy Number Alterations`,
-                                info: {
-                                    entrezGeneId: nextGene.entrezGeneId,
-                                    genomicColoringType:
-                                        GenomicColoringType.MutationTypeAndCopyNumber,
-                                },
-                            });
-                        }
-                        return options;
+                options: this.props.store.genes.result!.map(gene => ({
+                    label: gene.hugoGeneSymbol,
+                    info: {
+                        entrezGeneId: gene.entrezGeneId,
                     },
-                    [] as Omit<ColoringMenuOmnibarOption, 'value'>[]
-                ),
+                })),
             });
 
             allOptions.push({
@@ -1930,17 +1853,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         if (option.isGenericAssayType) {
             this.vertSelection.isGenericAssayType = true;
         }
-        // simultaneous selection of viewCNA and viewMutationType is not
-        // supported by the waterfall plot
-        if (
-            this.waterfallPlotIsShown &&
-            this.colorByMutationType &&
-            this.colorByCopyNumber
-        ) {
-            this.updateColoringMenuGenomicColoringType(
-                GenomicColoringType.MutationType
-            );
-        }
 
         this.viewLimitValues = true;
         this.selectionHistory.runVerticalUpdaters(
@@ -1971,20 +1883,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     public onHorizontalAxisDataTypeSelect(option: PlotsTabOption) {
         const oldHorizontalGene = this.horzSelection.selectedGeneOption;
         const oldVerticalGene = this.vertSelection.selectedGeneOption;
-        // simultaneous selection of viewCNA and viewMutationType is not
-        // supported by the waterfall plot
+
         this.horzSelection.dataType = option.value;
         if (option.isGenericAssayType) {
             this.horzSelection.isGenericAssayType = true;
-        }
-        if (
-            this.waterfallPlotIsShown &&
-            this.colorByMutationType &&
-            this.colorByCopyNumber
-        ) {
-            this.updateColoringMenuGenomicColoringType(
-                GenomicColoringType.MutationType
-            );
         }
 
         this.viewLimitValues = true;
@@ -2071,12 +1973,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.coloringMenuSelection.selectedOption &&
             this.coloringMenuSelection.selectedOption.info.entrezGeneId !==
                 NONE_SELECTED_OPTION_NUMERICAL_VALUE &&
-            !this.colorByCopyNumber &&
-            !this.colorByMutationType
+            !this.coloringMenuSelection.colorByCopyNumber &&
+            !this.coloringMenuSelection.colorByMutationType
         ) {
-            this.updateColoringMenuGenomicColoringType(
-                GenomicColoringType.MutationTypeAndCopyNumber
-            );
+            this.coloringMenuSelection.colorByMutationType = true;
+            this.coloringMenuSelection.colorByCopyNumber = true;
         }
     }
 
@@ -3933,6 +3834,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         ); // log scale selected
     }
 
+    @computed get coloringByGene() {
+        return !!(
+            this.coloringMenuSelection.selectedOption &&
+            this.coloringMenuSelection.selectedOption.info.entrezGeneId !==
+                undefined
+        );
+    }
+
     @computed get plot() {
         const promises: MobxPromise<any>[] = [
             this.plotType,
@@ -4105,10 +4014,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         this.coloringLogScale
                                     )}
                                     legendTitle={
+                                        '' /*
                                         this.selectedGeneForStyling
                                             ? this.selectedGeneForStyling
                                                   .hugoGeneSymbol
                                             : ''
+                                    */
                                     }
                                 />
                             );
@@ -4377,6 +4288,58 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                 Log Scale
                                             </LabeledCheckbox>
                                         )}
+                                        {this.coloringByGene &&
+                                            this.mutationDataCanBeShown && (
+                                                <LabeledCheckbox
+                                                    checked={
+                                                        this
+                                                            .coloringMenuSelection
+                                                            .colorByMutationType
+                                                    }
+                                                    onChange={() =>
+                                                        (this.coloringMenuSelection.colorByMutationType = !this
+                                                            .coloringMenuSelection
+                                                            .colorByMutationType)
+                                                    }
+                                                    inputProps={{
+                                                        style: { marginTop: 4 },
+                                                        disabled:
+                                                            this
+                                                                .waterfallPlotIsShown &&
+                                                            this
+                                                                .coloringMenuSelection
+                                                                .colorByCopyNumber, // cant color by both in waterfall
+                                                    }}
+                                                >
+                                                    Mutation Type
+                                                </LabeledCheckbox>
+                                            )}
+                                        {this.coloringByGene &&
+                                            this.cnaDataCanBeShown && (
+                                                <LabeledCheckbox
+                                                    checked={
+                                                        this
+                                                            .coloringMenuSelection
+                                                            .colorByCopyNumber
+                                                    }
+                                                    onChange={() =>
+                                                        (this.coloringMenuSelection.colorByCopyNumber = !this
+                                                            .coloringMenuSelection
+                                                            .colorByCopyNumber)
+                                                    }
+                                                    inputProps={{
+                                                        style: { marginTop: 4 },
+                                                        disabled:
+                                                            this
+                                                                .waterfallPlotIsShown &&
+                                                            this
+                                                                .coloringMenuSelection
+                                                                .colorByMutationType, // cant color by both in waterfall
+                                                    }}
+                                                >
+                                                    Copy Number
+                                                </LabeledCheckbox>
+                                            )}
                                     </div>
                                 </div>
                             )}
