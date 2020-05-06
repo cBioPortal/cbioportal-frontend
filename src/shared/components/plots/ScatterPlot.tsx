@@ -237,11 +237,22 @@ export default class ScatterPlot<
     }
 
     @computed get legendItemsPerRow() {
-        return clamp(
-            Math.floor(this.svgWidth / this.maxLegendLabelWidth),
-            1,
-            5
-        );
+        const widthPerItem =
+            this.maxLegendLabelWidth +
+            50 + // data point and padding
+            CBIOPORTAL_VICTORY_THEME.legend.gutter; // gutter between columns
+        let legendItemArea = this.svgWidth;
+        if (this.props.legendTitle) {
+            // make room for legend title if there is one
+            legendItemArea -= getTextWidth(
+                this.props.legendTitle,
+                CBIOPORTAL_VICTORY_THEME.legend.style.title.fontFamily,
+                CBIOPORTAL_VICTORY_THEME.legend.style.title.fontSize + 'px'
+            );
+            // padding
+            legendItemArea -= CBIOPORTAL_VICTORY_THEME.legend.gutter;
+        }
+        return clamp(Math.floor(legendItemArea / widthPerItem), 1, 5);
     }
 
     private get legend() {
