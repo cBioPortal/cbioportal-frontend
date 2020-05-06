@@ -288,9 +288,9 @@ export function isNone(d: IAxisData): d is IAxisData {
 export function getColoringMenuOptionValue(
     option: Omit<ColoringMenuOmnibarOption, 'value'>
 ) {
-    return `${option.info.entrezGeneId}_${
-        option.info.genomicColoringType
-    }_${JSON.stringify(option.info.clinicalAttribute)}`;
+    return `${option.info.entrezGeneId}_${JSON.stringify(
+        option.info.clinicalAttribute
+    )}`;
 }
 
 export function scatterPlotZIndexSortBy<
