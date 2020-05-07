@@ -239,15 +239,15 @@ export default class Tutorials extends React.Component<{}, {}> {
                             YouTube.com
                         </a>
                     </h4>
-                    {/*<span style={{ fontSize: 'large' }}> or </span>
+                    <span style={{ fontSize: 'large' }}> or </span>
                     <h4 style={{ display: 'inline' }}>
                         <a
                             target="_blank"
-                            href="https://www.bilibili.com/video/BV1tf4y1m7Lp"
+                            href="https://www.bilibili.com/video/BV1Qf4y1m7Lx"
                         >
                             bilibili.com
                         </a>
-                    </h4>*/}
+                    </h4>
                     <span style={{ color: '#eee' }}> | </span>
                     <h4 style={{ display: 'inline' }}>
                         <a
