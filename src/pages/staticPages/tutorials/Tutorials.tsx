@@ -191,7 +191,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                     <h4 style={{ display: 'inline' }}>
                         <a
                             target="_blank"
-                            href="https://www.youtube.com/embed/fPIAxH--cSo"
+                            href="https://www.youtube.com/watch?v=fPIAxH--cSo"
                         >
                             YouTube.com
                         </a>
@@ -234,7 +234,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                     <h4 style={{ display: 'inline' }}>
                         <a
                             target="_blank"
-                            href="https://www.youtube.com/embed/uJsp9kd2jIk"
+                            href="https://www.youtube.com/watch?v=uJsp9kd2jIk"
                         >
                             YouTube.com
                         </a>
