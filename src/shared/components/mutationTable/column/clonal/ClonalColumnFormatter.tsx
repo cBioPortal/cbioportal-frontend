@@ -26,7 +26,7 @@ function getClonalValue(mutation: Mutation): ClonalValue {
 
 export const getDefaultClonalColumnDefinition = (
     sampleIds?: string[],
-    sampleManager?: SampleManager
+    sampleManager?: SampleManager | null
 ) => {
     return {
         name: 'Clonal',
@@ -52,7 +52,7 @@ export default class ClonalColumnFormatter {
     public static renderFunction(
         data: Mutation[],
         sampleIds: string[],
-        sampleManager?: SampleManager
+        sampleManager?: SampleManager | null
     ) {
         const sampleToValue: { [key: string]: string } = {};
         const sampleToCCF: { [key: string]: string } = {};

@@ -16,7 +16,7 @@ function getCancerCellFractionValue(mutation: Mutation): string {
 
 export const getDefaultCancerCellFractionColumnDefinition = (
     sampleIds?: string[],
-    sampleManager?: SampleManager
+    sampleManager?: SampleManager | null
 ) => {
     return {
         name: 'CCF',
@@ -42,7 +42,7 @@ export default class CancerCellFractionColumnFormatter {
     public static renderFunction(
         data: Mutation[],
         sampleIds: string[],
-        sampleManager?: SampleManager
+        sampleManager?: SampleManager | null
     ) {
         const sampleToCCFValue: { [key: string]: string } = {};
         for (const mutation of data) {

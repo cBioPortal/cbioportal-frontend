@@ -50,7 +50,7 @@ function getMutantCopiesValue(mutation: Mutation): string {
 
 export const getDefaultMutantCopiesColumnDefinition = (
     sampleIds?: string[],
-    sampleManager?: SampleManager
+    sampleManager?: SampleManager | null
 ) => {
     return {
         name: 'Mutant Copies',
@@ -82,7 +82,7 @@ export default class MutantCopiesColumnFormatter {
     public static renderFunction(
         data: Mutation[],
         sampleIds: string[],
-        sampleManager?: SampleManager
+        sampleManager?: SampleManager | null
     ) {
         const sampleToTotalCopyNumber: { [key: string]: string } = {};
         const sampleToMutantCopies: { [key: string]: string } = {};
