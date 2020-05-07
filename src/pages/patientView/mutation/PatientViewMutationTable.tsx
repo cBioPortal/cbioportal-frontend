@@ -17,12 +17,11 @@ import TumorAlleleFreqColumnFormatter from 'shared/components/mutationTable/colu
 import ExonColumnFormatter from 'shared/components/mutationTable/column/ExonColumnFormatter';
 import HeaderIconMenu from './HeaderIconMenu';
 import GeneFilterMenu, { GeneFilterOption } from './GeneFilterMenu';
-import { floatValueIsNA } from 'shared/lib/NumberUtils';
 import { getDefaultASCNCopyNumberColumnDefinition } from 'shared/components/mutationTable/column/ascnCopyNumber/ASCNCopyNumberColumnFormatter';
 import { getDefaultCancerCellFractionColumnDefinition } from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionColumnFormatter';
 import { getDefaultClonalColumnDefinition } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
 import { getDefaultMutantCopiesColumnDefinition } from 'shared/components/mutationTable/column/mutantCopies/MutantCopiesColumnFormatter';
-import { ASCNAttributes } from 'shared/enums/ASCNEnums'
+import { ASCNAttributes } from 'shared/enums/ASCNEnums';
 
 export interface IPatientViewMutationTableProps extends IMutationTableProps {
     sampleManager: SampleManager | null;
@@ -169,7 +168,7 @@ export default class PatientViewMutationTable extends MutationTable<
             MutationTableColumnType.CANCER_CELL_FRACTION
         ] = getDefaultCancerCellFractionColumnDefinition(
             this.getSamples(),
-            this.props.sampleManager ? this.props.sampleManager: undefined
+            this.props.sampleManager ? this.props.sampleManager : undefined
         );
 
         this._columns[
@@ -315,25 +314,33 @@ export default class PatientViewMutationTable extends MutationTable<
         };
 
         this._columns[MutationTableColumnType.CLONAL].shouldExclude = () => {
-            return !this.hasRequiredASCNProperty(ASCNAttributes.CCF_M_COPIES_STRING);
+            return !this.hasRequiredASCNProperty(
+                ASCNAttributes.CCF_M_COPIES_STRING
+            );
         };
 
         this._columns[
             MutationTableColumnType.ASCN_METHOD
         ].shouldExclude = () => {
-            return !this.hasRequiredASCNProperty(ASCNAttributes.ASCN_METHOD_STRING);
+            return !this.hasRequiredASCNProperty(
+                ASCNAttributes.ASCN_METHOD_STRING
+            );
         };
 
         this._columns[
             MutationTableColumnType.CANCER_CELL_FRACTION
         ].shouldExclude = () => {
-            return !this.hasRequiredASCNProperty(ASCNAttributes.CCF_M_COPIES_STRING);
+            return !this.hasRequiredASCNProperty(
+                ASCNAttributes.CCF_M_COPIES_STRING
+            );
         };
 
         this._columns[
             MutationTableColumnType.MUTANT_COPIES
         ].shouldExclude = () => {
-            return !this.hasRequiredASCNProperty(ASCNAttributes.MUTANT_COPIES_STRING);
+            return !this.hasRequiredASCNProperty(
+                ASCNAttributes.MUTANT_COPIES_STRING
+            );
         };
 
         // only hide tumor column if there is one sample and no uncalled
