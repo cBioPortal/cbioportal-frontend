@@ -6082,25 +6082,31 @@ export class StudyViewPageStore {
                 this.clinicalAttributes.result!
             );
             // get paired attributes
-            const attributesPrefix = _.reduce(
+            const attributePrefixes = _.reduce(
                 attributes,
-                (attributesPrefix, attribute) => {
+                (attributePrefixes, attribute) => {
                     let prefix = attribute.substring(
                         0,
                         attribute.indexOf('_STATUS')
                     );
-                    if (!attributesPrefix.includes(prefix)) {
+                    if (!attributePrefixes.includes(prefix)) {
                         if (attributes.includes(`${prefix}_MONTHS`)) {
-                            attributesPrefix.push(prefix);
+                            attributePrefixes.push(prefix);
                         }
                     }
-                    return attributesPrefix;
+                    return attributePrefixes;
                 },
                 [] as string[]
             );
+            // TODO: after we migrate data into new format, we can support all survival data type
+            // this is a tempory fix for current data format, for now we only support survival types defined in survivalClinicalDataVocabulary
+            const filteredAttributePrefixes = _.filter(
+                attributePrefixes,
+                prefix => survivalClinicalDataVocabulary[prefix]
+            );
             // change prefix order based on priority
             return Promise.resolve(
-                _.sortBy(attributesPrefix, prefix => {
+                _.sortBy(filteredAttributePrefixes, prefix => {
                     return plotsPriority[prefix] || 999;
                 })
             );
