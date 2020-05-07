@@ -217,7 +217,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                 </div>
                 <hr />
                 <h2 id={'webinar-2'}>
-                    Webinar #2: Mutation Details & Patient View to cBioPortal{' '}
+                    Webinar #2: Mutation Details & Patient View{' '}
                     <ReturnToTop />
                 </h2>
 
