@@ -13,7 +13,7 @@ function getSVGWidth(numberOfSamples: number) {
 
 const CancerCellFractionElementTooltip: React.FunctionComponent<{
     sampleIds: string[];
-    sampleToCCFValue: any;
+    sampleToCCFValue: { [key: string]: string };
     sampleManager?: SampleManager | null;
 }> = props => {
     const sampleOrder = props.sampleManager
