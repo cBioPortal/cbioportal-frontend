@@ -55,7 +55,7 @@ import {
     IOncoKbData,
 } from 'cbioportal-frontend-commons';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
-import { CancerGene } from 'oncokb-ts-api-client';
+import { CancerGene, OncoKBInfo } from 'oncokb-ts-api-client';
 import {
     getAnnotationData,
     IAnnotation,
@@ -100,6 +100,7 @@ export interface IMutationTableProps {
     >;
     cosmicData?: ICosmicData;
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
+    usingPublicOncoKbInstance: boolean;
     civicGenes?: RemoteData<ICivicGene | undefined>;
     civicVariants?: RemoteData<ICivicVariant | undefined>;
     mrnaExprRankMolecularProfileId?: string;
@@ -751,6 +752,8 @@ export default class MutationTable<
                     myCancerGenomeData: this.props.myCancerGenomeData,
                     oncoKbData: this.props.oncoKbData,
                     oncoKbCancerGenes: this.props.oncoKbCancerGenes,
+                    usingPublicOncoKbInstance: this.props
+                        .usingPublicOncoKbInstance,
                     pubMedCache: this.props.pubMedCache,
                     civicGenes: this.props.civicGenes,
                     civicVariants: this.props.civicVariants,
@@ -776,6 +779,7 @@ export default class MutationTable<
                             this.props.hotspotData,
                             this.props.myCancerGenomeData,
                             this.props.oncoKbData,
+                            this.props.usingPublicOncoKbInstance,
                             this.props.civicGenes,
                             this.props.civicVariants,
                             this.resolveTumorType
@@ -816,6 +820,7 @@ export default class MutationTable<
                     this.props.hotspotData,
                     this.props.myCancerGenomeData,
                     this.props.oncoKbData,
+                    this.props.usingPublicOncoKbInstance,
                     this.props.civicGenes,
                     this.props.civicVariants,
                     this.resolveTumorType
@@ -828,6 +833,7 @@ export default class MutationTable<
                     this.props.hotspotData,
                     this.props.myCancerGenomeData,
                     this.props.oncoKbData,
+                    this.props.usingPublicOncoKbInstance,
                     this.props.civicGenes,
                     this.props.civicVariants,
                     this.resolveTumorType

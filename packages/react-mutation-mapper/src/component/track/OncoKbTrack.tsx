@@ -36,6 +36,9 @@ export default class OncoKbTrack extends React.Component<OncoKbTrackProps, {}> {
                     color: '#007FFF',
                     tooltip: (
                         <OncoKbTrackTooltip
+                            usingPublicOncoKbInstance={
+                                this.props.store.usingPublicOncoKbInstance
+                            }
                             mutations={
                                 this.props.store.mutationsByPosition[
                                     Number(position)

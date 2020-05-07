@@ -1134,6 +1134,11 @@ export default class PatientViewPage extends React.Component<
                                                             .patientViewPageStore
                                                             .oncoKbCancerGenes
                                                     }
+                                                    usingPublicOncoKbInstance={
+                                                        this
+                                                            .patientViewPageStore
+                                                            .usingPublicOncoKbInstance
+                                                    }
                                                     civicGenes={
                                                         this
                                                             .patientViewPageStore
@@ -1274,6 +1279,11 @@ export default class PatientViewPage extends React.Component<
                                                         this
                                                             .patientViewPageStore
                                                             .oncoKbCancerGenes
+                                                    }
+                                                    usingPublicOncoKbInstance={
+                                                        this
+                                                            .patientViewPageStore
+                                                            .usingPublicOncoKbInstance
                                                     }
                                                     enableOncoKb={
                                                         AppConfig.serverConfig

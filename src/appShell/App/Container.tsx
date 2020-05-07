@@ -62,31 +62,6 @@ export default class Container extends React.Component<IContainerProps, {}> {
             );
         }
 
-        if (ServerConfigHelpers.oncoKbIsEnabledWithoutToken()) {
-            return (
-                <div className="contentWrapper">
-                    <ErrorScreen
-                        title={'OncoKB is enabled but token is not defined'}
-                        body={
-                            <p>
-                                As of version 3.2.6, all cBioPortal
-                                installations require an access token to use the
-                                latest OncoKB data. You should either disable
-                                OncoKB by setting the <code>show.oncokb</code>{' '}
-                                property to <code>false</code> or register an
-                                OncoKB account and set the{' '}
-                                <code>oncokb.token</code> property. Please
-                                review these instructions for how to do so.{' '}
-                                <a href="https://docs.cbioportal.org/2.4-integration-with-other-webservices/oncokb-data-access">
-                                    https://docs.cbioportal.org/2.4-integration-with-other-webservices/oncokb-data-access
-                                </a>
-                            </p>
-                        }
-                    />
-                </div>
-            );
-        }
-
         return (
             <div>
                 <Helmet>

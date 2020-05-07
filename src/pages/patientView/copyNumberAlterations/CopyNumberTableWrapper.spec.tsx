@@ -3,6 +3,7 @@ import { ReactWrapper, mount } from 'enzyme';
 import { assert } from 'chai';
 import { default as CopyNumberTableWrapper } from './CopyNumberTableWrapper';
 import { GeneFilterOption } from '../mutation/GeneFilterMenu';
+import { USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB } from 'react-mutation-mapper';
 
 function hasColumn(
     tableWrapper: ReactWrapper<any, any>,
@@ -26,6 +27,7 @@ function getTable(
             genePanelIdToEntrezGeneIds={{}}
             sampleIds={samples}
             gisticData={{}}
+            usingPublicOncoKbInstance={USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB}
             status="available"
             referenceGenes={[]}
             currentGeneFilter={GeneFilterOption.ANY_SAMPLE}

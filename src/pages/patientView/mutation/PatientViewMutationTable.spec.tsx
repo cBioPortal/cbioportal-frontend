@@ -4,6 +4,7 @@ import { assert } from 'chai';
 import { default as PatientViewMutationTable } from './PatientViewMutationTable';
 import { MutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
 import { GeneFilterOption } from './GeneFilterMenu';
+import { USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB } from 'react-mutation-mapper';
 
 function hasColumn(
     tableWrapper: ReactWrapper<any, any>,
@@ -28,6 +29,7 @@ function getTable(
             sampleToGenePanelId={{}}
             genePanelIdToEntrezGeneIds={{}}
             mrnaExprRankMolecularProfileId={mrnaId}
+            usingPublicOncoKbInstance={USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB}
             discreteCNAMolecularProfileId={cnaId}
             currentGeneFilter={GeneFilterOption.ANY_SAMPLE}
             columns={[
