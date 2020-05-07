@@ -168,21 +168,21 @@ export default class PatientViewMutationTable extends MutationTable<
             MutationTableColumnType.CANCER_CELL_FRACTION
         ] = getDefaultCancerCellFractionColumnDefinition(
             this.getSamples(),
-            this.props.sampleManager ? this.props.sampleManager : undefined
+            this.props.sampleManager
         );
 
         this._columns[
             MutationTableColumnType.CLONAL
         ] = getDefaultClonalColumnDefinition(
             this.getSamples(),
-            this.props.sampleManager ? this.props.sampleManager : undefined
+            this.props.sampleManager
         );
 
         this._columns[
             MutationTableColumnType.MUTANT_COPIES
         ] = getDefaultMutantCopiesColumnDefinition(
             this.getSamples(),
-            this.props.sampleManager ? this.props.sampleManager : undefined
+            this.props.sampleManager
         );
 
         this._columns[
@@ -190,7 +190,7 @@ export default class PatientViewMutationTable extends MutationTable<
         ] = getDefaultASCNCopyNumberColumnDefinition(
             this.getSamples(),
             this.props.sampleIdToClinicalDataMap,
-            this.props.sampleManager ? this.props.sampleManager : undefined
+            this.props.sampleManager
         );
 
         // customization for allele count columns
