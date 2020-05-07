@@ -77,6 +77,7 @@ import { getDefaultASCNMethodColumnDefinition } from 'shared/components/mutation
 import { getDefaultCancerCellFractionColumnDefinition } from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionColumnFormatter';
 import { getDefaultClonalColumnDefinition } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
 import { getDefaultMutantCopiesColumnDefinition } from 'shared/components/mutationTable/column/mutantCopies/MutantCopiesColumnFormatter';
+import { hasASCNProperty } from 'shared/lib/MutationUtils';
 
 export interface IMutationTableProps {
     studyIdToStudy?: { [studyId: string]: CancerStudy };
@@ -1140,19 +1141,14 @@ export default class MutationTable<
      * @param property the field name to search for
      * @returns true if any available mutation is annotated with the passed property name
      */
-    protected hasRequiredASCNProperty(property: string): boolean {
+    protected anyMutationHasASCNProperty(property: string): boolean {
         let data = this.getMutations();
         if (data) {
             return data.some((row: Mutation[]) => {
                 /* if at least one row ... */
                 return row.some((m: Mutation) => {
                     /* contains at least one mutation record ... */
-                    return (
-                        /*  with ASCN annotations which have a value for key [property] */
-                        m.alleleSpecificCopyNumber !== undefined &&
-                        (m.alleleSpecificCopyNumber as any)[property] !==
-                            undefined
-                    );
+                    return hasASCNProperty(m, property);
                 });
             });
         }
