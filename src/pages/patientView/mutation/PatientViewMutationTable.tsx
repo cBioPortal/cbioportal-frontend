@@ -314,7 +314,7 @@ export default class PatientViewMutationTable extends MutationTable<
         };
 
         this._columns[MutationTableColumnType.CLONAL].shouldExclude = () => {
-            return !this.hasRequiredASCNProperty(
+            return !this.anyMutationHasASCNProperty(
                 ASCNAttributes.CCF_M_COPIES_STRING
             );
         };
@@ -322,7 +322,7 @@ export default class PatientViewMutationTable extends MutationTable<
         this._columns[
             MutationTableColumnType.ASCN_METHOD
         ].shouldExclude = () => {
-            return !this.hasRequiredASCNProperty(
+            return !this.anyMutationHasASCNProperty(
                 ASCNAttributes.ASCN_METHOD_STRING
             );
         };
@@ -330,7 +330,7 @@ export default class PatientViewMutationTable extends MutationTable<
         this._columns[
             MutationTableColumnType.CANCER_CELL_FRACTION
         ].shouldExclude = () => {
-            return !this.hasRequiredASCNProperty(
+            return !this.anyMutationHasASCNProperty(
                 ASCNAttributes.CCF_M_COPIES_STRING
             );
         };
@@ -338,7 +338,7 @@ export default class PatientViewMutationTable extends MutationTable<
         this._columns[
             MutationTableColumnType.MUTANT_COPIES
         ].shouldExclude = () => {
-            return !this.hasRequiredASCNProperty(
+            return !this.anyMutationHasASCNProperty(
                 ASCNAttributes.MUTANT_COPIES_STRING
             );
         };
