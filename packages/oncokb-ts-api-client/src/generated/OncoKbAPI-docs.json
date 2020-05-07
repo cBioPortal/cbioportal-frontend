@@ -735,6 +735,87 @@
         }
       }
     },
+    "/utils/allCuratedGenes": {
+      "get": {
+        "tags": [
+          "Cancer Genes"
+        ],
+        "summary": "utilsAllCuratedGenesGet",
+        "description": "Get list of genes OncoKB curated",
+        "operationId": "utilsAllCuratedGenesGetUsingGET_1",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "version",
+            "in": "query",
+            "description": "version",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CuratedGene"
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "503": {
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/utils/allCuratedGenes.txt": {
+      "get": {
+        "tags": [
+          "Cancer Genes"
+        ],
+        "summary": "utilsAllCuratedGenesTxtGet",
+        "description": "Get list of genes OncoKB curated in text file.",
+        "operationId": "utilsAllCuratedGenesTxtGetUsingGET_1",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "version",
+            "in": "query",
+            "description": "version",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "503": {
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
     "/utils/cancerGeneList": {
       "get": {
         "tags": [
@@ -873,6 +954,39 @@
         },
         "tumorType": {
           "type": "string"
+        }
+      }
+    },
+    "CuratedGene": {
+      "type": "object",
+      "properties": {
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "highestResistancLevel": {
+          "type": "string"
+        },
+        "highestSensitiveLevel": {
+          "type": "string"
+        },
+        "hugoSymbol": {
+          "type": "string"
+        },
+        "isoform": {
+          "type": "string"
+        },
+        "oncogene": {
+          "type": "boolean"
+        },
+        "refSeq": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "tsg": {
+          "type": "boolean"
         }
       }
     },
