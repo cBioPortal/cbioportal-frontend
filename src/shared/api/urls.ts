@@ -203,11 +203,7 @@ export function getProxyUrlIfNecessary(url: any) {
 }
 
 export function getOncoKbApiUrl() {
-    if (AppConfig.serverConfig.oncoKbTokenDefined) {
-        return buildCBioPortalAPIUrl(`proxy/oncokb`);
-    } else {
-        return undefined;
-    }
+    return buildCBioPortalAPIUrl(`proxy/oncokb`);
 }
 
 export function getGenomeNexusApiUrl() {

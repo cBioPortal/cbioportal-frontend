@@ -147,13 +147,6 @@ export class ServerConfigHelpers {
         return config.serverConfig.sessionServiceEnabled;
     }
 
-    static oncoKbIsEnabledWithoutToken() {
-        return (
-            config.serverConfig.show_oncokb &&
-            !config.serverConfig.oncoKbTokenDefined
-        );
-    }
-
     static getUserEmailAddress(): string | undefined {
         return config.serverConfig.user_email_address &&
             config.serverConfig.user_email_address !== 'anonymousUser'
