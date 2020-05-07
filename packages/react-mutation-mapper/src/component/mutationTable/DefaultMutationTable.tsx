@@ -36,6 +36,7 @@ export type DefaultMutationTableProps = {
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     myCancerGenomeData?: IMyCancerGenomeData;
     oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>;
+    usingPublicOncoKbInstance: boolean;
     indexedMyVariantInfoAnnotations?: RemoteData<
         { [genomicLocation: string]: MyVariantInfo } | undefined
     >;
@@ -96,6 +97,7 @@ export default class DefaultMutationTable extends React.Component<
                       this.props.hotspotData,
                       this.props.myCancerGenomeData,
                       this.props.oncoKbData,
+                      this.props.usingPublicOncoKbInstance,
                       this.props.civicGenes,
                       this.props.civicVariants
                   );
@@ -143,6 +145,9 @@ export default class DefaultMutationTable extends React.Component<
                         hotspotData={this.props.hotspotData}
                         oncoKbData={this.props.oncoKbData}
                         oncoKbCancerGenes={this.props.oncoKbCancerGenes}
+                        usingPublicOncoKbInstance={
+                            this.props.usingPublicOncoKbInstance
+                        }
                         pubMedCache={this.props.pubMedCache}
                         civicGenes={this.props.civicGenes}
                         civicVariants={this.props.civicVariants}

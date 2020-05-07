@@ -11,7 +11,7 @@ import {
     GenomeNexusAPI,
     GenomeNexusAPIInternal,
 } from 'genome-nexus-ts-api-client';
-import { OncoKbAPI } from 'oncokb-ts-api-client';
+import { OncoKbAPI, OncoKBInfo } from 'oncokb-ts-api-client';
 import _ from 'lodash';
 
 export const DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE =
@@ -26,6 +26,22 @@ export const DEFAULT_GENOME_NEXUS_URL = 'https://www.genomenexus.org/';
 export const DEFAULT_ONCO_KB_URL = 'https://legacy.oncokb.org/';
 export const ONCOKB_DEFAULT_DATA: IOncoKbData = {
     indicatorMap: {},
+};
+
+// Set the default to false since most of the instances are not public instance.
+// The only one we have right now is public.api.oncokb.org
+export const USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB = false;
+
+export const ONCOKB_DEFAULT_INFO: OncoKBInfo = {
+    apiVersion: 'v1.0.0',
+    dataVersion: {
+        version: 'v2.0',
+        date: '12/19/2019',
+    },
+    levels: [],
+    ncitVersion: '19.03d',
+    oncoTreeVersion: 'oncotree_2019_12_01',
+    publicInstance: USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
 };
 
 const DEFAULT_GENOME_NEXUS_CLIENT = initGenomeNexusClient();

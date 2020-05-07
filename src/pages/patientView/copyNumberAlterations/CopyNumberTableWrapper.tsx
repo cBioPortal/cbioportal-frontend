@@ -43,6 +43,7 @@ type ICopyNumberTableWrapperProps = {
     cnaCivicGenes?: RemoteData<ICivicGene | undefined>;
     cnaCivicVariants?: RemoteData<ICivicVariant | undefined>;
     oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>;
+    usingPublicOncoKbInstance: boolean;
     enableOncoKb?: boolean;
     enableCivic?: boolean;
     pubMedCache?: PubMedCache;
@@ -204,6 +205,8 @@ export default class CopyNumberTableWrapper extends React.Component<
                         .uniqueSampleKeyToTumorType,
                     oncoKbData: this.props.cnaOncoKbData,
                     oncoKbCancerGenes: this.props.oncoKbCancerGenes,
+                    usingPublicOncoKbInstance: this.props
+                        .usingPublicOncoKbInstance,
                     enableOncoKb: this.props.enableOncoKb as boolean,
                     pubMedCache: this.props.pubMedCache,
                     civicGenes: this.props.cnaCivicGenes,
@@ -218,6 +221,7 @@ export default class CopyNumberTableWrapper extends React.Component<
                 return AnnotationColumnFormatter.sortValue(
                     d,
                     this.props.oncoKbCancerGenes,
+                    this.props.usingPublicOncoKbInstance,
                     this.props.cnaOncoKbData,
                     this.props.uniqueSampleKeyToTumorType,
                     this.props.cnaCivicGenes,

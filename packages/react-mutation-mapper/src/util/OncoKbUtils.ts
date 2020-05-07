@@ -112,6 +112,7 @@ export function oncogenicYPosition(
 }
 
 export function annotationIconClassNames(
+    usingPublicOncoKbInstance: boolean,
     indicatorQueryResp: IndicatorQueryResp | undefined
 ): string {
     const classNames = ['oncokb', 'annotation-icon', 'unknown', 'no-level'];
@@ -124,7 +125,7 @@ export function annotationIconClassNames(
             ONCOGENIC_CLASS_NAMES[indicatorQueryResp.oncogenic] ||
             (indicatorQueryResp.vus ? 'vus' : 'unknown');
 
-        if (sl || rl) {
+        if (!usingPublicOncoKbInstance && (sl || rl)) {
             let levelName = 'level';
 
             if (sl) {

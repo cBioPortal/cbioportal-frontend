@@ -8,12 +8,16 @@ import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import OncoKbSummaryTable from '../oncokb/OncoKbSummaryTable';
 
 type OncoKbTrackTooltipProps = {
+    usingPublicOncoKbInstance: boolean;
     mutations: Mutation[];
     indicatorData?: IndicatorQueryResp[];
     hugoGeneSymbol?: string;
 };
 
-export function oncoKbTooltip(indicatorData: IndicatorQueryResp[]) {
+export function oncoKbTooltip(
+    usingPublicOncoKbInstance: boolean,
+    indicatorData: IndicatorQueryResp[]
+) {
     const sampleCount = indicatorData.length;
 
     // generate info
@@ -73,7 +77,10 @@ export function oncoKbTooltip(indicatorData: IndicatorQueryResp[]) {
         <span>
             <b>{sampleCount}</b> sample{pluralSuffix} with {oncogenicInfo}{' '}
             mutations.
-            <OncoKbSummaryTable data={tableData} />
+            <OncoKbSummaryTable
+                usingPublicOncoKbInstance={usingPublicOncoKbInstance}
+                data={tableData}
+            />
         </span>
     );
 }
@@ -104,7 +111,10 @@ export default class OncoKbTrackTooltip extends React.Component<
 > {
     public render() {
         return this.props.indicatorData
-            ? oncoKbTooltip(this.props.indicatorData)
+            ? oncoKbTooltip(
+                  this.props.usingPublicOncoKbInstance,
+                  this.props.indicatorData
+              )
             : null;
     }
 }
