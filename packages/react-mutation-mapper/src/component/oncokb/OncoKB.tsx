@@ -24,6 +24,7 @@ export interface IOncoKbProps {
     status: 'pending' | 'error' | 'complete';
     indicator?: IndicatorQueryResp;
     pubMedCache?: MobxCache;
+    usingPublicOncoKbInstance: boolean;
     isCancerGene: boolean;
     geneNotExist: boolean;
     hugoGeneSymbol: string;
@@ -84,6 +85,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}> {
                 <span className={`${annotationStyles['annotation-item']}`}>
                     <i
                         className={annotationIconClassNames(
+                            this.props.usingPublicOncoKbInstance,
                             this.props.indicator
                         )}
                         data-test="oncogenic-icon-image"
@@ -131,6 +133,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}> {
     private tooltipContent(): JSX.Element {
         return (
             <OncoKbTooltip
+                usingPublicOncoKbInstance={this.props.usingPublicOncoKbInstance}
                 hugoSymbol={this.props.hugoGeneSymbol}
                 geneNotExist={this.props.geneNotExist}
                 isCancerGene={this.props.isCancerGene}

@@ -11,7 +11,7 @@ import {
     PostTranslationalModification,
     VariantAnnotation,
 } from 'genome-nexus-ts-api-client';
-import { CancerGene, OncoKbAPI } from 'oncokb-ts-api-client';
+import { CancerGene, OncoKbAPI, OncoKBInfo } from 'oncokb-ts-api-client';
 import request from 'superagent';
 
 import { AggregatedHotspots } from './CancerHotspot';
@@ -63,6 +63,7 @@ export interface MutationMapperDataFetcher {
         client?: GenomeNexusAPIInternal
     ): Promise<AggregatedHotspots[]>;
     fetchOncoKbCancerGenes(client?: OncoKbAPI): Promise<CancerGene[]>;
+    fetchOncoKbInfo(client?: OncoKbAPI): Promise<OncoKBInfo>;
     fetchOncoKbData(
         mutations: Mutation[],
         annotatedGenes: { [entrezGeneId: number]: boolean } | Error,

@@ -74,6 +74,7 @@ import {
     IndicatorQueryResp,
     CancerGene,
     OncoKbAPI,
+    OncoKBInfo,
 } from 'oncokb-ts-api-client';
 import { EvidenceType, IOncoKbData } from 'cbioportal-frontend-commons';
 import { REFERENCE_GENOME } from './referenceGenomeUtils';
@@ -693,6 +694,12 @@ export async function fetchOncoKbCancerGenes(
     client: OncoKbAPI = oncokbClient
 ): Promise<CancerGene[]> {
     return await client.utilsCancerGeneListGetUsingGET_1({});
+}
+
+export async function fetchOncoKbInfo(
+    client: OncoKbAPI = oncokbClient
+): Promise<OncoKBInfo> {
+    return await client.infoGetUsingGET_1({});
 }
 
 export async function fetchOncoKbData(

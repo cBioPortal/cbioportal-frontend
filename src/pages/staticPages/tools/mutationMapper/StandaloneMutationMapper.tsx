@@ -27,6 +27,9 @@ export default class StandaloneMutationMapper extends MutationMapper<
                     this.props.store.uniqueSampleKeyToTumorType
                 }
                 oncoKbCancerGenes={this.props.store.oncoKbCancerGenes}
+                usingPublicOncoKbInstance={
+                    this.props.store.usingPublicOncoKbInstance
+                }
                 indexedVariantAnnotations={
                     this.props.store.indexedVariantAnnotations
                 }
