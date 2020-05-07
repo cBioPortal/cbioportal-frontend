@@ -10,8 +10,7 @@ import TumorAlleleFreqColumnFormatter from 'shared/components/mutationTable/colu
 import { Mutation, ClinicalData } from 'cbioportal-ts-api-client';
 import ExonColumnFormatter from 'shared/components/mutationTable/column/ExonColumnFormatter';
 import GnomadColumnFormatter from 'shared/components/mutationTable/column/GnomadColumnFormatter';
-import { floatValueIsNA } from 'shared/lib/NumberUtils';
-import { ASCNAttributes } from 'shared/enums/ASCNEnums'
+import { ASCNAttributes } from 'shared/enums/ASCNEnums';
 
 export interface IResultsViewMutationTableProps extends IMutationTableProps {
     // add results view specific props here if needed
@@ -141,25 +140,33 @@ export default class ResultsViewMutationTable extends MutationTable<
         };
 
         this._columns[MutationTableColumnType.CLONAL].shouldExclude = () => {
-            return !this.hasRequiredASCNProperty(ASCNAttributes.CCF_M_COPIES_STRING);
+            return !this.hasRequiredASCNProperty(
+                ASCNAttributes.CCF_M_COPIES_STRING
+            );
         };
 
         this._columns[
             MutationTableColumnType.ASCN_METHOD
         ].shouldExclude = () => {
-            return !this.hasRequiredASCNProperty(ASCNAttributes.ASCN_METHOD_STRING);
+            return !this.hasRequiredASCNProperty(
+                ASCNAttributes.ASCN_METHOD_STRING
+            );
         };
 
         this._columns[
             MutationTableColumnType.CANCER_CELL_FRACTION
         ].shouldExclude = () => {
-            return !this.hasRequiredASCNProperty(ASCNAttributes.CCF_M_COPIES_STRING);
+            return !this.hasRequiredASCNProperty(
+                ASCNAttributes.CCF_M_COPIES_STRING
+            );
         };
 
         this._columns[
             MutationTableColumnType.MUTANT_COPIES
         ].shouldExclude = () => {
-            return !this.hasRequiredASCNProperty(ASCNAttributes.MUTANT_COPIES_STRING);
+            return !this.hasRequiredASCNProperty(
+                ASCNAttributes.MUTANT_COPIES_STRING
+            );
         };
 
         this._columns[
