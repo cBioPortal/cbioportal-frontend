@@ -14,7 +14,7 @@ function getSVGWidth(numberOfSamples: number) {
 const CancerCellFractionElementTooltip: React.FunctionComponent<{
     sampleIds: string[];
     sampleToCCFValue: any;
-    sampleManager?: SampleManager;
+    sampleManager?: SampleManager | null;
 }> = props => {
     const sampleOrder = props.sampleManager
         ? props.sampleManager.getSampleIdsInOrder()
@@ -60,7 +60,7 @@ const CancerCellFractionBar: React.FunctionComponent<{
 const CancerCellFractionBarGraph: React.FunctionComponent<{
     sampleIds: string[];
     sampleToCCFValue: { [key: string]: string };
-    sampleManager?: SampleManager;
+    sampleManager?: SampleManager | null;
 }> = props => {
     const sampleOrder = props.sampleManager
         ? props.sampleManager.getSampleIdsInOrder()
@@ -96,7 +96,7 @@ const CancerCellFractionBarGraph: React.FunctionComponent<{
 const CancerCellFractionElement: React.FunctionComponent<{
     sampleIds: string[];
     sampleToCCFValue: { [key: string]: string };
-    sampleManager?: SampleManager;
+    sampleManager?: SampleManager | null;
 }> = props => {
     if (props.sampleManager) {
         return (

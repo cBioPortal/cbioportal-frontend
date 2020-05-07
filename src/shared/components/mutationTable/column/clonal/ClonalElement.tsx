@@ -23,7 +23,7 @@ const ClonalElementTooltip: React.FunctionComponent<{
     sampleId: string;
     clonalValue: string;
     ccfMCopies: string;
-    sampleManager?: SampleManager;
+    sampleManager?: SampleManager | null;
 }> = props => {
     const firstColumnStyle = {
         width: 40,
@@ -75,7 +75,7 @@ const ClonalElement: React.FunctionComponent<{
     sampleId: string;
     clonalValue: string;
     ccfMCopies: string;
-    sampleManager?: SampleManager;
+    sampleManager?: SampleManager | null;
 }> = props => {
     return (
         <DefaultTooltip

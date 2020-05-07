@@ -97,7 +97,7 @@ export function getWGD(
 export const getDefaultASCNCopyNumberColumnDefinition = (
     sampleIds?: string[],
     sampleIdToClinicalDataMap?: { [sampleId: string]: ClinicalData[] },
-    sampleManager?: SampleManager
+    sampleManager?: SampleManager | null
 ) => {
     return {
         name: 'Integer Copy #',
@@ -127,7 +127,7 @@ export default class ASCNCopyNumberColumnFormatter {
         data: Mutation[],
         sampleIds: string[],
         sampleIdToClinicalDataMap?: { [sampleId: string]: ClinicalData[] },
-        sampleManager?: SampleManager
+        sampleManager?: SampleManager | null
     ) {
         const sampleToTotalCopyNumber: { [key: string]: string } = {};
         const sampleToMinorCopyNumber: { [key: string]: string } = {};

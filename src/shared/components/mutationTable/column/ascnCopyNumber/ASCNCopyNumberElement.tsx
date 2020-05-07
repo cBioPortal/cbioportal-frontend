@@ -119,7 +119,7 @@ const ASCNCopyNumberElementTooltip: React.FunctionComponent<{
     totalCopyNumberValue: string;
     minorCopyNumberValue: string;
     ascnCopyNumberValue: string;
-    sampleManager?: SampleManager;
+    sampleManager?: SampleManager | null;
 }> = props => {
     const ascnCopyNumberCall: string = getASCNCopyNumberCall(
         props.wgdValue,
@@ -210,7 +210,7 @@ const ASCNCopyNumberElement: React.FunctionComponent<{
     totalCopyNumberValue: string;
     minorCopyNumberValue: string;
     ascnCopyNumberValue: string;
-    sampleManager?: SampleManager;
+    sampleManager?: SampleManager | null;
 }> = props => {
     const hasAllRequiredValues: boolean =
         props.totalCopyNumberValue !== ASCNCopyNumberValue.NA &&

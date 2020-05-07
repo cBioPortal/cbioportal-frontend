@@ -6,7 +6,7 @@ const MutantCopiesElementTooltip: React.FunctionComponent<{
     sampleId: string;
     totalCopyNumberValue: string;
     mutantCopiesValue: string;
-    sampleManager?: SampleManager;
+    sampleManager?: SampleManager | null;
 }> = props => {
     return (
         <span>
@@ -32,7 +32,7 @@ const MutantCopiesElement: React.FunctionComponent<{
     sampleId: string;
     totalCopyNumberValue: string;
     mutantCopiesValue: string;
-    sampleManager?: SampleManager;
+    sampleManager?: SampleManager | null;
 }> = props => {
     return (
         <DefaultTooltip
