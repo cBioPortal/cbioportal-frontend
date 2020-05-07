@@ -21,6 +21,26 @@ export type AnnotateMutationByGenomicChangeQuery = {
         'tumorType': string
 
 };
+export type CuratedGene = {
+    'entrezGeneId': number
+
+        'highestResistancLevel': string
+
+        'highestSensitiveLevel': string
+
+        'hugoSymbol': string
+
+        'isoform': string
+
+        'oncogene': boolean
+
+        'refSeq': string
+
+        'summary': string
+
+        'tsg': boolean
+
+};
 export type Query = {
     'alteration': string
 
@@ -1665,6 +1685,155 @@ export default class OncoKbAPI {
             $domain ? : string
     }): Promise < {} > {
         return this.levelsSensitiveGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    utilsAllCuratedGenesGetUsingGET_1URL(parameters: {
+        'version' ? : string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/utils/allCuratedGenes';
+        if (parameters['version'] !== undefined) {
+            queryParameters['version'] = parameters['version'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get list of genes OncoKB curated
+     * @method
+     * @name OncoKbAPI#utilsAllCuratedGenesGetUsingGET_1
+     * @param {string} version - version
+     */
+    utilsAllCuratedGenesGetUsingGET_1WithHttpInfo(parameters: {
+        'version' ? : string,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/utils/allCuratedGenes';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['version'] !== undefined) {
+                queryParameters['version'] = parameters['version'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get list of genes OncoKB curated
+     * @method
+     * @name OncoKbAPI#utilsAllCuratedGenesGetUsingGET_1
+     * @param {string} version - version
+     */
+    utilsAllCuratedGenesGetUsingGET_1(parameters: {
+            'version' ? : string,
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < CuratedGene >
+        > {
+            return this.utilsAllCuratedGenesGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    utilsAllCuratedGenesTxtGetUsingGET_1URL(parameters: {
+        'version' ? : string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/utils/allCuratedGenes.txt';
+        if (parameters['version'] !== undefined) {
+            queryParameters['version'] = parameters['version'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get list of genes OncoKB curated in text file.
+     * @method
+     * @name OncoKbAPI#utilsAllCuratedGenesTxtGetUsingGET_1
+     * @param {string} version - version
+     */
+    utilsAllCuratedGenesTxtGetUsingGET_1WithHttpInfo(parameters: {
+        'version' ? : string,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/utils/allCuratedGenes.txt';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'text/plain';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['version'] !== undefined) {
+                queryParameters['version'] = parameters['version'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get list of genes OncoKB curated in text file.
+     * @method
+     * @name OncoKbAPI#utilsAllCuratedGenesTxtGetUsingGET_1
+     * @param {string} version - version
+     */
+    utilsAllCuratedGenesTxtGetUsingGET_1(parameters: {
+        'version' ? : string,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < string > {
+        return this.utilsAllCuratedGenesTxtGetUsingGET_1WithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
