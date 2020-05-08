@@ -27,13 +27,15 @@ import {
     unionPatients,
     unionSamples,
     splitData,
+    getDefaultGroupName,
 } from './GroupComparisonUtils';
 import deepEqualInAnyOrder from 'deep-equal-in-any-order';
 import ComplexKeySet from '../../shared/lib/complexKeyDataStructures/ComplexKeySet';
-import { Sample } from 'cbioportal-ts-api-client';
+import { Sample, StudyViewFilter } from 'cbioportal-ts-api-client';
 import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { assertDeepEqualInAnyOrder } from '../../shared/lib/SpecUtils';
 import ComplexKeyGroupsMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap';
+import { DataType } from 'pages/studyView/StudyViewUtils';
 
 chai.use(deepEqualInAnyOrder);
 
@@ -3176,6 +3178,88 @@ describe('GroupComparisonUtils', () => {
                         value: ['study3+1', 'study3+2', 'study3+3', 'study3+4'],
                     },
                 ]
+            );
+        });
+    });
+
+    describe('getDefaultGroupName', () => {
+        it('returns correct group name', () => {
+            let filters: StudyViewFilter = {} as any;
+            assert.equal(
+                getDefaultGroupName(filters, {} as any, {} as any),
+                ''
+            );
+
+            filters.clinicalDataFilters = [
+                {
+                    attributeId: 'PATH_T_STAGE',
+                    values: [{ value: 'T4' }, { value: 'T2' }],
+                },
+            ] as any;
+            assert.equal(
+                getDefaultGroupName(
+                    filters,
+                    {} as any,
+                    { PATH_T_STAGE: DataType.STRING } as any
+                ),
+                'T4+T2'
+            );
+
+            filters.clinicalDataFilters.push({
+                attributeId: 'MUTATION_COUNT',
+                values: [{ start: 80, end: 90 }],
+            } as any);
+            assert.equal(
+                getDefaultGroupName(
+                    filters,
+                    {} as any,
+                    { PATH_T_STAGE: DataType.STRING } as any
+                ),
+                'T4+T2'
+            );
+
+            filters.geneFilters = [
+                {
+                    molecularProfileIds: ['acc_tcga_mutations'],
+                    geneQueries: [['TP53', 'CTNNB1'], ['ERCC2'], ['NCOR2']],
+                },
+            ];
+            assert.equal(
+                getDefaultGroupName(
+                    filters,
+                    {} as any,
+                    { PATH_T_STAGE: DataType.STRING } as any
+                ),
+                'TP53, CTNNB1, ERCC2, NCOR2, T4+T2'
+            );
+
+            filters.genomicProfiles = [['gistic'], ['rna_seq_v2_mrna']];
+            assert.equal(
+                getDefaultGroupName(
+                    filters,
+                    {} as any,
+                    { PATH_T_STAGE: DataType.STRING } as any
+                ),
+                'TP53, CTNNB1, ERCC2, NCOR2, T4+T2, gistic, rna_seq_v2_mrna'
+            );
+
+            filters.caseLists = [['cna', 'cnaseq']];
+            assert.equal(
+                getDefaultGroupName(
+                    filters,
+                    {} as any,
+                    { PATH_T_STAGE: DataType.STRING } as any
+                ),
+                'TP53, CTNNB1, ERCC2, NCOR2, T4+T2, gistic, rna_seq_v2_mrna, cna, cnaseq'
+            );
+
+            assert.equal(
+                getDefaultGroupName(
+                    filters,
+                    { custom_chart_1: ['Selected'] } as any,
+                    { PATH_T_STAGE: DataType.STRING } as any
+                ),
+                'TP53, CTNNB1, ERCC2, NCOR2, T4+T2, Selected, gistic, rna_seq_v2_mrna, cna, cnaseq'
             );
         });
     });
