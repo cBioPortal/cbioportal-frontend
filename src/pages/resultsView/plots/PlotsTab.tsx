@@ -193,11 +193,11 @@ export type ColoringMenuOmnibarGroup = {
 export type ColoringMenuSelection = {
     selectedOption: ColoringMenuOmnibarOption | undefined;
     logScale?: boolean;
+    colorByMutationType: boolean;
+    colorByCopyNumber: boolean;
     default: {
         entrezGeneId?: number;
     };
-    colorByMutationType: boolean;
-    colorByCopyNumber: boolean;
 };
 
 export interface IPlotsTabProps {
@@ -1062,22 +1062,54 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 this._selectedOptionValue = o && o.value;
             },
             get _selectedOptionValue() {
-                return self.props.urlWrapper.query.plots_coloring_selection;
+                return self.props.urlWrapper.query.plots_coloring_selection
+                    .selectedOption;
             },
             set _selectedOptionValue(v: string | undefined) {
-                self.props.urlWrapper.updateURL({
-                    plots_coloring_selection: v,
+                self.props.urlWrapper.updateURL(currentQuery => {
+                    currentQuery.plots_coloring_selection.selectedOption = v;
+                    return currentQuery;
                 });
             },
             get logScale() {
-                return this._logScale;
+                // default false
+                return (
+                    self.props.urlWrapper.query.plots_coloring_selection
+                        .logScale === 'true'
+                );
             },
             set logScale(s: boolean) {
-                this._logScale = s;
+                self.props.urlWrapper.updateURL(currentQuery => {
+                    currentQuery.plots_coloring_selection.logScale = s.toString();
+                    return currentQuery;
+                });
             },
-            _logScale: false, // TODO: put in URL
-            colorByMutationType: true,
-            colorByCopyNumber: true,
+            get colorByMutationType() {
+                // default true
+                return (
+                    self.props.urlWrapper.query.plots_coloring_selection
+                        .colorByMutationType !== 'false'
+                );
+            },
+            set colorByMutationType(s: boolean) {
+                self.props.urlWrapper.updateURL(currentQuery => {
+                    currentQuery.plots_coloring_selection.colorByMutationType = s.toString();
+                    return currentQuery;
+                });
+            },
+            get colorByCopyNumber() {
+                // default true
+                return (
+                    self.props.urlWrapper.query.plots_coloring_selection
+                        .colorByCopyNumber !== 'false'
+                );
+            },
+            set colorByCopyNumber(s: boolean) {
+                self.props.urlWrapper.updateURL(currentQuery => {
+                    currentQuery.plots_coloring_selection.colorByCopyNumber = s.toString();
+                    return currentQuery;
+                });
+            },
             default: {
                 entrezGeneId: undefined,
             },
