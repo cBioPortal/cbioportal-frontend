@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as styles_any from './styles/styles.module.scss';
+import styles from './styles/styles.module.scss';
 import { ObservableMap, expr, toJS, computed, observable } from 'mobx';
 import { observer, Observer } from 'mobx-react';
 import { Gistic } from 'cbioportal-ts-api-client';
@@ -10,23 +10,6 @@ import classNames from 'classnames';
 import { IColumnDefMap } from '../enhancedReactTable/IEnhancedReactTableProps';
 import { toPrecision } from '../../lib/FormatUtils';
 import { getGeneSymbols, sortByCytoband } from '../../lib/GisticUtils';
-
-const styles = styles_any as {
-    GisticGeneSelector: string;
-    gisticTable: string;
-    GisticGeneToggles: string;
-    geneToggle: string;
-    selected: string;
-    notSelected: string;
-    simulateHovered: string;
-    someGenes: string;
-    showMoreLess: string;
-    moreGenes: string;
-    selectButton: string;
-    header: string;
-    amp: string;
-    del: string;
-};
 
 const DEFAULT_NUM_GENES_SHOWN = 5;
 

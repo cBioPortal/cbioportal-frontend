@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import * as React from 'react';
 import LabeledCheckbox from '../labeledCheckbox/LabeledCheckbox';
-import * as styles_any from './styles/styles.module.scss';
+import styles from './styles/styles.module.scss';
 import { action, ObservableMap, expr, toJS, computed, observable } from 'mobx';
 import { observer, Observer } from 'mobx-react';
 import EnhancedReactTable from '../enhancedReactTable/EnhancedReactTable';
@@ -10,13 +10,6 @@ import { IColumnFormatterData } from '../enhancedReactTable/IColumnFormatter';
 import { IColumnDefMap } from '../enhancedReactTable/IEnhancedReactTableProps';
 import { Td } from 'reactable';
 import { toPrecision } from '../../lib/FormatUtils';
-
-const styles = styles_any as {
-    MutSigGeneSelector: string;
-    selectButton: string;
-    selectionColumnHeader: string;
-    selectionColumnCell: string;
-};
 
 class MutSigTable extends EnhancedReactTable<MutSig> {}
 

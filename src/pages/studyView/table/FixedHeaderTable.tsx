@@ -335,7 +335,9 @@ export default class FixedHeaderTable<T> extends React.Component<
                             {selectionOperation}{' '}
                             <i
                                 className={
-                                    styles[selectionOperation.toLowerCase()]
+                                    (styles as any)[
+                                        selectionOperation.toLowerCase()
+                                    ]
                                 }
                             ></i>
                         </div>
@@ -453,7 +455,6 @@ export default class FixedHeaderTable<T> extends React.Component<
                                 this._store.dataStore.sortedFilteredData.length
                             }
                             rowGetter={this.rowGetter}
-                            className={styles.studyViewTablesBody}
                             rowClassName={this.rowClassName}
                             headerClassName={styles.headerColumn}
                             sort={this.sort}
@@ -467,7 +468,6 @@ export default class FixedHeaderTable<T> extends React.Component<
                                         label={column.name}
                                         dataKey={column.name}
                                         width={Number(column.width)}
-                                        className={styles.columnCell}
                                         headerRenderer={
                                             this.columnHeaders[index]
                                         }

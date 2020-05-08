@@ -16,6 +16,7 @@
 *pegjs
 *.template
 *.ejs
+*module.scss.d.ts
 **/generated/**
 src/shared/lib/oql/oql-parser.js
 packages/**/dist/**
