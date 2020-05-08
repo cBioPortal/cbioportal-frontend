@@ -5,6 +5,6 @@ LABEL Description="End-2-end test image for cBioPortal frontend"
 
 USER root
 
-RUN npm install --global yarn@1.21.1
+RUN npm install --global yarn@1.22.4
 
 CMD /cbioportal-frontend/end-to-end-test/local/docker/screenshottest.sh
