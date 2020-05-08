@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import * as React from 'react';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import FontAwesome from 'react-fontawesome';
-import * as styles_any from './styles/styles.module.scss';
+import styles from './styles/styles.module.scss';
 import { observer } from 'mobx-react';
 import classNames from 'classnames';
 import { FlexRow } from '../flexbox/FlexBox';
@@ -10,19 +10,6 @@ import { QueryStoreComponent } from './QueryStore';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import SectionHeader from '../sectionHeader/SectionHeader';
 import AppConfig from 'appConfig';
-
-const styles = styles_any as {
-    MolecularProfileSelector: string;
-    group: string;
-    altType: string;
-    radio: string;
-    checkbox: string;
-    infoIcon: string;
-    zScore: string;
-    groupName: string;
-    profileName: string;
-    tooltip: string;
-};
 
 @observer
 export default class MolecularProfileSelector extends QueryStoreComponent<
@@ -85,13 +72,7 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
         checked: boolean;
         isGroupToggle: boolean;
     }) => (
-        <label
-            className={classNames({
-                [styles.altType]: isGroupToggle,
-                [styles.radio]: type === 'radio',
-                [styles.checkbox]: type === 'checkbox',
-            })}
-        >
+        <label>
             <input
                 type={type}
                 checked={checked}

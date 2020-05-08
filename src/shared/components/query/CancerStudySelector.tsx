@@ -3,7 +3,7 @@ import * as React from 'react';
 import ReactDOM from 'react-dom';
 import { TypeOfCancer as CancerType } from 'cbioportal-ts-api-client';
 import { FlexCol, FlexRow } from '../flexbox/FlexBox';
-import * as styles_any from './styles/styles.module.scss';
+import styles from './styles/styles.module.scss';
 import classNames from 'classnames';
 import StudyList from './studyList/StudyList';
 import { observer, Observer } from 'mobx-react';
@@ -25,41 +25,6 @@ import Timeout = NodeJS.Timeout;
 import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
 
 const MIN_LIST_HEIGHT = 200;
-
-const styles = styles_any as {
-    SelectedStudiesWindow: string;
-    CancerStudySelector: string;
-    CancerStudySelectorHeader: string;
-    selectable: string;
-    selected: string;
-    selectedCount: string;
-    selectAll: string;
-    noData: string;
-    selectionsExist: string;
-    cancerStudyName: string;
-    cancerStudySamples: string;
-    matchingNodeText: string;
-    nonMatchingNodeText: string;
-    containsSelectedStudies: string;
-    selectCancerStudyHeader: string;
-    selectCancerStudyRow: string;
-    searchTextInput: string;
-
-    cancerStudySelectorBody: string;
-    cancerTypeListContainer: string;
-    cancerTypeList: string;
-    cancerTypeListItem: string;
-    cancerTypeListItemLabel: string;
-    cancerTypeListItemCount: string;
-    cancerStudyListContainer: string;
-    submit: string;
-
-    summaryButtonClass: string;
-    summaryButtonIconClass: string;
-    summaryButtonTextClass: string;
-
-    quickSelect: string;
-};
 
 export interface ICancerStudySelectorProps {
     style?: React.CSSProperties;
@@ -139,7 +104,6 @@ export default class CancerStudySelector extends React.Component<
             );
             let highlighted = this.logic.isHighlighted(cancerType);
             let liClassName = classNames({
-                [styles.cancerTypeListItem]: true,
                 [styles.selectable]: true,
                 [styles.selected]: selected,
                 [styles.matchingNodeText]:

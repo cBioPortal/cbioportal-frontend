@@ -1,21 +1,8 @@
 import * as React from 'react';
-import * as styles_any from './styles/styles.module.scss';
+import styles from './styles/styles.module.scss';
 import { observer } from 'mobx-react';
 import FontAwesome from 'react-fontawesome';
 import { GeneReplacement, QueryStoreComponent, Focus } from './QueryStore';
-
-const styles = styles_any as {
-    GeneSymbolValidator: string;
-    pendingMessage: string;
-    errorMessage: string;
-    validBubble: string;
-    invalidBubble: string;
-    suggestionBubble: string;
-    icon: string;
-    noChoiceLabel: string;
-    singleChoiceLabel: string;
-    multiChoiceLabel: string;
-};
 
 @observer
 export default class GenesetsValidator extends QueryStoreComponent<{}, {}> {

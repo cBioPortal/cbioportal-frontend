@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as styles_any from './styles/styles.module.scss';
+import styles from './styles/styles.module.scss';
 import * as _ from 'lodash';
 import ReactSelect from 'react-select1';
 import { observer } from 'mobx-react';
@@ -16,12 +16,6 @@ import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import SectionHeader from '../sectionHeader/SectionHeader';
 import { getFilteredCustomCaseSets } from 'shared/components/query/CaseSetSelectorUtils';
 import { ModifyQueryParams } from 'pages/resultsView/ResultsViewPageStore';
-
-const styles = styles_any as {
-    CaseSetSelector: string;
-    tooltip: string;
-    radioRow: string;
-};
 
 export type ReactSelectOption<T> = { label: React.ReactChild; value: T };
 

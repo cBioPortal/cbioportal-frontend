@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as styles_any from './styles/styles.module.scss';
+import styles from './styles/styles.module.scss';
 import { Modal } from 'react-bootstrap';
 import { observer } from 'mobx-react';
 import { computed } from 'mobx';
@@ -12,17 +12,6 @@ import GenesetsVolcanoSelector from './GenesetsVolcanoSelector';
 import SectionHeader from '../sectionHeader/SectionHeader';
 import AppConfig from 'appConfig';
 import { ServerConfigHelpers } from '../../../config/config';
-
-const styles = styles_any as {
-    GeneSetSelector: string;
-    GenesetsSelectorWindow: string;
-    GenesetsVolcanoSelectorWindow: string;
-    buttonRow: string;
-    geneSet: string;
-    empty: string;
-    notEmpty: string;
-    sectionSpinner: string;
-};
 
 export interface GenesetsSelectorProps {}
 

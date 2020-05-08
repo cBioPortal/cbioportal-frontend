@@ -10,8 +10,6 @@ import {
 } from 'cbioportal-frontend-commons';
 import SampleManager from '../SampleManager';
 
-import styles from './styles.module.scss';
-
 export type IPatientHeaderProps = {
     patient: any;
     studyId: string;
@@ -25,7 +23,7 @@ export default class PatientHeader extends React.Component<
 > {
     public render() {
         return (
-            <div className={styles.patientHeader}>
+            <div>
                 {this.props.patient &&
                     this.getOverlayTriggerPatient(
                         this.props.patient,
