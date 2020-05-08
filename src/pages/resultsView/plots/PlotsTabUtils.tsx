@@ -390,7 +390,8 @@ export function scatterPlotLegendData(
     limitValueTypes: string[],
     highlight?: (d: IPlotSampleData) => boolean,
     coloringClinicalDataCacheEntry?: ClinicalDataCacheEntry,
-    coloringClinicalDataLogScale?: boolean
+    coloringClinicalDataLogScale?: boolean,
+    highlightedCategories?: (string | string[])[] // correspond to legend data names
 ) {
     const _mutationDataExists =
         mutationDataExists.isComplete && mutationDataExists.result;
@@ -491,6 +492,17 @@ export function scatterPlotLegendData(
     );
     if (searchIndicatorLegendData) {
         legend = legend.concat(searchIndicatorLegendData);
+    }
+
+    if (highlightedCategories) {
+        legend.forEach(datum => {
+            for (const highlightedCategory of highlightedCategories) {
+                if (_.isEqual(highlightedCategory, datum.name)) {
+                    (datum as any).labels = { fontWeight: 'bold' };
+                    break;
+                }
+            }
+        });
     }
     return legend;
 }
@@ -716,6 +728,9 @@ function scatterPlotStringClinicalLegendData(
                 fill: clinicalDataCacheEntry.categoryToColor![category],
                 type: legendSymbol,
             },
+            highlight: (d: IPlotSampleData) => {
+                return d.dispClinicalValue === category;
+            },
         };
     });
     if (showNoDataElement) {
@@ -726,6 +741,9 @@ function scatterPlotStringClinicalLegendData(
                 strokeOpacity: NON_CNA_STROKE_OPACITY,
                 fill: noDataClinicalAppearance.fill,
                 type: legendSymbol,
+            },
+            highlight: (d: IPlotSampleData) => {
+                return d.dispClinicalValue === undefined;
             },
         });
     }
