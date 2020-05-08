@@ -1,19 +1,12 @@
 import * as React from 'react';
 import MobxPromise from 'mobxpromise';
 import { observer } from 'mobx-react';
-import * as styles_any from './styles.module.scss';
+import styles from './styles.module.scss';
 import classNames from 'classnames';
 import ErrorBox from '../errorBox/ErrorBox';
 import ReactElement = React.ReactElement;
 import { ThreeBounce } from 'better-react-spinkit';
 import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
-
-const styles = styles_any as {
-    SectionHeader: string;
-    error: string;
-    message: string;
-    icon: string;
-};
 
 interface ISectionHeaderProps
     extends React.DetailedHTMLProps<

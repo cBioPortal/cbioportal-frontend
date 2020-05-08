@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as styles_any from './styles/styles.module.scss';
+import styles from './styles/styles.module.scss';
 import { Modal } from 'react-bootstrap';
 import ReactSelect from 'react-select1';
 import { observer } from 'mobx-react';
@@ -21,20 +21,6 @@ import { bind } from 'bind-decorator';
 import GenesetsValidator from './GenesetsValidator';
 import FontAwesome from 'react-fontawesome';
 import GeneSymbolValidationError from './GeneSymbolValidationError';
-
-const styles = styles_any as {
-    GeneSetSelector: string;
-    MutSigGeneSelectorWindow: string;
-    GisticGeneSelectorWindow: string;
-    buttonRow: string;
-    geneSet: string;
-    empty: string;
-    notEmpty: string;
-    sectionSpinner: string;
-    learnOql: string;
-    geneCount: string;
-    icon: string;
-};
 
 @observer
 export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {

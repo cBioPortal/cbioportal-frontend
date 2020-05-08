@@ -16,16 +16,16 @@
     }
 
     &:global(.forkedMode) {
-        //> div:nth-child(2) {
-        //  margin-top:0px !important;
-        //}
+        /*> div:nth-child(2) {
+          margin-top:0px !important;
+        }*/
 
         .forkedButtons {
             margin-top: 10px;
             justify-content: center;
             align-items: center;
             > div {
-                // we have to use span to fix issue with mouseover events and disabled button controls
+                /* we have to use span to fix issue with mouseover events and disabled button controls */
             }
             a {
                 pointer-events: all !important;

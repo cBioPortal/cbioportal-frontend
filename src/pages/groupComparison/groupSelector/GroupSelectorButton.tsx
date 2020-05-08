@@ -164,8 +164,7 @@ class GroupSelectorButton extends React.Component<
                                 arrowOffsetTop={17}
                                 className={classnames(
                                     'cbioportal-frontend',
-                                    'cbioTooltip',
-                                    styles.Tooltip
+                                    'cbioTooltip'
                                 )}
                             >
                                 <div>
