@@ -278,6 +278,27 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @observable searchCase: string = '';
     @observable searchMutation: string = '';
     @observable plotExists = false;
+    @observable highlightedCategoriesMap = observable.shallowMap<{
+        name: string | string[];
+        highlight: (d: any) => boolean;
+    }>();
+
+    @autobind
+    @action
+    private onClickLegendData(ld: {
+        name: string | string[];
+        highlight: (d: any) => boolean;
+    }) {
+        const key = JSON.stringify(ld.name);
+        if (this.highlightedCategoriesMap.has(key)) {
+            this.highlightedCategoriesMap.delete(key);
+        } else {
+            this.highlightedCategoriesMap.set(key, ld);
+        }
+    }
+    @computed get highlightedCategories() {
+        return this.highlightedCategoriesMap.values().map(x => x.name);
+    }
 
     @autobind
     private getScrollPane() {
@@ -2599,11 +2620,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     }
 
     @computed get scatterPlotHighlight() {
+        // need to regenerate the function whenever these change in order to trigger immediate Victory rerender
         const searchCaseWords = this.searchCase.trim().split(/\s+/g);
         const searchMutationWords = this.searchMutationWords;
-
-        // need to regenerate the function whenever these change in order to trigger immediate Victory rerender
-        return (d: IPlotSampleData) => {
+        function searchHighlight(d: IPlotSampleData) {
             let caseMatch = false;
             for (const word of searchCaseWords) {
                 caseMatch =
@@ -2622,6 +2642,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 }
             }
             return caseMatch || mutationMatch;
+        }
+        const highlightFunctions = [
+            searchHighlight,
+            ...this.highlightedCategoriesMap.values().map(x => x.highlight),
+        ];
+        return (d: IPlotSampleData) => {
+            return _.some(highlightFunctions, f => f(d));
         };
     }
 
@@ -4043,15 +4070,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         this.coloringClinicalDataPromise &&
                                             this.coloringClinicalDataPromise
                                                 .result!,
-                                        this.coloringLogScale
+                                        this.coloringLogScale,
+                                        this.highlightedCategories
                                     )}
+                                    onClickLegendData={this.onClickLegendData}
                                     legendTitle={
-                                        '' /*
                                         this.selectedGeneForStyling
                                             ? this.selectedGeneForStyling
                                                   .hugoGeneSymbol
                                             : ''
-                                    */
                                     }
                                 />
                             );
@@ -4119,7 +4146,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         this.coloringClinicalDataPromise &&
                                             this.coloringClinicalDataPromise
                                                 .result!,
-                                        this.coloringLogScale
+                                        this.coloringLogScale,
+                                        this.highlightedCategories
                                     )}
                                     legendTitle={
                                         this.selectedGeneForStyling
@@ -4195,7 +4223,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         this.coloringClinicalDataPromise &&
                                             this.coloringClinicalDataPromise
                                                 .result!,
-                                        this.coloringLogScale
+                                        this.coloringLogScale,
+                                        this.highlightedCategories
                                     )}
                                     legendLocationWidthThreshold={
                                         LEGEND_TO_BOTTOM_WIDTH_THRESHOLD
