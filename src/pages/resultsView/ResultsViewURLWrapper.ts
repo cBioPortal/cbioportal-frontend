@@ -10,16 +10,16 @@ import {
 import AppConfig from 'appConfig';
 
 export type PlotsSelectionParam = {
-    selectedGeneOption: string;
-    selectedGenesetOption: string;
-    selectedGenericAssayOption: string;
-    dataType: string;
-    selectedDataSourceOption: string;
-    mutationCountBy: string;
-    logScale: string;
+    selectedGeneOption?: string;
+    selectedGenesetOption?: string;
+    selectedGenericAssayOption?: string;
+    dataType?: string;
+    selectedDataSourceOption?: string;
+    mutationCountBy?: string;
+    logScale?: string;
 };
 
-const PlotsSelectionParamProps: PlotsSelectionParam = {
+const PlotsSelectionParamProps: Required<PlotsSelectionParam> = {
     selectedGeneOption: '',
     selectedGenesetOption: '',
     selectedGenericAssayOption: '',
@@ -27,6 +27,20 @@ const PlotsSelectionParamProps: PlotsSelectionParam = {
     selectedDataSourceOption: '',
     mutationCountBy: '',
     logScale: '',
+};
+
+export type PlotsColoringParam = {
+    selectedOption?: string;
+    logScale?: string;
+    colorByMutationType?: string;
+    colorByCopyNumber?: string;
+};
+
+const PlotsColoringParamProps: Required<PlotsColoringParam> = {
+    selectedOption: '',
+    logScale: '',
+    colorByMutationType: '',
+    colorByCopyNumber: '',
 };
 
 export enum ResultsViewURLQueryEnum {
@@ -71,7 +85,7 @@ export enum ResultsViewURLQueryEnum {
 
 type StringValuedParams = Exclude<
     keyof typeof ResultsViewURLQueryEnum,
-    'plots_horz_selection' | 'plots_vert_selection'
+    'plots_horz_selection' | 'plots_vert_selection' | 'plots_coloring_selection'
 >;
 
 export type ResultsViewURLQuery = {
@@ -79,6 +93,7 @@ export type ResultsViewURLQuery = {
 } & {
     plots_horz_selection: PlotsSelectionParam;
     plots_vert_selection: PlotsSelectionParam;
+    plots_coloring_selection: PlotsColoringParam;
 };
 
 export default class ResultsViewURLWrapper extends URLWrapper<
@@ -115,7 +130,10 @@ export default class ResultsViewURLWrapper extends URLWrapper<
                     isSessionProp: false,
                     nestedObjectProps: PlotsSelectionParamProps,
                 },
-                plots_coloring_selection: { isSessionProp: false },
+                plots_coloring_selection: {
+                    isSessionProp: false,
+                    nestedObjectProps: PlotsColoringParamProps,
+                },
 
                 // session props here
                 gene_list: { isSessionProp: true, doubleURIEncode: true },
