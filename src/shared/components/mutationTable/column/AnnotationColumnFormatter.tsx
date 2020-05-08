@@ -32,6 +32,7 @@ export default class AnnotationColumnFormatter {
         hotspotData?: RemoteData<IHotspotIndex | undefined>,
         myCancerGenomeData?: IMyCancerGenomeData,
         oncoKbData?: RemoteData<IOncoKbData | Error | undefined>,
+        usingPublicOncoKbInstance?: boolean,
         civicGenes?: RemoteData<ICivicGene | undefined>,
         civicVariants?: RemoteData<ICivicVariant | undefined>,
         resolveTumorType?: (mutation: Mutation) => string
@@ -42,6 +43,7 @@ export default class AnnotationColumnFormatter {
             hotspotData,
             myCancerGenomeData,
             oncoKbData,
+            usingPublicOncoKbInstance,
             civicGenes,
             civicVariants,
             resolveTumorType
@@ -56,6 +58,7 @@ export default class AnnotationColumnFormatter {
         hotspotData?: RemoteData<IHotspotIndex | undefined>,
         myCancerGenomeData?: IMyCancerGenomeData,
         oncoKbData?: RemoteData<IOncoKbData | Error | undefined>,
+        usingPublicOncoKbInstance?: boolean,
         civicGenes?: RemoteData<ICivicGene | undefined>,
         civicVariants?: RemoteData<ICivicVariant | undefined>,
         resolveTumorType?: (mutation: Mutation) => string
@@ -66,6 +69,7 @@ export default class AnnotationColumnFormatter {
             hotspotData,
             myCancerGenomeData,
             oncoKbData,
+            usingPublicOncoKbInstance,
             civicGenes,
             civicVariants,
             resolveTumorType

@@ -14,6 +14,7 @@ import {
 import { levelIconClassNames } from '../../util/OncoKbUtils';
 
 export type OncoKbSummaryTableProps = {
+    usingPublicOncoKbInstance: boolean;
     data: OncoKbSummary[];
     initialSortColumn?: string;
     initialSortDirection?: 'asc' | 'desc';
@@ -52,7 +53,7 @@ export default class OncoKbSummaryTable extends React.Component<
 
     @computed
     get columns(): Column[] {
-        return [
+        let columns: Column[] = [
             {
                 id: 'proteinChange',
                 accessor: 'proteinChange',
@@ -89,7 +90,9 @@ export default class OncoKbSummaryTable extends React.Component<
                 sortMethod: defaultStringArraySortMethod,
                 minWidth: 150,
             },
-            {
+        ];
+        if (!this.props.usingPublicOncoKbInstance) {
+            columns.push({
                 id: 'level',
                 accessor: 'level',
                 Header: 'Level',
@@ -125,8 +128,9 @@ export default class OncoKbSummaryTable extends React.Component<
                     </React.Fragment>
                 ),
                 minWidth: this.hasLevelData ? 180 : 50,
-            },
-        ];
+            });
+        }
+        return columns;
     }
 
     public render() {

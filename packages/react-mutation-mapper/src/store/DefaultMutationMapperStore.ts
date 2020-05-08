@@ -7,7 +7,11 @@ import {
     uniqueGenomicLocations,
 } from 'cbioportal-utils';
 import { Gene, Mutation } from 'cbioportal-utils';
-import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
+import {
+    CancerGene,
+    IndicatorQueryResp,
+    OncoKBInfo,
+} from 'oncokb-ts-api-client';
 import {
     EnsemblTranscript,
     GenomicLocation,
@@ -37,7 +41,11 @@ import {
     indexHotspotsData,
 } from '../util/CancerHotspotsUtils';
 import { fetchCivicGenes, fetchCivicVariants } from '../util/CivicUtils';
-import { ONCOKB_DEFAULT_DATA } from '../util/DataFetcherUtils';
+import {
+    ONCOKB_DEFAULT_DATA,
+    ONCOKB_DEFAULT_INFO,
+    USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
+} from '../util/DataFetcherUtils';
 import {
     applyDataFilters,
     groupDataByProteinImpactType,
@@ -779,6 +787,21 @@ class DefaultMutationMapperStore implements MutationMapperStore {
         },
         []
     );
+
+    readonly oncoKbInfo: MobxPromise<OncoKBInfo> = remoteData(
+        {
+            invoke: () => this.dataFetcher.fetchOncoKbInfo(),
+            onError: () => ONCOKB_DEFAULT_INFO,
+        },
+        ONCOKB_DEFAULT_INFO
+    );
+
+    @computed
+    get usingPublicOncoKbInstance() {
+        return this.oncoKbInfo.result
+            ? this.oncoKbInfo.result.publicInstance
+            : USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB;
+    }
 
     readonly oncoKbAnnotatedGenes: MobxPromise<{
         [entrezGeneId: number]: boolean;

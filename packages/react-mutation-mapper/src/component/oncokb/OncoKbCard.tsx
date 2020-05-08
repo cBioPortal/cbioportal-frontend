@@ -1,4 +1,4 @@
-import { getNCBIlink } from 'cbioportal-frontend-commons';
+import { DefaultTooltip, getNCBIlink } from 'cbioportal-frontend-commons';
 import { Citations, IndicatorQueryTreatment } from 'oncokb-ts-api-client';
 import classnames from 'classnames';
 import { action, computed, observable } from 'mobx';
@@ -37,11 +37,41 @@ type OncoKbCardPropsBase = {
 };
 
 export type OncoKbCardProps =
-    | (OncoKbCardPropsBase & { geneNotExist: boolean; isCancerGene: boolean })
+    | (OncoKbCardPropsBase & {
+          geneNotExist: boolean;
+          isCancerGene: boolean;
+          usingPublicOncoKbInstance: boolean;
+      })
     | (Partial<OncoKbCardPropsBase> & {
           geneNotExist: boolean;
           isCancerGene: boolean;
+          usingPublicOncoKbInstance: boolean;
       });
+
+const ONCOKB_DATA_ACCESS_PAGE_LINK =
+    'https://docs.cbioportal.org/2.4-integration-with-other-webservices/oncokb-data-access';
+
+const OncoKbMedicalDisclaimer = (
+    <p className={mainStyles.disclaimer}>
+        The information above is intended for research purposes only and should
+        not be used as a substitute for professional diagnosis and treatment.
+    </p>
+);
+
+const publicInstanceDisclaimerOverLay = (
+    <div>
+        <p>
+            This instance of cBioPortal does not currently have a license for
+            full OncoKB content and is therefore missing therapeutic
+            implications. To obtain a license, please follow{' '}
+            <a href={ONCOKB_DATA_ACCESS_PAGE_LINK} target={'_blank'}>
+                these instructions
+            </a>
+            .
+        </p>
+        {OncoKbMedicalDisclaimer}
+    </div>
+);
 
 @observer
 export default class OncoKbCard extends React.Component<OncoKbCardProps> {
@@ -220,27 +250,65 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps> {
                                                     }
                                                 )}
                                             </p>
-                                            <p style={{ marginBottom: 0 }}>
-                                                {this.props.tumorTypeSummary}
-                                            </p>
+                                            {this.props
+                                                .usingPublicOncoKbInstance ? (
+                                                <p
+                                                    className={
+                                                        mainStyles.disclaimer
+                                                    }
+                                                >
+                                                    Therapeutic levels are not
+                                                    available in this instance
+                                                    of cBioPortal.{' '}
+                                                    <DefaultTooltip
+                                                        overlayStyle={{
+                                                            maxWidth: 400,
+                                                        }}
+                                                        overlay={
+                                                            publicInstanceDisclaimerOverLay
+                                                        }
+                                                    >
+                                                        <i
+                                                            className={
+                                                                'fa fa-info-circle'
+                                                            }
+                                                        ></i>
+                                                    </DefaultTooltip>
+                                                </p>
+                                            ) : (
+                                                <>
+                                                    <p>
+                                                        {
+                                                            this.props
+                                                                .tumorTypeSummary
+                                                        }
+                                                    </p>
 
-                                            {this.props.treatments!.length >
-                                                0 && (
-                                                <div style={{ marginTop: 10 }}>
-                                                    <OncoKbTreatmentTable
-                                                        variant={
-                                                            this.props
-                                                                .variant || ''
-                                                        }
-                                                        pmidData={
-                                                            this.props.pmidData!
-                                                        }
-                                                        treatments={
-                                                            this.props
-                                                                .treatments!
-                                                        }
-                                                    />
-                                                </div>
+                                                    {this.props.treatments!
+                                                        .length > 0 && (
+                                                        <div
+                                                            style={{
+                                                                marginTop: 10,
+                                                            }}
+                                                        >
+                                                            <OncoKbTreatmentTable
+                                                                variant={
+                                                                    this.props
+                                                                        .variant ||
+                                                                    ''
+                                                                }
+                                                                pmidData={
+                                                                    this.props
+                                                                        .pmidData!
+                                                                }
+                                                                treatments={
+                                                                    this.props
+                                                                        .treatments!
+                                                                }
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </>
                                             )}
                                         </div>
                                     </div>
@@ -293,62 +361,73 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps> {
                                 )}
                             </div>
 
-                            <div className={mainStyles.disclaimer}>
-                                <span>
-                                    The information above is intended for
-                                    research purposes only and should not be
-                                    used as a substitute for professional
-                                    diagnosis and treatment.
-                                </span>
-                            </div>
-
-                            <div>
-                                <div
-                                    className={
-                                        collapsibleStyles['collapsible-header']
-                                    }
-                                    onClick={this.handleLevelCollapse}
-                                >
-                                    Levels
-                                    <span style={{ float: 'right' }}>
-                                        {this.levelsCollapsed ? (
-                                            <i
-                                                className={classnames(
-                                                    'fa fa-chevron-down',
-                                                    mainStyles['orange-icon']
-                                                )}
-                                            />
-                                        ) : (
-                                            <i
-                                                className={classnames(
-                                                    'fa fa-chevron-up',
-                                                    mainStyles['orange-icon']
-                                                )}
-                                            />
-                                        )}
-                                    </span>
-                                </div>
-                                <Collapse isOpened={!this.levelsCollapsed}>
-                                    <div
-                                        className={classnames(
-                                            levelStyles.levels,
-                                            collapsibleStyles['levels-collapse']
-                                        )}
-                                    >
-                                        <ul
-                                            style={{
-                                                lineHeight: 8,
-                                                padding: 0,
-                                            }}
-                                        >
-                                            {this.generateLevelRows(
-                                                OncoKbHelper.LEVELS,
-                                                OncoKbHelper.LEVEL_DESC
-                                            )}
-                                        </ul>
+                            {this.props.usingPublicOncoKbInstance ? (
+                                <></>
+                            ) : (
+                                <>
+                                    {/*Use tab pane style for the disclaimer to keep the consistency since the info is attached right under the tab pane*/}
+                                    <div className={tabsStyles['tab-pane']}>
+                                        {OncoKbMedicalDisclaimer}
                                     </div>
-                                </Collapse>
-                            </div>
+                                    <div>
+                                        <div
+                                            className={
+                                                collapsibleStyles[
+                                                    'collapsible-header'
+                                                ]
+                                            }
+                                            onClick={this.handleLevelCollapse}
+                                        >
+                                            Levels of Evidence
+                                            <span style={{ float: 'right' }}>
+                                                {this.levelsCollapsed ? (
+                                                    <i
+                                                        className={classnames(
+                                                            'fa fa-chevron-down',
+                                                            mainStyles[
+                                                                'orange-icon'
+                                                            ]
+                                                        )}
+                                                    />
+                                                ) : (
+                                                    <i
+                                                        className={classnames(
+                                                            'fa fa-chevron-up',
+                                                            mainStyles[
+                                                                'orange-icon'
+                                                            ]
+                                                        )}
+                                                    />
+                                                )}
+                                            </span>
+                                        </div>
+                                        <Collapse
+                                            isOpened={!this.levelsCollapsed}
+                                        >
+                                            <div
+                                                className={classnames(
+                                                    levelStyles.levels,
+                                                    collapsibleStyles[
+                                                        'levels-collapse'
+                                                    ]
+                                                )}
+                                            >
+                                                <ul
+                                                    style={{
+                                                        lineHeight: 8,
+                                                        padding: 0,
+                                                    }}
+                                                >
+                                                    {this.generateLevelRows(
+                                                        OncoKbHelper.LEVELS,
+                                                        OncoKbHelper.LEVEL_DESC
+                                                    )}
+                                                </ul>
+                                            </div>
+                                        </Collapse>
+                                    </div>
+                                </>
+                            )}
                         </span>
                     )}
                     {!this.props.isCancerGene && (

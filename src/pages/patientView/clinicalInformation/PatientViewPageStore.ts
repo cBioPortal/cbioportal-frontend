@@ -50,6 +50,7 @@ import {
     IHotspotIndex,
     IMyCancerGenomeData,
     indexHotspotsData,
+    ONCOKB_DEFAULT_INFO,
 } from 'react-mutation-mapper';
 import { ClinicalInformationData } from 'shared/model/ClinicalInformation';
 import VariantCountCache from 'shared/cache/VariantCountCache';
@@ -75,6 +76,7 @@ import {
     fetchMutSigData,
     fetchOncoKbCancerGenes,
     fetchOncoKbData,
+    fetchOncoKbInfo,
     fetchReferenceGenomeGenes,
     fetchSamplesForPatient,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData,
@@ -127,6 +129,7 @@ import { getGeneFilterDefault } from './PatientViewPageStoreUtil';
 import { checkNonProfiledGenesExist } from '../PatientViewPageUtils';
 import autobind from 'autobind-decorator';
 import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mutationMapper/MutationMapperUtils';
+import { USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB } from 'react-mutation-mapper';
 
 type PageMode = 'patient' | 'sample';
 
@@ -1060,6 +1063,25 @@ export class PatientViewPageStore {
         },
         []
     );
+
+    readonly oncoKbInfo = remoteData(
+        {
+            invoke: () => {
+                if (AppConfig.serverConfig.show_oncokb) {
+                    return fetchOncoKbInfo();
+                } else {
+                    return Promise.resolve(ONCOKB_DEFAULT_INFO);
+                }
+            },
+        },
+        ONCOKB_DEFAULT_INFO
+    );
+
+    @computed get usingPublicOncoKbInstance() {
+        return this.oncoKbInfo.result
+            ? this.oncoKbInfo.result.publicInstance
+            : USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB;
+    }
 
     readonly oncoKbAnnotatedGenes = remoteData(
         {
