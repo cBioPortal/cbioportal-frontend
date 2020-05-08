@@ -57,7 +57,11 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     zIndexSortBy?: ((d: D) => any)[]; // second argument to _.sortBy
     symbol?: string | ((d: D) => string); // see http://formidable.com/open-source/victory/docs/victory-scatter/#symbol for options
     tooltip?: (d: D) => JSX.Element;
-    legendData?: { name: string | string[]; symbol: any }[]; // see http://formidable.com/open-source/victory/docs/victory-legend/#data
+    legendData?: {
+        name: string | string[];
+        symbol: any;
+        highlight?: (d: D) => boolean;
+    }[]; // highlight is required if onClickLegendData is given
     correlation?: {
         pearson: number;
         spearman: number;
@@ -71,6 +75,10 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     axisLabelY?: string;
     fontFamily?: string;
     legendTitle?: string;
+    onClickLegendData?: (ld: {
+        name: string | string[];
+        highlight: (d: D) => boolean;
+    }) => void;
 }
 // constants related to the gutter
 const GUTTER_TEXT_STYLE = {
@@ -273,6 +281,26 @@ export default class ScatterPlot<
             }
             return (
                 <VictoryLegend
+                    events={
+                        this.props.onClickLegendData && [
+                            {
+                                childName: 'all',
+                                target: ['data', 'labels'],
+                                eventHandlers: {
+                                    onClick: () => [
+                                        {
+                                            target: 'data',
+                                            mutation: (props: any) => {
+                                                this.props.onClickLegendData!(
+                                                    props.data[props.index]
+                                                );
+                                            },
+                                        },
+                                    ],
+                                },
+                            },
+                        ]
+                    }
                     orientation={
                         this.legendLocation === 'right'
                             ? 'vertical'
