@@ -5,6 +5,7 @@ var ProgressBarPlugin = require('progress-bar-webpack-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 var ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 var TerserPlugin = require('terser-webpack-plugin');
+var { TypedCssModulesPlugin } = require('typed-css-modules-webpack-plugin');
 
 var commit = '"unknown"';
 var version = '"unknown"';
@@ -180,6 +181,9 @@ var config = {
                 to: 'reactapp/prefixed-bootstrap.min.css.map',
             },
         ]), // destination is relative to dist directory
+        new TypedCssModulesPlugin({
+            globPattern: 'src/**/*.module.scss',
+        }),
     ],
 
     module: {

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import CancerStudySelector from './CancerStudySelector';
 import { FlexCol, FlexRow } from '../flexbox/FlexBox';
-import * as styles_any from './styles/styles.module.scss';
+import styles from './styles/styles.module.scss';
 import MolecularProfileSelector from './MolecularProfileSelector';
 import { observer } from 'mobx-react';
 import DataTypePrioritySelector from './DataTypePrioritySelector';
@@ -24,21 +24,6 @@ import { StudySelectorStats } from 'shared/components/query/StudySelectorStats';
 import $ from 'jquery';
 import { serializeEvent } from 'shared/lib/tracking';
 import { ModifyQueryParams } from 'pages/resultsView/ResultsViewPageStore';
-
-const styles = styles_any as {
-    QueryContainer: string;
-    StudySelection: string;
-    queryContainerContent: string;
-    errorMessage: string;
-    oqlMessage: string;
-    downloadSubmitExplanation: string;
-    transposeDataMatrix: string;
-    submitRow: string;
-    submit: string;
-    genomeSpace: string;
-    forkedButtons: string;
-    studyName: string;
-};
 
 interface QueryContainerProps {
     store: QueryStore;

@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import * as React from 'react';
-import * as styles_any from './styles/styles.module.scss';
+import styles from './styles/styles.module.scss';
 import { QueryStore, QueryStoreComponent } from './QueryStore';
 import { toJS } from 'mobx';
 import { observer } from 'mobx-react';
@@ -9,11 +9,6 @@ import SectionHeader from '../sectionHeader/SectionHeader';
 import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewPageStore';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
-
-const styles = styles_any as {
-    DataTypePrioritySelector: string;
-    DataTypePriorityLabel: string;
-};
 
 @observer
 export default class DataTypePrioritySelector extends QueryStoreComponent<

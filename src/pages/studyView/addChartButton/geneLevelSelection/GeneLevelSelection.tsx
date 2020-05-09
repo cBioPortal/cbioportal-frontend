@@ -211,7 +211,7 @@ export default class GeneLevelSelection extends React.Component<
             </div>
         ),
         renderError: () => (
-            <div className={styles.noGroupsMessage}>
+            <div>
                 <ErrorMessage
                     message={
                         'There was an error loading saved groups. Please try again.'

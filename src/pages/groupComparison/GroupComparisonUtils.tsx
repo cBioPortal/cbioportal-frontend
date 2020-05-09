@@ -518,12 +518,17 @@ export function getDefaultGroupName(
         .flatMapDeep(geneFilter => geneFilter.geneQueries)
         .value();
 
+    const caseListsFilters = _.chain(filters.caseLists || [])
+        .flatMapDeep(caseList => caseList)
+        .value();
+
     const genomicProfileFilters = _.flatMapDeep(filters.genomicProfiles || []);
 
     return geneFilters
         .concat(equalityFilters)
         .concat(customChartValues)
         .concat(genomicProfileFilters)
+        .concat(caseListsFilters)
         .join(', '); // comma separate each attributes values
 }
 

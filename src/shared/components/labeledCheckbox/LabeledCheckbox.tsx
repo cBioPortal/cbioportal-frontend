@@ -1,11 +1,7 @@
 import * as React from 'react';
-import * as styles_any from './styles.module.scss';
+import styles from './styles.module.scss';
 import classNames from 'classnames';
 import ChangeEventHandler = React.ChangeEventHandler;
-
-const styles = styles_any as {
-    labeledCheckbox: string;
-};
 
 export interface ILabeledCheckboxProps {
     checked?: boolean;

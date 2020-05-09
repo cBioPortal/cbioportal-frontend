@@ -46,7 +46,7 @@ export default class PolyPhen2 extends React.Component<IPolyPhen2Props, {}> {
                 <span
                     className={classNames(
                         annotationStyles['annotation-item-text'],
-                        tooltipStyles[
+                        (tooltipStyles as any)[
                             `polyPhen2-${this.props.polyPhenPrediction}`
                         ]
                     )}
@@ -89,7 +89,7 @@ export default class PolyPhen2 extends React.Component<IPolyPhen2Props, {}> {
                         <td>
                             <span
                                 className={
-                                    tooltipStyles[
+                                    (tooltipStyles as any)[
                                         `polyPhen2-${this.props.polyPhenPrediction}`
                                     ]
                                 }

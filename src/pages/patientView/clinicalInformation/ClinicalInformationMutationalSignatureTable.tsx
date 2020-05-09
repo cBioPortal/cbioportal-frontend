@@ -143,7 +143,6 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
             <MutationalSignatureTable
                 columns={this.columns}
                 data={this.tableData}
-                className={styles.mutationalSignatureTable}
                 showPagination={false}
                 initialItemsPerPage={SHOW_ALL_PAGE_SIZE}
                 showColumnVisibility={false}

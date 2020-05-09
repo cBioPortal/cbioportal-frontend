@@ -43,7 +43,9 @@ export default class Sift extends React.Component<ISiftProps, {}> {
                 <span
                     className={classNames(
                         annotationStyles['annotation-item-text'],
-                        tooltipStyles[`sift-${this.props.siftPrediction}`]
+                        (tooltipStyles as any)[
+                            `sift-${this.props.siftPrediction}`
+                        ]
                     )}
                 >
                     <i className="fa fa-circle" aria-hidden="true"></i>
@@ -82,7 +84,7 @@ export default class Sift extends React.Component<ISiftProps, {}> {
                         <td>
                             <span
                                 className={
-                                    tooltipStyles[
+                                    (tooltipStyles as any)[
                                         `sift-${this.props.siftPrediction}`
                                     ]
                                 }
