@@ -8,6 +8,12 @@ defaults: &defaults
     # specify the version you desire here
     - image: circleci/node:12.16.0-browsers
 
+webdriver: &webdriver
+  working_directory: /tmp/repo
+  docker:
+    # specify the version you desire here
+    - image: circleci/node:8.12.0-browsers
+
 run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
   steps:
     - run:
@@ -225,7 +231,7 @@ jobs:
           command: yarn run checkIncorrectImportStatements
 
   end_to_end_tests:
-    <<: *defaults
+    <<: *webdriver
     environment:
       SPEC_FILE_PATTERN: ./remote/specs/core/**/*.spec.js
       JUNIT_REPORT_PATH: ./remote/junit/
@@ -233,7 +239,7 @@ jobs:
     <<: *run_e2e_and_save_artifacts
 
   end_to_end_tests_IE11:
-    <<: *defaults
+    <<: *webdriver
     environment:
       SPEC_FILE_PATTERN: ./ie11/specs/ie.js
       JUNIT_REPORT_PATH: ./ie11/junit/
