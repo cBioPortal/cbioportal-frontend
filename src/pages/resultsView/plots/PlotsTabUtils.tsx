@@ -66,11 +66,13 @@ import GenericAssayMolecularDataCache, {
 import {
     dataPointIsLimited,
     getJitterForCase,
+    LegendDataWithId,
 } from '../../../shared/components/plots/PlotUtils';
 import { isSampleProfiled } from '../../../shared/lib/isSampleProfiled';
 import Pluralize from 'pluralize';
 import AppConfig from 'appConfig';
 import { SpecialChartsUniqueKeyEnum } from 'pages/studyView/StudyViewUtils';
+import { observable, ObservableMap } from 'mobx';
 
 export const CLIN_ATTR_DATA_TYPE = 'clinical_attribute';
 export const GENESET_DATA_TYPE = 'GENESET_SCORE';
@@ -388,11 +390,12 @@ export function scatterPlotLegendData(
     cnaDataExists: MobxPromise<boolean>,
     driversAnnotated: boolean,
     limitValueTypes: string[],
+    highlightedLegendItems?: ObservableMap<LegendDataWithId>,
     highlight?: (d: IPlotSampleData) => boolean,
     coloringClinicalDataCacheEntry?: ClinicalDataCacheEntry,
     coloringClinicalDataLogScale?: boolean,
-    highlightedCategories?: (string | string[])[] // correspond to legend data names
-) {
+    onClickLegendItem?: (ld: LegendDataWithId) => void
+): LegendDataWithId[] {
     const _mutationDataExists =
         mutationDataExists.isComplete && mutationDataExists.result;
     const _cnaDataExists = cnaDataExists.isComplete && cnaDataExists.result;
@@ -405,7 +408,8 @@ export function scatterPlotLegendData(
             ) {
                 legend = scatterPlotStringClinicalLegendData(
                     coloringClinicalDataCacheEntry,
-                    plotType
+                    plotType,
+                    onClickLegendItem
                 );
             } else if (
                 coloringClinicalDataCacheEntry &&
@@ -420,13 +424,25 @@ export function scatterPlotLegendData(
             break;
         case ColoringType.CopyNumber:
             if (_cnaDataExists) {
-                legend = scatterPlotCnaLegendData(data, plotType);
+                legend = scatterPlotCnaLegendData(
+                    data,
+                    plotType,
+                    onClickLegendItem
+                );
             }
             break;
         case ColoringType.LimitValCopyNumber:
             if (_cnaDataExists) {
-                legend = scatterPlotCnaLegendData(data, plotType).concat(
-                    scatterPlotLimitValLegendData(plotType, limitValueTypes)
+                legend = scatterPlotCnaLegendData(
+                    data,
+                    plotType,
+                    onClickLegendItem
+                ).concat(
+                    scatterPlotLimitValLegendData(
+                        plotType,
+                        limitValueTypes,
+                        onClickLegendItem
+                    )
                 );
             }
             break;
@@ -436,9 +452,14 @@ export function scatterPlotLegendData(
                     data,
                     driversAnnotated,
                     true,
-                    plotType
+                    plotType,
+                    onClickLegendItem
                 ).concat(
-                    scatterPlotLimitValLegendData(plotType, limitValueTypes)
+                    scatterPlotLimitValLegendData(
+                        plotType,
+                        limitValueTypes,
+                        onClickLegendItem
+                    )
                 );
             }
             break;
@@ -448,13 +469,18 @@ export function scatterPlotLegendData(
                     data,
                     driversAnnotated,
                     true,
-                    plotType
+                    plotType,
+                    onClickLegendItem
                 );
             }
             break;
         case ColoringType.MutationSummary:
             if (_mutationDataExists) {
-                legend = scatterPlotMutationSummaryLegendData(data, plotType);
+                legend = scatterPlotMutationSummaryLegendData(
+                    data,
+                    plotType,
+                    onClickLegendItem
+                );
             }
             break;
         case ColoringType.MutationTypeAndCopyNumber:
@@ -463,8 +489,11 @@ export function scatterPlotLegendData(
                     data,
                     driversAnnotated,
                     false,
-                    plotType
-                ).concat(scatterPlotCnaLegendData(data, plotType));
+                    plotType,
+                    onClickLegendItem
+                ).concat(
+                    scatterPlotCnaLegendData(data, plotType, onClickLegendItem)
+                );
             }
             break;
         case ColoringType.LimitValMutationTypeAndCopyNumber:
@@ -473,16 +502,31 @@ export function scatterPlotLegendData(
                     data,
                     driversAnnotated,
                     false,
-                    plotType
+                    plotType,
+                    onClickLegendItem
                 )
-                    .concat(scatterPlotCnaLegendData(data, plotType))
                     .concat(
-                        scatterPlotLimitValLegendData(plotType, limitValueTypes)
+                        scatterPlotCnaLegendData(
+                            data,
+                            plotType,
+                            onClickLegendItem
+                        )
+                    )
+                    .concat(
+                        scatterPlotLimitValLegendData(
+                            plotType,
+                            limitValueTypes,
+                            onClickLegendItem
+                        )
                     );
             }
             break;
         case ColoringType.LimitVal:
-            legend = scatterPlotLimitValLegendData(plotType, limitValueTypes);
+            legend = scatterPlotLimitValLegendData(
+                plotType,
+                limitValueTypes,
+                onClickLegendItem
+            );
             break;
     }
     const searchIndicatorLegendData = scatterPlotSearchIndicatorLegendData(
@@ -494,14 +538,18 @@ export function scatterPlotLegendData(
         legend = legend.concat(searchIndicatorLegendData);
     }
 
-    if (highlightedCategories) {
+    // add highlighting styles
+    if (highlightedLegendItems) {
         legend.forEach(datum => {
-            for (const highlightedCategory of highlightedCategories) {
-                if (_.isEqual(highlightedCategory, datum.name)) {
-                    (datum as any).labels = { fontWeight: 'bold' };
-                    break;
+            const labels: any = {};
+            if (datum.highlighting) {
+                labels.cursor = 'pointer';
+                datum.symbol.cursor = 'pointer';
+                if (highlightedLegendItems.has(datum.highlighting.uid)) {
+                    labels.fontWeight = 'bold';
                 }
             }
+            datum.labels = labels;
         });
     }
     return legend;
@@ -509,8 +557,9 @@ export function scatterPlotLegendData(
 
 function scatterPlotMutationSummaryLegendData(
     data: IPlotSampleData[],
-    plotType: PlotType
-) {
+    plotType: PlotType,
+    onClick?: (ld: LegendDataWithId) => void
+): LegendDataWithId[] {
     // set plot type-dependent legend properties
     const legendSymbol =
         plotType === PlotType.WaterfallPlot ? 'square' : 'circle';
@@ -529,7 +578,7 @@ function scatterPlotMutationSummaryLegendData(
         .value();
     // no data, not profiled
 
-    const legendData: any[] = mutationSummaryLegendOrder
+    const legendData: LegendDataWithId[] = mutationSummaryLegendOrder
         .filter(x => unique.indexOf(x) > -1)
         .map((x: MutationSummary) => {
             const appearance = mutationSummaryToAppearance[x];
@@ -545,6 +594,13 @@ function scatterPlotMutationSummaryLegendData(
                     fill: appearance.fill,
                     type: legendSymbol,
                 },
+                highlighting: onClick && {
+                    uid: appearance.legendLabel,
+                    isDatumHighlighted: (d: IPlotSampleData) => {
+                        return d.dispMutationSummary === x;
+                    },
+                    onClick,
+                },
             };
         });
     if (showNotProfiledElement) {
@@ -558,6 +614,13 @@ function scatterPlotMutationSummaryLegendData(
                 fill: notProfiledMutationsAppearance.fill,
                 type: legendSymbol,
             },
+            highlighting: onClick && {
+                uid: JSON.stringify(NOT_PROFILED_MUTATION_LEGEND_LABEL),
+                isDatumHighlighted: (d: IPlotSampleData) => {
+                    return !d.profiledMutations;
+                },
+                onClick,
+            },
         });
     }
     return legendData;
@@ -567,8 +630,9 @@ function scatterPlotMutationLegendData(
     data: IPlotSampleData[],
     driversAnnotated: boolean,
     showStroke: boolean,
-    plotType: PlotType
-) {
+    plotType: PlotType,
+    onClick?: (ld: LegendDataWithId) => void
+): LegendDataWithId[] {
     const oncoprintMutationTypeToAppearance = driversAnnotated
         ? oncoprintMutationTypeToAppearanceDrivers
         : oncoprintMutationTypeToAppearanceDefault;
@@ -593,7 +657,7 @@ function scatterPlotMutationLegendData(
         .keyBy(x => x)
         .value();
 
-    const legendData: any[] = _.chain(mutationLegendOrder)
+    const legendData: LegendDataWithId[] = _.chain(mutationLegendOrder)
         .filter(type => !!uniqueMutations[type])
         .map(type => {
             const appearance = oncoprintMutationTypeToAppearance[type];
@@ -612,6 +676,13 @@ function scatterPlotMutationLegendData(
                     strokeOpacity: showStroke ? appearance.strokeOpacity : 0,
                     fill: appearance.fill,
                     type: legendSymbol,
+                },
+                highlighting: onClick && {
+                    uid: appearance.legendLabel,
+                    isDatumHighlighted: (d: IPlotSampleData) => {
+                        return d.dispMutationType === type;
+                    },
+                    onClick,
                 },
             };
         })
@@ -635,6 +706,13 @@ function scatterPlotMutationLegendData(
                 fill: noMutationAppearance.fill,
                 type: legendSymbol,
             },
+            highlighting: onClick && {
+                uid: noMutationAppearance.legendLabel,
+                isDatumHighlighted: (d: IPlotSampleData) => {
+                    return !!(d.profiledMutations && !d.dispMutationType);
+                },
+                onClick,
+            },
         });
     }
     if (showNotProfiledElement) {
@@ -649,6 +727,13 @@ function scatterPlotMutationLegendData(
                 fill: notProfiledMutationsAppearance.fill,
                 type: legendSymbol,
             },
+            highlighting: onClick && {
+                uid: JSON.stringify(NOT_PROFILED_MUTATION_LEGEND_LABEL),
+                isDatumHighlighted: (d: IPlotSampleData) => {
+                    return !d.profiledMutations;
+                },
+                onClick,
+            },
         });
     }
     return legendData;
@@ -657,8 +742,8 @@ function scatterPlotMutationLegendData(
 function scatterPlotLimitValLegendData(
     plotType: PlotType,
     limitValueTypes: string[]
-) {
-    const legendData: any[] = [];
+): LegendDataWithId[] {
+    const legendData: LegendDataWithId[] = [];
 
     if (limitValueTypes && limitValueTypes.length > 0) {
         const fillOpacity = plotType === PlotType.WaterfallPlot ? 0 : 1;
@@ -683,7 +768,7 @@ function scatterPlotSearchIndicatorLegendData(
     data: IPlotSampleData[],
     plotType: PlotType,
     highlight?: (d: IPlotSampleData) => boolean
-) {
+): LegendDataWithId | undefined {
     if (
         plotType === PlotType.WaterfallPlot &&
         highlight &&
@@ -705,8 +790,9 @@ function scatterPlotSearchIndicatorLegendData(
 
 function scatterPlotStringClinicalLegendData(
     clinicalDataCacheEntry: ClinicalDataCacheEntry,
-    plotType: PlotType
-) {
+    plotType: PlotType,
+    onClick?: (ld: LegendDataWithId) => void
+): LegendDataWithId[] {
     const showNoDataElement = true;
 
     // set plot type-dependent legend properties
@@ -728,8 +814,12 @@ function scatterPlotStringClinicalLegendData(
                 fill: clinicalDataCacheEntry.categoryToColor![category],
                 type: legendSymbol,
             },
-            highlight: (d: IPlotSampleData) => {
-                return d.dispClinicalValue === category;
+            highlighting: onClick && {
+                uid: category,
+                isDatumHighlighted: (d: IPlotSampleData) => {
+                    return d.dispClinicalValue === category;
+                },
+                onClick,
             },
         };
     });
@@ -742,8 +832,12 @@ function scatterPlotStringClinicalLegendData(
                 fill: noDataClinicalAppearance.fill,
                 type: legendSymbol,
             },
-            highlight: (d: IPlotSampleData) => {
-                return d.dispClinicalValue === undefined;
+            highlighting: onClick && {
+                uid: NO_DATA_CLINICAL_LEGEND_LABEL,
+                isDatumHighlighted: (d: IPlotSampleData) => {
+                    return d.dispClinicalValue === undefined;
+                },
+                onClick,
             },
         });
     }
@@ -754,7 +848,7 @@ function scatterPlotNumericalClinicalLegendData(
     clinicalDataCacheEntry: ClinicalDataCacheEntry,
     plotType: PlotType,
     logScale?: boolean
-) {
+): LegendDataWithId[] {
     const valueRange = clinicalDataCacheEntry.numericalValueRange;
     if (!valueRange) {
         return [];
@@ -766,7 +860,7 @@ function scatterPlotNumericalClinicalLegendData(
     const legendSymbol =
         plotType === PlotType.WaterfallPlot ? 'square' : 'circle';
 
-    const legendData: any[] = valueRange.map(x => {
+    const legendData: LegendDataWithId[] = valueRange.map(x => {
         return {
             name: x.toFixed(2),
             symbol: {
@@ -803,7 +897,11 @@ function scatterPlotNumericalClinicalLegendData(
     return legendData;
 }
 
-function scatterPlotCnaLegendData(data: IPlotSampleData[], plotType: PlotType) {
+function scatterPlotCnaLegendData(
+    data: IPlotSampleData[],
+    plotType: PlotType,
+    onClick?: (ld: LegendDataWithId) => void
+): LegendDataWithId[] {
     let showNotProfiledElement = false;
 
     // set plot type-dependent legend properties
@@ -829,7 +927,7 @@ function scatterPlotCnaLegendData(data: IPlotSampleData[], plotType: PlotType) {
         .sortBy((v: number) => -v) // sorted descending
         .value();
 
-    const legendData: any[] = uniqueDispCna.map(v => {
+    const legendData: LegendDataWithId[] = uniqueDispCna.map(v => {
         const appearance = cnaToAppearance[v as -2 | -1 | 0 | 1 | 2];
         return {
             name: appearance.legendLabel,
@@ -839,6 +937,13 @@ function scatterPlotCnaLegendData(data: IPlotSampleData[], plotType: PlotType) {
                 fill: appearance.stroke, // for waterfall plot
                 type: legendSymbol,
                 strokeWidth: CNA_STROKE_WIDTH,
+            },
+            highlighting: onClick && {
+                uid: appearance.legendLabel,
+                isDatumHighlighted: (d: IPlotSampleData) => {
+                    return !!(d.dispCna && d.dispCna.value === v);
+                },
+                onClick,
             },
         };
     });
@@ -851,6 +956,13 @@ function scatterPlotCnaLegendData(data: IPlotSampleData[], plotType: PlotType) {
                 fill: notProfiledCnaAppearance.stroke, // for waterfall plot
                 type: legendSymbol,
                 strokeWidth: CNA_STROKE_WIDTH,
+            },
+            highlighting: onClick && {
+                uid: NO_DATA_CLINICAL_LEGEND_LABEL,
+                isDatumHighlighted: (d: IPlotSampleData) => {
+                    return !d.profiledCna || !d.dispCna;
+                },
+                onClick,
             },
         });
     }

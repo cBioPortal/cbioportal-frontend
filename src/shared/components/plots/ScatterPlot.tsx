@@ -24,6 +24,7 @@ import {
     makeScatterPlotSizeFunction,
     separateScatterDataByAppearance,
     dataPointIsLimited,
+    LegendDataWithId,
 } from './PlotUtils';
 import { clamp, toConditionalPrecision } from '../../lib/NumberUtils';
 import { getRegressionComputations } from './ScatterPlotUtils';
@@ -57,11 +58,7 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     zIndexSortBy?: ((d: D) => any)[]; // second argument to _.sortBy
     symbol?: string | ((d: D) => string); // see http://formidable.com/open-source/victory/docs/victory-scatter/#symbol for options
     tooltip?: (d: D) => JSX.Element;
-    legendData?: {
-        name: string | string[];
-        symbol: any;
-        highlight?: (d: D) => boolean;
-    }[]; // highlight is required if onClickLegendData is given
+    legendData?: LegendDataWithId<D>[];
     correlation?: {
         pearson: number;
         spearman: number;
@@ -75,10 +72,6 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     axisLabelY?: string;
     fontFamily?: string;
     legendTitle?: string;
-    onClickLegendData?: (ld: {
-        name: string | string[];
-        highlight: (d: D) => boolean;
-    }) => void;
 }
 // constants related to the gutter
 const GUTTER_TEXT_STYLE = {
@@ -269,38 +262,40 @@ export default class ScatterPlot<
             if (this.legendLocation === 'bottom') {
                 // if legend is at bottom then flatten labels
                 legendData = legendData.map(x => {
-                    let name = x.name;
-                    if (Array.isArray(x.name)) {
+                    let { name, ...rest } = x;
+                    if (Array.isArray(name)) {
                         name = (name as string[]).join(' '); // flatten labels by joining with space
                     }
                     return {
                         name,
-                        symbol: x.symbol,
+                        ...rest,
                     };
                 });
             }
             return (
                 <VictoryLegend
-                    events={
-                        this.props.onClickLegendData && [
-                            {
-                                childName: 'all',
-                                target: ['data', 'labels'],
-                                eventHandlers: {
-                                    onClick: () => [
-                                        {
-                                            target: 'data',
-                                            mutation: (props: any) => {
-                                                this.props.onClickLegendData!(
-                                                    props.data[props.index]
+                    events={[
+                        {
+                            childName: 'all',
+                            target: ['data', 'labels'],
+                            eventHandlers: {
+                                onClick: () => [
+                                    {
+                                        target: 'data',
+                                        mutation: (props: any) => {
+                                            const datum: LegendDataWithId<D> =
+                                                props.data[props.index];
+                                            if (datum.highlighting) {
+                                                datum.highlighting.onClick(
+                                                    datum
                                                 );
-                                            },
+                                            }
                                         },
-                                    ],
-                                },
+                                    },
+                                ],
                             },
-                        ]
-                    }
+                        },
+                    ]}
                     orientation={
                         this.legendLocation === 'right'
                             ? 'vertical'
