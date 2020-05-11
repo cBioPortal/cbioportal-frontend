@@ -13,7 +13,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
     - run:
         name: "Install yarn at specific version"
         command:
-          sudo npm install --global yarn@1.22.4
+          sudo npm install --global yarn@1.22.4 --force
     - attach_workspace:
         at: /tmp/
     - run:
@@ -67,7 +67,7 @@ run_IE11_e2e_and_save_artifacts: &run_IE11_e2e_and_save_artifacts
     - run:
         name: "Install yarn at specific version"
         command:
-          sudo npm install --global yarn@1.22.4
+          sudo npm install --global yarn@1.22.4 --force
     - attach_workspace:
         at: /tmp/
     - run:
@@ -126,7 +126,7 @@ jobs:
       - run:
           name: "Install yarn at specific version"
           command:
-            sudo npm install --global yarn@1.22.4
+            sudo npm install --global yarn@1.22.4 --force
       - run:
           name: "Show yarn and node versions"
           command: |
@@ -182,7 +182,7 @@ jobs:
       - run:
           name: "Install yarn at specific version"
           command:
-            sudo npm install --global yarn@1.22.4
+            sudo npm install --global yarn@1.22.4 --force
       - attach_workspace:
           at: /tmp/
       # run tests!
@@ -213,6 +213,10 @@ jobs:
   check_incorrect_import_statements:
     <<: *defaults
     steps:
+      - run:
+          name: "Install yarn at specific version"
+          command:
+            sudo npm install --global yarn@1.22.4 --force
       - attach_workspace:
           at: /tmp/
       # make sure that there are no relative/incorrect package imports
@@ -323,11 +327,15 @@ jobs:
   prettier:
     <<: *defaults
     steps:
-    - attach_workspace:
-        at: /tmp/
-    - run:
-        name: 'Check code style with Prettier'
-        command: cd /tmp/repo/ && yarn run prettierCheckCircleCI
+      - run:
+          name: "Install yarn at specific version"
+          command:
+            sudo npm install --global yarn@1.22.4 --force
+      - attach_workspace:
+          at: /tmp/
+      - run:
+          name: 'Check code style with Prettier'
+          command: cd /tmp/repo/ && yarn run prettierCheckCircleCI
 
 workflows:
     version: 2
