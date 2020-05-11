@@ -2936,8 +2936,9 @@ export function getScatterPlotDownloadData(
     xAxisLabel: string,
     yAxisLabel: string,
     entrezGeneIdToGene: { [entrezGeneId: number]: Gene },
-    viewMutationType?: boolean,
-    viewCopyNumber?: boolean
+    colorByMutationType?: boolean,
+    colorByCopyNumber?: boolean,
+    colorByClinicalAttribute?: ClinicalAttribute
 ) {
     const dataRows: string[] = [];
     for (const datum of data) {
@@ -2945,7 +2946,7 @@ export function getScatterPlotDownloadData(
         row.push(datum.sampleId);
         row.push(numeral(datum.x).format('0[.][000000]'));
         row.push(numeral(datum.y).format('0[.][000000]'));
-        if (viewMutationType) {
+        if (colorByMutationType) {
             if (datum.mutations.length) {
                 row.push(
                     mutationsProteinChanges(
@@ -2955,24 +2956,34 @@ export function getScatterPlotDownloadData(
                 );
             } else if (datum.profiledMutations === false) {
                 row.push('Not Profiled');
-            } else if (viewCopyNumber) {
-                // if there are no mutations but there is a CNA column to the right,
-                // add "-" to skip the Mutations column
+            } else {
                 row.push('-');
             }
         }
-        if (viewCopyNumber && datum.dispCna) {
-            const cna = (cnaToAppearance as any)[datum.dispCna.value];
-            row.push(`${datum.dispCna.hugoGeneSymbol}: ${cna.legendLabel}`);
+        if (colorByCopyNumber) {
+            if (datum.dispCna) {
+                const cna = (cnaToAppearance as any)[datum.dispCna.value];
+                row.push(`${datum.dispCna.hugoGeneSymbol}: ${cna.legendLabel}`);
+            } else if (datum.profiledCna === false) {
+                row.push(`Not Profiled`);
+            } else {
+                row.push('-');
+            }
+        }
+        if (colorByClinicalAttribute) {
+            row.push((datum.dispClinicalValue as any) || '-');
         }
         dataRows.push(row.join('\t'));
     }
     const header = ['Sample Id', xAxisLabel, yAxisLabel];
-    if (viewMutationType) {
+    if (colorByMutationType) {
         header.push('Mutations');
     }
-    if (viewCopyNumber) {
+    if (colorByCopyNumber) {
         header.push('Copy Number Alterations');
+    }
+    if (colorByClinicalAttribute) {
+        header.push(colorByClinicalAttribute.displayName);
     }
     return header.join('\t') + '\n' + dataRows.join('\n');
 }
@@ -2983,8 +2994,9 @@ export function getWaterfallPlotDownloadData(
     pivotThreshold: number,
     axisLabel: string,
     entrezGeneIdToGene: { [enstrezGeneId: number]: Gene },
-    viewMutationType?: boolean,
-    viewCopyNumber?: boolean
+    colorByMutationType?: boolean,
+    colorByCopyNumber?: boolean,
+    colorByClinicalAttribute?: ClinicalAttribute
 ) {
     let dataPoints = _.cloneDeep(data);
     dataPoints = _.sortBy(dataPoints, (d: IWaterfallPlotData) => d.value);
@@ -3000,7 +3012,7 @@ export function getWaterfallPlotDownloadData(
         row.push(numeral(datum.value).format('0[.][000000]'));
         row.push(numeral(pivotThreshold).format('0[.][000000]'));
         row.push(sortOrder || '');
-        if (viewMutationType) {
+        if (colorByMutationType) {
             if (datum.mutations.length) {
                 row.push(
                     mutationsProteinChanges(
@@ -3010,15 +3022,22 @@ export function getWaterfallPlotDownloadData(
                 ); // 4 concatenated mutations
             } else if (datum.profiledMutations === false) {
                 row.push('Not Profiled');
-            } else if (viewCopyNumber) {
-                // if there are no mutations but there is a CNA column to the right,
-                // add "-" to skip the Mutations column
+            } else {
                 row.push('-');
             }
         }
-        if (viewCopyNumber && datum.dispCna) {
-            const cna = (cnaToAppearance as any)[datum.dispCna.value];
-            row.push(`${datum.dispCna.hugoGeneSymbol}: ${cna.legendLabel}`);
+        if (colorByCopyNumber) {
+            if (datum.dispCna) {
+                const cna = (cnaToAppearance as any)[datum.dispCna.value];
+                row.push(`${datum.dispCna.hugoGeneSymbol}: ${cna.legendLabel}`);
+            } else if (datum.profiledCna === false) {
+                row.push(`Not Profiled`);
+            } else {
+                row.push('-');
+            }
+        }
+        if (colorByClinicalAttribute) {
+            row.push((datum.dispClinicalValue as any) || '-');
         }
         dataRows.push(row.join('\t'));
     }
@@ -3028,11 +3047,14 @@ export function getWaterfallPlotDownloadData(
         'pivot threshold',
         'sort order',
     ];
-    if (viewMutationType) {
+    if (colorByMutationType) {
         header.push('Mutations');
     }
-    if (viewCopyNumber) {
+    if (colorByCopyNumber) {
         header.push('Copy Number Alterations');
+    }
+    if (colorByClinicalAttribute) {
+        header.push(colorByClinicalAttribute.displayName);
     }
     return header.join('\t') + '\n' + dataRows.join('\n');
 }
@@ -3042,8 +3064,9 @@ export function getBoxPlotDownloadData(
     categoryLabel: string,
     valueLabel: string,
     entrezGeneIdToGene: { [entrezGeneId: number]: Gene },
-    viewMutationType?: boolean,
-    viewCopyNumber?: boolean
+    colorByMutationType?: boolean,
+    colorByCopyNumber?: boolean,
+    colorByClinicalAttribute?: ClinicalAttribute
 ) {
     const dataRows: string[] = [];
     for (const categoryDatum of data) {
@@ -3053,7 +3076,7 @@ export function getBoxPlotDownloadData(
             row.push(datum.sampleId);
             row.push(category);
             row.push(numeral(datum.value).format('0[.][000000]'));
-            if (viewMutationType) {
+            if (colorByMutationType) {
                 if (datum.mutations.length) {
                     row.push(
                         mutationsProteinChanges(
@@ -3063,25 +3086,37 @@ export function getBoxPlotDownloadData(
                     );
                 } else if (datum.profiledMutations === false) {
                     row.push('Not Profiled');
-                } else if (viewCopyNumber) {
-                    // if there are no mutations but there is a CNA column to the right,
-                    // add "-" to skip the Mutations column
+                } else {
                     row.push('-');
                 }
             }
-            if (viewCopyNumber && datum.dispCna) {
-                const cna = (cnaToAppearance as any)[datum.dispCna.value];
-                row.push(`${datum.dispCna.hugoGeneSymbol}: ${cna.legendLabel}`);
+            if (colorByCopyNumber) {
+                if (datum.dispCna) {
+                    const cna = (cnaToAppearance as any)[datum.dispCna.value];
+                    row.push(
+                        `${datum.dispCna.hugoGeneSymbol}: ${cna.legendLabel}`
+                    );
+                } else if (datum.profiledCna === false) {
+                    row.push(`Not Profiled`);
+                } else {
+                    row.push('-');
+                }
+            }
+            if (colorByClinicalAttribute) {
+                row.push((datum.dispClinicalValue as any) || '-');
             }
             dataRows.push(row.join('\t'));
         }
     }
     const header = ['Sample Id', categoryLabel, valueLabel];
-    if (viewMutationType) {
+    if (colorByMutationType) {
         header.push('Mutations');
     }
-    if (viewCopyNumber) {
+    if (colorByCopyNumber) {
         header.push('Copy Number Alterations');
+    }
+    if (colorByClinicalAttribute) {
+        header.push(colorByClinicalAttribute.displayName);
     }
     return header.join('\t') + '\n' + dataRows.join('\n');
 }
