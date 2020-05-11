@@ -231,7 +231,7 @@ jobs:
           command: yarn run checkIncorrectImportStatements
 
   end_to_end_tests:
-    <<: *webdriver
+    <<: *defaults
     environment:
       SPEC_FILE_PATTERN: ./remote/specs/core/**/*.spec.js
       JUNIT_REPORT_PATH: ./remote/junit/
@@ -239,7 +239,7 @@ jobs:
     <<: *run_e2e_and_save_artifacts
 
   end_to_end_tests_IE11:
-    <<: *webdriver
+    <<: *defaults
     environment:
       SPEC_FILE_PATTERN: ./ie11/specs/ie.js
       JUNIT_REPORT_PATH: ./ie11/junit/
