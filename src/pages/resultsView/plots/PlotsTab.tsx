@@ -1192,7 +1192,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 vertLabel,
                                 entrezGeneIdToGene,
                                 this.coloringMenuSelection.colorByMutationType,
-                                this.coloringMenuSelection.colorByCopyNumber
+                                this.coloringMenuSelection.colorByCopyNumber,
+                                this.coloringMenuSelection.selectedOption &&
+                                    this.coloringMenuSelection.selectedOption
+                                        .info.clinicalAttribute
                             ),
                             filename
                         );
@@ -1206,7 +1209,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 this.waterfallLabel.result!,
                                 entrezGeneIdToGene,
                                 this.coloringMenuSelection.colorByMutationType,
-                                this.coloringMenuSelection.colorByCopyNumber
+                                this.coloringMenuSelection.colorByCopyNumber,
+                                this.coloringMenuSelection.selectedOption &&
+                                    this.coloringMenuSelection.selectedOption
+                                        .info.clinicalAttribute
                             ),
                             filename
                         );
@@ -1226,7 +1232,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 valueLabel,
                                 entrezGeneIdToGene,
                                 this.coloringMenuSelection.colorByMutationType,
-                                this.coloringMenuSelection.colorByCopyNumber
+                                this.coloringMenuSelection.colorByCopyNumber,
+                                this.coloringMenuSelection.selectedOption &&
+                                    this.coloringMenuSelection.selectedOption
+                                        .info.clinicalAttribute
                             ),
                             filename
                         );
