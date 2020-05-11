@@ -295,6 +295,22 @@ export function getColoringMenuOptionValue(
     )}`;
 }
 
+function doesPointHaveClinicalData(d: IPlotSampleData) {
+    return d.dispClinicalValue !== undefined;
+}
+function doesPointHaveMutationData(d: IPlotSampleData) {
+    return !!d.dispMutationType;
+}
+function doesPointHaveCnaData(d: IPlotSampleData) {
+    return !!d.dispCna;
+}
+function isPointProfiledForMutations(d: IPlotSampleData) {
+    return !!d.profiledMutations;
+}
+function isPointProfiledForCna(d: IPlotSampleData) {
+    return !!d.profiledCna;
+}
+
 export function scatterPlotZIndexSortBy<
     D extends Pick<
         IPlotSampleData,
@@ -641,7 +657,7 @@ function scatterPlotMutationLegendData(
     const uniqueMutations = _.chain(data)
         .map(d => {
             const ret = d.dispMutationType ? d.dispMutationType : null;
-            if (!d.profiledMutations) {
+            if (!isPointProfiledForMutations(d)) {
                 showNotProfiledElement = true;
             }
             return ret;
@@ -709,7 +725,10 @@ function scatterPlotMutationLegendData(
             highlighting: onClick && {
                 uid: noMutationAppearance.legendLabel,
                 isDatumHighlighted: (d: IPlotSampleData) => {
-                    return !!(d.profiledMutations && !d.dispMutationType);
+                    return (
+                        isPointProfiledForMutations(d) &&
+                        !doesPointHaveMutationData(d)
+                    );
                 },
                 onClick,
             },
@@ -730,7 +749,7 @@ function scatterPlotMutationLegendData(
             highlighting: onClick && {
                 uid: JSON.stringify(NOT_PROFILED_MUTATION_LEGEND_LABEL),
                 isDatumHighlighted: (d: IPlotSampleData) => {
-                    return !d.profiledMutations;
+                    return !isPointProfiledForMutations(d);
                 },
                 onClick,
             },
@@ -741,22 +760,31 @@ function scatterPlotMutationLegendData(
 
 function scatterPlotLimitValLegendData(
     plotType: PlotType,
-    limitValueTypes: string[]
+    limitValueTypes: string[],
+    onClick?: (ld: LegendDataWithId) => void
 ): LegendDataWithId[] {
     const legendData: LegendDataWithId[] = [];
 
     if (limitValueTypes && limitValueTypes.length > 0) {
         const fillOpacity = plotType === PlotType.WaterfallPlot ? 0 : 1;
         const stroke = plotType === PlotType.WaterfallPlot ? '#000000' : '#999';
+        const name = `value ${limitValueTypes.join(' or ')}`;
 
         legendData.push({
-            name: `value ${limitValueTypes.join(' or ')}`,
+            name,
             symbol: {
                 fill: '#999',
                 fillOpacity: fillOpacity,
                 stroke: stroke,
                 strokeOpacity: 1,
                 type: limitValueAppearance.symbol,
+            },
+            highlighting: onClick && {
+                uid: name,
+                isDatumHighlighted: (d: IPlotSampleData) => {
+                    return dataPointIsLimited(d);
+                },
+                onClick,
             },
         });
     }
@@ -835,7 +863,7 @@ function scatterPlotStringClinicalLegendData(
             highlighting: onClick && {
                 uid: NO_DATA_CLINICAL_LEGEND_LABEL,
                 isDatumHighlighted: (d: IPlotSampleData) => {
-                    return d.dispClinicalValue === undefined;
+                    return !doesPointHaveClinicalData(d);
                 },
                 onClick,
             },
@@ -912,7 +940,7 @@ function scatterPlotCnaLegendData(
     const uniqueDispCna = _.chain(data)
         .map(d => {
             const ret = d.dispCna ? d.dispCna.value : null;
-            if (!d.profiledCna) {
+            if (!isPointProfiledForCna(d)) {
                 showNotProfiledElement = true;
             }
             return ret;
@@ -960,7 +988,9 @@ function scatterPlotCnaLegendData(
             highlighting: onClick && {
                 uid: NO_DATA_CLINICAL_LEGEND_LABEL,
                 isDatumHighlighted: (d: IPlotSampleData) => {
-                    return !d.profiledCna || !d.dispCna;
+                    return (
+                        !isPointProfiledForCna(d) || !doesPointHaveCnaData(d)
+                    );
                 },
                 onClick,
             },
@@ -1791,19 +1821,19 @@ function getMutationTypeAppearance(
         };
     }
 ) {
-    if (!d.profiledMutations) {
+    if (!isPointProfiledForMutations(d)) {
         return notProfiledMutationsAppearance;
-    } else if (!d.dispMutationType) {
+    } else if (!doesPointHaveMutationData(d)) {
         return noMutationAppearance;
     } else {
-        return oncoprintMutationTypeToAppearance[d.dispMutationType];
+        return oncoprintMutationTypeToAppearance[d.dispMutationType!];
     }
 }
 function getCopyNumberAppearance(d: IPlotSampleData) {
-    if (!d.profiledCna || !d.dispCna) {
+    if (!doesPointHaveCnaData(d) || !isPointProfiledForCna(d)) {
         return notProfiledCnaAppearance;
     } else {
-        return cnaToAppearance[d.dispCna.value as -2 | -1 | 0 | 1 | 2];
+        return cnaToAppearance[d.dispCna!.value as -2 | -1 | 0 | 1 | 2];
     }
 }
 
@@ -1852,7 +1882,7 @@ export function makeScatterPlotPointAppearance(
                 ) {
                     const categoryToColor = data.result!.categoryToColor!;
                     return (d: IPlotSampleData) => {
-                        if (d.dispClinicalValue !== undefined) {
+                        if (doesPointHaveClinicalData(d)) {
                             return {
                                 stroke: '#000000',
                                 strokeOpacity: NON_CNA_STROKE_OPACITY,
@@ -1886,7 +1916,7 @@ export function makeScatterPlotPointAppearance(
                     }
 
                     return (d: IPlotSampleData) => {
-                        if (d.dispClinicalValue !== undefined) {
+                        if (doesPointHaveClinicalData(d)) {
                             return {
                                 stroke: '#000000',
                                 strokeOpacity: NON_CNA_STROKE_OPACITY,
