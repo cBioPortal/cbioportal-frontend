@@ -37,15 +37,18 @@ export type SurvivalPlotFilters = {
     y: [number, number];
 };
 
-// TODO should remove this if we want to be generic
-export const survivalClinicalDataVocabulary: { [prefix: string]: string[] } = {
-    OS: ['DECEASED'],
-    PFS: ['Progressed', 'Recurred/Progressed', 'PROGRESSION', 'Yes', '1'],
-    DFS: ['Recurred/Progressed', 'Recurred', 'Progressed', 'Yes', '1'],
-    DSS: ['DECEASED', 'Yes', 'DEAD OF MELANOMA', 'DEAD WITH TUMOR', '1'],
+export type ParsedSurvivalData = {
+    status: string | undefined;
+    label: string;
 };
 
-// TODO should remove this if we want to be generic
+export const survivalCasesHeaderText: { [prefix: string]: string } = {
+    OS: 'DECEASED',
+    PFS: 'Progressed',
+    DFS: 'Recurred/Progressed',
+    DSS: 'DECEASED',
+};
+
 export const survivalPlotTooltipxLabelWithEvent: {
     [prefix: string]: string;
 } = {
@@ -56,13 +59,26 @@ export const survivalPlotTooltipxLabelWithEvent: {
     DSS: 'Time of Death',
 };
 
-// TODO should remove this if we want to be generic
 export const plotsPriority: { [prefix: string]: number } = {
     OS: 1,
     DFS: 2,
     PFS: 3,
     DSS: 4,
 };
+
+// when try to find if a data is null
+// make sure add trim() and toLowerCase() for the value
+// this comparision is ignoring the cases and leading/trailing white space and line terminator characters from a string.
+export const survivalClinicalDataNullValueSet = new Set([
+    '[not applicable]',
+    '[not available]',
+    '[pending]',
+    '[discrepancy]',
+    '[completed]',
+    '[null]',
+    '',
+    'na',
+]);
 
 export const DEFAULT_SURVIVAL_PRIORITY = 999;
 
@@ -80,6 +96,62 @@ export function getEstimates(patientSurvivals: PatientSurvival[]): number[] {
         }
     });
     return estimates;
+}
+
+export function parseSurvivalData(s: string) {
+    const splitStatusAndLabel = s.split(':').map(text => text.trim());
+    let status = undefined;
+    let label = undefined;
+    // survival data in new format "status:label"
+    if (splitStatusAndLabel.length === 2) {
+        status = splitStatusAndLabel[0];
+        label = splitStatusAndLabel[1];
+    } else {
+        // old format "label"
+        label = splitStatusAndLabel[0];
+    }
+
+    // if status not exists, status will be undefined
+    return {
+        status,
+        label,
+    } as ParsedSurvivalData;
+}
+
+export function getSurvivalStatusBoolean(s: string, prefix: string) {
+    const parsedSurvivalData = parseSurvivalData(s);
+    if (parsedSurvivalData.status) {
+        return parsedSurvivalData.status === '1';
+    }
+    // return false as default for values that cannot get mapped
+    return false;
+}
+
+export function getStatusCasesHeaderText(
+    prefix: string,
+    uniqueSurvivalData: string[]
+): string {
+    // if not found set as 'Event'
+    let text = 'Event';
+
+    if (prefix in survivalCasesHeaderText) {
+        text = survivalCasesHeaderText[prefix];
+    } else {
+        // find first data with '1:' prefix
+        _.forEach(uniqueSurvivalData, data => {
+            const splitData = data.split(':');
+            if (splitData.length == 2 && splitData[0] === '1') {
+                text = splitData[1];
+                // first one found, return result
+                return false;
+            }
+        });
+    }
+    return _.startCase(_.toLower(text));
+}
+
+export function isNullSurvivalClinicalDataValue(value: string) {
+    return survivalClinicalDataNullValueSet.has(value.trim().toLowerCase());
 }
 
 export function getMedian(
