@@ -5,6 +5,7 @@ import {
     computed,
     IReactionDisposer,
     observable,
+    runInAction,
     whyRun,
 } from 'mobx';
 import { Observer, observer } from 'mobx-react';
@@ -91,6 +92,7 @@ import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner'
 import ScrollBar from '../../../shared/components/Scrollbar/ScrollBar';
 import {
     dataPointIsLimited,
+    LegendDataWithId,
     scatterPlotSize,
 } from '../../../shared/components/plots/PlotUtils';
 import { getTablePlotDownloadData } from '../../../shared/components/plots/TablePlotUtils';
@@ -278,26 +280,18 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @observable searchCase: string = '';
     @observable searchMutation: string = '';
     @observable plotExists = false;
-    @observable highlightedCategoriesMap = observable.shallowMap<{
-        name: string | string[];
-        highlight: (d: any) => boolean;
-    }>();
+    @observable highlightedLegendItems = observable.shallowMap<
+        LegendDataWithId
+    >();
 
     @autobind
     @action
-    private onClickLegendData(ld: {
-        name: string | string[];
-        highlight: (d: any) => boolean;
-    }) {
-        const key = JSON.stringify(ld.name);
-        if (this.highlightedCategoriesMap.has(key)) {
-            this.highlightedCategoriesMap.delete(key);
+    private onClickLegendItem(ld: LegendDataWithId<any>) {
+        if (this.highlightedLegendItems.has(ld.highlighting!.uid)) {
+            this.highlightedLegendItems.delete(ld.highlighting!.uid);
         } else {
-            this.highlightedCategoriesMap.set(key, ld);
+            this.highlightedLegendItems.set(ld.highlighting!.uid, ld);
         }
-    }
-    @computed get highlightedCategories() {
-        return this.highlightedCategoriesMap.values().map(x => x.name);
     }
 
     @autobind
@@ -1087,9 +1081,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     .selectedOption;
             },
             set _selectedOptionValue(v: string | undefined) {
-                self.props.urlWrapper.updateURL(currentQuery => {
-                    currentQuery.plots_coloring_selection.selectedOption = v;
-                    return currentQuery;
+                runInAction(() => {
+                    self.props.urlWrapper.updateURL(currentQuery => {
+                        currentQuery.plots_coloring_selection.selectedOption = v;
+                        return currentQuery;
+                    });
+                    // reset highlights
+                    self.highlightedLegendItems.clear();
                 });
             },
             get logScale() {
@@ -1113,9 +1111,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 );
             },
             set colorByMutationType(s: boolean) {
-                self.props.urlWrapper.updateURL(currentQuery => {
-                    currentQuery.plots_coloring_selection.colorByMutationType = s.toString();
-                    return currentQuery;
+                runInAction(() => {
+                    self.props.urlWrapper.updateURL(currentQuery => {
+                        currentQuery.plots_coloring_selection.colorByMutationType = s.toString();
+                        return currentQuery;
+                    });
+                    // reset highlights
+                    self.highlightedLegendItems.clear();
                 });
             },
             get colorByCopyNumber() {
@@ -1126,9 +1128,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 );
             },
             set colorByCopyNumber(s: boolean) {
-                self.props.urlWrapper.updateURL(currentQuery => {
-                    currentQuery.plots_coloring_selection.colorByCopyNumber = s.toString();
-                    return currentQuery;
+                runInAction(() => {
+                    self.props.urlWrapper.updateURL(currentQuery => {
+                        currentQuery.plots_coloring_selection.colorByCopyNumber = s.toString();
+                        return currentQuery;
+                    });
+                    // reset highlights
+                    self.highlightedLegendItems.clear();
                 });
             },
             default: {
@@ -2623,7 +2629,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         // need to regenerate the function whenever these change in order to trigger immediate Victory rerender
         const searchCaseWords = this.searchCase.trim().split(/\s+/g);
         const searchMutationWords = this.searchMutationWords;
-        function searchHighlight(d: IPlotSampleData) {
+        const searchHighlight = (d: IPlotSampleData) => {
             let caseMatch = false;
             for (const word of searchCaseWords) {
                 caseMatch =
@@ -2642,10 +2648,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 }
             }
             return caseMatch || mutationMatch;
-        }
+        };
         const highlightFunctions = [
             searchHighlight,
-            ...this.highlightedCategoriesMap.values().map(x => x.highlight),
+            ...this.highlightedLegendItems
+                .values()
+                .map(x => x.highlighting!.isDatumHighlighted),
         ];
         return (d: IPlotSampleData) => {
             return _.some(highlightFunctions, f => f(d));
@@ -4066,14 +4074,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                             .driverAnnotationSettings
                                             .driversAnnotated,
                                         this.limitValueTypes,
+                                        this.highlightedLegendItems,
                                         this.scatterPlotHighlight,
                                         this.coloringClinicalDataPromise &&
                                             this.coloringClinicalDataPromise
                                                 .result!,
                                         this.coloringLogScale,
-                                        this.highlightedCategories
+                                        this.onClickLegendItem
                                     )}
-                                    onClickLegendData={this.onClickLegendData}
                                     legendTitle={
                                         this.selectedGeneForStyling
                                             ? this.selectedGeneForStyling
@@ -4142,12 +4150,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                             .driverAnnotationSettings
                                             .driversAnnotated,
                                         this.limitValueTypes,
+                                        this.highlightedLegendItems,
                                         this.scatterPlotHighlight,
                                         this.coloringClinicalDataPromise &&
                                             this.coloringClinicalDataPromise
                                                 .result!,
                                         this.coloringLogScale,
-                                        this.highlightedCategories
+                                        this.onClickLegendItem
                                     )}
                                     legendTitle={
                                         this.selectedGeneForStyling
@@ -4219,12 +4228,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                             .driverAnnotationSettings
                                             .driversAnnotated,
                                         this.limitValueTypes,
+                                        this.highlightedLegendItems,
                                         this.scatterPlotHighlight,
                                         this.coloringClinicalDataPromise &&
                                             this.coloringClinicalDataPromise
                                                 .result!,
                                         this.coloringLogScale,
-                                        this.highlightedCategories
+                                        this.onClickLegendItem
                                     )}
                                     legendLocationWidthThreshold={
                                         LEGEND_TO_BOTTOM_WIDTH_THRESHOLD

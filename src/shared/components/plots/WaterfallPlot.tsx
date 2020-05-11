@@ -16,7 +16,10 @@ import {
     VictoryLegend,
     VictoryLabel,
 } from 'victory';
-import { makeScatterPlotSizeFunction as makePlotSizeFunction } from './PlotUtils';
+import {
+    LegendDataWithId,
+    makeScatterPlotSizeFunction as makePlotSizeFunction,
+} from './PlotUtils';
 import WaterfallPlotTooltip from './WaterfallPlotTooltip';
 import { tickFormatNumeral } from './TickUtils';
 import {
@@ -65,7 +68,7 @@ export interface IWaterfallPlotProps<D extends IBaseWaterfallPlotData> {
     zIndexSortBy?: ((d: D) => any)[]; // second argument to _.sortBy
     tooltip?: (d: D) => JSX.Element;
     horizontal: boolean;
-    legendData?: { name: string | string[]; symbol: any }[]; // see http://formidable.com/open-source/victory/docs/victory-legend/#data
+    legendData?: LegendDataWithId<D>[];
     legendLocationWidthThreshold?: number;
     log?: IAxisLogScaleParams | undefined;
     useLogSpaceTicks?: boolean; // if log scale for an axis, then this prop determines whether the ticks are shown in post-log coordinate, or original data coordinate space
@@ -277,18 +280,40 @@ export default class WaterfallPlot<
             if (this.legendLocation === 'bottom') {
                 // if legend is at bottom then flatten labels
                 legendData = legendData.map(x => {
-                    let name = x.name;
-                    if (Array.isArray(x.name)) {
+                    let { name, ...rest } = x;
+                    if (Array.isArray(name)) {
                         name = (name as string[]).join(' '); // flatten labels by joining with space
                     }
                     return {
                         name,
-                        symbol: x.symbol,
+                        ...rest,
                     };
                 });
             }
             return (
                 <VictoryLegend
+                    events={[
+                        {
+                            childName: 'all',
+                            target: ['data', 'labels'],
+                            eventHandlers: {
+                                onClick: () => [
+                                    {
+                                        target: 'data',
+                                        mutation: (props: any) => {
+                                            const datum: LegendDataWithId<D> =
+                                                props.data[props.index];
+                                            if (datum.highlighting) {
+                                                datum.highlighting.onClick(
+                                                    datum
+                                                );
+                                            }
+                                        },
+                                    },
+                                ],
+                            },
+                        },
+                    ]}
                     orientation={
                         this.legendLocation === 'right'
                             ? 'vertical'

@@ -13,6 +13,18 @@ import {
     IValue2D,
 } from 'pages/resultsView/plots/PlotsTabUtils';
 import { IBoxScatterPlotData } from './BoxScatterPlot';
+
+export type LegendDataWithId<D = any> = {
+    name: string | string[];
+    symbol: any; // see victory documentation
+    labels?: any; // see victory documentation
+    highlighting?: {
+        uid: string;
+        isDatumHighlighted: (d: D) => boolean; // if this legend item is selected then this governs how data are highlighted
+        onClick: (ld: LegendDataWithId<D>) => void;
+    };
+};
+
 export function getDeterministicRandomNumber(
     seed: number,
     range?: [number, number]
