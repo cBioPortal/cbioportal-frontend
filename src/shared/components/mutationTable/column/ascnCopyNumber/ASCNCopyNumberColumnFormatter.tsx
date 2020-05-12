@@ -86,13 +86,11 @@ export function getWGD(
     sampleId: string
 ) {
     let wgdData = sampleIdToClinicalDataMap
-        ? sampleIdToClinicalDataMap[sampleId].filter(
+        ? sampleIdToClinicalDataMap[sampleId].find(
               (cd: ClinicalData) => cd.clinicalAttributeId === CAID_FACETS_WGD
           )
         : undefined;
-    return wgdData !== undefined && wgdData.length > 0
-        ? wgdData[0].value
-        : ASCNCopyNumberValue.NA;
+    return wgdData !== undefined ? wgdData.value : ASCNCopyNumberValue.NA;
 }
 
 export const getDefaultASCNCopyNumberColumnDefinition = (
