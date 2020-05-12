@@ -9,6 +9,7 @@ import ASCNCopyNumberElement from 'shared/components/mutationTable/column/ascnCo
 import { ASCNCopyNumberValue } from 'shared/components/mutationTable/column/ascnCopyNumber/ASCNCopyNumberElement';
 import { ASCN_BLACK } from 'shared/lib/Colors';
 import { getASCNCopyNumberColor } from 'shared/lib/ASCNUtils';
+import { CAID_FACETS_WGD } from 'shared/constants';
 
 /**
  * @author Avery Wang
@@ -86,7 +87,7 @@ export function getWGD(
 ) {
     let wgdData = sampleIdToClinicalDataMap
         ? sampleIdToClinicalDataMap[sampleId].filter(
-              (cd: ClinicalData) => cd.clinicalAttributeId === 'FACETS_WGD'
+              (cd: ClinicalData) => cd.clinicalAttributeId === CAID_FACETS_WGD
           )
         : undefined;
     return wgdData !== undefined && wgdData.length > 0
