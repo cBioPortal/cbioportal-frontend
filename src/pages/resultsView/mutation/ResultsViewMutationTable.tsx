@@ -9,10 +9,12 @@ import CancerTypeColumnFormatter from 'shared/components/mutationTable/column/Ca
 import TumorAlleleFreqColumnFormatter from 'shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter';
 import { Mutation } from 'cbioportal-ts-api-client';
 import ExonColumnFormatter from 'shared/components/mutationTable/column/ExonColumnFormatter';
+import ProteinChangeColumnFormatter from 'shared/components/mutationTable/column/ProteinChangeColumnFormatter';
 
 export interface IResultsViewMutationTableProps extends IMutationTableProps {
     // add results view specific props here if needed
     totalNumberOfExons?: string;
+    isCanonicalTranscript: boolean | undefined;
 }
 //
 @observer
@@ -87,6 +89,10 @@ export default class ResultsViewMutationTable extends MutationTable<
                 : this.props.data
         );
 
+        // disable annotation column if non canonical transcript is selected
+        this._columns[MutationTableColumnType.ANNOTATION].shouldExclude = () =>
+            this.props.isCanonicalTranscript === false;
+
         // order columns
         this._columns[MutationTableColumnType.STUDY].order = 0;
         this._columns[MutationTableColumnType.SAMPLE_ID].order = 10;
@@ -146,5 +152,46 @@ export default class ResultsViewMutationTable extends MutationTable<
                 <br />({this.props.totalNumberOfExons} in total)
             </span>
         );
+
+        this._columns[MutationTableColumnType.PROTEIN_CHANGE].render = (
+            d: Mutation[]
+        ) =>
+            ProteinChangeColumnFormatter.renderWithMutationStatus(
+                d,
+                this.props.indexedAnnotatedMutationsByGenomicLocation,
+                this.props.isCanonicalTranscript,
+                this.props.indexedVariantAnnotations &&
+                    this.props.indexedVariantAnnotations.result
+                    ? this.props.indexedVariantAnnotations.result
+                    : undefined
+            );
+        this._columns[MutationTableColumnType.PROTEIN_CHANGE].download = (
+            d: Mutation[]
+        ) =>
+            ProteinChangeColumnFormatter.getTextValue(
+                d,
+                this.props.indexedAnnotatedMutationsByGenomicLocation,
+                this.props.isCanonicalTranscript
+            );
+        this._columns[MutationTableColumnType.PROTEIN_CHANGE].sortBy = (
+            d: Mutation[]
+        ) =>
+            ProteinChangeColumnFormatter.getSortValue(
+                d,
+                this.props.indexedAnnotatedMutationsByGenomicLocation,
+                this.props.isCanonicalTranscript
+            );
+        this._columns[MutationTableColumnType.PROTEIN_CHANGE].filter = (
+            data: Mutation[],
+            filterString: string,
+            filterStringUpper: string
+        ) =>
+            ProteinChangeColumnFormatter.getFilterValue(
+                data,
+                filterString,
+                filterStringUpper,
+                this.props.indexedAnnotatedMutationsByGenomicLocation,
+                this.props.isCanonicalTranscript
+            );
     }
 }
