@@ -42,6 +42,48 @@ export type ParsedSurvivalData = {
     label: string;
 };
 
+// TODO should remove this if we want to be generic
+export const survivalClinicalDataVocabulary: { [prefix: string]: string[] } = {
+    OS: ['DECEASED', '1:DECEASED'],
+    PFS: [
+        'Progressed',
+        'Recurred/Progressed',
+        'PROGRESSION',
+        'Yes',
+        '1',
+        '1:Progressed',
+        '1:Recurred/Progressed',
+        '1:PROGRESSION',
+        '1:Yes',
+        '1:1',
+    ],
+    DFS: [
+        'Recurred/Progressed',
+        'Recurred',
+        'Progressed',
+        'Yes',
+        '1',
+        '1:Recurred/Progressed',
+        '1:Recurred',
+        '1:Progressed',
+        '1:Yes',
+        '1:1',
+    ],
+    DSS: [
+        'DECEASED',
+        'Yes',
+        'DEAD OF MELANOMA',
+        'DEAD WITH TUMOR',
+        '1',
+        '1:DECEASED',
+        '1:Yes',
+        '1:DEAD OF MELANOMA',
+        '1:DEAD WITH TUMOR',
+        '1:1',
+    ],
+};
+
+// TODO should remove this if we want to be generic
 export const survivalCasesHeaderText: { [prefix: string]: string } = {
     OS: 'DECEASED',
     PFS: 'Progressed',
@@ -119,9 +161,16 @@ export function parseSurvivalData(s: string) {
 }
 
 export function getSurvivalStatusBoolean(s: string, prefix: string) {
-    const parsedSurvivalData = parseSurvivalData(s);
-    if (parsedSurvivalData.status) {
-        return parsedSurvivalData.status === '1';
+    // if prefix is in predefined survival type
+    if (prefix in survivalClinicalDataVocabulary) {
+        return survivalClinicalDataVocabulary[prefix].includes(s);
+    }
+    // if prefix is custom survival type
+    else {
+        const parsedSurvivalData = parseSurvivalData(s);
+        if (parsedSurvivalData.status) {
+            return parsedSurvivalData.status === '1';
+        }
     }
     // return false as default for values that cannot get mapped
     return false;
