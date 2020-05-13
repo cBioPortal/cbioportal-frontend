@@ -75,7 +75,9 @@ export default class ResultsViewMutationMapper extends MutationMapper<
             getRemoteDataGroupStatus(
                 this.props.store.clinicalDataForSamples,
                 this.props.store.studiesForSamplesWithoutCancerTypeClinicalData,
-                this.props.store.canonicalTranscript
+                this.props.store.canonicalTranscript,
+                this.props.store.mutationData,
+                this.props.store.indexedVariantAnnotations
             ) === 'pending'
         );
     }
@@ -140,6 +142,10 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 totalNumberOfExons={this.totalExonNumber}
                 generateGenomeNexusHgvsgUrl={
                     this.props.store.generateGenomeNexusHgvsgUrl
+                }
+                isCanonicalTranscript={this.props.store.isCanonicalTranscript}
+                indexedAnnotatedMutationsByGenomicLocation={
+                    this.props.store.indexedAnnotatedMutationsByGenomicLocation
                 }
             />
         );
