@@ -295,6 +295,32 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     }
 
     @autobind
+    @action
+    private onClickColorByCopyNumber() {
+        if (this.plotType.result === PlotType.WaterfallPlot) {
+            // waterfall plot is a radio - cant select both mutation type and copy number
+            this.coloringMenuSelection.colorByMutationType = false;
+            this.coloringMenuSelection.colorByCopyNumber = true;
+        } else {
+            this.coloringMenuSelection.colorByCopyNumber = !this
+                .coloringMenuSelection.colorByCopyNumber;
+        }
+    }
+
+    @autobind
+    @action
+    private onClickColorByMutationType() {
+        if (this.plotType.result === PlotType.WaterfallPlot) {
+            // waterfall plot is a radio - cant select both mutation type and copy number
+            this.coloringMenuSelection.colorByCopyNumber = false;
+            this.coloringMenuSelection.colorByMutationType = true;
+        } else {
+            this.coloringMenuSelection.colorByMutationType = !this
+                .coloringMenuSelection.colorByMutationType;
+        }
+    }
+
+    @autobind
     private getScrollPane() {
         return this.scrollPane;
     }
@@ -498,7 +524,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     private searchCaseTimeout: Timer;
     private searchMutationTimeout: Timer;
-    private coloringSelectionValidator: IReactionDisposer;
 
     constructor(props: IPlotsTabProps) {
         super(props);
@@ -510,23 +535,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.searchCaseInput = '';
         this.searchMutationInput = '';
 
-        this.coloringSelectionValidator = autorun(() => {
-            if (
-                this.coloringMenuSelection.colorByMutationType &&
-                this.coloringMenuSelection.colorByCopyNumber &&
-                this.waterfallPlotIsShown
-            ) {
-                // simultaneous selection of viewCNA and viewMutationType is not
-                // supported by the waterfall plot
-                this.coloringMenuSelection.colorByCopyNumber = false;
-            }
-        });
-
         (window as any).resultsViewPlotsTab = this;
-    }
-
-    componentWillUnmount() {
-        this.coloringSelectionValidator();
     }
 
     @autobind
@@ -1125,6 +1134,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 });
             },
             get colorByCopyNumber() {
+                // cant have both in waterfall plot
+                if (self.plotType.result === PlotType.WaterfallPlot) {
+                    return this._colorByCopyNumber && !this.colorByMutationType;
+                } else {
+                    return this._colorByCopyNumber;
+                }
+            },
+            get _colorByCopyNumber() {
                 // default true
                 return (
                     self.props.urlWrapper.query.plots_coloring_selection
@@ -4391,19 +4408,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                             .coloringMenuSelection
                                                             .colorByMutationType
                                                     }
-                                                    onChange={() =>
-                                                        (this.coloringMenuSelection.colorByMutationType = !this
-                                                            .coloringMenuSelection
-                                                            .colorByMutationType)
+                                                    onChange={
+                                                        this
+                                                            .onClickColorByMutationType
                                                     }
                                                     inputProps={{
+                                                        type: this
+                                                            .waterfallPlotIsShown
+                                                            ? 'radio'
+                                                            : 'checkbox',
                                                         style: { marginTop: 4 },
-                                                        disabled:
-                                                            this
-                                                                .waterfallPlotIsShown &&
-                                                            this
-                                                                .coloringMenuSelection
-                                                                .colorByCopyNumber, // cant color by both in waterfall
                                                     }}
                                                 >
                                                     Mutation Type
@@ -4417,22 +4431,44 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                             .coloringMenuSelection
                                                             .colorByCopyNumber
                                                     }
-                                                    onChange={() =>
-                                                        (this.coloringMenuSelection.colorByCopyNumber = !this
-                                                            .coloringMenuSelection
-                                                            .colorByCopyNumber)
+                                                    onChange={
+                                                        this
+                                                            .onClickColorByCopyNumber
                                                     }
                                                     inputProps={{
+                                                        type: this
+                                                            .waterfallPlotIsShown
+                                                            ? 'radio'
+                                                            : 'checkbox',
                                                         style: { marginTop: 4 },
-                                                        disabled:
-                                                            this
-                                                                .waterfallPlotIsShown &&
-                                                            this
-                                                                .coloringMenuSelection
-                                                                .colorByMutationType, // cant color by both in waterfall
                                                     }}
                                                 >
                                                     Copy Number
+                                                </LabeledCheckbox>
+                                            )}
+                                        {this.coloringByGene &&
+                                        this.waterfallPlotIsShown && // Show a "None" radio button only on waterfall plots
+                                            (this.mutationDataCanBeShown ||
+                                                this.cnaDataCanBeShown) && (
+                                                <LabeledCheckbox
+                                                    checked={
+                                                        !this
+                                                            .coloringMenuSelection
+                                                            .colorByCopyNumber &&
+                                                        !this
+                                                            .coloringMenuSelection
+                                                            .colorByMutationType
+                                                    }
+                                                    onChange={action(() => {
+                                                        this.coloringMenuSelection.colorByMutationType = false;
+                                                        this.coloringMenuSelection.colorByCopyNumber = false;
+                                                    })}
+                                                    inputProps={{
+                                                        type: 'radio',
+                                                        style: { marginTop: 4 },
+                                                    }}
+                                                >
+                                                    None
                                                 </LabeledCheckbox>
                                             )}
                                     </div>

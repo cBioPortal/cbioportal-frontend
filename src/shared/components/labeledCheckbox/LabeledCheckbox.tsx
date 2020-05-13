@@ -43,7 +43,10 @@ export default class LabeledCheckbox extends React.Component<
         return (
             <label className={className} {...this.props.labelProps}>
                 <input
-                    type="checkbox"
+                    type={
+                        (this.props.inputProps && this.props.inputProps.type) ||
+                        'checkbox'
+                    }
                     checked={this.props.checked}
                     onChange={this.props.onChange}
                     disabled={this.props.disabled}
