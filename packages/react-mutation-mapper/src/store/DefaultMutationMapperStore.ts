@@ -4,7 +4,6 @@ import {
     AggregatedHotspots,
     defaultHotspotFilter,
     genomicLocationString,
-    getMutationsToTranscriptId,
     getMyCancerGenomeData,
     groupCancerHotspotDataByPosition,
     groupHotspotsByMutations,
@@ -18,8 +17,11 @@ import {
     fetchCivicGenes,
     fetchCivicVariants,
     uniqueGenomicLocations,
+    // getMutationsByTranscriptId,
 } from 'cbioportal-utils';
 import { Gene, Mutation, IMyVariantInfoIndex } from 'cbioportal-utils';
+// REVERT THIS
+import { getMutationsByTranscriptId } from '../../../cbioportal-utils/src/mutation/MutationAnnotator';
 import {
     CancerGene,
     IndicatorQueryResp,
@@ -178,10 +180,11 @@ class DefaultMutationMapperStore implements MutationMapperStore {
             this.indexedVariantAnnotations.result &&
             !_.isEmpty(this.indexedVariantAnnotations.result)
         ) {
-            return getMutationsToTranscriptId(
+            return getMutationsByTranscriptId(
                 this.getMutations(),
                 this.activeTranscript,
-                this.indexedVariantAnnotations.result
+                this.indexedVariantAnnotations.result,
+                false
             );
         } else {
             return this.getMutations();
@@ -593,10 +596,11 @@ class DefaultMutationMapperStore implements MutationMapperStore {
                     // makes sure the annotations are actually of the form we are displaying (e.g. nonsynonymous)
                     return transcripts.filter(
                         (t: string) =>
-                            getMutationsToTranscriptId(
+                            getMutationsByTranscriptId(
                                 this.getMutations(),
                                 t,
-                                this.indexedVariantAnnotations.result!
+                                this.indexedVariantAnnotations.result!,
+                                false
                             ).length > 0
                     );
                 } else {
@@ -877,10 +881,11 @@ class DefaultMutationMapperStore implements MutationMapperStore {
             return _.fromPairs(
                 this.transcriptsWithAnnotations.result.map((t: string) => [
                     t,
-                    getMutationsToTranscriptId(
+                    getMutationsByTranscriptId(
                         this.getMutations(),
                         t,
-                        this.indexedVariantAnnotations.result!!
+                        this.indexedVariantAnnotations.result!,
+                        false
                     ),
                 ])
             );

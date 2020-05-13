@@ -688,7 +688,6 @@ export default class ResultsViewPage extends React.Component<
                                         </div>
                                     )}
                                 </div>
-
                                 {// we don't show the result tabs if we don't have valid query
                                 this.showTabs &&
                                     !this.resultsViewPageStore.genesInvalid &&
