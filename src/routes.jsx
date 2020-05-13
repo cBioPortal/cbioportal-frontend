@@ -9,6 +9,7 @@ import {
     handleStudyDO,
     handleLinkOut,
     handleEncodedRedirect,
+    redirectTo,
 } from './shared/lib/redirectHelpers';
 import PageNotFound from './shared/components/pageNotFound/PageNotFound';
 
@@ -177,6 +178,31 @@ export const makeRoutes = routing => {
                 }}
                 component={GroupComparisonLoading}
             />
+
+            {/* Redirect legacy survival route directly to survival tab in comparison */}
+            <Route
+                path="/results/survival"
+                onEnter={() => {
+                    redirectTo(
+                        { comparison_subtab: 'survival' },
+                        '/results/comparison'
+                    );
+                }}
+                component={getBlankPage()}
+            />
+
+            {/* Redirect legacy enrichments route directly to survival tab in comparison */}
+            <Route
+                path="/results/enrichments"
+                onEnter={() => {
+                    redirectTo(
+                        { comparison_subtab: 'mutations' },
+                        '/results/comparison'
+                    );
+                }}
+                component={getBlankPage()}
+            />
+
             <Route
                 path="/results(/:tab)"
                 onEnter={() => {}}

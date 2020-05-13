@@ -8,6 +8,7 @@
     "test-webdriver-manager-local": "(wdio shared/wdio/webdriver-manager.conf.js || bash shared/image-compare/upload_failed_screenshots.sh)",
     "test-webdriver-manager-debug": "(DEBUG=true wdio shared/wdio/webdriver-manager.conf.js --inspect || bash shared/image-compare/upload_failed_screenshots.sh)",
     "e2e": "rm -rf remote/screenshots/diff/; yarn run test-webdriver-manager",
+    "clean-local": "rm -rf undefined/ && rm results*.xml && rm customReport*",
     "clear": "rm -rf remote/screenshots/screen/; rm -rf remote/screenshots/error/; rm -rf remote/screenshots/diff/; rm -rf remote/screenshots/junit/; rm -rf local/screenshots/screen/; rm -rf local/screenshots/diff/; rm -rf local/screenshots/error/; rm -rf local/screenshots/junit/;"
   },
   "author": "",
