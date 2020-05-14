@@ -1,7 +1,5 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import { ClonalValue } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
-import ClonalColumnFormatter from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
 import { Mutation, ClinicalData } from 'cbioportal-ts-api-client';
 import { hasASCNProperty } from 'shared/lib/MutationUtils';
 import SampleManager from 'pages/patientView/SampleManager';

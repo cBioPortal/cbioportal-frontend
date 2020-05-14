@@ -1,10 +1,11 @@
 import * as _ from 'lodash';
 import { ReactWrapper, mount } from 'enzyme';
-import { assert } from 'chai';
+import { assert, expect } from 'chai';
 import { Mutation, ClinicalData } from 'cbioportal-ts-api-client';
 import { initMutation } from 'test/MutationMockUtils';
 import { initClinicalData } from 'test/ClinicalDataMockUtils';
 import { CAID_FACETS_WGD } from 'shared/constants';
+import SampleManager from 'pages/patientView/SampleManager';
 import {
     ASCN_AMP,
     ASCN_GAIN,
@@ -36,7 +37,7 @@ import { getDefaultASCNCopyNumberColumnDefinition } from './ASCNCopyNumberColumn
             - a text label (e.g. "diploid") corresponding to the ASCNCopyNumberValue
             - text indication of presence/absence of WGD clinical attribute
             - text reporting of TOTAL_COPY_NUMBER and MINOR_COPY_NUMBER mutation attribute values
-            
+
     test cases explore various expected combinations of the above elements:
         - cases involving only a single sample:
             - without any set ASCN mutation attriubutes
@@ -55,7 +56,7 @@ import { getDefaultASCNCopyNumberColumnDefinition } from './ASCNCopyNumberColumn
             - sample1 and sample 2 with WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValue of '-1'
         - cases involving three samples:
             - sample1 WGD, ASCN_AMP; sample2 NO_WGD, ASCN_LIGHTGREY; sample3 WGD, ASCN_HOMDEL
-    
+
     Note: all tests will test the appropriate presence of a populated tooltip popup
     Also, the first single sample test case, and second two sample test case will omit the
     samplemanager and still expect a populated tooltip to be output. Sub elementes in the tool tip
@@ -83,189 +84,165 @@ function createMockMutation(
     });
 }
 
-function test_copy_number_render(
-    cellWrapper: ReactWrapper<any, any>,
-    expectedWgdValue: string,
-    expectedIntegercopyNumberValue: string,
-    expectedTotalCopyNumberValue: string,
-    expectedBackgroundColor: string
+function expectElementPropertiesMatch(
+    wrapper: ReactWrapper<any, any>,
+    expectedWGD: string, // whole genome duplication attribute
+    expectedTCN: string, // totalCopyNumberValue attribute
+    expectedMCN: string, // minorCopyNumberValue attribute
+    expectedACNV: string // ascnCopyNumberValue attribute
 ) {
-    // console.log(' samples with ascn data: ');
-    // cellWrapper.find('text').forEach(el => {
-    //     console.log(el.html());
-    // });
-    // console.log(' samples with ascn data: ');
-    // cellWrapper.find('rect').forEach(el => {
-    //     console.log(el.prop('fill'));
-    //     console.log(el.prop('opacity'));
-    // });
-    // console.log(' samples without ascn data: ');
-    // componentWithoutAscnCopyNumberColumn
-    //     .find('svg')
-    //     .forEach(spanElement => {
-    //         console.log(spanElement.html());
-    //     });
-    assert.isDefined(
-        cellWrapper.find('text'),
-        'ASCN copy number elements expected'
-    );
-    let rectangleElement = cellWrapper.find('rect');
-    assert.isDefined(rectangleElement, 'ASCN copy number elements expected');
-    assert.equal(
-        rectangleElement.prop('fill'),
-        expectedBackgroundColor,
-        'color wrong'
-    );
-
-    let toolTipElement: any = cellWrapper.find('DefaultTooltip');
-    if (expectedBackgroundColor === ASCN_BLACK) {
-        assert.notEqual(
-            toolTipElement,
-            {},
-            'tooltip was present when not expected.'
-        );
-        return; // if we expect invisible black box, don't expect the wgd text element or anything else
-    }
-    let toolTipOverlay: any = toolTipElement.prop('overlay');
-    assert.isTrue(
-        toolTipOverlay && toolTipOverlay.props.minorCopyNumberValue === '1',
-        'tooltip was expected but not present.'
-    );
-    assert.isBelow(
-        cellWrapper.find('text').length,
-        3,
-        'too many text elements to interpret'
-    );
-    let wgdText: string = '';
-    let copyNumberText: string = '';
-    cellWrapper.find('text').forEach(el => {
-        if (el.text() === 'WGD') {
-            wgdText = el.text();
-        } else {
-            copyNumberText = el.text();
-        }
-    });
-    assert.equal(wgdText, expectedWgdValue, 'WGD indicator wrong');
-    assert.equal(
-        copyNumberText,
-        expectedTotalCopyNumberValue,
-        'copy number wrong'
-    );
+    expect(wrapper.length).to.equal(1); // exactly one copy number element was found
+    expect(wrapper.first().prop('wgdValue')).to.equal(expectedWGD);
+    expect(wrapper.first().prop('totalCopyNumberValue')).to.equal(expectedTCN);
+    expect(wrapper.first().prop('minorCopyNumberValue')).to.equal(expectedMCN);
+    expect(wrapper.first().prop('ascnCopyNumberValue')).to.equal(expectedACNV);
 }
 
 describe('ASCNCopyNumberColumnFormatter', () => {
     /* mock sample ids */
-    const sampleId1WithAscnData: string = 'sample_1_with_ascn_data';
-    const sampleId2WithAscnData: string = 'sample_2_with_ascn_data';
-    const sampleId3WithAscnData: string = 'sample_3_with_ascn_data';
-    const sampleId6WithoutAscnData: string = 'sample_6_without_ascn_data';
-    const sampleId7WithoutAscnData: string = 'sample_7_without_ascn_data';
-    const sampleIds1: string[] = [sampleId1WithAscnData];
-    const sampleIds12: string[] = [
-        sampleId1WithAscnData,
-        sampleId2WithAscnData,
-    ];
-    const sampleIds123: string[] = [
-        sampleId1WithAscnData,
-        sampleId2WithAscnData,
-        sampleId3WithAscnData,
-    ];
-    const sampleIds6: string[] = [sampleId6WithoutAscnData];
-    const sampleIds67: string[] = [
-        sampleId6WithoutAscnData,
-        sampleId7WithoutAscnData,
-    ];
+    const sample1Id: string = 'sample_1_with_ascn_data';
+    const sample2Id: string = 'sample_2_with_ascn_data';
+    const sample3Id: string = 'sample_3_with_ascn_data';
+    const sample6Id: string = 'sample_6_without_ascn_data';
+    const sample7Id: string = 'sample_7_without_ascn_data';
+    const sample1Ids: string[] = [sample1Id];
+    const sample12Ids: string[] = [sample1Id, sample2Id];
+    const sample123Ids: string[] = [sample1Id, sample2Id, sample3Id];
+    const sample6Ids: string[] = [sample6Id];
+    const sample7Ids: string[] = [sample7Id];
+    const sample67Ids: string[] = [sample6Id, sample7Id];
     /* mock mutation data */
-    const mutationS1Amp = createMockMutation(sampleId1WithAscnData, '2', '1');
-    const mutationS1Gain = createMockMutation(sampleId1WithAscnData, '1', '1');
-    const mutationS1Diploid = createMockMutation(
-        sampleId1WithAscnData,
-        '0',
-        '1'
-    );
-    const mutationS1Hetloss = createMockMutation(
-        sampleId1WithAscnData,
-        '-1',
-        '1'
-    );
-    const mutationS1Homdel = createMockMutation(
-        sampleId1WithAscnData,
-        '-2',
-        '1'
-    );
-    const mutationS1Other = createMockMutation(
-        sampleId1WithAscnData,
-        '999',
-        '1'
-    );
-    const mutationS1NA = createMockMutation(sampleId1WithAscnData, 'NA', '1');
-    const mutationS2Amp = createMockMutation(sampleId2WithAscnData, '2', '1');
-    const mutationS2Gain = createMockMutation(sampleId2WithAscnData, '1', '1');
-    const mutationS2Diploid = createMockMutation(
-        sampleId2WithAscnData,
-        '0',
-        '1'
-    );
-    const mutationS2Hetloss = createMockMutation(
-        sampleId2WithAscnData,
-        '-1',
-        '1'
-    );
-    const mutationS2Homdel = createMockMutation(
-        sampleId2WithAscnData,
-        '-2',
-        '1'
-    );
-    const mutationS2Other = createMockMutation(
-        sampleId2WithAscnData,
-        '999',
-        '1'
-    );
-    const mutationS2NA = createMockMutation(sampleId2WithAscnData, 'NA', '1');
-    const mutationS3Amp = createMockMutation(sampleId3WithAscnData, '2', '1');
-    const mutationS3Gain = createMockMutation(sampleId3WithAscnData, '1', '1');
-    const mutationS3Diploid = createMockMutation(
-        sampleId3WithAscnData,
-        '0',
-        '1'
-    );
-    const mutationS3Hetloss = createMockMutation(
-        sampleId3WithAscnData,
-        '-1',
-        '1'
-    );
-    const mutationS3Homdel = createMockMutation(
-        sampleId3WithAscnData,
-        '-2',
-        '1'
-    );
-    const mutationS3Other = createMockMutation(
-        sampleId3WithAscnData,
-        '999',
-        '1'
-    );
-    const mutationS3NA = createMockMutation(sampleId3WithAscnData, 'NA', '1');
-    const mutationS6 = createMockMutation(sampleId6WithoutAscnData);
-    const mutationS7 = createMockMutation(sampleId7WithoutAscnData);
-    const mutationsS1Amp: Mutation[] = [mutationS1Amp];
-    const mutationsS1Gain: Mutation[] = [mutationS1Gain];
-    const mutationsS1Diploid: Mutation[] = [mutationS1Diploid];
-    const mutationsS1Hetloss: Mutation[] = [mutationS1Hetloss];
-    const mutationsS1Homdel: Mutation[] = [mutationS1Homdel];
-    const mutationsS1Other: Mutation[] = [mutationS1Other];
-    const mutationsS1NA: Mutation[] = [mutationS1NA];
-    const mutationsS6: Mutation[] = [mutationS6];
+    const mutation_s1Amp = createMockMutation(sample1Id, '2', '1');
+    const mutation_s1Amp_TCN2 = createMockMutation(sample1Id, '2', '2');
+    const mutation_s1Gain = createMockMutation(sample1Id, '1', '1');
+    const mutation_s1Diploid = createMockMutation(sample1Id, '0', '1');
+    const mutation_s1Hetloss = createMockMutation(sample1Id, '-1', '1');
+    const mutation_s1Hetloss_TCN2 = createMockMutation(sample1Id, '-1', '2');
+    const mutation_s1Homdel = createMockMutation(sample1Id, '-2', '1');
+    const mutation_s1Other = createMockMutation(sample1Id, '999', '1');
+    const mutation_s1NA = createMockMutation(sample1Id, 'NA', '1');
+    const mutation_s2Amp = createMockMutation(sample2Id, '2', '1');
+    const mutation_s2Gain = createMockMutation(sample2Id, '1', '1');
+    const mutation_s2Diploid = createMockMutation(sample2Id, '0', '1');
+    const mutation_s2Hetloss = createMockMutation(sample2Id, '-1', '1');
+    const mutation_s2Hetloss_TCN2 = createMockMutation(sample2Id, '-1', '2');
+    const mutation_s2Homdel = createMockMutation(sample2Id, '-2', '1');
+    const mutation_s2Other = createMockMutation(sample2Id, '999', '1');
+    const mutation_s2NA = createMockMutation(sample2Id, 'NA', '1');
+    const mutation_s3Amp = createMockMutation(sample3Id, '2', '1');
+    const mutation_s3Gain = createMockMutation(sample3Id, '1', '1');
+    const mutation_s3Diploid = createMockMutation(sample3Id, '0', '1');
+    const mutation_s3Hetloss = createMockMutation(sample3Id, '-1', '1');
+    const mutation_s3Homdel = createMockMutation(sample3Id, '-2', '1');
+    const mutation_s3Other = createMockMutation(sample3Id, '999', '1');
+    const mutation_s3NA = createMockMutation(sample3Id, 'NA', '1');
+    const mutation_s6 = createMockMutation(sample6Id);
+    const mutation_s7 = createMockMutation(sample7Id);
+
+    const mutations_s1Amp: Mutation[] = [mutation_s1Amp];
+    const mutations_s1Amp_TCN1: Mutation[] = [mutation_s1Amp];
+    const mutations_s1Amp_TCN2: Mutation[] = [mutation_s1Amp_TCN2];
+    const mutations_s1Gain: Mutation[] = [mutation_s1Gain];
+    const mutations_s1Diploid: Mutation[] = [mutation_s1Diploid];
+    const mutations_s1Hetloss: Mutation[] = [mutation_s1Hetloss];
+    const mutations_s1Homdel: Mutation[] = [mutation_s1Homdel];
+    const mutations_s1Other: Mutation[] = [mutation_s1Other];
+    const mutations_s1NA: Mutation[] = [mutation_s1NA];
+    const mutations_s6: Mutation[] = [mutation_s6];
+    const mutations_s1Amp_s2Amp: Mutation[] = [mutation_s1Amp, mutation_s2Amp];
+    const mutations_s1Gain_s2Amp: Mutation[] = [
+        mutation_s1Gain,
+        mutation_s2Amp,
+    ];
+    const mutations_s1Diploid_s2Amp: Mutation[] = [
+        mutation_s1Diploid,
+        mutation_s2Amp,
+    ];
+    const mutations_s1Hetloss_s2Amp: Mutation[] = [
+        mutation_s1Hetloss,
+        mutation_s2Amp,
+    ];
+    const mutations_s1Homdel_s2Amp: Mutation[] = [
+        mutation_s1Homdel,
+        mutation_s2Amp,
+    ];
+    const mutations_s1Other_s2Amp: Mutation[] = [
+        mutation_s1Other,
+        mutation_s2Amp,
+    ];
+    const mutations_s1NA_s2Amp: Mutation[] = [mutation_s1NA, mutation_s2Amp];
+    const mutations_s1Homdel_s2Gain: Mutation[] = [
+        mutation_s1Homdel,
+        mutation_s2Gain,
+    ];
+    const mutations_s1Homdel_s2Diploid: Mutation[] = [
+        mutation_s1Homdel,
+        mutation_s2Diploid,
+    ];
+    const mutations_s1Homdel_s2Hetloss: Mutation[] = [
+        mutation_s1Homdel,
+        mutation_s2Hetloss,
+    ];
+    const mutations_s1Homdel_s2Homdel: Mutation[] = [
+        mutation_s1Homdel,
+        mutation_s2Homdel,
+    ];
+    const mutations_s1Homdel_s2Other: Mutation[] = [
+        mutation_s1Homdel,
+        mutation_s2Other,
+    ];
+    const mutations_s1Homdel_s2NA: Mutation[] = [
+        mutation_s1Homdel,
+        mutation_s2NA,
+    ];
+    const mutations_s1Hetloss_s2Gain: Mutation[] = [
+        mutation_s1Hetloss,
+        mutation_s2Gain,
+    ];
+    const mutations_s1Diploid_s2Other: Mutation[] = [
+        mutation_s1Diploid,
+        mutation_s2Other,
+    ];
+    const mutations_s1Hetloss_s2Hetloss_TCN2: Mutation[] = [
+        mutation_s1Hetloss,
+        mutation_s2Hetloss_TCN2,
+    ];
+    const mutations_s1Hetloss_TCN2_s2Hetloss: Mutation[] = [
+        mutation_s1Hetloss_TCN2,
+        mutation_s2Hetloss,
+    ];
+    const mutations_s1Hetloss_TCN2_s2Hetloss_TCN2: Mutation[] = [
+        mutation_s1Hetloss_TCN2,
+        mutation_s2Hetloss_TCN2,
+    ];
+    const mutations_s1Amp_s2Diploid_s2Homdel: Mutation[] = [
+        mutation_s1Amp,
+        mutation_s2Diploid,
+        mutation_s3Homdel,
+    ];
+    const mutations_s6_s7: Mutation[] = [mutation_s6, mutation_s7];
+
     /* mock clinical attributes */
     const clinicalDataSampleIdForSample1: ClinicalData = initClinicalData({
         clinicalAttributeId: 'SAMPLE_ID',
-        value: sampleId1WithAscnData,
+        value: sample1Id,
     });
-    // const clinicalDataSampleIdForSample6: ClinicalData = initClinicalData(
-    //     {
-    //         clinicalAttributeId: 'SAMPLE_ID',
-    //         value: sampleId6WithoutAscnData,
-    //     }
-    // );
+    const clinicalDataSampleIdForSample2: ClinicalData = initClinicalData({
+        clinicalAttributeId: 'SAMPLE_ID',
+        value: sample2Id,
+    });
+    const clinicalDataSampleIdForSample3: ClinicalData = initClinicalData({
+        clinicalAttributeId: 'SAMPLE_ID',
+        value: sample3Id,
+    });
+    const clinicalDataSampleIdForSample6: ClinicalData = initClinicalData({
+        clinicalAttributeId: 'SAMPLE_ID',
+        value: sample6Id,
+    });
+    const clinicalDataSampleIdForSample7: ClinicalData = initClinicalData({
+        clinicalAttributeId: 'SAMPLE_ID',
+        value: sample6Id,
+    });
     const clinicalDataWgd: ClinicalData = initClinicalData({
         clinicalAttributeId: CAID_FACETS_WGD,
         value: 'WGD',
@@ -274,212 +251,701 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         clinicalAttributeId: CAID_FACETS_WGD,
         value: 'NO_WGD',
     });
-    // const sampleIdToClinicalDataMapWithoutAscnData: {
-    //     [sampleId: string]: ClinicalData[];
-    // } = { sampleIdWithoutAscnData: [clinicalDataSampleIdForSampleWithoutAscnData] };
-    const sampleIdToClinicalDataMapWithWgd: {
+    const s1NoWgdClinicalDataMap: {
         [sampleId: string]: ClinicalData[];
     } = {
-        [sampleId1WithAscnData]: [
-            clinicalDataSampleIdForSample1,
-            clinicalDataWgd,
-        ],
+        [sample1Id]: [clinicalDataSampleIdForSample1, clinicalDataNoWgd],
     };
-    const sampleIdToClinicalDataMapWithoutWgd: {
+    const s1WgdClinicalDataMap: {
         [sampleId: string]: ClinicalData[];
     } = {
-        [sampleId1WithAscnData]: [
-            clinicalDataSampleIdForSample1,
-            clinicalDataNoWgd,
-        ],
+        [sample1Id]: [clinicalDataSampleIdForSample1, clinicalDataWgd],
     };
-    /* mock react components */
-    let componentS1AmpNoWgd: ReactWrapper<any, any>;
-    let componentS1GainNoWgd: ReactWrapper<any, any>;
-    let componentS1DiploidNoWgd: ReactWrapper<any, any>;
-    let componentS1HetlossNoWgd: ReactWrapper<any, any>;
-    let componentS1HomdelNoWgd: ReactWrapper<any, any>;
-    let componentS1OtherNoWgd: ReactWrapper<any, any>;
-    let componentS1NANoWgd: ReactWrapper<any, any>;
-    let componentS1AmpWgd: ReactWrapper<any, any>;
-    let componentS1GainWgd: ReactWrapper<any, any>;
-    let componentS1DiploidWgd: ReactWrapper<any, any>;
-    let componentS1HetlossWgd: ReactWrapper<any, any>;
-    let componentS1HomdelWgd: ReactWrapper<any, any>;
-    let componentS1OtherWgd: ReactWrapper<any, any>;
-    let componentS1NAWgd: ReactWrapper<any, any>;
-    let componentS6: ReactWrapper<any, any>;
+    const s2NoWgdClinicalDataMap: {
+        [sampleId: string]: ClinicalData[];
+    } = {
+        [sample2Id]: [clinicalDataSampleIdForSample2, clinicalDataNoWgd],
+    };
+    const s2WgdClinicalDataMap: {
+        [sampleId: string]: ClinicalData[];
+    } = {
+        [sample2Id]: [clinicalDataSampleIdForSample2, clinicalDataWgd],
+    };
+    const s3NoWgdClinicalDataMap: {
+        [sampleId: string]: ClinicalData[];
+    } = {
+        [sample3Id]: [clinicalDataSampleIdForSample3, clinicalDataNoWgd],
+    };
+    const s3WgdClinicalDataMap: {
+        [sampleId: string]: ClinicalData[];
+    } = {
+        [sample3Id]: [clinicalDataSampleIdForSample3, clinicalDataWgd],
+    };
+    const s1NoWgds2NoWgdClinicalDataMap: {
+        [sampleId: string]: ClinicalData[];
+    } = {
+        [sample1Id]: [clinicalDataSampleIdForSample1, clinicalDataNoWgd],
+        [sample2Id]: [clinicalDataSampleIdForSample2, clinicalDataNoWgd],
+    };
+    const s1NoWgds2WgdClinicalDataMap: {
+        [sampleId: string]: ClinicalData[];
+    } = {
+        [sample1Id]: [clinicalDataSampleIdForSample1, clinicalDataNoWgd],
+        [sample2Id]: [clinicalDataSampleIdForSample2, clinicalDataWgd],
+    };
+    const s1Wgds2NoWgdClinicalDataMap: {
+        [sampleId: string]: ClinicalData[];
+    } = {
+        [sample1Id]: [clinicalDataSampleIdForSample1, clinicalDataWgd],
+        [sample2Id]: [clinicalDataSampleIdForSample2, clinicalDataNoWgd],
+    };
+    const s1Wgds2WgdClinicalDataMap: {
+        [sampleId: string]: ClinicalData[];
+    } = {
+        [sample1Id]: [clinicalDataSampleIdForSample1, clinicalDataWgd],
+        [sample2Id]: [clinicalDataSampleIdForSample2, clinicalDataWgd],
+    };
+    const s1Wgds2NoWgds3WgdClinicalDataMap: {
+        [sampleId: string]: ClinicalData[];
+    } = {
+        [sample1Id]: [clinicalDataSampleIdForSample1, clinicalDataWgd],
+        [sample2Id]: [clinicalDataSampleIdForSample2, clinicalDataNoWgd],
+        [sample3Id]: [clinicalDataSampleIdForSample3, clinicalDataWgd],
+    };
+    const s6ClinicalDataMap: {
+        [sampleId: string]: ClinicalData[];
+    } = {
+        [sample6Id]: [clinicalDataSampleIdForSample6],
+    };
+    const s7ClinicalDataMap: {
+        [sampleId: string]: ClinicalData[];
+    } = {
+        [sample7Id]: [clinicalDataSampleIdForSample7],
+    };
+    const s6s7ClinicalDataMap: {
+        [sampleId: string]: ClinicalData[];
+    } = {
+        [sample6Id]: [clinicalDataSampleIdForSample6],
+        [sample7Id]: [clinicalDataSampleIdForSample7],
+    };
+    /* test column definitions */
+    let nullSampleManager = new SampleManager([]);
+    let s1NoWgdColDef = getDefaultASCNCopyNumberColumnDefinition(
+        sample1Ids,
+        s1NoWgdClinicalDataMap,
+        nullSampleManager
+    );
+    let s1WgdColDef = getDefaultASCNCopyNumberColumnDefinition(
+        sample1Ids,
+        s1WgdClinicalDataMap,
+        nullSampleManager
+    );
+    let s1NoWgds2NoWgdColDef = getDefaultASCNCopyNumberColumnDefinition(
+        sample12Ids,
+        s1NoWgds2NoWgdClinicalDataMap,
+        nullSampleManager
+    );
+    let s1NoWgds2WgdColDef = getDefaultASCNCopyNumberColumnDefinition(
+        sample12Ids,
+        s1NoWgds2WgdClinicalDataMap,
+        nullSampleManager
+    );
+    let s1Wgds2NoWgdColDef = getDefaultASCNCopyNumberColumnDefinition(
+        sample12Ids,
+        s1Wgds2NoWgdClinicalDataMap,
+        nullSampleManager
+    );
+    let s1Wgds2WgdColDef = getDefaultASCNCopyNumberColumnDefinition(
+        sample12Ids,
+        s1Wgds2WgdClinicalDataMap,
+        nullSampleManager
+    );
+    let s1Wgds2NoWgds3WgdColDef = getDefaultASCNCopyNumberColumnDefinition(
+        sample123Ids,
+        s1Wgds2NoWgds3WgdClinicalDataMap,
+        nullSampleManager
+    );
+    let s6ColDef = getDefaultASCNCopyNumberColumnDefinition(
+        sample6Ids,
+        s6ClinicalDataMap,
+        nullSampleManager
+    );
+    let s7ColDef = getDefaultASCNCopyNumberColumnDefinition(
+        sample7Ids,
+        s7ClinicalDataMap,
+        nullSampleManager
+    );
+    let s6s7ColDef = getDefaultASCNCopyNumberColumnDefinition(
+        sample67Ids,
+        s6s7ClinicalDataMap,
+        nullSampleManager
+    );
 
-    before(() => {
-        componentS1AmpNoWgd = mount(
-            getDefaultASCNCopyNumberColumnDefinition(
-                sampleIds1,
-                sampleIdToClinicalDataMapWithoutWgd
-            ).render(mutationsS1Amp)
-        );
-        componentS1GainNoWgd = mount(
-            getDefaultASCNCopyNumberColumnDefinition(
-                sampleIds1,
-                sampleIdToClinicalDataMapWithoutWgd
-            ).render(mutationsS1Gain)
-        );
-        componentS1DiploidNoWgd = mount(
-            getDefaultASCNCopyNumberColumnDefinition(
-                sampleIds1,
-                sampleIdToClinicalDataMapWithoutWgd
-            ).render(mutationsS1Diploid)
-        );
-        componentS1HetlossNoWgd = mount(
-            getDefaultASCNCopyNumberColumnDefinition(
-                sampleIds1,
-                sampleIdToClinicalDataMapWithoutWgd
-            ).render(mutationsS1Hetloss)
-        );
-        componentS1HomdelNoWgd = mount(
-            getDefaultASCNCopyNumberColumnDefinition(
-                sampleIds1,
-                sampleIdToClinicalDataMapWithoutWgd
-            ).render(mutationsS1Homdel)
-        );
-        componentS1OtherNoWgd = mount(
-            getDefaultASCNCopyNumberColumnDefinition(
-                sampleIds1,
-                sampleIdToClinicalDataMapWithoutWgd
-            ).render(mutationsS1Other)
-        );
-        componentS1NANoWgd = mount(
-            getDefaultASCNCopyNumberColumnDefinition(
-                sampleIds1,
-                sampleIdToClinicalDataMapWithoutWgd
-            ).render(mutationsS1NA)
-        );
-        componentS1AmpWgd = mount(
-            getDefaultASCNCopyNumberColumnDefinition(
-                sampleIds1,
-                sampleIdToClinicalDataMapWithWgd
-            ).render(mutationsS1Amp)
-        );
-        componentS1GainWgd = mount(
-            getDefaultASCNCopyNumberColumnDefinition(
-                sampleIds1,
-                sampleIdToClinicalDataMapWithWgd
-            ).render(mutationsS1Gain)
-        );
-        componentS1DiploidWgd = mount(
-            getDefaultASCNCopyNumberColumnDefinition(
-                sampleIds1,
-                sampleIdToClinicalDataMapWithWgd
-            ).render(mutationsS1Diploid)
-        );
-        componentS1HetlossWgd = mount(
-            getDefaultASCNCopyNumberColumnDefinition(
-                sampleIds1,
-                sampleIdToClinicalDataMapWithWgd
-            ).render(mutationsS1Hetloss)
-        );
-        componentS1HomdelWgd = mount(
-            getDefaultASCNCopyNumberColumnDefinition(
-                sampleIds1,
-                sampleIdToClinicalDataMapWithWgd
-            ).render(mutationsS1Homdel)
-        );
-        componentS1OtherWgd = mount(
-            getDefaultASCNCopyNumberColumnDefinition(
-                sampleIds1,
-                sampleIdToClinicalDataMapWithWgd
-            ).render(mutationsS1Other)
-        );
-        componentS1NAWgd = mount(
-            getDefaultASCNCopyNumberColumnDefinition(
-                sampleIds1,
-                sampleIdToClinicalDataMapWithWgd
-            ).render(mutationsS1NA)
-        );
-        componentS6 = mount(
-            getDefaultASCNCopyNumberColumnDefinition().render(mutationsS6)
-        );
-    });
+    before(() => {});
 
+    // Single sample tests - without any set ASCN mutation attriubutes
     it('renders default (no ASCN data) sample6', () => {
-        test_copy_number_render(componentS6, '', '', '', ASCN_BLACK);
-    });
-    it('renders sample1 Wgd Amp', () => {
-        test_copy_number_render(componentS1AmpWgd, 'WGD', '2', '1', ASCN_AMP);
-    });
-    it('renders sample1 Wgd Gain', () => {
-        test_copy_number_render(componentS1GainWgd, 'WGD', '1', '1', ASCN_GAIN);
-    });
-    it('renders sample1 Wgd Diploid', () => {
-        test_copy_number_render(
-            componentS1DiploidWgd,
-            'WGD',
-            '0',
-            '1',
-            ASCN_LIGHTGREY
+        const cellWrapper = mount(s6ColDef.render(mutations_s6));
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(1); // one sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample6Id
         );
+        expectElementPropertiesMatch(s1Wrapper, 'NA', '-1', '-1', '-1');
     });
-    it('renders sample1 Wgd Hetloss', () => {
-        test_copy_number_render(
-            componentS1HetlossWgd,
-            'WGD',
-            '-1',
-            '1',
-            ASCN_HETLOSS
-        );
-    });
-    it('renders sample1 Wgd Homdel', () => {
-        test_copy_number_render(
-            componentS1HomdelWgd,
-            'WGD',
-            '-2',
-            '1',
-            ASCN_HOMDEL
-        );
-    });
-    it('renders sample1 Wgd Other', () => {
-        test_copy_number_render(componentS1OtherWgd, '', '', '', ASCN_BLACK);
-    });
-    it('renders sample1 Wgd NA', () => {
-        test_copy_number_render(componentS1NAWgd, '', '', '', ASCN_BLACK);
-    });
+    // Single sample tests - with NO_WGD and ASCNCopyNumberValue from each of {'-2','-1','0','1','2','999','NA'}
     it('renders sample1 NoWgd Amp', () => {
-        test_copy_number_render(componentS1AmpNoWgd, '', '2', '1', ASCN_AMP);
+        const cellWrapper = mount(s1NoWgdColDef.render(mutations_s1Amp));
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(1); // one sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '2');
     });
     it('renders sample1 NoWgd Gain', () => {
-        test_copy_number_render(componentS1GainNoWgd, '', '1', '1', ASCN_GAIN);
+        const cellWrapper = mount(s1NoWgdColDef.render(mutations_s1Gain));
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(1); // one sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '1');
     });
     it('renders sample1 NoWgd Diploid', () => {
-        test_copy_number_render(
-            componentS1DiploidNoWgd,
-            '',
-            '0',
-            '1',
-            ASCN_LIGHTGREY
+        const cellWrapper = mount(s1NoWgdColDef.render(mutations_s1Diploid));
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(1); // one sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
         );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '0');
     });
     it('renders sample1 NoWgd Hetloss', () => {
-        test_copy_number_render(
-            componentS1HetlossNoWgd,
-            '',
-            '-1',
-            '1',
-            ASCN_HETLOSS
+        const cellWrapper = mount(s1NoWgdColDef.render(mutations_s1Hetloss));
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(1); // one sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
         );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-1');
     });
     it('renders sample1 NoWgd Homdel', () => {
-        test_copy_number_render(
-            componentS1HomdelNoWgd,
-            '',
-            '-2',
-            '1',
-            ASCN_HOMDEL
+        const cellWrapper = mount(s1NoWgdColDef.render(mutations_s1Homdel));
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(1); // one sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
         );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-2');
     });
-    it('renders sample1 NoWgd Other', () => {
-        test_copy_number_render(componentS1OtherNoWgd, '', '', '', ASCN_BLACK);
+    it('renders sample1 NoWgd Other (999)', () => {
+        const cellWrapper = mount(s1NoWgdColDef.render(mutations_s1Other));
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(1); // one sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '999');
     });
     it('renders sample1 NoWgd NA', () => {
-        test_copy_number_render(componentS1NANoWgd, '', '', '', ASCN_BLACK);
+        const cellWrapper = mount(s1NoWgdColDef.render(mutations_s1NA));
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(1); // one sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', 'NA');
     });
+    // Single sample tests - with WGD and ASCNCopyNumberValue from each of {see_above}
+    it('renders sample1 Wgd Amp', () => {
+        const cellWrapper = mount(s1WgdColDef.render(mutations_s1Amp));
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(1); // one sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '2');
+    });
+    it('renders sample1 Wgd Gain', () => {
+        const cellWrapper = mount(s1WgdColDef.render(mutations_s1Gain));
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(1); // one sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '1');
+    });
+    it('renders sample1 Wgd Diploid', () => {
+        const cellWrapper = mount(s1WgdColDef.render(mutations_s1Diploid));
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(1); // one sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '0');
+    });
+    it('renders sample1 Wgd Hetloss', () => {
+        const cellWrapper = mount(s1WgdColDef.render(mutations_s1Hetloss));
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(1); // one sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '-1');
+    });
+    it('renders sample1 Wgd Homdel', () => {
+        const cellWrapper = mount(s1WgdColDef.render(mutations_s1Homdel));
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(1); // one sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '-2');
+    });
+    it('renders sample1 Wgd Other (999)', () => {
+        const cellWrapper = mount(s1WgdColDef.render(mutations_s1Other));
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(1); // one sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '999');
+    });
+    it('renders sample1 Wgd NA', () => {
+        const cellWrapper = mount(s1WgdColDef.render(mutations_s1NA));
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(1); // one sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', 'NA');
+    });
+    // Single sample tests - with NO_WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValue of '2'
+    it('renders sample1 NoWgd Amp totalCopy1', () => {
+        const cellWrapper = mount(s1NoWgdColDef.render(mutations_s1Amp_TCN1));
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(1); // one sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '2');
+    });
+    it('renders sample1 NoWgd Amp totalCopy2', () => {
+        const cellWrapper = mount(s1NoWgdColDef.render(mutations_s1Amp_TCN2));
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(1); // one sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '2', '1', '2');
+    });
+    // Single sample tests - with WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValue of '2'
+    it('renders sample1 Wgd Amp totalCopy1', () => {
+        const cellWrapper = mount(s1WgdColDef.render(mutations_s1Amp_TCN1));
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(1); // one sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '2');
+    });
+    it('renders sample1 Wgd Amp totalCopy2', () => {
+        const cellWrapper = mount(s1WgdColDef.render(mutations_s1Amp_TCN2));
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(1); // one sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'WGD', '2', '1', '2');
+    });
+    // Two sample tests - without any set ASCN mutation attriubutes
+    it('renders default (no ASCN data) sample6,sample7', () => {
+        const cellWrapper = mount(s6s7ColDef.render(mutations_s6_s7));
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s6Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample6Id
+        );
+        expectElementPropertiesMatch(s6Wrapper, 'NA', '-1', '-1', '-1'); // unset
+        const s7Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample7Id
+        );
+        expectElementPropertiesMatch(s7Wrapper, 'NA', '-1', '-1', '-1'); // unset
+    });
+    // Two sample tests - sample1 NO_WGD, ASCNCopyNumberValue from each of {see_above}; sample2 NO_WGD, ASCN_AMP
+    it('renders sample1 NoWgd Amp, sample2 NoWgd Amp', () => {
+        const cellWrapper = mount(
+            s1NoWgds2NoWgdColDef.render(mutations_s1Amp_s2Amp)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '2');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '2');
+    });
+    it('renders sample1 NoWgd Gain, sample2 NoWgd Amp', () => {
+        const cellWrapper = mount(
+            s1NoWgds2NoWgdColDef.render(mutations_s1Gain_s2Amp)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '1');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '2');
+    });
+    it('renders sample1 NoWgd Diploid, sample2 NoWgd Amp', () => {
+        const cellWrapper = mount(
+            s1NoWgds2NoWgdColDef.render(mutations_s1Diploid_s2Amp)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '0');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '2');
+    });
+    it('renders sample1 NoWgd Hetloss, sample2 NoWgd Amp', () => {
+        const cellWrapper = mount(
+            s1NoWgds2NoWgdColDef.render(mutations_s1Hetloss_s2Amp)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-1');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '2');
+    });
+    it('renders sample1 NoWgd Homdel, sample2 NoWgd Amp', () => {
+        const cellWrapper = mount(
+            s1NoWgds2NoWgdColDef.render(mutations_s1Homdel_s2Amp)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-2');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '2');
+    });
+    it('renders sample1 NoWgd Other(999), sample2 NoWgd Amp', () => {
+        const cellWrapper = mount(
+            s1NoWgds2NoWgdColDef.render(mutations_s1Other_s2Amp)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '999');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '2');
+    });
+    it('renders sample1 NoWgd NA, sample2 NoWgd Amp', () => {
+        const cellWrapper = mount(
+            s1NoWgds2NoWgdColDef.render(mutations_s1NA_s2Amp)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', 'NA');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '2');
+    });
+    // Two sample tests - sample1 NO_WGD, ASCN_HOMDEL; sample2 NO_WGD, ASCNCopyNumberValue from each of {see_above}
+    it('renders sample1 NoWgd Homdel, sample2 NoWgd Amp', () => {
+        const cellWrapper = mount(
+            s1NoWgds2NoWgdColDef.render(mutations_s1Homdel_s2Amp)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-2');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '2');
+    });
+    it('renders sample1 NoWgd Homdel, sample2 NoWgd Gain', () => {
+        const cellWrapper = mount(
+            s1NoWgds2NoWgdColDef.render(mutations_s1Homdel_s2Gain)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-2');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '1');
+    });
+    it('renders sample1 NoWgd Homdel, sample2 NoWgd Diploid', () => {
+        const cellWrapper = mount(
+            s1NoWgds2NoWgdColDef.render(mutations_s1Homdel_s2Diploid)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-2');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '0');
+    });
+    it('renders sample1 NoWgd Homdel, sample2 NoWgd Hetloss', () => {
+        const cellWrapper = mount(
+            s1NoWgds2NoWgdColDef.render(mutations_s1Homdel_s2Hetloss)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-2');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '-1');
+    });
+    it('renders sample1 NoWgd Homdel, sample2 NoWgd Homdel', () => {
+        const cellWrapper = mount(
+            s1NoWgds2NoWgdColDef.render(mutations_s1Homdel_s2Homdel)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-2');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '-2');
+    });
+    it('renders sample1 NoWgd Homdel, sample2 NoWgd Other(999)', () => {
+        const cellWrapper = mount(
+            s1NoWgds2NoWgdColDef.render(mutations_s1Homdel_s2Other)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-2');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '999');
+    });
+    it('renders sample1 NoWgd Homdel, sample2 NoWgd NA', () => {
+        const cellWrapper = mount(
+            s1NoWgds2NoWgdColDef.render(mutations_s1Homdel_s2NA)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-2');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', 'NA');
+    });
+    // Two sample tests - sample1 NO_WGD, ASCN_HETLOSS; sample2 WGD, ASCN_GAIN
+    it('renders sample1 NoWgd Hetloss, sample2 Wgd Gain', () => {
+        const cellWrapper = mount(
+            s1NoWgds2NoWgdColDef.render(mutations_s1Hetloss_s2Gain)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-1');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '1');
+    });
+    // Two sample tests - sample1 WGD, ASCN_HOMDEL; sample2 NO_WGD, ASCN_GAIN
+    it('renders sample1 Wgd Homdel, sample2 NoWgd Gain', () => {
+        const cellWrapper = mount(
+            s1Wgds2NoWgdColDef.render(mutations_s1Homdel_s2Gain)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '-2');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '1');
+    });
+    // Two sample tests - sample1 WGD, ASCN_LIGHTGREY [0]; sample2 WGD, ASCN_BLACK [999]
+    it('renders sample1 Wgd Diploid, sample2 Wgd Other(999)', () => {
+        const cellWrapper = mount(
+            s1Wgds2WgdColDef.render(mutations_s1Diploid_s2Other)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '0');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'WGD', '1', '1', '999');
+    });
+    // Two sample tests - sample1 and sample 2 with NO_WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValue of '-1'
+    it('renders sample1 NoWgd Hetloss, sample2 NoWgd Hetloss totalCopy2', () => {
+        const cellWrapper = mount(
+            s1NoWgds2NoWgdColDef.render(mutations_s1Hetloss_s2Hetloss_TCN2)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-1');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '2', '1', '-1');
+    });
+    it('renders sample1 NoWgd Hetloss totalCopy2, sample2 NoWgd Hetloss', () => {
+        const cellWrapper = mount(
+            s1NoWgds2NoWgdColDef.render(mutations_s1Hetloss_TCN2_s2Hetloss)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '2', '1', '-1');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '-1');
+    });
+    it('renders sample1 NoWgd Hetloss totalCopy2, sample2 NoWgd Hetloss totalCopy2', () => {
+        const cellWrapper = mount(
+            s1NoWgds2NoWgdColDef.render(mutations_s1Hetloss_TCN2_s2Hetloss_TCN2)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '2', '1', '-1');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '2', '1', '-1');
+    });
+    // Two sample tests - sample1 and sample 2 with WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValue of '-1'
+    it('renders sample1 Wgd Hetloss, sample2 Wgd Hetloss totalCopy2', () => {
+        const cellWrapper = mount(
+            s1Wgds2WgdColDef.render(mutations_s1Hetloss_s2Hetloss_TCN2)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '-1');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'WGD', '2', '1', '-1');
+    });
+    it('renders sample1 Wgd Hetloss totalCopy2, sample2 Wgd Hetloss', () => {
+        const cellWrapper = mount(
+            s1Wgds2WgdColDef.render(mutations_s1Hetloss_TCN2_s2Hetloss)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'WGD', '2', '1', '-1');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'WGD', '1', '1', '-1');
+    });
+    it('renders sample1 Wgd Hetloss totalCopy2, sample2 Wgd Hetloss totalCopy2', () => {
+        const cellWrapper = mount(
+            s1Wgds2WgdColDef.render(mutations_s1Hetloss_TCN2_s2Hetloss_TCN2)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(2); // two sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'WGD', '2', '1', '-1');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'WGD', '2', '1', '-1');
+    });
+
+    // Three sample test - sample1 WGD, ASCN_AMP; sample2 NO_WGD, ASCN_LIGHTGREY; sample3 WGD, ASCN_HOMDEL
+    it('renders sample1 Wgd Amp, sample2 NoWgd Diploid, sample3 Wgd Homdel', () => {
+        const cellWrapper = mount(
+            s1Wgds2NoWgds3WgdColDef.render(mutations_s1Amp_s2Diploid_s2Homdel)
+        );
+        const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
+        expect(elementsWrapper.length).to.equal(3); // three sample
+        const s1Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample1Id
+        );
+        expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '2');
+        const s2Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample2Id
+        );
+        expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '0');
+        const s3Wrapper = elementsWrapper.filterWhere(
+            e => e.prop('sampleId') === sample3Id
+        );
+        expectElementPropertiesMatch(s3Wrapper, 'WGD', '1', '1', '-2');
+    });
+
     after(() => {});
 });
