@@ -107,7 +107,6 @@ const CATEGORY_LABEL_HORZ_ANGLE = 50;
 const DEFAULT_LEFT_PADDING = 25;
 const DEFAULT_BOTTOM_PADDING = 10;
 const BOTTOM_LEGEND_PADDING = 15;
-const RIGHT_PADDING_FOR_LONG_LABELS = 50;
 const HORIZONTAL_OFFSET = 8;
 const VERTICAL_OFFSET = 17;
 const UTILITIES_MENU_HEIGHT = 20;
@@ -301,8 +300,7 @@ export default class BoxScatterPlot<
             );
         }
 
-        // this result doesnt matter but it keeps us from dividing by zero
-        return this.svgWidth;
+        return 0;
     }
 
     @computed get legendItemsPerRow() {
@@ -741,9 +739,9 @@ export default class BoxScatterPlot<
             this.legendLocation === 'right'
         ) {
             // make room for legend
-            return Math.max(RIGHT_GUTTER, RIGHT_PADDING_FOR_LONG_LABELS);
+            return Math.max(RIGHT_GUTTER, this.maxLegendLabelWidth + 50); // + 50 makes room for circle and padding
         } else {
-            return RIGHT_PADDING_FOR_LONG_LABELS;
+            return RIGHT_GUTTER;
         }
     }
 
