@@ -140,17 +140,13 @@ describe('results page', function() {
         });
         it('should hide survival tab in a query without any survival data', () => {
             goToUrlAndSetLocalStorage(
-                `${CBIOPORTAL_URL}/index.do?session_id=5bc64bb5498eb8b3d5685afb`
+                `${CBIOPORTAL_URL}/results/comparison?session_id=5bc64bb5498eb8b3d5685afb`
             );
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
+            browser.waitForVisible(
+                'div[data-test="ComparisonPageOverlapTabDiv"]',
+                20000
+            );
             assert(!browser.isVisible('a.tabAnchor_survival'));
-        });
-        it('should show survival tab if the tab is routed to directly, even if no data', () => {
-            goToUrlAndSetLocalStorage(
-                `${CBIOPORTAL_URL}/results/survival?session_id=5bc64bb5498eb8b3d5685afb`
-            );
-            browser.waitForExist('a.tabAnchor_survival', 10000);
-            assert(browser.isVisible('a.tabAnchor_survival'));
         });
     });
     describe('mutual exclusivity tab', function() {

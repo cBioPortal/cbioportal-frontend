@@ -184,8 +184,11 @@ describe('track group headers', function() {
 
         // Cluster the mrna heatmap group
         var mrnaElements = getGroupHeaderOptionsElements(2);
-        browser.click(mrnaElements.button_selector);
-        browser.waitForVisible(mrnaElements.dropdown_selector, 1000); // wait for menu to appear
+        setDropdownOpen(
+            true,
+            mrnaElements.button_selector,
+            mrnaElements.dropdown_selector + ' li:nth-child(1)'
+        );
         browser.click(mrnaElements.dropdown_selector + ' li:nth-child(1)'); // Click Cluster
         browser.pause(500); // give it time to sort
     });
@@ -198,10 +201,14 @@ describe('track group headers', function() {
     it('oncoprint should delete clustered heatmap group correctly', function() {
         // Remove the mrna heatmap group, leaving the methylation group and everything sorted by data
         var mrnaElements = getGroupHeaderOptionsElements(2);
-        browser.click(mrnaElements.button_selector);
-        browser.waitForVisible(mrnaElements.dropdown_selector, 1000); // wait for menu to appear
+        setDropdownOpen(
+            true,
+            mrnaElements.button_selector,
+            mrnaElements.dropdown_selector + ' li:nth-child(4)',
+            'could not open mrna group options dropdown'
+        );
         browser.click(mrnaElements.dropdown_selector + ' li:nth-child(4)'); // Click Delete
-        waitForOncoprint(2000);
+        waitForOncoprint(10000);
 
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
@@ -210,10 +217,14 @@ describe('track group headers', function() {
     it('oncoprint should delete non-clustered heatmap group correctly', function() {
         // Remove the methylation group, leaving the mrna group clustered
         var methylElements = getGroupHeaderOptionsElements(3);
-        browser.click(methylElements.button_selector);
-        browser.waitForVisible(methylElements.dropdown_selector, 1000); // wait for menu to appear
+        setDropdownOpen(
+            true,
+            methylElements.button_selector,
+            methylElements.dropdown_selector + ' li:nth-child(4)',
+            'could not open mrna group options dropdown'
+        );
         browser.click(methylElements.dropdown_selector + ' li:nth-child(4)'); // Click Delete
-        waitForOncoprint(2000);
+        waitForOncoprint(10000);
 
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
@@ -222,8 +233,11 @@ describe('track group headers', function() {
     it('oncoprint should return to non-clustered state correctly', function() {
         // Cluster the mrna heatmap group
         var mrnaElements = getGroupHeaderOptionsElements(2);
-        browser.click(mrnaElements.button_selector);
-        browser.waitForVisible(mrnaElements.dropdown_selector, 1000); // wait for menu to appear
+        setDropdownOpen(
+            true,
+            mrnaElements.button_selector,
+            mrnaElements.dropdown_selector + ' li:nth-child(2)'
+        );
         browser.click(mrnaElements.dropdown_selector + ' li:nth-child(2)'); // Click Don't Cluster
         browser.pause(500); // give it time to sort
 
