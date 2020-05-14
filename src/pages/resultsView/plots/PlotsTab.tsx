@@ -4420,7 +4420,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                         style: { marginTop: 4 },
                                                     }}
                                                 >
-                                                    Mutation Type
+                                                    Mutation Type *
                                                 </LabeledCheckbox>
                                             )}
                                         {this.coloringByGene &&
