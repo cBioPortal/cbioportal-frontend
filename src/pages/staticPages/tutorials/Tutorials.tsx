@@ -79,13 +79,8 @@ export default class Tutorials extends React.Component<{}, {}> {
                                 </li>
 
                                 <li>
-                                    OQL & Expression (May 14, 2020, 11am-12pm
-                                    EDT)&nbsp;
-                                    <a
-                                        target="_blank"
-                                        href="https://dfci.zoom.us/webinar/register/7315875611981/WN_An_3l0XYQHCoinWvclUrlw"
-                                    >
-                                        register
+                                    <a href="#webinar-3">
+                                        Expression Data Analysis
                                     </a>
                                 </li>
 
@@ -253,6 +248,49 @@ export default class Tutorials extends React.Component<{}, {}> {
                         <a
                             href={`${AppConfig.serverConfig
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Webinar 2 Mutation Details and Patient View.pdf`}
+                        >
+                            Download slides
+                        </a>
+                    </h4>
+                </div>
+                <hr />
+                <h2 id={'webinar-3'}>
+                    Webinar #3: Expression Data Analysis{' '}
+                    <ReturnToTop />
+                </h2>
+
+                <iframe
+                    src="https://www.youtube.com/embed/YUxVv6pkxD4"
+                    frameBorder="0"
+                    width="720"
+                    height="434"
+                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen={true}
+                ></iframe>
+                <div>
+                    <span style={{ fontSize: 'large' }}>Watch on </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a
+                            target="_blank"
+                            href="https://www.youtube.com/watch?v=YUxVv6pkxD4"
+                        >
+                            YouTube.com
+                        </a>
+                    </h4>
+                    {/*<span style={{ fontSize: 'large' }}> or </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a
+                            target="_blank"
+                            href="https://www.bilibili.com/video/BV1Qf4y1m7Lx"
+                        >
+                            bilibili.com
+                        </a>
+                    </h4>*/
+                    <span style={{ color: '#eee' }}> | </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a
+                            href={`${AppConfig.serverConfig
+                                .skin_documentation_baseurl!}tutorials/cBioPortal Webinar 3 Expression Data Analysis.pdf`}
                         >
                             Download slides
                         </a>
