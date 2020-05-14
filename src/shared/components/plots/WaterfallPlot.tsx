@@ -28,7 +28,7 @@ import {
     limitValueAppearance,
     IValue1D,
 } from 'pages/resultsView/plots/PlotsTabUtils';
-import { getTextWidth, textTruncationUtils } from 'cbioportal-frontend-commons';
+import { getTextWidth, wrapText } from 'cbioportal-frontend-commons';
 import { clamp } from '../../lib/NumberUtils';
 
 // TODO make distinction between public and internal interface for waterfall plot data
@@ -76,7 +76,7 @@ export interface IWaterfallPlotProps<D extends IBaseWaterfallPlotData> {
     fontFamily?: string;
     sortOrder: string | undefined;
     pivotThreshold?: number;
-    legendTitle?: string;
+    legendTitle?: string | string[];
 }
 
 const DEFAULT_FONT_FAMILY = 'Verdana,Arial,sans-serif';
@@ -182,7 +182,7 @@ export default class WaterfallPlot<
 
     @computed get title() {
         if (this.props.title) {
-            const text = textTruncationUtils(
+            const text = wrapText(
                 this.props.title,
                 this.props.chartWidth,
                 this.fontFamily,
@@ -210,7 +210,7 @@ export default class WaterfallPlot<
             const maxDimension = this.props.horizontal
                 ? this.props.chartWidth
                 : this.props.chartHeight;
-            return textTruncationUtils(
+            return wrapText(
                 this.props.axisLabel,
                 maxDimension,
                 this.fontFamily,
@@ -262,11 +262,17 @@ export default class WaterfallPlot<
             CBIOPORTAL_VICTORY_THEME.legend.gutter; // gutter between columns
         let legendItemArea = this.svgWidth;
         if (this.props.legendTitle) {
+            const legendTitle = ([] as string[]).concat(this.props.legendTitle);
             // make room for legend title if there is one
-            legendItemArea -= getTextWidth(
-                this.props.legendTitle,
-                CBIOPORTAL_VICTORY_THEME.legend.style.title.fontFamily,
-                CBIOPORTAL_VICTORY_THEME.legend.style.title.fontSize + 'px'
+            legendItemArea -= Math.max(
+                ...legendTitle.map(t =>
+                    getTextWidth(
+                        t,
+                        CBIOPORTAL_VICTORY_THEME.legend.style.title.fontFamily,
+                        CBIOPORTAL_VICTORY_THEME.legend.style.title.fontSize +
+                            'px'
+                    )
+                )
             );
             // padding
             legendItemArea -= CBIOPORTAL_VICTORY_THEME.legend.gutter;

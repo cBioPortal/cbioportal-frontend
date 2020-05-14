@@ -33,7 +33,7 @@ import {
     IPlotSampleData,
 } from 'pages/resultsView/plots/PlotsTabUtils';
 import ifNotDefined from '../../lib/ifNotDefined';
-import { getTextWidth, textTruncationUtils } from 'cbioportal-frontend-commons';
+import { getTextWidth, wrapText } from 'cbioportal-frontend-commons';
 
 export interface IBaseScatterPlotData {
     x: number;
@@ -71,7 +71,7 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     axisLabelX?: string;
     axisLabelY?: string;
     fontFamily?: string;
-    legendTitle?: string;
+    legendTitle?: string | string[];
 }
 // constants related to the gutter
 const GUTTER_TEXT_STYLE = {
@@ -160,7 +160,7 @@ export default class ScatterPlot<
 
     private get title() {
         if (this.props.title) {
-            const text = textTruncationUtils(
+            const text = wrapText(
                 this.props.title,
                 this.props.chartWidth,
                 this.fontFamily,
@@ -244,11 +244,17 @@ export default class ScatterPlot<
             CBIOPORTAL_VICTORY_THEME.legend.gutter; // gutter between columns
         let legendItemArea = this.svgWidth;
         if (this.props.legendTitle) {
+            const legendTitle = ([] as string[]).concat(this.props.legendTitle);
             // make room for legend title if there is one
-            legendItemArea -= getTextWidth(
-                this.props.legendTitle,
-                CBIOPORTAL_VICTORY_THEME.legend.style.title.fontFamily,
-                CBIOPORTAL_VICTORY_THEME.legend.style.title.fontSize + 'px'
+            legendItemArea -= Math.max(
+                ...legendTitle.map(t =>
+                    getTextWidth(
+                        t,
+                        CBIOPORTAL_VICTORY_THEME.legend.style.title.fontFamily,
+                        CBIOPORTAL_VICTORY_THEME.legend.style.title.fontSize +
+                            'px'
+                    )
+                )
             );
             // padding
             legendItemArea -= CBIOPORTAL_VICTORY_THEME.legend.gutter;
