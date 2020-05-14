@@ -166,6 +166,7 @@ import {
     generateStudyViewSurvivalPlotTitle,
     getSurvivalAttributes,
     plotsPriority,
+    getSurvivalStatusBoolean,
     survivalClinicalDataVocabulary,
 } from 'pages/resultsView/survival/SurvivalUtil';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
@@ -217,7 +218,7 @@ export type SurvivalType = {
     id: string;
     title: string;
     associatedAttrs: string[];
-    filter: string[];
+    filter: (s: string) => boolean;
     survivalData: PatientSurvival[];
 };
 
@@ -4704,7 +4705,7 @@ export class StudyViewPageStore {
                     id: `${prefix}_SURVIVAL`,
                     title: plotTitle,
                     associatedAttrs: [`${prefix}_STATUS`, `${prefix}_MONTHS`],
-                    filter: survivalClinicalDataVocabulary[prefix],
+                    filter: s => getSurvivalStatusBoolean(s, prefix),
                     survivalData: [],
                 };
             }
@@ -5148,7 +5149,7 @@ export class StudyViewPageStore {
                     this.selectedPatientKeys.result!,
                     obj.associatedAttrs[0],
                     obj.associatedAttrs[1],
-                    s => obj.filter.includes(s)
+                    obj.filter
                 );
                 return obj;
             });

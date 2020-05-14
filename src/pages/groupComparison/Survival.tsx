@@ -23,9 +23,9 @@ import ComparisonStore, {
     OverlapStrategy,
 } from '../../shared/lib/comparison/ComparisonStore';
 import {
-    survivalClinicalDataVocabulary,
     survivalPlotTooltipxLabelWithEvent,
     generateSurvivalPlotTitleFromDisplayName,
+    getStatusCasesHeaderText,
 } from 'pages/resultsView/survival/SurvivalUtil';
 import { observable, action } from 'mobx';
 import survivalPlotStyle from './styles.module.scss';
@@ -215,6 +215,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.analysisGroupsComputations,
             this.props.store.overlapComputations,
             this.props.store.uidToGroup,
+            this.props.store.patientSurvivalUniqueStatusText,
         ],
         render: () => {
             let content: any = [];
@@ -330,19 +331,20 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                     xAxisLabel={`Months ${survivalTitleText[key]}`}
                                     yAxisLabel={survivalTitleText[key]}
                                     totalCasesHeader="Number of Cases, Total"
-                                    statusCasesHeader={`Number of Cases, ${_.startCase(
-                                        _.toLower(
-                                            survivalClinicalDataVocabulary[
-                                                key
-                                            ][0]
-                                        )
+                                    statusCasesHeader={`Number of Cases, ${getStatusCasesHeaderText(
+                                        key,
+                                        this.props.store
+                                            .patientSurvivalUniqueStatusText
+                                            .result![key]
                                     )}`}
                                     medianMonthsHeader={`Median Months ${survivalTitleText[key]}`}
                                     yLabelTooltip={`${_.startCase(
                                         _.toLower(survivalTitleText[key])
                                     )} estimate`}
                                     xLabelWithEventTooltip={
-                                        survivalPlotTooltipxLabelWithEvent[key]
+                                        survivalPlotTooltipxLabelWithEvent[
+                                            key
+                                        ] || 'Time of Death'
                                     }
                                     xLabelWithoutEventTooltip="Time of last observation"
                                     fileName={survivalTitleText[key].replace(
