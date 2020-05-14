@@ -82,6 +82,7 @@ const GUTTER_TEXT_STYLE = {
     fontFamily: baseLabelStyles.fontFamily,
     fontSize: baseLabelStyles.fontSize,
 };
+const LEGEND_COLUMN_PADDING = 45;
 const CORRELATION_INFO_Y = 100; // experimentally determined
 const REGRESSION_STROKE = '#c43a31';
 const REGRESSION_STROKE_WIDTH = 2;
@@ -263,7 +264,7 @@ export default class ScatterPlot<
         const widthPerItem =
             this.maxLegendLabelWidth +
             50 + // data point and padding
-            CBIOPORTAL_VICTORY_THEME.legend.gutter; // gutter between columns
+            LEGEND_COLUMN_PADDING; // space between columns
         let legendItemArea = this.svgWidth;
         if (this.props.legendTitle) {
             const legendTitle = ([] as string[]).concat(this.props.legendTitle);
@@ -335,6 +336,11 @@ export default class ScatterPlot<
                             : this.legendItemsPerRow
                     }
                     rowGutter={this.legendLocation === 'right' ? undefined : -5}
+                    gutter={
+                        this.legendLocation === 'right'
+                            ? undefined
+                            : LEGEND_COLUMN_PADDING
+                    }
                     data={legendData}
                     x={this.legendLocation === 'right' ? this.sideLegendX : 0}
                     y={
