@@ -85,7 +85,7 @@ const REGRESSION_EQUATION_Y = CORRELATION_INFO_Y + 95; // 95 ~= correlation heig
 const LEGEND_TEXT_WIDTH = 107; // experimentally determined
 
 const DEFAULT_FONT_FAMILY = 'Verdana,Arial,sans-serif';
-const RIGHT_PADDING = 120; // room for correlation info and legend
+const RIGHT_GUTTER = 120; // room for correlation info and legend
 const NUM_AXIS_TICKS = 8;
 const PLOT_DATA_PADDING_PIXELS = 50;
 const LEFT_PADDING = 25;
@@ -233,8 +233,7 @@ export default class ScatterPlot<
             );
         }
 
-        // this result doesnt matter but it keeps us from dividing by zero
-        return this.svgWidth;
+        return 0;
     }
 
     @computed get legendItemsPerRow() {
@@ -534,7 +533,16 @@ export default class ScatterPlot<
     }
 
     @computed get rightPadding() {
-        return RIGHT_PADDING;
+        if (
+            this.props.legendData &&
+            this.props.legendData.length > 0 &&
+            this.legendLocation === 'right'
+        ) {
+            // make room for legend
+            return Math.max(RIGHT_GUTTER, this.maxLegendLabelWidth + 50); // + 50 makes room for circle and padding
+        } else {
+            return RIGHT_GUTTER;
+        }
     }
 
     @computed get svgWidth() {

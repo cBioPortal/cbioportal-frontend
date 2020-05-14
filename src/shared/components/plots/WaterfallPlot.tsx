@@ -81,7 +81,7 @@ export interface IWaterfallPlotProps<D extends IBaseWaterfallPlotData> {
 
 const DEFAULT_FONT_FAMILY = 'Verdana,Arial,sans-serif';
 export const LEGEND_Y = 30;
-const RIGHT_PADDING = 120; // room for correlation info and legend
+const RIGHT_GUTTER = 130; // room for correlation info and legend
 const NUM_AXIS_TICKS = 8;
 const LEFT_PADDING = 25;
 const LABEL_OFFSET_FRACTION = 0.02;
@@ -251,8 +251,7 @@ export default class WaterfallPlot<
             );
         }
 
-        // this result doesnt matter but it keeps us from dividing by zero
-        return this.svgWidth;
+        return 0;
     }
 
     @computed get legendItemsPerRow() {
@@ -392,7 +391,7 @@ export default class WaterfallPlot<
     }
 
     @computed get svgWidth() {
-        return LEFT_PADDING + this.props.chartWidth + RIGHT_PADDING;
+        return LEFT_PADDING + this.props.chartWidth + this.rightPadding;
     }
 
     @computed get svgHeight() {
@@ -400,6 +399,19 @@ export default class WaterfallPlot<
             return this.props.chartHeight + this.bottomLegendHeight;
         }
         return this.props.chartHeight;
+    }
+
+    @computed get rightPadding() {
+        if (
+            this.props.legendData &&
+            this.props.legendData.length > 0 &&
+            this.legendLocation === 'right'
+        ) {
+            // make room for legend
+            return Math.max(RIGHT_GUTTER, this.maxLegendLabelWidth + 50); // + 50 makes room for circle and padding
+        } else {
+            return RIGHT_GUTTER;
+        }
     }
 
     @computed get legendLocation() {
