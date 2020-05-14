@@ -28,7 +28,11 @@ import {
     limitValueAppearance,
     IValue1D,
 } from 'pages/resultsView/plots/PlotsTabUtils';
-import { getTextWidth, wrapText } from 'cbioportal-frontend-commons';
+import {
+    getTextHeight,
+    getTextWidth,
+    wrapText,
+} from 'cbioportal-frontend-commons';
 import { clamp } from '../../lib/NumberUtils';
 
 // TODO make distinction between public and internal interface for waterfall plot data
@@ -226,13 +230,32 @@ export default class WaterfallPlot<
 
     @computed get bottomLegendHeight() {
         //height of legend in case its on bottom
-        if (!this.props.legendData) {
+        if (!this.props.legendData || this.legendLocation !== 'bottom') {
             return 0;
         } else {
             const numRows = Math.ceil(
                 this.props.legendData.length / this.legendItemsPerRow
             );
-            return 23.7 * numRows;
+            const itemsHeight = 23.7 * numRows;
+
+            let titleHeight = 0;
+            if (this.props.legendTitle) {
+                const legendTitle = ([] as string[]).concat(
+                    this.props.legendTitle
+                );
+                titleHeight = _.sumBy(legendTitle, t =>
+                    getTextHeight(
+                        t,
+                        CBIOPORTAL_VICTORY_THEME.legend.style.title.fontFamily,
+                        CBIOPORTAL_VICTORY_THEME.legend.style.title.fontSize +
+                            'px'
+                    )
+                );
+                // add room for between lines
+                titleHeight += 10 * (legendTitle.length - 1);
+            }
+
+            return Math.max(itemsHeight, titleHeight);
         }
     }
 

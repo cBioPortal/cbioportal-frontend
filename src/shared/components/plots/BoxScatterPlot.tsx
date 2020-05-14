@@ -28,6 +28,7 @@ import { logicalAnd } from '../../lib/LogicUtils';
 import { tickFormatNumeral, wrapTick } from './TickUtils';
 import { makeScatterPlotSizeFunction } from './PlotUtils';
 import {
+    getTextHeight,
     getTextWidth,
     truncateWithEllipsis,
 } from 'cbioportal-frontend-commons';
@@ -275,13 +276,32 @@ export default class BoxScatterPlot<
 
     @computed get bottomLegendHeight() {
         //height of legend in case its on bottom
-        if (!this.props.legendData) {
+        if (!this.props.legendData || this.legendLocation !== 'bottom') {
             return 0;
         } else {
             const numRows = Math.ceil(
                 this.props.legendData.length / this.legendItemsPerRow
             );
-            return 23.7 * numRows;
+            const itemsHeight = 23.7 * numRows;
+
+            let titleHeight = 0;
+            if (this.props.legendTitle) {
+                const legendTitle = ([] as string[]).concat(
+                    this.props.legendTitle
+                );
+                titleHeight = _.sumBy(legendTitle, t =>
+                    getTextHeight(
+                        t,
+                        CBIOPORTAL_VICTORY_THEME.legend.style.title.fontFamily,
+                        CBIOPORTAL_VICTORY_THEME.legend.style.title.fontSize +
+                            'px'
+                    )
+                );
+                // add room for between lines
+                titleHeight += 10 * (legendTitle.length - 1);
+            }
+
+            return Math.max(itemsHeight, titleHeight);
         }
     }
 
