@@ -82,6 +82,7 @@ import {
     DownloadControls,
     getMobxPromiseGroupStatus,
     remoteData,
+    wrapText,
 } from 'cbioportal-frontend-commons';
 import BoxScatterPlot, {
     IBoxScatterPlotData,
@@ -111,6 +112,7 @@ import { Mutable } from '../../../shared/lib/TypeScriptUtils';
 import MobxPromise from 'mobxpromise';
 import { SpecialAttribute } from '../../../shared/cache/ClinicalDataCache';
 import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledCheckbox';
+import CBIOPORTAL_VICTORY_THEME from '../../../shared/theme/cBioPoralTheme';
 
 enum EventKey {
     horz_logScale,
@@ -3514,6 +3516,27 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return undefined;
     }
 
+    @computed get legendTitle(): string | string[] {
+        if (this.selectedGeneForStyling) {
+            // coloring by gene
+            return this.selectedGeneForStyling.hugoGeneSymbol;
+        } else if (
+            this.coloringMenuSelection.selectedOption &&
+            this.coloringMenuSelection.selectedOption.info.clinicalAttribute
+        ) {
+            // coloring by clinical attribute
+            return wrapText(
+                this.coloringMenuSelection.selectedOption.info.clinicalAttribute
+                    .displayName,
+                100,
+                CBIOPORTAL_VICTORY_THEME.legend.style.title.fontFamily,
+                CBIOPORTAL_VICTORY_THEME.legend.style.title.fontSize + 'px'
+            );
+        }
+        // neither
+        return '';
+    }
+
     readonly scatterPlotData = remoteData<IScatterPlotData[]>({
         await: () => {
             const ret: MobxPromise<any>[] = [
@@ -4123,12 +4146,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         this.coloringLogScale,
                                         this.onClickLegendItem
                                     )}
-                                    legendTitle={
-                                        this.selectedGeneForStyling
-                                            ? this.selectedGeneForStyling
-                                                  .hugoGeneSymbol
-                                            : ''
-                                    }
+                                    legendTitle={this.legendTitle}
                                 />
                             );
                             break;
@@ -4199,12 +4217,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         this.coloringLogScale,
                                         this.onClickLegendItem
                                     )}
-                                    legendTitle={
-                                        this.selectedGeneForStyling
-                                            ? this.selectedGeneForStyling
-                                                  .hugoGeneSymbol
-                                            : ''
-                                    }
+                                    legendTitle={this.legendTitle}
                                 />
                             );
                             break;
@@ -4280,12 +4293,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     legendLocationWidthThreshold={
                                         LEGEND_TO_BOTTOM_WIDTH_THRESHOLD
                                     }
-                                    legendTitle={
-                                        this.selectedGeneForStyling
-                                            ? this.selectedGeneForStyling
-                                                  .hugoGeneSymbol
-                                            : ''
-                                    }
+                                    legendTitle={this.legendTitle}
                                 />
                             );
                             break;
