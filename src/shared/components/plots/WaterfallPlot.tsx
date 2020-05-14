@@ -83,6 +83,7 @@ export interface IWaterfallPlotProps<D extends IBaseWaterfallPlotData> {
     legendTitle?: string | string[];
 }
 
+const LEGEND_COLUMN_PADDING = 45;
 const DEFAULT_FONT_FAMILY = 'Verdana,Arial,sans-serif';
 export const LEGEND_Y = 30;
 const RIGHT_GUTTER = 130; // room for correlation info and legend
@@ -281,7 +282,7 @@ export default class WaterfallPlot<
         const widthPerItem =
             this.maxLegendLabelWidth +
             50 + // data point and padding
-            CBIOPORTAL_VICTORY_THEME.legend.gutter; // gutter between columns
+            LEGEND_COLUMN_PADDING; // space between columns
         let legendItemArea = this.svgWidth;
         if (this.props.legendTitle) {
             const legendTitle = ([] as string[]).concat(this.props.legendTitle);
@@ -353,6 +354,11 @@ export default class WaterfallPlot<
                             : this.legendItemsPerRow
                     }
                     rowGutter={this.legendLocation === 'right' ? undefined : -5}
+                    gutter={
+                        this.legendLocation === 'right'
+                            ? undefined
+                            : LEGEND_COLUMN_PADDING
+                    }
                     data={legendData}
                     x={this.legendLocation === 'right' ? this.legendX : 0}
                     y={
