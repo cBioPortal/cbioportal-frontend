@@ -78,7 +78,7 @@ export default class ClonalColumnFormatter {
 
         return (
             <>
-                {samplesWithValue.map((sampleId: string, index: number) => {
+                {sampleIds.map((sampleId: string, index: number) => {
                     return (
                         <span
                             key={sampleId}

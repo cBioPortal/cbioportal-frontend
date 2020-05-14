@@ -2,7 +2,7 @@ import * as React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import SampleManager from 'pages/patientView/SampleManager';
 
-enum ClonalColor {
+export enum ClonalColor {
     LIMEGREEN = 'limegreen',
     DIMGREY = 'dimgrey',
     LIGHTGREY = 'lightgrey',
@@ -19,7 +19,7 @@ function getClonalColor(clonalValue: string): ClonalColor {
     }
 }
 
-const ClonalElementTooltip: React.FunctionComponent<{
+export const ClonalElementTooltip: React.FunctionComponent<{
     sampleId: string;
     clonalValue: string;
     ccfMCopies: string;
@@ -66,6 +66,11 @@ const ClonalCircle: React.FunctionComponent<{
                 cy={5}
                 r={5}
                 fill={getClonalColor(props.clonalValue)}
+                opacity={
+                    getClonalColor(props.clonalValue) !== ClonalColor.LIGHTGREY
+                        ? 100
+                        : 0
+                }
             />
         </svg>
     );
@@ -77,16 +82,24 @@ const ClonalElement: React.FunctionComponent<{
     ccfMCopies: string;
     sampleManager?: SampleManager | null;
 }> = props => {
-    return (
-        <DefaultTooltip
-            overlay={<ClonalElementTooltip {...props} />}
-            placement="left"
-        >
+    if (getClonalColor(props.clonalValue) !== ClonalColor.LIGHTGREY) {
+        return (
+            <DefaultTooltip
+                overlay={<ClonalElementTooltip {...props} />}
+                placement="left"
+            >
+                <span>
+                    <ClonalCircle clonalValue={props.clonalValue} />
+                </span>
+            </DefaultTooltip>
+        );
+    } else {
+        return (
             <span>
                 <ClonalCircle clonalValue={props.clonalValue} />
             </span>
-        </DefaultTooltip>
-    );
+        );
+    }
 };
 
 export default ClonalElement;
