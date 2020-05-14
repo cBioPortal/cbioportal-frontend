@@ -1,10 +1,10 @@
 import _ from 'lodash';
 import numeral from 'numeral';
-import { textTruncationUtils } from 'cbioportal-frontend-commons';
+import { wrapText } from 'cbioportal-frontend-commons';
 import { axisTickLabelStyles } from '../../theme/cBioPoralTheme';
 
 export function wrapTick(label: string, maxWidth: number): string[] {
-    return textTruncationUtils(
+    return wrapText(
         label,
         maxWidth,
         axisTickLabelStyles.fontFamily,
