@@ -212,8 +212,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                 </div>
                 <hr />
                 <h2 id={'webinar-2'}>
-                    Webinar #2: Mutation Details & Patient View{' '}
-                    <ReturnToTop />
+                    Webinar #2: Mutation Details & Patient View <ReturnToTop />
                 </h2>
 
                 <iframe
@@ -255,8 +254,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                 </div>
                 <hr />
                 <h2 id={'webinar-3'}>
-                    Webinar #3: Expression Data Analysis{' '}
-                    <ReturnToTop />
+                    Webinar #3: Expression Data Analysis <ReturnToTop />
                 </h2>
 
                 <iframe
@@ -285,7 +283,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                         >
                             bilibili.com
                         </a>
-                    </h4>*/
+                    </h4>*/}
                     <span style={{ color: '#eee' }}> | </span>
                     <h4 style={{ display: 'inline' }}>
                         <a
