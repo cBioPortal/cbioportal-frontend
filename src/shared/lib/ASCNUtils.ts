@@ -18,7 +18,7 @@ export function getASCNCopyNumberColor(ASCNCopyNumberValue: string): string {
             return ASCN_LIGHTGREY;
         case '-1':
             return ASCN_HETLOSS;
-        case '2':
+        case '-2':
             return ASCN_HOMDEL;
         default:
             return ASCN_BLACK;
