@@ -33,7 +33,11 @@ import {
     IPlotSampleData,
 } from 'pages/resultsView/plots/PlotsTabUtils';
 import ifNotDefined from '../../lib/ifNotDefined';
-import { getTextWidth, wrapText } from 'cbioportal-frontend-commons';
+import {
+    getTextHeight,
+    getTextWidth,
+    wrapText,
+} from 'cbioportal-frontend-commons';
 
 export interface IBaseScatterPlotData {
     x: number;
@@ -214,7 +218,26 @@ export default class ScatterPlot<
             const numRows = Math.ceil(
                 this.props.legendData.length / this.legendItemsPerRow
             );
-            return 23.7 * numRows;
+            const itemsHeight = 23.7 * numRows;
+
+            let titleHeight = 0;
+            if (this.props.legendTitle) {
+                const legendTitle = ([] as string[]).concat(
+                    this.props.legendTitle
+                );
+                titleHeight = _.sumBy(legendTitle, t =>
+                    getTextHeight(
+                        t,
+                        CBIOPORTAL_VICTORY_THEME.legend.style.title.fontFamily,
+                        CBIOPORTAL_VICTORY_THEME.legend.style.title.fontSize +
+                            'px'
+                    )
+                );
+                // add room for between lines
+                titleHeight += 10 * (legendTitle.length - 1);
+            }
+
+            return Math.max(itemsHeight, titleHeight);
         }
     }
 
