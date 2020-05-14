@@ -42,7 +42,10 @@ import internalClient from '../../api/cbioportalInternalClientInstance';
 import autobind from 'autobind-decorator';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import request from 'superagent';
-import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
+import {
+    getPatientSurvivals,
+    getClinicalDataOfPatientSurvivalStatus,
+} from 'pages/resultsView/SurvivalStoreHelper';
 import {
     getPatientIdentifiers,
     pickClinicalDataColors,
@@ -65,10 +68,11 @@ import MobxPromise from 'mobxpromise';
 import ResultsViewURLWrapper from '../../../pages/resultsView/ResultsViewURLWrapper';
 import { ResultsViewPageStore } from '../../../pages/resultsView/ResultsViewPageStore';
 import {
-    survivalClinicalDataVocabulary,
     plotsPriority,
     getSurvivalAttributes,
     DEFAULT_SURVIVAL_PRIORITY,
+    getSurvivalStatusBoolean,
+    survivalClinicalDataVocabulary,
 } from 'pages/resultsView/survival/SurvivalUtil';
 
 export enum OverlapStrategy {
@@ -1334,15 +1338,47 @@ export default class ComparisonStore {
                     (acc, key) => {
                         acc[key] = getPatientSurvivals(
                             this.survivalClinicalDataGroupByUniquePatientKey
-                                .result,
+                                .result!,
                             this.activePatientKeysNotOverlapRemoved.result!,
                             `${key}_STATUS`,
                             `${key}_MONTHS`,
-                            s => survivalClinicalDataVocabulary[key].includes(s)
+                            s => getSurvivalStatusBoolean(s, key)
                         );
                         return acc;
                     },
                     {} as { [prefix: string]: PatientSurvival[] }
+                )
+            );
+        },
+    });
+
+    readonly patientSurvivalUniqueStatusText = remoteData<{
+        [prefix: string]: string[];
+    }>({
+        await: () => [
+            this.survivalClinicalDataGroupByUniquePatientKey,
+            this.activePatientKeysNotOverlapRemoved,
+            this.survivalClinicalAttributesPrefix,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                _.reduce(
+                    this.survivalClinicalAttributesPrefix.result!,
+                    (acc, key) => {
+                        const clinicalDataOfPatientSurvivalStatus = getClinicalDataOfPatientSurvivalStatus(
+                            this.survivalClinicalDataGroupByUniquePatientKey
+                                .result!,
+                            this.activePatientKeysNotOverlapRemoved.result!,
+                            `${key}_STATUS`,
+                            `${key}_MONTHS`
+                        );
+                        acc[key] = _.chain(clinicalDataOfPatientSurvivalStatus)
+                            .map(clinicalData => clinicalData.value)
+                            .uniq()
+                            .value();
+                        return acc;
+                    },
+                    {} as { [prefix: string]: string[] }
                 )
             );
         },
