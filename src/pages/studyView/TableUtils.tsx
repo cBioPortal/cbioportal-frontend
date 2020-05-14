@@ -123,7 +123,7 @@ export function getCancerGeneFilterToggleIcon(
 
 export enum FreqColumnTypeEnum {
     MUTATION = 'mutations',
-    FUSION = 'fusions',
+    STRUCTURAL_VARIANT = 'structural variants',
     CNA = 'copy number alterations',
     DATA = 'data',
 }

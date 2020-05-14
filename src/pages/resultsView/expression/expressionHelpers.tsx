@@ -16,7 +16,7 @@ import {
     tooltipMutationsSection,
 } from '../plots/PlotsTabUtils';
 import {
-    MUT_COLOR_FUSION,
+    STRUCTURAL_VARIANT_COLOR,
     MUT_COLOR_INFRAME,
     MUT_COLOR_MISSENSE,
     MUT_COLOR_PROMOTER,
@@ -70,7 +70,7 @@ export const ExpressionStyleSheet: {
     fusion: {
         typeName: 'Fusion',
         symbol: VictoryShapeType.circle,
-        fill: MUT_COLOR_FUSION,
+        fill: STRUCTURAL_VARIANT_COLOR,
         stroke: '#000000',
         legendText: 'Fusion',
     },

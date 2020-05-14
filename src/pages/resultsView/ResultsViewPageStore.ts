@@ -229,6 +229,8 @@ export const DataTypeConstants = {
     MAF: 'MAF',
     LOGVALUE: 'LOG-VALUE',
     LOG2VALUE: 'LOG2-VALUE',
+    FUSION: 'FUSION',
+    SV: 'SV',
 };
 
 export enum SampleListCategoryType {

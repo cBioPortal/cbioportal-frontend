@@ -13,7 +13,7 @@ import {
     DEFAULT_GREY,
     MRNA_COLOR_HIGH,
     MRNA_COLOR_LOW,
-    MUT_COLOR_FUSION,
+    STRUCTURAL_VARIANT_COLOR,
     MUT_COLOR_GERMLINE,
     MUT_COLOR_INFRAME,
     MUT_COLOR_INFRAME_PASSENGER,
@@ -153,7 +153,7 @@ const shapeBank = {
     },
     [ShapeId.fusionRectangle]: {
         type: 'rectangle',
-        fill: MUT_COLOR_FUSION,
+        fill: STRUCTURAL_VARIANT_COLOR,
         x: 0,
         y: 20,
         width: 100,

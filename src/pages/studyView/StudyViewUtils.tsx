@@ -104,7 +104,7 @@ export type ChartType =
     | 'TABLE'
     | 'SCATTER'
     | 'MUTATED_GENES_TABLE'
-    | 'FUSION_GENES_TABLE'
+    | 'STRUCTURAL_VARIANT_GENES_TABLE'
     | 'GENOMIC_PROFILES_TABLE'
     | 'CASE_LIST_TABLE'
     | 'CNA_GENES_TABLE'
@@ -2236,7 +2236,7 @@ export function getChartSettingsMap(
     genomicChartSet: { [id: string]: GenomicChart },
     clinicalDataBinFilter: { [uniqueId: string]: ClinicalDataBinFilter },
     filterMutatedGenesTableByCancerGenes: boolean = true,
-    filterFusionGenesTableByCancerGenes: boolean = true,
+    filterSVGenesTableByCancerGenes: boolean = true,
     filterCNAGenesTableByCancerGenes: boolean = true,
     gridLayout?: ReactGridLayout.Layout[]
 ) {
@@ -2262,10 +2262,10 @@ export function getChartSettingsMap(
             chartSettingsMap[
                 attribute.uniqueKey
             ].filterByCancerGenes = filterMutatedGenesTableByCancerGenes;
-        } else if (chartType === ChartTypeEnum.FUSION_GENES_TABLE) {
+        } else if (chartType === ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE) {
             chartSettingsMap[
                 attribute.uniqueKey
-            ].filterByCancerGenes = filterFusionGenesTableByCancerGenes;
+            ].filterByCancerGenes = filterSVGenesTableByCancerGenes;
         } else if (chartType === ChartTypeEnum.CNA_GENES_TABLE) {
             chartSettingsMap[
                 attribute.uniqueKey
@@ -2749,5 +2749,43 @@ export function getMolecularProfileSamplesSet(
             return acc;
         },
         {}
+    );
+}
+
+export function getFilteredMolecularProfilesByAlterationType(
+    studyIdToMolecularProfiles: { [studyId: string]: MolecularProfile[] },
+    alterationType: string,
+    allowedDataTypes?: string[] // allowed MolecularProfile datatypes
+) {
+    return _.reduce(
+        studyIdToMolecularProfiles,
+        (acc: MolecularProfile[], molecularProfiles) => {
+            let filteredMolecularProfiles = molecularProfiles.filter(
+                profile => {
+                    let isFiltered =
+                        profile.molecularAlterationType === alterationType;
+                    if (!_.isEmpty(allowedDataTypes)) {
+                        isFiltered =
+                            isFiltered ||
+                            allowedDataTypes!.includes(profile.datatype);
+                    }
+                    return isFiltered;
+                }
+            );
+            if (!_.isEmpty(allowedDataTypes)) {
+                const dataTypeToIndexSet = stringListToIndexSet(
+                    allowedDataTypes!
+                );
+                filteredMolecularProfiles = _.sortBy(
+                    filteredMolecularProfiles,
+                    profile => dataTypeToIndexSet[profile.datatype]
+                );
+            }
+            if (!_.isEmpty(filteredMolecularProfiles)) {
+                acc.push(filteredMolecularProfiles[0]);
+            }
+            return acc;
+        },
+        []
     );
 }
