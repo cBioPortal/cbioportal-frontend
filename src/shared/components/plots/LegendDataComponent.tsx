@@ -32,11 +32,9 @@ export default class LegendDataComponent extends React.Component<
                 gradientStopPoints.push(
                     <stop
                         offset={`${(fraction * 100).toFixed(0)}%`}
-                        style={{
-                            stopColor: colorFn(
-                                fraction * range[1] + (1 - fraction) * range[0]
-                            ),
-                        }}
+                        stopColor={colorFn(
+                            fraction * range[1] + (1 - fraction) * range[0]
+                        )}
                     />
                 );
             }
@@ -44,10 +42,10 @@ export default class LegendDataComponent extends React.Component<
                 <linearGradient
                     id={gradientId}
                     key={gradientId}
-                    x1="0%"
-                    y1={horizontal ? '0%' : '100%'}
-                    x2={horizontal ? '100%' : '0%'}
-                    y2="0%"
+                    x1="0"
+                    y1={horizontal ? '0' : '1'}
+                    x2={horizontal ? '1' : '0'}
+                    y2="0"
                 >
                     {gradientStopPoints}
                 </linearGradient>
