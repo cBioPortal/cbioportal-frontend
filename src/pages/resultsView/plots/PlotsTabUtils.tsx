@@ -888,7 +888,7 @@ function scatterPlotNumericalClinicalLegendData(
     const legendSymbol =
         plotType === PlotType.WaterfallPlot ? 'square' : 'circle';
 
-    const legendData: LegendDataWithId[] = valueRange.map(x => {
+    /*const legendData: LegendDataWithId[] = valueRange.map(x => {
         return {
             name: x.toFixed(2),
             symbol: {
@@ -908,7 +908,19 @@ function scatterPlotNumericalClinicalLegendData(
                 fillOpacity: 0,
             },
         });
-    }
+    }*/
+    const legendData: LegendDataWithId[] = [];
+    legendData.push({
+        name: '',
+        symbol: {
+            type: 'gradient',
+            range: valueRange,
+            colorFn: logScale
+                ? clinicalDataCacheEntry.logScaleNumericalValueToColor!
+                : clinicalDataCacheEntry.numericalValueToColor!,
+            gradientUid: 'gradient',
+        },
+    });
 
     if (showNoDataElement) {
         legendData.push({
@@ -919,6 +931,7 @@ function scatterPlotNumericalClinicalLegendData(
                 fill: noDataClinicalAppearance.fill,
                 type: legendSymbol,
             },
+            margin: 125,
         });
     }
 
