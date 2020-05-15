@@ -113,7 +113,7 @@ function getASCNCopyNumberCall(
         : ASCNCopyNumberValue.NA;
 }
 
-const ASCNCopyNumberElementTooltip: React.FunctionComponent<{
+export const ASCNCopyNumberElementTooltip: React.FunctionComponent<{
     sampleId: string;
     wgdValue: string;
     totalCopyNumberValue: string;
