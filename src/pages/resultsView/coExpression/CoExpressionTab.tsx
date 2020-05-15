@@ -297,6 +297,13 @@ export default class CoExpressionTab extends React.Component<
                     );
                 }
 
+                if (
+                    dataFilter.sampleIds === undefined &&
+                    dataFilter.sampleListId === undefined
+                ) {
+                    return Promise.resolve([]);
+                }
+
                 const dataQueryFilter = this.createDataQueryFilterForCoExpression(
                     dataFilter,
                     q.geneticEntityId,
