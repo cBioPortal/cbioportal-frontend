@@ -167,7 +167,6 @@ import {
     getSurvivalAttributes,
     plotsPriority,
     getSurvivalStatusBoolean,
-    survivalClinicalDataVocabulary,
 } from 'pages/resultsView/survival/SurvivalUtil';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
@@ -6099,15 +6098,9 @@ export class StudyViewPageStore {
                 },
                 [] as string[]
             );
-            // TODO: after we migrate data into new format, we can support all survival data type
-            // this is a tempory fix for current data format, for now we only support survival types defined in survivalClinicalDataVocabulary
-            const filteredAttributePrefixes = _.filter(
-                attributePrefixes,
-                prefix => survivalClinicalDataVocabulary[prefix]
-            );
             // change prefix order based on priority
             return Promise.resolve(
-                _.sortBy(filteredAttributePrefixes, prefix => {
+                _.sortBy(attributePrefixes, prefix => {
                     return plotsPriority[prefix] || 999;
                 })
             );
