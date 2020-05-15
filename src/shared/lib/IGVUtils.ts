@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import { CopyNumberSeg } from 'cbioportal-ts-api-client';
 import { TrackProps } from 'shared/components/igv/IntegrativeGenomicsViewer';
+import { normalizeChromosome } from 'cbioportal-utils';
 
 export const WHOLE_GENOME = 'all';
 
@@ -88,20 +89,6 @@ export function generateSegmentFeatures(
         numberOfProbes: segment.numberOfProbes,
         sampleKey: segment.uniqueSampleKey,
     }));
-}
-
-export function normalizeChromosome(chromosome: string) {
-    switch (chromosome) {
-        case '23': {
-            return 'X';
-        }
-        case '24': {
-            return 'Y';
-        }
-        default: {
-            return chromosome;
-        }
-    }
 }
 
 export function calcSegmentTrackHeight(
