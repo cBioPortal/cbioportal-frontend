@@ -25,6 +25,10 @@ import {
     separateScatterDataByAppearance,
     dataPointIsLimited,
     LegendDataWithId,
+    getLegendDataHeight,
+    getBottomLegendHeight,
+    getMaxLegendLabelWidth,
+    getLegendItemsPerRow,
 } from './PlotUtils';
 import { clamp, toConditionalPrecision } from '../../lib/NumberUtils';
 import { getRegressionComputations } from './ScatterPlotUtils';
@@ -38,6 +42,8 @@ import {
     getTextWidth,
     wrapText,
 } from 'cbioportal-frontend-commons';
+import LegendDataComponent from './LegendDataComponent';
+import LegendLabelComponent from './LegendLabelComponent';
 
 export interface IBaseScatterPlotData {
     x: number;
@@ -212,77 +218,36 @@ export default class ScatterPlot<
     }
 
     @computed get bottomLegendHeight() {
-        //height of legend in case its on bottom
-        if (!this.props.legendData || this.legendLocation !== 'bottom') {
+        if (
+            !this.props.legendData ||
+            !this.props.legendData.length ||
+            this.legendLocation !== 'bottom'
+        ) {
             return 0;
         } else {
-            const numRows = Math.ceil(
-                this.props.legendData.length / this.legendItemsPerRow
+            return getBottomLegendHeight(
+                this.legendItemsPerRow,
+                this.props.legendData,
+                this.props.legendTitle
             );
-            const itemsHeight = 23.7 * numRows;
-
-            let titleHeight = 0;
-            if (this.props.legendTitle) {
-                const legendTitle = ([] as string[]).concat(
-                    this.props.legendTitle
-                );
-                titleHeight = _.sumBy(legendTitle, t =>
-                    getTextHeight(
-                        t,
-                        CBIOPORTAL_VICTORY_THEME.legend.style.title.fontFamily,
-                        CBIOPORTAL_VICTORY_THEME.legend.style.title.fontSize +
-                            'px'
-                    )
-                );
-                // add room for between lines
-                titleHeight += 10 * (legendTitle.length - 1);
-            }
-
-            return Math.max(itemsHeight, titleHeight);
         }
     }
 
     @computed get maxLegendLabelWidth() {
         if (this.props.legendData) {
-            return Math.max(
-                ...this.props.legendData.map(d => {
-                    return getTextWidth(
-                        Array.isArray(d.name)
-                            ? (d.name as string[]).join(' ')
-                            : d.name,
-                        legendLabelStyles.fontFamily,
-                        legendLabelStyles.fontSize + 'px'
-                    );
-                })
-            );
+            return getMaxLegendLabelWidth(this.props.legendData);
         }
 
         return 0;
     }
 
     @computed get legendItemsPerRow() {
-        const widthPerItem =
-            this.maxLegendLabelWidth +
-            50 + // data point and padding
-            LEGEND_COLUMN_PADDING; // space between columns
-        let legendItemArea = this.svgWidth;
-        if (this.props.legendTitle) {
-            const legendTitle = ([] as string[]).concat(this.props.legendTitle);
-            // make room for legend title if there is one
-            legendItemArea -= Math.max(
-                ...legendTitle.map(t =>
-                    getTextWidth(
-                        t,
-                        CBIOPORTAL_VICTORY_THEME.legend.style.title.fontFamily,
-                        CBIOPORTAL_VICTORY_THEME.legend.style.title.fontSize +
-                            'px'
-                    )
-                )
-            );
-            // padding
-            legendItemArea -= CBIOPORTAL_VICTORY_THEME.legend.gutter;
-        }
-        return clamp(Math.floor(legendItemArea / widthPerItem), 1, 5);
+        return getLegendItemsPerRow(
+            this.maxLegendLabelWidth,
+            this.svgWidth,
+            LEGEND_COLUMN_PADDING,
+            this.props.legendTitle
+        );
     }
 
     private get legend() {
@@ -301,8 +266,17 @@ export default class ScatterPlot<
                     };
                 });
             }
+            const orientation =
+                this.legendLocation === 'right' ? 'vertical' : 'horizontal';
+
             return (
                 <VictoryLegend
+                    dataComponent={
+                        <LegendDataComponent orientation={orientation} />
+                    }
+                    labelComponent={
+                        <LegendLabelComponent orientation={orientation} />
+                    }
                     events={[
                         {
                             childName: 'all',
@@ -325,11 +299,7 @@ export default class ScatterPlot<
                             },
                         },
                     ]}
-                    orientation={
-                        this.legendLocation === 'right'
-                            ? 'vertical'
-                            : 'horizontal'
-                    }
+                    orientation={orientation}
                     itemsPerRow={
                         this.legendLocation === 'right'
                             ? undefined
