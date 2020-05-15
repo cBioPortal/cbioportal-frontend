@@ -72,7 +72,6 @@ import {
     getSurvivalAttributes,
     DEFAULT_SURVIVAL_PRIORITY,
     getSurvivalStatusBoolean,
-    survivalClinicalDataVocabulary,
 } from 'pages/resultsView/survival/SurvivalUtil';
 
 export enum OverlapStrategy {
@@ -1296,15 +1295,9 @@ export default class ComparisonStore {
                 },
                 [] as string[]
             );
-            // TODO: after we migrate data into new format, we can support all survival data type
-            // this is a tempory fix for current data format, for now we only support survival types defined in survivalClinicalDataVocabulary
-            const filteredAttributePrefixes = _.filter(
-                attributePrefixes,
-                prefix => survivalClinicalDataVocabulary[prefix]
-            );
             // change prefix order based on priority
             return Promise.resolve(
-                _.sortBy(filteredAttributePrefixes, prefix => {
+                _.sortBy(attributePrefixes, prefix => {
                     return plotsPriority[prefix] || DEFAULT_SURVIVAL_PRIORITY;
                 })
             );
