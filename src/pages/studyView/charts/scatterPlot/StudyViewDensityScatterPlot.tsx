@@ -393,11 +393,9 @@ export default class StudyViewDensityScatterPlot
                 gradientStopPoints.push(
                     <stop
                         offset={`${((i / GRADIENTMESH) * 100).toFixed(0)}%`}
-                        style={{
-                            stopColor: this.plotComputations.colorCoordToColor(
-                                i / GRADIENTMESH
-                            ),
-                        }}
+                        stopColor={this.plotComputations.colorCoordToColor(
+                            i / GRADIENTMESH
+                        )}
                     />
                 );
             }
@@ -405,10 +403,10 @@ export default class StudyViewDensityScatterPlot
                 <linearGradient
                     id={gradientId}
                     key={gradientId}
-                    x1="0%"
-                    y1="100%"
-                    x2="0%"
-                    y2="0%"
+                    x1="0"
+                    y1="1"
+                    x2="0"
+                    y2="0"
                 >
                     {gradientStopPoints}
                 </linearGradient>
