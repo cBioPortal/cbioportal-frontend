@@ -51,7 +51,6 @@ import ComparisonTab from './comparison/ComparisonTab';
 import OQLTextArea, {
     GeneBoxType,
 } from 'shared/components/GeneSelectionBox/OQLTextArea';
-import SurvivalTransitionTab from './survival/SurvivalTransitionTab';
 import browser from 'bowser';
 
 export function initStore(
@@ -321,29 +320,6 @@ export default class ResultsViewPage extends React.Component<
                                 appStore={this.props.appStore}
                                 store={this.resultsViewPageStore}
                             />
-                        </MSKTab>
-                    );
-                },
-            },
-
-            {
-                id: ResultsViewTab.SURVIVAL,
-                hide: () => {
-                    return (
-                        !this.resultsViewPageStore.survivalClinicalDataExists
-                            .isComplete ||
-                        !this.resultsViewPageStore.survivalClinicalDataExists
-                            .result!
-                    );
-                },
-                getTab: () => {
-                    return (
-                        <MSKTab
-                            key={4}
-                            id={ResultsViewTab.SURVIVAL}
-                            linkText="Survival"
-                        >
-                            <SurvivalTransitionTab store={store} />
                         </MSKTab>
                     );
                 },
