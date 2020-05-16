@@ -1,8 +1,11 @@
 import { assert } from 'chai';
-import { getPatientSurvivals } from './SurvivalStoreHelper';
-import { Patient } from 'cbioportal-ts-api-client';
+import {
+    getPatientSurvivals,
+    getClinicalDataOfPatientSurvivalStatus,
+} from './SurvivalStoreHelper';
+import { Patient, ClinicalData } from 'cbioportal-ts-api-client';
 
-const exampleClinicalData = {
+const exampleClinicalData: { [patientKey: string]: any[] } = {
     '1': [
         {
             clinicalAttributeId: 'OS_MONTHS',
@@ -112,6 +115,40 @@ describe('SurvivalStoreHelper', () => {
                         months: 0,
                         status: true,
                     },
+                ]
+            );
+        });
+    });
+
+    describe('#getClinicalDataOfPatientSurvivalStatus()', () => {
+        it('returns empty list for empty clinical data', () => {
+            assert.deepEqual(
+                getClinicalDataOfPatientSurvivalStatus(
+                    {},
+                    [],
+                    'OS_STATUS',
+                    'OS_MONTHS'
+                ),
+                []
+            );
+        });
+
+        it('returns correct result for example data', () => {
+            assert.deepEqual(
+                getClinicalDataOfPatientSurvivalStatus(
+                    exampleClinicalData,
+                    exampleTargetKeys,
+                    'OS_STATUS',
+                    'OS_MONTHS'
+                ),
+                [
+                    {
+                        clinicalAttributeId: 'OS_STATUS',
+                        value: 'DECEASED',
+                        patientId: 'patient_1',
+                        studyId: 'study_1',
+                        uniquePatientKey: '1',
+                    } as ClinicalData,
                 ]
             );
         });

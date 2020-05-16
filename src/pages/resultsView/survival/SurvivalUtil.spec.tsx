@@ -12,6 +12,10 @@ import {
     getScatterDataWithOpacity,
     getStats,
     ScatterData,
+    parseSurvivalData,
+    getSurvivalStatusBoolean,
+    getStatusCasesHeaderText,
+    isNullSurvivalClinicalDataValue,
 } from './SurvivalUtil';
 
 const exampleAlteredPatientSurvivals = [
@@ -931,6 +935,133 @@ describe('SurvivalUtil', () => {
                 uniquePatientKey: '',
                 studyId: '',
                 status: true,
+            });
+        });
+    });
+
+    describe('parseSurvivalData()', () => {
+        it('survival data do not has boolean status', () => {
+            let testData = {
+                status: undefined,
+                label: 'unknown',
+            };
+            assert.deepEqual(parseSurvivalData('unknown'), testData);
+        });
+
+        it('survival data has boolean status', () => {
+            let testData1 = {
+                status: '0',
+                label: 'LIVING',
+            };
+            assert.deepEqual(parseSurvivalData('0:LIVING'), testData1);
+
+            let testData2 = {
+                status: '1',
+                label: 'DECEASED',
+            };
+            assert.deepEqual(parseSurvivalData('1:DECEASED'), testData2);
+        });
+    });
+
+    describe('getSurvivalStatusBoolean()', () => {
+        it('survival data do not has boolean status, return false', () => {
+            const survivalStatus = 'unknown';
+            const prefix = 'OS';
+            assert.equal(
+                getSurvivalStatusBoolean(survivalStatus, prefix),
+                false
+            );
+        });
+
+        it('survival data has boolean status, return status', () => {
+            const survivalStatus1 = '1:DECEASED';
+            const prefix1 = 'OS';
+            const survivalStatus2 = '0:Recurred/Progressed';
+            const prefix2 = 'DFS';
+            const survivalStatus3 = '1:Event';
+            const prefix3 = 'EFS';
+            assert.equal(
+                getSurvivalStatusBoolean(survivalStatus1, prefix1),
+                true
+            );
+            assert.equal(
+                getSurvivalStatusBoolean(survivalStatus2, prefix2),
+                false
+            );
+            assert.equal(
+                getSurvivalStatusBoolean(survivalStatus3, prefix3),
+                true
+            );
+        });
+    });
+
+    describe('getStatusCasesHeaderText()', () => {
+        it('predix has been defined in survivalCasesHeaderText', () => {
+            const prefix = 'OS';
+            const clinicalData: string[] = [];
+            assert.equal(
+                getStatusCasesHeaderText(prefix, clinicalData),
+                'Deceased'
+            );
+        });
+
+        it('predix has not been defined in survivalCasesHeaderText, but has data with prefix 1:', () => {
+            const prefix = 'EFS';
+            const clinicalData: string[] = ['1:Relapse'];
+            assert.equal(
+                getStatusCasesHeaderText(prefix, clinicalData),
+                'Relapse'
+            );
+        });
+
+        it('predix has not been defined in survivalCasesHeaderText, and has no data with prefix 1:, return default Event', () => {
+            const prefix = 'EFS';
+            const clinicalData: string[] = ['0:Censored', '0:No Relapse'];
+            assert.equal(
+                getStatusCasesHeaderText(prefix, clinicalData),
+                'Event'
+            );
+        });
+    });
+
+    describe('isNullSurvivalClinicalDataValue()', () => {
+        it('return true for all null values', () => {
+            const nullValues = [
+                '[not applicable]',
+                '[not available]',
+                '[pending]',
+                '[discrepancy]',
+                '[completed]',
+                '[null]',
+                '',
+                'na',
+            ];
+            const nullValuesIgnoreCaseAndNotTrimmed = [
+                '[Not Applicable]  ',
+                '  [Not Available]',
+                '[Pending]',
+                '[Discrepancy]',
+                '  [Completed]',
+                '[NULL]  ',
+                'NA',
+            ];
+            nullValues.forEach(nullValue => {
+                assert.equal(isNullSurvivalClinicalDataValue(nullValue), true);
+            });
+            nullValuesIgnoreCaseAndNotTrimmed.forEach(nullValue => {
+                assert.equal(isNullSurvivalClinicalDataValue(nullValue), true);
+            });
+        });
+
+        it('return false for not null values', () => {
+            const values = [
+                'DECEASED',
+                'LIVING',
+                'Progressed',
+                'Recurred/Progressed',
+            ];
+            values.forEach(value => {
+                assert.equal(isNullSurvivalClinicalDataValue(value), false);
             });
         });
     });
