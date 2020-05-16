@@ -187,7 +187,6 @@ import {
     fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAssayType,
     fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
-import { getSurvivalAttributes } from './survival/SurvivalUtil';
 import ComplexKeySet from '../../shared/lib/complexKeyDataStructures/ComplexKeySet';
 import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mutationMapper/MutationMapperUtils';
 import { getGenomeNexusHgvsgUrl } from 'shared/api/urls';
@@ -2933,104 +2932,6 @@ export class ResultsViewPageStore {
         }
     }
 
-    private getClinicalDataCount(
-        clinicalDataType: 'SAMPLE' | 'PATIENT',
-        studies: any[],
-        entities: any[],
-        attributeIds: string[]
-    ): Promise<number> {
-        const projection = 'META';
-        // single study query endpoint is optimal so we should use it
-        // when there's only one study
-        if (studies.length === 1) {
-            const study = this.studies.result[0];
-            const filter: ClinicalDataSingleStudyFilter = {
-                attributeIds: attributeIds,
-                ids: _.map(
-                    entities,
-                    clinicalDataType === 'SAMPLE' ? 'sampleId' : 'patientId'
-                ),
-            };
-            return client
-                .fetchAllClinicalDataInStudyUsingPOSTWithHttpInfo({
-                    studyId: study.studyId,
-                    clinicalDataSingleStudyFilter: filter,
-                    clinicalDataType: clinicalDataType,
-                    projection,
-                })
-                .then(function(response: request.Response) {
-                    return parseInt(response.header['total-count'], 10);
-                });
-        } else {
-            const filter: ClinicalDataMultiStudyFilter = {
-                attributeIds: attributeIds,
-                identifiers: entities.map((s: any) =>
-                    clinicalDataType === 'SAMPLE'
-                        ? { entityId: s.sampleId, studyId: s.studyId }
-                        : { entityId: s.patientId, studyId: s.studyId }
-                ),
-            };
-            return client
-                .fetchClinicalDataUsingPOSTWithHttpInfo({
-                    clinicalDataType: clinicalDataType,
-                    clinicalDataMultiStudyFilter: filter,
-                    projection,
-                })
-                .then(function(response: request.Response) {
-                    return parseInt(response.header['total-count'], 10);
-                });
-        }
-    }
-
-    readonly survivalClinicalDataAttributes = remoteData({
-        await: () => [this.clinicalAttributes],
-        invoke: async () => {
-            return getSurvivalAttributes(this.clinicalAttributes.result!);
-        },
-    });
-
-    readonly survivalClinicalDataExists = remoteData<boolean>({
-        await: () => [
-            this.studies,
-            this.patients,
-            this.survivalClinicalDataAttributes,
-        ],
-        invoke: async () => {
-            if (!_.isEmpty(this.survivalClinicalDataAttributes.result)) {
-                const count = await this.getClinicalDataCount(
-                    'PATIENT',
-                    this.studies.result!,
-                    this.patients.result,
-                    this.survivalClinicalDataAttributes.result!
-                );
-                return count > 0;
-            }
-            return false;
-        },
-    });
-
-    readonly survivalClinicalData = remoteData<ClinicalData[]>(
-        {
-            await: () => [
-                this.studies,
-                this.patients,
-                this.survivalClinicalDataAttributes,
-            ],
-            invoke: () => {
-                if (!_.isEmpty(this.survivalClinicalDataAttributes.result)) {
-                    return this.getClinicalData(
-                        'PATIENT',
-                        this.studies.result!,
-                        this.patients.result,
-                        this.survivalClinicalDataAttributes.result!
-                    );
-                }
-                return Promise.resolve([]);
-            },
-        },
-        []
-    );
-
     readonly germlineConsentedSamples = remoteData<SampleIdentifier[]>(
         {
             await: () => [this.studyIds, this.samples],
@@ -4591,14 +4492,5 @@ export class ResultsViewPageStore {
 
     @action clearErrors() {
         this.ajaxErrors = [];
-    }
-
-    @autobind
-    @action
-    public navigateToSurvivalTab() {
-        this.urlWrapper.setTabId(ResultsViewTab.COMPARISON);
-        this.urlWrapper.setComparisonSubTabId(
-            ResultsViewComparisonSubTab.SURVIVAL
-        );
     }
 }

@@ -179,3 +179,16 @@ export function handleEncodedRedirect() {
         decodedURL
     );
 }
+
+export function redirectTo(
+    newParams: QueryParams,
+    path: string | undefined = undefined,
+    clear = false
+) {
+    (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute(
+        newParams,
+        path,
+        clear,
+        true
+    );
+}
