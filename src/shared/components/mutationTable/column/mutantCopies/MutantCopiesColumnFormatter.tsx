@@ -22,7 +22,7 @@ function getSampleIdToMutantCopiesMap(
     return sampleToValue;
 }
 
-function getDisplayValueAsString(
+export function getDisplayValueAsString(
     data: Mutation[],
     sampleIds: string[]
 ): string {

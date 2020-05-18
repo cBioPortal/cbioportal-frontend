@@ -1,13 +1,12 @@
 import * as React from 'react';
 import { Mutation } from 'cbioportal-ts-api-client';
 import { hasASCNProperty } from 'shared/lib/MutationUtils';
-import SampleManager from 'pages/patientView/SampleManager';
 
 /**
  * @author Avery Wang
  */
 
-function getASCNMethodValue(mutation: Mutation): string {
+export function getASCNMethodValue(mutation: Mutation): string {
     return hasASCNProperty(mutation, 'ascnMethod')
         ? mutation.alleleSpecificCopyNumber.ascnMethod
         : '';
