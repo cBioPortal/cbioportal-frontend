@@ -85,7 +85,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                                         target="_blank"
                                         href="https://dfci.zoom.us/webinar/register/7315875611981/WN_An_3l0XYQHCoinWvclUrlw"
                                     >
-                                        register
+                                        register rjdfdsjq
                                     </a>
                                 </li>
 
@@ -217,8 +217,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                 </div>
                 <hr />
                 <h2 id={'webinar-2'}>
-                    Webinar #2: Mutation Details & Patient View{' '}
-                    <ReturnToTop />
+                    Webinar #2: Mutation Details & Patient View <ReturnToTop />
                 </h2>
 
                 <iframe
