@@ -1,7 +1,8 @@
 import * as _ from 'lodash';
 import { render, ReactWrapper, mount, shallow } from 'enzyme';
 import * as React from 'react';
-import { assert, expect } from 'chai';
+import { expect } from 'chai';
+import SampleManager from 'pages/patientView/SampleManager';
 import {
     default as ASCNCopyNumberElement,
     ASCNCopyNumberElementTooltip,
@@ -16,36 +17,36 @@ import {
     ASCN_BLACK,
 } from 'shared/lib/Colors';
 
-/*
-    done: black icon is returned if:
-       ascn copy number value is NA
-       wgd value is NA
-       total copy number NA
-       ascn copy number is not 2, 1, 0, -1, or -2
+/* Test Design:
 
-       then also test opacity of black icon is 0
+    Test of copy number element rendering with NA properties
+    - black icon is returned if:
+        - ascn copy number value is NA
+        - wgd value is NA
+        - total copy number NA
+        - ascn copy number is not 2, 1, 0, -1, or -2
+    - then also test opacity of black icon is 0
 
-    done: test all other colors and that opacity is 100
+    Test of copy number element rendering with in-range properties
+    - test for presence of backing colored rect
+    - test all rendered colors and that opacity is 100
+    - test that icon displays total copy number
 
-    done: test rect is there
+    Test "WGD" supratext above copy number indicator
+    - test wgd text is displayed when properties show WGD
+    - test wgd element (span) is not present when properties do not show WGD
 
-    done: icon displays total copy number
-
-    done: test wgd
-        done: test wgd displayed
-        done: it also has an opactity? (0 vs 100)
-
-    test tooltip
-        - ASCNCopyNumberValue text
-        - WGD/no WGD
-        - total copy number
-        - minor copy number
-        - icon for sample (if multiple samples) -- maybe do this
+    Test tooltip
+    - test ASCNCopyNumberValue text correct {Gain, Diploid, Double Loss After, ...}
+    - test "WGD"/"no WGD" text correct
+    - test total copy number text correct "with total copy number of #"
+    - test minor copy number text correct "and a minor copy number of #"
+    - icon for sample (if multiple samples present) from samplemanager not tested
 
 */
 
 describe('ASCNCopyNumberElement', () => {
-    before(() => {});
+    let nullSampleManager = new SampleManager([]);
 
     function initSample() {
         return {
@@ -54,7 +55,7 @@ describe('ASCNCopyNumberElement', () => {
             totalCopyNumberValue: '0',
             minorCopyNumberValue: '0',
             ascnCopyNumberValue: '0',
-            sampleManager: null,
+            sampleManager: nullSampleManager,
         };
     }
 
@@ -118,7 +119,7 @@ describe('ASCNCopyNumberElement', () => {
         expect(textElement.length).to.not.equal(
             0,
             "Expected to find a 'text' element containing total copy number value '" +
-                +componentProperties['totalCopyNumberValue'] +
+                componentProperties['totalCopyNumberValue'] +
                 "' but did not"
         );
     }
@@ -148,26 +149,14 @@ describe('ASCNCopyNumberElement', () => {
         }
     }
 
-    function testExpectedValidTooltip(
-        componentProperties: any,
-        ascnCopyNumberCall: string
-    ) {
-        const ascnCopyNumberElementTooltip = mount(
-            <ASCNCopyNumberElementTooltip {...componentProperties} />
-        );
-
-        /* tooltip looks like: 
-            <span>
-                <span>
-                    <b>{ascnCopyNumberCall}</b>
-                    <span>{text with total copy number, minor copy number, and wgd}</span>
-                </span>
-            </span>
-        */
-        const bElement = ascnCopyNumberElementTooltip.find('b');
-        expect(bElement).to.have.text(ascnCopyNumberCall.toLowerCase());
-
-        const spanElement = ascnCopyNumberElementTooltip.findWhere(
+    function countSpansWithCopyNumberText(
+        ascnCopyNumberElementTooltip: ReactWrapper<any, any>,
+        componentProperties: any
+    ): number {
+        const spanElements: ReactWrapper<
+            any,
+            any
+        > = ascnCopyNumberElementTooltip.findWhere(
             n =>
                 n.type() === 'span' &&
                 n
@@ -184,9 +173,36 @@ describe('ASCNCopyNumberElement', () => {
                     ) &&
                 n.text().includes(componentProperties.minorCopyNumberValue)
         );
+        return spanElements.length;
+    }
+
+    function testExpectedValidTooltip(
+        componentProperties: any,
+        ascnCopyNumberCall: string
+    ) {
+        /* tooltip should contain something like this:
+            <span>
+                <span>
+                    <b>{ascnCopyNumberCall}</b>
+                    <span>{text with wgd, total copy number, and minor copy number}</span>
+                </span>
+            </span>
+        */
+
+        const ascnCopyNumberElementTooltip = mount(
+            <ASCNCopyNumberElementTooltip {...componentProperties} />
+        );
+
+        const bElement = ascnCopyNumberElementTooltip.find('b');
+        expect(bElement).to.have.text(ascnCopyNumberCall.toLowerCase());
+
+        const spanCount = countSpansWithCopyNumberText(
+            ascnCopyNumberElementTooltip,
+            componentProperties
+        );
 
         // the span with our text is nested in 2 other spans (see example above) so we match 3
-        expect(spanElement.length).to.equal(
+        expect(spanCount).to.equal(
             3,
             "Expected to find three 'span' elements containing specified values but failed"
         );
@@ -197,7 +213,7 @@ describe('ASCNCopyNumberElement', () => {
             <ASCNCopyNumberElementTooltip {...componentProperties} />
         );
 
-        /* tooltip looks like: 
+        /* tooltip looks like:
             <span>
                 <span>
                     <b>{ascnCopyNumberCall}</b>
@@ -207,30 +223,17 @@ describe('ASCNCopyNumberElement', () => {
         const bElement = ascnCopyNumberElementTooltip.find('b');
         expect(bElement).to.have.text(ASCNCopyNumberValue.NA);
 
-        // TODO make a function
-        const spanElement = ascnCopyNumberElementTooltip.findWhere(
-            n =>
-                n.type() === 'span' &&
-                n
-                    .text()
-                    .includes(
-                        componentProperties.wgdValue +
-                            ' with total copy number of'
-                    ) &&
-                n
-                    .text()
-                    .includes(
-                        componentProperties.totalCopyNumberValue +
-                            ' and a minor copy number of'
-                    ) &&
-                n.text().includes(componentProperties.minorCopyNumberValue)
+        const spanCount = countSpansWithCopyNumberText(
+            ascnCopyNumberElementTooltip,
+            componentProperties
         );
-
-        expect(spanElement.length).to.equal(
+        expect(spanCount).to.equal(
             0,
             "Expected zero 'span' elements containing specified values but failed"
         );
     }
+
+    before(() => {});
 
     it('ascn copy number of 2 should have the ASCN_AMP color and be visible', () => {
         let sample = initSample();
