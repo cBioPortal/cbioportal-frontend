@@ -42,8 +42,6 @@ import {
     makeScatterPlotData,
     makeScatterPlotPointAppearance,
     makeWaterfallPlotData,
-    MutationSummary,
-    mutationSummaryToAppearance,
     PLOT_SIDELENGTH,
     scatterPlotLegendData,
     scatterPlotTooltip,
@@ -56,6 +54,7 @@ import {
     NO_GENE_OPTION,
     bothAxesNoMolecularProfile,
     waterfallPlotTooltip,
+    basicAppearance,
 } from './PlotsTabUtils';
 import {
     ClinicalAttribute,
@@ -113,9 +112,7 @@ export enum ViewType {
     MutationType,
     MutationTypeAndCopyNumber,
     CopyNumber,
-    MutationSummary,
     LimitVal,
-    LimitValMutationSummary,
     LimitValMutationType,
     LimitValCopyNumber,
     LimitValMutationTypeAndCopyNumber,
@@ -124,10 +121,8 @@ export enum ViewType {
 
 export enum PotentialViewType {
     MutationTypeAndCopyNumber,
-    MutationSummary,
     None,
     LimitValMutationTypeAndCopyNumber,
-    LimitValMutationSummary,
     LimitVal,
 }
 
@@ -277,13 +272,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     ret = ViewType.None;
                 }
                 break;
-            case PotentialViewType.MutationSummary:
-                if (this.viewMutationType) {
-                    ret = ViewType.MutationSummary;
-                } else {
-                    ret = ViewType.None;
-                }
-                break;
             case PotentialViewType.LimitValMutationTypeAndCopyNumber:
                 if (
                     this.viewMutationType &&
@@ -301,17 +289,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     ret = ViewType.MutationType;
                 } else if (this.viewCopyNumber) {
                     ret = ViewType.CopyNumber;
-                } else if (this.viewLimitValues) {
-                    ret = ViewType.LimitVal;
-                } else {
-                    ret = ViewType.None;
-                }
-                break;
-            case PotentialViewType.LimitValMutationSummary:
-                if (this.viewMutationType && this.viewLimitValues) {
-                    ret = ViewType.LimitValMutationSummary;
-                } else if (this.viewMutationType) {
-                    ret = ViewType.MutationSummary;
                 } else if (this.viewLimitValues) {
                     ret = ViewType.LimitVal;
                 } else {
@@ -2080,7 +2057,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return !!(
             this.mutationDataExists.result &&
             (this.viewType === ViewType.MutationType ||
-                this.viewType === ViewType.MutationSummary ||
                 this.viewType === ViewType.MutationTypeAndCopyNumber)
         );
     }
@@ -2302,16 +2278,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 return '#000000';
             case ViewType.MutationTypeAndCopyNumber:
             case ViewType.MutationType:
-            case ViewType.MutationSummary:
             case ViewType.LimitVal:
             case ViewType.LimitValMutationType:
-            case ViewType.LimitValMutationSummary:
             case ViewType.LimitValMutationTypeAndCopyNumber:
                 return (d: IPlotSampleData) =>
                     this.scatterPlotAppearance(d).fill!;
             case ViewType.None:
-                return mutationSummaryToAppearance[MutationSummary.Neither]
-                    .fill;
+                return basicAppearance.fill;
         }
     }
 
@@ -2365,15 +2338,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             case ViewType.LimitValCopyNumber:
                 return this.scatterPlotStroke(d);
             case ViewType.MutationType:
-            case ViewType.MutationSummary:
             case ViewType.LimitValMutationType:
-            case ViewType.LimitValMutationSummary:
                 return this.scatterPlotAppearance(d).fill!;
             case ViewType.LimitVal:
             case ViewType.None:
             default:
-                return mutationSummaryToAppearance[MutationSummary.Neither]
-                    .fill;
+                return basicAppearance.fill;
         }
     }
 
@@ -2382,7 +2352,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         switch (this.viewType) {
             case ViewType.LimitVal:
             case ViewType.LimitValMutationType:
-            case ViewType.LimitValMutationSummary:
             case ViewType.LimitValCopyNumber:
             case ViewType.LimitValMutationTypeAndCopyNumber:
                 return dataPointIsLimited(d);
