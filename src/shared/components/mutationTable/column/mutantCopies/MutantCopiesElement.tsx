@@ -2,7 +2,7 @@ import * as React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import SampleManager from 'pages/patientView/SampleManager';
 
-const MutantCopiesElementTooltip: React.FunctionComponent<{
+export const MutantCopiesElementTooltip: React.FunctionComponent<{
     sampleId: string;
     totalCopyNumberValue: string;
     mutantCopiesValue: string;
