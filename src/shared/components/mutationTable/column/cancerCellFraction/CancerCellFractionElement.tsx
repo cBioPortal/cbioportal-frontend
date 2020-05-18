@@ -2,16 +2,16 @@ import * as React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import SampleManager from 'pages/patientView/SampleManager';
 
-const maxBarHeight = 12;
+export const maxBarHeight = 12;
 const barWidth = 6;
 const barSpacing = 3;
-const indexToBarLeft = (n: number) => n * (barWidth + barSpacing);
+export const indexToBarLeft = (n: number) => n * (barWidth + barSpacing);
 
 function getSVGWidth(numberOfSamples: number) {
     return numberOfSamples * barWidth + (numberOfSamples - 1) * barSpacing;
 }
 
-const CancerCellFractionElementTooltip: React.FunctionComponent<{
+export const CancerCellFractionElementTooltip: React.FunctionComponent<{
     sampleIds: string[];
     sampleToCCFValue: { [key: string]: string };
     sampleManager?: SampleManager | null;
