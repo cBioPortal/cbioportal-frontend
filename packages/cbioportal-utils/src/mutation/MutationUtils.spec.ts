@@ -7,6 +7,7 @@ import {
     extractGenomicLocation,
     genomicLocationString,
     uniqueGenomicLocations,
+    normalizeChromosome,
 } from './MutationUtils';
 
 import { Mutation } from '../model/Mutation';
@@ -150,7 +151,7 @@ describe('MutationUtils', () => {
     });
 
     describe('genomicLocationString', () => {
-        it('extract genomic location', () => {
+        it('extracts genomic location', () => {
             let genomicLocation: GenomicLocation = {
                 chromosome: '1',
                 start: 100,
@@ -162,6 +163,20 @@ describe('MutationUtils', () => {
                 genomicLocationString(genomicLocation),
                 '1,100,100,C,G',
                 'genomic location string should be:  1,100,100,C,G'
+            );
+        });
+        it('normalizes chromosome and extracts genomic location', () => {
+            let genomicLocation: GenomicLocation = {
+                chromosome: '23',
+                start: 100,
+                end: 100,
+                referenceAllele: 'C',
+                variantAllele: 'G',
+            };
+            assert.equal(
+                genomicLocationString(genomicLocation),
+                'X,100,100,C,G',
+                'genomic location string should be:  X,100,100,C,G'
             );
         });
     });
