@@ -141,10 +141,7 @@ export const ASCNCopyNumberElementTooltip: React.FunctionComponent<{
                 <b>{ascnCopyNumberCall}</b>
                 {ascnCopyNumberCall !== ASCNCopyNumberValueEnum.NA ? (
                     <span>
-                        {' '}
-                        ({props.wgdValue} with total copy number of{' '}
-                        {props.totalCopyNumberValue} and a minor copy number of{' '}
-                        {props.minorCopyNumberValue})
+                        {` (${props.wgdValue} with total copy number of ${props.totalCopyNumberValue} and a minor copy number of ${props.minorCopyNumberValue})`}
                     </span>
                 ) : null}
             </span>
