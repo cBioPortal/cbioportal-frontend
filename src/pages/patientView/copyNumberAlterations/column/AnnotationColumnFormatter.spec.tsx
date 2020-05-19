@@ -12,10 +12,6 @@ import {
 } from 'test/CivicMockUtils';
 
 describe('AnnotationColumnFormatter', () => {
-    before(() => {});
-
-    after(() => {});
-
     it('properly creates a civic entry', () => {
         let civicGenes = getCivicGenes();
 

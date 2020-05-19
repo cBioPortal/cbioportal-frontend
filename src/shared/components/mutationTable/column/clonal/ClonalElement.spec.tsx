@@ -28,8 +28,6 @@ describe('ClonalElement', () => {
         ccfMCopies: 'NA',
     };
 
-    before(() => {});
-
     function testExpectedValidClonalElement(
         componentProperties: any,
         expectedColor: string
@@ -114,6 +112,4 @@ describe('ClonalElement', () => {
     it('generates lightgrey circle with tooltip for clonal NA', () => {
         testExpectedInvalidClonalElement(clonalNA, ClonalColor.LIGHTGREY);
     });
-
-    after(() => {});
 });

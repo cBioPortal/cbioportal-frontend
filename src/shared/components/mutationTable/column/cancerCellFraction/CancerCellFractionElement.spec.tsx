@@ -94,8 +94,6 @@ describe('CancerCellFractionElement', () => {
         ).to.equal(expectedCCFValue);
     }
 
-    before(() => {});
-
     it('renders correctly for valid single sample', () => {
         const validSingleSampleCancerCellFractionColumn = mount(
             <CancerCellFractionElement
@@ -210,6 +208,4 @@ describe('CancerCellFractionElement', () => {
             'NA'
         );
     });
-
-    after(() => {});
 });

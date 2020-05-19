@@ -6,7 +6,7 @@ import SampleManager from 'pages/patientView/SampleManager';
 import {
     default as ASCNCopyNumberElement,
     ASCNCopyNumberElementTooltip,
-    ASCNCopyNumberValue,
+    ASCNCopyNumberValueEnum,
 } from './ASCNCopyNumberElement';
 import {
     ASCN_AMP,
@@ -37,7 +37,7 @@ import {
     - test wgd element (span) is not present when properties do not show WGD
 
     Test tooltip
-    - test ASCNCopyNumberValue text correct {Gain, Diploid, Double Loss After, ...}
+    - test ASCNCopyNumberValueEnum text correct {Gain, Diploid, Double Loss After, ...}
     - test "WGD"/"no WGD" text correct
     - test total copy number text correct "with total copy number of #"
     - test minor copy number text correct "and a minor copy number of #"
@@ -221,7 +221,7 @@ describe('ASCNCopyNumberElement', () => {
             </span>
         */
         const bElement = ascnCopyNumberElementTooltip.find('b');
-        expect(bElement).to.have.text(ASCNCopyNumberValue.NA);
+        expect(bElement).to.have.text(ASCNCopyNumberValueEnum.NA);
 
         const spanCount = countSpansWithCopyNumberText(
             ascnCopyNumberElementTooltip,
@@ -232,8 +232,6 @@ describe('ASCNCopyNumberElement', () => {
             "Expected zero 'span' elements containing specified values but failed"
         );
     }
-
-    before(() => {});
 
     it('ascn copy number of 2 should have the ASCN_AMP color and be visible', () => {
         let sample = initSample();
@@ -273,19 +271,19 @@ describe('ASCNCopyNumberElement', () => {
 
     it('total copy number of NA should have the ASCN_BLACK color and be invisible', () => {
         let sample = initSample();
-        sample.totalCopyNumberValue = ASCNCopyNumberValue.NA;
+        sample.totalCopyNumberValue = ASCNCopyNumberValueEnum.NA;
         testExpectedColorInvalidASCNCopyNumberElement(sample);
     });
 
     it('WGD of NA should have the ASCN_BLACK color and be invisible', () => {
         let sample = initSample();
-        sample.wgdValue = ASCNCopyNumberValue.NA;
+        sample.wgdValue = ASCNCopyNumberValueEnum.NA;
         testExpectedColorInvalidASCNCopyNumberElement(sample);
     });
 
     it('ascn copy number of NA should have the ASCN_BLACK color and be invisible', () => {
         let sample = initSample();
-        sample.ascnCopyNumberValue = ASCNCopyNumberValue.NA;
+        sample.ascnCopyNumberValue = ASCNCopyNumberValueEnum.NA;
         testExpectedColorInvalidASCNCopyNumberElement(sample);
     });
 
@@ -310,46 +308,46 @@ describe('ASCNCopyNumberElement', () => {
 
     it(
         'no wgd with major copy number of 1 and minor copy number of 0 displays ' +
-            ASCNCopyNumberValue.HETLOSS.toLowerCase() +
+            ASCNCopyNumberValueEnum.HETLOSS.toLowerCase() +
             ' in tooltip',
         () => {
             let sample = initSample();
             sample.wgdValue = 'no WGD';
             sample.totalCopyNumberValue = '1';
             sample.minorCopyNumberValue = '0';
-            testExpectedValidTooltip(sample, ASCNCopyNumberValue.HETLOSS);
+            testExpectedValidTooltip(sample, ASCNCopyNumberValueEnum.HETLOSS);
         }
     );
 
     it(
         'no wgd with major copy number of 1 and minor copy number of 1 displays ' +
-            ASCNCopyNumberValue.DIPLOID.toLowerCase() +
+            ASCNCopyNumberValueEnum.DIPLOID.toLowerCase() +
             ' in tooltip',
         () => {
             let sample = initSample();
             sample.wgdValue = 'no WGD';
             sample.totalCopyNumberValue = '2';
             sample.minorCopyNumberValue = '1';
-            testExpectedValidTooltip(sample, ASCNCopyNumberValue.DIPLOID);
+            testExpectedValidTooltip(sample, ASCNCopyNumberValueEnum.DIPLOID);
         }
     );
 
     it(
         'no wgd with major copy number of 2 and minor copy number of 1 displays ' +
-            ASCNCopyNumberValue.GAIN.toLowerCase() +
+            ASCNCopyNumberValueEnum.GAIN.toLowerCase() +
             ' in tooltip',
         () => {
             let sample = initSample();
             sample.wgdValue = 'no WGD';
             sample.totalCopyNumberValue = '3';
             sample.minorCopyNumberValue = '1';
-            testExpectedValidTooltip(sample, ASCNCopyNumberValue.GAIN);
+            testExpectedValidTooltip(sample, ASCNCopyNumberValueEnum.GAIN);
         }
     );
 
     it(
         'wgd with major copy number of 1 and minor copy number of 0 displays ' +
-            ASCNCopyNumberValue.LOSSBEFOREAFTER.toLowerCase() +
+            ASCNCopyNumberValueEnum.LOSSBEFOREAFTER.toLowerCase() +
             ' in tooltip',
         () => {
             let sample = initSample();
@@ -358,14 +356,14 @@ describe('ASCNCopyNumberElement', () => {
             sample.minorCopyNumberValue = '0';
             testExpectedValidTooltip(
                 sample,
-                ASCNCopyNumberValue.LOSSBEFOREAFTER
+                ASCNCopyNumberValueEnum.LOSSBEFOREAFTER
             );
         }
     );
 
     it(
         'wgd with major copy number of 1 and minor copy number of 1 displays ' +
-            ASCNCopyNumberValue.DOUBLELOSSAFTER.toLowerCase() +
+            ASCNCopyNumberValueEnum.DOUBLELOSSAFTER.toLowerCase() +
             ' in tooltip',
         () => {
             let sample = initSample();
@@ -374,35 +372,38 @@ describe('ASCNCopyNumberElement', () => {
             sample.minorCopyNumberValue = '1';
             testExpectedValidTooltip(
                 sample,
-                ASCNCopyNumberValue.DOUBLELOSSAFTER
+                ASCNCopyNumberValueEnum.DOUBLELOSSAFTER
             );
         }
     );
 
     it(
         'wgd with major copy number of 2 and minor copy number of 1 displays ' +
-            ASCNCopyNumberValue.LOSSAFTER.toLowerCase() +
+            ASCNCopyNumberValueEnum.LOSSAFTER.toLowerCase() +
             ' in tooltip',
         () => {
             let sample = initSample();
             sample.wgdValue = 'WGD';
             sample.totalCopyNumberValue = '3';
             sample.minorCopyNumberValue = '1';
-            testExpectedValidTooltip(sample, ASCNCopyNumberValue.LOSSAFTER);
+            testExpectedValidTooltip(sample, ASCNCopyNumberValueEnum.LOSSAFTER);
         }
     );
 
-    it('invalid wgd displays ' + ASCNCopyNumberValue.NA + ' in tooltip', () => {
-        let sample = initSample();
-        sample.wgdValue = 'not in table';
-        sample.totalCopyNumberValue = '3';
-        sample.minorCopyNumberValue = '1';
-        testExpectedInvalidTooltip(sample);
-    });
+    it(
+        'invalid wgd displays ' + ASCNCopyNumberValueEnum.NA + ' in tooltip',
+        () => {
+            let sample = initSample();
+            sample.wgdValue = 'not in table';
+            sample.totalCopyNumberValue = '3';
+            sample.minorCopyNumberValue = '1';
+            testExpectedInvalidTooltip(sample);
+        }
+    );
 
     it(
         'invalid major copy number displays ' +
-            ASCNCopyNumberValue.NA +
+            ASCNCopyNumberValueEnum.NA +
             ' in tooltip',
         () => {
             let sample = initSample();
@@ -415,7 +416,7 @@ describe('ASCNCopyNumberElement', () => {
 
     it(
         'invalid minor copy number displays ' +
-            ASCNCopyNumberValue.NA +
+            ASCNCopyNumberValueEnum.NA +
             ' in tooltip',
         () => {
             let sample = initSample();
@@ -425,6 +426,4 @@ describe('ASCNCopyNumberElement', () => {
             testExpectedInvalidTooltip(sample);
         }
     );
-
-    after(() => {});
 });

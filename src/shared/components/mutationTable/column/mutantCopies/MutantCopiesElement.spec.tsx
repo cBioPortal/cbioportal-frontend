@@ -40,8 +40,6 @@ describe('MutantCopiesElement', () => {
         ).to.exist;
     }
 
-    before(() => {});
-
     it('generates MutantCopiesElement with Tooltip', () => {
         // only mutations with tcn/mutantCopies available map to an element
         let mutantCopiesElementTest = mount(
@@ -50,6 +48,4 @@ describe('MutantCopiesElement', () => {
         expect(mutantCopiesElementTest.find('span').text()).to.equal('2/4');
         testMutantCopiesElementTooltip(mutantCopiesElementTest);
     });
-
-    after(() => {});
 });

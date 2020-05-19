@@ -44,5 +44,4 @@ describe('ASCNMethodColumnFormatter', () => {
             'ASCN method should be an empty string if not available for a mutation'
         );
     });
-    after(() => {});
 });

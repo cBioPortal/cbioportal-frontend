@@ -70,8 +70,6 @@ describe('ClonalColumnFormatter', () => {
     let clonalColumnTest: ReactWrapper<any, any>;
     let clonalNoComponent: ReactWrapper<any, any>;
 
-    before(() => {});
-
     it('has expected number of ClonalElement components', () => {
         clonalColumnTest = mount(
             getDefaultClonalColumnDefinition(
