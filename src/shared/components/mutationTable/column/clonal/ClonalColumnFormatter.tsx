@@ -69,12 +69,6 @@ export default class ClonalColumnFormatter {
                 ? mutation.alleleSpecificCopyNumber.ccfMCopies.toString()
                 : 'NA';
         }
-        // exclude samples with invalid count value (undefined || emtpy || lte 0)
-        const samplesWithValue = sampleIds.filter(
-            sampleId =>
-                sampleToValue[sampleId] &&
-                sampleToValue[sampleId].toString().length > 0
-        );
 
         return (
             <>
