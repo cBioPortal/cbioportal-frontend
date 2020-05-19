@@ -4,7 +4,7 @@ import { ClinicalData, ClinicalAttribute } from 'cbioportal-ts-api-client';
 /**
  * Utility functions to generate mock data.
  *
- * @author Selcuk Onur Sumer
+ * @author Rob Sheridan, Manda Wilson
  */
 
 export function emptyClinicalData(): ClinicalData {
