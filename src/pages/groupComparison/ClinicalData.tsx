@@ -13,6 +13,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import client from 'shared/api/cbioportalClientInstance';
 import {
+    basicAppearance,
     boxPlotTooltip,
     IAxisData,
     IAxisLogScaleParams,
@@ -22,8 +23,6 @@ import {
     isStringData,
     IStringAxisData,
     makeBoxScatterPlotData,
-    MutationSummary,
-    mutationSummaryToAppearance,
 } from 'pages/resultsView/plots/PlotsTabUtils';
 import ScrollBar from 'shared/components/Scrollbar/ScrollBar';
 import BoxScatterPlot, {
@@ -664,21 +663,9 @@ export default class ClinicalData extends React.Component<
                                 horizontal={this.boxPlotData.result.horizontal}
                                 logScale={this.logScaleFunction}
                                 size={scatterPlotSize}
-                                fill={
-                                    mutationSummaryToAppearance[
-                                        MutationSummary.Neither
-                                    ].fill
-                                }
-                                stroke={
-                                    mutationSummaryToAppearance[
-                                        MutationSummary.Neither
-                                    ].stroke
-                                }
-                                strokeOpacity={
-                                    mutationSummaryToAppearance[
-                                        MutationSummary.Neither
-                                    ].strokeOpacity
-                                }
+                                fill={basicAppearance.fill}
+                                stroke={basicAppearance.stroke}
+                                strokeOpacity={basicAppearance.strokeOpacity}
                                 symbol="circle"
                                 useLogSpaceTicks={true}
                                 legendLocationWidthThreshold={550}
