@@ -1,3 +1,4 @@
+import * as React from 'react';
 import * as _ from 'lodash';
 import { ReactWrapper, mount } from 'enzyme';
 import { assert, expect } from 'chai';
@@ -28,9 +29,15 @@ describe('MutantCopiesElement', () => {
                     .overlay as any).props}
             />
         );
-        expect(mutantCopiesElementTooltip.find('span')).contains(
-            '2 out of 4 copies of this gene are mutated'
-        );
+        expect(
+            mutantCopiesElementTooltip.findWhere(
+                node =>
+                    node.type() === 'span' &&
+                    node.children().length == 0 &&
+                    node.text() ==
+                        ' 2 out of 4 copies of this gene are mutated.'
+            )
+        ).to.exist;
     }
 
     before(() => {});
