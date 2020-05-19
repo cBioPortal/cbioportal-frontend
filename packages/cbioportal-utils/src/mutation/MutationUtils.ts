@@ -67,7 +67,11 @@ export function extractGenomicLocation(
 }
 
 export function genomicLocationString(genomicLocation: GenomicLocation) {
-    return `${genomicLocation.chromosome},${genomicLocation.start},${genomicLocation.end},${genomicLocation.referenceAllele},${genomicLocation.variantAllele}`;
+    return `${normalizeChromosome(genomicLocation.chromosome)},${
+        genomicLocation.start
+    },${genomicLocation.end},${genomicLocation.referenceAllele},${
+        genomicLocation.variantAllele
+    }`;
 }
 
 export function uniqueGenomicLocations(
@@ -88,4 +92,18 @@ export function uniqueGenomicLocations(
     });
 
     return _.values(genomicLocationMap);
+}
+
+export function normalizeChromosome(chromosome: string) {
+    switch (chromosome) {
+        case '23': {
+            return 'X';
+        }
+        case '24': {
+            return 'Y';
+        }
+        default: {
+            return chromosome;
+        }
+    }
 }

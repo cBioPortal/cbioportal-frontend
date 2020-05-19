@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-frontend-commons",
   "description": "cBioPortal Frontend Modules",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
@@ -42,7 +42,7 @@
     "measure-text": "0.0.4",
     "mobxpromise": "github:cbioportal/mobxpromise#v1.0.2",
     "object-sizeof": "^1.2.0",
-    "oncokb-ts-api-client": "^1.0.3",
+    "oncokb-ts-api-client": "^1.0.4",
     "rc-tooltip": "3.7.3",
     "react-file-download": "^0.3.2",
     "react-select": "^3.0.4",
