@@ -91,7 +91,11 @@ function buildImagePath(ref, rootUrl) {
 }
 
 function buildCurlStatement(data) {
-    return `curl '${data.screenImagePath}' > 'end-to-end-test/remote/screenshots/reference/${data.imageName}'; git add 'end-to-end-test/remote/screenshots/reference/${data.imageName}';`;
+    // -L means follow redirects
+    //      CircleCI seems to be hosting their files differently now, with the real URL
+    //      being behind a redirect, and so if we don't use the -L option we end up with a corrupted file.
+    //      -L makes curl "follow" the redirect so it downloads the file correctly.
+    return `curl -L '${data.screenImagePath}' > 'end-to-end-test/remote/screenshots/reference/${data.imageName}'; git add 'end-to-end-test/remote/screenshots/reference/${data.imageName}';`;
 }
 
 function updateSideBySide(opacity) {
