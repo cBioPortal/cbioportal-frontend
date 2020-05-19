@@ -4,7 +4,7 @@ import { assert, expect } from 'chai';
 import { Mutation, ClinicalData } from 'cbioportal-ts-api-client';
 import { initMutation } from 'test/MutationMockUtils';
 import { initClinicalData } from 'test/ClinicalDataMockUtils';
-import { CAID_FACETS_WGD } from 'shared/constants';
+import { CLINICAL_ATTRIBUTE_ID_ENUM } from 'shared/constants';
 import SampleManager from 'pages/patientView/SampleManager';
 import {
     ASCN_AMP,
@@ -244,11 +244,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         value: sample6Id,
     });
     const clinicalDataWgd: ClinicalData = initClinicalData({
-        clinicalAttributeId: CAID_FACETS_WGD,
+        clinicalAttributeId: CLINICAL_ATTRIBUTE_ID_ENUM.FACETS_WGD,
         value: 'WGD',
     });
     const clinicalDataNoWgd: ClinicalData = initClinicalData({
-        clinicalAttributeId: CAID_FACETS_WGD,
+        clinicalAttributeId: CLINICAL_ATTRIBUTE_ID_ENUM.FACETS_WGD,
         value: 'NO_WGD',
     });
     const s1NoWgdClinicalDataMap: {

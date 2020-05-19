@@ -7,7 +7,10 @@ import ASCNCopyNumberElement from 'shared/components/mutationTable/column/ascnCo
 import { ASCNCopyNumberValueEnum } from 'shared/components/mutationTable/column/ascnCopyNumber/ASCNCopyNumberElement';
 import { ASCN_BLACK } from 'shared/lib/Colors';
 import { getASCNCopyNumberColor } from 'shared/lib/ASCNUtils';
-import { CAID_FACETS_WGD } from 'shared/constants';
+import {
+    CLINICAL_ATTRIBUTE_ID_ENUM,
+    MUTATION_DATA_FIELD_ENUM,
+} from 'shared/constants';
 
 /**
  * @author Avery Wang
@@ -20,7 +23,10 @@ function getAscnCopyNumberData(
         | { [sampleId: string]: ClinicalData[] }
         | undefined
 ) {
-    return hasASCNProperty(mutation, 'ascnIntegerCopyNumber')
+    return hasASCNProperty(
+        mutation,
+        MUTATION_DATA_FIELD_ENUM.ASCN_INTEGER_COPY_NUMBER
+    )
         ? mutation.alleleSpecificCopyNumber.ascnIntegerCopyNumber
         : ASCNCopyNumberValueEnum.NA;
 }
@@ -85,7 +91,9 @@ export function getWGD(
 ) {
     let wgdData = sampleIdToClinicalDataMap
         ? sampleIdToClinicalDataMap[sampleId].find(
-              (cd: ClinicalData) => cd.clinicalAttributeId === CAID_FACETS_WGD
+              (cd: ClinicalData) =>
+                  cd.clinicalAttributeId ===
+                  CLINICAL_ATTRIBUTE_ID_ENUM.FACETS_WGD
           )
         : undefined;
     return wgdData !== undefined ? wgdData.value : ASCNCopyNumberValueEnum.NA;
@@ -145,7 +153,7 @@ export default class ASCNCopyNumberColumnFormatter {
                 : ASCNCopyNumberValueEnum.NA;
             sampleToASCNCopyNumber[mutation.sampleId] = hasASCNProperty(
                 mutation,
-                'ascnIntegerCopyNumber'
+                MUTATION_DATA_FIELD_ENUM.ASCN_INTEGER_COPY_NUMBER
             )
                 ? mutation.alleleSpecificCopyNumber.ascnIntegerCopyNumber.toString()
                 : ASCNCopyNumberValueEnum.NA;

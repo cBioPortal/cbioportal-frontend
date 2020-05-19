@@ -194,26 +194,12 @@ import ComplexKeySet from '../../shared/lib/complexKeyDataStructures/ComplexKeyS
 import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mutationMapper/MutationMapperUtils';
 import { getGenomeNexusHgvsgUrl } from 'shared/api/urls';
 import {
-    CAF_DATATYPE_COUNTS_MAP,
-    CAF_DATATYPE_NUMBER,
-    CAF_DATATYPE_STRING,
-    CAF_ID,
-    CAID_CANCER_TYPE,
-    CAID_CANCER_TYPE_DETAILED,
-    CAID_FACETS_PURITY,
-    CAID_FACETS_WGD,
-    GNARG_FIELD_ANNOTATION_SUMMARY,
-    GNARG_FIELD_HOTSPOTS,
-    GNARG_FIELD_MUTATION_ASSESSOR,
-    GNARG_FIELD_MY_VARIANT_INFO,
-    GPF_MOLECULAR_ALTERATION_TYPE,
-    GPF_STUDY_ID,
+    CLINICAL_ATTRIBUTE_FIELD_ENUM,
+    CLINICAL_ATTRIBUTE_ID_ENUM,
+    GENOME_NEXUS_ARG_FIELD_ENUM,
+    GENETIC_PROFILE_FIELD_ENUM,
     PUTATIVE_DRIVER,
-    RARG_CLINICAL_DATA_TYPE_PATIENT,
-    RARG_CLINICAL_DATA_TYPE_SAMPLE,
-    RARG_PROJECTION_DETAILED,
-    RARG_PROJECTION_META,
-    RARG_PROJECTION_SUMMARY,
+    REQUEST_ARG_ENUM,
     SAMPLE_CANCER_TYPE_UNKNOWN,
 } from 'shared/constants';
 
@@ -391,10 +377,10 @@ export function extendSamplesWithCancerType(
         if (clinicalData) {
             clinicalData.forEach((clinicalDatum: ClinicalData) => {
                 switch (clinicalDatum.clinicalAttributeId) {
-                    case CAID_CANCER_TYPE_DETAILED:
+                    case CLINICAL_ATTRIBUTE_ID_ENUM.CANCER_TYPE_DETAILED:
                         sample.cancerTypeDetailed = clinicalDatum.value;
                         break;
-                    case CAID_CANCER_TYPE:
+                    case CLINICAL_ATTRIBUTE_ID_ENUM.CANCER_TYPE:
                         sample.cancerType = clinicalDatum.value;
                         break;
                     default:
@@ -858,7 +844,10 @@ export class ResultsViewPageStore {
             const profiles: MolecularProfile[] = this.selectedMolecularProfiles
                 .result!;
             return Promise.resolve(
-                _.groupBy(profiles, GPF_MOLECULAR_ALTERATION_TYPE)
+                _.groupBy(
+                    profiles,
+                    GENETIC_PROFILE_FIELD_ENUM.MOLECULAR_ALTERATION_TYPE
+                )
             );
         },
     });
@@ -882,7 +871,7 @@ export class ResultsViewPageStore {
             const specialAttributes = [
                 {
                     clinicalAttributeId: SpecialAttribute.MutationSpectrum,
-                    datatype: CAF_DATATYPE_COUNTS_MAP,
+                    datatype: CLINICAL_ATTRIBUTE_FIELD_ENUM.DATATYPE_COUNTS_MAP,
                     description:
                         'Number of point mutations in the sample counted by different types of nucleotide changes.',
                     displayName: 'Mutation spectrum',
@@ -895,7 +884,7 @@ export class ResultsViewPageStore {
                 // if more than one study, add "Study of Origin" attribute
                 specialAttributes.push({
                     clinicalAttributeId: SpecialAttribute.StudyOfOrigin,
-                    datatype: CAF_DATATYPE_STRING,
+                    datatype: CLINICAL_ATTRIBUTE_FIELD_ENUM.DATATYPE_STRING,
                     description: 'Study which the sample is a part of.',
                     displayName: 'Study of origin',
                     patientAttribute: false,
@@ -907,7 +896,7 @@ export class ResultsViewPageStore {
                 // if different number of samples and patients, add "Num Samples of Patient" attribute
                 specialAttributes.push({
                     clinicalAttributeId: SpecialAttribute.NumSamplesPerPatient,
-                    datatype: CAF_DATATYPE_NUMBER,
+                    datatype: CLINICAL_ATTRIBUTE_FIELD_ENUM.DATATYPE_NUMBER,
                     description: 'Number of queried samples for each patient.',
                     displayName: '# Samples per Patient',
                     patientAttribute: true,
@@ -925,7 +914,12 @@ export class ResultsViewPageStore {
     readonly clinicalAttributeIdToClinicalAttribute = remoteData({
         await: () => [this.clinicalAttributes],
         invoke: () =>
-            Promise.resolve(_.keyBy(this.clinicalAttributes.result!, CAF_ID)),
+            Promise.resolve(
+                _.keyBy(
+                    this.clinicalAttributes.result!,
+                    CLINICAL_ATTRIBUTE_FIELD_ENUM.ID
+                )
+            ),
     });
 
     readonly clinicalAttributeIdToAvailableSampleCount = remoteData({
@@ -1105,7 +1099,7 @@ export class ResultsViewPageStore {
                 if (identifiers.length) {
                     return client.fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
                         {
-                            projection: RARG_PROJECTION_DETAILED,
+                            projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                             molecularDataMultipleStudyFilter: {
                                 entrezGeneIds: _.map(
                                     this.genes.result,
@@ -1174,7 +1168,7 @@ export class ResultsViewPageStore {
                 if (sampleIdentifiers.length) {
                     return client.fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
                         {
-                            projection: RARG_PROJECTION_DETAILED,
+                            projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                             molecularDataMultipleStudyFilter: {
                                 entrezGeneIds: _.map(
                                     this.genes.result,
@@ -1219,7 +1213,7 @@ export class ResultsViewPageStore {
             );
             const studyToProfiles = _.groupBy(
                 coExpressionProfiles,
-                GPF_STUDY_ID
+                GENETIC_PROFILE_FIELD_ENUM.STUDY_ID
             );
             // we know these are all mrna and protein profiles
             const sampleMolecularIdentifiers = _.flatten(
@@ -1247,7 +1241,7 @@ export class ResultsViewPageStore {
                                 entrezGeneIds,
                                 sampleMolecularIdentifiers,
                             } as MolecularDataMultipleStudyFilter,
-                            projection: RARG_PROJECTION_META,
+                            projection: REQUEST_ARG_ENUM.PROJECTION_META,
                         }
                     )
                     .then(function(response: request.Response) {
@@ -1330,7 +1324,7 @@ export class ResultsViewPageStore {
                 }
 
                 const molecularProfileId = profile.molecularProfileId;
-                const projection = RARG_PROJECTION_META;
+                const projection = REQUEST_ARG_ENUM.PROJECTION_META;
                 const dataFilter = {
                     entrezGeneIds: this.genes.result!.map(g => g.entrezGeneId),
                     ...dataQueryFilter,
@@ -1755,7 +1749,7 @@ export class ResultsViewPageStore {
                 if (genePanelIds.length) {
                     genePanels = await client.fetchGenePanelsUsingPOST({
                         genePanelIds,
-                        projection: RARG_PROJECTION_DETAILED,
+                        projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                     });
                 }
                 return computeGenePanelInformation(
@@ -2410,7 +2404,7 @@ export class ResultsViewPageStore {
                             sampleListIds: sampleListsToQuery.map(
                                 spec => spec.sampleListId
                             ),
-                            projection: RARG_PROJECTION_DETAILED,
+                            projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                         }
                     );
                     // add samples from those sample lists to corresponding study
@@ -2488,7 +2482,7 @@ export class ResultsViewPageStore {
                     uniqueStudyIds.map(studyId => {
                         return client.getAllSampleListsInStudyUsingGET({
                             studyId: studyId,
-                            projection: RARG_PROJECTION_SUMMARY,
+                            projection: REQUEST_ARG_ENUM.PROJECTION_SUMMARY,
                         });
                     })
                 );
@@ -2545,7 +2539,7 @@ export class ResultsViewPageStore {
         {
             invoke: async () =>
                 await client.getAllStudiesUsingGET({
-                    projection: RARG_PROJECTION_SUMMARY,
+                    projection: REQUEST_ARG_ENUM.PROJECTION_SUMMARY,
                 }),
         },
         []
@@ -2711,7 +2705,7 @@ export class ResultsViewPageStore {
 
             return await client.fetchMutationsInMultipleMolecularProfilesUsingPOST(
                 {
-                    projection: RARG_PROJECTION_DETAILED,
+                    projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                     mutationMultipleStudyFilter: data,
                 }
             );
@@ -2916,10 +2910,13 @@ export class ResultsViewPageStore {
             await: () => [this.studies, this.samples],
             invoke: () =>
                 this.getClinicalData(
-                    RARG_CLINICAL_DATA_TYPE_SAMPLE,
+                    REQUEST_ARG_ENUM.CLINICAL_DATA_TYPE_SAMPLE,
                     this.studies.result!,
                     this.samples.result,
-                    [CAID_CANCER_TYPE, CAID_CANCER_TYPE_DETAILED]
+                    [
+                        CLINICAL_ATTRIBUTE_ID_ENUM.CANCER_TYPE,
+                        CLINICAL_ATTRIBUTE_ID_ENUM.CANCER_TYPE_DETAILED,
+                    ]
                 ),
         },
         []
@@ -2930,10 +2927,13 @@ export class ResultsViewPageStore {
             await: () => [this.studies, this.samples],
             invoke: () =>
                 this.getClinicalData(
-                    RARG_CLINICAL_DATA_TYPE_SAMPLE,
+                    REQUEST_ARG_ENUM.CLINICAL_DATA_TYPE_SAMPLE,
                     this.studies.result!,
                     this.samples.result,
-                    [CAID_FACETS_WGD, CAID_FACETS_PURITY]
+                    [
+                        CLINICAL_ATTRIBUTE_ID_ENUM.FACETS_WGD,
+                        CLINICAL_ATTRIBUTE_ID_ENUM.FACETS_PURITY,
+                    ]
                 ),
         },
         []
@@ -3013,7 +3013,7 @@ export class ResultsViewPageStore {
         entities: any[],
         attributeIds: string[]
     ): Promise<number> {
-        const projection = RARG_PROJECTION_META;
+        const projection = REQUEST_ARG_ENUM.PROJECTION_META;
         // single study query endpoint is optimal so we should use it
         // when there's only one study
         if (studies.length === 1) {
@@ -3072,7 +3072,7 @@ export class ResultsViewPageStore {
         invoke: async () => {
             if (!_.isEmpty(this.survivalClinicalDataAttributes.result)) {
                 const count = await this.getClinicalDataCount(
-                    RARG_CLINICAL_DATA_TYPE_PATIENT,
+                    REQUEST_ARG_ENUM.CLINICAL_DATA_TYPE_PATIENT,
                     this.studies.result!,
                     this.patients.result,
                     this.survivalClinicalDataAttributes.result!
@@ -3093,7 +3093,7 @@ export class ResultsViewPageStore {
             invoke: () => {
                 if (!_.isEmpty(this.survivalClinicalDataAttributes.result)) {
                     return this.getClinicalData(
-                        RARG_CLINICAL_DATA_TYPE_PATIENT,
+                        REQUEST_ARG_ENUM.CLINICAL_DATA_TYPE_PATIENT,
                         this.studies.result!,
                         this.patients.result,
                         this.survivalClinicalDataAttributes.result!
@@ -3158,7 +3158,7 @@ export class ResultsViewPageStore {
                             sampleFilter: {
                                 sampleIdentifiers,
                             } as SampleFilter,
-                            projection: RARG_PROJECTION_DETAILED,
+                            projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                         })
                     );
                 }
@@ -3168,7 +3168,7 @@ export class ResultsViewPageStore {
                             sampleFilter: {
                                 sampleListIds,
                             } as SampleFilter,
-                            projection: RARG_PROJECTION_DETAILED,
+                            projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                         })
                     );
                 }
@@ -3270,7 +3270,7 @@ export class ResultsViewPageStore {
             invoke: async () => {
                 return client.fetchStudiesUsingPOST({
                     studyIds: this.studyIds.result!,
-                    projection: RARG_PROJECTION_DETAILED,
+                    projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                 });
             },
         },
@@ -4099,8 +4099,8 @@ export class ResultsViewPageStore {
                     ? await fetchVariantAnnotationsIndexedByGenomicLocation(
                           this.mutations.result,
                           [
-                              GNARG_FIELD_ANNOTATION_SUMMARY,
-                              GNARG_FIELD_HOTSPOTS,
+                              GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY,
+                              GENOME_NEXUS_ARG_FIELD_ENUM.HOTSPOTS,
                           ],
                           AppConfig.serverConfig.isoformOverrideSource,
                           this.genomeNexusClient
@@ -4450,7 +4450,7 @@ export class ResultsViewPageStore {
     @cached get genomeNexusCache() {
         return new GenomeNexusCache(
             createVariantAnnotationsByMutationFetcher(
-                [GNARG_FIELD_ANNOTATION_SUMMARY],
+                [GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY],
                 this.genomeNexusClient
             )
         );
@@ -4459,7 +4459,10 @@ export class ResultsViewPageStore {
     @cached get genomeNexusMutationAssessorCache() {
         return new GenomeNexusMutationAssessorCache(
             createVariantAnnotationsByMutationFetcher(
-                [GNARG_FIELD_ANNOTATION_SUMMARY, GNARG_FIELD_MUTATION_ASSESSOR],
+                [
+                    GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY,
+                    GENOME_NEXUS_ARG_FIELD_ENUM.MUTATION_ASSESSOR,
+                ],
                 this.genomeNexusClient
             )
         );
@@ -4468,7 +4471,7 @@ export class ResultsViewPageStore {
     @cached get genomeNexusMyVariantInfoCache() {
         return new GenomeNexusMyVariantInfoCache(
             createVariantAnnotationsByMutationFetcher(
-                [GNARG_FIELD_MY_VARIANT_INFO],
+                [GENOME_NEXUS_ARG_FIELD_ENUM.MY_VARIANT_INFO],
                 this.genomeNexusClient
             )
         );
@@ -4656,7 +4659,8 @@ export class ResultsViewPageStore {
                                         entrezGeneIds: [q.entrezGeneId],
                                         ...dqf,
                                     } as MutationFilter,
-                                    projection: RARG_PROJECTION_DETAILED,
+                                    projection:
+                                        REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                                 }
                             );
                         } else {

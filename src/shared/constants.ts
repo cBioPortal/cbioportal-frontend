@@ -6,44 +6,53 @@ export const PUTATIVE_DRIVER = 'Putative_Driver';
 export const SAMPLE_CANCER_TYPE_UNKNOWN = 'Unknown';
 
 /* cbioportal api request arguments */
-
-export const RARG_PROJECTION_META = 'META';
-export const RARG_PROJECTION_SUMMARY = 'SUMMARY';
-export const RARG_PROJECTION_DETAILED = 'DETAILED';
-export const RARG_CASE_TYPE_PATIENT = 'PATIENT';
-export const RARG_CASE_TYPE_SAMPLE = 'SAMPLE';
-export const RARG_CLINICAL_DATA_TYPE_PATIENT = 'PATIENT';
-export const RARG_CLINICAL_DATA_TYPE_SAMPLE = 'SAMPLE';
+export const enum REQUEST_ARG_ENUM {
+    PROJECTION_META = 'META',
+    PROJECTION_SUMMARY = 'SUMMARY',
+    PROJECTION_DETAILED = 'DETAILED',
+    CLINICAL_DATA_TYPE_PATIENT = 'PATIENT',
+    CLINICAL_DATA_TYPE_SAMPLE = 'SAMPLE',
+}
 
 /* cbioportal api responses */
 
 /* cbioportal api responses - general response values */
-export const RV_NA = 'NA';
+export const RESPONSE_VALUE_NA = 'NA';
 
 /* cbioportal api responses - clinical attribute identifiers */
-export const CAID_CANCER_TYPE = 'CANCER_TYPE';
-export const CAID_CANCER_TYPE_DETAILED = 'CANCER_TYPE_DETAILED';
-export const CAID_FACETS_PURITY = 'FACETS_PURITY';
-export const CAID_FACETS_WGD = 'FACETS_WGD';
+export const enum CLINICAL_ATTRIBUTE_ID_ENUM {
+    CANCER_TYPE = 'CANCER_TYPE',
+    CANCER_TYPE_DETAILED = 'CANCER_TYPE_DETAILED',
+    FACETS_PURITY = 'FACETS_PURITY',
+    FACETS_WGD = 'FACETS_WGD',
+}
 
 /* cbioportal api responses - clinical attribute fields and subfields */
-export const CAF_ID = 'clinicalAttributeId';
-export const CAF_DATATYPE_NUMBER = 'NUMBER';
-export const CAF_DATATYPE_STRING = 'STRING';
-export const CAF_DATATYPE_COUNTS_MAP = 'COUNTS_MAP';
+export const enum CLINICAL_ATTRIBUTE_FIELD_ENUM {
+    ID = 'clinicalAttributeId',
+    DATATYPE_NUMBER = 'NUMBER',
+    DATATYPE_STRING = 'STRING',
+    DATATYPE_COUNTS_MAP = 'COUNTS_MAP',
+}
 
 /* cbioportal api responses - mutation data fields and subfields */
-export const MDF_ASCN_INTEGER_COPY_NUMBER = 'ascnIntegerCopyNumber';
-export const MDF_TOTAL_COPY_NUMBER = 'totalCopyNumber';
-export const MDF_MINOR_COPY_NUMBER = 'minorCopyNumber';
-export const MDF_MUTANT_COPIES = 'mutantCopies';
+export const enum MUTATION_DATA_FIELD_ENUM {
+    ASCN_INTEGER_COPY_NUMBER = 'ascnIntegerCopyNumber',
+    TOTAL_COPY_NUMBER = 'totalCopyNumber',
+    MINOR_COPY_NUMBER = 'minorCopyNumber',
+    MUTANT_COPIES = 'mutantCopies',
+}
 
 /* cbioportal api responses - genetic profile fields and subfields */
-export const GPF_MOLECULAR_ALTERATION_TYPE = 'molecularAlterationType';
-export const GPF_STUDY_ID = 'studyId';
+export const enum GENETIC_PROFILE_FIELD_ENUM {
+    MOLECULAR_ALTERATION_TYPE = 'molecularAlterationType',
+    STUDY_ID = 'studyId',
+}
 
 /* genome nexus api request arguments */
-export const GNARG_FIELD_ANNOTATION_SUMMARY = 'annotation_summary';
-export const GNARG_FIELD_HOTSPOTS = 'hotspots';
-export const GNARG_FIELD_MUTATION_ASSESSOR = 'mutation_assessor';
-export const GNARG_FIELD_MY_VARIANT_INFO = 'my_variant_info';
+export const enum GENOME_NEXUS_ARG_FIELD_ENUM {
+    ANNOTATION_SUMMARY = 'annotation_summary',
+    HOTSPOTS = 'hotspots',
+    MUTATION_ASSESSOR = 'mutation_assessor',
+    MY_VARIANT_INFO = 'my_variant_info',
+}
