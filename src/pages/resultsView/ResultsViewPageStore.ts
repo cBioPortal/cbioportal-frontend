@@ -790,14 +790,14 @@ export class ResultsViewPageStore {
     }
 
     readonly comparisonGroups = remoteData<Group[]>({
-        await: () => [this.studyIds],
+        await: () => [this.queriedStudies],
         invoke: async () => {
             let ret: Group[] = [];
             if (this.appStore.isLoggedIn) {
                 try {
                     ret = ret.concat(
                         await comparisonClient.getGroupsForStudies(
-                            this.studyIds.result!
+                            this.queriedStudies.result!.map(x => x.studyId)
                         )
                     );
                 } catch (e) {
