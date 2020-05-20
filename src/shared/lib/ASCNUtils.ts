@@ -8,8 +8,10 @@ import {
     ASCN_BLACK,
 } from 'shared/lib/Colors';
 
-export function getASCNCopyNumberColor(ASCNCopyNumberValue: string): string {
-    switch (ASCNCopyNumberValue) {
+export function getASCNCopyNumberColor(
+    ASCNCopyNumberValueEnum: string
+): string {
+    switch (ASCNCopyNumberValueEnum) {
         case '2':
             return ASCN_AMP;
         case '1':

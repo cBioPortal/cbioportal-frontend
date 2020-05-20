@@ -4,7 +4,7 @@ import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { ASCN_BLACK } from 'shared/lib/Colors';
 import { getASCNCopyNumberColor } from 'shared/lib/ASCNUtils';
 
-export enum ASCNCopyNumberValue {
+export enum ASCNCopyNumberValueEnum {
     WGD = 'WGD',
     NA = 'NA',
     AMPBALANCED = 'Amp (Balanced)',
@@ -29,69 +29,69 @@ export enum ASCNCopyNumberValue {
 }
 
 const ASCNCallTable: { [key: string]: string } = {
-    'no WGD,0,0': ASCNCopyNumberValue.HOMDEL,
-    'no WGD,1,0': ASCNCopyNumberValue.HETLOSS,
-    'no WGD,2,0': ASCNCopyNumberValue.CNLOH,
-    'no WGD,3,0': ASCNCopyNumberValue.CNLOHGAIN,
-    'no WGD,4,0': ASCNCopyNumberValue.CNLOHGAIN,
-    'no WGD,5,0': ASCNCopyNumberValue.AMPLOH,
-    'no WGD,6,0': ASCNCopyNumberValue.AMPLOH,
-    'no WGD,1,1': ASCNCopyNumberValue.DIPLOID,
-    'no WGD,2,1': ASCNCopyNumberValue.GAIN,
-    'no WGD,3,1': ASCNCopyNumberValue.GAIN,
-    'no WGD,4,1': ASCNCopyNumberValue.AMP,
-    'no WGD,5,1': ASCNCopyNumberValue.AMP,
-    'no WGD,6,1': ASCNCopyNumberValue.AMP,
-    'no WGD,2,2': ASCNCopyNumberValue.TETRAPLOID,
-    'no WGD,3,2': ASCNCopyNumberValue.AMP,
-    'no WGD,4,2': ASCNCopyNumberValue.AMP,
-    'no WGD,5,2': ASCNCopyNumberValue.AMP,
-    'no WGD,6,2': ASCNCopyNumberValue.AMP,
-    'no WGD,3,3': ASCNCopyNumberValue.AMPBALANCED,
-    'no WGD,4,3': ASCNCopyNumberValue.AMP,
-    'no WGD,5,3': ASCNCopyNumberValue.AMP,
-    'no WGD,6,3': ASCNCopyNumberValue.AMP,
-    'WGD,0,0': ASCNCopyNumberValue.HOMDEL,
-    'WGD,1,0': ASCNCopyNumberValue.LOSSBEFOREAFTER,
-    'WGD,2,0': ASCNCopyNumberValue.LOSSBEFORE,
-    'WGD,3,0': ASCNCopyNumberValue.CNLOHBEFORELOSS,
-    'WGD,4,0': ASCNCopyNumberValue.CNLOHBEFORE,
-    'WGD,5,0': ASCNCopyNumberValue.CNLOHBEFOREGAIN,
-    'WGD,6,0': ASCNCopyNumberValue.AMPLOH,
-    'WGD,1,1': ASCNCopyNumberValue.DOUBLELOSSAFTER,
-    'WGD,2,1': ASCNCopyNumberValue.LOSSAFTER,
-    'WGD,3,1': ASCNCopyNumberValue.CNLOHAFTER,
-    'WGD,4,1': ASCNCopyNumberValue.LOSSGAIN,
-    'WGD,5,1': ASCNCopyNumberValue.AMP,
-    'WGD,6,1': ASCNCopyNumberValue.AMP,
-    'WGD,2,2': ASCNCopyNumberValue.TETRAPLOID,
-    'WGD,3,2': ASCNCopyNumberValue.GAIN,
-    'WGD,4,2': ASCNCopyNumberValue.AMP,
-    'WGD,5,2': ASCNCopyNumberValue.AMP,
-    'WGD,6,2': ASCNCopyNumberValue.AMP,
-    'WGD,3,3': ASCNCopyNumberValue.AMPBALANCED,
-    'WGD,4,3': ASCNCopyNumberValue.AMP,
-    'WGD,5,3': ASCNCopyNumberValue.AMP,
-    'WGD,6,3': ASCNCopyNumberValue.AMP,
+    'no WGD,0,0': ASCNCopyNumberValueEnum.HOMDEL,
+    'no WGD,1,0': ASCNCopyNumberValueEnum.HETLOSS,
+    'no WGD,2,0': ASCNCopyNumberValueEnum.CNLOH,
+    'no WGD,3,0': ASCNCopyNumberValueEnum.CNLOHGAIN,
+    'no WGD,4,0': ASCNCopyNumberValueEnum.CNLOHGAIN,
+    'no WGD,5,0': ASCNCopyNumberValueEnum.AMPLOH,
+    'no WGD,6,0': ASCNCopyNumberValueEnum.AMPLOH,
+    'no WGD,1,1': ASCNCopyNumberValueEnum.DIPLOID,
+    'no WGD,2,1': ASCNCopyNumberValueEnum.GAIN,
+    'no WGD,3,1': ASCNCopyNumberValueEnum.GAIN,
+    'no WGD,4,1': ASCNCopyNumberValueEnum.AMP,
+    'no WGD,5,1': ASCNCopyNumberValueEnum.AMP,
+    'no WGD,6,1': ASCNCopyNumberValueEnum.AMP,
+    'no WGD,2,2': ASCNCopyNumberValueEnum.TETRAPLOID,
+    'no WGD,3,2': ASCNCopyNumberValueEnum.AMP,
+    'no WGD,4,2': ASCNCopyNumberValueEnum.AMP,
+    'no WGD,5,2': ASCNCopyNumberValueEnum.AMP,
+    'no WGD,6,2': ASCNCopyNumberValueEnum.AMP,
+    'no WGD,3,3': ASCNCopyNumberValueEnum.AMPBALANCED,
+    'no WGD,4,3': ASCNCopyNumberValueEnum.AMP,
+    'no WGD,5,3': ASCNCopyNumberValueEnum.AMP,
+    'no WGD,6,3': ASCNCopyNumberValueEnum.AMP,
+    'WGD,0,0': ASCNCopyNumberValueEnum.HOMDEL,
+    'WGD,1,0': ASCNCopyNumberValueEnum.LOSSBEFOREAFTER,
+    'WGD,2,0': ASCNCopyNumberValueEnum.LOSSBEFORE,
+    'WGD,3,0': ASCNCopyNumberValueEnum.CNLOHBEFORELOSS,
+    'WGD,4,0': ASCNCopyNumberValueEnum.CNLOHBEFORE,
+    'WGD,5,0': ASCNCopyNumberValueEnum.CNLOHBEFOREGAIN,
+    'WGD,6,0': ASCNCopyNumberValueEnum.AMPLOH,
+    'WGD,1,1': ASCNCopyNumberValueEnum.DOUBLELOSSAFTER,
+    'WGD,2,1': ASCNCopyNumberValueEnum.LOSSAFTER,
+    'WGD,3,1': ASCNCopyNumberValueEnum.CNLOHAFTER,
+    'WGD,4,1': ASCNCopyNumberValueEnum.LOSSGAIN,
+    'WGD,5,1': ASCNCopyNumberValueEnum.AMP,
+    'WGD,6,1': ASCNCopyNumberValueEnum.AMP,
+    'WGD,2,2': ASCNCopyNumberValueEnum.TETRAPLOID,
+    'WGD,3,2': ASCNCopyNumberValueEnum.GAIN,
+    'WGD,4,2': ASCNCopyNumberValueEnum.AMP,
+    'WGD,5,2': ASCNCopyNumberValueEnum.AMP,
+    'WGD,6,2': ASCNCopyNumberValueEnum.AMP,
+    'WGD,3,3': ASCNCopyNumberValueEnum.AMPBALANCED,
+    'WGD,4,3': ASCNCopyNumberValueEnum.AMP,
+    'WGD,5,3': ASCNCopyNumberValueEnum.AMP,
+    'WGD,6,3': ASCNCopyNumberValueEnum.AMP,
 };
 
-enum ASCNCopyNumberOpacity {
+enum ASCNCopyNumberOpacityEnum {
     TRANSPARENT = 0,
     OPAQUE = 100,
 }
 
 function getASCNCopyNumberOpacity(
-    ASCNCopyNumberValue: string
-): ASCNCopyNumberOpacity {
-    switch (ASCNCopyNumberValue) {
+    ASCNCopyNumberValueEnum: string
+): ASCNCopyNumberOpacityEnum {
+    switch (ASCNCopyNumberValueEnum) {
         case '2':
         case '1':
         case '0':
         case '-1':
         case '-2':
-            return ASCNCopyNumberOpacity.OPAQUE;
+            return ASCNCopyNumberOpacityEnum.OPAQUE;
         default:
-            return ASCNCopyNumberOpacity.TRANSPARENT;
+            return ASCNCopyNumberOpacityEnum.TRANSPARENT;
     }
 }
 
@@ -110,7 +110,7 @@ function getASCNCopyNumberCall(
     ].join(',');
     return key in ASCNCallTable
         ? ASCNCallTable[key].toLowerCase()
-        : ASCNCopyNumberValue.NA;
+        : ASCNCopyNumberValueEnum.NA;
 }
 
 export const ASCNCopyNumberElementTooltip: React.FunctionComponent<{
@@ -139,12 +139,9 @@ export const ASCNCopyNumberElementTooltip: React.FunctionComponent<{
             ) : null}
             <span>
                 <b>{ascnCopyNumberCall}</b>
-                {ascnCopyNumberCall !== ASCNCopyNumberValue.NA ? (
+                {ascnCopyNumberCall !== ASCNCopyNumberValueEnum.NA ? (
                     <span>
-                        {' '}
-                        ({props.wgdValue} with total copy number of{' '}
-                        {props.totalCopyNumberValue} and a minor copy number of{' '}
-                        {props.minorCopyNumberValue})
+                        {` (${props.wgdValue} with total copy number of ${props.totalCopyNumberValue} and a minor copy number of ${props.minorCopyNumberValue})`}
                     </span>
                 ) : null}
             </span>
@@ -159,7 +156,7 @@ const ASCNCopyNumberIcon: React.FunctionComponent<{
 }> = props => {
     return (
         <svg width="18" height="20" className="case-label-header">
-            {props.wgdValue === ASCNCopyNumberValue.WGD ? (
+            {props.wgdValue === ASCNCopyNumberValueEnum.WGD ? (
                 <svg>
                     <text
                         x="9"
@@ -213,9 +210,9 @@ const ASCNCopyNumberElement: React.FunctionComponent<{
     sampleManager?: SampleManager | null;
 }> = props => {
     const hasAllRequiredValues: boolean =
-        props.totalCopyNumberValue !== ASCNCopyNumberValue.NA &&
-        props.ascnCopyNumberValue !== ASCNCopyNumberValue.NA &&
-        props.wgdValue !== ASCNCopyNumberValue.NA &&
+        props.totalCopyNumberValue !== ASCNCopyNumberValueEnum.NA &&
+        props.ascnCopyNumberValue !== ASCNCopyNumberValueEnum.NA &&
+        props.wgdValue !== ASCNCopyNumberValueEnum.NA &&
         getASCNCopyNumberColor(props.ascnCopyNumberValue) !== ASCN_BLACK;
 
     if (hasAllRequiredValues) {
@@ -237,9 +234,9 @@ const ASCNCopyNumberElement: React.FunctionComponent<{
         return (
             <span>
                 <ASCNCopyNumberIcon
-                    wgdValue={ASCNCopyNumberValue.NA}
+                    wgdValue={ASCNCopyNumberValueEnum.NA}
                     totalCopyNumberValue=""
-                    ascnCopyNumberValue={ASCNCopyNumberValue.NA}
+                    ascnCopyNumberValue={ASCNCopyNumberValueEnum.NA}
                 />
             </span>
         );

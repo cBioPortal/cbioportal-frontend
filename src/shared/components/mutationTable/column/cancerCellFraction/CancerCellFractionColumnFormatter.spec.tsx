@@ -46,8 +46,6 @@ describe('CancerCellFractionColumnFormatter', () => {
         ).to.deep.equal(expectedSampleToCCFValue);
     }
 
-    before(() => {});
-
     // no SampleManager, single sample
     it('generates CancerCellFractionElement for single valid sample with right properties', () => {
         const validSingleSampleCCFColumn = mount(
@@ -98,6 +96,4 @@ describe('CancerCellFractionColumnFormatter', () => {
         );
         expect(validMultiSampleCCFColumn.find('DefaultTooltip')).to.exist;
     });
-
-    after(() => {});
 });

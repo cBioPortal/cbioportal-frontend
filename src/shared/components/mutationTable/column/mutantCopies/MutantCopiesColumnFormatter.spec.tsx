@@ -92,8 +92,6 @@ describe('MutantCopiesColumnFormatter', () => {
         createMutationWithMissingData('S006', ['alleleSpecificCopyNumber']),
     ];
 
-    before(() => {});
-
     it('has expected number of MutantCopiesElement components', () => {
         // only mutations with tcn/mutantCopies available map to an element
         let mutantCopiesColumnTest = mount(

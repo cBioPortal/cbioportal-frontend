@@ -4,10 +4,13 @@ import { Mutation, ClinicalData } from 'cbioportal-ts-api-client';
 import { hasASCNProperty } from 'shared/lib/MutationUtils';
 import SampleManager from 'pages/patientView/SampleManager';
 import ASCNCopyNumberElement from 'shared/components/mutationTable/column/ascnCopyNumber/ASCNCopyNumberElement';
-import { ASCNCopyNumberValue } from 'shared/components/mutationTable/column/ascnCopyNumber/ASCNCopyNumberElement';
+import { ASCNCopyNumberValueEnum } from 'shared/components/mutationTable/column/ascnCopyNumber/ASCNCopyNumberElement';
 import { ASCN_BLACK } from 'shared/lib/Colors';
 import { getASCNCopyNumberColor } from 'shared/lib/ASCNUtils';
-import { CAID_FACETS_WGD } from 'shared/constants';
+import {
+    CLINICAL_ATTRIBUTE_ID_ENUM,
+    MUTATION_DATA_FIELD_ENUM,
+} from 'shared/constants';
 
 /**
  * @author Avery Wang
@@ -20,9 +23,12 @@ function getAscnCopyNumberData(
         | { [sampleId: string]: ClinicalData[] }
         | undefined
 ) {
-    return hasASCNProperty(mutation, 'ascnIntegerCopyNumber')
+    return hasASCNProperty(
+        mutation,
+        MUTATION_DATA_FIELD_ENUM.ASCN_INTEGER_COPY_NUMBER
+    )
         ? mutation.alleleSpecificCopyNumber.ascnIntegerCopyNumber
-        : ASCNCopyNumberValue.NA;
+        : ASCNCopyNumberValueEnum.NA;
 }
 
 // sort by total copy number (since that is the number displayed in the icon
@@ -39,16 +45,16 @@ function getAllTotalCopyNumberForMutation(
                 sampleIdToClinicalDataMap
             );
             if (
-                ascnCopyNumberValue !== ASCNCopyNumberValue.NA &&
+                ascnCopyNumberValue !== ASCNCopyNumberValueEnum.NA &&
                 hasASCNProperty(mutation, 'totalCopyNumber') &&
                 getWGD(sampleIdToClinicalDataMap, mutation.sampleId) !==
-                    ASCNCopyNumberValue.NA &&
+                    ASCNCopyNumberValueEnum.NA &&
                 getASCNCopyNumberColor(ascnCopyNumberValue.toString()) !==
                     ASCN_BLACK
             ) {
                 return mutation.alleleSpecificCopyNumber.totalCopyNumber.toString();
             }
-            return ASCNCopyNumberValue.NA;
+            return ASCNCopyNumberValueEnum.NA;
         })
         .value();
     return sampleToCNA;
@@ -85,10 +91,12 @@ export function getWGD(
 ) {
     let wgdData = sampleIdToClinicalDataMap
         ? sampleIdToClinicalDataMap[sampleId].find(
-              (cd: ClinicalData) => cd.clinicalAttributeId === CAID_FACETS_WGD
+              (cd: ClinicalData) =>
+                  cd.clinicalAttributeId ===
+                  CLINICAL_ATTRIBUTE_ID_ENUM.FACETS_WGD
           )
         : undefined;
-    return wgdData !== undefined ? wgdData.value : ASCNCopyNumberValue.NA;
+    return wgdData !== undefined ? wgdData.value : ASCNCopyNumberValueEnum.NA;
 }
 
 export const getDefaultASCNCopyNumberColumnDefinition = (
@@ -136,19 +144,19 @@ export default class ASCNCopyNumberColumnFormatter {
                 'totalCopyNumber'
             )
                 ? mutation.alleleSpecificCopyNumber.totalCopyNumber.toString()
-                : ASCNCopyNumberValue.NA;
+                : ASCNCopyNumberValueEnum.NA;
             sampleToMinorCopyNumber[mutation.sampleId] = hasASCNProperty(
                 mutation,
                 'minorCopyNumber'
             )
                 ? mutation.alleleSpecificCopyNumber.minorCopyNumber.toString()
-                : ASCNCopyNumberValue.NA;
+                : ASCNCopyNumberValueEnum.NA;
             sampleToASCNCopyNumber[mutation.sampleId] = hasASCNProperty(
                 mutation,
-                'ascnIntegerCopyNumber'
+                MUTATION_DATA_FIELD_ENUM.ASCN_INTEGER_COPY_NUMBER
             )
                 ? mutation.alleleSpecificCopyNumber.ascnIntegerCopyNumber.toString()
-                : ASCNCopyNumberValue.NA;
+                : ASCNCopyNumberValueEnum.NA;
         }
 
         return (
@@ -168,17 +176,17 @@ export default class ASCNCopyNumberColumnFormatter {
                                 totalCopyNumberValue={
                                     sampleToTotalCopyNumber[sampleId]
                                         ? sampleToTotalCopyNumber[sampleId]
-                                        : ASCNCopyNumberValue.NA
+                                        : ASCNCopyNumberValueEnum.NA
                                 }
                                 minorCopyNumberValue={
                                     sampleToMinorCopyNumber[sampleId]
                                         ? sampleToMinorCopyNumber[sampleId]
-                                        : ASCNCopyNumberValue.NA
+                                        : ASCNCopyNumberValueEnum.NA
                                 }
                                 ascnCopyNumberValue={
                                     sampleToASCNCopyNumber[sampleId]
                                         ? sampleToASCNCopyNumber[sampleId]
-                                        : ASCNCopyNumberValue.NA
+                                        : ASCNCopyNumberValueEnum.NA
                                 }
                                 sampleManager={sampleManager}
                             />

@@ -48,8 +48,6 @@ describe('MutationStatusColumnFormatter', () => {
         );
     });
 
-    after(() => {});
-
     it('gets validation status data properly', () => {
         assert.equal(
             ValidationStatusColumnFormatter.getData(validData),

@@ -20,9 +20,7 @@ export const MutantCopiesElementTooltip: React.FunctionComponent<{
                 </span>
             ) : null}
             <span>
-                {' '}
-                {props.mutantCopiesValue} out of {props.totalCopyNumberValue}{' '}
-                copies of this gene are mutated.
+                {` ${props.mutantCopiesValue} out of ${props.totalCopyNumberValue} copies of this gene are mutated.`}
             </span>
         </span>
     );

@@ -233,6 +233,4 @@ describe('AnnotationUtils', () => {
             'SMURF1 R101N should be a 3d hotspot mutation.'
         );
     });
-
-    after(() => {});
 });

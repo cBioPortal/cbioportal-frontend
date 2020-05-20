@@ -3,7 +3,7 @@ import { Mutation } from 'cbioportal-ts-api-client';
 import { hasASCNProperty } from 'shared/lib/MutationUtils';
 import SampleManager from 'pages/patientView/SampleManager';
 import MutantCopiesElement from 'shared/components/mutationTable/column/mutantCopies/MutantCopiesElement';
-import { RV_NA } from 'shared/constants';
+import { RESPONSE_VALUE_NA } from 'shared/constants';
 
 /**
  * @author Avery Wang
@@ -93,13 +93,13 @@ export default class MutantCopiesColumnFormatter {
                 'totalCopyNumber'
             )
                 ? mutation.alleleSpecificCopyNumber.totalCopyNumber.toString()
-                : RV_NA;
+                : RESPONSE_VALUE_NA;
             sampleToMutantCopies[mutation.sampleId] = hasASCNProperty(
                 mutation,
                 'mutantCopies'
             )
                 ? mutation.alleleSpecificCopyNumber.mutantCopies.toString()
-                : RV_NA;
+                : RESPONSE_VALUE_NA;
         }
 
         // exclude samples with invalid count value (undefined || emtpy || lte 0)
@@ -107,8 +107,8 @@ export default class MutantCopiesColumnFormatter {
             sampleId =>
                 sampleToTotalCopyNumber[sampleId] &&
                 sampleToMutantCopies[sampleId] &&
-                sampleToTotalCopyNumber[sampleId] !== RV_NA &&
-                sampleToMutantCopies[sampleId] !== RV_NA
+                sampleToTotalCopyNumber[sampleId] !== RESPONSE_VALUE_NA &&
+                sampleToMutantCopies[sampleId] !== RESPONSE_VALUE_NA
         );
 
         return (

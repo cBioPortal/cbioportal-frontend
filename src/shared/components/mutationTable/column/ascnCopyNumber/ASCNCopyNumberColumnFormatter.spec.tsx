@@ -4,7 +4,7 @@ import { assert, expect } from 'chai';
 import { Mutation, ClinicalData } from 'cbioportal-ts-api-client';
 import { initMutation } from 'test/MutationMockUtils';
 import { initClinicalData } from 'test/ClinicalDataMockUtils';
-import { CAID_FACETS_WGD } from 'shared/constants';
+import { CLINICAL_ATTRIBUTE_ID_ENUM } from 'shared/constants';
 import SampleManager from 'pages/patientView/SampleManager';
 import {
     ASCN_AMP,
@@ -34,26 +34,26 @@ import { getDefaultASCNCopyNumberColumnDefinition } from './ASCNCopyNumberColumn
                     attribute 'FACETS_WGD' containing a value "WGD" (and not "NO_WGD")
         - a hoverover tooltip showing one line per sample having the variant, each line with
             - a sample number icon using black SVG circle with superimposed white numeral
-            - a text label (e.g. "diploid") corresponding to the ASCNCopyNumberValue
+            - a text label (e.g. "diploid") corresponding to the ASCNCopyNumberValueEnum
             - text indication of presence/absence of WGD clinical attribute
             - text reporting of TOTAL_COPY_NUMBER and MINOR_COPY_NUMBER mutation attribute values
 
     test cases explore various expected combinations of the above elements:
         - cases involving only a single sample:
             - without any set ASCN mutation attriubutes
-            - with NO_WGD and ASCNCopyNumberValue from each of {'-2','-1','0','1','2','999','NA'}
-            - with WGD and ASCNCopyNumberValue from each of {see_above}
-            - with NO_WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValue of '2'
-            - with WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValue of '2'
+            - with NO_WGD and ASCNCopyNumberValueEnum from each of {'-2','-1','0','1','2','999','NA'}
+            - with WGD and ASCNCopyNumberValueEnum from each of {see_above}
+            - with NO_WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValueEnum of '2'
+            - with WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValueEnum of '2'
         - cases involving two samples:
             - without any set ASCN mutation attriubutes
-            - sample1 NO_WGD, ASCNCopyNumberValue from each of {see_above}; sample2 NO_WGD, ASCN_AMP
-            - sample1 NO_WGD, ASCN_HOMDEL; sample2 NO_WGD, ASCNCopyNumberValue from each of {see_above}
+            - sample1 NO_WGD, ASCNCopyNumberValueEnum from each of {see_above}; sample2 NO_WGD, ASCN_AMP
+            - sample1 NO_WGD, ASCN_HOMDEL; sample2 NO_WGD, ASCNCopyNumberValueEnum from each of {see_above}
             - sample1 NO_WGD, ASCN_HETLOSS; sample2 WGD, ASCN_GAIN
             - sample1 WGD, ASCN_HOMDEL; sample2 NO_WGD, ASCN_GAIN
             - sample1 WGD, ASCN_LIGHTGREY [0]; sample2 WGD, ASCN_BLACK [999]
-            - sample1 and sample 2 with NO_WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValue of '-1'
-            - sample1 and sample 2 with WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValue of '-1'
+            - sample1 and sample 2 with NO_WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValueEnum of '-1'
+            - sample1 and sample 2 with WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValueEnum of '-1'
         - cases involving three samples:
             - sample1 WGD, ASCN_AMP; sample2 NO_WGD, ASCN_LIGHTGREY; sample3 WGD, ASCN_HOMDEL
 
@@ -244,11 +244,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         value: sample6Id,
     });
     const clinicalDataWgd: ClinicalData = initClinicalData({
-        clinicalAttributeId: CAID_FACETS_WGD,
+        clinicalAttributeId: CLINICAL_ATTRIBUTE_ID_ENUM.FACETS_WGD,
         value: 'WGD',
     });
     const clinicalDataNoWgd: ClinicalData = initClinicalData({
-        clinicalAttributeId: CAID_FACETS_WGD,
+        clinicalAttributeId: CLINICAL_ATTRIBUTE_ID_ENUM.FACETS_WGD,
         value: 'NO_WGD',
     });
     const s1NoWgdClinicalDataMap: {
@@ -381,8 +381,6 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         nullSampleManager
     );
 
-    before(() => {});
-
     // Single sample tests - without any set ASCN mutation attriubutes
     it('renders default (no ASCN data) sample6', () => {
         const cellWrapper = mount(s6ColDef.render(mutations_s6));
@@ -393,7 +391,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s1Wrapper, 'NA', '-1', '-1', '-1');
     });
-    // Single sample tests - with NO_WGD and ASCNCopyNumberValue from each of {'-2','-1','0','1','2','999','NA'}
+    // Single sample tests - with NO_WGD and ASCNCopyNumberValueEnum from each of {'-2','-1','0','1','2','999','NA'}
     it('renders sample1 NoWgd Amp', () => {
         const cellWrapper = mount(s1NoWgdColDef.render(mutations_s1Amp));
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
@@ -457,7 +455,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', 'NA');
     });
-    // Single sample tests - with WGD and ASCNCopyNumberValue from each of {see_above}
+    // Single sample tests - with WGD and ASCNCopyNumberValueEnum from each of {see_above}
     it('renders sample1 Wgd Amp', () => {
         const cellWrapper = mount(s1WgdColDef.render(mutations_s1Amp));
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
@@ -521,7 +519,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', 'NA');
     });
-    // Single sample tests - with NO_WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValue of '2'
+    // Single sample tests - with NO_WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValueEnum of '2'
     it('renders sample1 NoWgd Amp totalCopy1', () => {
         const cellWrapper = mount(s1NoWgdColDef.render(mutations_s1Amp_TCN1));
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
@@ -540,7 +538,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '2', '1', '2');
     });
-    // Single sample tests - with WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValue of '2'
+    // Single sample tests - with WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValueEnum of '2'
     it('renders sample1 Wgd Amp totalCopy1', () => {
         const cellWrapper = mount(s1WgdColDef.render(mutations_s1Amp_TCN1));
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
@@ -573,7 +571,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s7Wrapper, 'NA', '-1', '-1', '-1'); // unset
     });
-    // Two sample tests - sample1 NO_WGD, ASCNCopyNumberValue from each of {see_above}; sample2 NO_WGD, ASCN_AMP
+    // Two sample tests - sample1 NO_WGD, ASCNCopyNumberValueEnum from each of {see_above}; sample2 NO_WGD, ASCN_AMP
     it('renders sample1 NoWgd Amp, sample2 NoWgd Amp', () => {
         const cellWrapper = mount(
             s1NoWgds2NoWgdColDef.render(mutations_s1Amp_s2Amp)
@@ -679,7 +677,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '2');
     });
-    // Two sample tests - sample1 NO_WGD, ASCN_HOMDEL; sample2 NO_WGD, ASCNCopyNumberValue from each of {see_above}
+    // Two sample tests - sample1 NO_WGD, ASCN_HOMDEL; sample2 NO_WGD, ASCNCopyNumberValueEnum from each of {see_above}
     it('renders sample1 NoWgd Homdel, sample2 NoWgd Amp', () => {
         const cellWrapper = mount(
             s1NoWgds2NoWgdColDef.render(mutations_s1Homdel_s2Amp)
@@ -833,7 +831,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s2Wrapper, 'WGD', '1', '1', '999');
     });
-    // Two sample tests - sample1 and sample 2 with NO_WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValue of '-1'
+    // Two sample tests - sample1 and sample 2 with NO_WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValueEnum of '-1'
     it('renders sample1 NoWgd Hetloss, sample2 NoWgd Hetloss totalCopy2', () => {
         const cellWrapper = mount(
             s1NoWgds2NoWgdColDef.render(mutations_s1Hetloss_s2Hetloss_TCN2)
@@ -879,7 +877,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '2', '1', '-1');
     });
-    // Two sample tests - sample1 and sample 2 with WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValue of '-1'
+    // Two sample tests - sample1 and sample 2 with WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValueEnum of '-1'
     it('renders sample1 Wgd Hetloss, sample2 Wgd Hetloss totalCopy2', () => {
         const cellWrapper = mount(
             s1Wgds2WgdColDef.render(mutations_s1Hetloss_s2Hetloss_TCN2)
@@ -946,6 +944,4 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s3Wrapper, 'WGD', '1', '1', '-2');
     });
-
-    after(() => {});
 });
