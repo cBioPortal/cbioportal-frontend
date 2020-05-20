@@ -1220,12 +1220,14 @@ export function groupBySampleId(
 }
 
 export function mapSampleIdToClinicalData(
-    clinicalDataGroupedBySampleId: Array<{ id:string; clinicalData:ClinicalData[] }>
+    clinicalDataGroupedBySampleId: Array<{
+        id: string;
+        clinicalData: ClinicalData[];
+    }>
 ) {
-    const sampleIdToClinicalDataMap = _
-        .chain(clinicalDataGroupedBySampleId)
+    const sampleIdToClinicalDataMap = _.chain(clinicalDataGroupedBySampleId)
         .keyBy('id')
-        .mapValues('clinicalData')
+        .mapValues(o => o.clinicalData)
         .value();
     return sampleIdToClinicalDataMap;
 }

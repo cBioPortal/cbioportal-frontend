@@ -1126,7 +1126,7 @@ export default class MutationTable<
         );
     }
 
-    protected getMutations() {
+    @computed protected get getMutations() {
         let data: Mutation[][] | undefined = [];
         if (this.props.dataStore) {
             data = this.props.dataStore.allData;
@@ -1142,7 +1142,7 @@ export default class MutationTable<
      * @returns true if any available mutation is annotated with the passed property name
      */
     protected anyMutationHasASCNProperty(property: string): boolean {
-        let data = this.getMutations();
+        let data = this.getMutations;
         if (data) {
             return data.some((row: Mutation[]) => {
                 /* if at least one row ... */

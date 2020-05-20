@@ -6,7 +6,6 @@ import ResultsViewMutationMapper from './ResultsViewMutationMapper';
 import { convertToMutationMapperProps } from 'shared/components/mutationMapper/MutationMapperConfig';
 import MutationMapperUserSelectionStore from 'shared/components/mutationMapper/MutationMapperUserSelectionStore';
 import { observable } from 'mobx';
-import { PatientViewPageStore } from '../../../pages/patientView/clinicalInformation/PatientViewPageStore';
 import AppConfig from 'appConfig';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
 import autobind from 'autobind-decorator';
