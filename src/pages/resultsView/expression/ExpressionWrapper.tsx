@@ -35,11 +35,10 @@ import {
     IStringAxisData,
     makeBoxScatterPlotData,
     makeScatterPlotPointAppearance,
-    MutationSummary,
-    mutationSummaryToAppearance,
     scatterPlotLegendData,
     scatterPlotZIndexSortBy,
     IAxisLogScaleParams,
+    basicAppearance,
 } from '../plots/PlotsTabUtils';
 import {
     AnnotatedMutation,
@@ -567,7 +566,7 @@ export default class ExpressionWrapper extends React.Component<
         if (this.showCna || this.showMutations) {
             return (d: IPlotSampleData) => this.scatterPlotAppearance(d).fill!;
         } else {
-            return mutationSummaryToAppearance[MutationSummary.Neither].fill;
+            return basicAppearance.fill;
         }
     }
 
