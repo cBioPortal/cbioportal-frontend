@@ -13,6 +13,7 @@ import {
     isGroupEmpty,
     partitionCasesByGroupMembership,
     EnrichmentAnalysisComparisonGroup,
+    getGroupsDownloadData,
 } from '../../../pages/groupComparison/GroupComparisonUtils';
 import { GroupComparisonTab } from '../../../pages/groupComparison/GroupComparisonTabs';
 import { remoteData, stringListToIndexSet } from 'cbioportal-frontend-commons';
@@ -70,6 +71,7 @@ import {
     getSurvivalAttributes,
     DEFAULT_SURVIVAL_PRIORITY,
 } from 'pages/resultsView/survival/SurvivalUtil';
+import onMobxPromise from '../onMobxPromise';
 
 export enum OverlapStrategy {
     INCLUDE = 'Include',
@@ -1151,6 +1153,31 @@ export default class ComparisonStore {
         },
     });
 
+    public readonly sampleKeyToGroups = remoteData({
+        await: () => [this._originalGroups, this.sampleSet],
+        invoke: () => {
+            const sampleSet = this.sampleSet.result!;
+            const groups = this._originalGroups.result!;
+            const ret: {
+                [uniqueSampleKey: string]: { [groupUid: string]: boolean };
+            } = {};
+            for (const group of groups) {
+                for (const studyObject of group.studies) {
+                    const studyId = studyObject.id;
+                    for (const sampleId of studyObject.samples) {
+                        const sample = sampleSet.get({ sampleId, studyId });
+                        if (sample) {
+                            ret[sample.uniqueSampleKey] =
+                                ret[sample.uniqueSampleKey] || {};
+                            ret[sample.uniqueSampleKey][group.uid] = true;
+                        }
+                    }
+                }
+            }
+            return Promise.resolve(ret);
+        },
+    });
+
     public readonly patientsVennPartition = remoteData({
         await: () => [
             this._activeGroupsNotOverlapRemoved,
@@ -1485,4 +1512,30 @@ export default class ComparisonStore {
             return Promise.resolve(survivalDescriptions);
         },
     });
+
+    @autobind
+    public getGroupsDownloadDataPromise() {
+        return new Promise<string>(resolve => {
+            onMobxPromise<any>(
+                [this._originalGroups, this.samples, this.sampleKeyToGroups],
+                (
+                    groups: ComparisonGroup[],
+                    samples: Sample[],
+                    sampleKeyToGroups: {
+                        [uniqueSampleKey: string]: {
+                            [groupUid: string]: boolean;
+                        };
+                    }
+                ) => {
+                    resolve(
+                        getGroupsDownloadData(
+                            samples,
+                            groups,
+                            sampleKeyToGroups
+                        )
+                    );
+                }
+            );
+        });
+    }
 }
