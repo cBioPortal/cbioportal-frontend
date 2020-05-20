@@ -52,6 +52,10 @@ import OQLTextArea, {
     GeneBoxType,
 } from 'shared/components/GeneSelectionBox/OQLTextArea';
 import browser from 'bowser';
+import { GroupComparisonTab } from '../groupComparison/GroupComparisonTabs';
+import NotUsingGenePanelWarning from './NotUsingGenePanelWarning';
+import Survival from '../groupComparison/Survival';
+import ResultsViewComparisonStore from './comparison/ResultsViewComparisonStore';
 
 export function initStore(
     appStore: AppStore,
@@ -324,7 +328,20 @@ export default class ResultsViewPage extends React.Component<
                     );
                 },
             },
-
+            {
+                id: ResultsViewTab.SURVIVAL_REDIRECT,
+                hide: () =>
+                    !this.resultsViewPageStore.survivalClinicalDataExists
+                        .isComplete ||
+                    !this.resultsViewPageStore.survivalClinicalDataExists
+                        .result!,
+                getTab: () => (
+                    <MSKTab
+                        id={ResultsViewTab.SURVIVAL_REDIRECT}
+                        linkText="Survival"
+                    ></MSKTab>
+                ),
+            },
             {
                 id: ResultsViewTab.CN_SEGMENTS,
                 hide: () => {
