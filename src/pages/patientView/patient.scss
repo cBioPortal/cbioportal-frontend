@@ -3,6 +3,11 @@
 .patientPageHeader {
     .cohortNav {
         text-align: right;
+
+        .btn-group {
+            float: right !important;
+            display: flex;
+        }
     }
 
     position: relative;

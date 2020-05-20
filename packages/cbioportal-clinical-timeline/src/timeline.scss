@@ -1,0 +1,275 @@
+$width: 1200px;
+$borderColor: #ccc;
+$tickRowHeight: 20px;
+$rowHeight: 20px;
+
+.tl-timeline-wrapper {
+    position: relative;
+
+    min-height: 200px;
+
+    .tl-timeline-unzoom {
+        position: absolute;
+        top: -25px;
+        left: 50%;
+    }
+}
+
+.tl-timelineviewport {
+    border-left: 1px solid $borderColor;
+    border-right: 1px solid $borderColor;
+    border-top: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    display: inline-block;
+    width: $width;
+    flex-grow: 1;
+}
+
+.tl-timeline-display {
+    display: flex;
+}
+
+.tl-timeline {
+    position: relative;
+
+    .tl-cursor {
+        position: absolute;
+        top: 0;
+        left: 0px;
+        border-left: 1px dashed #999;
+        width: 1px;
+        height: 1000px;
+        display: none;
+        z-index: 10;
+        overflow: visible;
+
+        > div {
+            position: absolute;
+            background: #999;
+            color: #fff;
+            padding: 1px;
+            font-size: 9px;
+            white-space: nowrap;
+            width: 75px;
+            top: 0px;
+            left: -37.5px;
+            text-align: center;
+            opacity: 1;
+            border-radius: 4px;
+            display: none;
+        }
+    }
+
+    .tl-row {
+        min-height: $rowHeight;
+        position: relative;
+        z-index: 30;
+        display: flex;
+        border-bottom: 1px dashed #eee;
+        align-items: center;
+
+        &:hover {
+            background-color: rgba(163, 163, 163, 0.2);
+        }
+    }
+
+    .tl-item {
+        min-width: 1px;
+        position: absolute;
+        display: inline-block;
+        z-index: 50;
+    }
+
+    .tl-item-point {
+        transform: translate(-50%, 0%);
+        font-size: 9px;
+        color: lightblue;
+        width: auto !important;
+        display: flex;
+
+        .tl-timeline-multipoint {
+            height: $rowHeight;
+            width: 14px;
+            svg {
+                position: absolute;
+                left: 0;
+            }
+            display: flex;
+            align-items: center;
+            > :first-child {
+                position: relative;
+                top: -6px;
+            }
+            > :last-child {
+                position: relative;
+                top: 6px;
+            }
+        }
+    }
+
+    .tl-item-range {
+        min-width: 1px;
+        background-color: rgb(31, 119, 180);
+        border-radius: 5px;
+        height: 5px;
+    }
+
+    .tl-trim-region {
+        background: orange;
+        bottom: 0;
+        top: 0;
+        position: absolute;
+        z-index: 0;
+    }
+
+    .tl-ticks {
+        position: relative;
+        height: $tickRowHeight;
+        border-bottom: 1px solid $borderColor;
+
+        > div {
+            backface-visibility: hidden;
+            position: absolute;
+            height: $rowHeight;
+            min-width: 1px;
+            font-size: 9px;
+            transform: translate(-50%, 0%);
+
+            .fa {
+                font-size: 14px;
+            }
+
+            .tl-tickline {
+                position: absolute;
+                height: 6px;
+                width: 1px;
+                left: 50%;
+                bottom: 0;
+                background-color: #aaa;
+            }
+        }
+
+        .tl-timeline-minortick {
+            position: absolute;
+            height: 15px;
+            left: 50%;
+            bottom: 0;
+            font-weight: normal;
+            color: #aaa;
+
+            div {
+                height: 3px !important;
+                width: 1px;
+                position: absolute;
+                background: #aaa;
+                bottom: 0;
+            }
+
+            //&:first-child {
+            //    display: none;
+            //}
+        }
+
+        .tl-daytick {
+            .tl-tickline {
+                background-color: orange;
+            }
+        }
+
+        //> :first-child {
+        //    display: none;
+        //}
+    }
+
+    .tl-timeline-trim {
+        .tl-timeline-tickline {
+            display: none;
+        }
+
+        .tl-timeline-trim-squiqqle {
+            margin-top: 14px;
+        }
+
+        + div {
+            display: none;
+        }
+
+        border-bottom: 1px solid #fff;
+        z-index: 20;
+        width: 20px;
+        color: #ccc;
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        i.fa {
+            margin-bottom: 20px;
+        }
+    }
+}
+
+.tl-timeline-leftbar {
+    padding-top: $tickRowHeight;
+
+    .tl-timeline-tracklabels {
+        font-size: 12px;
+        text-transform: capitalize;
+        > div {
+            display: flex;
+            white-space: nowrap;
+            flex-direction: row;
+            align-items: center;
+            height: $rowHeight;
+            border-bottom: 1px dashed #eee;
+            padding-right: 10px;
+        }
+    }
+}
+
+.tl-zoom-selectbox {
+    position: absolute;
+    height: 1000px;
+    background: #ccc;
+    left: 100px;
+    z-index: 100;
+    opacity: 0.3;
+    display: none;
+}
+
+.tl-zoom-selectbox-mask {
+    position: absolute;
+    z-index: 99;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: none;
+}
+
+.tl-timeline-tooltip {
+    .rc-tooltip-inner {
+        padding: 2px 5px !important;
+        border: none;
+        background-color: #000000;
+        color: #fff;
+        font-size: 10px;
+
+        td,
+        th {
+            padding: 1px 5px;
+        }
+    }
+    .rc-tooltip-arrow {
+        border-right-color: #000000;
+    }
+
+    &.rc-tooltip-placement-left {
+        .rc-tooltip-arrow {
+            border-left-color: #000000 !important;
+        }
+    }
+}
+
+.timeline-label:last-of-type {
+    display: none;
+}
