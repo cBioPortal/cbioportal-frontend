@@ -29,7 +29,6 @@ export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     mutationCountCache?: MutationCountCache;
     genomeNexusMyVariantInfoCache?: GenomeNexusMyVariantInfoCache;
     userEmailAddress: string;
-    clinicalDataStore: ResultsViewPageStore;
 }
 
 @observer
@@ -79,7 +78,8 @@ export default class ResultsViewMutationMapper extends MutationMapper<
             getMobxPromiseGroupStatus(
                 this.props.store.clinicalDataForSamples,
                 this.props.store.studiesForSamplesWithoutCancerTypeClinicalData,
-                this.props.store.canonicalTranscript
+                this.props.store.canonicalTranscript,
+                this.props.store.clinicalDataGroupedBySampleMap
             ) === 'pending'
         );
     }
@@ -143,8 +143,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                     this.props.store.generateGenomeNexusHgvsgUrl
                 }
                 sampleIdToClinicalDataMap={
-                    this.props.clinicalDataStore.clinicalDataGroupedBySampleMap
-                        .result
+                    this.props.store.clinicalDataGroupedBySampleMap.result
                 }
             />
         );

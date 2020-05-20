@@ -2843,7 +2843,8 @@ export class ResultsViewPageStore {
                                     this.uniqueSampleKeyToTumorType.result!,
                                     this.generateGenomeNexusHgvsgUrl,
                                     this.genomeNexusClient,
-                                    this.genomeNexusInternalClient
+                                    this.genomeNexusInternalClient,
+                                    this.clinicalDataGroupedBySampleMap
                                 );
                                 return map;
                             },

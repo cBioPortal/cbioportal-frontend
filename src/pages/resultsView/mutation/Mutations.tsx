@@ -19,7 +19,6 @@ export interface IMutationsPageProps {
     routing?: any;
     store: ResultsViewPageStore;
     appStore: AppStore;
-    sampleIdToClinicalDataMap: {};
 }
 
 @observer
@@ -164,7 +163,6 @@ export default class Mutations extends React.Component<
                             generateGenomeNexusHgvsgUrl={
                                 this.props.store.generateGenomeNexusHgvsgUrl
                             }
-                            clinicalDataStore={this.props.store}
                         />
                     </MSKTab>
                 );
