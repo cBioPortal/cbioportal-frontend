@@ -200,12 +200,6 @@ export interface INumberAxisData {
     datatype: string;
 }
 
-export enum MutationSummary {
-    Neither = 'Neither',
-    Both = 'Both',
-    One = 'One',
-}
-
 const NOT_PROFILED_MUTATION_LEGEND_LABEL = ['Not profiled', 'for mutations'];
 const NOT_PROFILED_CNA_LEGEND_LABEL = ['Not profiled', 'for CNA'];
 const NO_DATA_CLINICAL_LEGEND_LABEL = 'No data';
@@ -222,7 +216,6 @@ export interface IPlotSampleData {
     studyId: string;
     dispCna?: AnnotatedNumericGeneMolecularData;
     dispMutationType?: OncoprintMutationType;
-    dispMutationSummary?: MutationSummary;
     dispClinicalValue?: string | number;
     profiledCna?: boolean;
     profiledMutations?: boolean;
@@ -315,7 +308,6 @@ export function scatterPlotZIndexSortBy<
     D extends Pick<
         IPlotSampleData,
         | 'dispMutationType'
-        | 'dispMutationSummary'
         | 'profiledMutations'
         | 'dispCna'
         | 'dispClinicalValue'
@@ -373,26 +365,6 @@ export function scatterPlotZIndexSortBy<
             break;
         case ColoringType.CopyNumber:
             sortBy = [sortByHighlight, sortByCna];
-            break;
-        case ColoringType.MutationType:
-            sortBy = [
-                sortByHighlight,
-                (d: D) => {
-                    if (
-                        d.dispMutationSummary! in mutationSummaryRenderPriority
-                    ) {
-                        return -mutationSummaryRenderPriority[
-                            d.dispMutationSummary!
-                        ];
-                    } else if (!d.profiledMutations) {
-                        return -mutationSummaryRenderPriority[
-                            MUTATION_TYPE_NOT_PROFILED
-                        ];
-                    } else {
-                        return Number.NEGATIVE_INFINITY;
-                    }
-                },
-            ];
             break;
     }
     return sortBy;
@@ -490,15 +462,6 @@ export function scatterPlotLegendData(
                 );
             }
             break;
-        case ColoringType.MutationSummary:
-            if (_mutationDataExists) {
-                legend = scatterPlotMutationSummaryLegendData(
-                    data,
-                    plotType,
-                    onClickLegendItem
-                );
-            }
-            break;
         case ColoringType.MutationTypeAndCopyNumber:
             if (_mutationDataExists && _cnaDataExists) {
                 legend = scatterPlotMutationLegendData(
@@ -569,77 +532,6 @@ export function scatterPlotLegendData(
         });
     }
     return legend;
-}
-
-function scatterPlotMutationSummaryLegendData(
-    data: IPlotSampleData[],
-    plotType: PlotType,
-    onClick?: (ld: LegendDataWithId) => void
-): LegendDataWithId[] {
-    // set plot type-dependent legend properties
-    const legendSymbol =
-        plotType === PlotType.WaterfallPlot ? 'square' : 'circle';
-
-    let showNotProfiledElement = false;
-    const unique = _.chain(data)
-        .map(d => {
-            const ret = d.dispMutationSummary;
-            if (!d.profiledMutations) {
-                showNotProfiledElement = true;
-            }
-            return ret;
-        })
-        .uniq()
-        .filter(x => !!x)
-        .value();
-    // no data, not profiled
-
-    const legendData: LegendDataWithId[] = mutationSummaryLegendOrder
-        .filter(x => unique.indexOf(x) > -1)
-        .map((x: MutationSummary) => {
-            const appearance = mutationSummaryToAppearance[x];
-            const stroke =
-                plotType === PlotType.WaterfallPlot
-                    ? appearance.fill
-                    : appearance.stroke;
-            return {
-                name: appearance.legendLabel,
-                symbol: {
-                    stroke: stroke,
-                    strokeOpacity: appearance.strokeOpacity,
-                    fill: appearance.fill,
-                    type: legendSymbol,
-                },
-                highlighting: onClick && {
-                    uid: appearance.legendLabel,
-                    isDatumHighlighted: (d: IPlotSampleData) => {
-                        return d.dispMutationSummary === x;
-                    },
-                    onClick,
-                },
-            };
-        });
-    if (showNotProfiledElement) {
-        const stroke = notProfiledMutationsAppearance.stroke;
-
-        legendData.push({
-            name: NOT_PROFILED_MUTATION_LEGEND_LABEL,
-            symbol: {
-                stroke: stroke,
-                strokeOpacity: notProfiledMutationsAppearance.strokeOpacity,
-                fill: notProfiledMutationsAppearance.fill,
-                type: legendSymbol,
-            },
-            highlighting: onClick && {
-                uid: JSON.stringify(NOT_PROFILED_MUTATION_LEGEND_LABEL),
-                isDatumHighlighted: (d: IPlotSampleData) => {
-                    return !d.profiledMutations;
-                },
-                onClick,
-            },
-        });
-    }
-    return legendData;
 }
 
 function scatterPlotMutationLegendData(
@@ -1536,6 +1428,12 @@ export function getAxisDescription(
     return ret;
 }
 
+export const basicAppearance = {
+    fill: '#00AAF8',
+    stroke: '#0089C6',
+    strokeOpacity: 1,
+};
+
 const NON_CNA_STROKE_OPACITY = 0.5;
 
 export const oncoprintMutationTypeToAppearanceDrivers: {
@@ -1715,35 +1613,6 @@ export const noMutationAppearance = {
     strokeOpacity: 0.3,
     legendLabel: 'Not mutated',
 };
-
-export const mutationSummaryToAppearance = {
-    Neither: {
-        fill: '#00AAF8',
-        stroke: '#0089C6',
-        strokeOpacity: 1,
-        legendLabel: 'Neither mutated',
-    },
-    One: {
-        fill: '#DBA901',
-        stroke: '#886A08',
-        strokeOpacity: 1,
-        legendLabel: 'One Gene mutated',
-    },
-    Both: {
-        fill: '#FF0000',
-        stroke: '#B40404',
-        strokeOpacity: 1,
-        legendLabel: 'Both mutated',
-    },
-};
-export const mutationSummaryLegendOrder = [
-    MutationSummary.Both,
-    MutationSummary.One,
-    MutationSummary.Neither,
-];
-export const mutationSummaryRenderPriority = stringListToIndexSet(
-    (mutationSummaryLegendOrder as any[]).concat(MUTATION_TYPE_NOT_PROFILED)
-);
 
 const cnaToAppearance = {
     '-2': {
@@ -2025,28 +1894,12 @@ export function makeScatterPlotPointAppearance(
         case ColoringType.LimitVal:
             return (d: IPlotSampleData) => {
                 const limitValAppearance = getLimitValueAppearance(d);
-                const defaultAppearance =
-                    mutationSummaryToAppearance[MutationSummary.Neither];
+                const defaultAppearance = basicAppearance;
                 return Object.assign({}, defaultAppearance, limitValAppearance);
             };
-        case ColoringType.MutationSummary:
-            if (mutationDataExists.isComplete && mutationDataExists.result) {
-                return (d: IPlotSampleData) => {
-                    if (!d.profiledMutations) {
-                        return notProfiledMutationsAppearance;
-                    } else if (!d.dispMutationSummary) {
-                        return noMutationAppearance;
-                    } else {
-                        return mutationSummaryToAppearance[
-                            d.dispMutationSummary
-                        ];
-                    }
-                };
-            }
-            break;
     }
-    // By default, return same circle as mutation summary "Neither"
-    return () => mutationSummaryToAppearance[MutationSummary.Neither];
+    // By default, return basic appearance
+    return () => basicAppearance;
 }
 
 function mutationsProteinChanges(
@@ -2569,20 +2422,6 @@ export function makeScatterPlotData(
                 }
             }
         }
-        let dispMutationSummary: MutationSummary | undefined = undefined;
-        if (profiledMutations) {
-            const genesMutatedCount = _.uniqBy(
-                sampleMutations,
-                m => m.entrezGeneId
-            ).length;
-            if (genesMutatedCount === 0) {
-                dispMutationSummary = MutationSummary.Neither;
-            } else if (genesMutatedCount === 1) {
-                dispMutationSummary = MutationSummary.One;
-            } else {
-                dispMutationSummary = MutationSummary.Both;
-            }
-        }
         let dispClinicalValue: string | number | undefined = undefined;
         let sampleClinicalData;
         if (clinicalData && clinicalData.clinicalAttribute.patientAttribute) {
@@ -2596,7 +2435,6 @@ export function makeScatterPlotData(
         if (sampleClinicalData) {
             dispClinicalValue = sampleClinicalData.value;
         }
-
         dataMap[d.uniqueSampleKey] = {
             uniqueSampleKey: d.uniqueSampleKey,
             sampleId: sample.sampleId,
@@ -2607,7 +2445,6 @@ export function makeScatterPlotData(
             copyNumberAlterations: sampleCopyNumberAlterations || [],
             dispCna,
             dispMutationType,
-            dispMutationSummary,
             dispClinicalValue,
             profiledCna,
             profiledMutations,
@@ -2810,7 +2647,6 @@ export function makeWaterfallPlotData(
             jitter: getJitterForCase(d.uniqueSampleKey),
             dispCna,
             dispMutationType,
-            dispMutationSummary: undefined,
             dispClinicalValue,
             profiledCna,
             profiledMutations,
