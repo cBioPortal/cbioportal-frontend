@@ -371,6 +371,8 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                 {this.plotExists && (
                     <DownloadControls
                         getSvg={this.getSvg}
+                        getData={this.props.store.getGroupsDownloadDataPromise}
+                        buttons={['SVG', 'PNG', 'PDF', 'Data']}
                         filename={'overlap'}
                         dontFade={true}
                         style={{ position: 'absolute', right: 10, top: 10 }}

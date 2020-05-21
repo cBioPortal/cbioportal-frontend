@@ -8,6 +8,7 @@ import { VirtualStudy } from '../../shared/model/VirtualStudy';
 
 export enum ResultsViewTab {
     ONCOPRINT = 'oncoprint',
+    SURVIVAL_REDIRECT = 'survival',
     CANCER_TYPES_SUMMARY = 'cancerTypesSummary',
     MUTUAL_EXCLUSIVITY = 'mutualExclusivity',
     PLOTS = 'plots',

@@ -50,8 +50,6 @@ import {
     makeScatterPlotData,
     makeScatterPlotPointAppearance,
     makeWaterfallPlotData,
-    MutationSummary,
-    mutationSummaryToAppearance,
     PLOT_SIDELENGTH,
     scatterPlotLegendData,
     scatterPlotTooltip,
@@ -65,6 +63,7 @@ import {
     bothAxesNoMolecularProfile,
     waterfallPlotTooltip,
     getColoringMenuOptionValue,
+    basicAppearance,
 } from './PlotsTabUtils';
 import {
     ClinicalAttribute,
@@ -127,9 +126,7 @@ export enum ColoringType {
     MutationType,
     MutationTypeAndCopyNumber,
     CopyNumber,
-    MutationSummary,
     LimitVal,
-    LimitValMutationSummary,
     LimitValMutationType,
     LimitValCopyNumber,
     LimitValMutationTypeAndCopyNumber,
@@ -138,10 +135,8 @@ export enum ColoringType {
 
 export enum PotentialColoringType {
     MutationTypeAndCopyNumber,
-    MutationSummary,
     None,
     LimitValMutationTypeAndCopyNumber,
-    LimitValMutationSummary,
     LimitVal,
 }
 
@@ -354,13 +349,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     ret = ColoringType.None;
                 }
                 break;
-            case PotentialColoringType.MutationSummary:
-                if (colorByMutationType) {
-                    ret = ColoringType.MutationSummary;
-                } else {
-                    ret = ColoringType.None;
-                }
-                break;
             case PotentialColoringType.LimitValMutationTypeAndCopyNumber:
                 if (
                     colorByMutationType &&
@@ -378,17 +366,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     ret = ColoringType.MutationType;
                 } else if (colorByCopyNumber) {
                     ret = ColoringType.CopyNumber;
-                } else if (this.viewLimitValues) {
-                    ret = ColoringType.LimitVal;
-                } else {
-                    ret = ColoringType.None;
-                }
-                break;
-            case PotentialColoringType.LimitValMutationSummary:
-                if (colorByMutationType && this.viewLimitValues) {
-                    ret = ColoringType.LimitValMutationSummary;
-                } else if (colorByMutationType) {
-                    ret = ColoringType.MutationSummary;
                 } else if (this.viewLimitValues) {
                     ret = ColoringType.LimitVal;
                 } else {
@@ -2328,7 +2305,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return !!(
             this.mutationDataExists.result &&
             (this.coloringType === ColoringType.MutationType ||
-                this.coloringType === ColoringType.MutationSummary ||
                 this.coloringType === ColoringType.MutationTypeAndCopyNumber)
         );
     }
@@ -2552,16 +2528,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             case ColoringType.ClinicalData:
             case ColoringType.MutationTypeAndCopyNumber:
             case ColoringType.MutationType:
-            case ColoringType.MutationSummary:
             case ColoringType.LimitVal:
             case ColoringType.LimitValMutationType:
-            case ColoringType.LimitValMutationSummary:
             case ColoringType.LimitValMutationTypeAndCopyNumber:
                 return (d: IPlotSampleData) =>
                     this.scatterPlotAppearance(d).fill!;
             case ColoringType.None:
-                return mutationSummaryToAppearance[MutationSummary.Neither]
-                    .fill;
+                return basicAppearance.fill;
         }
     }
 
@@ -2615,16 +2588,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             case ColoringType.LimitValCopyNumber:
                 return this.scatterPlotStroke(d);
             case ColoringType.MutationType:
-            case ColoringType.MutationSummary:
             case ColoringType.LimitValMutationType:
-            case ColoringType.LimitValMutationSummary:
             case ColoringType.ClinicalData:
                 return this.scatterPlotAppearance(d).fill!;
             case ColoringType.LimitVal:
             case ColoringType.None:
             default:
-                return mutationSummaryToAppearance[MutationSummary.Neither]
-                    .fill;
+                return basicAppearance.fill;
         }
     }
 
@@ -2633,7 +2603,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         switch (this.coloringType) {
             case ColoringType.LimitVal:
             case ColoringType.LimitValMutationType:
-            case ColoringType.LimitValMutationSummary:
             case ColoringType.LimitValCopyNumber:
             case ColoringType.LimitValMutationTypeAndCopyNumber:
                 return dataPointIsLimited(d);
