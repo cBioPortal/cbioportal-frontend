@@ -283,16 +283,6 @@ export async function fetchOncoKbDataForCna(
         .value() as any) as AnnotateCopyNumberAlterationQuery[]; // lodash typings not perfect
     return queryOncoKbCopyNumberAlterationData(queryVariants, client);
 }
-
-function makeGeneticTrackDatum_Data(
-    oncoprinterInputLine: OncoprinterGeneticInputLineType2,
-    hugoGeneSymbolToGene: { [hugoGeneSymbol: string]: Gene }
-) {
-    return makeGeneticTrackDatum_Data_Type2(
-        oncoprinterInputLine,
-        hugoGeneSymbolToGene
-    );
-}
 /* Leaving commented only for reference, this will be replaced by unified input strategy
 function makeGeneticTrackDatum_Data_Type3(oncoprinterInputLine:OncoprinterInputLineType3, hugoGeneSymbolToGene:{[hugoGeneSymbol:string]:Gene}) {
     let ret:Partial<OncoprinterGeneticTrackDatum_Data> = {
@@ -339,7 +329,7 @@ function makeGeneticTrackDatum_Data_Type3(oncoprinterInputLine:OncoprinterInputL
     return ret as OncoprinterGeneticTrackDatum_Data;
 }*/
 
-export function makeGeneticTrackDatum_Data_Type2(
+export function makeGeneticTrackDatum_Data(
     oncoprinterInputLine: OncoprinterGeneticInputLineType2,
     hugoGeneSymbolToGene: { [hugoGeneSymbol: string]: Gene }
 ) {

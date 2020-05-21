@@ -6,21 +6,19 @@ import {
     IObservableObject,
     IReactionDisposer,
     observable,
-    ObservableMap,
-    reaction,
-    runInAction,
 } from 'mobx';
 import {
     capitalize,
     FadeInteraction,
-    getBrowserWindow,
     getMobxPromiseGroupStatus,
-    isWebdriver,
     remoteData,
     svgToPdfDownload,
 } from 'cbioportal-frontend-commons';
 import Oncoprint, {
+    ClinicalTrackSpec,
     GENETIC_TRACK_GROUP_INDEX,
+    GeneticTrackDatum_Data,
+    GeneticTrackSpec,
     IHeatmapTrackSpec,
 } from './Oncoprint';
 import OncoprintControls, {
@@ -28,20 +26,26 @@ import OncoprintControls, {
     IOncoprintControlsState,
     ISelectOption,
 } from 'shared/components/oncoprint/controls/OncoprintControls';
-import { Gene, MolecularProfile, Sample } from 'cbioportal-ts-api-client';
 import {
-    ResultsViewPageStore,
+    ClinicalAttribute,
+    Gene,
+    MolecularProfile,
+    Patient,
+    Sample,
+} from 'cbioportal-ts-api-client';
+import {
     AlterationTypeConstants,
+    ResultsViewPageStore,
 } from '../../../pages/resultsView/ResultsViewPageStore';
 import {
     getAlteredUids,
     getUnalteredUids,
     makeClinicalTracksMobxPromise,
+    makeGenericAssayProfileHeatmapTracksMobxPromise,
     makeGenesetHeatmapExpansionsMobxPromise,
     makeGenesetHeatmapTracksMobxPromise,
     makeGeneticTracksMobxPromise,
     makeHeatmapTracksMobxPromise,
-    makeGenericAssayProfileHeatmapTracksMobxPromise,
 } from './OncoprintUtils';
 import _ from 'lodash';
 import onMobxPromise from 'shared/lib/onMobxPromise';
@@ -61,8 +65,8 @@ import {
 } from '../../cache/ClinicalDataCache';
 import OqlStatusBanner from '../banners/OqlStatusBanner';
 import {
-    getAnnotatingProgressMessage,
     genericAssayEntitiesToSelectOptionsGroupByGenericAssayType,
+    getAnnotatingProgressMessage,
 } from './ResultsViewOncoprintUtils';
 import ProgressIndicator, {
     IProgressIndicatorItem,
@@ -70,11 +74,14 @@ import ProgressIndicator, {
 import autobind from 'autobind-decorator';
 import { parseOQLQuery } from '../../lib/oql/oqlfilter';
 import AlterationFilterWarning from '../banners/AlterationFilterWarning';
-import { selectDisplayValue } from './DataUtils';
 import WindowStore from '../window/WindowStore';
 import { OncoprintAnalysisCaseType } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
-import { MakeMobxView } from '../MobxView';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
+import {
+    getOncoprinterClinicalInput,
+    getOncoprinterGeneticInput,
+} from '../../../pages/staticPages/tools/oncoprinter/OncoprinterImportUtils';
+import { buildCBioPortalPageUrl } from '../../api/urls';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -883,6 +890,90 @@ export default class ResultsViewOncoprint extends React.Component<
                                     this.oncoprintAnalysisCaseType,
                                     this.distinguishDrivers
                                 );
+                            }
+                        );
+                        break;
+                    case 'oncoprinter':
+                        onMobxPromise(
+                            [
+                                this.props.store.samples,
+                                this.props.store.patients,
+                                this.geneticTracks,
+                                this.clinicalTracks,
+                                this.props.store
+                                    .clinicalAttributeIdToClinicalAttribute,
+                            ],
+                            (
+                                samples: Sample[],
+                                patients: Patient[],
+                                geneticTracks: GeneticTrackSpec[],
+                                clinicalTracks: ClinicalTrackSpec[],
+                                attributeIdToAttribute: {
+                                    [attributeId: string]: ClinicalAttribute;
+                                }
+                            ) => {
+                                const caseIds =
+                                    this.oncoprintAnalysisCaseType ===
+                                    OncoprintAnalysisCaseType.SAMPLE
+                                        ? samples.map(s => s.sampleId)
+                                        : patients.map(p => p.patientId);
+
+                                let geneticInput = '';
+                                if (geneticTracks.length > 0) {
+                                    const oncoprintGeneticData = _.flatMap(
+                                        geneticTracks,
+                                        (track: GeneticTrackSpec) => track.data
+                                    );
+                                    geneticInput = getOncoprinterGeneticInput(
+                                        oncoprintGeneticData,
+                                        caseIds,
+                                        this.oncoprintAnalysisCaseType
+                                    );
+                                }
+
+                                let mutationSpectrumTrackExcluded = false;
+                                const downloadableClinicalTracks = clinicalTracks.filter(
+                                    t => {
+                                        if (t.datatype === 'counts') {
+                                            // TODO: implement counts tracks in oncoprinter
+                                            // or TODO: change this message if any other stacked bar track is created
+                                            mutationSpectrumTrackExcluded = true;
+                                            return false;
+                                        } else {
+                                            return true;
+                                        }
+                                    }
+                                );
+                                if (mutationSpectrumTrackExcluded) {
+                                    alert(
+                                        'Cannot view Mutation Spectrum track in Oncoprinter.'
+                                    );
+                                }
+
+                                let clinicalInput = '';
+                                if (downloadableClinicalTracks.length > 0) {
+                                    const oncoprintClinicalData = _.flatMap(
+                                        downloadableClinicalTracks,
+                                        (track: ClinicalTrackSpec) => track.data
+                                    );
+                                    clinicalInput = getOncoprinterClinicalInput(
+                                        oncoprintClinicalData,
+                                        caseIds,
+                                        downloadableClinicalTracks.map(
+                                            track => track.attributeId
+                                        ),
+                                        attributeIdToAttribute,
+                                        this.oncoprintAnalysisCaseType
+                                    );
+                                }
+
+                                const oncoprinterWindow = window.open(
+                                    buildCBioPortalPageUrl('/oncoprinter')
+                                ) as any;
+                                oncoprinterWindow.clientPostedData = {
+                                    genetic: geneticInput,
+                                    clinical: clinicalInput,
+                                };
                             }
                         );
                         break;

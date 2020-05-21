@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet';
 import { PageLayout } from '../../../../shared/components/PageLayout/PageLayout';
 import OncoprinterStore from './OncoprinterStore';
 import Oncoprinter from './Oncoprinter';
-import { action, observable } from 'mobx';
+import { action, observable, runInAction } from 'mobx';
 import { Button, ControlLabel, FormControl, FormGroup } from 'react-bootstrap';
 import { Collapse } from 'react-collapse';
 import autobind from 'autobind-decorator';
@@ -15,8 +15,12 @@ import {
 import { MSKTab, MSKTabs } from '../../../../shared/components/MSKTabs/MSKTabs';
 import MutualExclusivityTab from '../../../resultsView/mutualExclusivity/MutualExclusivityTab';
 import { getDataForSubmission } from './OncoprinterToolUtils';
-import { ONCOPRINTER_CLINICAL_VAL_NA } from './OncoprinterClinicalUtils';
+import {
+    ClinicalTrackDataType,
+    ONCOPRINTER_CLINICAL_VAL_NA,
+} from './OncoprinterClinicalUtils';
 import styles from './styles.module.scss';
+import { getBrowserWindow } from 'cbioportal-frontend-commons';
 
 export interface IOncoprinterToolProps {}
 
@@ -164,12 +168,15 @@ const helpSection = (
             All rows are tab- or space-delimited.
             <br />
             The first (header) row gives the names of the clinical attributes,
-            as well as their data type (number, lognumber, or string, default is
-            string). An example first row is:
+            as well as their data type ({ClinicalTrackDataType.NUMBER},{' '}
+            {ClinicalTrackDataType.LOG_NUMBER}, or{' '}
+            {ClinicalTrackDataType.STRING}, default is
+            {ClinicalTrackDataType.STRING}). An example first row is:
             <br />
-            <code>Sample</code>&#9;<code>Age(number)</code>&#9;
-            <code>Cancer_Type(string)</code>&#9;
-            <code>Mutation_Count(lognumber)</code>
+            <code>Sample</code>&#9;
+            <code>Age({ClinicalTrackDataType.NUMBER})</code>&#9;
+            <code>Cancer_Type({ClinicalTrackDataType.STRING})</code>&#9;
+            <code>Mutation_Count({ClinicalTrackDataType.LOG_NUMBER})</code>
             <br />
             Each following row gives the sample id, then the value for each
             clinical attribute, or the special value{' '}
@@ -197,15 +204,9 @@ export default class OncoprinterTool extends React.Component<
     {}
 > {
     private store = new OncoprinterStore();
-    private oncoprinter: Oncoprinter | null;
     private geneticFileInput: HTMLInputElement | null;
     private clinicalFileInput: HTMLInputElement | null;
     @observable private activeTabId: OncoprinterTab = OncoprinterTab.ONCOPRINT;
-
-    @autobind
-    private oncoprinterRef(o: Oncoprinter | null) {
-        this.oncoprinter = o;
-    }
 
     @observable dataInputOpened = true;
 
@@ -217,6 +218,17 @@ export default class OncoprinterTool extends React.Component<
     @observable clinicalDataInput = '';
     @observable geneOrderInput = '';
     @observable sampleOrderInput = '';
+
+    componentDidMount() {
+        // Load posted data, if it exists
+        const postData = getBrowserWindow().clientPostedData;
+        if (postData) {
+            this.geneticDataInput = postData.genetic;
+            this.clinicalDataInput = postData.clinical;
+            this.doSubmit(this.geneticDataInput, this.clinicalDataInput);
+            getBrowserWindow().clientPostedData = null;
+        }
+    }
 
     @autobind
     private toggleHelpOpened() {
@@ -501,7 +513,6 @@ export default class OncoprinterTool extends React.Component<
                                 )}
                                 <div style={{ marginTop: 10 }}>
                                     <Oncoprinter
-                                        ref={this.oncoprinterRef}
                                         divId="oncoprinter"
                                         store={this.store}
                                     />

@@ -1,10 +1,4 @@
 import _ from 'lodash';
-import { fillGeneticTrackDatum } from '../../../../shared/components/oncoprint/DataUtils';
-import {
-    OncoprinterGeneticTrackDatum,
-    OncoprinterGeneticTrackDatum_Data,
-} from './OncoprinterGeneticUtils';
-import { CustomTrackOption } from 'oncoprintjs';
 import {
     ClinicalTrackDatum,
     ClinicalTrackSpec,
@@ -29,7 +23,7 @@ type OncoprinterClinicalTrackDatum = Pick<
 
 const ATTRIBUTE_REGEX = /^((?:[^\(\)])+)(?:\(([^\(\)]+)\))?$/;
 
-enum ClinicalTrackDataType {
+export enum ClinicalTrackDataType {
     NUMBER = 'number',
     LOG_NUMBER = 'lognumber',
     STRING = 'string',
@@ -201,6 +195,7 @@ export function getClinicalTracks(
         const data = attributeToOncoprintData[attr.clinicalAttributeName];
         return {
             key: getClinicalTrackKey(attr.clinicalAttributeName),
+            attributeId: attr.clinicalAttributeName,
             label: attr.clinicalAttributeName,
             data,
             datatype:

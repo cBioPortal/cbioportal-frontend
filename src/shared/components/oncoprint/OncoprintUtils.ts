@@ -847,6 +847,7 @@ export function makeClinicalTracksMobxPromise(
                     key: oncoprint.clinicalAttributeIdToTrackKey(
                         attribute.clinicalAttributeId
                     ),
+                    attributeId: attribute.clinicalAttributeId,
                     label: attribute.displayName,
                     description: attribute.description,
                     data: makeClinicalTrackData(
