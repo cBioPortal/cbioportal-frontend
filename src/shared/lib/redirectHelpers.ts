@@ -27,18 +27,19 @@ export function restoreRouteAfterRedirect(injected: {
     return null;
 }
 
-// harvest query data written to the page by JSP to support queries originating
+// harvest query data written to the page by JSP (or assigned by parent window) to support queries originating
 // from external posts
 export function handlePostedSubmission(urlWrapper: ResultsViewURLWrapper) {
-    if (getBrowserWindow().postData) {
+    if (getBrowserWindow().postData || getBrowserWindow().clientPostedData) {
         urlWrapper.updateURL(
-            getBrowserWindow().postData,
+            getBrowserWindow().postData || getBrowserWindow().clientPostedData,
             'results',
             true,
             true
         );
         // we don't want this data to be around anymore once we've tranferred it to URL
         getBrowserWindow().postData = null;
+        getBrowserWindow().clientPostedData = null;
     }
 }
 
