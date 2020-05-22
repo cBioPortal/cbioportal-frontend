@@ -74,6 +74,8 @@ import {
     isMutationProfile,
     ONCOKB_DEFAULT,
     getGenomeNexusUrl,
+    fetchSurvivalDataExists,
+    getSurvivalClinicalAttributesPrefix,
 } from 'shared/lib/StoreUtils';
 import { IHotspotIndex, indexHotspotsData } from 'react-mutation-mapper';
 import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
@@ -190,6 +192,7 @@ import {
 import ComplexKeySet from '../../shared/lib/complexKeyDataStructures/ComplexKeySet';
 import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mutationMapper/MutationMapperUtils';
 import { getGenomeNexusHgvsgUrl } from 'shared/api/urls';
+import ResultsViewComparisonStore from './comparison/ResultsViewComparisonStore';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -790,14 +793,14 @@ export class ResultsViewPageStore {
     }
 
     readonly comparisonGroups = remoteData<Group[]>({
-        await: () => [this.studyIds],
+        await: () => [this.queriedStudies],
         invoke: async () => {
             let ret: Group[] = [];
             if (this.appStore.isLoggedIn) {
                 try {
                     ret = ret.concat(
                         await comparisonClient.getGroupsForStudies(
-                            this.studyIds.result!
+                            this.queriedStudies.result!.map(x => x.studyId)
                         )
                     );
                 } catch (e) {
@@ -2002,6 +2005,26 @@ export class ResultsViewPageStore {
                 )
             );
         },
+    });
+
+    readonly survivalClinicalAttributesPrefix = remoteData({
+        await: () => [this.clinicalAttributes],
+        invoke: () => {
+            return Promise.resolve(
+                getSurvivalClinicalAttributesPrefix(
+                    this.clinicalAttributes.result!
+                )
+            );
+        },
+    });
+
+    readonly survivalClinicalDataExists = remoteData<boolean>({
+        await: () => [this.samples, this.survivalClinicalAttributesPrefix],
+        invoke: () =>
+            fetchSurvivalDataExists(
+                this.samples.result!,
+                this.survivalClinicalAttributesPrefix.result!
+            ),
     });
 
     readonly samplesByDetailedCancerType = remoteData<{

@@ -844,3 +844,31 @@ export function getOverlapComputations<
         excludedFromAnalysis: _.mapValues(removedGroups, g => true as true),
     };
 }
+
+export function getGroupsDownloadData(
+    samples: Sample[],
+    groups: ComparisonGroup[],
+    sampleKeyToGroups: {
+        [uniqueSampleKey: string]: { [groupUid: string]: boolean };
+    }
+) {
+    const lines: string[][] = [];
+    const header = ['Sample ID', 'Patient ID', 'Study ID'].concat(
+        groups.map(g => g.name)
+    );
+    lines.push(header);
+    for (const sample of samples) {
+        const groupMembershipMap = sampleKeyToGroups[sample.uniqueSampleKey];
+        const line = [sample.sampleId, sample.patientId, sample.studyId].concat(
+            groups.map(g => {
+                if (groupMembershipMap[g.uid]) {
+                    return 'Yes';
+                } else {
+                    return 'No';
+                }
+            })
+        );
+        lines.push(line);
+    }
+    return lines.map(line => line.join('\t')).join('\n');
+}
