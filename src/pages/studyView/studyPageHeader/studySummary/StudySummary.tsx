@@ -12,12 +12,14 @@ import { DefaultTooltip, getNCBIlink } from 'cbioportal-frontend-commons';
 import MobxPromise from 'mobxpromise';
 import { StudyDataDownloadLink } from '../../../../shared/components/StudyDataDownloadLink/StudyDataDownloadLink';
 import { serializeEvent } from '../../../../shared/lib/tracking';
+import { mixedReferenceGenomeWarning } from 'shared/lib/referenceGenomeUtils';
 
 interface IStudySummaryProps {
     studies: CancerStudy[];
     hasRawDataForDownload: boolean;
     originStudies: MobxPromise<CancerStudy[]>;
     showOriginStudiesInSummaryDescription: boolean;
+    isMixedReferenceGenome: boolean | undefined;
 }
 
 @observer
@@ -119,6 +121,8 @@ export default class StudySummary extends React.Component<
                     }}
                 >
                     {this.name}
+                    {this.props.isMixedReferenceGenome &&
+                        mixedReferenceGenomeWarning()}
                     {this.props.hasRawDataForDownload && (
                         <DefaultTooltip
                             trigger={['hover']}
