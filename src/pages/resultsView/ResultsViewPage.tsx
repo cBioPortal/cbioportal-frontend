@@ -56,6 +56,7 @@ import { GroupComparisonTab } from '../groupComparison/GroupComparisonTabs';
 import NotUsingGenePanelWarning from './NotUsingGenePanelWarning';
 import Survival from '../groupComparison/Survival';
 import ResultsViewComparisonStore from './comparison/ResultsViewComparisonStore';
+import { QueryStore } from '../../shared/components/query/QueryStore';
 
 export function initStore(
     appStore: AppStore,
@@ -542,13 +543,18 @@ export default class ResultsViewPage extends React.Component<
         return isRoutedTo || (!isExcludedInList && !isExcluded);
     }
 
-    @computed get quickOQLSubmitButtion() {
+    @autobind
+    private getQuickOQLSubmitButton(store: QueryStore) {
         return (
             <>
                 <button
                     className={'btn btn-primary btn-sm'}
                     style={{ marginLeft: 10 }}
-                    onClick={this.handleQuickOQLSubmission}
+                    onClick={() => {
+                        //this.handleQuickOQLSubmission();
+                        store.submit();
+                    }}
+                    disabled={!store.submitEnabled}
                 >
                     Submit Query
                 </button>
@@ -567,9 +573,6 @@ export default class ResultsViewPage extends React.Component<
     @action
     handleQuickOQLSubmission() {
         this.showOQLEditor = false;
-        this.urlWrapper.updateURL({
-            gene_list: this.oqlSubmission,
-        });
     }
 
     @autobind
@@ -669,9 +672,11 @@ export default class ResultsViewPage extends React.Component<
                                     {this.showOQLEditor && (
                                         <div className={'quick_oql_edit'}>
                                             <OQLTextArea
-                                                inputGeneQuery={
-                                                    this.resultsViewPageStore
-                                                        .oqlText
+                                                getQueryStore={() =>
+                                                    createQueryStore(
+                                                        this.urlWrapper.query,
+                                                        this.urlWrapper
+                                                    )
                                                 }
                                                 validateInputGeneQuery={true}
                                                 callback={(...args) => {
@@ -679,8 +684,8 @@ export default class ResultsViewPage extends React.Component<
                                                         args[2];
                                                 }}
                                                 location={GeneBoxType.DEFAULT}
-                                                submitButton={
-                                                    this.quickOQLSubmitButtion
+                                                getSubmitButton={
+                                                    this.getQuickOQLSubmitButton
                                                 }
                                             />
                                         </div>

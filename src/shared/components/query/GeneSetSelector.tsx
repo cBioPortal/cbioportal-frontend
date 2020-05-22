@@ -139,6 +139,7 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
                             'Enter HUGO Gene Symbols, Gene Aliases, or OQL'
                         }
                         callback={this.handleOQLUpdate}
+                        getQueryStore={() => this.store}
                     >
                         {this.customError}
                     </OQLTextArea>
