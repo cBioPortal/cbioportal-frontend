@@ -3,6 +3,7 @@ import * as _ from 'lodash';
 import { observer } from 'mobx-react';
 import classnames from 'classnames';
 import styles from './styles.module.scss';
+import queryStoreStyles from '../../components/query/styles/styles.module.scss';
 import {
     observable,
     computed,
@@ -16,6 +17,7 @@ import {
     GeneReplacement,
     Focus,
     normalizeQuery,
+    QueryStore,
 } from 'shared/components/query/QueryStore';
 import {
     getEmptyGeneValidationResult,
@@ -27,14 +29,17 @@ import GeneSymbolValidator, {
 } from './GeneSymbolValidator';
 import autobind from 'autobind-decorator';
 import bind from 'bind-decorator';
+import { createQueryStore } from '../../lib/createQueryStore';
+import { FlexCol } from '../flexbox/FlexBox';
 
 export interface IGeneSelectionBoxProps {
+    getQueryStore?: () => QueryStore;
+    getSubmitButton?: (store?: QueryStore) => JSX.Element;
     focus?: Focus;
     inputGeneQuery?: string;
     validateInputGeneQuery?: boolean;
     location?: GeneBoxType;
     textBoxPrompt?: string;
-    submitButton?: JSX.Element;
     callback?: (
         oql: {
             query: SingleGeneQuery[];
@@ -70,11 +75,26 @@ export default class OQLTextArea extends React.Component<
     // Need to record the textarea value due to SyntheticEvent restriction due to debounce
     private currentTextAreaValue = '';
 
-    @observable private geneQuery = '';
+    @observable private _geneQuery = '';
+    @computed get geneQuery() {
+        if (this.queryStore) {
+            return this.queryStore.geneQuery;
+        } else {
+            return this._geneQuery;
+        }
+    }
+    set geneQuery(q: string) {
+        if (this.queryStore) {
+            this.queryStore.geneQuery = q;
+        } else {
+            this._geneQuery = q;
+        }
+    }
     @observable private geneQueryIsValid = true;
     @observable private queryToBeValidated = '';
     @observable private isFocused = false;
     @observable private skipGenesValidation = false;
+    private queryStore: QueryStore | undefined;
 
     private readonly textAreaRef: React.RefObject<HTMLTextAreaElement>;
     private updateQueryToBeValidateDebounce = _.debounce(() => {
@@ -107,6 +127,8 @@ export default class OQLTextArea extends React.Component<
             this.skipGenesValidation = true;
         }
         this.textAreaRef = React.createRef<HTMLTextAreaElement>();
+        this.queryStore =
+            this.props.getQueryStore && this.props.getQueryStore();
     }
 
     componentDidMount(): void {
@@ -263,6 +285,14 @@ export default class OQLTextArea extends React.Component<
         this.updateGeneQuery(updatedQuery);
     }
 
+    @computed get submitButton() {
+        if (this.props.getSubmitButton) {
+            return this.props.getSubmitButton(this.queryStore);
+        }
+
+        return null;
+    }
+
     render() {
         return (
             <div className={styles.genesSelection}>
@@ -282,7 +312,7 @@ export default class OQLTextArea extends React.Component<
                         style={{ height: this.props.textAreaHeight }}
                     />
 
-                    {this.props.submitButton && this.props.submitButton}
+                    {this.submitButton}
                 </div>
                 <div className={'oqlValidationContainer'}>
                     <GeneSymbolValidator
@@ -300,6 +330,32 @@ export default class OQLTextArea extends React.Component<
                         {this.props.children}
                     </GeneSymbolValidator>
                 </div>
+                {this.queryStore && (
+                    <div>
+                        {!!this.queryStore.submitError && (
+                            <span
+                                className={queryStoreStyles.errorMessage}
+                                data-test="oqlErrorMessage"
+                            >
+                                {this.queryStore.submitError}
+                            </span>
+                        )}
+
+                        {this.queryStore.oqlMessages.map(msg => {
+                            return (
+                                <span className={queryStoreStyles.oqlMessage}>
+                                    <i
+                                        className="fa fa-info-circle"
+                                        style={{
+                                            marginRight: 5,
+                                        }}
+                                    />
+                                    {msg}
+                                </span>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
         );
     }
