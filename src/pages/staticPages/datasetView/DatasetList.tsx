@@ -158,7 +158,7 @@ export default class DataSetsPageTable extends React.Component<
                                 },
                             },
                             { name: 'All', type: 'all' },
-                            { name: 'Sequenced', type: 'sequenced' },
+                            { name: 'Mutations', type: 'sequenced' }, // product team requested this be titled mutations
                             { name: 'CNA', type: 'cna' },
                             {
                                 name: 'RNA-Seq',
