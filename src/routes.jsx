@@ -181,7 +181,7 @@ export const makeRoutes = routing => {
 
             {/* Redirect legacy survival route directly to survival tab in comparison */}
             <Route
-                path="/results/survival"
+                path={`/results/${ResultsViewTab.SURVIVAL_REDIRECT}`}
                 onEnter={() => {
                     redirectTo(
                         { comparison_subtab: 'survival' },
@@ -191,7 +191,7 @@ export const makeRoutes = routing => {
                 component={getBlankPage()}
             />
 
-            {/* Redirect legacy enrichments route directly to survival tab in comparison */}
+            {/* Redirect legacy enrichments route directly to mutations tab in comparison */}
             <Route
                 path="/results/enrichments"
                 onEnter={() => {
