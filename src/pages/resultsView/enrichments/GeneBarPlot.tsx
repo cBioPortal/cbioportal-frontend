@@ -22,7 +22,10 @@ import styles from './frequencyPlotStyles.module.scss';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { FormControl } from 'react-bootstrap';
-import { GeneReplacement } from 'shared/components/query/QueryStore';
+import {
+    GeneReplacement,
+    QueryStore,
+} from 'shared/components/query/QueryStore';
 import { EnrichmentsTableDataStore } from './EnrichmentsTableDataStore';
 
 export interface IGeneBarPlotProps {
