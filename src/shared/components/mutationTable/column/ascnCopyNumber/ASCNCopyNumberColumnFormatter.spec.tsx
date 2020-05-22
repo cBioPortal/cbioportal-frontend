@@ -5,7 +5,10 @@ import { Mutation, ClinicalData } from 'cbioportal-ts-api-client';
 import { initMutation } from 'test/MutationMockUtils';
 import { initClinicalData } from 'test/ClinicalDataMockUtils';
 import { CLINICAL_ATTRIBUTE_ID_ENUM } from 'shared/constants';
+import { remoteData } from 'cbioportal-frontend-commons';
 import SampleManager from 'pages/patientView/SampleManager';
+import { MobxPromise } from 'mobxpromise';
+
 import {
     ASCN_AMP,
     ASCN_GAIN,
@@ -251,83 +254,103 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         clinicalAttributeId: CLINICAL_ATTRIBUTE_ID_ENUM.FACETS_WGD,
         value: 'NO_WGD',
     });
-    const s1NoWgdClinicalDataMap: {
+
+    function mockCompleteClinicalDataMapPromise(sampleIdToClinicalDataMap: {
         [sampleId: string]: ClinicalData[];
-    } = {
+    }): MobxPromise<{ [sampleId: string]: ClinicalData[] }> {
+        return {
+            result: sampleIdToClinicalDataMap,
+            status: 'complete' as 'complete',
+            peekStatus: 'complete',
+            isPending: false,
+            isError: false,
+            isComplete: true,
+            error: undefined,
+        };
+    }
+
+    function mockPendingClinicalDataMapPromise(): MobxPromise<{
+        [sampleId: string]: ClinicalData[];
+    }> {
+        return {
+            result: {},
+            status: 'pending' as 'pending',
+            peekStatus: 'pending',
+            isPending: true,
+            isError: false,
+            isComplete: false,
+            error: undefined,
+        };
+    }
+
+    function mockErrorClinicalDataMapPromise(): MobxPromise<{
+        [sampleId: string]: ClinicalData[];
+    }> {
+        return {
+            result: {},
+            status: 'error' as 'error',
+            peekStatus: 'error',
+            isPending: false,
+            isError: true,
+            isComplete: false,
+            error: 'MockError' as 'MockError',
+        };
+    }
+
+    const s1NoWgdClinicalDataMap = mockCompleteClinicalDataMapPromise({
         [sample1Id]: [clinicalDataSampleIdForSample1, clinicalDataNoWgd],
-    };
-    const s1WgdClinicalDataMap: {
-        [sampleId: string]: ClinicalData[];
-    } = {
+    });
+    const s1WgdClinicalDataMap = mockCompleteClinicalDataMapPromise({
         [sample1Id]: [clinicalDataSampleIdForSample1, clinicalDataWgd],
-    };
-    const s2NoWgdClinicalDataMap: {
-        [sampleId: string]: ClinicalData[];
-    } = {
+    });
+    const s2NoWgdClinicalDataMap = mockCompleteClinicalDataMapPromise({
         [sample2Id]: [clinicalDataSampleIdForSample2, clinicalDataNoWgd],
-    };
-    const s2WgdClinicalDataMap: {
-        [sampleId: string]: ClinicalData[];
-    } = {
+    });
+    const s2WgdClinicalDataMap = mockCompleteClinicalDataMapPromise({
         [sample2Id]: [clinicalDataSampleIdForSample2, clinicalDataWgd],
-    };
-    const s3NoWgdClinicalDataMap: {
-        [sampleId: string]: ClinicalData[];
-    } = {
+    });
+    const s3NoWgdClinicalDataMap = mockCompleteClinicalDataMapPromise({
         [sample3Id]: [clinicalDataSampleIdForSample3, clinicalDataNoWgd],
-    };
-    const s3WgdClinicalDataMap: {
-        [sampleId: string]: ClinicalData[];
-    } = {
+    });
+    const s3WgdClinicalDataMap = mockCompleteClinicalDataMapPromise({
         [sample3Id]: [clinicalDataSampleIdForSample3, clinicalDataWgd],
-    };
-    const s1NoWgds2NoWgdClinicalDataMap: {
-        [sampleId: string]: ClinicalData[];
-    } = {
+    });
+    const s1NoWgds2NoWgdClinicalDataMap = mockCompleteClinicalDataMapPromise({
         [sample1Id]: [clinicalDataSampleIdForSample1, clinicalDataNoWgd],
         [sample2Id]: [clinicalDataSampleIdForSample2, clinicalDataNoWgd],
-    };
-    const s1NoWgds2WgdClinicalDataMap: {
-        [sampleId: string]: ClinicalData[];
-    } = {
+    });
+    const s1NoWgds2WgdClinicalDataMap = mockCompleteClinicalDataMapPromise({
         [sample1Id]: [clinicalDataSampleIdForSample1, clinicalDataNoWgd],
         [sample2Id]: [clinicalDataSampleIdForSample2, clinicalDataWgd],
-    };
-    const s1Wgds2NoWgdClinicalDataMap: {
-        [sampleId: string]: ClinicalData[];
-    } = {
+    });
+    const s1Wgds2NoWgdClinicalDataMap = mockCompleteClinicalDataMapPromise({
         [sample1Id]: [clinicalDataSampleIdForSample1, clinicalDataWgd],
         [sample2Id]: [clinicalDataSampleIdForSample2, clinicalDataNoWgd],
-    };
-    const s1Wgds2WgdClinicalDataMap: {
-        [sampleId: string]: ClinicalData[];
-    } = {
+    });
+    const s1Wgds2WgdClinicalDataMap = mockCompleteClinicalDataMapPromise({
         [sample1Id]: [clinicalDataSampleIdForSample1, clinicalDataWgd],
         [sample2Id]: [clinicalDataSampleIdForSample2, clinicalDataWgd],
-    };
-    const s1Wgds2NoWgds3WgdClinicalDataMap: {
-        [sampleId: string]: ClinicalData[];
-    } = {
-        [sample1Id]: [clinicalDataSampleIdForSample1, clinicalDataWgd],
-        [sample2Id]: [clinicalDataSampleIdForSample2, clinicalDataNoWgd],
-        [sample3Id]: [clinicalDataSampleIdForSample3, clinicalDataWgd],
-    };
-    const s6ClinicalDataMap: {
-        [sampleId: string]: ClinicalData[];
-    } = {
+    });
+    const s1Wgds2NoWgds3WgdClinicalDataMap = mockCompleteClinicalDataMapPromise(
+        {
+            [sample1Id]: [clinicalDataSampleIdForSample1, clinicalDataWgd],
+            [sample2Id]: [clinicalDataSampleIdForSample2, clinicalDataNoWgd],
+            [sample3Id]: [clinicalDataSampleIdForSample3, clinicalDataWgd],
+        }
+    );
+    const s6ClinicalDataMap = mockCompleteClinicalDataMapPromise({
         [sample6Id]: [clinicalDataSampleIdForSample6],
-    };
-    const s7ClinicalDataMap: {
-        [sampleId: string]: ClinicalData[];
-    } = {
+    });
+    const s7ClinicalDataMap = mockCompleteClinicalDataMapPromise({
         [sample7Id]: [clinicalDataSampleIdForSample7],
-    };
-    const s6s7ClinicalDataMap: {
-        [sampleId: string]: ClinicalData[];
-    } = {
+    });
+    const s6s7ClinicalDataMap = mockCompleteClinicalDataMapPromise({
         [sample6Id]: [clinicalDataSampleIdForSample6],
         [sample7Id]: [clinicalDataSampleIdForSample7],
-    };
+    });
+    const s1NoWgdClinicalDataMapPending = mockPendingClinicalDataMapPromise();
+    const s1NoWgdClinicalDataMapError = mockErrorClinicalDataMapPromise();
+
     /* test column definitions */
     let nullSampleManager = new SampleManager([]);
     let s1NoWgdColDef = getDefaultASCNCopyNumberColumnDefinition(
@@ -380,6 +403,16 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         s6s7ClinicalDataMap,
         nullSampleManager
     );
+    let s1NoWgdPendingColDef = getDefaultASCNCopyNumberColumnDefinition(
+        sample1Ids,
+        s1NoWgdClinicalDataMapPending,
+        nullSampleManager
+    );
+    let s1NoWgdErrorColDef = getDefaultASCNCopyNumberColumnDefinition(
+        sample1Ids,
+        s1NoWgdClinicalDataMapError,
+        nullSampleManager
+    );
 
     // Single sample tests - without any set ASCN mutation attriubutes
     it('renders default (no ASCN data) sample6', () => {
@@ -391,6 +424,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s1Wrapper, 'NA', '-1', '-1', '-1');
     });
+
     // Single sample tests - with NO_WGD and ASCNCopyNumberValueEnum from each of {'-2','-1','0','1','2','999','NA'}
     it('renders sample1 NoWgd Amp', () => {
         const cellWrapper = mount(s1NoWgdColDef.render(mutations_s1Amp));
@@ -401,6 +435,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '2');
     });
+
     it('renders sample1 NoWgd Gain', () => {
         const cellWrapper = mount(s1NoWgdColDef.render(mutations_s1Gain));
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
@@ -943,5 +978,19 @@ describe('ASCNCopyNumberColumnFormatter', () => {
             e => e.prop('sampleId') === sample3Id
         );
         expectElementPropertiesMatch(s3Wrapper, 'WGD', '1', '1', '-2');
+    });
+
+    // sample test with pending clinical data
+    it('renders pending indicator when clinical data not yet available', () => {
+        const cellWrapper = mount(s1NoWgdPendingColDef.render(mutations_s1Amp));
+        const elementsWrapper = cellWrapper.find('.fa-spinner');
+        expect(elementsWrapper.length).to.equal(1); // one pending icon
+    });
+
+    // sample test with error clinical data
+    it('renders pending indicator when clinical data promise is in error state', () => {
+        const cellWrapper = mount(s1NoWgdErrorColDef.render(mutations_s1Amp));
+        const elementsWrapper = cellWrapper.find('.fa-exclamation-triangle');
+        expect(elementsWrapper.length).to.equal(1); // one error icon
     });
 });

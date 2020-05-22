@@ -129,7 +129,7 @@ export interface IMutationTableProps {
     onRowMouseEnter?: (d: Mutation[]) => void;
     onRowMouseLeave?: (d: Mutation[]) => void;
     generateGenomeNexusHgvsgUrl: (hgvsg: string) => string;
-    sampleIdToClinicalDataMap?: { [key: string]: ClinicalData[] };
+    sampleIdToClinicalDataMap?: MobxPromise<{ [x: string]: ClinicalData[] }>;
 }
 
 export enum MutationTableColumnType {

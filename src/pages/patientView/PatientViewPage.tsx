@@ -1002,9 +1002,6 @@ export default class PatientViewPage extends React.Component<
                                         this.patientViewPageStore
                                             .genePanelIdToEntrezGeneIds
                                             .isComplete &&
-                                        this.patientViewPageStore
-                                            .clinicalDataGroupedBySampleMap
-                                            .isComplete &&
                                         !!sampleManager && (
                                             <div data-test="patientview-mutation-table">
                                                 <PatientViewMutationTable
@@ -1208,7 +1205,6 @@ export default class PatientViewPage extends React.Component<
                                                         this
                                                             .patientViewPageStore
                                                             .clinicalDataGroupedBySampleMap
-                                                            .result
                                                     }
                                                 />
                                             </div>

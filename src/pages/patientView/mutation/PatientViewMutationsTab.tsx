@@ -345,7 +345,7 @@ export default class PatientViewMutationsTab extends React.Component<
                         this.props.store.generateGenomeNexusHgvsgUrl
                     }
                     sampleIdToClinicalDataMap={
-                        this.props.store.clinicalDataGroupedBySampleMap.result
+                        this.props.store.clinicalDataGroupedBySampleMap
                     }
                 />
             </div>

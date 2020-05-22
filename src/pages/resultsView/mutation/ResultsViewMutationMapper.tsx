@@ -143,7 +143,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                     this.props.store.generateGenomeNexusHgvsgUrl
                 }
                 sampleIdToClinicalDataMap={
-                    this.props.store.clinicalDataGroupedBySampleMap.result
+                    this.props.store.clinicalDataGroupedBySampleMap
                 }
             />
         );

@@ -11,6 +11,11 @@ import {
     CLINICAL_ATTRIBUTE_ID_ENUM,
     MUTATION_DATA_FIELD_ENUM,
 } from 'shared/constants';
+import MobxPromise from 'mobxpromise';
+import {
+    errorIcon,
+    loaderIcon,
+} from '../../../../../../packages/react-mutation-mapper/src/component/StatusHelpers';
 
 /**
  * @author Avery Wang
@@ -62,14 +67,18 @@ function getAllTotalCopyNumberForMutation(
 
 function getSortValue(
     data: Mutation[],
-    sampleIdToClinicalDataMap: { [key: string]: ClinicalData[] } | undefined,
+    sampleIdToClinicalDataMap:
+        | MobxPromise<{ [key: string]: ClinicalData[] }>
+        | undefined,
     sampleIds: string[]
 ) {
     const displayValuesBySample: {
         [key: string]: string;
     } = getAllTotalCopyNumberForMutation(
         data,
-        sampleIdToClinicalDataMap,
+        sampleIdToClinicalDataMap !== undefined
+            ? sampleIdToClinicalDataMap.result
+            : undefined,
         sampleIds
     );
     const sampleIdsWithValues = sampleIds.filter(
@@ -89,19 +98,22 @@ export function getWGD(
         | undefined,
     sampleId: string
 ) {
-    let wgdData = sampleIdToClinicalDataMap
-        ? sampleIdToClinicalDataMap[sampleId].find(
-              (cd: ClinicalData) =>
-                  cd.clinicalAttributeId ===
-                  CLINICAL_ATTRIBUTE_ID_ENUM.FACETS_WGD
-          )
-        : undefined;
+    let wgdData =
+        sampleIdToClinicalDataMap && sampleId in sampleIdToClinicalDataMap
+            ? sampleIdToClinicalDataMap[sampleId].find(
+                  (cd: ClinicalData) =>
+                      cd.clinicalAttributeId ===
+                      CLINICAL_ATTRIBUTE_ID_ENUM.FACETS_WGD
+              )
+            : undefined;
     return wgdData !== undefined ? wgdData.value : ASCNCopyNumberValueEnum.NA;
 }
 
 export const getDefaultASCNCopyNumberColumnDefinition = (
     sampleIds?: string[],
-    sampleIdToClinicalDataMap?: { [sampleId: string]: ClinicalData[] },
+    sampleIdToClinicalDataMap?:
+        | MobxPromise<{ [sampleId: string]: ClinicalData[] }>
+        | undefined,
     sampleManager?: SampleManager | null
 ) => {
     return {
@@ -131,7 +143,9 @@ export default class ASCNCopyNumberColumnFormatter {
     public static renderFunction(
         data: Mutation[],
         sampleIds: string[],
-        sampleIdToClinicalDataMap?: { [sampleId: string]: ClinicalData[] },
+        sampleIdToClinicalDataMap?:
+            | MobxPromise<{ [sampleId: string]: ClinicalData[] }>
+            | undefined,
         sampleManager?: SampleManager | null
     ) {
         const sampleToTotalCopyNumber: { [key: string]: string } = {};
@@ -158,42 +172,52 @@ export default class ASCNCopyNumberColumnFormatter {
                 ? mutation.alleleSpecificCopyNumber.ascnIntegerCopyNumber.toString()
                 : ASCNCopyNumberValueEnum.NA;
         }
-
-        return (
-            <>
-                {sampleIds.map((sampleId: string, index: number) => {
-                    return (
-                        <span
-                            key={sampleId}
-                            style={index === 0 ? undefined : { marginLeft: 5 }}
-                        >
-                            <ASCNCopyNumberElement
-                                sampleId={sampleId}
-                                wgdValue={getWGD(
-                                    sampleIdToClinicalDataMap,
-                                    sampleId
-                                )}
-                                totalCopyNumberValue={
-                                    sampleToTotalCopyNumber[sampleId]
-                                        ? sampleToTotalCopyNumber[sampleId]
-                                        : ASCNCopyNumberValueEnum.NA
+        if (
+            sampleIdToClinicalDataMap === undefined ||
+            sampleIdToClinicalDataMap.isError
+        ) {
+            return errorIcon('Error fetching data');
+        } else if (sampleIdToClinicalDataMap.isComplete) {
+            return (
+                <>
+                    {sampleIds.map((sampleId: string, index: number) => {
+                        return (
+                            <span
+                                key={sampleId}
+                                style={
+                                    index === 0 ? undefined : { marginLeft: 5 }
                                 }
-                                minorCopyNumberValue={
-                                    sampleToMinorCopyNumber[sampleId]
-                                        ? sampleToMinorCopyNumber[sampleId]
-                                        : ASCNCopyNumberValueEnum.NA
-                                }
-                                ascnCopyNumberValue={
-                                    sampleToASCNCopyNumber[sampleId]
-                                        ? sampleToASCNCopyNumber[sampleId]
-                                        : ASCNCopyNumberValueEnum.NA
-                                }
-                                sampleManager={sampleManager}
-                            />
-                        </span>
-                    );
-                })}
-            </>
-        );
+                            >
+                                <ASCNCopyNumberElement
+                                    sampleId={sampleId}
+                                    wgdValue={getWGD(
+                                        sampleIdToClinicalDataMap.result,
+                                        sampleId
+                                    )}
+                                    totalCopyNumberValue={
+                                        sampleToTotalCopyNumber[sampleId]
+                                            ? sampleToTotalCopyNumber[sampleId]
+                                            : ASCNCopyNumberValueEnum.NA
+                                    }
+                                    minorCopyNumberValue={
+                                        sampleToMinorCopyNumber[sampleId]
+                                            ? sampleToMinorCopyNumber[sampleId]
+                                            : ASCNCopyNumberValueEnum.NA
+                                    }
+                                    ascnCopyNumberValue={
+                                        sampleToASCNCopyNumber[sampleId]
+                                            ? sampleToASCNCopyNumber[sampleId]
+                                            : ASCNCopyNumberValueEnum.NA
+                                    }
+                                    sampleManager={sampleManager}
+                                />
+                            </span>
+                        );
+                    })}
+                </>
+            );
+        } else {
+            return loaderIcon('pull-left');
+        }
     }
 }
