@@ -85,14 +85,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                                 </li>
 
                                 <li>
-                                    Group Comparison (May 21, 2020, 11am-12pm
-                                    EDT)&nbsp;
-                                    <a
-                                        target="_blank"
-                                        href="https://dfci.zoom.us/webinar/register/7315875611981/WN_An_3l0XYQHCoinWvclUrlw"
-                                    >
-                                        register
-                                    </a>
+                                    <a href="#webinar-4">Group Comparison</a>
                                 </li>
 
                                 <li>
@@ -295,6 +288,49 @@ export default class Tutorials extends React.Component<{}, {}> {
                     </h4>
                 </div>
                 <hr />
+                <h2 id={'webinar-4'}>
+                    Webinar #4: Group Comparison <ReturnToTop />
+                </h2>
+
+                <iframe
+                    src="https://www.youtube.com/embed/Tx4HZCrIe5c"
+                    frameBorder="0"
+                    width="720"
+                    height="434"
+                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen={true}
+                ></iframe>
+                <div>
+                    <span style={{ fontSize: 'large' }}>Watch on </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a
+                            target="_blank"
+                            href="https://www.youtube.com/watch?v=Tx4HZCrIe5c"
+                        >
+                            YouTube.com
+                        </a>
+                    </h4>
+                    <span style={{ fontSize: 'large' }}> or </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a
+                            target="_blank"
+                            href="https://www.bilibili.com/video/BV1VZ4y1W76p"
+                        >
+                            bilibili.com
+                        </a>
+                    </h4>
+                    <span style={{ color: '#eee' }}> | </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a
+                            href={`${AppConfig.serverConfig
+                                .skin_documentation_baseurl!}tutorials/cBioPortal Webinar 4 Group Comparison.pdf`}
+                        >
+                            Download slides
+                        </a>
+                    </h4>
+                </div>
+                <hr />
+
                 {/*<h1 id={'tutorials'}>Tutorials</h1>*/}
                 <h2 id={'single-study-exploration'}>
                     Tutorial #1: Single Study Exploration
