@@ -12,6 +12,10 @@ import OQLTextArea, {
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import classnames from 'classnames';
 import { serializeEvent } from '../../../../shared/lib/tracking';
+import { getOqlMessages } from '../../../../shared/lib/StoreUtils';
+import { CUSTOM_CASE_LIST_ID } from '../../../../shared/components/query/QueryStore';
+import AppConfig from 'appConfig';
+import { remoteData } from 'cbioportal-frontend-commons';
 
 export interface IRightPanelProps {
     store: StudyViewPageStore;
@@ -53,6 +57,76 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
         );
     }
 
+    @computed get isQueryLimitReached(): boolean {
+        if (this.props.store.selectedSamples.isComplete) {
+            return (
+                this.props.store.geneQueries.length *
+                    this.props.store.selectedSamples.result.length >
+                AppConfig.serverConfig.query_product_limit
+            );
+        } else {
+            return false;
+        }
+    }
+
+    @computed get geneLimit(): number {
+        if (this.props.store.selectedSamples.isComplete) {
+            return Math.floor(
+                AppConfig.serverConfig.query_product_limit /
+                    this.props.store.selectedSamples.result.length
+            );
+        } else {
+            // won't be used here
+            return 0;
+        }
+    }
+
+    @computed get oqlMessages() {
+        return getOqlMessages(this.props.store.geneQueries);
+    }
+
+    @computed get oqlSubmitError() {
+        if (this.props.store.isSingleNonVirtualStudyQueried) {
+            if (
+                this.props.store.alterationTypesInOQL.haveMutInQuery &&
+                !this.props.store.defaultMutationProfile
+            )
+                return 'Mutation data query specified in OQL, but no mutation profile is available for the selected study.';
+            if (
+                this.props.store.alterationTypesInOQL.haveCnaInQuery &&
+                !this.props.store.defaultCnaProfile
+            )
+                return 'CNA data query specified in OQL, but no CNA profile is available in the selected study.';
+            if (
+                this.props.store.alterationTypesInOQL.haveMrnaInQuery &&
+                !this.props.store.defaultMrnaProfile
+            )
+                return 'mRNA expression data query specified in OQL, but no mRNA profile is available in the selected study.';
+            if (
+                this.props.store.alterationTypesInOQL.haveProtInQuery &&
+                !this.props.store.defaultProtProfile
+            )
+                return 'Protein level data query specified in OQL, but no protein level profile is available in the selected study.';
+        }
+        if (
+            this.props.store.alterationTypesInOQL.haveMrnaInQuery &&
+            this.props.store.displayedStudies.isComplete &&
+            this.props.store.displayedStudies.result.length > 1
+        ) {
+            return 'Expression filtering in the gene list (the EXP command) is not supported when doing cross cancer queries.';
+        } else if (
+            this.props.store.alterationTypesInOQL.haveProtInQuery &&
+            this.props.store.displayedStudies.isComplete &&
+            this.props.store.displayedStudies.result.length > 1
+        ) {
+            return 'Protein level filtering in the gene list (the PROT command) is not supported when doing cross cancer queries.';
+        }
+
+        if (this.isQueryLimitReached) {
+            return `Please limit your queries to ${this.geneLimit} genes or fewer.`;
+        }
+    }
+
     render() {
         return (
             <div className="studyViewSummaryHeader">
@@ -60,9 +134,11 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
                     <div className={'small'}>
                         <OQLTextArea
                             inputGeneQuery={this.props.store.geneQueryStr}
-                            validateInputGeneQuery={false}
+                            validateInputGeneQuery={true}
                             callback={this.updateSelectedGenes}
                             location={GeneBoxType.STUDY_VIEW_PAGE}
+                            error={this.oqlSubmitError}
+                            messages={this.oqlMessages}
                         />
                     </div>
                     <button

@@ -33,8 +33,10 @@ import { createQueryStore } from '../../lib/createQueryStore';
 import { FlexCol } from '../flexbox/FlexBox';
 
 export interface IGeneSelectionBoxProps {
-    getQueryStore?: () => QueryStore;
-    getSubmitButton?: (store?: QueryStore) => JSX.Element;
+    submitButton?: JSX.Element;
+    error?: string;
+    messages?: string[];
+
     focus?: Focus;
     inputGeneQuery?: string;
     validateInputGeneQuery?: boolean;
@@ -127,8 +129,6 @@ export default class OQLTextArea extends React.Component<
             this.skipGenesValidation = true;
         }
         this.textAreaRef = React.createRef<HTMLTextAreaElement>();
-        this.queryStore =
-            this.props.getQueryStore && this.props.getQueryStore();
     }
 
     componentDidMount(): void {
@@ -285,12 +285,11 @@ export default class OQLTextArea extends React.Component<
         this.updateGeneQuery(updatedQuery);
     }
 
-    @computed get submitButton() {
-        if (this.props.getSubmitButton) {
-            return this.props.getSubmitButton(this.queryStore);
-        }
-
-        return null;
+    @computed get showErrorsAndMessages() {
+        return (
+            this.props.location !== GeneBoxType.STUDY_VIEW_PAGE ||
+            this.isFocused
+        );
     }
 
     render() {
@@ -312,7 +311,7 @@ export default class OQLTextArea extends React.Component<
                         style={{ height: this.props.textAreaHeight }}
                     />
 
-                    {this.submitButton}
+                    {this.props.submitButton}
                 </div>
                 <div className={'oqlValidationContainer'}>
                     <GeneSymbolValidator
@@ -330,32 +329,30 @@ export default class OQLTextArea extends React.Component<
                         {this.props.children}
                     </GeneSymbolValidator>
                 </div>
-                {this.queryStore && (
-                    <div>
-                        {!!this.queryStore.submitError && (
-                            <span
-                                className={queryStoreStyles.errorMessage}
-                                data-test="oqlErrorMessage"
-                            >
-                                {this.queryStore.submitError}
-                            </span>
-                        )}
+                <div>
+                    {this.showErrorsAndMessages && this.props.error && (
+                        <span
+                            className={queryStoreStyles.errorMessage}
+                            data-test="oqlErrorMessage"
+                        >
+                            {this.props.error}
+                        </span>
+                    )}
 
-                        {this.queryStore.oqlMessages.map(msg => {
-                            return (
-                                <span className={queryStoreStyles.oqlMessage}>
-                                    <i
-                                        className="fa fa-info-circle"
-                                        style={{
-                                            marginRight: 5,
-                                        }}
-                                    />
-                                    {msg}
-                                </span>
-                            );
-                        })}
-                    </div>
-                )}
+                    {this.showErrorsAndMessages &&
+                        this.props.messages &&
+                        this.props.messages.map(msg => (
+                            <span className={queryStoreStyles.oqlMessage}>
+                                <i
+                                    className="fa fa-info-circle"
+                                    style={{
+                                        marginRight: 5,
+                                    }}
+                                />
+                                {msg}
+                            </span>
+                        ))}
+                </div>
             </div>
         );
     }
