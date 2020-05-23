@@ -28,6 +28,7 @@ import {
     unionSamples,
     splitData,
     getDefaultGroupName,
+    getGroupsDownloadData,
 } from './GroupComparisonUtils';
 import deepEqualInAnyOrder from 'deep-equal-in-any-order';
 import ComplexKeySet from '../../shared/lib/complexKeyDataStructures/ComplexKeySet';
@@ -3260,6 +3261,63 @@ describe('GroupComparisonUtils', () => {
                     { PATH_T_STAGE: DataType.STRING } as any
                 ),
                 'TP53, CTNNB1, ERCC2, NCOR2, T4+T2, Selected, gistic, rna_seq_v2_mrna, cna, cnaseq'
+            );
+        });
+    });
+    describe('getGroupsDownloadData', () => {
+        it('returns the correct data', () => {
+            const samples = [
+                {
+                    sampleId: 'sample1',
+                    patientId: 'patient1',
+                    studyId: 'study1',
+                    uniqueSampleKey: '1-1',
+                },
+                {
+                    sampleId: 'sample2',
+                    patientId: 'patient1',
+                    studyId: 'study1',
+                    uniqueSampleKey: '2-1',
+                },
+                {
+                    sampleId: 'sample3',
+                    patientId: 'patient2',
+                    studyId: 'study1',
+                    uniqueSampleKey: '3-1',
+                },
+                {
+                    sampleId: 'sample1',
+                    patientId: 'patient3',
+                    studyId: 'study2',
+                    uniqueSampleKey: '1-2',
+                },
+                {
+                    sampleId: 'sample2',
+                    patientId: 'patient3',
+                    studyId: 'study2',
+                    uniqueSampleKey: '2-2',
+                },
+            ] as Sample[];
+            const groups = [
+                { uid: 'group1', name: 'A' },
+                { uid: 'group2', name: 'B' },
+                { uid: 'group3', name: 'C' },
+            ] as ComparisonGroup[];
+            const sampleKeyToGroups: any = {
+                '1-1': { group1: true },
+                '2-1': { group1: true, group2: true },
+                '3-1': { group2: true },
+                '1-2': { group2: true, group3: true },
+                '2-2': { group1: true, group2: true, group3: true },
+            };
+            assert.equal(
+                getGroupsDownloadData(samples, groups, sampleKeyToGroups),
+                'Sample ID\tPatient ID\tStudy ID\tA\tB\tC\n' +
+                    'sample1\tpatient1\tstudy1\tYes\tNo\tNo\n' +
+                    'sample2\tpatient1\tstudy1\tYes\tYes\tNo\n' +
+                    'sample3\tpatient2\tstudy1\tNo\tYes\tNo\n' +
+                    'sample1\tpatient3\tstudy2\tNo\tYes\tYes\n' +
+                    'sample2\tpatient3\tstudy2\tYes\tYes\tYes'
             );
         });
     });
