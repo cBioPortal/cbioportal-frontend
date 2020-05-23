@@ -50,7 +50,11 @@ import {
 import getOverlappingStudies from '../../lib/getOverlappingStudies';
 import MolecularProfilesInStudyCache from '../../cache/MolecularProfilesInStudyCache';
 import { CacheData } from '../../lib/LazyMobXCache';
-import { getHierarchyData } from 'shared/lib/StoreUtils';
+import {
+    getAlterationTypesInOql,
+    getHierarchyData,
+    getOqlMessages,
+} from 'shared/lib/StoreUtils';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
 import { VirtualStudy } from 'shared/model/VirtualStudy';
 import {
@@ -1806,20 +1810,7 @@ export class QueryStore {
     }
 
     @computed get oqlMessages(): string[] {
-        let unrecognizedMutations = _.flatten(
-            this.oql.query.map(result => {
-                return (result.alterations || []).filter(
-                    alt =>
-                        alt.alteration_type === 'mut' &&
-                        (alt.info as any).unrecognized
-                ) as MUTCommand<any>[];
-            })
-        );
-        return unrecognizedMutations.map(mutCommand => {
-            return `Unrecognized input "${
-                (mutCommand as any).constr_val
-            }" is interpreted as a mutation code.`;
-        });
+        return getOqlMessages(this.oql.query);
     }
 
     /**
@@ -1884,29 +1875,7 @@ export class QueryStore {
     }
 
     @computed get alterationTypesInOQL() {
-        let haveMutInQuery = false;
-        let haveCnaInQuery = false;
-        let haveMrnaInQuery = false;
-        let haveProtInQuery = false;
-
-        for (const queryLine of this.oql.query) {
-            for (const alteration of queryLine.alterations || []) {
-                haveMutInQuery =
-                    haveMutInQuery || alteration.alteration_type === 'mut';
-                haveCnaInQuery =
-                    haveCnaInQuery || alteration.alteration_type === 'cna';
-                haveMrnaInQuery =
-                    haveMrnaInQuery || alteration.alteration_type === 'exp';
-                haveProtInQuery =
-                    haveProtInQuery || alteration.alteration_type === 'prot';
-            }
-        }
-        return {
-            haveMutInQuery,
-            haveCnaInQuery,
-            haveMrnaInQuery,
-            haveProtInQuery,
-        };
+        return getAlterationTypesInOql(this.oql.query);
     }
 
     @computed get submitError() {
