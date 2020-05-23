@@ -107,7 +107,7 @@ export default class ResultsViewPage extends React.Component<
 
     private urlWrapper: ResultsViewURLWrapper;
 
-    @observable showOQLEditor = false;
+    @observable.ref quickOQLQueryStore: QueryStore | null = null;
 
     @observable showTabs = true;
 
@@ -543,35 +543,48 @@ export default class ResultsViewPage extends React.Component<
         return isRoutedTo || (!isExcludedInList && !isExcluded);
     }
 
-    @autobind
-    private getQuickOQLSubmitButton(store: QueryStore) {
-        return (
-            <>
-                <button
-                    className={'btn btn-primary btn-sm'}
-                    style={{ marginLeft: 10 }}
-                    onClick={() => {
-                        //this.handleQuickOQLSubmission();
-                        store.submit();
-                    }}
-                    disabled={!store.submitEnabled}
-                >
-                    Submit Query
-                </button>
-                &nbsp;
-                <button
-                    className={'btn btn-link btn-sm'}
-                    onClick={this.toggleOQLEditor}
-                >
-                    Cancel
-                </button>
-            </>
-        );
+    @computed get quickOQLSubmitButton() {
+        if (this.quickOQLQueryStore) {
+            return (
+                <>
+                    <button
+                        className={'btn btn-primary btn-sm'}
+                        style={{ marginLeft: 10 }}
+                        onClick={this.handleQuickOQLSubmission}
+                        disabled={!this.quickOQLQueryStore!.submitEnabled}
+                    >
+                        Submit Query
+                    </button>
+                    &nbsp;
+                    <button
+                        className={'btn btn-link btn-sm'}
+                        onClick={this.toggleOQLEditor}
+                    >
+                        Cancel
+                    </button>
+                </>
+            );
+        }
+    }
+
+    @computed get showOQLEditor() {
+        return !!this.quickOQLQueryStore;
+    }
+    set showOQLEditor(s: boolean) {
+        if (s) {
+            this.quickOQLQueryStore = createQueryStore(
+                this.urlWrapper.query,
+                this.urlWrapper
+            );
+        } else {
+            this.quickOQLQueryStore = null;
+        }
     }
 
     @autobind
     @action
     handleQuickOQLSubmission() {
+        this.quickOQLQueryStore!.submit();
         this.showOQLEditor = false;
     }
 
@@ -589,8 +602,6 @@ export default class ResultsViewPage extends React.Component<
             hash: this.props.routing.location.hash,
         });
     }
-
-    @observable oqlSubmission = '';
 
     @computed get pageContent() {
         if (this.resultsViewPageStore.invalidStudyIds.result.length > 0) {
@@ -672,20 +683,26 @@ export default class ResultsViewPage extends React.Component<
                                     {this.showOQLEditor && (
                                         <div className={'quick_oql_edit'}>
                                             <OQLTextArea
-                                                getQueryStore={() =>
-                                                    createQueryStore(
-                                                        this.urlWrapper.query,
-                                                        this.urlWrapper
-                                                    )
-                                                }
                                                 validateInputGeneQuery={true}
+                                                inputGeneQuery={
+                                                    this.quickOQLQueryStore!
+                                                        .geneQuery
+                                                }
                                                 callback={(...args) => {
-                                                    this.oqlSubmission =
+                                                    this.quickOQLQueryStore!.geneQuery =
                                                         args[2];
                                                 }}
                                                 location={GeneBoxType.DEFAULT}
-                                                getSubmitButton={
-                                                    this.getQuickOQLSubmitButton
+                                                submitButton={
+                                                    this.quickOQLSubmitButton
+                                                }
+                                                error={
+                                                    this.quickOQLQueryStore!
+                                                        .submitError
+                                                }
+                                                messages={
+                                                    this.quickOQLQueryStore!
+                                                        .oqlMessages
                                                 }
                                             />
                                         </div>
