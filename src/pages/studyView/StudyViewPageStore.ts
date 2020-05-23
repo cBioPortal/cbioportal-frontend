@@ -170,6 +170,10 @@ import {
 } from 'pages/resultsView/survival/SurvivalUtil';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
+import {
+    REFERENCE_GENOME,
+    isMixedReferenceGenome,
+} from 'shared/lib/referenceGenomeUtils';
 
 export type ChartUserSetting = {
     id: string;
@@ -6183,5 +6187,11 @@ export class StudyViewPageStore {
             }
         }
         return title;
+    }
+
+    @computed get isMixedReferenceGenome() {
+        if (this.studies.result) {
+            return isMixedReferenceGenome(this.studies.result);
+        }
     }
 }
