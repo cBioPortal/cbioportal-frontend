@@ -114,6 +114,7 @@ export interface ICancerSummaryContentProps {
     gene: string;
     width: number;
     handlePivotChange: (e: any) => void;
+    handleStudyLinkout?: (studyId: string, hugoGeneSymbol?: string) => void;
 }
 
 const GroupByOptions = [
@@ -804,6 +805,9 @@ export class CancerSummaryContent extends React.Component<
                                     this.hideGenomicAlterations
                                 }
                                 xLabels={this.chartData.labels}
+                                handleStudyLinkout={
+                                    this.props.handleStudyLinkout!
+                                }
                             />
                         </div>
                     </Then>
