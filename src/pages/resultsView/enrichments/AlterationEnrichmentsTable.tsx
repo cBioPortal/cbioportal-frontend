@@ -6,7 +6,7 @@ import LazyMobXTable, {
 import { observer } from 'mobx-react';
 import { computed } from 'mobx';
 import { Checkbox } from 'react-bootstrap';
-import { formatSignificanceValueWithStyle } from 'shared/lib/FormatUtils';
+import { toConditionalPrecisionWithMinimum } from 'shared/lib/FormatUtils';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import styles from './styles.module.scss';
 import { cytobandFilter } from 'pages/resultsView/ResultsViewTableUtils';
@@ -160,9 +160,19 @@ export default class AlterationEnrichmentTable extends React.Component<
         columns[AlterationEnrichmentTableColumnType.P_VALUE] = {
             name: 'p-Value',
             render: (d: AlterationEnrichmentRow) => (
-                <span style={{ whiteSpace: 'nowrap' }}>
+                <span
+                    style={{
+                        whiteSpace: 'nowrap',
+                        fontWeight: d.qValue! < 0.05 ? 'bold' : 'normal',
+                    }}
+                >
                     {d.pValue !== undefined
-                        ? toConditionalPrecision(d.pValue, 3, 0.01)
+                        ? toConditionalPrecisionWithMinimum(
+                              d.pValue,
+                              3,
+                              0.01,
+                              -10
+                          )
                         : '-'}
                 </span>
             ),
@@ -184,9 +194,19 @@ export default class AlterationEnrichmentTable extends React.Component<
         columns[AlterationEnrichmentTableColumnType.Q_VALUE] = {
             name: 'q-Value',
             render: (d: AlterationEnrichmentRow) => (
-                <span style={{ whiteSpace: 'nowrap' }}>
+                <span
+                    style={{
+                        whiteSpace: 'nowrap',
+                        fontWeight: d.qValue! < 0.05 ? 'bold' : 'normal',
+                    }}
+                >
                     {d.qValue !== undefined
-                        ? formatSignificanceValueWithStyle(d.qValue)
+                        ? toConditionalPrecisionWithMinimum(
+                              d.qValue,
+                              3,
+                              0.01,
+                              -10
+                          )
                         : '-'}
                 </span>
             ),
