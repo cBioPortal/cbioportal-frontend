@@ -215,7 +215,11 @@ export declare type MutationType =
     | 'TRUNC'
     | 'PROMOTER';
 
-export declare type MutationModifier = 'GERMLINE' | 'SOMATIC' | DriverModifier;
+export declare type MutationModifier =
+    | { type: 'GERMLINE' }
+    | { type: 'SOMATIC' }
+    | RangeModifier
+    | DriverModifier;
 
 export declare type CNAModifier = DriverModifier;
 
@@ -223,7 +227,12 @@ export declare type FusionModifier = DriverModifier;
 
 export declare type AnyModifier = DriverModifier;
 
-export declare type DriverModifier = 'DRIVER';
+export declare type DriverModifier = { type: 'DRIVER' };
+export declare type RangeModifier = {
+    type: 'RANGE';
+    start?: number;
+    end?: number;
+};
 
 export declare type Mutation =
     | {
