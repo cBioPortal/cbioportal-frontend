@@ -552,7 +552,7 @@ describe('OQL parser', () => {
         },
     ]);
     doTest(
-        'TP53:DRIVER GERMLINE_DRIVER DRIVER_GERMLINE TRUNC_DRIVER DRIVER_MISSENSE INFRAME_DRIVER_GERMLINE DRIVER_GERMLINE_INFRAME DRIVER_GERMLINE_INFRAME_(1-100) MUT_(-500) GERMLINE_(51-)_DRIVER',
+        'TP53:DRIVER GERMLINE_DRIVER DRIVER_GERMLINE TRUNC_DRIVER DRIVER_MISSENSE INFRAME_DRIVER_GERMLINE DRIVER_GERMLINE_INFRAME DRIVER_GERMLINE_INFRAME_(1-100)! MUT_(-500) GERMLINE_(51-)_DRIVER',
         [
             {
                 gene: 'TP53',
@@ -609,20 +609,35 @@ describe('OQL parser', () => {
                         modifiers: [
                             { type: 'DRIVER' },
                             { type: 'GERMLINE' },
-                            { type: 'RANGE', start: 1, end: 100 },
+                            {
+                                type: 'RANGE',
+                                start: 1,
+                                end: 100,
+                                completeOverlapOnly: true,
+                            },
                         ],
                     },
                     {
                         alteration_type: 'mut',
                         info: {},
-                        modifiers: [{ type: 'RANGE', end: 500 }],
+                        modifiers: [
+                            {
+                                type: 'RANGE',
+                                end: 500,
+                                completeOverlapOnly: false,
+                            },
+                        ],
                     },
                     {
                         alteration_type: 'mut',
                         info: {},
                         modifiers: [
                             { type: 'GERMLINE' },
-                            { type: 'RANGE', start: 51 },
+                            {
+                                type: 'RANGE',
+                                start: 51,
+                                completeOverlapOnly: false,
+                            },
                             { type: 'DRIVER' },
                         ],
                     },
