@@ -3,6 +3,8 @@ import * as _ from 'lodash';
 import { cached } from 'mobxpromise';
 import {
     annotateMutations,
+    getMyVariantInfoAnnotationsFromIndexedVariantAnnotations,
+    IMyVariantInfoIndex,
     resolveDefaultsForMissingValues,
 } from 'cbioportal-utils';
 import { IHotspotIndex, indexHotspotsData } from 'react-mutation-mapper';
@@ -21,12 +23,9 @@ import { ClinicalData, Gene, Mutation } from 'cbioportal-ts-api-client';
 
 import {
     fetchGenes,
-    fetchOncoKbData,
-    ONCOKB_DEFAULT,
     getCanonicalTranscriptsByHugoSymbol,
     fetchOncoKbCancerGenes,
     fetchVariantAnnotationsIndexedByGenomicLocation,
-    fetchVariantAnnotationsByMutation,
 } from 'shared/lib/StoreUtils';
 import {
     getClinicalData,
@@ -39,7 +38,6 @@ import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
 import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
-import GenomeNexusMyVariantInfoCache from 'shared/cache/GenomeNexusMyVariantInfoCache';
 import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
 import MutationMapperStore from 'shared/components/mutationMapper/MutationMapperStore';
 import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownloadDataFetcher';
@@ -47,8 +45,6 @@ import {
     normalizeMutations,
     createVariantAnnotationsByMutationFetcher,
 } from '../../../../shared/components/mutationMapper/MutationMapperUtils';
-import { IOncoKbData } from 'cbioportal-frontend-commons';
-import { IMutationMapperConfig } from 'shared/components/mutationMapper/MutationMapperConfig';
 import defaultGenomeNexusClient from 'shared/api/genomeNexusClientInstance';
 import defaultGenomeNexusInternalClient from 'shared/api/genomeNexusInternalClientInstance';
 import autobind from 'autobind-decorator';
@@ -224,6 +220,29 @@ export default class MutationMapperToolStore {
                     AppConfig.serverConfig.isoformOverrideSource,
                     this.genomeNexusClient
                 ),
+            onError: (err: Error) => {
+                this.criticalErrors.push(err);
+            },
+        },
+        undefined
+    );
+
+    readonly indexedMyVariantInfoAnnotations = remoteData<
+        IMyVariantInfoIndex | undefined
+    >(
+        {
+            invoke: async () => {
+                const indexedVariantAnnotations = await fetchVariantAnnotationsIndexedByGenomicLocation(
+                    this.rawMutations,
+                    ['my_variant_info'],
+                    AppConfig.serverConfig.isoformOverrideSource,
+                    this.genomeNexusClient
+                );
+
+                return getMyVariantInfoAnnotationsFromIndexedVariantAnnotations(
+                    indexedVariantAnnotations
+                );
+            },
             onError: (err: Error) => {
                 this.criticalErrors.push(err);
             },
@@ -407,15 +426,6 @@ export default class MutationMapperToolStore {
         );
     }
 
-    @cached get genomeNexusMyVariantInfoCache() {
-        return new GenomeNexusMyVariantInfoCache(
-            createVariantAnnotationsByMutationFetcher(
-                ['my_variant_info'],
-                this.genomeNexusClient
-            )
-        );
-    }
-
     @cached get pdbHeaderCache() {
         return new PdbHeaderCache();
     }
@@ -425,8 +435,7 @@ export default class MutationMapperToolStore {
             this.mutations,
             undefined,
             () => this.genomeNexusCache,
-            () => this.genomeNexusMutationAssessorCache,
-            () => this.genomeNexusMyVariantInfoCache
+            () => this.genomeNexusMutationAssessorCache
         );
     }
 

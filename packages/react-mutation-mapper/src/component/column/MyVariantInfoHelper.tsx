@@ -23,7 +23,7 @@ export type MyVariantInfoProps = {
 export function renderMyVariantInfoContent(
     props: MyVariantInfoProps,
     getContent: (
-        myVariantInfo: MyVariantInfo,
+        myVariantInfo?: MyVariantInfo,
         variantAnnotation?: VariantAnnotation
     ) => JSX.Element
 ) {
@@ -44,11 +44,23 @@ export function renderMyVariantInfoContent(
         content = loaderIcon();
     } else if (status === 'error') {
         content = errorIcon('Error fetching Genome Nexus annotation');
-    } else if (!myVariantInfo) {
-        content = null;
     } else {
         content = getContent(myVariantInfo, variantAnnotation);
     }
 
     return <div className={props.className}>{content}</div>;
+}
+
+export function getMyVariantInfoData(
+    mutation?: Mutation,
+    indexedMyVariantInfoAnnotations?: RemoteData<
+        { [genomicLocation: string]: MyVariantInfo } | undefined
+    >
+) {
+    return getMyVariantInfoAnnotation(
+        mutation,
+        indexedMyVariantInfoAnnotations
+            ? indexedMyVariantInfoAnnotations.result
+            : undefined
+    );
 }

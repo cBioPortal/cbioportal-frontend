@@ -19,10 +19,6 @@ import {
     default as GenomeNexusMutationAssessorCache,
     defaultGNFetch as fetchGenomeNexusMutationAssessorData,
 } from 'shared/cache/GenomeNexusMutationAssessorCache';
-import {
-    default as GenomeNexusMyVariantInfoCache,
-    defaultGNFetch as fetchGenomeNexusMyVariantInfoData,
-} from 'shared/cache/GenomeNexusMyVariantInfoCache';
 
 export class MutationTableDownloadDataFetcher
     implements ILazyMobXTableApplicationLazyDownloadDataFetcher {
@@ -35,7 +31,6 @@ export class MutationTableDownloadDataFetcher
         },
         private genomeNexusCache?: () => GenomeNexusCache,
         private genomeNexusMutationAssessorCache?: () => GenomeNexusMutationAssessorCache,
-        private genomeNexusMyVariantInfoCache?: () => GenomeNexusMyVariantInfoCache,
         private mutationCountCache?: () => MutationCountCache,
         private discreteCNACache?: () => DiscreteCNACache
     ) {
@@ -87,15 +82,6 @@ export class MutationTableDownloadDataFetcher
                     )
                 );
                 caches.push(this.genomeNexusMutationAssessorCache());
-            }
-        }
-
-        if (this.genomeNexusMyVariantInfoCache) {
-            if (this.mutationData.result) {
-                promises.push(
-                    fetchGenomeNexusMyVariantInfoData(this.mutationData.result)
-                );
-                caches.push(this.genomeNexusMyVariantInfoCache());
             }
         }
 

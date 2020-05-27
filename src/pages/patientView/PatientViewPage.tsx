@@ -1064,6 +1064,11 @@ export default class PatientViewPage extends React.Component<
                                                             .patientViewPageStore
                                                             .indexedVariantAnnotations
                                                     }
+                                                    indexedMyVariantInfoAnnotations={
+                                                        this
+                                                            .patientViewPageStore
+                                                            .indexedMyVariantInfoAnnotations
+                                                    }
                                                     discreteCNACache={
                                                         this
                                                             .patientViewPageStore
@@ -1088,11 +1093,6 @@ export default class PatientViewPage extends React.Component<
                                                         this
                                                             .patientViewPageStore
                                                             .genomeNexusMutationAssessorCache
-                                                    }
-                                                    genomeNexusMyVariantInfoCache={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .genomeNexusMyVariantInfoCache
                                                     }
                                                     mrnaExprRankMolecularProfileId={
                                                         this
