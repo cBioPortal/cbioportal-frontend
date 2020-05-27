@@ -230,6 +230,7 @@ export declare type AnyModifier = DriverModifier;
 export declare type DriverModifier = { type: 'DRIVER' };
 export declare type RangeModifier = {
     type: 'RANGE';
+    completeOverlapOnly: boolean;
     start?: number;
     end?: number;
 };
