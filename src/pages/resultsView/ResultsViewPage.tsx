@@ -574,7 +574,8 @@ export default class ResultsViewPage extends React.Component<
         if (s) {
             this.quickOQLQueryStore = createQueryStore(
                 this.urlWrapper.query,
-                this.urlWrapper
+                this.urlWrapper,
+                false
             );
         } else {
             this.quickOQLQueryStore = null;
