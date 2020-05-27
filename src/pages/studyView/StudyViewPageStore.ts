@@ -2877,18 +2877,6 @@ export class StudyViewPageStore {
         } as ClinicalDataBinFilter;
     }
 
-    readonly studies = remoteData<CancerStudy[]>({
-        invoke: () => {
-            if (this.studyIds.length > 0) {
-                return defaultClient.fetchStudiesUsingPOST({
-                    studyIds: toJS(this.studyIds),
-                });
-            } else {
-                return Promise.resolve([]);
-            }
-        },
-    });
-
     readonly resourceDefinitions = remoteData({
         await: () => [this.queriedPhysicalStudies],
         invoke: () => {
@@ -6192,8 +6180,8 @@ export class StudyViewPageStore {
     }
 
     @computed get isMixedReferenceGenome() {
-        if (this.studies.result) {
-            return isMixedReferenceGenome(this.studies.result);
+        if (this.queriedPhysicalStudies.result) {
+            return isMixedReferenceGenome(this.queriedPhysicalStudies.result);
         }
     }
 }
