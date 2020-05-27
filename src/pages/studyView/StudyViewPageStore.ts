@@ -47,6 +47,7 @@ import {
 import {
     fetchCopyNumberSegmentsForSamples,
     getAlterationTypesInOql,
+    getDefaultProfilesForOql,
 } from 'shared/lib/StoreUtils';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
@@ -1308,49 +1309,39 @@ export class StudyViewPageStore {
         return getAlterationTypesInOql(this.geneQueries);
     }
 
-    @computed get defaultMutationProfile() {
+    @computed get defaultProfilesForOql() {
         if (this.molecularProfiles.isComplete) {
-            return this.molecularProfiles.result.find(
-                x =>
-                    x.showProfileInAnalysisTab &&
-                    x.molecularAlterationType ===
-                        AlterationTypeConstants.MUTATION_EXTENDED
-            );
+            return getDefaultProfilesForOql(this.molecularProfiles.result);
         }
         return undefined;
+    }
+    @computed get defaultMutationProfile() {
+        return (
+            this.defaultProfilesForOql &&
+            this.defaultProfilesForOql[
+                AlterationTypeConstants.MUTATION_EXTENDED
+            ]
+        );
     }
     @computed get defaultCnaProfile() {
-        if (this.molecularProfiles.isComplete) {
-            return this.molecularProfiles.result.find(
-                x =>
-                    x.showProfileInAnalysisTab &&
-                    x.molecularAlterationType ===
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION
-            );
-        }
-        return undefined;
+        return (
+            this.defaultProfilesForOql &&
+            this.defaultProfilesForOql[
+                AlterationTypeConstants.COPY_NUMBER_ALTERATION
+            ]
+        );
     }
     @computed get defaultMrnaProfile() {
-        if (this.molecularProfiles.isComplete) {
-            return this.molecularProfiles.result.find(
-                x =>
-                    x.showProfileInAnalysisTab &&
-                    x.molecularAlterationType ===
-                        AlterationTypeConstants.MRNA_EXPRESSION
-            );
-        }
-        return undefined;
+        return (
+            this.defaultProfilesForOql &&
+            this.defaultProfilesForOql[AlterationTypeConstants.MRNA_EXPRESSION]
+        );
     }
     @computed get defaultProtProfile() {
-        if (this.molecularProfiles.isComplete) {
-            return this.molecularProfiles.result.find(
-                x =>
-                    x.showProfileInAnalysisTab &&
-                    x.molecularAlterationType ===
-                        AlterationTypeConstants.PROTEIN_LEVEL
-            );
-        }
-        return undefined;
+        return (
+            this.defaultProfilesForOql &&
+            this.defaultProfilesForOql[AlterationTypeConstants.PROTEIN_LEVEL]
+        );
     }
 
     @autobind

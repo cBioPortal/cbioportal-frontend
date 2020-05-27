@@ -85,7 +85,7 @@ import {
     plotsPriority,
 } from '../../pages/resultsView/survival/SurvivalUtil';
 import request from 'superagent';
-import { MUTCommand, SingleGeneQuery } from './oql/oql-parser';
+import { Alteration, MUTCommand, SingleGeneQuery } from './oql/oql-parser';
 import { CUSTOM_CASE_LIST_ID } from '../components/query/QueryStore';
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
@@ -1394,4 +1394,22 @@ export function getOqlMessages(parsedLines: SingleGeneQuery[]) {
             (mutCommand as any).constr_val
         }" is interpreted as a mutation code.`;
     });
+}
+
+export function getDefaultProfilesForOql(profiles: MolecularProfile[]) {
+    return _.mapValues(
+        _.keyBy([
+            AlterationTypeConstants.MUTATION_EXTENDED,
+            AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+            AlterationTypeConstants.MRNA_EXPRESSION,
+            AlterationTypeConstants.PROTEIN_LEVEL,
+        ]),
+        alterationType =>
+            profiles.find(profile => {
+                return (
+                    profile.showProfileInAnalysisTab &&
+                    profile.molecularAlterationType === alterationType
+                );
+            })
+    );
 }
