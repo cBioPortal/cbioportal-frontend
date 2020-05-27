@@ -52,6 +52,7 @@ import MolecularProfilesInStudyCache from '../../cache/MolecularProfilesInStudyC
 import { CacheData } from '../../lib/LazyMobXCache';
 import {
     getAlterationTypesInOql,
+    getDefaultProfilesForOql,
     getHierarchyData,
     getOqlMessages,
 } from 'shared/lib/StoreUtils';
@@ -1539,49 +1540,41 @@ export class QueryStore {
         return result;
     }
 
-    @computed get defaultMutationProfile() {
+    @computed get defaultProfilesForOql() {
         if (this.molecularProfilesInSelectedStudies.isComplete) {
-            return this.molecularProfilesInSelectedStudies.result.find(
-                x =>
-                    x.showProfileInAnalysisTab &&
-                    x.molecularAlterationType ===
-                        AlterationTypeConstants.MUTATION_EXTENDED
+            return getDefaultProfilesForOql(
+                this.molecularProfilesInSelectedStudies.result
             );
         }
         return undefined;
+    }
+    @computed get defaultMutationProfile() {
+        return (
+            this.defaultProfilesForOql &&
+            this.defaultProfilesForOql[
+                AlterationTypeConstants.MUTATION_EXTENDED
+            ]
+        );
     }
     @computed get defaultCnaProfile() {
-        if (this.molecularProfilesInSelectedStudies.isComplete) {
-            return this.molecularProfilesInSelectedStudies.result.find(
-                x =>
-                    x.showProfileInAnalysisTab &&
-                    x.molecularAlterationType ===
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION
-            );
-        }
-        return undefined;
+        return (
+            this.defaultProfilesForOql &&
+            this.defaultProfilesForOql[
+                AlterationTypeConstants.COPY_NUMBER_ALTERATION
+            ]
+        );
     }
     @computed get defaultMrnaProfile() {
-        if (this.molecularProfilesInSelectedStudies.isComplete) {
-            return this.molecularProfilesInSelectedStudies.result.find(
-                x =>
-                    x.showProfileInAnalysisTab &&
-                    x.molecularAlterationType ===
-                        AlterationTypeConstants.MRNA_EXPRESSION
-            );
-        }
-        return undefined;
+        return (
+            this.defaultProfilesForOql &&
+            this.defaultProfilesForOql[AlterationTypeConstants.MRNA_EXPRESSION]
+        );
     }
     @computed get defaultProtProfile() {
-        if (this.molecularProfilesInSelectedStudies.isComplete) {
-            return this.molecularProfilesInSelectedStudies.result.find(
-                x =>
-                    x.showProfileInAnalysisTab &&
-                    x.molecularAlterationType ===
-                        AlterationTypeConstants.PROTEIN_LEVEL
-            );
-        }
-        return undefined;
+        return (
+            this.defaultProfilesForOql &&
+            this.defaultProfilesForOql[AlterationTypeConstants.PROTEIN_LEVEL]
+        );
     }
 
     // SAMPLE LIST
