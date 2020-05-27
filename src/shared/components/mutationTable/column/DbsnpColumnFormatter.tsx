@@ -79,4 +79,22 @@ export default class DbsnpColumnFormatter {
 
         return dbsnpSortValue(myVariantInfo);
     }
+
+    public static filter(
+        d: Mutation[],
+        filterStringUpper: string,
+        indexedMyVariantInfoAnnotations?: RemoteData<
+            IMyVariantInfoIndex | undefined
+        >
+    ): boolean {
+        const sortValue = DbsnpColumnFormatter.getSortValue(
+            d,
+            indexedMyVariantInfoAnnotations
+        );
+
+        return (
+            sortValue !== null &&
+            sortValue.toUpperCase().includes(filterStringUpper)
+        );
+    }
 }

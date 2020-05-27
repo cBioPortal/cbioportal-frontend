@@ -1037,6 +1037,16 @@ export default class MutationTable<
                     d,
                     this.props.indexedMyVariantInfoAnnotations
                 ),
+            filter: (
+                d: Mutation[],
+                filterString: string,
+                filterStringUpper: string
+            ) =>
+                DbsnpColumnFormatter.filter(
+                    d,
+                    filterStringUpper,
+                    this.props.indexedMyVariantInfoAnnotations
+                ),
             tooltip: (
                 <span
                     style={{
