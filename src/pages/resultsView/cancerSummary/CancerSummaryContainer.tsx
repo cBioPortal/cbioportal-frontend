@@ -3,28 +3,21 @@ import * as _ from 'lodash';
 import { action, computed, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import { MSKTabs, MSKTab } from 'shared/components/MSKTabs/MSKTabs';
-import { If, Then, Else } from 'react-if';
-import { ThreeBounce } from 'better-react-spinkit';
 import { CancerSummaryContent, IAlterationData } from './CancerSummaryContent';
-import {
-    ExtendedAlteration,
-    ExtendedSample,
-    ResultsViewPageStore,
-} from '../ResultsViewPageStore';
-import Loader, {
-    default as LoadingIndicator,
-} from '../../../shared/components/loadingIndicator/LoadingIndicator';
-import { CancerStudy, Gene } from 'cbioportal-ts-api-client';
+import { ExtendedSample, ResultsViewPageStore } from '../ResultsViewPageStore';
+import { default as LoadingIndicator } from '../../../shared/components/loadingIndicator/LoadingIndicator';
+import { Gene } from 'cbioportal-ts-api-client';
 import './styles.scss';
 import {
     getAlterationCountsForCancerTypesByGene,
     getAlterationCountsForCancerTypesForAllGenes,
 } from '../../../shared/lib/alterationCountHelpers';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
-import MobxPromise from 'mobxpromise/dist/src/MobxPromise';
 import { getMobxPromiseGroupStatus } from 'cbioportal-frontend-commons';
-import NotUsingGenePanelWarning from '../NotUsingGenePanelWarning';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
+import { ResultsViewURLQueryEnum } from 'pages/resultsView/ResultsViewURLWrapper';
+import { buildCBioPortalPageUrl } from 'shared/api/urls';
+import autobind from 'autobind-decorator';
 
 interface ICancerSummaryContainerProps {
     store: ResultsViewPageStore;
@@ -139,6 +132,7 @@ export default class CancerSummaryContainer extends React.Component<
                                 gene.hugoGeneSymbol
                             ]
                         }
+                        handleStudyLinkout={this.handleStudyLinkout}
                         groupAlterationsBy={this.groupAlterationsBy}
                         gene={gene.hugoGeneSymbol}
                         labelTransformer={labelTransformer}
@@ -173,11 +167,31 @@ export default class CancerSummaryContainer extends React.Component<
                         handlePivotChange={this.pivotData}
                         labelTransformer={labelTransformer}
                         groupAlterationsBy={this.groupAlterationsBy}
+                        handleStudyLinkout={this.handleStudyLinkout}
                     />
                 </MSKTab>
             );
         }
         return geneTabs;
+    }
+
+    @autobind
+    public handleStudyLinkout(studyId: string, gene?: string) {
+        const params: any = Object.assign(
+            {},
+            this.props.store.urlWrapper.query,
+            {
+                [ResultsViewURLQueryEnum.cancer_study_list]: studyId,
+                [ResultsViewURLQueryEnum.gene_list]:
+                    gene || this.props.store.urlWrapper.query.gene_list,
+            }
+        );
+
+        const studyWindow = window.open(
+            buildCBioPortalPageUrl('/results')
+        ) as any;
+
+        studyWindow.clientPostedData = params;
     }
 
     public render() {
