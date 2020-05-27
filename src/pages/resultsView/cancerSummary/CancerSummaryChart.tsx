@@ -57,6 +57,7 @@ interface CancerSummaryChartProps {
     showLinks: boolean;
     hideGenomicAlterations?: boolean;
     gene: string;
+    handleStudyLinkout?: (studyId: string, hugoGeneSymbol?: string) => void;
 }
 
 export function percentageRounder(num: number) {
@@ -329,29 +330,12 @@ export class CancerSummaryChart extends React.Component<
      * so that it is just for the one study.
      */
     private async queryStudy(studyId: string) {
-        const studyWindow = window.open(window.location.href) as any;
-
-        if (studyWindow === null) {
-            return;
+        let gene;
+        if (this.props.gene != CANCER_SUMMARY_ALL_GENES) {
+            gene = this.props.gene;
         }
-
-        await sleepUntil(() => {
-            return (
-                studyWindow.closed ||
-                (studyWindow.globalStores &&
-                    studyWindow.globalStores.appStore.appReady)
-            );
-        });
-
-        if (!studyWindow.closed) {
-            const params: any = {
-                [ResultsViewURLQueryEnum.cancer_study_list]: studyId,
-            };
-            if (this.props.gene != CANCER_SUMMARY_ALL_GENES) {
-                params[ResultsViewURLQueryEnum.gene_list] = this.props.gene;
-            }
-            studyWindow.routingStore.updateRoute(params);
-        }
+        this.props.handleStudyLinkout &&
+            this.props.handleStudyLinkout(studyId, gene);
     }
 
     private formatStudyLink(studyId: string): string {

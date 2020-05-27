@@ -30,6 +30,7 @@ import {
     ExpressionEnrichmentTableColumn,
     ExpressionEnrichmentTableColumnType,
 } from './ExpressionEnrichmentsTable';
+import { Datalabel } from 'shared/lib/DataUtils';
 
 export type AlterationEnrichmentWithQ = AlterationEnrichment & {
     logRatio?: number;
@@ -292,6 +293,9 @@ export function getFilteredData(
             const enrichedGroupData = enrichmentDatum.groupsSet[
                 enrichedGroup
             ] as any;
+            if (!enrichedGroupData) {
+                return false;
+            }
             let enrichedGroupAlteredPercentage =
                 enrichedGroupData.meanExpression ||
                 enrichedGroupData.alteredPercentage;
@@ -624,7 +628,11 @@ export function getExpressionEnrichmentColumns(
             name: group.name,
             headerRender: (name: string) => STAT_IN_headerRender('μ', name),
             render: (d: ExpressionEnrichmentRow) => (
-                <span>{d.groupsSet[group.name].meanExpression.toFixed(2)}</span>
+                <span>
+                    {d.groupsSet[group.name]
+                        ? d.groupsSet[group.name].meanExpression.toFixed(2)
+                        : Datalabel.NA}
+                </span>
             ),
             tooltip: (
                 <span>
@@ -645,7 +653,9 @@ export function getExpressionEnrichmentColumns(
             headerRender: (name: string) => STAT_IN_headerRender('σ', name),
             render: (d: ExpressionEnrichmentRow) => (
                 <span>
-                    {d.groupsSet[group.name].standardDeviation.toFixed(2)}
+                    {d.groupsSet[group.name]
+                        ? d.groupsSet[group.name].standardDeviation.toFixed(2)
+                        : 'NA'}
                 </span>
             ),
             tooltip: (
