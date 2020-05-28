@@ -288,7 +288,7 @@ function parsedOQLMutationModifierToSourceOQL(
             return `(${ifNotDefined(modifier.start, '')}-${ifNotDefined(
                 modifier.end,
                 ''
-            )})${modifier.completeOverlapOnly ? '!' : ''}`;
+            )}${modifier.completeOverlapOnly ? '!' : ''})`;
         default:
             return modifier.type;
     }
