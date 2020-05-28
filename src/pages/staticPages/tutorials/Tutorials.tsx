@@ -89,14 +89,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                                 </li>
 
                                 <li>
-                                    API & R Client (May 28th, 2020, 11am-12pm
-                                    EDT)&nbsp;
-                                    <a
-                                        target="_blank"
-                                        href="https://dfci.zoom.us/webinar/register/7315875611981/WN_An_3l0XYQHCoinWvclUrlw"
-                                    >
-                                        register
-                                    </a>
+                                    <a href="#webinar-5">API & R Client</a>
                                 </li>
                             </ol>
                         </li>
@@ -326,6 +319,58 @@ export default class Tutorials extends React.Component<{}, {}> {
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Webinar 4 Group Comparison.pdf`}
                         >
                             Download slides
+                        </a>
+                    </h4>
+                </div>
+                <hr />
+                <h2 id={'webinar-5'}>
+                    Webinar #5: API & R Client
+                    <ReturnToTop />
+                </h2>
+
+                <iframe
+                    src="https://www.youtube.com/embed/Nq12o2i0yaw"
+                    frameBorder="0"
+                    width="720"
+                    height="434"
+                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen={true}
+                ></iframe>
+                <div>
+                    <span style={{ fontSize: 'large' }}>Watch on </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a
+                            target="_blank"
+                            href="https://www.youtube.com/watch?v=Nq12o2i0yaw"
+                        >
+                            YouTube.com
+                        </a>
+                    </h4>
+                    <span style={{ fontSize: 'large' }}> or </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a
+                            target="_blank"
+                            href="https://www.bilibili.com/video/BV1jz4y197iU"
+                        >
+                            bilibili.com
+                        </a>
+                    </h4>
+                    <span style={{ color: '#eee' }}> | </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a
+                            href={`${AppConfig.serverConfig
+                                .skin_documentation_baseurl!}tutorials/cBioPortal Webinar 5 API and R Client.pdf`}
+                        >
+                            Download slides
+                        </a>
+                    </h4>
+                    <span style={{ color: '#eee' }}> | </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a
+                            target="_blank"
+                            href="https://github.com/cBioPortal/2020-cbioportal-r-workshop"
+                        >
+                            Workshop code
                         </a>
                     </h4>
                 </div>
