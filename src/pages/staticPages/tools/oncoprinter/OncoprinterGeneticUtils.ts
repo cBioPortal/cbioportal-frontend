@@ -848,7 +848,7 @@ export function parseGeneticInput(
                         }
 
                         for (const modifier of parsedMutation.modifiers) {
-                            switch (modifier) {
+                            switch (modifier.type) {
                                 case 'GERMLINE':
                                     ret.isGermline = true;
                                     break;
