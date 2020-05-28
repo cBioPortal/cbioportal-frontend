@@ -64,7 +64,6 @@ export interface IServerConfig {
     skin_documentation_baseurl: string | null;
     skin_blurb: string | null;
     skin_custom_header_tabs: string | null;
-    skin_data_sets_footer: string | null;
     skin_data_sets_header: string | null;
     skin_documentation_markdown: boolean;
     skin_description: string;
