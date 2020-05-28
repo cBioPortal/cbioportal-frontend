@@ -2831,7 +2831,7 @@ export class ResultsViewPageStore {
                                     () => this.genomeNexusMutationAssessorCache,
                                     () => this.genomeNexusMyVariantInfoCache,
                                     () => this.discreteCNACache,
-                                    this.studyToMolecularProfileDiscrete.result!,
+                                    this.studyToMolecularProfileDiscreteCna.result!,
                                     this.studyIdToStudy,
                                     this.molecularProfileIdToMolecularProfile,
                                     this.clinicalDataForSamples,
@@ -3268,7 +3268,7 @@ export class ResultsViewPageStore {
         {}
     );
 
-    readonly studyToMolecularProfileDiscrete = remoteData<{
+    readonly studyToMolecularProfileDiscreteCna = remoteData<{
         [studyId: string]: MolecularProfile;
     }>(
         {
@@ -3277,7 +3277,12 @@ export class ResultsViewPageStore {
                 const ret: { [studyId: string]: MolecularProfile } = {};
                 for (const molecularProfile of this.molecularProfilesInStudies
                     .result) {
-                    if (molecularProfile.datatype === 'DISCRETE') {
+                    if (
+                        molecularProfile.datatype ===
+                            DataTypeConstants.DISCRETE &&
+                        molecularProfile.molecularAlterationType ===
+                            AlterationTypeConstants.COPY_NUMBER_ALTERATION
+                    ) {
                         ret[molecularProfile.studyId] = molecularProfile;
                     }
                 }
@@ -3797,7 +3802,7 @@ export class ResultsViewPageStore {
         await: () =>
             this.numericGeneMolecularDataCache.await(
                 [
-                    this.studyToMolecularProfileDiscrete,
+                    this.studyToMolecularProfileDiscreteCna,
                     this.entrezGeneIdToGene,
                     this.getOncoKbCnaAnnotationForOncoprint,
                     this.molecularProfileIdToMolecularProfile,
@@ -3814,7 +3819,7 @@ export class ResultsViewPageStore {
                 this.numericGeneMolecularDataCache
                     .getAll(
                         _.values(
-                            this.studyToMolecularProfileDiscrete.result!
+                            this.studyToMolecularProfileDiscreteCna.result!
                         ).map(p => ({
                             entrezGeneId: q.entrezGeneId,
                             molecularProfileId: p.molecularProfileId,
@@ -4326,7 +4331,7 @@ export class ResultsViewPageStore {
 
     @cached get discreteCNACache() {
         return new DiscreteCNACache(
-            this.studyToMolecularProfileDiscrete.result
+            this.studyToMolecularProfileDiscreteCna.result
         );
     }
 
