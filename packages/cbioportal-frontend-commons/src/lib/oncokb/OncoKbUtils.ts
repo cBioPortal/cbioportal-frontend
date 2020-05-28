@@ -175,22 +175,6 @@ export function generateAnnotateStructuralVariantQuery(
         proteinChange,
         mutationType
     );
-    const fusionResult = new RegExp(FUSION_REGEX, 'gi').exec(proteinChange);
-    if (fusionResult) {
-        return {
-            id: id,
-            geneA: {
-                hugoSymbol: fusionResult![1],
-            },
-            geneB: {
-                hugoSymbol: fusionResult![2],
-            },
-            structuralVariantType: 'FUSION',
-            functionalFusion: true,
-            tumorType: tumorType,
-            evidenceTypes: evidenceTypes,
-        } as AnnotateStructuralVariantQuery;
-    }
     const intragenicResult = new RegExp(INTRAGENIC_REGEX, 'gi').exec(
         proteinChange
     );
@@ -204,6 +188,22 @@ export function generateAnnotateStructuralVariantQuery(
                 hugoSymbol: intragenicResult![1],
             },
             structuralVariantType: 'DELETION',
+            functionalFusion: false,
+            tumorType: tumorType,
+            evidenceTypes: evidenceTypes,
+        } as AnnotateStructuralVariantQuery;
+    }
+    const fusionResult = new RegExp(FUSION_REGEX, 'gi').exec(proteinChange);
+    if (fusionResult) {
+        return {
+            id: id,
+            geneA: {
+                hugoSymbol: fusionResult![1],
+            },
+            geneB: {
+                hugoSymbol: fusionResult![2],
+            },
+            structuralVariantType: 'FUSION',
             functionalFusion: true,
             tumorType: tumorType,
             evidenceTypes: evidenceTypes,
