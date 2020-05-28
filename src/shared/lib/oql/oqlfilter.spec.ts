@@ -301,11 +301,11 @@ describe('unparseOQLQueryLine', () => {
     });
     it('unparses queries with range mutation modifiers', () => {
         const parsedLine = parseOQLQuery(
-            'TP53: DRIVER_GERMLINE_INFRAME_(1-100)! MUT_(-500) GERMLINE_(51-)_DRIVER'
+            'TP53: DRIVER_GERMLINE_INFRAME_(1-100!) MUT_(-500) GERMLINE_(51-)_DRIVER'
         )[0];
         assert.equal(
             unparseOQLQueryLine(parsedLine),
-            'TP53: MUT=INFRAME_DRIVER_GERMLINE_(1-100)! MUT_(-500) MUT_GERMLINE_(51-)_DRIVER;'
+            'TP53: MUT=INFRAME_DRIVER_GERMLINE_(1-100!) MUT_(-500) MUT_GERMLINE_(51-)_DRIVER;'
         );
     });
 });
@@ -476,16 +476,16 @@ describe('filterCBioPortalWebServiceData', () => {
         const tests = [
             { oql: 'BRCA1: MUT_(1-10)', ids: [0, 2] },
             { oql: 'BRCA1: MUT_(20-49)', ids: [0, 1] },
-            { oql: 'BRCA1: MUT_(1-10)!', ids: [2] },
-            { oql: 'BRCA1: MUT_(20-49)!', ids: [1] },
+            { oql: 'BRCA1: MUT_(1-10!)', ids: [2] },
+            { oql: 'BRCA1: MUT_(20-49!)', ids: [1] },
             { oql: 'BRCA1: MUT_(2-)', ids: [0, 1, 2] },
             { oql: 'BRCA1: MUT_(20-)', ids: [0, 1] },
-            { oql: 'BRCA1: MUT_(2-)!', ids: [0, 1] },
-            { oql: 'BRCA1: MUT_(20-)!', ids: [1] },
+            { oql: 'BRCA1: MUT_(2-!)', ids: [0, 1] },
+            { oql: 'BRCA1: MUT_(20-!)', ids: [1] },
             { oql: 'BRCA1: MUT_(-15)', ids: [0, 2] },
             { oql: 'BRCA1: MUT_(-45)', ids: [0, 1, 2] },
-            { oql: 'BRCA1: MUT_(-15)!', ids: [2] },
-            { oql: 'BRCA1: MUT_(-45)!', ids: [1, 2] },
+            { oql: 'BRCA1: MUT_(-15!)', ids: [2] },
+            { oql: 'BRCA1: MUT_(-45!)', ids: [1, 2] },
         ];
         let filteredData: any[];
         for (const test of tests) {
@@ -507,11 +507,11 @@ describe('filterCBioPortalWebServiceData', () => {
         const accessorsInstance = new AccessorsForOqlFilter([MUTATION_PROFILE]);
         const tests = [
             { oql: 'BRCA1: MUT_(1-10)_GERMLINE', ids: [0] },
-            { oql: 'BRCA1: MUT_(20-49)!_DRIVER', ids: [1] },
+            { oql: 'BRCA1: MUT_(20-49!)_DRIVER', ids: [1] },
             { oql: 'BRCA1: MUT_(2-)_GERMLINE_DRIVER', ids: [0] },
-            { oql: 'BRCA1: MUT_(20-)!_GERMLINE_DRIVER', ids: [] },
+            { oql: 'BRCA1: MUT_(20-!)_GERMLINE_DRIVER', ids: [] },
             { oql: 'BRCA1: MUT_(-15)_SOMATIC', ids: [2] },
-            { oql: 'BRCA1: MUT_(-45)!_SOMATIC_DRIVER', ids: [1] },
+            { oql: 'BRCA1: MUT_(-45!)_SOMATIC_DRIVER', ids: [1] },
         ];
         let filteredData: any[];
         for (const test of tests) {
