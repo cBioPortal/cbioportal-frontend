@@ -22,7 +22,7 @@ export default class ResourcesTab extends React.Component<
     readonly studyResources = MakeMobxView({
         await: () => [
             this.props.store.studyResourceData,
-            this.props.store.studies,
+            this.props.store.queriedPhysicalStudies,
         ],
         render: () => {
             if (this.props.store.studyResourceData.result!.length > 0) {
@@ -30,7 +30,10 @@ export default class ResourcesTab extends React.Component<
                     <div className="resourcesSection">
                         <h4 className="blackHeader">
                             Study Resources for{' '}
-                            {this.props.store.studies.result![0].name}
+                            {
+                                this.props.store.queriedPhysicalStudies
+                                    .result![0].name
+                            }
                         </h4>
                         {_.sortBy(
                             this.props.store.studyResourceData.result!,
