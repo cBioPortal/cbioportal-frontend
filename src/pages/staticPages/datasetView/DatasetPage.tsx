@@ -49,16 +49,6 @@ export default class DatasetPage extends React.Component<{}, {}> {
                 }}
             ></p>
         ) : null;
-        const footer: JSX.Element | null = !_.isEmpty(
-            AppConfig.serverConfig.skin_data_sets_footer
-        ) ? (
-            <p
-                style={{ marginTop: '20px' }}
-                dangerouslySetInnerHTML={{
-                    __html: AppConfig.serverConfig.skin_data_sets_footer!,
-                }}
-            ></p>
-        ) : null;
 
         return (
             <PageLayout className={'whiteBackground'}>
@@ -81,7 +71,6 @@ export default class DatasetPage extends React.Component<{}, {}> {
                                     }
                                     datasets={this.store.data.result}
                                 />
-                                {footer}
                             </div>
                         )}
 
