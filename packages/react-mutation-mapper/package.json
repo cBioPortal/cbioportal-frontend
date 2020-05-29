@@ -48,6 +48,7 @@
     "oncokb-styles": "~0.1.2",
     "oncokb-ts-api-client": "^1.0.4",
     "react-collapse": "^4.0.3",
+    "react-if": "^2.1.0",
     "react-motion": "^0.5.2",
     "react-rangeslider": "^2.2.0",
     "react-select": "^3.0.4",
