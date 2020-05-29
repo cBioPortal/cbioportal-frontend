@@ -20,6 +20,8 @@ export interface ActionButtonsProps {
     appStore: AppStore;
 }
 
+export const MAXIMUM_NAV_CASE_IDS_IN_URL = 2000;
+
 @observer
 export default class ActionButtons extends React.Component<
     ActionButtonsProps,
@@ -62,13 +64,27 @@ export default class ActionButtons extends React.Component<
                 }
             );
 
-            window.open(
-                getPatientViewUrl(
-                    firstPatient.studyId,
-                    firstPatient.patientId,
-                    navCaseIds
-                )
-            );
+            // if number of cases large equal to MAXIMUM_NAV_CASE_IDS_IN_URL, use clientPostedData to pass navCaseIds
+            if (navCaseIds.length >= MAXIMUM_NAV_CASE_IDS_IN_URL) {
+                const patientViewWindow = window.open(
+                    getPatientViewUrl(
+                        firstPatient.studyId,
+                        firstPatient.patientId
+                    )
+                ) as any;
+                patientViewWindow.clientPostedData = {
+                    navCaseIds: navCaseIds,
+                };
+            } else {
+                // add navCaseIds into url if number of cases less than MAXIMUM_NAV_CASE_IDS_IN_URL
+                window.open(
+                    getPatientViewUrl(
+                        firstPatient.studyId,
+                        firstPatient.patientId,
+                        navCaseIds
+                    )
+                );
+            }
         }
     }
 
