@@ -2362,7 +2362,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @autobind
     private scatterPlotTooltip(d: IScatterPlotData) {
-        return scatterPlotTooltip(d);
+        return scatterPlotTooltip(
+            d,
+            this.horzLogScaleFunction,
+            this.vertLogScaleFunction
+        );
     }
 
     @autobind
@@ -2374,7 +2378,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return (d: IBoxScatterPlotPoint) => {
             let content;
             if (this.boxPlotData.isComplete) {
-                content = boxPlotTooltip(d, this.boxPlotData.result.horizontal);
+                content = boxPlotTooltip(
+                    d,
+                    this.boxPlotData.result.horizontal,
+                    this.boxPlotData.result.horizontal
+                        ? this.horzLogScaleFunction
+                        : this.vertLogScaleFunction
+                );
             } else {
                 content = (
                     <span>
