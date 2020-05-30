@@ -157,6 +157,14 @@ export function parseCohortIds(concatenatedIds: string) {
     });
 }
 
+export function buildCohortIdsFromNavCaseIds(
+    navCaseIds: { patientId: string; studyId: string }[]
+) {
+    return _.map(navCaseIds, navCaseId => {
+        return navCaseId.studyId + ':' + navCaseId.patientId;
+    });
+}
+
 export function handlePathologyReportCheckResponse(
     patientId: string,
     resp: any
