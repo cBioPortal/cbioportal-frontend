@@ -21,6 +21,7 @@ import { toggleColumnVisibility } from 'cbioportal-frontend-commons';
 import {
     parseCohortIds,
     PatientViewPageStore,
+    buildCohortIdsFromNavCaseIds,
 } from './clinicalInformation/PatientViewPageStore';
 import ClinicalInformationPatientTable from './clinicalInformation/ClinicalInformationPatientTable';
 import ClinicalInformationSamples from './clinicalInformation/ClinicalInformationSamplesTable';
@@ -198,6 +199,17 @@ export default class PatientViewPage extends React.Component<
         this.onCnaTableColumnVisibilityToggled = this.onCnaTableColumnVisibilityToggled.bind(
             this
         );
+    }
+
+    componentDidMount() {
+        // Load posted data, if it exists
+        const postData = getBrowserWindow().clientPostedData;
+        if (postData && postData.navCaseIds) {
+            this.patientViewPageStore.patientIdsInCohort = buildCohortIdsFromNavCaseIds(
+                postData.navCaseIds
+            );
+            getBrowserWindow().clientPostedData = null;
+        }
     }
 
     public handleSampleClick(
