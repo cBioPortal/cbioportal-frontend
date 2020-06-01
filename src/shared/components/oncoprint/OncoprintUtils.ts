@@ -53,6 +53,7 @@ import {
 } from 'cbioportal-ts-api-client';
 import {
     clinicalAttributeIsPROFILEDIN,
+    MUTATION_SPECTRUM_CATEGORIES,
     SpecialAttribute,
 } from '../../cache/ClinicalDataCache';
 import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
@@ -905,14 +906,7 @@ export function makeClinicalTracksMobxPromise(
                     SpecialAttribute.MutationSpectrum
                 ) {
                     ret.datatype = 'counts';
-                    (ret as any).countsCategoryLabels = [
-                        'C>A',
-                        'C>G',
-                        'C>T',
-                        'T>A',
-                        'T>C',
-                        'T>G',
-                    ];
+                    (ret as any).countsCategoryLabels = MUTATION_SPECTRUM_CATEGORIES;
                     (ret as any).countsCategoryFills = [
                         '#3D6EB1',
                         '#8EBFDC',

@@ -931,35 +931,16 @@ export default class ResultsViewOncoprint extends React.Component<
                                     );
                                 }
 
-                                let mutationSpectrumTrackExcluded = false;
-                                const downloadableClinicalTracks = clinicalTracks.filter(
-                                    t => {
-                                        if (t.datatype === 'counts') {
-                                            // TODO: implement counts tracks in oncoprinter
-                                            // or TODO: change this message if any other stacked bar track is created
-                                            mutationSpectrumTrackExcluded = true;
-                                            return false;
-                                        } else {
-                                            return true;
-                                        }
-                                    }
-                                );
-                                if (mutationSpectrumTrackExcluded) {
-                                    alert(
-                                        'Cannot view Mutation Spectrum track in Oncoprinter.'
-                                    );
-                                }
-
                                 let clinicalInput = '';
-                                if (downloadableClinicalTracks.length > 0) {
+                                if (clinicalTracks.length > 0) {
                                     const oncoprintClinicalData = _.flatMap(
-                                        downloadableClinicalTracks,
+                                        clinicalTracks,
                                         (track: ClinicalTrackSpec) => track.data
                                     );
                                     clinicalInput = getOncoprinterClinicalInput(
                                         oncoprintClinicalData,
                                         caseIds,
-                                        downloadableClinicalTracks.map(
+                                        clinicalTracks.map(
                                             track => track.attributeId
                                         ),
                                         attributeIdToAttribute,
