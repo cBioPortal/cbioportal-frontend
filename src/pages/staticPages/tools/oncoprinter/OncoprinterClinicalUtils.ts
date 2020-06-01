@@ -33,7 +33,7 @@ export enum ClinicalTrackDataType {
     COUNTS = 'counts',
 }
 
-function parseClinicalDataHeader(headerLine: string[]) {
+export function parseClinicalDataHeader(headerLine: string[]) {
     // we dont care about the first column, it's just "sample" or something
     headerLine.shift();
 
@@ -46,7 +46,7 @@ function parseClinicalDataHeader(headerLine: string[]) {
                 `${errorPrefix}misformatted attribute name ${attribute}`
             );
         }
-        let datatype = (match[2] || ClinicalTrackDataType.STRING).toLowerCase();
+        let datatype = match[2] || ClinicalTrackDataType.STRING;
         let countsCategories: string[] | undefined = undefined;
 
         if (
@@ -176,6 +176,11 @@ export function getClinicalOncoprintData(
                     case ClinicalTrackDataType.NUMBER:
                     case ClinicalTrackDataType.LOG_NUMBER:
                         const parsed = parseFloat(rawValue);
+                        if (isNaN(parsed)) {
+                            throw new Error(
+                                `${errorPrefix} input ${rawValue} is not valid for numerical track ${attributes[i].clinicalAttributeName}`
+                            );
+                        }
                         attr_val_counts = { [parsed]: 1 };
                         attr_val = parsed;
                         break;

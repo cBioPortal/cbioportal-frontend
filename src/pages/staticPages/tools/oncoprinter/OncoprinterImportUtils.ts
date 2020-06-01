@@ -25,6 +25,10 @@ import {
 } from './OncoprinterClinicalUtils';
 import _ from 'lodash';
 import { PUTATIVE_DRIVER } from '../../../../shared/constants';
+import {
+    MUTATION_SPECTRUM_CATEGORIES,
+    SpecialAttribute,
+} from '../../../../shared/cache/ClinicalDataCache';
 
 const geneticAlterationToDataType: {
     [alterationType in OncoprinterGeneticInputLineType2['alteration']]: string;
@@ -172,6 +176,12 @@ export function getOncoprinterClinicalInput(
                 if (attribute.clinicalAttributeId === 'MUTATION_COUNT') {
                     datatype = ClinicalTrackDataType.LOG_NUMBER;
                 }
+                if (
+                    attribute.clinicalAttributeId ===
+                    SpecialAttribute.MutationSpectrum
+                ) {
+                    datatype = MUTATION_SPECTRUM_CATEGORIES.join('/');
+                }
                 return `${name}(${datatype})`;
             })
         )
@@ -191,7 +201,15 @@ export function getOncoprinterClinicalInput(
                         return ONCOPRINTER_CLINICAL_VAL_NA;
                     }
 
-                    return sanitizeColumnData(datum.attr_val.toString());
+                    if (attributeId === SpecialAttribute.MutationSpectrum) {
+                        return MUTATION_SPECTRUM_CATEGORIES.map(category => {
+                            return (datum.attr_val as ClinicalTrackDatum['attr_val_counts'])[
+                                category
+                            ];
+                        }).join('/');
+                    } else {
+                        return sanitizeColumnData(datum.attr_val.toString());
+                    }
                 })
             )
         );
