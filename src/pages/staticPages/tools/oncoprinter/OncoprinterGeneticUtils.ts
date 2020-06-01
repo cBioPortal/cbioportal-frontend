@@ -726,7 +726,7 @@ export function annotateGeneticTrackData(
                         (params.useHotspots && d.isHotspot) ||
                         getCBioAnnotation(d) ||
                         (params.useCustomBinary &&
-                            d.driverFilter === 'Putative_Driver')
+                            d.driverFilter === PUTATIVE_DRIVER)
                     );
                     return !excludeVUS || d.putativeDriver;
                 } else {

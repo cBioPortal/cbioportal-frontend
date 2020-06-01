@@ -24,6 +24,7 @@ import {
     OncoprinterClinicalInputLine,
 } from './OncoprinterClinicalUtils';
 import _ from 'lodash';
+import { PUTATIVE_DRIVER } from '../../../../shared/constants';
 
 const geneticAlterationToDataType: {
     [alterationType in OncoprinterGeneticInputLineType2['alteration']]: string;
@@ -56,7 +57,7 @@ function getOncoprinterParsedGeneticInputLine(
         oncoprinterInput.alteration = alteration;
         oncoprinterInput.proteinChange = d.proteinChange;
         oncoprinterInput.isGermline = !isNotGermlineMutation(d);
-        oncoprinterInput.isCustomDriver = d.driverFilter === 'Putative_Driver';
+        oncoprinterInput.isCustomDriver = d.driverFilter === PUTATIVE_DRIVER;
         return oncoprinterInput as OncoprinterGeneticInputLineType2;
     } else {
         return { sampleId: caseId };

@@ -171,12 +171,15 @@ const helpSection = (
             as well as their data type ({ClinicalTrackDataType.NUMBER},{' '}
             {ClinicalTrackDataType.LOG_NUMBER}, or{' '}
             {ClinicalTrackDataType.STRING}, default is
-            {ClinicalTrackDataType.STRING}). An example first row is:
+            {ClinicalTrackDataType.STRING}). Additionally, you can enter a
+            /-delimited list of labels to create a stacked-bar-chart track (see
+            example data below). An example first row is:
             <br />
             <code>Sample</code>&#9;
             <code>Age({ClinicalTrackDataType.NUMBER})</code>&#9;
             <code>Cancer_Type({ClinicalTrackDataType.STRING})</code>&#9;
-            <code>Mutation_Count({ClinicalTrackDataType.LOG_NUMBER})</code>
+            <code>Mutation_Count({ClinicalTrackDataType.LOG_NUMBER})</code>&#9;
+            <code>Mutation_Spectrum(C>A/C>G/C>T/T>A/T>C/T>G)</code>
             <br />
             Each following row gives the sample id, then the value for each
             clinical attribute, or the special value{' '}
@@ -186,12 +189,14 @@ const helpSection = (
             <br />
             <code>sample1</code>&#9;<code>30</code>&#9;
             <code>{ONCOPRINTER_CLINICAL_VAL_NA}</code>&#9;<code>1</code>
+            &#9;<code>1/8/3/0/9/2</code>
             <br />
             <code>sample2</code>&#9;<code>27</code>&#9;<code>Colorectal</code>
-            &#9;<code>100</code>
+            &#9;<code>100</code>&#9;<code>5/1/4/2/0/3</code>
             <br />
             <code>sample3</code>&#9;<code>{ONCOPRINTER_CLINICAL_VAL_NA}</code>
             &#9;<code>Breast</code>&#9;
+            <code>{ONCOPRINTER_CLINICAL_VAL_NA}</code>&#9;
             <code>{ONCOPRINTER_CLINICAL_VAL_NA}</code>
             <br />
         </div>
