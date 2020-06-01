@@ -236,25 +236,26 @@ export class StudySummaryTab extends React.Component<
                 props.onChangeCancerGeneFilter = this.store.updateMutatedGenesTableByCancerGenesFilter;
                 break;
             }
-            case ChartTypeEnum.FUSION_GENES_TABLE: {
+            case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE: {
                 props.filters = this.store.getGeneFiltersByUniqueKey(
                     chartMeta.uniqueKey
                 );
-                props.promise = this.store.fusionGeneTableRowData;
+                props.promise = this.store.structuralVariantGeneTableRowData;
                 props.onValueSelection = this.store.addGeneFilters;
                 props.onResetSelection = () =>
                     this.store.resetGeneFilter(chartMeta.uniqueKey);
                 props.selectedGenes = this.store.selectedGenes;
                 props.onGeneSelect = this.store.onCheckGene;
                 props.title = this.store.getChartTitle(
-                    ChartTypeEnum.FUSION_GENES_TABLE,
+                    ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE,
                     props.title
                 );
-                props.getData = () => this.store.getFusionGenesDownloadData();
+                props.getData = () =>
+                    this.store.getStructuralVariantGenesDownloadData();
                 props.genePanelCache = this.store.genePanelCache;
                 props.downloadTypes = ['Data'];
-                props.filterByCancerGenes = this.store.filterFusionGenesTableByCancerGenes;
-                props.onChangeCancerGeneFilter = this.store.updateFusionGenesTableByCancerGenesFilter;
+                props.filterByCancerGenes = this.store.filterSVGenesTableByCancerGenes;
+                props.onChangeCancerGeneFilter = this.store.updateSVGenesTableByCancerGenesFilter;
                 break;
             }
             case ChartTypeEnum.CNA_GENES_TABLE: {

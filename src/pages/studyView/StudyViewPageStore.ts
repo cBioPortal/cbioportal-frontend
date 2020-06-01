@@ -45,7 +45,10 @@ import {
     ResourceData,
     ResourceDefinition,
 } from 'cbioportal-ts-api-client';
-import { fetchCopyNumberSegmentsForSamples } from 'shared/lib/StoreUtils';
+import {
+    fetchCopyNumberSegmentsForSamples,
+    MolecularAlterationType_filenameSuffix,
+} from 'shared/lib/StoreUtils';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
 import {
@@ -102,6 +105,7 @@ import {
     getGenomicDataAsClinicalData,
     convertGenomicDataBinsToClinicalDataBins,
     getGenomicChartUniqueKey,
+    getFilteredMolecularProfilesByAlterationType,
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -1207,7 +1211,7 @@ export class StudyViewPageStore {
     @observable _filterComparisonGroups: StudyViewComparisonGroup[] = [];
 
     @observable private _filterMutatedGenesTableByCancerGenes: boolean = true;
-    @observable private _filterFusionGenesTableByCancerGenes: boolean = true;
+    @observable private _filterSVGenesTableByCancerGenes: boolean = true;
     @observable private _filterCNAGenesTableByCancerGenes: boolean = true;
 
     @autobind
@@ -1217,8 +1221,8 @@ export class StudyViewPageStore {
     }
     @autobind
     @action
-    updateFusionGenesTableByCancerGenesFilter(filtered: boolean) {
-        this._filterFusionGenesTableByCancerGenes = filtered;
+    updateSVGenesTableByCancerGenesFilter(filtered: boolean) {
+        this._filterSVGenesTableByCancerGenes = filtered;
     }
 
     @autobind
@@ -1234,10 +1238,10 @@ export class StudyViewPageStore {
         );
     }
 
-    @computed get filterFusionGenesTableByCancerGenes() {
+    @computed get filterSVGenesTableByCancerGenes() {
         return (
             this.oncokbCancerGeneFilterEnabled &&
-            this._filterFusionGenesTableByCancerGenes
+            this._filterSVGenesTableByCancerGenes
         );
     }
 
@@ -1752,7 +1756,7 @@ export class StudyViewPageStore {
                     this.updateScatterPlotFilterByValues(chartUniqueKey);
                     break;
                 case ChartTypeEnum.MUTATED_GENES_TABLE:
-                case ChartTypeEnum.FUSION_GENES_TABLE:
+                case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
                 case ChartTypeEnum.CNA_GENES_TABLE:
                     this.resetGeneFilter(chartUniqueKey);
                     break;
@@ -2771,11 +2775,26 @@ export class StudyViewPageStore {
         default: [],
     });
 
-    readonly mutationProfiles = remoteData({
+    readonly studyIdToMolecularProfiles = remoteData({
         await: () => [this.molecularProfiles],
-        invoke: async () => {
+        invoke: () => {
             return Promise.resolve(
-                this.getMolecularProfilesByAlterationType(
+                _.groupBy(
+                    this.molecularProfiles.result!,
+                    molecularProfile => molecularProfile.studyId
+                )
+            );
+        },
+        onError: error => {},
+        default: {},
+    });
+
+    readonly mutationProfiles = remoteData({
+        await: () => [this.studyIdToMolecularProfiles],
+        invoke: () => {
+            return Promise.resolve(
+                getFilteredMolecularProfilesByAlterationType(
+                    this.studyIdToMolecularProfiles.result,
                     AlterationTypeConstants.MUTATION_EXTENDED
                 )
             );
@@ -2785,14 +2804,14 @@ export class StudyViewPageStore {
     });
 
     readonly structuralVariantProfiles = remoteData({
-        await: () => [this.molecularProfiles],
-        invoke: async () => {
-            // TODO: currently only look for STRUCTURAL_VARIANT profiles with fusion datatype
-            // until database is support querying structural variant data
+        await: () => [this.studyIdToMolecularProfiles],
+        invoke: () => {
+            // TODO: Cleanup once fusions are removed from database
             return Promise.resolve(
-                this.getMolecularProfilesByAlterationType(
+                getFilteredMolecularProfilesByAlterationType(
+                    this.studyIdToMolecularProfiles.result,
                     AlterationTypeConstants.STRUCTURAL_VARIANT,
-                    AlterationTypeConstants.FUSION
+                    [DataTypeConstants.SV, DataTypeConstants.FUSION]
                 )
             );
         },
@@ -2801,41 +2820,19 @@ export class StudyViewPageStore {
     });
 
     readonly cnaProfiles = remoteData({
-        await: () => [this.molecularProfiles],
-        invoke: async () => {
+        await: () => [this.studyIdToMolecularProfiles],
+        invoke: () => {
             return Promise.resolve(
-                this.getMolecularProfilesByAlterationType(
+                getFilteredMolecularProfilesByAlterationType(
+                    this.studyIdToMolecularProfiles.result,
                     AlterationTypeConstants.COPY_NUMBER_ALTERATION,
-                    DataTypeConstants.DISCRETE
+                    [DataTypeConstants.DISCRETE]
                 )
             );
         },
         onError: error => {},
         default: [],
     });
-
-    private getMolecularProfilesByAlterationType(
-        alterationType: string,
-        dataType?: string
-    ) {
-        let molecularProfiles: MolecularProfile[] = [];
-        if (_.isEmpty(dataType)) {
-            molecularProfiles = this.molecularProfiles.result.filter(
-                profile => profile.molecularAlterationType === alterationType
-            );
-        } else {
-            molecularProfiles = this.molecularProfiles.result.filter(
-                profile =>
-                    profile.molecularAlterationType === alterationType &&
-                    profile.datatype === dataType
-            );
-        }
-
-        return _.chain(molecularProfiles)
-            .groupBy(molecularProfile => molecularProfile.studyId)
-            .flatMap(profiles => profiles[0])
-            .value();
-    }
 
     readonly filteredGenePanelData = remoteData({
         await: () => [this.molecularProfiles, this.samples],
@@ -3363,9 +3360,9 @@ export class StudyViewPageStore {
                 uniqueKey: uniqueKey,
                 dataType: ChartMetaDataTypeEnum.GENOMIC,
                 patientAttribute: false,
-                displayName: 'Fusion Genes',
+                displayName: 'Structural Variant Genes',
                 priority: getDefaultPriorityByUniqueKey(
-                    ChartTypeEnum.FUSION_GENES_TABLE
+                    ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
                 ),
                 renderWhenDataChange: true,
                 description: '',
@@ -3564,7 +3561,7 @@ export class StudyViewPageStore {
                 this._geneSpecificChartMap.toJS(),
                 this._clinicalDataBinFilterSet.toJS(),
                 this._filterMutatedGenesTableByCancerGenes,
-                this._filterFusionGenesTableByCancerGenes,
+                this._filterSVGenesTableByCancerGenes,
                 this._filterCNAGenesTableByCancerGenes,
                 this.currentGridLayout
             );
@@ -3603,7 +3600,7 @@ export class StudyViewPageStore {
         this.currentFocusedChartByUser = undefined;
         this.currentFocusedChartByUserDimension = undefined;
         this._filterMutatedGenesTableByCancerGenes = true;
-        this._filterFusionGenesTableByCancerGenes = true;
+        this._filterSVGenesTableByCancerGenes = true;
         this._filterCNAGenesTableByCancerGenes = true;
         this._clinicalDataBinFilterSet = observable.map(
             toJS(this._defaultClinicalDataBinFilterSet)
@@ -3733,8 +3730,8 @@ export class StudyViewPageStore {
                             ? true
                             : chartUserSettings.filterByCancerGenes;
                     break;
-                case ChartTypeEnum.FUSION_GENES_TABLE:
-                    this._filterFusionGenesTableByCancerGenes =
+                case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
+                    this._filterSVGenesTableByCancerGenes =
                         chartUserSettings.filterByCancerGenes === undefined
                             ? true
                             : chartUserSettings.filterByCancerGenes;
@@ -3826,18 +3823,27 @@ export class StudyViewPageStore {
                     profile => profile.molecularProfileId
                 )
             );
-            const fusionGeneMeta = _.find(
+            const structuralVariantGeneMeta = _.find(
                 this.chartMetaSet,
                 chartMeta => chartMeta.uniqueKey === uniqueKey
             );
-            if (fusionGeneMeta && fusionGeneMeta.priority !== 0) {
-                this.changeChartVisibility(fusionGeneMeta.uniqueKey, true);
+            if (
+                structuralVariantGeneMeta &&
+                structuralVariantGeneMeta.priority !== 0
+            ) {
+                this.changeChartVisibility(
+                    structuralVariantGeneMeta.uniqueKey,
+                    true
+                );
             }
-            this.chartsType.set(uniqueKey, ChartTypeEnum.FUSION_GENES_TABLE);
+            this.chartsType.set(
+                uniqueKey,
+                ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
+            );
             this.chartsDimension.set(
                 uniqueKey,
                 STUDY_VIEW_CONFIG.layout.dimensions[
-                    ChartTypeEnum.FUSION_GENES_TABLE
+                    ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
                 ]
             );
         }
@@ -4542,7 +4548,9 @@ export class StudyViewPageStore {
         default: [],
     });
 
-    readonly fusionGeneTableRowData = remoteData<MultiSelectionTableRow[]>({
+    readonly structuralVariantGeneTableRowData = remoteData<
+        MultiSelectionTableRow[]
+    >({
         await: () =>
             this.oncokbCancerGeneFilterEnabled
                 ? [
@@ -4559,14 +4567,14 @@ export class StudyViewPageStore {
                   ],
         invoke: async () => {
             if (!_.isEmpty(this.structuralVariantProfiles.result)) {
-                const fusionGenes = await internalClient.fetchFusionGenesUsingPOST(
+                const structuralVariantGenes = await internalClient.fetchStructuralVariantGenesUsingPOST(
                     {
                         studyViewFilter: this
                             .studyViewFilterWithFilteredSampleIdentifiers
                             .result!,
                     }
                 );
-                return fusionGenes.map(item => {
+                return structuralVariantGenes.map(item => {
                     return {
                         ...item,
                         label: item.hugoGeneSymbol,
@@ -5047,11 +5055,11 @@ export class StudyViewPageStore {
         } else return '';
     }
 
-    public getFusionGenesDownloadData() {
-        if (this.fusionGeneTableRowData.result) {
+    public getStructuralVariantGenesDownloadData() {
+        if (this.structuralVariantGeneTableRowData.result) {
             const header = [
                 'Gene',
-                '# Fusion',
+                '# Structural Variant',
                 '#',
                 'Profiled Samples',
                 'Freq',
@@ -5061,7 +5069,7 @@ export class StudyViewPageStore {
             }
             const data = [header.join('\t')];
             _.each(
-                this.fusionGeneTableRowData.result,
+                this.structuralVariantGeneTableRowData.result,
                 (record: MultiSelectionTableRow) => {
                     const rowData = [
                         record.label,
@@ -6152,7 +6160,7 @@ export class StudyViewPageStore {
         },
     });
 
-    // For mutated genes, cna genes and fusion gene charts we show number of profiled samples
+    // For mutated genes, cna genes and structural variant gene charts we show number of profiled samples
     // in the chart title. These numbers are fetched from molecularProfileSampleCountSet
     public getChartTitle(chartType: ChartTypeEnum, title?: string) {
         let count = 0;
@@ -6160,18 +6168,23 @@ export class StudyViewPageStore {
             switch (chartType) {
                 case ChartTypeEnum.MUTATED_GENES_TABLE: {
                     count = this.molecularProfileSampleCountSet.result[
-                        'mutations'
+                        MolecularAlterationType_filenameSuffix.MUTATION_EXTENDED!
                     ]
                         ? this.molecularProfileSampleCountSet.result[
-                              'mutations'
+                              MolecularAlterationType_filenameSuffix.MUTATION_EXTENDED!
                           ]
                         : 0;
                     break;
                 }
-                case ChartTypeEnum.FUSION_GENES_TABLE: {
-                    count = this.molecularProfileSampleCountSet.result['fusion']
-                        ? this.molecularProfileSampleCountSet.result['fusion']
-                        : 0;
+                case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE: {
+                    count =
+                        this.molecularProfileSampleCountSet.result[
+                            MolecularAlterationType_filenameSuffix.STRUCTURAL_VARIANT!
+                        ] ||
+                        this.molecularProfileSampleCountSet.result[
+                            MolecularAlterationType_filenameSuffix.FUSION!
+                        ] ||
+                        0;
                     break;
                 }
                 case ChartTypeEnum.CNA_GENES_TABLE: {

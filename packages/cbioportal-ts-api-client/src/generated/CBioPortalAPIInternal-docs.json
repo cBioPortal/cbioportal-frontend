@@ -676,43 +676,6 @@
         }
       }
     },
-    "/fusion-genes/fetch": {
-      "post": {
-        "tags": [
-          "Study View"
-        ],
-        "summary": "Fetch fusion genes by study view filter",
-        "operationId": "fetchFusionGenesUsingPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "in": "body",
-            "name": "studyViewFilter",
-            "description": "Study view filter",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/StudyViewFilter"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/MutationCountByGene"
-              }
-            }
-          }
-        }
-      }
-    },
     "/geneset-hierarchy/fetch": {
       "post": {
         "tags": [
@@ -1528,6 +1491,43 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/CaseListDataCount"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/structural-variant-genes/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch fusion genes by study view filter",
+        "operationId": "fetchStructuralVariantGenesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/StructuralVariantCountByGene"
               }
             }
           }
@@ -2923,6 +2923,40 @@
         }
       },
       "title": "ServerStatusMessage"
+    },
+    "StructuralVariantCountByGene": {
+      "type": "object",
+      "properties": {
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "matchingGenePanelIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "numberOfAlteredCases": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "numberOfProfiledCases": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "qValue": {
+          "type": "number"
+        },
+        "totalCount": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "StructuralVariantCountByGene"
     },
     "StudyViewFilter": {
       "type": "object",

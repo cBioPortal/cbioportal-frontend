@@ -55,7 +55,7 @@ export enum MultiSelectionTableColumnKey {
     GENE = 'Gene',
     MOLECULAR_PROFILE = 'Molecular Profile',
     CASE_LIST = 'Name',
-    NUMBER_FUSIONS = '# Fusion',
+    NUMBER_STRUCTURAL_VARIANTS = '# Alt',
     NUMBER_MUTATIONS = '# Mut',
     CYTOBAND = 'Cytoband',
     CNA = 'CNA',
@@ -92,7 +92,7 @@ const DEFAULT_COLUMN_WIDTH_RATIO: {
     [MultiSelectionTableColumnKey.MOLECULAR_PROFILE]: 0.6,
     [MultiSelectionTableColumnKey.CASE_LIST]: 0.6,
     [MultiSelectionTableColumnKey.NUMBER_MUTATIONS]: 0.25,
-    [MultiSelectionTableColumnKey.NUMBER_FUSIONS]: 0.25,
+    [MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: 0.25,
     [MultiSelectionTableColumnKey.NUMBER]: 0.25,
     [MultiSelectionTableColumnKey.FREQ]: 0.15,
     [MultiSelectionTableColumnKey.CYTOBAND]: 0.25,
@@ -323,7 +323,11 @@ export class MultiSelectionTable extends React.Component<
                 name: columnKey,
                 tooltip: <span>Total number of mutations</span>,
                 headerRender: () => {
-                    return <div style={{ marginLeft: cellMargin }}># Mut</div>;
+                    return (
+                        <div style={{ marginLeft: cellMargin }}>
+                            {MultiSelectionTableColumnKey.NUMBER_MUTATIONS}
+                        </div>
+                    );
                 },
                 render: (data: MultiSelectionTableRow) => (
                     <span
@@ -346,11 +350,17 @@ export class MultiSelectionTable extends React.Component<
                 },
                 width: columnWidth,
             },
-            [MultiSelectionTableColumnKey.NUMBER_FUSIONS]: {
-                name: MultiSelectionTableColumnKey.NUMBER_FUSIONS,
-                tooltip: <span>Total number of mutations</span>,
+            [MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: {
+                name: columnKey,
+                tooltip: <span>Total number of structural variants</span>,
                 headerRender: () => {
-                    return <span># Fusion</span>;
+                    return (
+                        <span>
+                            {
+                                MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS
+                            }
+                        </span>
+                    );
                 },
                 render: (data: MultiSelectionTableRow) => (
                     <span
@@ -445,7 +455,7 @@ export class MultiSelectionTable extends React.Component<
                     this.totalCountLocaleString
                 )
             ),
-            [MultiSelectionTableColumnKey.NUMBER_FUSIONS]: correctMargin(
+            [MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: correctMargin(
                 getFixedHeaderNumberCellMargin(
                     columnWidth,
                     this.totalCountLocaleString

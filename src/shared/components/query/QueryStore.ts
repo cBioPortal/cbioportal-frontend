@@ -50,7 +50,10 @@ import {
 import getOverlappingStudies from '../../lib/getOverlappingStudies';
 import MolecularProfilesInStudyCache from '../../cache/MolecularProfilesInStudyCache';
 import { CacheData } from '../../lib/LazyMobXCache';
-import { getHierarchyData } from 'shared/lib/StoreUtils';
+import {
+    getHierarchyData,
+    MolecularAlterationType_filenameSuffix,
+} from 'shared/lib/StoreUtils';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
 import { VirtualStudy } from 'shared/model/VirtualStudy';
 import {
@@ -1950,17 +1953,6 @@ export class QueryStore {
         }
     }
 
-    private readonly dict_molecularAlterationType_filenameSuffix: {
-        [K in MolecularProfile['molecularAlterationType']]?: string;
-    } = {
-        MUTATION_EXTENDED: 'mutations',
-        COPY_NUMBER_ALTERATION: 'cna',
-        MRNA_EXPRESSION: 'mrna',
-        METHYLATION: 'methylation',
-        METHYLATION_BINARY: 'methylation',
-        PROTEIN_LEVEL: 'rppa',
-    };
-
     @computed get downloadDataFilename() {
         let study =
             this.selectableSelectedStudyIds.length === 1 &&
@@ -1975,7 +1967,7 @@ export class QueryStore {
             return 'cbioportal-data.txt';
 
         let suffix =
-            this.dict_molecularAlterationType_filenameSuffix[
+            MolecularAlterationType_filenameSuffix[
                 profile.molecularAlterationType
             ] || profile.molecularAlterationType.toLowerCase();
         return `cbioportal-${study.studyId}-${suffix}.txt`;

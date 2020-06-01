@@ -35,7 +35,7 @@ import {
     CNA_COLOR_AMP,
     CNA_COLOR_HOMDEL,
     DEFAULT_GREY,
-    MUT_COLOR_FUSION,
+    STRUCTURAL_VARIANT_COLOR,
     MUT_COLOR_INFRAME,
     MUT_COLOR_INFRAME_PASSENGER,
     MUT_COLOR_MISSENSE,
@@ -1258,7 +1258,7 @@ export const oncoprintMutationTypeToAppearanceDrivers: {
     },
     fusion: {
         symbol: 'circle',
-        fill: MUT_COLOR_FUSION,
+        fill: STRUCTURAL_VARIANT_COLOR,
         stroke: '#000000',
         strokeOpacity: NON_CNA_STROKE_OPACITY,
         legendLabel: 'Fusion',
@@ -1318,7 +1318,7 @@ export const oncoprintMutationTypeToAppearanceDefault: {
     },
     fusion: {
         symbol: 'circle',
-        fill: MUT_COLOR_FUSION,
+        fill: STRUCTURAL_VARIANT_COLOR,
         stroke: '#000000',
         strokeOpacity: NON_CNA_STROKE_OPACITY,
         legendLabel: 'Fusion',

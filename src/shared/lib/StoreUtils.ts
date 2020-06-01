@@ -79,6 +79,19 @@ import {
 import { EvidenceType, IOncoKbData } from 'cbioportal-frontend-commons';
 import { REFERENCE_GENOME } from './referenceGenomeUtils';
 
+export const MolecularAlterationType_filenameSuffix: {
+    [K in MolecularProfile['molecularAlterationType']]?: string;
+} = {
+    MUTATION_EXTENDED: 'mutations',
+    COPY_NUMBER_ALTERATION: 'cna',
+    MRNA_EXPRESSION: 'mrna',
+    METHYLATION: 'methylation',
+    METHYLATION_BINARY: 'methylation',
+    PROTEIN_LEVEL: 'rppa',
+    FUSION: 'fusions',
+    STRUCTURAL_VARIANT: 'structural_variants',
+};
+
 export const ONCOKB_DEFAULT: IOncoKbData = {
     indicatorMap: {},
 };

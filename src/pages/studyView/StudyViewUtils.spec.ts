@@ -216,7 +216,9 @@ describe('StudyViewUtils', () => {
                     },
                     {
                         geneQueries: [['GENE1']],
-                        molecularProfileIds: ['cancer_study_fusion'],
+                        molecularProfileIds: [
+                            'cancer_study_structural_variants',
+                        ],
                     },
                     {
                         geneQueries: [['GENE2:HOMDEL']],
@@ -258,14 +260,15 @@ describe('StudyViewUtils', () => {
                         attribute2: 'attribute2 name',
                         attribute3: 'attribute3 name',
                         cancer_study_sequenced: ' Mutated Genes',
-                        cancer_study_fusion: 'Fusion Genes',
+                        cancer_study_structural_variants:
+                            'Structural Variant Genes',
                         cancer_study_cna: 'CNA Genes',
                     },
                     {} as any,
                     {} as any
                 ).startsWith(
                     '4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)' +
-                        '\n\nFilters:\n-  Mutated Genes:\n  - GENE1\n- Fusion Genes:\n  - GENE1\n- CNA Genes:' +
+                        '\n\nFilters:\n-  Mutated Genes:\n  - GENE1\n- Structural Variant Genes:\n  - GENE1\n- CNA Genes:' +
                         '\n  - GENE2:HOMDEL\n- attribute1 name: value1\n' +
                         '- attribute2 name: 10 < x ≤ 0\n- attribute3 name: 2 samples\n\nCreated on'
                 )
