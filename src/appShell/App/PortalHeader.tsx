@@ -6,7 +6,10 @@ import { If, Then, Else } from 'react-if';
 import { openSocialAuthWindow } from '../../shared/lib/openSocialAuthWindow';
 import { AppStore } from '../../AppStore';
 import { observer } from 'mobx-react';
-import { buildCBioPortalPageUrl } from '../../shared/api/urls';
+import {
+    buildCBioPortalPageUrl,
+    getInstituteLogoUrl,
+} from '../../shared/api/urls';
 import SocialAuthButton from '../../shared/components/SocialAuthButton';
 import { Dropdown } from 'react-bootstrap';
 import { DataAccessTokensDropdown } from '../../shared/components/dataAccessTokens/DataAccessTokensDropdown';
@@ -166,15 +169,10 @@ export default class PortalHeader extends React.Component<
                             </Else>
                         </If>
                     </If>
-                    <If
-                        condition={
-                            !_.isEmpty(AppConfig.serverConfig.skin_right_logo)
-                        }
-                    >
+                    <If condition={!_.isEmpty(getInstituteLogoUrl())}>
                         <img
                             id="institute-logo"
-                            src={`images/${AppConfig.serverConfig
-                                .skin_right_logo!}`}
+                            src={getInstituteLogoUrl()}
                             alt="Institute Logo"
                         />
                     </If>
