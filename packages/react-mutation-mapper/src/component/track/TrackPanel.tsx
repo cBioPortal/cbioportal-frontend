@@ -37,7 +37,7 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
         return Math.max(proteinLength, 1);
     }
 
-    get availableTracks() {
+    get availableTracks(): { [trackName: string]: JSX.Element | null } {
         return {
             [TrackName.CancerHotspots]:
                 !this.props.trackVisibility ||
