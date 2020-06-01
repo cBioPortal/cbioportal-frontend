@@ -152,8 +152,10 @@ export function applyDefaultMutationFilter(
     const filterPredicates = filter.values.map((value: MutationFilterValue) => {
         const valuePredicates = Object.keys(value).map(key =>
             includesSearchTextIgnoreCase(
-                mutation[key] ? mutation[key].toString() : undefined,
-                value[key] ? value[key.toString()] : undefined
+                (mutation as any)[key]
+                    ? (mutation as any)[key].toString()
+                    : undefined,
+                (value as any)[key] ? (value as any)[key.toString()] : undefined
             )
         );
 
@@ -182,11 +184,11 @@ export function groupDataByGroupFilters(
 }
 
 export function groupDataByProteinImpactType(sortedFilteredData: any[]) {
-    const filters = Object.keys(ProteinImpactType).map(key => ({
-        group: ProteinImpactType[key],
+    const filters = Object.values(ProteinImpactType).map(value => ({
+        group: value,
         filter: {
             type: DataFilterType.PROTEIN_IMPACT_TYPE,
-            values: [ProteinImpactType[key]],
+            values: [value],
         },
     }));
 

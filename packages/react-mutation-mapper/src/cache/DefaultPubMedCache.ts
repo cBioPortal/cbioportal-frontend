@@ -1,10 +1,10 @@
 import { action, observable } from 'mobx';
 import request from 'superagent';
 
-import { MobxCache } from '../model/MobxCache';
+import { CacheData, MobxCache } from '../model/MobxCache';
 
 export class DefaultPubMedCache implements MobxCache<any, string> {
-    protected _cache = observable.shallowMap();
+    protected _cache = observable.shallowMap<CacheData>();
 
     public async fetch(query: string) {
         const pubMedRecords = await new Promise<any>((resolve, reject) => {
@@ -20,7 +20,7 @@ export class DefaultPubMedCache implements MobxCache<any, string> {
                         const response = JSON.parse(res.text);
                         const result = response.result;
                         const uids = result.uids;
-                        const ret = {};
+                        const ret: any = {};
                         for (let uid of uids) {
                             ret[uid] = result[uid];
                         }
@@ -36,17 +36,19 @@ export class DefaultPubMedCache implements MobxCache<any, string> {
 
     @action
     public get(query: string) {
-        if (!this._cache[query]) {
-            this._cache[query] = { status: 'pending' };
+        if (!this._cache.get(query)) {
+            this._cache.set(query, { status: 'pending' });
 
             this.fetch(query)
-                .then(
-                    d => (this._cache[query] = { status: 'complete', data: d })
+                .then(d =>
+                    this._cache.set(query, { status: 'complete', data: d })
                 )
-                .catch(() => (this._cache[query] = { status: 'error' }));
+                .catch(() => this._cache.set(query, { status: 'error' }));
         }
 
-        return this._cache[query];
+        const data = this._cache.get(query);
+
+        return data ? data : null;
     }
 
     public get cache() {

@@ -16,7 +16,7 @@
     "noImplicitAny": true,
     "resolveJsonModule": true,
     "strictNullChecks": true,
-    "suppressImplicitAnyIndexErrors": true,
+    "suppressImplicitAnyIndexErrors": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "experimentalDecorators": true,
