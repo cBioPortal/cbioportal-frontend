@@ -1232,7 +1232,6 @@ export default class ComparisonStore {
                     },
                     [] as string[]
                 );
-                console.log(attributeNames);
 
                 if (attributeNames.length === 0) {
                     return Promise.resolve([]);
