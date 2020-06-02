@@ -132,7 +132,7 @@ function getOncoprinterGeneticInputLine(parsed: OncoprinterGeneticInputLine) {
 }
 
 export function getOncoprinterGeneticInput(
-    oncoprintData: GeneticTrackDatum[],
+    oncoprintData: Pick<GeneticTrackDatum, 'data' | 'sample' | 'patient'>[],
     caseIds: string[],
     sampleOrPatient: 'sample' | 'patient'
 ) {
@@ -160,7 +160,12 @@ export function getOncoprinterClinicalInput(
     data: ClinicalTrackDatum[],
     caseIds: string[],
     attributeIds: string[],
-    attributeIdToAttribute: { [attributeId: string]: ClinicalAttribute },
+    attributeIdToAttribute: {
+        [attributeId: string]: Pick<
+            ClinicalAttribute,
+            'displayName' | 'datatype' | 'clinicalAttributeId'
+        >;
+    },
     sampleOrPatient: 'sample' | 'patient'
 ): string {
     const caseToClinicalData = _.groupBy(data, d => d[sampleOrPatient]);
