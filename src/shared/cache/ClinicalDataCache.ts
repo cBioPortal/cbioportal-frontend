@@ -40,6 +40,15 @@ export const MUTATION_SPECTRUM_CATEGORIES = [
     'T>G',
 ];
 
+export const MUTATION_SPECTRUM_FILLS = [
+    '#3D6EB1',
+    '#8EBFDC',
+    '#DFF1F8',
+    '#FCE08E',
+    '#F78F5E',
+    '#D62B23',
+];
+
 const locallyComputedSpecialAttributes = [
     SpecialAttribute.StudyOfOrigin,
     SpecialAttribute.NumSamplesPerPatient,

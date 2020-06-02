@@ -4,6 +4,7 @@ import {
     ClinicalTrackSpec,
 } from '../../../../shared/components/oncoprint/Oncoprint';
 import { makeUniqueColorGetter } from '../../../../shared/components/plots/PlotUtils';
+import { MUTATION_SPECTRUM_FILLS } from '../../../../shared/cache/ClinicalDataCache';
 
 export const ONCOPRINTER_CLINICAL_VAL_NA = 'N/A';
 
@@ -260,7 +261,7 @@ export function getClinicalTracks(
     const colorGetter = makeUniqueColorGetter();
     return attributes.map(attr => {
         const data = attributeToOncoprintData[attr.clinicalAttributeName];
-        let datatype, numberRange;
+        let datatype, numberRange, countsCategoryFills;
         switch (attr.datatype) {
             case ClinicalTrackDataType.STRING:
                 datatype = 'string';
@@ -272,6 +273,14 @@ export function getClinicalTracks(
                 break;
             case ClinicalTrackDataType.COUNTS:
                 datatype = 'counts';
+                if (
+                    attr.clinicalAttributeName.toLowerCase() ===
+                        'mutation_spectrum' &&
+                    attr.countsCategories!.length ===
+                        MUTATION_SPECTRUM_FILLS.length
+                ) {
+                    countsCategoryFills = MUTATION_SPECTRUM_FILLS;
+                }
                 break;
         }
         return {
@@ -287,9 +296,7 @@ export function getClinicalTracks(
                     ? true
                     : undefined,
             countsCategoryLabels: attr.countsCategories,
-            countsCategoryFills:
-                attr.countsCategories &&
-                attr.countsCategories.map(c => colorGetter()),
+            countsCategoryFills,
         } as ClinicalTrackSpec;
     });
 }
