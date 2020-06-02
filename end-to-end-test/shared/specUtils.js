@@ -122,7 +122,7 @@ function goToUrlAndSetLocalStorage(url) {
         var prefix = url.indexOf('?') > 0 ? '&' : '?';
         browser.url(`${url}${prefix}${urlparam}=true`);
     }
-    browser.setViewportSize({ height: 1600, width: 1000 });
+    browser.setViewportSize({ height: 1000, width: 1600 });
 
     // move mouse out of the way
     browser.moveToObject('body', 0, 0);
