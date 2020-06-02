@@ -176,14 +176,17 @@ export default class AlterationEnrichmentTable extends React.Component<
                         : '-'}
                 </span>
             ),
-            tooltip: (
-                <span>
-                    Derived from{' '}
-                    {_.values(this.props.data[0].groupsSet).length > 2
-                        ? 'Chi-squared test'
-                        : 'one-sided Fisher Exact test'}
-                </span>
-            ),
+            tooltip:
+                this.props.data.length > 0 ? (
+                    <span>
+                        Derived from{' '}
+                        {_.values(this.props.data[0].groupsSet).length > 2
+                            ? 'Chi-squared test'
+                            : 'one-sided Fisher Exact test'}
+                    </span>
+                ) : (
+                    undefined
+                ),
             sortBy: (d: AlterationEnrichmentRow) => Number(d.pValue),
             download: (d: AlterationEnrichmentRow) =>
                 d.pValue !== undefined
