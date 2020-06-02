@@ -2153,10 +2153,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     });
 
     readonly cnaDataExists = remoteData({
-        await: () => [this.props.store.studyToMolecularProfileDiscrete],
+        await: () => [this.props.store.studyToMolecularProfileDiscreteCna],
         invoke: () => {
             return Promise.resolve(
-                !!_.values(this.props.store.studyToMolecularProfileDiscrete)
+                !!_.values(this.props.store.studyToMolecularProfileDiscreteCna)
                     .length
             );
         },
@@ -3251,7 +3251,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.mutationPromise,
             this.props.store.studyToMutationMolecularProfile,
             this.cnaPromise,
-            this.props.store.studyToMolecularProfileDiscrete,
+            this.props.store.studyToMolecularProfileDiscreteCna,
         ],
         invoke: () => {
             const horzAxisData = this.horzAxisDataPromise.result;
@@ -3281,7 +3281,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 ? {
                                       molecularProfileIds: _.values(
                                           this.props.store
-                                              .studyToMolecularProfileDiscrete
+                                              .studyToMolecularProfileDiscreteCna
                                               .result!
                                       ).map(p => p.molecularProfileId),
                                       data: this.cnaPromise.result!,
@@ -3306,7 +3306,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.mutationPromise,
             this.props.store.studyToMutationMolecularProfile,
             this.cnaPromise,
-            this.props.store.studyToMolecularProfileDiscrete,
+            this.props.store.studyToMolecularProfileDiscreteCna,
         ],
         invoke: () => {
             const horzAxisData = this.horzAxisDataPromise.result;
@@ -3355,7 +3355,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 ? {
                                       molecularProfileIds: _.values(
                                           this.props.store
-                                              .studyToMolecularProfileDiscrete
+                                              .studyToMolecularProfileDiscreteCna
                                               .result!
                                       ).map(p => p.molecularProfileId),
                                       data: this.cnaPromise.result!,
@@ -3434,7 +3434,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.mutationPromise,
             this.props.store.studyToMutationMolecularProfile,
             this.cnaPromise,
-            this.props.store.studyToMolecularProfileDiscrete,
+            this.props.store.studyToMolecularProfileDiscreteCna,
         ],
         invoke: () => {
             const horzAxisData = this.horzAxisDataPromise.result;
@@ -3480,7 +3480,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             ? {
                                   molecularProfileIds: _.values(
                                       this.props.store
-                                          .studyToMolecularProfileDiscrete
+                                          .studyToMolecularProfileDiscreteCna
                                           .result!
                                   ).map(p => p.molecularProfileId),
                                   data: this.cnaPromise.result!,

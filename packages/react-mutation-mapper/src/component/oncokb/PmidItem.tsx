@@ -2,6 +2,7 @@ import { getNCBIlink } from 'cbioportal-frontend-commons';
 import * as React from 'react';
 
 import styles from './listGroupItem.module.scss';
+import { trimOffHtmlTagEntities } from 'cbioportal-frontend-commons';
 
 type PmidItemProps = {
     title: string;
@@ -20,7 +21,7 @@ export default class PmidItem extends React.Component<PmidItemProps> {
                     href={getNCBIlink(`/pubmed/${this.props.pmid}`)}
                     target="_blank"
                 >
-                    <b>{this.props.title}</b>
+                    <b>{trimOffHtmlTagEntities(this.props.title)}</b>
                 </a>
                 <div className={styles['list-group-item-content']}>
                     <span>
