@@ -10,6 +10,7 @@ describe('getTabularDownloadData', () => {
                     {
                         key: '',
                         label: 'mutation spectrum',
+                        attributeId: 'MUTATION_SPECTRUM',
                         description: '',
                         data: [
                             {
@@ -68,6 +69,7 @@ describe('getTabularDownloadData', () => {
                     },
                     {
                         key: '',
+                        attributeId: 'other_counts',
                         label: 'other counts',
                         description: '',
                         data: [
@@ -131,6 +133,7 @@ describe('getTabularDownloadData', () => {
                 [
                     {
                         key: '',
+                        attributeId: 'MUTATION_SPECTRUM',
                         label: 'mutation spectrum',
                         description: '',
                         data: [
@@ -190,6 +193,7 @@ describe('getTabularDownloadData', () => {
                     },
                     {
                         key: '',
+                        attributeId: 'other_counts',
                         label: 'other counts',
                         description: '',
                         data: [
