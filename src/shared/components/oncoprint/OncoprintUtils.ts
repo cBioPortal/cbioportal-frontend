@@ -54,6 +54,7 @@ import {
 import {
     clinicalAttributeIsPROFILEDIN,
     MUTATION_SPECTRUM_CATEGORIES,
+    MUTATION_SPECTRUM_FILLS,
     SpecialAttribute,
 } from '../../cache/ClinicalDataCache';
 import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
@@ -907,14 +908,7 @@ export function makeClinicalTracksMobxPromise(
                 ) {
                     ret.datatype = 'counts';
                     (ret as any).countsCategoryLabels = MUTATION_SPECTRUM_CATEGORIES;
-                    (ret as any).countsCategoryFills = [
-                        '#3D6EB1',
-                        '#8EBFDC',
-                        '#DFF1F8',
-                        '#FCE08E',
-                        '#F78F5E',
-                        '#D62B23',
-                    ];
+                    (ret as any).countsCategoryFills = MUTATION_SPECTRUM_FILLS;
                 }
                 return ret as ClinicalTrackSpec;
             });
