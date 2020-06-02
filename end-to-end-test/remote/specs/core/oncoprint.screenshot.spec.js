@@ -11,7 +11,8 @@ var checkOncoprintElement = require('../../../shared/specUtils')
 var getGroupHeaderOptionsElements = require('../../../shared/specUtils')
     .getOncoprintGroupHeaderOptionsElements;
 var setDropdownOpen = require('../../../shared/specUtils').setDropdownOpen;
-
+var closeDevModeBanner = require('../../../shared/specUtils')
+    .closeDevModeBanner;
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 const ONCOPRINT_TIMEOUT = 60000;
@@ -176,9 +177,8 @@ describe('track group headers', function() {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/oncoprint?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&heatmap_track_groups=coadread_tcga_pub_rna_seq_mrna_median_Zscores%2CKRAS%2CNRAS%2CBRAF%3Bcoadread_tcga_pub_methylation_hm27%2CKRAS%2CNRAS%2CBRAF&show_samples=false`
         );
-        $('.alert-warning')
-            .$('button.close')
-            .click(); // close dev mode notification so it doesnt intercept clicks
+        // close dev mode notification so it doesnt intercept clicks
+        closeDevModeBanner();
 
         waitForOncoprint(ONCOPRINT_TIMEOUT);
 
@@ -354,9 +354,8 @@ describe('sorting', function() {
             CBIOPORTAL_URL +
                 '/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%20MDM2%20MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=FRACTION_GENOME_ALTERED%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4'
         );
-        $('.alert-warning')
-            .$('button.close')
-            .click(); // close dev mode notification so it doesnt intercept clicks
+        // close dev mode notification so it doesnt intercept clicks
+        closeDevModeBanner();
 
         waitForOncoprint(ONCOPRINT_TIMEOUT);
 
@@ -545,9 +544,8 @@ describe('sorting', function() {
             CBIOPORTAL_URL +
                 '/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%2520MDM2%2520MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=FRACTION_GENOME_ALTERED%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4&show_samples=true'
         );
-        $('.alert-warning')
-            .$('button.close')
-            .click(); // close dev mode notification so it doesnt intercept clicks
+        // close dev mode notification so it doesnt intercept clicks
+        closeDevModeBanner();
 
         waitForOncoprint(ONCOPRINT_TIMEOUT);
 
