@@ -4377,6 +4377,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                 }
                                                 inputProps={{
                                                     style: { marginTop: 4 },
+                                                    className:
+                                                        'coloringLogScale',
                                                 }}
                                             >
                                                 Log Scale

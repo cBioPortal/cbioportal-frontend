@@ -19,7 +19,12 @@ export default class LegendLabelComponent extends React.Component<
     render() {
         // default victory component
         const horizontal = this.props.orientation === 'horizontal';
-        const text = <VictoryLabel {...this.props} />;
+        const text = (
+            <VictoryLabel
+                className={`legendLabel_${(this.props as any).text}`}
+                {...this.props}
+            />
+        );
         if (this.props.datum!.margin !== undefined) {
             const dx = horizontal ? this.props.datum!.margin : 0;
             const dy = horizontal ? 0 : this.props.datum!.margin;
