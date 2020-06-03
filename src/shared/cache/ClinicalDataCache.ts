@@ -3,14 +3,11 @@ import {
     CancerStudy,
     ClinicalAttribute,
     ClinicalData,
-    GenePanelData,
     MolecularProfile,
-    Patient,
-    Sample,
-} from 'cbioportal-ts-api-client';
-import {
     MutationSpectrum,
     MutationSpectrumFilter,
+    Patient,
+    Sample,
 } from 'cbioportal-ts-api-client';
 import { MobxPromise } from 'mobxpromise';
 import {
@@ -20,11 +17,14 @@ import {
 import _ from 'lodash';
 import client from '../api/cbioportalClientInstance';
 import internalClient from '../api/cbioportalInternalClientInstance';
-import { Group } from '../api/ComparisonGroupClient';
 import ComplexKeySet from '../lib/complexKeyDataStructures/ComplexKeySet';
 import { makeUniqueColorGetter } from '../components/plots/PlotUtils';
 import { RESERVED_CLINICAL_VALUE_COLORS } from '../lib/Colors';
 import { interpolateReds } from 'd3-scale-chromatic';
+import {
+    getClinicalAttributeColoring,
+    OncoprintClinicalData,
+} from './ClinicalDataCacheUtils';
 
 export enum SpecialAttribute {
     MutationSpectrum = 'NO_CONTEXT_MUTATION_SIGNATURE',
@@ -68,14 +68,15 @@ export function clinicalAttributeIsLocallyComputed(attribute: {
 }
 
 export type ClinicalDataCacheEntry = {
+    data: OncoprintClinicalData;
+    // Compute colors here so that we can use the same color
+    //  scheme for a clinical attribute throughout the portal,
+    //  e.g. in oncoprint and plots tab.
     categoryToColor?: { [value: string]: string };
     numericalValueToColor?: (x: number) => string;
     logScaleNumericalValueToColor?: (x: number) => string;
     numericalValueRange?: [number, number];
-    data: OncoprintClinicalData;
 };
-
-type OncoprintClinicalData = ClinicalData[] | MutationSpectrum[];
 
 function makeComparisonGroupData(
     attribute: ExtendedClinicalAttribute,
@@ -279,70 +280,9 @@ export default class ClinicalDataCache extends MobxPromiseCache<
                         studyIdToStudyPromise.result!,
                         coverageInformationPromise.result!
                     );
-                    let categoryToColor;
-                    let numericalValueToColor;
-                    let logScaleNumericalValueToColor;
-                    let numericalValueRange;
-                    if (q.datatype === 'STRING') {
-                        const colorGetter = makeUniqueColorGetter(
-                            _.values(RESERVED_CLINICAL_VALUE_COLORS)
-                        );
-                        categoryToColor = _.cloneDeep(
-                            RESERVED_CLINICAL_VALUE_COLORS
-                        );
-                        for (const d of data) {
-                            if (
-                                !((d as ClinicalData).value in categoryToColor)
-                            ) {
-                                categoryToColor[
-                                    (d as ClinicalData).value
-                                ] = colorGetter();
-                            }
-                        }
-                    } else if (q.datatype === 'NUMBER') {
-                        // TODO: calculate gradient with data
-                        const numbers = (data as ClinicalData[]).reduce(
-                            (nums, d) => {
-                                if (d.value && !isNaN(d.value as any)) {
-                                    nums.push(parseFloat(d.value));
-                                }
-                                return nums;
-                            },
-                            [] as number[]
-                        );
-                        const min = _.min(numbers)!;
-                        const max = _.max(numbers)!;
-                        if (min !== undefined && max !== undefined) {
-                            numericalValueToColor = (x: number) =>
-                                interpolateReds((x - min) / (max - min));
-
-                            if (min >= 0) {
-                                const safeLog = (x: number) => {
-                                    return Math.log(Math.max(0.01, x));
-                                };
-                                const logMin = safeLog(min);
-                                const logMax = safeLog(max);
-                                logScaleNumericalValueToColor = (x: number) => {
-                                    return interpolateReds(
-                                        (safeLog(x) - logMin) /
-                                            (logMax - logMin)
-                                    );
-                                };
-                            }
-                            numericalValueRange = [min, max] as [
-                                number,
-                                number
-                            ];
-                        } else {
-                            numericalValueToColor = (x: number) => '#000000';
-                        }
-                    }
                     return {
                         data,
-                        categoryToColor,
-                        numericalValueToColor,
-                        numericalValueRange,
-                        logScaleNumericalValueToColor,
+                        ...getClinicalAttributeColoring(data, q.datatype),
                     };
                 },
             }),
