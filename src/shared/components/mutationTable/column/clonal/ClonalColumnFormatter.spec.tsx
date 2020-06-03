@@ -2,7 +2,10 @@ import * as _ from 'lodash';
 import { ReactWrapper, mount } from 'enzyme';
 import { assert } from 'chai';
 import { initMutation } from 'test/MutationMockUtils';
-import { getDefaultClonalColumnDefinition } from './ClonalColumnFormatter';
+import {
+    getDefaultClonalColumnDefinition,
+    ClonalValue,
+} from './ClonalColumnFormatter';
 import { Mutation } from 'cbioportal-ts-api-client';
 
 describe('ClonalColumnFormatter', () => {
@@ -10,14 +13,17 @@ describe('ClonalColumnFormatter', () => {
         clonalElementProperties: any,
         expectedSampleId: string,
         expectedClonalValue: string,
-        expectedCCFMCopies: string
+        expectedCCFExpectedCopies: string
     ) {
         assert.equal(clonalElementProperties['sampleId'], expectedSampleId);
         assert.equal(
             clonalElementProperties['clonalValue'],
             expectedClonalValue
         );
-        assert.equal(clonalElementProperties['ccfMCopies'], expectedCCFMCopies);
+        assert.equal(
+            clonalElementProperties['ccfExpectedCopies'],
+            expectedCCFExpectedCopies
+        );
     }
 
     function testExpectedNumberOfClonalElements(
@@ -35,34 +41,43 @@ describe('ClonalColumnFormatter', () => {
     // completely drops data member, instead of returning default "null"/"" value
     function createEmptyMutation() {
         let emptyMutation: Mutation = initMutation({
-            sampleId: 'S003',
+            sampleId: 'S004',
             alleleSpecificCopyNumber: {
                 totalCopyNumber: 2,
                 minorCopyNumber: 1,
             },
         });
         delete emptyMutation.alleleSpecificCopyNumber.clonal;
-        delete emptyMutation.alleleSpecificCopyNumber.ccfMCopies;
+        delete emptyMutation.alleleSpecificCopyNumber.ccfExpectedCopies;
         return emptyMutation;
     }
 
     const mutations: Mutation[] = [
-        // Clonal 'yes' case
+        // Clonal case
         initMutation({
             sampleId: 'S001',
             alleleSpecificCopyNumber: {
-                ccfMCopies: 1,
-                clonal: true,
+                ccfExpectedCopies: 1,
+                clonal: 'CLONAL',
             },
         }),
-        // Clonal 'no' case
+        // Subclonal case
         initMutation({
             sampleId: 'S002',
             alleleSpecificCopyNumber: {
-                ccfMCopies: 0.85,
-                clonal: false,
+                ccfExpectedCopies: 0.85,
+                clonal: 'SUBCLONAL',
             },
         }),
+        // Indeterminate case
+        initMutation({
+            sampleId: 'S003',
+            alleleSpecificCopyNumber: {
+                ccfExpectedCopies: 0.55,
+                clonal: 'INDETERMINATE',
+            },
+        }),
+        // Clonal NA case
         // Clonal NA case
         createEmptyMutation(),
     ];
@@ -88,7 +103,7 @@ describe('ClonalColumnFormatter', () => {
     it('generated ClonalElement componenets use correct property values', () => {
         clonalColumnTest = mount(
             getDefaultClonalColumnDefinition(
-                ['S001', 'S002', 'S003'],
+                ['S001', 'S002', 'S003', 'S004'],
                 null
             ).render(mutations)
         );
@@ -102,19 +117,25 @@ describe('ClonalColumnFormatter', () => {
         testExpectedClonalElementProperties(
             sampleToClonalElement['S001'],
             'S001',
-            'yes',
+            ClonalValue.CLONAL,
             '1'
         );
         testExpectedClonalElementProperties(
             sampleToClonalElement['S002'],
             'S002',
-            'no',
+            ClonalValue.SUBCLONAL,
             '0.85'
         );
         testExpectedClonalElementProperties(
             sampleToClonalElement['S003'],
             'S003',
-            'NA',
+            ClonalValue.NA,
+            '0.55'
+        );
+        testExpectedClonalElementProperties(
+            sampleToClonalElement['S004'],
+            'S004',
+            ClonalValue.NA,
             'NA'
         );
     });

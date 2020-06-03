@@ -2961,7 +2961,7 @@ export class ResultsViewPageStore {
         []
     );
 
-    readonly facetsClinicalDataForSamples = remoteData<ClinicalData[]>(
+    readonly ascnClinicalDataForSamples = remoteData<ClinicalData[]>(
         {
             await: () => [this.studies, this.samples],
             invoke: () =>
@@ -2970,8 +2970,8 @@ export class ResultsViewPageStore {
                     this.studies.result!,
                     this.samples.result,
                     [
-                        CLINICAL_ATTRIBUTE_ID_ENUM.FACETS_WGD,
-                        CLINICAL_ATTRIBUTE_ID_ENUM.FACETS_PURITY,
+                        CLINICAL_ATTRIBUTE_ID_ENUM.ASCN_WGD,
+                        CLINICAL_ATTRIBUTE_ID_ENUM.ASCN_PURITY,
                     ]
                 ),
         },
@@ -2985,13 +2985,13 @@ export class ResultsViewPageStore {
         return [];
     }
 
-    readonly facetsClinicalDataGroupedBySample = remoteData(
+    readonly ascnClinicalDataGroupedBySample = remoteData(
         {
-            await: () => [this.facetsClinicalDataForSamples],
+            await: () => [this.ascnClinicalDataForSamples],
             invoke: async () =>
                 groupBySampleId(
                     this.sampleIds,
-                    this.facetsClinicalDataForSamples.result
+                    this.ascnClinicalDataForSamples.result
                 ),
         },
         []
@@ -2999,10 +2999,10 @@ export class ResultsViewPageStore {
 
     readonly clinicalDataGroupedBySampleMap = remoteData(
         {
-            await: () => [this.facetsClinicalDataGroupedBySample],
+            await: () => [this.ascnClinicalDataGroupedBySample],
             invoke: async () =>
                 mapSampleIdToClinicalData(
-                    this.facetsClinicalDataGroupedBySample.result
+                    this.ascnClinicalDataGroupedBySample.result
                 ),
         },
         {}

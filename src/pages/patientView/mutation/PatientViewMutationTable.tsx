@@ -21,7 +21,7 @@ import GeneFilterMenu, { GeneFilterOption } from './GeneFilterMenu';
 import { getDefaultASCNCopyNumberColumnDefinition } from 'shared/components/mutationTable/column/ascnCopyNumber/ASCNCopyNumberColumnFormatter';
 import { getDefaultCancerCellFractionColumnDefinition } from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionColumnFormatter';
 import { getDefaultClonalColumnDefinition } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
-import { getDefaultMutantCopiesColumnDefinition } from 'shared/components/mutationTable/column/mutantCopies/MutantCopiesColumnFormatter';
+import { getDefaultExpectedAltCopiesColumnDefinition } from 'shared/components/mutationTable/column/expectedAltCopies/ExpectedAltCopiesColumnFormatter';
 import { ASCNAttributes } from 'shared/enums/ASCNEnums';
 
 export interface IPatientViewMutationTableProps extends IMutationTableProps {
@@ -76,7 +76,7 @@ export default class PatientViewMutationTable extends MutationTable<
             MutationTableColumnType.VARIANT_TYPE,
             MutationTableColumnType.CLONAL,
             MutationTableColumnType.CANCER_CELL_FRACTION,
-            MutationTableColumnType.MUTANT_COPIES,
+            MutationTableColumnType.EXPECTED_ALT_COPIES,
             MutationTableColumnType.FUNCTIONAL_IMPACT,
             MutationTableColumnType.COSMIC,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
@@ -181,8 +181,8 @@ export default class PatientViewMutationTable extends MutationTable<
         );
 
         this._columns[
-            MutationTableColumnType.MUTANT_COPIES
-        ] = getDefaultMutantCopiesColumnDefinition(
+            MutationTableColumnType.EXPECTED_ALT_COPIES
+        ] = getDefaultExpectedAltCopiesColumnDefinition(
             this.getSamples(),
             this.props.sampleManager
         );
@@ -290,7 +290,7 @@ export default class PatientViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.VARIANT_TYPE].order = 115;
         this._columns[MutationTableColumnType.CLONAL].order = 116;
         this._columns[MutationTableColumnType.CANCER_CELL_FRACTION].order = 117;
-        this._columns[MutationTableColumnType.MUTANT_COPIES].order = 118;
+        this._columns[MutationTableColumnType.EXPECTED_ALT_COPIES].order = 118;
         this._columns[MutationTableColumnType.CENTER].order = 120;
         this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ].order = 130;
         this._columns[MutationTableColumnType.VAR_READS].order = 140;
@@ -317,7 +317,7 @@ export default class PatientViewMutationTable extends MutationTable<
 
         this._columns[MutationTableColumnType.CLONAL].shouldExclude = () => {
             return !this.props.existsSomeMutationWithAscnProperty[
-                ASCNAttributes.CCF_M_COPIES_STRING
+                ASCNAttributes.CCF_EXPECTED_COPIES_STRING
             ];
         };
 
@@ -333,15 +333,15 @@ export default class PatientViewMutationTable extends MutationTable<
             MutationTableColumnType.CANCER_CELL_FRACTION
         ].shouldExclude = () => {
             return !this.props.existsSomeMutationWithAscnProperty[
-                ASCNAttributes.CCF_M_COPIES_STRING
+                ASCNAttributes.CCF_EXPECTED_COPIES_STRING
             ];
         };
 
         this._columns[
-            MutationTableColumnType.MUTANT_COPIES
+            MutationTableColumnType.EXPECTED_ALT_COPIES
         ].shouldExclude = () => {
             return !this.props.existsSomeMutationWithAscnProperty[
-                ASCNAttributes.MUTANT_COPIES_STRING
+                ASCNAttributes.EXPECTED_ALT_COPIES_STRING
             ];
         };
 

@@ -2,10 +2,10 @@ import * as React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import SampleManager from 'pages/patientView/SampleManager';
 
-export const MutantCopiesElementTooltip: React.FunctionComponent<{
+export const ExpectedAltCopiesElementTooltip: React.FunctionComponent<{
     sampleId: string;
     totalCopyNumberValue: string;
-    mutantCopiesValue: string;
+    expectedAltCopiesValue: string;
     sampleManager?: SampleManager | null;
 }> = props => {
     return (
@@ -20,28 +20,28 @@ export const MutantCopiesElementTooltip: React.FunctionComponent<{
                 </span>
             ) : null}
             <span>
-                {` ${props.mutantCopiesValue} out of ${props.totalCopyNumberValue} copies of this gene are mutated.`}
+                {` ${props.expectedAltCopiesValue} out of ${props.totalCopyNumberValue} copies of this gene are mutated.`}
             </span>
         </span>
     );
 };
 
-const MutantCopiesElement: React.FunctionComponent<{
+const ExpectedAltCopiesElement: React.FunctionComponent<{
     sampleId: string;
     totalCopyNumberValue: string;
-    mutantCopiesValue: string;
+    expectedAltCopiesValue: string;
     sampleManager?: SampleManager | null;
 }> = props => {
     return (
         <DefaultTooltip
-            overlay={<MutantCopiesElementTooltip {...props} />}
+            overlay={<ExpectedAltCopiesElementTooltip {...props} />}
             placement="left"
         >
             <span>
-                {props.mutantCopiesValue}/{props.totalCopyNumberValue}
+                {props.expectedAltCopiesValue}/{props.totalCopyNumberValue}
             </span>
         </DefaultTooltip>
     );
 };
 
-export default MutantCopiesElement;
+export default ExpectedAltCopiesElement;

@@ -2,19 +2,19 @@ import * as React from 'react';
 import { Mutation } from 'cbioportal-ts-api-client';
 import { hasASCNProperty } from 'shared/lib/MutationUtils';
 import SampleManager from 'pages/patientView/SampleManager';
-import MutantCopiesElement from 'shared/components/mutationTable/column/mutantCopies/MutantCopiesElement';
+import ExpectedAltCopiesElement from 'shared/components/mutationTable/column/expectedAltCopies/ExpectedAltCopiesElement';
 import { RESPONSE_VALUE_NA } from 'shared/constants';
 
 /**
  * @author Avery Wang
  */
 
-function getSampleIdToMutantCopiesMap(
+function getSampleIdToExpectedAltCopiesMap(
     data: Mutation[]
 ): { [key: string]: string } {
     const sampleToValue: { [key: string]: string } = {};
     for (const mutation of data) {
-        const value: string = getMutantCopiesValue(mutation);
+        const value: string = getExpectedAltCopiesValue(mutation);
         if (value.length > 0) {
             sampleToValue[mutation.sampleId] = value;
         }
@@ -28,7 +28,7 @@ export function getDisplayValueAsString(
 ): string {
     const displayValuesBySample: {
         [key: string]: string;
-    } = getSampleIdToMutantCopiesMap(data);
+    } = getSampleIdToExpectedAltCopiesMap(data);
     const sampleIdsWithValues = sampleIds.filter(
         sampleId => displayValuesBySample[sampleId]
     );
@@ -40,26 +40,24 @@ export function getDisplayValueAsString(
     return displayValuesAsString.join('; ');
 }
 
-function getMutantCopiesValue(mutation: Mutation): string {
+function getExpectedAltCopiesValue(mutation: Mutation): string {
     return hasASCNProperty(mutation, 'totalCopyNumber') &&
-        hasASCNProperty(mutation, 'mutantCopies')
-        ? mutation.alleleSpecificCopyNumber.mutantCopies.toString() +
+        hasASCNProperty(mutation, 'expectedAltCopies')
+        ? mutation.alleleSpecificCopyNumber.expectedAltCopies.toString() +
               '/' +
               mutation.alleleSpecificCopyNumber.totalCopyNumber.toString()
         : '';
 }
 
-export const getDefaultMutantCopiesColumnDefinition = (
+export const getDefaultExpectedAltCopiesColumnDefinition = (
     sampleIds?: string[],
     sampleManager?: SampleManager | null
 ) => {
     return {
-        name: 'Mutant Copies',
-        tooltip: (
-            <span>FACETS Best Guess for Mutant Copies / Total Copies</span>
-        ),
+        name: 'Expected Alt Copies',
+        tooltip: <span>Best Guess for Expected Alt Copies / Total Copies</span>,
         render: (d: Mutation[]) =>
-            MutantCopiesColumnFormatter.renderFunction(
+            ExpectedAltCopiesColumnFormatter.renderFunction(
                 d,
                 sampleIds ? sampleIds : d.length > 0 ? [d[0].sampleId] : [],
                 sampleManager
@@ -70,11 +68,11 @@ export const getDefaultMutantCopiesColumnDefinition = (
                 sampleIds ? sampleIds : d.length > 0 ? [d[0].sampleId] : []
             ),
         download: (d: Mutation[]) =>
-            MutantCopiesColumnFormatter.getMutantCopiesDownload(d),
+            ExpectedAltCopiesColumnFormatter.getExpectedAltCopiesDownload(d),
     };
 };
 
-export default class MutantCopiesColumnFormatter {
+export default class ExpectedAltCopiesColumnFormatter {
     /* Determines the display value by using the impact field.
      *
      * @param data  column formatter data
@@ -86,7 +84,7 @@ export default class MutantCopiesColumnFormatter {
         sampleManager?: SampleManager | null
     ) {
         const sampleToTotalCopyNumber: { [key: string]: string } = {};
-        const sampleToMutantCopies: { [key: string]: string } = {};
+        const sampleToExpectedAltCopies: { [key: string]: string } = {};
         for (const mutation of data) {
             sampleToTotalCopyNumber[mutation.sampleId] = hasASCNProperty(
                 mutation,
@@ -94,11 +92,11 @@ export default class MutantCopiesColumnFormatter {
             )
                 ? mutation.alleleSpecificCopyNumber.totalCopyNumber.toString()
                 : RESPONSE_VALUE_NA;
-            sampleToMutantCopies[mutation.sampleId] = hasASCNProperty(
+            sampleToExpectedAltCopies[mutation.sampleId] = hasASCNProperty(
                 mutation,
-                'mutantCopies'
+                'expectedAltCopies'
             )
-                ? mutation.alleleSpecificCopyNumber.mutantCopies.toString()
+                ? mutation.alleleSpecificCopyNumber.expectedAltCopies.toString()
                 : RESPONSE_VALUE_NA;
         }
 
@@ -106,9 +104,9 @@ export default class MutantCopiesColumnFormatter {
         const samplesWithValue = sampleIds.filter(
             sampleId =>
                 sampleToTotalCopyNumber[sampleId] &&
-                sampleToMutantCopies[sampleId] &&
+                sampleToExpectedAltCopies[sampleId] &&
                 sampleToTotalCopyNumber[sampleId] !== RESPONSE_VALUE_NA &&
-                sampleToMutantCopies[sampleId] !== RESPONSE_VALUE_NA
+                sampleToExpectedAltCopies[sampleId] !== RESPONSE_VALUE_NA
         );
 
         return (
@@ -119,13 +117,13 @@ export default class MutantCopiesColumnFormatter {
                             key={sampleId}
                             style={index === 0 ? undefined : { marginLeft: 5 }}
                         >
-                            <MutantCopiesElement
+                            <ExpectedAltCopiesElement
                                 sampleId={sampleId}
                                 totalCopyNumberValue={
                                     sampleToTotalCopyNumber[sampleId]
                                 }
-                                mutantCopiesValue={
-                                    sampleToMutantCopies[sampleId]
+                                expectedAltCopiesValue={
+                                    sampleToExpectedAltCopies[sampleId]
                                 }
                                 sampleManager={sampleManager}
                             />
@@ -137,7 +135,9 @@ export default class MutantCopiesColumnFormatter {
         );
     }
 
-    public static getMutantCopiesDownload(mutations: Mutation[]): string[] {
-        return mutations.map(mutation => getMutantCopiesValue(mutation));
+    public static getExpectedAltCopiesDownload(
+        mutations: Mutation[]
+    ): string[] {
+        return mutations.map(mutation => getExpectedAltCopiesValue(mutation));
     }
 }
