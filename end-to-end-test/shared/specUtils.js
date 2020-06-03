@@ -191,13 +191,6 @@ function waitForNetworkQuiet(timeout) {
     }, timeout);
 }
 
-function closeDevModeBanner() {
-    // Using class name to remove the banner is not ideal. We should add a data-test at the backend repo.
-    $('.alert-warning')
-        .$('button.close')
-        .click();
-}
-
 function getPortalUrlFromEnv() {
     return process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 }
@@ -458,6 +451,5 @@ module.exports = {
     setResultsPageSettingsMenuOpen: setResultsPageSettingsMenuOpen,
     setDropdownOpen: setDropdownOpen,
     postDataToUrl: postDataToUrl,
-    closeDevModeBanner: closeDevModeBanner,
     getPortalUrlFromEnv: getPortalUrlFromEnv,
 };
