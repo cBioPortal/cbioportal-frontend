@@ -67,11 +67,24 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
             return getBoxPlotDownloadData(
                 this.boxPlotData.result!,
                 'Group',
-                this.props.selectedRow.hugoGeneSymbol +
-                    ', ' +
-                    this.props.selectedProfile.name,
+                this.axisLabelY,
                 {}
             );
+        }
+        return '';
+    }
+
+    @computed get logScale() {
+        return this.props.selectedProfile.molecularProfileId.includes(
+            'rna_seq'
+        );
+    }
+
+    @computed get axisLabelY() {
+        if (this.props.selectedRow !== undefined) {
+            return `${this.props.selectedRow.hugoGeneSymbol}, ${
+                this.props.selectedProfile.name
+            }${this.logScale ? ' (log2)' : ''}`;
         }
         return '';
     }
@@ -135,12 +148,9 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
                 );
 
                 const axisData_Data = axisData.data;
-                const applyLog2 = this.props.selectedProfile.molecularProfileId.includes(
-                    'rna_seq'
-                );
 
                 for (const d of modecluarData) {
-                    const value = applyLog2
+                    const value = this.logScale
                         ? Math.log(d.value + 1) / Math.log(2)
                         : d.value;
                     axisData_Data.push({
@@ -210,7 +220,8 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
                             <b>{d.sampleId}</b>
                         </a>
                         <br />
-                        mRNA expression: {d.value.toFixed(3)}
+                        mRNA expression{this.logScale ? ' (log2)' : ''}:{' '}
+                        {d.value.toFixed(3)}
                         {!!alterationContent && <br />}
                         {alterationContent}
                     </div>
@@ -265,11 +276,7 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
                         domainPadding={10}
                         startDataAxisAtZero={true}
                         boxWidth={this.boxPlotData.result.length > 7 ? 30 : 60}
-                        axisLabelY={
-                            this.props.selectedRow.hugoGeneSymbol +
-                            ', ' +
-                            this.props.selectedProfile.name
-                        }
+                        axisLabelY={this.axisLabelY}
                         axisLabelX={axisLabelX}
                         data={this.boxPlotData.result!}
                         chartBase={320}

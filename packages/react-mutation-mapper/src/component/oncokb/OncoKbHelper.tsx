@@ -1,5 +1,10 @@
 import * as React from 'react';
 
+// This will be extended to Tx, Dx and Px. A separate PR will follow.
+export enum OncoKbCardDataType {
+    TX,
+}
+
 export default class OncoKbHelper {
     public static get LEVELS(): string[] {
         return ['1', '2', '3A', '3B', '4', 'R1', 'R2'];

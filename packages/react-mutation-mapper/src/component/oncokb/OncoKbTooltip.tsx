@@ -6,6 +6,7 @@ import { observer } from 'mobx-react';
 
 import { MobxCache } from '../../model/MobxCache';
 import OncoKbCard from './OncoKbCard';
+import { OncoKbCardDataType } from './OncoKbHelper';
 
 export interface IOncoKbTooltipProps {
     indicator?: IndicatorQueryResp;
@@ -61,10 +62,11 @@ export default class OncoKbTooltip extends React.Component<
         if (this.props.geneNotExist) {
             tooltipContent = (
                 <OncoKbCard
+                    type={OncoKbCardDataType.TX}
                     usingPublicOncoKbInstance={
                         this.props.usingPublicOncoKbInstance
                     }
-                    gene={this.props.hugoSymbol}
+                    hugoSymbol={this.props.hugoSymbol}
                     geneNotExist={this.props.geneNotExist}
                     isCancerGene={this.props.isCancerGene}
                     pmidData={{}}
@@ -81,45 +83,14 @@ export default class OncoKbTooltip extends React.Component<
             const pmidData: ICache<any> = this.pmidData;
             tooltipContent = (
                 <OncoKbCard
+                    type={OncoKbCardDataType.TX}
                     usingPublicOncoKbInstance={
                         this.props.usingPublicOncoKbInstance
                     }
                     geneNotExist={this.props.geneNotExist}
                     isCancerGene={this.props.isCancerGene}
-                    title={`${this.props.indicator.query.hugoSymbol} ${this.props.indicator.query.alteration} in ${this.props.indicator.query.tumorType}`}
-                    gene={
-                        this.props.indicator.geneExist
-                            ? this.props.indicator.query.hugoSymbol
-                            : ''
-                    }
-                    variant={
-                        this.props.indicator.query.alteration
-                            ? this.props.indicator.query.alteration
-                            : ''
-                    }
-                    oncogenicity={this.props.indicator.oncogenic}
-                    mutationEffect={
-                        this.props.indicator.mutationEffect
-                            ? this.props.indicator.mutationEffect.knownEffect
-                            : ''
-                    }
-                    mutationEffectCitations={
-                        this.props.indicator.mutationEffect
-                            ? this.props.indicator.mutationEffect.citations
-                            : {
-                                  abstracts: [],
-                                  pmids: [],
-                              }
-                    }
-                    geneSummary={this.props.indicator.geneSummary}
-                    variantSummary={this.props.indicator.variantSummary}
-                    tumorTypeSummary={this.props.indicator.tumorTypeSummary}
-                    biologicalSummary={
-                        this.props.indicator.mutationEffect
-                            ? this.props.indicator.mutationEffect.description
-                            : ''
-                    }
-                    treatments={this.props.indicator.treatments}
+                    hugoSymbol={this.props.hugoSymbol}
+                    indicator={this.props.indicator}
                     pmidData={pmidData}
                     handleFeedbackOpen={this.props.handleFeedbackOpen}
                 />

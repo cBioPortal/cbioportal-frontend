@@ -2399,10 +2399,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     });
 
     readonly cnaDataExists = remoteData({
-        await: () => [this.props.store.studyToMolecularProfileDiscrete],
+        await: () => [this.props.store.studyToMolecularProfileDiscreteCna],
         invoke: () => {
             return Promise.resolve(
-                !!_.values(this.props.store.studyToMolecularProfileDiscrete)
+                !!_.values(this.props.store.studyToMolecularProfileDiscreteCna)
                     .length
             );
         },
@@ -2615,6 +2615,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     private scatterPlotTooltip(d: IScatterPlotData) {
         return scatterPlotTooltip(
             d,
+            this.horzLogScaleFunction,
+            this.vertLogScaleFunction,
             this.coloringMenuSelection.selectedOption &&
                 this.coloringMenuSelection.selectedOption.info.clinicalAttribute
         );
@@ -2636,6 +2638,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 content = boxPlotTooltip(
                     d,
                     this.boxPlotData.result.horizontal,
+                    this.boxPlotData.result.horizontal
+                        ? this.horzLogScaleFunction
+                        : this.vertLogScaleFunction,
                     this.coloringMenuSelection.selectedOption &&
                         this.coloringMenuSelection.selectedOption.info
                             .clinicalAttribute
@@ -3516,7 +3521,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 this.mutationPromise,
                 this.props.store.studyToMutationMolecularProfile,
                 this.cnaPromise,
-                this.props.store.studyToMolecularProfileDiscrete,
+                this.props.store.studyToMolecularProfileDiscreteCna,
             ];
             if (
                 this.coloringMenuSelection.selectedOption &&
@@ -3570,7 +3575,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 ? {
                                       molecularProfileIds: _.values(
                                           this.props.store
-                                              .studyToMolecularProfileDiscrete
+                                              .studyToMolecularProfileDiscreteCna
                                               .result!
                                       ).map(p => p.molecularProfileId),
                                       data: this.cnaPromise.result!,
@@ -3601,7 +3606,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 this.mutationPromise,
                 this.props.store.studyToMutationMolecularProfile,
                 this.cnaPromise,
-                this.props.store.studyToMolecularProfileDiscrete,
+                this.props.store.studyToMolecularProfileDiscreteCna,
             ];
             if (
                 this.coloringMenuSelection.selectedOption &&
@@ -3674,7 +3679,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 ? {
                                       molecularProfileIds: _.values(
                                           this.props.store
-                                              .studyToMolecularProfileDiscrete
+                                              .studyToMolecularProfileDiscreteCna
                                               .result!
                                       ).map(p => p.molecularProfileId),
                                       data: this.cnaPromise.result!,
@@ -3759,7 +3764,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 this.mutationPromise,
                 this.props.store.studyToMutationMolecularProfile,
                 this.cnaPromise,
-                this.props.store.studyToMolecularProfileDiscrete,
+                this.props.store.studyToMolecularProfileDiscreteCna,
             ];
             if (
                 this.coloringMenuSelection.selectedOption &&
@@ -3829,7 +3834,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             ? {
                                   molecularProfileIds: _.values(
                                       this.props.store
-                                          .studyToMolecularProfileDiscrete
+                                          .studyToMolecularProfileDiscreteCna
                                           .result!
                                   ).map(p => p.molecularProfileId),
                                   data: this.cnaPromise.result!,

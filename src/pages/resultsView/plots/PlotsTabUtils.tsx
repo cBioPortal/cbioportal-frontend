@@ -73,6 +73,7 @@ import Pluralize from 'pluralize';
 import AppConfig from 'appConfig';
 import { SpecialChartsUniqueKeyEnum } from 'pages/studyView/StudyViewUtils';
 import { observable, ObservableMap } from 'mobx';
+import { toFixedWithoutTrailingZeros } from '../../../shared/lib/FormatUtils';
 
 export const CLIN_ATTR_DATA_TYPE = 'clinical_attribute';
 export const GENESET_DATA_TYPE = 'GENESET_SCORE';
@@ -2045,8 +2046,8 @@ function tooltipClinicalDataSection(
 
 function generalScatterPlotTooltip<D extends IPlotSampleData>(
     d: D,
-    horizontalKey: keyof D,
-    verticalKey: keyof D,
+    getHorzCoord: (d: D) => any,
+    getVertCoord: (d: D) => any,
     horzKeyThresholdType: keyof D,
     vertKeyThresholdType: keyof D,
     coloringClinicalAttribute?: ClinicalAttribute
@@ -2067,12 +2068,22 @@ function generalScatterPlotTooltip<D extends IPlotSampleData>(
         );
     }
 
+    let horzCoord = getHorzCoord(d);
+    let vertCoord = getVertCoord(d);
+
+    if (typeof horzCoord === 'number') {
+        horzCoord = toFixedWithoutTrailingZeros(horzCoord, 2);
+    }
+    if (typeof vertCoord === 'number') {
+        vertCoord = toFixedWithoutTrailingZeros(vertCoord, 2);
+    }
+
     let horzLabel = horzKeyThresholdType
-        ? `${d[horzKeyThresholdType]}${d[horizontalKey]}`
-        : d[horizontalKey];
+        ? `${d[horzKeyThresholdType]}${horzCoord}`
+        : horzCoord;
     let vertLabel = vertKeyThresholdType
-        ? `${d[vertKeyThresholdType]}${d[verticalKey]}`
-        : d[verticalKey];
+        ? `${d[vertKeyThresholdType]}${vertCoord}`
+        : vertCoord;
     return (
         <div>
             <a href={getSampleViewUrl(d.studyId, d.sampleId)} target="_blank">
@@ -2162,12 +2173,14 @@ function generalWaterfallPlotTooltip<D extends IWaterfallPlotData>(
 
 export function scatterPlotTooltip(
     d: IScatterPlotData,
+    logX?: IAxisLogScaleParams | undefined,
+    logY?: IAxisLogScaleParams | undefined,
     coloringClinicalAttribute?: ClinicalAttribute
 ) {
     return generalScatterPlotTooltip(
         d,
-        'x',
-        'y',
+        logX ? d => logX.fLogScale(d.x) : d => d.x,
+        logY ? d => logY.fLogScale(d.y) : d => d.y,
         'xThresholdType',
         'yThresholdType',
         coloringClinicalAttribute
@@ -2177,10 +2190,15 @@ export function scatterPlotTooltip(
 export function boxPlotTooltip(
     d: IBoxScatterPlotPoint,
     horizontal: boolean,
+    log?: IAxisLogScaleParams | undefined,
     coloringClinicalAttribute?: ClinicalAttribute
 ) {
-    let horzAxisKey = horizontal ? 'value' : ('category' as any);
-    let vertAxisKey = horizontal ? 'category' : ('value' as any);
+    let horzAxisKey: keyof IBoxScatterPlotPoint = horizontal
+        ? 'value'
+        : 'category';
+    let vertAxisKey: keyof IBoxScatterPlotPoint = horizontal
+        ? 'category'
+        : 'value';
     let horzThresholdTypeKey = horizontal
         ? 'thresholdType'
         : (undefined as any);
@@ -2189,8 +2207,8 @@ export function boxPlotTooltip(
         : ('thresholdType' as any);
     return generalScatterPlotTooltip(
         d,
-        horzAxisKey,
-        vertAxisKey,
+        log && horizontal ? d => log.fLogScale(d.value) : d => d[horzAxisKey],
+        log && !horizontal ? d => log.fLogScale(d.value) : d => d[vertAxisKey],
         horzThresholdTypeKey,
         vertThresholdTypeKey,
         coloringClinicalAttribute

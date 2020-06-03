@@ -23,7 +23,6 @@ import {
     SampleIdentifier,
     StudyViewFilter,
     DataFilterValue,
-    GenomicDataCount,
     GeneFilter,
     ClinicalDataBin,
     GenomicDataBinFilter,
@@ -59,7 +58,6 @@ import {
     ChartDataCountSet,
     ClinicalDataCountSummary,
     ClinicalDataTypeEnum,
-    Datalabel,
     DataType,
     generateScatterPlotDownloadData,
     GenomicDataCountWithSampleUniqueKeys,
@@ -170,6 +168,8 @@ import {
 } from 'pages/resultsView/survival/SurvivalUtil';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
+import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
+import { Datalabel } from 'shared/lib/DataUtils';
 
 export type ChartUserSetting = {
     id: string;
@@ -2876,18 +2876,6 @@ export class StudyViewPageStore {
             disableLogScale: false,
         } as ClinicalDataBinFilter;
     }
-
-    readonly studies = remoteData<CancerStudy[]>({
-        invoke: () => {
-            if (this.studyIds.length > 0) {
-                return defaultClient.fetchStudiesUsingPOST({
-                    studyIds: toJS(this.studyIds),
-                });
-            } else {
-                return Promise.resolve([]);
-            }
-        },
-    });
 
     readonly resourceDefinitions = remoteData({
         await: () => [this.queriedPhysicalStudies],
@@ -6189,5 +6177,11 @@ export class StudyViewPageStore {
             }
         }
         return title;
+    }
+
+    @computed get isMixedReferenceGenome() {
+        if (this.queriedPhysicalStudies.result) {
+            return isMixedReferenceGenome(this.queriedPhysicalStudies.result);
+        }
     }
 }

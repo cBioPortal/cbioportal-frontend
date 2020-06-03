@@ -109,18 +109,29 @@
         ],
         "parameters": [
           {
-            "name": "projection",
+            "name": "direction",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Direction of the sort",
             "required": false,
             "type": "string",
-            "default": "SUMMARY",
+            "default": "ASC",
+            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
+              "ASC",
+              "DESC"
             ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -133,18 +144,23 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
           },
           {
             "name": "sortBy",
@@ -152,6 +168,7 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "cancerTypeId",
               "name",
@@ -159,18 +176,6 @@
               "dedicatedColor",
               "shortName",
               "parent"
-            ]
-          },
-          {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
             ]
           }
         ],
@@ -184,7 +189,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/cancer-types/{cancerTypeId}": {
@@ -213,7 +219,8 @@
               "$ref": "#/definitions/TypeOfCancer"
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/clinical-attributes": {
@@ -228,18 +235,29 @@
         ],
         "parameters": [
           {
-            "name": "projection",
+            "name": "direction",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Direction of the sort",
             "required": false,
             "type": "string",
-            "default": "SUMMARY",
+            "default": "ASC",
+            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
+              "ASC",
+              "DESC"
             ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -252,18 +270,23 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
           },
           {
             "name": "sortBy",
@@ -271,6 +294,7 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "clinicalAttributeId",
               "displayName",
@@ -279,18 +303,6 @@
               "patientAttribute",
               "priority",
               "studyId"
-            ]
-          },
-          {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
             ]
           }
         ],
@@ -304,7 +316,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/clinical-attributes/counts/fetch": {
@@ -341,7 +354,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/clinical-attributes/fetch": {
@@ -359,6 +373,21 @@
         ],
         "parameters": [
           {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
             "in": "body",
             "name": "studyIds",
             "description": "List of Study IDs",
@@ -369,20 +398,6 @@
                 "type": "string"
               }
             }
-          },
-          {
-            "name": "projection",
-            "in": "query",
-            "description": "Level of detail of the response",
-            "required": false,
-            "type": "string",
-            "default": "SUMMARY",
-            "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
-            ]
           }
         ],
         "responses": {
@@ -395,7 +410,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/clinical-data/fetch": {
@@ -413,18 +429,6 @@
         ],
         "parameters": [
           {
-            "name": "clinicalDataType",
-            "in": "query",
-            "description": "Type of the clinical data",
-            "required": false,
-            "type": "string",
-            "default": "SAMPLE",
-            "enum": [
-              "SAMPLE",
-              "PATIENT"
-            ]
-          },
-          {
             "in": "body",
             "name": "clinicalDataMultiStudyFilter",
             "description": "List of patient or sample identifiers and attribute IDs",
@@ -434,12 +438,26 @@
             }
           },
           {
+            "name": "clinicalDataType",
+            "in": "query",
+            "description": "Type of the clinical data",
+            "required": false,
+            "type": "string",
+            "default": "SAMPLE",
+            "allowEmptyValue": false,
+            "enum": [
+              "SAMPLE",
+              "PATIENT"
+            ]
+          },
+          {
             "name": "projection",
             "in": "query",
             "description": "Level of detail of the response",
             "required": false,
             "type": "string",
             "default": "SUMMARY",
+            "allowEmptyValue": false,
             "enum": [
               "ID",
               "SUMMARY",
@@ -458,7 +476,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/copy-number-segments/fetch": {
@@ -476,6 +495,29 @@
         ],
         "parameters": [
           {
+            "name": "chromosome",
+            "in": "query",
+            "description": "Chromosome",
+            "required": false,
+            "type": "string",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
             "in": "body",
             "name": "sampleIdentifiers",
             "description": "List of sample identifiers",
@@ -486,27 +528,6 @@
                 "$ref": "#/definitions/SampleIdentifier"
               }
             }
-          },
-          {
-            "name": "chromosome",
-            "in": "query",
-            "description": "Chromosome",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "projection",
-            "in": "query",
-            "description": "Level of detail of the response",
-            "required": false,
-            "type": "string",
-            "default": "SUMMARY",
-            "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
-            ]
           }
         ],
         "responses": {
@@ -519,7 +540,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/gene-panel-data/fetch": {
@@ -559,7 +581,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/gene-panels": {
@@ -574,18 +597,29 @@
         ],
         "parameters": [
           {
-            "name": "projection",
+            "name": "direction",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Direction of the sort",
             "required": false,
             "type": "string",
-            "default": "SUMMARY",
+            "default": "ASC",
+            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
+              "ASC",
+              "DESC"
             ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -598,18 +632,23 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
           },
           {
             "name": "sortBy",
@@ -617,21 +656,10 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "genePanelId",
               "description"
-            ]
-          },
-          {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
             ]
           }
         ],
@@ -645,7 +673,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/gene-panels/fetch": {
@@ -681,6 +710,7 @@
             "required": false,
             "type": "string",
             "default": "SUMMARY",
+            "allowEmptyValue": false,
             "enum": [
               "ID",
               "SUMMARY",
@@ -699,7 +729,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/gene-panels/{genePanelId}": {
@@ -728,7 +759,8 @@
               "$ref": "#/definitions/GenePanel"
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/generic_assay_data/fetch": {
@@ -761,6 +793,7 @@
             "required": false,
             "type": "string",
             "default": "SUMMARY",
+            "allowEmptyValue": false,
             "enum": [
               "ID",
               "SUMMARY",
@@ -779,7 +812,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/generic_assay_data/{molecularProfileId}/fetch": {
@@ -797,13 +831,6 @@
         ],
         "parameters": [
           {
-            "name": "molecularProfileId",
-            "in": "path",
-            "description": "Molecular Profile ID",
-            "required": true,
-            "type": "string"
-          },
-          {
             "in": "body",
             "name": "genericAssayDataFilter",
             "description": "List of Sample IDs/Sample List ID and Generic Assay IDs",
@@ -813,12 +840,20 @@
             }
           },
           {
+            "name": "molecularProfileId",
+            "in": "path",
+            "description": "Molecular Profile ID",
+            "required": true,
+            "type": "string"
+          },
+          {
             "name": "projection",
             "in": "query",
             "description": "Level of detail of the response",
             "required": false,
             "type": "string",
             "default": "SUMMARY",
+            "allowEmptyValue": false,
             "enum": [
               "ID",
               "SUMMARY",
@@ -837,7 +872,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/generic_assay_meta/fetch": {
@@ -870,6 +906,7 @@
             "required": false,
             "type": "string",
             "default": "SUMMARY",
+            "allowEmptyValue": false,
             "enum": [
               "ID",
               "SUMMARY",
@@ -888,7 +925,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/genes": {
@@ -903,32 +941,45 @@
         ],
         "parameters": [
           {
-            "name": "keyword",
-            "in": "query",
-            "description": "Search keyword that applies to hugo gene symbol of the genes",
-            "required": false,
-            "type": "string"
-          },
-          {
             "name": "alias",
             "in": "query",
             "description": "Alias of the gene",
             "required": false,
-            "type": "string"
+            "type": "string",
+            "allowEmptyValue": false
           },
           {
-            "name": "projection",
+            "name": "direction",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Direction of the sort",
             "required": false,
             "type": "string",
-            "default": "SUMMARY",
+            "default": "ASC",
+            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
+              "ASC",
+              "DESC"
             ]
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "description": "Search keyword that applies to hugo gene symbol of the genes",
+            "required": false,
+            "type": "string",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -941,18 +992,23 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
           },
           {
             "name": "sortBy",
@@ -960,24 +1016,13 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "entrezGeneId",
               "hugoGeneSymbol",
               "type",
               "cytoband",
               "length"
-            ]
-          },
-          {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
             ]
           }
         ],
@@ -991,7 +1036,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/genes/fetch": {
@@ -1015,6 +1061,7 @@
             "required": false,
             "type": "string",
             "default": "ENTREZ_GENE_ID",
+            "allowEmptyValue": false,
             "enum": [
               "ENTREZ_GENE_ID",
               "HUGO_GENE_SYMBOL"
@@ -1039,6 +1086,7 @@
             "required": false,
             "type": "string",
             "default": "SUMMARY",
+            "allowEmptyValue": false,
             "enum": [
               "ID",
               "SUMMARY",
@@ -1057,7 +1105,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/genes/{geneId}": {
@@ -1086,7 +1135,8 @@
               "$ref": "#/definitions/Gene"
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/genes/{geneId}/aliases": {
@@ -1118,7 +1168,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/molecular-data/fetch": {
@@ -1151,6 +1202,7 @@
             "required": false,
             "type": "string",
             "default": "SUMMARY",
+            "allowEmptyValue": false,
             "enum": [
               "ID",
               "SUMMARY",
@@ -1169,7 +1221,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/molecular-profiles": {
@@ -1184,18 +1237,29 @@
         ],
         "parameters": [
           {
-            "name": "projection",
+            "name": "direction",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Direction of the sort",
             "required": false,
             "type": "string",
-            "default": "SUMMARY",
+            "default": "ASC",
+            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
+              "ASC",
+              "DESC"
             ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -1208,18 +1272,23 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
           },
           {
             "name": "sortBy",
@@ -1227,6 +1296,7 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "molecularProfileId",
               "molecularAlterationType",
@@ -1234,18 +1304,6 @@
               "name",
               "description",
               "showProfileInAnalysisTab"
-            ]
-          },
-          {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
             ]
           }
         ],
@@ -1259,7 +1317,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/molecular-profiles/fetch": {
@@ -1292,6 +1351,7 @@
             "required": false,
             "type": "string",
             "default": "SUMMARY",
+            "allowEmptyValue": false,
             "enum": [
               "ID",
               "SUMMARY",
@@ -1310,7 +1370,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/molecular-profiles/{molecularProfileId}": {
@@ -1339,7 +1400,8 @@
               "$ref": "#/definitions/MolecularProfile"
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/molecular-profiles/{molecularProfileId}/discrete-copy-number": {
@@ -1354,26 +1416,13 @@
         ],
         "parameters": [
           {
-            "name": "molecularProfileId",
-            "in": "path",
-            "description": "Molecular Profile ID e.g. acc_tcga_gistic",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "sampleListId",
-            "in": "query",
-            "description": "Sample List ID e.g. acc_tcga_all",
-            "required": true,
-            "type": "string"
-          },
-          {
             "name": "discreteCopyNumberEventType",
             "in": "query",
             "description": "Type of the copy number event",
             "required": false,
             "type": "string",
             "default": "HOMDEL_AND_AMP",
+            "allowEmptyValue": false,
             "enum": [
               "HOMDEL_AND_AMP",
               "HOMDEL",
@@ -1385,18 +1434,34 @@
             ]
           },
           {
+            "name": "molecularProfileId",
+            "in": "path",
+            "description": "Molecular Profile ID e.g. acc_tcga_gistic",
+            "required": true,
+            "type": "string"
+          },
+          {
             "name": "projection",
             "in": "query",
             "description": "Level of detail of the response",
             "required": false,
             "type": "string",
             "default": "SUMMARY",
+            "allowEmptyValue": false,
             "enum": [
               "ID",
               "SUMMARY",
               "DETAILED",
               "META"
             ]
+          },
+          {
+            "name": "sampleListId",
+            "in": "query",
+            "description": "Sample List ID e.g. acc_tcga_all",
+            "required": true,
+            "type": "string",
+            "allowEmptyValue": false
           }
         ],
         "responses": {
@@ -1409,7 +1474,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/molecular-profiles/{molecularProfileId}/discrete-copy-number-counts/fetch": {
@@ -1427,13 +1493,6 @@
         ],
         "parameters": [
           {
-            "name": "molecularProfileId",
-            "in": "path",
-            "description": "Molecular Profile ID e.g. acc_tcga_gistic",
-            "required": true,
-            "type": "string"
-          },
-          {
             "in": "body",
             "name": "copyNumberCountIdentifiers",
             "description": "List of copy number count identifiers",
@@ -1444,6 +1503,13 @@
                 "$ref": "#/definitions/CopyNumberCountIdentifier"
               }
             }
+          },
+          {
+            "name": "molecularProfileId",
+            "in": "path",
+            "description": "Molecular Profile ID e.g. acc_tcga_gistic",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -1456,7 +1522,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/molecular-profiles/{molecularProfileId}/discrete-copy-number/fetch": {
@@ -1474,19 +1541,13 @@
         ],
         "parameters": [
           {
-            "name": "molecularProfileId",
-            "in": "path",
-            "description": "Molecular Profile ID e.g. acc_tcga_gistic",
-            "required": true,
-            "type": "string"
-          },
-          {
             "name": "discreteCopyNumberEventType",
             "in": "query",
             "description": "Type of the copy number event",
             "required": false,
             "type": "string",
             "default": "HOMDEL_AND_AMP",
+            "allowEmptyValue": false,
             "enum": [
               "HOMDEL_AND_AMP",
               "HOMDEL",
@@ -1507,12 +1568,20 @@
             }
           },
           {
+            "name": "molecularProfileId",
+            "in": "path",
+            "description": "Molecular Profile ID e.g. acc_tcga_gistic",
+            "required": true,
+            "type": "string"
+          },
+          {
             "name": "projection",
             "in": "query",
             "description": "Level of detail of the response",
             "required": false,
             "type": "string",
             "default": "SUMMARY",
+            "allowEmptyValue": false,
             "enum": [
               "ID",
               "SUMMARY",
@@ -1531,7 +1600,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/molecular-profiles/{molecularProfileId}/gene-panel-data/fetch": {
@@ -1549,13 +1619,6 @@
         ],
         "parameters": [
           {
-            "name": "molecularProfileId",
-            "in": "path",
-            "description": "Molecular Profile ID e.g. nsclc_unito_2016_mutations",
-            "required": true,
-            "type": "string"
-          },
-          {
             "in": "body",
             "name": "genePanelDataFilter",
             "description": "List of Sample IDs/Sample List ID and Entrez Gene IDs",
@@ -1563,6 +1626,13 @@
             "schema": {
               "$ref": "#/definitions/GenePanelDataFilter"
             }
+          },
+          {
+            "name": "molecularProfileId",
+            "in": "path",
+            "description": "Molecular Profile ID e.g. nsclc_unito_2016_mutations",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -1575,7 +1645,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/molecular-profiles/{molecularProfileId}/molecular-data": {
@@ -1590,26 +1661,20 @@
         ],
         "parameters": [
           {
-            "name": "molecularProfileId",
-            "in": "path",
-            "description": "Molecular Profile ID e.g. acc_tcga_rna_seq_v2_mrna",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "sampleListId",
-            "in": "query",
-            "description": "Sample List ID e.g. acc_tcga_all",
-            "required": true,
-            "type": "string"
-          },
-          {
             "name": "entrezGeneId",
             "in": "query",
             "description": "Entrez Gene ID e.g. 1",
             "required": true,
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "molecularProfileId",
+            "in": "path",
+            "description": "Molecular Profile ID e.g. acc_tcga_rna_seq_v2_mrna",
+            "required": true,
+            "type": "string"
           },
           {
             "name": "projection",
@@ -1618,12 +1683,21 @@
             "required": false,
             "type": "string",
             "default": "SUMMARY",
+            "allowEmptyValue": false,
             "enum": [
               "ID",
               "SUMMARY",
               "DETAILED",
               "META"
             ]
+          },
+          {
+            "name": "sampleListId",
+            "in": "query",
+            "description": "Sample List ID e.g. acc_tcga_all",
+            "required": true,
+            "type": "string",
+            "allowEmptyValue": false
           }
         ],
         "responses": {
@@ -1636,7 +1710,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/molecular-profiles/{molecularProfileId}/molecular-data/fetch": {
@@ -1654,13 +1729,6 @@
         ],
         "parameters": [
           {
-            "name": "molecularProfileId",
-            "in": "path",
-            "description": "Molecular Profile ID e.g. acc_tcga_rna_seq_v2_mrna",
-            "required": true,
-            "type": "string"
-          },
-          {
             "in": "body",
             "name": "molecularDataFilter",
             "description": "List of Sample IDs/Sample List ID and Entrez Gene IDs",
@@ -1670,12 +1738,20 @@
             }
           },
           {
+            "name": "molecularProfileId",
+            "in": "path",
+            "description": "Molecular Profile ID e.g. acc_tcga_rna_seq_v2_mrna",
+            "required": true,
+            "type": "string"
+          },
+          {
             "name": "projection",
             "in": "query",
             "description": "Level of detail of the response",
             "required": false,
             "type": "string",
             "default": "SUMMARY",
+            "allowEmptyValue": false,
             "enum": [
               "ID",
               "SUMMARY",
@@ -1694,7 +1770,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/molecular-profiles/{molecularProfileId}/mutations": {
@@ -1709,18 +1786,17 @@
         ],
         "parameters": [
           {
-            "name": "molecularProfileId",
-            "in": "path",
-            "description": "Molecular Profile ID e.g. acc_tcga_mutations",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "sampleListId",
+            "name": "direction",
             "in": "query",
-            "description": "Sample List ID e.g. acc_tcga_all",
-            "required": true,
-            "type": "string"
+            "description": "Direction of the sort",
+            "required": false,
+            "type": "string",
+            "default": "ASC",
+            "allowEmptyValue": false,
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
           },
           {
             "name": "entrezGeneId",
@@ -1728,21 +1804,27 @@
             "description": "Entrez Gene ID",
             "required": false,
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "projection",
+            "name": "molecularProfileId",
+            "in": "path",
+            "description": "Molecular Profile ID e.g. acc_tcga_mutations",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pageNumber",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Page number of the result list",
             "required": false,
-            "type": "string",
-            "default": "SUMMARY",
-            "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
-            ]
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -1755,18 +1837,31 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
+            "name": "sampleListId",
+            "in": "query",
+            "description": "Sample List ID e.g. acc_tcga_all",
+            "required": true,
+            "type": "string",
+            "allowEmptyValue": false
           },
           {
             "name": "sortBy",
@@ -1774,6 +1869,7 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "entrezGeneId",
               "center",
@@ -1797,18 +1893,6 @@
               "proteinPosEnd",
               "keyword"
             ]
-          },
-          {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
-            ]
           }
         ],
         "responses": {
@@ -1821,7 +1905,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/molecular-profiles/{molecularProfileId}/mutations/fetch": {
@@ -1839,6 +1924,19 @@
         ],
         "parameters": [
           {
+            "name": "direction",
+            "in": "query",
+            "description": "Direction of the sort",
+            "required": false,
+            "type": "string",
+            "default": "ASC",
+            "allowEmptyValue": false,
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          {
             "name": "molecularProfileId",
             "in": "path",
             "description": "Molecular Profile ID e.g. acc_tcga_mutations",
@@ -1855,18 +1953,16 @@
             }
           },
           {
-            "name": "projection",
+            "name": "pageNumber",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Page number of the result list",
             "required": false,
-            "type": "string",
-            "default": "SUMMARY",
-            "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
-            ]
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -1879,18 +1975,23 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
           },
           {
             "name": "sortBy",
@@ -1898,6 +1999,7 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "entrezGeneId",
               "center",
@@ -1921,18 +2023,6 @@
               "proteinPosEnd",
               "keyword"
             ]
-          },
-          {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
-            ]
           }
         ],
         "responses": {
@@ -1945,7 +2035,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/mutation-counts-by-position/fetch": {
@@ -1985,7 +2076,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/mutations/fetch": {
@@ -2003,6 +2095,19 @@
         ],
         "parameters": [
           {
+            "name": "direction",
+            "in": "query",
+            "description": "Direction of the sort",
+            "required": false,
+            "type": "string",
+            "default": "ASC",
+            "allowEmptyValue": false,
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          {
             "in": "body",
             "name": "mutationMultipleStudyFilter",
             "description": "List of Molecular Profile IDs or List of Molecular Profile ID / Sample ID pairs, and List of Entrez Gene IDs",
@@ -2012,18 +2117,16 @@
             }
           },
           {
-            "name": "projection",
+            "name": "pageNumber",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Page number of the result list",
             "required": false,
-            "type": "string",
-            "default": "SUMMARY",
-            "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
-            ]
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -2036,18 +2139,23 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
           },
           {
             "name": "sortBy",
@@ -2055,6 +2163,7 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "entrezGeneId",
               "center",
@@ -2078,18 +2187,6 @@
               "proteinPosEnd",
               "keyword"
             ]
-          },
-          {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
-            ]
           }
         ],
         "responses": {
@@ -2102,7 +2199,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/patients": {
@@ -2117,25 +2215,37 @@
         ],
         "parameters": [
           {
+            "name": "direction",
+            "in": "query",
+            "description": "Direction of the sort",
+            "required": false,
+            "type": "string",
+            "default": "ASC",
+            "allowEmptyValue": false,
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          {
             "name": "keyword",
             "in": "query",
             "description": "Search keyword that applies to ID of the patients",
             "required": false,
-            "type": "string"
+            "type": "string",
+            "allowEmptyValue": false
           },
           {
-            "name": "projection",
+            "name": "pageNumber",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Page number of the result list",
             "required": false,
-            "type": "string",
-            "default": "SUMMARY",
-            "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
-            ]
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -2148,18 +2258,23 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
           },
           {
             "name": "sortBy",
@@ -2167,20 +2282,9 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "patientId"
-            ]
-          },
-          {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
             ]
           }
         ],
@@ -2194,7 +2298,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/patients/fetch": {
@@ -2227,6 +2332,7 @@
             "required": false,
             "type": "string",
             "default": "SUMMARY",
+            "allowEmptyValue": false,
             "enum": [
               "ID",
               "SUMMARY",
@@ -2245,7 +2351,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/reference-genome-genes/{genomeName}": {
@@ -2277,7 +2384,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/reference-genome-genes/{genomeName}/fetch": {
@@ -2295,13 +2403,6 @@
         ],
         "parameters": [
           {
-            "name": "genomeName",
-            "in": "path",
-            "description": "Name of Reference Genome hg19",
-            "required": true,
-            "type": "string"
-          },
-          {
             "in": "body",
             "name": "geneIds",
             "description": "List of Entrez Gene IDs",
@@ -2312,6 +2413,13 @@
                 "type": "string"
               }
             }
+          },
+          {
+            "name": "genomeName",
+            "in": "path",
+            "description": "Name of Reference Genome hg19",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -2324,7 +2432,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/reference-genome-genes/{genomeName}/{geneId}": {
@@ -2339,19 +2448,19 @@
         ],
         "parameters": [
           {
-            "name": "genomeName",
-            "in": "path",
-            "description": "Name of Reference Genome hg19",
-            "required": true,
-            "type": "string"
-          },
-          {
             "name": "geneId",
             "in": "path",
             "description": "Entrez Gene ID 207",
             "required": true,
             "type": "integer",
             "format": "int32"
+          },
+          {
+            "name": "genomeName",
+            "in": "path",
+            "description": "Name of Reference Genome hg19",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -2361,7 +2470,8 @@
               "$ref": "#/definitions/ReferenceGenomeGene"
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/sample-lists": {
@@ -2376,18 +2486,29 @@
         ],
         "parameters": [
           {
-            "name": "projection",
+            "name": "direction",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Direction of the sort",
             "required": false,
             "type": "string",
-            "default": "SUMMARY",
+            "default": "ASC",
+            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
+              "ASC",
+              "DESC"
             ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -2400,18 +2521,23 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
           },
           {
             "name": "sortBy",
@@ -2419,24 +2545,13 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "sampleListId",
               "category",
               "studyId",
               "name",
               "description"
-            ]
-          },
-          {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
             ]
           }
         ],
@@ -2450,7 +2565,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/sample-lists/fetch": {
@@ -2468,6 +2584,21 @@
         ],
         "parameters": [
           {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
             "in": "body",
             "name": "sampleListIds",
             "description": "List of sample list IDs",
@@ -2478,20 +2609,6 @@
                 "type": "string"
               }
             }
-          },
-          {
-            "name": "projection",
-            "in": "query",
-            "description": "Level of detail of the response",
-            "required": false,
-            "type": "string",
-            "default": "SUMMARY",
-            "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
-            ]
           }
         ],
         "responses": {
@@ -2504,7 +2621,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/sample-lists/{sampleListId}": {
@@ -2533,7 +2651,8 @@
               "$ref": "#/definitions/SampleList"
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/sample-lists/{sampleListId}/sample-ids": {
@@ -2565,7 +2684,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/samples": {
@@ -2580,25 +2700,37 @@
         ],
         "parameters": [
           {
+            "name": "direction",
+            "in": "query",
+            "description": "Direction of the sort",
+            "required": false,
+            "type": "string",
+            "default": "ASC",
+            "allowEmptyValue": false,
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          {
             "name": "keyword",
             "in": "query",
             "description": "Search keyword that applies to the study ID",
             "required": false,
-            "type": "string"
+            "type": "string",
+            "allowEmptyValue": false
           },
           {
-            "name": "projection",
+            "name": "pageNumber",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Page number of the result list",
             "required": false,
-            "type": "string",
-            "default": "SUMMARY",
-            "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
-            ]
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -2611,18 +2743,23 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
           },
           {
             "name": "sortBy",
@@ -2630,21 +2767,10 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "sampleId",
               "sampleType"
-            ]
-          },
-          {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
             ]
           }
         ],
@@ -2658,7 +2784,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/samples/fetch": {
@@ -2676,6 +2803,21 @@
         ],
         "parameters": [
           {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
             "in": "body",
             "name": "sampleFilter",
             "description": "List of sample identifiers",
@@ -2683,20 +2825,6 @@
             "schema": {
               "$ref": "#/definitions/SampleFilter"
             }
-          },
-          {
-            "name": "projection",
-            "in": "query",
-            "description": "Level of detail of the response",
-            "required": false,
-            "type": "string",
-            "default": "SUMMARY",
-            "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
-            ]
           }
         ],
         "responses": {
@@ -2709,7 +2837,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/structuralvariant/fetch": {
@@ -2727,6 +2856,17 @@
         ],
         "parameters": [
           {
+            "name": "entrezGeneIds",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "collectionFormat": "multi"
+          },
+          {
             "name": "molecularProfileIds",
             "in": "query",
             "required": false,
@@ -2739,24 +2879,13 @@
             "minimum": 1
           },
           {
-            "name": "entrezGeneIds",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "collectionFormat": "multi"
-          },
-          {
-            "name": "sampleMolecularIdentifiers[0].sampleId",
+            "name": "sampleMolecularIdentifiers[0].molecularProfileId",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "sampleMolecularIdentifiers[0].molecularProfileId",
+            "name": "sampleMolecularIdentifiers[0].sampleId",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2781,7 +2910,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies": {
@@ -2796,25 +2926,37 @@
         ],
         "parameters": [
           {
+            "name": "direction",
+            "in": "query",
+            "description": "Direction of the sort",
+            "required": false,
+            "type": "string",
+            "default": "ASC",
+            "allowEmptyValue": false,
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          {
             "name": "keyword",
             "in": "query",
             "description": "Search keyword that applies to name and cancer type of the studies",
             "required": false,
-            "type": "string"
+            "type": "string",
+            "allowEmptyValue": false
           },
           {
-            "name": "projection",
+            "name": "pageNumber",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Page number of the result list",
             "required": false,
-            "type": "string",
-            "default": "SUMMARY",
-            "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
-            ]
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -2827,18 +2969,23 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
           },
           {
             "name": "sortBy",
@@ -2846,6 +2993,7 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "studyId",
               "cancerTypeId",
@@ -2859,18 +3007,6 @@
               "status",
               "importDate"
             ]
-          },
-          {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
-            ]
           }
         ],
         "responses": {
@@ -2883,7 +3019,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/fetch": {
@@ -2901,6 +3038,21 @@
         ],
         "parameters": [
           {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
             "in": "body",
             "name": "studyIds",
             "description": "List of Study IDs",
@@ -2911,20 +3063,6 @@
                 "type": "string"
               }
             }
-          },
-          {
-            "name": "projection",
-            "in": "query",
-            "description": "Level of detail of the response",
-            "required": false,
-            "type": "string",
-            "default": "SUMMARY",
-            "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
-            ]
           }
         ],
         "responses": {
@@ -2937,7 +3075,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/tags/fetch": {
@@ -2977,7 +3116,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}": {
@@ -3006,7 +3146,8 @@
               "$ref": "#/definitions/CancerStudy"
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/clinical-attributes": {
@@ -3021,25 +3162,29 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
-            "in": "path",
-            "description": "Study ID e.g. acc_tcga",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "projection",
+            "name": "direction",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Direction of the sort",
             "required": false,
             "type": "string",
-            "default": "SUMMARY",
+            "default": "ASC",
+            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
+              "ASC",
+              "DESC"
             ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -3052,18 +3197,23 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
           },
           {
             "name": "sortBy",
@@ -3071,6 +3221,7 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "clinicalAttributeId",
               "displayName",
@@ -3082,16 +3233,11 @@
             ]
           },
           {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
-            ]
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -3104,7 +3250,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/clinical-attributes/{clinicalAttributeId}": {
@@ -3119,16 +3266,16 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
+            "name": "clinicalAttributeId",
             "in": "path",
-            "description": "Study ID e.g. acc_tcga",
+            "description": "Clinical Attribute ID e.g. CANCER_TYPE",
             "required": true,
             "type": "string"
           },
           {
-            "name": "clinicalAttributeId",
+            "name": "studyId",
             "in": "path",
-            "description": "Clinical Attribute ID e.g. CANCER_TYPE",
+            "description": "Study ID e.g. acc_tcga",
             "required": true,
             "type": "string"
           }
@@ -3140,7 +3287,8 @@
               "$ref": "#/definitions/ClinicalAttribute"
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/clinical-data": {
@@ -3155,18 +3303,12 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
-            "in": "path",
-            "description": "Study ID e.g. acc_tcga",
-            "required": true,
-            "type": "string"
-          },
-          {
             "name": "attributeId",
             "in": "query",
             "description": "Attribute ID e.g. CANCER_TYPE",
             "required": false,
-            "type": "string"
+            "type": "string",
+            "allowEmptyValue": false
           },
           {
             "name": "clinicalDataType",
@@ -3175,24 +3317,36 @@
             "required": false,
             "type": "string",
             "default": "SAMPLE",
+            "allowEmptyValue": false,
             "enum": [
               "SAMPLE",
               "PATIENT"
             ]
           },
           {
-            "name": "projection",
+            "name": "direction",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Direction of the sort",
             "required": false,
             "type": "string",
-            "default": "SUMMARY",
+            "default": "ASC",
+            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
+              "ASC",
+              "DESC"
             ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -3205,18 +3359,23 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
           },
           {
             "name": "sortBy",
@@ -3224,22 +3383,18 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "clinicalAttributeId",
               "value"
             ]
           },
           {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
-            ]
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -3252,7 +3407,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/clinical-data/fetch": {
@@ -3270,25 +3426,6 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
-            "in": "path",
-            "description": "Study ID e.g. acc_tcga",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "clinicalDataType",
-            "in": "query",
-            "description": "Type of the clinical data",
-            "required": false,
-            "type": "string",
-            "default": "SAMPLE",
-            "enum": [
-              "SAMPLE",
-              "PATIENT"
-            ]
-          },
-          {
             "in": "body",
             "name": "clinicalDataSingleStudyFilter",
             "description": "List of patient or sample IDs and attribute IDs",
@@ -3298,18 +3435,39 @@
             }
           },
           {
+            "name": "clinicalDataType",
+            "in": "query",
+            "description": "Type of the clinical data",
+            "required": false,
+            "type": "string",
+            "default": "SAMPLE",
+            "allowEmptyValue": false,
+            "enum": [
+              "SAMPLE",
+              "PATIENT"
+            ]
+          },
+          {
             "name": "projection",
             "in": "query",
             "description": "Level of detail of the response",
             "required": false,
             "type": "string",
             "default": "SUMMARY",
+            "allowEmptyValue": false,
             "enum": [
               "ID",
               "SUMMARY",
               "DETAILED",
               "META"
             ]
+          },
+          {
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -3322,7 +3480,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/clinical-events": {
@@ -3337,25 +3496,29 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
-            "in": "path",
-            "description": "Study ID e.g. lgg_ucsf_2014",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "projection",
+            "name": "direction",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Direction of the sort",
             "required": false,
             "type": "string",
-            "default": "SUMMARY",
+            "default": "ASC",
+            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
+              "ASC",
+              "DESC"
             ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -3368,18 +3531,23 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
           },
           {
             "name": "sortBy",
@@ -3387,6 +3555,7 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "eventType",
               "startNumberOfDaysSinceDiagnosis",
@@ -3394,16 +3563,11 @@
             ]
           },
           {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
-            ]
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. lgg_ucsf_2014",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -3416,7 +3580,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/molecular-profiles": {
@@ -3431,25 +3596,29 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
-            "in": "path",
-            "description": "Study ID e.g. acc_tcga",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "projection",
+            "name": "direction",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Direction of the sort",
             "required": false,
             "type": "string",
-            "default": "SUMMARY",
+            "default": "ASC",
+            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
+              "ASC",
+              "DESC"
             ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -3462,18 +3631,23 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
           },
           {
             "name": "sortBy",
@@ -3481,6 +3655,7 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "molecularProfileId",
               "molecularAlterationType",
@@ -3491,16 +3666,11 @@
             ]
           },
           {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
-            ]
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -3513,7 +3683,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/patients": {
@@ -3528,25 +3699,29 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
-            "in": "path",
-            "description": "Study ID e.g. acc_tcga",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "projection",
+            "name": "direction",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Direction of the sort",
             "required": false,
             "type": "string",
-            "default": "SUMMARY",
+            "default": "ASC",
+            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
+              "ASC",
+              "DESC"
             ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -3559,18 +3734,23 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
           },
           {
             "name": "sortBy",
@@ -3578,21 +3758,17 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "patientId"
             ]
           },
           {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
-            ]
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -3605,7 +3781,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/patients/{patientId}": {
@@ -3620,16 +3797,16 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
+            "name": "patientId",
             "in": "path",
-            "description": "Study ID e.g. acc_tcga",
+            "description": "Patient ID e.g. TCGA-OR-A5J2",
             "required": true,
             "type": "string"
           },
           {
-            "name": "patientId",
+            "name": "studyId",
             "in": "path",
-            "description": "Patient ID e.g. TCGA-OR-A5J2",
+            "description": "Study ID e.g. acc_tcga",
             "required": true,
             "type": "string"
           }
@@ -3641,7 +3818,8 @@
               "$ref": "#/definitions/Patient"
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/patients/{patientId}/clinical-data": {
@@ -3656,39 +3834,37 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
-            "in": "path",
-            "description": "Study ID e.g. acc_tcga",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "patientId",
-            "in": "path",
-            "description": "Patient ID e.g. TCGA-OR-A5J2",
-            "required": true,
-            "type": "string"
-          },
-          {
             "name": "attributeId",
             "in": "query",
             "description": "Attribute ID e.g. AGE",
             "required": false,
-            "type": "string"
+            "type": "string",
+            "allowEmptyValue": false
           },
           {
-            "name": "projection",
+            "name": "direction",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Direction of the sort",
             "required": false,
             "type": "string",
-            "default": "SUMMARY",
+            "default": "ASC",
+            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
+              "ASC",
+              "DESC"
             ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -3701,18 +3877,30 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "patientId",
+            "in": "path",
+            "description": "Patient ID e.g. TCGA-OR-A5J2",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
           },
           {
             "name": "sortBy",
@@ -3720,22 +3908,18 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "clinicalAttributeId",
               "value"
             ]
           },
           {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
-            ]
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -3748,7 +3932,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/patients/{patientId}/clinical-events": {
@@ -3763,11 +3948,43 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
-            "in": "path",
-            "description": "Study ID e.g. lgg_ucsf_2014",
-            "required": true,
-            "type": "string"
+            "name": "direction",
+            "in": "query",
+            "description": "Direction of the sort",
+            "required": false,
+            "type": "string",
+            "default": "ASC",
+            "allowEmptyValue": false,
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Page size of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "patientId",
@@ -3783,6 +4000,7 @@
             "required": false,
             "type": "string",
             "default": "SUMMARY",
+            "allowEmptyValue": false,
             "enum": [
               "ID",
               "SUMMARY",
@@ -3791,35 +4009,12 @@
             ]
           },
           {
-            "name": "pageSize",
-            "in": "query",
-            "description": "Page size of the result list",
-            "required": false,
-            "type": "integer",
-            "default": 10000000,
-            "maximum": 10000000,
-            "exclusiveMaximum": false,
-            "minimum": 1,
-            "exclusiveMinimum": false,
-            "format": "int32"
-          },
-          {
-            "name": "pageNumber",
-            "in": "query",
-            "description": "Page number of the result list",
-            "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
-          },
-          {
             "name": "sortBy",
             "in": "query",
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "eventType",
               "startNumberOfDaysSinceDiagnosis",
@@ -3827,16 +4022,11 @@
             ]
           },
           {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
-            ]
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. lgg_ucsf_2014",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -3849,7 +4039,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/patients/{patientId}/resource-data": {
@@ -3864,39 +4055,29 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
-            "in": "path",
-            "description": "Study ID e.g. acc_tcga",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "patientId",
-            "in": "path",
-            "description": "Patient ID e.g. TCGA-OR-A5J2",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "resourceId",
+            "name": "direction",
             "in": "query",
-            "description": "Resource ID",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "projection",
-            "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Direction of the sort",
             "required": false,
             "type": "string",
-            "default": "SUMMARY",
+            "default": "ASC",
+            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
+              "ASC",
+              "DESC"
             ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -3909,18 +4090,38 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "patientId",
+            "in": "path",
+            "description": "Patient ID e.g. TCGA-OR-A5J2",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
+            "name": "resourceId",
+            "in": "query",
+            "description": "Resource ID",
+            "required": false,
+            "type": "string",
+            "allowEmptyValue": false
           },
           {
             "name": "sortBy",
@@ -3928,22 +4129,18 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "ResourceId",
               "url"
             ]
           },
           {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
-            ]
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -3956,7 +4153,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/patients/{patientId}/samples": {
@@ -3971,11 +4169,43 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
-            "in": "path",
-            "description": "Study ID e.g. acc_tcga",
-            "required": true,
-            "type": "string"
+            "name": "direction",
+            "in": "query",
+            "description": "Direction of the sort",
+            "required": false,
+            "type": "string",
+            "default": "ASC",
+            "allowEmptyValue": false,
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Page size of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "patientId",
@@ -3991,6 +4221,7 @@
             "required": false,
             "type": "string",
             "default": "SUMMARY",
+            "allowEmptyValue": false,
             "enum": [
               "ID",
               "SUMMARY",
@@ -3999,51 +4230,23 @@
             ]
           },
           {
-            "name": "pageSize",
-            "in": "query",
-            "description": "Page size of the result list",
-            "required": false,
-            "type": "integer",
-            "default": 10000000,
-            "maximum": 10000000,
-            "exclusiveMaximum": false,
-            "minimum": 1,
-            "exclusiveMinimum": false,
-            "format": "int32"
-          },
-          {
-            "name": "pageNumber",
-            "in": "query",
-            "description": "Page number of the result list",
-            "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
-          },
-          {
             "name": "sortBy",
             "in": "query",
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "sampleId",
               "sampleType"
             ]
           },
           {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
-            ]
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -4056,7 +4259,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/resource-data": {
@@ -4071,32 +4275,29 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
-            "in": "path",
-            "description": "Study ID e.g. acc_tcga",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "resourceId",
+            "name": "direction",
             "in": "query",
-            "description": "Resource ID",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "projection",
-            "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Direction of the sort",
             "required": false,
             "type": "string",
-            "default": "SUMMARY",
+            "default": "ASC",
+            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
+              "ASC",
+              "DESC"
             ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -4109,18 +4310,31 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
+            "name": "resourceId",
+            "in": "query",
+            "description": "Resource ID",
+            "required": false,
+            "type": "string",
+            "allowEmptyValue": false
           },
           {
             "name": "sortBy",
@@ -4128,22 +4342,18 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "ResourceId",
               "url"
             ]
           },
           {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
-            ]
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -4156,7 +4366,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/resource-definitions": {
@@ -4171,25 +4382,29 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
-            "in": "path",
-            "description": "Study ID e.g. acc_tcga",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "projection",
+            "name": "direction",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Direction of the sort",
             "required": false,
             "type": "string",
-            "default": "SUMMARY",
+            "default": "ASC",
+            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
+              "ASC",
+              "DESC"
             ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -4202,18 +4417,23 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
           },
           {
             "name": "sortBy",
@@ -4221,6 +4441,7 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "resourceId",
               "displayName",
@@ -4232,16 +4453,11 @@
             ]
           },
           {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
-            ]
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -4254,7 +4470,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/resource-definitions/{resourceId}": {
@@ -4269,16 +4486,16 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
+            "name": "resourceId",
             "in": "path",
-            "description": "Study ID e.g. acc_tcga",
+            "description": "Resource ID",
             "required": true,
             "type": "string"
           },
           {
-            "name": "resourceId",
+            "name": "studyId",
             "in": "path",
-            "description": "Resource ID",
+            "description": "Study ID e.g. acc_tcga",
             "required": true,
             "type": "string"
           }
@@ -4290,7 +4507,8 @@
               "$ref": "#/definitions/ResourceDefinition"
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/sample-lists": {
@@ -4305,25 +4523,29 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
-            "in": "path",
-            "description": "Study ID e.g. acc_tcga",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "projection",
+            "name": "direction",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Direction of the sort",
             "required": false,
             "type": "string",
-            "default": "SUMMARY",
+            "default": "ASC",
+            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
+              "ASC",
+              "DESC"
             ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -4336,18 +4558,23 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
           },
           {
             "name": "sortBy",
@@ -4355,6 +4582,7 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "sampleListId",
               "category",
@@ -4364,16 +4592,11 @@
             ]
           },
           {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
-            ]
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -4386,7 +4609,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/samples": {
@@ -4401,25 +4625,29 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
-            "in": "path",
-            "description": "Study ID e.g. acc_tcga",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "projection",
+            "name": "direction",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Direction of the sort",
             "required": false,
             "type": "string",
-            "default": "SUMMARY",
+            "default": "ASC",
+            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
+              "ASC",
+              "DESC"
             ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -4432,18 +4660,23 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
           },
           {
             "name": "sortBy",
@@ -4451,22 +4684,18 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "sampleId",
               "sampleType"
             ]
           },
           {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
-            ]
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -4479,7 +4708,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/samples/{sampleId}": {
@@ -4494,16 +4724,16 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
+            "name": "sampleId",
             "in": "path",
-            "description": "Study ID e.g. acc_tcga",
+            "description": "Sample ID e.g. TCGA-OR-A5J2-01",
             "required": true,
             "type": "string"
           },
           {
-            "name": "sampleId",
+            "name": "studyId",
             "in": "path",
-            "description": "Sample ID e.g. TCGA-OR-A5J2-01",
+            "description": "Study ID e.g. acc_tcga",
             "required": true,
             "type": "string"
           }
@@ -4515,7 +4745,8 @@
               "$ref": "#/definitions/Sample"
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/samples/{sampleId}/clinical-data": {
@@ -4530,39 +4761,37 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
-            "in": "path",
-            "description": "Study ID e.g. acc_tcga",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "sampleId",
-            "in": "path",
-            "description": "Sample ID e.g. TCGA-OR-A5J2-01",
-            "required": true,
-            "type": "string"
-          },
-          {
             "name": "attributeId",
             "in": "query",
             "description": "Attribute ID e.g. CANCER_TYPE",
             "required": false,
-            "type": "string"
+            "type": "string",
+            "allowEmptyValue": false
           },
           {
-            "name": "projection",
+            "name": "direction",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Direction of the sort",
             "required": false,
             "type": "string",
-            "default": "SUMMARY",
+            "default": "ASC",
+            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
+              "ASC",
+              "DESC"
             ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -4575,18 +4804,30 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
+            "name": "sampleId",
+            "in": "path",
+            "description": "Sample ID e.g. TCGA-OR-A5J2-01",
+            "required": true,
+            "type": "string"
           },
           {
             "name": "sortBy",
@@ -4594,22 +4835,18 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "clinicalAttributeId",
               "value"
             ]
           },
           {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
-            ]
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -4622,7 +4859,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/samples/{sampleId}/copy-number-segments": {
@@ -4637,39 +4875,37 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
-            "in": "path",
-            "description": "Study ID e.g. acc_tcga",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "sampleId",
-            "in": "path",
-            "description": "Sample ID e.g. TCGA-OR-A5J2-01",
-            "required": true,
-            "type": "string"
-          },
-          {
             "name": "chromosome",
             "in": "query",
             "description": "Chromosome",
             "required": false,
-            "type": "string"
+            "type": "string",
+            "allowEmptyValue": false
           },
           {
-            "name": "projection",
+            "name": "direction",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Direction of the sort",
             "required": false,
             "type": "string",
-            "default": "SUMMARY",
+            "default": "ASC",
+            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
+              "ASC",
+              "DESC"
             ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -4682,18 +4918,30 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
+            "name": "sampleId",
+            "in": "path",
+            "description": "Sample ID e.g. TCGA-OR-A5J2-01",
+            "required": true,
+            "type": "string"
           },
           {
             "name": "sortBy",
@@ -4701,6 +4949,7 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "chromosome",
               "start",
@@ -4710,16 +4959,11 @@
             ]
           },
           {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
-            ]
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -4732,7 +4976,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/samples/{sampleId}/resource-data": {
@@ -4747,39 +4992,29 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
-            "in": "path",
-            "description": "Study ID e.g. acc_tcga",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "sampleId",
-            "in": "path",
-            "description": "Sample ID e.g. TCGA-OR-A5J2-01",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "resourceId",
+            "name": "direction",
             "in": "query",
-            "description": "Resource ID",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "projection",
-            "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Direction of the sort",
             "required": false,
             "type": "string",
-            "default": "SUMMARY",
+            "default": "ASC",
+            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
+              "ASC",
+              "DESC"
             ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -4792,18 +5027,38 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
+            "name": "resourceId",
+            "in": "query",
+            "description": "Resource ID",
+            "required": false,
+            "type": "string",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "sampleId",
+            "in": "path",
+            "description": "Sample ID e.g. TCGA-OR-A5J2-01",
+            "required": true,
+            "type": "string"
           },
           {
             "name": "sortBy",
@@ -4811,22 +5066,18 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "ResourceId",
               "url"
             ]
           },
           {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
-            ]
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -4839,7 +5090,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/tags": {
@@ -4868,7 +5120,8 @@
               "type": "object"
             }
           }
-        }
+        },
+        "deprecated": false
       }
     }
   },
