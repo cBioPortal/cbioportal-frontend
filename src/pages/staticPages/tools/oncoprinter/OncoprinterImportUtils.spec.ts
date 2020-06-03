@@ -261,6 +261,24 @@ describe('OncoprinterImportUtils', () => {
                     `sample2  19  12  ${ONCOPRINTER_CLINICAL_VAL_NA}  ${ONCOPRINTER_CLINICAL_VAL_NA}`
             );
         });
-        it('produces correct oncoprinter clinical input for 2 patients x 4 tracks', () => {});
+        it('produces correct oncoprinter clinical input for 2 patients x 4 tracks', () => {
+            assert.deepEqual(
+                getOncoprinterClinicalInput(
+                    data,
+                    ['patient1', 'patient2'],
+                    [
+                        'age',
+                        'MUTATION_COUNT',
+                        'cancer_type',
+                        SpecialAttribute.MutationSpectrum,
+                    ],
+                    attributeIdToAttribute,
+                    'patient'
+                ),
+                'Sample  Age(number)  Mutation_Count(lognumber)  Cancer_type(string)  Mutation_Spectrum(C>A/C>G/C>T/T>A/T>C/T>G)\n' +
+                    `patient1  ${ONCOPRINTER_CLINICAL_VAL_NA}  5  Prostate  3/4/5/10/2/0\n` +
+                    `patient2  19  12  ${ONCOPRINTER_CLINICAL_VAL_NA}  ${ONCOPRINTER_CLINICAL_VAL_NA}`
+            );
+        });
     });
 });
