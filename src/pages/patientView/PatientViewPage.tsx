@@ -1206,6 +1206,11 @@ export default class PatientViewPage extends React.Component<
                                                             .patientViewPageStore
                                                             .clinicalDataGroupedBySampleMap
                                                     }
+                                                    existsSomeMutationWithAscnProperty={
+                                                        this
+                                                            .patientViewPageStore
+                                                            .existsSomeMutationWithAscnProperty
+                                                    }
                                                 />
                                             </div>
                                         )}

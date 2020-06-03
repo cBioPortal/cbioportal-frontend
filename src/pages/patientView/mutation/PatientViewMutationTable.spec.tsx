@@ -38,6 +38,7 @@ function getTable(
             ]}
             data={[]}
             generateGenomeNexusHgvsgUrl={(s: string) => s}
+            existsSomeMutationWithAscnProperty={{}}
         />
     );
 }

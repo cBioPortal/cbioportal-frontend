@@ -27,6 +27,7 @@ export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     discreteCNACache?: DiscreteCNACache;
     cancerTypeCache?: CancerTypeCache;
     mutationCountCache?: MutationCountCache;
+    existsSomeMutationWithAscnProperty: { [property: string]: boolean };
     genomeNexusMyVariantInfoCache?: GenomeNexusMyVariantInfoCache;
     userEmailAddress: string;
 }
@@ -144,6 +145,9 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 }
                 sampleIdToClinicalDataMap={
                     this.props.store.clinicalDataGroupedBySampleMap
+                }
+                existsSomeMutationWithAscnProperty={
+                    this.props.existsSomeMutationWithAscnProperty
                 }
             />
         );

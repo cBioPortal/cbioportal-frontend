@@ -58,6 +58,7 @@ import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
 import {
     cancerTypeForOncoKb,
+    existsSomeMutationWithAscnPropertyInCollection,
     fetchAllReferenceGenomeGenes,
     fetchCnaOncoKbDataWithNumericGeneMolecularData,
     fetchCopyNumberSegmentsForSamples,
@@ -2711,6 +2712,20 @@ export class ResultsViewPageStore {
             );
         },
     });
+
+    @computed get existsSomeMutationWithAscnProperty(): {
+        [property: string]: boolean;
+    } {
+        if (this.mutations.result === undefined) {
+            return existsSomeMutationWithAscnPropertyInCollection(
+                [] as Mutation[]
+            );
+        } else {
+            return existsSomeMutationWithAscnPropertyInCollection(
+                this.mutations.result
+            );
+        }
+    }
 
     public mutationsTabFilteringSettings = this.makeMutationsTabFilteringSettings();
 

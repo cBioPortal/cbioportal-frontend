@@ -6,6 +6,7 @@ import {
     MutationTableColumnType,
     default as MutationTable,
 } from 'shared/components/mutationTable/MutationTable';
+import PatientViewMutationsDataStore from './PatientViewMutationsDataStore';
 import SampleManager from '../SampleManager';
 import { Mutation } from 'cbioportal-ts-api-client';
 import AlleleCountColumnFormatter from 'shared/components/mutationTable/column/AlleleCountColumnFormatter';
@@ -33,6 +34,7 @@ export interface IPatientViewMutationTableProps extends IMutationTableProps {
     onFilterGenes?: (option: GeneFilterOption) => void;
     onSelectGenePanel?: (name: string) => void;
     disableTooltip?: boolean;
+    existsSomeMutationWithAscnProperty: { [property: string]: boolean };
 }
 
 @observer
@@ -314,33 +316,33 @@ export default class PatientViewMutationTable extends MutationTable<
         };
 
         this._columns[MutationTableColumnType.CLONAL].shouldExclude = () => {
-            return !this.anyMutationHasASCNProperty(
+            return !this.props.existsSomeMutationWithAscnProperty[
                 ASCNAttributes.CCF_M_COPIES_STRING
-            );
+            ];
         };
 
         this._columns[
             MutationTableColumnType.ASCN_METHOD
         ].shouldExclude = () => {
-            return !this.anyMutationHasASCNProperty(
+            return !this.props.existsSomeMutationWithAscnProperty[
                 ASCNAttributes.ASCN_METHOD_STRING
-            );
+            ];
         };
 
         this._columns[
             MutationTableColumnType.CANCER_CELL_FRACTION
         ].shouldExclude = () => {
-            return !this.anyMutationHasASCNProperty(
+            return !this.props.existsSomeMutationWithAscnProperty[
                 ASCNAttributes.CCF_M_COPIES_STRING
-            );
+            ];
         };
 
         this._columns[
             MutationTableColumnType.MUTANT_COPIES
         ].shouldExclude = () => {
-            return !this.anyMutationHasASCNProperty(
+            return !this.props.existsSomeMutationWithAscnProperty[
                 ASCNAttributes.MUTANT_COPIES_STRING
-            );
+            ];
         };
 
         // only hide tumor column if there is one sample and no uncalled

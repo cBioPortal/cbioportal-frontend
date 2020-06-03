@@ -1125,33 +1125,4 @@ export default class MutationTable<
             />
         );
     }
-
-    @computed protected get getMutations() {
-        let data: Mutation[][] | undefined = [];
-        if (this.props.dataStore) {
-            data = this.props.dataStore.allData;
-        } else if (this.props.data) {
-            data = this.props.data;
-        }
-        return data;
-    }
-
-    /**
-     * searches all available mutation data for any mutation with the passed field key
-     * @param property the field name to search for
-     * @returns true if any available mutation is annotated with the passed property name
-     */
-    protected anyMutationHasASCNProperty(property: string): boolean {
-        let data = this.getMutations;
-        if (data) {
-            return data.some((row: Mutation[]) => {
-                /* if at least one row ... */
-                return row.some((m: Mutation) => {
-                    /* contains at least one mutation record ... */
-                    return hasASCNProperty(m, property);
-                });
-            });
-        }
-        return false;
-    }
 }

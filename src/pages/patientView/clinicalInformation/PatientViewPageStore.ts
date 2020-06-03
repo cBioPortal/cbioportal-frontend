@@ -59,6 +59,7 @@ import MutationCountCache from 'shared/cache/MutationCountCache';
 import AppConfig from 'appConfig';
 import {
     concatMutationData,
+    existsSomeMutationWithAscnPropertyInCollection,
     fetchClinicalData,
     fetchClinicalDataForPatient,
     fetchCnaOncoKbData,
@@ -104,7 +105,7 @@ import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
 import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownloadDataFetcher';
-import { getNavCaseIdsCache } from '../../../shared/lib/handleLongUrls';
+import { getNavCaseIdsCache } from 'shared/lib/handleLongUrls';
 import {
     fetchTrialMatchesUsingPOST,
     fetchTrialsById,
@@ -122,7 +123,7 @@ import {
     computeGenePanelInformation,
     CoverageInformation,
 } from '../../resultsView/ResultsViewPageStoreUtils';
-import { getVariantAlleleFrequency } from '../../../shared/lib/MutationUtils';
+import { getVariantAlleleFrequency } from 'shared/lib/MutationUtils';
 import { AppStore, SiteError } from 'AppStore';
 import { getGeneFilterDefault } from './PatientViewPageStoreUtil';
 import { checkNonProfiledGenesExist } from '../PatientViewPageUtils';
@@ -1450,6 +1451,14 @@ export class PatientViewPageStore {
                     return vaf != null && vaf > 0;
                 });
             }
+        );
+    }
+
+    @computed get existsSomeMutationWithAscnProperty(): {
+        [property: string]: boolean;
+    } {
+        return existsSomeMutationWithAscnPropertyInCollection(
+            this.mergedMutationDataIncludingUncalled
         );
     }
 

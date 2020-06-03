@@ -347,6 +347,9 @@ export default class PatientViewMutationsTab extends React.Component<
                     sampleIdToClinicalDataMap={
                         this.props.store.clinicalDataGroupedBySampleMap
                     }
+                    existsSomeMutationWithAscnProperty={
+                        this.props.store.existsSomeMutationWithAscnProperty
+                    }
                 />
             </div>
         ),

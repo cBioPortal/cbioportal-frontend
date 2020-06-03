@@ -293,7 +293,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
             isPending: false,
             isError: true,
             isComplete: false,
-            error: 'MockError' as 'MockError',
+            error: new Error('MockError'),
         };
     }
 

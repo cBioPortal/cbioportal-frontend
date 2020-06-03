@@ -15,6 +15,7 @@ import { ASCNAttributes } from 'shared/enums/ASCNEnums';
 export interface IResultsViewMutationTableProps extends IMutationTableProps {
     // add results view specific props here if needed
     totalNumberOfExons?: string;
+    existsSomeMutationWithAscnProperty: { [property: string]: boolean };
 }
 //
 @observer
@@ -140,33 +141,33 @@ export default class ResultsViewMutationTable extends MutationTable<
         };
 
         this._columns[MutationTableColumnType.CLONAL].shouldExclude = () => {
-            return !this.anyMutationHasASCNProperty(
+            return !this.props.existsSomeMutationWithAscnProperty[
                 ASCNAttributes.CCF_M_COPIES_STRING
-            );
+            ];
         };
 
         this._columns[
             MutationTableColumnType.ASCN_METHOD
         ].shouldExclude = () => {
-            return !this.anyMutationHasASCNProperty(
+            return !this.props.existsSomeMutationWithAscnProperty[
                 ASCNAttributes.ASCN_METHOD_STRING
-            );
+            ];
         };
 
         this._columns[
             MutationTableColumnType.CANCER_CELL_FRACTION
         ].shouldExclude = () => {
-            return !this.anyMutationHasASCNProperty(
+            return !this.props.existsSomeMutationWithAscnProperty[
                 ASCNAttributes.CCF_M_COPIES_STRING
-            );
+            ];
         };
 
         this._columns[
             MutationTableColumnType.MUTANT_COPIES
         ].shouldExclude = () => {
-            return !this.anyMutationHasASCNProperty(
+            return !this.props.existsSomeMutationWithAscnProperty[
                 ASCNAttributes.MUTANT_COPIES_STRING
-            );
+            ];
         };
 
         this._columns[
