@@ -243,10 +243,12 @@ export default class WaterfallPlot<
         ) {
             return 0;
         } else {
-            return getBottomLegendHeight(
-                this.legendItemsPerRow,
-                this.props.legendData,
-                this.props.legendTitle
+            return (
+                getBottomLegendHeight(
+                    this.legendItemsPerRow,
+                    this.props.legendData,
+                    this.props.legendTitle
+                ) + 50
             );
         }
     }
