@@ -5,7 +5,7 @@ import {
     IThreshold1D,
     IThreshold2D,
 } from 'pages/resultsView/plots/PlotsTabUtils';
-import Timer = NodeJS.Timer;
+import Timeout = NodeJS.Timeout;
 import { getTextHeight, getTextWidth } from 'cbioportal-frontend-commons';
 import CBIOPORTAL_VICTORY_THEME, {
     legendLabelStyles,
@@ -151,7 +151,7 @@ export function makeMouseEvents(self: {
     tooltipModel: any;
     pointHovered: boolean;
 }) {
-    let disappearTimeout: Timer | null = null;
+    let disappearTimeout: Timeout | null = null;
     const disappearDelayMs = 250;
 
     return [
