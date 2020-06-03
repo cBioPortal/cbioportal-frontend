@@ -9,17 +9,21 @@ import ClonalElement from 'shared/components/mutationTable/column/clonal/ClonalE
  */
 
 export enum ClonalValue {
-    YES = 'yes',
-    NO = 'no',
+    CLONAL = 'CLONAL',
+    SUBCLONAL = 'SUBCLONAL',
+    INDETERMINATE = 'INDETERMINATE',
     NA = 'NA',
 }
 
 function getClonalValue(mutation: Mutation): ClonalValue {
     let textValue: ClonalValue = ClonalValue.NA;
     if (hasASCNProperty(mutation, 'clonal')) {
-        textValue = mutation.alleleSpecificCopyNumber.clonal
-            ? ClonalValue.YES
-            : ClonalValue.NO;
+        textValue =
+            mutation.alleleSpecificCopyNumber.clonal in ClonalValue &&
+            mutation.alleleSpecificCopyNumber.clonal !==
+                ClonalValue.INDETERMINATE
+                ? (ClonalValue as any)[mutation.alleleSpecificCopyNumber.clonal] // needs the cast to prevent typescript error
+                : ClonalValue.NA;
     }
     return textValue;
 }
@@ -30,7 +34,6 @@ export const getDefaultClonalColumnDefinition = (
 ) => {
     return {
         name: 'Clonal',
-        tooltip: <span>FACETS Clonal</span>,
         render: (d: Mutation[]) =>
             ClonalColumnFormatter.renderFunction(
                 d,
@@ -38,7 +41,7 @@ export const getDefaultClonalColumnDefinition = (
                 sampleManager
             ),
         sortBy: (d: Mutation[]) =>
-            d.map(m => m.alleleSpecificCopyNumber.ccfMCopiesUpper),
+            d.map(m => m.alleleSpecificCopyNumber.ccfExpectedCopiesUpper),
         download: (d: Mutation[]) => ClonalColumnFormatter.getClonalDownload(d),
     };
 };
@@ -64,9 +67,9 @@ export default class ClonalColumnFormatter {
             // check must be done because members without values will not be returned in the backend response
             sampleToCCF[mutation.sampleId] = hasASCNProperty(
                 mutation,
-                'ccfMCopies'
+                'ccfExpectedCopies'
             )
-                ? mutation.alleleSpecificCopyNumber.ccfMCopies.toString()
+                ? mutation.alleleSpecificCopyNumber.ccfExpectedCopies.toString()
                 : 'NA';
         }
 
@@ -81,7 +84,7 @@ export default class ClonalColumnFormatter {
                             <ClonalElement
                                 sampleId={sampleId}
                                 clonalValue={sampleToValue[sampleId]}
-                                ccfMCopies={sampleToCCF[sampleId]}
+                                ccfExpectedCopies={sampleToCCF[sampleId]}
                                 sampleManager={sampleManager}
                             />
                         </span>

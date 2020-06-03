@@ -9,8 +9,8 @@ import CancerCellFractionElement from 'shared/components/mutationTable/column/ca
  */
 
 function getCancerCellFractionValue(mutation: Mutation): string {
-    return hasASCNProperty(mutation, 'ccfMCopies')
-        ? mutation.alleleSpecificCopyNumber.ccfMCopies.toFixed(2)
+    return hasASCNProperty(mutation, 'ccfExpectedCopies')
+        ? mutation.alleleSpecificCopyNumber.ccfExpectedCopies.toFixed(2)
         : '';
 }
 
@@ -48,9 +48,9 @@ export default class CancerCellFractionColumnFormatter {
         for (const mutation of data) {
             sampleToCCFValue[mutation.sampleId] = hasASCNProperty(
                 mutation,
-                'ccfMCopies'
+                'ccfExpectedCopies'
             )
-                ? mutation.alleleSpecificCopyNumber.ccfMCopies.toString()
+                ? mutation.alleleSpecificCopyNumber.ccfExpectedCopies.toString()
                 : 'NA';
         }
         return (

@@ -34,7 +34,7 @@ import { getDefaultASCNCopyNumberColumnDefinition } from './ASCNCopyNumberColumn
                     } based on the value of mutation attribute alleleSpecificCopyNumber.ascnIntegerCopyNumber (e.g. [1])
             - text : showing the value of mutation attribute alleleSpecificCopyNumber.TotalCopyNumber
             - optional "WGD" suprascript, evident when the sample represented has clinical
-                    attribute 'FACETS_WGD' containing a value "WGD" (and not "NO_WGD")
+                    attribute 'ASCN_WGD' containing a value "WGD" (and not "NO_WGD")
         - a hoverover tooltip showing one line per sample having the variant, each line with
             - a sample number icon using black SVG circle with superimposed white numeral
             - a text label (e.g. "diploid") corresponding to the ASCNCopyNumberValueEnum
@@ -247,11 +247,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         value: sample6Id,
     });
     const clinicalDataWgd: ClinicalData = initClinicalData({
-        clinicalAttributeId: CLINICAL_ATTRIBUTE_ID_ENUM.FACETS_WGD,
+        clinicalAttributeId: CLINICAL_ATTRIBUTE_ID_ENUM.ASCN_WGD,
         value: 'WGD',
     });
     const clinicalDataNoWgd: ClinicalData = initClinicalData({
-        clinicalAttributeId: CLINICAL_ATTRIBUTE_ID_ENUM.FACETS_WGD,
+        clinicalAttributeId: CLINICAL_ATTRIBUTE_ID_ENUM.ASCN_WGD,
         value: 'NO_WGD',
     });
 

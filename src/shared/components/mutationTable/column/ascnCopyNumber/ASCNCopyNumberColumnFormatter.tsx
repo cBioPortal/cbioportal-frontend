@@ -100,7 +100,7 @@ export function getWGD(
             ? sampleIdToClinicalDataMap[sampleId].find(
                   (cd: ClinicalData) =>
                       cd.clinicalAttributeId ===
-                      CLINICAL_ATTRIBUTE_ID_ENUM.FACETS_WGD
+                      CLINICAL_ATTRIBUTE_ID_ENUM.ASCN_WGD
               )
             : undefined;
     return wgdData !== undefined ? wgdData.value : ASCNCopyNumberValueEnum.NA;
