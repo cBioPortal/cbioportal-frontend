@@ -1,8 +1,12 @@
 import { Patient, ClinicalData } from 'cbioportal-ts-api-client';
 import { PatientSurvival } from '../../shared/model/PatientSurvival';
+import _ from 'lodash';
+import { isNullSurvivalClinicalDataValue } from './survival/SurvivalUtil';
 
 export function getPatientSurvivals(
-    survivalClinicalDataGroupByUniquePatientKey: any,
+    survivalClinicalDataGroupByUniquePatientKey: {
+        [patientKey: string]: ClinicalData[];
+    },
     targetUniquePatientKeys: string[],
     statusAttributeId: string,
     monthsAttributeId: string,
@@ -11,26 +15,26 @@ export function getPatientSurvivals(
     if (targetUniquePatientKeys) {
         return targetUniquePatientKeys.reduce(
             (patientSurvivals: PatientSurvival[], uniquePatientKey: string) => {
-                const clinicalData: ClinicalData[] =
+                const clinicalData =
                     survivalClinicalDataGroupByUniquePatientKey[
                         uniquePatientKey
                     ];
                 if (clinicalData) {
-                    const statusClinicalData:
-                        | ClinicalData
-                        | undefined = clinicalData.find(
+                    const statusClinicalData = clinicalData.find(
                         c => c.clinicalAttributeId === statusAttributeId
                     );
-                    const monthsClinicalData:
-                        | ClinicalData
-                        | undefined = clinicalData.find(
+                    const monthsClinicalData = clinicalData.find(
                         c => c.clinicalAttributeId === monthsAttributeId
                     );
                     if (
                         statusClinicalData &&
                         monthsClinicalData &&
-                        statusClinicalData.value != 'NA' &&
-                        monthsClinicalData.value != 'NA' &&
+                        !isNullSurvivalClinicalDataValue(
+                            statusClinicalData.value
+                        ) &&
+                        !isNullSurvivalClinicalDataValue(
+                            monthsClinicalData.value
+                        ) &&
                         !Number.isNaN(Number(monthsClinicalData.value))
                     ) {
                         patientSurvivals.push({
@@ -43,6 +47,54 @@ export function getPatientSurvivals(
                     }
                 }
                 return patientSurvivals;
+            },
+            []
+        );
+    } else {
+        return [];
+    }
+}
+
+export function getClinicalDataOfPatientSurvivalStatus(
+    survivalClinicalDataGroupByUniquePatientKey: {
+        [patientKey: string]: ClinicalData[];
+    },
+    targetUniquePatientKeys: string[],
+    statusAttributeId: string,
+    monthsAttributeId: string
+): ClinicalData[] {
+    if (targetUniquePatientKeys) {
+        return targetUniquePatientKeys.reduce(
+            (
+                patientSurvivalStatusData: ClinicalData[],
+                uniquePatientKey: string
+            ) => {
+                const clinicalData =
+                    survivalClinicalDataGroupByUniquePatientKey[
+                        uniquePatientKey
+                    ];
+                if (clinicalData) {
+                    const statusClinicalData = clinicalData.find(
+                        c => c.clinicalAttributeId === statusAttributeId
+                    );
+                    const monthsClinicalData = clinicalData.find(
+                        c => c.clinicalAttributeId === monthsAttributeId
+                    );
+                    if (
+                        statusClinicalData &&
+                        monthsClinicalData &&
+                        !isNullSurvivalClinicalDataValue(
+                            statusClinicalData.value
+                        ) &&
+                        !isNullSurvivalClinicalDataValue(
+                            monthsClinicalData.value
+                        ) &&
+                        !Number.isNaN(Number(monthsClinicalData.value))
+                    ) {
+                        patientSurvivalStatusData.push(statusClinicalData);
+                    }
+                }
+                return patientSurvivalStatusData;
             },
             []
         );
