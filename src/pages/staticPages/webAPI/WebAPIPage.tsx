@@ -119,9 +119,12 @@ export default class WebAPIPage extends React.Component<{}, {}> {
                 </Helmet>
 
                 <h1>Web API</h1>
-                
+
                 <p>
-                    API documentation is now at <a href="https://docs.cbioportal.org/6.-web-api-and-clients/api-and-api-clients">docs.cbioportal.org</a> 
+                    API documentation is now at{' '}
+                    <a href="https://docs.cbioportal.org/6.-web-api-and-clients/api-and-api-clients">
+                        docs.cbioportal.org
+                    </a>
                 </p>
                 {this.renderDataAccessTokensDiv()}
                 <h2 id="linking-to-us">Linking to Us</h2>
