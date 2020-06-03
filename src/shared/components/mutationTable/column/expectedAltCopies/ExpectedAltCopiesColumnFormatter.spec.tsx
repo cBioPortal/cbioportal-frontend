@@ -2,32 +2,32 @@ import * as _ from 'lodash';
 import { ReactWrapper, mount } from 'enzyme';
 import { assert, expect } from 'chai';
 import { initMutation } from 'test/MutationMockUtils';
-import { getDefaultMutantCopiesColumnDefinition } from './MutantCopiesColumnFormatter';
+import { getDefaultExpectedAltCopiesColumnDefinition } from './ExpectedAltCopiesColumnFormatter';
 import { Mutation, AlleleSpecificCopyNumber } from 'cbioportal-ts-api-client';
 
-describe('MutantCopiesColumnFormatter', () => {
-    function testExpectedMutantCopiesElementProperties(
-        mutantCopiesElementProperties: any,
+describe('ExpectedAltCopiesColumnFormatter', () => {
+    function testExpectedExpectedAltCopiesElementProperties(
+        expectedAltCopiesElementProperties: any,
         expectedSampleId: string,
         expectedTotalCopyNumberValue: string,
-        expectedMutantCopiesValue: string
+        expectedExpectedAltCopiesValue: string
     ) {
-        expect(mutantCopiesElementProperties['sampleId']).to.equal(
+        expect(expectedAltCopiesElementProperties['sampleId']).to.equal(
             expectedSampleId
         );
-        expect(mutantCopiesElementProperties['totalCopyNumberValue']).to.equal(
-            expectedTotalCopyNumberValue
-        );
-        expect(mutantCopiesElementProperties['mutantCopiesValue']).to.equal(
-            expectedMutantCopiesValue
-        );
+        expect(
+            expectedAltCopiesElementProperties['totalCopyNumberValue']
+        ).to.equal(expectedTotalCopyNumberValue);
+        expect(
+            expectedAltCopiesElementProperties['expectedAltCopiesValue']
+        ).to.equal(expectedExpectedAltCopiesValue);
     }
 
-    function testExpectedNumberOfMutantCopiesElements(
+    function testExpectedNumberOfExpectedAltCopiesElements(
         columnCell: ReactWrapper<any, any>,
         expectedNumber: number
     ) {
-        expect(columnCell.find('MutantCopiesElement')).to.have.length(
+        expect(columnCell.find('ExpectedAltCopiesElement')).to.have.length(
             expectedNumber
         );
     }
@@ -42,7 +42,7 @@ describe('MutantCopiesColumnFormatter', () => {
             sampleId: sampleId,
             alleleSpecificCopyNumber: {
                 totalCopyNumber: 2,
-                mutantCopies: 1,
+                expectedAltCopies: 1,
             },
         });
         if (
@@ -60,14 +60,14 @@ describe('MutantCopiesColumnFormatter', () => {
         return emptyMutation;
     }
 
-    // one valid, one missing tcn, one missing mutantCopies, one w/o ASCN
+    // one valid, one missing tcn, one missing expectedAltCopies, one w/o ASCN
     const mutations: Mutation[] = [
-        // MutantCopies 'yes' case
+        // ExpectedAltCopies 'yes' case
         initMutation({
             sampleId: 'S001',
             alleleSpecificCopyNumber: {
                 totalCopyNumber: 4,
-                mutantCopies: 1,
+                expectedAltCopies: 1,
             },
         }),
         // missing total copy number
@@ -76,95 +76,106 @@ describe('MutantCopiesColumnFormatter', () => {
             sampleId: 'S003',
             alleleSpecificCopyNumber: {
                 totalCopyNumber: 3,
-                mutantCopies: 2,
+                expectedAltCopies: 2,
             },
         }),
         initMutation({
             sampleId: 'S004',
             alleleSpecificCopyNumber: {
                 totalCopyNumber: 2,
-                mutantCopies: 1,
+                expectedAltCopies: 1,
             },
         }),
-        // missing mutant copies
-        createMutationWithMissingData('S005', ['mutantCopies']),
+        // missing expected alt copies
+        createMutationWithMissingData('S005', ['expectedAltCopies']),
         // no ascn data at all
         createMutationWithMissingData('S006', ['alleleSpecificCopyNumber']),
     ];
 
-    it('has expected number of MutantCopiesElement components', () => {
-        // only mutations with tcn/mutantCopies available map to an element
-        let mutantCopiesColumnTest = mount(
-            getDefaultMutantCopiesColumnDefinition(
+    it('has expected number of ExpectedAltCopiesElement components', () => {
+        // only mutations with tcn/expectedAltCopies available map to an element
+        let expectedAltCopiesColumnTest = mount(
+            getDefaultExpectedAltCopiesColumnDefinition(
                 ['S001', 'S002', 'S003', 'S004', 'S005', 'S006'],
                 null
             ).render(mutations)
         );
-        testExpectedNumberOfMutantCopiesElements(mutantCopiesColumnTest, 3);
-
-        mutantCopiesColumnTest = mount(
-            getDefaultMutantCopiesColumnDefinition().render(mutations)
+        testExpectedNumberOfExpectedAltCopiesElements(
+            expectedAltCopiesColumnTest,
+            3
         );
-        testExpectedNumberOfMutantCopiesElements(mutantCopiesColumnTest, 1);
+
+        expectedAltCopiesColumnTest = mount(
+            getDefaultExpectedAltCopiesColumnDefinition().render(mutations)
+        );
+        testExpectedNumberOfExpectedAltCopiesElements(
+            expectedAltCopiesColumnTest,
+            1
+        );
 
         // nothing returned for single NA one
-        mutantCopiesColumnTest = mount(
-            getDefaultMutantCopiesColumnDefinition().render([
+        expectedAltCopiesColumnTest = mount(
+            getDefaultExpectedAltCopiesColumnDefinition().render([
                 createMutationWithMissingData('S001', [
                     'alleleSpecificCopyNumber',
                 ]),
             ])
         );
-        testExpectedNumberOfMutantCopiesElements(mutantCopiesColumnTest, 0);
+        testExpectedNumberOfExpectedAltCopiesElements(
+            expectedAltCopiesColumnTest,
+            0
+        );
     });
 
-    it('generated MutantCopiesElement components use correct property values', () => {
-        let mutantCopiesColumnTest = mount(
-            getDefaultMutantCopiesColumnDefinition(
+    it('generated ExpectedAltCopiesElement components use correct property values', () => {
+        let expectedAltCopiesColumnTest = mount(
+            getDefaultExpectedAltCopiesColumnDefinition(
                 ['S001', 'S002', 'S003', 'S004', 'S005', 'S006'],
                 null
             ).render(mutations)
         );
 
-        let sampleToMutantCopiesElement: { [key: string]: any } = {};
-        mutantCopiesColumnTest.find('MutantCopiesElement').forEach(node => {
-            var sampleIdProp: string = node.prop('sampleId');
-            sampleToMutantCopiesElement[sampleIdProp] = node.props();
-        });
+        let sampleToExpectedAltCopiesElement: { [key: string]: any } = {};
+        expectedAltCopiesColumnTest
+            .find('ExpectedAltCopiesElement')
+            .forEach(node => {
+                var sampleIdProp: string = node.prop('sampleId');
+                sampleToExpectedAltCopiesElement[sampleIdProp] = node.props();
+            });
 
-        testExpectedMutantCopiesElementProperties(
-            sampleToMutantCopiesElement['S001'],
+        testExpectedExpectedAltCopiesElementProperties(
+            sampleToExpectedAltCopiesElement['S001'],
             'S001',
             '4',
             '1'
         );
-        expect(sampleToMutantCopiesElement['S002']).to.not.exist;
-        testExpectedMutantCopiesElementProperties(
-            sampleToMutantCopiesElement['S003'],
+        expect(sampleToExpectedAltCopiesElement['S002']).to.not.exist;
+        testExpectedExpectedAltCopiesElementProperties(
+            sampleToExpectedAltCopiesElement['S003'],
             'S003',
             '3',
             '2'
         );
-        testExpectedMutantCopiesElementProperties(
-            sampleToMutantCopiesElement['S004'],
+        testExpectedExpectedAltCopiesElementProperties(
+            sampleToExpectedAltCopiesElement['S004'],
             'S004',
             '2',
             '1'
         );
-        expect(sampleToMutantCopiesElement['S005']).to.not.exist;
-        expect(sampleToMutantCopiesElement['S006']).to.not.exist;
+        expect(sampleToExpectedAltCopiesElement['S005']).to.not.exist;
+        expect(sampleToExpectedAltCopiesElement['S006']).to.not.exist;
     });
 
-    it('semi-colons placed after correct MutantCopiesElement(s)', () => {
-        let mutantCopiesColumnTest = mount(
-            getDefaultMutantCopiesColumnDefinition(
+    it('semi-colons placed after correct ExpectedAltCopiesElement(s)', () => {
+        let expectedAltCopiesColumnTest = mount(
+            getDefaultExpectedAltCopiesColumnDefinition(
                 ['S001', 'S002', 'S003', 'S004', 'S005', 'S006'],
                 null
             ).render(mutations)
         );
         // not last and valid - has delimiter
         expect(
-            mutantCopiesColumnTest
+            expectedAltCopiesColumnTest
                 .findWhere(
                     node => node.type() === 'span' && node.key() === 'S001'
                 )
@@ -172,7 +183,7 @@ describe('MutantCopiesColumnFormatter', () => {
         ).to.have.string(';');
         // not last but valid - has delimiter
         expect(
-            mutantCopiesColumnTest
+            expectedAltCopiesColumnTest
                 .findWhere(
                     node => node.type() === 'span' && node.key() === 'S003'
                 )
@@ -180,7 +191,7 @@ describe('MutantCopiesColumnFormatter', () => {
         ).to.have.string(';');
         // last valid - should not have delimiter
         expect(
-            mutantCopiesColumnTest
+            expectedAltCopiesColumnTest
                 .findWhere(
                     node => node.type() === 'span' && node.key() === 'S004'
                 )

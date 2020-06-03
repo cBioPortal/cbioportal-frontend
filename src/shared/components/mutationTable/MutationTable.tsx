@@ -76,7 +76,7 @@ import { getDefaultASCNCopyNumberColumnDefinition } from 'shared/components/muta
 import { getDefaultASCNMethodColumnDefinition } from 'shared/components/mutationTable/column/ascnMethod/ASCNMethodColumnFormatter';
 import { getDefaultCancerCellFractionColumnDefinition } from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionColumnFormatter';
 import { getDefaultClonalColumnDefinition } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
-import { getDefaultMutantCopiesColumnDefinition } from 'shared/components/mutationTable/column/mutantCopies/MutantCopiesColumnFormatter';
+import { getDefaultExpectedAltCopiesColumnDefinition } from 'shared/components/mutationTable/column/expectedAltCopies/ExpectedAltCopiesColumnFormatter';
 import { hasASCNProperty } from 'shared/lib/MutationUtils';
 
 export interface IMutationTableProps {
@@ -150,7 +150,7 @@ export enum MutationTableColumnType {
     VARIANT_TYPE,
     CLONAL,
     CANCER_CELL_FRACTION,
-    MUTANT_COPIES,
+    EXPECTED_ALT_COPIES,
     CENTER,
     TUMOR_ALLELE_FREQ,
     NORMAL_ALLELE_FREQ,
@@ -733,8 +733,8 @@ export default class MutationTable<
         );
 
         this._columns[
-            MutationTableColumnType.MUTANT_COPIES
-        ] = getDefaultMutantCopiesColumnDefinition();
+            MutationTableColumnType.EXPECTED_ALT_COPIES
+        ] = getDefaultExpectedAltCopiesColumnDefinition();
 
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT] = {
             name: 'Functional Impact',

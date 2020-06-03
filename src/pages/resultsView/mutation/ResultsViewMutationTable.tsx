@@ -54,7 +54,7 @@ export default class ResultsViewMutationTable extends MutationTable<
             MutationTableColumnType.VARIANT_TYPE,
             MutationTableColumnType.CLONAL,
             MutationTableColumnType.CANCER_CELL_FRACTION,
-            MutationTableColumnType.MUTANT_COPIES,
+            MutationTableColumnType.EXPECTED_ALT_COPIES,
             MutationTableColumnType.COSMIC,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
             MutationTableColumnType.NORMAL_ALLELE_FREQ,
@@ -108,7 +108,7 @@ export default class ResultsViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.ASCN_METHOD].order = 46;
         this._columns[MutationTableColumnType.CLONAL].order = 47;
         this._columns[MutationTableColumnType.CANCER_CELL_FRACTION].order = 48;
-        this._columns[MutationTableColumnType.MUTANT_COPIES].order = 49;
+        this._columns[MutationTableColumnType.EXPECTED_ALT_COPIES].order = 49;
         this._columns[MutationTableColumnType.COPY_NUM].order = 50;
         this._columns[MutationTableColumnType.ASCN_COPY_NUM].order = 51;
         this._columns[MutationTableColumnType.COSMIC].order = 60;
@@ -142,7 +142,7 @@ export default class ResultsViewMutationTable extends MutationTable<
 
         this._columns[MutationTableColumnType.CLONAL].shouldExclude = () => {
             return !this.props.existsSomeMutationWithAscnProperty[
-                ASCNAttributes.CCF_M_COPIES_STRING
+                ASCNAttributes.CCF_EXPECTED_COPIES_STRING
             ];
         };
 
@@ -158,15 +158,15 @@ export default class ResultsViewMutationTable extends MutationTable<
             MutationTableColumnType.CANCER_CELL_FRACTION
         ].shouldExclude = () => {
             return !this.props.existsSomeMutationWithAscnProperty[
-                ASCNAttributes.CCF_M_COPIES_STRING
+                ASCNAttributes.CCF_EXPECTED_COPIES_STRING
             ];
         };
 
         this._columns[
-            MutationTableColumnType.MUTANT_COPIES
+            MutationTableColumnType.EXPECTED_ALT_COPIES
         ].shouldExclude = () => {
             return !this.props.existsSomeMutationWithAscnProperty[
-                ASCNAttributes.MUTANT_COPIES_STRING
+                ASCNAttributes.EXPECTED_ALT_COPIES_STRING
             ];
         };
 

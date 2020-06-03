@@ -3,6 +3,7 @@ import { render, ReactWrapper, mount, shallow } from 'enzyme';
 import * as React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { assert } from 'chai';
+import { ClonalValue } from './ClonalColumnFormatter';
 import {
     default as ClonalElement,
     ClonalElementTooltip,
@@ -10,27 +11,28 @@ import {
 } from './ClonalElement';
 
 describe('ClonalElement', () => {
-    const clonalYes = {
+    const clonal = {
         sampleId: 'S001',
-        clonalValue: 'yes',
-        ccfMCopies: '1',
+        clonalValue: ClonalValue.CLONAL,
+        ccfExpectedCopies: '1',
     };
 
-    const clonalNo = {
+    const subclonal = {
         sampleId: 'S002',
-        clonalValue: 'no',
-        ccfMCopies: '0.85',
+        clonalValue: ClonalValue.SUBCLONAL,
+        ccfExpectedCopies: '0.85',
     };
 
-    const clonalNA = {
+    const indeterminate = {
         sampleId: 'S003',
-        clonalValue: 'NA',
-        ccfMCopies: 'NA',
+        clonalValue: ClonalValue.NA,
+        ccfExpectedCopies: 'NA',
     };
 
     function testExpectedValidClonalElement(
         componentProperties: any,
-        expectedColor: string
+        expectedCircleColor: string,
+        expectedTextColor: string
     ) {
         // check main icon is right color given a clonalValue
         const validClonalElementTest = mount(
@@ -38,7 +40,7 @@ describe('ClonalElement', () => {
         );
         assert.equal(
             validClonalElementTest.find('circle').prop('fill'),
-            expectedColor
+            expectedCircleColor
         );
 
         // check props are correctly passed to tooltip
@@ -73,15 +75,15 @@ describe('ClonalElement', () => {
         assert.isTrue(clonalDiv.exists() && ccfDiv.exists());
         assert.equal(
             (clonalDiv.find('strong').prop('style') as any).color,
-            expectedColor
+            expectedTextColor
         );
         assert.equal(
             clonalDiv.find('strong').text(),
-            componentProperties['clonalValue']
+            componentProperties['clonalValue'].toLowerCase()
         );
         assert.equal(
             ccfDiv.find('strong').text(),
-            componentProperties['ccfMCopies']
+            componentProperties['ccfExpectedCopies']
         );
     }
 
@@ -101,15 +103,23 @@ describe('ClonalElement', () => {
         );
     }
 
-    it('generates limegreen circle with tooltip for clonal yes', () => {
-        testExpectedValidClonalElement(clonalYes, ClonalColor.LIMEGREEN);
+    it('generates limegreen circle with tooltip for clonal', () => {
+        testExpectedValidClonalElement(
+            clonal,
+            ClonalColor.LIMEGREEN,
+            ClonalColor.LIMEGREEN
+        );
     });
 
-    it('generates dimgrey circle with tooltip for clonal no', () => {
-        testExpectedValidClonalElement(clonalNo, ClonalColor.DIMGREY);
+    it('generates white circle with tooltip for subclonal', () => {
+        testExpectedValidClonalElement(
+            subclonal,
+            ClonalColor.WHITE,
+            ClonalColor.DIMGREY
+        );
     });
 
     it('generates lightgrey circle with tooltip for clonal NA', () => {
-        testExpectedInvalidClonalElement(clonalNA, ClonalColor.LIGHTGREY);
+        testExpectedInvalidClonalElement(indeterminate, ClonalColor.LIGHTGREY);
     });
 });

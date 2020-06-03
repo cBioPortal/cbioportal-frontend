@@ -19,15 +19,15 @@ describe('CancerCellFractionColumnFormatter', () => {
         let mutationWithoutCCF = initMutation({
             sampleId: 'S002',
         });
-        delete mutationWithoutCCF.alleleSpecificCopyNumber.ccfMCopies;
+        delete mutationWithoutCCF.alleleSpecificCopyNumber.ccfExpectedCopies;
         return mutationWithoutCCF;
     }
 
-    function createMutation(sampleIdVal: string, ccfMCopiesVal: number) {
+    function createMutation(sampleIdVal: string, ccfExpectedCopiesVal: number) {
         const mutationWithCCF = initMutation({
             sampleId: sampleIdVal,
             alleleSpecificCopyNumber: {
-                ccfMCopies: ccfMCopiesVal,
+                ccfExpectedCopies: ccfExpectedCopiesVal,
             },
         });
         return mutationWithCCF;

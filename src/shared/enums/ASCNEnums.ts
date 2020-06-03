@@ -1,10 +1,10 @@
 export enum ASCNAttributes {
     ASCN_INTEGER_COPY_NUMBER_STRING = 'ascnIntegerCopyNumber',
     ASCN_METHOD_STRING = 'ascnMethod',
-    CCF_M_COPIES_STRING = 'ccfMCopies',
-    CCF_M_COPIES_UPPER_STRING = 'ccfMCopiesUpper',
+    CCF_EXPECTED_COPIES_STRING = 'ccfExpectedCopies',
+    CCF_EXPECTED_COPIES_UPPER_STRING = 'ccfExpectedCopiesUpper',
     CLONAL_STRING = 'clonal',
     MINOR_COPY_NUMBER_STRING = 'minorCopyNumber',
-    MUTANT_COPIES_STRING = 'mutantCopies',
+    EXPECTED_ALT_COPIES_STRING = 'expectedAltCopies',
     TOTAL_COPY_NUMBER_STRING = 'totalCopyNumber',
 }
