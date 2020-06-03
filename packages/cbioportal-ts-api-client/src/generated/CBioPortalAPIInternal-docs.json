@@ -112,18 +112,6 @@
         ],
         "parameters": [
           {
-            "name": "dataBinMethod",
-            "in": "query",
-            "description": "Method for data binning",
-            "required": false,
-            "type": "string",
-            "default": "DYNAMIC",
-            "enum": [
-              "STATIC",
-              "DYNAMIC"
-            ]
-          },
-          {
             "in": "body",
             "name": "clinicalDataBinCountFilter",
             "description": "Clinical data bin count filter",
@@ -131,6 +119,19 @@
             "schema": {
               "$ref": "#/definitions/ClinicalDataBinCountFilter"
             }
+          },
+          {
+            "name": "dataBinMethod",
+            "in": "query",
+            "description": "Method for data binning",
+            "required": false,
+            "type": "string",
+            "default": "DYNAMIC",
+            "allowEmptyValue": false,
+            "enum": [
+              "STATIC",
+              "DYNAMIC"
+            ]
           }
         ],
         "responses": {
@@ -143,7 +144,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/clinical-data-counts/fetch": {
@@ -180,7 +182,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/clinical-data-density-plot/fetch": {
@@ -198,11 +201,21 @@
         ],
         "parameters": [
           {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          },
+          {
             "name": "xAxisAttributeId",
             "in": "query",
             "description": "Clinical Attribute ID of the X axis",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "allowEmptyValue": false
           },
           {
             "name": "xAxisBinCount",
@@ -211,28 +224,32 @@
             "required": false,
             "type": "integer",
             "default": 50,
-            "format": "int32"
-          },
-          {
-            "name": "xAxisStart",
-            "in": "query",
-            "description": "Starting point of the X axis, if different than smallest value",
-            "required": false,
-            "type": "number"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "xAxisEnd",
             "in": "query",
             "description": "Starting point of the X axis, if different than largest value",
             "required": false,
-            "type": "number"
+            "type": "number",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "xAxisStart",
+            "in": "query",
+            "description": "Starting point of the X axis, if different than smallest value",
+            "required": false,
+            "type": "number",
+            "allowEmptyValue": false
           },
           {
             "name": "yAxisAttributeId",
             "in": "query",
             "description": "Clinical Attribute ID of the Y axis",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "allowEmptyValue": false
           },
           {
             "name": "yAxisBinCount",
@@ -241,30 +258,24 @@
             "required": false,
             "type": "integer",
             "default": 50,
-            "format": "int32"
-          },
-          {
-            "name": "yAxisStart",
-            "in": "query",
-            "description": "Starting point of the Y axis, if different than smallest value",
-            "required": false,
-            "type": "number"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "yAxisEnd",
             "in": "query",
             "description": "Starting point of the Y axis, if different than largest value",
             "required": false,
-            "type": "number"
+            "type": "number",
+            "allowEmptyValue": false
           },
           {
-            "in": "body",
-            "name": "studyViewFilter",
-            "description": "Study view filter",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/StudyViewFilter"
-            }
+            "name": "yAxisStart",
+            "in": "query",
+            "description": "Starting point of the Y axis, if different than smallest value",
+            "required": false,
+            "type": "number",
+            "allowEmptyValue": false
           }
         ],
         "responses": {
@@ -277,7 +288,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/clinical-data-enrichments/fetch": {
@@ -314,7 +326,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/cna-genes/fetch": {
@@ -351,7 +364,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/copy-number-enrichments/fetch": {
@@ -375,6 +389,7 @@
             "required": false,
             "type": "string",
             "default": "HOMDEL",
+            "allowEmptyValue": false,
             "enum": [
               "HOMDEL",
               "AMP"
@@ -387,6 +402,7 @@
             "required": false,
             "type": "string",
             "default": "SAMPLE",
+            "allowEmptyValue": false,
             "enum": [
               "SAMPLE",
               "PATIENT"
@@ -415,7 +431,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/cosmic-counts/fetch": {
@@ -455,7 +472,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/data-access-tokens": {
@@ -468,6 +486,38 @@
         "produces": [
           "*/*"
         ],
+        "parameters": [
+          {
+            "name": "authenticated",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "authorities[0].authority",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "credentials",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
+            "name": "details",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
+            "name": "principal",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -478,7 +528,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       },
       "post": {
         "tags": [
@@ -499,6 +550,36 @@
             "description": "allowRevocationOfOtherTokens",
             "required": false,
             "type": "boolean"
+          },
+          {
+            "name": "authenticated",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "authorities[0].authority",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "credentials",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
+            "name": "details",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
+            "name": "principal",
+            "in": "query",
+            "required": false,
+            "type": "object"
           }
         ],
         "responses": {
@@ -508,7 +589,8 @@
               "$ref": "#/definitions/DataAccessToken"
             }
           }
-        }
+        },
+        "deprecated": false
       },
       "delete": {
         "tags": [
@@ -519,11 +601,44 @@
         "produces": [
           "*/*"
         ],
+        "parameters": [
+          {
+            "name": "authenticated",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "authorities[0].authority",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "credentials",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
+            "name": "details",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
+            "name": "principal",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/data-access-tokens/{token}": {
@@ -552,7 +667,8 @@
               "$ref": "#/definitions/DataAccessToken"
             }
           }
-        }
+        },
+        "deprecated": false
       },
       "delete": {
         "tags": [
@@ -576,7 +692,8 @@
           "200": {
             "description": "OK"
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/expression-enrichments/fetch": {
@@ -600,6 +717,7 @@
             "required": false,
             "type": "string",
             "default": "SAMPLE",
+            "allowEmptyValue": false,
             "enum": [
               "SAMPLE",
               "PATIENT"
@@ -628,7 +746,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/filtered-samples/fetch": {
@@ -651,7 +770,9 @@
             "description": "Whether to negate the study view filters",
             "required": false,
             "type": "boolean",
-            "default": false
+            "default": false,
+            "allowEmptyValue": false,
+            "x-example": false
           },
           {
             "in": "body",
@@ -673,7 +794,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/fusion-genes/fetch": {
@@ -710,7 +832,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/geneset-hierarchy/fetch": {
@@ -732,7 +855,8 @@
             "in": "query",
             "description": "Genetic Profile ID e.g. gbm_tcga_gsva_scores. The final hierarchy  will only include gene sets scored in the specified profile.",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "allowEmptyValue": false
           },
           {
             "name": "percentile",
@@ -745,20 +869,8 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
-          },
-          {
-            "name": "scoreThreshold",
-            "in": "query",
-            "description": "Gene set score threshold (for absolute score value). Filters out gene sets where the GSVA(like) *representative score* is under this threshold.",
-            "required": false,
-            "type": "number",
-            "default": 0.4,
-            "maximum": 1,
-            "exclusiveMaximum": false,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "double"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pvalueThreshold",
@@ -771,14 +883,8 @@
             "exclusiveMaximum": false,
             "minimum": 0,
             "exclusiveMinimum": false,
-            "format": "double"
-          },
-          {
-            "name": "sampleListId",
-            "in": "query",
-            "description": "Identifier of pre-defined sample list with samples to query, e.g. brca_tcga_all",
-            "required": false,
-            "type": "string"
+            "format": "double",
+            "allowEmptyValue": false
           },
           {
             "in": "body",
@@ -791,6 +897,28 @@
                 "type": "string"
               }
             }
+          },
+          {
+            "name": "sampleListId",
+            "in": "query",
+            "description": "Identifier of pre-defined sample list with samples to query, e.g. brca_tcga_all",
+            "required": false,
+            "type": "string",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "scoreThreshold",
+            "in": "query",
+            "description": "Gene set score threshold (for absolute score value). Filters out gene sets where the GSVA(like) *representative score* is under this threshold.",
+            "required": false,
+            "type": "number",
+            "default": 0.4,
+            "maximum": 1,
+            "exclusiveMaximum": false,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "double",
+            "allowEmptyValue": false
           }
         ],
         "responses": {
@@ -803,7 +931,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/genesets": {
@@ -818,18 +947,16 @@
         ],
         "parameters": [
           {
-            "name": "projection",
+            "name": "pageNumber",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Page number of the result list",
             "required": false,
-            "type": "string",
-            "default": "SUMMARY",
-            "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
-            ]
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -842,18 +969,23 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
           }
         ],
         "responses": {
@@ -866,7 +998,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/genesets/fetch": {
@@ -906,7 +1039,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/genesets/version": {
@@ -926,7 +1060,8 @@
               "type": "string"
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/genesets/{genesetId}": {
@@ -955,7 +1090,8 @@
               "$ref": "#/definitions/Geneset"
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/genesets/{genesetId}/expression-correlation/fetch": {
@@ -973,6 +1109,20 @@
         ],
         "parameters": [
           {
+            "name": "correlationThreshold",
+            "in": "query",
+            "description": "Correlation threshold (for absolute correlation value, Spearman correlation)",
+            "required": false,
+            "type": "number",
+            "default": 0.3,
+            "maximum": 1,
+            "exclusiveMaximum": false,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "double",
+            "allowEmptyValue": false
+          },
+          {
             "name": "genesetId",
             "in": "path",
             "description": "Gene set ID, e.g. HINATA_NFKB_MATRIX.",
@@ -984,27 +1134,8 @@
             "in": "query",
             "description": "Genetic Profile ID e.g. gbm_tcga_gsva_scores",
             "required": true,
-            "type": "string"
-          },
-          {
-            "name": "correlationThreshold",
-            "in": "query",
-            "description": "Correlation threshold (for absolute correlation value, Spearman correlation)",
-            "required": false,
-            "type": "number",
-            "default": 0.3,
-            "maximum": 1,
-            "exclusiveMaximum": false,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "double"
-          },
-          {
-            "name": "sampleListId",
-            "in": "query",
-            "description": "Identifier of pre-defined sample list with samples to query, e.g. brca_tcga_all",
-            "required": false,
-            "type": "string"
+            "type": "string",
+            "allowEmptyValue": false
           },
           {
             "in": "body",
@@ -1017,6 +1148,14 @@
                 "type": "string"
               }
             }
+          },
+          {
+            "name": "sampleListId",
+            "in": "query",
+            "description": "Identifier of pre-defined sample list with samples to query, e.g. brca_tcga_all",
+            "required": false,
+            "type": "string",
+            "allowEmptyValue": false
           }
         ],
         "responses": {
@@ -1029,7 +1168,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/genetic-profiles/{geneticProfileId}/geneset-genetic-data/fetch": {
@@ -1047,13 +1187,6 @@
         ],
         "parameters": [
           {
-            "name": "geneticProfileId",
-            "in": "path",
-            "description": "Genetic profile ID, e.g. gbm_tcga_gsva_scores",
-            "required": true,
-            "type": "string"
-          },
-          {
             "in": "body",
             "name": "genesetDataFilterCriteria",
             "description": "Search criteria to return the values for a given set of samples and gene set items. genesetIds: The list of identifiers for the gene sets of interest, e.g. HINATA_NFKB_MATRIX. Use one of these if you want to specify a subset of samples:(1) sampleListId: Identifier of pre-defined sample list with samples to query, e.g. brca_tcga_all or (2) sampleIds: custom list of samples or patients to query, e.g. TCGA-BH-A1EO-01, TCGA-AR-A1AR-01",
@@ -1061,6 +1194,13 @@
             "schema": {
               "$ref": "#/definitions/GenesetDataFilterCriteria"
             }
+          },
+          {
+            "name": "geneticProfileId",
+            "in": "path",
+            "description": "Genetic profile ID, e.g. gbm_tcga_gsva_scores",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -1073,7 +1213,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/genomic-data-bin-counts/fetch": {
@@ -1097,6 +1238,7 @@
             "required": false,
             "type": "string",
             "default": "DYNAMIC",
+            "allowEmptyValue": false,
             "enum": [
               "STATIC",
               "DYNAMIC"
@@ -1122,7 +1264,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/health": {
@@ -1142,7 +1285,8 @@
               "$ref": "#/definitions/ServerStatusMessage"
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/info": {
@@ -1162,7 +1306,8 @@
               "$ref": "#/definitions/Info"
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/molecular-profile-sample-counts/fetch": {
@@ -1199,7 +1344,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/molecular-profiles/co-expressions/fetch": {
@@ -1217,20 +1363,6 @@
         ],
         "parameters": [
           {
-            "name": "molecularProfileIdA",
-            "in": "query",
-            "description": "Molecular Profile ID from the Genetic Entity referenced in the co-expression filter e.g. acc_tcga_rna_seq_v2_mrna",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "molecularProfileIdB",
-            "in": "query",
-            "description": "Molecular Profile ID (can be the same as molecularProfileIdA) e.g. acc_tcga_rna_seq_v2_mrna",
-            "required": true,
-            "type": "string"
-          },
-          {
             "in": "body",
             "name": "coExpressionFilter",
             "description": "List of Sample IDs/Sample List ID and Entrez Gene ID/Gene set ID",
@@ -1240,13 +1372,30 @@
             }
           },
           {
+            "name": "molecularProfileIdA",
+            "in": "query",
+            "description": "Molecular Profile ID from the Genetic Entity referenced in the co-expression filter e.g. acc_tcga_rna_seq_v2_mrna",
+            "required": true,
+            "type": "string",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "molecularProfileIdB",
+            "in": "query",
+            "description": "Molecular Profile ID (can be the same as molecularProfileIdA) e.g. acc_tcga_rna_seq_v2_mrna",
+            "required": true,
+            "type": "string",
+            "allowEmptyValue": false
+          },
+          {
             "name": "threshold",
             "in": "query",
             "description": "Threshold",
             "required": false,
             "type": "number",
             "default": 0.3,
-            "format": "double"
+            "format": "double",
+            "allowEmptyValue": false
           }
         ],
         "responses": {
@@ -1259,7 +1408,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/molecular-profiles/{molecularProfileId}/mrna-percentile/fetch": {
@@ -1277,20 +1427,6 @@
         ],
         "parameters": [
           {
-            "name": "molecularProfileId",
-            "in": "path",
-            "description": "Molecular Profile ID e.g. acc_tcga_rna_seq_v2_mrna",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "sampleId",
-            "in": "query",
-            "description": "Sample ID e.g. TCGA-OR-A5J2-01",
-            "required": true,
-            "type": "string"
-          },
-          {
             "in": "body",
             "name": "entrezGeneIds",
             "description": "List of Entrez Gene IDs",
@@ -1302,6 +1438,21 @@
                 "format": "int32"
               }
             }
+          },
+          {
+            "name": "molecularProfileId",
+            "in": "path",
+            "description": "Molecular Profile ID e.g. acc_tcga_rna_seq_v2_mrna",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "sampleId",
+            "in": "query",
+            "description": "Sample ID e.g. TCGA-OR-A5J2-01",
+            "required": true,
+            "type": "string",
+            "allowEmptyValue": false
           }
         ],
         "responses": {
@@ -1314,7 +1465,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/molecular-profiles/{molecularProfileId}/mutation-spectrums/fetch": {
@@ -1358,7 +1510,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/molecular-profiles/{molecularProfileId}/variant-counts/fetch": {
@@ -1405,7 +1558,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/mutated-genes/fetch": {
@@ -1442,7 +1596,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/mutation-enrichments/fetch": {
@@ -1466,6 +1621,7 @@
             "required": false,
             "type": "string",
             "default": "SAMPLE",
+            "allowEmptyValue": false,
             "enum": [
               "SAMPLE",
               "PATIENT"
@@ -1494,7 +1650,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/sample-lists-counts/fetch": {
@@ -1531,7 +1688,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/significant-copy-number-regions": {
@@ -1546,25 +1704,29 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
-            "in": "path",
-            "description": "Study ID e.g. acc_tcga",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "projection",
+            "name": "direction",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Direction of the sort",
             "required": false,
             "type": "string",
-            "default": "SUMMARY",
+            "default": "ASC",
+            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
+              "ASC",
+              "DESC"
             ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -1577,18 +1739,23 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
           },
           {
             "name": "sortBy",
@@ -1596,6 +1763,7 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "chromosome",
               "cytoband",
@@ -1606,16 +1774,11 @@
             ]
           },
           {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
-            ]
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -1628,7 +1791,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/studies/{studyId}/significantly-mutated-genes": {
@@ -1643,25 +1807,29 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
-            "in": "path",
-            "description": "Study ID e.g. acc_tcga",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "projection",
+            "name": "direction",
             "in": "query",
-            "description": "Level of detail of the response",
+            "description": "Direction of the sort",
             "required": false,
             "type": "string",
-            "default": "SUMMARY",
+            "default": "ASC",
+            "allowEmptyValue": false,
             "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
+              "ASC",
+              "DESC"
             ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
             "name": "pageSize",
@@ -1674,18 +1842,23 @@
             "exclusiveMaximum": false,
             "minimum": 1,
             "exclusiveMinimum": false,
-            "format": "int32"
+            "format": "int32",
+            "allowEmptyValue": false
           },
           {
-            "name": "pageNumber",
+            "name": "projection",
             "in": "query",
-            "description": "Page number of the result list",
+            "description": "Level of detail of the response",
             "required": false,
-            "type": "integer",
-            "default": 0,
-            "minimum": 0,
-            "exclusiveMinimum": false,
-            "format": "int32"
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
           },
           {
             "name": "sortBy",
@@ -1693,6 +1866,7 @@
             "description": "Name of the property that the result list is sorted by",
             "required": false,
             "type": "string",
+            "allowEmptyValue": false,
             "enum": [
               "entrezGeneId",
               "hugoGeneSymbol",
@@ -1703,16 +1877,11 @@
             ]
           },
           {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
-            ]
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -1725,7 +1894,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     },
     "/timestamps": {
@@ -1748,7 +1918,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": false
       }
     }
   },

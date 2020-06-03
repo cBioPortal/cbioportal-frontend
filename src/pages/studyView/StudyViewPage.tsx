@@ -2,13 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import { inject, Observer, observer } from 'mobx-react';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
-import {
-    action,
-    computed,
-    IReactionDisposer,
-    observable,
-    reaction,
-} from 'mobx';
+import { action, computed, observable } from 'mobx';
 import {
     CustomChart,
     StudyViewPageStore,
@@ -34,7 +28,6 @@ import StudyPageHeader from './studyPageHeader/StudyPageHeader';
 import CNSegments from './tabs/CNSegments';
 
 import AddChartButton from './addChartButton/AddChartButton';
-import { CSSTransition } from 'react-transition-group';
 import { sleep } from '../../shared/lib/TimeUtils';
 import { Else, If, Then } from 'react-if';
 import CustomCaseSelection from './addChartButton/customCaseSelection/CustomCaseSelection';
@@ -113,7 +106,6 @@ export default class StudyViewPage extends React.Component<
         StudyViewPageTabKeyEnum.SUMMARY,
         StudyViewPageTabKeyEnum.CLINICAL_DATA,
     ];
-    private queryReaction: IReactionDisposer;
 
     private toolbar: any;
     private toolbarLeftUpdater: any;
@@ -143,47 +135,40 @@ export default class StudyViewPage extends React.Component<
 
         getBrowserWindow().studyPage = this;
 
-        this.queryReaction = reaction(
-            () => [props.routing.location.query, props.routing.location.hash],
-            ([query, hash]) => {
-                if (
-                    !getBrowserWindow().globalStores.routing.location.pathname.includes(
-                        '/study'
-                    )
-                ) {
-                    return;
-                }
+        if (
+            !getBrowserWindow().globalStores.routing.location.pathname.includes(
+                '/study'
+            )
+        ) {
+            return;
+        }
 
-                const newStudyViewFilter: StudyViewURLQuery = _.pick(query, [
-                    'id',
-                    'studyId',
-                    'cancer_study_id',
-                    'filters',
-                    'filterAttributeId',
-                    'filterValues',
-                ]);
+        const query = props.routing.location.query;
+        const hash = props.routing.location.hash;
+        // clear hash if any
+        props.routing.location.hash = '';
+        const newStudyViewFilter: StudyViewURLQuery = _.pick(query, [
+            'id',
+            'studyId',
+            'cancer_study_id',
+            'filters',
+            'filterAttributeId',
+            'filterValues',
+        ]);
 
-                const filterJson = hash || getBrowserWindow().studyPageFilter;
-                delete (window as any).studyPageFilter;
+        const filterJson = hash || getBrowserWindow().studyPageFilter;
+        delete (window as any).studyPageFilter;
 
-                if (filterJson) {
-                    const filters = filterJson.match(/filterJson=([^&]*)/);
-                    if (filters && filters.length > 1) {
-                        newStudyViewFilter.filters = filters[1];
-                    }
-                }
-                if (
-                    !_.isEqual(
-                        newStudyViewFilter,
-                        this.store.studyViewQueryFilter
-                    )
-                ) {
-                    this.store.updateStoreFromURL(newStudyViewFilter);
-                    this.store.studyViewQueryFilter = newStudyViewFilter;
-                }
-            },
-            { fireImmediately: true }
-        );
+        if (filterJson) {
+            const filters = filterJson.match(/filterJson=([^&]*)/);
+            if (filters && filters.length > 1) {
+                newStudyViewFilter.filters = filters[1];
+            }
+        }
+        if (!_.isEqual(newStudyViewFilter, this.store.studyViewQueryFilter)) {
+            this.store.updateStoreFromURL(newStudyViewFilter);
+            this.store.studyViewQueryFilter = newStudyViewFilter;
+        }
 
         onMobxPromise(
             this.store.queriedPhysicalStudyIds,
@@ -822,7 +807,6 @@ export default class StudyViewPage extends React.Component<
     }
 
     componentWillUnmount(): void {
-        this.queryReaction();
         this.store.destroy();
         clearInterval(this.toolbarLeftUpdater);
     }

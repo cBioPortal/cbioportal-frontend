@@ -6,8 +6,9 @@ import Oncoprint, {
     IBaseHeatmapTrackSpec,
 } from './Oncoprint';
 import fileDownload from 'react-file-download';
+import ifNotDefined from '../../lib/ifNotDefined';
 
-export default function tabularDownload(
+export function getTabularDownloadData(
     geneticTracks: GeneticTrackSpec[],
     clinicalTracks: ClinicalTrackSpec[],
     heatmapTracks: IHeatmapTrackSpec[],
@@ -18,9 +19,11 @@ export default function tabularDownload(
     columnMode: 'sample' | 'patient',
     distinguishDrivers: boolean
 ) {
+    function getCountsTrackRowLabel(attrName: string, countsCategory: string) {
+        return `${attrName} (${countsCategory})`;
+    }
+
     const caseNames = uidOrder.map(getCaseId);
-    const prefixName =
-        columnMode === 'sample' ? 'SAMPLE_DATA_' : 'PATIENT_DATA_'; //Name depending on the type of case
 
     //Gather all the Oncoprint data
     const oncoprintData: any = {
@@ -143,14 +146,25 @@ export default function tabularDownload(
             }
         }
     }
-
     //Add clinical data
     for (const clinicalTrack of clinicalTracks) {
         const currentClinicalTrackData = clinicalTrack.data;
         const currentAttributeName = clinicalTrack.label;
         //Add the currentAttributeName to the oncoprintData if it does not exist
-        if (oncoprintData.CLINICAL[currentAttributeName] === undefined) {
-            oncoprintData.CLINICAL[currentAttributeName] = {};
+        // Handle counts differently - separate row per count category
+        if (clinicalTrack.datatype === 'counts') {
+            for (const category of clinicalTrack.countsCategoryLabels) {
+                const rowLabel = getCountsTrackRowLabel(
+                    currentAttributeName,
+                    category
+                );
+                oncoprintData.CLINICAL[rowLabel] =
+                    oncoprintData.CLINICAL[rowLabel] || {};
+            }
+        } else {
+            if (oncoprintData.CLINICAL[currentAttributeName] === undefined) {
+                oncoprintData.CLINICAL[currentAttributeName] = {};
+            }
         }
         //Iterate over all patients/samples of the track and add them to oncoprintData
         for (const clinicalTrackDatum of currentClinicalTrackData) {
@@ -158,10 +172,22 @@ export default function tabularDownload(
                 columnMode === 'sample'
                     ? clinicalTrackDatum.sample!
                     : clinicalTrackDatum.patient!;
-            oncoprintData.CLINICAL[currentAttributeName][id] = '';
-            if (clinicalTrackDatum.attr_val !== undefined) {
-                oncoprintData.CLINICAL[currentAttributeName][id] =
-                    clinicalTrackDatum.attr_val;
+            if (clinicalTrack.datatype === 'counts') {
+                for (const category of clinicalTrack.countsCategoryLabels) {
+                    oncoprintData.CLINICAL[
+                        getCountsTrackRowLabel(currentAttributeName, category)
+                    ][id] = clinicalTrackDatum.attr_val
+                        ? (clinicalTrackDatum.attr_val as {
+                              [val: string]: number;
+                          })[category]
+                        : '';
+                }
+            } else {
+                oncoprintData.CLINICAL[currentAttributeName][id] = '';
+                oncoprintData.CLINICAL[currentAttributeName][id] = ifNotDefined(
+                    clinicalTrackDatum.attr_val,
+                    ''
+                );
             }
         }
     }
@@ -209,15 +235,50 @@ export default function tabularDownload(
     content += '\n';
 
     //Iterate over oncoprintData and write it to content
-    Object.keys(oncoprintData).forEach(function(j) {
-        Object.keys(oncoprintData[j]).forEach(function(k) {
-            content += k + '\t' + j;
+    Object.keys(oncoprintData).forEach(function(dataType) {
+        Object.keys(oncoprintData[dataType]).forEach(function(
+            geneOrClinicalAttribute
+        ) {
+            content += geneOrClinicalAttribute + '\t' + dataType;
             for (let l = 0; l < caseNames.length; l++) {
-                content += '\t' + oncoprintData[j][k][caseNames[l]];
+                content +=
+                    '\t' +
+                    oncoprintData[dataType][geneOrClinicalAttribute][
+                        caseNames[l]
+                    ];
             }
             content += '\n';
         });
     });
 
-    fileDownload(content, prefixName + 'oncoprint.tsv');
+    return content;
+}
+export default function tabularDownload(
+    geneticTracks: GeneticTrackSpec[],
+    clinicalTracks: ClinicalTrackSpec[],
+    heatmapTracks: IHeatmapTrackSpec[],
+    genericAssayHeatmapTracks: IHeatmapTrackSpec[],
+    genesetTracks: IGenesetHeatmapTrackSpec[],
+    uidOrder: string[],
+    getCaseId: (uid: string) => string,
+    columnMode: 'sample' | 'patient',
+    distinguishDrivers: boolean
+) {
+    const prefixName =
+        columnMode === 'sample' ? 'SAMPLE_DATA_' : 'PATIENT_DATA_'; //Name depending on the type of case
+
+    fileDownload(
+        getTabularDownloadData(
+            geneticTracks,
+            clinicalTracks,
+            heatmapTracks,
+            genericAssayHeatmapTracks,
+            genesetTracks,
+            uidOrder,
+            getCaseId,
+            columnMode,
+            distinguishDrivers
+        ),
+        prefixName + 'oncoprint.tsv'
+    );
 }
