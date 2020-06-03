@@ -4,8 +4,6 @@ var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
     .goToUrlAndSetLocalStorage;
 var waitForNetworkQuiet = require('../../../shared/specUtils')
     .waitForNetworkQuiet;
-var closeDevModeBanner = require('../../../shared/specUtils')
-    .closeDevModeBanner;
 var getPortalUrlFromEnv = require('../../../shared/specUtils')
     .getPortalUrlFromEnv;
 
@@ -93,7 +91,6 @@ describe('OncoKB Integration', () => {
                     `${CBIOPORTAL_URL}/patient?sampleId=TCGA-AA-A02W-01&studyId=coadread_tcga_pub`
                 );
                 waitForNetworkQuiet();
-                closeDevModeBanner();
                 // Set to default visual regression size
                 // The default is in webdriver-manager.conf.js
                 browser.setViewportSize({ height: 1000, width: 1600 });
@@ -121,7 +118,6 @@ describe('OncoKB Integration', () => {
                     `${CBIOPORTAL_URL}/results/mutations?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=coadread_tcga_pub&case_ids=coadread_tcga_pub%3ATCGA-AA-A02W-01&case_set_id=-1&data_priority=0&gene_list=TP53%250AKRAS%250ALRP1B%250ADNASE1L3&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&profileFilter=0&tab_index=tab_visualize`
                 );
                 waitForNetworkQuiet();
-                closeDevModeBanner();
                 // Set to default visual regression size
                 // The default is in webdriver-manager.conf.js
                 browser.setViewportSize({ height: 1000, width: 1600 });
