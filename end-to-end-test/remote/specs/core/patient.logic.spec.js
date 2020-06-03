@@ -29,32 +29,6 @@ describe('patient page', function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
     });
 
-    it('oncokb indicators show up and hovering produces oncocard', function() {
-        goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/patient?studyId=ucec_tcga_pub&caseId=TCGA-BK-A0CC`
-        );
-
-        browser.waitForExist('span=PPP2R1A');
-
-        // find oncokb image
-        const oncokbIcon =
-            '[data-test2="PPP2R1A"][data-test="oncogenic-icon-image"]';
-        browser.waitForExist(oncokbIcon, 30000);
-
-        // move over oncokb image (this is deprecated, but there is no new
-        // function yet)
-
-        browser.waitForExist(oncokbIcon, 3000);
-        browser.moveToObject(oncokbIcon, 5, 5);
-
-        browser.waitForExist('[data-test="oncokb-card"]', 30000);
-
-        assert.equal(
-            browser.getText('[data-test="oncokb-card-title"]').toLowerCase(),
-            'ppp2r1a s256f in uterine serous carcinoma/uterine papillary serous carcinoma'.toLowerCase()
-        );
-    });
-
     it('should show all samples button for single sample view of multi sample patient', function() {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/patient?studyId=lgg_ucsf_2014&tab=summaryTab&sampleId=P04_Pri`

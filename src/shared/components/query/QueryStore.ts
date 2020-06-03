@@ -67,6 +67,10 @@ import {
     ResultsViewURLQueryEnum,
 } from 'pages/resultsView/ResultsViewURLWrapper';
 import { getFilteredCustomCaseSets } from './CaseSetSelectorUtils';
+import {
+    REFERENCE_GENOME,
+    isMixedReferenceGenome,
+} from 'shared/lib/referenceGenomeUtils';
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -1819,6 +1823,19 @@ export class QueryStore {
         return Math.floor(
             AppConfig.serverConfig.query_product_limit / this.approxSampleCount
         );
+    }
+
+    @computed get isMixedReferenceGenome() {
+        if (
+            this.physicalStudyIdsInSelection &&
+            this.physicalStudiesSet.result
+        ) {
+            const studies = _.map(
+                this.physicalStudyIdsInSelection,
+                id => this.physicalStudiesSet.result[id]
+            );
+            return isMixedReferenceGenome(studies);
+        }
     }
 
     @computed get submitError() {

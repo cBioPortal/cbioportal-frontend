@@ -36,7 +36,7 @@ describe('homepage', function() {
 
         studies.waitForExist(10000); // same as `browser.waitForExist('.notification', 10000)`
 
-        expect([27, 29, 32]).to.include(
+        expect([27, 29, 33]).to.include(
             browser.elements('[data-test="cancerTypeListContainer"] > ul > ul')
                 .value.length
         );
@@ -49,7 +49,7 @@ describe('homepage', function() {
 
         setInputText(searchInputSelector, 'bladder');
 
-        waitForNumberOfStudyCheckboxes(3);
+        waitForNumberOfStudyCheckboxes(4);
     });
 
     it('when a single study is selected, a case set selector is provided', function() {
