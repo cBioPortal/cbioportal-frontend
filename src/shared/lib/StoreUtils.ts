@@ -83,7 +83,6 @@ import {
     DEFAULT_SURVIVAL_PRIORITY,
     getSurvivalAttributes,
     plotsPriority,
-    survivalClinicalDataVocabulary,
 } from '../../pages/resultsView/survival/SurvivalUtil';
 import request from 'superagent';
 
@@ -1308,14 +1307,8 @@ export function getSurvivalClinicalAttributesPrefix(
         },
         [] as string[]
     );
-    // TODO: after we migrate data into new format, we can support all survival data type
-    // this is a tempory fix for current data format, for now we only support survival types defined in survivalClinicalDataVocabulary
-    const filteredAttributePrefixes = _.filter(
-        attributePrefixes,
-        prefix => survivalClinicalDataVocabulary[prefix]
-    );
     // change prefix order based on priority
-    return _.sortBy(filteredAttributePrefixes, prefix => {
+    return _.sortBy(attributePrefixes, prefix => {
         return plotsPriority[prefix] || DEFAULT_SURVIVAL_PRIORITY;
     });
 }
