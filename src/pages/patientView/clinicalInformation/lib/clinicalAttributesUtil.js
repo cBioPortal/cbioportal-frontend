@@ -53,6 +53,14 @@ function clean(clinicalData) {
                     }
                     cleanClinicalData[key] = value;
                     break;
+                // remove prefix ("1:" or "0:") for OS_STATUS and DFS_STATUS
+                case 'OS_STATUS':
+                case 'DFS_STATUS':
+                    if (value.match(/^(1|0):/)) {
+                        value = value.replace(/^(1|0):/, '');
+                        cleanClinicalData[key] = value;
+                    }
+                    break;
                 default:
             }
         }
