@@ -176,6 +176,4 @@ describe('MutationTypeColumnFormatter', () => {
             'other'
         );
     });
-
-    after(() => {});
 });

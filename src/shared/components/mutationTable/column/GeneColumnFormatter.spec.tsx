@@ -31,6 +31,4 @@ describe('GeneColumnFormatter', () => {
             'Gene symbol display value is correct'
         );
     });
-
-    after(() => {});
 });
