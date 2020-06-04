@@ -1,0 +1,6 @@
+cancer_study_identifier: ascn_test_study
+description: There is ASCN data in here.
+groups: PUBLIC 
+name: ASCN Study
+short_name: Proj_ASCN
+type_of_cancer: mel

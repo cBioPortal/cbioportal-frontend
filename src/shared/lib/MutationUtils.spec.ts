@@ -9,6 +9,7 @@ import {
     isValidGenomicLocation,
     genomicLocationString,
     generateHgvsgByMutation,
+    hasASCNProperty,
 } from './MutationUtils';
 import { assert } from 'chai';
 import { Gene, MolecularProfile, Mutation } from 'cbioportal-ts-api-client';
@@ -742,6 +743,55 @@ describe('MutationUtils', () => {
                 '17:g.7578205_7578207delinsTTT',
                 generateHgvsgByMutation(delinsMutations[1]),
                 'should be delins 17:g.7578205_7578207delinsTTT: (chr):g.(start)_(end)delins(var)'
+            );
+        });
+    });
+
+    describe('hasASCNProperty', () => {
+        const mutationWithASCNProperty = initMutation({
+            sampleId: 'P1_sample1',
+            alleleSpecificCopyNumber: {
+                ascnMethod: 'FACETS',
+            },
+        });
+        // initMutation sets up a mutation with an alleleSpecificCopyNumber
+        // containing default values (e.g. ascnIntegerCopyNumber: -1, ascnMethod: '', ...)
+        // so remove properties that we want to be undefined
+        // this is easier than creating a full Mutation ourselves
+        const mutationWithoutASCNProperty = initMutation({
+            sampleId: 'P1_sample1',
+        });
+        delete mutationWithoutASCNProperty.alleleSpecificCopyNumber.ascnMethod;
+        const mutationWithoutASCN = initMutation({
+            sampleId: 'P1_sample1',
+        });
+        delete mutationWithoutASCN.alleleSpecificCopyNumber;
+
+        it('checks if mutation has allele specific copy number and specified sub-property', () => {
+            const hasASCNMethod = hasASCNProperty(
+                mutationWithASCNProperty,
+                'ascnMethod'
+            );
+            const missingASCNMethod = hasASCNProperty(
+                mutationWithoutASCNProperty,
+                'ascnMethod'
+            );
+            const missingASCN = hasASCNProperty(
+                mutationWithoutASCN,
+                'ascnMethod'
+            );
+
+            assert.isTrue(
+                hasASCNMethod,
+                'hasASCNProperty() returned false when looking for ascnMethod, should be true.'
+            );
+            assert.isFalse(
+                missingASCNMethod,
+                'hasASCNProperty() returned true when looking for ascnMethod, should be false.'
+            );
+            assert.isFalse(
+                missingASCN,
+                'hasASCNProperty() returned true when looking for ascnMethod, should be false (all of alleleSpecificCopyNumber is missing).'
             );
         });
     });

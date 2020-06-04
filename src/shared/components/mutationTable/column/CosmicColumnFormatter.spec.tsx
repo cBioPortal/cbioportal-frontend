@@ -153,6 +153,4 @@ describe('CosmicColumnFormatter', () => {
             'Sort value value property for DIABLO mutation should be null, no cosmic data'
         );
     });
-
-    after(() => {});
 });

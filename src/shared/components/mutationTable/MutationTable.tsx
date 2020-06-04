@@ -11,6 +11,7 @@ import {
     CancerStudy,
     MolecularProfile,
     Mutation,
+    ClinicalData,
 } from 'cbioportal-ts-api-client';
 import SampleColumnFormatter from './column/SampleColumnFormatter';
 import TumorAlleleFreqColumnFormatter from './column/TumorAlleleFreqColumnFormatter';
@@ -67,6 +68,12 @@ import GnomadColumnFormatter from './column/GnomadColumnFormatter';
 import ClinVarColumnFormatter from './column/ClinVarColumnFormatter';
 import autobind from 'autobind-decorator';
 import DbsnpColumnFormatter from './column/DbsnpColumnFormatter';
+import { getDefaultASCNCopyNumberColumnDefinition } from 'shared/components/mutationTable/column/ascnCopyNumber/ASCNCopyNumberColumnFormatter';
+import { getDefaultASCNMethodColumnDefinition } from 'shared/components/mutationTable/column/ascnMethod/ASCNMethodColumnFormatter';
+import { getDefaultCancerCellFractionColumnDefinition } from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionColumnFormatter';
+import { getDefaultClonalColumnDefinition } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
+import { getDefaultExpectedAltCopiesColumnDefinition } from 'shared/components/mutationTable/column/expectedAltCopies/ExpectedAltCopiesColumnFormatter';
+import { hasASCNProperty } from 'shared/lib/MutationUtils';
 
 export interface IMutationTableProps {
     studyIdToStudy?: { [studyId: string]: CancerStudy };
@@ -122,6 +129,7 @@ export interface IMutationTableProps {
     onRowMouseEnter?: (d: Mutation[]) => void;
     onRowMouseLeave?: (d: Mutation[]) => void;
     generateGenomeNexusHgvsgUrl: (hgvsg: string) => string;
+    sampleIdToClinicalDataMap?: MobxPromise<{ [x: string]: ClinicalData[] }>;
 }
 
 export enum MutationTableColumnType {
@@ -139,6 +147,9 @@ export enum MutationTableColumnType {
     VALIDATION_STATUS,
     MUTATION_TYPE,
     VARIANT_TYPE,
+    CLONAL,
+    CANCER_CELL_FRACTION,
+    EXPECTED_ALT_COPIES,
     CENTER,
     TUMOR_ALLELE_FREQ,
     NORMAL_ALLELE_FREQ,
@@ -147,6 +158,8 @@ export enum MutationTableColumnType {
     HGVSG,
     COSMIC,
     COPY_NUM,
+    ASCN_COPY_NUM,
+    ASCN_METHOD,
     MRNA_EXPR,
     COHORT,
     REF_READS_N,
@@ -358,10 +371,8 @@ export default class MutationTable<
             name: 'mRNA Expr.',
             render: (d: Mutation[]) =>
                 this.props.mrnaExprRankCache ? (
-                    MrnaExprColumnFormatter.renderFunction(
-                        d,
-                        this.props.mrnaExprRankCache as MrnaExprRankCache
-                    )
+                    MrnaExprColumnFormatter.renderFunction(d, this.props
+                        .mrnaExprRankCache as MrnaExprRankCache)
                 ) : (
                     <span></span>
                 ),
@@ -461,9 +472,8 @@ export default class MutationTable<
                     return false;
                 }
             },
-            visible: DiscreteCNAColumnFormatter.isVisible(
-                this.props.discreteCNACache as DiscreteCNACache
-            ),
+            visible: DiscreteCNAColumnFormatter.isVisible(this.props
+                .discreteCNACache as DiscreteCNACache),
         };
 
         this._columns[MutationTableColumnType.REF_READS_N] = {
@@ -702,6 +712,29 @@ export default class MutationTable<
             visible: false,
         };
 
+        this._columns[
+            MutationTableColumnType.ASCN_METHOD
+        ] = getDefaultASCNMethodColumnDefinition();
+
+        this._columns[
+            MutationTableColumnType.CANCER_CELL_FRACTION
+        ] = getDefaultCancerCellFractionColumnDefinition();
+
+        this._columns[
+            MutationTableColumnType.CLONAL
+        ] = getDefaultClonalColumnDefinition();
+
+        this._columns[
+            MutationTableColumnType.ASCN_COPY_NUM
+        ] = getDefaultASCNCopyNumberColumnDefinition(
+            undefined,
+            this.props.sampleIdToClinicalDataMap
+        );
+
+        this._columns[
+            MutationTableColumnType.EXPECTED_ALT_COPIES
+        ] = getDefaultExpectedAltCopiesColumnDefinition();
+
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT] = {
             name: 'Functional Impact',
             render: (d: Mutation[]) => {
@@ -924,15 +957,11 @@ export default class MutationTable<
                     <span></span>
                 ),
             download: (d: Mutation[]) =>
-                ExonColumnFormatter.download(
-                    d,
-                    this.props.genomeNexusCache as GenomeNexusCache
-                ),
+                ExonColumnFormatter.download(d, this.props
+                    .genomeNexusCache as GenomeNexusCache),
             sortBy: (d: Mutation[]) =>
-                ExonColumnFormatter.getSortValue(
-                    d,
-                    this.props.genomeNexusCache as GenomeNexusCache
-                ),
+                ExonColumnFormatter.getSortValue(d, this.props
+                    .genomeNexusCache as GenomeNexusCache),
             visible: false,
             align: 'right',
         };
