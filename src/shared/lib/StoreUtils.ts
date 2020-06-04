@@ -87,6 +87,8 @@ import {
 import request from 'superagent';
 import { Alteration, MUTCommand, SingleGeneQuery } from './oql/oql-parser';
 import { CUSTOM_CASE_LIST_ID } from '../components/query/QueryStore';
+import { ASCNAttributes } from 'shared/enums/ASCNEnums';
+import { hasASCNProperty } from 'shared/lib/MutationUtils';
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
     indicatorMap: {},
@@ -1192,6 +1194,47 @@ export function generateMutationIdByGeneAndProteinChangeAndEvent(
     ].join('_');
 }
 
+/** scan a collection of Mutations to see if any contain values for ASCN fields/properties
+ *
+ * all mutations (whether passed as a simple array or as an array of array)
+ * are scanned (once per known ASCN field/property) to see whether any mutation can be found
+ * which has a (non-empty) value defined for the field. A map from field name to boolean
+ * result is returned.
+ *
+ * @param mutations - a union type (either array of Mutation or array of array of Mutation)
+ * @returns Object/Dictionary with key from {ASCN_field_names} and boolean value per key
+ */
+export function existsSomeMutationWithAscnPropertyInCollection(
+    mutations: Mutation[] | Mutation[][]
+): {
+    [property: string]: boolean;
+} {
+    const existsSomeMutationWithAscnPropertyMap: {
+        [property: string]: boolean;
+    } = {};
+    for (let p of Object.values(ASCNAttributes)) {
+        if (mutations.length == 0) {
+            existsSomeMutationWithAscnPropertyMap[p] = false;
+            continue;
+        }
+        existsSomeMutationWithAscnPropertyMap[p] = _.some(
+            mutations,
+            mutationElement => {
+                if (mutationElement.hasOwnProperty('variantAllele')) {
+                    // element is a single mutation
+                    return hasASCNProperty(mutationElement as Mutation, p);
+                } else {
+                    // element is a mutation array
+                    return _.some(mutationElement as Mutation[], m => {
+                        return hasASCNProperty(m, p);
+                    });
+                }
+            }
+        );
+    }
+    return existsSomeMutationWithAscnPropertyMap;
+}
+
 export function generateDataQueryFilter(
     sampleListId: string | null,
     sampleIds?: string[]
@@ -1233,6 +1276,19 @@ export function groupBySampleId(
             (cd: ClinicalData) => cd.sampleId === k
         ),
     }));
+}
+
+export function mapSampleIdToClinicalData(
+    clinicalDataGroupedBySampleId: Array<{
+        id: string;
+        clinicalData: ClinicalData[];
+    }>
+) {
+    const sampleIdToClinicalDataMap = _.chain(clinicalDataGroupedBySampleId)
+        .keyBy('id')
+        .mapValues(o => o.clinicalData)
+        .value();
+    return sampleIdToClinicalDataMap;
 }
 
 export function groupBy<T>(

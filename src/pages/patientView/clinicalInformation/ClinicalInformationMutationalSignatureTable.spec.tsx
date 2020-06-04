@@ -42,9 +42,6 @@ const sampleMutationalSignatureData = [
 ];
 
 describe('ClinicalInformationMutationalSignatureTable', () => {
-    before(() => {});
-    after(() => {});
-
     it('takes mutational signature sample data and formats it for mutational signature table to render', () => {
         let result = prepareMutationalSignatureDataForTable(
             sampleMutationalSignatureData
