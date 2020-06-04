@@ -67,6 +67,9 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
             [uniqueSampleKey: string]: string;
         },
         public generateGenomeNexusHgvsgUrl: (hgvsg: string) => string,
+        public clinicalDataGroupedBySampleMap: MobxPromise<{
+            [sampleId: string]: ClinicalData[];
+        }>,
         protected genomenexusClient?: GenomeNexusAPI,
         protected genomenexusInternalClient?: GenomeNexusAPIInternal
     ) {

@@ -12,7 +12,7 @@ import VAFLineChart, { SHOW_ONLY_SELECTED_LABEL } from './VAFLineChart';
 import { action, computed, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import PatientViewMutationsDataStore from './PatientViewMutationsDataStore';
-import { Mutation } from 'cbioportal-ts-api-client';
+import { Mutation, ClinicalDataBySampleId } from 'cbioportal-ts-api-client';
 import ReactSelect from 'react-select';
 import MutationOncoprint from './oncoprint/MutationOncoprint';
 import { DownloadControls } from 'cbioportal-frontend-commons';
@@ -29,6 +29,7 @@ export interface IPatientViewMutationsTabProps {
     store: PatientViewPageStore;
     urlWrapper: PatientViewUrlWrapper;
     mutationTableColumnVisibility?: { [columnId: string]: boolean };
+    samples?: ClinicalDataBySampleId[];
     onMutationTableColumnVisibilityToggled: (
         columnId: string,
         columnVisibility?: IColumnVisibilityDef[]
@@ -345,6 +346,12 @@ export default class PatientViewMutationsTab extends React.Component<
                     }
                     generateGenomeNexusHgvsgUrl={
                         this.props.store.generateGenomeNexusHgvsgUrl
+                    }
+                    sampleIdToClinicalDataMap={
+                        this.props.store.clinicalDataGroupedBySampleMap
+                    }
+                    existsSomeMutationWithAscnProperty={
+                        this.props.store.existsSomeMutationWithAscnProperty
                     }
                 />
             </div>

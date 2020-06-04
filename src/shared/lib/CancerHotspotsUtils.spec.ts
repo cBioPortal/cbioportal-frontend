@@ -4,8 +4,6 @@ import { Mutation } from 'cbioportal-ts-api-client';
 import { filterMutationsOnNonHotspotGenes } from './CancerHotspotsUtils';
 
 describe('CancerHotspotsUtils', () => {
-    before(() => {});
-
     describe('filterMutationsOnNonHotspotGenes', () => {
         it('filters mutations on non hotspot genes', () => {
             const mutations = [
@@ -17,6 +15,4 @@ describe('CancerHotspotsUtils', () => {
             );
         });
     });
-
-    after(() => {});
 });

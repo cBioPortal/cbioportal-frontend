@@ -7,13 +7,15 @@ import {
 } from 'shared/components/mutationTable/MutationTable';
 import CancerTypeColumnFormatter from 'shared/components/mutationTable/column/CancerTypeColumnFormatter';
 import TumorAlleleFreqColumnFormatter from 'shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter';
-import { Mutation } from 'cbioportal-ts-api-client';
+import { Mutation, ClinicalData } from 'cbioportal-ts-api-client';
 import ExonColumnFormatter from 'shared/components/mutationTable/column/ExonColumnFormatter';
 import GnomadColumnFormatter from 'shared/components/mutationTable/column/GnomadColumnFormatter';
+import { ASCNAttributes } from 'shared/enums/ASCNEnums';
 
 export interface IResultsViewMutationTableProps extends IMutationTableProps {
     // add results view specific props here if needed
     totalNumberOfExons?: string;
+    existsSomeMutationWithAscnProperty: { [property: string]: boolean };
 }
 //
 @observer
@@ -30,6 +32,8 @@ export default class ResultsViewMutationTable extends MutationTable<
             MutationTableColumnType.STUDY,
             MutationTableColumnType.SAMPLE_ID,
             MutationTableColumnType.COPY_NUM,
+            MutationTableColumnType.ASCN_METHOD,
+            MutationTableColumnType.ASCN_COPY_NUM,
             MutationTableColumnType.ANNOTATION,
             MutationTableColumnType.HGVSG,
             MutationTableColumnType.FUNCTIONAL_IMPACT,
@@ -48,6 +52,9 @@ export default class ResultsViewMutationTable extends MutationTable<
             MutationTableColumnType.PROTEIN_CHANGE,
             MutationTableColumnType.MUTATION_TYPE,
             MutationTableColumnType.VARIANT_TYPE,
+            MutationTableColumnType.CLONAL,
+            MutationTableColumnType.CANCER_CELL_FRACTION,
+            MutationTableColumnType.MUTANT_COPIES,
             MutationTableColumnType.COSMIC,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
             MutationTableColumnType.NORMAL_ALLELE_FREQ,
@@ -98,7 +105,12 @@ export default class ResultsViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT].order = 38;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 40;
         this._columns[MutationTableColumnType.VARIANT_TYPE].order = 45;
+        this._columns[MutationTableColumnType.ASCN_METHOD].order = 46;
+        this._columns[MutationTableColumnType.CLONAL].order = 47;
+        this._columns[MutationTableColumnType.CANCER_CELL_FRACTION].order = 48;
+        this._columns[MutationTableColumnType.MUTANT_COPIES].order = 49;
         this._columns[MutationTableColumnType.COPY_NUM].order = 50;
+        this._columns[MutationTableColumnType.ASCN_COPY_NUM].order = 51;
         this._columns[MutationTableColumnType.COSMIC].order = 60;
         this._columns[MutationTableColumnType.MUTATION_STATUS].order = 70;
         this._columns[MutationTableColumnType.VALIDATION_STATUS].order = 80;
@@ -127,6 +139,37 @@ export default class ResultsViewMutationTable extends MutationTable<
         ].shouldExclude = () => {
             return !this.props.uniqueSampleKeyToTumorType;
         };
+
+        this._columns[MutationTableColumnType.CLONAL].shouldExclude = () => {
+            return !this.props.existsSomeMutationWithAscnProperty[
+                ASCNAttributes.CCF_M_COPIES_STRING
+            ];
+        };
+
+        this._columns[
+            MutationTableColumnType.ASCN_METHOD
+        ].shouldExclude = () => {
+            return !this.props.existsSomeMutationWithAscnProperty[
+                ASCNAttributes.ASCN_METHOD_STRING
+            ];
+        };
+
+        this._columns[
+            MutationTableColumnType.CANCER_CELL_FRACTION
+        ].shouldExclude = () => {
+            return !this.props.existsSomeMutationWithAscnProperty[
+                ASCNAttributes.CCF_M_COPIES_STRING
+            ];
+        };
+
+        this._columns[
+            MutationTableColumnType.MUTANT_COPIES
+        ].shouldExclude = () => {
+            return !this.props.existsSomeMutationWithAscnProperty[
+                ASCNAttributes.MUTANT_COPIES_STRING
+            ];
+        };
+
         this._columns[
             MutationTableColumnType.NUM_MUTATIONS
         ].shouldExclude = () => {

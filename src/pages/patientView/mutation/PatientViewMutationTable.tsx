@@ -6,6 +6,7 @@ import {
     MutationTableColumnType,
     default as MutationTable,
 } from 'shared/components/mutationTable/MutationTable';
+import PatientViewMutationsDataStore from './PatientViewMutationsDataStore';
 import SampleManager from '../SampleManager';
 import { Mutation } from 'cbioportal-ts-api-client';
 import AlleleCountColumnFormatter from 'shared/components/mutationTable/column/AlleleCountColumnFormatter';
@@ -17,6 +18,11 @@ import TumorAlleleFreqColumnFormatter from 'shared/components/mutationTable/colu
 import ExonColumnFormatter from 'shared/components/mutationTable/column/ExonColumnFormatter';
 import HeaderIconMenu from './HeaderIconMenu';
 import GeneFilterMenu, { GeneFilterOption } from './GeneFilterMenu';
+import { getDefaultASCNCopyNumberColumnDefinition } from 'shared/components/mutationTable/column/ascnCopyNumber/ASCNCopyNumberColumnFormatter';
+import { getDefaultCancerCellFractionColumnDefinition } from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionColumnFormatter';
+import { getDefaultClonalColumnDefinition } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
+import { getDefaultMutantCopiesColumnDefinition } from 'shared/components/mutationTable/column/mutantCopies/MutantCopiesColumnFormatter';
+import { ASCNAttributes } from 'shared/enums/ASCNEnums';
 
 export interface IPatientViewMutationTableProps extends IMutationTableProps {
     sampleManager: SampleManager | null;
@@ -28,6 +34,7 @@ export interface IPatientViewMutationTableProps extends IMutationTableProps {
     onFilterGenes?: (option: GeneFilterOption) => void;
     onSelectGenePanel?: (name: string) => void;
     disableTooltip?: boolean;
+    existsSomeMutationWithAscnProperty: { [property: string]: boolean };
 }
 
 @observer
@@ -47,6 +54,8 @@ export default class PatientViewMutationTable extends MutationTable<
             MutationTableColumnType.COHORT,
             MutationTableColumnType.MRNA_EXPR,
             MutationTableColumnType.COPY_NUM,
+            MutationTableColumnType.ASCN_METHOD,
+            MutationTableColumnType.ASCN_COPY_NUM,
             MutationTableColumnType.ANNOTATION,
             MutationTableColumnType.HGVSG,
             MutationTableColumnType.REF_READS_N,
@@ -65,6 +74,9 @@ export default class PatientViewMutationTable extends MutationTable<
             MutationTableColumnType.PROTEIN_CHANGE,
             MutationTableColumnType.MUTATION_TYPE,
             MutationTableColumnType.VARIANT_TYPE,
+            MutationTableColumnType.CLONAL,
+            MutationTableColumnType.CANCER_CELL_FRACTION,
+            MutationTableColumnType.MUTANT_COPIES,
             MutationTableColumnType.FUNCTIONAL_IMPACT,
             MutationTableColumnType.COSMIC,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
@@ -147,6 +159,41 @@ export default class PatientViewMutationTable extends MutationTable<
             sortBy: (d: Mutation[]) =>
                 PanelColumnFormatter.getGenePanelIds(GenePanelProps(d)),
         };
+
+        // customization for ASCN-related columns
+        // Patient view differs from default/results view because multiple samples can appear in a row
+        // due to same variant in multiple samples
+        // This can lead to cases where there are multiple icons/tooltips in a single cell
+        // therefore patient view needs sampleManager to indicate which values match which samples
+
+        this._columns[
+            MutationTableColumnType.CANCER_CELL_FRACTION
+        ] = getDefaultCancerCellFractionColumnDefinition(
+            this.getSamples(),
+            this.props.sampleManager
+        );
+
+        this._columns[
+            MutationTableColumnType.CLONAL
+        ] = getDefaultClonalColumnDefinition(
+            this.getSamples(),
+            this.props.sampleManager
+        );
+
+        this._columns[
+            MutationTableColumnType.MUTANT_COPIES
+        ] = getDefaultMutantCopiesColumnDefinition(
+            this.getSamples(),
+            this.props.sampleManager
+        );
+
+        this._columns[
+            MutationTableColumnType.ASCN_COPY_NUM
+        ] = getDefaultASCNCopyNumberColumnDefinition(
+            this.getSamples(),
+            this.props.sampleIdToClinicalDataMap,
+            this.props.sampleManager
+        );
 
         // customization for allele count columns
 
@@ -237,15 +284,20 @@ export default class PatientViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.VAR_ALLELE].order = 80;
         this._columns[MutationTableColumnType.MUTATION_STATUS].order = 90;
         this._columns[MutationTableColumnType.VALIDATION_STATUS].order = 100;
+        this._columns[MutationTableColumnType.ASCN_METHOD].order = 105;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 110;
         this._columns[MutationTableColumnType.VARIANT_TYPE].order = 115;
+        this._columns[MutationTableColumnType.CLONAL].order = 116;
+        this._columns[MutationTableColumnType.CANCER_CELL_FRACTION].order = 117;
+        this._columns[MutationTableColumnType.MUTANT_COPIES].order = 118;
         this._columns[MutationTableColumnType.CENTER].order = 120;
         this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ].order = 130;
         this._columns[MutationTableColumnType.VAR_READS].order = 140;
         this._columns[MutationTableColumnType.REF_READS].order = 150;
         this._columns[MutationTableColumnType.VAR_READS_N].order = 170;
-        this._columns[MutationTableColumnType.REF_READS_N].order = 180;
-        this._columns[MutationTableColumnType.COPY_NUM].order = 181;
+        this._columns[MutationTableColumnType.REF_READS_N].order = 175;
+        this._columns[MutationTableColumnType.COPY_NUM].order = 177;
+        this._columns[MutationTableColumnType.ASCN_COPY_NUM].order = 181;
         this._columns[MutationTableColumnType.MRNA_EXPR].order = 182;
         this._columns[MutationTableColumnType.COHORT].order = 183;
         this._columns[MutationTableColumnType.COSMIC].order = 184;
@@ -262,6 +314,37 @@ export default class PatientViewMutationTable extends MutationTable<
                 this.getSamples().length > 1
             );
         };
+
+        this._columns[MutationTableColumnType.CLONAL].shouldExclude = () => {
+            return !this.props.existsSomeMutationWithAscnProperty[
+                ASCNAttributes.CCF_M_COPIES_STRING
+            ];
+        };
+
+        this._columns[
+            MutationTableColumnType.ASCN_METHOD
+        ].shouldExclude = () => {
+            return !this.props.existsSomeMutationWithAscnProperty[
+                ASCNAttributes.ASCN_METHOD_STRING
+            ];
+        };
+
+        this._columns[
+            MutationTableColumnType.CANCER_CELL_FRACTION
+        ].shouldExclude = () => {
+            return !this.props.existsSomeMutationWithAscnProperty[
+                ASCNAttributes.CCF_M_COPIES_STRING
+            ];
+        };
+
+        this._columns[
+            MutationTableColumnType.MUTANT_COPIES
+        ].shouldExclude = () => {
+            return !this.props.existsSomeMutationWithAscnProperty[
+                ASCNAttributes.MUTANT_COPIES_STRING
+            ];
+        };
+
         // only hide tumor column if there is one sample and no uncalled
         // mutations (there is no information added in that case by the sample
         // label)
