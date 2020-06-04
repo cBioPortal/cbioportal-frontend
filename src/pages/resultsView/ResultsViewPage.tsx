@@ -310,14 +310,19 @@ export default class ResultsViewPage extends React.Component<
             {
                 id: ResultsViewTab.COMPARISON,
                 hide: () => {
-                    return !this.resultsViewPageStore.studies.isComplete;
+                    return this.resultsViewPageStore.survivalClinicalDataExists
+                        .isPending;
                 },
                 getTab: () => {
+                    const text = this.resultsViewPageStore
+                        .survivalClinicalDataExists.result
+                        ? 'Comparison/Survival'
+                        : 'Comparison';
                     return (
                         <MSKTab
                             key={10}
                             id={ResultsViewTab.COMPARISON}
-                            linkText={'Comparison'}
+                            linkText={text}
                         >
                             <ComparisonTab
                                 urlWrapper={this.urlWrapper}
