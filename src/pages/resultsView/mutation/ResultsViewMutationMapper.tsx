@@ -19,6 +19,7 @@ import { MUTATION_STATUS_FILTER_ID } from 'shared/components/mutationMapper/Muta
 
 import MutationRateSummary from 'pages/resultsView/mutation/MutationRateSummary';
 import ResultsViewMutationMapperStore from 'pages/resultsView/mutation/ResultsViewMutationMapperStore';
+import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import ResultsViewMutationTable from 'pages/resultsView/mutation/ResultsViewMutationTable';
 
 export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
@@ -26,6 +27,7 @@ export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     discreteCNACache?: DiscreteCNACache;
     cancerTypeCache?: CancerTypeCache;
     mutationCountCache?: MutationCountCache;
+    existsSomeMutationWithAscnProperty: { [property: string]: boolean };
     genomeNexusMyVariantInfoCache?: GenomeNexusMyVariantInfoCache;
     userEmailAddress: string;
 }
@@ -77,7 +79,8 @@ export default class ResultsViewMutationMapper extends MutationMapper<
             getMobxPromiseGroupStatus(
                 this.props.store.clinicalDataForSamples,
                 this.props.store.studiesForSamplesWithoutCancerTypeClinicalData,
-                this.props.store.canonicalTranscript
+                this.props.store.canonicalTranscript,
+                this.props.store.clinicalDataGroupedBySampleMap
             ) === 'pending'
         );
     }
@@ -142,6 +145,12 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 totalNumberOfExons={this.totalExonNumber}
                 generateGenomeNexusHgvsgUrl={
                     this.props.store.generateGenomeNexusHgvsgUrl
+                }
+                sampleIdToClinicalDataMap={
+                    this.props.store.clinicalDataGroupedBySampleMap
+                }
+                existsSomeMutationWithAscnProperty={
+                    this.props.existsSomeMutationWithAscnProperty
                 }
             />
         );

@@ -23,8 +23,6 @@ describe('SimpleTable', () => {
         table = shallow(<SimpleTable headers={headers} rows={rows} />);
     });
 
-    after(() => {});
-
     it('renders 3 rows if passed headers and two rows', () => {
         assert.equal(table.find('tr').length, 3);
     });

@@ -189,6 +189,4 @@ describe('CohortColumnFormatter', () => {
         assert.equal(qValue, 0.00045);
         assert.equal(count, 4);
     });
-
-    after(() => {});
 });

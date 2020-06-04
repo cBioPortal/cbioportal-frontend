@@ -60,6 +60,4 @@ describe('SampleColumnFormatter', () => {
             'Tooltip should exists for long sample id'
         );
     });
-
-    after(() => {});
 });

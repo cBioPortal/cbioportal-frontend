@@ -143,8 +143,6 @@ describe('MutationInputParser', () => {
         'TCGA-24-1104\tCancerType3\n' +
         'Unknown\tCancerType4';
 
-    before(() => {});
-
     it('extracts mutation input headers', () => {
         const separator = '\t';
         const richInputIndexMap = buildIndexMap(
