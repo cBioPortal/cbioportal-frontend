@@ -12,10 +12,7 @@ import {
     MUTATION_DATA_FIELD_ENUM,
 } from 'shared/constants';
 import MobxPromise from 'mobxpromise';
-import {
-    errorIcon,
-    loaderIcon,
-} from '../../../../../../packages/react-mutation-mapper/src/component/StatusHelpers';
+import { errorIcon, loaderIcon } from 'react-mutation-mapper';
 
 /**
  * @author Avery Wang
