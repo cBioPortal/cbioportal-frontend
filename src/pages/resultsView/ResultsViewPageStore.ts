@@ -2857,9 +2857,9 @@ export class ResultsViewPageStore {
                                     this.indexedVariantAnnotations,
                                     this.uniqueSampleKeyToTumorType.result!,
                                     this.generateGenomeNexusHgvsgUrl,
+                                    this.clinicalDataGroupedBySampleMap,
                                     this.genomeNexusClient,
-                                    this.genomeNexusInternalClient,
-                                    this.clinicalDataGroupedBySampleMap
+                                    this.genomeNexusInternalClient
                                 );
                                 return map;
                             },
