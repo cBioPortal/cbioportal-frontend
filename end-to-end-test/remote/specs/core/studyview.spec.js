@@ -20,7 +20,10 @@ const getTextFromElement = require('../../../shared/specUtils')
 const waitForStudyViewSelectedInfo = require('../../../shared/specUtils')
     .waitForStudyViewSelectedInfo;
 
-var { checkElementWithMouseDisabled } = require('../../../shared/specUtils');
+var {
+    checkElementWithMouseDisabled,
+    setInputText,
+} = require('../../../shared/specUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const CUSTOM_SELECTION_BUTTON = "[data-test='custom-selection-button']";
@@ -616,6 +619,66 @@ describe('the gene panel is loaded properly', () => {
                 '[data-test="gene-panel-modal-body"] p:first-child'
             ),
             'ABL1'
+        );
+    });
+});
+
+describe('submit genes to results view query', () => {
+    it('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
+        goToUrlAndSetLocalStorage(
+            `${CBIOPORTAL_URL}/study/summary?id=acc_tcga_pan_can_atlas_2018`
+        );
+        browser.waitForExist('[data-test="geneSet"]', 5000);
+        setInputText('[data-test="geneSet"]', 'PTEN: PROT>0');
+
+        // error appears
+        browser.waitUntil(() => {
+            return (
+                browser.isExisting('[data-test="oqlErrorMessage"]') &&
+                browser.getText('[data-test="oqlErrorMessage"]') ===
+                    'Protein level data query specified in OQL, but no protein level profile is available in the selected study.'
+            );
+        }, 20000);
+
+        // submit is disabled
+        browser.waitUntil(() => {
+            return !browser.isEnabled('button[data-test="geneSetSubmit"]');
+        }, 5000);
+    });
+    it('auto-selects an mrna profile when mrna oql is entered', () => {
+        const studyViewTabId = browser.getTabIds()[0];
+
+        // enter oql
+        browser.waitForExist('textarea[data-test="geneSet"]', 2000);
+        setInputText('textarea[data-test="geneSet"]', 'PTEN: EXP>1');
+
+        browser.waitForEnabled('button[data-test="geneSetSubmit"]', 5000);
+        browser.click('button[data-test="geneSetSubmit"]');
+
+        // switch tabs to results view
+        const resultsViewTabId = browser
+            .getTabIds()
+            .find(x => x !== studyViewTabId);
+        browser.switchTab(resultsViewTabId);
+
+        // wait for query to load
+        waitForOncoprint(20000);
+
+        // only mrna profile is there
+        const query = browser.execute(function() {
+            return urlWrapper.query;
+        }).value;
+        assert.equal(
+            query.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
+            undefined
+        );
+        assert.equal(
+            query.genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
+            undefined
+        );
+        assert.equal(
+            query.genetic_profile_ids_PROFILE_MRNA_EXPRESSION,
+            'acc_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median_Zscores'
         );
     });
 });
