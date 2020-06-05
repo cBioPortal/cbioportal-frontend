@@ -900,6 +900,7 @@ export default class ResultsViewOncoprint extends React.Component<
                                 this.props.store.patients,
                                 this.geneticTracks,
                                 this.clinicalTracks,
+                                this.heatmapTracks,
                                 this.props.store
                                     .clinicalAttributeIdToClinicalAttribute,
                             ],
@@ -908,6 +909,7 @@ export default class ResultsViewOncoprint extends React.Component<
                                 patients: Patient[],
                                 geneticTracks: GeneticTrackSpec[],
                                 clinicalTracks: ClinicalTrackSpec[],
+                                heatmapTracks: IHeatmapTrackSpec[],
                                 attributeIdToAttribute: {
                                     [attributeId: string]: ClinicalAttribute;
                                 }
@@ -945,6 +947,12 @@ export default class ResultsViewOncoprint extends React.Component<
                                         ),
                                         attributeIdToAttribute,
                                         this.oncoprintAnalysisCaseType
+                                    );
+                                }
+
+                                if (this.heatmapTracks.result!.length > 0) {
+                                    alert(
+                                        'Note: heatmap tracks are not currently supported in Oncoprinter.'
                                     );
                                 }
 
