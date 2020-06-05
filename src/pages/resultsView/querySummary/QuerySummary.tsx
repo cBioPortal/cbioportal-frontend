@@ -122,7 +122,10 @@ export default class QuerySummary extends React.Component<
                     {getGeneSummary(this.props.store.hugoGeneSymbols)}
                     &nbsp;
                     <DefaultTooltip overlay={'Edit genes or OQL'}>
-                        <a onClick={this.props.onToggleOQLEditUIVisibility}>
+                        <a
+                            data-test="oqlQuickEditButton"
+                            onClick={this.props.onToggleOQLEditUIVisibility}
+                        >
                             <i className={'fa fa-pencil'}></i>
                         </a>
                     </DefaultTooltip>

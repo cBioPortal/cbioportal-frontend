@@ -83,9 +83,10 @@ import {
     DEFAULT_SURVIVAL_PRIORITY,
     getSurvivalAttributes,
     plotsPriority,
-    survivalClinicalDataVocabulary,
 } from '../../pages/resultsView/survival/SurvivalUtil';
 import request from 'superagent';
+import { Alteration, MUTCommand, SingleGeneQuery } from './oql/oql-parser';
+import { CUSTOM_CASE_LIST_ID } from '../components/query/QueryStore';
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
     indicatorMap: {},
@@ -1308,14 +1309,8 @@ export function getSurvivalClinicalAttributesPrefix(
         },
         [] as string[]
     );
-    // TODO: after we migrate data into new format, we can support all survival data type
-    // this is a tempory fix for current data format, for now we only support survival types defined in survivalClinicalDataVocabulary
-    const filteredAttributePrefixes = _.filter(
-        attributePrefixes,
-        prefix => survivalClinicalDataVocabulary[prefix]
-    );
     // change prefix order based on priority
-    return _.sortBy(filteredAttributePrefixes, prefix => {
+    return _.sortBy(attributePrefixes, prefix => {
         return plotsPriority[prefix] || DEFAULT_SURVIVAL_PRIORITY;
     });
 }
@@ -1356,4 +1351,65 @@ export async function fetchSurvivalDataExists(
             return parseInt(response.header['total-count'], 10);
         });
     return count > 0;
+}
+
+export function getAlterationTypesInOql(parsedQueryLines: SingleGeneQuery[]) {
+    let haveMutInQuery = false;
+    let haveCnaInQuery = false;
+    let haveMrnaInQuery = false;
+    let haveProtInQuery = false;
+
+    for (const queryLine of parsedQueryLines) {
+        for (const alteration of queryLine.alterations || []) {
+            haveMutInQuery =
+                haveMutInQuery || alteration.alteration_type === 'mut';
+            haveCnaInQuery =
+                haveCnaInQuery || alteration.alteration_type === 'cna';
+            haveMrnaInQuery =
+                haveMrnaInQuery || alteration.alteration_type === 'exp';
+            haveProtInQuery =
+                haveProtInQuery || alteration.alteration_type === 'prot';
+        }
+    }
+    return {
+        haveMutInQuery,
+        haveCnaInQuery,
+        haveMrnaInQuery,
+        haveProtInQuery,
+    };
+}
+
+export function getOqlMessages(parsedLines: SingleGeneQuery[]) {
+    const unrecognizedMutations = _.flatten(
+        parsedLines.map(result => {
+            return (result.alterations || []).filter(
+                alt =>
+                    alt.alteration_type === 'mut' &&
+                    (alt.info as any).unrecognized
+            ) as MUTCommand<any>[];
+        })
+    );
+    return unrecognizedMutations.map(mutCommand => {
+        return `Unrecognized input "${
+            (mutCommand as any).constr_val
+        }" is interpreted as a mutation code.`;
+    });
+}
+
+export function getDefaultProfilesForOql(profiles: MolecularProfile[]) {
+    return _.mapValues(
+        _.keyBy([
+            AlterationTypeConstants.MUTATION_EXTENDED,
+            AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+            AlterationTypeConstants.MRNA_EXPRESSION,
+            AlterationTypeConstants.PROTEIN_LEVEL,
+        ]),
+        alterationType =>
+            profiles.find(profile => {
+                return (
+                    profile.showProfileInAnalysisTab &&
+                    profile.molecularAlterationType === alterationType
+                );
+            })
+    );
 }

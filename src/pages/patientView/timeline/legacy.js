@@ -221,7 +221,7 @@ export function buildTimeline(
         for (i = 0; i < prefixes.length; i++) {
             var prefix = prefixes[i];
             if (
-                patientInfo[prefix + 'OS_STATUS'] === 'DECEASED' &&
+                patientInfo[prefix + 'OS_STATUS'] === '1:DECEASED' &&
                 prefix + 'OS_MONTHS' in patientInfo
             ) {
                 var days = Math.round(
