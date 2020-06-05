@@ -44,7 +44,11 @@ import {
     ResourceData,
     ResourceDefinition,
 } from 'cbioportal-ts-api-client';
-import { fetchCopyNumberSegmentsForSamples } from 'shared/lib/StoreUtils';
+import {
+    fetchCopyNumberSegmentsForSamples,
+    getAlterationTypesInOql,
+    getDefaultProfilesForOql,
+} from 'shared/lib/StoreUtils';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
 import {
@@ -164,7 +168,7 @@ import {
     generateStudyViewSurvivalPlotTitle,
     getSurvivalAttributes,
     plotsPriority,
-    survivalClinicalDataVocabulary,
+    getSurvivalStatusBoolean,
 } from 'pages/resultsView/survival/SurvivalUtil';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
@@ -217,7 +221,7 @@ export type SurvivalType = {
     id: string;
     title: string;
     associatedAttrs: string[];
-    filter: string[];
+    filter: (s: string) => boolean;
     survivalData: PatientSurvival[];
 };
 
@@ -911,7 +915,7 @@ export class StudyViewPageStore {
 
     @observable geneQueryStr: string;
 
-    @observable private geneQueries: SingleGeneQuery[] = [];
+    @observable public geneQueries: SingleGeneQuery[] = [];
 
     @observable public chartsDimension = observable.map<ChartDimension>();
 
@@ -1299,6 +1303,45 @@ export class StudyViewPageStore {
     updateSelectedGenes(query: SingleGeneQuery[], queryStr: string) {
         this.geneQueries = query;
         this.geneQueryStr = queryStr;
+    }
+
+    @computed get alterationTypesInOQL() {
+        return getAlterationTypesInOql(this.geneQueries);
+    }
+
+    @computed get defaultProfilesForOql() {
+        if (this.molecularProfiles.isComplete) {
+            return getDefaultProfilesForOql(this.molecularProfiles.result);
+        }
+        return undefined;
+    }
+    @computed get defaultMutationProfile() {
+        return (
+            this.defaultProfilesForOql &&
+            this.defaultProfilesForOql[
+                AlterationTypeConstants.MUTATION_EXTENDED
+            ]
+        );
+    }
+    @computed get defaultCnaProfile() {
+        return (
+            this.defaultProfilesForOql &&
+            this.defaultProfilesForOql[
+                AlterationTypeConstants.COPY_NUMBER_ALTERATION
+            ]
+        );
+    }
+    @computed get defaultMrnaProfile() {
+        return (
+            this.defaultProfilesForOql &&
+            this.defaultProfilesForOql[AlterationTypeConstants.MRNA_EXPRESSION]
+        );
+    }
+    @computed get defaultProtProfile() {
+        return (
+            this.defaultProfilesForOql &&
+            this.defaultProfilesForOql[AlterationTypeConstants.PROTEIN_LEVEL]
+        );
     }
 
     @autobind
@@ -2690,6 +2733,15 @@ export class StudyViewPageStore {
         },
         default: [],
     });
+
+    @computed get isSingleNonVirtualStudyQueried() {
+        return (
+            this.filteredPhysicalStudies.isComplete &&
+            this.filteredVirtualStudies.isComplete &&
+            this.filteredPhysicalStudies.result.length === 1 &&
+            this.filteredVirtualStudies.result.length === 0
+        );
+    }
 
     @computed get showOriginStudiesInSummaryDescription() {
         return showOriginStudiesInSummaryDescription(
@@ -4692,7 +4744,7 @@ export class StudyViewPageStore {
                     id: `${prefix}_SURVIVAL`,
                     title: plotTitle,
                     associatedAttrs: [`${prefix}_STATUS`, `${prefix}_MONTHS`],
-                    filter: survivalClinicalDataVocabulary[prefix],
+                    filter: s => getSurvivalStatusBoolean(s, prefix),
                     survivalData: [],
                 };
             }
@@ -5136,7 +5188,7 @@ export class StudyViewPageStore {
                     this.selectedPatientKeys.result!,
                     obj.associatedAttrs[0],
                     obj.associatedAttrs[1],
-                    s => obj.filter.includes(s)
+                    obj.filter
                 );
                 return obj;
             });
@@ -5784,15 +5836,37 @@ export class StudyViewPageStore {
             this.filteredVirtualStudies.result.length === 0 &&
             this.studyIds.length === 1
         ) {
-            if (!_.isEmpty(this.mutationProfiles.result)) {
+            if (
+                this.alterationTypesInOQL.haveMutInQuery &&
+                this.defaultMutationProfile
+            ) {
                 formOps[
                     'genetic_profile_ids_PROFILE_MUTATION_EXTENDED'
-                ] = this.mutationProfiles.result[0].molecularProfileId;
+                ] = this.defaultMutationProfile.molecularProfileId;
             }
-            if (!_.isEmpty(this.cnaProfiles.result)) {
+            if (
+                this.alterationTypesInOQL.haveCnaInQuery &&
+                this.defaultCnaProfile
+            ) {
                 formOps[
                     'genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION'
-                ] = this.cnaProfiles.result[0].molecularProfileId;
+                ] = this.defaultCnaProfile.molecularProfileId;
+            }
+            if (
+                this.alterationTypesInOQL.haveMrnaInQuery &&
+                this.defaultMrnaProfile
+            ) {
+                formOps[
+                    'genetic_profile_ids_PROFILE_MRNA_EXPRESSION'
+                ] = this.defaultMrnaProfile.molecularProfileId;
+            }
+            if (
+                this.alterationTypesInOQL.haveProtInQuery &&
+                this.defaultProtProfile
+            ) {
+                formOps[
+                    'genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION'
+                ] = this.defaultProtProfile.molecularProfileId;
             }
         } else {
             let data_priority = '0';
@@ -6086,15 +6160,9 @@ export class StudyViewPageStore {
                 },
                 [] as string[]
             );
-            // TODO: after we migrate data into new format, we can support all survival data type
-            // this is a tempory fix for current data format, for now we only support survival types defined in survivalClinicalDataVocabulary
-            const filteredAttributePrefixes = _.filter(
-                attributePrefixes,
-                prefix => survivalClinicalDataVocabulary[prefix]
-            );
             // change prefix order based on priority
             return Promise.resolve(
-                _.sortBy(filteredAttributePrefixes, prefix => {
+                _.sortBy(attributePrefixes, prefix => {
                     return plotsPriority[prefix] || 999;
                 })
             );

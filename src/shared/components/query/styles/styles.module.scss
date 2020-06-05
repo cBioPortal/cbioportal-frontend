@@ -38,16 +38,16 @@
         margin-bottom: 0;
         font-weight: normal;
     }
+}
 
-    .errorMessage {
-        color: $redError;
-        font-weight: bold;
-    }
+.errorMessage {
+    color: $redError;
+    font-weight: bold;
+}
 
-    .oqlMessage {
-        color: $brand-info;
-        font-weight: bold;
-    }
+.oqlMessage {
+    color: $brand-info;
+    font-weight: bold;
 }
 
 .CancerStudySelector {

@@ -3,6 +3,7 @@ import * as _ from 'lodash';
 import { observer } from 'mobx-react';
 import classnames from 'classnames';
 import styles from './styles.module.scss';
+import queryStoreStyles from '../../components/query/styles/styles.module.scss';
 import {
     observable,
     computed,
@@ -16,6 +17,7 @@ import {
     GeneReplacement,
     Focus,
     normalizeQuery,
+    QueryStore,
 } from 'shared/components/query/QueryStore';
 import {
     getEmptyGeneValidationResult,
@@ -27,14 +29,19 @@ import GeneSymbolValidator, {
 } from './GeneSymbolValidator';
 import autobind from 'autobind-decorator';
 import bind from 'bind-decorator';
+import { createQueryStore } from '../../lib/createQueryStore';
+import { FlexCol } from '../flexbox/FlexBox';
 
 export interface IGeneSelectionBoxProps {
+    submitButton?: JSX.Element;
+    error?: string;
+    messages?: string[];
+
     focus?: Focus;
     inputGeneQuery?: string;
     validateInputGeneQuery?: boolean;
     location?: GeneBoxType;
     textBoxPrompt?: string;
-    submitButton?: JSX.Element;
     callback?: (
         oql: {
             query: SingleGeneQuery[];
@@ -70,11 +77,26 @@ export default class OQLTextArea extends React.Component<
     // Need to record the textarea value due to SyntheticEvent restriction due to debounce
     private currentTextAreaValue = '';
 
-    @observable private geneQuery = '';
+    @observable private _geneQuery = '';
+    @computed get geneQuery() {
+        if (this.queryStore) {
+            return this.queryStore.geneQuery;
+        } else {
+            return this._geneQuery;
+        }
+    }
+    set geneQuery(q: string) {
+        if (this.queryStore) {
+            this.queryStore.geneQuery = q;
+        } else {
+            this._geneQuery = q;
+        }
+    }
     @observable private geneQueryIsValid = true;
     @observable private queryToBeValidated = '';
     @observable private isFocused = false;
     @observable private skipGenesValidation = false;
+    private queryStore: QueryStore | undefined;
 
     private readonly textAreaRef: React.RefObject<HTMLTextAreaElement>;
     private updateQueryToBeValidateDebounce = _.debounce(() => {
@@ -263,6 +285,13 @@ export default class OQLTextArea extends React.Component<
         this.updateGeneQuery(updatedQuery);
     }
 
+    @computed get showErrorsAndMessages() {
+        return (
+            this.props.location !== GeneBoxType.STUDY_VIEW_PAGE ||
+            this.isFocused
+        );
+    }
+
     render() {
         return (
             <div className={styles.genesSelection}>
@@ -282,7 +311,7 @@ export default class OQLTextArea extends React.Component<
                         style={{ height: this.props.textAreaHeight }}
                     />
 
-                    {this.props.submitButton && this.props.submitButton}
+                    {this.props.submitButton}
                 </div>
                 <div className={'oqlValidationContainer'}>
                     <GeneSymbolValidator
@@ -299,6 +328,30 @@ export default class OQLTextArea extends React.Component<
                     >
                         {this.props.children}
                     </GeneSymbolValidator>
+                </div>
+                <div>
+                    {this.showErrorsAndMessages && this.props.error && (
+                        <span
+                            className={queryStoreStyles.errorMessage}
+                            data-test="oqlErrorMessage"
+                        >
+                            {this.props.error}
+                        </span>
+                    )}
+
+                    {this.showErrorsAndMessages &&
+                        this.props.messages &&
+                        this.props.messages.map(msg => (
+                            <span className={queryStoreStyles.oqlMessage}>
+                                <i
+                                    className="fa fa-info-circle"
+                                    style={{
+                                        marginRight: 5,
+                                    }}
+                                />
+                                {msg}
+                            </span>
+                        ))}
                 </div>
             </div>
         );
