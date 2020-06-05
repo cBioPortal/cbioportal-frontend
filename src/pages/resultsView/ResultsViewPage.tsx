@@ -549,6 +549,7 @@ export default class ResultsViewPage extends React.Component<
                 <>
                     <button
                         className={'btn btn-primary btn-sm'}
+                        data-test="oqlQuickEditSubmitButton"
                         style={{ marginLeft: 10 }}
                         onClick={this.handleQuickOQLSubmission}
                         disabled={!this.quickOQLQueryStore!.submitEnabled}

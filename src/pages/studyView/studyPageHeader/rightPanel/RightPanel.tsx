@@ -53,7 +53,9 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
     @computed
     get isQueryButtonDisabled() {
         return (
-            this.props.store.geneQueryStr === '' || this.geneValidationHasIssue
+            this.props.store.geneQueryStr === '' ||
+            this.geneValidationHasIssue ||
+            !!this.oqlSubmitError
         );
     }
 
@@ -153,6 +155,7 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
                             label: this.props.store.queriedPhysicalStudyIds
                                 .result,
                         })}
+                        data-test="geneSetSubmit"
                         onClick={() => this.props.store.onSubmitQuery()}
                     >
                         Query
