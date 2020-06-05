@@ -4402,6 +4402,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                             ? 'radio'
                                                             : 'checkbox',
                                                         style: { marginTop: 4 },
+                                                        'data-test':
+                                                            'ViewMutationType',
                                                     }}
                                                 >
                                                     Mutation Type *
@@ -4425,6 +4427,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                             ? 'radio'
                                                             : 'checkbox',
                                                         style: { marginTop: 4 },
+                                                        'data-test':
+                                                            'ViewCopyNumber',
                                                     }}
                                                 >
                                                     Copy Number
