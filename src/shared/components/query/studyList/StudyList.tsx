@@ -217,6 +217,7 @@ export default class StudyList extends QueryStoreComponent<
                             [styles.DeletedStudy]: this.store.isDeletedVirtualStudy(
                                 study.studyId
                             ),
+                            [`studyItem_${study.studyId}`]: true,
                         });
                         return (
                             <CancerTreeCheckbox view={this.view} node={study}>
