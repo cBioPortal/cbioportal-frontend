@@ -84,7 +84,7 @@ describe('plots tab screenshot tests', function() {
     it('plots tab search case id and mutation', function() {
         browser.execute(function() {
             resultsViewPlotsTab.executeSearchMutation(
-                'I195T H179R apsdoifjapsoid'
+                'L321 V2L apsdoifjapsoid'
             );
         });
         waitForAndCheckPlotsTab();
