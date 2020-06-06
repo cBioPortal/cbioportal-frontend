@@ -1230,9 +1230,6 @@
     "ClinVar": {
       "type": "object",
       "properties": {
-        "_license": {
-          "type": "string"
-        },
         "alleleId": {
           "type": "integer",
           "format": "int32",
@@ -1265,6 +1262,10 @@
         "hgvs": {
           "description": "hgvs",
           "$ref": "#/definitions/Hgvs"
+        },
+        "license": {
+          "type": "string",
+          "description": "license"
         },
         "rcv": {
           "type": "array",
@@ -1322,9 +1323,6 @@
     "Cosmic": {
       "type": "object",
       "properties": {
-        "_license": {
-          "type": "string"
-        },
         "alt": {
           "type": "string",
           "description": "alt"
@@ -1340,6 +1338,10 @@
         "hg19": {
           "description": "hg19",
           "$ref": "#/definitions/Hg19"
+        },
+        "license": {
+          "type": "string",
+          "description": "_license"
         },
         "mutFreq": {
           "type": "number",
@@ -1357,6 +1359,25 @@
         "tumorSite": {
           "type": "string",
           "description": "tumor_site"
+        }
+      }
+    },
+    "CountByTumorType": {
+      "type": "object",
+      "properties": {
+        "tumorType": {
+          "type": "string",
+          "description": "Tumor Type"
+        },
+        "tumorTypeCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Sample count for Tumor Type"
+        },
+        "variantCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Variant count for Tumor Type"
         }
       }
     },
@@ -2493,9 +2514,16 @@
         "mutdb": {
           "$ref": "#/definitions/Mutdb"
         },
+        "query": {
+          "type": "string"
+        },
         "snpeff": {
           "description": "snpeff",
           "$ref": "#/definitions/Snpeff"
+        },
+        "variant": {
+          "type": "string",
+          "description": "variant"
         },
         "vcf": {
           "description": "vcf",
@@ -2766,6 +2794,84 @@
         "preferredName": {
           "type": "string",
           "description": "preferred_name"
+        }
+      }
+    },
+    "SignalAnnotation": {
+      "type": "object",
+      "properties": {
+        "annotation": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SignalMutation"
+          }
+        },
+        "license": {
+          "type": "string"
+        }
+      }
+    },
+    "SignalMutation": {
+      "type": "object",
+      "properties": {
+        "biallelicCountsByTumorType": {
+          "type": "array",
+          "description": "Biallelic Counts by Tumor Type",
+          "items": {
+            "$ref": "#/definitions/CountByTumorType"
+          }
+        },
+        "chromosome": {
+          "type": "string",
+          "description": "Chromosome"
+        },
+        "countsByTumorType": {
+          "type": "array",
+          "description": "Counts by Tumor Type",
+          "items": {
+            "$ref": "#/definitions/CountByTumorType"
+          }
+        },
+        "endPosition": {
+          "type": "integer",
+          "format": "int64",
+          "description": "End Position"
+        },
+        "hugoGeneSymbol": {
+          "type": "string",
+          "description": "Hugo Gene Symbol"
+        },
+        "mutationStatus": {
+          "type": "string",
+          "description": "Mutation Status"
+        },
+        "pathogenic": {
+          "type": "string",
+          "description": "Pathogenic"
+        },
+        "penetrance": {
+          "type": "string",
+          "description": "Penetrance"
+        },
+        "qcPassCountsByTumorType": {
+          "type": "array",
+          "description": "QC Pass Counts by Tumor Type",
+          "items": {
+            "$ref": "#/definitions/CountByTumorType"
+          }
+        },
+        "referenceAllele": {
+          "type": "string",
+          "description": "Reference Allele"
+        },
+        "startPosition": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Start Position"
+        },
+        "variantAllele": {
+          "type": "string",
+          "description": "Variant Allele"
         }
       }
     },
@@ -3101,6 +3207,9 @@
         "seq_region_name": {
           "type": "string",
           "description": "Chromosome"
+        },
+        "signalAnnotation": {
+          "$ref": "#/definitions/SignalAnnotation"
         },
         "start": {
           "type": "integer",
