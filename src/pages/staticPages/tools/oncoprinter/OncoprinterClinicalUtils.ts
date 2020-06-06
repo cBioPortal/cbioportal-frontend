@@ -1,14 +1,10 @@
 import _ from 'lodash';
-import { fillGeneticTrackDatum } from '../../../../shared/components/oncoprint/DataUtils';
-import {
-    OncoprinterGeneticTrackDatum,
-    OncoprinterGeneticTrackDatum_Data,
-} from './OncoprinterGeneticUtils';
-import { CustomTrackOption } from 'oncoprintjs';
 import {
     ClinicalTrackDatum,
     ClinicalTrackSpec,
 } from '../../../../shared/components/oncoprint/Oncoprint';
+import { makeUniqueColorGetter } from '../../../../shared/components/plots/PlotUtils';
+import { MUTATION_SPECTRUM_FILLS } from '../../../../shared/cache/ClinicalDataCache';
 
 export const ONCOPRINTER_CLINICAL_VAL_NA = 'N/A';
 
@@ -20,22 +16,25 @@ export type OncoprinterClinicalInputLine = {
 type AttributeSpec = {
     clinicalAttributeName: string;
     datatype: ClinicalTrackDataType;
+    countsCategories?: string[];
 };
 
 type OncoprinterClinicalTrackDatum = Pick<
     ClinicalTrackDatum,
-    'attr_id' | 'uid' | 'attr_val_counts' | 'na'
-> & { sample: string; attr_val: string | number };
+    'attr_id' | 'uid' | 'attr_val_counts' | 'na' | 'attr_val'
+> & { sample: string };
 
 const ATTRIBUTE_REGEX = /^((?:[^\(\)])+)(?:\(([^\(\)]+)\))?$/;
+const COUNTS_MAP_ATTRIBUTE_TYPE_REGEX = /^(?:[^\/]+\/)+[^\/]+$/;
 
-enum ClinicalTrackDataType {
+export enum ClinicalTrackDataType {
     NUMBER = 'number',
     LOG_NUMBER = 'lognumber',
     STRING = 'string',
+    COUNTS = 'counts',
 }
 
-function parseClinicalDataHeader(headerLine: string[]) {
+export function parseClinicalDataHeader(headerLine: string[]) {
     // we dont care about the first column, it's just "sample" or something
     headerLine.shift();
 
@@ -48,21 +47,27 @@ function parseClinicalDataHeader(headerLine: string[]) {
                 `${errorPrefix}misformatted attribute name ${attribute}`
             );
         }
-        const datatype = (
-            match[2] || ClinicalTrackDataType.STRING
-        ).toLowerCase();
+        let datatype = match[2] || ClinicalTrackDataType.STRING;
+        let countsCategories: string[] | undefined = undefined;
+
         if (
             datatype !== ClinicalTrackDataType.NUMBER &&
             datatype !== ClinicalTrackDataType.LOG_NUMBER &&
             datatype !== ClinicalTrackDataType.STRING
         ) {
-            throw new Error(
-                `${errorPrefix}invalid track data type ${datatype}`
-            );
+            if (COUNTS_MAP_ATTRIBUTE_TYPE_REGEX.test(datatype)) {
+                countsCategories = datatype.split('/');
+                datatype = ClinicalTrackDataType.COUNTS;
+            } else {
+                throw new Error(
+                    `${errorPrefix}invalid track data type ${datatype}`
+                );
+            }
         }
         ret.push({
             clinicalAttributeName: match[1],
             datatype: datatype as ClinicalTrackDataType,
+            countsCategories,
         });
     }
 
@@ -146,23 +151,79 @@ export function getClinicalOncoprintData(
         ret[attr.clinicalAttributeName] = [];
     }
 
-    for (const line of parsedLines) {
+    parsedLines.forEach((line, lineIndex) => {
+        // add 2 to line index: 1 because we removed header, 1 because changing from 0- to 1-indexing
+        const errorPrefix = `Clinical data input error on line ${lineIndex +
+            2}: \n\n`;
         for (let i = 0; i < attributes.length; i++) {
             const rawValue = line.orderedValues[i];
-            const value =
-                attributes[i].datatype === ClinicalTrackDataType.STRING
-                    ? rawValue
-                    : parseFloat(rawValue);
-            ret[attributes[i].clinicalAttributeName].push({
-                sample: line.sampleId,
-                attr_id: attributes[i].clinicalAttributeName,
-                attr_val_counts: { [value]: 1 },
-                attr_val: value,
-                uid: line.sampleId,
-                na: rawValue === ONCOPRINTER_CLINICAL_VAL_NA,
-            });
+
+            if (rawValue === ONCOPRINTER_CLINICAL_VAL_NA) {
+                ret[attributes[i].clinicalAttributeName].push({
+                    sample: line.sampleId,
+                    attr_id: attributes[i].clinicalAttributeName,
+                    attr_val_counts: {},
+                    attr_val: '',
+                    uid: line.sampleId,
+                    na: true,
+                });
+            } else {
+                let attr_val_counts, attr_val;
+                switch (attributes[i].datatype) {
+                    case ClinicalTrackDataType.STRING:
+                        attr_val_counts = { [rawValue]: 1 };
+                        attr_val = rawValue;
+                        break;
+                    case ClinicalTrackDataType.NUMBER:
+                    case ClinicalTrackDataType.LOG_NUMBER:
+                        const parsed = parseFloat(rawValue);
+                        if (isNaN(parsed)) {
+                            throw new Error(
+                                `${errorPrefix} input ${rawValue} is not valid for numerical track ${attributes[i].clinicalAttributeName}`
+                            );
+                        }
+                        attr_val_counts = { [parsed]: 1 };
+                        attr_val = parsed;
+                        break;
+                    case ClinicalTrackDataType.COUNTS:
+                        const parsedCounts = rawValue
+                            .split('/')
+                            .map(parseFloat);
+                        if (
+                            parsedCounts.length !==
+                            attributes[i].countsCategories!.length
+                        ) {
+                            throw new Error(
+                                `${errorPrefix} input ${rawValue} is not valid - must have ${
+                                    attributes[i].countsCategories!.length
+                                } values to match with header, but only has ${
+                                    parsedCounts.length
+                                }`
+                            );
+                        }
+                        attr_val_counts = attributes[
+                            i
+                        ].countsCategories!.reduce(
+                            (counts, category, index) => {
+                                counts[category] = parsedCounts[index];
+                                return counts;
+                            },
+                            {} as ClinicalTrackDatum['attr_val_counts']
+                        );
+                        attr_val = attr_val_counts;
+                        break;
+                }
+                ret[attributes[i].clinicalAttributeName].push({
+                    sample: line.sampleId,
+                    attr_id: attributes[i].clinicalAttributeName,
+                    attr_val_counts,
+                    attr_val,
+                    uid: line.sampleId,
+                    na: rawValue === ONCOPRINTER_CLINICAL_VAL_NA,
+                });
+            }
         }
-    }
+    });
     return ret;
 }
 
@@ -197,25 +258,45 @@ export function getClinicalTracks(
         return data.filter(d => !(d.sample in excludedSampleIdsMap));
     });
 
+    const colorGetter = makeUniqueColorGetter();
     return attributes.map(attr => {
         const data = attributeToOncoprintData[attr.clinicalAttributeName];
+        let datatype, numberRange, countsCategoryFills;
+        switch (attr.datatype) {
+            case ClinicalTrackDataType.STRING:
+                datatype = 'string';
+                break;
+            case ClinicalTrackDataType.NUMBER:
+            case ClinicalTrackDataType.LOG_NUMBER:
+                datatype = 'number';
+                numberRange = getNumberRange(data);
+                break;
+            case ClinicalTrackDataType.COUNTS:
+                datatype = 'counts';
+                if (
+                    attr.clinicalAttributeName.toLowerCase() ===
+                        'mutation_spectrum' &&
+                    attr.countsCategories!.length ===
+                        MUTATION_SPECTRUM_FILLS.length
+                ) {
+                    countsCategoryFills = MUTATION_SPECTRUM_FILLS;
+                }
+                break;
+        }
         return {
             key: getClinicalTrackKey(attr.clinicalAttributeName),
+            attributeId: attr.clinicalAttributeName,
             label: attr.clinicalAttributeName,
             data,
-            datatype:
-                attr.datatype === ClinicalTrackDataType.STRING
-                    ? 'string'
-                    : 'number',
+            datatype,
             description: '',
-            numberRange:
-                attr.datatype === ClinicalTrackDataType.STRING
-                    ? undefined
-                    : getNumberRange(data),
+            numberRange,
             numberLogScale:
                 attr.datatype === ClinicalTrackDataType.LOG_NUMBER
                     ? true
                     : undefined,
+            countsCategoryLabels: attr.countsCategories,
+            countsCategoryFills,
         } as ClinicalTrackSpec;
     });
 }

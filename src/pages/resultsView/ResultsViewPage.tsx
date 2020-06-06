@@ -56,6 +56,7 @@ import { GroupComparisonTab } from '../groupComparison/GroupComparisonTabs';
 import NotUsingGenePanelWarning from './NotUsingGenePanelWarning';
 import Survival from '../groupComparison/Survival';
 import ResultsViewComparisonStore from './comparison/ResultsViewComparisonStore';
+import { QueryStore } from '../../shared/components/query/QueryStore';
 
 export function initStore(
     appStore: AppStore,
@@ -106,7 +107,7 @@ export default class ResultsViewPage extends React.Component<
 
     private urlWrapper: ResultsViewURLWrapper;
 
-    @observable showOQLEditor = false;
+    @observable.ref quickOQLQueryStore: QueryStore | null = null;
 
     @observable showTabs = true;
 
@@ -310,14 +311,19 @@ export default class ResultsViewPage extends React.Component<
             {
                 id: ResultsViewTab.COMPARISON,
                 hide: () => {
-                    return !this.resultsViewPageStore.studies.isComplete;
+                    return this.resultsViewPageStore.survivalClinicalDataExists
+                        .isPending;
                 },
                 getTab: () => {
+                    const text = this.resultsViewPageStore
+                        .survivalClinicalDataExists.result
+                        ? 'Comparison/Survival'
+                        : 'Comparison';
                     return (
                         <MSKTab
                             key={10}
                             id={ResultsViewTab.COMPARISON}
-                            linkText={'Comparison'}
+                            linkText={text}
                         >
                             <ComparisonTab
                                 urlWrapper={this.urlWrapper}
@@ -542,34 +548,51 @@ export default class ResultsViewPage extends React.Component<
         return isRoutedTo || (!isExcludedInList && !isExcluded);
     }
 
-    @computed get quickOQLSubmitButtion() {
-        return (
-            <>
-                <button
-                    className={'btn btn-primary btn-sm'}
-                    style={{ marginLeft: 10 }}
-                    onClick={this.handleQuickOQLSubmission}
-                >
-                    Submit Query
-                </button>
-                &nbsp;
-                <button
-                    className={'btn btn-link btn-sm'}
-                    onClick={this.toggleOQLEditor}
-                >
-                    Cancel
-                </button>
-            </>
-        );
+    @computed get quickOQLSubmitButton() {
+        if (this.quickOQLQueryStore) {
+            return (
+                <>
+                    <button
+                        className={'btn btn-primary btn-sm'}
+                        data-test="oqlQuickEditSubmitButton"
+                        style={{ marginLeft: 10 }}
+                        onClick={this.handleQuickOQLSubmission}
+                        disabled={!this.quickOQLQueryStore!.submitEnabled}
+                    >
+                        Submit Query
+                    </button>
+                    &nbsp;
+                    <button
+                        className={'btn btn-link btn-sm'}
+                        onClick={this.toggleOQLEditor}
+                    >
+                        Cancel
+                    </button>
+                </>
+            );
+        }
+    }
+
+    @computed get showOQLEditor() {
+        return !!this.quickOQLQueryStore;
+    }
+    set showOQLEditor(s: boolean) {
+        if (s) {
+            this.quickOQLQueryStore = createQueryStore(
+                this.urlWrapper.query,
+                this.urlWrapper,
+                false
+            );
+        } else {
+            this.quickOQLQueryStore = null;
+        }
     }
 
     @autobind
     @action
     handleQuickOQLSubmission() {
+        this.quickOQLQueryStore!.submit();
         this.showOQLEditor = false;
-        this.urlWrapper.updateURL({
-            gene_list: this.oqlSubmission,
-        });
     }
 
     @autobind
@@ -586,8 +609,6 @@ export default class ResultsViewPage extends React.Component<
             hash: this.props.routing.location.hash,
         });
     }
-
-    @observable oqlSubmission = '';
 
     @computed get pageContent() {
         if (this.resultsViewPageStore.invalidStudyIds.result.length > 0) {
@@ -669,18 +690,26 @@ export default class ResultsViewPage extends React.Component<
                                     {this.showOQLEditor && (
                                         <div className={'quick_oql_edit'}>
                                             <OQLTextArea
-                                                inputGeneQuery={
-                                                    this.resultsViewPageStore
-                                                        .oqlText
-                                                }
                                                 validateInputGeneQuery={true}
+                                                inputGeneQuery={
+                                                    this.quickOQLQueryStore!
+                                                        .geneQuery
+                                                }
                                                 callback={(...args) => {
-                                                    this.oqlSubmission =
+                                                    this.quickOQLQueryStore!.geneQuery =
                                                         args[2];
                                                 }}
                                                 location={GeneBoxType.DEFAULT}
                                                 submitButton={
-                                                    this.quickOQLSubmitButtion
+                                                    this.quickOQLSubmitButton
+                                                }
+                                                error={
+                                                    this.quickOQLQueryStore!
+                                                        .submitError
+                                                }
+                                                messages={
+                                                    this.quickOQLQueryStore!
+                                                        .oqlMessages
                                                 }
                                             />
                                         </div>

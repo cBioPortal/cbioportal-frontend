@@ -326,36 +326,6 @@ export default class QueryContainer extends React.Component<
                                                 ? 'Submit Query'
                                                 : 'Download'}
                                         </button>
-                                        <FlexCol>
-                                            {!!this.store.submitError && (
-                                                <span
-                                                    className={
-                                                        styles.errorMessage
-                                                    }
-                                                    data-test="oqlErrorMessage"
-                                                >
-                                                    {this.store.submitError}
-                                                </span>
-                                            )}
-
-                                            {this.store.oqlMessages.map(msg => {
-                                                return (
-                                                    <span
-                                                        className={
-                                                            styles.oqlMessage
-                                                        }
-                                                    >
-                                                        <i
-                                                            className="fa fa-info-circle"
-                                                            style={{
-                                                                marginRight: 5,
-                                                            }}
-                                                        />
-                                                        {msg}
-                                                    </span>
-                                                );
-                                            })}
-                                        </FlexCol>
                                     </FlexRow>
                                 </>
                             </If>
