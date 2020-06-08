@@ -182,6 +182,6 @@ DriverModifier
     = "DRIVER"i { return { type:"DRIVER" };}
 
 RangeModifier
-    = "(" start:NaturalNumber "-" end:NaturalNumber e:[!]? ")" { return { "type":"RANGE", "start":parseInt(start, 10), "end":parseInt(end, 10), completeOverlapOnly: !!e } }
-    / "(-" end:NaturalNumber e:[!]? ")" { return { "type":"RANGE", "end":parseInt(end, 10), completeOverlapOnly: !!e } }
-    / "(" start:NaturalNumber "-" e:[!]? ")" { return { "type":"RANGE", "start":parseInt(start, 10), completeOverlapOnly: !!e } }
+    = "(" start:NaturalNumber "-" end:NaturalNumber e:[*]? ")" { return { "type":"RANGE", "start":parseInt(start, 10), "end":parseInt(end, 10), completeOverlapOnly: !!e } }
+    / "(-" end:NaturalNumber e:[*]? ")" { return { "type":"RANGE", "end":parseInt(end, 10), completeOverlapOnly: !!e } }
+    / "(" start:NaturalNumber "-" e:[*]? ")" { return { "type":"RANGE", "start":parseInt(start, 10), completeOverlapOnly: !!e } }
