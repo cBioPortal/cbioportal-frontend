@@ -4,12 +4,12 @@ import { Mutation } from 'cbioportal-ts-api-client';
  * @author Selcuk Onur Sumer
  */
 export default class ChromosomeColumnFormatter {
-    public static getSortValue(data: Mutation[]): number | null {
-        const chromosome = ChromosomeColumnFormatter.getData(data);
+    public static getSortValue(data: Pick<Mutation, 'chr'>[]): number | null {
+        const chromosome = this.getData(data);
         if (!chromosome) {
             return null;
         } else {
-            return ChromosomeColumnFormatter.extractSortValue(chromosome);
+            return this.extractSortValue(chromosome);
         }
     }
 
@@ -31,7 +31,7 @@ export default class ChromosomeColumnFormatter {
         return value;
     }
 
-    public static getData(data: Mutation[]): string | null {
+    public static getData(data: Pick<Mutation, 'chr'>[]): string | null {
         if (data.length > 0) {
             return data[0].chr;
         } else {

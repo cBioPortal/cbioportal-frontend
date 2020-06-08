@@ -26,6 +26,7 @@ import {
     Sample,
     SampleFilter,
     ClinicalAttribute,
+    StructuralVariant,
 } from 'cbioportal-ts-api-client';
 import defaultClient from 'shared/api/cbioportalClientInstance';
 import client from 'shared/api/cbioportalClientInstance';
@@ -51,6 +52,7 @@ import {
     generateCopyNumberAlterationQuery,
     generateIdToIndicatorMap,
     generateProteinChangeQuery,
+    generateAnnotateStructuralVariantQueryFromGenes,
 } from 'cbioportal-frontend-commons';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
 import { MobxPromise } from 'mobxpromise';
@@ -72,6 +74,7 @@ import AppConfig from 'appConfig';
 import { getFrontendAssetUrl } from 'shared/api/urls';
 import {
     AnnotateCopyNumberAlterationQuery,
+    AnnotateStructuralVariantQuery,
     IndicatorQueryResp,
     CancerGene,
     OncoKbAPI,
@@ -670,40 +673,6 @@ export async function fetchCopyNumberData(
     }
 }
 
-export async function fetchGenePanelData(
-    molecularProfileId: string,
-    sampleIds: string[] = [],
-    sampleListId: string = ''
-): Promise<{ [sampleId: string]: GenePanelData }> {
-    const filter: any = {};
-    if (sampleIds.length > 0) {
-        filter.sampleIds = sampleIds;
-    }
-    if (sampleListId.length > 0) {
-        filter.sampleListId = sampleListId;
-    }
-    const remoteData = await client.getGenePanelDataUsingPOST({
-        molecularProfileId,
-        genePanelDataFilter: filter as GenePanelDataFilter,
-    });
-    return _.keyBy(remoteData, genePanelData => genePanelData.sampleId);
-}
-
-export async function fetchGenePanel(
-    genePanelIds: string[]
-): Promise<{ [genePanelId: string]: GenePanel }> {
-    const genePanels: { [genePanelId: string]: GenePanel } = {};
-    const uniquePanelIds = _.uniq(genePanelIds);
-    const remoteData = await Promise.all(
-        _.map(
-            uniquePanelIds,
-            async genePanelId =>
-                await client.getGenePanelUsingGET({ genePanelId })
-        )
-    );
-    return _.keyBy(remoteData, genePanel => genePanel.genePanelId);
-}
-
 export function fetchMutationalSignatureData(): IMutationalSignature[] {
     return require('../../../resources/samplemutsigdata.json');
 }
@@ -796,6 +765,44 @@ export async function fetchCnaOncoKbData(
             'id'
         );
         return queryOncoKbCopyNumberAlterationData(queryVariants, client);
+    }
+}
+
+export async function fetchStructuralVariantOncoKbData(
+    uniqueSampleKeyToTumorType: { [uniqueSampleKey: string]: string },
+    annotatedGenes: { [entrezGeneId: number]: boolean },
+    structuralVariantData: MobxPromise<StructuralVariant[]>,
+    client: OncoKbAPI = oncokbClient
+) {
+    if (
+        !structuralVariantData.result ||
+        structuralVariantData.result.length === 0
+    ) {
+        return ONCOKB_DEFAULT;
+    } else {
+        const alterationsToQuery = _.filter(
+            structuralVariantData.result,
+            d =>
+                d.site1EntrezGeneId &&
+                d.site2EntrezGeneId &&
+                (!!annotatedGenes[d.site1EntrezGeneId] ||
+                    !!annotatedGenes[d.site2EntrezGeneId])
+        );
+        const queryVariants = _.uniqBy(
+            _.map(alterationsToQuery, datum => {
+                return generateAnnotateStructuralVariantQueryFromGenes(
+                    datum.site1EntrezGeneId,
+                    datum.site2EntrezGeneId,
+                    cancerTypeForOncoKb(
+                        datum.uniqueSampleKey,
+                        uniqueSampleKeyToTumorType
+                    ),
+                    datum.variantClass as any
+                );
+            }),
+            datum => datum.id
+        );
+        return fetchOncoKbStructuralVariantData(queryVariants, client);
     }
 }
 
@@ -933,6 +940,20 @@ export async function queryOncoKbCopyNumberAlterationData(
         queryVariants.length === 0
             ? []
             : await client.annotateCopyNumberAlterationsPostUsingPOST_1({
+                  body: queryVariants,
+              });
+
+    return toOncoKbData(oncokbSearch);
+}
+
+export async function fetchOncoKbStructuralVariantData(
+    queryVariants: AnnotateStructuralVariantQuery[],
+    client: OncoKbAPI = oncokbClient
+) {
+    const oncokbSearch =
+        queryVariants.length === 0
+            ? []
+            : await client.annotateStructuralVariantsPostUsingPOST_1({
                   body: queryVariants,
               });
 
@@ -1193,6 +1214,18 @@ function mutationEventFields(m: Mutation) {
 
 export function generateMutationIdByEvent(m: Mutation): string {
     return mutationEventFields(m).join('_');
+}
+
+export function generateStructuralVariantId(s: StructuralVariant): string {
+    return [
+        s.site1HugoSymbol,
+        s.site2HugoSymbol,
+        s.site1Position,
+        s.site2Position,
+        s.site1Chromosome,
+        s.site2Chromosome,
+        s.variantClass,
+    ].join('_');
 }
 
 export function generateMutationIdByGeneAndProteinChangeAndEvent(

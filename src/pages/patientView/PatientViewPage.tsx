@@ -78,6 +78,7 @@ import {
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
 import { MakeMobxView } from '../../shared/components/MobxView';
 import ResourceTab from '../../shared/components/resources/ResourceTab';
+import PatientViewStructuralVariantTable from './structuralVariant/PatientViewStructuralVariantTable';
 
 export interface IPatientViewPageProps {
     params: any; // react route
@@ -192,13 +193,6 @@ export default class PatientViewPage extends React.Component<
             },
             { fireImmediately: true }
         );
-
-        this.onMutationTableColumnVisibilityToggled = this.onMutationTableColumnVisibilityToggled.bind(
-            this
-        );
-        this.onCnaTableColumnVisibilityToggled = this.onCnaTableColumnVisibilityToggled.bind(
-            this
-        );
     }
 
     componentDidMount() {
@@ -266,7 +260,9 @@ export default class PatientViewPage extends React.Component<
         );
     }
 
-    @action private onCnaTableColumnVisibilityToggled(
+    @autobind
+    @action
+    private onCnaTableColumnVisibilityToggled(
         columnId: string,
         columnVisibility?: IColumnVisibilityDef[]
     ) {
@@ -277,7 +273,9 @@ export default class PatientViewPage extends React.Component<
         );
     }
 
-    @action private onMutationTableColumnVisibilityToggled(
+    @autobind
+    @action
+    private onMutationTableColumnVisibilityToggled(
         columnId: string,
         columnVisibility?: IColumnVisibilityDef[]
     ) {
@@ -372,42 +370,6 @@ export default class PatientViewPage extends React.Component<
         this.patientViewPageStore.copyNumberTableGeneFilterOption = option;
     }
 
-    mutationTableShowGeneFilterMenu(sampleIds: string[]): boolean {
-        const entrezGeneIds: number[] = _.uniq(
-            _.map(
-                this.patientViewPageStore.mergedMutationDataIncludingUncalled,
-                mutations => mutations[0].entrezGeneId
-            )
-        );
-        return (
-            sampleIds.length > 1 &&
-            checkNonProfiledGenesExist(
-                sampleIds,
-                entrezGeneIds,
-                this.patientViewPageStore.sampleToMutationGenePanelId.result,
-                this.patientViewPageStore.genePanelIdToEntrezGeneIds.result
-            )
-        );
-    }
-
-    cnaTableShowGeneFilterMenu(sampleIds: string[]): boolean {
-        const entrezGeneIds: number[] = _.uniq(
-            _.map(
-                this.patientViewPageStore.mergedDiscreteCNAData,
-                alterations => alterations[0].entrezGeneId
-            )
-        );
-        return (
-            sampleIds.length > 1 &&
-            checkNonProfiledGenesExist(
-                sampleIds,
-                entrezGeneIds,
-                this.patientViewPageStore.sampleToDiscreteGenePanelId.result,
-                this.patientViewPageStore.genePanelIdToEntrezGeneIds.result
-            )
-        );
-    }
-
     @autobind
     @action
     toggleGenePanelModal(genePanelId?: string | undefined) {
@@ -421,29 +383,6 @@ export default class PatientViewPage extends React.Component<
         return this.patientViewPageStore.genePanelIdToPanel.result[
             this.genePanelModal.genePanelId
         ];
-    }
-    @computed get sampleManager() {
-        if (
-            this.patientViewPageStore.patientViewData.isComplete &&
-            this.patientViewPageStore.studyMetaData.isComplete
-        ) {
-            const patientData = this.patientViewPageStore.patientViewData
-                .result;
-
-            if (
-                this.patientViewPageStore.clinicalEvents.isComplete &&
-                this.patientViewPageStore.clinicalEvents.result!.length > 0
-            ) {
-                return new SampleManager(
-                    patientData.samples!,
-                    this.patientViewPageStore.clinicalEvents.result
-                );
-            } else {
-                return new SampleManager(patientData.samples!);
-            }
-        } else {
-            return null;
-        }
     }
 
     readonly resourceTabs = MakeMobxView({
@@ -522,7 +461,10 @@ export default class PatientViewPage extends React.Component<
     }
 
     public render() {
-        const sampleManager = this.sampleManager;
+        let sampleManager: SampleManager | null = null;
+        if (this.patientViewPageStore.sampleManager.isComplete) {
+            sampleManager = this.patientViewPageStore.sampleManager.result!;
+        }
         let sampleHeader: (JSX.Element | undefined)[] | null = null;
         let cohortNav: JSX.Element | null = null;
         let studyName: JSX.Element | null = null;
@@ -1381,6 +1323,14 @@ export default class PatientViewPage extends React.Component<
                                                 />
                                             </div>
                                         )}
+
+                                    <hr />
+                                    <PatientViewStructuralVariantTable
+                                        store={this.patientViewPageStore}
+                                        onSelectGenePanel={
+                                            this.toggleGenePanelModal
+                                        }
+                                    />
                                 </MSKTab>
                                 {this.patientViewPageStore.sampleIds.length >
                                     1 &&
@@ -1472,7 +1422,10 @@ export default class PatientViewPage extends React.Component<
                                     <div>
                                         <ResourcesTab
                                             store={this.patientViewPageStore}
-                                            sampleManager={this.sampleManager}
+                                            sampleManager={
+                                                this.patientViewPageStore
+                                                    .sampleManager.result!
+                                            }
                                             openResource={this.openResource}
                                         />
                                     </div>
