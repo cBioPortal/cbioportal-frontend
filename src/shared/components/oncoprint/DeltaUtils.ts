@@ -1191,7 +1191,10 @@ function transitionClinicalTrack(
                     nextProps.onDeleteClinicalTrack(nextSpec.key);
             },
             sort_direction_changeable: true,
-            tooltipFn: makeClinicalTrackTooltip(nextSpec, true),
+            tooltipFn: makeClinicalTrackTooltip(
+                nextSpec,
+                nextProps.caseLinkOutInTooltips
+            ),
             important_ids: nextSpec.altered_uids, // only show clinical track legends for altered cases. e.g. if only altered cases are female for the SEX clinical track, then only show 'female' in the SEX legend
             //track_info: "\u23f3",
             sortCmpFn: getClinicalTrackSortComparator(nextSpec),
@@ -1218,7 +1221,7 @@ function transitionClinicalTrack(
         // set tooltip, its cheap
         oncoprint.setTrackTooltipFn(
             trackId,
-            makeClinicalTrackTooltip(nextSpec, true)
+            makeClinicalTrackTooltip(nextSpec, nextProps.caseLinkOutInTooltips)
         );
         // set custom track options if they've shallow changed - its cheap
         if (prevSpec.custom_options !== nextSpec.custom_options) {
