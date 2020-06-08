@@ -6,15 +6,15 @@ export type AlleleSpecificCopyNumber = {
 
         'ascnMethod': string
 
-        'ccfMCopies': number
+        'ccfExpectedCopies': number
 
-        'ccfMCopiesUpper': number
+        'ccfExpectedCopiesUpper': number
 
-        'clonal': boolean
+        'clonal': string
+
+        'expectedAltCopies': number
 
         'minorCopyNumber': number
-
-        'mutantCopies': number
 
         'totalCopyNumber': number
 

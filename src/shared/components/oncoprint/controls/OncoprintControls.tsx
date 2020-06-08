@@ -85,7 +85,9 @@ export interface IOncoprintControlsHandlers {
     onClickSortByData?: () => void;
     onClickSortAlphabetical?: () => void;
     onClickSortCaseListOrder?: () => void;
-    onClickDownload?: (type: string) => void; // type is "pdf", "png", "svg", "order", or "tabular"
+    onClickDownload?: (
+        type: 'pdf' | 'png' | 'svg' | 'order' | 'tabular' | 'oncoprinter'
+    ) => void;
     onChangeSelectedClinicalTracks?: (
         attributeIds: (string | SpecialAttribute)[]
     ) => void;
@@ -210,6 +212,7 @@ const EVENT_KEY = {
     downloadSVG: '27',
     downloadOrder: '28',
     downloadTabular: '29',
+    downloadOncoprinter: '29.1',
     horzZoomSlider: '30',
     viewNGCHM: '31',
     addGenericAssaysToHeatmap: '32',
@@ -583,6 +586,10 @@ export default class OncoprintControls extends React.Component<
             case EVENT_KEY.downloadTabular:
                 this.props.handlers.onClickDownload &&
                     this.props.handlers.onClickDownload('tabular');
+                break;
+            case EVENT_KEY.downloadOncoprinter:
+                this.props.handlers.onClickDownload &&
+                    this.props.handlers.onClickDownload('oncoprinter');
                 break;
             case EVENT_KEY.viewNGCHM:
                 if (
@@ -1486,6 +1493,15 @@ export default class OncoprintControls extends React.Component<
                         onClick={this.onButtonClick}
                     >
                         Tabular
+                    </button>
+                )}
+                {!this.props.oncoprinterMode && (
+                    <button
+                        className="btn btn-sm btn-default"
+                        name={EVENT_KEY.downloadOncoprinter}
+                        onClick={this.onButtonClick}
+                    >
+                        Open in Oncoprinter
                     </button>
                 )}
             </CustomDropdown>

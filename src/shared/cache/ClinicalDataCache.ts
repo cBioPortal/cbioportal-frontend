@@ -34,6 +34,24 @@ export enum SpecialAttribute {
     NumSamplesPerPatient = 'NUM_SAMPLES_PER_PATIENT',
 }
 
+export const MUTATION_SPECTRUM_CATEGORIES = [
+    'C>A',
+    'C>G',
+    'C>T',
+    'T>A',
+    'T>C',
+    'T>G',
+];
+
+export const MUTATION_SPECTRUM_FILLS = [
+    '#3D6EB1',
+    '#8EBFDC',
+    '#DFF1F8',
+    '#FCE08E',
+    '#F78F5E',
+    '#D62B23',
+];
+
 const locallyComputedSpecialAttributes = [
     SpecialAttribute.StudyOfOrigin,
     SpecialAttribute.NumSamplesPerPatient,

@@ -22,11 +22,15 @@ describe('homepage', function() {
     });
 
     if (useExternalFrontend) {
-        it('it should show dev mode when testing', function() {
-            var devMode = $('.alert-warning');
-
-            devMode.waitForExist(10000);
-            assert(browser.getText('.alert-warning').indexOf('dev mode') > 0);
+        it('window.frontendConfig.frontendUrl should point to localhost 3000 when testing', function() {
+            // We no longer check whether the dev mode banner exits.
+            // The banner is hidden in e2etests.scss
+            assert.equal(
+                browser.execute(function() {
+                    return window.frontendConfig.frontendUrl;
+                }).value,
+                '//localhost:3000/'
+            );
         });
     }
 
