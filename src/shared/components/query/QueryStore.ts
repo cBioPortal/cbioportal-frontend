@@ -51,7 +51,10 @@ import getOverlappingStudies from '../../lib/getOverlappingStudies';
 import MolecularProfilesInStudyCache from '../../cache/MolecularProfilesInStudyCache';
 import { CacheData } from '../../lib/LazyMobXCache';
 import {
+    getAlterationTypesInOql,
+    getDefaultProfilesForOql,
     getHierarchyData,
+    getOqlMessages,
     MolecularAlterationType_filenameSuffix,
 } from 'shared/lib/StoreUtils';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
@@ -70,6 +73,10 @@ import {
     ResultsViewURLQueryEnum,
 } from 'pages/resultsView/ResultsViewURLWrapper';
 import { getFilteredCustomCaseSets } from './CaseSetSelectorUtils';
+import {
+    REFERENCE_GENOME,
+    isMixedReferenceGenome,
+} from 'shared/lib/referenceGenomeUtils';
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -1534,6 +1541,43 @@ export class QueryStore {
         return result;
     }
 
+    @computed get defaultProfilesForOql() {
+        if (this.molecularProfilesInSelectedStudies.isComplete) {
+            return getDefaultProfilesForOql(
+                this.molecularProfilesInSelectedStudies.result
+            );
+        }
+        return undefined;
+    }
+    @computed get defaultMutationProfile() {
+        return (
+            this.defaultProfilesForOql &&
+            this.defaultProfilesForOql[
+                AlterationTypeConstants.MUTATION_EXTENDED
+            ]
+        );
+    }
+    @computed get defaultCnaProfile() {
+        return (
+            this.defaultProfilesForOql &&
+            this.defaultProfilesForOql[
+                AlterationTypeConstants.COPY_NUMBER_ALTERATION
+            ]
+        );
+    }
+    @computed get defaultMrnaProfile() {
+        return (
+            this.defaultProfilesForOql &&
+            this.defaultProfilesForOql[AlterationTypeConstants.MRNA_EXPRESSION]
+        );
+    }
+    @computed get defaultProtProfile() {
+        return (
+            this.defaultProfilesForOql &&
+            this.defaultProfilesForOql[AlterationTypeConstants.PROTEIN_LEVEL]
+        );
+    }
+
     // SAMPLE LIST
 
     @computed get defaultSelectedSampleListId() {
@@ -1760,20 +1804,7 @@ export class QueryStore {
     }
 
     @computed get oqlMessages(): string[] {
-        let unrecognizedMutations = _.flatten(
-            this.oql.query.map(result => {
-                return (result.alterations || []).filter(
-                    alt =>
-                        alt.alteration_type === 'mut' &&
-                        (alt.info as any).unrecognized
-                ) as MUTCommand<any>[];
-            })
-        );
-        return unrecognizedMutations.map(mutCommand => {
-            return `Unrecognized input "${
-                (mutCommand as any).constr_val
-            }" is interpreted as a mutation code.`;
-        });
+        return getOqlMessages(this.oql.query);
     }
 
     /**
@@ -1824,25 +1855,24 @@ export class QueryStore {
         );
     }
 
-    @computed get submitError() {
-        let haveMutInQuery = false;
-        let haveCnaInQuery = false;
-        let haveExpInQuery = false;
-        let haveProtInQuery = false;
-
-        for (const queryLine of this.oql.query) {
-            for (const alteration of queryLine.alterations || []) {
-                haveMutInQuery =
-                    haveMutInQuery || alteration.alteration_type === 'mut';
-                haveCnaInQuery =
-                    haveCnaInQuery || alteration.alteration_type === 'cna';
-                haveExpInQuery =
-                    haveExpInQuery || alteration.alteration_type === 'exp';
-                haveProtInQuery =
-                    haveProtInQuery || alteration.alteration_type === 'prot';
-            }
+    @computed get isMixedReferenceGenome() {
+        if (
+            this.physicalStudyIdsInSelection &&
+            this.physicalStudiesSet.result
+        ) {
+            const studies = _.map(
+                this.physicalStudyIdsInSelection,
+                id => this.physicalStudiesSet.result[id]
+            );
+            return isMixedReferenceGenome(studies);
         }
+    }
 
+    @computed get alterationTypesInOQL() {
+        return getAlterationTypesInOql(this.oql.query);
+    }
+
+    @computed get submitError() {
         if (!this.selectableSelectedStudyIds.length)
             return 'Please select one or more cancer studies.';
 
@@ -1850,26 +1880,26 @@ export class QueryStore {
             if (!this.selectedProfileIds.length)
                 return 'Please select one or more molecular profiles.';
 
-            let mutProfileSelected = this.getSelectedProfileIdFromMolecularAlterationType(
-                AlterationTypeConstants.MUTATION_EXTENDED as any
-            );
-            let cnaProfileSelected = this.getSelectedProfileIdFromMolecularAlterationType(
-                AlterationTypeConstants.COPY_NUMBER_ALTERATION as any
-            );
-            let expProfileSelected = this.getSelectedProfileIdFromMolecularAlterationType(
-                AlterationTypeConstants.MRNA_EXPRESSION as any
-            );
-            let protProfileSelected = this.getSelectedProfileIdFromMolecularAlterationType(
-                AlterationTypeConstants.PROTEIN_LEVEL as any
-            );
-            if (haveMutInQuery && !mutProfileSelected)
-                return 'Mutation data query specified in OQL, but no mutation profile selected in `Select Genomic Profiles`';
-            if (haveCnaInQuery && !cnaProfileSelected)
-                return 'CNA data query specified in OQL, but not CNA profile selected in `Select Genomic Profiles`';
-            if (haveExpInQuery && !expProfileSelected)
-                return 'mRNA expression data query specified in OQL, but no mRNA profile selected in `Select Genomic Profiles`';
-            if (haveProtInQuery && !protProfileSelected)
-                return 'Protein level data query specified in OQL, but no protein level profile selected in `Select Genomic Profiles`';
+            if (
+                this.alterationTypesInOQL.haveMutInQuery &&
+                !this.defaultMutationProfile
+            )
+                return 'Mutation data query specified in OQL, but no mutation profile is available for the selected study.';
+            if (
+                this.alterationTypesInOQL.haveCnaInQuery &&
+                !this.defaultCnaProfile
+            )
+                return 'CNA data query specified in OQL, but no CNA profile is available in the selected study.';
+            if (
+                this.alterationTypesInOQL.haveMrnaInQuery &&
+                !this.defaultMrnaProfile
+            )
+                return 'mRNA expression data query specified in OQL, but no mRNA profile is available in the selected study.';
+            if (
+                this.alterationTypesInOQL.haveProtInQuery &&
+                !this.defaultProtProfile
+            )
+                return 'Protein level data query specified in OQL, but no protein level profile is available in the selected study.';
         } else if (
             !(this.dataTypePriority.mutation || this.dataTypePriority.cna)
         ) {
@@ -1887,12 +1917,12 @@ export class QueryStore {
             if (this.asyncCustomCaseSet.error)
                 return 'Error in custom case set.';
         } else if (
-            haveExpInQuery &&
+            this.alterationTypesInOQL.haveMrnaInQuery &&
             this.selectableSelectedStudyIds.length > 1
         ) {
             return 'Expression filtering in the gene list (the EXP command) is not supported when doing cross cancer queries.';
         } else if (
-            haveProtInQuery &&
+            this.alterationTypesInOQL.haveProtInQuery &&
             this.selectableSelectedStudyIds.length > 1
         ) {
             return 'Protein level filtering in the gene list (the PROT command) is not supported when doing cross cancer queries.';

@@ -71,6 +71,7 @@ import {
     DataTypeConstants,
 } from 'pages/resultsView/ResultsViewPageStore';
 import { decideMolecularProfileSortingOrder } from 'pages/resultsView/download/DownloadUtils';
+import { Datalabel } from 'shared/lib/DataUtils';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -160,12 +161,6 @@ export type StudyViewFilterWithSampleIdentifierFilters = StudyViewFilter & {
 export type GenomicDataCountWithSampleUniqueKeys = GenomicDataCount & {
     sampleUniqueKeys: string[];
 };
-
-export enum Datalabel {
-    YES = 'YES',
-    NO = 'NO',
-    NA = 'NA',
-}
 
 export type RectangleBounds = {
     xEnd?: number;

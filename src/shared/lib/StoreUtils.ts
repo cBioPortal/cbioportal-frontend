@@ -25,6 +25,7 @@ import {
     ReferenceGenomeGene,
     Sample,
     SampleFilter,
+    ClinicalAttribute,
 } from 'cbioportal-ts-api-client';
 import defaultClient from 'shared/api/cbioportalClientInstance';
 import client from 'shared/api/cbioportalClientInstance';
@@ -78,6 +79,14 @@ import {
 } from 'oncokb-ts-api-client';
 import { EvidenceType, IOncoKbData } from 'cbioportal-frontend-commons';
 import { REFERENCE_GENOME } from './referenceGenomeUtils';
+import {
+    DEFAULT_SURVIVAL_PRIORITY,
+    getSurvivalAttributes,
+    plotsPriority,
+} from '../../pages/resultsView/survival/SurvivalUtil';
+import request from 'superagent';
+import { Alteration, MUTCommand, SingleGeneQuery } from './oql/oql-parser';
+import { CUSTOM_CASE_LIST_ID } from '../components/query/QueryStore';
 
 export const MolecularAlterationType_filenameSuffix: {
     [K in MolecularProfile['molecularAlterationType']]?: string;
@@ -1293,4 +1302,127 @@ export function getGenomeNexusUrl(studies: CancerStudy[]) {
         }
     }
     return AppConfig.serverConfig.genomenexus_url!;
+}
+
+export function getSurvivalClinicalAttributesPrefix(
+    clinicalAttributes: ClinicalAttribute[]
+) {
+    const attributes = getSurvivalAttributes(clinicalAttributes);
+    // get paired attributes
+    const attributePrefixes = _.reduce(
+        attributes,
+        (attributePrefixes, attribute) => {
+            let prefix = attribute.substring(0, attribute.indexOf('_STATUS'));
+            if (!attributePrefixes.includes(prefix)) {
+                if (attributes.includes(`${prefix}_MONTHS`)) {
+                    attributePrefixes.push(prefix);
+                }
+            }
+            return attributePrefixes;
+        },
+        [] as string[]
+    );
+    // change prefix order based on priority
+    return _.sortBy(attributePrefixes, prefix => {
+        return plotsPriority[prefix] || DEFAULT_SURVIVAL_PRIORITY;
+    });
+}
+
+export async function fetchSurvivalDataExists(
+    samples: Sample[],
+    survivalClinicalAttributesPrefix: string[]
+) {
+    if (samples.length === 0) {
+        return false;
+    }
+    const attributeNames = _.reduce(
+        survivalClinicalAttributesPrefix,
+        (attributeNames, prefix: string) => {
+            attributeNames.push(prefix + '_STATUS');
+            attributeNames.push(prefix + '_MONTHS');
+            return attributeNames;
+        },
+        [] as string[]
+    );
+    if (attributeNames.length === 0) {
+        return false;
+    }
+    const filter: ClinicalDataMultiStudyFilter = {
+        attributeIds: attributeNames,
+        identifiers: samples.map((s: any) => ({
+            entityId: s.patientId,
+            studyId: s.studyId,
+        })),
+    };
+    const count = await client
+        .fetchClinicalDataUsingPOSTWithHttpInfo({
+            clinicalDataType: 'PATIENT',
+            clinicalDataMultiStudyFilter: filter,
+            projection: 'META',
+        })
+        .then(function(response: request.Response) {
+            return parseInt(response.header['total-count'], 10);
+        });
+    return count > 0;
+}
+
+export function getAlterationTypesInOql(parsedQueryLines: SingleGeneQuery[]) {
+    let haveMutInQuery = false;
+    let haveCnaInQuery = false;
+    let haveMrnaInQuery = false;
+    let haveProtInQuery = false;
+
+    for (const queryLine of parsedQueryLines) {
+        for (const alteration of queryLine.alterations || []) {
+            haveMutInQuery =
+                haveMutInQuery || alteration.alteration_type === 'mut';
+            haveCnaInQuery =
+                haveCnaInQuery || alteration.alteration_type === 'cna';
+            haveMrnaInQuery =
+                haveMrnaInQuery || alteration.alteration_type === 'exp';
+            haveProtInQuery =
+                haveProtInQuery || alteration.alteration_type === 'prot';
+        }
+    }
+    return {
+        haveMutInQuery,
+        haveCnaInQuery,
+        haveMrnaInQuery,
+        haveProtInQuery,
+    };
+}
+
+export function getOqlMessages(parsedLines: SingleGeneQuery[]) {
+    const unrecognizedMutations = _.flatten(
+        parsedLines.map(result => {
+            return (result.alterations || []).filter(
+                alt =>
+                    alt.alteration_type === 'mut' &&
+                    (alt.info as any).unrecognized
+            ) as MUTCommand<any>[];
+        })
+    );
+    return unrecognizedMutations.map(mutCommand => {
+        return `Unrecognized input "${
+            (mutCommand as any).constr_val
+        }" is interpreted as a mutation code.`;
+    });
+}
+
+export function getDefaultProfilesForOql(profiles: MolecularProfile[]) {
+    return _.mapValues(
+        _.keyBy([
+            AlterationTypeConstants.MUTATION_EXTENDED,
+            AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+            AlterationTypeConstants.MRNA_EXPRESSION,
+            AlterationTypeConstants.PROTEIN_LEVEL,
+        ]),
+        alterationType =>
+            profiles.find(profile => {
+                return (
+                    profile.showProfileInAnalysisTab &&
+                    profile.molecularAlterationType === alterationType
+                );
+            })
+    );
 }

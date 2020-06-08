@@ -856,6 +856,41 @@
         }
       }
     },
+    "/signal/mutation/hgvs/{variant}": {
+      "get": {
+        "tags": [
+          "signal-mutation-controller"
+        ],
+        "summary": "Retrieves SignalDB mutations by hgvgs variant",
+        "operationId": "fetchSignalMutationsByHgvsgGETUsingGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "variant",
+            "in": "path",
+            "description": "A variant. For example 13:g.32890665G>A",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/SignalMutation"
+              }
+            }
+          }
+        }
+      }
+    },
     "/xrefs/{accession}": {
       "get": {
         "tags": [
@@ -1093,9 +1128,6 @@
     "ClinVar": {
       "type": "object",
       "properties": {
-        "_license": {
-          "type": "string"
-        },
         "alleleId": {
           "type": "integer",
           "format": "int32",
@@ -1129,6 +1161,10 @@
           "description": "hgvs",
           "$ref": "#/definitions/Hgvs"
         },
+        "license": {
+          "type": "string",
+          "description": "license"
+        },
         "rcv": {
           "type": "array",
           "items": {
@@ -1145,9 +1181,6 @@
     "Cosmic": {
       "type": "object",
       "properties": {
-        "_license": {
-          "type": "string"
-        },
         "alt": {
           "type": "string",
           "description": "alt"
@@ -1163,6 +1196,10 @@
         "hg19": {
           "description": "hg19",
           "$ref": "#/definitions/Hg19"
+        },
+        "license": {
+          "type": "string",
+          "description": "_license"
         },
         "mutFreq": {
           "type": "number",
@@ -1754,9 +1791,16 @@
         "mutdb": {
           "$ref": "#/definitions/Mutdb"
         },
+        "query": {
+          "type": "string"
+        },
         "snpeff": {
           "description": "snpeff",
           "$ref": "#/definitions/Snpeff"
+        },
+        "variant": {
+          "type": "string",
+          "description": "variant"
         },
         "vcf": {
           "description": "vcf",

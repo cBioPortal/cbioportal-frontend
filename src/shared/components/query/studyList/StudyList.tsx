@@ -24,6 +24,7 @@ import {
 } from '../CancerStudyTreeData';
 import { StudyLink } from '../../StudyLink/StudyLink';
 import StudyTagsTooltip from '../../studyTagsTooltip/StudyTagsTooltip';
+import { formatStudyReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 
 const styles = {
     ...styles_any,
@@ -175,6 +176,28 @@ export default class StudyList extends QueryStoreComponent<
             </DefaultTooltip>
         ) : null;
 
+        const isMixedReferenceGenome =
+            _.includes(this.store.selectableSelectedStudyIds, study.studyId) &&
+            this.store.isMixedReferenceGenome;
+        const mixedReferenceGenomeWarning = isMixedReferenceGenome ? (
+            <DefaultTooltip
+                mouseEnterDelay={0}
+                placement="top"
+                overlay={
+                    <div>
+                        You are combining studies with molecular data based on
+                        both GRCh37/hg19 and GRCh38/hg38. This is not fully
+                        supported yet. Please double check your findings
+                    </div>
+                }
+            >
+                <span>
+                    <i className="fa fa-exclamation-triangle"></i>{' '}
+                    {formatStudyReferenceGenome(study.referenceGenome)}
+                </span>
+            </DefaultTooltip>
+        ) : null;
+
         return (
             <li
                 key={arrayIndex}
@@ -189,16 +212,19 @@ export default class StudyList extends QueryStoreComponent<
                     {() => {
                         const classes = classNames({
                             [styles.StudyName]: true,
-                            overlappingStudy: isOverlap,
+                            overlappingStudy:
+                                isOverlap || isMixedReferenceGenome,
                             [styles.DeletedStudy]: this.store.isDeletedVirtualStudy(
                                 study.studyId
                             ),
+                            [`studyItem_${study.studyId}`]: true,
                         });
                         return (
                             <CancerTreeCheckbox view={this.view} node={study}>
                                 <span className={classes}>
                                     {study.name}
                                     {overlapWarning}
+                                    {mixedReferenceGenomeWarning}
                                 </span>
                             </CancerTreeCheckbox>
                         );

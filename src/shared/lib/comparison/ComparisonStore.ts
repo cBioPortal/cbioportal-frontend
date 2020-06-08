@@ -13,6 +13,7 @@ import {
     isGroupEmpty,
     partitionCasesByGroupMembership,
     EnrichmentAnalysisComparisonGroup,
+    getGroupsDownloadData,
 } from '../../../pages/groupComparison/GroupComparisonUtils';
 import { GroupComparisonTab } from '../../../pages/groupComparison/GroupComparisonTabs';
 import { remoteData, stringListToIndexSet } from 'cbioportal-frontend-commons';
@@ -42,7 +43,10 @@ import internalClient from '../../api/cbioportalInternalClientInstance';
 import autobind from 'autobind-decorator';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import request from 'superagent';
-import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
+import {
+    getPatientSurvivals,
+    getClinicalDataOfPatientSurvivalStatus,
+} from 'pages/resultsView/SurvivalStoreHelper';
 import {
     getPatientIdentifiers,
     pickClinicalDataColors,
@@ -60,16 +64,16 @@ import { AppStore } from '../../../AppStore';
 import { GACustomFieldsEnum, trackEvent } from 'shared/lib/tracking';
 import ifNotDefined from '../ifNotDefined';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
-import { fetchAllReferenceGenomeGenes } from 'shared/lib/StoreUtils';
+import {
+    fetchAllReferenceGenomeGenes,
+    fetchSurvivalDataExists,
+    getSurvivalClinicalAttributesPrefix,
+} from 'shared/lib/StoreUtils';
 import MobxPromise from 'mobxpromise';
 import ResultsViewURLWrapper from '../../../pages/resultsView/ResultsViewURLWrapper';
 import { ResultsViewPageStore } from '../../../pages/resultsView/ResultsViewPageStore';
-import {
-    survivalClinicalDataVocabulary,
-    plotsPriority,
-    getSurvivalAttributes,
-    DEFAULT_SURVIVAL_PRIORITY,
-} from 'pages/resultsView/survival/SurvivalUtil';
+import { getSurvivalStatusBoolean } from 'pages/resultsView/survival/SurvivalUtil';
+import onMobxPromise from '../onMobxPromise';
 
 export enum OverlapStrategy {
     INCLUDE = 'Include',
@@ -1151,6 +1155,31 @@ export default class ComparisonStore {
         },
     });
 
+    public readonly sampleKeyToGroups = remoteData({
+        await: () => [this._originalGroups, this.sampleSet],
+        invoke: () => {
+            const sampleSet = this.sampleSet.result!;
+            const groups = this._originalGroups.result!;
+            const ret: {
+                [uniqueSampleKey: string]: { [groupUid: string]: boolean };
+            } = {};
+            for (const group of groups) {
+                for (const studyObject of group.studies) {
+                    const studyId = studyObject.id;
+                    for (const sampleId of studyObject.samples) {
+                        const sample = sampleSet.get({ sampleId, studyId });
+                        if (sample) {
+                            ret[sample.uniqueSampleKey] =
+                                ret[sample.uniqueSampleKey] || {};
+                            ret[sample.uniqueSampleKey][group.uid] = true;
+                        }
+                    }
+                }
+            }
+            return Promise.resolve(ret);
+        },
+    });
+
     public readonly patientsVennPartition = remoteData({
         await: () => [
             this._activeGroupsNotOverlapRemoved,
@@ -1177,39 +1206,11 @@ export default class ComparisonStore {
             this.activeSamplesNotOverlapRemoved,
             this.survivalClinicalAttributesPrefix,
         ],
-        invoke: async () => {
-            if (this.activeSamplesNotOverlapRemoved.result!.length === 0) {
-                return false;
-            }
-            const attributeNames = _.reduce(
-                this.survivalClinicalAttributesPrefix.result!,
-                (attributeNames, prefix: string) => {
-                    attributeNames.push(prefix + '_STATUS');
-                    attributeNames.push(prefix + '_MONTHS');
-                    return attributeNames;
-                },
-                [] as string[]
-            );
-            if (attributeNames.length === 0) {
-                return false;
-            }
-            const filter: ClinicalDataMultiStudyFilter = {
-                attributeIds: attributeNames,
-                identifiers: this.activeSamplesNotOverlapRemoved.result!.map(
-                    (s: any) => ({ entityId: s.patientId, studyId: s.studyId })
-                ),
-            };
-            const count = await client
-                .fetchClinicalDataUsingPOSTWithHttpInfo({
-                    clinicalDataType: 'PATIENT',
-                    clinicalDataMultiStudyFilter: filter,
-                    projection: 'META',
-                })
-                .then(function(response: request.Response) {
-                    return parseInt(response.header['total-count'], 10);
-                });
-            return count > 0;
-        },
+        invoke: () =>
+            fetchSurvivalDataExists(
+                this.activeSamplesNotOverlapRemoved.result!,
+                this.survivalClinicalAttributesPrefix.result!
+            ),
     });
 
     readonly survivalClinicalData = remoteData<ClinicalData[]>(
@@ -1231,7 +1232,6 @@ export default class ComparisonStore {
                     },
                     [] as string[]
                 );
-                console.log(attributeNames);
 
                 if (attributeNames.length === 0) {
                     return Promise.resolve([]);
@@ -1272,37 +1272,10 @@ export default class ComparisonStore {
     readonly survivalClinicalAttributesPrefix = remoteData({
         await: () => [this.activeStudiesClinicalAttributes],
         invoke: () => {
-            const attributes = getSurvivalAttributes(
-                this.activeStudiesClinicalAttributes.result!
-            );
-            // get paired attributes
-            const attributePrefixes = _.reduce(
-                attributes,
-                (attributePrefixes, attribute) => {
-                    let prefix = attribute.substring(
-                        0,
-                        attribute.indexOf('_STATUS')
-                    );
-                    if (!attributePrefixes.includes(prefix)) {
-                        if (attributes.includes(`${prefix}_MONTHS`)) {
-                            attributePrefixes.push(prefix);
-                        }
-                    }
-                    return attributePrefixes;
-                },
-                [] as string[]
-            );
-            // TODO: after we migrate data into new format, we can support all survival data type
-            // this is a tempory fix for current data format, for now we only support survival types defined in survivalClinicalDataVocabulary
-            const filteredAttributePrefixes = _.filter(
-                attributePrefixes,
-                prefix => survivalClinicalDataVocabulary[prefix]
-            );
-            // change prefix order based on priority
             return Promise.resolve(
-                _.sortBy(filteredAttributePrefixes, prefix => {
-                    return plotsPriority[prefix] || DEFAULT_SURVIVAL_PRIORITY;
-                })
+                getSurvivalClinicalAttributesPrefix(
+                    this.activeStudiesClinicalAttributes.result!
+                )
             );
         },
     });
@@ -1334,15 +1307,47 @@ export default class ComparisonStore {
                     (acc, key) => {
                         acc[key] = getPatientSurvivals(
                             this.survivalClinicalDataGroupByUniquePatientKey
-                                .result,
+                                .result!,
                             this.activePatientKeysNotOverlapRemoved.result!,
                             `${key}_STATUS`,
                             `${key}_MONTHS`,
-                            s => survivalClinicalDataVocabulary[key].includes(s)
+                            s => getSurvivalStatusBoolean(s, key)
                         );
                         return acc;
                     },
                     {} as { [prefix: string]: PatientSurvival[] }
+                )
+            );
+        },
+    });
+
+    readonly patientSurvivalUniqueStatusText = remoteData<{
+        [prefix: string]: string[];
+    }>({
+        await: () => [
+            this.survivalClinicalDataGroupByUniquePatientKey,
+            this.activePatientKeysNotOverlapRemoved,
+            this.survivalClinicalAttributesPrefix,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                _.reduce(
+                    this.survivalClinicalAttributesPrefix.result!,
+                    (acc, key) => {
+                        const clinicalDataOfPatientSurvivalStatus = getClinicalDataOfPatientSurvivalStatus(
+                            this.survivalClinicalDataGroupByUniquePatientKey
+                                .result!,
+                            this.activePatientKeysNotOverlapRemoved.result!,
+                            `${key}_STATUS`,
+                            `${key}_MONTHS`
+                        );
+                        acc[key] = _.chain(clinicalDataOfPatientSurvivalStatus)
+                            .map(clinicalData => clinicalData.value)
+                            .uniq()
+                            .value();
+                        return acc;
+                    },
+                    {} as { [prefix: string]: string[] }
                 )
             );
         },
@@ -1485,4 +1490,30 @@ export default class ComparisonStore {
             return Promise.resolve(survivalDescriptions);
         },
     });
+
+    @autobind
+    public getGroupsDownloadDataPromise() {
+        return new Promise<string>(resolve => {
+            onMobxPromise<any>(
+                [this._originalGroups, this.samples, this.sampleKeyToGroups],
+                (
+                    groups: ComparisonGroup[],
+                    samples: Sample[],
+                    sampleKeyToGroups: {
+                        [uniqueSampleKey: string]: {
+                            [groupUid: string]: boolean;
+                        };
+                    }
+                ) => {
+                    resolve(
+                        getGroupsDownloadData(
+                            samples,
+                            groups,
+                            sampleKeyToGroups
+                        )
+                    );
+                }
+            );
+        });
+    }
 }

@@ -42,8 +42,6 @@ import {
     makeScatterPlotData,
     makeScatterPlotPointAppearance,
     makeWaterfallPlotData,
-    MutationSummary,
-    mutationSummaryToAppearance,
     PLOT_SIDELENGTH,
     scatterPlotLegendData,
     scatterPlotTooltip,
@@ -56,6 +54,7 @@ import {
     NO_GENE_OPTION,
     bothAxesNoMolecularProfile,
     waterfallPlotTooltip,
+    basicAppearance,
 } from './PlotsTabUtils';
 import {
     ClinicalAttribute,
@@ -113,9 +112,7 @@ export enum ViewType {
     MutationType,
     MutationTypeAndCopyNumber,
     CopyNumber,
-    MutationSummary,
     LimitVal,
-    LimitValMutationSummary,
     LimitValMutationType,
     LimitValCopyNumber,
     LimitValMutationTypeAndCopyNumber,
@@ -124,10 +121,8 @@ export enum ViewType {
 
 export enum PotentialViewType {
     MutationTypeAndCopyNumber,
-    MutationSummary,
     None,
     LimitValMutationTypeAndCopyNumber,
-    LimitValMutationSummary,
     LimitVal,
 }
 
@@ -277,13 +272,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     ret = ViewType.None;
                 }
                 break;
-            case PotentialViewType.MutationSummary:
-                if (this.viewMutationType) {
-                    ret = ViewType.MutationSummary;
-                } else {
-                    ret = ViewType.None;
-                }
-                break;
             case PotentialViewType.LimitValMutationTypeAndCopyNumber:
                 if (
                     this.viewMutationType &&
@@ -301,17 +289,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     ret = ViewType.MutationType;
                 } else if (this.viewCopyNumber) {
                     ret = ViewType.CopyNumber;
-                } else if (this.viewLimitValues) {
-                    ret = ViewType.LimitVal;
-                } else {
-                    ret = ViewType.None;
-                }
-                break;
-            case PotentialViewType.LimitValMutationSummary:
-                if (this.viewMutationType && this.viewLimitValues) {
-                    ret = ViewType.LimitValMutationSummary;
-                } else if (this.viewMutationType) {
-                    ret = ViewType.MutationSummary;
                 } else if (this.viewLimitValues) {
                     ret = ViewType.LimitVal;
                 } else {
@@ -2080,7 +2057,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return !!(
             this.mutationDataExists.result &&
             (this.viewType === ViewType.MutationType ||
-                this.viewType === ViewType.MutationSummary ||
                 this.viewType === ViewType.MutationTypeAndCopyNumber)
         );
     }
@@ -2177,10 +2153,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     });
 
     readonly cnaDataExists = remoteData({
-        await: () => [this.props.store.studyToMolecularProfileDiscrete],
+        await: () => [this.props.store.studyToMolecularProfileDiscreteCna],
         invoke: () => {
             return Promise.resolve(
-                !!_.values(this.props.store.studyToMolecularProfileDiscrete)
+                !!_.values(this.props.store.studyToMolecularProfileDiscreteCna)
                     .length
             );
         },
@@ -2302,16 +2278,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 return '#000000';
             case ViewType.MutationTypeAndCopyNumber:
             case ViewType.MutationType:
-            case ViewType.MutationSummary:
             case ViewType.LimitVal:
             case ViewType.LimitValMutationType:
-            case ViewType.LimitValMutationSummary:
             case ViewType.LimitValMutationTypeAndCopyNumber:
                 return (d: IPlotSampleData) =>
                     this.scatterPlotAppearance(d).fill!;
             case ViewType.None:
-                return mutationSummaryToAppearance[MutationSummary.Neither]
-                    .fill;
+                return basicAppearance.fill;
         }
     }
 
@@ -2365,15 +2338,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             case ViewType.LimitValCopyNumber:
                 return this.scatterPlotStroke(d);
             case ViewType.MutationType:
-            case ViewType.MutationSummary:
             case ViewType.LimitValMutationType:
-            case ViewType.LimitValMutationSummary:
                 return this.scatterPlotAppearance(d).fill!;
             case ViewType.LimitVal:
             case ViewType.None:
             default:
-                return mutationSummaryToAppearance[MutationSummary.Neither]
-                    .fill;
+                return basicAppearance.fill;
         }
     }
 
@@ -2382,7 +2352,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         switch (this.viewType) {
             case ViewType.LimitVal:
             case ViewType.LimitValMutationType:
-            case ViewType.LimitValMutationSummary:
             case ViewType.LimitValCopyNumber:
             case ViewType.LimitValMutationTypeAndCopyNumber:
                 return dataPointIsLimited(d);
@@ -2393,7 +2362,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @autobind
     private scatterPlotTooltip(d: IScatterPlotData) {
-        return scatterPlotTooltip(d);
+        return scatterPlotTooltip(
+            d,
+            this.horzLogScaleFunction,
+            this.vertLogScaleFunction
+        );
     }
 
     @autobind
@@ -2405,7 +2378,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return (d: IBoxScatterPlotPoint) => {
             let content;
             if (this.boxPlotData.isComplete) {
-                content = boxPlotTooltip(d, this.boxPlotData.result.horizontal);
+                content = boxPlotTooltip(
+                    d,
+                    this.boxPlotData.result.horizontal,
+                    this.boxPlotData.result.horizontal
+                        ? this.horzLogScaleFunction
+                        : this.vertLogScaleFunction
+                );
             } else {
                 content = (
                     <span>
@@ -3272,7 +3251,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.mutationPromise,
             this.props.store.studyToMutationMolecularProfile,
             this.cnaPromise,
-            this.props.store.studyToMolecularProfileDiscrete,
+            this.props.store.studyToMolecularProfileDiscreteCna,
         ],
         invoke: () => {
             const horzAxisData = this.horzAxisDataPromise.result;
@@ -3302,7 +3281,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 ? {
                                       molecularProfileIds: _.values(
                                           this.props.store
-                                              .studyToMolecularProfileDiscrete
+                                              .studyToMolecularProfileDiscreteCna
                                               .result!
                                       ).map(p => p.molecularProfileId),
                                       data: this.cnaPromise.result!,
@@ -3327,7 +3306,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.mutationPromise,
             this.props.store.studyToMutationMolecularProfile,
             this.cnaPromise,
-            this.props.store.studyToMolecularProfileDiscrete,
+            this.props.store.studyToMolecularProfileDiscreteCna,
         ],
         invoke: () => {
             const horzAxisData = this.horzAxisDataPromise.result;
@@ -3376,7 +3355,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 ? {
                                       molecularProfileIds: _.values(
                                           this.props.store
-                                              .studyToMolecularProfileDiscrete
+                                              .studyToMolecularProfileDiscreteCna
                                               .result!
                                       ).map(p => p.molecularProfileId),
                                       data: this.cnaPromise.result!,
@@ -3455,7 +3434,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.mutationPromise,
             this.props.store.studyToMutationMolecularProfile,
             this.cnaPromise,
-            this.props.store.studyToMolecularProfileDiscrete,
+            this.props.store.studyToMolecularProfileDiscreteCna,
         ],
         invoke: () => {
             const horzAxisData = this.horzAxisDataPromise.result;
@@ -3501,7 +3480,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             ? {
                                   molecularProfileIds: _.values(
                                       this.props.store
-                                          .studyToMolecularProfileDiscrete
+                                          .studyToMolecularProfileDiscreteCna
                                           .result!
                                   ).map(p => p.molecularProfileId),
                                   data: this.cnaPromise.result!,

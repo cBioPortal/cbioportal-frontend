@@ -33,6 +33,7 @@ export type ClinicalTrackDatum = {
 
 export type ClinicalTrackSpec = {
     key: string; // for efficient diffing, just like in React. must be unique
+    attributeId: string;
     label: string;
     description: string;
     data: ClinicalTrackDatum[];

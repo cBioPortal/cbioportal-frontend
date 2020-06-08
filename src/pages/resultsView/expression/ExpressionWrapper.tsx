@@ -35,11 +35,10 @@ import {
     IStringAxisData,
     makeBoxScatterPlotData,
     makeScatterPlotPointAppearance,
-    MutationSummary,
-    mutationSummaryToAppearance,
     scatterPlotLegendData,
     scatterPlotZIndexSortBy,
     IAxisLogScaleParams,
+    basicAppearance,
 } from '../plots/PlotsTabUtils';
 import {
     AnnotatedMutation,
@@ -262,10 +261,10 @@ export default class ExpressionWrapper extends React.Component<
     });
 
     readonly cnaDataExists = remoteData({
-        await: () => [this.props.store.studyToMolecularProfileDiscrete],
+        await: () => [this.props.store.studyToMolecularProfileDiscreteCna],
         invoke: () => {
             return Promise.resolve(
-                !!_.values(this.props.store.studyToMolecularProfileDiscrete)
+                !!_.values(this.props.store.studyToMolecularProfileDiscreteCna)
                     .length
             );
         },
@@ -310,7 +309,7 @@ export default class ExpressionWrapper extends React.Component<
             this.expressionData,
             this.props.store.sampleKeyToSample,
             this.props.store.studyToMutationMolecularProfile,
-            this.props.store.studyToMolecularProfileDiscrete,
+            this.props.store.studyToMolecularProfileDiscreteCna,
             this.cnaData,
         ],
         invoke: () => {
@@ -341,7 +340,8 @@ export default class ExpressionWrapper extends React.Component<
                         ? {
                               molecularProfileIds: _.values(
                                   this.props.store
-                                      .studyToMolecularProfileDiscrete.result!
+                                      .studyToMolecularProfileDiscreteCna
+                                      .result!
                               ).map(p => p.molecularProfileId),
                               data: this.cnaData.result!,
                           }
@@ -567,7 +567,7 @@ export default class ExpressionWrapper extends React.Component<
         if (this.showCna || this.showMutations) {
             return (d: IPlotSampleData) => this.scatterPlotAppearance(d).fill!;
         } else {
-            return mutationSummaryToAppearance[MutationSummary.Neither].fill;
+            return basicAppearance.fill;
         }
     }
 

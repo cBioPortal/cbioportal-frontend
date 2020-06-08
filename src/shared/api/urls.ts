@@ -206,6 +206,20 @@ export function getOncoKbApiUrl() {
     return buildCBioPortalAPIUrl(`proxy/oncokb`);
 }
 
+export function getInstituteLogoUrl() {
+    if (AppConfig.serverConfig.skin_right_logo) {
+        if (/^http/.test(AppConfig.serverConfig.skin_right_logo)) {
+            return AppConfig.serverConfig.skin_right_logo;
+        } else {
+            return buildCBioPortalPageUrl(
+                `images/${AppConfig.serverConfig.skin_right_logo}`
+            );
+        }
+    } else {
+        return undefined;
+    }
+}
+
 export function getGenomeNexusApiUrl() {
     let url = AppConfig.serverConfig.genomenexus_url;
     return getProxyUrlIfNecessary(url);

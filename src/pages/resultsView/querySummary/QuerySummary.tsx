@@ -33,6 +33,7 @@ import { buildCBioPortalPageUrl } from '../../../shared/api/urls';
 import ResultsPageSettings from '../settings/ResultsPageSettings';
 import { createQueryStore } from 'shared/lib/createQueryStore';
 import _ from 'lodash';
+import { mixedReferenceGenomeWarning } from 'shared/lib/referenceGenomeUtils';
 
 interface QuerySummaryProps {
     routingStore: ExtendedRouterStore;
@@ -121,7 +122,10 @@ export default class QuerySummary extends React.Component<
                     {getGeneSummary(this.props.store.hugoGeneSymbols)}
                     &nbsp;
                     <DefaultTooltip overlay={'Edit genes or OQL'}>
-                        <a onClick={this.props.onToggleOQLEditUIVisibility}>
+                        <a
+                            data-test="oqlQuickEditButton"
+                            onClick={this.props.onToggleOQLEditUIVisibility}
+                        >
                             <i className={'fa fa-pencil'}></i>
                         </a>
                     </DefaultTooltip>
@@ -166,6 +170,8 @@ export default class QuerySummary extends React.Component<
                             )}{' '}
                             samples)
                         </a>
+                        {this.props.store.isMixedReferenceGenome &&
+                            mixedReferenceGenomeWarning()}
                     </h3>
                     <span>
                         Querying {this.studyPageFilteredCasesLink} in{' '}
