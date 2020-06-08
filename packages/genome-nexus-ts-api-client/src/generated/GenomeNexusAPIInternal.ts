@@ -78,9 +78,7 @@ export type Alleles = {
 
 };
 export type ClinVar = {
-    '_license': string
-
-        'alleleId': number
+    'alleleId': number
 
         'alt': string
 
@@ -96,21 +94,23 @@ export type ClinVar = {
 
         'hgvs': Hgvs
 
+        'license': string
+
         'rcv': Array < Rcv >
 
         'variantId': number
 
 };
 export type Cosmic = {
-    '_license': string
-
-        'alt': string
+    'alt': string
 
         'chrom': string
 
         'cosmicId': string
 
         'hg19': Hg19
+
+        'license': string
 
         'mutFreq': number
 
@@ -366,7 +366,11 @@ export type MyVariantInfo = {
 
         'mutdb': Mutdb
 
+        'query': string
+
         'snpeff': Snpeff
+
+        'variant': string
 
         'vcf': Vcf
 
@@ -2233,6 +2237,83 @@ export default class GenomeNexusAPIInternal {
         }): Promise < Array < SignalMutation >
         > {
             return this.fetchSignalMutationsByMutationFilterPOSTUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchSignalMutationsByHgvsgGETUsingGETURL(parameters: {
+        'variant': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/signal/mutation/hgvs/{variant}';
+
+        path = path.replace('{variant}', parameters['variant'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves SignalDB mutations by hgvgs variant
+     * @method
+     * @name GenomeNexusAPIInternal#fetchSignalMutationsByHgvsgGETUsingGET
+     * @param {string} variant - A variant. For example 13:g.32890665G>A
+     */
+    fetchSignalMutationsByHgvsgGETUsingGETWithHttpInfo(parameters: {
+        'variant': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/signal/mutation/hgvs/{variant}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            path = path.replace('{variant}', parameters['variant'] + '');
+
+            if (parameters['variant'] === undefined) {
+                reject(new Error('Missing required  parameter: variant'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Retrieves SignalDB mutations by hgvgs variant
+     * @method
+     * @name GenomeNexusAPIInternal#fetchSignalMutationsByHgvsgGETUsingGET
+     * @param {string} variant - A variant. For example 13:g.32890665G>A
+     */
+    fetchSignalMutationsByHgvsgGETUsingGET(parameters: {
+            'variant': string,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < SignalMutation >
+        > {
+            return this.fetchSignalMutationsByHgvsgGETUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
