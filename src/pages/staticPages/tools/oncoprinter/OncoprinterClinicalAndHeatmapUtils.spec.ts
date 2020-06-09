@@ -1,19 +1,19 @@
 import { assert } from 'chai';
 import {
     ClinicalTrackDataType,
-    getClinicalOncoprintData,
-    ONCOPRINTER_CLINICAL_VAL_NA,
-    parseClinicalDataHeader,
-} from './OncoprinterClinicalUtils';
+    getClinicalAndHeatmapOncoprintData,
+    ONCOPRINTER_VAL_NA,
+    parseClinicalAndHeatmapDataHeader,
+} from './OncoprinterClinicalAndHeatmapUtils';
 
-describe('OncoprinterClinicalUtils', () => {
-    describe('parseClinicalDataHeader', () => {
+describe('OncoprinterClinicalAndHeatmapUtils', () => {
+    describe('parseClinicalAndHeatmapDataHeader', () => {
         it('parses zero attributes correctly', () => {
-            assert.deepEqual(parseClinicalDataHeader(['sample']), []);
+            assert.deepEqual(parseClinicalAndHeatmapDataHeader(['sample']), []);
         });
         it('parses clinical attribute definitions correctly', () => {
             assert.deepEqual(
-                parseClinicalDataHeader([
+                parseClinicalAndHeatmapDataHeader([
                     'sample',
                     'age(number)',
                     'mutcount(lognumber)',
@@ -23,27 +23,27 @@ describe('OncoprinterClinicalUtils', () => {
                 ]),
                 [
                     {
-                        clinicalAttributeName: 'age',
+                        trackName: 'age',
                         datatype: ClinicalTrackDataType.NUMBER,
                         countsCategories: undefined,
                     },
                     {
-                        clinicalAttributeName: 'mutcount',
+                        trackName: 'mutcount',
                         datatype: ClinicalTrackDataType.LOG_NUMBER,
                         countsCategories: undefined,
                     },
                     {
-                        clinicalAttributeName: 'cancer_type',
+                        trackName: 'cancer_type',
                         datatype: ClinicalTrackDataType.STRING,
                         countsCategories: undefined,
                     },
                     {
-                        clinicalAttributeName: 'cancer_type2',
+                        trackName: 'cancer_type2',
                         datatype: ClinicalTrackDataType.STRING,
                         countsCategories: undefined,
                     },
                     {
-                        clinicalAttributeName: 'spectrum',
+                        trackName: 'spectrum',
                         datatype: ClinicalTrackDataType.COUNTS,
                         countsCategories: ['a', 'b'],
                     },
@@ -53,7 +53,7 @@ describe('OncoprinterClinicalUtils', () => {
         it('throws error for misformatted attribute name', () => {
             let errorMessage: any = null;
             try {
-                parseClinicalDataHeader(['sample', 'test()']);
+                parseClinicalAndHeatmapDataHeader(['sample', 'test()']);
             } catch (e) {
                 errorMessage = e.message;
             }
@@ -62,7 +62,7 @@ describe('OncoprinterClinicalUtils', () => {
         it('throws error for invalid data type', () => {
             let errorMessage: any = null;
             try {
-                parseClinicalDataHeader(['sample', 'test(asdf)']);
+                parseClinicalAndHeatmapDataHeader(['sample', 'test(asdf)']);
             } catch (e) {
                 errorMessage = e.message;
             }
@@ -70,7 +70,7 @@ describe('OncoprinterClinicalUtils', () => {
         });
     });
 
-    describe('getClinicalOncoprintData', () => {
+    describe('getClinicalAndHeatmapOncoprintData', () => {
         it('parses data correctly', () => {
             const attributes = [
                 {
@@ -132,7 +132,7 @@ describe('OncoprinterClinicalUtils', () => {
                 },
             ];
             assert.deepEqual(
-                getClinicalOncoprintData(attributes, parsedLines),
+                getClinicalAndHeatmapOncoprintData(attributes, parsedLines),
                 {
                     AGE: [
                         {
@@ -335,7 +335,7 @@ describe('OncoprinterClinicalUtils', () => {
 
             let errorMessage: any = null;
             try {
-                getClinicalOncoprintData(attributes, parsedLines);
+                getClinicalAndHeatmapOncoprintData(attributes, parsedLines);
             } catch (e) {
                 errorMessage = e.message;
             }
@@ -364,7 +364,7 @@ describe('OncoprinterClinicalUtils', () => {
 
             let errorMessage: any = null;
             try {
-                getClinicalOncoprintData(attributes, parsedLines);
+                getClinicalAndHeatmapOncoprintData(attributes, parsedLines);
             } catch (e) {
                 errorMessage = e.message;
             }
@@ -401,7 +401,9 @@ describe('OncoprinterClinicalUtils', () => {
 
             let errorMessage: any = null;
             try {
-                getClinicalOncoprintData(attributes, [parsedLines[0]]);
+                getClinicalAndHeatmapOncoprintData(attributes, [
+                    parsedLines[0],
+                ]);
             } catch (e) {
                 errorMessage = e.message;
             }
@@ -412,7 +414,9 @@ describe('OncoprinterClinicalUtils', () => {
 
             errorMessage = null;
             try {
-                getClinicalOncoprintData(attributes, [parsedLines[1]]);
+                getClinicalAndHeatmapOncoprintData(attributes, [
+                    parsedLines[1],
+                ]);
             } catch (e) {
                 errorMessage = e.message;
             }

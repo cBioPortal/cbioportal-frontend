@@ -20,9 +20,9 @@ import { getOncoprintMutationType } from '../../../../shared/components/oncoprin
 import { cna_profile_data_to_string } from '../../../../shared/lib/oql/AccessorsForOqlFilter';
 import {
     ClinicalTrackDataType,
-    ONCOPRINTER_CLINICAL_VAL_NA,
-    OncoprinterClinicalInputLine,
-} from './OncoprinterClinicalUtils';
+    ONCOPRINTER_VAL_NA,
+    OncoprinterClinicalAndHeatmapInputLine,
+} from './OncoprinterClinicalAndHeatmapUtils';
 import _ from 'lodash';
 import { PUTATIVE_DRIVER } from '../../../../shared/constants';
 import {
@@ -203,7 +203,7 @@ export function getOncoprinterClinicalInput(
                         );
 
                     if (!datum || datum.na || !datum.attr_val) {
-                        return ONCOPRINTER_CLINICAL_VAL_NA;
+                        return ONCOPRINTER_VAL_NA;
                     }
 
                     if (attributeId === SpecialAttribute.MutationSpectrum) {
