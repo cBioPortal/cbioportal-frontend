@@ -325,7 +325,7 @@ export default class ClinicalData extends React.Component<
 
     private readonly groupMembershipAxisData = remoteData({
         await: () => [
-            this.props.store.sampleSet,
+            this.props.store.sampleMap,
             this.props.store.activeGroups,
         ],
         invoke: async () => {
@@ -339,7 +339,7 @@ export default class ClinicalData extends React.Component<
                 categoryOrder,
             } as IStringAxisData;
             const sampleSet =
-                this.props.store.sampleSet.result ||
+                this.props.store.sampleMap.result ||
                 new ComplexKeyMap<Sample>();
 
             const sampleKeyToGroupSampleData = _.reduce(
