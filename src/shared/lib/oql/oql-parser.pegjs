@@ -163,9 +163,10 @@ TrailingMutationModifier
     = "_" mod:MutationModifier { return mod; }
 
 MutationModifier
-    = "GERMLINE"i { return "GERMLINE";}
-    / "SOMATIC"i { return "SOMATIC";}
+    = "GERMLINE"i { return { type: "GERMLINE" };}
+    / "SOMATIC"i { return { type: "SOMATIC" };}
     / mod:DriverModifier { return mod; }
+    / range:RangeModifier { return range; }
 
 CNAModifier
     // NOTE: if you ever want to add more modifiers, then to be able to specify in any order need to do
@@ -178,4 +179,9 @@ FusionModifier
     = d:DriverModifier { return d; }
 
 DriverModifier
-    = "DRIVER"i { return "DRIVER";}
+    = "DRIVER"i { return { type:"DRIVER" };}
+
+RangeModifier
+    = "(" start:NaturalNumber "-" end:NaturalNumber e:[*]? ")" { return { "type":"RANGE", "start":parseInt(start, 10), "end":parseInt(end, 10), completeOverlapOnly: !!e } }
+    / "(-" end:NaturalNumber e:[*]? ")" { return { "type":"RANGE", "end":parseInt(end, 10), completeOverlapOnly: !!e } }
+    / "(" start:NaturalNumber "-" e:[*]? ")" { return { "type":"RANGE", "start":parseInt(start, 10), completeOverlapOnly: !!e } }
