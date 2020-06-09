@@ -64,7 +64,10 @@ import {
     getJitterForCase,
     dataPointIsLimited,
 } from '../../../shared/components/plots/PlotUtils';
-import { isSampleProfiled } from '../../../shared/lib/isSampleProfiled';
+import {
+    isSampleProfiled,
+    isSampleProfiledInMultiple,
+} from '../../../shared/lib/isSampleProfiled';
 import Pluralize from 'pluralize';
 import AppConfig from 'appConfig';
 import { SpecialChartsUniqueKeyEnum } from 'pages/studyView/StudyViewUtils';
@@ -651,65 +654,69 @@ function makeAxisDataPromise_Clinical(
 
 function makeAxisDataPromise_Molecular(
     entrezGeneId: number,
-    molecularProfileId: string,
+    dataType: string,
     mutationCache: MobxPromiseCache<{ entrezGeneId: number }, Mutation[]>,
     numericGeneMolecularDataCache: MobxPromiseCache<
         { entrezGeneId: number; molecularProfileId: string },
         NumericGeneMolecularData[]
     >,
     entrezGeneIdToGene: MobxPromise<{ [entrezGeneId: number]: Gene }>,
-    molecularProfileIdToMolecularProfile: MobxPromise<{
-        [molecularProfileId: string]: MolecularProfile;
-    }>,
     mutationCountBy: MutationCountBy,
     coverageInformation: MobxPromise<CoverageInformation>,
-    samples: MobxPromise<Sample[]>
+    samples: MobxPromise<Sample[]>,
+    dataTypeToDataSourceOptions: MobxPromise<{
+        [dataType: string]: { value: string; label: string }[];
+    }>
 ): MobxPromise<IAxisData> {
-    let promise: MobxPromise<any>; /* = ;*/
+    let promises: MobxPromise<any>[] = []; /* = ;*/
     return remoteData({
         await: () => {
             const ret: MobxPromise<any>[] = [];
-            if (molecularProfileIdToMolecularProfile.isComplete) {
-                if (
-                    molecularProfileIdToMolecularProfile.result![
-                        molecularProfileId
-                    ].molecularAlterationType ===
-                    AlterationTypeConstants.MUTATION_EXTENDED
-                ) {
+            if (dataTypeToDataSourceOptions.isComplete) {
+                const profileIds = dataTypeToDataSourceOptions.result![
+                    dataType
+                ].map(option => option.value);
+                if (dataType === AlterationTypeConstants.MUTATION_EXTENDED) {
                     // mutation profile
-                    promise = mutationCache.get({ entrezGeneId });
+                    promises.push(mutationCache.get({ entrezGeneId }));
                     ret.push(coverageInformation);
                     ret.push(samples);
                 } else {
                     // non-mutation profile
-                    promise = numericGeneMolecularDataCache.get({
-                        entrezGeneId,
-                        molecularProfileId,
+                    profileIds.forEach(profileId => {
+                        promises.push(
+                            numericGeneMolecularDataCache.get({
+                                entrezGeneId,
+                                molecularProfileId: profileId,
+                            })
+                        );
                     });
                 }
-                ret.push(promise);
+                ret.push(...promises);
             } else {
-                ret.push(molecularProfileIdToMolecularProfile);
+                ret.push(dataTypeToDataSourceOptions);
             }
             ret.push(entrezGeneIdToGene);
             return ret;
         },
-        invoke: () => {
-            const profile = molecularProfileIdToMolecularProfile.result![
-                molecularProfileId
-            ];
+        invoke: async () => {
+            const profileIds = dataTypeToDataSourceOptions.result![
+                dataType
+            ].map(option => option.value);
+
             const hugoGeneSymbol = entrezGeneIdToGene.result![entrezGeneId]
                 .hugoGeneSymbol;
 
-            if (
-                profile.molecularAlterationType ===
-                AlterationTypeConstants.MUTATION_EXTENDED
-            ) {
+            if (dataType === AlterationTypeConstants.MUTATION_EXTENDED) {
                 // mutation profile
-                const mutations: Mutation[] = promise.result!;
+                let mutations: Mutation[] = [];
+                promises.forEach(promise => {
+                    mutations.push(promise.result!);
+                });
+
                 return Promise.resolve(
                     makeAxisDataPromise_Molecular_MakeMutationData(
-                        molecularProfileId,
+                        profileIds,
                         hugoGeneSymbol,
                         mutations,
                         coverageInformation.result!,
@@ -720,10 +727,12 @@ function makeAxisDataPromise_Molecular(
             } else {
                 // non-mutation profile
                 const isDiscreteCna =
-                    profile.molecularAlterationType ===
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
-                    profile.datatype === 'DISCRETE';
-                const data: NumericGeneMolecularData[] = promise.result!;
+                    dataType === AlterationTypeConstants.COPY_NUMBER_ALTERATION;
+                let data: NumericGeneMolecularData[] = [];
+                promises.forEach(promise => {
+                    data.push(...promise.result!);
+                });
+
                 return Promise.resolve({
                     data: data.map(d => {
                         let value = d.value;
@@ -750,7 +759,7 @@ function makeAxisDataPromise_Molecular(
 }
 
 export function makeAxisDataPromise_Molecular_MakeMutationData(
-    molecularProfileId: string,
+    molecularProfileIds: string[],
     hugoGeneSymbol: string,
     mutations: Pick<
         Mutation,
@@ -778,11 +787,14 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
             // sampleMutTypes would never be an empty array because its generated by _.groupBy,
             //  so we need only check if it exists
             if (
-                !isSampleProfiled(
-                    s.uniqueSampleKey,
-                    molecularProfileId,
-                    hugoGeneSymbol,
-                    coverageInformation
+                !_.some(
+                    isSampleProfiledInMultiple(
+                        s.uniqueSampleKey,
+                        molecularProfileIds,
+                        coverageInformation,
+                        hugoGeneSymbol
+                    ),
+                    booleanStatus => booleanStatus === true
                 )
             ) {
                 // its not profiled
@@ -833,31 +845,44 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
 
 function makeAxisDataPromise_Geneset(
     genesetId: string,
-    molecularProfileId: string,
+    molecularProfileIdSuffix: string,
     genesetMolecularDataCachePromise: MobxPromise<GenesetMolecularDataCache>,
-    molecularProfileIdToMolecularProfile: MobxPromise<{
-        [molecularProfileId: string]: MolecularProfile;
+    molecularProfileIdSuffixToMolecularProfiles: MobxPromise<{
+        [molecularProfileIdSuffix: string]: MolecularProfile[];
     }>
 ): MobxPromise<IAxisData> {
     return remoteData({
         await: () => [
             genesetMolecularDataCachePromise,
-            molecularProfileIdToMolecularProfile,
+            molecularProfileIdSuffixToMolecularProfiles,
         ],
         invoke: async () => {
-            const profile = molecularProfileIdToMolecularProfile.result![
-                molecularProfileId
+            const profiles = molecularProfileIdSuffixToMolecularProfiles.result![
+                molecularProfileIdSuffix
             ];
-            // const isDiscreteCna = (profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION
-            //                         && profile.datatype === "DISCRETE");
+            const data: GenesetMolecularData[] = [];
             const makeRequest = true;
-            await genesetMolecularDataCachePromise.result!.getPromise(
-                { genesetId, molecularProfileId },
-                makeRequest
+            await Promise.all(
+                profiles.map(profile =>
+                    genesetMolecularDataCachePromise.result!.getPromise(
+                        {
+                            genesetId,
+                            molecularProfileId: profile.molecularProfileId,
+                        },
+                        makeRequest
+                    )
+                )
             );
-            const data: GenesetMolecularData[] = genesetMolecularDataCachePromise.result!.get(
-                { molecularProfileId, genesetId }
-            )!.data!;
+            profiles.forEach(profile => {
+                const dataForEachProfile: GenesetMolecularData[] = genesetMolecularDataCachePromise.result!.get(
+                    {
+                        molecularProfileId: profile.molecularProfileId,
+                        genesetId,
+                    }
+                )!.data!;
+                data.push(...dataForEachProfile);
+            });
+
             return Promise.resolve({
                 data: data.map(d => {
                     const value = d.value;
@@ -875,31 +900,46 @@ function makeAxisDataPromise_Geneset(
 
 function makeAxisDataPromise_GenericAssay(
     entityId: string,
-    molecularProfileId: string,
+    molecularProfileIdSuffix: string,
     genericAssayMolecularDataCachePromise: MobxPromise<
         GenericAssayMolecularDataCache
     >,
-    molecularProfileIdToMolecularProfile: MobxPromise<{
-        [molecularProfileId: string]: MolecularProfile;
+    molecularProfileIdSuffixToMolecularProfiles: MobxPromise<{
+        [molecularProfileIdSuffix: string]: MolecularProfile[];
     }>
 ): MobxPromise<IAxisData> {
     return remoteData({
         await: () => [
             genericAssayMolecularDataCachePromise,
-            molecularProfileIdToMolecularProfile,
+            molecularProfileIdSuffixToMolecularProfiles,
         ],
         invoke: async () => {
-            const profile = molecularProfileIdToMolecularProfile.result![
-                molecularProfileId
+            const profiles = molecularProfileIdSuffixToMolecularProfiles.result![
+                molecularProfileIdSuffix
             ];
+            const data: GenericAssayDataEnhanced[] = [];
             const makeRequest = true;
-            await genericAssayMolecularDataCachePromise.result!.getPromise(
-                { stableId: entityId, molecularProfileId },
-                makeRequest
+            await Promise.all(
+                profiles.map(profile =>
+                    genericAssayMolecularDataCachePromise.result!.getPromise(
+                        {
+                            stableId: entityId,
+                            molecularProfileId: profile.molecularProfileId,
+                        },
+                        makeRequest
+                    )
+                )
             );
-            const data: GenericAssayDataEnhanced[] = genericAssayMolecularDataCachePromise.result!.get(
-                { molecularProfileId, stableId: entityId }
-            )!.data!;
+            profiles.forEach(profile => {
+                const dataForEachProfile: GenericAssayDataEnhanced[] = genericAssayMolecularDataCachePromise.result!.get(
+                    {
+                        molecularProfileId: profile.molecularProfileId,
+                        stableId: entityId,
+                    }
+                )!.data!;
+                data.push(...dataForEachProfile);
+            });
+
             return Promise.resolve({
                 data: data.map(d => {
                     return {
@@ -920,8 +960,8 @@ export function makeAxisDataPromise(
     clinicalAttributeIdToClinicalAttribute: MobxPromise<{
         [clinicalAttributeId: string]: ClinicalAttribute;
     }>,
-    molecularProfileIdToMolecularProfile: MobxPromise<{
-        [molecularProfileId: string]: MolecularProfile;
+    molecularProfileIdSuffixToMolecularProfiles: MobxPromise<{
+        [molecularProfileIdSuffix: string]: MolecularProfile[];
     }>,
     patientKeyToSamples: MobxPromise<{ [uniquePatientKey: string]: Sample[] }>,
     entrezGeneIdToGene: MobxPromise<{ [entrezGeneId: number]: Gene }>,
@@ -939,7 +979,10 @@ export function makeAxisDataPromise(
     genesetMolecularDataCachePromise: MobxPromise<GenesetMolecularDataCache>,
     genericAssayMolecularDataCachePromise: MobxPromise<
         GenericAssayMolecularDataCache
-    >
+    >,
+    dataTypeToDataSourceOptions: MobxPromise<{
+        [dataType: string]: { value: string; label: string }[];
+    }>
 ): MobxPromise<IAxisData> {
     let ret: MobxPromise<IAxisData> = remoteData(
         () => new Promise<IAxisData>(() => 0)
@@ -954,7 +997,7 @@ export function makeAxisDataPromise(
                 selection.genericAssayEntityId,
                 selection.dataSourceId,
                 genericAssayMolecularDataCachePromise,
-                molecularProfileIdToMolecularProfile
+                molecularProfileIdSuffixToMolecularProfiles
             );
             return ret;
         }
@@ -997,7 +1040,7 @@ export function makeAxisDataPromise(
                     selection.genesetId,
                     selection.dataSourceId,
                     genesetMolecularDataCachePromise,
-                    molecularProfileIdToMolecularProfile
+                    molecularProfileIdSuffixToMolecularProfiles
                 );
             }
             break;
@@ -1010,14 +1053,14 @@ export function makeAxisDataPromise(
             ) {
                 ret = makeAxisDataPromise_Molecular(
                     selection.entrezGeneId,
-                    selection.dataSourceId,
+                    selection.dataType,
                     mutationCache,
                     numericGeneMolecularDataCache,
                     entrezGeneIdToGene,
-                    molecularProfileIdToMolecularProfile,
                     selection.mutationCountBy,
                     coverageInformation,
-                    samples
+                    samples,
+                    dataTypeToDataSourceOptions
                 );
             }
             break;
@@ -2506,13 +2549,19 @@ export function makeClinicalAttributeOptions(
                 validDataTypes.indexOf(attribute.datatype.toLowerCase()) > -1
         );
 
+        // for multiple study cases, we need unique attributes
+        const uniqueValidClinicalAttributes = _.uniqBy(
+            validClinicalAttributes,
+            validClinicalAttribute => validClinicalAttribute.clinicalAttributeId
+        );
+
         // sort
         let options = _.sortBy<{
             value: string;
             label: string;
             priority: number;
         }>(
-            validClinicalAttributes.map(attribute => ({
+            uniqueValidClinicalAttributes.map(attribute => ({
                 value: attribute.clinicalAttributeId,
                 label: attribute.displayName,
                 priority: parseFloat(attribute.priority || '-1'),

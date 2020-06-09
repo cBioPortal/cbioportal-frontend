@@ -3246,6 +3246,27 @@ export class ResultsViewPageStore {
         {}
     );
 
+    readonly molecularProfileIdSuffixToMolecularProfiles = remoteData<{
+        [molecularProfileIdSuffix: string]: MolecularProfile[];
+    }>(
+        {
+            await: () => [this.molecularProfilesInStudies],
+            invoke: () => {
+                return Promise.resolve(
+                    _.chain(this.molecularProfilesInStudies.result)
+                        .groupBy(molecularProfile =>
+                            molecularProfile.molecularProfileId.replace(
+                                molecularProfile.studyId + '_',
+                                ''
+                            )
+                        )
+                        .value()
+                );
+            },
+        },
+        {}
+    );
+
     // If we have same profile accros multiple studies, they should have the same name, so we can group them by name to get all related molecular profiles in multiple studies.
     readonly nonSelectedDownloadableMolecularProfilesGroupByName = remoteData<{
         [profileName: string]: MolecularProfile[];

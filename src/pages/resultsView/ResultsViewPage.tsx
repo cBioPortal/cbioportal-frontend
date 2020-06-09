@@ -238,9 +238,7 @@ export default class ResultsViewPage extends React.Component<
                     if (!this.resultsViewPageStore.studies.isComplete) {
                         return true;
                     } else {
-                        return (
-                            this.resultsViewPageStore.studies.result!.length > 1
-                        );
+                        return false;
                     }
                 },
                 getTab: () => {

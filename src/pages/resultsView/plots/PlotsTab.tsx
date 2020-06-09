@@ -1622,7 +1622,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     isGenericAssayType: true,
                 }))
                 .value();
-
             return Promise.resolve(
                 _.concat(
                     _.sortBy(
@@ -2090,7 +2089,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return makeAxisDataPromise(
             this.horzSelection,
             this.clinicalAttributeIdToClinicalAttribute,
-            this.props.store.molecularProfileIdToMolecularProfile,
+            this.props.store.molecularProfileIdSuffixToMolecularProfiles,
             this.props.store.patientKeyToSamples,
             this.props.store.entrezGeneIdToGene,
             this.props.store.clinicalDataCache,
@@ -2100,7 +2099,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.props.store.coverageInformation,
             this.props.store.samples,
             this.props.store.genesetMolecularDataCache,
-            this.props.store.genericAssayMolecularDataCache
+            this.props.store.genericAssayMolecularDataCache,
+            this.dataTypeToDataSourceOptions
         );
     }
 
@@ -2108,7 +2108,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return makeAxisDataPromise(
             this.vertSelection,
             this.clinicalAttributeIdToClinicalAttribute,
-            this.props.store.molecularProfileIdToMolecularProfile,
+            this.props.store.molecularProfileIdSuffixToMolecularProfiles,
             this.props.store.patientKeyToSamples,
             this.props.store.entrezGeneIdToGene,
             this.props.store.clinicalDataCache,
@@ -2118,7 +2118,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.props.store.coverageInformation,
             this.props.store.samples,
             this.props.store.genesetMolecularDataCache,
-            this.props.store.genericAssayMolecularDataCache
+            this.props.store.genericAssayMolecularDataCache,
+            this.dataTypeToDataSourceOptions
         );
     }
 
