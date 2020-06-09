@@ -55,91 +55,24 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
 
     @computed
     public get usePatientLevelEnrichments() {
-        return this.urlWrapper.query.patient_enrichments === 'true';
+        return this.resultsViewStore.usePatientLevelEnrichments;
     }
 
     @autobind
     @action
     public setUsePatientLevelEnrichments(e: boolean) {
-        this.urlWrapper.updateURL({ patient_enrichments: e.toString() });
+        this.resultsViewStore.setUsePatientLevelEnrichments(e);
     }
 
-    readonly _queryDerivedGroups = remoteData<SessionGroupData[]>({
-        await: () => [
-            this.resultsViewStore.studyIds,
-            this.resultsViewStore.alteredSamples,
-            this.resultsViewStore.unalteredSamples,
-            this.resultsViewStore.alteredPatients,
-            this.resultsViewStore.unalteredPatients,
-            this.resultsViewStore.samples,
-            this.resultsViewStore
-                .oqlFilteredCaseAggregatedDataByUnflattenedOQLLine,
-            this.resultsViewStore.defaultOQLQuery,
-        ],
-        invoke: () => {
-            const groups: SessionGroupData[] = [];
-
-            // altered/unaltered groups
-            groups.push(
-                ...getAlteredVsUnalteredGroups(
-                    this.usePatientLevelEnrichments,
-                    this.resultsViewStore.studyIds.result!,
-                    this.resultsViewStore.alteredSamples.result!,
-                    this.resultsViewStore.unalteredSamples.result!
-                )
-            );
-
-            // altered per oncoprint track groups
-            groups.push(
-                ...getAlteredByOncoprintTrackGroups(
-                    this.usePatientLevelEnrichments,
-                    this.resultsViewStore.studyIds.result!,
-                    this.resultsViewStore.samples.result!,
-                    this.resultsViewStore
-                        .oqlFilteredCaseAggregatedDataByUnflattenedOQLLine
-                        .result!,
-                    this.resultsViewStore.defaultOQLQuery.result!
-                )
-            );
-            return Promise.resolve(groups);
-        },
-    });
-
-    readonly _session = remoteData<Session>({
-        await: () => [this.resultsViewStore.studyIds],
-        invoke: () => {
-            const sessionId = this.urlWrapper.query
-                .comparison_createdGroupsSessionId;
-
-            if (sessionId) {
-                // if theres a session holding onto user-created groups, add groups from there
-                return comparisonClient.getComparisonSession(sessionId);
-            } else {
-                return Promise.resolve({
-                    id: '',
-                    groups: [],
-                    origin: this.resultsViewStore.studyIds.result!,
-                });
-            }
-        },
-    });
+    @computed get _session() {
+        return this.resultsViewStore.comparisonTabComparisonSession;
+    }
 
     readonly _originalGroups = remoteData<ResultsViewComparisonGroup[]>({
-        await: () => [this._queryDerivedGroups, this._session, this.sampleSet],
+        await: () => [this.resultsViewStore.comparisonTabGroups],
         invoke: () => {
-            const uniqueColorGetter = makeUniqueColorGetter([
-                ALTERED_COLOR,
-                UNALTERED_COLOR,
-            ]);
-            const groups = this._queryDerivedGroups.result!.concat(
-                this._session.result!.groups
-            );
-            const defaultOrderGroups = completeSessionGroups(
-                this.usePatientLevelEnrichments,
-                groups,
-                this.sampleSet.result!,
-                uniqueColorGetter
-            );
+            const defaultOrderGroups = this.resultsViewStore.comparisonTabGroups
+                .result!;
             if (this.groupOrder) {
                 const order = stringListToIndexSet(this.groupOrder);
                 return Promise.resolve(
