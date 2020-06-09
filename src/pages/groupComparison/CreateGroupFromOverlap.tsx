@@ -119,7 +119,7 @@ export default class CreateGroupFromOverlap extends React.Component<
     private readonly enterNameInterface = MakeMobxView({
         await: () => [
             this.props.store.origin,
-            this.props.store.sampleSet,
+            this.props.store.sampleMap,
             this.props.store.existingGroupNames,
             this.props.store._originalGroups,
             this.props.store.patientToSamplesSet,

@@ -80,7 +80,7 @@ export default class GroupSelector extends React.Component<
                 deletable={this.props.isGroupDeletable(group)}
                 onClick={this.onClick}
                 onClickDelete={this.onClickDelete}
-                sampleSet={this.props.store.sampleSet.result!}
+                sampleSet={this.props.store.sampleMap.result!}
                 group={group}
                 index={index}
                 excludedFromAnalysis={excludedFromAnalysis}
@@ -91,7 +91,7 @@ export default class GroupSelector extends React.Component<
     readonly tabUI = MakeMobxView({
         await: () => [
             this.props.store._originalGroups,
-            this.props.store.sampleSet,
+            this.props.store.sampleMap,
             this.props.store.overlapComputations,
         ],
         render: () => {
