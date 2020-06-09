@@ -6,7 +6,7 @@ import {
 import { AlterationTypeConstants } from '../../../resultsView/ResultsViewPageStore';
 import { PUTATIVE_DRIVER } from '../../../../shared/constants';
 import { SpecialAttribute } from '../../../../shared/cache/ClinicalDataCache';
-import { ONCOPRINTER_CLINICAL_VAL_NA } from './OncoprinterClinicalUtils';
+import { ONCOPRINTER_VAL_NA } from './OncoprinterClinicalAndHeatmapUtils';
 
 describe('OncoprinterImportUtils', () => {
     describe('getOncoprinterGeneticInput', () => {
@@ -257,8 +257,8 @@ describe('OncoprinterImportUtils', () => {
                     'sample'
                 ),
                 'Sample  Age(number)  Mutation_Count(lognumber)  Cancer_type(string)  Mutation_Spectrum(C>A/C>G/C>T/T>A/T>C/T>G)\n' +
-                    `sample1  ${ONCOPRINTER_CLINICAL_VAL_NA}  5  Prostate  3/4/5/10/2/0\n` +
-                    `sample2  19  12  ${ONCOPRINTER_CLINICAL_VAL_NA}  ${ONCOPRINTER_CLINICAL_VAL_NA}`
+                    `sample1  ${ONCOPRINTER_VAL_NA}  5  Prostate  3/4/5/10/2/0\n` +
+                    `sample2  19  12  ${ONCOPRINTER_VAL_NA}  ${ONCOPRINTER_VAL_NA}`
             );
         });
         it('produces correct oncoprinter clinical input for 2 patients x 4 tracks', () => {
@@ -276,8 +276,8 @@ describe('OncoprinterImportUtils', () => {
                     'patient'
                 ),
                 'Sample  Age(number)  Mutation_Count(lognumber)  Cancer_type(string)  Mutation_Spectrum(C>A/C>G/C>T/T>A/T>C/T>G)\n' +
-                    `patient1  ${ONCOPRINTER_CLINICAL_VAL_NA}  5  Prostate  3/4/5/10/2/0\n` +
-                    `patient2  19  12  ${ONCOPRINTER_CLINICAL_VAL_NA}  ${ONCOPRINTER_CLINICAL_VAL_NA}`
+                    `patient1  ${ONCOPRINTER_VAL_NA}  5  Prostate  3/4/5/10/2/0\n` +
+                    `patient2  19  12  ${ONCOPRINTER_VAL_NA}  ${ONCOPRINTER_VAL_NA}`
             );
         });
     });

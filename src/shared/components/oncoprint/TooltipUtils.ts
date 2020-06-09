@@ -214,6 +214,9 @@ export function makeHeatmapTrackTooltip(
             case AlterationTypeConstants.GENERIC_ASSAY:
                 data_header = 'GENERIC ASSAY: ';
                 break;
+            default:
+                data_header = 'Value: ';
+                break;
         }
 
         let profileDataSum = 0;

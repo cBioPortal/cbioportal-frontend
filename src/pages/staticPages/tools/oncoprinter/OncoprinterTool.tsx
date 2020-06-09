@@ -9,7 +9,7 @@ import { Button, ControlLabel, FormControl, FormGroup } from 'react-bootstrap';
 import { Collapse } from 'react-collapse';
 import autobind from 'autobind-decorator';
 import {
-    exampleClinicalData,
+    exampleClinicalAndHeatmapData,
     exampleGeneticData,
 } from './OncoprinterConstants';
 import { MSKTab, MSKTabs } from '../../../../shared/components/MSKTabs/MSKTabs';
@@ -17,8 +17,8 @@ import MutualExclusivityTab from '../../../resultsView/mutualExclusivity/MutualE
 import { getDataForSubmission } from './OncoprinterToolUtils';
 import {
     ClinicalTrackDataType,
-    ONCOPRINTER_CLINICAL_VAL_NA,
-} from './OncoprinterClinicalUtils';
+    ONCOPRINTER_VAL_NA,
+} from './OncoprinterClinicalAndHeatmapUtils';
 import styles from './styles.module.scss';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 
@@ -179,25 +179,27 @@ const helpSection = (
             <code>Age({ClinicalTrackDataType.NUMBER})</code>&#9;
             <code>Cancer_Type({ClinicalTrackDataType.STRING})</code>&#9;
             <code>Mutation_Count({ClinicalTrackDataType.LOG_NUMBER})</code>&#9;
-            <code>Mutation_Spectrum(C>A/C>G/C>T/T>A/T>C/T>G)</code>
+            <br />
+            <code>Mutation_Spectrum(C>A/C>G/C>T/T>A/T>C/T>G)</code>&#9;
+            <code>PTEN_expression(heatmap)</code>
             <br />
             Each following row gives the sample id, then the value for each
-            clinical attribute, or the special value{' '}
-            {ONCOPRINTER_CLINICAL_VAL_NA} which indicates that there's no data.
+            clinical attribute, or the special value {ONCOPRINTER_VAL_NA} which
+            indicates that there's no data.
             <br />
             Some example data rows would then be:
             <br />
             <code>sample1</code>&#9;<code>30</code>&#9;
-            <code>{ONCOPRINTER_CLINICAL_VAL_NA}</code>&#9;<code>1</code>
+            <code>{ONCOPRINTER_VAL_NA}</code>&#9;<code>1</code>
             &#9;<code>1/8/3/0/9/2</code>
             <br />
             <code>sample2</code>&#9;<code>27</code>&#9;<code>Colorectal</code>
             &#9;<code>100</code>&#9;<code>5/1/4/2/0/3</code>
             <br />
-            <code>sample3</code>&#9;<code>{ONCOPRINTER_CLINICAL_VAL_NA}</code>
+            <code>sample3</code>&#9;<code>{ONCOPRINTER_VAL_NA}</code>
             &#9;<code>Breast</code>&#9;
-            <code>{ONCOPRINTER_CLINICAL_VAL_NA}</code>&#9;
-            <code>{ONCOPRINTER_CLINICAL_VAL_NA}</code>
+            <code>{ONCOPRINTER_VAL_NA}</code>&#9;
+            <code>{ONCOPRINTER_VAL_NA}</code>
             <br />
         </div>
     </div>
@@ -247,7 +249,7 @@ export default class OncoprinterTool extends React.Component<
 
     @autobind
     private populateClinicalExampleData() {
-        this.clinicalDataInput = exampleClinicalData;
+        this.clinicalDataInput = exampleClinicalAndHeatmapData;
     }
 
     @autobind

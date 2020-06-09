@@ -35,9 +35,9 @@ import { Mutation, MutationCountByPosition } from 'cbioportal-ts-api-client';
 import { SampleAlteredMap } from '../../../resultsView/ResultsViewPageStoreUtils';
 import { AlteredStatus } from 'pages/resultsView/mutualExclusivity/MutualExclusivityUtil';
 import {
-    getClinicalTracks,
-    parseClinicalInput,
-} from './OncoprinterClinicalUtils';
+    getClinicalAndHeatmapTracks,
+    parseClinicalAndHeatmapInput,
+} from './OncoprinterClinicalAndHeatmapUtils';
 
 export type OncoprinterDriverAnnotationSettings = Pick<
     DriverAnnotationSettings,
@@ -69,7 +69,9 @@ export default class OncoprinterStore {
     @observable.ref _geneOrder: string | undefined = undefined;
     @observable driverAnnotationSettings: OncoprinterDriverAnnotationSettings;
     @observable.ref _geneticDataInput: string | undefined = undefined;
-    @observable.ref _clinicalDataInput: string | undefined = undefined;
+    @observable.ref _clinicalAndHeatmapDataInput:
+        | string
+        | undefined = undefined;
     @observable public showUnalteredColumns: boolean = true;
     @observable hideGermlineMutations = false;
     @observable customDriverWarningHidden: boolean;
@@ -99,8 +101,8 @@ export default class OncoprinterStore {
         const parsedInputLines = (
             this.parsedGeneticInputLines.result || []
         ).concat(
-            (this.parsedClinicalInputLines.result &&
-                this.parsedClinicalInputLines.result.data) ||
+            (this.parsedClinicalAndHeatmapInputLines.result &&
+                this.parsedClinicalAndHeatmapInputLines.result.data) ||
                 []
         );
         if (parsedInputLines.length > 0) {
@@ -154,12 +156,12 @@ export default class OncoprinterStore {
     }
 
     public hasData() {
-        return !!this._geneticDataInput || !!this._clinicalDataInput;
+        return !!this._geneticDataInput || !!this._clinicalAndHeatmapDataInput;
     }
 
     @action setDataInput(geneticData: string, clinicalData: string) {
         this._geneticDataInput = geneticData;
-        this._clinicalDataInput = clinicalData;
+        this._clinicalAndHeatmapDataInput = clinicalData;
     }
 
     @action public setInput(
@@ -198,15 +200,17 @@ export default class OncoprinterStore {
         }
     }
 
-    @computed get parsedClinicalInputLines() {
-        if (!this._clinicalDataInput) {
+    @computed get parsedClinicalAndHeatmapInputLines() {
+        if (!this._clinicalAndHeatmapDataInput) {
             return {
                 error: null,
                 result: { headers: [], data: [] },
             };
         }
 
-        const parsed = parseClinicalInput(this._clinicalDataInput);
+        const parsed = parseClinicalAndHeatmapInput(
+            this._clinicalAndHeatmapDataInput
+        );
         if (parsed.status === 'error') {
             return {
                 error: parsed.error,
@@ -225,8 +229,8 @@ export default class OncoprinterStore {
         if (this.parsedGeneticInputLines.error) {
             errors.push(this.parsedGeneticInputLines.error);
         }
-        if (this.parsedClinicalInputLines.error) {
-            errors.push(this.parsedClinicalInputLines.error);
+        if (this.parsedClinicalAndHeatmapInputLines.error) {
+            errors.push(this.parsedClinicalAndHeatmapInputLines.error);
         }
 
         return errors;
@@ -528,17 +532,26 @@ export default class OncoprinterStore {
         default: [],
     });
 
-    @computed get clinicalTracks() {
-        const clinicalResult = this.parsedClinicalInputLines.result;
+    @computed get clinicalAndHeatmapTracks() {
+        const result = this.parsedClinicalAndHeatmapInputLines.result;
 
-        if (!clinicalResult) {
-            return [];
+        if (!result) {
+            return {
+                clinicalTracks: [],
+                heatmapTracks: [],
+            };
         }
 
-        return getClinicalTracks(
-            clinicalResult.headers,
-            clinicalResult.data,
+        return getClinicalAndHeatmapTracks(
+            result.headers,
+            result.data,
             this.sampleIdsNotInInputOrder
         );
+    }
+    @computed get clinicalTracks() {
+        return this.clinicalAndHeatmapTracks.clinicalTracks;
+    }
+    @computed get heatmapTracks() {
+        return this.clinicalAndHeatmapTracks.heatmapTracks;
     }
 }
