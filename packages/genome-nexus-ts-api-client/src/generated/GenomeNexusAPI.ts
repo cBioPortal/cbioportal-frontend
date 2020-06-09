@@ -78,9 +78,7 @@ export type Citations = {
 
 };
 export type ClinVar = {
-    '_license': string
-
-        'alleleId': number
+    'alleleId': number
 
         'alt': string
 
@@ -95,6 +93,8 @@ export type ClinVar = {
         'hg38': Hg38
 
         'hgvs': Hgvs
+
+        'license': string
 
         'rcv': Array < Rcv >
 
@@ -118,15 +118,15 @@ export type ColocatedVariant = {
 
 };
 export type Cosmic = {
-    '_license': string
-
-        'alt': string
+    'alt': string
 
         'chrom': string
 
         'cosmicId': string
 
         'hg19': Hg19
+
+        'license': string
 
         'mutFreq': number
 
@@ -135,6 +135,14 @@ export type Cosmic = {
         'ref': string
 
         'tumorSite': string
+
+};
+export type CountByTumorType = {
+    'tumorType': string
+
+        'tumorTypeCount': number
+
+        'variantCount': number
 
 };
 export type Dbsnp = {
@@ -549,7 +557,11 @@ export type MyVariantInfo = {
 
         'mutdb': Mutdb
 
+        'query': string
+
         'snpeff': Snpeff
+
+        'variant': string
 
         'vcf': Vcf
 
@@ -673,6 +685,38 @@ export type Rcv = {
         'origin': string
 
         'preferredName': string
+
+};
+export type SignalAnnotation = {
+    'annotation': Array < SignalMutation >
+
+        'license': string
+
+};
+export type SignalMutation = {
+    'biallelicCountsByTumorType': Array < CountByTumorType >
+
+        'chromosome': string
+
+        'countsByTumorType': Array < CountByTumorType >
+
+        'endPosition': number
+
+        'hugoGeneSymbol': string
+
+        'mutationStatus': string
+
+        'pathogenic': string
+
+        'penetrance': string
+
+        'qcPassCountsByTumorType': Array < CountByTumorType >
+
+        'referenceAllele': string
+
+        'startPosition': number
+
+        'variantAllele': string
 
 };
 export type Snpeff = {
@@ -821,6 +865,8 @@ export type VariantAnnotation = {
         'ptms': PtmAnnotation
 
         'seq_region_name': string
+
+        'signalAnnotation': SignalAnnotation
 
         'start': number
 

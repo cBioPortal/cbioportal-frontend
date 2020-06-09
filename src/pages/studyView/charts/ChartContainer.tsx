@@ -55,6 +55,12 @@ import {
     MultiSelectionTable,
 } from 'pages/studyView/table/MultiSelectionTable';
 import { FreqColumnTypeEnum } from '../TableUtils';
+import {
+    SampleTreatmentsTable,
+    SampleTreatmentsTableColumnKey,
+} from '../table/treatments/SampleTreatmentsTable';
+import { TreatmentTableType } from '../table/treatments/treatmentsTableUtil';
+import { PatientTreatmentsTableColumnKey, PatientTreatmentsTable } from '../table/treatments/PatientTreatmentsTable';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -143,7 +149,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             resetFilters: action(() => {
                 this.props.onResetSelection(this.props.chartMeta, []);
             }),
-            onValueSelection: action((values: string[]) => {
+            onValueSelection: action((values: any) => {
                 this.props.onValueSelection(this.props.chartMeta, values);
             }),
             onDataBinSelection: action((dataBins: ClinicalDataBin[]) => {
@@ -351,7 +357,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     }
 
     @computed
-    get chart() {
+    get chart(): (() => JSX.Element) | null {        
         switch (this.chartType) {
             case ChartTypeEnum.PIE_CHART: {
                 return () => (
@@ -648,6 +654,59 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     return null;
                 }
             }
+            case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE: {
+                console.log("creating sample treatment table");
+                
+                return () => (
+                    <SampleTreatmentsTable
+                        tableType={TreatmentTableType.SAMPLE}
+                        promise={this.props.promise}
+                        width={getWidthByDimension(
+                            this.props.dimension,
+                            this.borderWidth
+                        )}
+                        height={getHeightByDimension(
+                            this.props.dimension,
+                            this.chartHeaderHeight
+                        )}
+                        filters={this.props.filters}
+                        onUserSelection={this.handlers.onValueSelection}
+                        columns={[
+                            { columnKey: SampleTreatmentsTableColumnKey.TREATMENT },
+                            { columnKey: SampleTreatmentsTableColumnKey.TIME },
+                            { columnKey: SampleTreatmentsTableColumnKey.COUNT },
+                        ]}
+                        defaultSortBy={SampleTreatmentsTableColumnKey.COUNT}
+                        selectedTreatments={[]}
+                    />
+                );
+            }
+            case ChartTypeEnum.PATIENT_TREATMENTS_TABLE: {
+                console.log("creating patients table");
+                
+                return () => (
+                    <PatientTreatmentsTable
+                        tableType={TreatmentTableType.PATIENT}
+                        promise={this.props.promise}
+                        width={getWidthByDimension(
+                            this.props.dimension,
+                            this.borderWidth
+                        )}
+                        height={getHeightByDimension(
+                            this.props.dimension,
+                            this.chartHeaderHeight
+                        )}
+                        filters={this.props.filters}
+                        onUserSelection={this.handlers.onValueSelection}
+                        columns={[
+                            { columnKey: PatientTreatmentsTableColumnKey.TREATMENT },
+                            { columnKey: PatientTreatmentsTableColumnKey.COUNT },
+                        ]}
+                        defaultSortBy={PatientTreatmentsTableColumnKey.COUNT}
+                        selectedTreatments={[]}
+                    />
+                );
+            }
             case ChartTypeEnum.SCATTER: {
                 return () => (
                     <div
@@ -720,6 +779,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     }
 
     public render() {
+        if (this.chart) {
+            const c = this.chart!()
+        }
         return (
             <div
                 className={classnames(styles.chart, {

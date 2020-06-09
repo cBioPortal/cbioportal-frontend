@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import { observer } from 'mobx-react';
 import { computed } from 'mobx';
 import styles from './styles.module.scss';
-import { DataFilterValue } from 'cbioportal-ts-api-client';
+import { DataFilterValue, AndedPatientTreatmentFilters, AndedSampleTreatmentFilters, PatientTreatmentFilter, SampleTreatmentFilter } from 'cbioportal-ts-api-client';
 import {
     SpecialChartsUniqueKeyEnum,
     DataType,
@@ -34,6 +34,9 @@ import {
     StudyViewComparisonGroup,
 } from '../groupComparison/GroupComparisonUtils';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { accessibilityOverscanIndicesGetter } from 'react-virtualized';
+import { OredPatientTreatmentFilters, OredSampleTreatmentFilters } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
+import { toPatientTreatmentFilter } from './table/treatments/treatmentsTableUtil';
 
 export interface IUserSelectionsProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;
@@ -58,6 +61,8 @@ export interface IUserSelectionsProps {
     onBookmarkClick: () => void;
     molecularProfileNameSet: { [key: string]: string };
     removeGenomicProfileFilter: (value: string) => void;
+    removeSampleTreatmentsFilter: (outerIndex: number, innerIndex: number) => void;
+    removePatientTreatmentsFilter: (outerIndex: number, innerIndex: number) => void;
 }
 
 @observer
@@ -413,7 +418,73 @@ export default class UserSelections extends React.Component<
                 </div>
             );
         }
+
+        if (this.props.filter.sampleTreatmentFilters) {
+            const f = this.renderTreatmentFilter(this.props.filter.sampleTreatmentFilters);
+            components.push(f)
+        }
+
+        if (this.props.filter.patientTreatmentFilters) {
+            const f = this.renderTreatmentFilter(this.props.filter.patientTreatmentFilters);
+            components.push(f);
+        }
         return components;
+    }
+
+    private renderTreatmentFilter(f: AndedPatientTreatmentFilters | AndedSampleTreatmentFilters): JSX.Element {
+        type OuterFilter = OredPatientTreatmentFilters | OredSampleTreatmentFilters;
+        type InnerFilter = PatientTreatmentFilter | SampleTreatmentFilter;
+
+        // the gross "as any" casting shouldn't be necessary for a type of
+        // OredSampleTreatmentFilters[] | OredPatientTreatmentFilters[],
+        // but the compiler complains if I remove it
+        const filters = (f.filters as any).map((oFilter: OuterFilter, oIndex: number) => {
+            const pills = (oFilter.filters as any).
+                map((iFilter: InnerFilter, iIndex: number) => {
+                    const filterInfo = this.getFilterStringAndRemoveFunc(iFilter)
+
+                    return <PillTag
+                        content={iFilter.treatment + " " + filterInfo.str}
+                        backgroundColor={
+                            STUDY_VIEW_CONFIG
+                                .colors
+                                .theme
+                                .clinicalFilterContent
+                        }
+                        onDelete={() => {filterInfo.func(oIndex, iIndex);}}
+                    />
+                });
+
+            return <GroupLogic
+                components={pills}
+                operation={'or'}
+                group={true}
+            />; 
+        });
+
+        return <GroupLogic
+            components={filters}
+            operation={'and'}
+            group={false}
+        />
+    }
+
+    private getFilterStringAndRemoveFunc(
+        filter: PatientTreatmentFilter | SampleTreatmentFilter
+    ): { str: string, func: (o: number, i: number) => void} {
+        
+        if (filter.hasOwnProperty("time")) {
+            return {
+                str: (filter as SampleTreatmentFilter).time,
+                func: this.props.removeSampleTreatmentsFilter,
+            }
+        } else {
+            return {
+                str: "",
+                func: this.props.removePatientTreatmentsFilter,
+            }
+        }
+
     }
 
     private groupedGeneQueries(

@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "description": "OncoKB, a comprehensive and curated precision oncology knowledge base, offers oncologists detailed, evidence-based information about individual somatic mutations and structural alterations present in patient tumors with the goal of supporting optimal treatment decisions.",
-    "version": "v1.0.0",
+    "version": "v1.1.0",
     "title": "OncoKB APIs",
     "contact": {
       "name": "OncoKB",
@@ -735,6 +735,87 @@
         }
       }
     },
+    "/utils/allCuratedGenes": {
+      "get": {
+        "tags": [
+          "Cancer Genes"
+        ],
+        "summary": "utilsAllCuratedGenesGet",
+        "description": "Get list of genes OncoKB curated",
+        "operationId": "utilsAllCuratedGenesGetUsingGET_1",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "version",
+            "in": "query",
+            "description": "version",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CuratedGene"
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "503": {
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/utils/allCuratedGenes.txt": {
+      "get": {
+        "tags": [
+          "Cancer Genes"
+        ],
+        "summary": "utilsAllCuratedGenesTxtGet",
+        "description": "Get list of genes OncoKB curated in text file.",
+        "operationId": "utilsAllCuratedGenesTxtGetUsingGET_1",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "version",
+            "in": "query",
+            "description": "version",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "503": {
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
     "/utils/cancerGeneList": {
       "get": {
         "tags": [
@@ -876,6 +957,39 @@
         }
       }
     },
+    "CuratedGene": {
+      "type": "object",
+      "properties": {
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "highestResistancLevel": {
+          "type": "string"
+        },
+        "highestSensitiveLevel": {
+          "type": "string"
+        },
+        "hugoSymbol": {
+          "type": "string"
+        },
+        "isoform": {
+          "type": "string"
+        },
+        "oncogene": {
+          "type": "boolean"
+        },
+        "refSeq": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "tsg": {
+          "type": "boolean"
+        }
+      }
+    },
     "Query": {
       "type": "object",
       "properties": {
@@ -957,6 +1071,9 @@
         "hugoSymbol": {
           "type": "string"
         },
+        "isoform": {
+          "type": "string"
+        },
         "mSKHeme": {
           "type": "boolean"
         },
@@ -972,6 +1089,9 @@
         },
         "oncokbAnnotated": {
           "type": "boolean"
+        },
+        "refSeq": {
+          "type": "string"
         },
         "sangerCGC": {
           "type": "boolean"
@@ -1007,6 +1127,9 @@
     "OncoKBInfo": {
       "type": "object",
       "properties": {
+        "apiVersion": {
+          "type": "string"
+        },
         "dataVersion": {
           "$ref": "#/definitions/Version"
         },
@@ -1021,6 +1144,9 @@
         },
         "oncoTreeVersion": {
           "type": "string"
+        },
+        "publicInstance": {
+          "type": "boolean"
         }
       }
     },
@@ -1145,9 +1271,6 @@
           "items": {
             "$ref": "#/definitions/Drug"
           }
-        },
-        "fdaApproved": {
-          "type": "boolean"
         },
         "level": {
           "type": "string",

@@ -199,8 +199,13 @@ function getSpanElementsFromCleanData(
     clinicalAttributesCleanDerived,
     cancerStudyId
 ) {
+    console.log("asdsads")
     let spans = [];
-    return Object.keys(clinicalAttributesCleanDerived).map(key => {
+    return Object.keys(clinicalAttributesCleanDerived)
+        .sort((a,b) => {
+            return 0;
+        })
+        .map(key => {
         let value = clinicalAttributesCleanDerived[key];
         return (
             <span

@@ -25,6 +25,8 @@ import autobind from 'autobind-decorator';
 import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledCheckbox';
 import { ChartMeta, ChartType, RectangleBounds } from '../StudyViewUtils';
 import { DataType } from 'cbioportal-frontend-commons';
+import { toSampleTreatmentFilter } from '../table/treatments/treatmentsTableUtil';
+import { OredSampleTreatmentFilters } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore;
@@ -322,6 +324,24 @@ export class StudySummaryTab extends React.Component<
                 props.sampleToAnalysisGroup = this.store.sampleToAnalysisGroup;
                 props.getData = () => this.store.getScatterDownloadData();
                 props.downloadTypes = ['Data', 'SVG', 'PDF'];
+                break;
+            }
+            case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE: {
+                props.filters = this.store.sampleTreatmentFiltersAsStrings;
+                props.promise = this.store.sampleTreatments;
+                props.onValueSelection = this.store.onSampleTreatmentSelection;
+                props.onResetSelection = () => {
+                    this.store.clearSampleTreatmentFilters();
+                }
+                break;
+            }
+            case ChartTypeEnum.PATIENT_TREATMENTS_TABLE: {
+                props.filters = this.store.patientTreatmentFiltersAsStrings;
+                props.promise = this.store.patientTreatments;
+                props.onValueSelection = this.store.onPatientTreatmentSelection;
+                props.onResetSelection = () => {
+                    this.store.clearPatientTreatmentFilters();
+                }
                 break;
             }
             default:

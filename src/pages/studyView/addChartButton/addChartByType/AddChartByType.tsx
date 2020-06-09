@@ -199,7 +199,7 @@ export default class AddChartByType extends React.Component<
 
     @autobind
     @action
-    onOptionChange(option: AddChartOption) {
+    onOptionChange(option: AddChartOption) {        
         this.props.onToggleOption(option.key);
     }
 
