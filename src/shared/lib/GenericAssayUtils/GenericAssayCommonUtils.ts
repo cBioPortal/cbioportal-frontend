@@ -87,7 +87,7 @@ export function fetchGenericAssayMetaByProfileIds(
     genericAssayProfileIds: string[]
 ) {
     if (genericAssayProfileIds.length > 0) {
-        return client.fetchGenericAssayMetaDataUsingPOST({
+        return client.fetchGenericAssayEntityUsingPOST({
             genericAssayMetaFilter: {
                 molecularProfileIds: genericAssayProfileIds,
                 // the Swagger-generated type expected by the client method below
@@ -101,7 +101,7 @@ export function fetchGenericAssayMetaByProfileIds(
 
 export function fetchGenericAssayMetaByEntityIds(entityIds: string[]) {
     if (entityIds.length > 0) {
-        return client.fetchGenericAssayMetaDataUsingPOST({
+        return client.fetchGenericAssayEntityUsingPOST({
             genericAssayMetaFilter: {
                 genericAssayStableIds: entityIds,
                 // the Swagger-generated type expected by the client method below

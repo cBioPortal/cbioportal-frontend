@@ -743,12 +743,12 @@
         "deprecated": false
       }
     },
-    "/generic_assay_data/fetch": {
+    "/generic-assay-data/fetch": {
       "post": {
         "tags": [
           "Generic Assays"
         ],
-        "summary": "Fetch generic_assay_data",
+        "summary": "Fetch generic-assay-data",
         "operationId": "fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST",
         "consumes": [
           "application/json"
@@ -796,12 +796,12 @@
         "deprecated": false
       }
     },
-    "/generic_assay_data/{molecularProfileId}/fetch": {
+    "/generic-assay-data/{molecularProfileId}/fetch": {
       "post": {
         "tags": [
           "Generic Assays"
         ],
-        "summary": "fetch generic_assay_data in a molecular profile",
+        "summary": "fetch generic-assay-data in a molecular profile",
         "operationId": "fetchGenericAssayDataInMolecularProfileUsingPOST",
         "consumes": [
           "application/json"
@@ -856,13 +856,13 @@
         "deprecated": false
       }
     },
-    "/generic_assay_meta/fetch": {
+    "/generic-assay-entity/fetch": {
       "post": {
         "tags": [
           "Generic Assays"
         ],
-        "summary": "Fetch meta data for generic-assay by ID",
-        "operationId": "fetchGenericAssayMetaDataUsingPOST",
+        "summary": "Fetch entity for generic-assay by ID",
+        "operationId": "fetchGenericAssayEntityUsingPOST",
         "consumes": [
           "application/json"
         ],
