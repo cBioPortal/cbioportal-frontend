@@ -52,9 +52,17 @@ $sample-color-xenograft: pink;
         order: 6;
     }
     /* Show comma before clinical attributes */
-    .clinical-attribute:before {
-        content: ', ';
-        color: #000;
+    .clinical-attribute {
+        &:after {
+            content: ',\00A0';
+            color: #000;
+        }
+
+        &:first-of-type {
+            &:before {
+                content: ',\00A0';
+            }
+        }
     }
     /* Order patient+sample clinical attributes */
     .clinical-attribute[attr-id='PATIENT_DISPLAY_NAME'],
@@ -82,28 +90,28 @@ $sample-color-xenograft: pink;
     .clinical-attribute[attr-id='PATIENT_DISPLAY_NAME']:after,
     .clinical-attribute[attr-id='DERIVED_SAMPLE_LOCATION']:after,
     .clinical-attribute[attr-id='SAMPLE_DISPLAY_NAME']:after {
-        content: ')';
+        content: ')\00A0';
     }
     /* text before an attribute */
     .clinical-attribute[attr-id='SERUM_PSA']:before {
-        content: ', Serum PSA: ';
+        content: ', Serum PSA:\00A0';
     }
     .clinical-attribute[attr-id='ERG_FUSION_ACGH']:before {
-        content: ', ERG-fusion aCGH: ';
+        content: ', ERG-fusion aCGH:\00A0';
     }
     .clinical-attribute[attr-id='TMPRSS2_ERG_FUSION_STATUS']:before {
-        content: ', TMPRSS2-ERG Fusion: ';
+        content: ', TMPRSS2-ERG Fusion:\00A0';
     }
     .clinical-attribute[attr-id='GLEASON']:before {
-        content: ', Gleason: ';
+        content: ', Gleason:\00A0';
     }
     /* text after an attribute */
     .clinical-attribute[attr-id='OS_MONTHS']:after,
     .clinical-attribute[attr-id='DFS_MONTHS']:after {
-        content: ' months)';
+        content: ' months)\00A0';
     }
     .clinical-attribute[attr-id='AGE']:after {
-        content: ' years old';
+        content: ' years old\00A0';
     }
     /* attributes with special colors */
     .clinical-attribute[attr-id='OS_STATUS'][attr-value='1:DECEASED'],
