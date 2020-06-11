@@ -3960,12 +3960,7 @@ export class StudyViewPageStore {
             }
         });
 
-        const cancerTypeIds = _.uniq(
-            this.queriedPhysicalStudies.result.map(study => study.cancerTypeId)
-        );
-        const survivalUniqueKeys = this.survivalPlotKeys;
-
-        survivalUniqueKeys.forEach(key => {
+        this.survivalPlotKeys.forEach(key => {
             this.chartsType.set(key, ChartTypeEnum.SURVIVAL);
             this.chartsDimension.set(
                 key,
@@ -3973,12 +3968,7 @@ export class StudyViewPageStore {
             );
             if (getDefaultPriorityByUniqueKey(key) !== 0) {
                 // hide *_SURVIVAL chart if cancer type is mixed or have more than one cancer type
-                if (
-                    cancerTypeIds.length === 1 &&
-                    cancerTypeIds[0] !== 'mixed'
-                ) {
-                    this.changeChartVisibility(key, true);
-                }
+                this.changeChartVisibility(key, true);
             }
         });
 
