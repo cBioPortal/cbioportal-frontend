@@ -82,7 +82,7 @@ export const MAIN_MUTATION_TYPE_MAP: { [key: string]: MutationTypeFormat } = {
 /**
  * Determines the display value by using the impact field.
  *
- * @param data  column formatter data
+ * @param mutation  column formatter data
  * @returns {string}    mutation assessor text value
  */
 function getDisplayValue(mutation: Mutation): string {
@@ -132,7 +132,9 @@ export default class MutationType extends React.Component<
         // use actual value for tooltip
         const toolTip = this.props.mutation.mutationType;
 
-        let content = <span className={styles[className]}>{text}</span>;
+        let content = (
+            <span className={(styles as any)[className]}>{text}</span>
+        );
 
         // add tooltip only if the display value differs from the actual text value!
         if (toolTip && toolTip.toLowerCase() !== text.toLowerCase()) {
