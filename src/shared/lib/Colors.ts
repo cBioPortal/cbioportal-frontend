@@ -40,6 +40,7 @@ export const ASCN_HETLOSS = '#2a5eea';
 export const ASCN_HOMDEL = '#0000ff';
 export const ASCN_LIGHTGREY = '#bcbcbc';
 export const ASCN_BLACK = '#000000';
+export const ASCN_WHITE = '#ffffff';
 
 export const DEFAULT_NA_COLOR = LIGHT_GREY;
 export const DEFAULT_UNKNOWN_COLOR = DARK_GREY;

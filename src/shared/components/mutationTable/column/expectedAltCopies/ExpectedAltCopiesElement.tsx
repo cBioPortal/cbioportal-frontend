@@ -9,7 +9,7 @@ export const ExpectedAltCopiesElementTooltip: React.FunctionComponent<{
     sampleManager?: SampleManager | null;
 }> = props => {
     return (
-        <span>
+        <span data-test="eac-tooltip">
             {props.sampleManager ? (
                 <span>
                     {props.sampleManager.getComponentForSample(

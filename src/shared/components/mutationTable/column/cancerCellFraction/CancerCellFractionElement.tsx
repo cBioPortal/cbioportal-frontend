@@ -35,7 +35,7 @@ export const CancerCellFractionElementTooltip: React.FunctionComponent<{
             </span>
         )
     );
-    return <span>{tooltipLines}</span>;
+    return <span data-test="ccf-tooltip">{tooltipLines}</span>;
 };
 
 const CancerCellFractionBar: React.FunctionComponent<{
