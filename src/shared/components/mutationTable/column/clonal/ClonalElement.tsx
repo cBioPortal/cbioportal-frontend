@@ -45,7 +45,7 @@ export const ClonalElementTooltip: React.FunctionComponent<{
         display: 'inline-block',
     };
     return (
-        <div>
+        <div data-test="clonal-tooltip">
             {props.sampleManager ? (
                 <div>
                     {props.sampleManager.getComponentForSample(
@@ -79,7 +79,15 @@ const ClonalCircle: React.FunctionComponent<{
     clonalValue: string;
 }> = props => {
     return (
-        <svg height="10" width="10">
+        <svg
+            height="10"
+            width="10"
+            data-test={`${
+                props.clonalValue !== undefined
+                    ? props.clonalValue.toLowerCase()
+                    : 'na'
+            }-icon`}
+        >
             <circle
                 cx={5}
                 cy={5}

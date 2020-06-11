@@ -176,7 +176,7 @@ export default class ASCNCopyNumberColumnFormatter {
             return errorIcon('Error fetching data');
         } else if (sampleIdToClinicalDataMap.isComplete) {
             return (
-                <>
+                <span data-test="ascn-copy-number-cell">
                     {sampleIds.map((sampleId: string, index: number) => {
                         return (
                             <span
@@ -211,7 +211,7 @@ export default class ASCNCopyNumberColumnFormatter {
                             </span>
                         );
                     })}
-                </>
+                </span>
             );
         } else {
             return loaderIcon('pull-left');

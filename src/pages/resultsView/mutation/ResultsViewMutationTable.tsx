@@ -172,6 +172,22 @@ export default class ResultsViewMutationTable extends MutationTable<
         };
 
         this._columns[
+            MutationTableColumnType.ASCN_COPY_NUM
+        ].shouldExclude = () => {
+            return (
+                !this.props.existsSomeMutationWithAscnProperty[
+                    ASCNAttributes.ASCN_INTEGER_COPY_NUMBER_STRING
+                ] ||
+                !this.props.existsSomeMutationWithAscnProperty[
+                    ASCNAttributes.TOTAL_COPY_NUMBER_STRING
+                ] ||
+                !this.props.existsSomeMutationWithAscnProperty[
+                    ASCNAttributes.MINOR_COPY_NUMBER_STRING
+                ]
+            );
+        };
+
+        this._columns[
             MutationTableColumnType.NUM_MUTATIONS
         ].shouldExclude = () => {
             return !this.props.mutationCountCache;

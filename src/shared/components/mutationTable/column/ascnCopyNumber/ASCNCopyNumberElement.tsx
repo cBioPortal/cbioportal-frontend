@@ -2,7 +2,11 @@ import * as React from 'react';
 import SampleManager from 'pages/patientView/SampleManager';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { ASCN_BLACK } from 'shared/lib/Colors';
-import { getASCNCopyNumberColor } from 'shared/lib/ASCNUtils';
+import {
+    getASCNCopyNumberColor,
+    getASCNCopyNumberStrokeColor,
+    getASCNCopyNumberTextColor,
+} from 'shared/lib/ASCNUtils';
 
 export enum ASCNCopyNumberValueEnum {
     WGD = 'WGD',
@@ -127,7 +131,7 @@ export const ASCNCopyNumberElementTooltip: React.FunctionComponent<{
         props.minorCopyNumberValue
     );
     return (
-        <span>
+        <span data-test="ascn-copy-number-tooltip">
             {props.sampleManager ? (
                 <span>
                     {props.sampleManager.getComponentForSample(
@@ -173,10 +177,14 @@ const ASCNCopyNumberIcon: React.FunctionComponent<{
             ) : null}
             <g transform="translate(3,8)">
                 <rect
-                    width="12"
-                    height="12"
+                    width="11"
+                    height="11"
                     rx="15%"
                     ry="15%"
+                    stroke={getASCNCopyNumberStrokeColor(
+                        props.ascnCopyNumberValue
+                    )}
+                    stroke-width="1"
                     fill={getASCNCopyNumberColor(props.ascnCopyNumberValue)}
                     opacity={getASCNCopyNumberOpacity(
                         props.ascnCopyNumberValue
@@ -184,12 +192,14 @@ const ASCNCopyNumberIcon: React.FunctionComponent<{
                 />
                 <svg>
                     <text
-                        x="6"
-                        y="7"
+                        x="5.5"
+                        y="6"
                         dominantBaseline="middle"
                         textAnchor="middle"
                         fontSize={9}
-                        fill="white"
+                        fill={getASCNCopyNumberTextColor(
+                            props.ascnCopyNumberValue
+                        )}
                     >
                         {props.totalCopyNumberValue}
                     </text>

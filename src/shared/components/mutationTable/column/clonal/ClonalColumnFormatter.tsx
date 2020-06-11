@@ -33,7 +33,7 @@ export const getDefaultClonalColumnDefinition = (
     sampleManager?: SampleManager | null
 ) => {
     return {
-        name: 'Clonal',
+        name: 'Clonality',
         render: (d: Mutation[]) =>
             ClonalColumnFormatter.renderFunction(
                 d,
@@ -74,7 +74,7 @@ export default class ClonalColumnFormatter {
         }
 
         return (
-            <>
+            <span data-test="clonal-cell">
                 {sampleIds.map((sampleId: string, index: number) => {
                     return (
                         <span
@@ -90,7 +90,7 @@ export default class ClonalColumnFormatter {
                         </span>
                     );
                 })}
-            </>
+            </span>
         );
     }
 
