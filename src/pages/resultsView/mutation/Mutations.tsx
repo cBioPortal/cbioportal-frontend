@@ -21,11 +21,13 @@ import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarn
 import { Mutation } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import ResultsViewURLWrapper from '../ResultsViewURLWrapper';
 
 export interface IMutationsPageProps {
     routing?: any;
     store: ResultsViewPageStore;
     appStore: AppStore;
+    urlWrapper: ResultsViewURLWrapper;
 }
 
 @observer
@@ -46,7 +48,13 @@ export default class Mutations extends React.Component<
 
     constructor(props: IMutationsPageProps) {
         super(props);
-        this.selectedGeneSymbol = this.props.store.hugoGeneSymbols[0];
+        this.selectedGeneSymbol =
+            this.props.urlWrapper.query.mutations_gene &&
+            this.props.store.hugoGeneSymbols.includes(
+                this.props.urlWrapper.query.mutations_gene
+            )
+                ? this.props.urlWrapper.query.mutations_gene
+                : this.props.store.hugoGeneSymbols[0];
         this.handleTabChange.bind(this);
         this.userSelectionStore = new MutationMapperUserSelectionStore();
     }
@@ -67,6 +75,14 @@ export default class Mutations extends React.Component<
     private onToggleGermline() {
         this.props.store.mutationsTabFilteringSettings.excludeGermline = !this
             .props.store.mutationsTabFilteringSettings.excludeGermline;
+    }
+
+    @action
+    public setSelectedGeneSymbol(hugoGeneSymbol: string) {
+        this.selectedGeneSymbol = hugoGeneSymbol;
+        this.props.urlWrapper.updateURL({
+            mutations_gene: hugoGeneSymbol,
+        });
     }
 
     public render() {
@@ -131,11 +147,6 @@ export default class Mutations extends React.Component<
 
     protected handleTabChange(id: string) {
         this.setSelectedGeneSymbol(id);
-    }
-
-    @action
-    public setSelectedGeneSymbol(hugoGeneSymbol: string) {
-        this.selectedGeneSymbol = hugoGeneSymbol;
     }
 
     @computed get geneTabContent() {
