@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import {
-    getOncoprinterClinicalInput,
+    getOncoprinterClinicalAndHeatmapInput,
     getOncoprinterGeneticInput,
 } from './OncoprinterImportUtils';
 import { AlterationTypeConstants } from '../../../resultsView/ResultsViewPageStore';
@@ -244,7 +244,7 @@ describe('OncoprinterImportUtils', () => {
 
         it('produces correct oncoprinter clinical input for 2 samples x 4 tracks', () => {
             assert.deepEqual(
-                getOncoprinterClinicalInput(
+                getOncoprinterClinicalAndHeatmapInput(
                     data,
                     ['sample1', 'sample2'],
                     [
@@ -263,7 +263,7 @@ describe('OncoprinterImportUtils', () => {
         });
         it('produces correct oncoprinter clinical input for 2 patients x 4 tracks', () => {
             assert.deepEqual(
-                getOncoprinterClinicalInput(
+                getOncoprinterClinicalAndHeatmapInput(
                     data,
                     ['patient1', 'patient2'],
                     [
