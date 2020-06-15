@@ -218,6 +218,18 @@ const MUTATION_DATA = ([
         putativeDriver: true,
         __id: 3,
     },
+    {
+        gene: {
+            hugoGeneSymbol: 'BRCA1',
+        },
+        molecularProfileId: 'gbm_tcga_mutations',
+        mutationType: 'in_frame_ins',
+        mutationStatus: undefined,
+        proteinPosStart: -1,
+        proteinPosEnd: 10000000,
+        putativeDriver: true,
+        __id: 3.1,
+    },
 ] as any) as AnnotatedMutation[];
 
 describe('doesQueryContainOQL', () => {
@@ -330,6 +342,7 @@ describe('filterCBioPortalWebServiceData', () => {
             1,
             2,
             3,
+            3.1,
         ]);
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:MISSENSE_SOMATIC',
@@ -344,7 +357,10 @@ describe('filterCBioPortalWebServiceData', () => {
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [3]);
+        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [
+            3,
+            3.1,
+        ]);
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:INFRAME_GERMLINE',
             MUTATION_DATA,
@@ -365,7 +381,11 @@ describe('filterCBioPortalWebServiceData', () => {
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [0, 3]);
+        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [
+            0,
+            3,
+            3.1,
+        ]);
     });
     it('filters properly using the DRIVER modifier', () => {
         const accessorsInstance = new AccessorsForOqlFilter([
@@ -383,6 +403,7 @@ describe('filterCBioPortalWebServiceData', () => {
             0,
             1,
             3,
+            3.1,
             7,
         ]);
 
@@ -396,6 +417,7 @@ describe('filterCBioPortalWebServiceData', () => {
             0,
             1,
             3,
+            3.1,
         ]);
 
         filteredData = filterCBioPortalWebServiceData(
@@ -449,6 +471,7 @@ describe('filterCBioPortalWebServiceData', () => {
             0,
             1,
             3,
+            3.1,
             7,
             8,
             9,
