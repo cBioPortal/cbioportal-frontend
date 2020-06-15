@@ -82,6 +82,9 @@ window.postLoadForMskCIS = function() {
     AppConfig.hide_login = true;
 };
 
+// this is the only supported way to disable tracking for the $3Dmol.js
+window.$3Dmol = { notrack: true };
+
 // make sure lodash doesn't overwrite (or set) global underscore
 _.noConflict();
 
