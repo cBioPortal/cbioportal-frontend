@@ -222,7 +222,7 @@ export default class OncoprinterTool extends React.Component<
 
     // input
     @observable geneticDataInput = '';
-    @observable clinicalDataInput = '';
+    @observable clinicalAndHeatmapDataInput = '';
     @observable geneOrderInput = '';
     @observable sampleOrderInput = '';
 
@@ -231,8 +231,11 @@ export default class OncoprinterTool extends React.Component<
         const postData = getBrowserWindow().clientPostedData;
         if (postData) {
             this.geneticDataInput = postData.genetic;
-            this.clinicalDataInput = postData.clinical;
-            this.doSubmit(this.geneticDataInput, this.clinicalDataInput);
+            this.clinicalAndHeatmapDataInput = postData.clinicalAndHeatmap;
+            this.doSubmit(
+                this.geneticDataInput,
+                this.clinicalAndHeatmapDataInput
+            );
             getBrowserWindow().clientPostedData = null;
         }
     }
@@ -249,7 +252,7 @@ export default class OncoprinterTool extends React.Component<
 
     @autobind
     private populateClinicalExampleData() {
-        this.clinicalDataInput = exampleClinicalAndHeatmapData;
+        this.clinicalAndHeatmapDataInput = exampleClinicalAndHeatmapData;
     }
 
     @autobind
@@ -259,7 +262,7 @@ export default class OncoprinterTool extends React.Component<
 
     @autobind
     private onClinicalDataInputChange(e: any) {
-        this.clinicalDataInput = e.currentTarget.value;
+        this.clinicalAndHeatmapDataInput = e.currentTarget.value;
     }
 
     @autobind
@@ -308,7 +311,7 @@ export default class OncoprinterTool extends React.Component<
     private getClinicalDataForSubmission() {
         return getDataForSubmission(
             this.clinicalFileInput,
-            this.clinicalDataInput
+            this.clinicalAndHeatmapDataInput
         );
     }
 
@@ -391,7 +394,7 @@ export default class OncoprinterTool extends React.Component<
                         <FormControl
                             className="oncoprinterClinicalDataInput"
                             componentClass="textarea"
-                            value={this.clinicalDataInput}
+                            value={this.clinicalAndHeatmapDataInput}
                             placeholder="Enter data here..."
                             onChange={this.onClinicalDataInputChange}
                             style={{ height: 200, width: '100%' }}
@@ -431,7 +434,7 @@ export default class OncoprinterTool extends React.Component<
                     bsStyle="primary"
                     disabled={
                         this.geneticDataInput.trim().length === 0 &&
-                        this.clinicalDataInput.trim().length === 0
+                        this.clinicalAndHeatmapDataInput.trim().length === 0
                     }
                     onClick={this.onClickSubmit}
                     style={{ marginBottom: 20 }}

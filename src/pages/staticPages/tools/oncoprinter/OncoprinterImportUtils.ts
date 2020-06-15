@@ -2,6 +2,8 @@ import {
     ClinicalTrackDatum,
     GeneticTrackDatum,
     GeneticTrackDatum_Data,
+    IBaseHeatmapTrackDatum,
+    IHeatmapTrackSpec,
 } from '../../../../shared/components/oncoprint/Oncoprint';
 import {
     isType2,
@@ -156,8 +158,8 @@ function sanitizeColumnData(s: string) {
     return s.replace(/\s+/g, '_');
 }
 
-export function getOncoprinterClinicalInput(
-    data: ClinicalTrackDatum[],
+export function getOncoprinterClinicalAndHeatmapInput(
+    clinicalData: ClinicalTrackDatum[],
     caseIds: string[],
     attributeIds: string[],
     attributeIdToAttribute: {
@@ -166,57 +168,90 @@ export function getOncoprinterClinicalInput(
             'displayName' | 'datatype' | 'clinicalAttributeId'
         >;
     },
+    heatmapTracks: IHeatmapTrackSpec[],
     sampleOrPatient: 'sample' | 'patient'
 ): string {
-    const caseToClinicalData = _.groupBy(data, d => d[sampleOrPatient]);
+    const caseToClinicalData = _.groupBy(clinicalData, d => d[sampleOrPatient]);
+    const heatmapTrackToCaseToHeatmapData = _.mapValues(
+        _.keyBy(heatmapTracks, t => t.key),
+        track => _.keyBy(track.data, d => d[sampleOrPatient])
+    );
 
     const rows: any[] = [];
     // header row
     rows.push(
-        ['Sample'].concat(
-            attributeIds.map(attributeId => {
-                const attribute = attributeIdToAttribute[attributeId];
-                const name = sanitizeColumnData(attribute.displayName);
-                let datatype = attribute.datatype.toLowerCase();
-                if (attribute.clinicalAttributeId === 'MUTATION_COUNT') {
-                    datatype = ClinicalTrackDataType.LOG_NUMBER;
-                }
-                if (
-                    attribute.clinicalAttributeId ===
-                    SpecialAttribute.MutationSpectrum
-                ) {
-                    datatype = MUTATION_SPECTRUM_CATEGORIES.join('/');
-                }
-                return `${name}(${datatype})`;
-            })
-        )
+        ['Sample']
+            .concat(
+                attributeIds.map(attributeId => {
+                    const attribute = attributeIdToAttribute[attributeId];
+                    const name = sanitizeColumnData(attribute.displayName);
+                    let datatype = attribute.datatype.toLowerCase();
+                    if (attribute.clinicalAttributeId === 'MUTATION_COUNT') {
+                        datatype = ClinicalTrackDataType.LOG_NUMBER;
+                    }
+                    if (
+                        attribute.clinicalAttributeId ===
+                        SpecialAttribute.MutationSpectrum
+                    ) {
+                        datatype = MUTATION_SPECTRUM_CATEGORIES.join('/');
+                    }
+                    return `${name}(${datatype})`;
+                })
+            )
+            .concat(
+                heatmapTracks.map(
+                    track =>
+                        `${track.label}_${track.molecularProfileId}(heatmap)`
+                )
+            )
     );
     // data
     for (const caseId of caseIds) {
         rows.push(
-            [caseId as any].concat(
-                attributeIds.map(attributeId => {
-                    const datum =
-                        caseToClinicalData[caseId] &&
-                        caseToClinicalData[caseId].find(
-                            d => d.attr_id === attributeId
-                        );
+            [caseId as any]
+                .concat(
+                    attributeIds.map(attributeId => {
+                        const datum =
+                            caseToClinicalData[caseId] &&
+                            caseToClinicalData[caseId].find(
+                                d => d.attr_id === attributeId
+                            );
 
-                    if (!datum || datum.na || !datum.attr_val) {
-                        return ONCOPRINTER_VAL_NA;
-                    }
+                        if (!datum || datum.na || !datum.attr_val) {
+                            return ONCOPRINTER_VAL_NA;
+                        }
 
-                    if (attributeId === SpecialAttribute.MutationSpectrum) {
-                        return MUTATION_SPECTRUM_CATEGORIES.map(category => {
-                            return (datum.attr_val as ClinicalTrackDatum['attr_val_counts'])[
-                                category
-                            ];
-                        }).join('/');
-                    } else {
-                        return sanitizeColumnData(datum.attr_val.toString());
-                    }
-                })
-            )
+                        if (attributeId === SpecialAttribute.MutationSpectrum) {
+                            return MUTATION_SPECTRUM_CATEGORIES.map(
+                                category => {
+                                    return (datum.attr_val as ClinicalTrackDatum['attr_val_counts'])[
+                                        category
+                                    ];
+                                }
+                            ).join('/');
+                        } else {
+                            return sanitizeColumnData(
+                                datum.attr_val.toString()
+                            );
+                        }
+                    })
+                )
+                .concat(
+                    heatmapTracks.map(track => {
+                        const datum =
+                            heatmapTrackToCaseToHeatmapData[track.key][caseId];
+                        if (
+                            !datum ||
+                            datum.na ||
+                            datum.profile_data === null ||
+                            isNaN(datum.profile_data)
+                        ) {
+                            return ONCOPRINTER_VAL_NA;
+                        }
+
+                        return datum.profile_data;
+                    })
+                )
         );
     }
 
