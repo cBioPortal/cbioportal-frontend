@@ -720,7 +720,8 @@ export default class ResultsViewPage extends React.Component<
     public render() {
         if (
             this.urlWrapper.isPendingSession ||
-            this.urlWrapper.isLoadingSession
+            this.urlWrapper.isLoadingSession ||
+            !this.resultsViewPageStore.studies.isComplete
         ) {
             return (
                 <LoadingIndicator isLoading={true} center={true} size={'big'} />
