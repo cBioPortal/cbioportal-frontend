@@ -179,7 +179,13 @@ export default class AccessorsForOqlFilter
         if (this.isMutation(d)) {
             var start = d.proteinPosStart;
             var end = d.proteinPosEnd;
-            if (start !== null && end !== null) {
+            if (
+                !isNaN(start) &&
+                !isNaN(end) &&
+                start !== -1 &&
+                end !== -1 &&
+                start <= end
+            ) {
                 return [start, end] as [number, number];
             } else {
                 return null;
