@@ -40,6 +40,7 @@ import {
 import TrackPanel from '../track/TrackPanel';
 
 import './lollipopMutationPlot.scss';
+import DomainTooltip from '../lollipopPlot/DomainTooltip';
 
 const DEFAULT_PROTEIN_LENGTH = 10;
 
@@ -47,6 +48,7 @@ export type LollipopMutationPlotProps = {
     store: MutationMapperStore;
     controlsConfig?: LollipopPlotControlsConfig;
     pubMedCache?: MobxCache;
+    mutationAlignerCache?: MobxCache<string>;
     getLollipopColor?: (mutations: Partial<Mutation>[]) => string;
     getMutationCount?: (mutation: Partial<Mutation>) => number;
     topYAxisSymbol?: string;
@@ -325,55 +327,6 @@ export default class LollipopMutationPlot extends React.Component<
         return specs;
     }
 
-    private mutationAlignerLink(pfamAccession: string): JSX.Element | null {
-        if (
-            this.props.store.mutationAlignerLinks &&
-            this.props.store.mutationAlignerLinks.result
-        ) {
-            const mutationAlignerLink = this.props.store.mutationAlignerLinks
-                .result[pfamAccession];
-            return mutationAlignerLink ? (
-                <a href={mutationAlignerLink} target="_blank">
-                    Mutation Aligner
-                </a>
-            ) : null;
-        } else {
-            return null;
-        }
-    }
-
-    private domainTooltip(
-        range: PfamDomainRange,
-        domain: PfamDomain | undefined,
-        pfamAcc: string
-    ): JSX.Element {
-        const pfamAccession = domain ? domain.pfamAccession : pfamAcc;
-
-        // if no domain info, then just display the accession
-        const domainInfo = domain
-            ? `${domain.name}: ${domain.description}`
-            : pfamAccession;
-
-        return (
-            <div style={{ maxWidth: 200 }}>
-                <div>
-                    {domainInfo} ({range.pfamDomainStart} -{' '}
-                    {range.pfamDomainEnd})
-                </div>
-                <div>
-                    <a
-                        style={{ marginRight: '5px' }}
-                        href={`http://pfam.xfam.org/family/${pfamAccession}`}
-                        target="_blank"
-                    >
-                        PFAM
-                    </a>
-                    {this.mutationAlignerLink(pfamAccession)}
-                </div>
-            </div>
-        );
-    }
-
     @computed private get domains(): DomainSpec[] {
         if (
             !this.props.store.pfamDomainData.isComplete ||
@@ -403,10 +356,15 @@ export default class LollipopMutationPlot extends React.Component<
                     endCodon: range.pfamDomainEnd,
                     label: domain ? domain.name : range.pfamDomainId,
                     color: this.domainColorMap[range.pfamDomainId],
-                    tooltip: this.domainTooltip(
-                        range,
-                        domain,
-                        range.pfamDomainId
+                    tooltip: (
+                        <DomainTooltip
+                            range={range}
+                            domain={domain}
+                            pfamDomainId={range.pfamDomainId}
+                            mutationAlignerCache={
+                                this.props.mutationAlignerCache
+                            }
+                        />
                     ),
                 };
             });

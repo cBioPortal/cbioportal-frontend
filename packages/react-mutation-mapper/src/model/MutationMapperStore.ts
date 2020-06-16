@@ -25,9 +25,6 @@ export interface MutationMapperStore {
     uniprotId: RemoteData<string | undefined>;
     activeTranscript?: string;
     canonicalTranscript: RemoteData<EnsemblTranscript | undefined>;
-    mutationAlignerLinks: RemoteData<
-        { [pfamAccession: string]: string } | undefined
-    >;
     mutationData: RemoteData<Partial<Mutation>[] | undefined>;
     pfamDomainData: RemoteData<PfamDomain[] | undefined>;
     allTranscripts: RemoteData<EnsemblTranscript[] | undefined>;
