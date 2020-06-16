@@ -228,13 +228,14 @@ export default class PatientViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.GENE_PANEL].order = 25;
         this._columns[MutationTableColumnType.PROTEIN_CHANGE].order = 30;
         this._columns[MutationTableColumnType.ANNOTATION].order = 35;
-        this._columns[MutationTableColumnType.HGVSG].order = 36;
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT].order = 38;
         this._columns[MutationTableColumnType.CHROMOSOME].order = 40;
         this._columns[MutationTableColumnType.START_POS].order = 50;
         this._columns[MutationTableColumnType.END_POS].order = 60;
         this._columns[MutationTableColumnType.REF_ALLELE].order = 70;
         this._columns[MutationTableColumnType.VAR_ALLELE].order = 80;
+        this._columns[MutationTableColumnType.HGVSG].order = 81;
+        this._columns[MutationTableColumnType.HGVSC].order = 82;
         this._columns[MutationTableColumnType.MUTATION_STATUS].order = 90;
         this._columns[MutationTableColumnType.VALIDATION_STATUS].order = 100;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 110;
@@ -250,7 +251,6 @@ export default class PatientViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.COHORT].order = 183;
         this._columns[MutationTableColumnType.COSMIC].order = 184;
         this._columns[MutationTableColumnType.EXON].order = 185;
-        this._columns[MutationTableColumnType.HGVSC].order = 186;
         this._columns[MutationTableColumnType.GNOMAD].order = 187;
         this._columns[MutationTableColumnType.CLINVAR].order = 188;
         this._columns[MutationTableColumnType.DBSNP].order = 189;

@@ -1,5 +1,5 @@
 # cbioportal-frontend
-This is the frontend code for cBioPortal which uses React, MobX and TypeScript. Read more about the architecture of cBioPortal [here](https://docs.cbioportal.org/2.1-deployment/architecture-overview).
+This repo contains the frontend code for cBioPortal which uses React, MobX and TypeScript. Read more about the architecture of cBioPortal [here](https://docs.cbioportal.org/2.1-deployment/architecture-overview).
 
 ## Branch Information
 | | main branch | upcoming release branch | later release candidate branch |
