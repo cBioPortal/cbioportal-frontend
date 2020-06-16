@@ -8,6 +8,7 @@ var fs = require('fs');
 require.extensions['.txt'] = function(module, filename) {
     module.exports = fs.readFileSync(filename, 'utf8');
 };
+var _ = require('lodash');
 
 const debug = process.env.DEBUG;
 const defaultTimeoutInterval = 180000;
@@ -19,6 +20,11 @@ var refDir =
 var screenDir =
     process.env.SCREENSHOT_DIRECTORY + '/screen' || 'screenshots/screen/';
 var errorDir = process.env.SCREENSHOT_DIRECTORY + '/error' || './errorShots/';
+var userDataDir =
+    process.env.SESSION_DATA_DIRECTORY &&
+    process.env.SESSION_DATA_DIRECTORY.length > 0
+        ? `--user-data-dir=${process.env.SESSION_DATA_DIRECTORY}`
+        : undefined;
 
 var config = {
     //
@@ -68,10 +74,11 @@ var config = {
         {
             //browserName: 'chrome',
             chromeOptions: {
-                args: [
+                args: _.compact([
                     '--disable-composited-antialiasing',
                     '--allow-insecure-localhost',
-                ],
+                    userDataDir,
+                ]),
             },
 
             os: 'OS X',
