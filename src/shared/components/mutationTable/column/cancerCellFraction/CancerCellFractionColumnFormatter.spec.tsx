@@ -72,7 +72,7 @@ describe('CancerCellFractionColumnFormatter', () => {
         testExpectedCancerCellFractionElement(
             validMultiSampleCCFColumn.find('CancerCellFractionElement'),
             ['S001', 'S002'],
-            { S001: '0.75', S002: '1' }
+            { S001: '0.75', S002: '1.00' }
         );
         expect(validMultiSampleCCFColumn.find('DefaultTooltip')).to.exist;
     });

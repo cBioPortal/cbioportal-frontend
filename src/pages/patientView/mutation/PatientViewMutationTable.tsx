@@ -345,6 +345,22 @@ export default class PatientViewMutationTable extends MutationTable<
             ];
         };
 
+        this._columns[
+            MutationTableColumnType.ASCN_COPY_NUM
+        ].shouldExclude = () => {
+            return (
+                !this.props.existsSomeMutationWithAscnProperty[
+                    ASCNAttributes.ASCN_INTEGER_COPY_NUMBER_STRING
+                ] ||
+                !this.props.existsSomeMutationWithAscnProperty[
+                    ASCNAttributes.TOTAL_COPY_NUMBER_STRING
+                ] ||
+                !this.props.existsSomeMutationWithAscnProperty[
+                    ASCNAttributes.MINOR_COPY_NUMBER_STRING
+                ]
+            );
+        };
+
         // only hide tumor column if there is one sample and no uncalled
         // mutations (there is no information added in that case by the sample
         // label)

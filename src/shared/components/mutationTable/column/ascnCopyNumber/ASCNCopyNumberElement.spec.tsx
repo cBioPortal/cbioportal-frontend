@@ -15,6 +15,7 @@ import {
     ASCN_HETLOSS,
     ASCN_HOMDEL,
     ASCN_BLACK,
+    ASCN_WHITE,
 } from 'shared/lib/Colors';
 
 /* Test Design:
@@ -248,7 +249,7 @@ describe('ASCNCopyNumberElement', () => {
     it('ascn copy number value 0 should have the ASCN_LIGHTGREY color and be visible', () => {
         let sample = initSample();
         sample.ascnCopyNumberValue = '0';
-        testExpectedColorValidASCNCopyNumberElement(sample, ASCN_LIGHTGREY);
+        testExpectedColorValidASCNCopyNumberElement(sample, ASCN_WHITE);
     });
 
     it('ascn copy number value -1 should have the ASCN_HETLOSS color and be visible', () => {

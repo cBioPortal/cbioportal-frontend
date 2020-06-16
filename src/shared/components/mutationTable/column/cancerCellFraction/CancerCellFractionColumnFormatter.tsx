@@ -50,11 +50,11 @@ export default class CancerCellFractionColumnFormatter {
                 mutation,
                 'ccfExpectedCopies'
             )
-                ? mutation.alleleSpecificCopyNumber.ccfExpectedCopies.toString()
+                ? mutation.alleleSpecificCopyNumber.ccfExpectedCopies.toFixed(2)
                 : 'NA';
         }
         return (
-            <span>
+            <span data-test="ccf-cell">
                 <CancerCellFractionElement
                     sampleIds={sampleIds}
                     sampleToCCFValue={sampleToCCFValue}

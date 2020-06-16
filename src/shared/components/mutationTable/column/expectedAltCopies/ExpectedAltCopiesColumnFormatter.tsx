@@ -110,7 +110,7 @@ export default class ExpectedAltCopiesColumnFormatter {
         );
 
         return (
-            <>
+            <span data-test="eac-cell">
                 {samplesWithValue.map((sampleId: string, index: number) => {
                     return (
                         <span
@@ -131,7 +131,7 @@ export default class ExpectedAltCopiesColumnFormatter {
                         </span>
                     );
                 })}
-            </>
+            </span>
         );
     }
 

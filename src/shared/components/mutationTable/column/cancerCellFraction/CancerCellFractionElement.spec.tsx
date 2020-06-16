@@ -31,9 +31,9 @@ describe('CancerCellFractionElement', () => {
 
     // For multi sample test (bar chart displayed)
     const validMultiSampleToCCFValue = {
-        S001: '.5',
+        S001: '.50',
         S002: 'NA',
-        S003: '1',
+        S003: '1.00',
     };
 
     const multiSampleSampleManager = new SampleManager([
@@ -149,7 +149,7 @@ describe('CancerCellFractionElement', () => {
         testExpectedCancerCellFractionTooltip(
             multiSampleCancerCellFractionColumn,
             'S001',
-            '.5'
+            '.50'
         );
         testExpectedCancerCellFractionTooltip(
             multiSampleCancerCellFractionColumn,
@@ -159,7 +159,7 @@ describe('CancerCellFractionElement', () => {
         testExpectedCancerCellFractionTooltip(
             multiSampleCancerCellFractionColumn,
             'S003',
-            '1'
+            '1.00'
         );
     });
 
