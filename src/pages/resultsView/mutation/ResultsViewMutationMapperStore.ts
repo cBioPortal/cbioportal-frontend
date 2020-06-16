@@ -103,10 +103,10 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
 
     @computed
     get isCanonicalTranscript(): boolean | undefined {
-        if (this.canonicalTranscript.result && this.activeTranscript) {
+        if (this.canonicalTranscript.result && this.activeTranscript.result) {
             // if transcript dropdown is enabled, return true for canonical transcript
             return (
-                this.activeTranscript ===
+                this.activeTranscript.result ===
                 this.canonicalTranscript.result.transcriptId
             );
         }
