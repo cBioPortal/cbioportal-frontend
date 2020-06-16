@@ -40,9 +40,9 @@ export class ProteinImpactTypeDropdownSelector extends React.Component<
 
     @computed
     protected get options() {
-        return Object.keys(ProteinImpactType).map(key => ({
-            value: ProteinImpactType[key],
-            label: this.optionDisplayValueMap[ProteinImpactType[key]],
+        return Object.values(ProteinImpactType).map(value => ({
+            value,
+            label: this.optionDisplayValueMap[value],
         }));
     }
 

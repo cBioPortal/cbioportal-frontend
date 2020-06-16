@@ -177,6 +177,8 @@ const MUTATION_DATA = ([
         molecularProfileId: 'gbm_tcga_mutations',
         mutationType: 'Missense_Variant',
         mutationStatus: 'germline',
+        proteinPosStart: 10,
+        proteinPosEnd: 53,
         putativeDriver: true,
         __id: 0,
     },
@@ -187,6 +189,8 @@ const MUTATION_DATA = ([
         molecularProfileId: 'gbm_tcga_mutations',
         mutationType: 'Missense_Variant',
         mutationStatus: 'aspdoifjpasoid',
+        proteinPosStart: 20,
+        proteinPosEnd: 33,
         putativeDriver: true,
         __id: 1,
     },
@@ -197,6 +201,8 @@ const MUTATION_DATA = ([
         molecularProfileId: 'gbm_tcga_mutations',
         mutationType: 'Missense_Variant',
         mutationStatus: null,
+        proteinPosStart: 1,
+        proteinPosEnd: 3,
         putativeDriver: false,
         __id: 2,
     },
@@ -207,8 +213,22 @@ const MUTATION_DATA = ([
         molecularProfileId: 'gbm_tcga_mutations',
         mutationType: 'in_frame_ins',
         mutationStatus: undefined,
+        proteinPosStart: undefined,
+        proteinPosEnd: undefined,
         putativeDriver: true,
         __id: 3,
+    },
+    {
+        gene: {
+            hugoGeneSymbol: 'BRCA1',
+        },
+        molecularProfileId: 'gbm_tcga_mutations',
+        mutationType: 'in_frame_ins',
+        mutationStatus: undefined,
+        proteinPosStart: -1,
+        proteinPosEnd: 10000000,
+        putativeDriver: true,
+        __id: 3.1,
     },
 ] as any) as AnnotatedMutation[];
 
@@ -291,6 +311,15 @@ describe('unparseOQLQueryLine', () => {
             'TP53: DRIVER MUT=DRIVER CNA_DRIVER CNA_DRIVER FUSION_DRIVER FUSION_DRIVER MUT=TRUNC_DRIVER MUT=TRUNC_DRIVER AMP_DRIVER HOMDEL_DRIVER MUT_GERMLINE MUT=MISSENSE_SOMATIC MUT=proteinchange_GERMLINE;'
         );
     });
+    it('unparses queries with range mutation modifiers', () => {
+        const parsedLine = parseOQLQuery(
+            'TP53: DRIVER_GERMLINE_INFRAME_(1-100*) MUT_(-500) GERMLINE_(51-)_DRIVER'
+        )[0];
+        assert.equal(
+            unparseOQLQueryLine(parsedLine),
+            'TP53: MUT=INFRAME_DRIVER_GERMLINE_(1-100*) MUT_(-500) MUT_GERMLINE_(51-)_DRIVER;'
+        );
+    });
 });
 
 describe('filterCBioPortalWebServiceData', () => {
@@ -313,6 +342,7 @@ describe('filterCBioPortalWebServiceData', () => {
             1,
             2,
             3,
+            3.1,
         ]);
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:MISSENSE_SOMATIC',
@@ -327,7 +357,10 @@ describe('filterCBioPortalWebServiceData', () => {
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [3]);
+        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [
+            3,
+            3.1,
+        ]);
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:INFRAME_GERMLINE',
             MUTATION_DATA,
@@ -348,7 +381,11 @@ describe('filterCBioPortalWebServiceData', () => {
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [0, 3]);
+        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [
+            0,
+            3,
+            3.1,
+        ]);
     });
     it('filters properly using the DRIVER modifier', () => {
         const accessorsInstance = new AccessorsForOqlFilter([
@@ -366,6 +403,7 @@ describe('filterCBioPortalWebServiceData', () => {
             0,
             1,
             3,
+            3.1,
             7,
         ]);
 
@@ -379,6 +417,7 @@ describe('filterCBioPortalWebServiceData', () => {
             0,
             1,
             3,
+            3.1,
         ]);
 
         filteredData = filterCBioPortalWebServiceData(
@@ -432,6 +471,7 @@ describe('filterCBioPortalWebServiceData', () => {
             0,
             1,
             3,
+            3.1,
             7,
             8,
             9,
@@ -452,6 +492,64 @@ describe('filterCBioPortalWebServiceData', () => {
             ''
         );
         assert.deepEqual((filteredData as any).map((x: any) => x.__id), [-1]);
+    });
+
+    it('filters by RANGE modifier alone', () => {
+        const accessorsInstance = new AccessorsForOqlFilter([MUTATION_PROFILE]);
+        const tests = [
+            { oql: 'BRCA1: MUT_(1-10)', ids: [0, 2] },
+            { oql: 'BRCA1: MUT_(20-49)', ids: [0, 1] },
+            { oql: 'BRCA1: MUT_(1-10*)', ids: [2] },
+            { oql: 'BRCA1: MUT_(20-49*)', ids: [1] },
+            { oql: 'BRCA1: MUT_(2-)', ids: [0, 1, 2] },
+            { oql: 'BRCA1: MUT_(20-)', ids: [0, 1] },
+            { oql: 'BRCA1: MUT_(2-*)', ids: [0, 1] },
+            { oql: 'BRCA1: MUT_(20-*)', ids: [1] },
+            { oql: 'BRCA1: MUT_(-15)', ids: [0, 2] },
+            { oql: 'BRCA1: MUT_(-45)', ids: [0, 1, 2] },
+            { oql: 'BRCA1: MUT_(-15*)', ids: [2] },
+            { oql: 'BRCA1: MUT_(-45*)', ids: [1, 2] },
+        ];
+        let filteredData: any[];
+        for (const test of tests) {
+            filteredData = filterCBioPortalWebServiceData(
+                test.oql,
+                MUTATION_DATA,
+                accessorsInstance,
+                ''
+            );
+            assert.deepEqual(
+                filteredData.map((x: any) => x.__id),
+                test.ids,
+                test.oql
+            );
+        }
+    });
+
+    it('filters by RANGE modifier combined with other modifiers', () => {
+        const accessorsInstance = new AccessorsForOqlFilter([MUTATION_PROFILE]);
+        const tests = [
+            { oql: 'BRCA1: MUT_(1-10)_GERMLINE', ids: [0] },
+            { oql: 'BRCA1: MUT_(20-49*)_DRIVER', ids: [1] },
+            { oql: 'BRCA1: MUT_(2-)_GERMLINE_DRIVER', ids: [0] },
+            { oql: 'BRCA1: MUT_(20-*)_GERMLINE_DRIVER', ids: [] },
+            { oql: 'BRCA1: MUT_(-15)_SOMATIC', ids: [2] },
+            { oql: 'BRCA1: MUT_(-45*)_SOMATIC_DRIVER', ids: [1] },
+        ];
+        let filteredData: any[];
+        for (const test of tests) {
+            filteredData = filterCBioPortalWebServiceData(
+                test.oql,
+                MUTATION_DATA,
+                accessorsInstance,
+                ''
+            );
+            assert.deepEqual(
+                filteredData.map((x: any) => x.__id),
+                test.ids,
+                test.oql
+            );
+        }
     });
 });
 
