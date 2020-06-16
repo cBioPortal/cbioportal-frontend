@@ -539,6 +539,10 @@ describe('multi studies', () => {
         waitForNetworkQuiet();
     });
 
+    it('check for survival plots', () => {
+        assertScreenShotMatch(checkElementWithMouseDisabled('#mainColumn'));
+    });
+
     it('multi studies view should not have the raw data available', () => {
         assert(!browser.isExisting(STUDY_SUMMARY_RAW_DATA_DOWNLOAD));
     });
