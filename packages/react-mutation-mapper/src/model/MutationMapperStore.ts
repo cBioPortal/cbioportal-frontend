@@ -27,7 +27,7 @@ export interface MutationMapperStore {
     gene: Gene;
     dataStore: DataStore;
     uniprotId: RemoteData<string | undefined>;
-    activeTranscript?: string;
+    activeTranscript?: RemoteData<string | undefined>;
     canonicalTranscript: RemoteData<EnsemblTranscript | undefined>;
     mutationData: RemoteData<Partial<Mutation>[] | undefined>;
     pfamDomainData: RemoteData<PfamDomain[] | undefined>;
@@ -74,6 +74,7 @@ export interface MutationMapperStore {
     transcriptsWithAnnotations: RemoteData<string[] | undefined>;
     transcriptsWithProteinLength: RemoteData<string[] | undefined>;
     mutationsByTranscriptId: { [transcriptId: string]: Mutation[] };
+    setSelectedTranscript?: (id: string | undefined) => void;
 }
 
 export default MutationMapperStore;

@@ -8,19 +8,15 @@ import {
     DefaultMutationMapperDataFetcher,
     groupDataByProteinImpactType,
     groupOncoKbIndicatorDataByMutations,
-    // DefaultMutationMapperStore,
+    DefaultMutationMapperStore,
 } from 'react-mutation-mapper';
-// REVERT THIS
-import DefaultMutationMapperStore from '../../../../packages/react-mutation-mapper/src/store/DefaultMutationMapperStore';
 
 import {
     defaultOncoKbIndicatorFilter,
     IHotspotIndex,
-    // getMutationsByTranscriptId,
+    getMutationsByTranscriptId,
     Mutation as SimpleMutation,
 } from 'cbioportal-utils';
-// REVERT THIS
-import { getMutationsByTranscriptId } from '../../../../packages/cbioportal-utils/src/mutation/MutationAnnotator';
 
 import defaultGenomeNexusClient from 'shared/api/genomeNexusClientInstance';
 import defaultInternalGenomeNexusClient from 'shared/api/genomeNexusInternalClientInstance';
@@ -163,10 +159,10 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
 
     readonly alignmentData = remoteData(
         {
-            await: () => [this.mutationData],
+            await: () => [this.mutationData, this.activeTranscript],
             invoke: async () => {
-                if (this.activeTranscript) {
-                    return fetchPdbAlignmentData(this.activeTranscript);
+                if (this.activeTranscript.result) {
+                    return fetchPdbAlignmentData(this.activeTranscript.result);
                 } else {
                     return [];
                 }
@@ -248,13 +244,13 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
         [genomicLocation: string]: Mutation;
     } {
         if (
-            this.activeTranscript &&
+            this.activeTranscript.result &&
             !_.isEmpty(this.indexedVariantAnnotations.result)
         ) {
             // overwrite mutations with annotated mutations
             return indexMutationsByGenomicLocation(getMutationsByTranscriptId(
                 this.mutationData.result,
-                this.activeTranscript,
+                this.activeTranscript.result,
                 this.indexedVariantAnnotations.result!,
                 true
             ) as Mutation[]);

@@ -33,8 +33,16 @@ import {
     GenericAssayData,
 } from 'cbioportal-ts-api-client';
 import client from 'shared/api/cbioportalClientInstance';
-import { action, computed, observable, ObservableMap, reaction } from 'mobx';
 import { remoteData, stringListToSet } from 'cbioportal-frontend-commons';
+import {
+    action,
+    computed,
+    observable,
+    ObservableMap,
+    reaction,
+    runInAction,
+    autorun,
+} from 'mobx';
 import {
     generateQueryVariantId,
     getProteinPositionFromProteinChange,
@@ -2930,7 +2938,8 @@ export class ResultsViewPageStore {
     }
 
     public getMutationMapperStore(
-        gene: Gene
+        gene: Gene,
+        selectedTranscriptId: string | undefined
     ): ResultsViewMutationMapperStore | undefined {
         if (
             this.genes.isComplete &&
@@ -2939,9 +2948,12 @@ export class ResultsViewPageStore {
             this.mutations.isComplete &&
             this.mutationsByGene.isComplete
         ) {
-            return this.mutationMapperStoreByGene[gene.hugoGeneSymbol]
+            let store = this.mutationMapperStoreByGene[gene.hugoGeneSymbol]
                 ? this.mutationMapperStoreByGene[gene.hugoGeneSymbol]
                 : this.createMutationMapperStoreForSelectedGene(gene);
+
+            autorun(() => store.setSelectedTranscript(selectedTranscriptId));
+            return store;
         }
         return undefined;
     }

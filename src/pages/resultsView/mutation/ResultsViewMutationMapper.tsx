@@ -86,11 +86,11 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         const canonicalTranscriptId =
             this.props.store.canonicalTranscript.result &&
             this.props.store.canonicalTranscript.result.transcriptId;
-        const transcript = (this.props.store.activeTranscript &&
-        this.props.store.activeTranscript === canonicalTranscriptId
+        const transcript = (this.props.store.activeTranscript.result &&
+        this.props.store.activeTranscript.result === canonicalTranscriptId
             ? this.props.store.canonicalTranscript.result
             : this.props.store.transcriptsByTranscriptId[
-                  this.props.store.activeTranscript!
+                  this.props.store.activeTranscript.result!
               ]) as EnsemblTranscript;
         return transcript && transcript.exons && transcript.exons.length > 0
             ? transcript.exons.length.toString()
