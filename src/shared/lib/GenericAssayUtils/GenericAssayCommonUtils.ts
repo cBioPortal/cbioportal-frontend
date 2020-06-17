@@ -7,12 +7,31 @@ import {
     GenericAssayMetaFilter,
     GenericAssayDataFilter,
     GenericAssayMeta,
+    GenericAssayDataMultipleStudyFilter,
 } from 'cbioportal-ts-api-client';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import { IDataQueryFilter } from '../StoreUtils';
 
 export const NOT_APPLICABLE_VALUE = 'NA';
+
+export async function fetchGenericAssayStableIdsByMolecularProfileIds(
+    genericAssayProfileIds: string[]
+) {
+    if (genericAssayProfileIds.length > 0) {
+        const metaList = await client.fetchGenericAssayMetaDataUsingPOST({
+            genericAssayMetaFilter: {
+                molecularProfileIds: genericAssayProfileIds,
+                // the Swagger-generated type expected by the client method below
+                // incorrectly requires both molecularProfileIds and genericAssayStableIds;
+                // use 'as' to tell TypeScript that this object really does fit.
+            } as GenericAssayMetaFilter,
+            projection: 'ID',
+        });
+        return Promise.resolve(_.map(metaList, meta => meta.stableId));
+    }
+    return Promise.resolve([]);
+}
 
 export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAssayType(
     molecularProfiles: MolecularProfile[]
@@ -134,4 +153,16 @@ export async function fetchGenericAssayData(
     );
     const results = await Promise.all(dataPromises);
     return results;
+}
+
+export async function fetchGenericAssayDataByStableIdsAndMolecularIds(
+    stableIds: string[],
+    molecularProfileIds: string[]
+) {
+    return client.fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST({
+        genericAssayDataMultipleStudyFilter: {
+            genericAssayStableIds: stableIds,
+            molecularProfileIds: molecularProfileIds,
+        } as GenericAssayDataMultipleStudyFilter,
+    });
 }

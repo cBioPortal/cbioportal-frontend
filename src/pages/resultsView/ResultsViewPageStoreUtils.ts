@@ -826,7 +826,7 @@ export function fetchPatients(samples: Sample[]) {
     });
 }
 
-export function excludeMutationAndSVProfiles(
+export function excludeSpecialMolecularProfiles(
     molecularprofiles: MolecularProfile[]
 ): MolecularProfile[] {
     const mutationAlterationTypes = [
@@ -834,6 +834,7 @@ export function excludeMutationAndSVProfiles(
         AlterationTypeConstants.MUTATION_UNCALLED,
         AlterationTypeConstants.FUSION,
         AlterationTypeConstants.STRUCTURAL_VARIANT,
+        AlterationTypeConstants.GENERIC_ASSAY,
     ];
     return molecularprofiles.filter(
         profile =>

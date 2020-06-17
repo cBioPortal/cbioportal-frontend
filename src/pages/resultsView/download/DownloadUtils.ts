@@ -15,6 +15,7 @@ import {
     Gene,
     MolecularProfile,
     GenePanelData,
+    GenericAssayData,
 } from 'cbioportal-ts-api-client';
 import {
     ICaseAlteration,
@@ -321,6 +322,36 @@ export function generateOtherMolecularProfileDownloadData(
         : [];
 }
 
+export function generateGenericAssayProfileData(
+    molecularProfileId: string[],
+    unfilteredCaseAggregatedData?: CaseAggregatedData<GenericAssayData>
+): { [key: string]: GenericAssayData[] } {
+    const sampleFilter = (data: GenericAssayData) => {
+        return molecularProfileId.includes(data.molecularProfileId);
+    };
+
+    return unfilteredCaseAggregatedData
+        ? generateGenericAssayDataByStableId(
+              unfilteredCaseAggregatedData,
+              sampleFilter
+          )
+        : {};
+}
+
+export function generateGenericAssayProfileDownloadData(
+    sampleAlterationDataByGene: { [key: string]: GenericAssayData[] },
+    samples: Sample[] = [],
+    stableIds: string[] = []
+): string[][] {
+    return sampleAlterationDataByGene
+        ? generateGenericAssayDownloadData(
+              sampleAlterationDataByGene,
+              samples,
+              stableIds
+          )
+        : [];
+}
+
 export function generateSampleAlterationDataByGene(
     unfilteredCaseAggregatedData: CaseAggregatedData<ExtendedAlteration>,
     sampleFilter?: (alteration: ExtendedAlteration) => boolean
@@ -349,6 +380,68 @@ export function generateDownloadFileRows(
     sampleIndex: { [sampleKey: string]: Sample },
     sampleKeys: string[],
     extractValue?: (alteration: ExtendedAlteration) => string
+): { [sampleKey: string]: IDownloadFileRow } {
+    const rows: { [sampleKey: string]: IDownloadFileRow } = {};
+
+    sampleKeys.forEach(sampleKey => {
+        const sample = sampleIndex[sampleKey];
+
+        const row: IDownloadFileRow = rows[sampleKey] || {
+            studyId: sample.studyId,
+            sampleId: sample.sampleId,
+            patientId: sample.patientId,
+            alterationData: {},
+        };
+
+        rows[sampleKey] = row;
+
+        geneSymbols.forEach(gene => {
+            row.alterationData[gene] = row.alterationData[gene] || [];
+
+            const key = `${gene}_${sampleKey}`;
+
+            if (sampleAlterationDataByGene[key]) {
+                sampleAlterationDataByGene[key].forEach(alteration => {
+                    const value = extractValue
+                        ? extractValue(alteration)
+                        : String(alteration.value);
+                    row.alterationData[gene].push(value);
+                });
+            }
+        });
+    });
+
+    return rows;
+}
+
+export function generateGenericAssayDataByStableId(
+    unfilteredCaseAggregatedData: CaseAggregatedData<GenericAssayData>,
+    sampleFilter?: (alteration: GenericAssayData) => boolean
+): { [key: string]: GenericAssayData[] } {
+    // key => gene + uniqueSampleKey
+    const sampleDataByStableId: { [key: string]: GenericAssayData[] } = {};
+
+    _.values(unfilteredCaseAggregatedData.samples).forEach(alterations => {
+        alterations.forEach(alteration => {
+            const key = `${alteration.stableId}_${alteration.uniqueSampleKey}`;
+            sampleDataByStableId[key] = sampleDataByStableId[key] || [];
+
+            // if no filter function provided nothing is filtered out,
+            // otherwise alteration is filtered out if filter function returns false
+            if (!sampleFilter || sampleFilter(alteration)) {
+                sampleDataByStableId[key].push(alteration);
+            }
+        });
+    });
+    return sampleDataByStableId;
+}
+
+export function generateGenericAssayDownloadFileRows(
+    sampleAlterationDataByGene: { [key: string]: GenericAssayData[] },
+    geneSymbols: string[],
+    sampleIndex: { [sampleKey: string]: Sample },
+    sampleKeys: string[],
+    extractValue?: (alteration: GenericAssayData) => string
 ): { [sampleKey: string]: IDownloadFileRow } {
     const rows: { [sampleKey: string]: IDownloadFileRow } = {};
 
@@ -422,6 +515,53 @@ export function generateDownloadData(
             const formattedValue = formatData
                 ? formatData(rowData.alterationData[gene]) // if provided format with the custom data formatter
                 : rowData.alterationData[gene].join(' ') || 'NA'; // else, default format: space delimited join
+
+            row.push(formattedValue);
+        });
+
+        downloadData.push(row);
+    });
+
+    return downloadData;
+}
+
+export function generateGenericAssayDownloadData(
+    sampleGenericAssayDataByStableId: { [key: string]: GenericAssayData[] },
+    samples: Sample[] = [],
+    stableIds: string[] = [],
+    extractValue?: (alteration: GenericAssayData) => string,
+    formatData?: (data: string[]) => string
+) {
+    // we need the sample index for better performance
+    const sampleIndex = _.keyBy(samples, 'uniqueSampleKey');
+    const sampleKeys = samples.map(sample => sample.uniqueSampleKey);
+
+    // generate row data (keyed by uniqueSampleKey)
+    const rows = generateGenericAssayDownloadFileRows(
+        sampleGenericAssayDataByStableId,
+        stableIds,
+        sampleIndex,
+        sampleKeys,
+        extractValue
+    );
+
+    const downloadData: string[][] = [];
+
+    // add headers
+    downloadData.push(['STUDY_ID', 'SAMPLE_ID'].concat(stableIds));
+
+    // convert row data into a 2D array of strings
+    sampleKeys.forEach(sampleKey => {
+        const rowData = rows[sampleKey];
+        const row: string[] = [];
+
+        row.push(rowData.studyId);
+        row.push(rowData.sampleId);
+
+        stableIds.forEach(stableId => {
+            const formattedValue = formatData
+                ? formatData(rowData.alterationData[stableId]) // if provided format with the custom data formatter
+                : rowData.alterationData[stableId].join(' ') || 'NA'; // else, default format: space delimited join
 
             row.push(formattedValue);
         });
