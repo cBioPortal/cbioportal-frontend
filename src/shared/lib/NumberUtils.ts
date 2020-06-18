@@ -9,3 +9,11 @@ export function toConditionalPrecision(
 
     return number.toPrecision(precision);
 }
+
+export function clamp(
+    x: number,
+    lower_inclusive: number,
+    upper_inclusive: number
+) {
+    return Math.min(upper_inclusive, Math.max(lower_inclusive, x));
+}

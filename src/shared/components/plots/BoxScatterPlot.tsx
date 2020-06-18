@@ -4,6 +4,7 @@ import { computed, observable, action } from 'mobx';
 import { bind } from 'bind-decorator';
 import CBIOPORTAL_VICTORY_THEME, {
     axisTickLabelStyles,
+    legendLabelStyles,
 } from '../../theme/cBioPoralTheme';
 import ifNotDefined from '../../lib/ifNotDefined';
 import { BoxPlotModel, calculateBoxPlotModel } from '../../lib/boxPlotUtils';
@@ -19,13 +20,19 @@ import {
 } from 'victory';
 import { IBaseScatterPlotData } from './ScatterPlot';
 import {
+    getBottomLegendHeight,
     getDeterministicRandomNumber,
+    getLegendDataHeight,
+    getLegendItemsPerRow,
+    getMaxLegendLabelWidth,
+    LegendDataWithId,
     separateScatterDataByAppearance,
 } from './PlotUtils';
 import { logicalAnd } from '../../lib/LogicUtils';
 import { tickFormatNumeral, wrapTick } from './TickUtils';
 import { makeScatterPlotSizeFunction } from './PlotUtils';
 import {
+    getTextHeight,
     getTextWidth,
     truncateWithEllipsis,
 } from 'cbioportal-frontend-commons';
@@ -40,7 +47,10 @@ import { Popover } from 'react-bootstrap';
 import * as ReactDOM from 'react-dom';
 import classnames from 'classnames';
 import WindowStore from '../window/WindowStore';
-import { textTruncationUtils } from 'cbioportal-frontend-commons';
+import { wrapText } from 'cbioportal-frontend-commons';
+import { clamp } from '../../lib/NumberUtils';
+import LegendDataComponent from './LegendDataComponent';
+import LegendLabelComponent from './LegendLabelComponent';
 
 export interface IBaseBoxScatterPlotPoint {
     value: number;
@@ -72,7 +82,7 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     symbol?: string | ((d: D) => string); // see http://formidable.com/open-source/victory/docs/victory-scatter/#symbol for options
     scatterPlotTooltip?: (d: D) => JSX.Element;
     boxPlotTooltip?: (d: BoxModel) => JSX.Element;
-    legendData?: { name: string | string[]; symbol: any }[]; // see http://formidable.com/open-source/victory/docs/victory-legend/#data
+    legendData?: LegendDataWithId<D>[];
     logScale?: IAxisLogScaleParams | undefined; // log scale along the point data axis
     excludeLimitValuesFromBoxPlot?: boolean;
     axisLabelX?: string;
@@ -84,7 +94,7 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     boxCalculationFilter?: (d: D) => boolean; // determines which points are used for calculating the box
     containerRef?: (svgContainer: SVGElement | null) => void;
     compressXAxis?: boolean;
-    legendTitle?: string;
+    legendTitle?: string | string[];
 }
 
 type BoxModel = {
@@ -98,14 +108,13 @@ type BoxModel = {
 };
 
 const RIGHT_GUTTER = 130; // room for legend
+const LEGEND_COLUMN_PADDING = 45;
 const NUM_AXIS_TICKS = 8;
 const PLOT_DATA_PADDING_PIXELS = 100;
 const CATEGORY_LABEL_HORZ_ANGLE = 50;
 const DEFAULT_LEFT_PADDING = 25;
 const DEFAULT_BOTTOM_PADDING = 10;
-const LEGEND_ITEMS_PER_ROW = 4;
 const BOTTOM_LEGEND_PADDING = 15;
-const RIGHT_PADDING_FOR_LONG_LABELS = 50;
 const HORIZONTAL_OFFSET = 8;
 const VERTICAL_OFFSET = 17;
 const UTILITIES_MENU_HEIGHT = 20;
@@ -217,7 +226,7 @@ export default class BoxScatterPlot<
 
     private get title() {
         if (this.props.title) {
-            const text = textTruncationUtils(
+            const text = wrapText(
                 this.props.title,
                 this.chartWidth,
                 axisTickLabelStyles.fontFamily,
@@ -262,8 +271,9 @@ export default class BoxScatterPlot<
 
     @computed get legendLocation() {
         if (
-            this.props.legendLocationWidthThreshold !== undefined &&
-            this.chartWidth > this.props.legendLocationWidthThreshold
+            (this.props.legendLocationWidthThreshold !== undefined && // if chart meets width threshold
+                this.chartWidth > this.props.legendLocationWidthThreshold) ||
+            (this.props.legendData && this.props.legendData.length > 7) // too many legend data
         ) {
             return 'bottom';
         } else {
@@ -272,15 +282,36 @@ export default class BoxScatterPlot<
     }
 
     @computed get bottomLegendHeight() {
-        //height of legend in case its on bottom
-        if (!this.props.legendData) {
+        if (
+            !this.props.legendData ||
+            !this.props.legendData.length ||
+            this.legendLocation !== 'bottom'
+        ) {
             return 0;
         } else {
-            const numRows = Math.ceil(
-                this.props.legendData.length / LEGEND_ITEMS_PER_ROW
+            return getBottomLegendHeight(
+                this.legendItemsPerRow,
+                this.props.legendData,
+                this.props.legendTitle
             );
-            return 23.7 * numRows;
         }
+    }
+
+    @computed get maxLegendLabelWidth() {
+        if (this.props.legendData) {
+            return getMaxLegendLabelWidth(this.props.legendData);
+        }
+
+        return 0;
+    }
+
+    @computed get legendItemsPerRow() {
+        return getLegendItemsPerRow(
+            this.maxLegendLabelWidth,
+            this.svgWidth,
+            LEGEND_COLUMN_PADDING,
+            this.props.legendTitle
+        );
     }
 
     private get legend() {
@@ -289,29 +320,61 @@ export default class BoxScatterPlot<
             if (this.legendLocation === 'bottom') {
                 // if legend is at bottom then flatten labels
                 legendData = legendData.map(x => {
-                    let name = x.name;
-                    if (Array.isArray(x.name)) {
+                    let { name, ...rest } = x;
+                    if (Array.isArray(name)) {
                         name = (name as string[]).join(' '); // flatten labels by joining with space
                     }
                     return {
                         name,
-                        symbol: x.symbol,
+                        ...rest,
                     };
                 });
             }
+            const orientation =
+                this.legendLocation === 'right' ? 'vertical' : 'horizontal';
+
             return (
                 <VictoryLegend
-                    orientation={
-                        this.legendLocation === 'right'
-                            ? 'vertical'
-                            : 'horizontal'
+                    dataComponent={
+                        <LegendDataComponent orientation={orientation} />
                     }
+                    labelComponent={
+                        <LegendLabelComponent orientation={orientation} />
+                    }
+                    events={[
+                        {
+                            childName: 'all',
+                            target: ['data', 'labels'],
+                            eventHandlers: {
+                                onClick: () => [
+                                    {
+                                        target: 'data',
+                                        mutation: (props: any) => {
+                                            const datum: LegendDataWithId<D> =
+                                                props.data[props.index];
+                                            if (datum.highlighting) {
+                                                datum.highlighting.onClick(
+                                                    datum
+                                                );
+                                            }
+                                        },
+                                    },
+                                ],
+                            },
+                        },
+                    ]}
+                    orientation={orientation}
                     itemsPerRow={
                         this.legendLocation === 'right'
                             ? undefined
-                            : LEGEND_ITEMS_PER_ROW
+                            : this.legendItemsPerRow
                     }
                     rowGutter={this.legendLocation === 'right' ? undefined : -5}
+                    gutter={
+                        this.legendLocation === 'right'
+                            ? undefined
+                            : LEGEND_COLUMN_PADDING
+                    }
                     data={legendData}
                     x={this.legendLocation === 'right' ? this.sideLegendX : 0}
                     y={
@@ -582,7 +645,7 @@ export default class BoxScatterPlot<
 
     @computed get yAxisLabel(): string[] {
         if (this.props.axisLabelY) {
-            return textTruncationUtils(
+            return wrapText(
                 this.props.axisLabelY,
                 this.chartHeight - UTILITIES_MENU_HEIGHT,
                 axisTickLabelStyles.fontFamily,
@@ -672,9 +735,9 @@ export default class BoxScatterPlot<
             this.legendLocation === 'right'
         ) {
             // make room for legend
-            return Math.max(RIGHT_GUTTER, RIGHT_PADDING_FOR_LONG_LABELS);
+            return Math.max(RIGHT_GUTTER, this.maxLegendLabelWidth + 50); // + 50 makes room for circle and padding
         } else {
-            return RIGHT_PADDING_FOR_LONG_LABELS;
+            return RIGHT_GUTTER;
         }
     }
 
