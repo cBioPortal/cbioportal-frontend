@@ -1,4 +1,8 @@
-import { ONCOPRINTER_VAL_NA } from './OncoprinterClinicalAndHeatmapUtils';
+import {
+    ClinicalTrackDataType,
+    HeatmapTrackDataType,
+    ONCOPRINTER_VAL_NA,
+} from './OncoprinterClinicalAndHeatmapUtils';
 
 export const exampleGeneticData = `TCGA-25-2392-01	TP53	FUSION	FUSION
 TCGA-04-1331-01	PTEN	HOMDEL	CNA
@@ -592,7 +596,7 @@ TCGA-25-2392-01
 TCGA-25-2393-01
 `;
 
-export const exampleClinicalAndHeatmapData = `sample\tAGE(number)\tCANCER_TYPE\tMUTATION_COUNT(lognumber)\tMUTATION_SPECTRUM(C>A/C>G/C>T/T>A/T>C/T>G)\tPTEN(heatmap)
+export const exampleClinicalAndHeatmapData = `sample\tAGE(${ClinicalTrackDataType.NUMBER})\tCANCER_TYPE\tMUTATION_COUNT(${ClinicalTrackDataType.LOG_NUMBER})\tMUTATION_SPECTRUM(C>A/C>G/C>T/T>A/T>C/T>G)\tPTEN(${HeatmapTrackDataType.HEATMAP_01})
 TCGA-25-2392-01\t24\tProstate\t63\t190/54/416/661/392/708\t0.60
 TCGA-25-2393-01\t33\tLung\t83\t51/651/765/956/106/552\t0.9996
 TCGA-04-1331-01\t22\tLung\t15\t73/987/206/408/602/317\t0.16357

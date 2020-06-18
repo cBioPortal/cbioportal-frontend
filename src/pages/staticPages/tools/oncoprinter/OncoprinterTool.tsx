@@ -17,6 +17,7 @@ import MutualExclusivityTab from '../../../resultsView/mutualExclusivity/MutualE
 import { getDataForSubmission } from './OncoprinterToolUtils';
 import {
     ClinicalTrackDataType,
+    HeatmapTrackDataType,
     ONCOPRINTER_VAL_NA,
 } from './OncoprinterClinicalAndHeatmapUtils';
 import styles from './styles.module.scss';
@@ -164,14 +165,18 @@ const helpSection = (
         </div>
         <div className={styles.dataFormatHelpBorder} />
         <div className={styles.dataFormatHelpSection}>
-            <h4>Clinical data format</h4>
+            <h4>Clinical/Heatmap data format</h4>
             All rows are tab- or space-delimited.
             <br />
-            The first (header) row gives the names of the clinical attributes,
-            as well as their data type ({ClinicalTrackDataType.NUMBER},{' '}
-            {ClinicalTrackDataType.LOG_NUMBER}, or{' '}
-            {ClinicalTrackDataType.STRING}, default is
-            {ClinicalTrackDataType.STRING}). Additionally, you can enter a
+            The first (header) row gives the names of the tracks, as well as
+            their data type. The possible clinical data types are{' '}
+            {ClinicalTrackDataType.NUMBER}, {ClinicalTrackDataType.LOG_NUMBER},
+            or {ClinicalTrackDataType.STRING}. The possible heatmap types are{' '}
+            {HeatmapTrackDataType.HEATMAP_ZSCORE} for z-score data,{' '}
+            {HeatmapTrackDataType.HEATMAP_01} for data between 0 and 1 (such as
+            methylation), and {HeatmapTrackDataType.HEATMAP} which is for all
+            other types of heatmaps. The default track type is{' '}
+            {ClinicalTrackDataType.STRING}). Finally, you can also enter a{' '}
             /-delimited list of labels to create a stacked-bar-chart track (see
             example data below). An example first row is:
             <br />
@@ -181,7 +186,7 @@ const helpSection = (
             <code>Mutation_Count({ClinicalTrackDataType.LOG_NUMBER})</code>&#9;
             <br />
             <code>Mutation_Spectrum(C>A/C>G/C>T/T>A/T>C/T>G)</code>&#9;
-            <code>PTEN_expression(heatmap)</code>
+            <code>PTEN_expression(${HeatmapTrackDataType.HEATMAP_01})</code>
             <br />
             Each following row gives the sample id, then the value for each
             clinical attribute, or the special value {ONCOPRINTER_VAL_NA} which
