@@ -906,9 +906,8 @@ export default class DownloadTab extends React.Component<
                 <td>
                     <div>
                         <a
-                            onClick={event =>
+                            onClick={() =>
                                 this.handleOtherMolecularProfileDownload(
-                                    event,
                                     option.name
                                 )
                             }
@@ -921,9 +920,8 @@ export default class DownloadTab extends React.Component<
                         </a>
                         <span style={{ margin: '0px 10px' }}>|</span>
                         <a
-                            onClick={event =>
+                            onClick={() =>
                                 this.handleTransposedOtherMolecularProfileDownload(
-                                    event,
                                     option.name
                                 )
                             }
@@ -985,9 +983,8 @@ export default class DownloadTab extends React.Component<
                 <td>
                     <div>
                         <a
-                            onClick={event =>
+                            onClick={() =>
                                 this.handleGenericAssayProfileDownload(
-                                    event,
                                     option.name,
                                     option.profileIdSuffix
                                 )
@@ -1001,9 +998,8 @@ export default class DownloadTab extends React.Component<
                         </a>
                         <span style={{ margin: '0px 10px' }}>|</span>
                         <a
-                            onClick={event =>
+                            onClick={() =>
                                 this.handleTransposedGenericAssayProfileDownload(
-                                    event,
                                     option.name,
                                     option.profileIdSuffix
                                 )
@@ -1204,10 +1200,7 @@ export default class DownloadTab extends React.Component<
     }
 
     @autobind
-    private handleOtherMolecularProfileDownload(
-        event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
-        profileName: string
-    ) {
+    private handleOtherMolecularProfileDownload(profileName: string) {
         onMobxPromise(
             this.allOtherMolecularProfileDownloadDataGroupByProfileName,
             downloadDataGroupByProfileName => {
@@ -1220,10 +1213,7 @@ export default class DownloadTab extends React.Component<
     }
 
     @autobind
-    private handleTransposedOtherMolecularProfileDownload(
-        event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
-        profileName: string
-    ) {
+    private handleTransposedOtherMolecularProfileDownload(profileName: string) {
         onMobxPromise(
             this.allOtherMolecularProfileDownloadDataGroupByProfileName,
             downloadDataGroupByProfileName => {
@@ -1242,7 +1232,6 @@ export default class DownloadTab extends React.Component<
 
     @autobind
     private handleGenericAssayProfileDownload(
-        event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
         profileName: string,
         profileIdSuffix: string
     ) {
@@ -1259,7 +1248,6 @@ export default class DownloadTab extends React.Component<
 
     @autobind
     private handleTransposedGenericAssayProfileDownload(
-        event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
         profileName: string,
         profileIdSuffix: string
     ) {
