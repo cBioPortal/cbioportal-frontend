@@ -15,6 +15,7 @@ import {
     ResourceData,
     Sample,
     SampleMolecularIdentifier,
+    StructuralVariantFilter,
 } from 'cbioportal-ts-api-client';
 import client from '../../../shared/api/cbioportalClientInstance';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
@@ -67,8 +68,6 @@ import {
     fetchCopyNumberSegments,
     fetchCosmicData,
     fetchDiscreteCNAData,
-    fetchGenePanel,
-    fetchGenePanelData,
     fetchGisticData,
     fetchMutationalSignatureData,
     fetchMutationalSignatureMetaData,
@@ -95,6 +94,8 @@ import {
     noGenePanelUsed,
     ONCOKB_DEFAULT,
     getGenomeNexusUrl,
+    generateStructuralVariantId,
+    fetchStructuralVariantOncoKbData,
 } from 'shared/lib/StoreUtils';
 import {
     fetchCivicGenes,
@@ -130,6 +131,12 @@ import { checkNonProfiledGenesExist } from '../PatientViewPageUtils';
 import autobind from 'autobind-decorator';
 import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mutationMapper/MutationMapperUtils';
 import { USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB } from 'react-mutation-mapper';
+import SampleManager from '../SampleManager';
+import { getFilteredMolecularProfilesByAlterationType } from 'pages/studyView/StudyViewUtils';
+import {
+    AlterationTypeConstants,
+    DataTypeConstants,
+} from 'pages/resultsView/ResultsViewPageStore';
 
 type PageMode = 'patient' | 'sample';
 
@@ -267,12 +274,22 @@ export class PatientViewPageStore {
         this.openResourceTabMap.set(resourceId, open);
     }
 
+    @autobind
+    @action
+    public onFilterGenesStructuralVariantTable(option: GeneFilterOption): void {
+        this.structuralVariantTableGeneFilterOption = option;
+    }
+
     @observable
     public mutationTableGeneFilterOption: GeneFilterOption = getGeneFilterDefault(
         getBrowserWindow().frontendConfig
     );
     @observable
     public copyNumberTableGeneFilterOption: GeneFilterOption = getGeneFilterDefault(
+        getBrowserWindow().frontendConfig
+    );
+    @observable
+    public structuralVariantTableGeneFilterOption: GeneFilterOption = getGeneFilterDefault(
         getBrowserWindow().frontendConfig
     );
 
@@ -311,17 +328,28 @@ export class PatientViewPageStore {
     });
 
     readonly mutationMolecularProfileId = remoteData({
-        await: () => [this.molecularProfilesInStudy],
+        await: () => [this.mutationMolecularProfile],
         invoke: async () => {
-            const profile = findMutationMolecularProfile(
-                this.molecularProfilesInStudy,
-                this.studyId
-            );
-            if (profile) {
-                return profile.molecularProfileId;
+            if (this.mutationMolecularProfile.result) {
+                return this.mutationMolecularProfile.result.molecularProfileId;
             } else {
                 return undefined;
             }
+        },
+    });
+
+    readonly structuralVariantProfile = remoteData({
+        await: () => [this.studyIdToMolecularProfiles],
+        invoke: async () => {
+            const structuralVariantProfiles = getFilteredMolecularProfilesByAlterationType(
+                this.studyIdToMolecularProfiles.result,
+                AlterationTypeConstants.STRUCTURAL_VARIANT,
+                [DataTypeConstants.SV, DataTypeConstants.FUSION]
+            );
+            if (structuralVariantProfiles.length > 0) {
+                return structuralVariantProfiles[0];
+            }
+            return undefined;
         },
     });
 
@@ -740,6 +768,26 @@ export class PatientViewPageStore {
         invoke: async () => client.getStudyUsingGET({ studyId: this.studyId }),
     });
 
+    public sampleManager = remoteData<SampleManager>({
+        await: () => [
+            this.patientViewData,
+            this.studyMetaData,
+            this.clinicalEvents,
+        ],
+        invoke: async () => {
+            const patientData = this.patientViewData.result;
+
+            if (this.clinicalEvents.result.length > 0) {
+                return new SampleManager(
+                    patientData.samples!,
+                    this.clinicalEvents.result
+                );
+            } else {
+                return new SampleManager(patientData.samples!);
+            }
+        },
+    });
+
     readonly patientViewData = remoteData<ClinicalInformationData>(
         {
             await: () => [
@@ -779,6 +827,20 @@ export class PatientViewPageStore {
             studyId: this.studyId,
         });
     }, []);
+
+    readonly studyIdToMolecularProfiles = remoteData({
+        await: () => [this.molecularProfilesInStudy],
+        invoke: () => {
+            return Promise.resolve(
+                _.groupBy(
+                    this.molecularProfilesInStudy.result!,
+                    molecularProfile => molecularProfile.studyId
+                )
+            );
+        },
+        onError: error => {},
+        default: {},
+    });
 
     readonly molecularProfileIdToMolecularProfile = remoteData<{
         [molecularProfileId: string]: MolecularProfile;
@@ -959,7 +1021,7 @@ export class PatientViewPageStore {
         []
     );
 
-    readonly coverageInformation = remoteData<CoverageInformation>(
+    readonly genePanelData = remoteData(
         {
             await: () => [
                 this.mutatedGenes,
@@ -982,7 +1044,7 @@ export class PatientViewPageStore {
                     }
                 });
                 // query for gene panel data using sample molecular identifiers
-                let genePanelData: GenePanelData[];
+                let genePanelData: GenePanelData[] = [];
                 if (
                     sampleMolecularIdentifiers.length &&
                     this.mutatedGenes.result!.length
@@ -992,9 +1054,58 @@ export class PatientViewPageStore {
                             sampleMolecularIdentifiers,
                         }
                     );
-                } else {
-                    genePanelData = [];
                 }
+
+                return genePanelData;
+            },
+        },
+        []
+    );
+
+    readonly genePanels = remoteData(
+        {
+            await: () => [this.genePanelData],
+            invoke: async () => {
+                let genePanelData: GenePanelData[] = this.genePanelData.result;
+
+                // query for gene panel metadata
+                const genePanelIds = _.uniq(
+                    genePanelData
+                        .map(gpData => gpData.genePanelId)
+                        .filter(id => !!id)
+                );
+                if (genePanelIds.length) {
+                    return client.fetchGenePanelsUsingPOST({
+                        genePanelIds,
+                        projection: 'DETAILED',
+                    });
+                }
+                return [];
+            },
+        },
+        []
+    );
+
+    readonly genePanelIdToPanel = remoteData<{
+        [genePanelId: string]: GenePanel;
+    }>(
+        {
+            await: () => [this.genePanels],
+            invoke: async () => {
+                return _.keyBy(
+                    this.genePanels.result,
+                    genePanel => genePanel.genePanelId
+                );
+            },
+        },
+        {}
+    );
+
+    readonly coverageInformation = remoteData<CoverageInformation>(
+        {
+            await: () => [this.mutatedGenes, this.samples, this.genePanelData],
+            invoke: async () => {
+                let genePanelData: GenePanelData[] = this.genePanelData.result;
 
                 // query for gene panel metadata
                 const genePanelIds = _.uniq(
@@ -1028,6 +1139,23 @@ export class PatientViewPageStore {
         { samples: {}, patients: {} }
     );
 
+    readonly genePanelDataByMolecularProfileIdAndSampleId = remoteData<{
+        [profileId: string]: { [sampleId: string]: GenePanelData };
+    }>(
+        {
+            await: () => [this.genePanelData],
+            invoke: async () => {
+                return _.chain(this.genePanelData.result!)
+                    .groupBy(datum => datum.molecularProfileId)
+                    .mapValues(data =>
+                        _.keyBy(data, genePanelData => genePanelData.sampleId)
+                    )
+                    .value();
+            },
+        },
+        {}
+    );
+
     readonly mutationData = remoteData(
         {
             await: () => [this.samples, this.mutationMolecularProfileId],
@@ -1044,6 +1172,40 @@ export class PatientViewPageStore {
         },
         []
     );
+
+    readonly structuralVariantData = remoteData({
+        await: () => [this.samples, this.structuralVariantProfile],
+        invoke: async () => {
+            if (this.structuralVariantProfile.result) {
+                const structuralVariantFilter = {
+                    sampleMolecularIdentifiers: this.sampleIds.map(sampleId => {
+                        return {
+                            molecularProfileId: this.structuralVariantProfile
+                                .result!.molecularProfileId,
+                            sampleId,
+                        };
+                    }),
+                } as StructuralVariantFilter;
+
+                return client.fetchStructuralVariantsUsingPOST({
+                    structuralVariantFilter,
+                });
+            }
+            return [];
+        },
+        default: [],
+    });
+
+    readonly groupedStructuralVariantData = remoteData({
+        await: () => [this.structuralVariantData],
+        invoke: async () => {
+            return _(this.structuralVariantData.result)
+                .groupBy(generateStructuralVariantId)
+                .values()
+                .value();
+        },
+        default: [],
+    });
 
     readonly mutatedGenes = remoteData({
         await: () => [this.mutationData],
@@ -1227,6 +1389,32 @@ export class PatientViewPageStore {
         ONCOKB_DEFAULT
     );
 
+    readonly structuralVariantOncoKbData = remoteData<IOncoKbData>(
+        {
+            await: () => [
+                this.oncoKbAnnotatedGenes,
+                this.structuralVariantData,
+                this.clinicalDataForSamples,
+                this.studies,
+            ],
+            invoke: async () => {
+                if (AppConfig.serverConfig.show_oncokb) {
+                    return fetchStructuralVariantOncoKbData(
+                        this.uniqueSampleKeyToTumorType,
+                        this.oncoKbAnnotatedGenes.result || {},
+                        this.structuralVariantData
+                    );
+                } else {
+                    return ONCOKB_DEFAULT;
+                }
+            },
+            onError: (err: Error) => {
+                // fail silently, leave the error handling responsibility to the data consumer
+            },
+        },
+        ONCOKB_DEFAULT
+    );
+
     readonly cnaCivicGenes = remoteData<ICivicGene | undefined>(
         {
             await: () => [this.discreteCNAData, this.clinicalDataForSamples],
@@ -1282,16 +1470,21 @@ export class PatientViewPageStore {
         invoke: () => Promise.resolve(indexHotspotsData(this.hotspotData)),
     });
 
-    readonly sampleToMutationGenePanelData = remoteData<{
-        [sampleId: string]: GenePanelData;
+    readonly sampleToMutationGenePanelId = remoteData<{
+        [sampleId: string]: string;
     }>(
         {
-            await: () => [this.mutationMolecularProfileId, this.samples],
+            await: () => [
+                this.mutationMolecularProfileId,
+                this.genePanelDataByMolecularProfileIdAndSampleId,
+            ],
             invoke: async () => {
                 if (this.mutationMolecularProfileId.result) {
-                    return fetchGenePanelData(
-                        this.mutationMolecularProfileId.result,
-                        this.sampleIds
+                    return _.mapValues(
+                        this.genePanelDataByMolecularProfileIdAndSampleId
+                            .result[this.mutationMolecularProfileId.result] ||
+                            {},
+                        genePanelData => genePanelData.genePanelId
                     );
                 }
                 return {};
@@ -1300,31 +1493,23 @@ export class PatientViewPageStore {
         {}
     );
 
-    readonly sampleToMutationGenePanelId = remoteData<{
+    readonly sampleToStructuralVariantGenePanelId = remoteData<{
         [sampleId: string]: string;
     }>(
         {
-            await: () => [this.sampleToMutationGenePanelData],
+            await: () => [
+                this.structuralVariantProfile,
+                this.genePanelDataByMolecularProfileIdAndSampleId,
+            ],
             invoke: async () => {
-                return _.mapValues(
-                    this.sampleToMutationGenePanelData.result,
-                    genePanelData => genePanelData.genePanelId
-                );
-            },
-        },
-        {}
-    );
-
-    readonly sampleToDiscreteGenePanelData = remoteData<{
-        [sampleId: string]: GenePanelData;
-    }>(
-        {
-            await: () => [this.molecularProfileIdDiscrete, this.samples],
-            invoke: async () => {
-                if (this.molecularProfileIdDiscrete.result) {
-                    return fetchGenePanelData(
-                        this.molecularProfileIdDiscrete.result,
-                        this.sampleIds
+                if (this.structuralVariantProfile.result) {
+                    return _.mapValues(
+                        this.genePanelDataByMolecularProfileIdAndSampleId
+                            .result[
+                            this.structuralVariantProfile.result!
+                                .molecularProfileId
+                        ] || {},
+                        genePanelData => genePanelData.genePanelId
                     );
                 }
                 return {};
@@ -1337,35 +1522,20 @@ export class PatientViewPageStore {
         [sampleId: string]: string;
     }>(
         {
-            await: () => [this.sampleToDiscreteGenePanelData],
-            invoke: async () => {
-                return _.mapValues(
-                    this.sampleToDiscreteGenePanelData.result,
-                    genePanelData => genePanelData.genePanelId
-                );
-            },
-        },
-        {}
-    );
-
-    readonly genePanelIdToPanel = remoteData<{
-        [genePanelId: string]: GenePanel;
-    }>(
-        {
             await: () => [
-                this.sampleToMutationGenePanelData,
-                this.sampleToDiscreteGenePanelData,
+                this.molecularProfileIdDiscrete,
+                this.genePanelDataByMolecularProfileIdAndSampleId,
             ],
             invoke: async () => {
-                const sampleGenePanelInfo = _.concat(
-                    _.values(this.sampleToMutationGenePanelData.result),
-                    _.values(this.sampleToDiscreteGenePanelData.result)
-                );
-                const panelIds = _(sampleGenePanelInfo)
-                    .map(genePanelData => genePanelData.genePanelId)
-                    .filter(genePanelId => !noGenePanelUsed(genePanelId))
-                    .value();
-                return fetchGenePanel(panelIds);
+                if (this.molecularProfileIdDiscrete.result) {
+                    return _.mapValues(
+                        this.genePanelDataByMolecularProfileIdAndSampleId
+                            .result[this.molecularProfileIdDiscrete.result] ||
+                            {},
+                        genePanelData => genePanelData.genePanelId
+                    );
+                }
+                return {};
             },
         },
         {}
@@ -1520,6 +1690,38 @@ export class PatientViewPageStore {
                     )
             );
         },
+    });
+
+    readonly structuralVariantTableShowGeneFilterMenu = remoteData({
+        await: () => [
+            this.samples,
+            this.sampleToStructuralVariantGenePanelId,
+            this.genePanelIdToEntrezGeneIds,
+            this.groupedStructuralVariantData,
+        ],
+        invoke: () => {
+            const entrezGeneIds: number[] = _.uniq(
+                _.flatMap(this.groupedStructuralVariantData.result, datum =>
+                    datum[0].site2EntrezGeneId
+                        ? [
+                              datum[0].site1EntrezGeneId,
+                              datum[0].site2EntrezGeneId,
+                          ]
+                        : [datum[0].site1EntrezGeneId]
+                )
+            );
+            const sampleIds = this.samples.result!.map(s => s.sampleId);
+            return Promise.resolve(
+                sampleIds.length > 1 &&
+                    checkNonProfiledGenesExist(
+                        sampleIds,
+                        entrezGeneIds,
+                        this.sampleToStructuralVariantGenePanelId.result,
+                        this.genePanelIdToEntrezGeneIds.result
+                    )
+            );
+        },
+        default: false,
     });
 
     @computed get uniqueSampleKeyToTumorType(): { [sampleId: string]: string } {

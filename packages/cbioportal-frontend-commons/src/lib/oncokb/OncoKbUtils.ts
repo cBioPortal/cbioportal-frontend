@@ -76,6 +76,19 @@ export function generateQueryVariant(
     return query;
 }
 
+export function generateQueryStructuralVariantId(
+    site1EntrezGeneId: number,
+    site2EntrezGeneId: number,
+    tumorType: string | null
+): string {
+    let id = `${site1EntrezGeneId}_${site2EntrezGeneId}`;
+    if (tumorType) {
+        id = `${id}_${tumorType}`;
+    }
+
+    return id.trim().replace(/\s/g, '_');
+}
+
 export function generateQueryVariantId(
     entrezGeneId: number,
     tumorType: string | null,
@@ -221,6 +234,45 @@ export function generateAnnotateStructuralVariantQuery(
         structuralVariantType: 'FUSION',
         functionalFusion: false,
         tumorType: tumorType,
+        evidenceTypes: evidenceTypes,
+    } as AnnotateStructuralVariantQuery;
+}
+
+export enum StructuralVariantType {
+    DELETION = 'DELETION',
+    TRANSLOCATION = 'TRANSLOCATION',
+    DUPLICATION = 'DUPLICATION',
+    INSERTION = 'INSERTION',
+    INVERSION = 'INVERSION',
+    FUSION = 'FUSION',
+    UNKNOWN = 'UNKNOWN',
+}
+
+export function generateAnnotateStructuralVariantQueryFromGenes(
+    site1EntrezGeneId: number,
+    site2EntrezGeneId: number,
+    tumorType: string | null,
+    structuralVariantType: keyof typeof StructuralVariantType,
+    evidenceTypes?: EvidenceType[]
+): AnnotateStructuralVariantQuery {
+    return {
+        id: generateQueryStructuralVariantId(
+            site1EntrezGeneId,
+            site2EntrezGeneId,
+            tumorType
+        ),
+        geneA: {
+            entrezGeneId: site1EntrezGeneId,
+        },
+        geneB: {
+            entrezGeneId: site2EntrezGeneId,
+        },
+        structuralVariantType,
+        functionalFusion: !(
+            site1EntrezGeneId === site2EntrezGeneId ||
+            site2EntrezGeneId === null
+        ),
+        tumorType,
         evidenceTypes: evidenceTypes,
     } as AnnotateStructuralVariantQuery;
 }
