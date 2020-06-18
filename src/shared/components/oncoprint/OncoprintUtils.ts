@@ -999,6 +999,9 @@ export function makeHeatmapTracksMobxPromise(
                     key: `HEATMAPTRACK_${molecularProfileId},${gene}`,
                     label: gene,
                     molecularProfileId: molecularProfileId,
+                    molecularProfileName:
+                        molecularProfileIdToMolecularProfile[molecularProfileId]
+                            .name,
                     molecularAlterationType:
                         molecularProfileIdToMolecularProfile[molecularProfileId]
                             .molecularAlterationType,
