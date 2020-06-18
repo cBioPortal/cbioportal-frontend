@@ -99,9 +99,9 @@
         }
     }
 
-    .utilities-menu {
+    .coloring-menu {
         margin-bottom: -20px;
-        margin-right: 25px; // to avoid the download button overlapping the menu
+        margin-right: 50px; // to avoid the download button overlapping the menu
 
         * {
             vertical-align: middle;
@@ -155,7 +155,7 @@
                 .gene-select {
                     text-align: left;
                     margin-right: 0;
-                    width: 100px;
+                    width: 350px;
                 }
             }
         }
