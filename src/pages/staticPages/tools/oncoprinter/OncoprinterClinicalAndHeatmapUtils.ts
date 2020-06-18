@@ -9,6 +9,7 @@ import {
 import { makeUniqueColorGetter } from '../../../../shared/components/plots/PlotUtils';
 import { MUTATION_SPECTRUM_FILLS } from '../../../../shared/cache/ClinicalDataCache';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
+import { AlterationTypeConstants } from '../../../resultsView/ResultsViewPageStore';
 
 export const ONCOPRINTER_VAL_NA = 'N/A';
 
@@ -44,7 +45,44 @@ export enum ClinicalTrackDataType {
 }
 
 export enum HeatmapTrackDataType {
+    HEATMAP_01 = 'heatmap01',
+    HEATMAP_ZSCORE = 'heatmapZscores',
     HEATMAP = 'heatmap',
+}
+
+const CLINICAL_TRACK_TYPES: { [type in ClinicalTrackDataType]: boolean } = {
+    [ClinicalTrackDataType.NUMBER]: true,
+    [ClinicalTrackDataType.LOG_NUMBER]: true,
+    [ClinicalTrackDataType.STRING]: true,
+    [ClinicalTrackDataType.COUNTS]: true,
+};
+
+const HEATMAP_TRACK_TYPES: { [type in HeatmapTrackDataType]: boolean } = {
+    [HeatmapTrackDataType.HEATMAP_01]: true,
+    [HeatmapTrackDataType.HEATMAP_ZSCORE]: true,
+    [HeatmapTrackDataType.HEATMAP]: true,
+};
+
+function isClinicalTrackType(
+    type: ClinicalTrackDataType | HeatmapTrackDataType
+): type is ClinicalTrackDataType {
+    return type in CLINICAL_TRACK_TYPES;
+}
+function isHeatmapTrackType(
+    type: ClinicalTrackDataType | HeatmapTrackDataType
+): type is HeatmapTrackDataType {
+    return type in HEATMAP_TRACK_TYPES;
+}
+
+function getHeatmapMolecularAlterationType(datatype: HeatmapTrackDataType) {
+    switch (datatype) {
+        case HeatmapTrackDataType.HEATMAP_01:
+            return AlterationTypeConstants.METHYLATION;
+        case HeatmapTrackDataType.HEATMAP_ZSCORE:
+            return AlterationTypeConstants.MRNA_EXPRESSION;
+        case HeatmapTrackDataType.HEATMAP:
+            return AlterationTypeConstants.GENERIC_ASSAY;
+    }
 }
 
 export function parseClinicalAndHeatmapDataHeader(headerLine: string[]) {
@@ -63,20 +101,25 @@ export function parseClinicalAndHeatmapDataHeader(headerLine: string[]) {
         let datatype = match[2] || ClinicalTrackDataType.STRING;
         let countsCategories: string[] | undefined = undefined;
 
-        if (
-            datatype !== ClinicalTrackDataType.NUMBER &&
-            datatype !== ClinicalTrackDataType.LOG_NUMBER &&
-            datatype !== ClinicalTrackDataType.STRING &&
-            datatype !== HeatmapTrackDataType.HEATMAP
-        ) {
-            if (COUNTS_MAP_ATTRIBUTE_TYPE_REGEX.test(datatype)) {
-                countsCategories = datatype.split('/');
-                datatype = ClinicalTrackDataType.COUNTS;
-            } else {
-                throw new Error(
-                    `${errorPrefix}invalid track data type ${datatype}`
-                );
-            }
+        // validate and normalize track data type and options
+        switch (datatype) {
+            case ClinicalTrackDataType.NUMBER:
+            case ClinicalTrackDataType.LOG_NUMBER:
+            case ClinicalTrackDataType.STRING:
+            case HeatmapTrackDataType.HEATMAP_01:
+            case HeatmapTrackDataType.HEATMAP_ZSCORE:
+            case HeatmapTrackDataType.HEATMAP:
+                break;
+            default:
+                if (COUNTS_MAP_ATTRIBUTE_TYPE_REGEX.test(datatype)) {
+                    countsCategories = datatype.split('/');
+                    datatype = ClinicalTrackDataType.COUNTS;
+                } else {
+                    throw new Error(
+                        `${errorPrefix}invalid track data type ${datatype}`
+                    );
+                }
+                break;
         }
         ret.push({
             trackName: match[1],
@@ -168,17 +211,17 @@ export function getClinicalAndHeatmapOncoprintData(
     } = {};
 
     for (const attr of attributes) {
-        if (attr.datatype === HeatmapTrackDataType.HEATMAP) {
-            heatmapTracks[attr.trackName] = [];
-        } else {
+        if (isClinicalTrackType(attr.datatype)) {
             clinicalTracks[attr.trackName] = [];
+        } else if (isHeatmapTrackType(attr.datatype)) {
+            heatmapTracks[attr.trackName] = [];
         }
     }
 
     parsedLines.forEach((line, lineIndex) => {
         for (let i = 0; i < attributes.length; i++) {
             const rawValue = line.orderedValues[i];
-            if (attributes[i].datatype === HeatmapTrackDataType.HEATMAP) {
+            if (isHeatmapTrackType(attributes[i].datatype)) {
                 heatmapTracks[attributes[i].trackName].push(
                     makeHeatmapTrackDatum(
                         rawValue,
@@ -187,7 +230,7 @@ export function getClinicalAndHeatmapOncoprintData(
                         lineIndex
                     )
                 );
-            } else {
+            } else if (isClinicalTrackType(attributes[i].datatype)) {
                 clinicalTracks[attributes[i].trackName].push(
                     makeClinicalTrackDatum(
                         rawValue,
@@ -351,24 +394,28 @@ export function getClinicalAndHeatmapTracks(
 
     const ret = {
         clinicalTracks: [] as ClinicalTrackSpec[],
-        heatmapTracks: [] as IBaseHeatmapTrackSpec[],
+        heatmapTracks: [] as IHeatmapTrackSpec[],
     };
 
     attributes.map(attr => {
-        if (attr.datatype === HeatmapTrackDataType.HEATMAP) {
+        if (isHeatmapTrackType(attr.datatype)) {
             const data = attributeToOncoprintData.heatmapTracks[attr.trackName];
 
             ret.heatmapTracks.push({
                 key: getHeatmapTrackKey(attr.trackName),
                 label: attr.trackName,
+                legendLabel: 'Heatmap',
+                tooltipValueLabel: 'Value',
                 molecularProfileId: 'input',
-                molecularAlterationType: '' as any,
+                molecularAlterationType: getHeatmapMolecularAlterationType(
+                    attr.datatype
+                ) as any,
                 datatype: '',
                 data,
                 trackGroupIndex: 2,
                 hasColumnSpacing: false,
             });
-        } else {
+        } else if (isClinicalTrackType(attr.datatype)) {
             const data =
                 attributeToOncoprintData.clinicalTracks[attr.trackName];
             let datatype, numberRange, countsCategoryFills;

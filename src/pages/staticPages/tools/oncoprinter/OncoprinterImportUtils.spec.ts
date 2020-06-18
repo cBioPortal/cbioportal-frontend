@@ -254,6 +254,7 @@ describe('OncoprinterImportUtils', () => {
                         SpecialAttribute.MutationSpectrum,
                     ],
                     attributeIdToAttribute,
+                    [],
                     'sample'
                 ),
                 'Sample  Age(number)  Mutation_Count(lognumber)  Cancer_type(string)  Mutation_Spectrum(C>A/C>G/C>T/T>A/T>C/T>G)\n' +
@@ -273,6 +274,7 @@ describe('OncoprinterImportUtils', () => {
                         SpecialAttribute.MutationSpectrum,
                     ],
                     attributeIdToAttribute,
+                    [],
                     'patient'
                 ),
                 'Sample  Age(number)  Mutation_Count(lognumber)  Cancer_type(string)  Mutation_Spectrum(C>A/C>G/C>T/T>A/T>C/T>G)\n' +
