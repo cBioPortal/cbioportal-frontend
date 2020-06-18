@@ -287,7 +287,7 @@ export function makeTrackGroupHeaders(
     onClickClusterCallback: (index: TrackGroupIndex) => void,
     onClickDontClusterCallback: () => void,
     onClickDeleteCallback: (index: TrackGroupIndex) => void
-): { [p: number]: TrackGroupHeader } {
+): { [trackGroupIndex: number]: TrackGroupHeader } {
     var headers = _.reduce(
         molecularProfileIdToHeatmapTracks,
         (headerMap, nextEntry) => {
