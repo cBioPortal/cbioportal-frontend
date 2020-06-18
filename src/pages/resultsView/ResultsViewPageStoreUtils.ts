@@ -826,6 +826,7 @@ export function fetchPatients(samples: Sample[]) {
     });
 }
 
+// special profiles includes mutation genetic profiles and structural variant profiles and generic assay profiles
 export function excludeSpecialMolecularProfiles(
     molecularprofiles: MolecularProfile[]
 ): MolecularProfile[] {

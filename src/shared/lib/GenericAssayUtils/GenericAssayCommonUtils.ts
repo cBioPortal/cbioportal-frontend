@@ -22,9 +22,6 @@ export async function fetchGenericAssayStableIdsByMolecularProfileIds(
         const metaList = await client.fetchGenericAssayMetaDataUsingPOST({
             genericAssayMetaFilter: {
                 molecularProfileIds: genericAssayProfileIds,
-                // the Swagger-generated type expected by the client method below
-                // incorrectly requires both molecularProfileIds and genericAssayStableIds;
-                // use 'as' to tell TypeScript that this object really does fit.
             } as GenericAssayMetaFilter,
             projection: 'ID',
         });
