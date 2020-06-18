@@ -1429,7 +1429,7 @@ export default class ResultsViewOncoprint extends React.Component<
             this.oncoprint.resetSortableTracksSortDirection();
         }
 
-        var molecularProfileId: string | undefined;
+        let molecularProfileId: string | undefined;
         if (index === this.genesetHeatmapTrackGroup) {
             molecularProfileId =
                 this.props.store.genesetMolecularProfile.result &&
