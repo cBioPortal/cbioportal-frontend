@@ -4,6 +4,8 @@ import { observable } from 'mobx';
 import { Popover } from 'react-bootstrap';
 import bind from 'bind-decorator';
 import classnames from 'classnames';
+import * as Portal from 'react-overlays/lib/Portal';
+import $ from 'jquery';
 
 export interface IWaterfallPlotTooltipProps {
     container: HTMLDivElement;
@@ -39,33 +41,38 @@ export default class WaterfallPlotTooltip extends React.Component<
             !this.props.placement ||
             this.props.placement === 'left' ||
             this.props.placement === 'right';
-        if (this.props.targetHovered || this.isHovered) {
+        const containerOffset = $(this.props.container).offset();
+        if (containerOffset && (this.props.targetHovered || this.isHovered)) {
             return (
-                <Popover
-                    className={classnames(
-                        'cbioportal-frontend',
-                        'cbioTooltip',
-                        this.props.className
-                    )}
-                    positionLeft={
-                        this.props.targetCoords.x +
-                        this.props.container.offsetLeft +
-                        leftPadding -
-                        (!horizontal ? arrowOffsetLeft + 6 : 0)
-                    }
-                    positionTop={
-                        this.props.targetCoords.y +
-                        this.props.container.offsetTop -
-                        (horizontal ? arrowOffsetTop : -5)
-                    }
-                    onMouseEnter={this.onMouseEnter}
-                    onMouseLeave={this.onMouseLeave}
-                    arrowOffsetTop={horizontal ? arrowOffsetTop : undefined}
-                    arrowOffsetLeft={!horizontal ? arrowOffsetLeft : undefined}
-                    placement={this.props.placement}
-                >
-                    {this.props.overlay}
-                </Popover>
+                <Portal container={document.body}>
+                    <Popover
+                        className={classnames(
+                            'cbioportal-frontend',
+                            'cbioTooltip',
+                            this.props.className
+                        )}
+                        positionLeft={
+                            this.props.targetCoords.x +
+                            containerOffset.left +
+                            leftPadding -
+                            (!horizontal ? arrowOffsetLeft + 6 : 0)
+                        }
+                        positionTop={
+                            this.props.targetCoords.y +
+                            containerOffset.top -
+                            (horizontal ? arrowOffsetTop : -5)
+                        }
+                        onMouseEnter={this.onMouseEnter}
+                        onMouseLeave={this.onMouseLeave}
+                        arrowOffsetTop={horizontal ? arrowOffsetTop : undefined}
+                        arrowOffsetLeft={
+                            !horizontal ? arrowOffsetLeft : undefined
+                        }
+                        placement={this.props.placement}
+                    >
+                        {this.props.overlay}
+                    </Popover>
+                </Portal>
             );
         } else {
             return null;

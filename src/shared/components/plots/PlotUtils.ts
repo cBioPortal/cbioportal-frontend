@@ -1,18 +1,121 @@
 import _ from 'lodash';
-
-import Timer = NodeJS.Timer;
 import jStat from 'jStat';
 import {
     IPlotSampleData,
     IThreshold1D,
-    IWaterfallPlotData,
-    IScatterPlotData,
-    IBoxScatterPlotPoint,
     IThreshold2D,
-    IValue1D,
-    IValue2D,
 } from 'pages/resultsView/plots/PlotsTabUtils';
-import { IBoxScatterPlotData } from './BoxScatterPlot';
+import Timeout = NodeJS.Timeout;
+import { getTextHeight, getTextWidth } from 'cbioportal-frontend-commons';
+import CBIOPORTAL_VICTORY_THEME, {
+    legendLabelStyles,
+} from '../../theme/cBioPoralTheme';
+import { clamp } from '../../lib/NumberUtils';
+
+export type LegendDataWithId<D = any> = {
+    name: string | string[];
+    symbol:
+        | {
+              type: 'gradient';
+              range: [number, number];
+              colorFn: (x: number) => string;
+              gradientUid: string;
+          }
+        | any; // see victory documentation
+    labels?: any; // see victory documentation
+    margin?: number;
+    highlighting?: {
+        uid: string;
+        isDatumHighlighted: (d: D) => boolean; // if this legend item is selected then this governs how data are highlighted
+        onClick: (ld: LegendDataWithId<D>) => void;
+    };
+};
+
+export function getLegendDataHeight(ld: LegendDataWithId) {
+    if (ld.symbol.type === 'gradient') {
+        return 100;
+    } else {
+        const name = ([] as string[]).concat(ld.name);
+        return _.sumBy(name, t =>
+            getTextHeight(
+                t,
+                CBIOPORTAL_VICTORY_THEME.legend.style.labels.fontFamily,
+                CBIOPORTAL_VICTORY_THEME.legend.style.labels.fontSize + 'px'
+            )
+        );
+    }
+}
+
+export function getBottomLegendHeight(
+    legendItemsPerRow: number,
+    legendData: LegendDataWithId<any>[],
+    _legendTitle?: string | string[]
+) {
+    //height of legend in case its on bottom
+    const numRows = Math.ceil(legendData.length / legendItemsPerRow);
+    let itemsHeight =
+        Math.max(...legendData.map(getLegendDataHeight)) * numRows;
+    // add room for between rows
+    itemsHeight += 20 * (numRows - 1);
+
+    let titleHeight = 0;
+    if (_legendTitle) {
+        const legendTitle = ([] as string[]).concat(_legendTitle);
+        titleHeight = _.sumBy(legendTitle, t =>
+            getTextHeight(
+                t,
+                CBIOPORTAL_VICTORY_THEME.legend.style.title.fontFamily,
+                CBIOPORTAL_VICTORY_THEME.legend.style.title.fontSize + 'px'
+            )
+        );
+        // add room for between lines
+        titleHeight += 10 * (legendTitle.length - 1);
+    }
+
+    return Math.max(itemsHeight, titleHeight);
+}
+
+export function getMaxLegendLabelWidth(legendData: LegendDataWithId<any>[]) {
+    return Math.max(
+        ...legendData.map(d => {
+            return getTextWidth(
+                Array.isArray(d.name) ? (d.name as string[]).join(' ') : d.name,
+                legendLabelStyles.fontFamily,
+                legendLabelStyles.fontSize + 'px'
+            );
+        })
+    );
+}
+
+export function getLegendItemsPerRow(
+    maxLegendLabelWidth: number,
+    svgWidth: number,
+    LEGEND_COLUMN_PADDING: number,
+    _legendTitle?: string | string[]
+) {
+    const widthPerItem =
+        maxLegendLabelWidth +
+        50 + // data point and padding
+        LEGEND_COLUMN_PADDING; // space between columns
+    let legendItemArea = svgWidth;
+    if (_legendTitle) {
+        const legendTitle = ([] as string[]).concat(_legendTitle);
+        // make room for legend title if there is one
+        legendItemArea -= Math.max(
+            ...legendTitle.map(t =>
+                getTextWidth(
+                    t,
+                    CBIOPORTAL_VICTORY_THEME.legend.style.title.fontFamily,
+                    CBIOPORTAL_VICTORY_THEME.legend.style.title.fontSize + 'px'
+                )
+            )
+        );
+        // padding
+        legendItemArea -= CBIOPORTAL_VICTORY_THEME.legend.gutter;
+    }
+    return clamp(Math.floor(legendItemArea / widthPerItem), 1, 5);
+}
+
 export function getDeterministicRandomNumber(
     seed: number,
     range?: [number, number]
@@ -48,7 +151,7 @@ export function makeMouseEvents(self: {
     tooltipModel: any;
     pointHovered: boolean;
 }) {
-    let disappearTimeout: Timer | null = null;
+    let disappearTimeout: Timeout | null = null;
     const disappearDelayMs = 250;
 
     return [

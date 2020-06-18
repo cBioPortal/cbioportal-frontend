@@ -41,6 +41,7 @@ describe('coexpression tab screenshot tests', function() {
     });
     it('coexpression tab coadread_tcga_pub log scale x and y with regression line', function() {
         browser.click('input[data-test="ShowRegressionLine"]');
+        browser.moveToObject('body', 0, 0);
         var res = browser.checkElement('div[data-test="coExpressionTabDiv"]');
         assertScreenShotMatch(res);
     });
