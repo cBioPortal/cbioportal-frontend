@@ -60,6 +60,7 @@ import {
 import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
 import { ISelectOption } from './controls/OncoprintControls';
 import { NOT_APPLICABLE_VALUE } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import ifNotDefined from '../../lib/ifNotDefined';
 
 interface IGenesetExpansionMap {
     [genesetTrackKey: string]: IHeatmapTrackSpec[];
@@ -190,13 +191,13 @@ export function getHeatmapTrackRuleSetParams(
             break;
         case AlterationTypeConstants.METHYLATION:
             value_range = [0, 1];
-            legend_label = 'Methylation Heatmap';
+            legend_label = trackSpec.legendLabel || 'Methylation Heatmap';
             value_stop_points = [0, 0.35, 1];
             colors = [[0, 0, 255, 1], [255, 255, 255, 1], [255, 0, 0, 1]];
             break;
         case AlterationTypeConstants.MUTATION_EXTENDED:
             value_range = [0, 1];
-            legend_label = 'VAF Heatmap';
+            legend_label = trackSpec.legendLabel || 'VAF Heatmap';
             null_legend_label = 'Not mutated/no VAF data';
             na_legend_label = 'Not sequenced';
             value_stop_points = [0, 1];
@@ -204,7 +205,7 @@ export function getHeatmapTrackRuleSetParams(
             break;
         default:
             value_range = [-3, 3];
-            legend_label = 'Expression Heatmap';
+            legend_label = trackSpec.legendLabel || 'Expression Heatmap';
             value_stop_points = [-3, 0, 3];
             colors = [[0, 0, 255, 1], [0, 0, 0, 1], [255, 0, 0, 1]];
             break;
@@ -242,7 +243,7 @@ export function getGenericAssayTrackRuleSetParams(
     //  along side other track specs (if possible)
     // - When the most extreme value does not reach the pivotThreshold the pivotThreshold is used a most extreme value
 
-    legend_label = `${trackSpec.molecularProfileName}`;
+    legend_label = trackSpec.legendLabel || `${trackSpec.molecularProfileName}`;
     const dataPoints = trackSpec.data;
     const pivotThreshold = trackSpec.pivotThreshold;
     const sortOrder = trackSpec.sortOrder;
@@ -275,6 +276,20 @@ export function getGenericAssayTrackRuleSetParams(
 
     let maxValue = trackSpec.maxProfileValue!;
     let minValue = trackSpec.minProfileValue!;
+
+    if (maxValue === undefined || minValue === undefined) {
+        let dataMax = Number.NEGATIVE_INFINITY;
+        let dataMin = Number.POSITIVE_INFINITY;
+        for (const d of trackSpec.data) {
+            if (d.profile_data !== null) {
+                dataMax = Math.max(d.profile_data, dataMax);
+                dataMin = Math.min(d.profile_data, dataMin);
+            }
+        }
+        maxValue = ifNotDefined(maxValue, dataMax);
+        minValue = ifNotDefined(minValue, dataMin);
+    }
+
     if (pivotThreshold !== undefined) {
         maxValue = Math.max(maxValue, pivotThreshold);
         minValue = Math.min(minValue, pivotThreshold);

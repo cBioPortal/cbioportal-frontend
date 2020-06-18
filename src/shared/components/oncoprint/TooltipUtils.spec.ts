@@ -2576,7 +2576,10 @@ describe('Oncoprint TooltipUtils', () => {
         });
     });
     describe('makeHeatmapTrackTooltip', () => {
-        const tooltip = makeHeatmapTrackTooltip('MRNA_EXPRESSION', false);
+        const tooltip = makeHeatmapTrackTooltip(
+            { molecularAlterationType: 'MRNA_EXPRESSION' } as any,
+            false
+        );
 
         it('should show data rounded to 2 decimal digits', () => {
             // one data
@@ -2683,7 +2686,7 @@ describe('Oncoprint TooltipUtils', () => {
         });
 
         const fTreamentTooltip = makeHeatmapTrackTooltip(
-            'GENERIC_ASSAY',
+            { molecularAlterationType: 'GENERIC_ASSAY' } as any,
             false
         );
 
