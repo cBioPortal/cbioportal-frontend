@@ -4555,6 +4555,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         className="plots-oql-status-banner"
                         store={this.props.store}
                         tabReflectsOql={false}
+                        isUnaffected={
+                            !this.props.store.queryContainsMutationOql
+                        }
                     />
                     <AlterationFilterWarning
                         store={this.props.store}
