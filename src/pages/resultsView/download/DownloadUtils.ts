@@ -339,13 +339,13 @@ export function generateGenericAssayProfileData(
 }
 
 export function generateGenericAssayProfileDownloadData(
-    sampleAlterationDataByGene: { [key: string]: GenericAssayData[] },
+    sampleAlterationDataByStableId: { [key: string]: GenericAssayData[] },
     samples: Sample[] = [],
     stableIds: string[] = []
 ): string[][] {
-    return sampleAlterationDataByGene
+    return sampleAlterationDataByStableId
         ? generateGenericAssayDownloadData(
-              sampleAlterationDataByGene,
+              sampleAlterationDataByStableId,
               samples,
               stableIds
           )
@@ -418,7 +418,7 @@ export function generateGenericAssayDataByStableId(
     unfilteredCaseAggregatedData: CaseAggregatedData<GenericAssayData>,
     sampleFilter?: (alteration: GenericAssayData) => boolean
 ): { [key: string]: GenericAssayData[] } {
-    // key => gene + uniqueSampleKey
+    // key => stableId + uniqueSampleKey
     const sampleDataByStableId: { [key: string]: GenericAssayData[] } = {};
 
     _.values(unfilteredCaseAggregatedData.samples).forEach(alterations => {
@@ -438,7 +438,7 @@ export function generateGenericAssayDataByStableId(
 
 export function generateGenericAssayDownloadFileRows(
     sampleAlterationDataByGene: { [key: string]: GenericAssayData[] },
-    geneSymbols: string[],
+    stableIds: string[],
     sampleIndex: { [sampleKey: string]: Sample },
     sampleKeys: string[],
     extractValue?: (alteration: GenericAssayData) => string
@@ -457,17 +457,17 @@ export function generateGenericAssayDownloadFileRows(
 
         rows[sampleKey] = row;
 
-        geneSymbols.forEach(gene => {
-            row.alterationData[gene] = row.alterationData[gene] || [];
+        stableIds.forEach(stableId => {
+            row.alterationData[stableId] = row.alterationData[stableId] || [];
 
-            const key = `${gene}_${sampleKey}`;
+            const key = `${stableId}_${sampleKey}`;
 
             if (sampleAlterationDataByGene[key]) {
                 sampleAlterationDataByGene[key].forEach(alteration => {
                     const value = extractValue
                         ? extractValue(alteration)
                         : String(alteration.value);
-                    row.alterationData[gene].push(value);
+                    row.alterationData[stableId].push(value);
                 });
             }
         });
