@@ -465,10 +465,10 @@ export class ResultsViewPageStore {
             cosmicCountThreshold: 0,
             driverTiers: observable.map<boolean>(),
 
-            _customBinary: undefined,
             _hotspots: false,
             _oncoKb: false,
             _excludeVUS: false,
+            _customBinary: undefined,
 
             set hotspots(val: boolean) {
                 this._hotspots = val;
@@ -518,13 +518,15 @@ export class ResultsViewPageStore {
                 return anySelected;
             },
 
+            set customBinary(val: boolean) {
+                this._customBinary = val;
+            },
             get customBinary() {
                 return this._customBinary === undefined
                     ? AppConfig.serverConfig
                           .oncoprint_custom_driver_annotation_binary_default
                     : this._customBinary;
             },
-
             get customTiersDefault() {
                 return AppConfig.serverConfig
                     .oncoprint_custom_driver_annotation_tiers_default;
