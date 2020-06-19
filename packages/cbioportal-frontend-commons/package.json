@@ -44,7 +44,7 @@
     "measure-text": "0.0.4",
     "mobxpromise": "github:cbioportal/mobxpromise#v1.0.2",
     "object-sizeof": "^1.2.0",
-    "oncokb-ts-api-client": "^1.0.4",
+    "oncokb-ts-api-client": "^1.1.0-beta.1",
     "rc-tooltip": "3.7.3",
     "react-file-download": "^0.3.2",
     "react-select": "^3.0.4",
