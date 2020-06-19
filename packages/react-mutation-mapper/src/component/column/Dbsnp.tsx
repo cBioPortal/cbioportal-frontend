@@ -1,11 +1,11 @@
 import autobind from 'autobind-decorator';
-import { getClinVarId } from 'cbioportal-utils';
+import { getDbsnpRsId } from 'cbioportal-utils';
 import { MyVariantInfo } from 'genome-nexus-ts-api-client';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
 import { defaultSortMethod } from '../../util/ReactTableUtils';
-import ClinVarId from '../clinvar/ClinVarId';
+import DbsnpId from '../dbsnp/DbsnpId';
 import {
     MyVariantInfoProps,
     renderMyVariantInfoContent,
@@ -17,18 +17,16 @@ export function download(myVariantInfo?: MyVariantInfo): string {
     return value ? value.toString() : '';
 }
 
-export function sortValue(myVariantInfo?: MyVariantInfo): number | null {
-    const id = getClinVarId(myVariantInfo);
-
-    return id ? parseInt(id, 10) : null;
+export function sortValue(myVariantInfo?: MyVariantInfo): string | null {
+    return getDbsnpRsId(myVariantInfo);
 }
 
-export function clinVarSortMethod(a: MyVariantInfo, b: MyVariantInfo) {
+export function dbsnpSortMethod(a: MyVariantInfo, b: MyVariantInfo) {
     return defaultSortMethod(sortValue(a), sortValue(b));
 }
 
 @observer
-export default class ClinVar extends React.Component<MyVariantInfoProps, {}> {
+export default class Dbsnp extends React.Component<MyVariantInfoProps, {}> {
     public static defaultProps: Partial<MyVariantInfoProps> = {
         className: 'pull-right mr-1',
     };
@@ -39,6 +37,6 @@ export default class ClinVar extends React.Component<MyVariantInfoProps, {}> {
 
     @autobind
     public getContent(myVariantInfo: MyVariantInfo) {
-        return <ClinVarId myVariantInfo={myVariantInfo} />;
+        return <DbsnpId myVariantInfo={myVariantInfo} />;
     }
 }

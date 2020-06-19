@@ -155,9 +155,6 @@ export default class Mutations extends React.Component<
                                 this.props.store
                                     .genomeNexusMutationAssessorCache
                             }
-                            genomeNexusMyVariantInfoCache={
-                                this.props.store.genomeNexusMyVariantInfoCache
-                            }
                             pdbHeaderCache={this.props.store.pdbHeaderCache}
                             userEmailAddress={this.props.appStore.userName!}
                             generateGenomeNexusHgvsgUrl={

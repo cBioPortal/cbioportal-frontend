@@ -38,7 +38,6 @@ import {
 import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
-import GenomeNexusMyVariantInfoCache from 'shared/cache/GenomeNexusMyVariantInfoCache';
 import {
     GenomeNexusAPI,
     GenomeNexusAPIInternal,
@@ -130,6 +129,10 @@ import { checkNonProfiledGenesExist } from '../PatientViewPageUtils';
 import autobind from 'autobind-decorator';
 import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mutationMapper/MutationMapperUtils';
 import { USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB } from 'react-mutation-mapper';
+import {
+    getMyVariantInfoAnnotationsFromIndexedVariantAnnotations,
+    IMyVariantInfoIndex,
+} from 'cbioportal-utils';
 
 type PageMode = 'patient' | 'sample';
 
@@ -668,6 +671,30 @@ export class PatientViewPageStore {
         },
         undefined
     );
+
+    readonly indexedMyVariantInfoAnnotations = remoteData<
+        IMyVariantInfoIndex | undefined
+    >({
+        await: () => [this.mutationData, this.uncalledMutationData],
+        invoke: async () => {
+            const indexedVariantAnnotations = await fetchVariantAnnotationsIndexedByGenomicLocation(
+                concatMutationData(
+                    this.mutationData,
+                    this.uncalledMutationData
+                ),
+                ['my_variant_info'],
+                AppConfig.serverConfig.isoformOverrideSource,
+                this.genomeNexusClient
+            );
+
+            return getMyVariantInfoAnnotationsFromIndexedVariantAnnotations(
+                indexedVariantAnnotations
+            );
+        },
+        onError: () => {
+            // fail silently, leave the error handling responsibility to the data consumer
+        },
+    });
 
     readonly hotspotData = remoteData({
         await: () => [this.mutationData, this.uncalledMutationData],
@@ -1558,15 +1585,6 @@ export class PatientViewPageStore {
         return new GenomeNexusCache(
             createVariantAnnotationsByMutationFetcher(
                 ['annotation_summary'],
-                this.genomeNexusClient
-            )
-        );
-    }
-
-    @cached get genomeNexusMyVariantInfoCache() {
-        return new GenomeNexusMyVariantInfoCache(
-            createVariantAnnotationsByMutationFetcher(
-                ['my_variant_info'],
                 this.genomeNexusClient
             )
         );
