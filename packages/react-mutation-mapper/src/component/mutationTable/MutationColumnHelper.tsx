@@ -12,6 +12,7 @@ import { gnomadSortMethod } from '../column/Gnomad';
 import { clinVarSortMethod } from '../column/ClinVar';
 import MutationType from '../column/MutationType';
 import MutationStatus from '../column/MutationStatus';
+import { dbsnpSortMethod } from '../column/Dbsnp';
 
 export enum MutationColumn {
     PROTEIN_CHANGE = 'proteinChange',
@@ -25,6 +26,7 @@ export enum MutationColumn {
     VARIANT_ALLELE = 'variantAllele',
     GNOMAD = 'gnomad',
     CLINVAR = 'clinVarId',
+    DBSNP = 'dbsnp',
 }
 
 export enum MutationColumnName {
@@ -39,6 +41,7 @@ export enum MutationColumnName {
     VARIANT_ALLELE = 'Var',
     GNOMAD = 'gnomAD',
     CLINVAR = 'ClinVar ID',
+    DBSNP = 'dbSNP',
 }
 
 export function rightAlignedCell(cellProps: any) {
@@ -174,6 +177,29 @@ export const MUTATION_COLUMN_HEADERS = {
             }
         />
     ),
+    [MutationColumn.DBSNP]: (
+        <ColumnHeader
+            headerContent={
+                <span className="pull-right mr-3">
+                    {MutationColumnName.DBSNP}{' '}
+                    <i className="fa fa-info-circle" />
+                </span>
+            }
+            overlay={
+                <span>
+                    The Single Nucleotide Polymorphism Database (
+                    <a href="https://www.ncbi.nlm.nih.gov/snp/" target="_blank">
+                        dbSNP
+                    </a>
+                    ) is a free public archive for genetic variation within and
+                    across different species.
+                    <br />
+                    NOTE: Currently only SNPs, single base deletions and
+                    insertions are supported.
+                </span>
+            }
+        />
+    ),
 };
 
 /**
@@ -267,6 +293,12 @@ export const MUTATION_COLUMNS_DEFINITION = {
         Header: MUTATION_COLUMN_HEADERS[MutationColumn.CLINVAR],
         sortMethod: clinVarSortMethod,
     },
+    [MutationColumn.DBSNP]: {
+        id: MutationColumn.DBSNP,
+        name: MutationColumnName.DBSNP,
+        Header: MUTATION_COLUMN_HEADERS[MutationColumn.DBSNP],
+        sortMethod: dbsnpSortMethod,
+    },
 };
 
 export const DEFAULT_MUTATION_COLUMNS = [
@@ -279,6 +311,8 @@ export const DEFAULT_MUTATION_COLUMNS = [
     MUTATION_COLUMNS_DEFINITION[MutationColumn.REFERENCE_ALLELE],
     MUTATION_COLUMNS_DEFINITION[MutationColumn.VARIANT_ALLELE],
     MUTATION_COLUMNS_DEFINITION[MutationColumn.CLINVAR],
+    MUTATION_COLUMNS_DEFINITION[MutationColumn.GNOMAD],
+    MUTATION_COLUMNS_DEFINITION[MutationColumn.DBSNP],
 ];
 
 export function mergeColumns(
