@@ -323,33 +323,76 @@ export function generateOtherMolecularProfileDownloadData(
 }
 
 export function generateGenericAssayProfileData(
-    molecularProfileId: string[],
-    unfilteredCaseAggregatedData?: CaseAggregatedData<GenericAssayData>
+    molecularProfileIds: string[],
+    unfilteredCaseAggregatedData: CaseAggregatedData<GenericAssayData>
 ): { [key: string]: GenericAssayData[] } {
     const sampleFilter = (data: GenericAssayData) => {
-        return molecularProfileId.includes(data.molecularProfileId);
+        return molecularProfileIds.includes(data.molecularProfileId);
     };
 
-    return unfilteredCaseAggregatedData
-        ? generateGenericAssayDataByStableId(
-              unfilteredCaseAggregatedData,
-              sampleFilter
-          )
-        : {};
+    // generate GenericAssay profile data by key
+    // key => stableId + uniqueSampleKey
+    const sampleDataByStableId: { [key: string]: GenericAssayData[] } = {};
+
+    _.values(unfilteredCaseAggregatedData.samples).forEach(alterations => {
+        alterations.forEach(alteration => {
+            const key = `${alteration.stableId}_${alteration.uniqueSampleKey}`;
+            sampleDataByStableId[key] = sampleDataByStableId[key] || [];
+
+            // alteration is filtered out if filter function returns false
+            if (sampleFilter(alteration)) {
+                sampleDataByStableId[key].push(alteration);
+            }
+        });
+    });
+    return sampleDataByStableId;
 }
 
 export function generateGenericAssayProfileDownloadData(
-    sampleAlterationDataByStableId: { [key: string]: GenericAssayData[] },
+    sampleGenericAssayDataByStableId: { [key: string]: GenericAssayData[] },
     samples: Sample[] = [],
     stableIds: string[] = []
 ): string[][] {
-    return sampleAlterationDataByStableId
-        ? generateGenericAssayDownloadData(
-              sampleAlterationDataByStableId,
-              samples,
-              stableIds
-          )
-        : [];
+    if (_.isEmpty(sampleGenericAssayDataByStableId)) {
+        return [];
+    } else {
+        // we need the sample index for better performance
+        const sampleIndex = _.keyBy(samples, 'uniqueSampleKey');
+        const sampleKeys = samples.map(sample => sample.uniqueSampleKey);
+
+        // generate row data (keyed by uniqueSampleKey)
+        const rows = generateGenericAssayDownloadFileRows(
+            sampleGenericAssayDataByStableId,
+            stableIds,
+            sampleIndex,
+            sampleKeys
+        );
+
+        const downloadData: string[][] = [];
+
+        // add headers
+        downloadData.push(['STUDY_ID', 'SAMPLE_ID'].concat(stableIds));
+
+        // convert row data into a 2D array of strings
+        sampleKeys.forEach(sampleKey => {
+            const rowData = rows[sampleKey];
+            const row: string[] = [];
+
+            row.push(rowData.studyId);
+            row.push(rowData.sampleId);
+
+            stableIds.forEach(stableId => {
+                // format: space delimited join
+                const formattedValue =
+                    rowData.alterationData[stableId].join(' ') || 'NA';
+                row.push(formattedValue);
+            });
+
+            downloadData.push(row);
+        });
+
+        return downloadData;
+    }
 }
 
 export function generateSampleAlterationDataByGene(
@@ -414,30 +457,8 @@ export function generateDownloadFileRows(
     return rows;
 }
 
-export function generateGenericAssayDataByStableId(
-    unfilteredCaseAggregatedData: CaseAggregatedData<GenericAssayData>,
-    sampleFilter?: (alteration: GenericAssayData) => boolean
-): { [key: string]: GenericAssayData[] } {
-    // key => stableId + uniqueSampleKey
-    const sampleDataByStableId: { [key: string]: GenericAssayData[] } = {};
-
-    _.values(unfilteredCaseAggregatedData.samples).forEach(alterations => {
-        alterations.forEach(alteration => {
-            const key = `${alteration.stableId}_${alteration.uniqueSampleKey}`;
-            sampleDataByStableId[key] = sampleDataByStableId[key] || [];
-
-            // if no filter function provided nothing is filtered out,
-            // otherwise alteration is filtered out if filter function returns false
-            if (!sampleFilter || sampleFilter(alteration)) {
-                sampleDataByStableId[key].push(alteration);
-            }
-        });
-    });
-    return sampleDataByStableId;
-}
-
 export function generateGenericAssayDownloadFileRows(
-    sampleAlterationDataByGene: { [key: string]: GenericAssayData[] },
+    sampleGenericAssayDataByStableId: { [key: string]: GenericAssayData[] },
     stableIds: string[],
     sampleIndex: { [sampleKey: string]: Sample },
     sampleKeys: string[],
@@ -462,8 +483,8 @@ export function generateGenericAssayDownloadFileRows(
 
             const key = `${stableId}_${sampleKey}`;
 
-            if (sampleAlterationDataByGene[key]) {
-                sampleAlterationDataByGene[key].forEach(alteration => {
+            if (sampleGenericAssayDataByStableId[key]) {
+                sampleGenericAssayDataByStableId[key].forEach(alteration => {
                     const value = extractValue
                         ? extractValue(alteration)
                         : String(alteration.value);
@@ -515,53 +536,6 @@ export function generateDownloadData(
             const formattedValue = formatData
                 ? formatData(rowData.alterationData[gene]) // if provided format with the custom data formatter
                 : rowData.alterationData[gene].join(' ') || 'NA'; // else, default format: space delimited join
-
-            row.push(formattedValue);
-        });
-
-        downloadData.push(row);
-    });
-
-    return downloadData;
-}
-
-export function generateGenericAssayDownloadData(
-    sampleGenericAssayDataByStableId: { [key: string]: GenericAssayData[] },
-    samples: Sample[] = [],
-    stableIds: string[] = [],
-    extractValue?: (alteration: GenericAssayData) => string,
-    formatData?: (data: string[]) => string
-) {
-    // we need the sample index for better performance
-    const sampleIndex = _.keyBy(samples, 'uniqueSampleKey');
-    const sampleKeys = samples.map(sample => sample.uniqueSampleKey);
-
-    // generate row data (keyed by uniqueSampleKey)
-    const rows = generateGenericAssayDownloadFileRows(
-        sampleGenericAssayDataByStableId,
-        stableIds,
-        sampleIndex,
-        sampleKeys,
-        extractValue
-    );
-
-    const downloadData: string[][] = [];
-
-    // add headers
-    downloadData.push(['STUDY_ID', 'SAMPLE_ID'].concat(stableIds));
-
-    // convert row data into a 2D array of strings
-    sampleKeys.forEach(sampleKey => {
-        const rowData = rows[sampleKey];
-        const row: string[] = [];
-
-        row.push(rowData.studyId);
-        row.push(rowData.sampleId);
-
-        stableIds.forEach(stableId => {
-            const formattedValue = formatData
-                ? formatData(rowData.alterationData[stableId]) // if provided format with the custom data formatter
-                : rowData.alterationData[stableId].join(' ') || 'NA'; // else, default format: space delimited join
 
             row.push(formattedValue);
         });

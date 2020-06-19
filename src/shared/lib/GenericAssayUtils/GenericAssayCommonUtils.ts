@@ -15,21 +15,6 @@ import { IDataQueryFilter } from '../StoreUtils';
 
 export const NOT_APPLICABLE_VALUE = 'NA';
 
-export async function fetchGenericAssayStableIdsByMolecularProfileIds(
-    genericAssayProfileIds: string[]
-) {
-    if (genericAssayProfileIds.length > 0) {
-        const metaList = await client.fetchGenericAssayMetaDataUsingPOST({
-            genericAssayMetaFilter: {
-                molecularProfileIds: genericAssayProfileIds,
-            } as GenericAssayMetaFilter,
-            projection: 'ID',
-        });
-        return Promise.resolve(_.map(metaList, meta => meta.stableId));
-    }
-    return Promise.resolve([]);
-}
-
 export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAssayType(
     molecularProfiles: MolecularProfile[]
 ) {
