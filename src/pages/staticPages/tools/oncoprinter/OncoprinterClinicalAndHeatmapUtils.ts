@@ -31,7 +31,7 @@ type OncoprinterClinicalTrackDatum = Pick<
 
 type OncoprinterHeatmapTrackDatum = Pick<
     IBaseHeatmapTrackDatum,
-    'profile_data' | 'uid' | 'na' | 'patient' | 'study_id'
+    'profile_data' | 'uid' | 'na'
 > & { sample: string };
 
 const ATTRIBUTE_REGEX = /^((?:[^\(\)])+)(?:\(([^\(\)]+)\))?$/;
@@ -91,6 +91,7 @@ export function parseClinicalAndHeatmapDataHeader(headerLine: string[]) {
 
     const errorPrefix = 'Clinical data input error in line 1 (header): ';
     const ret: TrackSpec[] = [];
+    const trackNamesMap: { [usedTrackName: string]: boolean } = {};
     for (const attribute of headerLine) {
         const match = attribute.match(ATTRIBUTE_REGEX);
         if (!match) {
@@ -121,11 +122,16 @@ export function parseClinicalAndHeatmapDataHeader(headerLine: string[]) {
                 }
                 break;
         }
+        const trackName = match[1];
+        if (trackName in trackNamesMap) {
+            throw new Error(`${errorPrefix}duplicate track name ${trackName}`);
+        }
         ret.push({
-            trackName: match[1],
+            trackName,
             datatype: datatype as ClinicalTrackDataType,
             countsCategories,
         });
+        trackNamesMap[trackName] = true;
     }
 
     return ret;
@@ -269,8 +275,6 @@ function makeHeatmapTrackDatum(
     }
     return {
         sample: line.sampleId,
-        patient: '',
-        study_id: '',
         profile_data,
         uid: line.sampleId,
         na: profile_data === null,
@@ -411,7 +415,9 @@ export function getClinicalAndHeatmapTracks(
                     attr.datatype
                 ) as any,
                 datatype: '',
-                data,
+                data: data.map(d =>
+                    Object.assign(d, { study_id: '', patient: '' })
+                ),
                 trackGroupIndex: 2,
                 hasColumnSpacing: false,
             });
