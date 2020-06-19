@@ -1,139 +1,84 @@
 import * as React from 'react';
-import { Circle } from 'better-react-spinkit';
 import 'rc-tooltip/assets/bootstrap_white.css';
+
 import { Mutation } from 'cbioportal-ts-api-client';
+import { MyVariantInfo, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import {
-    TableCellStatusIndicator,
-    TableCellStatus,
-} from 'cbioportal-frontend-commons';
-import { MyVariantInfoAnnotation } from 'genome-nexus-ts-api-client';
-import GenomeNexusMyVariantInfoCache, {
-    GenomeNexusCacheDataType,
-} from 'shared/cache/GenomeNexusMyVariantInfoCache';
+    getMyVariantInfoAnnotation,
+    IMyVariantInfoIndex,
+} from 'cbioportal-utils';
 import {
-    ClinVarId,
+    ClinVar,
     clinVarSortValue,
-    getClinVarId,
+    clinVarDownload,
+    RemoteData,
 } from 'react-mutation-mapper';
+
 import generalStyles from './styles.module.scss';
 
 export default class ClinVarColumnFormatter {
     public static renderFunction(
         data: Mutation[],
-        genomeNexusMyVariantInfoCache: GenomeNexusMyVariantInfoCache | undefined
+        indexedVariantAnnotations?: RemoteData<
+            { [genomicLocation: string]: VariantAnnotation } | undefined
+        >,
+        indexedMyVariantInfoAnnotations?: RemoteData<
+            IMyVariantInfoIndex | undefined
+        >
     ) {
-        const genomeNexusCacheData = ClinVarColumnFormatter.getGenomeNexusDataFromCache(
-            data,
-            genomeNexusMyVariantInfoCache
-        );
         return (
-            <div
-                data-test="clinvar-data"
-                className={generalStyles['integer-data']}
-            >
-                {ClinVarColumnFormatter.getClinVarDataViz(genomeNexusCacheData)}
+            <div data-test="clinvar-data">
+                <ClinVar
+                    className={generalStyles['integer-data']}
+                    mutation={data[0]}
+                    indexedVariantAnnotations={indexedVariantAnnotations}
+                    indexedMyVariantInfoAnnotations={
+                        indexedMyVariantInfoAnnotations
+                    }
+                />
             </div>
         );
     }
 
-    private static getGenomeNexusDataFromCache(
-        data: Mutation[],
-        cache: GenomeNexusMyVariantInfoCache | undefined
-    ): GenomeNexusCacheDataType | null {
-        if (data.length === 0 || !cache) {
-            return null;
-        }
-        return cache.get(data[0]);
-    }
-
-    private static getClinVarDataViz(
-        genomeNexusCacheData: GenomeNexusCacheDataType | null
-    ) {
-        let status: TableCellStatus | null = null;
-
-        if (genomeNexusCacheData === null) {
-            status = TableCellStatus.LOADING;
-        } else if (genomeNexusCacheData.status === 'error') {
-            status = TableCellStatus.ERROR;
-        } else if (genomeNexusCacheData.data === null) {
-            status = TableCellStatus.NA;
-        } else {
-            return (
-                <ClinVarId
-                    myVariantInfo={
-                        genomeNexusCacheData.data.my_variant_info
-                            ? genomeNexusCacheData.data.my_variant_info
-                                  .annotation
-                            : undefined
-                    }
-                />
-            );
-        }
-
-        if (status !== null) {
-            // show loading circle
-            if (status === TableCellStatus.LOADING) {
-                return (
-                    <Circle
-                        size={18}
-                        scaleEnd={0.5}
-                        scaleStart={0.2}
-                        color="#aaa"
-                        className="pull-right"
-                    />
-                );
-            } else {
-                return <TableCellStatusIndicator status={status} />;
-            }
-        }
-    }
-
     public static getData(
-        genomeNexusData: MyVariantInfoAnnotation | null
-    ): string | null {
-        if (genomeNexusData) {
-            return getClinVarId(genomeNexusData.annotation);
-        } else {
-            return null;
-        }
+        data: Mutation[],
+        indexedMyVariantInfoAnnotations?: RemoteData<
+            IMyVariantInfoIndex | undefined
+        >
+    ): MyVariantInfo | undefined {
+        return getMyVariantInfoAnnotation(
+            data[0],
+            indexedMyVariantInfoAnnotations
+                ? indexedMyVariantInfoAnnotations.result
+                : undefined
+        );
     }
 
     public static download(
         data: Mutation[],
-        genomeNexusMyVariantInfoCache: GenomeNexusMyVariantInfoCache
+        indexedMyVariantInfoAnnotations?: RemoteData<
+            IMyVariantInfoIndex | undefined
+        >
     ): string {
-        const genomeNexusCacheData = ClinVarColumnFormatter.getGenomeNexusDataFromCache(
+        const myVariantInfo = ClinVarColumnFormatter.getData(
             data,
-            genomeNexusMyVariantInfoCache
+            indexedMyVariantInfoAnnotations
         );
-        if (genomeNexusCacheData && genomeNexusCacheData.data) {
-            let clinVarId = ClinVarColumnFormatter.getData(
-                genomeNexusCacheData.data.my_variant_info
-            );
-            if (clinVarId) {
-                return clinVarId;
-            }
-        }
-        return '';
+
+        return clinVarDownload(myVariantInfo);
     }
 
     public static getSortValue(
         data: Mutation[],
-        genomeNexusCache: GenomeNexusMyVariantInfoCache
+        indexedMyVariantInfoAnnotations?: RemoteData<
+            IMyVariantInfoIndex | undefined
+        >
     ): number | null {
-        const genomeNexusCacheData = ClinVarColumnFormatter.getGenomeNexusDataFromCache(
+        const myVariantInfo = ClinVarColumnFormatter.getData(
             data,
-            genomeNexusCache
+            indexedMyVariantInfoAnnotations
         );
-        if (
-            genomeNexusCacheData &&
-            genomeNexusCacheData.data &&
-            genomeNexusCacheData.data.my_variant_info
-        ) {
-            return clinVarSortValue(
-                genomeNexusCacheData.data.my_variant_info.annotation
-            );
-        }
-        return null;
+
+        return clinVarSortValue(myVariantInfo);
     }
 }

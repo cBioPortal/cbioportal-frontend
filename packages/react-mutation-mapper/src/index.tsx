@@ -3,10 +3,7 @@ export {
     download as civicDownload,
     sortValue as civicSortValue,
 } from './component/civic/Civic';
-export {
-    default as ClinVarId,
-    getClinVarId,
-} from './component/clinvar/ClinVarId';
+export { default as ClinVarId } from './component/clinvar/ClinVarId';
 export {
     AnnotationProps,
     default as Annotation,
@@ -18,17 +15,25 @@ export {
 } from './component/column/Annotation';
 export {
     default as ClinVar,
+    download as clinVarDownload,
     sortValue as clinVarSortValue,
 } from './component/column/ClinVar';
 export { default as ColumnHeader } from './component/column/ColumnHeader';
+export {
+    default as Dbsnp,
+    download as dbsnpDownload,
+    sortValue as dbsnpSortValue,
+} from './component/column/Dbsnp';
 export {
     default as HotspotAnnotation,
     sortValue as hotspotAnnotationSortValue,
 } from './component/column/HotspotAnnotation';
 export {
     default as Gnomad,
+    download as gnomadDownload,
     sortValue as gnomadSortValue,
 } from './component/column/Gnomad';
+export { default as DbsnpId } from './component/dbsnp/DbsnpId';
 export {
     default as MyCancerGenome,
     download as myCancerGenomeDownload,
@@ -65,7 +70,7 @@ export {
 } from './component/filter/MutationStatusBadgeSelector';
 export {
     default as GnomadFrequency,
-    calculateAlleleFrequency as calculateGnomadAllelFrequency,
+    calculateAlleleFrequency as calculateGnomadAlleleFrequency,
 } from './component/gnomad/GnomadFrequency';
 export {
     default as GnomadFrequencyTable,
@@ -139,9 +144,9 @@ export { DomainSpec } from './model/DomainSpec';
 export { ApplyFilterFn, FilterApplier } from './model/FilterApplier';
 export { IProteinImpactTypeColors } from './model/ProteinImpact';
 export { LollipopSpec } from './model/LollipopSpec';
-export * from './model/MyCancerGenome';
 export { MutationMapperDataFetcher } from './model/MutationMapperDataFetcher';
 export { MutationMapperStore } from './model/MutationMapperStore';
+export * from './model/MyCancerGenome';
 export { RemoteData } from './model/RemoteData';
 export { SequenceSpec } from './model/SequenceSpec';
 

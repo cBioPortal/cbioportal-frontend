@@ -42,20 +42,19 @@ import PubMedCache from 'shared/cache/PubMedCache';
 import MutationCountCache from 'shared/cache/MutationCountCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
-import GenomeNexusMyVariantInfoCache from 'shared/cache/GenomeNexusMyVariantInfoCache';
 import { ILazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import { ILazyMobXTableApplicationLazyDownloadDataFetcher } from 'shared/lib/ILazyMobXTableApplicationLazyDownloadDataFetcher';
 import generalStyles from './column/styles.module.scss';
 import classnames from 'classnames';
 import { IPaginationControlsProps } from '../paginationControls/PaginationControls';
 import { IColumnVisibilityControlsProps } from '../columnVisibilityControls/ColumnVisibilityControls';
-import MobxPromise from 'mobxpromise';
 import {
     generateQueryVariantId,
     IOncoKbData,
 } from 'cbioportal-frontend-commons';
+import { IMyVariantInfoIndex } from 'cbioportal-utils';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
-import { CancerGene, OncoKBInfo } from 'oncokb-ts-api-client';
+import { CancerGene } from 'oncokb-ts-api-client';
 import {
     getAnnotationData,
     IAnnotation,
@@ -86,7 +85,6 @@ export interface IMutationTableProps {
     mutationCountCache?: MutationCountCache;
     genomeNexusCache?: GenomeNexusCache;
     genomeNexusMutationAssessorCache?: GenomeNexusMutationAssessorCache;
-    genomeNexusMyVariantInfoCache?: GenomeNexusMyVariantInfoCache;
     mutSigData?: IMutSigData;
     enableOncoKb?: boolean;
     enableMyCancerGenome?: boolean;
@@ -95,8 +93,11 @@ export interface IMutationTableProps {
     enableFunctionalImpact?: boolean;
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspotData?: RemoteData<IHotspotIndex | undefined>;
-    indexedVariantAnnotations?: MobxPromise<
+    indexedVariantAnnotations?: RemoteData<
         { [genomicLocation: string]: VariantAnnotation } | undefined
+    >;
+    indexedMyVariantInfoAnnotations?: RemoteData<
+        IMyVariantInfoIndex | undefined
     >;
     cosmicData?: ICosmicData;
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
@@ -955,14 +956,21 @@ export default class MutationTable<
         this._columns[MutationTableColumnType.GNOMAD] = {
             name: 'gnomAD',
             render: (d: Mutation[]) =>
-                GnomadColumnFormatter.renderFunction(d, this.props
-                    .genomeNexusMyVariantInfoCache as GenomeNexusMyVariantInfoCache),
+                GnomadColumnFormatter.renderFunction(
+                    d,
+                    this.props.indexedVariantAnnotations,
+                    this.props.indexedMyVariantInfoAnnotations
+                ),
             sortBy: (d: Mutation[]) =>
-                GnomadColumnFormatter.getSortValue(d, this.props
-                    .genomeNexusMyVariantInfoCache as GenomeNexusMyVariantInfoCache),
+                GnomadColumnFormatter.getSortValue(
+                    d,
+                    this.props.indexedMyVariantInfoAnnotations
+                ),
             download: (d: Mutation[]) =>
-                GnomadColumnFormatter.download(d, this.props
-                    .genomeNexusMyVariantInfoCache as GenomeNexusMyVariantInfoCache),
+                GnomadColumnFormatter.download(
+                    d,
+                    this.props.indexedMyVariantInfoAnnotations
+                ),
             tooltip: (
                 <span>
                     <a href="https://gnomad.broadinstitute.org/">gnomAD</a>{' '}
@@ -979,14 +987,21 @@ export default class MutationTable<
         this._columns[MutationTableColumnType.CLINVAR] = {
             name: 'ClinVar ID',
             render: (d: Mutation[]) =>
-                ClinVarColumnFormatter.renderFunction(d, this.props
-                    .genomeNexusMyVariantInfoCache as GenomeNexusMyVariantInfoCache),
+                ClinVarColumnFormatter.renderFunction(
+                    d,
+                    this.props.indexedVariantAnnotations,
+                    this.props.indexedMyVariantInfoAnnotations
+                ),
             sortBy: (d: Mutation[]) =>
-                ClinVarColumnFormatter.getSortValue(d, this.props
-                    .genomeNexusMyVariantInfoCache as GenomeNexusMyVariantInfoCache),
+                ClinVarColumnFormatter.getSortValue(
+                    d,
+                    this.props.indexedMyVariantInfoAnnotations
+                ),
             download: (d: Mutation[]) =>
-                ClinVarColumnFormatter.download(d, this.props
-                    .genomeNexusMyVariantInfoCache as GenomeNexusMyVariantInfoCache),
+                ClinVarColumnFormatter.download(
+                    d,
+                    this.props.indexedMyVariantInfoAnnotations
+                ),
             tooltip: (
                 <span>
                     <a
@@ -1007,14 +1022,31 @@ export default class MutationTable<
         this._columns[MutationTableColumnType.DBSNP] = {
             name: 'dbSNP',
             render: (d: Mutation[]) =>
-                DbsnpColumnFormatter.renderFunction(d, this.props
-                    .genomeNexusMyVariantInfoCache as GenomeNexusMyVariantInfoCache),
+                DbsnpColumnFormatter.renderFunction(
+                    d,
+                    this.props.indexedVariantAnnotations,
+                    this.props.indexedMyVariantInfoAnnotations
+                ),
             sortBy: (d: Mutation[]) =>
-                DbsnpColumnFormatter.getSortValue(d, this.props
-                    .genomeNexusMyVariantInfoCache as GenomeNexusMyVariantInfoCache),
+                DbsnpColumnFormatter.getSortValue(
+                    d,
+                    this.props.indexedMyVariantInfoAnnotations
+                ),
             download: (d: Mutation[]) =>
-                DbsnpColumnFormatter.download(d, this.props
-                    .genomeNexusMyVariantInfoCache as GenomeNexusMyVariantInfoCache),
+                DbsnpColumnFormatter.download(
+                    d,
+                    this.props.indexedMyVariantInfoAnnotations
+                ),
+            filter: (
+                d: Mutation[],
+                filterString: string,
+                filterStringUpper: string
+            ) =>
+                DbsnpColumnFormatter.filter(
+                    d,
+                    filterStringUpper,
+                    this.props.indexedMyVariantInfoAnnotations
+                ),
             tooltip: (
                 <span
                     style={{
