@@ -3717,17 +3717,13 @@ export class ResultsViewPageStore {
         [profileIdSuffix: string]: GenericAssayData[];
     }>({
         await: () => [
-            this.genericAssayProfiles,
             this.genericAssayProfilesGroupByProfileIdSuffix,
+            this.genericAssayEntityStableIdsGroupByProfileIdSuffix,
         ],
         invoke: async () => {
             const genericAssayDataGroupByProfileIdSuffix: {
                 [profileIdSuffix: string]: GenericAssayData[];
             } = {};
-
-            const genericAssayMetaGroupByMolecularProfileId = await fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId(
-                this.genericAssayProfiles.result!
-            );
 
             await Promise.all(
                 _.map(
@@ -3736,17 +3732,9 @@ export class ResultsViewPageStore {
                         const molecularIds = profiles.map(
                             profile => profile.molecularProfileId
                         );
-                        const stableIds = _.chain(molecularIds)
-                            .map(
-                                id =>
-                                    genericAssayMetaGroupByMolecularProfileId[
-                                        id
-                                    ]
-                            )
-                            .flatten()
-                            .map(meta => meta.stableId)
-                            .uniq()
-                            .value();
+                        const stableIds = this
+                            .genericAssayEntityStableIdsGroupByProfileIdSuffix
+                            .result![profileIdSuffix];
 
                         return fetchGenericAssayDataByStableIdsAndMolecularIds(
                             stableIds,

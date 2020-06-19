@@ -266,19 +266,17 @@ export default class DownloadTab extends React.Component<
             ),
     });
 
-    readonly genericAssayProfileDataGroupByProfileIdSuffix = remoteData<{
-        [profileIdSuffix: string]: { [key: string]: GenericAssayData[] };
+    readonly genericAssayProfileDownloadDataGroupByProfileIdSuffix = remoteData<{
+        [key: string]: string[][];
     }>({
         await: () => [
+            this.props.store.samples,
+            this.props.store.genericAssayEntityStableIdsGroupByProfileIdSuffix,
             this.props.store.genericAssayDataGroupByProfileIdSuffix,
             this.props.store.genericAssayProfilesGroupByProfileIdSuffix,
         ],
         invoke: () => {
-            const genericAssayProfileDataGroupByProfileIdSuffix: {
-                [profileIdSuffix: string]: {
-                    [key: string]: GenericAssayData[];
-                };
-            } = _.mapValues(
+            const genericAssayProfileDataGroupByProfileIdSuffix = _.mapValues(
                 this.props.store.genericAssayDataGroupByProfileIdSuffix.result,
                 (genericAssayProfileData, profileIdSuffix) => {
                     const data = {
@@ -295,26 +293,10 @@ export default class DownloadTab extends React.Component<
                     );
                 }
             );
-            console.log(genericAssayProfileDataGroupByProfileIdSuffix);
 
             return Promise.resolve(
-                genericAssayProfileDataGroupByProfileIdSuffix
-            );
-        },
-    });
-
-    readonly genericAssayProfileDownloadDataGroupByProfileIdSuffix = remoteData<{
-        [key: string]: string[][];
-    }>({
-        await: () => [
-            this.genericAssayProfileDataGroupByProfileIdSuffix,
-            this.props.store.samples,
-            this.props.store.genericAssayEntityStableIdsGroupByProfileIdSuffix,
-        ],
-        invoke: () =>
-            Promise.resolve(
                 _.mapValues(
-                    this.genericAssayProfileDataGroupByProfileIdSuffix.result,
+                    genericAssayProfileDataGroupByProfileIdSuffix,
                     (genericAssayProfileData, profileIdSuffix) => {
                         return generateGenericAssayProfileDownloadData(
                             genericAssayProfileData,
@@ -325,7 +307,8 @@ export default class DownloadTab extends React.Component<
                         );
                     }
                 )
-            ),
+            );
+        },
     });
 
     readonly mrnaData = remoteData<{ [key: string]: ExtendedAlteration[] }>({
