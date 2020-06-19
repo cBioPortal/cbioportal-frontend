@@ -3,14 +3,11 @@ import {
     CancerStudy,
     ClinicalAttribute,
     ClinicalData,
-    GenePanelData,
     MolecularProfile,
-    Patient,
-    Sample,
-} from 'cbioportal-ts-api-client';
-import {
     MutationSpectrum,
     MutationSpectrumFilter,
+    Patient,
+    Sample,
 } from 'cbioportal-ts-api-client';
 import { MobxPromise } from 'mobxpromise';
 import {
@@ -20,8 +17,14 @@ import {
 import _ from 'lodash';
 import client from '../api/cbioportalClientInstance';
 import internalClient from '../api/cbioportalInternalClientInstance';
-import { Group } from '../api/ComparisonGroupClient';
 import ComplexKeySet from '../lib/complexKeyDataStructures/ComplexKeySet';
+import { makeUniqueColorGetter } from '../components/plots/PlotUtils';
+import { RESERVED_CLINICAL_VALUE_COLORS } from '../lib/Colors';
+import { interpolateReds } from 'd3-scale-chromatic';
+import {
+    getClinicalAttributeColoring,
+    OncoprintClinicalData,
+} from './ClinicalDataCacheUtils';
 
 export enum SpecialAttribute {
     MutationSpectrum = 'NO_CONTEXT_MUTATION_SIGNATURE',
@@ -82,7 +85,16 @@ export function clinicalAttributeIsLocallyComputed(attribute: {
     );
 }
 
-type OncoprintClinicalData = ClinicalData[] | MutationSpectrum[];
+export type ClinicalDataCacheEntry = {
+    data: OncoprintClinicalData;
+    // Compute colors here so that we can use the same color
+    //  scheme for a clinical attribute throughout the portal,
+    //  e.g. in oncoprint and plots tab.
+    categoryToColor?: { [value: string]: string };
+    numericalValueToColor?: (x: number) => string;
+    logScaleNumericalValueToColor?: (x: number) => string;
+    numericalValueRange?: [number, number];
+};
 
 function makeComparisonGroupData(
     attribute: ExtendedClinicalAttribute,
@@ -163,7 +175,7 @@ async function fetch(
     studyToMutationMolecularProfile: { [studyId: string]: MolecularProfile },
     studyIdToStudy: { [studyId: string]: CancerStudy },
     coverageInformation: CoverageInformation
-) {
+): Promise<OncoprintClinicalData> {
     let ret: OncoprintClinicalData;
     let studyToSamples: { [studyId: string]: Sample[] };
     switch (attribute.clinicalAttributeId) {
@@ -257,7 +269,7 @@ async function fetch(
 
 export default class ClinicalDataCache extends MobxPromiseCache<
     ExtendedClinicalAttribute,
-    OncoprintClinicalData
+    ClinicalDataCacheEntry
 > {
     constructor(
         samplesPromise: MobxPromise<Sample[]>,
@@ -277,15 +289,20 @@ export default class ClinicalDataCache extends MobxPromiseCache<
                     studyIdToStudyPromise,
                     coverageInformationPromise,
                 ],
-                invoke: () =>
-                    fetch(
+                invoke: async () => {
+                    const data: OncoprintClinicalData = await fetch(
                         q,
                         samplesPromise.result!,
                         patientsPromise.result!,
                         studyToMutationMolecularProfilePromise.result!,
                         studyIdToStudyPromise.result!,
                         coverageInformationPromise.result!
-                    ),
+                    );
+                    return {
+                        data,
+                        ...getClinicalAttributeColoring(data, q.datatype),
+                    };
+                },
             }),
             q =>
                 `${q.clinicalAttributeId},${(q.molecularProfileIds || []).join(

@@ -5,6 +5,7 @@ import bind from 'bind-decorator';
 import { computed, observable } from 'mobx';
 import CBIOPORTAL_VICTORY_THEME, {
     baseLabelStyles,
+    legendLabelStyles,
 } from '../../theme/cBioPoralTheme';
 import Timer = NodeJS.Timer;
 import {
@@ -23,15 +24,26 @@ import {
     makeScatterPlotSizeFunction,
     separateScatterDataByAppearance,
     dataPointIsLimited,
+    LegendDataWithId,
+    getLegendDataHeight,
+    getBottomLegendHeight,
+    getMaxLegendLabelWidth,
+    getLegendItemsPerRow,
 } from './PlotUtils';
-import { toConditionalPrecision } from '../../lib/NumberUtils';
+import { clamp, toConditionalPrecision } from '../../lib/NumberUtils';
 import { getRegressionComputations } from './ScatterPlotUtils';
 import {
     IAxisLogScaleParams,
     IPlotSampleData,
 } from 'pages/resultsView/plots/PlotsTabUtils';
 import ifNotDefined from '../../lib/ifNotDefined';
-import { textTruncationUtils } from 'cbioportal-frontend-commons';
+import {
+    getTextHeight,
+    getTextWidth,
+    wrapText,
+} from 'cbioportal-frontend-commons';
+import LegendDataComponent from './LegendDataComponent';
+import LegendLabelComponent from './LegendLabelComponent';
 
 export interface IBaseScatterPlotData {
     x: number;
@@ -56,7 +68,7 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     zIndexSortBy?: ((d: D) => any)[]; // second argument to _.sortBy
     symbol?: string | ((d: D) => string); // see http://formidable.com/open-source/victory/docs/victory-scatter/#symbol for options
     tooltip?: (d: D) => JSX.Element;
-    legendData?: { name: string | string[]; symbol: any }[]; // see http://formidable.com/open-source/victory/docs/victory-legend/#data
+    legendData?: LegendDataWithId<D>[];
     correlation?: {
         pearson: number;
         spearman: number;
@@ -69,13 +81,14 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     axisLabelX?: string;
     axisLabelY?: string;
     fontFamily?: string;
-    legendTitle?: string;
+    legendTitle?: string | string[];
 }
 // constants related to the gutter
 const GUTTER_TEXT_STYLE = {
     fontFamily: baseLabelStyles.fontFamily,
     fontSize: baseLabelStyles.fontSize,
 };
+const LEGEND_COLUMN_PADDING = 45;
 const CORRELATION_INFO_Y = 100; // experimentally determined
 const REGRESSION_STROKE = '#c43a31';
 const REGRESSION_STROKE_WIDTH = 2;
@@ -83,7 +96,7 @@ const REGRESSION_EQUATION_Y = CORRELATION_INFO_Y + 95; // 95 ~= correlation heig
 const LEGEND_TEXT_WIDTH = 107; // experimentally determined
 
 const DEFAULT_FONT_FAMILY = 'Verdana,Arial,sans-serif';
-const RIGHT_PADDING = 120; // room for correlation info and legend
+const RIGHT_GUTTER = 120; // room for correlation info and legend
 const NUM_AXIS_TICKS = 8;
 const PLOT_DATA_PADDING_PIXELS = 50;
 const LEFT_PADDING = 25;
@@ -158,7 +171,7 @@ export default class ScatterPlot<
 
     private get title() {
         if (this.props.title) {
-            const text = textTruncationUtils(
+            const text = wrapText(
                 this.props.title,
                 this.props.chartWidth,
                 this.fontFamily,
@@ -181,11 +194,11 @@ export default class ScatterPlot<
         }
     }
 
-    @computed get legendX() {
+    @computed get sideLegendX() {
         return this.props.chartWidth - 20;
     }
 
-    @computed get legendY() {
+    @computed get sideLegendY() {
         const correlationInfo = 90;
         const regressionEqation = 45;
 
@@ -196,18 +209,130 @@ export default class ScatterPlot<
         }
     }
 
+    @computed get legendLocation() {
+        if (this.props.legendData && this.props.legendData.length > 7) {
+            return 'bottom';
+        } else {
+            return 'right';
+        }
+    }
+
+    @computed get bottomLegendHeight() {
+        if (
+            !this.props.legendData ||
+            !this.props.legendData.length ||
+            this.legendLocation !== 'bottom'
+        ) {
+            return 0;
+        } else {
+            return getBottomLegendHeight(
+                this.legendItemsPerRow,
+                this.props.legendData,
+                this.props.legendTitle
+            );
+        }
+    }
+
+    @computed get maxLegendLabelWidth() {
+        if (this.props.legendData) {
+            return getMaxLegendLabelWidth(this.props.legendData);
+        }
+
+        return 0;
+    }
+
+    @computed get legendItemsPerRow() {
+        return getLegendItemsPerRow(
+            this.maxLegendLabelWidth,
+            this.svgWidth,
+            LEGEND_COLUMN_PADDING,
+            this.props.legendTitle
+        );
+    }
+
     private get legend() {
-        const x = this.legendX;
         if (this.props.legendData && this.props.legendData.length) {
+            let legendData = this.props.legendData;
+            if (this.legendLocation === 'bottom') {
+                // if legend is at bottom then flatten labels
+                legendData = legendData.map(x => {
+                    let { name, ...rest } = x;
+                    if (Array.isArray(name)) {
+                        name = (name as string[]).join(' '); // flatten labels by joining with space
+                    }
+                    return {
+                        name,
+                        ...rest,
+                    };
+                });
+            }
+            const orientation =
+                this.legendLocation === 'right' ? 'vertical' : 'horizontal';
+
             return (
                 <VictoryLegend
-                    orientation="vertical"
-                    data={this.props.legendData}
-                    x={x}
-                    y={this.legendY}
-                    width={RIGHT_PADDING}
+                    dataComponent={
+                        <LegendDataComponent orientation={orientation} />
+                    }
+                    labelComponent={
+                        <LegendLabelComponent orientation={orientation} />
+                    }
+                    events={[
+                        {
+                            childName: 'all',
+                            target: ['data', 'labels'],
+                            eventHandlers: {
+                                onClick: () => [
+                                    {
+                                        target: 'data',
+                                        mutation: (props: any) => {
+                                            const datum: LegendDataWithId<D> =
+                                                props.data[props.index];
+                                            if (datum.highlighting) {
+                                                datum.highlighting.onClick(
+                                                    datum
+                                                );
+                                            }
+                                        },
+                                    },
+                                ],
+                            },
+                        },
+                    ]}
+                    orientation={orientation}
+                    itemsPerRow={
+                        this.legendLocation === 'right'
+                            ? undefined
+                            : this.legendItemsPerRow
+                    }
+                    rowGutter={this.legendLocation === 'right' ? undefined : -5}
+                    gutter={
+                        this.legendLocation === 'right'
+                            ? undefined
+                            : LEGEND_COLUMN_PADDING
+                    }
+                    data={legendData}
+                    x={this.legendLocation === 'right' ? this.sideLegendX : 0}
+                    y={
+                        this.legendLocation === 'right'
+                            ? this.sideLegendY
+                            : this.svgHeight - this.bottomLegendHeight
+                    }
                     title={this.props.legendTitle}
-                    style={{ title: { fontSize: 15, fontWeight: 'bold' } }}
+                    titleOrientation={
+                        this.legendLocation === 'right' ? 'top' : 'left'
+                    }
+                    style={{
+                        title: {
+                            fontSize: 15,
+                            fontWeight: 'bold',
+                        },
+                    }}
+                    titleComponent={
+                        <VictoryLabel
+                            dx={this.legendLocation === 'right' ? 0 : -10}
+                        />
+                    }
                 />
             );
         } else {
@@ -216,7 +341,7 @@ export default class ScatterPlot<
     }
 
     private get correlationInfo() {
-        const x = this.legendX;
+        const x = this.sideLegendX;
         return (
             <g>
                 <VictoryLabel
@@ -282,14 +407,19 @@ export default class ScatterPlot<
                 <line
                     stroke={REGRESSION_STROKE}
                     strokeWidth={REGRESSION_STROKE_WIDTH}
-                    x1={this.legendX + legendPadding}
+                    x1={this.sideLegendX + legendPadding}
                     y1={REGRESSION_EQUATION_Y}
-                    x2={this.legendX + legendPadding + lineLength}
+                    x2={this.sideLegendX + legendPadding + lineLength}
                     y2={REGRESSION_EQUATION_Y}
                     dy="0"
                 />
                 <VictoryLabel
-                    x={this.legendX + legendPadding + lineLength + linePadding}
+                    x={
+                        this.sideLegendX +
+                        legendPadding +
+                        lineLength +
+                        linePadding
+                    }
                     y={REGRESSION_EQUATION_Y}
                     dy="0"
                     textAnchor="start"
@@ -297,7 +427,12 @@ export default class ScatterPlot<
                     style={GUTTER_TEXT_STYLE}
                 />
                 <VictoryLabel
-                    x={this.legendX + legendPadding + lineLength + linePadding}
+                    x={
+                        this.sideLegendX +
+                        legendPadding +
+                        lineLength +
+                        linePadding
+                    }
                     y={REGRESSION_EQUATION_Y}
                     dy="2"
                     textAnchor="start"
@@ -397,7 +532,16 @@ export default class ScatterPlot<
     }
 
     @computed get rightPadding() {
-        return RIGHT_PADDING;
+        if (
+            this.props.legendData &&
+            this.props.legendData.length > 0 &&
+            this.legendLocation === 'right'
+        ) {
+            // make room for legend
+            return Math.max(RIGHT_GUTTER, this.maxLegendLabelWidth + 50); // + 50 makes room for circle and padding
+        } else {
+            return RIGHT_GUTTER;
+        }
     }
 
     @computed get svgWidth() {
@@ -405,7 +549,7 @@ export default class ScatterPlot<
     }
 
     @computed get svgHeight() {
-        return this.props.chartHeight;
+        return this.props.chartHeight + this.bottomLegendHeight;
     }
 
     @bind

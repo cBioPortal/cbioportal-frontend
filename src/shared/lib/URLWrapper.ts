@@ -27,7 +27,7 @@ export type Property<T, NestedObjectType = any> = {
     name: keyof T;
     isSessionProp: boolean;
     doubleURIEncode?: boolean;
-    nestedObjectProps?: { [prop in keyof NestedObjectType]: any };
+    nestedObjectProps?: { [prop in keyof Required<NestedObjectType>]: any };
     aliases?: string[];
 };
 

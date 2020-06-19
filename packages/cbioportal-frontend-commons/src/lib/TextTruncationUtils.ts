@@ -46,7 +46,7 @@ function splitTextByWidth(
     return ret;
 }
 
-export function textTruncationUtils(
+export function wrapText(
     text: string,
     maxWidth: number,
     fontFamily: string,

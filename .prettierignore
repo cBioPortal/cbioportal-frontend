@@ -24,3 +24,4 @@ yarn.lock
 .prettierignore
 .DS_Store
 .gitignore
+.kodiak.toml

@@ -450,7 +450,11 @@ export function getClinicalTrackRuleSetParams(track: ClinicalTrackSpec) {
             params = {
                 type: RuleSetType.CATEGORICAL,
                 category_key: 'attr_val',
-                category_to_color: RESERVED_CLINICAL_VALUE_COLORS,
+                category_to_color: Object.assign(
+                    {},
+                    track.category_to_color,
+                    RESERVED_CLINICAL_VALUE_COLORS
+                ),
             };
             break;
     }
@@ -838,7 +842,7 @@ export function makeClinicalTracksMobxPromise(
                 })
                 .filter(x => !!x); // filter out nonexistent attributes
             return attributes.map((attribute: ClinicalAttribute) => {
-                const data = oncoprint.props.store.clinicalDataCache.get(
+                const dataAndColors = oncoprint.props.store.clinicalDataCache.get(
                     attribute
                 ).result!;
                 let altered_uids = undefined;
@@ -857,7 +861,7 @@ export function makeClinicalTracksMobxPromise(
                         sampleMode
                             ? oncoprint.props.store.samples.result!
                             : oncoprint.props.store.patients.result!,
-                        data
+                        dataAndColors.data
                     ),
                     altered_uids,
                 };
@@ -902,6 +906,8 @@ export function makeClinicalTracksMobxPromise(
                     }
                 } else if (attribute.datatype === 'STRING') {
                     ret.datatype = 'string';
+                    (ret as any).category_to_color =
+                        dataAndColors.categoryToColor;
                 } else if (
                     attribute.clinicalAttributeId ===
                     SpecialAttribute.MutationSpectrum

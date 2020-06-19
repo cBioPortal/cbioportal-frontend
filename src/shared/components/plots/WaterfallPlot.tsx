@@ -3,7 +3,10 @@ import * as React from 'react';
 import { observer, Observer } from 'mobx-react';
 import bind from 'bind-decorator';
 import { computed, observable } from 'mobx';
-import CBIOPORTAL_VICTORY_THEME from '../../theme/cBioPoralTheme';
+import CBIOPORTAL_VICTORY_THEME, {
+    baseLabelStyles,
+    legendLabelStyles,
+} from '../../theme/cBioPoralTheme';
 import Timer = NodeJS.Timer;
 import {
     VictoryChart,
@@ -13,7 +16,14 @@ import {
     VictoryLegend,
     VictoryLabel,
 } from 'victory';
-import { makeScatterPlotSizeFunction as makePlotSizeFunction } from './PlotUtils';
+import {
+    getBottomLegendHeight,
+    getLegendDataHeight,
+    getLegendItemsPerRow,
+    getMaxLegendLabelWidth,
+    LegendDataWithId,
+    makeScatterPlotSizeFunction as makePlotSizeFunction,
+} from './PlotUtils';
 import WaterfallPlotTooltip from './WaterfallPlotTooltip';
 import { tickFormatNumeral } from './TickUtils';
 import {
@@ -22,7 +32,14 @@ import {
     limitValueAppearance,
     IValue1D,
 } from 'pages/resultsView/plots/PlotsTabUtils';
-import { textTruncationUtils } from 'cbioportal-frontend-commons';
+import {
+    getTextHeight,
+    getTextWidth,
+    wrapText,
+} from 'cbioportal-frontend-commons';
+import { clamp } from '../../lib/NumberUtils';
+import LegendDataComponent from './LegendDataComponent';
+import LegendLabelComponent from './LegendLabelComponent';
 
 // TODO make distinction between public and internal interface for waterfall plot data
 export interface IBaseWaterfallPlotData extends IValue1D {
@@ -61,7 +78,7 @@ export interface IWaterfallPlotProps<D extends IBaseWaterfallPlotData> {
     zIndexSortBy?: ((d: D) => any)[]; // second argument to _.sortBy
     tooltip?: (d: D) => JSX.Element;
     horizontal: boolean;
-    legendData?: { name: string | string[]; symbol: any }[]; // see http://formidable.com/open-source/victory/docs/victory-legend/#data
+    legendData?: LegendDataWithId<D>[];
     legendLocationWidthThreshold?: number;
     log?: IAxisLogScaleParams | undefined;
     useLogSpaceTicks?: boolean; // if log scale for an axis, then this prop determines whether the ticks are shown in post-log coordinate, or original data coordinate space
@@ -69,15 +86,15 @@ export interface IWaterfallPlotProps<D extends IBaseWaterfallPlotData> {
     fontFamily?: string;
     sortOrder: string | undefined;
     pivotThreshold?: number;
-    legendTitle?: string;
+    legendTitle?: string | string[];
 }
 
+const LEGEND_COLUMN_PADDING = 45;
 const DEFAULT_FONT_FAMILY = 'Verdana,Arial,sans-serif';
 export const LEGEND_Y = 30;
-const RIGHT_PADDING = 120; // room for correlation info and legend
+const RIGHT_GUTTER = 130; // room for correlation info and legend
 const NUM_AXIS_TICKS = 8;
 const LEFT_PADDING = 25;
-const LEGEND_ITEMS_PER_ROW = 4;
 const LABEL_OFFSET_FRACTION = 0.02;
 const SEARCH_LABEL_SIZE_MULTIPLIER = 1.5;
 const TOOLTIP_OFFSET_Y = 28.5;
@@ -176,7 +193,7 @@ export default class WaterfallPlot<
 
     @computed get title() {
         if (this.props.title) {
-            const text = textTruncationUtils(
+            const text = wrapText(
                 this.props.title,
                 this.props.chartWidth,
                 this.fontFamily,
@@ -204,7 +221,7 @@ export default class WaterfallPlot<
             const maxDimension = this.props.horizontal
                 ? this.props.chartWidth
                 : this.props.chartHeight;
-            return textTruncationUtils(
+            return wrapText(
                 this.props.axisLabel,
                 maxDimension,
                 this.fontFamily,
@@ -219,15 +236,38 @@ export default class WaterfallPlot<
     }
 
     @computed get bottomLegendHeight() {
-        //height of legend in case its on bottom
-        if (!this.props.legendData) {
+        if (
+            !this.props.legendData ||
+            !this.props.legendData.length ||
+            this.legendLocation !== 'bottom'
+        ) {
             return 0;
         } else {
-            const numRows = Math.ceil(
-                this.props.legendData.length / LEGEND_ITEMS_PER_ROW
+            return (
+                getBottomLegendHeight(
+                    this.legendItemsPerRow,
+                    this.props.legendData,
+                    this.props.legendTitle
+                ) + 50
             );
-            return 23.7 * numRows;
         }
+    }
+
+    @computed get maxLegendLabelWidth() {
+        if (this.props.legendData) {
+            return getMaxLegendLabelWidth(this.props.legendData);
+        }
+
+        return 0;
+    }
+
+    @computed get legendItemsPerRow() {
+        return getLegendItemsPerRow(
+            this.maxLegendLabelWidth,
+            this.svgWidth,
+            LEGEND_COLUMN_PADDING,
+            this.props.legendTitle
+        );
     }
 
     private get legend() {
@@ -236,31 +276,63 @@ export default class WaterfallPlot<
             if (this.legendLocation === 'bottom') {
                 // if legend is at bottom then flatten labels
                 legendData = legendData.map(x => {
-                    let name = x.name;
-                    if (Array.isArray(x.name)) {
+                    let { name, ...rest } = x;
+                    if (Array.isArray(name)) {
                         name = (name as string[]).join(' '); // flatten labels by joining with space
                     }
                     return {
                         name,
-                        symbol: x.symbol,
+                        ...rest,
                     };
                 });
             }
+            const orientation =
+                this.legendLocation === 'right' ? 'vertical' : 'horizontal';
+
             return (
                 <VictoryLegend
-                    orientation={
-                        this.legendLocation === 'right'
-                            ? 'vertical'
-                            : 'horizontal'
+                    dataComponent={
+                        <LegendDataComponent orientation={orientation} />
                     }
+                    labelComponent={
+                        <LegendLabelComponent orientation={orientation} />
+                    }
+                    events={[
+                        {
+                            childName: 'all',
+                            target: ['data', 'labels'],
+                            eventHandlers: {
+                                onClick: () => [
+                                    {
+                                        target: 'data',
+                                        mutation: (props: any) => {
+                                            const datum: LegendDataWithId<D> =
+                                                props.data[props.index];
+                                            if (datum.highlighting) {
+                                                datum.highlighting.onClick(
+                                                    datum
+                                                );
+                                            }
+                                        },
+                                    },
+                                ],
+                            },
+                        },
+                    ]}
+                    orientation={orientation}
                     itemsPerRow={
                         this.legendLocation === 'right'
                             ? undefined
-                            : LEGEND_ITEMS_PER_ROW
+                            : this.legendItemsPerRow
                     }
                     rowGutter={this.legendLocation === 'right' ? undefined : -5}
+                    gutter={
+                        this.legendLocation === 'right'
+                            ? undefined
+                            : LEGEND_COLUMN_PADDING
+                    }
                     data={legendData}
-                    x={this.legendLocation === 'right' ? this.legendX : 50}
+                    x={this.legendLocation === 'right' ? this.legendX : 0}
                     y={
                         this.legendLocation === 'right'
                             ? 100
@@ -320,20 +392,35 @@ export default class WaterfallPlot<
     }
 
     @computed get svgWidth() {
-        return LEFT_PADDING + this.props.chartWidth + RIGHT_PADDING;
+        return LEFT_PADDING + this.props.chartWidth + this.rightPadding;
     }
 
     @computed get svgHeight() {
-        if (this.props.horizontal) {
+        if (this.legendLocation === 'bottom') {
             return this.props.chartHeight + this.bottomLegendHeight;
         }
         return this.props.chartHeight;
     }
 
+    @computed get rightPadding() {
+        if (
+            this.props.legendData &&
+            this.props.legendData.length > 0 &&
+            this.legendLocation === 'right'
+        ) {
+            // make room for legend
+            return Math.max(RIGHT_GUTTER, this.maxLegendLabelWidth + 50); // + 50 makes room for circle and padding
+        } else {
+            return RIGHT_GUTTER;
+        }
+    }
+
     @computed get legendLocation() {
         if (
-            this.props.legendLocationWidthThreshold !== undefined &&
-            this.props.chartWidth > this.props.legendLocationWidthThreshold
+            (this.props.legendLocationWidthThreshold !== undefined && // if chart meets width threshold
+                this.props.chartWidth >
+                    this.props.legendLocationWidthThreshold) ||
+            (this.props.legendData && this.props.legendData.length > 7) // too many legend data
         ) {
             return 'bottom';
         } else {
