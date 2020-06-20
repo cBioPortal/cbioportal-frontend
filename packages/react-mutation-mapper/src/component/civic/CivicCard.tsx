@@ -1,7 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-
-import { ICivicVariantData } from '../../model/Civic';
+import { ICivicVariantData } from 'cbioportal-utils';
 
 import civicTextLogo from '../../images/civic_text_logo.png';
 import './civicCard.scss';

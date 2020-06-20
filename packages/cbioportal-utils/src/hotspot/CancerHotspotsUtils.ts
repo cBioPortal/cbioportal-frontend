@@ -1,21 +1,20 @@
 import * as _ from 'lodash';
-import MobxPromise from 'mobxpromise';
-
-import {
-    extractGenomicLocation,
-    genomicLocationString,
-    Mutation,
-} from 'cbioportal-utils';
 import { Hotspot } from 'genome-nexus-ts-api-client';
 
 import { AggregatedHotspots, IHotspotIndex } from '../model/CancerHotspot';
+import { RemoteData } from '../model/RemoteData';
+import { Mutation } from '../model/Mutation';
+import {
+    extractGenomicLocation,
+    genomicLocationString,
+} from '../mutation/MutationUtils';
 
 export function groupCancerHotspotDataByPosition(ptmData: Hotspot[]) {
     return _.groupBy(ptmData, 'proteinPosStart');
 }
 
 export function indexHotspotsData(
-    hotspotData: MobxPromise<AggregatedHotspots[]>
+    hotspotData: RemoteData<AggregatedHotspots[] | undefined>
 ): IHotspotIndex | undefined {
     if (hotspotData.result) {
         return indexHotspots(hotspotData.result);

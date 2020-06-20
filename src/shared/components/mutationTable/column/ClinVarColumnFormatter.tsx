@@ -6,12 +6,12 @@ import { MyVariantInfo, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import {
     getMyVariantInfoAnnotation,
     IMyVariantInfoIndex,
+    RemoteData,
 } from 'cbioportal-utils';
 import {
     ClinVar,
     clinVarSortValue,
     clinVarDownload,
-    RemoteData,
 } from 'react-mutation-mapper';
 
 import generalStyles from './styles.module.scss';
