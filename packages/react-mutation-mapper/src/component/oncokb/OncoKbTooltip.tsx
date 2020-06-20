@@ -1,10 +1,10 @@
 import { ICache } from 'cbioportal-frontend-commons';
+import { MobxCache } from 'cbioportal-utils';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import * as React from 'react';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
 
-import { MobxCache } from '../../model/MobxCache';
 import OncoKbCard from './OncoKbCard';
 import { OncoKbCardDataType } from './OncoKbHelper';
 

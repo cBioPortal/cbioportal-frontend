@@ -1,4 +1,4 @@
-import { IHotspotIndex } from 'react-mutation-mapper';
+import { IHotspotIndex } from 'cbioportal-utils';
 import {
     Mutation,
     Gene,

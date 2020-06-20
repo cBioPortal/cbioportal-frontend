@@ -1,9 +1,22 @@
 import autobind from 'autobind-decorator';
-import { IOncoKbData, remoteData } from 'cbioportal-frontend-commons';
+import { remoteData } from 'cbioportal-frontend-commons';
 import {
+    AggregatedHotspots,
+    defaultHotspotFilter,
     genomicLocationString,
     getMutationsToTranscriptId,
+    getMyCancerGenomeData,
+    groupCancerHotspotDataByPosition,
+    groupHotspotsByMutations,
     groupMutationsByProteinStartPos,
+    indexHotspotsData,
+    ICivicGene,
+    ICivicVariant,
+    IHotspotIndex,
+    IMyCancerGenomeData,
+    IOncoKbData,
+    fetchCivicGenes,
+    fetchCivicVariants,
     uniqueGenomicLocations,
 } from 'cbioportal-utils';
 import { Gene, Mutation, IMyVariantInfoIndex } from 'cbioportal-utils';
@@ -25,21 +38,11 @@ import _ from 'lodash';
 import { computed, observable } from 'mobx';
 import MobxPromise, { cached } from 'mobxpromise';
 
-import { AggregatedHotspots, IHotspotIndex } from '../model/CancerHotspot';
-import { ICivicGene, ICivicVariant } from '../model/Civic';
 import { DataFilter, DataFilterType } from '../model/DataFilter';
 import DataStore from '../model/DataStore';
 import { ApplyFilterFn, FilterApplier } from '../model/FilterApplier';
 import { MutationMapperDataFetcher } from '../model/MutationMapperDataFetcher';
 import { MutationMapperStore } from '../model/MutationMapperStore';
-import { IMyCancerGenomeData } from '../model/MyCancerGenome';
-import {
-    defaultHotspotFilter,
-    groupCancerHotspotDataByPosition,
-    groupHotspotsByMutations,
-    indexHotspotsData,
-} from '../util/CancerHotspotsUtils';
-import { fetchCivicGenes, fetchCivicVariants } from '../util/CivicUtils';
 import {
     ONCOKB_DEFAULT_DATA,
     ONCOKB_DEFAULT_INFO,
@@ -49,7 +52,6 @@ import {
     applyDataFilters,
     groupDataByProteinImpactType,
 } from '../util/FilterUtils';
-import { getMyCancerGenomeData } from '../util/MyCancerGenomeUtils';
 import {
     defaultOncoKbIndicatorFilter,
     groupOncoKbIndicatorDataByMutations,

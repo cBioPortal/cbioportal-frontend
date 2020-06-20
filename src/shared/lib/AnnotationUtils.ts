@@ -1,5 +1,5 @@
 import { Hotspot } from 'genome-nexus-ts-api-client';
-import { IHotspotIndex, isHotspot } from 'react-mutation-mapper';
+import { IHotspotIndex, isHotspot } from 'cbioportal-utils';
 
 import { CosmicMutation } from 'cbioportal-ts-api-client';
 import { ICosmicData } from 'shared/model/Cosmic';
