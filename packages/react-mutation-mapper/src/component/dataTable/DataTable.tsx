@@ -3,6 +3,7 @@ import {
     resolveColumnVisibility,
     resolveColumnVisibilityByColumnDefinition,
 } from 'cbioportal-frontend-commons';
+import { getRemoteDataGroupStatus, RemoteData } from 'cbioportal-utils';
 import classnames from 'classnames';
 import _ from 'lodash';
 import {
@@ -19,9 +20,7 @@ import ReactTable, { Column, RowInfo, TableProps } from 'react-table';
 
 import { DataFilter } from '../../model/DataFilter';
 import { DataStore } from '../../model/DataStore';
-import { RemoteData } from '../../model/RemoteData';
 import { TEXT_INPUT_FILTER_ID } from '../../util/FilterUtils';
-import { getRemoteDataGroupStatus } from '../../util/RemoteDataUtils';
 import { ColumnSelectorProps, ColumnVisibilityDef } from './ColumnSelector';
 import { DataTableToolbar } from './DataTableToolbar';
 
@@ -68,7 +67,7 @@ export function getInitialColumnDataStatus(
     initialSortColumnData?: (RemoteData<any> | undefined)[]
 ) {
     return initialSortColumnData
-        ? getRemoteDataGroupStatus(_.compact(initialSortColumnData))
+        ? getRemoteDataGroupStatus(..._.compact(initialSortColumnData))
         : 'complete';
 }
 

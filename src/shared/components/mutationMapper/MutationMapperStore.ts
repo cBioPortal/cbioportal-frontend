@@ -9,10 +9,11 @@ import {
     DefaultMutationMapperStore,
     groupDataByProteinImpactType,
     groupOncoKbIndicatorDataByMutations,
-    IHotspotIndex,
 } from 'react-mutation-mapper';
 import {
+    defaultOncoKbIndicatorFilter,
     getMutationsToTranscriptId,
+    IHotspotIndex,
     Mutation as SimpleMutation,
 } from 'cbioportal-utils';
 
@@ -20,10 +21,6 @@ import defaultGenomeNexusClient from 'shared/api/genomeNexusClientInstance';
 import defaultInternalGenomeNexusClient from 'shared/api/genomeNexusInternalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
 import { Gene, Mutation } from 'cbioportal-ts-api-client';
-import {
-    defaultOncoKbIndicatorFilter,
-    IOncoKbData,
-} from 'cbioportal-frontend-commons';
 
 import ResidueMappingCache from 'shared/cache/ResidueMappingCache';
 import {

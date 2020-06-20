@@ -30,10 +30,8 @@ import { ICoExpressionPlotProps } from './CoExpressionPlot';
 import { bind } from 'bind-decorator';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
 import { IDataQueryFilter } from 'shared/lib/StoreUtils';
-import {
-    remoteData,
-    getMobxPromiseGroupStatus,
-} from 'cbioportal-frontend-commons';
+import { remoteData } from 'cbioportal-frontend-commons';
+import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 
 export interface ICoExpressionTabProps {
@@ -624,7 +622,7 @@ export default class CoExpressionTab extends React.Component<
             );
         }
 
-        const status = getMobxPromiseGroupStatus(
+        const status = getRemoteDataGroupStatus(
             this.props.store.genes,
             this.props.store.molecularProfileIdToProfiledSamples,
             this.props.store.coexpressionTabMolecularProfiles

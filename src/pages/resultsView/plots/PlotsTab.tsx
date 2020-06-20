@@ -79,10 +79,10 @@ import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicato
 import InfoIcon from '../../../shared/components/InfoIcon';
 import {
     DownloadControls,
-    getMobxPromiseGroupStatus,
     remoteData,
     wrapText,
 } from 'cbioportal-frontend-commons';
+import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import BoxScatterPlot, {
     IBoxScatterPlotData,
 } from '../../../shared/components/plots/BoxScatterPlot';
@@ -3931,7 +3931,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         if (this.coloringClinicalDataPromise) {
             promises.push(this.coloringClinicalDataPromise);
         }
-        const groupStatus = getMobxPromiseGroupStatus(...promises);
+        const groupStatus = getRemoteDataGroupStatus(...promises);
         const isPercentage =
             this.discreteVsDiscretePlotType ===
             DiscreteVsDiscretePlotType.PercentageStackedBar;

@@ -1,5 +1,14 @@
-import { IOncoKbData } from 'cbioportal-frontend-commons';
-import { Mutation } from 'cbioportal-utils';
+import {
+    ICivicGene,
+    ICivicVariant,
+    IHotspotIndex,
+    IMyCancerGenomeData,
+    IOncoKbData,
+    getRemoteDataGroupStatus,
+    MobxCache,
+    Mutation,
+    RemoteData,
+} from 'cbioportal-utils';
 import { MyVariantInfo, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
 import _ from 'lodash';
@@ -14,17 +23,11 @@ import Dbsnp from '../column/Dbsnp';
 import Gnomad from '../column/Gnomad';
 import { getMyVariantInfoData } from '../column/MyVariantInfoHelper';
 import { MutationFilterValue } from '../../filter/MutationFilter';
-import { IHotspotIndex } from '../../model/CancerHotspot';
-import { ICivicGene, ICivicVariant } from '../../model/Civic';
 import { DataFilterType } from '../../model/DataFilter';
-import { MobxCache } from '../../model/MobxCache';
-import { IMyCancerGenomeData } from '../../model/MyCancerGenome';
-import { RemoteData } from '../../model/RemoteData';
 import {
     findNonTextInputFilters,
     TEXT_INPUT_FILTER_ID,
 } from '../../util/FilterUtils';
-import { getRemoteDataGroupStatus } from '../../util/RemoteDataUtils';
 import DataTable, {
     DataTableColumn,
     DataTableProps,
@@ -78,7 +81,9 @@ export default class DefaultMutationTable extends React.Component<
 
     @computed
     get annotationColumnDataStatus() {
-        return getRemoteDataGroupStatus(_.compact(this.annotationColumnData));
+        return getRemoteDataGroupStatus(
+            ..._.compact(this.annotationColumnData)
+        );
     }
 
     @computed

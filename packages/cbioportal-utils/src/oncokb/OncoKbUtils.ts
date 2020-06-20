@@ -6,7 +6,7 @@ import {
     IndicatorQueryResp,
     LevelOfEvidence,
 } from 'oncokb-ts-api-client';
-import { EvidenceType } from './OncoKB';
+import { EvidenceType } from '../model/OncoKB';
 
 export const LEVELS = {
     sensitivity: ['4', '3B', '3A', '2', '1', '0'],

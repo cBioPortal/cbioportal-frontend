@@ -4,13 +4,12 @@ import { observer } from 'mobx-react';
 import * as React from 'react';
 import Select from 'react-select';
 
-import { Mutation } from 'cbioportal-utils';
+import { Mutation, RemoteData } from 'cbioportal-utils';
 import {
     EnsemblTranscript,
     VariantAnnotation,
 } from 'genome-nexus-ts-api-client';
 
-import { RemoteData } from '../../model/RemoteData';
 import styles from './transcriptDropdown.module.scss';
 
 export type TranscriptDropdownProps = {

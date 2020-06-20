@@ -1,5 +1,5 @@
 import autobind from 'autobind-decorator';
-import { Mutation } from 'cbioportal-utils';
+import { MobxCache, Mutation } from 'cbioportal-utils';
 import { PfamDomain, PfamDomainRange } from 'genome-nexus-ts-api-client';
 import _ from 'lodash';
 import { action, computed, observable } from 'mobx';
@@ -12,7 +12,6 @@ import $ from 'jquery';
 import { DomainSpec } from '../../model/DomainSpec';
 import { LollipopPlotControlsConfig } from '../../model/LollipopPlotControlsConfig';
 import { LollipopPlacement, LollipopSpec } from '../../model/LollipopSpec';
-import { MobxCache } from '../../model/MobxCache';
 import { MutationMapperStore } from '../../model/MutationMapperStore';
 import { SequenceSpec } from '../../model/SequenceSpec';
 import { DefaultLollipopPlotControlsConfig } from '../../store/DefaultLollipopPlotControlsConfig';
