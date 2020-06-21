@@ -1,5 +1,5 @@
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import { getClinVarId } from 'cbioportal-utils';
+import { getDbsnpRsId } from 'cbioportal-utils';
 import { MyVariantInfo } from 'genome-nexus-ts-api-client';
 import { observer } from 'mobx-react';
 import * as React from 'react';
@@ -9,15 +9,15 @@ export type ClinVarIdProps = {
 };
 
 @observer
-export default class ClinVarId extends React.Component<ClinVarIdProps, {}> {
+export default class DbsnpId extends React.Component<ClinVarIdProps, {}> {
     public render() {
-        const clinVarId = getClinVarId(this.props.myVariantInfo);
+        const rsId = getDbsnpRsId(this.props.myVariantInfo);
 
-        if (clinVarId == null) {
+        if (rsId == null) {
             return (
                 <DefaultTooltip
                     placement="topRight"
-                    overlay={<span>Variant has no ClinVar data.</span>}
+                    overlay={<span>Variant has no dbSNP data.</span>}
                 >
                     <span
                         style={{
@@ -32,18 +32,19 @@ export default class ClinVarId extends React.Component<ClinVarIdProps, {}> {
                 </DefaultTooltip>
             );
         } else {
-            const clinVarLink = `https://www.ncbi.nlm.nih.gov/clinvar/variation/${clinVarId}/`;
-
+            let dbsnpLink = 'https://www.ncbi.nlm.nih.gov/snp/' + rsId;
             return (
                 <DefaultTooltip
                     placement="top"
                     overlay={
-                        <span>Click to see variant on ClinVar website.</span>
+                        <span>Click to see variant on dbSNP website.</span>
                     }
                 >
-                    <a href={clinVarLink} target="_blank">
-                        {clinVarId}
-                    </a>
+                    <span style={{ textAlign: 'right', float: 'right' }}>
+                        <a href={dbsnpLink} target="_blank">
+                            {rsId}
+                        </a>
+                    </span>
                 </DefaultTooltip>
             );
         }

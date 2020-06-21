@@ -6,7 +6,7 @@ import {
     groupMutationsByProteinStartPos,
     uniqueGenomicLocations,
 } from 'cbioportal-utils';
-import { Gene, Mutation } from 'cbioportal-utils';
+import { Gene, Mutation, IMyVariantInfoIndex } from 'cbioportal-utils';
 import {
     CancerGene,
     IndicatorQueryResp,
@@ -16,7 +16,6 @@ import {
     EnsemblTranscript,
     GenomicLocation,
     Hotspot,
-    MyVariantInfo,
     PfamDomain,
     PfamDomainRange,
     PostTranslationalModification,
@@ -913,7 +912,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     });
 
     readonly indexedMyVariantInfoAnnotations: MobxPromise<
-        { [genomicLocation: string]: MyVariantInfo } | undefined
+        IMyVariantInfoIndex | undefined
     > = remoteData({
         await: () => [this.mutationData],
         invoke: async () =>
