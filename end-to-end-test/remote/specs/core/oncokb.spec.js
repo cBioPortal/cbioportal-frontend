@@ -78,7 +78,7 @@ onoKbCardWithInfoSuite = (prefix, gene, showLevelsOfEvidence = false) => {
     it(`${prefix} - Oncogenicity tab shows correctly`, () => {
         checkOncogenicityScreenshot(gene, showLevelsOfEvidence);
     });
-    it(`${prefix} - mutation effect tab shows correctly`, () => {
+    it.skip(`${prefix} - mutation effect tab shows correctly`, () => {
         checkMutationEffectScreenshot(gene);
     });
 };
