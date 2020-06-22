@@ -79,8 +79,9 @@ import WindowStore from '../window/WindowStore';
 import { OncoprintAnalysisCaseType } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import {
-    getOncoprinterClinicalAndHeatmapInput,
+    getOncoprinterClinicalInput,
     getOncoprinterGeneticInput,
+    getOncoprinterHeatmapInput,
 } from '../../../pages/staticPages/tools/oncoprinter/OncoprinterImportUtils';
 import { buildCBioPortalPageUrl } from '../../api/urls';
 
@@ -936,23 +937,28 @@ export default class ResultsViewOncoprint extends React.Component<
                                     );
                                 }
 
-                                let clinicalAndHeatmapInput = '';
-                                if (
-                                    clinicalTracks.length > 0 ||
-                                    heatmapTracks.length > 0
-                                ) {
+                                let clinicalInput = '';
+                                if (clinicalTracks.length > 0) {
                                     const oncoprintClinicalData = _.flatMap(
                                         clinicalTracks,
                                         (track: ClinicalTrackSpec) => track.data
                                     );
-                                    clinicalAndHeatmapInput = getOncoprinterClinicalAndHeatmapInput(
+                                    clinicalInput = getOncoprinterClinicalInput(
                                         oncoprintClinicalData,
                                         caseIds,
                                         clinicalTracks.map(
                                             track => track.attributeId
                                         ),
                                         attributeIdToAttribute,
+                                        this.oncoprintAnalysisCaseType
+                                    );
+                                }
+
+                                let heatmapInput = '';
+                                if (heatmapTracks.length > 0) {
+                                    heatmapInput = getOncoprinterHeatmapInput(
                                         heatmapTracks,
+                                        caseIds,
                                         this.oncoprintAnalysisCaseType
                                     );
                                 }
@@ -968,7 +974,8 @@ export default class ResultsViewOncoprint extends React.Component<
                                 ) as any;
                                 oncoprinterWindow.clientPostedData = {
                                     genetic: geneticInput,
-                                    clinicalAndHeatmap: clinicalAndHeatmapInput,
+                                    clinical: clinicalInput,
+                                    heatmap: heatmapInput,
                                 };
                             }
                         );

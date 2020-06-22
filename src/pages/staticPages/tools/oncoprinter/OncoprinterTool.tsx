@@ -9,8 +9,9 @@ import { Button, ControlLabel, FormControl, FormGroup } from 'react-bootstrap';
 import { Collapse } from 'react-collapse';
 import autobind from 'autobind-decorator';
 import {
-    exampleClinicalAndHeatmapData,
+    exampleClinicalData,
     exampleGeneticData,
+    exampleHeatmapData,
 } from './OncoprinterConstants';
 import { MSKTab, MSKTabs } from '../../../../shared/components/MSKTabs/MSKTabs';
 import MutualExclusivityTab from '../../../resultsView/mutualExclusivity/MutualExclusivityTab';
@@ -22,6 +23,11 @@ import {
 } from './OncoprinterClinicalAndHeatmapUtils';
 import styles from './styles.module.scss';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
+import {
+    ClinicalFormatHelp,
+    GenomicFormatHelp,
+    HeatmapFormatHelp,
+} from './OncoprinterHelp';
 
 export interface IOncoprinterToolProps {}
 
@@ -29,186 +35,6 @@ export enum OncoprinterTab {
     ONCOPRINT = 'oncoprint',
     MUTUAL_EXCLUSIVITY = 'mutualExclusivity',
 }
-
-const helpSection = (
-    <div className={styles.dataFormatHelp}>
-        <div className={styles.dataFormatHelpSection}>
-            <h4>Genomic data format</h4>
-            Each row of the data can take one of two formats, with tab- or
-            space-delimited columns:
-            <br />
-            <strong>(1)</strong> <code>Sample</code> only (e.g. so that percent
-            altered in your data can be properly calculated by including
-            unaltered samples).
-            <br />
-            <strong>(2)</strong> <code>Sample</code>&#9;<code>Gene</code>&#9;
-            <code>Alteration (defined below)</code>&#9;
-            <code>Type (defined below)</code>
-            <br />
-            {/*<strong>(3) (MAF format, mutation only)</strong> <code>Sample</code>, <code>Cancer Type</code>, <code>Protein Change</code>, <code>Mutation Type</code>,	<code>Chromosome</code>,
-            <code>Start position</code>, <code>End position</code>, <code>Reference allele</code>,	<code>Variant allele</code><br/>
-            <br/>*/}
-            For rows of type 2, the definition is below:
-            <ol>
-                <li>
-                    <code>Sample</code>: Sample ID
-                </li>
-                <li>
-                    <code>Gene</code>: Gene symbol (or other gene identifier)
-                </li>
-                <li>
-                    <code>Alteration</code>: Definition of the alteration event
-                    <ul>
-                        <li>
-                            Mutation event: amino acid change or any other
-                            information about the mutation
-                        </li>
-                        <li>Fusion event: fusion information</li>
-                        <li>
-                            Copy number alteration (CNA) - please use one of the
-                            four events below:
-                            <ul>
-                                <li>
-                                    <code>AMP</code>: high level amplification
-                                </li>
-                                <li>
-                                    <code>GAIN</code>: low level gain
-                                </li>
-                                <li>
-                                    <code>HETLOSS</code>: shallow deletion
-                                </li>
-                                <li>
-                                    <code>HOMDEL</code>: deep deletion
-                                </li>
-                            </ul>
-                        </li>
-                        <li>
-                            mRNA expression - please use one of the two events
-                            below:
-                            <ul>
-                                <li>
-                                    <code>HIGH</code>: expression high
-                                </li>
-                                <li>
-                                    <code>LOW</code>: expression low
-                                </li>
-                            </ul>
-                        </li>
-                        <li>
-                            Protein expression - please use one of the two
-                            events below:
-                            <ul>
-                                <li>
-                                    <code>HIGH</code>: Protein high
-                                </li>
-                                <li>
-                                    <code>LOW</code>: Protein low
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                </li>
-                <li>
-                    <code>Type</code>: Definition of the alteration type. It has
-                    to be one of the following.
-                    <ul>
-                        <li>
-                            For a mutation event, please use one of the five
-                            mutation types below:
-                            <ul>
-                                <li>
-                                    <code>MISSENSE</code>: a missense mutation
-                                </li>
-                                <li>
-                                    <code>INFRAME</code>: a inframe mutation
-                                </li>
-                                <li>
-                                    <code>TRUNC</code>: a truncation mutation
-                                </li>
-                                <li>
-                                    <code>PROMOTER</code>: a promoter mutation
-                                </li>
-                                <li>
-                                    <code>OTHER</code>: any other kind of
-                                    mutation
-                                </li>
-                            </ul>
-                            <br />
-                            In addition, mutation types can be augmented with
-                            the modifiers{' '}
-                            <span style={{ whiteSpace: 'nowrap' }}>
-                                <code>_GERMLINE</code> and <code>_DRIVER</code>
-                            </span>
-                            to indicate that they are, respectively, germline
-                            and driver mutations.
-                            <br />
-                            For example: <code>INFRAME_GERMLINE</code> or{' '}
-                            <code>MISSENSE_GERMLINE_DRIVER</code> or{' '}
-                            <code>TRUNC_DRIVER</code>.
-                            <br />
-                        </li>
-                        <li>
-                            <code>FUSION</code>: a fusion event
-                        </li>
-                        <li>
-                            <code>CNA</code>: a copy number alteration event
-                        </li>
-                        <li>
-                            <code>EXP</code>: a expression event
-                        </li>
-                        <li>
-                            <code>PROT</code>: a protein expression event
-                        </li>
-                    </ul>
-                </li>
-            </ol>
-        </div>
-        <div className={styles.dataFormatHelpBorder} />
-        <div className={styles.dataFormatHelpSection}>
-            <h4>Clinical/Heatmap data format</h4>
-            All rows are tab- or space-delimited.
-            <br />
-            The first (header) row gives the names of the tracks, as well as
-            their data type. The possible clinical data types are{' '}
-            {ClinicalTrackDataType.NUMBER}, {ClinicalTrackDataType.LOG_NUMBER},
-            or {ClinicalTrackDataType.STRING}. The possible heatmap types are{' '}
-            {HeatmapTrackDataType.HEATMAP_ZSCORE} for z-score data,{' '}
-            {HeatmapTrackDataType.HEATMAP_01} for data between 0 and 1 (such as
-            methylation), and {HeatmapTrackDataType.HEATMAP} which is for all
-            other types of heatmaps. The default track type is{' '}
-            {ClinicalTrackDataType.STRING}). Finally, you can also enter a{' '}
-            /-delimited list of labels to create a stacked-bar-chart track (see
-            example data below). An example first row is:
-            <br />
-            <code>Sample</code>&#9;
-            <code>Age({ClinicalTrackDataType.NUMBER})</code>&#9;
-            <code>Cancer_Type({ClinicalTrackDataType.STRING})</code>&#9;
-            <code>Mutation_Count({ClinicalTrackDataType.LOG_NUMBER})</code>&#9;
-            <br />
-            <code>Mutation_Spectrum(C>A/C>G/C>T/T>A/T>C/T>G)</code>&#9;
-            <code>PTEN_expression(${HeatmapTrackDataType.HEATMAP_01})</code>
-            <br />
-            Each following row gives the sample id, then the value for each
-            clinical attribute, or the special value {ONCOPRINTER_VAL_NA} which
-            indicates that there's no data.
-            <br />
-            Some example data rows would then be:
-            <br />
-            <code>sample1</code>&#9;<code>30</code>&#9;
-            <code>{ONCOPRINTER_VAL_NA}</code>&#9;<code>1</code>
-            &#9;<code>1/8/3/0/9/2</code>
-            <br />
-            <code>sample2</code>&#9;<code>27</code>&#9;<code>Colorectal</code>
-            &#9;<code>100</code>&#9;<code>5/1/4/2/0/3</code>
-            <br />
-            <code>sample3</code>&#9;<code>{ONCOPRINTER_VAL_NA}</code>
-            &#9;<code>Breast</code>&#9;
-            <code>{ONCOPRINTER_VAL_NA}</code>&#9;
-            <code>{ONCOPRINTER_VAL_NA}</code>
-            <br />
-        </div>
-    </div>
-);
 
 @observer
 export default class OncoprinterTool extends React.Component<
@@ -218,6 +44,7 @@ export default class OncoprinterTool extends React.Component<
     private store = new OncoprinterStore();
     private geneticFileInput: HTMLInputElement | null;
     private clinicalFileInput: HTMLInputElement | null;
+    private heatmapFileInput: HTMLInputElement | null;
     @observable private activeTabId: OncoprinterTab = OncoprinterTab.ONCOPRINT;
 
     @observable dataInputOpened = true;
@@ -227,7 +54,8 @@ export default class OncoprinterTool extends React.Component<
 
     // input
     @observable geneticDataInput = '';
-    @observable clinicalAndHeatmapDataInput = '';
+    @observable clinicalDataInput = '';
+    @observable heatmapDataInput = '';
     @observable geneOrderInput = '';
     @observable sampleOrderInput = '';
 
@@ -236,10 +64,12 @@ export default class OncoprinterTool extends React.Component<
         const postData = getBrowserWindow().clientPostedData;
         if (postData) {
             this.geneticDataInput = postData.genetic;
-            this.clinicalAndHeatmapDataInput = postData.clinicalAndHeatmap;
+            this.clinicalDataInput = postData.clinical;
+            this.heatmapDataInput = postData.heatmap;
             this.doSubmit(
                 this.geneticDataInput,
-                this.clinicalAndHeatmapDataInput
+                this.clinicalDataInput,
+                this.heatmapDataInput
             );
             getBrowserWindow().clientPostedData = null;
         }
@@ -257,7 +87,12 @@ export default class OncoprinterTool extends React.Component<
 
     @autobind
     private populateClinicalExampleData() {
-        this.clinicalAndHeatmapDataInput = exampleClinicalAndHeatmapData;
+        this.clinicalDataInput = exampleClinicalData;
+    }
+
+    @autobind
+    private populateHeatmapExampleData() {
+        this.heatmapDataInput = exampleHeatmapData;
     }
 
     @autobind
@@ -267,7 +102,12 @@ export default class OncoprinterTool extends React.Component<
 
     @autobind
     private onClinicalDataInputChange(e: any) {
-        this.clinicalAndHeatmapDataInput = e.currentTarget.value;
+        this.clinicalDataInput = e.currentTarget.value;
+    }
+
+    @autobind
+    private onHeatmapDataInputChange(e: any) {
+        this.heatmapDataInput = e.currentTarget.value;
     }
 
     @autobind
@@ -282,11 +122,13 @@ export default class OncoprinterTool extends React.Component<
 
     @action private doSubmit(
         geneticDataInput: string,
-        clinicalDataInput: string
+        clinicalDataInput: string,
+        heatmapDataInput: string
     ) {
         this.store.setInput(
             geneticDataInput,
             clinicalDataInput,
+            heatmapDataInput,
             this.geneOrderInput,
             this.sampleOrderInput
         );
@@ -304,6 +146,10 @@ export default class OncoprinterTool extends React.Component<
         this.clinicalFileInput = input;
     }
 
+    @autobind private heatmapFileInputRef(input: HTMLInputElement | null) {
+        this.heatmapFileInput = input;
+    }
+
     @autobind
     private getGeneticDataForSubmission() {
         return getDataForSubmission(
@@ -316,7 +162,15 @@ export default class OncoprinterTool extends React.Component<
     private getClinicalDataForSubmission() {
         return getDataForSubmission(
             this.clinicalFileInput,
-            this.clinicalAndHeatmapDataInput
+            this.clinicalDataInput
+        );
+    }
+
+    @autobind
+    private getHeatmapDataForSubmission() {
+        return getDataForSubmission(
+            this.heatmapFileInput,
+            this.heatmapDataInput
         );
     }
 
@@ -325,29 +179,9 @@ export default class OncoprinterTool extends React.Component<
     private async onClickSubmit() {
         const geneticData = await this.getGeneticDataForSubmission();
         const clinicalData = await this.getClinicalDataForSubmission();
+        const heatmapData = await this.getHeatmapDataForSubmission();
 
-        this.doSubmit(geneticData, clinicalData);
-    }
-
-    @autobind
-    private getHelpSection() {
-        return (
-            <div style={{ marginBottom: 7 }}>
-                <span>
-                    Please input{' '}
-                    <strong>tab-delimited or space-delimited</strong> data.
-                </span>
-                <Button
-                    style={{ marginLeft: 7 }}
-                    bsStyle="primary"
-                    bsSize="small"
-                    onClick={this.toggleHelpOpened}
-                >{`${
-                    this.helpOpened ? 'Close' : 'Open'
-                } data format help`}</Button>
-                <Collapse isOpened={this.helpOpened}>{helpSection}</Collapse>
-            </div>
-        );
+        this.doSubmit(geneticData, clinicalData, heatmapData);
     }
 
     @autobind
@@ -356,56 +190,96 @@ export default class OncoprinterTool extends React.Component<
             <FormGroup
                 style={{ display: this.dataInputOpened ? undefined : 'none' }}
             >
-                <div
-                    style={{ display: 'flex', justifyContent: 'space-between' }}
-                >
-                    <div style={{ width: '45%' }}>
-                        <ControlLabel style={{ marginBottom: 7 }}>
-                            Input genomic alteration data (optional):
-                            <Button
-                                className="oncoprinterGeneticExampleData"
-                                style={{ marginLeft: 7 }}
-                                bsStyle="primary"
-                                bsSize="small"
-                                onClick={this.populateGeneticExampleData}
-                            >
-                                Load example data
-                            </Button>
-                        </ControlLabel>
-                        <FormControl
-                            className="oncoprinterGeneticDataInput"
-                            componentClass="textarea"
-                            value={this.geneticDataInput}
-                            placeholder="Enter data here..."
-                            onChange={this.onGeneticDataInputChange}
-                            style={{ height: 200, width: '100%' }}
-                        />
-                        <ControlLabel>or input data from file:</ControlLabel>
-                        <input ref={this.geneticFileInputRef} type="file" />
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div className={styles.inputSection}>
+                        <div>
+                            <ControlLabel style={{ marginBottom: 7 }}>
+                                Input genomic alteration data (optional):
+                                <Button
+                                    className="oncoprinterGeneticExampleData"
+                                    style={{ marginLeft: 7 }}
+                                    bsStyle="primary"
+                                    bsSize="small"
+                                    onClick={this.populateGeneticExampleData}
+                                >
+                                    Load example data
+                                </Button>
+                            </ControlLabel>
+                            <FormControl
+                                className="oncoprinterGeneticDataInput"
+                                componentClass="textarea"
+                                value={this.geneticDataInput}
+                                placeholder="Enter data here..."
+                                onChange={this.onGeneticDataInputChange}
+                                style={{ height: 200, width: '100%' }}
+                            />
+                            <ControlLabel>
+                                or input data from file:
+                            </ControlLabel>
+                            <input ref={this.geneticFileInputRef} type="file" />
+                        </div>
+                        {GenomicFormatHelp}
                     </div>
-                    <div style={{ width: '45%' }}>
-                        <ControlLabel style={{ marginBottom: 7 }}>
-                            Input clinical data (optional):
-                            <Button
-                                className="oncoprinterClinicalExampleData"
-                                style={{ marginLeft: 7 }}
-                                bsStyle="primary"
-                                bsSize="small"
-                                onClick={this.populateClinicalExampleData}
-                            >
-                                Load example data
-                            </Button>
-                        </ControlLabel>
-                        <FormControl
-                            className="oncoprinterClinicalDataInput"
-                            componentClass="textarea"
-                            value={this.clinicalAndHeatmapDataInput}
-                            placeholder="Enter data here..."
-                            onChange={this.onClinicalDataInputChange}
-                            style={{ height: 200, width: '100%' }}
-                        />
-                        <ControlLabel>or input data from file:</ControlLabel>
-                        <input ref={this.clinicalFileInputRef} type="file" />
+                    <div className={styles.inputSection}>
+                        <div>
+                            <ControlLabel style={{ marginBottom: 7 }}>
+                                Input clinical data (optional):
+                                <Button
+                                    className="oncoprinterClinicalExampleData"
+                                    style={{ marginLeft: 7 }}
+                                    bsStyle="primary"
+                                    bsSize="small"
+                                    onClick={this.populateClinicalExampleData}
+                                >
+                                    Load example data
+                                </Button>
+                            </ControlLabel>
+                            <FormControl
+                                className="oncoprinterClinicalDataInput"
+                                componentClass="textarea"
+                                value={this.clinicalDataInput}
+                                placeholder="Enter data here..."
+                                onChange={this.onClinicalDataInputChange}
+                                style={{ height: 200, width: '100%' }}
+                            />
+                            <ControlLabel>
+                                or input data from file:
+                            </ControlLabel>
+                            <input
+                                ref={this.clinicalFileInputRef}
+                                type="file"
+                            />
+                        </div>
+                        {ClinicalFormatHelp}
+                    </div>
+                    <div className={styles.inputSection}>
+                        <div>
+                            <ControlLabel style={{ marginBottom: 7 }}>
+                                Input heatmap data (optional):
+                                <Button
+                                    className="oncoprinterHeatmapExampleData"
+                                    style={{ marginLeft: 7 }}
+                                    bsStyle="primary"
+                                    bsSize="small"
+                                    onClick={this.populateHeatmapExampleData}
+                                >
+                                    Load example data
+                                </Button>
+                            </ControlLabel>
+                            <FormControl
+                                className="oncoprinterHeatmapDataInput"
+                                componentClass="textarea"
+                                value={this.heatmapDataInput}
+                                placeholder="Enter data here..."
+                                onChange={this.onHeatmapDataInputChange}
+                                style={{ height: 200, width: '100%' }}
+                            />
+                            <ControlLabel>
+                                or input data from file:
+                            </ControlLabel>
+                            <input ref={this.heatmapFileInputRef} type="file" />
+                        </div>
+                        {HeatmapFormatHelp}
                     </div>
                 </div>
                 <br />
@@ -439,7 +313,8 @@ export default class OncoprinterTool extends React.Component<
                     bsStyle="primary"
                     disabled={
                         this.geneticDataInput.trim().length === 0 &&
-                        this.clinicalAndHeatmapDataInput.trim().length === 0
+                        this.clinicalDataInput.trim().length === 0 &&
+                        this.heatmapDataInput.trim().length === 0
                     }
                     onClick={this.onClickSubmit}
                     style={{ marginBottom: 20 }}
@@ -478,7 +353,6 @@ export default class OncoprinterTool extends React.Component<
                     from your own data.
                     <br />
                     <br />
-                    <Observer>{this.getHelpSection}</Observer>
                     <Observer>{this.getInputSection}</Observer>
                     {!this.dataInputOpened && (
                         <button
