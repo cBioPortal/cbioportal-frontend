@@ -23,7 +23,10 @@ import StandaloneMutationMapper from './StandaloneMutationMapper';
 import MutationMapperToolStore from './MutationMapperToolStore';
 
 import AppConfig from 'appConfig';
-import { getOncoKbApiUrl } from 'shared/api/urls';
+import {
+    getMutationAlignerUrlTemplate,
+    getOncoKbApiUrl,
+} from 'shared/api/urls';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { REFERENCE_GENOME } from 'shared/lib/referenceGenomeUtils';
 
@@ -560,6 +563,7 @@ export default class MutationMapperTool extends React.Component<
                             generateGenomeNexusHgvsgUrl={
                                 this.store.generateGenomeNexusHgvsgUrl
                             }
+                            mutationAlignerUrlTemplate={getMutationAlignerUrlTemplate()}
                         />
                     </MSKTab>
                 );
