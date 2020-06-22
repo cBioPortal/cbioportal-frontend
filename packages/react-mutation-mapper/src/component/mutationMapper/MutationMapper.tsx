@@ -7,6 +7,7 @@ import { TableProps } from 'react-table';
 import { Mutation } from 'cbioportal-utils';
 
 import { DefaultPubMedCache } from '../../cache/DefaultPubMedCache';
+import { MutationAlignerCache } from '../../cache/MutationAlignerCache';
 import { FilterResetPanel } from './FilterResetPanel';
 import { DataFilter } from '../../model/DataFilter';
 import { ApplyFilterFn, FilterApplier } from '../../model/FilterApplier';
@@ -69,8 +70,10 @@ export type MutationMapperProps = {
     mutationTableInitialSortDirection?: ColumnSortDirection;
     mutationRates?: MutationRate[];
     pubMedCache?: MobxCache;
+    mutationAlignerCache?: MobxCache;
     // TODO annotateMutations?: boolean;
     dataFetcher?: MutationMapperDataFetcher;
+    mutationAlignerUrlTemplate?: string;
     genomeNexusUrl?: string;
     oncoKbUrl?: string;
     enableOncoKb?: boolean;
@@ -232,6 +235,13 @@ export default class MutationMapper<
             : new DefaultPubMedCache();
     }
 
+    protected get mutationAlignerCache(): MobxCache {
+        // mutationAlignerUrlTemplate property is ignored if a custom cache implementation is provided
+        return this.props.mutationAlignerCache
+            ? this.props.mutationAlignerCache!
+            : new MutationAlignerCache(this.props.mutationAlignerUrlTemplate);
+    }
+
     @computed
     protected get windowWrapper(): { size: { width: number; height: number } } {
         return this.props.windowWrapper
@@ -307,6 +317,7 @@ export default class MutationMapper<
                 store={this.store}
                 controlsConfig={this.lollipopPlotControlsConfig}
                 pubMedCache={this.pubMedCache}
+                mutationAlignerCache={this.mutationAlignerCache}
                 geneWidth={this.geneWidth}
                 vizHeight={this.props.plotVizHeight}
                 trackVisibility={this.trackVisibility}

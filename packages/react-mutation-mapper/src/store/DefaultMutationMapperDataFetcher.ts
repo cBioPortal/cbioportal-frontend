@@ -35,7 +35,6 @@ import {
 import { AggregatedHotspots } from '../model/CancerHotspot';
 import { MutationMapperDataFetcher } from '../model/MutationMapperDataFetcher';
 import {
-    DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE,
     DEFAULT_MY_GENE_URL_TEMPLATE,
     DEFAULT_UNIPROT_ID_URL_TEMPLATE,
     fetchVariantAnnotationsIndexedByGenomicLocation,
@@ -111,18 +110,6 @@ export class DefaultMutationMapperDataFetcher
             )
         );
         return uniprotData.text.split('\n')[1];
-    }
-
-    public fetchMutationAlignerLink(
-        pfamDomainId: string
-    ): request.SuperAgentRequest {
-        return request.get(
-            getUrl(
-                this.config.mutationAlignerUrlTemplate ||
-                    DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE,
-                { pfamDomainId }
-            )
-        );
     }
 
     public async fetchPfamDomainData(
