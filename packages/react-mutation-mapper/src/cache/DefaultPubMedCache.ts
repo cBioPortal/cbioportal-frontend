@@ -1,11 +1,8 @@
-import { action, observable } from 'mobx';
 import request from 'superagent';
 
-import { CacheData, MobxCache } from '../model/MobxCache';
+import { DefaultStringQueryCache } from './DefaultStringQueryCache';
 
-export class DefaultPubMedCache implements MobxCache<any, string> {
-    protected _cache = observable.shallowMap<CacheData>();
-
+export class DefaultPubMedCache extends DefaultStringQueryCache<any> {
     public async fetch(query: string) {
         const pubMedRecords = await new Promise<any>((resolve, reject) => {
             // TODO duplicate code from cbioportal-frontend
@@ -32,27 +29,5 @@ export class DefaultPubMedCache implements MobxCache<any, string> {
         });
 
         return pubMedRecords[query];
-    }
-
-    @action
-    public get(query: string) {
-        if (!this._cache.get(query)) {
-            this._cache.set(query, { status: 'pending' });
-
-            this.fetch(query)
-                .then(d =>
-                    this._cache.set(query, { status: 'complete', data: d })
-                )
-                .catch(() => this._cache.set(query, { status: 'error' }));
-        }
-
-        const data = this._cache.get(query);
-
-        return data ? data : null;
-    }
-
-    public get cache() {
-        // TODO "as any" is not ideal
-        return this._cache as any;
     }
 }
