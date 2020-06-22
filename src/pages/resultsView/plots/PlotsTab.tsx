@@ -64,6 +64,7 @@ import {
     waterfallPlotTooltip,
     getColoringMenuOptionValue,
     basicAppearance,
+    getSuffixOfMolecularProfile,
 } from './PlotsTabUtils';
 import {
     ClinicalAttribute,
@@ -1622,20 +1623,42 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     readonly horzGenericAssayOptions = remoteData({
         await: () => [
             this.props.store.genericAssayEntitiesGroupByMolecularProfileId,
+            this.props.store.molecularProfileIdSuffixToMolecularProfiles,
         ],
         invoke: () => {
             // different generic assay profile can holds different entities, use entites in selected profile
             if (
                 this.horzSelection.dataSourceId &&
-                this.props.store.genericAssayEntitiesGroupByMolecularProfileId
+                this.props.store.molecularProfileIdSuffixToMolecularProfiles
                     .result &&
-                this.props.store.genericAssayEntitiesGroupByMolecularProfileId
+                this.props.store.molecularProfileIdSuffixToMolecularProfiles
                     .result[this.horzSelection.dataSourceId]
             ) {
+                const profiles = this.props.store
+                    .molecularProfileIdSuffixToMolecularProfiles.result[
+                    this.horzSelection.dataSourceId!
+                ];
+                const allMeta: GenericAssayMeta[] = [];
+                _.forEach(profiles, profile => {
+                    if (
+                        this.props.store
+                            .genericAssayEntitiesGroupByMolecularProfileId
+                            .result &&
+                        this.props.store
+                            .genericAssayEntitiesGroupByMolecularProfileId
+                            .result[profile.molecularProfileId]
+                    ) {
+                        allMeta.push(
+                            ...this.props.store
+                                .genericAssayEntitiesGroupByMolecularProfileId
+                                .result[profile.molecularProfileId]
+                        );
+                    }
+                });
+
+                const uniqueAllMeta = _.uniqBy(allMeta, meta => meta.stableId);
                 return Promise.resolve(
-                    this.props.store.genericAssayEntitiesGroupByMolecularProfileId.result[
-                        this.horzSelection.dataSourceId
-                    ].map((meta: GenericAssayMeta) => ({
+                    uniqueAllMeta.map((meta: GenericAssayMeta) => ({
                         value: meta.stableId,
                         label:
                             'NAME' in meta.genericEntityMetaProperties
@@ -1651,6 +1674,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     readonly vertGenericAssayOptions = remoteData({
         await: () => [
             this.props.store.genericAssayEntitiesGroupByMolecularProfileId,
+            this.props.store.molecularProfileIdSuffixToMolecularProfiles,
         ],
         invoke: () => {
             let sameGenericAssayOption = undefined;
@@ -1665,44 +1689,75 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 // different generic assay profile can hold different entities, use entites in selected profile
                 if (
                     this.vertSelection.dataSourceId &&
-                    this.props.store
-                        .genericAssayEntitiesGroupByMolecularProfileId.result &&
-                    this.props.store
-                        .genericAssayEntitiesGroupByMolecularProfileId.result[
-                        this.vertSelection.dataSourceId
-                    ]
+                    this.props.store.molecularProfileIdSuffixToMolecularProfiles
+                        .result &&
+                    this.props.store.molecularProfileIdSuffixToMolecularProfiles
+                        .result[this.vertSelection.dataSourceId]
                 ) {
-                    verticalOptions = this.props.store.genericAssayEntitiesGroupByMolecularProfileId.result[
-                        this.vertSelection.dataSourceId
-                    ].map((meta: GenericAssayMeta) => ({
-                        value: meta.stableId,
-                        label:
-                            'NAME' in meta.genericEntityMetaProperties
-                                ? meta.genericEntityMetaProperties['NAME']
-                                : '',
-                    }));
+                    const profiles = this.props.store
+                        .molecularProfileIdSuffixToMolecularProfiles.result[
+                        this.vertSelection.dataSourceId!
+                    ];
+                    const allMeta: GenericAssayMeta[] = [];
+                    _.forEach(profiles, profile => {
+                        if (
+                            this.props.store
+                                .genericAssayEntitiesGroupByMolecularProfileId
+                                .result &&
+                            this.props.store
+                                .genericAssayEntitiesGroupByMolecularProfileId
+                                .result[profile.molecularProfileId]
+                        ) {
+                            allMeta.push(
+                                ...this.props.store
+                                    .genericAssayEntitiesGroupByMolecularProfileId
+                                    .result[profile.molecularProfileId]
+                            );
+                        }
+                    });
+
+                    const uniqueAllMeta = _.uniqBy(
+                        allMeta,
+                        meta => meta.stableId
+                    );
+                    verticalOptions = uniqueAllMeta.map(
+                        (meta: GenericAssayMeta) => ({
+                            value: meta.stableId,
+                            label:
+                                'NAME' in meta.genericEntityMetaProperties
+                                    ? meta.genericEntityMetaProperties['NAME']
+                                    : '',
+                        })
+                    );
                 }
                 // if horzSelection has the same dataType selected, add a SAME_SELECTED_OPTION option
                 if (
                     this.horzSelection.dataType &&
                     this.horzSelection.dataType ===
                         this.vertSelection.dataType &&
+                    this.horzSelection.dataSourceId &&
                     this.showGenericAssaySelectBox(
                         this.horzSelection.dataType,
                         this.horzSelection.isGenericAssayType
                     ) &&
                     this.horzSelection.selectedGenericAssayOption &&
                     this.horzSelection.selectedGenericAssayOption.value !==
-                        NONE_SELECTED_OPTION_STRING_VALUE
+                        NONE_SELECTED_OPTION_STRING_VALUE &&
+                    this.props.store.molecularProfileIdSuffixToMolecularProfiles
+                        .result &&
+                    this.props.store.molecularProfileIdSuffixToMolecularProfiles
+                        .result[this.horzSelection.dataSourceId]
                 ) {
+                    const firstProfile = this.props.store
+                        .molecularProfileIdSuffixToMolecularProfiles.result[
+                        this.horzSelection.dataSourceId!
+                    ][0];
                     sameGenericAssayOption = [
                         {
                             value: SAME_SELECTED_OPTION_STRING_VALUE,
-                            label: `Same ${
-                                dataTypeToDisplayType[
-                                    this.horzSelection.dataType
-                                ]
-                            } (${
+                            label: `Same ${deriveDisplayTextFromGenericAssayType(
+                                firstProfile.genericAssayType
+                            )} (${
                                 this.horzSelection.selectedGenericAssayOption
                                     .label
                             })`,
@@ -1907,8 +1962,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     } else return profile.molecularAlterationType;
                 }), // create a map from profile type to list of profiles of that type
                 profilesOfType =>
-                    sortMolecularProfilesForDisplay(profilesOfType).map(p => ({
-                        value: p.molecularProfileId,
+                    // use unique suffix of molecular profile id as the dataSource
+                    _.uniqBy(
+                        sortMolecularProfilesForDisplay(profilesOfType),
+                        profile => getSuffixOfMolecularProfile(profile)
+                    ).map(p => ({
+                        value: getSuffixOfMolecularProfile(p),
                         label: p.name,
                     })) // create options out of those profiles
             );
@@ -2310,7 +2369,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return makeAxisDataPromise(
             this.horzSelection,
             this.clinicalAttributeIdToClinicalAttribute,
-            this.props.store.molecularProfileIdToMolecularProfile,
+            this.props.store.molecularProfileIdSuffixToMolecularProfiles,
             this.props.store.patientKeyToFilteredSamples,
             this.props.store.entrezGeneIdToGene,
             this.props.store.clinicalDataCache,
@@ -2327,7 +2386,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return makeAxisDataPromise(
             this.vertSelection,
             this.clinicalAttributeIdToClinicalAttribute,
-            this.props.store.molecularProfileIdToMolecularProfile,
+            this.props.store.molecularProfileIdSuffixToMolecularProfiles,
             this.props.store.patientKeyToFilteredSamples,
             this.props.store.entrezGeneIdToGene,
             this.props.store.clinicalDataCache,
@@ -2382,7 +2441,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     readonly horzLabel = remoteData({
         await: () => [
-            this.props.store.molecularProfileIdToMolecularProfile,
+            this.props.store.molecularProfileIdSuffixToMolecularProfiles,
             this.props.store.entrezGeneIdToGene,
             this.clinicalAttributeIdToClinicalAttribute,
             this.plotType,
@@ -2391,7 +2450,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             return Promise.resolve(
                 getAxisLabel(
                     this.horzSelection,
-                    this.props.store.molecularProfileIdToMolecularProfile
+                    this.props.store.molecularProfileIdSuffixToMolecularProfiles
                         .result!,
                     this.props.store.entrezGeneIdToGene.result!,
                     this.clinicalAttributeIdToClinicalAttribute.result!,
@@ -2403,7 +2462,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     readonly vertLabel = remoteData({
         await: () => [
-            this.props.store.molecularProfileIdToMolecularProfile,
+            this.props.store.molecularProfileIdSuffixToMolecularProfiles,
             this.props.store.entrezGeneIdToGene,
             this.clinicalAttributeIdToClinicalAttribute,
         ],
@@ -2411,7 +2470,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             return Promise.resolve(
                 getAxisLabel(
                     this.vertSelection,
-                    this.props.store.molecularProfileIdToMolecularProfile
+                    this.props.store.molecularProfileIdSuffixToMolecularProfiles
                         .result!,
                     this.props.store.entrezGeneIdToGene.result!,
                     this.clinicalAttributeIdToClinicalAttribute.result!,
@@ -2423,7 +2482,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     readonly waterfallLabel = remoteData({
         await: () => [
-            this.props.store.molecularProfileIdToMolecularProfile,
+            this.props.store.molecularProfileIdSuffixToMolecularProfiles,
             this.props.store.entrezGeneIdToGene,
             this.clinicalAttributeIdToClinicalAttribute,
             this.plotType,
@@ -2439,7 +2498,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             return Promise.resolve(
                 getAxisLabel(
                     selection,
-                    this.props.store.molecularProfileIdToMolecularProfile
+                    this.props.store.molecularProfileIdSuffixToMolecularProfiles
                         .result!,
                     this.props.store.entrezGeneIdToGene.result!,
                     this.clinicalAttributeIdToClinicalAttribute.result!,
@@ -2725,7 +2784,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             (axisSelection.dataType !== CLIN_ATTR_DATA_TYPE &&
                 axisSelection.dataType !==
                     AlterationTypeConstants.MUTATION_EXTENDED &&
-                !this.props.store.molecularProfileIdToMolecularProfile
+                !this.props.store.molecularProfileIdSuffixToMolecularProfiles
                     .isComplete) ||
             (axisSelection.dataType &&
                 axisSelection.isGenericAssayType &&
@@ -2783,9 +2842,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 ].description;
             } else {
                 dataSourceDescription = this.props.store
-                    .molecularProfileIdToMolecularProfile.result![
+                    .molecularProfileIdSuffixToMolecularProfiles.result![
                     dataSourceValue
-                ].description;
+                ][0].description;
             }
         }
 
@@ -2795,9 +2854,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 ? this.horzSelection.dataSourceId
                 : this.vertSelection.dataSourceId;
             const otherProfileName = this.props.store
-                .molecularProfileIdToMolecularProfile.result![
+                .molecularProfileIdSuffixToMolecularProfiles.result![
                 otherDataSourceId!
-            ].name;
+            ][0].name;
             dataTypeDescription = `Sample order determined by values on the '${otherProfileName}' axis`;
         }
 
@@ -3205,12 +3264,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.props.store.selectedGenericAssayEntities,
             (acc, value, key) => {
                 if (
-                    this.props.store.molecularProfileIdToMolecularProfile
+                    this.props.store.molecularProfileIdSuffixToMolecularProfiles
                         .result[key]
                 ) {
                     const type = this.props.store
-                        .molecularProfileIdToMolecularProfile.result[key]
-                        .genericAssayType;
+                        .molecularProfileIdSuffixToMolecularProfiles.result[
+                        key
+                    ][0].genericAssayType;
                     acc[type] = acc[type] ? _.union(value, acc[type]) : value;
                     return acc;
                 }
@@ -3675,8 +3735,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         const dataSourceId: string | undefined = this.isHorizontalWaterfallPlot
             ? this.horzSelection.dataSourceId!
             : this.vertSelection.dataSourceId!;
-        const profile = this.props.store.molecularProfileIdToMolecularProfile
-            .result![dataSourceId];
+        const profile = this.props.store
+            .molecularProfileIdSuffixToMolecularProfiles.result![
+            dataSourceId
+        ][0];
         return profile.pivotThreshold;
     }
 
@@ -3688,8 +3750,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             const dataSourceId =
                 this.horzSelection.dataSourceId ||
                 this.vertSelection.dataSourceId;
-            return this.props.store.molecularProfileIdToMolecularProfile
-                .result![dataSourceId!].sortOrder;
+            return this.props.store.molecularProfileIdSuffixToMolecularProfiles
+                .result![dataSourceId!][0].sortOrder;
         }
         return this._waterfallPlotSortOrder!;
     }
