@@ -122,10 +122,8 @@ export default class Mutations extends React.Component<
         const tabs: JSX.Element[] = [];
 
         genes.forEach((gene: string) => {
-            const mutations = mutationsByGene[gene];
-
-            if (mutations) {
-                const tabHasMutations = mutations.length > 0;
+            if (mutationsByGene[gene]) {
+                const tabHasMutations = mutationsByGene[gene].length > 0;
                 // gray out tab if no mutations
                 const anchorStyle = tabHasMutations
                     ? undefined
@@ -241,9 +239,7 @@ export default class Mutations extends React.Component<
                 </div>
             );
         } else {
-            return (
-                <LoadingIndicator isLoading={true} center={true} size={'big'} />
-            );
+            return null;
         }
     }
 
