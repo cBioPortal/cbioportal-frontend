@@ -1,6 +1,6 @@
 {
   "name": "react-mutation-mapper",
-  "version": "0.5.19",
+  "version": "0.5.20",
   "description": "Generic Mutation Mapper",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
