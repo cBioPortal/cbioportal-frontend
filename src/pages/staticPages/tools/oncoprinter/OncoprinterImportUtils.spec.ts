@@ -1,7 +1,8 @@
 import { assert } from 'chai';
 import {
-    getOncoprinterClinicalAndHeatmapInput,
+    getOncoprinterClinicalInput,
     getOncoprinterGeneticInput,
+    getOncoprinterHeatmapInput,
 } from './OncoprinterImportUtils';
 import {
     AlterationTypeConstants,
@@ -165,7 +166,7 @@ describe('OncoprinterImportUtils', () => {
         });
     });
 
-    describe('getOncoprinterClinicalAndHeatmapInput', () => {
+    describe('getOncoprinterClinicalInput', () => {
         const data: any[] = [
             {
                 attr_id: 'MUTATION_COUNT',
@@ -245,6 +246,48 @@ describe('OncoprinterImportUtils', () => {
                 clinicalAttributeId: SpecialAttribute.MutationSpectrum,
             },
         };
+
+        it('produces correct oncoprinter clinical and heatmap input for 2 samples x 4 tracks', () => {
+            assert.deepEqual(
+                getOncoprinterClinicalInput(
+                    data,
+                    ['sample1', 'sample2'],
+                    [
+                        'age',
+                        'MUTATION_COUNT',
+                        'cancer_type',
+                        SpecialAttribute.MutationSpectrum,
+                    ],
+                    attributeIdToAttribute,
+                    'sample'
+                ),
+                'Sample  Age(number)  Mutation_Count(lognumber)  Cancer_type(string)  Mutation_Spectrum(C>A/C>G/C>T/T>A/T>C/T>G)\n' +
+                    `sample1  ${ONCOPRINTER_VAL_NA}  5  Prostate  3/4/5/10/2/0\n` +
+                    `sample2  19  12  ${ONCOPRINTER_VAL_NA}  ${ONCOPRINTER_VAL_NA}`
+            );
+        });
+        it('produces correct oncoprinter clinical input for 2 patients x 4 tracks', () => {
+            assert.deepEqual(
+                getOncoprinterClinicalInput(
+                    data,
+                    ['patient1', 'patient2'],
+                    [
+                        'age',
+                        'MUTATION_COUNT',
+                        'cancer_type',
+                        SpecialAttribute.MutationSpectrum,
+                    ],
+                    attributeIdToAttribute,
+                    'patient'
+                ),
+                'Sample  Age(number)  Mutation_Count(lognumber)  Cancer_type(string)  Mutation_Spectrum(C>A/C>G/C>T/T>A/T>C/T>G)\n' +
+                    `patient1  ${ONCOPRINTER_VAL_NA}  5  Prostate  3/4/5/10/2/0\n` +
+                    `patient2  19  12  ${ONCOPRINTER_VAL_NA}  ${ONCOPRINTER_VAL_NA}`
+            );
+        });
+    });
+
+    describe('getOncoprinterHeatmapInput', () => {
         const heatmapTracks: IHeatmapTrackSpec[] = [
             {
                 key: 'mrna-zscores',
@@ -329,44 +372,28 @@ describe('OncoprinterImportUtils', () => {
             },
         ];
 
-        it('produces correct oncoprinter clinical and heatmap input for 2 samples x 7 tracks', () => {
-            assert.deepEqual(
-                getOncoprinterClinicalAndHeatmapInput(
-                    data,
-                    ['sample1', 'sample2'],
-                    [
-                        'age',
-                        'MUTATION_COUNT',
-                        'cancer_type',
-                        SpecialAttribute.MutationSpectrum,
-                    ],
-                    attributeIdToAttribute,
+        it('produces correct oncoprinter heatmap input for 2 samples x 3 tracks', () => {
+            assert.equal(
+                getOncoprinterHeatmapInput(
                     heatmapTracks,
+                    ['sample1', 'sample2'],
                     'sample'
                 ),
-                'Sample  Age(number)  Mutation_Count(lognumber)  Cancer_type(string)  Mutation_Spectrum(C>A/C>G/C>T/T>A/T>C/T>G)  PTEN_mRNA_z-scores(heatmapZscores)  BRCA1_mRNA_values(heatmap)  TP53_Methylation_HM27(heatmap01)\n' +
-                    `sample1  ${ONCOPRINTER_VAL_NA}  5  Prostate  3/4/5/10/2/0  1.5  6  0.3\n` +
-                    `sample2  19  12  ${ONCOPRINTER_VAL_NA}  ${ONCOPRINTER_VAL_NA}  -1  ${ONCOPRINTER_VAL_NA}  0.8`
+                `Sample  PTEN_mRNA_z-scores(heatmapZscores)  BRCA1_mRNA_values(heatmap)  TP53_Methylation_HM27(heatmap01)\n` +
+                    `sample1  1.5  6  0.3\n` +
+                    `sample2  -1  ${ONCOPRINTER_VAL_NA}  0.8`
             );
         });
-        it('produces correct oncoprinter clinical input for 2 patients x 4 tracks', () => {
-            assert.deepEqual(
-                getOncoprinterClinicalAndHeatmapInput(
-                    data,
-                    ['patient1', 'patient2'],
-                    [
-                        'age',
-                        'MUTATION_COUNT',
-                        'cancer_type',
-                        SpecialAttribute.MutationSpectrum,
-                    ],
-                    attributeIdToAttribute,
+        it('produces correct oncoprinter heatmap input for 2 patients x 3 tracks', () => {
+            assert.equal(
+                getOncoprinterHeatmapInput(
                     heatmapTracks,
+                    ['patient1', 'patient2'],
                     'patient'
                 ),
-                'Sample  Age(number)  Mutation_Count(lognumber)  Cancer_type(string)  Mutation_Spectrum(C>A/C>G/C>T/T>A/T>C/T>G)  PTEN_mRNA_z-scores(heatmapZscores)  BRCA1_mRNA_values(heatmap)  TP53_Methylation_HM27(heatmap01)\n' +
-                    `patient1  ${ONCOPRINTER_VAL_NA}  5  Prostate  3/4/5/10/2/0  1.5  6  0.3\n` +
-                    `patient2  19  12  ${ONCOPRINTER_VAL_NA}  ${ONCOPRINTER_VAL_NA}  -1  ${ONCOPRINTER_VAL_NA}  0.8`
+                'Sample  PTEN_mRNA_z-scores(heatmapZscores)  BRCA1_mRNA_values(heatmap)  TP53_Methylation_HM27(heatmap01)\n' +
+                    `patient1  1.5  6  0.3\n` +
+                    `patient2  -1  ${ONCOPRINTER_VAL_NA}  0.8`
             );
         });
     });

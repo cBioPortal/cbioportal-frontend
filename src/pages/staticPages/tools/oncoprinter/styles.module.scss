@@ -3,15 +3,21 @@
     padding: 13px;
     border-radius: 11px;
     margin-top: 10px;
-    display: inline-flex;
-
-    .dataFormatHelpSection {
-        max-width: 600px;
-    }
+    width: 50%;
 
     .dataFormatHelpBorder {
         border-left: 1px solid black;
         margin-left: 15px;
         margin-right: 15px;
+    }
+}
+
+.inputSection {
+    display: flex;
+    justify-content: space-between;
+
+    & > div {
+        width: 50%;
+        margin: 5px;
     }
 }
