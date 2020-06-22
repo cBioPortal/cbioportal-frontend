@@ -234,7 +234,8 @@ export default class ProteinChangeColumnFormatter {
                       genomicLocationString(genomicLocation)
                   ]
                 : undefined;
-        // check if indexedAnnotatedMutationsByGenomicLocation exists (only results view with enabled transcript dropdown will pass indexedAnnotatedMutationsByGenomicLocation)
+        // check if indexedAnnotatedMutationsByGenomicLocation exists
+        // (only results view with enabled transcript dropdown will pass indexedAnnotatedMutationsByGenomicLocation)
         if (indexedAnnotatedMutationsByGenomicLocation !== undefined) {
             // check if current mutation is annotated by genome nexus successfully
             if (annotatedMutation) {

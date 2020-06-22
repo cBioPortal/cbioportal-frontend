@@ -184,7 +184,8 @@ class DefaultMutationMapperStore implements MutationMapperStore {
             this.canonicalTranscript.isPending ||
             (this.config.filterMutationsBySelectedTranscript &&
                 (this.transcriptsWithAnnotations.isPending ||
-                    this.indexedVariantAnnotations.isPending))
+                    this.indexedVariantAnnotations.isPending) &&
+                this.canonicalTranscript.isPending)
         ) {
             return [];
         } else if (
@@ -197,6 +198,10 @@ class DefaultMutationMapperStore implements MutationMapperStore {
                 this.getMutations(),
                 this.activeTranscript.result,
                 this.indexedVariantAnnotations.result,
+                this.canonicalTranscript.result
+                    ? this.canonicalTranscript.result.transcriptId ===
+                          this.activeTranscript.result
+                    : false,
                 false
             );
         } else {
@@ -564,6 +569,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
                 this.indexedVariantAnnotations,
                 this.allTranscripts,
                 this.transcriptsWithProteinLength,
+                this.canonicalTranscript,
             ],
             invoke: async () => {
                 if (
@@ -613,6 +619,10 @@ class DefaultMutationMapperStore implements MutationMapperStore {
                                 this.getMutations(),
                                 t,
                                 this.indexedVariantAnnotations.result!,
+                                this.canonicalTranscript.result
+                                    ? this.canonicalTranscript.result!
+                                          .transcriptId === t
+                                    : false,
                                 false
                             ).length > 0
                     );
@@ -891,7 +901,8 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     get mutationsByTranscriptId(): { [transcriptId: string]: Mutation[] } {
         if (
             this.indexedVariantAnnotations.result &&
-            this.transcriptsWithAnnotations.result
+            this.transcriptsWithAnnotations.result &&
+            this.canonicalTranscript.isComplete
         ) {
             return _.fromPairs(
                 this.transcriptsWithAnnotations.result.map((t: string) => [
@@ -900,6 +911,10 @@ class DefaultMutationMapperStore implements MutationMapperStore {
                         this.getMutations(),
                         t,
                         this.indexedVariantAnnotations.result!,
+                        this.canonicalTranscript.result
+                            ? this.canonicalTranscript.result!.transcriptId ===
+                                  t
+                            : false,
                         false
                     ),
                 ])
