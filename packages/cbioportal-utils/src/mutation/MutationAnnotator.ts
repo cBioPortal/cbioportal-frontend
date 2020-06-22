@@ -102,6 +102,7 @@ export function getMutationByTranscriptId(
     mutation: Mutation,
     ensemblTranscriptId: string,
     indexedVariantAnnotations: { [genomicLocation: string]: VariantAnnotation },
+    isCanonicalTranscript: boolean,
     overwriteWithAnnotatedMutation?: boolean
 ): Mutation | undefined {
     const genomicLocation = extractGenomicLocation(mutation);
@@ -128,6 +129,7 @@ export function getMutationByTranscriptId(
             mutation,
             variantAnnotation.annotation_summary,
             transcriptConsequenceSummary,
+            isCanonicalTranscript,
             overwriteWithAnnotatedMutation !== undefined
                 ? overwriteWithAnnotatedMutation
                 : true
@@ -148,6 +150,7 @@ export function getAnnotatedMutationFromAnnotationSummary(
     mutation: Partial<Mutation>,
     annotationSummary: VariantAnnotationSummary,
     transcriptConsequenceSummary: TranscriptConsequenceSummary,
+    isCanonicalTranscript: boolean,
     overwriteWithAnnotatedMutation: boolean
 ) {
     const annotatedMutation: Partial<Mutation> = initAnnotatedMutation(
@@ -169,9 +172,12 @@ export function getAnnotatedMutationFromAnnotationSummary(
             ''
         );
     }
-    annotatedMutation.mutationType =
-        (!overwriteWithAnnotatedMutation && annotatedMutation.mutationType) ||
-        transcriptConsequenceSummary.variantClassification;
+
+    // overwite the mutationType for non-canonical transcript
+    if (!isCanonicalTranscript) {
+        annotatedMutation.mutationType =
+            transcriptConsequenceSummary.variantClassification;
+    }
 
     if (transcriptConsequenceSummary.proteinPosition) {
         // TODO: make this logic more clear, lollipopplot fills in proteinstart
@@ -211,6 +217,7 @@ export function getMutationsByTranscriptId(
     mutations: Mutation[],
     ensemblTranscriptId: string,
     indexedVariantAnnotations: { [genomicLocation: string]: VariantAnnotation },
+    isCanonicalTranscript: boolean,
     overwriteWithAnnotatedMutation?: boolean
 ): Mutation[] {
     const fusionMutation = getFusionMutations(mutations);
@@ -223,6 +230,7 @@ export function getMutationsByTranscriptId(
                     mutation,
                     ensemblTranscriptId,
                     indexedVariantAnnotations,
+                    isCanonicalTranscript,
                     overwriteWithAnnotatedMutation
                 )
             )
@@ -266,6 +274,7 @@ export function annotateMutation(
             mutation,
             variantAnnotation.annotation_summary,
             canonicalTranscript,
+            true,
             false
         );
     } else {
