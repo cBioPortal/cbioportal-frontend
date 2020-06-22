@@ -1,7 +1,7 @@
 declare const styles: {
   readonly "dataFormatHelp": string;
   readonly "dataFormatHelpBorder": string;
-  readonly "dataFormatHelpSection": string;
+  readonly "inputSection": string;
 };
 export = styles;
 

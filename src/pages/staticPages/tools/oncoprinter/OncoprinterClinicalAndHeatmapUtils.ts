@@ -10,18 +10,24 @@ import { makeUniqueColorGetter } from '../../../../shared/components/plots/PlotU
 import { MUTATION_SPECTRUM_FILLS } from '../../../../shared/cache/ClinicalDataCache';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import { AlterationTypeConstants } from '../../../resultsView/ResultsViewPageStore';
+import { capitalize } from 'cbioportal-frontend-commons';
 
 export const ONCOPRINTER_VAL_NA = 'N/A';
 
-export type OncoprinterClinicalAndHeatmapInputLine = {
+export type OncoprinterOrderedValuesInputLine = {
     sampleId: string;
     orderedValues: string[];
 };
 
-type TrackSpec = {
+type OncoprinterClinicalTrackSpec = {
     trackName: string;
-    datatype: ClinicalTrackDataType | HeatmapTrackDataType;
+    datatype: ClinicalTrackDataType;
     countsCategories?: string[];
+};
+
+type OncoprinterHeatmapTrackSpec = {
+    trackName: string;
+    datatype: HeatmapTrackDataType;
 };
 
 type OncoprinterClinicalTrackDatum = Pick<
@@ -33,6 +39,19 @@ type OncoprinterHeatmapTrackDatum = Pick<
     IBaseHeatmapTrackDatum,
     'profile_data' | 'uid' | 'na'
 > & { sample: string };
+
+// Output mimics mobxpromise form but thats just because its a nice way to package status and result.
+// This isn't meant to be plugged into mobxpromise machinery i.e. with `await`
+type ParseInputResult<TrackSpecType> =
+    | {
+          status: 'complete';
+          result: {
+              headers: TrackSpecType[];
+              data: OncoprinterOrderedValuesInputLine[];
+          };
+          error: undefined;
+      }
+    | { status: 'error'; result: undefined; error: string };
 
 const ATTRIBUTE_REGEX = /^((?:[^\(\)])+)(?:\(([^\(\)]+)\))?$/;
 const COUNTS_MAP_ATTRIBUTE_TYPE_REGEX = /^(?:[^\/]+\/)+[^\/]+$/;
@@ -85,18 +104,18 @@ function getHeatmapMolecularAlterationType(datatype: HeatmapTrackDataType) {
     }
 }
 
-export function parseClinicalAndHeatmapDataHeader(headerLine: string[]) {
+export function parseClinicalDataHeader(headerLine: string[]) {
     // we dont care about the first column, it's just "sample" or something
     headerLine.shift();
 
     const errorPrefix = 'Clinical data input error in line 1 (header): ';
-    const ret: TrackSpec[] = [];
+    const ret: OncoprinterClinicalTrackSpec[] = [];
     const trackNamesMap: { [usedTrackName: string]: boolean } = {};
     for (const attribute of headerLine) {
         const match = attribute.match(ATTRIBUTE_REGEX);
         if (!match) {
             throw new Error(
-                `${errorPrefix}misformatted attribute name ${attribute}`
+                `${errorPrefix}misformatted clinical track name ${attribute}`
             );
         }
         let datatype = match[2] || ClinicalTrackDataType.STRING;
@@ -107,9 +126,6 @@ export function parseClinicalAndHeatmapDataHeader(headerLine: string[]) {
             case ClinicalTrackDataType.NUMBER:
             case ClinicalTrackDataType.LOG_NUMBER:
             case ClinicalTrackDataType.STRING:
-            case HeatmapTrackDataType.HEATMAP_01:
-            case HeatmapTrackDataType.HEATMAP_ZSCORE:
-            case HeatmapTrackDataType.HEATMAP:
                 break;
             default:
                 if (COUNTS_MAP_ATTRIBUTE_TYPE_REGEX.test(datatype)) {
@@ -117,14 +133,16 @@ export function parseClinicalAndHeatmapDataHeader(headerLine: string[]) {
                     datatype = ClinicalTrackDataType.COUNTS;
                 } else {
                     throw new Error(
-                        `${errorPrefix}invalid track data type ${datatype}`
+                        `${errorPrefix}invalid clinical track data type ${datatype}`
                     );
                 }
                 break;
         }
         const trackName = match[1];
         if (trackName in trackNamesMap) {
-            throw new Error(`${errorPrefix}duplicate track name ${trackName}`);
+            throw new Error(
+                `${errorPrefix}duplicate clinical track name ${trackName}`
+            );
         }
         ret.push({
             trackName,
@@ -137,21 +155,96 @@ export function parseClinicalAndHeatmapDataHeader(headerLine: string[]) {
     return ret;
 }
 
-export function parseClinicalAndHeatmapInput(
+export function parseHeatmapDataHeader(headerLine: string[]) {
+    // we dont care about the first column, it's just "sample" or something
+    headerLine.shift();
+
+    const errorPrefix = 'Heatmap data input error in line 1 (header): ';
+    const ret: OncoprinterHeatmapTrackSpec[] = [];
+    const trackNamesMap: { [usedTrackName: string]: boolean } = {};
+    for (const attribute of headerLine) {
+        const match = attribute.match(ATTRIBUTE_REGEX);
+        if (!match) {
+            throw new Error(
+                `${errorPrefix}misformatted heatmap track name ${attribute}`
+            );
+        }
+        let datatype = match[2] || HeatmapTrackDataType.HEATMAP;
+
+        // validate and normalize track data type and options
+        switch (datatype) {
+            case HeatmapTrackDataType.HEATMAP_01:
+            case HeatmapTrackDataType.HEATMAP_ZSCORE:
+            case HeatmapTrackDataType.HEATMAP:
+                break;
+            default:
+                throw new Error(
+                    `${errorPrefix}invalid heatmap track data type ${datatype}`
+                );
+                break;
+        }
+        const trackName = match[1];
+        if (trackName in trackNamesMap) {
+            throw new Error(
+                `${errorPrefix}duplicate heatmap track name ${trackName}`
+            );
+        }
+        ret.push({
+            trackName,
+            datatype: datatype as HeatmapTrackDataType,
+        });
+        trackNamesMap[trackName] = true;
+    }
+
+    return ret;
+}
+
+export function parseClinicalInput(
     input: string
 ):
     | {
           status: 'complete';
           result: {
-              headers: TrackSpec[];
-              data: OncoprinterClinicalAndHeatmapInputLine[];
+              headers: OncoprinterClinicalTrackSpec[];
+              data: OncoprinterOrderedValuesInputLine[];
           };
           error: undefined;
       }
     | { status: 'error'; result: undefined; error: string } {
-    // Output mimics mobxpromise form but thats just because its a nice way to package status and result.
-    // This isn't meant to be plugged into mobxpromise machinery i.e. with `await`
+    return parseInput(input, 'clinical');
+}
 
+export function parseHeatmapInput(
+    input: string
+):
+    | {
+          status: 'complete';
+          result: {
+              headers: OncoprinterHeatmapTrackSpec[];
+              data: OncoprinterOrderedValuesInputLine[];
+          };
+          error: undefined;
+      }
+    | { status: 'error'; result: undefined; error: string } {
+    return parseInput(input, 'heatmap');
+}
+
+function parseInput(
+    input: string,
+    clinicalOrHeatmap: 'clinical'
+): ParseInputResult<OncoprinterClinicalTrackSpec>;
+
+function parseInput(
+    input: string,
+    clinicalOrHeatmap: 'heatmap'
+): ParseInputResult<OncoprinterHeatmapTrackSpec>;
+
+function parseInput(
+    input: string,
+    clinicalOrHeatmap: 'clinical' | 'heatmap'
+):
+    | ParseInputResult<OncoprinterHeatmapTrackSpec>
+    | ParseInputResult<OncoprinterClinicalTrackSpec> {
     const lines = input
         .trim()
         .split('\n')
@@ -167,14 +260,21 @@ export function parseClinicalAndHeatmapInput(
 
     try {
         // Get attribute names from first line
-        const attributes = parseClinicalAndHeatmapDataHeader(lines.shift()!);
+        const firstLine = lines.shift()!;
+        const attributes =
+            clinicalOrHeatmap === 'clinical'
+                ? parseClinicalDataHeader(firstLine)
+                : parseHeatmapDataHeader(firstLine);
 
         const result = lines.map((line, lineIndex) => {
             //                                                  add 2 to line index: 1 because we removed header, 1 because changing from 0- to 1-indexing
-            const errorPrefix = `Clinical data input error on line ${lineIndex +
-                2}: \n${line.join('\t')}\n\n`;
+            const errorPrefix = `${capitalize(
+                clinicalOrHeatmap
+            )} data input error on line ${lineIndex + 2}: \n${line.join(
+                '\t'
+            )}\n\n`;
             if (line.length === attributes.length + 1) {
-                const ret: OncoprinterClinicalAndHeatmapInputLine = {
+                const ret: OncoprinterOrderedValuesInputLine = {
                     sampleId: line[0],
                     orderedValues: line.slice(1),
                 };
@@ -192,10 +292,12 @@ export function parseClinicalAndHeatmapInput(
                 headers: attributes,
                 data: result.filter(
                     x => !!x
-                ) as OncoprinterClinicalAndHeatmapInputLine[],
+                ) as OncoprinterOrderedValuesInputLine[],
             },
             error: undefined,
-        };
+        } as
+            | ParseInputResult<OncoprinterClinicalTrackSpec>
+            | ParseInputResult<OncoprinterHeatmapTrackSpec>;
     } catch (e) {
         return {
             status: 'error',
@@ -204,60 +306,47 @@ export function parseClinicalAndHeatmapInput(
         };
     }
 }
-
-export function getClinicalAndHeatmapOncoprintData(
-    attributes: TrackSpec[],
-    parsedLines: OncoprinterClinicalAndHeatmapInputLine[]
+export function getClinicalOncoprintData(
+    attributes: OncoprinterClinicalTrackSpec[],
+    parsedLines: OncoprinterOrderedValuesInputLine[]
 ) {
     const clinicalTracks: {
         [trackName: string]: OncoprinterClinicalTrackDatum[];
-    } = {};
-    const heatmapTracks: {
-        [trackName: string]: OncoprinterHeatmapTrackDatum[];
-    } = {};
-
-    for (const attr of attributes) {
-        if (isClinicalTrackType(attr.datatype)) {
-            clinicalTracks[attr.trackName] = [];
-        } else if (isHeatmapTrackType(attr.datatype)) {
-            heatmapTracks[attr.trackName] = [];
-        }
-    }
+    } = _.mapValues(_.keyBy(attributes, a => a.trackName), () => []);
 
     parsedLines.forEach((line, lineIndex) => {
         for (let i = 0; i < attributes.length; i++) {
             const rawValue = line.orderedValues[i];
-            if (isHeatmapTrackType(attributes[i].datatype)) {
-                heatmapTracks[attributes[i].trackName].push(
-                    makeHeatmapTrackDatum(
-                        rawValue,
-                        line,
-                        attributes[i],
-                        lineIndex
-                    )
-                );
-            } else if (isClinicalTrackType(attributes[i].datatype)) {
-                clinicalTracks[attributes[i].trackName].push(
-                    makeClinicalTrackDatum(
-                        rawValue,
-                        line,
-                        attributes[i],
-                        lineIndex
-                    )
-                );
-            }
+            clinicalTracks[attributes[i].trackName].push(
+                makeClinicalTrackDatum(rawValue, line, attributes[i], lineIndex)
+            );
         }
     });
-    return {
-        clinicalTracks,
-        heatmapTracks,
-    };
+    return clinicalTracks;
+}
+export function getHeatmapOncoprintData(
+    attributes: OncoprinterHeatmapTrackSpec[],
+    parsedLines: OncoprinterOrderedValuesInputLine[]
+) {
+    const heatmapTracks: {
+        [trackName: string]: OncoprinterHeatmapTrackDatum[];
+    } = _.mapValues(_.keyBy(attributes, a => a.trackName), () => []);
+
+    parsedLines.forEach((line, lineIndex) => {
+        for (let i = 0; i < attributes.length; i++) {
+            const rawValue = line.orderedValues[i];
+            heatmapTracks[attributes[i].trackName].push(
+                makeHeatmapTrackDatum(rawValue, line, attributes[i], lineIndex)
+            );
+        }
+    });
+    return heatmapTracks;
 }
 
 function makeHeatmapTrackDatum(
     rawValue: string,
-    line: OncoprinterClinicalAndHeatmapInputLine,
-    attribute: TrackSpec,
+    line: OncoprinterOrderedValuesInputLine,
+    attribute: OncoprinterHeatmapTrackSpec,
     lineIndex: number
 ) {
     // add 2 to line index: 1 because we removed header, 1 because changing from 0- to 1-indexing
@@ -283,8 +372,8 @@ function makeHeatmapTrackDatum(
 
 function makeClinicalTrackDatum(
     rawValue: string,
-    line: OncoprinterClinicalAndHeatmapInputLine,
-    attribute: TrackSpec,
+    line: OncoprinterOrderedValuesInputLine,
+    attribute: OncoprinterClinicalTrackSpec,
     lineIndex: number
 ): OncoprinterClinicalTrackDatum {
     // add 2 to line index: 1 because we removed header, 1 because changing from 0- to 1-indexing
@@ -372,95 +461,100 @@ export function getHeatmapTrackKey(attributeName: string) {
     return `heatmapTrack_${attributeName}`;
 }
 
-export function getClinicalAndHeatmapTracks(
-    attributes: TrackSpec[],
-    parsedLines: OncoprinterClinicalAndHeatmapInputLine[],
+export function getClinicalTracks(
+    attributes: OncoprinterClinicalTrackSpec[],
+    parsedLines: OncoprinterOrderedValuesInputLine[],
     excludedSampleIds?: string[]
 ) {
-    const attributeToOncoprintData = getClinicalAndHeatmapOncoprintData(
+    let attributeToOncoprintData = getClinicalOncoprintData(
         attributes,
         parsedLines
     );
     // remove excluded sample data
     const excludedSampleIdsMap = _.keyBy(excludedSampleIds || []);
-    attributeToOncoprintData.clinicalTracks = _.mapValues(
-        attributeToOncoprintData.clinicalTracks,
-        data => {
-            return data.filter(d => !(d.sample in excludedSampleIdsMap));
-        }
-    );
-    attributeToOncoprintData.heatmapTracks = _.mapValues(
-        attributeToOncoprintData.heatmapTracks,
-        data => {
-            return data.filter(d => !(d.sample in excludedSampleIdsMap));
-        }
-    );
+    attributeToOncoprintData = _.mapValues(attributeToOncoprintData, data => {
+        return data.filter(d => !(d.sample in excludedSampleIdsMap));
+    });
 
-    const ret = {
-        clinicalTracks: [] as ClinicalTrackSpec[],
-        heatmapTracks: [] as IHeatmapTrackSpec[],
-    };
+    const ret: ClinicalTrackSpec[] = [];
 
     attributes.map(attr => {
-        if (isHeatmapTrackType(attr.datatype)) {
-            const data = attributeToOncoprintData.heatmapTracks[attr.trackName];
-
-            ret.heatmapTracks.push({
-                key: getHeatmapTrackKey(attr.trackName),
-                label: attr.trackName,
-                legendLabel: 'Heatmap',
-                tooltipValueLabel: 'Value',
-                molecularProfileId: 'input',
-                molecularAlterationType: getHeatmapMolecularAlterationType(
-                    attr.datatype
-                ) as any,
-                datatype: '',
-                data: data.map(d =>
-                    Object.assign(d, { study_id: '', patient: '' })
-                ),
-                trackGroupIndex: 2,
-                hasColumnSpacing: false,
-            });
-        } else if (isClinicalTrackType(attr.datatype)) {
-            const data =
-                attributeToOncoprintData.clinicalTracks[attr.trackName];
-            let datatype, numberRange, countsCategoryFills;
-            switch (attr.datatype) {
-                case ClinicalTrackDataType.STRING:
-                    datatype = 'string';
-                    break;
-                case ClinicalTrackDataType.NUMBER:
-                case ClinicalTrackDataType.LOG_NUMBER:
-                    datatype = 'number';
-                    numberRange = getNumberRange(data);
-                    break;
-                case ClinicalTrackDataType.COUNTS:
-                    datatype = 'counts';
-                    if (
-                        attr.trackName.toLowerCase() === 'mutation_spectrum' &&
-                        attr.countsCategories!.length ===
-                            MUTATION_SPECTRUM_FILLS.length
-                    ) {
-                        countsCategoryFills = MUTATION_SPECTRUM_FILLS;
-                    }
-                    break;
-            }
-            ret.clinicalTracks.push({
-                key: getClinicalTrackKey(attr.trackName),
-                attributeId: attr.trackName,
-                label: attr.trackName,
-                data,
-                datatype,
-                description: '',
-                numberRange,
-                numberLogScale:
-                    attr.datatype === ClinicalTrackDataType.LOG_NUMBER
-                        ? true
-                        : undefined,
-                countsCategoryLabels: attr.countsCategories,
-                countsCategoryFills,
-            } as ClinicalTrackSpec);
+        const data = attributeToOncoprintData[attr.trackName];
+        let datatype, numberRange, countsCategoryFills;
+        switch (attr.datatype) {
+            case ClinicalTrackDataType.STRING:
+                datatype = 'string';
+                break;
+            case ClinicalTrackDataType.NUMBER:
+            case ClinicalTrackDataType.LOG_NUMBER:
+                datatype = 'number';
+                numberRange = getNumberRange(data);
+                break;
+            case ClinicalTrackDataType.COUNTS:
+                datatype = 'counts';
+                if (
+                    attr.trackName.toLowerCase() === 'mutation_spectrum' &&
+                    attr.countsCategories!.length ===
+                        MUTATION_SPECTRUM_FILLS.length
+                ) {
+                    countsCategoryFills = MUTATION_SPECTRUM_FILLS;
+                }
+                break;
         }
+        ret.push({
+            key: getClinicalTrackKey(attr.trackName),
+            attributeId: attr.trackName,
+            label: attr.trackName,
+            data,
+            datatype,
+            description: '',
+            numberRange,
+            numberLogScale:
+                attr.datatype === ClinicalTrackDataType.LOG_NUMBER
+                    ? true
+                    : undefined,
+            countsCategoryLabels: attr.countsCategories,
+            countsCategoryFills,
+        } as ClinicalTrackSpec);
+    });
+    return ret;
+}
+export function getHeatmapTracks(
+    attributes: OncoprinterHeatmapTrackSpec[],
+    parsedLines: OncoprinterOrderedValuesInputLine[],
+    excludedSampleIds?: string[]
+) {
+    let attributeToOncoprintData = getHeatmapOncoprintData(
+        attributes,
+        parsedLines
+    );
+    // remove excluded sample data
+    const excludedSampleIdsMap = _.keyBy(excludedSampleIds || []);
+    attributeToOncoprintData = _.mapValues(attributeToOncoprintData, data => {
+        return data.filter(d => !(d.sample in excludedSampleIdsMap));
+    });
+
+    const ret: IHeatmapTrackSpec[] = [];
+
+    attributes.map(attr => {
+        const data = attributeToOncoprintData[attr.trackName];
+
+        ret.push({
+            key: getHeatmapTrackKey(attr.trackName),
+            label: attr.trackName,
+            legendLabel: 'Heatmap',
+            tooltipValueLabel: 'Value',
+            molecularProfileId: 'input',
+            molecularAlterationType: getHeatmapMolecularAlterationType(
+                attr.datatype
+            ) as any,
+            datatype: '',
+            data: data.map(d =>
+                Object.assign(d, { study_id: '', patient: '' })
+            ),
+            trackGroupIndex: 2,
+            hasColumnSpacing: false,
+        });
     });
     return ret;
 }
