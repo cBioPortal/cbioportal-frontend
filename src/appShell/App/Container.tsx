@@ -17,6 +17,7 @@ import {
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import ErrorScreen from 'shared/components/errorScreen/ErrorScreen';
 import { ServerConfigHelpers } from 'config/config';
+import { isLocalDBServer } from 'cbioportal-frontend-commons/src';
 
 interface IContainerProps {
     location: Location;
@@ -42,7 +43,11 @@ export default class Container extends React.Component<IContainerProps, {}> {
     }
 
     render() {
-        if (!isWebdriver() && !ServerConfigHelpers.sessionServiceIsEnabled()) {
+        if (
+            !isLocalDBServer() &&
+            !isWebdriver() &&
+            !ServerConfigHelpers.sessionServiceIsEnabled()
+        ) {
             return (
                 <div className="contentWrapper">
                     <ErrorScreen

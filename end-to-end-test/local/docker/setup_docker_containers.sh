@@ -94,7 +94,7 @@ run_cbioportal_container() {
         --name=$E2E_CBIOPORTAL_HOST_NAME \
         --net=$DOCKER_NETWORK_NAME \
         -v "$TEST_HOME/local/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
-        -e JAVA_OPTS="-Xms2g -Xmx4g -Dauthenticate=false" \
+        -e JAVA_OPTS="-Xms2g -Xmx4g -Dauthenticate=false -Dapp.name=localdbe2e" \
         -p 8081:8080 \
         $BACKEND_IMAGE_NAME \
         /bin/sh -c 'java ${JAVA_OPTS} -jar webapp-runner.jar /app.war'
