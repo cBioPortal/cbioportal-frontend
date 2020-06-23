@@ -65,21 +65,27 @@ class FunctionalImpactColumnTooltip extends React.Component<
                     <thead>
                         <tr>
                             <th>Legend</th>
-                            {/* TODO: enable when MutationAsessor comes back online
                             <th>
-                                {/*
                                 <span
-                                    style={{display:'inline-block',width:22}}
-                                    title='Mutation Asessor'
-                                    onMouseOver={() => this.setState({active:'mutationAssessor'})}
+                                    style={{
+                                        display: 'inline-block',
+                                        width: 22,
+                                    }}
+                                    title="Mutation Asessor"
+                                    onMouseOver={() =>
+                                        this.setState({
+                                            active: 'mutationAssessor',
+                                        })
+                                    }
                                 >
                                     <img
-                                        height={14} width={14}
-                                        src={require("./mutationAssessor.png")}
-                                        alt='Mutation Assessor'
+                                        height={14}
+                                        width={14}
+                                        src={require('./mutationAssessor.png')}
+                                        alt="Mutation Assessor"
                                     />
                                 </span>
-                            </th> */}
+                            </th>
                             <th>
                                 <span
                                     style={{
@@ -137,7 +143,9 @@ class FunctionalImpactColumnTooltip extends React.Component<
                                     ></i>
                                 </span>
                             </td>
-                            {/* <td className={mutationAssessorStyles['ma-high']}>high</td> */}
+                            <td className={mutationAssessorStyles['ma-high']}>
+                                high
+                            </td>
                             <td className={siftStyles['sift-deleterious']}>
                                 deleterious
                             </td>
@@ -151,16 +159,28 @@ class FunctionalImpactColumnTooltip extends React.Component<
                                 probably_damaging
                             </td>
                         </tr>
-                        {/* <tr>
+                        <tr>
                             <td>
-                                <span className={classNames(annotationStyles["annotation-item-text"], mutationAssessorStyles[`ma-medium`])}>
-                                    <i className='fa fa-circle' aria-hidden="true"></i>
+                                <span
+                                    className={classNames(
+                                        annotationStyles[
+                                            'annotation-item-text'
+                                        ],
+                                        mutationAssessorStyles[`ma-medium`]
+                                    )}
+                                >
+                                    <i
+                                        className="fa fa-circle"
+                                        aria-hidden="true"
+                                    ></i>
                                 </span>
                             </td>
-                            <td className={mutationAssessorStyles['ma-medium']}>medium</td>
+                            <td className={mutationAssessorStyles['ma-medium']}>
+                                medium
+                            </td>
                             <td>-</td>
                             <td>-</td>
-                        </tr> */}
+                        </tr>
                         <tr>
                             <td>
                                 <span
@@ -177,7 +197,9 @@ class FunctionalImpactColumnTooltip extends React.Component<
                                     ></i>
                                 </span>
                             </td>
-                            {/* <td className={mutationAssessorStyles['ma-low']}>low</td> */}
+                            <td className={mutationAssessorStyles['ma-low']}>
+                                low
+                            </td>
                             <td
                                 className={
                                     siftStyles[
@@ -213,7 +235,11 @@ class FunctionalImpactColumnTooltip extends React.Component<
                                     ></i>
                                 </span>
                             </td>
-                            {/* <td className={mutationAssessorStyles['ma-neutral']}>neutral</td> */}
+                            <td
+                                className={mutationAssessorStyles['ma-neutral']}
+                            >
+                                neutral
+                            </td>
                             <td
                                 className={
                                     siftStyles['sift-tolerated_low_confidence']
@@ -226,8 +252,22 @@ class FunctionalImpactColumnTooltip extends React.Component<
                             </td>
                         </tr>
                         <tr>
-                            <td></td>
-                            {/* <td>-</td> */}
+                            <td>
+                                <span
+                                    className={classNames(
+                                        annotationStyles[
+                                            'annotation-item-text'
+                                        ],
+                                        mutationAssessorStyles[`ma-neutral`]
+                                    )}
+                                >
+                                    <i
+                                        className="fa fa-circle"
+                                        aria-hidden="true"
+                                    ></i>
+                                </span>
+                            </td>
+                            <td>-</td>
                             <td className={siftStyles['sift-tolerated']}>
                                 tolerated
                             </td>
@@ -330,7 +370,6 @@ export default class FunctionalImpactColumnFormatter {
                                 height={14}
                                 width={14}
                                 src={require('./mutationAssessor.png')}
-                                // className={tooltipStyles['mutation-assessor-main-img']}
                                 alt="Sift"
                             />
                         </span>
@@ -350,7 +389,6 @@ export default class FunctionalImpactColumnFormatter {
                                 height={14}
                                 width={14}
                                 src={require('./siftFunnel.png')}
-                                // className={tooltipStyles['mutation-assessor-main-img']}
                                 alt="SIFT"
                             />
                         </span>
@@ -370,7 +408,6 @@ export default class FunctionalImpactColumnFormatter {
                                 height={14}
                                 width={14}
                                 src={require('./polyPhen-2.png')}
-                                // className={tooltipStyles['mutation-assessor-main-img']}
                                 alt="PolyPhen-2"
                             />
                         </span>
