@@ -201,6 +201,7 @@ export default class MutationMapper<
             <LollipopMutationPlot
                 store={this.props.store}
                 pubMedCache={this.props.pubMedCache}
+                mutationAlignerCache={this.mutationAlignerCache}
                 onXAxisOffset={this.onXAxisOffset}
                 geneWidth={this.geneWidth}
                 tracks={this.tracks}
