@@ -177,25 +177,41 @@ describe('gsva feature', function() {
             });
 
             it('adds gene set name to entry component', () => {
+                console.log('A');
+                $('button[data-test=GENESET_VOLCANO_BUTTON]').waitForExist();
+                console.log('B');
                 browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
+                console.log('C');
                 $('div.modal-dialog').waitForExist();
-
+                console.log('D');
                 // find the GO_ATP_DEPENDENT_CHROMATIN_REMODELING entry and check its checkbox
+                $('span=GO_ATP_DEPENDENT_CHROMATIN_REMODELING').waitForExist();
                 var checkBox = $('span=GO_ATP_DEPENDENT_CHROMATIN_REMODELING')
                     .$('..')
                     .$('..')
                     .$$('td')[3]
                     .$('label input');
+                console.log('E');
                 checkBox.waitForVisible();
+                console.log('F');
+                browser.waitUntil(() => {
+                    checkBox.click();
+                    return checkBox.isSelected();
+                });
 
-                checkBox.click();
-                checkBox.waitUntil(checkBox.isSelected());
-
+                console.log('G');
+                $('button=Add selection to the query').waitForExist();
+                console.log('H');
                 browser.$('button=Add selection to the query').click();
 
+                console.log('I');
                 $('span*=All gene sets are valid').waitForExist();
 
+                console.log('J');
                 var textArea = browser.$('[data-test=GENESETS_TEXT_AREA]');
+                console.log('K');
+                textArea.waitForExist();
+                console.log('L');
                 assert.equal(
                     textArea.getText(),
                     'GO_ATP_DEPENDENT_CHROMATIN_REMODELING'
@@ -242,15 +258,18 @@ describe('gsva feature', function() {
 
                 $('div.modal-dialog').waitForExist();
 
-                var before = $$('span*=GO_');
+                browser.waitUntil(() => $$('span*=GO_').length > 5);
 
+                const lengthBefore = $$('span*=GO_').length;
+
+                $('input.tableSearchInput').waitForExist();
                 $('input.tableSearchInput').setValue('GO_ACYL');
 
-                browser.waitUntil(() => $$('span*=GO_').length < before.length);
+                browser.waitUntil(() => $$('span*=GO_').length < lengthBefore);
 
-                var after = $$('span*=GO_');
+                const lengthAfter = $$('span*=GO_').length;
 
-                assert.equal(after.length, 1);
+                assert.equal(lengthAfter, 1);
             });
         });
 
@@ -439,6 +458,7 @@ describe('gsva feature', function() {
                 var icon = $('//*[@id="coexpressionTabGeneTabs"]').$('a=RPS11');
                 icon.click();
                 $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
+
                 assert.equal(
                     getReactSelectOptions(
                         $('.coexpression-select-query-profile')

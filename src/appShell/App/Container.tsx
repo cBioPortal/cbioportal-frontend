@@ -23,6 +23,17 @@ interface IContainerProps {
     children: React.ReactNode;
 }
 
+function isLocalDBServer() {
+    try {
+        return (
+            (window as any).frontendConfig.serverConfig.app_name ===
+            'localdbe2e'
+        );
+    } catch (ex) {
+        return false;
+    }
+}
+
 @observer
 export default class Container extends React.Component<IContainerProps, {}> {
     private get routingStore() {
@@ -42,7 +53,11 @@ export default class Container extends React.Component<IContainerProps, {}> {
     }
 
     render() {
-        if (!isWebdriver() && !ServerConfigHelpers.sessionServiceIsEnabled()) {
+        if (
+            !isLocalDBServer() &&
+            !isWebdriver() &&
+            !ServerConfigHelpers.sessionServiceIsEnabled()
+        ) {
             return (
                 <div className="contentWrapper">
                     <ErrorScreen
