@@ -75,6 +75,7 @@ export interface MutationMapperStore {
     transcriptsWithProteinLength: RemoteData<string[] | undefined>;
     mutationsByTranscriptId: { [transcriptId: string]: Mutation[] };
     setSelectedTranscript?: (id: string | undefined) => void;
+    getTranscriptId?: () => string | undefined;
 }
 
 export default MutationMapperStore;
