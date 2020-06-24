@@ -92,10 +92,23 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     @observable
     private _selectedTranscript: string | undefined = undefined;
 
+    // this allows us to keep selected transcript state in one of two places
+    // external (e.g. url)
+    // internal (_selectedTranscript)
+    // we default to external
+    @computed get selectedTranscript(): string | undefined {
+        if (this.getTranscriptId) {
+            return this.getTranscriptId();
+        } else {
+            return this._selectedTranscript;
+        }
+    }
+
     constructor(
         public gene: Gene,
         protected config: DefaultMutationMapperStoreConfig,
-        protected getMutations: () => Mutation[]
+        protected getMutations: () => Mutation[],
+        public getTranscriptId?: () => string | undefined
     ) {}
 
     readonly activeTranscript: MobxPromise<string | undefined> = remoteData(
@@ -111,13 +124,13 @@ class DefaultMutationMapperStore implements MutationMapperStore {
                     ? this.canonicalTranscript.result.transcriptId
                     : undefined;
                 const selectedTranscript =
-                    this._selectedTranscript &&
+                    this.selectedTranscript &&
                     this.allTranscripts.result &&
                     this.allTranscripts.result.find(
                         transcript =>
-                            transcript.transcriptId === this._selectedTranscript
+                            transcript.transcriptId === this.selectedTranscript
                     )
-                        ? this._selectedTranscript
+                        ? this.selectedTranscript
                         : undefined;
 
                 if (selectedTranscript) {
