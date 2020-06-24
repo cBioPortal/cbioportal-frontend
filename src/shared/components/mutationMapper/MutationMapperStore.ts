@@ -82,7 +82,8 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
             [uniqueSampleKey: string]: string;
         },
         protected genomenexusClient?: GenomeNexusAPI,
-        protected genomenexusInternalClient?: GenomeNexusAPIInternal
+        protected genomenexusInternalClient?: GenomeNexusAPIInternal,
+        public getTranscriptId?: () => string
     ) {
         super(
             gene,
@@ -94,7 +95,8 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
                 enableCivic: mutationMapperConfig.show_civic,
                 enableOncoKb: mutationMapperConfig.show_oncokb,
             },
-            getMutations
+            getMutations,
+            getTranscriptId
         );
 
         const unnormalizedGetMutations = this.getMutations;
