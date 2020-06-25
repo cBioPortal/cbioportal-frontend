@@ -103,7 +103,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
     }
 
     @computed
-    get isCanonicalTranscript(): boolean | undefined {
+    get isCanonicalTranscript(): boolean {
         if (this.canonicalTranscript.result && this.activeTranscript.result) {
             // if transcript dropdown is enabled, return true for canonical transcript
             return (
@@ -111,7 +111,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
                 this.canonicalTranscript.result.transcriptId
             );
         }
-        // if transcript dropdown is disabled, return undefined
-        return undefined;
+        // if transcript dropdown is disabled, canonical transcript is used by default
+        return true;
     }
 }

@@ -7,6 +7,7 @@ import {
     getMyCancerGenomeData,
     groupCancerHotspotDataByPosition,
     groupHotspotsByMutations,
+    getMutationsByTranscriptId,
     groupMutationsByProteinStartPos,
     indexHotspotsData,
     ICivicGene,
@@ -17,7 +18,6 @@ import {
     fetchCivicGenes,
     fetchCivicVariants,
     uniqueGenomicLocations,
-    getMutationsByTranscriptId,
 } from 'cbioportal-utils';
 import { Gene, Mutation, IMyVariantInfoIndex } from 'cbioportal-utils';
 
