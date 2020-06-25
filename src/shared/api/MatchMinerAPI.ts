@@ -6,12 +6,12 @@ import { buildCBioPortalAPIUrl } from './urls';
  * Retrieves the trial matches for the query given, if they are in the MatchMiner API.
  */
 // It cannot be set globally since it will cause test error: undefined of 'replace'.
-// const cbioportalUrl = buildCBioPortalAPIUrl('api-legacy/proxy/matchminer/api');
+// const cbioportalUrl = buildCBioPortalAPIUrl('api/proxy/matchminer/api');
 export async function fetchTrialMatchesUsingPOST(
     query: object
 ): Promise<Array<ITrialMatch>> {
     const cbioportalUrl = buildCBioPortalAPIUrl(
-        'api-legacy/proxy/matchminer/api'
+        'api/proxy/matchminer/api'
     );
     return request
         .post(cbioportalUrl + '/post_trial_match')
@@ -59,7 +59,7 @@ export async function fetchTrialsByTypeAndId(
     id: string
 ): Promise<ITrial> {
     const cbioportalUrl = buildCBioPortalAPIUrl(
-        'api-legacy/proxy/matchminer/api'
+        'api/proxy/matchminer/api'
     );
     return request.get(cbioportalUrl + '/' + type + '/' + id).then(res => {
         const response = JSON.parse(res.text);
@@ -80,7 +80,7 @@ export async function fetchTrialsUsingPost(
     query: object
 ): Promise<Array<ITrial>> {
     const cbioportalUrl = buildCBioPortalAPIUrl(
-        'api-legacy/proxy/matchminer/api'
+        'api/proxy/matchminer/api'
     );
     return request
         .post(cbioportalUrl + '/post_trial')
@@ -102,7 +102,7 @@ export async function fetchTrialsUsingPost(
 
 export async function fetchTrialsById(query: object): Promise<Array<ITrial>> {
     const cbioportalUrl = buildCBioPortalAPIUrl(
-        'api-legacy/proxy/matchminer/api'
+        'api/proxy/matchminer/api'
     );
     return request
         .post(cbioportalUrl + '/trials')
