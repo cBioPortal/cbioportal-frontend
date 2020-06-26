@@ -83,7 +83,7 @@ onoKbCardWithInfoSuite = (prefix, gene, showLevelsOfEvidence = false) => {
     });
 };
 
-describe('OncoKB Integration', () => {
+describe.skip('OncoKB Integration', () => {
     describe('Check oncokb card', () => {
         describe('Check patient view', () => {
             beforeEach(() => {
