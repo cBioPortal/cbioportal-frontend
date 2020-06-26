@@ -572,15 +572,25 @@ describe('treatment feature', function() {
 
                 $('.gene-select-container').waitForExist();
                 var geneSelect = $('.gene-select-container');
-                geneSelect.$('.Select-value-label').click();
 
-                var options = geneSelect.$$('.Select-option');
+                geneSelect.click();
 
-                assert.equal(options[0].getText(), 'None');
-                assert.equal(options[1].getText(), 'CDKN2A');
-                assert.equal(options[2].getText(), 'MDM2');
-                assert.equal(options[3].getText(), 'MDM4');
-                assert.equal(options[4].getText(), 'TP53');
+                assert.equal(
+                    $('#react-select-12-option-1-0').getText(),
+                    'CDKN2A'
+                );
+                assert.equal(
+                    $('#react-select-12-option-1-1').getText(),
+                    'MDM2'
+                );
+                assert.equal(
+                    $('#react-select-12-option-1-2').getText(),
+                    'MDM4'
+                );
+                assert.equal(
+                    $('#react-select-12-option-1-3').getText(),
+                    'TP53'
+                );
             });
 
             it('shows sort order button for waterfall plot when `Ordered samples` selected', () => {
