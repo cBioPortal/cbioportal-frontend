@@ -45,6 +45,7 @@ import FAQ from 'bundle-loader?lazy!babel-loader!./pages/staticPages/faq/FAQ';
 import OQL from 'bundle-loader?lazy!babel-loader!./pages/staticPages/oql/OQL';
 import GroupComparisonPage from 'bundle-loader?lazy!babel-loader!./pages/groupComparison/GroupComparisonPage';
 import ErrorPage from 'bundle-loader?lazy!babel-loader!./pages/resultsView/ErrorPage';
+import OncoprinterDataFormat from 'bundle-loader?lazy!babel-loader!./pages/staticPages/tools/oncoprinter/OncoprinterDataFormat';
 
 import $ from 'jquery';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
@@ -253,6 +254,10 @@ export const makeRoutes = routing => {
             <Route
                 path="/oncoprinter"
                 getComponent={lazyLoadComponent(OncoprinterTool)}
+            />
+            <Route
+                path="/oncoprinterDataFormat"
+                getComponent={lazyLoadComponent(OncoprinterDataFormat)}
             />
             <Route
                 path="/webAPI"

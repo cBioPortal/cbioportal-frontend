@@ -28,6 +28,7 @@ import {
     GenomicFormatHelp,
     HeatmapFormatHelp,
 } from './OncoprinterHelp';
+import { buildCBioLink } from 'shared/api/urls';
 
 export interface IOncoprinterToolProps {}
 
@@ -184,6 +185,10 @@ export default class OncoprinterTool extends React.Component<
         this.doSubmit(geneticData, clinicalData, heatmapData);
     }
 
+    private openDataFormat(tab: 'genomic' | 'clinical' | 'heatmap') {
+        window.open(`oncoprinterDataFormat?tab=${tab}`, '_blank');
+    }
+
     @autobind
     private getInputSection() {
         return (
@@ -192,94 +197,102 @@ export default class OncoprinterTool extends React.Component<
             >
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <div className={styles.inputSection}>
-                        <div>
-                            <ControlLabel style={{ marginBottom: 7 }}>
-                                Input genomic alteration data (optional):
-                                <Button
-                                    className="oncoprinterGeneticExampleData"
-                                    style={{ marginLeft: 7 }}
-                                    bsStyle="primary"
-                                    bsSize="small"
-                                    onClick={this.populateGeneticExampleData}
-                                >
-                                    Load example data
-                                </Button>
-                            </ControlLabel>
-                            <FormControl
-                                className="oncoprinterGeneticDataInput"
-                                componentClass="textarea"
-                                value={this.geneticDataInput}
-                                placeholder="Enter data here..."
-                                onChange={this.onGeneticDataInputChange}
-                                style={{ height: 200, width: '100%' }}
-                            />
-                            <ControlLabel>
-                                or input data from file:
-                            </ControlLabel>
-                            <input ref={this.geneticFileInputRef} type="file" />
-                        </div>
-                        {GenomicFormatHelp}
+                        <ControlLabel style={{ marginBottom: 7 }}>
+                            Step 1) Input genomic alteration data (optional):
+                        </ControlLabel>
+                        <Button
+                            className="oncoprinterGeneticExampleData"
+                            style={{ marginLeft: 7 }}
+                            bsStyle="primary"
+                            bsSize="xs"
+                            onClick={this.populateGeneticExampleData}
+                        >
+                            Load example data
+                        </Button>
+                        <Button
+                            style={{ marginLeft: 7 }}
+                            bsStyle="primary"
+                            bsSize="xs"
+                            onClick={() => this.openDataFormat('genomic')}
+                        >
+                            View data format
+                        </Button>
+                        <FormControl
+                            className="oncoprinterGeneticDataInput"
+                            componentClass="textarea"
+                            value={this.geneticDataInput}
+                            placeholder="Enter data here..."
+                            onChange={this.onGeneticDataInputChange}
+                            style={{ height: 200, width: '100%' }}
+                        />
+                        <ControlLabel>or input data from file:</ControlLabel>
+                        <input ref={this.geneticFileInputRef} type="file" />
                     </div>
+                    <hr style={{ width: '100%' }} />
                     <div className={styles.inputSection}>
-                        <div>
-                            <ControlLabel style={{ marginBottom: 7 }}>
-                                Input clinical data (optional):
-                                <Button
-                                    className="oncoprinterClinicalExampleData"
-                                    style={{ marginLeft: 7 }}
-                                    bsStyle="primary"
-                                    bsSize="small"
-                                    onClick={this.populateClinicalExampleData}
-                                >
-                                    Load example data
-                                </Button>
-                            </ControlLabel>
-                            <FormControl
-                                className="oncoprinterClinicalDataInput"
-                                componentClass="textarea"
-                                value={this.clinicalDataInput}
-                                placeholder="Enter data here..."
-                                onChange={this.onClinicalDataInputChange}
-                                style={{ height: 200, width: '100%' }}
-                            />
-                            <ControlLabel>
-                                or input data from file:
-                            </ControlLabel>
-                            <input
-                                ref={this.clinicalFileInputRef}
-                                type="file"
-                            />
-                        </div>
-                        {ClinicalFormatHelp}
+                        <ControlLabel style={{ marginBottom: 7 }}>
+                            Step 2) Input clinical data (optional):
+                        </ControlLabel>
+                        <Button
+                            className="oncoprinterClinicalExampleData"
+                            style={{ marginLeft: 7 }}
+                            bsStyle="primary"
+                            bsSize="xs"
+                            onClick={this.populateClinicalExampleData}
+                        >
+                            Load example data
+                        </Button>
+                        <Button
+                            style={{ marginLeft: 7 }}
+                            bsStyle="primary"
+                            bsSize="xs"
+                            onClick={() => this.openDataFormat('clinical')}
+                        >
+                            View data format
+                        </Button>
+                        <FormControl
+                            className="oncoprinterClinicalDataInput"
+                            componentClass="textarea"
+                            value={this.clinicalDataInput}
+                            placeholder="Enter data here..."
+                            onChange={this.onClinicalDataInputChange}
+                            style={{ height: 200, width: '100%' }}
+                        />
+                        <ControlLabel>or input data from file:</ControlLabel>
+                        <input ref={this.clinicalFileInputRef} type="file" />
                     </div>
+                    <hr style={{ width: '100%' }} />
                     <div className={styles.inputSection}>
-                        <div>
-                            <ControlLabel style={{ marginBottom: 7 }}>
-                                Input heatmap data (optional):
-                                <Button
-                                    className="oncoprinterHeatmapExampleData"
-                                    style={{ marginLeft: 7 }}
-                                    bsStyle="primary"
-                                    bsSize="small"
-                                    onClick={this.populateHeatmapExampleData}
-                                >
-                                    Load example data
-                                </Button>
-                            </ControlLabel>
-                            <FormControl
-                                className="oncoprinterHeatmapDataInput"
-                                componentClass="textarea"
-                                value={this.heatmapDataInput}
-                                placeholder="Enter data here..."
-                                onChange={this.onHeatmapDataInputChange}
-                                style={{ height: 200, width: '100%' }}
-                            />
-                            <ControlLabel>
-                                or input data from file:
-                            </ControlLabel>
-                            <input ref={this.heatmapFileInputRef} type="file" />
-                        </div>
-                        {HeatmapFormatHelp}
+                        <ControlLabel style={{ marginBottom: 7 }}>
+                            Step 3) Input heatmap data (optional):
+                        </ControlLabel>
+                        <Button
+                            className="oncoprinterHeatmapExampleData"
+                            style={{ marginLeft: 7 }}
+                            bsStyle="primary"
+                            bsSize="xs"
+                            onClick={this.populateHeatmapExampleData}
+                        >
+                            Load example data
+                        </Button>
+                        <Button
+                            style={{ marginLeft: 7 }}
+                            bsStyle="primary"
+                            bsSize="xs"
+                            onClick={() => this.openDataFormat('heatmap')}
+                        >
+                            View data format
+                        </Button>
+                        <FormControl
+                            className="oncoprinterHeatmapDataInput"
+                            componentClass="textarea"
+                            value={this.heatmapDataInput}
+                            placeholder="Enter data here..."
+                            onChange={this.onHeatmapDataInputChange}
+                            style={{ height: 200, width: '100%' }}
+                        />
+                        <ControlLabel>or input data from file:</ControlLabel>
+                        <input ref={this.heatmapFileInputRef} type="file" />
                     </div>
                 </div>
                 <br />
