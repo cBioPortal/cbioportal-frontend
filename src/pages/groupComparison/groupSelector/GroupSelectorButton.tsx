@@ -168,11 +168,13 @@ class GroupSelectorButton extends React.Component<
                                 )}
                             >
                                 <div>
-                                    {renderGroupNameWithOrdinal(group)}&nbsp;
+                                    {renderGroupNameWithOrdinal(group)}{' '}
                                     {caseCountsInParens(
                                         sampleIdentifiers,
                                         patientIdentifiers
                                     )}
+                                    {group.description &&
+                                        ` - ${group.description}`}
                                 </div>
                                 {this.props.excludedFromAnalysis && (
                                     <div

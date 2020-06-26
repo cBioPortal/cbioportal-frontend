@@ -866,7 +866,8 @@ export class ResultsViewPageStore {
                     this.usePatientLevelEnrichments,
                     this.studyIds.result!,
                     this.alteredSamples.result!,
-                    this.unalteredSamples.result!
+                    this.unalteredSamples.result!,
+                    this.queryContainsOql
                 )
             );
 
