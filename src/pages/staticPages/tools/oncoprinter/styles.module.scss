@@ -1,9 +1,9 @@
 .dataFormatHelp {
-    background-color: #eee;
     padding: 13px;
     border-radius: 11px;
     margin-top: 10px;
-    width: 50%;
+    width: 100%;
+    max-width: 800px;
 
     .dataFormatHelpBorder {
         border-left: 1px solid black;
@@ -13,11 +13,4 @@
 }
 
 .inputSection {
-    display: flex;
-    justify-content: space-between;
-
-    & > div {
-        width: 50%;
-        margin: 5px;
-    }
 }
