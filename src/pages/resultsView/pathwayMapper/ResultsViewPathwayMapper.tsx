@@ -53,6 +53,13 @@ export default class ResultsViewPathwayMapper extends React.Component<
     @observable
     private activeToasts: React.ReactText[];
 
+    @observable
+    private warningMessage: string | null;
+
+    private readonly DEFAULT_MESSAGE = 'Welcome to Pathways tab...';
+    private readonly LOADING_MESSAGE = 'Loading alteration data...';
+    @observable
+    private isMessageShown = false;
     private toastReaction: IReactionDisposer;
 
     private readonly validNonQueryGenes = remoteData<string[]>({
@@ -64,14 +71,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
         onResult: (genes: string[]) => {
             // show loading text only if there are actually new genes to load
             if (genes.length > 0) {
-                const tId = toast('Loading alteration data...', {
-                    autoClose: false,
-                    draggable: false,
-                    position: 'bottom-left',
-                    className: styles.toast,
-                });
-
-                this.activeToasts.push(tId);
+                this.showMessage(this.LOADING_MESSAGE);
             }
         },
     });
@@ -114,6 +114,14 @@ export default class ResultsViewPathwayMapper extends React.Component<
         return this.alterationFrequencyDataForQueryGenes.concat(
             this.alterationFrequencyDataForNonQueryGenes
         );
+    }
+
+    @computed get message(): string {
+        if (!this.warningMessage) {
+            return this.DEFAULT_MESSAGE;
+        }
+
+        return this.warningMessage;
     }
 
     @computed get alterationFrequencyDataForQueryGenes() {
@@ -196,7 +204,9 @@ export default class ResultsViewPathwayMapper extends React.Component<
         // Alteration data of non-query genes are loaded.
         if (this.isNewStoreReady) {
             this.addGenomicData(this.alterationFrequencyData);
-            this.dismissActiveToasts();
+            if (this.message === this.LOADING_MESSAGE) {
+                this.dismissMessage();
+            }
         }
 
         if (!this.PathwayMapperComponent) {
@@ -217,6 +227,13 @@ export default class ResultsViewPathwayMapper extends React.Component<
                                 store={this.props.store}
                                 tabReflectsOql={true}
                             />
+
+                            <PathwayMapperMessageBox
+                                message={this.message}
+                                DEFAULT_MESSAGE={this.DEFAULT_MESSAGE}
+                                LOADING_MESSAGE={this.LOADING_MESSAGE}
+                                setMessageCallback={this.showMessage}
+                            />
                             {/*
                                   // @ts-ignore */}
                             <this.PathwayMapperComponent
@@ -234,6 +251,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
                                 tableComponent={this.renderTable}
                                 validGenes={this.validGenes}
                                 toast={toast}
+                                showMessage={this.showMessage}
                             />
                             <ToastContainer
                                 closeButton={<i className="fa fa-times" />}
@@ -332,15 +350,17 @@ export default class ResultsViewPathwayMapper extends React.Component<
     }
 
     @autobind
-    private dismissActiveToasts() {
+    private dismissMessage() {
         // Toasts are removed with delay
         setTimeout(() => {
-            this.activeToasts.forEach(tId => {
-                toast.dismiss(tId);
-            });
+            this.warningMessage = null;
         }, 2000);
     }
 
+    @autobind
+    private showMessage(message: string) {
+        this.warningMessage = message;
+    }
     @autobind
     private renderTable(
         data: IPathwayMapperTable[],
@@ -356,3 +376,56 @@ export default class ResultsViewPathwayMapper extends React.Component<
         );
     }
 }
+interface PathwayMapperMessageBoxProps {
+    message: string | null;
+    DEFAULT_MESSAGE: string;
+    LOADING_MESSAGE: string;
+    setMessageCallback: (message: string | null) => void;
+}
+const PathwayMapperMessageBox: React.SFC<
+    PathwayMapperMessageBoxProps
+> = props => {
+    const message = props.message;
+    const isWarningMessage =
+        message !== props.LOADING_MESSAGE && message !== props.DEFAULT_MESSAGE;
+
+    return (
+        <div
+            className={
+                'alert ' +
+                (isWarningMessage ? 'alert-warning' : 'alert-success')
+            }
+            style={{
+                marginLeft: '1%',
+                marginBottom: '0px',
+                color: message !== props.DEFAULT_MESSAGE ? 'black' : 'gray',
+                maxHeight: '35px',
+                overflowY: 'auto',
+            }}
+        >
+            <button
+                type="button"
+                className="close"
+                onClick={() => {
+                    props.setMessageCallback(null);
+                }}
+                style={{
+                    display:
+                        message !== props.DEFAULT_MESSAGE ? 'block' : 'none',
+                }}
+            >
+                &times;
+            </button>
+            {isWarningMessage && (
+                <i
+                    className="fa fa-md fa-exclamation-triangle"
+                    style={{
+                        marginRight: '6px',
+                        marginBottom: '1px',
+                    }}
+                ></i>
+            )}
+            {message}
+        </div>
+    );
+};
