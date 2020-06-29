@@ -14,25 +14,31 @@ export function getProteinChangeData(
     },
     isCanonicalTranscript?: boolean
 ) {
-    // non-canonical
-    if (isCanonicalTranscript === false) {
-        const annotatedMutation = indexedAnnotatedMutationsByGenomicLocation
-            ? findMatchingAnnotatedMutation(
-                  originalMutation,
-                  indexedAnnotatedMutationsByGenomicLocation
-              )
-            : undefined;
-        if (annotatedMutation) {
-            // non-canonical, GN has data, but data is empty, show empty
-            if (annotatedMutation.proteinChange.length === 0) {
-                return '';
-            }
-            // non-canonical, GN has data, show GN annotated result
-            return annotatedMutation.proteinChange;
-        }
-        // non-canonical and GN doesn't have data, show data from database
-    }
-    // canonical, show database result
+    // // non-canonical
+    // //if (isCanonicalTranscript === false) {
+    //     const annotatedMutation = indexedAnnotatedMutationsByGenomicLocation
+    //         ? findMatchingAnnotatedMutation(
+    //               originalMutation,
+    //               indexedAnnotatedMutationsByGenomicLocation
+    //           )
+    //         : undefined;
+    //     if (annotatedMutation) {
+    //         console.log(annotatedMutation);
+
+    //         // non-canonical, GN has data, but data is empty, show empty
+    //         if (annotatedMutation.proteinChange.length === 0) {
+    //             return '';
+    //         }
+    //         // non-canonical, GN has data, show GN annotated result
+    //         return annotatedMutation.proteinChange;
+    //     }
+    //     else {
+    //         return undefined;
+    //     }
+    //     // non-canonical and GN doesn't have data, show data from database
+    // //}
+    // // canonical, show database result
+
     return originalMutation.proteinChange;
 }
 

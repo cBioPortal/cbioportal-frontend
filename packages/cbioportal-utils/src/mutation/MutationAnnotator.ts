@@ -142,7 +142,7 @@ export function getMutationByTranscriptId(
         return annotatedMutation as Mutation;
     } else {
         // if mutation is not annotatable or can't map back (due to genomic location normalization or other reasons), return original mutation
-        return mutation;
+        return undefined;
     }
 }
 
@@ -157,39 +157,44 @@ export function getAnnotatedMutationFromAnnotationSummary(
         mutation
     );
 
-    // Overwrite only missing values: Do not overwrite user provided values!
-    annotatedMutation.variantType =
-        (!overwriteWithAnnotatedMutation && annotatedMutation.variantType) ||
-        annotationSummary.variantType;
-
-    annotatedMutation.proteinChange =
-        (!overwriteWithAnnotatedMutation && annotatedMutation.proteinChange) ||
-        transcriptConsequenceSummary.hgvspShort;
-    // remove p. prefix if exists
-    if (annotatedMutation.proteinChange) {
-        annotatedMutation.proteinChange = annotatedMutation.proteinChange.replace(
-            /^p./,
-            ''
-        );
-    }
-
-    // overwite the mutationType for non-canonical transcript
     if (!isCanonicalTranscript) {
-        annotatedMutation.mutationType =
-            transcriptConsequenceSummary.variantClassification;
-    }
+        // Overwrite only missing values: Do not overwrite user provided values!
+        annotatedMutation.variantType =
+            // (!overwriteWithAnnotatedMutation && annotatedMutation.variantType) ||
+            annotationSummary.variantType;
 
-    if (transcriptConsequenceSummary.proteinPosition) {
-        // TODO: make this logic more clear, lollipopplot fills in proteinstart
-        // and end if it's undefined but proteinChange exists
-        annotatedMutation.proteinPosStart =
-            !overwriteWithAnnotatedMutation && annotatedMutation.proteinChange
-                ? annotatedMutation.proteinPosStart
-                : transcriptConsequenceSummary.proteinPosition.start;
-        annotatedMutation.proteinPosEnd =
-            !overwriteWithAnnotatedMutation && annotatedMutation.proteinChange
-                ? annotatedMutation.proteinPosEnd
-                : transcriptConsequenceSummary.proteinPosition.end;
+        annotatedMutation.proteinChange =
+            // (!overwriteWithAnnotatedMutation && annotatedMutation.proteinChange) ||
+            transcriptConsequenceSummary.hgvspShort;
+        // remove p. prefix if exists
+        if (annotatedMutation.proteinChange) {
+            annotatedMutation.proteinChange = annotatedMutation.proteinChange.replace(
+                /^p./,
+                ''
+            );
+        }
+
+        // overwrite mutationType
+        annotatedMutation.mutationType =
+            // (!overwriteWithAnnotatedMutation && annotatedMutation.mutationType) ||
+            transcriptConsequenceSummary.variantClassification;
+        //     transcriptConsequenceSummary.variantClassification;
+        // transcriptConsequenceSummary.variantClassification;
+
+        if (transcriptConsequenceSummary.proteinPosition) {
+            // TODO: make this logic more clear, lollipopplot fills in proteinstart
+            // and end if it's undefined but proteinChange exists
+            annotatedMutation.proteinPosStart =
+                // !overwriteWithAnnotatedMutation && annotatedMutation.proteinChange
+                //     ? annotatedMutation.proteinPosStart
+                //     :
+                transcriptConsequenceSummary.proteinPosition.start;
+            annotatedMutation.proteinPosEnd =
+                // !overwriteWithAnnotatedMutation && annotatedMutation.proteinChange
+                //     ? annotatedMutation.proteinPosEnd
+                //     :
+                transcriptConsequenceSummary.proteinPosition.end;
+        }
     }
 
     // Entrez Gene id is critical for OncoKB annotation
