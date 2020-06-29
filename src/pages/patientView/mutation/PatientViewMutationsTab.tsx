@@ -13,7 +13,6 @@ import { action, computed, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import PatientViewMutationsDataStore from './PatientViewMutationsDataStore';
 import { Mutation } from 'cbioportal-ts-api-client';
-import ReactSelect from 'react-select';
 import MutationOncoprint from './oncoprint/MutationOncoprint';
 import { DownloadControls } from 'cbioportal-frontend-commons';
 import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledCheckbox';
@@ -23,7 +22,6 @@ import { isFusion } from '../../../shared/lib/MutationUtils';
 import PatientViewUrlWrapper from '../PatientViewUrlWrapper';
 import WindowStore from '../../../shared/components/window/WindowStore';
 import Timeline from '../timeline/Timeline';
-import classnames from 'classnames';
 
 export interface IPatientViewMutationsTabProps {
     store: PatientViewPageStore;
@@ -296,13 +294,13 @@ export default class PatientViewMutationsTab extends React.Component<
                     indexedVariantAnnotations={
                         this.props.store.indexedVariantAnnotations
                     }
+                    indexedMyVariantInfoAnnotations={
+                        this.props.store.indexedMyVariantInfoAnnotations
+                    }
                     discreteCNACache={this.props.store.discreteCNACache}
                     mrnaExprRankCache={this.props.store.mrnaExprRankCache}
                     pubMedCache={this.props.store.pubMedCache}
                     genomeNexusCache={this.props.store.genomeNexusCache}
-                    genomeNexusMyVariantInfoCache={
-                        this.props.store.genomeNexusMyVariantInfoCache
-                    }
                     mrnaExprRankMolecularProfileId={
                         this.props.store.mrnaRankMolecularProfileId.result ||
                         undefined

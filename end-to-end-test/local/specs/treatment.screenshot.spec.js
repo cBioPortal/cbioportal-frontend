@@ -110,7 +110,7 @@ describe('treatment feature', () => {
             assertScreenShotMatch(res);
         });
 
-        it('updates title of watefall plot when selecting a new gene', () => {
+        it.skip('updates title of watefall plot when selecting a new gene', () => {
             var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
             selectReactSelectOption(horzDataSelect, 'Ordered samples');
 
@@ -118,11 +118,9 @@ describe('treatment feature', () => {
             $('[data-test=ViewCopyNumber]').waitForExist();
             $('[data-test=ViewCopyNumber]').click();
 
-            $('input[name=utilities_geneSelectionBox]').waitForExist();
-            var geneSelect = $('input[name=utilities_geneSelectionBox]').$(
-                '..'
-            );
-            selectReactSelectOption(geneSelect, 'TP53');
+            $('.gene-select').click();
+
+            $('#react-select-13-option-1-3').click();
 
             var res = browser.checkElement('[id=plots-tab-plot-svg]');
             assertScreenShotMatch(res);

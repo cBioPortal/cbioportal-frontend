@@ -454,44 +454,20 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         );
     }
 
-    // determine whether the selected DataTypes support formatting options
-    // for points in the scatter plot (based on mutations type, CNA, ...)
-    // NOTE1: the order of these statements is critical for correct resolution
-    // NOTE2: limit values are only supported for generic assay outcome profiles
+    // Determine whether the selected DataTypes support formatting options.
+    // Any plot with scatters can show any data type.
+    // Limit values are only supported for generic assay outcome profiles
     @computed get potentialColoringType(): PotentialColoringType {
         if (this.plotType.result === PlotType.DiscreteVsDiscrete) {
             // cant show either in table
             return PotentialColoringType.None;
         }
 
-        // molecular profile in one or both axes
-        if (this.oneAxisMolecularProfile || this.bothAxesMolecularProfile) {
-            //  establish whether data may contain limit values
-            // (for now only supported for treatment data)
-            if (this.limitValuesCanBeShown) {
-                return PotentialColoringType.LimitValMutationTypeAndCopyNumber;
-            }
-            return PotentialColoringType.MutationTypeAndCopyNumber;
-        }
-
-        // both axes no molecular profile
-        if (this.bothAxesNoMolecularProfile) {
-            //  establish whether data may contain limit values
-            // (for now only supported for generic assay data)
-            if (this.limitValuesCanBeShown) {
-                return PotentialColoringType.LimitValMutationTypeAndCopyNumber;
-            }
-            return PotentialColoringType.MutationTypeAndCopyNumber;
-        }
-
-        //  establish whether data may contain limit values
-        // (for now only supported for generic assay data)
         if (this.limitValuesCanBeShown) {
-            return PotentialColoringType.LimitVal;
+            return PotentialColoringType.LimitValMutationTypeAndCopyNumber;
+        } else {
+            return PotentialColoringType.MutationTypeAndCopyNumber;
         }
-
-        // neither axis gene or generic assay
-        return PotentialColoringType.None;
     }
 
     @computed get bothAxesNoMolecularProfile() {
@@ -2157,33 +2133,28 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         }
     }
 
+    private isAxisMolecularProfile(selection: AxisMenuSelection) {
+        return (
+            selection.dataType !== undefined &&
+            selection.dataType !== NONE_SELECTED_OPTION_STRING_VALUE &&
+            selection.dataType !== CLIN_ATTR_DATA_TYPE &&
+            selection.dataType !== GENESET_DATA_TYPE &&
+            !selection.isGenericAssayType
+        );
+    }
+
     @computed get bothAxesMolecularProfile() {
         return (
-            (this.horzSelection.dataType === undefined ||
-                (this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE &&
-                    !this.horzSelection.isGenericAssayType)) &&
-            (this.vertSelection.dataType === undefined ||
-                (this.vertSelection.dataType !== CLIN_ATTR_DATA_TYPE &&
-                    !this.vertSelection.isGenericAssayType))
+            this.isAxisMolecularProfile(this.horzSelection) &&
+            this.isAxisMolecularProfile(this.vertSelection)
         );
     }
 
     @computed get oneAxisMolecularProfile() {
         return (
-            !this.bothAxesMolecularProfile &&
-            (this.horzSelection.dataType === undefined ||
-                ((this.horzSelection.dataType !==
-                    NONE_SELECTED_OPTION_STRING_VALUE &&
-                    this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE &&
-                    this.horzSelection.dataType &&
-                    !this.horzSelection.isGenericAssayType) ||
-                    (this.vertSelection.dataType === undefined ||
-                        (this.vertSelection.dataType !==
-                            NONE_SELECTED_OPTION_STRING_VALUE &&
-                            this.vertSelection.dataType !==
-                                CLIN_ATTR_DATA_TYPE &&
-                            !this.vertSelection.isGenericAssayType))))
-        );
+            this.isAxisMolecularProfile(this.horzSelection) !==
+            this.isAxisMolecularProfile(this.vertSelection)
+        ); // XOR
     }
 
     @computed get sameGeneInBothAxes() {

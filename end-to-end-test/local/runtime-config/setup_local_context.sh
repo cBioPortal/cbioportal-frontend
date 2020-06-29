@@ -76,17 +76,20 @@ yarn install --frozen-lockfile
 
 echo START SERVE_DIST
 cd $PORTAL_SOURCE_DIR
-yarn
-yarn buildModules
-yarn serveDistLocalDb &
+
+if $BUILD_JS; then
+  yarn
+  yarn buildModules
+  yarn serveDistLocalDb &
+fi
 
 cd $TEST_HOME
 
 echo UPDATE WEBDRIVER-MANAGER
-./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome "2.42"
+./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome  "${CHROMEDRIVER_VERSION:=2.42}"
 
 echo START WEBDRIVER-MANAGER
-./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome "2.42" &
+./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome "${CHROMEDRIVER_VERSION:=2.42}" &
 
 echo PROBE CBIOPORTAL
 curl $CBIOPORTAL_URL > /dev/null

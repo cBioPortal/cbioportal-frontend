@@ -6,7 +6,7 @@ import {
     groupMutationsByProteinStartPos,
     uniqueGenomicLocations,
 } from 'cbioportal-utils';
-import { Gene, Mutation } from 'cbioportal-utils';
+import { Gene, Mutation, IMyVariantInfoIndex } from 'cbioportal-utils';
 import {
     CancerGene,
     IndicatorQueryResp,
@@ -16,7 +16,6 @@ import {
     EnsemblTranscript,
     GenomicLocation,
     Hotspot,
-    MyVariantInfo,
     PfamDomain,
     PfamDomainRange,
     PostTranslationalModification,
@@ -398,67 +397,6 @@ class DefaultMutationMapperStore implements MutationMapperStore {
             },
         },
         ''
-    );
-
-    readonly mutationAlignerLinks: MobxPromise<
-        { [pfamAccession: string]: string } | undefined
-    > = remoteData(
-        {
-            await: () => [this.canonicalTranscript, this.allTranscripts],
-            invoke: () =>
-                new Promise<{ [pfamAccession: string]: string } | undefined>(
-                    (resolve, reject) => {
-                        const regions =
-                            this.allTranscripts.result &&
-                            this.activeTranscript &&
-                            this.transcriptsByTranscriptId[
-                                this.activeTranscript
-                            ]
-                                ? this.transcriptsByTranscriptId[
-                                      this.activeTranscript
-                                  ].pfamDomains
-                                : undefined;
-
-                        const responsePromises: Promise<Response>[] = [];
-                        for (let i = 0; regions && i < regions.length; i++) {
-                            // have to do a for loop because seamlessImmutable will make result of .map immutable,
-                            // and that causes infinite loop here
-                            // TODO fix `as any`
-                            responsePromises.push(
-                                this.dataFetcher.fetchMutationAlignerLink(
-                                    regions[i].pfamDomainId
-                                ) as any
-                            );
-                        }
-                        const allResponses = Promise.all(responsePromises);
-                        allResponses.then(responses => {
-                            // TODO fix `as any`
-                            const data = responses.map(r =>
-                                JSON.parse(r.text as any)
-                            );
-                            const ret: { [pfamAccession: string]: string } = {};
-                            let mutationAlignerData: any;
-                            let pfamAccession: string | null;
-                            for (let i = 0; i < data.length; i++) {
-                                mutationAlignerData = data[i];
-                                pfamAccession = regions
-                                    ? regions[i].pfamDomainId
-                                    : null;
-                                if (
-                                    pfamAccession &&
-                                    mutationAlignerData.linkToMutationAligner
-                                ) {
-                                    ret[pfamAccession] =
-                                        mutationAlignerData.linkToMutationAligner;
-                                }
-                            }
-                            resolve(ret);
-                        });
-                        allResponses.catch(reject);
-                    }
-                ),
-        },
-        {}
     );
 
     readonly pfamDomainData: MobxPromise<PfamDomain[] | undefined> = remoteData(
@@ -913,7 +851,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     });
 
     readonly indexedMyVariantInfoAnnotations: MobxPromise<
-        { [genomicLocation: string]: MyVariantInfo } | undefined
+        IMyVariantInfoIndex | undefined
     > = remoteData({
         await: () => [this.mutationData],
         invoke: async () =>

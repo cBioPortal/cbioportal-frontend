@@ -125,7 +125,7 @@ describe('Mutation Table', function() {
             browser.click('//*[text()="gnomAD"]');
             // find frequency
             const frequency =
-                '[data-test2="LUAD-B00416-Tumor"][data-test="gnomad-column"]';
+                '[data-test2="LUAD-B00416-Tumor"][data-test="gnomad-column"] span';
             browser.waitForExist(frequency, 60000);
             // wait for gnomad frequency show in the column
             browser.waitUntil(
