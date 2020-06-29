@@ -49,19 +49,19 @@ export default class OqlStatusBanner extends React.Component<
             if (this.props.isUnaffected) {
                 className = 'alert alert-unaffected';
                 message =
-                    'The results below are not affected by the OQL specification from your query i.e. they would be identical without the OQL specification.';
+                    'Your OQL specification does not affect the results below, because it includes all mutations in this gene.';
                 iconClassName = 'fa fa-md fa-info-circle';
                 dataTest = 'OqlStatusBannerUnaffected';
             } else if (this.props.tabReflectsOql) {
                 className = 'alert alert-success';
                 message =
-                    'The results below reflect the OQL specification from your query.';
+                    'The results below are filtered by the OQL specification from your query.';
                 iconClassName = 'fa fa-md fa-check';
                 dataTest = 'OqlStatusBannerYes';
             } else {
                 className = 'alert alert-info';
                 message =
-                    'The results below do not reflect the OQL specification from your query.';
+                    'The results below are not filtered by the OQL specification from your query.';
                 iconClassName = 'fa fa-md fa-exclamation-triangle';
                 dataTest = 'OqlStatusBannerNo';
             }
