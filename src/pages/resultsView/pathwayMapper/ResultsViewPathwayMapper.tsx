@@ -30,6 +30,7 @@ import 'cytoscape-navigator/cytoscape.js-navigator.css';
 import 'react-toastify/dist/ReactToastify.css';
 import styles from './pathwayMapper.module.scss';
 import PathwayMapper, { ICBioData } from 'pathway-mapper';
+import AlterationFilterWarning from 'shared/components/banners/AlterationFilterWarning';
 
 interface IResultsViewPathwayMapperProps {
     store: ResultsViewPageStore;
@@ -205,6 +206,14 @@ export default class ResultsViewPathwayMapper extends React.Component<
 
         return (
             <div className="pathwayMapper">
+                <div className={'tabMessageContainer'}>
+                    <OqlStatusBanner
+                        className="plots-oql-status-banner"
+                        store={this.props.store}
+                        tabReflectsOql={true}
+                    />
+                    <AlterationFilterWarning store={this.props.store} />
+                </div>
                 <div
                     data-test="pathwayMapperTabDiv"
                     className="cBioMode"
