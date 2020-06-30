@@ -13,7 +13,10 @@ import { AppStore } from '../../../AppStore';
 
 import './mutations.scss';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
-import { getOncoKbApiUrl } from 'shared/api/urls';
+import {
+    getMutationAlignerUrlTemplate,
+    getOncoKbApiUrl,
+} from 'shared/api/urls';
 
 export interface IMutationsPageProps {
     routing?: any;
@@ -160,6 +163,7 @@ export default class Mutations extends React.Component<
                             generateGenomeNexusHgvsgUrl={
                                 this.props.store.generateGenomeNexusHgvsgUrl
                             }
+                            mutationAlignerUrlTemplate={getMutationAlignerUrlTemplate()}
                         />
                     </MSKTab>
                 );
