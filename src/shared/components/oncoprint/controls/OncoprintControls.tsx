@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer, Observer } from 'mobx-react';
-import { Button, ButtonGroup, Modal } from 'react-bootstrap';
+import { Button, ButtonGroup } from 'react-bootstrap';
 import CustomDropdown from './CustomDropdown';
 import ConfirmNgchmModal from './ConfirmNgchmModal';
 import ReactSelect from 'react-select1';
@@ -22,11 +22,7 @@ import {
     GenericAssayMeta,
 } from 'cbioportal-ts-api-client';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import {
-    DefaultTooltip,
-    EditableSpan,
-    CheckedSelect,
-} from 'cbioportal-frontend-commons';
+import { DefaultTooltip, EditableSpan } from 'cbioportal-frontend-commons';
 import Slider from 'react-rangeslider';
 import 'react-rangeslider/lib/index.css';
 import './styles.scss';
@@ -35,7 +31,6 @@ import { SpecialAttribute } from '../../../cache/ClinicalDataCache';
 import {
     AlterationTypeConstants,
     ResultsViewPageStore,
-    GenericAssayTypeConstants,
 } from '../../../../pages/resultsView/ResultsViewPageStore';
 import {
     OncoprintAnalysisCaseType,
@@ -49,11 +44,9 @@ import DriverAnnotationControls, {
     IDriverAnnotationControlsHandlers,
 } from '../../../../pages/resultsView/settings/DriverAnnotationControls';
 import OncoprintDropdownCount from 'pages/resultsView/oncoprint/OncoprintDropdownCount';
-import TextIconArea, {
-    ITextIconAreaItemProps,
-} from 'shared/components/textIconArea/TextIconArea';
-import { extractGenericAssaySelections } from '../OncoprintUtils';
+import { ITextIconAreaItemProps } from 'shared/components/textIconArea/TextIconArea';
 import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/PlotsTabUtils';
+import Select from 'react-select';
 
 export interface IOncoprintControlsHandlers {
     onSelectColumnType?: (type: 'sample' | 'patient') => void;
@@ -226,8 +219,7 @@ export default class OncoprintControls extends React.Component<
     @observable horzZoomSliderState: number;
     @observable heatmapGenesReady = false;
     @observable private _selectedGenericAssayEntityIds: string[];
-    private textareaGenericAssayEntityText = '';
-    @observable genericAssayEntityFilter = '';
+    @observable private _genericAssaySearchText: string = '';
     @observable showConfirmNgchmModal: boolean = false;
 
     constructor(props: IOncoprintControlsProps) {
@@ -635,20 +627,6 @@ export default class OncoprintControls extends React.Component<
         }
     }
 
-    @autobind
-    private onChangeGenericAssayTextArea(text: string): string {
-        return extractGenericAssaySelections(
-            text,
-            this._selectedGenericAssayEntityIds,
-            this.genericAssayEntitiesOptionsByValueMap
-        );
-    }
-
-    @autobind
-    private onAddAllGenericAssayRemoved(entityId: string) {
-        _.remove(this._selectedGenericAssayEntityIds, v => v === entityId);
-    }
-
     @computed get heatmapProfileOptions() {
         if (
             this.props.state.heatmapProfilesPromise &&
@@ -694,8 +672,32 @@ export default class OncoprintControls extends React.Component<
 
     @autobind
     @action
-    private onSelectGenericAssayEntities(selectedElements: ISelectOption[]) {
-        this._selectedGenericAssayEntityIds = selectedElements.map(o => o.id);
+    private onSelectGenericAssayEntities(
+        selectedOptions: ISelectOption[],
+        selectInfo: any
+    ) {
+        // selectedOptions can be null if delete the last selected option
+        let candidateOptions = selectedOptions ? selectedOptions : [];
+        // if choose select all option, add all filtered options
+        if (
+            selectInfo.action === 'select-option' &&
+            selectInfo.option.id === 'select_all_filtered_options'
+        ) {
+            candidateOptions = _.union(
+                this.filteredGenericAssayOptions,
+                candidateOptions
+            );
+        }
+        // map to id
+        let candidateIds = candidateOptions.map(o => o.id);
+        // remove select all option from the candidate id list
+        if (candidateIds.includes('select_all_filtered_options')) {
+            candidateIds = _.difference(candidateIds, [
+                'select_all_filtered_options',
+            ]);
+        }
+        this._selectedGenericAssayEntityIds = candidateIds;
+        this._genericAssaySearchText = '';
     }
 
     @computed get selectedGenericAssayEntities(): ISelectOption[] {
@@ -719,8 +721,20 @@ export default class OncoprintControls extends React.Component<
         }));
     }
 
-    @computed get filteredGenericAssayOptions() {
-        const allOptionsInSelectedProfile =
+    private isOptionIncludingText(text: string, option: ISelectOption) {
+        let result = false;
+        if (
+            !text ||
+            option.label.toLowerCase().includes(text.toLowerCase()) ||
+            option.value.toLowerCase().includes(text.toLowerCase())
+        ) {
+            result = true;
+        }
+        return result;
+    }
+
+    @computed get genericAssayOptions() {
+        let allOptionsInSelectedProfile =
             this.props.state.selectedHeatmapProfileId &&
             this.isGenericAssayDataComplete &&
             this.props
@@ -730,41 +744,54 @@ export default class OncoprintControls extends React.Component<
                       .genericAssayEntitiesSelectOptionsGroupByMolecularProfileIdPromise!
                       .result[this.props.state.selectedHeatmapProfileId]
                 : [];
-        if (this.genericAssayEntityFilter) {
-            const regex = new RegExp(this.genericAssayEntityFilter, 'i');
-            return allOptionsInSelectedProfile.filter(
-                option => regex.test(option.label) || regex.test(option.value)
+
+        // add select all option
+        if (this._genericAssaySearchText.length > 0) {
+            allOptionsInSelectedProfile = _.concat(
+                {
+                    id: 'select_all_filtered_options',
+                    value: 'select_all_filtered_options',
+                    label: 'Select all filtered options',
+                } as ISelectOption,
+                allOptionsInSelectedProfile
             );
         }
         return allOptionsInSelectedProfile;
     }
 
-    @autobind
-    @action
-    onInputChange(input: string) {
-        this.genericAssayEntityFilter = input;
-    }
-
-    @autobind onAddAllGenericAssays() {
-        if (this.filteredGenericAssayOptions) {
-            // merge the current selected options with all the filtered ones and remove duplicates
-            this.onSelectGenericAssayEntities(
-                _.uniqBy(
-                    [
-                        ...this.selectedGenericAssaysJS,
-                        ...this.filteredGenericAssayOptions,
-                    ],
-                    option => option.value
-                )
+    @computed get filteredGenericAssayOptions() {
+        return _.filter(this.genericAssayOptions, option => {
+            // do not filter out select all option
+            if (option.value === 'select_all_filtered_options') {
+                return false;
+            }
+            return this.isOptionIncludingText(
+                this._genericAssaySearchText,
+                option
             );
+        });
+    }
+
+    @autobind filterGenericAssayOption(
+        option: ISelectOption,
+        filterString: string
+    ) {
+        if (option.value === 'select_all_filtered_options') {
+            return true;
+        }
+        return this.isOptionIncludingText(filterString, option);
+    }
+
+    @autobind onGenericAssayInputChange(input: string, inputInfo: any) {
+        if (inputInfo.action === 'input-change') {
+            this._genericAssaySearchText = input;
+        } else if (inputInfo.action !== 'set-value') {
+            this._genericAssaySearchText = '';
         }
     }
 
-    @computed get addAllLabel() {
-        if (this.filteredGenericAssayOptions) {
-            return `Select all (${this.filteredGenericAssayOptions.length})`;
-        }
-        return 'Select all';
+    @computed get isSelectedGenericAssayOptionsOverLimit() {
+        return this._selectedGenericAssayEntityIds.length > 100;
     }
 
     @autobind
@@ -804,7 +831,7 @@ export default class OncoprintControls extends React.Component<
             showItemSelectionElements &&
             this.props.state.selectedHeatmapProfileAlterationType !==
                 AlterationTypeConstants.GENERIC_ASSAY;
-        const showGenericAssaysTextArea =
+        const showGenericAssaysSelector =
             showItemSelectionElements &&
             this.props.state.selectedHeatmapProfileAlterationType ===
                 AlterationTypeConstants.GENERIC_ASSAY;
@@ -851,24 +878,7 @@ export default class OncoprintControls extends React.Component<
                                 Add Genes to Heatmap
                             </button>,
                         ]}
-                        {showGenericAssaysTextArea && [
-                            <TextIconArea
-                                elements={this.textareaGenericAssayEntries}
-                                text={this.textareaGenericAssayEntityText}
-                                placeholder={`Type space- or comma-separated ${deriveDisplayTextFromGenericAssayType(
-                                    this.props.state
-                                        .selectedHeatmapProfileGenericAssayType!
-                                )} here, then click 'Add ${deriveDisplayTextFromGenericAssayType(
-                                    this.props.state
-                                        .selectedHeatmapProfileGenericAssayType!,
-                                    true
-                                )} to Heatmap'`}
-                                onChangeTextArea={
-                                    this.onChangeGenericAssayTextArea
-                                }
-                                onIconClicked={this.onAddAllGenericAssayRemoved}
-                                classNames={['generic-assay-textarea']}
-                            />,
+                        {showGenericAssaysSelector && [
                             // if generic assay data is loading, show loading indicator
                             this.isGenericAssayDataComplete ? (
                                 <div
@@ -876,25 +886,38 @@ export default class OncoprintControls extends React.Component<
                                         'generic-assay-selector'
                                     )}
                                 >
-                                    <CheckedSelect
+                                    {this
+                                        .isSelectedGenericAssayOptionsOverLimit && (
+                                        <div className="alert alert-warning">
+                                            <i
+                                                className="fa fa-warning"
+                                                style={{ marginRight: 3 }}
+                                            />
+                                            Warning: we don't support adding
+                                            more than 100 options, please make
+                                            sure your selection has less than
+                                            100 options.
+                                        </div>
+                                    )}
+                                    <Select
                                         name="generic-assay-select"
                                         placeholder={`Search for ${deriveDisplayTextFromGenericAssayType(
                                             this.props.state
                                                 .selectedHeatmapProfileGenericAssayType!,
                                             true
                                         )}...`}
-                                        options={
-                                            this.filteredGenericAssayOptions
+                                        closeMenuOnSelect={false}
+                                        value={this.selectedGenericAssaysJS}
+                                        isMulti
+                                        options={this.genericAssayOptions}
+                                        filterOption={
+                                            this.filterGenericAssayOption
+                                        }
+                                        onInputChange={
+                                            this.onGenericAssayInputChange
                                         }
                                         onChange={
                                             this.onSelectGenericAssayEntities
-                                        }
-                                        value={this.selectedGenericAssaysJS}
-                                        onInputChange={this.onInputChange}
-                                        addAllLabel={this.addAllLabel}
-                                        onAddAll={this.onAddAllGenericAssays}
-                                        inputValue={
-                                            this.genericAssayEntityFilter
                                         }
                                     />
                                 </div>
@@ -906,7 +929,10 @@ export default class OncoprintControls extends React.Component<
                                 className="btn btn-sm btn-default"
                                 name={EVENT_KEY.addGenericAssaysToHeatmap}
                                 onClick={this.onButtonClick}
-                                disabled={!this.isGenericAssayDataComplete}
+                                disabled={
+                                    !this.isGenericAssayDataComplete ||
+                                    this.isSelectedGenericAssayOptionsOverLimit
+                                }
                             >
                                 {`Add ${deriveDisplayTextFromGenericAssayType(
                                     this.props.state

@@ -43,10 +43,6 @@
             min-height: 50px;
             border: 1px solid $borderColor;
             resize: vertical;
-
-            &.generic-assay-textarea {
-                border-radius: 2px;
-            }
         }
         > *,
         button {
