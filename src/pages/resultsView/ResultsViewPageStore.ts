@@ -931,23 +931,11 @@ export class ResultsViewPageStore {
     readonly clinicalAttributes_comparisonGroupMembership = remoteData<
         (ClinicalAttribute & { comparisonGroup: Group })[]
     >({
-        await: () => [
-            this.savedComparisonGroupsForStudies,
-            this.comparisonTabGroups,
-        ],
+        await: () => [this.savedComparisonGroupsForStudies],
         invoke: () =>
             Promise.resolve(
                 makeComparisonGroupClinicalAttributes(
                     this.savedComparisonGroupsForStudies.result!
-                ).concat(
-                    makeComparisonGroupClinicalAttributes(
-                        this.comparisonTabGroups.result!.map(groupData => {
-                            return {
-                                id: groupData.uid,
-                                data: groupData,
-                            };
-                        })
-                    )
                 )
             ),
     });
