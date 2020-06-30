@@ -3698,15 +3698,17 @@ export class ResultsViewPageStore {
                 _.mapValues(
                     this.genericAssayProfilesGroupByProfileIdSuffix.result,
                     profiles => {
-                        const stableIds: string[] = [];
-                        _.forEach(profiles, profile => {
-                            stableIds.push(
-                                ...this.genericAssayEntitiesGroupByMolecularProfileId.result![
-                                    profile.molecularProfileId
-                                ].map(entity => entity.stableId)
-                            );
-                        });
-                        return _.uniq(stableIds);
+                        return _.chain(profiles)
+                            .map(
+                                profile =>
+                                    this
+                                        .genericAssayEntitiesGroupByMolecularProfileId
+                                        .result![profile.molecularProfileId]
+                            )
+                            .flatten()
+                            .map(entity => entity.stableId)
+                            .uniq()
+                            .value();
                     }
                 )
             );

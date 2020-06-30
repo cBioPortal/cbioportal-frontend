@@ -137,7 +137,7 @@ export async function fetchGenericAssayData(
     return results;
 }
 
-export async function fetchGenericAssayDataByStableIdsAndMolecularIds(
+export function fetchGenericAssayDataByStableIdsAndMolecularIds(
     stableIds: string[],
     molecularProfileIds: string[]
 ) {
