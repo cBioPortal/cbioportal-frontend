@@ -12,8 +12,6 @@ import { Group } from '../../api/ComparisonGroupClient';
 import * as React from 'react';
 import { ISelectOption } from './controls/OncoprintControls';
 import { NOT_APPLICABLE_VALUE } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
-import { TrackGroupHeader, TrackGroupIndex } from 'oncoprintjs';
-import { HeatmapTrackGroupRecord } from 'shared/components/oncoprint/ResultsViewOncoprint';
 
 export const alterationTypeToProfiledForText: {
     [alterationType: string]: string;
@@ -277,101 +275,4 @@ export function genericAssayEntitiesToSelectOptionsGroupByGenericAssayType(gener
             });
         }
     );
-}
-
-export function makeTrackGroupHeaders(
-    molecularProfileIdToMolecularProfile: { [p: string]: MolecularProfile },
-    molecularProfileIdToHeatmapTracks: { [p: string]: HeatmapTrackGroupRecord },
-    genesetHeatmapTrackGroup: number | undefined,
-    clusteredTrackGroupIndex: number | undefined,
-    onClickClusterCallback: (index: TrackGroupIndex) => void,
-    onClickDontClusterCallback: () => void,
-    onClickDeleteCallback: (index: TrackGroupIndex) => void
-): { [trackGroupIndex: number]: TrackGroupHeader } {
-    var headers = _.reduce(
-        molecularProfileIdToHeatmapTracks,
-        (headerMap, nextEntry) => {
-            headerMap[nextEntry.trackGroupIndex] = makeTrackGroupHeader(
-                'heatmap',
-                molecularProfileIdToMolecularProfile[
-                    nextEntry.molecularProfileId
-                ].name,
-                nextEntry.trackGroupIndex,
-                clusteredTrackGroupIndex,
-                onClickClusterCallback,
-                onClickDontClusterCallback,
-                onClickDeleteCallback
-            );
-            return headerMap;
-        },
-        {} as { [trackGroupIndex: number]: TrackGroupHeader }
-    );
-
-    if (genesetHeatmapTrackGroup !== undefined) {
-        headers[genesetHeatmapTrackGroup] = makeTrackGroupHeader(
-            'geneset',
-            'GSVA Scores',
-            genesetHeatmapTrackGroup!,
-            clusteredTrackGroupIndex,
-            onClickClusterCallback,
-            onClickDontClusterCallback,
-            onClickDeleteCallback
-        );
-    }
-
-    return headers;
-}
-
-function makeTrackGroupHeader(
-    type: 'heatmap' | 'geneset',
-    text: string,
-    trackgroupIndex: number,
-    clusteredTrackGroupIndex: number | undefined,
-    onClickClusterCallback: (index: TrackGroupIndex) => void,
-    onClickDontClusterCallback: () => void,
-    onClickDeleteCallback: (index: TrackGroupIndex) => void
-): TrackGroupHeader {
-    const header = {
-        label: { text: text },
-        options: [
-            {
-                label: 'Cluster',
-                onClick: onClickClusterCallback,
-                weight: () => {
-                    if (clusteredTrackGroupIndex === trackgroupIndex) {
-                        return 'bold';
-                    } else {
-                        return 'normal';
-                    }
-                },
-            },
-            {
-                label: "Don't cluster",
-                onClick: () => {
-                    if (clusteredTrackGroupIndex === trackgroupIndex) {
-                        onClickDontClusterCallback();
-                    }
-                },
-                weight: () => {
-                    if (clusteredTrackGroupIndex === trackgroupIndex) {
-                        return 'normal';
-                    } else {
-                        return 'bold';
-                    }
-                },
-            },
-        ],
-    } as TrackGroupHeader;
-
-    if (type !== 'geneset') {
-        header.options.push({
-            separator: true,
-        });
-        header.options.push({
-            label: 'Delete',
-            onClick: onClickDeleteCallback,
-        });
-    }
-
-    return header;
 }
