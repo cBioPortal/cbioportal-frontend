@@ -156,10 +156,10 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
         {
             await: () => [
                 this.props.store._selectedGroups,
-                this.props.store.sampleSet,
+                this.props.store.sampleMap,
             ],
             invoke: () => {
-                const sampleSet = this.props.store.sampleSet.result!;
+                const sampleSet = this.props.store.sampleMap.result!;
                 const groupsWithSamples = _.map(
                     this.props.store._selectedGroups.result,
                     group => {
@@ -189,10 +189,10 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
         {
             await: () => [
                 this.props.store._selectedGroups,
-                this.props.store.sampleSet,
+                this.props.store.sampleMap,
             ],
             invoke: () => {
-                const sampleSet = this.props.store.sampleSet.result!;
+                const sampleSet = this.props.store.sampleMap.result!;
                 const groupsWithPatients = _.map(
                     this.props.store._selectedGroups.result,
                     group => {
@@ -223,10 +223,10 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
     private activeSamples = remoteData({
         await: () => [
             this.props.store._selectedGroups,
-            this.props.store.sampleSet,
+            this.props.store.sampleMap,
         ],
         invoke: () => {
-            const sampleSet = this.props.store.sampleSet.result!;
+            const sampleSet = this.props.store.sampleMap.result!;
             const activeSampleIdentifiers = getSampleIdentifiers(
                 this.props.store._selectedGroups.result!
             );
@@ -240,11 +240,11 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
     private readonly samplesVennPartition = remoteData({
         await: () => [
             this.props.store._selectedGroups,
-            this.props.store.sampleSet,
+            this.props.store.sampleMap,
             this.activeSamples,
         ],
         invoke: () => {
-            const sampleSet = this.props.store.sampleSet.result!;
+            const sampleSet = this.props.store.sampleMap.result!;
             return Promise.resolve(partitionCasesByGroupMembership(
                 this.props.store._selectedGroups.result!,
                 group => getSampleIdentifiers([group]),
