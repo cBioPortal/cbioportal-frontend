@@ -1,6 +1,7 @@
 import { default as URL, QueryParams } from 'url';
 import AppConfig from 'appConfig';
 import { BuildUrlParams, getBrowserWindow } from 'cbioportal-frontend-commons';
+import { DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE } from 'react-mutation-mapper';
 import * as _ from 'lodash';
 import { GroupComparisonLoadingParams } from '../../pages/groupComparison/GroupComparisonLoading';
 import { GroupComparisonURLQuery } from '../../pages/groupComparison/GroupComparisonURLWrapper';
@@ -173,8 +174,8 @@ export function getUniprotIdUrl(swissProtAccession: string) {
     });
 }
 
-export function getMutationAlignerUrl() {
-    return buildCBioPortalAPIUrl(`getMutationAligner.json`);
+export function getMutationAlignerUrlTemplate() {
+    return getProxyUrlIfNecessary(DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE);
 }
 
 export function getOncoQueryDocUrl() {
