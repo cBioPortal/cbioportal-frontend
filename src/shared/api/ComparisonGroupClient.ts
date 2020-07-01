@@ -9,7 +9,7 @@ import { ClinicalAttribute } from 'cbioportal-ts-api-client';
 import PromisePlus from '../lib/PromisePlus';
 import { Omit } from '../lib/TypeScriptUtils';
 
-export type SessionGroupData = Omit<VirtualStudyData, 'studyViewFilter'> & {
+export type SessionGroupData = GroupData & {
     uid?: string;
     color?: string; // for charts
 };
