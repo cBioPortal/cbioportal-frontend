@@ -67,7 +67,6 @@ import OqlStatusBanner from '../banners/OqlStatusBanner';
 import {
     genericAssayEntitiesToSelectOptionsGroupByGenericAssayType,
     getAnnotatingProgressMessage,
-    makeTrackGroupHeaders,
 } from './ResultsViewOncoprintUtils';
 import ProgressIndicator, {
     IProgressIndicatorItem,
@@ -1394,13 +1393,11 @@ export default class ResultsViewOncoprint extends React.Component<
         if (this.sortMode.type === 'heatmap') {
             const clusteredHeatmapProfile: string = this.sortMode
                 .clusteredHeatmapProfile;
-
             const genesetHeatmapProfile: string | undefined =
                 this.props.store.genesetMolecularProfile.result &&
                 this.props.store.genesetMolecularProfile.result.value &&
                 this.props.store.genesetMolecularProfile.result.value
                     .molecularProfileId;
-
             if (clusteredHeatmapProfile === genesetHeatmapProfile) {
                 return this.genesetHeatmapTrackGroup;
             } else {
@@ -1429,26 +1426,14 @@ export default class ResultsViewOncoprint extends React.Component<
             this.oncoprint.resetSortableTracksSortDirection();
         }
 
-        let molecularProfileId: string | undefined;
-        if (index === this.genesetHeatmapTrackGroup) {
-            molecularProfileId =
-                this.props.store.genesetMolecularProfile.result &&
-                this.props.store.genesetMolecularProfile.result.value &&
-                this.props.store.genesetMolecularProfile.result.value
-                    .molecularProfileId;
-        } else {
-            const heatmapTrackGroup = _.values(
-                this.molecularProfileIdToHeatmapTracks
-            ).find(trackGroup => trackGroup.trackGroupIndex === index);
-            molecularProfileId = heatmapTrackGroup
-                ? heatmapTrackGroup.molecularProfileId
-                : undefined;
-        }
+        const groupEntry = _.values(
+            this.molecularProfileIdToHeatmapTracks
+        ).find(trackGroup => trackGroup.trackGroupIndex === index);
 
-        if (molecularProfileId) {
+        if (groupEntry) {
             this.urlWrapper.updateURL({
                 oncoprint_sortby: 'cluster',
-                oncoprint_cluster_profile: molecularProfileId,
+                oncoprint_cluster_profile: groupEntry.molecularProfileId,
             });
         }
     }
@@ -1478,16 +1463,69 @@ export default class ResultsViewOncoprint extends React.Component<
     readonly heatmapTrackHeaders = remoteData({
         await: () => [this.props.store.molecularProfileIdToMolecularProfile],
         invoke: () => {
+            const profileMap = this.props.store
+                .molecularProfileIdToMolecularProfile.result!;
             return Promise.resolve(
-                makeTrackGroupHeaders(
-                    this.props.store.molecularProfileIdToMolecularProfile
-                        .result!,
+                _.reduce(
                     this.molecularProfileIdToHeatmapTracks,
-                    this.genesetHeatmapTrackGroup,
-                    this.clusteredHeatmapTrackGroupIndex,
-                    this.clusterHeatmapByIndex,
-                    () => this.sortByData(),
-                    this.removeHeatmapByIndex
+                    (headerMap, nextEntry) => {
+                        headerMap[nextEntry.trackGroupIndex] = {
+                            label: {
+                                text:
+                                    profileMap[nextEntry.molecularProfileId]
+                                        .name,
+                            },
+                            options: [
+                                {
+                                    label: 'Cluster',
+                                    onClick: this.clusterHeatmapByIndex,
+                                    weight: () => {
+                                        if (
+                                            this
+                                                .clusteredHeatmapTrackGroupIndex ===
+                                            nextEntry.trackGroupIndex
+                                        ) {
+                                            return 'bold';
+                                        } else {
+                                            return 'normal';
+                                        }
+                                    },
+                                },
+                                {
+                                    label: "Don't cluster",
+                                    onClick: () => {
+                                        if (
+                                            this
+                                                .clusteredHeatmapTrackGroupIndex ===
+                                            nextEntry.trackGroupIndex
+                                        ) {
+                                            this.sortByData();
+                                        }
+                                    },
+                                    weight: () => {
+                                        if (
+                                            this
+                                                .clusteredHeatmapTrackGroupIndex ===
+                                            nextEntry.trackGroupIndex
+                                        ) {
+                                            return 'normal';
+                                        } else {
+                                            return 'bold';
+                                        }
+                                    },
+                                },
+                                {
+                                    separator: true,
+                                },
+                                {
+                                    label: 'Delete',
+                                    onClick: this.removeHeatmapByIndex,
+                                },
+                            ],
+                        };
+                        return headerMap;
+                    },
+                    {} as { [trackGroupIndex: number]: TrackGroupHeader }
                 )
             );
         },
