@@ -30,6 +30,7 @@ import {
     SampleIdentifier,
     SampleList,
     SampleMolecularIdentifier,
+    GenericAssayData,
 } from 'cbioportal-ts-api-client';
 import client from 'shared/api/cbioportalClientInstance';
 import { action, computed, observable, ObservableMap, reaction } from 'mobx';
@@ -118,7 +119,7 @@ import {
     computeCustomDriverAnnotationReport,
     computeGenePanelInformation,
     CoverageInformation,
-    excludeMutationAndSVProfiles,
+    excludeSpecialMolecularProfiles,
     fetchPatients,
     fetchQueriedStudies,
     filterAndAnnotateMutations,
@@ -192,6 +193,7 @@ import { ChartTypeEnum } from 'pages/studyView/StudyViewConfig';
 import {
     fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAssayType,
     fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
+    fetchGenericAssayDataByStableIdsAndMolecularIds,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import ComplexKeySet from '../../shared/lib/complexKeyDataStructures/ComplexKeySet';
 import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mutationMapper/MutationMapperUtils';
@@ -1165,9 +1167,9 @@ export class ResultsViewPageStore {
             this.samples,
         ],
         invoke: () => {
-            // we get mutations with mutations endpoint, structural variants and fusions with structural variant endpoint.
-            // filter out mutation genetic profile and structural variant profiles
-            const profilesWithoutMutationProfile = excludeMutationAndSVProfiles(
+            // we get mutations with mutations endpoint, structural variants and fusions with structural variant endpoint, generic assay with generic assay endpoint.
+            // filter out mutation genetic profile and structural variant profiles and generic assay profiles
+            const profilesWithoutMutationProfile = excludeSpecialMolecularProfiles(
                 this.selectedMolecularProfiles.result!
             );
             const genes = this.genes.result;
@@ -1227,7 +1229,7 @@ export class ResultsViewPageStore {
         invoke: () => {
             // we get mutations with mutations endpoint, structural variants and fusions with structural variant endpoint.
             // filter out mutation genetic profile and structural variant profiles
-            const profilesWithoutMutationProfile = excludeMutationAndSVProfiles(
+            const profilesWithoutMutationProfile = excludeSpecialMolecularProfiles(
                 this.nonSelectedDownloadableMolecularProfiles.result
             );
             const genes = this.genes.result;
@@ -3318,7 +3320,7 @@ export class ResultsViewPageStore {
             ],
             invoke: () => {
                 return Promise.resolve(
-                    excludeMutationAndSVProfiles(
+                    excludeSpecialMolecularProfiles(
                         _.difference(
                             this.molecularProfilesInStudies.result!,
                             this.selectedMolecularProfiles.result!
@@ -3764,6 +3766,103 @@ export class ResultsViewPageStore {
             } else {
                 return {};
             }
+        },
+    });
+
+    readonly genericAssayProfiles = remoteData<MolecularProfile[]>({
+        await: () => [this.molecularProfilesInStudies],
+        invoke: () => {
+            return Promise.resolve(
+                this.molecularProfilesInStudies.result.filter(
+                    profile =>
+                        profile.molecularAlterationType ===
+                        AlterationTypeConstants.GENERIC_ASSAY
+                )
+            );
+        },
+    });
+
+    readonly genericAssayProfilesGroupByProfileIdSuffix = remoteData<{
+        [profileIdSuffix: string]: MolecularProfile[];
+    }>({
+        await: () => [this.genericAssayProfiles],
+        invoke: () => {
+            return Promise.resolve(
+                _.groupBy(this.genericAssayProfiles.result, molecularProfile =>
+                    molecularProfile.molecularProfileId.replace(
+                        molecularProfile.studyId + '_',
+                        ''
+                    )
+                )
+            );
+        },
+    });
+
+    readonly genericAssayEntityStableIdsGroupByProfileIdSuffix = remoteData<{
+        [profileIdSuffix: string]: string[];
+    }>({
+        await: () => [
+            this.genericAssayEntitiesGroupByMolecularProfileId,
+            this.genericAssayProfilesGroupByProfileIdSuffix,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                _.mapValues(
+                    this.genericAssayProfilesGroupByProfileIdSuffix.result,
+                    profiles => {
+                        return _.chain(profiles)
+                            .map(
+                                profile =>
+                                    this
+                                        .genericAssayEntitiesGroupByMolecularProfileId
+                                        .result![profile.molecularProfileId]
+                            )
+                            .flatten()
+                            .map(entity => entity.stableId)
+                            .uniq()
+                            .value();
+                    }
+                )
+            );
+        },
+    });
+
+    readonly genericAssayDataGroupByProfileIdSuffix = remoteData<{
+        [profileIdSuffix: string]: GenericAssayData[];
+    }>({
+        await: () => [
+            this.genericAssayProfilesGroupByProfileIdSuffix,
+            this.genericAssayEntityStableIdsGroupByProfileIdSuffix,
+        ],
+        invoke: async () => {
+            const genericAssayDataGroupByProfileIdSuffix: {
+                [profileIdSuffix: string]: GenericAssayData[];
+            } = {};
+
+            await Promise.all(
+                _.map(
+                    this.genericAssayProfilesGroupByProfileIdSuffix.result,
+                    (profiles, profileIdSuffix) => {
+                        const molecularIds = profiles.map(
+                            profile => profile.molecularProfileId
+                        );
+                        const stableIds = this
+                            .genericAssayEntityStableIdsGroupByProfileIdSuffix
+                            .result![profileIdSuffix];
+
+                        return fetchGenericAssayDataByStableIdsAndMolecularIds(
+                            stableIds,
+                            molecularIds
+                        ).then(genericAssayData => {
+                            genericAssayDataGroupByProfileIdSuffix[
+                                profileIdSuffix
+                            ] = genericAssayData;
+                        });
+                    }
+                )
+            );
+
+            return genericAssayDataGroupByProfileIdSuffix;
         },
     });
 
