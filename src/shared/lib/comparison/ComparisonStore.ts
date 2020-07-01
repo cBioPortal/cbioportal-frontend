@@ -247,10 +247,10 @@ export default class ComparisonStore {
     });
 
     readonly enrichmentAnalysisGroups = remoteData({
-        await: () => [this.activeGroups, this.sampleSet],
+        await: () => [this.activeGroups, this.sampleMap],
         invoke: () => {
             const sampleSet =
-                this.sampleSet.result || new ComplexKeyMap<Sample>();
+                this.sampleMap.result || new ComplexKeyMap<Sample>();
             const groups = this.activeGroups.result!.map(group => {
                 const samples: Sample[] = [];
                 group.studies.forEach(studyEntry => {
@@ -323,12 +323,12 @@ export default class ComparisonStore {
     });
 
     readonly activeSamplesNotOverlapRemoved = remoteData({
-        await: () => [this.sampleSet, this._activeGroupsNotOverlapRemoved],
+        await: () => [this.sampleMap, this._activeGroupsNotOverlapRemoved],
         invoke: () => {
             const activeSampleIdentifiers = getSampleIdentifiers(
                 this._activeGroupsNotOverlapRemoved.result!
             );
-            const sampleSet = this.sampleSet.result!;
+            const sampleSet = this.sampleMap.result!;
             return Promise.resolve(
                 activeSampleIdentifiers.map(
                     sampleIdentifier => sampleSet.get(sampleIdentifier)!
@@ -1091,7 +1091,7 @@ export default class ComparisonStore {
         );
     }
 
-    public readonly sampleSet = remoteData({
+    public readonly sampleMap = remoteData({
         await: () => [this.samples],
         invoke: () => {
             const sampleSet = new ComplexKeyMap<Sample>();
@@ -1156,9 +1156,9 @@ export default class ComparisonStore {
     });
 
     public readonly sampleKeyToGroups = remoteData({
-        await: () => [this._originalGroups, this.sampleSet],
+        await: () => [this._originalGroups, this.sampleMap],
         invoke: () => {
-            const sampleSet = this.sampleSet.result!;
+            const sampleSet = this.sampleMap.result!;
             const groups = this._originalGroups.result!;
             const ret: {
                 [uniqueSampleKey: string]: { [groupUid: string]: boolean };

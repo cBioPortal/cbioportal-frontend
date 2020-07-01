@@ -216,10 +216,7 @@ export default class AddClinicalTracks extends React.Component<
 
     @autobind
     private getDropdown() {
-        if (
-            this.props.store.comparisonGroups.isComplete &&
-            this.props.store.comparisonGroups.result!.length > 0
-        ) {
+        if (this.options.isComplete && this.options.result!.groups.length > 0) {
             return (
                 <MSKTabs
                     activeTabId={this.tabId}
@@ -234,9 +231,8 @@ export default class AddClinicalTracks extends React.Component<
                         id={Tab.GROUPS}
                         linkText={Tab.GROUPS}
                         hide={
-                            !this.props.store.comparisonGroups.isComplete ||
-                            this.props.store.comparisonGroups.result!.length ===
-                                0
+                            !this.options.isComplete ||
+                            this.options.result!.groups.length === 0
                         }
                     >
                         {this.addGroupTracksMenu.component}
