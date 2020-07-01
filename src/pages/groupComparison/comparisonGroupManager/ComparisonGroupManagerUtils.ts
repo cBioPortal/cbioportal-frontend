@@ -66,17 +66,3 @@ export function getGroupParameters(
         color,
     };
 }
-
-export function addSamplesParameters(
-    group: GroupData,
-    sampleIdentifiers: SampleIdentifier[]
-) {
-    group = Object.assign({}, group);
-    const prevSampleIdentifiers = getSampleIdentifiers([group]);
-    const newSampleIdentifiers = _.uniqWith(
-        prevSampleIdentifiers.concat(sampleIdentifiers),
-        (a, b) => a.studyId === b.studyId && a.sampleId === b.sampleId
-    );
-    group.studies = getStudiesAttr(newSampleIdentifiers);
-    return group;
-}

@@ -174,6 +174,8 @@ import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescrip
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { Datalabel } from 'shared/lib/DataUtils';
+import { Group } from '../../shared/api/ComparisonGroupClient';
+import PromisePlus from 'shared/lib/PromisePlus';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 
 export type ChartUserSetting = {
@@ -235,6 +237,7 @@ export type StudyViewURLQuery = {
     filters?: string;
     filterAttributeId?: string;
     filterValues?: string;
+    sharedGroups?: string;
 };
 
 export type CustomGroup = {
@@ -287,8 +290,10 @@ export class StudyViewPageStore {
 
     public studyViewQueryFilter: StudyViewURLQuery;
 
+    @observable showComparisonGroupUI = false;
+
     constructor(
-        private appStore: AppStore,
+        public appStore: AppStore,
         private sessionServiceIsEnabled: boolean,
         private urlWrapper: StudyViewURLWrapper
     ) {
@@ -479,48 +484,177 @@ export class StudyViewPageStore {
         }
     }
 
-    @action public markSelectedGroupsForDeletion() {
-        onMobxPromise(this.comparisonGroups, groups => {
-            for (const group of groups) {
-                if (this.isComparisonGroupSelected(group.uid)) {
-                    this.toggleComparisonGroupMarkedForDeletion(group.uid);
-                }
-            }
-        });
-    }
-
     @action public async deleteMarkedComparisonGroups() {
         const deletionPromises = [];
         for (const groupId of this._comparisonGroupsMarkedForDeletion.keys()) {
             if (this.isComparisonGroupMarkedForDeletion(groupId)) {
-                deletionPromises.push(comparisonClient.deleteGroup(groupId));
+                if (this.isLoggedIn) {
+                    const promise = comparisonClient.deleteGroup(groupId);
+                    deletionPromises.push(promise);
+                    this._pendingChanges.push(new PromisePlus(promise));
+                }
+                // delete it even from the shared group set
+                delete this.sharedGroupSet[groupId];
+
                 this._selectedComparisonGroups.delete(groupId);
             }
         }
+
         await Promise.all(deletionPromises);
         this._comparisonGroupsMarkedForDeletion.clear();
         this.notifyComparisonGroupsChange();
     }
 
-    readonly comparisonGroups = remoteData<StudyViewComparisonGroup[]>({
-        await: () => [this.sampleSet],
+    // edge case: user deletes/add a group, then opens the panel again,
+    //          and the getGroups request responds before the deleteGroup/addGroup
+    //          request completes, thus showing a group that should be
+    //          (and soon will be) deleted. We fix this by waiting
+    //          until deletions/additions are done before allowing getGroups requests.
+    @observable _pendingChanges: PromisePlus<any>[] = [];
+
+    readonly pendingDecision = remoteData<boolean>({
+        invoke: async () => {
+            this._pendingChanges = this._pendingChanges.filter(
+                x => x.status !== 'pending'
+            );
+            await Promise.all(this._pendingChanges.map(p => p.promise)); // wait for pending deletions to finish
+            return false;
+        },
+        default: true,
+    });
+
+    //Save any shared groups to user profile if user login after page is loaded
+    public async saveGroupsToUserProfile(groups: StudyViewComparisonGroup[]) {
+        if (this.isLoggedIn) {
+            const addPromises: Promise<void>[] = [];
+            groups.forEach(group => {
+                // undefined for page session groups
+                if (group.isSharedGroup || group.isSharedGroup === undefined) {
+                    const promise = comparisonClient.addGroupToUser(group.uid);
+                    addPromises.push(promise);
+                }
+            });
+            await Promise.all(addPromises);
+        }
+    }
+
+    readonly userSavedGroups = remoteData<StudyViewComparisonGroup[]>({
+        await: () => [this.sampleSet, this.pendingDecision],
         invoke: async () => {
             // reference this so its responsive to changes
             this._comparisonGroupsChangeCount;
-            if (this.studyIds.length > 0) {
+            if (
+                this.studyIds.length > 0 &&
+                this.isLoggedIn &&
+                !this.pendingDecision.result
+            ) {
                 const groups = await comparisonClient.getGroupsForStudies(
                     this.studyIds.slice()
                 ); // slice because cant pass mobx
+
                 return groups.map(group =>
                     Object.assign(
                         group.data,
-                        { uid: group.id },
+                        { uid: group.id, isSharedGroup: false },
                         finalizeStudiesAttr(group.data, this.sampleSet.result!)
                     )
                 );
-            } else {
-                return [];
             }
+            return [];
+        },
+        default: [],
+    });
+
+    readonly sharedGroups = remoteData<StudyViewComparisonGroup[]>({
+        await: () => [this.sampleSet, this.queriedPhysicalStudyIds],
+        invoke: async () => {
+            const promises: Promise<Group>[] = [];
+            Object.keys(this.sharedGroupSet).forEach(groupId => {
+                promises.push(comparisonClient.getGroup(groupId));
+            });
+            const studyIdsSet = stringListToSet(
+                this.queriedPhysicalStudyIds.result!
+            );
+            const groups = await Promise.all(promises);
+            return groups
+                .filter(
+                    group =>
+                        !_.some(
+                            group.data.studies,
+                            study => studyIdsSet[study.id] === undefined
+                        )
+                )
+                .map(group =>
+                    Object.assign(
+                        group.data,
+                        { uid: group.id, isSharedGroup: true },
+                        finalizeStudiesAttr(group.data, this.sampleSet.result!)
+                    )
+                );
+        },
+        default: [],
+    });
+
+    readonly comparisonGroups = remoteData<StudyViewComparisonGroup[]>({
+        await: () => [this.userSavedGroups, this.sharedGroups],
+        invoke: async () => {
+            let groups: StudyViewComparisonGroup[] = _.cloneDeep(
+                this.userSavedGroups.result
+            );
+            let groupIdSet: { [s: string]: boolean } = stringListToSet(
+                groups.map(group => group.uid)
+            );
+            if (this.sharedGroups.result.length > 0) {
+                this.sharedGroups.result.forEach(sharedGroup => {
+                    if (groupIdSet[sharedGroup.uid] === undefined) {
+                        groups.push(sharedGroup);
+                        groupIdSet[sharedGroup.uid] = true;
+                    }
+                });
+            }
+
+            // group present in page session which are not saved to user account
+            const missingGroupIds = this._selectedComparisonGroups
+                .keys()
+                .filter(groupId => groupIdSet[groupId] === undefined);
+
+            if (missingGroupIds.length > 0) {
+                const promises = [];
+                for (const groupId of missingGroupIds) {
+                    promises.push(comparisonClient.getGroup(groupId));
+                }
+                const studyIdsSet = stringListToSet(
+                    this.queriedPhysicalStudyIds.result!
+                );
+                let newGroups: Group[] = await Promise.all(promises);
+
+                newGroups
+                    .filter(
+                        group =>
+                            !_.some(
+                                group.data.studies,
+                                study => studyIdsSet[study.id] === undefined
+                            )
+                    )
+                    .forEach(group =>
+                        groups.push(
+                            Object.assign(
+                                group.data,
+                                { uid: group.id },
+                                finalizeStudiesAttr(
+                                    group.data,
+                                    this.sampleSet.result!
+                                )
+                            )
+                        )
+                    );
+            }
+
+            return groups;
+        },
+        default: [],
+        onResult: groups => {
+            this.saveGroupsToUserProfile(groups);
         },
     });
 
@@ -924,6 +1058,8 @@ export class StudyViewPageStore {
 
     private newlyAddedCharts = observable.array<string>();
 
+    @observable public sharedGroupSet: { [id: string]: boolean } = {};
+
     private unfilteredClinicalDataCountCache: {
         [uniqueKey: string]: ClinicalDataCountItem;
     } = {};
@@ -1035,6 +1171,11 @@ export class StudyViewPageStore {
                 // update if different
                 this.studyIds = studyIds;
             }
+        }
+        if (query.sharedGroups) {
+            this.sharedGroupSet = stringListToSet(
+                query.sharedGroups.trim().split(',')
+            );
         }
 
         // We do not support studyIds in the query filters
