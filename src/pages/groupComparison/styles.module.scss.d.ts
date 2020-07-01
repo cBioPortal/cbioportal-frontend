@@ -10,6 +10,7 @@ declare const styles: {
   readonly "headerControls": string;
   readonly "markedForDeletion": string;
   readonly "noGroupsMessage": string;
+  readonly "sharedGroup": string;
   readonly "survivalPlotHeader": string;
   readonly "survivalPlotHeaderContainer": string;
   readonly "survivalTypeOptions": string;
