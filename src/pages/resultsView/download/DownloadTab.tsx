@@ -45,6 +45,8 @@ import {
     stringify2DArray,
     generateOtherMolecularProfileData,
     generateOtherMolecularProfileDownloadData,
+    generateGenericAssayProfileData,
+    generateGenericAssayProfileDownloadData,
 } from './DownloadUtils';
 
 import styles from './styles.module.scss';
@@ -62,6 +64,7 @@ import {
     MolecularProfile,
     Sample,
     CancerStudy,
+    GenericAssayData,
 } from 'cbioportal-ts-api-client';
 import ErrorMessage from '../../../shared/components/ErrorMessage';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
@@ -261,6 +264,51 @@ export default class DownloadTab extends React.Component<
                     }
                 )
             ),
+    });
+
+    readonly genericAssayProfileDownloadDataGroupByProfileIdSuffix = remoteData<{
+        [key: string]: string[][];
+    }>({
+        await: () => [
+            this.props.store.samples,
+            this.props.store.genericAssayEntityStableIdsGroupByProfileIdSuffix,
+            this.props.store.genericAssayDataGroupByProfileIdSuffix,
+            this.props.store.genericAssayProfilesGroupByProfileIdSuffix,
+        ],
+        invoke: () => {
+            const genericAssayProfileDataGroupByProfileIdSuffix = _.mapValues(
+                this.props.store.genericAssayDataGroupByProfileIdSuffix.result,
+                (genericAssayProfileData, profileIdSuffix) => {
+                    const data = {
+                        samples: _.groupBy(
+                            genericAssayProfileData,
+                            data => data.uniqueSampleKey
+                        ),
+                    } as CaseAggregatedData<GenericAssayData>;
+                    return generateGenericAssayProfileData(
+                        this.props.store.genericAssayProfilesGroupByProfileIdSuffix.result![
+                            profileIdSuffix
+                        ].map(profile => profile.molecularProfileId),
+                        data
+                    );
+                }
+            );
+
+            return Promise.resolve(
+                _.mapValues(
+                    genericAssayProfileDataGroupByProfileIdSuffix,
+                    (genericAssayProfileData, profileIdSuffix) => {
+                        return generateGenericAssayProfileDownloadData(
+                            genericAssayProfileData,
+                            this.props.store.samples.result!,
+                            this.props.store
+                                .genericAssayEntityStableIdsGroupByProfileIdSuffix
+                                .result![profileIdSuffix]
+                        );
+                    }
+                )
+            );
+        },
     });
 
     readonly mrnaData = remoteData<{ [key: string]: ExtendedAlteration[] }>({
@@ -587,7 +635,8 @@ export default class DownloadTab extends React.Component<
             this.props.store
                 .nonSelectedDownloadableMolecularProfilesGroupByName,
             this.props.store.studies,
-            this.props.store.selectedMolecularProfiles
+            this.props.store.selectedMolecularProfiles,
+            this.props.store.genericAssayDataGroupByProfileIdSuffix
         );
 
         switch (status) {
@@ -667,6 +716,16 @@ export default class DownloadTab extends React.Component<
                                         this.nonSelectedProfileDownloadRow(
                                             this.props.store
                                                 .nonSelectedDownloadableMolecularProfilesGroupByName
+                                                .result!
+                                        )}
+                                    {!_.isEmpty(
+                                        this.props.store
+                                            .genericAssayProfilesGroupByProfileIdSuffix
+                                            .result
+                                    ) &&
+                                        this.genericAssayProfileDownloadRows(
+                                            this.props.store
+                                                .genericAssayProfilesGroupByProfileIdSuffix
                                                 .result!
                                         )}
                                 </tbody>
@@ -830,9 +889,8 @@ export default class DownloadTab extends React.Component<
                 <td>
                     <div>
                         <a
-                            onClick={event =>
+                            onClick={() =>
                                 this.handleOtherMolecularProfileDownload(
-                                    event,
                                     option.name
                                 )
                             }
@@ -845,10 +903,88 @@ export default class DownloadTab extends React.Component<
                         </a>
                         <span style={{ margin: '0px 10px' }}>|</span>
                         <a
-                            onClick={event =>
+                            onClick={() =>
                                 this.handleTransposedOtherMolecularProfileDownload(
-                                    event,
                                     option.name
+                                )
+                            }
+                        >
+                            <i
+                                className="fa fa-cloud-download"
+                                style={{ marginRight: 5 }}
+                            />
+                            Transposed Matrix
+                        </a>
+                    </div>
+                </td>
+            </tr>
+        ));
+    }
+
+    private genericAssayProfileDownloadRows(
+        genericAssayProfilesGroupByProfileIdSuffix: _.Dictionary<
+            MolecularProfile[]
+        >
+    ) {
+        const allProfileOptions = _.map(
+            genericAssayProfilesGroupByProfileIdSuffix,
+            (profiles: MolecularProfile[], profileIdSuffix: string) => {
+                // we are using genericAssayProfilesGroupByProfileIdSuffix
+                // each group has at least one profile
+                const profile = profiles[0];
+                return {
+                    name: profile.name,
+                    description: profile.description,
+                    profileIdSuffix: profileIdSuffix,
+                };
+            }
+        );
+
+        return _.map(allProfileOptions, option => (
+            <tr>
+                <td style={{ width: 500 }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        {option.name}
+                        {option.description && (
+                            <DefaultTooltip
+                                mouseEnterDelay={0}
+                                placement="right"
+                                overlay={
+                                    <div className={styles.tooltip}>
+                                        {option.description}
+                                    </div>
+                                }
+                            >
+                                <FontAwesome
+                                    className={styles.infoIcon}
+                                    name="info-circle"
+                                />
+                            </DefaultTooltip>
+                        )}
+                    </div>
+                </td>
+                <td>
+                    <div>
+                        <a
+                            onClick={() =>
+                                this.handleGenericAssayProfileDownload(
+                                    option.name,
+                                    option.profileIdSuffix
+                                )
+                            }
+                        >
+                            <i
+                                className="fa fa-cloud-download"
+                                style={{ marginRight: 5 }}
+                            />
+                            Tab Delimited Format
+                        </a>
+                        <span style={{ margin: '0px 10px' }}>|</span>
+                        <a
+                            onClick={() =>
+                                this.handleTransposedGenericAssayProfileDownload(
+                                    option.name,
+                                    option.profileIdSuffix
                                 )
                             }
                         >
@@ -1047,14 +1183,11 @@ export default class DownloadTab extends React.Component<
     }
 
     @autobind
-    private handleOtherMolecularProfileDownload(
-        event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
-        profileName: string
-    ) {
+    private handleOtherMolecularProfileDownload(profileName: string) {
         onMobxPromise(
             this.allOtherMolecularProfileDownloadDataGroupByProfileName,
             downloadDataGroupByProfileName => {
-                const textMap = this.downloadDataTextGroupByProfileName(
+                const textMap = this.downloadDataTextGroupByKey(
                     downloadDataGroupByProfileName
                 );
                 fileDownload(textMap[profileName], `${profileName}.txt`);
@@ -1063,20 +1196,54 @@ export default class DownloadTab extends React.Component<
     }
 
     @autobind
-    private handleTransposedOtherMolecularProfileDownload(
-        event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
-        profileName: string
-    ) {
+    private handleTransposedOtherMolecularProfileDownload(profileName: string) {
         onMobxPromise(
             this.allOtherMolecularProfileDownloadDataGroupByProfileName,
             downloadDataGroupByProfileName => {
-                const transposedTextMap = this.downloadDataTextGroupByProfileName(
-                    this.unzipDownloadDataGroupByProfileName(
+                const transposedTextMap = this.downloadDataTextGroupByKey(
+                    this.unzipDownloadDataGroupByKey(
                         downloadDataGroupByProfileName
                     )
                 );
                 fileDownload(
                     transposedTextMap[profileName],
+                    `${profileName}.txt`
+                );
+            }
+        );
+    }
+
+    @autobind
+    private handleGenericAssayProfileDownload(
+        profileName: string,
+        profileIdSuffix: string
+    ) {
+        onMobxPromise(
+            this.genericAssayProfileDownloadDataGroupByProfileIdSuffix,
+            downloadDataGroupByProfileIdSuffix => {
+                const textMap = this.downloadDataTextGroupByKey(
+                    downloadDataGroupByProfileIdSuffix
+                );
+                fileDownload(textMap[profileIdSuffix], `${profileName}.txt`);
+            }
+        );
+    }
+
+    @autobind
+    private handleTransposedGenericAssayProfileDownload(
+        profileName: string,
+        profileIdSuffix: string
+    ) {
+        onMobxPromise(
+            this.genericAssayProfileDownloadDataGroupByProfileIdSuffix,
+            downloadDataGroupByProfileIdSuffix => {
+                const transposedTextMap = this.downloadDataTextGroupByKey(
+                    this.unzipDownloadDataGroupByKey(
+                        downloadDataGroupByProfileIdSuffix
+                    )
+                );
+                fileDownload(
+                    transposedTextMap[profileIdSuffix],
                     `${profileName}.txt`
                 );
             }
@@ -1094,21 +1261,21 @@ export default class DownloadTab extends React.Component<
         this.props.store.queryFormVisible = true;
     }
 
-    private unzipDownloadDataGroupByProfileName(downloadDataGroupByProfileName: {
+    private unzipDownloadDataGroupByKey(downloadDataGroupByKey: {
         [key: string]: string[][];
     }): { [key: string]: string[][] } {
         return _.mapValues(
-            downloadDataGroupByProfileName,
+            downloadDataGroupByKey,
             otherMolecularProfileDownloadData => {
                 return _.unzip(otherMolecularProfileDownloadData);
             }
         );
     }
 
-    private downloadDataTextGroupByProfileName(downloadDataGroupByProfileName: {
+    private downloadDataTextGroupByKey(downloadDataGroupByKey: {
         [key: string]: string[][];
     }): { [x: string]: string } {
-        return _.mapValues(downloadDataGroupByProfileName, downloadData => {
+        return _.mapValues(downloadDataGroupByKey, downloadData => {
             return stringify2DArray(downloadData);
         });
     }
