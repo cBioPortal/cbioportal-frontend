@@ -359,7 +359,7 @@ export default class DriverAnnotationControls extends React.Component<
                     )}
                     {!!this.props.state
                         .customDriverAnnotationTiersMenuLabel && (
-                        <span>
+                        <span data-test="annotateCustomTiers" >
                             <span className="caret" />
                             &nbsp;&nbsp;
                             <span>
