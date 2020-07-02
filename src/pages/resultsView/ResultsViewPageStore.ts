@@ -30,6 +30,7 @@ import {
     SampleIdentifier,
     SampleList,
     SampleMolecularIdentifier,
+    GenericAssayData,
 } from 'cbioportal-ts-api-client';
 import client from 'shared/api/cbioportalClientInstance';
 import { action, computed, observable, ObservableMap, reaction } from 'mobx';
@@ -38,6 +39,8 @@ import {
     IOncoKbData,
     remoteData,
     stringListToSet,
+    getBrowserWindow,
+    stringListToIndexSet,
 } from 'cbioportal-frontend-commons';
 import { getProteinPositionFromProteinChange } from 'cbioportal-utils';
 import {
@@ -116,7 +119,7 @@ import {
     computeCustomDriverAnnotationReport,
     computeGenePanelInformation,
     CoverageInformation,
-    excludeMutationAndSVProfiles,
+    excludeSpecialMolecularProfiles,
     fetchPatients,
     fetchQueriedStudies,
     filterAndAnnotateMutations,
@@ -162,7 +165,11 @@ import { ErrorMessages } from '../../shared/enums/ErrorEnums';
 import sessionServiceClient from '../../shared/api/sessionServiceInstance';
 import { VirtualStudy } from 'shared/model/VirtualStudy';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
-import { Group } from '../../shared/api/ComparisonGroupClient';
+import {
+    Group,
+    Session,
+    SessionGroupData,
+} from '../../shared/api/ComparisonGroupClient';
 import { AppStore } from '../../AppStore';
 import { getNumSamples } from '../groupComparison/GroupComparisonUtils';
 import autobind from 'autobind-decorator';
@@ -186,12 +193,24 @@ import { ChartTypeEnum } from 'pages/studyView/StudyViewConfig';
 import {
     fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAssayType,
     fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
+    fetchGenericAssayDataByStableIdsAndMolecularIds,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import ComplexKeySet from '../../shared/lib/complexKeyDataStructures/ComplexKeySet';
 import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mutationMapper/MutationMapperUtils';
 import { getGenomeNexusHgvsgUrl } from 'shared/api/urls';
 import ResultsViewComparisonStore from './comparison/ResultsViewComparisonStore';
 import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
+import {
+    ALTERED_COLOR,
+    completeSessionGroups,
+    getAlteredByOncoprintTrackGroups,
+    getAlteredVsUnalteredGroups,
+    ResultsViewComparisonGroup,
+    UNALTERED_COLOR,
+} from './comparison/ResultsViewComparisonUtils';
+import { makeUniqueColorGetter } from '../../shared/components/plots/PlotUtils';
+import ifNotDefined from '../../shared/lib/ifNotDefined';
+import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -631,6 +650,17 @@ export class ResultsViewPageStore {
         });
     }
 
+    @computed
+    public get usePatientLevelEnrichments() {
+        return this.urlWrapper.query.patient_enrichments === 'true';
+    }
+
+    @autobind
+    @action
+    public setUsePatientLevelEnrichments(e: boolean) {
+        this.urlWrapper.updateURL({ patient_enrichments: e.toString() });
+    }
+
     @computed get hugoGeneSymbols() {
         if (this.urlWrapper.query.gene_list.length > 0) {
             return uniqueGenesInOQLQuery(this.urlWrapper.query.gene_list);
@@ -791,7 +821,7 @@ export class ResultsViewPageStore {
         }
     }
 
-    readonly comparisonGroups = remoteData<Group[]>({
+    readonly savedComparisonGroupsForStudies = remoteData<Group[]>({
         await: () => [this.queriedStudies],
         invoke: async () => {
             let ret: Group[] = [];
@@ -808,20 +838,106 @@ export class ResultsViewPageStore {
             }
             // add any groups that are referenced in URL
             for (const id of this.comparisonGroupsReferencedInURL) {
-                ret.push(await comparisonClient.getGroup(id));
+                try {
+                    ret.push(await comparisonClient.getGroup(id));
+                } catch (e) {
+                    // ignore any errors with group ids that don't exist
+                }
             }
             return ret;
+        },
+    });
+
+    readonly queryDerivedGroups = remoteData<SessionGroupData[]>({
+        await: () => [
+            this.studyIds,
+            this.alteredSamples,
+            this.unalteredSamples,
+            this.alteredPatients,
+            this.unalteredPatients,
+            this.samples,
+            this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine,
+            this.defaultOQLQuery,
+        ],
+        invoke: () => {
+            const groups: SessionGroupData[] = [];
+
+            // altered/unaltered groups
+            groups.push(
+                ...getAlteredVsUnalteredGroups(
+                    this.usePatientLevelEnrichments,
+                    this.studyIds.result!,
+                    this.alteredSamples.result!,
+                    this.unalteredSamples.result!,
+                    this.queryContainsOql
+                )
+            );
+
+            // altered per oncoprint track groups
+            groups.push(
+                ...getAlteredByOncoprintTrackGroups(
+                    this.usePatientLevelEnrichments,
+                    this.studyIds.result!,
+                    this.samples.result!,
+                    this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine
+                        .result!,
+                    this.defaultOQLQuery.result!
+                )
+            );
+            return Promise.resolve(groups);
+        },
+    });
+
+    readonly comparisonTabComparisonSession = remoteData<Session>({
+        await: () => [this.studyIds],
+        invoke: () => {
+            const sessionId = this.urlWrapper.query
+                .comparison_createdGroupsSessionId;
+
+            if (sessionId) {
+                // if theres a session holding onto user-created groups, add groups from there
+                return comparisonClient.getComparisonSession(sessionId);
+            } else {
+                return Promise.resolve({
+                    id: '',
+                    groups: [],
+                    origin: this.studyIds.result!,
+                });
+            }
+        },
+    });
+    readonly comparisonTabGroups = remoteData<ResultsViewComparisonGroup[]>({
+        await: () => [
+            this.queryDerivedGroups,
+            this.comparisonTabComparisonSession,
+            this.sampleMap,
+        ],
+        invoke: () => {
+            const uniqueColorGetter = makeUniqueColorGetter([
+                ALTERED_COLOR,
+                UNALTERED_COLOR,
+            ]);
+            const groups = this.queryDerivedGroups.result!.concat(
+                this.comparisonTabComparisonSession.result!.groups
+            );
+            const defaultOrderGroups = completeSessionGroups(
+                this.usePatientLevelEnrichments,
+                groups,
+                this.sampleMap.result!,
+                uniqueColorGetter
+            );
+            return Promise.resolve(defaultOrderGroups);
         },
     });
 
     readonly clinicalAttributes_comparisonGroupMembership = remoteData<
         (ClinicalAttribute & { comparisonGroup: Group })[]
     >({
-        await: () => [this.comparisonGroups],
+        await: () => [this.savedComparisonGroupsForStudies],
         invoke: () =>
             Promise.resolve(
                 makeComparisonGroupClinicalAttributes(
-                    this.comparisonGroups.result!
+                    this.savedComparisonGroupsForStudies.result!
                 )
             ),
     });
@@ -909,7 +1025,7 @@ export class ResultsViewPageStore {
     readonly clinicalAttributeIdToAvailableSampleCount = remoteData({
         await: () => [
             this.samples,
-            this.sampleSet,
+            this.sampleMap,
             this.studies,
             this.clinicalAttributes,
             this.studyToDataQueryFilter,
@@ -984,13 +1100,13 @@ export class ResultsViewPageStore {
                 ret[attr.clinicalAttributeId] = this.samples.result!.length;
             }
             // add counts for "ComparisonGroup" clinical attributes
-            const sampleSet = this.sampleSet.result!;
+            const sampleMap = this.sampleMap.result!;
             for (const attr of this.clinicalAttributes_comparisonGroupMembership
                 .result!) {
                 ret[attr.clinicalAttributeId] = getNumSamples(
                     attr.comparisonGroup!.data,
                     (studyId, sampleId) => {
-                        return sampleSet.has({ studyId, sampleId });
+                        return sampleMap.has({ studyId, sampleId });
                     }
                 );
             }
@@ -1051,9 +1167,9 @@ export class ResultsViewPageStore {
             this.samples,
         ],
         invoke: () => {
-            // we get mutations with mutations endpoint, structural variants and fusions with structural variant endpoint.
-            // filter out mutation genetic profile and structural variant profiles
-            const profilesWithoutMutationProfile = excludeMutationAndSVProfiles(
+            // we get mutations with mutations endpoint, structural variants and fusions with structural variant endpoint, generic assay with generic assay endpoint.
+            // filter out mutation genetic profile and structural variant profiles and generic assay profiles
+            const profilesWithoutMutationProfile = excludeSpecialMolecularProfiles(
                 this.selectedMolecularProfiles.result!
             );
             const genes = this.genes.result;
@@ -1113,7 +1229,7 @@ export class ResultsViewPageStore {
         invoke: () => {
             // we get mutations with mutations endpoint, structural variants and fusions with structural variant endpoint.
             // filter out mutation genetic profile and structural variant profiles
-            const profilesWithoutMutationProfile = excludeMutationAndSVProfiles(
+            const profilesWithoutMutationProfile = excludeSpecialMolecularProfiles(
                 this.nonSelectedDownloadableMolecularProfiles.result
             );
             const genes = this.genes.result;
@@ -3026,16 +3142,14 @@ export class ResultsViewPageStore {
         []
     );
 
-    readonly sampleSet = remoteData({
+    readonly sampleMap = remoteData({
         await: () => [this.samples],
         invoke: () => {
             return Promise.resolve(
-                ComplexKeySet.from(
-                    this.samples.result!.map(s => ({
-                        studyId: s.studyId,
-                        sampleId: s.sampleId,
-                    }))
-                )
+                ComplexKeyMap.from(this.samples.result!, s => ({
+                    studyId: s.studyId,
+                    sampleId: s.sampleId,
+                }))
             );
         },
     });
@@ -3206,7 +3320,7 @@ export class ResultsViewPageStore {
             ],
             invoke: () => {
                 return Promise.resolve(
-                    excludeMutationAndSVProfiles(
+                    excludeSpecialMolecularProfiles(
                         _.difference(
                             this.molecularProfilesInStudies.result!,
                             this.selectedMolecularProfiles.result!
@@ -3652,6 +3766,103 @@ export class ResultsViewPageStore {
             } else {
                 return {};
             }
+        },
+    });
+
+    readonly genericAssayProfiles = remoteData<MolecularProfile[]>({
+        await: () => [this.molecularProfilesInStudies],
+        invoke: () => {
+            return Promise.resolve(
+                this.molecularProfilesInStudies.result.filter(
+                    profile =>
+                        profile.molecularAlterationType ===
+                        AlterationTypeConstants.GENERIC_ASSAY
+                )
+            );
+        },
+    });
+
+    readonly genericAssayProfilesGroupByProfileIdSuffix = remoteData<{
+        [profileIdSuffix: string]: MolecularProfile[];
+    }>({
+        await: () => [this.genericAssayProfiles],
+        invoke: () => {
+            return Promise.resolve(
+                _.groupBy(this.genericAssayProfiles.result, molecularProfile =>
+                    molecularProfile.molecularProfileId.replace(
+                        molecularProfile.studyId + '_',
+                        ''
+                    )
+                )
+            );
+        },
+    });
+
+    readonly genericAssayEntityStableIdsGroupByProfileIdSuffix = remoteData<{
+        [profileIdSuffix: string]: string[];
+    }>({
+        await: () => [
+            this.genericAssayEntitiesGroupByMolecularProfileId,
+            this.genericAssayProfilesGroupByProfileIdSuffix,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                _.mapValues(
+                    this.genericAssayProfilesGroupByProfileIdSuffix.result,
+                    profiles => {
+                        return _.chain(profiles)
+                            .map(
+                                profile =>
+                                    this
+                                        .genericAssayEntitiesGroupByMolecularProfileId
+                                        .result![profile.molecularProfileId]
+                            )
+                            .flatten()
+                            .map(entity => entity.stableId)
+                            .uniq()
+                            .value();
+                    }
+                )
+            );
+        },
+    });
+
+    readonly genericAssayDataGroupByProfileIdSuffix = remoteData<{
+        [profileIdSuffix: string]: GenericAssayData[];
+    }>({
+        await: () => [
+            this.genericAssayProfilesGroupByProfileIdSuffix,
+            this.genericAssayEntityStableIdsGroupByProfileIdSuffix,
+        ],
+        invoke: async () => {
+            const genericAssayDataGroupByProfileIdSuffix: {
+                [profileIdSuffix: string]: GenericAssayData[];
+            } = {};
+
+            await Promise.all(
+                _.map(
+                    this.genericAssayProfilesGroupByProfileIdSuffix.result,
+                    (profiles, profileIdSuffix) => {
+                        const molecularIds = profiles.map(
+                            profile => profile.molecularProfileId
+                        );
+                        const stableIds = this
+                            .genericAssayEntityStableIdsGroupByProfileIdSuffix
+                            .result![profileIdSuffix];
+
+                        return fetchGenericAssayDataByStableIdsAndMolecularIds(
+                            stableIds,
+                            molecularIds
+                        ).then(genericAssayData => {
+                            genericAssayDataGroupByProfileIdSuffix[
+                                profileIdSuffix
+                            ] = genericAssayData;
+                        });
+                    }
+                )
+            );
+
+            return genericAssayDataGroupByProfileIdSuffix;
         },
     });
 

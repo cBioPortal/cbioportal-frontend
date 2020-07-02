@@ -68,23 +68,28 @@ export function getAlteredVsUnalteredGroups(
     patientLevel: boolean,
     studyIds: string[],
     alteredSamples: Sample[],
-    unalteredSamples: Sample[]
+    unalteredSamples: Sample[],
+    queryContainsOql: boolean
 ): SessionGroupData[] {
     return [
         {
             name: ALTERED_GROUP_NAME,
-            description: `Number (percentage) of ${
-                patientLevel ? 'patients' : 'samples'
-            } that have alterations in the query gene(s) that also have a deep deletion in the listed gene.`,
+            description: `${
+                patientLevel ? 'Patients' : 'Samples'
+            } with at least one alteration in ${
+                queryContainsOql ? 'the OQL specification for ' : ''
+            }your queried genes in the selected profiles.`,
             studies: getStudiesAttr(alteredSamples, alteredSamples),
             origin: studyIds,
             color: ALTERED_COLOR,
         },
         {
             name: UNALTERED_GROUP_NAME,
-            description: `Number (percentage) of ${
-                patientLevel ? 'patients' : 'samples'
-            } that do not have alterations in the query gene(s) that have a deep deletion in the listed gene.`,
+            description: `${
+                patientLevel ? 'Patients' : 'Samples'
+            } without any alterations in ${
+                queryContainsOql ? 'the OQL specification for ' : ''
+            }your queried genes in the selected profiles.`,
             studies: getStudiesAttr(unalteredSamples, unalteredSamples),
             origin: studyIds,
             color: UNALTERED_COLOR,
@@ -115,9 +120,9 @@ export function getAlteredByOncoprintTrackGroups(
             const studies = getStudiesAttr(alteredSamples, alteredSamples);
             return {
                 name: label,
-                description: `Number (percentage) of ${
-                    patientLevel ? 'patients' : 'samples'
-                } in the following track: ${label}`,
+                description: `${
+                    patientLevel ? 'Patients' : 'Samples'
+                } with alterations in ${label}`,
                 studies,
                 origin: studyIds,
             };
