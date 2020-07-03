@@ -75,7 +75,8 @@ export class DataAccessTokensDropdown extends React.Component<
                     AppConfig.serverConfig.authenticationMethod ===
                         'social_auth' ||
                     (AppConfig.serverConfig.dat_method !== 'uuid' &&
-                        AppConfig.serverConfig.dat_method !== 'jwt'),
+                        AppConfig.serverConfig.dat_method !== 'jwt' &&
+                        AppConfig.serverConfig.dat_method !== 'oauth2'),
             },
         ];
         const shownListItems = listItems.filter(l => {
