@@ -2,7 +2,7 @@ import PatientViewPage from './PatientViewPage';
 import React from 'react';
 import { assert } from 'chai';
 import sinon from 'sinon';
-
+///
 const componentUnderTest: PatientViewPage = (PatientViewPage as any)
     .wrappedComponent;
 

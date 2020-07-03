@@ -2,14 +2,11 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { observable } from 'mobx';
 import { PageLayout } from '../../../shared/components/PageLayout/PageLayout';
-import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import './styles.scss';
 import Helmet from 'react-helmet';
-import { Link } from 'react-router';
 import AppConfig from 'appConfig';
-import { isNullOrUndefined } from 'util';
-import fileDownload from 'react-file-download';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
+import { buildCBioPortalAPIUrl } from 'shared/api/urls';
 
 export class UserDataAccessToken {
     @observable token: string;
@@ -29,59 +26,23 @@ export class UserDataAccessToken {
     }
 }
 
-function buildDataAccessTokenFileContents(
-    dat: UserDataAccessToken | undefined
-) {
-    if (!isNullOrUndefined(dat)) {
-        var token = dat!.token;
-        var creation_date = new Date(dat!.creationDate).toISOString();
-        var expiration_date = new Date(dat!.expirationDate).toISOString();
-        return `token: ${token}\ncreation_date: ${creation_date}\nexpiration_date: ${expiration_date}\n`;
-    } else {
-        alert(
-            'Cannot create Data Access Token file for user with non-existent tokens.'
-        );
-        return null;
-    }
-}
-
 @observer
 export default class WebAPIPage extends React.Component<{}, {}> {
     private get appStore() {
         return getBrowserWindow().globalStores.appStore;
     }
 
-    async generateNewDataAccessToken() {
-        if (this.appStore.isLoggedIn) {
-            let _token = await internalClient.createDataAccessTokenUsingPOST({
-                allowRevocationOfOtherTokens:
-                    AppConfig.serverConfig.dat_uuid_revoke_other_tokens,
-            });
-            const dat = new UserDataAccessToken(
-                _token.token,
-                _token.creation,
-                _token.expiration,
-                _token.username
-            );
-            return dat;
-        } else {
-            return undefined;
-        }
-    }
-
     async downloadDataAccessTokenFile() {
-        const dat = this.generateNewDataAccessToken();
-        if (!isNullOrUndefined(dat)) {
-            const fileContents = buildDataAccessTokenFileContents(await dat);
-            fileDownload(fileContents, 'cbioportal_data_access_token.txt');
-        }
+        const tokenUrl = buildCBioPortalAPIUrl('api/data-access-token');
+        window.open(tokenUrl, '_blank');
     }
 
     renderDataAccessTokensDiv() {
         if (
             AppConfig.serverConfig.authenticationMethod === 'social_auth' ||
             (AppConfig.serverConfig.dat_method !== 'uuid' &&
-                AppConfig.serverConfig.dat_method !== 'jwt')
+                AppConfig.serverConfig.dat_method !== 'jwt' &&
+                AppConfig.serverConfig.dat_method !== 'oauth2')
         ) {
             return <div></div>;
         } else {
