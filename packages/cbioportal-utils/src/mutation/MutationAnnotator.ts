@@ -65,9 +65,20 @@ export function annotateMutations(
     indexedVariantAnnotations: { [genomicLocation: string]: VariantAnnotation }
 ): Partial<Mutation>[] {
     // add annotation values by updating corresponding fields
-    return mutations.map(mutation =>
-        annotateMutation(mutation, indexedVariantAnnotations)
-    );
+    // do not overwrite if proteinChange exist
+    if (
+        _.every(mutations, mutation => {
+            return _.has(mutation, 'proteinChange');
+        })
+    ) {
+        return mutations.map(mutation =>
+            annotateMutation(mutation, indexedVariantAnnotations, false)
+        );
+    } else {
+        return mutations.map(mutation =>
+            annotateMutation(mutation, indexedVariantAnnotations, true)
+        );
+    }
 }
 
 /**
@@ -102,8 +113,7 @@ export function getMutationByTranscriptId(
     mutation: Mutation,
     ensemblTranscriptId: string,
     indexedVariantAnnotations: { [genomicLocation: string]: VariantAnnotation },
-    isCanonicalTranscript: boolean,
-    overwriteWithAnnotatedMutation?: boolean
+    isCanonicalTranscript: boolean
 ): Mutation | undefined {
     const genomicLocation = extractGenomicLocation(mutation);
     const variantAnnotation = genomicLocation
@@ -129,10 +139,7 @@ export function getMutationByTranscriptId(
             mutation,
             variantAnnotation.annotation_summary,
             transcriptConsequenceSummary,
-            isCanonicalTranscript,
-            overwriteWithAnnotatedMutation !== undefined
-                ? overwriteWithAnnotatedMutation
-                : true
+            isCanonicalTranscript
         );
         // do not ignore mutations that don't have a protein change
         // include silent mutations
@@ -151,20 +158,15 @@ export function getAnnotatedMutationFromAnnotationSummary(
     annotationSummary: VariantAnnotationSummary,
     transcriptConsequenceSummary: TranscriptConsequenceSummary,
     isCanonicalTranscript: boolean,
-    overwriteWithAnnotatedMutation: boolean
+    shouldOverwriteByAnnotatedMutation: boolean = false
 ) {
     const annotatedMutation: Partial<Mutation> = initAnnotatedMutation(
         mutation
     );
-
-    if (!isCanonicalTranscript) {
-        // Overwrite only missing values: Do not overwrite user provided values!
-        annotatedMutation.variantType =
-            // (!overwriteWithAnnotatedMutation && annotatedMutation.variantType) ||
-            annotationSummary.variantType;
-
+    // Overwrite only non-canonical transcripts
+    if (!isCanonicalTranscript || shouldOverwriteByAnnotatedMutation) {
+        annotatedMutation.variantType = annotationSummary.variantType;
         annotatedMutation.proteinChange =
-            // (!overwriteWithAnnotatedMutation && annotatedMutation.proteinChange) ||
             transcriptConsequenceSummary.hgvspShort;
         // remove p. prefix if exists
         if (annotatedMutation.proteinChange) {
@@ -174,26 +176,19 @@ export function getAnnotatedMutationFromAnnotationSummary(
             );
         }
 
-        // overwrite mutationType
         annotatedMutation.mutationType =
-            // (!overwriteWithAnnotatedMutation && annotatedMutation.mutationType) ||
             transcriptConsequenceSummary.variantClassification;
-        //     transcriptConsequenceSummary.variantClassification;
-        // transcriptConsequenceSummary.variantClassification;
 
         if (transcriptConsequenceSummary.proteinPosition) {
             // TODO: make this logic more clear, lollipopplot fills in proteinstart
             // and end if it's undefined but proteinChange exists
             annotatedMutation.proteinPosStart =
-                // !overwriteWithAnnotatedMutation && annotatedMutation.proteinChange
-                //     ? annotatedMutation.proteinPosStart
-                //     :
                 transcriptConsequenceSummary.proteinPosition.start;
             annotatedMutation.proteinPosEnd =
-                // !overwriteWithAnnotatedMutation && annotatedMutation.proteinChange
-                //     ? annotatedMutation.proteinPosEnd
-                //     :
                 transcriptConsequenceSummary.proteinPosition.end;
+        } else {
+            annotatedMutation.proteinPosStart = undefined;
+            annotatedMutation.proteinPosEnd = undefined;
         }
     }
 
@@ -206,7 +201,7 @@ export function getAnnotatedMutationFromAnnotationSummary(
     annotatedMutation.gene = {
         ...annotatedMutation.gene,
         hugoGeneSymbol:
-            (!overwriteWithAnnotatedMutation &&
+            (isCanonicalTranscript &&
                 annotatedMutation.gene &&
                 annotatedMutation.gene.hugoGeneSymbol) ||
             transcriptConsequenceSummary.hugoGeneSymbol,
@@ -222,8 +217,7 @@ export function getMutationsByTranscriptId(
     mutations: Mutation[],
     ensemblTranscriptId: string,
     indexedVariantAnnotations: { [genomicLocation: string]: VariantAnnotation },
-    isCanonicalTranscript: boolean,
-    overwriteWithAnnotatedMutation?: boolean
+    isCanonicalTranscript: boolean
 ): Mutation[] {
     const fusionMutation = getFusionMutations(mutations);
     // only non-fusion mutations need to get mutation with transcript id
@@ -235,8 +229,7 @@ export function getMutationsByTranscriptId(
                     mutation,
                     ensemblTranscriptId,
                     indexedVariantAnnotations,
-                    isCanonicalTranscript,
-                    overwriteWithAnnotatedMutation
+                    isCanonicalTranscript
                 )
             )
         ),
@@ -260,7 +253,8 @@ export function filterMutationsByTranscriptId(
 
 export function annotateMutation(
     mutation: Partial<Mutation>,
-    indexedVariantAnnotations: { [genomicLocation: string]: VariantAnnotation }
+    indexedVariantAnnotations: { [genomicLocation: string]: VariantAnnotation },
+    shouldOverwriteByAnnotatedMutation?: boolean
 ): Partial<Mutation> {
     const genomicLocation = extractGenomicLocation(mutation);
     const variantAnnotation = genomicLocation
@@ -280,7 +274,7 @@ export function annotateMutation(
             variantAnnotation.annotation_summary,
             canonicalTranscript,
             true,
-            false
+            shouldOverwriteByAnnotatedMutation
         );
     } else {
         return initAnnotatedMutation(mutation);

@@ -53,10 +53,6 @@ export default class Mutations extends React.Component<
         );
     }
 
-    @computed get selectedTranscripId() {
-        return this.props.urlWrapper.query.mutations_transcript_id;
-    }
-
     constructor(props: IMutationsPageProps) {
         super(props);
         this.handleTabChange.bind(this);
@@ -153,14 +149,10 @@ export default class Mutations extends React.Component<
     @computed get geneTabContent() {
         if (
             this.selectedGene &&
-            this.props.store.getMutationMapperStore(
-                this.selectedGene,
-                this.selectedTranscripId
-            )
+            this.props.store.getMutationMapperStore(this.selectedGene)
         ) {
             const mutationMapperStore = this.props.store.getMutationMapperStore(
-                this.selectedGene,
-                this.selectedTranscripId
+                this.selectedGene
             )!;
             return (
                 <div>

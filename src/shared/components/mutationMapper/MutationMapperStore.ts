@@ -258,8 +258,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
                 this.canonicalTranscript.result
                     ? this.canonicalTranscript.result.transcriptId ===
                           this.activeTranscript.result
-                    : false,
-                true
+                    : false
             ) as Mutation[]);
         } else {
             return {};
@@ -314,8 +313,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
                         this.canonicalTranscript.result
                             ? this.canonicalTranscript.result!.transcriptId ===
                                   t
-                            : false,
-                        false
+                            : false
                     ),
                 ])
             );
