@@ -2939,8 +2939,7 @@ export class ResultsViewPageStore {
     }
 
     public getMutationMapperStore(
-        gene: Gene,
-        selectedTranscriptId: string | undefined
+        gene: Gene
     ): ResultsViewMutationMapperStore | undefined {
         if (
             this.genes.isComplete &&
@@ -2949,12 +2948,9 @@ export class ResultsViewPageStore {
             this.mutations.isComplete &&
             this.mutationsByGene.isComplete
         ) {
-            let store = this.mutationMapperStoreByGene[gene.hugoGeneSymbol]
+            return this.mutationMapperStoreByGene[gene.hugoGeneSymbol]
                 ? this.mutationMapperStoreByGene[gene.hugoGeneSymbol]
                 : this.createMutationMapperStoreForSelectedGene(gene);
-
-            //autorun(() => store.setSelectedTranscript(selectedTranscriptId));
-            return store;
         }
         return undefined;
     }

@@ -1,55 +1,20 @@
 import * as React from 'react';
-import {
-    calcProteinChangeSortValue,
-    extractGenomicLocation,
-    genomicLocationString,
-} from 'cbioportal-utils';
+import { calcProteinChangeSortValue } from 'cbioportal-utils';
 import { Mutation } from 'cbioportal-ts-api-client';
 import TruncatedText from 'shared/components/TruncatedText';
 import MutationStatusColumnFormatter from './MutationStatusColumnFormatter';
 import styles from './proteinChange.module.scss';
-import {
-    findMatchingAnnotatedMutation,
-    indexMutationsByGenomicLocation,
-} from 'shared/lib/MutationUtils';
-import MutationTypeColumnFormatter from './MutationTypeColumnFormatter';
-import { VariantAnnotation } from 'genome-nexus-ts-api-client';
-import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import {
-    getProteinChangeData,
-    shouldShowWarningForProteinChangeDifference,
-} from 'shared/lib/ProteinChangeUtils';
 
 export default class ProteinChangeColumnFormatter {
-    public static getSortValue(
-        d: Mutation[],
-        indexedAnnotatedMutationsByGenomicLocation?: {
-            [genomicLocation: string]: Mutation;
-        },
-        isCanonicalTranscript?: boolean
-    ): number | null {
+    public static getSortValue(d: Mutation[]): number | null {
         return calcProteinChangeSortValue(
-            ProteinChangeColumnFormatter.getTextValue(
-                d,
-                indexedAnnotatedMutationsByGenomicLocation,
-                isCanonicalTranscript
-            )
+            ProteinChangeColumnFormatter.getTextValue(d)
         );
     }
 
-    public static getTextValue(
-        data: Mutation[],
-        indexedAnnotatedMutationsByGenomicLocation?: {
-            [genomicLocation: string]: Mutation;
-        },
-        isCanonicalTranscript?: boolean
-    ): string {
+    public static getTextValue(data: Mutation[]): string {
         let textValue: string = '';
-        const dataValue = ProteinChangeColumnFormatter.getData(
-            data,
-            indexedAnnotatedMutationsByGenomicLocation,
-            isCanonicalTranscript
-        );
+        const dataValue = ProteinChangeColumnFormatter.getData(data);
 
         if (dataValue) {
             textValue = dataValue.toString();
@@ -61,17 +26,9 @@ export default class ProteinChangeColumnFormatter {
     public static getFilterValue(
         data: Mutation[],
         filterString: string,
-        filterStringUpper: string,
-        indexedAnnotatedMutationsByGenomicLocation?: {
-            [genomicLocation: string]: Mutation;
-        },
-        isCanonicalTranscript?: boolean
+        filterStringUpper: string
     ): boolean {
-        let filterValue = ProteinChangeColumnFormatter.getDisplayValue(
-            data,
-            indexedAnnotatedMutationsByGenomicLocation,
-            isCanonicalTranscript
-        );
+        let filterValue = ProteinChangeColumnFormatter.getDisplayValue(data);
         const mutationStatus:
             | string
             | null = MutationStatusColumnFormatter.getData(data);
@@ -86,91 +43,34 @@ export default class ProteinChangeColumnFormatter {
         return filterValue.toUpperCase().indexOf(filterStringUpper) > -1;
     }
 
-    public static getDisplayValue(
-        data: Mutation[],
-        indexedAnnotatedMutationsByGenomicLocation?: {
-            [genomicLocation: string]: Mutation;
-        },
-        isCanonicalTranscript?: boolean
-    ): string {
+    public static getDisplayValue(data: Mutation[]): string {
         // same as text value
-        return ProteinChangeColumnFormatter.getTextValue(
-            data,
-            indexedAnnotatedMutationsByGenomicLocation,
-            isCanonicalTranscript
-        );
+        return ProteinChangeColumnFormatter.getTextValue(data);
     }
 
-    public static getData(
-        data: Mutation[],
-        indexedAnnotatedMutationsByGenomicLocation?: {
-            [genomicLocation: string]: Mutation;
-        },
-        isCanonicalTranscript?: boolean
-    ) {
+    public static getData(data: Mutation[]) {
         if (data.length > 0) {
-            return getProteinChangeData(
-                data[0],
-                indexedAnnotatedMutationsByGenomicLocation,
-                isCanonicalTranscript
-            );
+            return data[0].proteinChange;
         } else {
             return null;
         }
     }
 
-    public static renderWithMutationStatus(
-        data: Mutation[],
-        indexedAnnotatedMutationsByGenomicLocation?: {
-            [genomicLocation: string]: Mutation;
-        },
-        isCanonicalTranscript?: boolean,
-        indexedVariantAnnotations?: {
-            [genomicLocation: string]: VariantAnnotation;
-        }
-    ) {
+    public static renderWithMutationStatus(data: Mutation[]) {
         // use text as display value
-        const text: string = ProteinChangeColumnFormatter.getDisplayValue(
-            data,
-            indexedAnnotatedMutationsByGenomicLocation,
-            isCanonicalTranscript
-        );
-        const shouldShowWarning =
-            data.length > 0
-                ? shouldShowWarningForProteinChangeDifference(
-                      data[0],
-                      indexedAnnotatedMutationsByGenomicLocation,
-                      indexedVariantAnnotations
-                  )
-                : false;
+        const text: string = ProteinChangeColumnFormatter.getDisplayValue(data);
 
         const mutationStatus:
             | string
             | null = MutationStatusColumnFormatter.getData(data);
 
         let content = (
-            <span>
-                <TruncatedText
-                    text={text}
-                    tooltip={<span>{text}</span>}
-                    className={styles.proteinChange}
-                    maxLength={40}
-                />
-                {shouldShowWarning && (
-                    <DefaultTooltip
-                        mouseEnterDelay={0}
-                        placement="top"
-                        overlay={
-                            <div>
-                                No Genome Nexus response for this mutation,
-                                please double check your data
-                            </div>
-                        }
-                    >
-                        <i className="fa fa-exclamation-triangle text-warning"></i>
-                    </DefaultTooltip>
-                )}
-            </span>
+            <TruncatedText
+                text={text}
+                tooltip={<span>{text}</span>}
+                className={styles.proteinChange}
+                maxLength={40}
+            />
         );
 
         // add a germline indicator next to protein change if it is a germline mutation!

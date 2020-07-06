@@ -152,46 +152,5 @@ export default class ResultsViewMutationTable extends MutationTable<
                 <br />({this.props.totalNumberOfExons} in total)
             </span>
         );
-
-        // this._columns[MutationTableColumnType.PROTEIN_CHANGE].render = (
-        //     d: Mutation[]
-        // ) =>
-        //     ProteinChangeColumnFormatter.renderWithMutationStatus(
-        //         d,
-        //         this.props.indexedAnnotatedMutationsByGenomicLocation,
-        //         this.props.isCanonicalTranscript,
-        //         this.props.indexedVariantAnnotations &&
-        //             this.props.indexedVariantAnnotations.result
-        //             ? this.props.indexedVariantAnnotations.result
-        //             : undefined
-        //     );
-        // this._columns[MutationTableColumnType.PROTEIN_CHANGE].download = (
-        //     d: Mutation[]
-        // ) =>
-        //     ProteinChangeColumnFormatter.getTextValue(
-        //         d,
-        //         this.props.indexedAnnotatedMutationsByGenomicLocation,
-        //         this.props.isCanonicalTranscript
-        //     );
-        // this._columns[MutationTableColumnType.PROTEIN_CHANGE].sortBy = (
-        //     d: Mutation[]
-        // ) =>
-        //     ProteinChangeColumnFormatter.getSortValue(
-        //         d,
-        //         this.props.indexedAnnotatedMutationsByGenomicLocation,
-        //         this.props.isCanonicalTranscript
-        //     );
-        // this._columns[MutationTableColumnType.PROTEIN_CHANGE].filter = (
-        //     data: Mutation[],
-        //     filterString: string,
-        //     filterStringUpper: string
-        // ) =>
-        //     ProteinChangeColumnFormatter.getFilterValue(
-        //         data,
-        //         filterString,
-        //         filterStringUpper,
-        //         this.props.indexedAnnotatedMutationsByGenomicLocation,
-        //         this.props.isCanonicalTranscript
-        //     );
     }
 }
