@@ -2290,11 +2290,11 @@
       "properties": {
         "creation": {
           "type": "string",
-          "format": "date-time"
+          "example": "yyyy-MM-dd HH:mm:ss"
         },
         "expiration": {
           "type": "string",
-          "format": "date-time"
+          "example": "yyyy-MM-dd HH:mm:ss"
         },
         "token": {
           "type": "string"
