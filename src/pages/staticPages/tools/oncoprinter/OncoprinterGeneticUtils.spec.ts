@@ -37,7 +37,7 @@ describe('OncoprinterGeneticUtils', () => {
                         {
                             sampleId: 'sample_id',
                             hugoGeneSymbol: 'TP53',
-                            alteration: 'fusion',
+                            alteration: 'structuralVariant',
                             proteinChange: 'FUSION',
                         },
                     ],

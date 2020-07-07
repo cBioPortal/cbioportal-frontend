@@ -95,10 +95,13 @@ describe('OncoprinterImportUtils', () => {
                 data: [
                     {
                         molecularProfileAlterationType:
-                            AlterationTypeConstants.MUTATION_EXTENDED,
-                        proteinChange: 'proteinChange3',
-                        mutationType: 'fusion',
-                        hugoGeneSymbol: 'gene2',
+                            AlterationTypeConstants.STRUCTURAL_VARIANT,
+                        hugoGeneSymbol: 'gene1',
+                        site1HugoSymbol: 'gene1',
+                        site2HugoSymbol: 'gene2',
+                        eventInfo: 'gene1-gene2',
+                        variantClass: 'Fusion',
+                        comments: 'gene1 gene1-gene2',
                     },
                     {
                         molecularProfileAlterationType:
@@ -131,7 +134,7 @@ describe('OncoprinterImportUtils', () => {
                     'sample2  gene1  proteinChange2  TRUNC_GERMLINE\n' +
                     'sample2  gene1  AMP  CNA\n' +
                     'sample2  gene1  HIGH  PROT\n' +
-                    'sample2  gene2  proteinChange3  FUSION\n' +
+                    'sample2  gene1  STRUCTURAL VARIANT\n' +
                     'sample2\n' +
                     'sample2  gene2  LOW  PROT\n' +
                     'sample1\nsample2'
@@ -153,7 +156,7 @@ describe('OncoprinterImportUtils', () => {
                     'patient2  gene1  proteinChange2  TRUNC_GERMLINE\n' +
                     'patient2  gene1  AMP  CNA\n' +
                     'patient2  gene1  HIGH  PROT\n' +
-                    'patient2  gene2  proteinChange3  FUSION\n' +
+                    'patient2  gene1  STRUCTURAL VARIANT\n' +
                     'patient2\n' +
                     'patient2  gene2  LOW  PROT\n' +
                     'patient1\npatient2'

@@ -29,6 +29,18 @@ export function currentQueryParams(store: QueryStore) {
             store.defaultMutationProfile.molecularProfileId;
     }
 
+    let genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT = store.getSelectedProfileIdFromMolecularAlterationType(
+        'STRUCTURAL_VARIANT'
+    );
+    if (
+        store.alterationTypesInOQL.haveStructuralVariantInQuery &&
+        !genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT &&
+        store.defaultStructuralVariantProfile
+    ) {
+        genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT =
+            store.defaultStructuralVariantProfile.molecularProfileId;
+    }
+
     let genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION = store.getSelectedProfileIdFromMolecularAlterationType(
         'COPY_NUMBER_ALTERATION'
     );
@@ -67,6 +79,7 @@ export function currentQueryParams(store: QueryStore) {
 
     const ret: CancerStudyQueryUrlParams = {
         genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
+        genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT,
         genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
         genetic_profile_ids_PROFILE_MRNA_EXPRESSION,
         genetic_profile_ids_PROFILE_METHYLATION:

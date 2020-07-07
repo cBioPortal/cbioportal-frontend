@@ -1727,6 +1727,7 @@ export default class ResultsViewOncoprint extends React.Component<
             promises: [
                 this.props.store.filteredAndAnnotatedMolecularData,
                 this.props.store.filteredAndAnnotatedMutations,
+                this.props.store.filteredAndAnnotatedStructuralVariants,
             ],
         });
 

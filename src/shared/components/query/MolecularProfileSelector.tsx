@@ -36,6 +36,10 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                     data-test="molecularProfileSelector"
                 >
                     {this.renderGroup('MUTATION_EXTENDED', 'Mutation')}
+                    {this.renderGroup(
+                        'STRUCTURAL_VARIANT',
+                        'Structural Variant'
+                    )}
                     {this.renderGroup('COPY_NUMBER_ALTERATION', 'Copy Number')}
                     {this.showGSVA &&
                         this.renderGroup('GENESET_SCORE', 'GSVA scores')}
@@ -146,7 +150,11 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                         ? 'radio'
                         : 'checkbox'
                 }
-                label={profile.name}
+                label={
+                    profile.molecularAlterationType === 'STRUCTURAL_VARIANT'
+                        ? groupLabel
+                        : profile.name
+                }
                 checked={_.includes(
                     this.store.selectedProfileIds,
                     profile.molecularProfileId

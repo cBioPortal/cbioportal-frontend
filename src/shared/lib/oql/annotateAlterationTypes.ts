@@ -1,14 +1,16 @@
 import AccessorsForOqlFilter from './AccessorsForOqlFilter';
-import { NumericGeneMolecularData } from 'cbioportal-ts-api-client';
+import {
+    NumericGeneMolecularData,
+    StructuralVariant,
+} from 'cbioportal-ts-api-client';
 import {
     AlterationTypeConstants,
     AnnotatedMutation,
     ExtendedAlteration,
 } from '../../../pages/resultsView/ResultsViewPageStore';
-import { isMutation } from '../CBioPortalAPIUtils';
 
 export function annotateAlterationTypes(
-    datum: (AnnotatedMutation | NumericGeneMolecularData) &
+    datum: (AnnotatedMutation | NumericGeneMolecularData | StructuralVariant) &
         Partial<ExtendedAlteration>,
     accessors: AccessorsForOqlFilter
 ): ExtendedAlteration {
@@ -17,18 +19,16 @@ export function annotateAlterationTypes(
     );
     switch (molecularAlterationType) {
         case AlterationTypeConstants.MUTATION_EXTENDED:
-        case AlterationTypeConstants.FUSION:
-            if (accessors.fusion(datum as AnnotatedMutation) !== null) {
-                datum.alterationType = AlterationTypeConstants.FUSION;
-                datum.alterationSubType = '';
-            } else {
-                datum.alterationType =
-                    AlterationTypeConstants.MUTATION_EXTENDED;
-                datum.alterationSubType = accessors.mut_type(
-                    datum as AnnotatedMutation
-                ) as any;
-            }
+            datum.alterationType = AlterationTypeConstants.MUTATION_EXTENDED;
+            datum.alterationSubType = accessors.mut_type(
+                datum as AnnotatedMutation
+            ) as any;
             break;
+        case AlterationTypeConstants.STRUCTURAL_VARIANT: {
+            datum.alterationType = AlterationTypeConstants.STRUCTURAL_VARIANT;
+            datum.alterationSubType = '';
+            break;
+        }
         case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
             datum.alterationType =
                 AlterationTypeConstants.COPY_NUMBER_ALTERATION;

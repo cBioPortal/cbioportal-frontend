@@ -1325,6 +1325,14 @@ export class StudyViewPageStore {
             ]
         );
     }
+    @computed get defaultStructuralVariantProfile() {
+        return (
+            this.defaultProfilesForOql &&
+            this.defaultProfilesForOql[
+                AlterationTypeConstants.STRUCTURAL_VARIANT
+            ]
+        );
+    }
     @computed get defaultCnaProfile() {
         return (
             this.defaultProfilesForOql &&
@@ -5849,6 +5857,14 @@ export class StudyViewPageStore {
                 formOps[
                     'genetic_profile_ids_PROFILE_MUTATION_EXTENDED'
                 ] = this.defaultMutationProfile.molecularProfileId;
+            }
+            if (
+                this.alterationTypesInOQL.haveStructuralVariantInQuery &&
+                this.defaultStructuralVariantProfile
+            ) {
+                formOps[
+                    'genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT'
+                ] = this.defaultStructuralVariantProfile.molecularProfileId;
             }
             if (
                 this.alterationTypesInOQL.haveCnaInQuery &&

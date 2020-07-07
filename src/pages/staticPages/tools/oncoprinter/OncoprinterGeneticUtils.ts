@@ -57,7 +57,7 @@ export type OncoprinterGeneticTrackDatum = Pick<
     | 'disp_cna'
     | 'disp_mrna'
     | 'disp_prot'
-    | 'disp_fusion'
+    | 'disp_structuralVariant'
     | 'disp_germ'
 > & {
     sample: string;
@@ -92,7 +92,8 @@ export type OncoprinterGeneticInputLineType2 = OncoprinterGeneticInputLineType1 
         | 'mrnaHigh'
         | 'mrnaLow'
         | 'protHigh'
-        | 'protLow';
+        | 'protLow'
+        | 'structuralVariant';
     isGermline?: boolean;
     isCustomDriver?: boolean;
     proteinChange?: string;
@@ -398,11 +399,11 @@ export function makeGeneticTrackDatum_Data(
                 mutationType: 'indel',
             });
             break;
-        case 'fusion':
+        case 'structuralVariant':
             ret = Object.assign(ret, {
                 molecularProfileAlterationType:
-                    AlterationTypeConstants.MUTATION_EXTENDED,
-                mutationType: 'fusion',
+                    AlterationTypeConstants.STRUCTURAL_VARIANT,
+                mutationType: 'structuralVariant',
             });
             break;
         case 'promoter':
@@ -493,7 +494,11 @@ export function makeGeneticTrackDatum_Data(
 
 export function isAltered(d: OncoprinterGeneticTrackDatum) {
     return (
-        d.disp_mut || d.disp_cna || d.disp_mrna || d.disp_prot || d.disp_fusion
+        d.disp_mut ||
+        d.disp_cna ||
+        d.disp_mrna ||
+        d.disp_prot ||
+        d.disp_structuralVariant
     );
 }
 function getPercentAltered(data: OncoprinterGeneticTrackDatum[]) {
@@ -827,7 +832,7 @@ export function parseGeneticInput(
                                 `${errorPrefix}Type "${type}" is not valid - it must be "FUSION" if Alteration is "FUSION"`
                             );
                         } else {
-                            ret.alteration = lcType as OncoprintMutationType;
+                            ret.alteration = 'structuralVariant';
                             ret.proteinChange = alteration;
                         }
                         break;

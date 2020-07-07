@@ -1936,7 +1936,6 @@ export function makeScatterPlotData(
                 .groupBy(mutation => {
                     const mutationType = getOncoprintMutationType(mutation);
                     const driverSuffix =
-                        mutationType !== 'fusion' &&
                         mutationType !== 'promoter' &&
                         mutationType !== 'other' &&
                         mutation.putativeDriver
@@ -2102,7 +2101,6 @@ export function makeWaterfallPlotData(
                 .groupBy((mutation: AnnotatedMutation) => {
                     const mutationType = getOncoprintMutationType(mutation);
                     const driverSuffix =
-                        mutationType !== 'fusion' &&
                         mutationType !== 'promoter' &&
                         mutationType !== 'other' &&
                         mutation.putativeDriver

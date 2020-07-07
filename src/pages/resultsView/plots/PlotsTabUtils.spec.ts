@@ -193,25 +193,25 @@ describe('PlotsTabUtils', () => {
                         entrezGeneId: 1234,
                         uniqueSampleKey: 'sample1',
                         oncoKbOncogenic: 'MutationA',
-                        mutationType: 'fusion',
+                        mutationType: 'missense_mutation',
                     },
                     {
                         entrezGeneId: 1234,
                         uniqueSampleKey: 'sample1',
                         oncoKbOncogenic: 'MutationB',
-                        mutationType: 'fusion',
+                        mutationType: 'missense_mutation',
                     },
                     {
                         entrezGeneId: 5678,
                         uniqueSampleKey: 'sample2',
                         oncoKbOncogenic: 'MutationC',
-                        mutationType: 'fusion',
+                        mutationType: 'missense_mutation',
                     },
                     {
                         entrezGeneId: 5678,
                         uniqueSampleKey: 'sample2',
                         oncoKbOncogenic: 'MutationD',
-                        mutationType: 'fusion',
+                        mutationType: 'missense_mutation',
                     },
                 ] as AnnotatedMutation[],
             },
@@ -341,7 +341,7 @@ describe('PlotsTabUtils', () => {
                 i.copyNumberAlterations
             );
             assert.equal(data.length, 1);
-            assert.equal(data[0].dispMutationType!, 'fusion');
+            assert.equal(data[0].dispMutationType!, 'missense');
         });
 
         it("should return no mutation when user-selected gene has no mutations's", () => {
@@ -514,7 +514,7 @@ describe('PlotsTabUtils', () => {
                 {
                     uniqueSampleKey: 'sample3',
                     proteinChange: '',
-                    mutationType: 'fusion',
+                    mutationType: 'missense',
                 },
             ];
             coverageInformation = {
@@ -653,7 +653,7 @@ describe('PlotsTabUtils', () => {
                         },
                         {
                             uniqueSampleKey: 'sample3',
-                            value: [mutationTypeToDisplayName.fusion],
+                            value: [mutationTypeToDisplayName.missense],
                         },
                         {
                             uniqueSampleKey: 'sample4',
