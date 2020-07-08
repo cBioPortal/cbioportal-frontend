@@ -77,7 +77,8 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 this.props.store.studiesForSamplesWithoutCancerTypeClinicalData,
                 this.props.store.canonicalTranscript,
                 this.props.store.mutationData,
-                this.props.store.indexedVariantAnnotations
+                this.props.store.indexedVariantAnnotations,
+                this.props.store.activeTranscript
             ) === 'pending'
         );
     }
@@ -147,6 +148,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 indexedAnnotatedMutationsByGenomicLocation={
                     this.props.store.indexedAnnotatedMutationsByGenomicLocation
                 }
+                selectedTranscriptId={this.props.store.activeTranscript.result}
             />
         );
     }

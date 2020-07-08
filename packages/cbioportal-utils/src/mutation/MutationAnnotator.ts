@@ -148,7 +148,7 @@ export function getMutationByTranscriptId(
         }
         return annotatedMutation as Mutation;
     } else {
-        // if mutation is not annotatable or can't map back (due to genomic location normalization or other reasons), return original mutation
+        // if mutation is not annotatable or can't map back (due to genomic location normalization or other reasons), return undefined
         return undefined;
     }
 }
