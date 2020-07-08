@@ -61,43 +61,6 @@
                 vertical-align: middle;
             }
         }
-
-        .text-icon-area {
-            width: 100%;
-            min-height: 50px;
-            overflow: hidden;
-            margin-bottom: 5px;
-
-            $iconMargin: 2px;
-            $iconPadding: 1px;
-
-            .icon-area {
-                min-height: 0px;
-                overflow: hidden;
-                padding: 1px;
-                padding-bottom: 2px;
-
-                .icon {
-                    padding: $iconPadding;
-                    padding-left: $iconPadding + 6;
-                    padding-right: $iconPadding + 6;
-                    margin: $iconMargin;
-                    margin-bottom: $iconMargin + 1;
-                    background: $brand-primary;
-                    color: white;
-                    border-radius: 4px;
-                    float: left;
-                }
-            }
-
-            .text-area {
-                width: 100%;
-                min-height: 50px;
-                resize: vertical;
-                overflow: hidden;
-                border: 1px solid $borderColor;
-            }
-        }
     }
 
     .oncoprint__zoom-controls {
