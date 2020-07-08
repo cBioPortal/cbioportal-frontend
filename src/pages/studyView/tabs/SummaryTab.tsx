@@ -29,6 +29,8 @@ import autobind from 'autobind-decorator';
 import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledCheckbox';
 import { ChartMeta, ChartType, RectangleBounds } from '../StudyViewUtils';
 import { DataType } from 'cbioportal-frontend-commons';
+import { toSampleTreatmentFilter } from '../table/treatments/treatmentsTableUtil';
+import { OredSampleTreatmentFilters } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore;
@@ -340,6 +342,24 @@ export class StudySummaryTab extends React.Component<
                 props.downloadTypes = ['Data', 'SVG', 'PDF'];
                 break;
             }
+            case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE: {
+                props.filters = this.store.sampleTreatmentFiltersAsStrings;
+                props.promise = this.store.sampleTreatments;
+                props.onValueSelection = this.store.onSampleTreatmentSelection;
+                props.onResetSelection = () => {
+                    this.store.clearSampleTreatmentFilters();
+                };
+                break;
+            }
+            case ChartTypeEnum.PATIENT_TREATMENTS_TABLE: {
+                props.filters = this.store.patientTreatmentFiltersAsStrings;
+                props.promise = this.store.patientTreatments;
+                props.onValueSelection = this.store.onPatientTreatmentSelection;
+                props.onResetSelection = () => {
+                    this.store.clearPatientTreatmentFilters();
+                };
+                break;
+            }
             default:
                 break;
         }
@@ -418,7 +438,6 @@ export class StudySummaryTab extends React.Component<
                         sequential={false}
                     />
                 </LoadingIndicator>
-
                 {this.store.invalidSampleIds.result.length > 0 &&
                     this.showErrorMessage && (
                         <div>
@@ -493,44 +512,68 @@ export class StudySummaryTab extends React.Component<
                     </div>
                 )}
 
-                {!this.store.loadingInitialDataForSummaryTab && (
-                    <div data-test="summary-tab-content">
-                        <div className={styles.studyViewFlexContainer}>
-                            {this.store.defaultVisibleAttributes.isComplete && (
-                                <ReactGridLayout
-                                    className="layout"
-                                    style={{ width: this.store.containerWidth }}
-                                    width={this.store.containerWidth}
-                                    cols={
-                                        this.store.studyViewPageLayoutProps.cols
-                                    }
-                                    rowHeight={
-                                        this.store.studyViewPageLayoutProps.grid
-                                            .h
-                                    }
-                                    layout={
-                                        this.store.studyViewPageLayoutProps
-                                            .layout
-                                    }
-                                    margin={[
-                                        STUDY_VIEW_CONFIG.layout.gridMargin.x,
-                                        STUDY_VIEW_CONFIG.layout.gridMargin.y,
-                                    ]}
-                                    useCSSTransforms={false}
-                                    draggableHandle={`.${chartHeaderStyles.draggable}`}
-                                    onLayoutChange={
-                                        this.handlers.onLayoutChange
-                                    }
-                                    onResizeStop={this.onResize}
-                                >
-                                    {this.store.visibleAttributes.map(
-                                        this.renderAttributeChart
-                                    )}
-                                </ReactGridLayout>
-                            )}
+                {this.props.store.selectedSamples.result.length > 0 &&
+                    !this.store.loadingInitialDataForSummaryTab && (
+                        <div data-test="summary-tab-content">
+                            <div className={styles.studyViewFlexContainer}>
+                                {this.store.defaultVisibleAttributes
+                                    .isComplete && (
+                                    <ReactGridLayout
+                                        className="layout"
+                                        style={{
+                                            width: this.store.containerWidth,
+                                        }}
+                                        width={this.store.containerWidth}
+                                        cols={
+                                            this.store.studyViewPageLayoutProps
+                                                .cols
+                                        }
+                                        rowHeight={
+                                            this.store.studyViewPageLayoutProps
+                                                .grid.h
+                                        }
+                                        layout={
+                                            this.store.studyViewPageLayoutProps
+                                                .layout
+                                        }
+                                        margin={[
+                                            STUDY_VIEW_CONFIG.layout.gridMargin
+                                                .x,
+                                            STUDY_VIEW_CONFIG.layout.gridMargin
+                                                .y,
+                                        ]}
+                                        useCSSTransforms={false}
+                                        draggableHandle={`.${chartHeaderStyles.draggable}`}
+                                        onLayoutChange={
+                                            this.handlers.onLayoutChange
+                                        }
+                                        onResizeStop={this.onResize}
+                                    >
+                                        {this.store.visibleAttributes.map(
+                                            this.renderAttributeChart
+                                        )}
+                                    </ReactGridLayout>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
+                {this.props.store.selectedSamples.isComplete &&
+                    this.props.store.selectedSamples.result.length === 0 && (
+                        <div className={styles.studyViewNoSamples}>
+                            <div className={styles.studyViewNoSamplesInner}>
+                                <p>
+                                    The filters you have selected have filtered
+                                    out all the samples in this study; because
+                                    of this, no data visualizations are shown.
+                                </p>
+                                <p>
+                                    You can remove filters in the header of this
+                                    page to widen your search criteria and add
+                                    samples back to your results.
+                                </p>
+                            </div>
+                        </div>
+                    )}
             </div>
         );
     }
