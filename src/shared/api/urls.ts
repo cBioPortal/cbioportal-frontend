@@ -243,9 +243,9 @@ export function getSessionUrl() {
         // TODO: remove this after switch to AWS. This is a hack to use proxy
         // session-service from non apiRoot. We'll have to come up with a better
         // solution for auth portals
-        return buildCBioPortalPageUrl('api-legacy/proxy/session');
+        return buildCBioPortalPageUrl('api/proxy/session');
     } else {
-        return buildCBioPortalAPIUrl('api-legacy/proxy/session');
+        return buildCBioPortalAPIUrl('api/proxy/session');
     }
 }
 
@@ -257,9 +257,9 @@ export function fetchComparisonGroupsServiceUrl() {
         // TODO: remove this after switch to AWS. This is a hack to use proxy
         // session-service from non apiRoot. We'll have to come up with a better
         // solution for auth portals
-        return buildCBioPortalPageUrl('api-legacy/proxy/session/groups/fetch');
+        return buildCBioPortalPageUrl('api/proxy/session/groups/fetch');
     } else {
-        return buildCBioPortalAPIUrl('api-legacy/proxy/session/groups/fetch');
+        return buildCBioPortalAPIUrl('api/proxy/session/groups/fetch');
     }
 }
 
@@ -271,9 +271,9 @@ export function getComparisonGroupServiceUrl() {
         // TODO: remove this after switch to AWS. This is a hack to use proxy
         // session-service from non apiRoot. We'll have to come up with a better
         // solution for auth portals
-        return buildCBioPortalPageUrl('api-legacy/proxy/session/group');
+        return buildCBioPortalPageUrl('api/proxy/session/group');
     } else {
-        return buildCBioPortalAPIUrl('api-legacy/proxy/session/group');
+        return buildCBioPortalAPIUrl('api/proxy/session/group');
     }
 }
 
@@ -286,11 +286,11 @@ export function getComparisonSessionServiceUrl() {
         // session-service from non apiRoot. We'll have to come up with a better
         // solution for auth portals
         return buildCBioPortalPageUrl(
-            'api-legacy/proxy/session/comparison_session'
+            'api/proxy/session/comparison_session'
         );
     } else {
         return buildCBioPortalAPIUrl(
-            'api-legacy/proxy/session/comparison_session'
+            'api/proxy/session/comparison_session'
         );
     }
 }
@@ -333,11 +333,7 @@ export function getStudyDownloadListUrl() {
 }
 
 export function getBitlyServiceUrl() {
-    return buildCBioPortalAPIUrl('api-legacy/proxy/bitly');
-}
-
-export function getLegacyCopyNumberUrl() {
-    return buildCBioPortalAPIUrl('api-legacy/copynumbersegments');
+    return buildCBioPortalAPIUrl('api/proxy/bitly');
 }
 
 export function getMDAndersonHeatmapPatientUrl(patientId: string) {
