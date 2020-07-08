@@ -28,25 +28,23 @@ describe('treatment feature', () => {
                 $('.oncoprint__controls__heatmap_menu'),
                 'IC50 values of compounds on cellular phenotype readout'
             );
-            $('.oncoprint__controls__heatmap_menu textarea').setValue('17-AAG');
-            $('div.icon-area div.icon').waitForExist();
+            // wait for generic assay data loading complete
+            $(
+                '.oncoprint__controls__heatmap_menu .generic-assay-selector'
+            ).waitForExist();
+            $('.oncoprint__controls__heatmap_menu input').setValue('17-AAG');
+            var options = $$('div[class$="option"]');
+            options[0].click();
+            var indicators = $$('div[class$="indicatorContainer"]');
+            // close the dropdown
+            indicators[1].click();
+            var selectedOptions = $$('div[class$="multiValue"]');
+            assert.equal(selectedOptions.length, 1);
+
             $('button=Add Treatment Responses to Heatmap').click();
             openHeatmapMenu();
             waitForOncoprint();
             var res = browser.checkElement('[id=oncoprintDiv]');
-            assertScreenShotMatch(res);
-        });
-
-        it('selects treatment in treatment select box when icon present', () => {
-            openHeatmapMenu();
-            selectReactSelectOption(
-                $('.oncoprint__controls__heatmap_menu'),
-                'IC50 values of compounds on cellular phenotype readout'
-            );
-            $('.oncoprint__controls__heatmap_menu textarea').setValue('17-AAG');
-            $('div.icon-area div.icon').waitForExist();
-            $('.generic-assay-selector .default-checked-select').click();
-            var res = browser.checkElement('.checked-select-option*=17-AAG');
             assertScreenShotMatch(res);
         });
     });
