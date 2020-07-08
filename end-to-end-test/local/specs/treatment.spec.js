@@ -90,7 +90,22 @@ describe('treatment feature', function() {
                 assert.equal(selectedOptions.length, 1);
             });
 
-            it('select multiple filtered treatment in generic assay selector', () => {
+            it('show multiple filtered treatments', () => {
+                openHeatmapMenu();
+                selectReactSelectOption(
+                    $('.oncoprint__controls__heatmap_menu'),
+                    'IC50 values of compounds on cellular phenotype readout'
+                );
+                // wait for generic assay data loading complete
+                $(
+                    '.oncoprint__controls__heatmap_menu .generic-assay-selector'
+                ).waitForExist();
+                $('.oncoprint__controls__heatmap_menu input').setValue('AZD');
+                var options = $$('div[class$="option"]');
+                assert.equal(options.length, 3);
+            });
+
+            it('select multiple filtered treatments in generic assay selector', () => {
                 openHeatmapMenu();
                 selectReactSelectOption(
                     $('.oncoprint__controls__heatmap_menu'),
@@ -106,25 +121,6 @@ describe('treatment feature', function() {
                 $('div[class$="multiValue"]').waitForExist();
                 var selectedOptions = $$('div[class$="multiValue"]');
                 assert.equal(selectedOptions.length, 2);
-            });
-
-            it('select multiple filtered option removed after cleared the search text', () => {
-                openHeatmapMenu();
-                selectReactSelectOption(
-                    $('.oncoprint__controls__heatmap_menu'),
-                    'IC50 values of compounds on cellular phenotype readout'
-                );
-                // wait for generic assay data loading complete
-                $(
-                    '.oncoprint__controls__heatmap_menu .generic-assay-selector'
-                ).waitForExist();
-                $('.oncoprint__controls__heatmap_menu input').setValue('AZD');
-                var options = $$('div[class$="option"]');
-                assert.equal(options.length, 3);
-                $('.oncoprint__controls__heatmap_menu input').setValue('');
-                $('.generic-assay-selector div[class$="control"]').click();
-                options = $$('div[class$="option"]');
-                assert.equal(options.length, 10);
             });
 
             it('keeps the filtered treatments list open after selecting an option', () => {

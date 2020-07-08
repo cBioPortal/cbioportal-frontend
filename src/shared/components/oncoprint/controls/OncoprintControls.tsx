@@ -217,7 +217,7 @@ export default class OncoprintControls extends React.Component<
 > {
     @observable horzZoomSliderState: number;
     @observable heatmapGenesReady = false;
-    @observable private _selectedGenericAssayEntityIds: string[];
+    @observable.ref private _selectedGenericAssayEntityIds: string[];
     @observable private _genericAssaySearchText: string = '';
     @observable showConfirmNgchmModal: boolean = false;
 
@@ -682,6 +682,7 @@ export default class OncoprintControls extends React.Component<
             selectInfo.action === 'select-option' &&
             selectInfo.option.id === 'select_all_filtered_options'
         ) {
+            // use union to keep previous selected options and new added options
             candidateOptions = _.union(
                 this.filteredGenericAssayOptions,
                 candidateOptions
@@ -689,12 +690,10 @@ export default class OncoprintControls extends React.Component<
         }
         // map to id
         let candidateIds = candidateOptions.map(o => o.id);
-        // remove select all option from the candidate id list
-        if (candidateIds.includes('select_all_filtered_options')) {
-            candidateIds = _.difference(candidateIds, [
-                'select_all_filtered_options',
-            ]);
-        }
+        // filter out select all option from the candidate id list
+        candidateIds = candidateIds.filter(
+            id => id !== 'select_all_filtered_options'
+        );
         this._selectedGenericAssayEntityIds = candidateIds;
         this._genericAssaySearchText = '';
     }
@@ -717,8 +716,8 @@ export default class OncoprintControls extends React.Component<
         let result = false;
         if (
             !text ||
-            option.label.toLowerCase().includes(text.toLowerCase()) ||
-            option.value.toLowerCase().includes(text.toLowerCase())
+            new RegExp(text, 'i').test(option.label) ||
+            new RegExp(text, 'i').test(option.value)
         ) {
             result = true;
         }
@@ -737,13 +736,25 @@ export default class OncoprintControls extends React.Component<
                       .result[this.props.state.selectedHeatmapProfileId]
                 : [];
 
-        // add select all option
-        if (this._genericAssaySearchText.length > 0) {
+        // add select all option only when options have been filtered and has at least one filtered option
+        // one generic assay profile usually contains hundries of options, we don't want user try to add all options without filtering the option
+        // that would overwhelm the oncoprint, add more than hundries of heatmap tracks can crash the page.
+        const filteredOptionsLength = allOptionsInSelectedProfile.filter(
+            option =>
+                this.isOptionIncludingText(
+                    this._genericAssaySearchText,
+                    option
+                ) && !this._selectedGenericAssayEntityIds.includes(option.id)
+        ).length;
+        if (
+            this._genericAssaySearchText.length > 0 &&
+            filteredOptionsLength > 0
+        ) {
             allOptionsInSelectedProfile = _.concat(
                 {
                     id: 'select_all_filtered_options',
                     value: 'select_all_filtered_options',
-                    label: 'Select all filtered options',
+                    label: `Select all filtered options (${filteredOptionsLength})`,
                 } as ISelectOption,
                 allOptionsInSelectedProfile
             );
@@ -771,7 +782,10 @@ export default class OncoprintControls extends React.Component<
         if (option.value === 'select_all_filtered_options') {
             return true;
         }
-        return this.isOptionIncludingText(filterString, option);
+        return (
+            this.isOptionIncludingText(filterString, option) &&
+            !this._selectedGenericAssayEntityIds.includes(option.id)
+        );
     }
 
     @autobind onGenericAssayInputChange(input: string, inputInfo: any) {
@@ -911,6 +925,12 @@ export default class OncoprintControls extends React.Component<
                                         onChange={
                                             this.onSelectGenericAssayEntities
                                         }
+                                        styles={{
+                                            multiValueLabel: (base: any) => ({
+                                                ...base,
+                                                whiteSpace: 'normal',
+                                            }),
+                                        }}
                                     />
                                 </div>
                             ) : (
