@@ -44,7 +44,6 @@ import DriverAnnotationControls, {
     IDriverAnnotationControlsHandlers,
 } from '../../../../pages/resultsView/settings/DriverAnnotationControls';
 import OncoprintDropdownCount from 'pages/resultsView/oncoprint/OncoprintDropdownCount';
-import { ITextIconAreaItemProps } from 'shared/components/textIconArea/TextIconArea';
 import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/PlotsTabUtils';
 import Select from 'react-select';
 
@@ -712,13 +711,6 @@ export default class OncoprintControls extends React.Component<
 
     @computed get selectedGenericAssaysJS() {
         return toJS(this.selectedGenericAssayEntities);
-    }
-
-    @computed get textareaGenericAssayEntries(): ITextIconAreaItemProps[] {
-        return _.map(this.selectedGenericAssayEntities, (d: ISelectOption) => ({
-            value: d.id,
-            label: d.id,
-        }));
     }
 
     private isOptionIncludingText(text: string, option: ISelectOption) {
