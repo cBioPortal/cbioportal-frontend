@@ -336,8 +336,8 @@ describe('results view comparison tab screenshot tests', function() {
                 'div[data-test="GroupComparisonMRNAEnrichments"]',
                 10000
             );
-            browser.waitForVisible('b=TYMP', 10000);
-            browser.click('b=TYMP');
+            browser.waitForVisible('b=PLA2G2F', 10000);
+            browser.click('b=PLA2G2F');
             browser.waitForVisible('div[data-test="MiniBoxPlot"]', 20000);
             browser.moveToObject('body', 0, 0);
             var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
