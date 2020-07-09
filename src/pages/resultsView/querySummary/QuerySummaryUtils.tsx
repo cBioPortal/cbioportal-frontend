@@ -87,6 +87,7 @@ export function submitToStudyViewPage(
     queriedStudies: Pick<CancerStudy, 'studyId'>[],
     samples: Pick<Sample, 'sampleId' | 'studyId'>[],
     hasVirtualStudies: boolean,
+    samplesAreFiltered: boolean,
     sampleLists?: Pick<SampleList, 'category'>[]
 ) {
     const hasAllCaseLists = _.some(
@@ -97,7 +98,9 @@ export function submitToStudyViewPage(
         sampleId: string;
         studyId: string;
     }[] = [];
-    if (samples.length > 0 && (hasVirtualStudies || !hasAllCaseLists)) {
+    const shouldPassSampleFilter =
+        samplesAreFiltered || hasVirtualStudies || !hasAllCaseLists;
+    if (samples.length > 0 && shouldPassSampleFilter) {
         samples.forEach(sample =>
             sampleIdentifiers.push({
                 sampleId: sample.sampleId,
