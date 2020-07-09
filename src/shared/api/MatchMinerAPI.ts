@@ -6,13 +6,11 @@ import { buildCBioPortalAPIUrl } from './urls';
  * Retrieves the trial matches for the query given, if they are in the MatchMiner API.
  */
 // It cannot be set globally since it will cause test error: undefined of 'replace'.
-// const cbioportalUrl = buildCBioPortalAPIUrl('api/proxy/matchminer/api');
+// const cbioportalUrl = buildCBioPortalAPIUrl('api/matchminer/api');
 export async function fetchTrialMatchesUsingPOST(
     query: object
 ): Promise<Array<ITrialMatch>> {
-    const cbioportalUrl = buildCBioPortalAPIUrl(
-        'api/proxy/matchminer/api'
-    );
+    const cbioportalUrl = buildCBioPortalAPIUrl('api/matchminer/api');
     return request
         .post(cbioportalUrl + '/post_trial_match')
         .set('Content-Type', 'application/json')
@@ -58,9 +56,7 @@ export async function fetchTrialsByTypeAndId(
     type: string,
     id: string
 ): Promise<ITrial> {
-    const cbioportalUrl = buildCBioPortalAPIUrl(
-        'api/proxy/matchminer/api'
-    );
+    const cbioportalUrl = buildCBioPortalAPIUrl('api/matchminer/api');
     return request.get(cbioportalUrl + '/' + type + '/' + id).then(res => {
         const response = JSON.parse(res.text);
         return {
@@ -79,9 +75,7 @@ export async function fetchTrialsByTypeAndId(
 export async function fetchTrialsUsingPost(
     query: object
 ): Promise<Array<ITrial>> {
-    const cbioportalUrl = buildCBioPortalAPIUrl(
-        'api/proxy/matchminer/api'
-    );
+    const cbioportalUrl = buildCBioPortalAPIUrl('api/matchminer/api');
     return request
         .post(cbioportalUrl + '/post_trial')
         .set('Content-Type', 'application/json')
@@ -101,9 +95,7 @@ export async function fetchTrialsUsingPost(
 }
 
 export async function fetchTrialsById(query: object): Promise<Array<ITrial>> {
-    const cbioportalUrl = buildCBioPortalAPIUrl(
-        'api/proxy/matchminer/api'
-    );
+    const cbioportalUrl = buildCBioPortalAPIUrl('api/matchminer/api');
     return request
         .post(cbioportalUrl + '/trials')
         .set('Content-Type', 'application/json')
