@@ -49,6 +49,9 @@ export default class OncoprinterTool extends React.Component<
     @observable private activeTabId: OncoprinterTab = OncoprinterTab.ONCOPRINT;
 
     @observable dataInputOpened = true;
+    @observable geneticHelpOpened = false;
+    @observable clinicalHelpOpened = false;
+    @observable heatmapHelpOpened = false;
 
     // help
     @observable helpOpened = false;
@@ -119,6 +122,21 @@ export default class OncoprinterTool extends React.Component<
     @autobind
     private onSampleOrderInputChange(e: any) {
         this.sampleOrderInput = e.currentTarget.value;
+    }
+
+    @autobind
+    private toggleGeneticHelp() {
+        this.geneticHelpOpened = !this.geneticHelpOpened;
+    }
+
+    @autobind
+    private toggleClinicalHelp() {
+        this.clinicalHelpOpened = !this.clinicalHelpOpened;
+    }
+
+    @autobind
+    private toggleHeatmapHelp() {
+        this.heatmapHelpOpened = !this.heatmapHelpOpened;
     }
 
     @action private doSubmit(
@@ -210,13 +228,20 @@ export default class OncoprinterTool extends React.Component<
                             Load example data
                         </Button>
                         <Button
+                            className="oncoprinterGeneticHelp"
                             style={{ marginLeft: 7 }}
                             bsStyle="primary"
                             bsSize="xs"
-                            onClick={() => this.openDataFormat('genomic')}
+                            onClick={this.toggleGeneticHelp}
                         >
-                            View data format
+                            {this.geneticHelpOpened ? 'Close ' : 'View '}data
+                            format
                         </Button>
+                        <Collapse isOpened={this.geneticHelpOpened}>
+                            <div style={{ paddingBottom: 10 }}>
+                                {GenomicFormatHelp}
+                            </div>
+                        </Collapse>
                         <FormControl
                             className="oncoprinterGeneticDataInput"
                             componentClass="textarea"
@@ -243,13 +268,20 @@ export default class OncoprinterTool extends React.Component<
                             Load example data
                         </Button>
                         <Button
+                            className="oncoprinterClinicalHelp"
                             style={{ marginLeft: 7 }}
                             bsStyle="primary"
                             bsSize="xs"
-                            onClick={() => this.openDataFormat('clinical')}
+                            onClick={this.toggleClinicalHelp}
                         >
-                            View data format
+                            {this.clinicalHelpOpened ? 'Close ' : 'View '}data
+                            format
                         </Button>
+                        <Collapse isOpened={this.clinicalHelpOpened}>
+                            <div style={{ paddingBottom: 10 }}>
+                                {ClinicalFormatHelp}
+                            </div>
+                        </Collapse>
                         <FormControl
                             className="oncoprinterClinicalDataInput"
                             componentClass="textarea"
@@ -276,13 +308,20 @@ export default class OncoprinterTool extends React.Component<
                             Load example data
                         </Button>
                         <Button
+                            className="oncoprinterHeatmapHelp"
                             style={{ marginLeft: 7 }}
                             bsStyle="primary"
                             bsSize="xs"
-                            onClick={() => this.openDataFormat('heatmap')}
+                            onClick={this.toggleHeatmapHelp}
                         >
-                            View data format
+                            {this.heatmapHelpOpened ? 'Close ' : 'View '}data
+                            format
                         </Button>
+                        <Collapse isOpened={this.heatmapHelpOpened}>
+                            <div style={{ paddingBottom: 10 }}>
+                                {HeatmapFormatHelp}
+                            </div>
+                        </Collapse>
                         <FormControl
                             className="oncoprinterHeatmapDataInput"
                             componentClass="textarea"
