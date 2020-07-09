@@ -542,7 +542,7 @@ export function getHeatmapTracks(
         ret.push({
             key: getHeatmapTrackKey(attr.trackName),
             label: attr.trackName,
-            legendLabel: 'Heatmap',
+            legendLabel: getHeatmapLegendLabel(attr),
             tooltipValueLabel: 'Value',
             molecularProfileId: 'input',
             molecularAlterationType: getHeatmapMolecularAlterationType(
@@ -557,4 +557,16 @@ export function getHeatmapTracks(
         });
     });
     return ret;
+}
+
+function getHeatmapLegendLabel(attr: OncoprinterHeatmapTrackSpec) {
+    switch (attr.datatype) {
+        case HeatmapTrackDataType.HEATMAP_01:
+            return 'Heatmap (0-1)';
+        case HeatmapTrackDataType.HEATMAP_ZSCORE:
+            return 'Heatmap (z-scores)';
+        case HeatmapTrackDataType.HEATMAP:
+        default:
+            return 'Heatmap';
+    }
 }
