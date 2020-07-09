@@ -74,10 +74,6 @@ export default class MutationTypeColumnFormatter {
                 displayValue: 'Silent',
                 className: styles.otherMutation,
             },
-            other: {
-                displayValue: 'Other',
-                className: styles.otherMutation,
-            },
         };
     }
 
@@ -123,8 +119,7 @@ export default class MutationTypeColumnFormatter {
         }
         // for unmapped values, use the "other" style
         else {
-            return MutationTypeColumnFormatter.MAIN_MUTATION_TYPE_MAP['other']
-                .className;
+            return styles.otherMutation;
         }
     }
 
