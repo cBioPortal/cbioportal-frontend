@@ -17,8 +17,8 @@ export const GenomicFormatHelp = (
         samples).
         <br />
         <strong>(2)</strong> <code>Sample</code>&#9;<code>Gene</code>&#9;
-        <code>Alteration (defined below)</code>&#9;
-        <code>Type (defined below)</code>
+        <code>Alteration</code>&#9;
+        <code>Type</code>
         <br />
         {/*<strong>(3) (MAF format, mutation only)</strong> <code>Sample</code>, <code>Cancer Type</code>, <code>Protein Change</code>, <code>Mutation Type</code>,	<code>Chromosome</code>,
         <code>Start position</code>, <code>End position</code>, <code>Reference allele</code>,	<code>Variant allele</code><br/>
@@ -193,9 +193,9 @@ export const HeatmapFormatHelp = (
         example first row is:
         <br />
         <code>Sample</code>&#9;
-        <code>methylation(${HeatmapTrackDataType.HEATMAP_01})</code>&#9;
-        <code>expression(${HeatmapTrackDataType.HEATMAP})</code>&#9;
-        <code>zscores(${HeatmapTrackDataType.HEATMAP_ZSCORE})</code>
+        <code>methylation({HeatmapTrackDataType.HEATMAP_01})</code>&#9;
+        <code>expression({HeatmapTrackDataType.HEATMAP})</code>&#9;
+        <code>zscores({HeatmapTrackDataType.HEATMAP_ZSCORE})</code>
         <br />
         Each following row gives the sample id, then the value for each heatmap
         track, or the special value {ONCOPRINTER_VAL_NA} which indicates that
