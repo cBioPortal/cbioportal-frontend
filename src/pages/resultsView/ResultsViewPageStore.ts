@@ -133,9 +133,7 @@ import {
     parseGenericAssayGroups,
 } from './ResultsViewPageStoreUtils';
 import MobxPromiseCache from '../../shared/lib/MobxPromiseCache';
-import {
-    isSampleProfiledInMultiple,
-} from '../../shared/lib/isSampleProfiled';
+import { isSampleProfiledInMultiple } from '../../shared/lib/isSampleProfiled';
 import ClinicalDataCache, {
     clinicalAttributeIsINCOMPARISONGROUP,
     SpecialAttribute,
