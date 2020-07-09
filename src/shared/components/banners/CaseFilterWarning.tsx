@@ -56,7 +56,7 @@ export default class CaseFilterWarning extends React.Component<
                             this.props.isPatientMode ? 'patient' : 'sample',
                             nFiltered
                         )}`}
-                        {` that are not profiled in all selected genomic profiles`}
+                        {` that are not profiled for all queried genes in all queried profiles`}
                         {` ${is} included in analysis.`}
                     </div>
                 );
@@ -76,7 +76,7 @@ export default class CaseFilterWarning extends React.Component<
                             nFiltered
                         )}`}
                         {` ${is} excluded from analysis since ${it} ${is} not profiled`}
-                        {` for all genes in all queried profiles.`}
+                        {` for all queried genes in all queried profiles.`}
                     </div>
                 );
             }

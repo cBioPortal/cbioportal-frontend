@@ -156,8 +156,8 @@ export default class ResultsPageSettings extends React.Component<
                                 checked={this.props.store.hideUnprofiledSamples}
                                 onClick={this.onInputClick}
                             />{' '}
-                            Exclude samples that are not profiled for all genes
-                            in all queried profiles
+                            Exclude samples that are not profiled for all
+                            queried genes in all queried profiles
                         </label>
                     </div>
                 </div>
