@@ -111,7 +111,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
                 this.canonicalTranscript.result.transcriptId
             );
         }
-        // if transcript dropdown is disabled, canonical transcript is used by default
+        // return true if transcript dropdown is disabled
         return true;
     }
 }

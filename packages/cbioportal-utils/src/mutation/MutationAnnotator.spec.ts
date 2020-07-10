@@ -2250,21 +2250,27 @@ describe('MutationAnnotator', () => {
 
             assert.equal(data[0].gene!.hugoGeneSymbol, 'AR');
             assert.isTrue(data[0].proteinChange!.includes('L729I'));
+            assert.isTrue(data[0].mutationType!.includes('Missense'));
 
             assert.equal(data[1].gene!.hugoGeneSymbol, 'BRCA1');
             assert.isTrue(data[1].proteinChange!.includes('Q1395Lfs*11'));
+            assert.isTrue(data[1].mutationType!.includes('Frame_Shift_Ins'));
 
             assert.equal(data[2].gene!.hugoGeneSymbol, 'BRCA2');
             assert.isTrue(data[2].proteinChange!.includes('E1441*'));
+            assert.isTrue(data[2].mutationType!.includes('Nonsense'));
 
             assert.equal(data[3].gene!.hugoGeneSymbol, 'POLE');
             assert.isTrue(data[3].proteinChange!.includes('N1869K'));
+            assert.isTrue(data[3].mutationType!.includes('Missense'));
 
             assert.equal(data[4].gene!.hugoGeneSymbol, 'TP53');
             assert.isTrue(data[4].proteinChange!.includes('R248W'));
+            assert.isTrue(data[4].mutationType!.includes('Missense'));
 
             assert.equal(data[5].gene!.hugoGeneSymbol, 'PTEN');
             assert.isTrue(data[5].proteinChange!.includes('R130Q'));
+            assert.isTrue(data[5].mutationType!.includes('Missense'));
         });
     });
 

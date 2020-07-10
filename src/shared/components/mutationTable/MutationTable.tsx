@@ -122,9 +122,6 @@ export interface IMutationTableProps {
     onRowMouseEnter?: (d: Mutation[]) => void;
     onRowMouseLeave?: (d: Mutation[]) => void;
     generateGenomeNexusHgvsgUrl: (hgvsg: string) => string;
-    indexedAnnotatedMutationsByGenomicLocation?: {
-        [genomicLocation: string]: Mutation;
-    };
 }
 
 export enum MutationTableColumnType {
@@ -666,16 +663,7 @@ export default class MutationTable<
             download: ProteinChangeColumnFormatter.getTextValue,
             sortBy: (d: Mutation[]) =>
                 ProteinChangeColumnFormatter.getSortValue(d),
-            filter: (
-                data: Mutation[],
-                filterString: string,
-                filterStringUpper: string
-            ) =>
-                ProteinChangeColumnFormatter.getFilterValue(
-                    data,
-                    filterString,
-                    filterStringUpper
-                ),
+            filter: ProteinChangeColumnFormatter.getFilterValue,
         };
 
         this._columns[MutationTableColumnType.MUTATION_TYPE] = {

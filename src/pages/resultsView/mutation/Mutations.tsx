@@ -5,7 +5,7 @@ import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import ResultsViewMutationMapper from './ResultsViewMutationMapper';
 import { convertToMutationMapperProps } from 'shared/components/mutationMapper/MutationMapperConfig';
 import MutationMapperUserSelectionStore from 'shared/components/mutationMapper/MutationMapperUserSelectionStore';
-import { observable, computed, action, reaction } from 'mobx';
+import { computed, action } from 'mobx';
 import AppConfig from 'appConfig';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
 import autobind from 'autobind-decorator';
@@ -20,7 +20,6 @@ import {
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 import { Mutation } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
-import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ResultsViewURLWrapper from '../ResultsViewURLWrapper';
 
 export interface IMutationsPageProps {
