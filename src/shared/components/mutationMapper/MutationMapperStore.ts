@@ -10,7 +10,6 @@ import {
     groupOncoKbIndicatorDataByMutations,
     DefaultMutationMapperStore,
 } from 'react-mutation-mapper';
-
 import {
     defaultOncoKbIndicatorFilter,
     IHotspotIndex,
@@ -50,7 +49,6 @@ import MutationMapperDataStore from './MutationMapperDataStore';
 import {
     groupMutationsByProteinStartPos,
     countUniqueMutations,
-    indexMutationsByGenomicLocation,
 } from 'shared/lib/MutationUtils';
 
 import { IMutationMapperConfig } from './MutationMapperConfig';
@@ -240,29 +238,6 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
     @computed get processedMutationData(): Mutation[][] {
         // just convert Mutation[] to Mutation[][]
         return (this.mutationData.result || []).map(mutation => [mutation]);
-    }
-
-    @computed get indexedAnnotatedMutationsByGenomicLocation(): {
-        [genomicLocation: string]: Mutation;
-    } {
-        if (
-            this.activeTranscript.result &&
-            !_.isEmpty(this.indexedVariantAnnotations.result) &&
-            this.canonicalTranscript.isComplete
-        ) {
-            // overwrite mutations with annotated mutations
-            return indexMutationsByGenomicLocation(getMutationsByTranscriptId(
-                this.mutationData.result,
-                this.activeTranscript.result,
-                this.indexedVariantAnnotations.result!,
-                this.canonicalTranscript.result
-                    ? this.canonicalTranscript.result.transcriptId ===
-                          this.activeTranscript.result
-                    : false
-            ) as Mutation[]);
-        } else {
-            return {};
-        }
     }
 
     @computed get mergedAlignmentData(): IPdbChain[] {
