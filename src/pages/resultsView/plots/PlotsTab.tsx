@@ -65,12 +65,14 @@ import {
     getColoringMenuOptionValue,
     basicAppearance,
     getSuffixOfMolecularProfile,
+    getAxisDataSampleCount,
 } from './PlotsTabUtils';
 import {
     ClinicalAttribute,
     GenericAssayMeta,
     Gene,
     ClinicalData,
+    CancerStudy,
 } from 'cbioportal-ts-api-client';
 import Timer = NodeJS.Timer;
 import ScatterPlot from 'shared/components/plots/ScatterPlot';
@@ -82,6 +84,7 @@ import {
     DownloadControls,
     remoteData,
     wrapText,
+    DefaultTooltip,
 } from 'cbioportal-frontend-commons';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import BoxScatterPlot, {
@@ -114,6 +117,8 @@ import { SpecialAttribute } from '../../../shared/cache/ClinicalDataCache';
 import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledCheckbox';
 import CBIOPORTAL_VICTORY_THEME from '../../../shared/theme/cBioPoralTheme';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
+import SimpleTable from 'shared/components/simpleTable/SimpleTable';
+import { StudyLink } from 'shared/components/StudyLink/StudyLink';
 
 enum EventKey {
     horz_logScale,
@@ -454,6 +459,181 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 </ul>
             </div>
         );
+    }
+
+    @computed get renderTableHeaders() {
+        let thValues = [<th>Data Type</th>, <th>Profile</th>];
+        thValues = thValues.concat(
+            _.map(this.props.store.studies.result, study => {
+                return <th>{study.name}</th>;
+            })
+        );
+        return thValues;
+    }
+
+    @computed get renderTableRows() {
+        const rows: JSX.Element[] = [];
+        rows.push(<tr>✓✗</tr>);
+
+        return rows;
+    }
+
+    private makeStudyList(studies: CancerStudy[]) {
+        return (
+            <ul className="list-unstyled" style={{ marginBottom: 0 }}>
+                {studies.map((study: CancerStudy) => {
+                    return (
+                        <li>
+                            <StudyLink studyId={study.studyId}>
+                                {study.name}
+                            </StudyLink>
+                        </li>
+                    );
+                })}
+            </ul>
+        );
+    }
+
+    @computed get dataAvailability(): JSX.Element[] {
+        let components: JSX.Element[] = [];
+        if (
+            this.horzAxisDataPromise.isComplete &&
+            this.horzAxisDataPromise.result &&
+            this.vertAxisDataPromise.isComplete &&
+            this.vertAxisDataPromise.result
+        ) {
+            const horzAxisDataSampleCount = getAxisDataSampleCount(
+                this.horzAxisDataPromise.result
+            );
+            const vertAxisDataSampleCount = getAxisDataSampleCount(
+                this.vertAxisDataPromise.result
+            );
+
+            switch (this.horzSelection.dataType) {
+                case undefined:
+                    break;
+                // when no datatype is selected (`None`), return a resolved Promise that is of the `none` datatype
+                case NONE_SELECTED_OPTION_STRING_VALUE:
+                    break;
+                case CLIN_ATTR_DATA_TYPE:
+                    if (
+                        this.horzSelection.dataSourceId !== undefined &&
+                        this.clinicalAttributesGroupByclinicalAttributeId
+                            .isComplete &&
+                        this.props.store.studies.isComplete
+                    ) {
+                        const attributes = this
+                            .clinicalAttributesGroupByclinicalAttributeId
+                            .result![this.horzSelection.dataSourceId];
+                        const studyIds = attributes.map(
+                            attribute => attribute.studyId
+                        );
+                        const studies = this.props.store.studies.result.filter(
+                            study => studyIds.includes(study.studyId)
+                        );
+                        components.push(
+                            <DefaultTooltip
+                                placement="right"
+                                overlay={this.makeStudyList(studies)}
+                            >
+                                <span>{`horz: ${horzAxisDataSampleCount} from ${studies.length} studies`}</span>
+                            </DefaultTooltip>
+                        );
+                    }
+                    break;
+                default:
+                    // molecular profile
+                    if (
+                        this.horzSelection.dataSourceId !== undefined &&
+                        this.props.store
+                            .molecularProfileIdSuffixToMolecularProfiles
+                            .isComplete &&
+                        this.props.store.studies.isComplete
+                    ) {
+                        const studyIds = _.uniq(
+                            this.props.store.molecularProfileIdSuffixToMolecularProfiles.result[
+                                this.horzSelection.dataSourceId
+                            ].map(profile => profile.studyId)
+                        );
+                        const studies = this.props.store.studies.result.filter(
+                            study => studyIds.includes(study.studyId)
+                        );
+                        components.push(
+                            <DefaultTooltip
+                                placement="right"
+                                overlay={this.makeStudyList(studies)}
+                            >
+                                <span>{`horz: ${horzAxisDataSampleCount} from ${studies.length} studies`}</span>
+                            </DefaultTooltip>
+                        );
+                    }
+                    break;
+            }
+
+            switch (this.vertSelection.dataType) {
+                case undefined:
+                    break;
+                // when no datatype is selected (`None`), return a resolved Promise that is of the `none` datatype
+                case NONE_SELECTED_OPTION_STRING_VALUE:
+                    break;
+                case CLIN_ATTR_DATA_TYPE:
+                    if (
+                        this.vertSelection.dataSourceId !== undefined &&
+                        this.clinicalAttributesGroupByclinicalAttributeId
+                            .isComplete &&
+                        this.props.store.studies.isComplete
+                    ) {
+                        const attributes = this
+                            .clinicalAttributesGroupByclinicalAttributeId
+                            .result![this.vertSelection.dataSourceId];
+                        const studyIds = attributes.map(
+                            attribute => attribute.studyId
+                        );
+                        const studies = this.props.store.studies.result.filter(
+                            study => studyIds.includes(study.studyId)
+                        );
+                        components.push(
+                            <DefaultTooltip
+                                placement="right"
+                                overlay={this.makeStudyList(studies)}
+                            >
+                                <span>{`vert: ${vertAxisDataSampleCount} from ${studies.length} studies`}</span>
+                            </DefaultTooltip>
+                        );
+                    }
+                    break;
+                default:
+                    // molecular profile
+                    if (
+                        this.vertSelection.dataSourceId !== undefined &&
+                        this.props.store
+                            .molecularProfileIdSuffixToMolecularProfiles
+                            .isComplete &&
+                        this.props.store.studies.isComplete
+                    ) {
+                        const studyIds = _.uniq(
+                            this.props.store.molecularProfileIdSuffixToMolecularProfiles.result[
+                                this.vertSelection.dataSourceId
+                            ].map(profile => profile.studyId)
+                        );
+                        const studies = this.props.store.studies.result.filter(
+                            study => studyIds.includes(study.studyId)
+                        );
+                        components.push(
+                            <DefaultTooltip
+                                placement="right"
+                                overlay={this.makeStudyList(studies)}
+                            >
+                                <span>{`vert: ${vertAxisDataSampleCount} from ${studies.length} studies`}</span>
+                            </DefaultTooltip>
+                        );
+                    }
+                    break;
+            }
+        } else {
+            components.push(<LoadingIndicator isLoading={true} />);
+        }
+        return components;
     }
 
     // Determine whether the selected DataTypes support formatting options.
@@ -1838,6 +2018,23 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 c => c.clinicalAttributeId
             );
             return Promise.resolve(_map);
+        },
+    });
+
+    readonly clinicalAttributesGroupByclinicalAttributeId = remoteData<{
+        [clinicalAttributeId: string]: ClinicalAttribute[];
+    }>({
+        await: () => [
+            this.props.store.clinicalAttributes,
+            this.props.store.studyIds,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                _.groupBy(
+                    this.props.store.clinicalAttributes.result,
+                    c => c.clinicalAttributeId
+                )
+            );
         },
     });
 
@@ -4600,6 +4797,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     <div className="quickPlotsContainer">
                         <strong className="quickPlotsTitle">Examples: </strong>
                         {this.quickPlotButtons}
+                    </div>
+                    <div className="dataAvailabilityContainer">
+                        <strong className="dataAvailabilityTitle">
+                            Data Availability:{' '}
+                        </strong>
+                        {this.dataAvailability}
                     </div>
                     <div style={{ display: 'flex' }}>
                         <div className="leftColumn">

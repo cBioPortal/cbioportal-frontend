@@ -3221,6 +3221,14 @@ export function axisHasNegativeNumbers(axisData: IAxisData): boolean {
     return false;
 }
 
+export function getAxisDataSampleCount(axisData: IAxisData): number {
+    console.log(axisData);
+    return _.chain(axisData.data)
+        .uniqBy((d: any) => d.uniqueSampleKey)
+        .size()
+        .value();
+}
+
 export function getLimitValues(data: any[]): string[] {
     return _(data)
         .filter(d => {
