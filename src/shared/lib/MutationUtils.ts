@@ -367,24 +367,3 @@ export function isValidGenomicLocation(mutation: Partial<Mutation>): boolean {
 
     return false;
 }
-
-export function findMatchingAnnotatedMutation(
-    originalMutation: Mutation,
-    annotatedMutations: { [genomicLocation: string]: Mutation }
-) {
-    const genomicLocation = extractGenomicLocation(originalMutation);
-    return genomicLocation
-        ? annotatedMutations[genomicLocationString(genomicLocation)]
-        : undefined;
-}
-
-export function indexMutationsByGenomicLocation(
-    mutations: Mutation[]
-): { [genomicLocation: string]: Mutation } {
-    return _.keyBy(mutations, mutation => {
-        const genomicLocation = extractGenomicLocation(mutation);
-        return mutation && genomicLocation
-            ? genomicLocationString(genomicLocation)
-            : undefined;
-    });
-}

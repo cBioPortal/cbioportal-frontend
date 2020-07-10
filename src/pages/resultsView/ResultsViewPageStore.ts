@@ -34,15 +34,7 @@ import {
 } from 'cbioportal-ts-api-client';
 import client from 'shared/api/cbioportalClientInstance';
 import { remoteData, stringListToSet } from 'cbioportal-frontend-commons';
-import {
-    action,
-    computed,
-    observable,
-    ObservableMap,
-    reaction,
-    runInAction,
-    autorun,
-} from 'mobx';
+import { action, computed, observable, ObservableMap, reaction } from 'mobx';
 import {
     generateQueryVariantId,
     getProteinPositionFromProteinChange,
