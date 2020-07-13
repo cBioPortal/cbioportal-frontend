@@ -193,3 +193,15 @@
     margin-top: 0px !important;
     margin-bottom: 0px !important;
 }
+
+.dataAvailabilityAlert {
+    margin-bottom: 10px !important;
+    background-color: #eee !important;
+    border: none !important;
+    display: flex;
+
+    > div {
+        padding-top: 1px;
+        padding-left: 4px;
+    }
+}

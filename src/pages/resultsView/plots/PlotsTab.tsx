@@ -65,7 +65,7 @@ import {
     getColoringMenuOptionValue,
     basicAppearance,
     getSuffixOfMolecularProfile,
-    getAxisDataSampleCount,
+    getAxisDataOverlapSampleCount,
 } from './PlotsTabUtils';
 import {
     ClinicalAttribute,
@@ -104,6 +104,7 @@ import MultipleCategoryBarPlot from '../../../shared/components/plots/MultipleCa
 import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
 import onMobxPromise from '../../../shared/lib/onMobxPromise';
 import { showWaterfallPlot } from 'pages/resultsView/plots/PlotsTabUtils';
+import Pluralize from 'pluralize';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 import LastPlotsTabSelectionForDatatype from './LastPlotsTabSelectionForDatatype';
 import { generateQuickPlots } from './QuickPlots';
@@ -502,11 +503,26 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.vertAxisDataPromise.isComplete &&
             this.vertAxisDataPromise.result
         ) {
-            const horzAxisDataSampleCount = getAxisDataSampleCount(
-                this.horzAxisDataPromise.result
-            );
-            const vertAxisDataSampleCount = getAxisDataSampleCount(
+            const horzAxisDataSampleCount = this.horzAxisDataPromise.result.data
+                .length;
+            const vertAxisDataSampleCount = this.vertAxisDataPromise.result.data
+                .length;
+            const axisOverlapSampleCount = getAxisDataOverlapSampleCount(
+                this.horzAxisDataPromise.result,
                 this.vertAxisDataPromise.result
+            );
+
+            components.push(
+                <div>
+                    <div>
+                        The data on Horizontal Axis and Vertical Axis can come
+                        from different studies.
+                    </div>
+                    <div>
+                        Only data from studies that exist in both axes will be
+                        shown on the plots.
+                    </div>
+                </div>
             );
 
             switch (this.horzSelection.dataType) {
@@ -532,12 +548,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             study => studyIds.includes(study.studyId)
                         );
                         components.push(
-                            <DefaultTooltip
-                                placement="right"
-                                overlay={this.makeStudyList(studies)}
-                            >
-                                <span>{`horz: ${horzAxisDataSampleCount} from ${studies.length} studies`}</span>
-                            </DefaultTooltip>
+                            <div>
+                                <strong>Horizontal Axis: </strong>
+                                {`${horzAxisDataSampleCount} samples from ${
+                                    studies.length
+                                } ${Pluralize('study', studies.length)}:`}
+                                {this.makeStudyList(studies)}
+                            </div>
                         );
                     }
                     break;
@@ -559,12 +576,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             study => studyIds.includes(study.studyId)
                         );
                         components.push(
-                            <DefaultTooltip
-                                placement="right"
-                                overlay={this.makeStudyList(studies)}
-                            >
-                                <span>{`horz: ${horzAxisDataSampleCount} from ${studies.length} studies`}</span>
-                            </DefaultTooltip>
+                            <div>
+                                <strong>Horizontal Axis: </strong>
+                                {`${horzAxisDataSampleCount} samples from ${
+                                    studies.length
+                                } ${Pluralize('study', studies.length)}:`}
+                                {this.makeStudyList(studies)}
+                            </div>
                         );
                     }
                     break;
@@ -593,12 +611,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             study => studyIds.includes(study.studyId)
                         );
                         components.push(
-                            <DefaultTooltip
-                                placement="right"
-                                overlay={this.makeStudyList(studies)}
-                            >
-                                <span>{`vert: ${vertAxisDataSampleCount} from ${studies.length} studies`}</span>
-                            </DefaultTooltip>
+                            <div>
+                                <strong>Vertical Axis: </strong>
+                                {`${vertAxisDataSampleCount} samples from ${
+                                    studies.length
+                                } ${Pluralize('study', studies.length)}:`}
+                                {this.makeStudyList(studies)}
+                            </div>
                         );
                     }
                     break;
@@ -620,16 +639,24 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             study => studyIds.includes(study.studyId)
                         );
                         components.push(
-                            <DefaultTooltip
-                                placement="right"
-                                overlay={this.makeStudyList(studies)}
-                            >
-                                <span>{`vert: ${vertAxisDataSampleCount} from ${studies.length} studies`}</span>
-                            </DefaultTooltip>
+                            <div>
+                                <strong>Vertical Axis: </strong>
+                                {`${vertAxisDataSampleCount} samples from ${
+                                    studies.length
+                                } ${Pluralize('study', studies.length)}:`}
+                                {this.makeStudyList(studies)}
+                            </div>
                         );
                     }
                     break;
             }
+
+            components = [
+                <div className="alert alert-info dataAvailabilityAlert">
+                    {`There are ${axisOverlapSampleCount} samples matching both profiles (axis) will be shown `}
+                    <InfoIcon tooltip={<div>{components}</div>} />
+                </div>,
+            ];
         } else {
             components.push(<LoadingIndicator isLoading={true} />);
         }
@@ -4518,6 +4545,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 }
                 return (
                     <div>
+                        {this.dataAvailability}
                         <div
                             data-test="PlotsTabPlotDiv"
                             className="borderedChart posRelative"
@@ -4798,12 +4826,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         <strong className="quickPlotsTitle">Examples: </strong>
                         {this.quickPlotButtons}
                     </div>
-                    <div className="dataAvailabilityContainer">
+                    {/* <div className="dataAvailabilityContainer">
                         <strong className="dataAvailabilityTitle">
                             Data Availability:{' '}
                         </strong>
                         {this.dataAvailability}
-                    </div>
+                    </div> */}
                     <div style={{ display: 'flex' }}>
                         <div className="leftColumn">
                             {this.dataTypeOptions.isComplete &&
