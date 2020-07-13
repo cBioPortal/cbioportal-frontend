@@ -3221,12 +3221,23 @@ export function axisHasNegativeNumbers(axisData: IAxisData): boolean {
     return false;
 }
 
-export function getAxisDataSampleCount(axisData: IAxisData): number {
-    console.log(axisData);
-    return _.chain(axisData.data)
-        .uniqBy((d: any) => d.uniqueSampleKey)
-        .size()
-        .value();
+export function getAxisDataOverlapSampleCount(
+    firstAxisData: IAxisData,
+    secondAxisData: IAxisData
+): number {
+    // normally data from axis cannot be 0
+    // but for odered sample selection, data from axis are 0
+    // return the count from the other axis
+    if (firstAxisData.data.length == 0) {
+        return secondAxisData.data.length;
+    } else if (secondAxisData.data.length == 0) {
+        return firstAxisData.data.length;
+    }
+    return _.intersectionBy(
+        firstAxisData.data,
+        secondAxisData.data,
+        (d: any) => d.uniqueSampleKey
+    ).length;
 }
 
 export function getLimitValues(data: any[]): string[] {
