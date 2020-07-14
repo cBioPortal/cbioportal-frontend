@@ -3,8 +3,8 @@ import {
     generateQueryVariantId,
     IOncoKbData,
     LEVELS,
-} from 'cbioportal-frontend-commons';
-import { Mutation } from 'cbioportal-utils';
+    Mutation,
+} from 'cbioportal-utils';
 import { IndicatorQueryResp, TumorType } from 'oncokb-ts-api-client';
 
 // oncogenic value => oncogenic class name

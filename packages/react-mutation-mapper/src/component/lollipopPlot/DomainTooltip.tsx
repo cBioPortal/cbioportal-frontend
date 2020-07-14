@@ -3,7 +3,7 @@ import { computed } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
-import { MobxCache } from '../../model/MobxCache';
+import { MobxCache } from 'cbioportal-utils';
 
 export interface IDomainTooltipProps {
     mutationAlignerCache?: MobxCache<string>;

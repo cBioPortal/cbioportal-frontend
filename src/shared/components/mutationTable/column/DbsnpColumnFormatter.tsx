@@ -5,14 +5,10 @@ import { Mutation } from 'cbioportal-ts-api-client';
 import {
     getMyVariantInfoAnnotation,
     IMyVariantInfoIndex,
+    RemoteData,
 } from 'cbioportal-utils';
 import { MyVariantInfo, VariantAnnotation } from 'genome-nexus-ts-api-client';
-import {
-    Dbsnp,
-    dbsnpDownload,
-    dbsnpSortValue,
-    RemoteData,
-} from 'react-mutation-mapper';
+import { Dbsnp, dbsnpDownload, dbsnpSortValue } from 'react-mutation-mapper';
 
 export default class DbsnpColumnFormatter {
     public static renderFunction(

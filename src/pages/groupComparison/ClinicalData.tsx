@@ -6,11 +6,8 @@ import { action, autorun, computed, IReactionDisposer, observable } from 'mobx';
 import { SimpleGetterLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import ClinicalDataEnrichmentsTable from './ClinicalDataEnrichmentsTable';
 import _ from 'lodash';
-import {
-    DownloadControls,
-    getMobxPromiseGroupStatus,
-    remoteData,
-} from 'cbioportal-frontend-commons';
+import { DownloadControls, remoteData } from 'cbioportal-frontend-commons';
+import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import client from 'shared/api/cbioportalClientInstance';
 import {
     basicAppearance,
@@ -617,7 +614,7 @@ export default class ClinicalData extends React.Component<
             return <span></span>;
         }
         const promises = [this.horzAxisDataPromise, this.vertAxisDataPromise];
-        const groupStatus = getMobxPromiseGroupStatus(...promises);
+        const groupStatus = getRemoteDataGroupStatus(...promises);
         const isPercentage = this.plotType === PlotType.PercentageStackedBar;
         const isStacked = isPercentage || this.plotType === PlotType.StackedBar;
         switch (groupStatus) {

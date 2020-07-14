@@ -10,10 +10,10 @@ import {
 import {
     capitalize,
     FadeInteraction,
-    getMobxPromiseGroupStatus,
     remoteData,
     svgToPdfDownload,
 } from 'cbioportal-frontend-commons';
+import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import Oncoprint, {
     ClinicalTrackSpec,
     GENETIC_TRACK_GROUP_INDEX,
@@ -1570,7 +1570,7 @@ export default class ResultsViewOncoprint extends React.Component<
 
     @computed get isLoading() {
         return (
-            getMobxPromiseGroupStatus(
+            getRemoteDataGroupStatus(
                 this.clinicalTracks,
                 this.geneticTracks,
                 this.genesetHeatmapTracks,

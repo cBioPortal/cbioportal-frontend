@@ -1,8 +1,6 @@
-import { Mutation } from 'cbioportal-utils';
-
+import { Mutation } from '../model/Mutation';
 import { IMyCancerGenome, IMyCancerGenomeData } from '../model/MyCancerGenome';
-
-import myCancerGenomeJson from '../resources/mycancergenome.json';
+import myCancerGenomeJson from './mycancergenome.json';
 
 export function getMyCancerGenomeLinks(
     mutation: Partial<Mutation>,

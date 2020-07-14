@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { IHotspotIndex, indexHotspots } from 'react-mutation-mapper';
+import { IHotspotIndex, indexHotspots } from 'cbioportal-utils';
 import { isRecurrentHotspot, is3dHotspot } from './AnnotationUtils';
 import { initMutation } from 'test/MutationMockUtils';
 

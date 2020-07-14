@@ -1,8 +1,8 @@
 import { computed } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
+import { formatPercentValue } from 'cbioportal-utils';
 
-import { formatPercentValue } from '../../util/FormatUtils';
 import BadgeSelector, {
     BadgeSelectorOption,
     BadgeSelectorProps,

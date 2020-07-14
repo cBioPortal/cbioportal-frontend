@@ -1,4 +1,5 @@
 import { DownloadControls, EditableSpan } from 'cbioportal-frontend-commons';
+import { numberOfLeadingDecimalZeros } from 'cbioportal-utils';
 import classnames from 'classnames';
 import _ from 'lodash';
 import * as React from 'react';
@@ -6,7 +7,6 @@ import Slider from 'react-rangeslider';
 import { computed } from 'mobx';
 import { observer } from 'mobx-react';
 
-import { numberOfLeadingDecimalZeros } from '../../util/FormatUtils';
 import { calcYMaxInput } from '../../util/LollipopPlotUtils';
 import TrackSelector, {
     TrackDataStatus,
