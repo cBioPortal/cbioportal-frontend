@@ -17,8 +17,14 @@ import {
     getWaterfallPlotDownloadData,
     getLimitValues,
     deriveDisplayTextFromGenericAssayType,
+    getSuffixOfMolecularProfile,
 } from './PlotsTabUtils';
-import { Mutation, Sample, Gene } from 'cbioportal-ts-api-client';
+import {
+    Mutation,
+    Sample,
+    Gene,
+    MolecularProfile,
+} from 'cbioportal-ts-api-client';
 import {
     AlterationTypeConstants,
     AnnotatedNumericGeneMolecularData,
@@ -879,6 +885,18 @@ describe('PlotsTabUtils', () => {
                 true
             );
             assert.equal(displayText, derivedText);
+        });
+    });
+
+    describe('getSuffixOfMolecularProfile', () => {
+        it('get suffix correctly from molecular profile', () => {
+            const profile = {
+                molecularProfileId: 'ccle_broad_2019_CCLE_drug_treatment_IC50',
+                studyId: 'ccle_broad_2019',
+            } as MolecularProfile;
+            const suffix = 'CCLE_drug_treatment_IC50';
+            const result = getSuffixOfMolecularProfile(profile);
+            assert.equal(result, suffix);
         });
     });
 });
