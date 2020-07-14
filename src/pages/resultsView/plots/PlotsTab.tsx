@@ -1,13 +1,5 @@
 import * as React from 'react';
-import {
-    action,
-    autorun,
-    computed,
-    IReactionDisposer,
-    observable,
-    runInAction,
-    whyRun,
-} from 'mobx';
+import { action, computed, observable, runInAction } from 'mobx';
 import { Observer, observer } from 'mobx-react';
 import './styles.scss';
 import {
@@ -59,7 +51,6 @@ import {
     WATERFALLPLOT_SIDELENGTH,
     WATERFALLPLOT_SIDELENGTH_SAMPLE_MULTIPLICATION_FACTOR,
     deriveDisplayTextFromGenericAssayType,
-    NO_GENE_OPTION,
     bothAxesNoMolecularProfile,
     waterfallPlotTooltip,
     getColoringMenuOptionValue,
@@ -72,7 +63,6 @@ import {
     GenericAssayMeta,
     Gene,
     ClinicalData,
-    CancerStudy,
 } from 'cbioportal-ts-api-client';
 import Timer = NodeJS.Timer;
 import ScatterPlot from 'shared/components/plots/ScatterPlot';
@@ -84,7 +74,6 @@ import {
     DownloadControls,
     remoteData,
     wrapText,
-    DefaultTooltip,
 } from 'cbioportal-frontend-commons';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import BoxScatterPlot, {
@@ -110,16 +99,12 @@ import LastPlotsTabSelectionForDatatype from './LastPlotsTabSelectionForDatatype
 import { generateQuickPlots } from './QuickPlots';
 import ResultsViewURLWrapper, {
     PlotsSelectionParam,
-    ResultsViewURLQuery,
 } from '../ResultsViewURLWrapper';
-import { Mutable } from '../../../shared/lib/TypeScriptUtils';
 import MobxPromise from 'mobxpromise';
 import { SpecialAttribute } from '../../../shared/cache/ClinicalDataCache';
 import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledCheckbox';
 import CBIOPORTAL_VICTORY_THEME from '../../../shared/theme/cBioPoralTheme';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
-import SimpleTable from 'shared/components/simpleTable/SimpleTable';
-import { StudyLink } from 'shared/components/StudyLink/StudyLink';
 
 enum EventKey {
     horz_logScale,
@@ -462,204 +447,157 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         );
     }
 
-    @computed get renderTableHeaders() {
-        let thValues = [<th>Data Type</th>, <th>Profile</th>];
-        thValues = thValues.concat(
-            _.map(this.props.store.studies.result, study => {
-                return <th>{study.name}</th>;
-            })
-        );
-        return thValues;
-    }
-
-    @computed get renderTableRows() {
-        const rows: JSX.Element[] = [];
-        rows.push(<tr>✓✗</tr>);
-
-        return rows;
-    }
-
-    private makeStudyList(studies: CancerStudy[]) {
-        return (
-            <ul className="list-unstyled" style={{ marginBottom: 0 }}>
-                {studies.map((study: CancerStudy) => {
-                    return (
-                        <li>
-                            <StudyLink studyId={study.studyId}>
-                                {study.name}
-                            </StudyLink>
-                        </li>
-                    );
-                })}
-            </ul>
-        );
-    }
-
     @computed get dataAvailability(): JSX.Element[] {
         let components: JSX.Element[] = [];
-        if (
-            this.horzAxisDataPromise.isComplete &&
-            this.horzAxisDataPromise.result &&
-            this.vertAxisDataPromise.isComplete &&
-            this.vertAxisDataPromise.result
-        ) {
-            const horzAxisDataSampleCount = this.horzAxisDataPromise.result.data
-                .length;
-            const vertAxisDataSampleCount = this.vertAxisDataPromise.result.data
-                .length;
-            const axisOverlapSampleCount = getAxisDataOverlapSampleCount(
-                this.horzAxisDataPromise.result,
-                this.vertAxisDataPromise.result
-            );
 
-            components.push(
+        // data await in plot(), this.horzAxisDataPromise.result and this.vertAxisDataPromise.result is ready
+        const horzAxisDataSampleCount = this.horzAxisDataPromise.result!.data
+            .length;
+        const vertAxisDataSampleCount = this.vertAxisDataPromise.result!.data
+            .length;
+        const axisOverlapSampleCount = getAxisDataOverlapSampleCount(
+            this.horzAxisDataPromise.result!,
+            this.vertAxisDataPromise.result!
+        );
+
+        components.push(
+            <div>
                 <div>
-                    <div>
-                        The data on Horizontal Axis and Vertical Axis can come
-                        from different studies.
-                    </div>
-                    <div>
-                        Only data from studies that exist in both axes will be
-                        shown on the plots.
-                    </div>
+                    The data on Horizontal Axis and Vertical Axis can come from
+                    different studies.
                 </div>
-            );
+                <div>
+                    Only data from studies that exist in both axes will be shown
+                    on the plots.
+                </div>
+            </div>
+        );
 
-            switch (this.horzSelection.dataType) {
-                case undefined:
-                    break;
-                // when no datatype is selected (`None`), return a resolved Promise that is of the `none` datatype
-                case NONE_SELECTED_OPTION_STRING_VALUE:
-                    break;
-                case CLIN_ATTR_DATA_TYPE:
-                    if (
-                        this.horzSelection.dataSourceId !== undefined &&
-                        this.clinicalAttributesGroupByclinicalAttributeId
-                            .isComplete &&
-                        this.props.store.studies.isComplete
-                    ) {
-                        const attributes = this
-                            .clinicalAttributesGroupByclinicalAttributeId
-                            .result![this.horzSelection.dataSourceId];
-                        const studyIds = attributes.map(
-                            attribute => attribute.studyId
-                        );
-                        const studies = this.props.store.studies.result.filter(
-                            study => studyIds.includes(study.studyId)
-                        );
-                        components.push(
-                            <div>
-                                <strong>Horizontal Axis: </strong>
-                                {`${horzAxisDataSampleCount} samples from ${
-                                    studies.length
-                                } ${Pluralize('study', studies.length)}:`}
-                                {this.makeStudyList(studies)}
-                            </div>
-                        );
-                    }
-                    break;
-                default:
-                    // molecular profile
-                    if (
-                        this.horzSelection.dataSourceId !== undefined &&
-                        this.props.store
-                            .molecularProfileIdSuffixToMolecularProfiles
-                            .isComplete &&
-                        this.props.store.studies.isComplete
-                    ) {
-                        const studyIds = _.uniq(
-                            this.props.store.molecularProfileIdSuffixToMolecularProfiles.result[
-                                this.horzSelection.dataSourceId
-                            ].map(profile => profile.studyId)
-                        );
-                        const studies = this.props.store.studies.result.filter(
-                            study => studyIds.includes(study.studyId)
-                        );
-                        components.push(
-                            <div>
-                                <strong>Horizontal Axis: </strong>
-                                {`${horzAxisDataSampleCount} samples from ${
-                                    studies.length
-                                } ${Pluralize('study', studies.length)}:`}
-                                {this.makeStudyList(studies)}
-                            </div>
-                        );
-                    }
-                    break;
-            }
-
-            switch (this.vertSelection.dataType) {
-                case undefined:
-                    break;
-                // when no datatype is selected (`None`), return a resolved Promise that is of the `none` datatype
-                case NONE_SELECTED_OPTION_STRING_VALUE:
-                    break;
-                case CLIN_ATTR_DATA_TYPE:
-                    if (
-                        this.vertSelection.dataSourceId !== undefined &&
-                        this.clinicalAttributesGroupByclinicalAttributeId
-                            .isComplete &&
-                        this.props.store.studies.isComplete
-                    ) {
-                        const attributes = this
-                            .clinicalAttributesGroupByclinicalAttributeId
-                            .result![this.vertSelection.dataSourceId];
-                        const studyIds = attributes.map(
-                            attribute => attribute.studyId
-                        );
-                        const studies = this.props.store.studies.result.filter(
-                            study => studyIds.includes(study.studyId)
-                        );
-                        components.push(
-                            <div>
-                                <strong>Vertical Axis: </strong>
-                                {`${vertAxisDataSampleCount} samples from ${
-                                    studies.length
-                                } ${Pluralize('study', studies.length)}:`}
-                                {this.makeStudyList(studies)}
-                            </div>
-                        );
-                    }
-                    break;
-                default:
-                    // molecular profile
-                    if (
-                        this.vertSelection.dataSourceId !== undefined &&
-                        this.props.store
-                            .molecularProfileIdSuffixToMolecularProfiles
-                            .isComplete &&
-                        this.props.store.studies.isComplete
-                    ) {
-                        const studyIds = _.uniq(
-                            this.props.store.molecularProfileIdSuffixToMolecularProfiles.result[
-                                this.vertSelection.dataSourceId
-                            ].map(profile => profile.studyId)
-                        );
-                        const studies = this.props.store.studies.result.filter(
-                            study => studyIds.includes(study.studyId)
-                        );
-                        components.push(
-                            <div>
-                                <strong>Vertical Axis: </strong>
-                                {`${vertAxisDataSampleCount} samples from ${
-                                    studies.length
-                                } ${Pluralize('study', studies.length)}:`}
-                                {this.makeStudyList(studies)}
-                            </div>
-                        );
-                    }
-                    break;
-            }
-
-            components = [
-                <div className="alert alert-info dataAvailabilityAlert">
-                    {`There are ${axisOverlapSampleCount} samples matching both profiles (axis) will be shown `}
-                    <InfoIcon tooltip={<div>{components}</div>} />
-                </div>,
-            ];
-        } else {
-            components.push(<LoadingIndicator isLoading={true} />);
+        // add information for Horizontal Axis
+        switch (this.horzSelection.dataType) {
+            case undefined:
+                break;
+            // when no datatype is selected (`None`)
+            case NONE_SELECTED_OPTION_STRING_VALUE:
+                break;
+            case CLIN_ATTR_DATA_TYPE:
+                if (
+                    this.horzSelection.dataSourceId !== undefined &&
+                    this.clinicalAttributesGroupByclinicalAttributeId.isComplete
+                ) {
+                    const attributes = this
+                        .clinicalAttributesGroupByclinicalAttributeId.result![
+                        this.horzSelection.dataSourceId
+                    ];
+                    const studyIds = attributes.map(
+                        attribute => attribute.studyId
+                    );
+                    const studies = this.props.store.studies.result.filter(
+                        study => studyIds.includes(study.studyId)
+                    );
+                    components.push(
+                        <div>
+                            <strong>Horizontal Axis: </strong>
+                            {`${horzAxisDataSampleCount} samples from ${
+                                studies.length
+                            } ${Pluralize('study', studies.length)}:`}
+                        </div>
+                    );
+                }
+                break;
+            default:
+                // molecular profile
+                if (
+                    this.horzSelection.dataSourceId !== undefined &&
+                    this.props.store.molecularProfileIdSuffixToMolecularProfiles
+                        .isComplete
+                ) {
+                    const studyIds = _.uniq(
+                        this.props.store.molecularProfileIdSuffixToMolecularProfiles.result[
+                            this.horzSelection.dataSourceId
+                        ].map(profile => profile.studyId)
+                    );
+                    const studies = this.props.store.studies.result.filter(
+                        study => studyIds.includes(study.studyId)
+                    );
+                    components.push(
+                        <div>
+                            <strong>Horizontal Axis: </strong>
+                            {`${horzAxisDataSampleCount} samples from ${
+                                studies.length
+                            } ${Pluralize('study', studies.length)}:`}
+                        </div>
+                    );
+                }
+                break;
         }
+
+        // add information for Vertical Axis
+        switch (this.vertSelection.dataType) {
+            case undefined:
+                break;
+            // when no datatype is selected (`None`)
+            case NONE_SELECTED_OPTION_STRING_VALUE:
+                break;
+            case CLIN_ATTR_DATA_TYPE:
+                if (
+                    this.vertSelection.dataSourceId !== undefined &&
+                    this.clinicalAttributesGroupByclinicalAttributeId.isComplete
+                ) {
+                    const attributes = this
+                        .clinicalAttributesGroupByclinicalAttributeId.result![
+                        this.vertSelection.dataSourceId
+                    ];
+                    const studyIds = attributes.map(
+                        attribute => attribute.studyId
+                    );
+                    const studies = this.props.store.studies.result.filter(
+                        study => studyIds.includes(study.studyId)
+                    );
+                    components.push(
+                        <div>
+                            <strong>Vertical Axis: </strong>
+                            {`${vertAxisDataSampleCount} samples from ${
+                                studies.length
+                            } ${Pluralize('study', studies.length)}:`}
+                        </div>
+                    );
+                }
+                break;
+            default:
+                // molecular profile
+                if (
+                    this.vertSelection.dataSourceId !== undefined &&
+                    this.props.store.molecularProfileIdSuffixToMolecularProfiles
+                        .isComplete
+                ) {
+                    const studyIds = _.uniq(
+                        this.props.store.molecularProfileIdSuffixToMolecularProfiles.result[
+                            this.vertSelection.dataSourceId
+                        ].map(profile => profile.studyId)
+                    );
+                    const studies = this.props.store.studies.result.filter(
+                        study => studyIds.includes(study.studyId)
+                    );
+                    components.push(
+                        <div>
+                            <strong>Vertical Axis: </strong>
+                            {`${vertAxisDataSampleCount} samples from ${
+                                studies.length
+                            } ${Pluralize('study', studies.length)}:`}
+                        </div>
+                    );
+                }
+                break;
+        }
+
+        components = [
+            <div className="alert alert-info dataAvailabilityAlert">
+                {`There are ${axisOverlapSampleCount} samples matching both profiles (axis) will be shown `}
+                <InfoIcon tooltip={<div>{components}</div>} />
+            </div>,
+        ];
+
         return components;
     }
 
@@ -4214,6 +4152,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.vertLabel,
             this.genericEntitiesGroupByEntityId,
             this.horzGenericAssayOptions,
+            this.props.store.studies,
         ];
         if (this.coloringClinicalDataPromise) {
             promises.push(this.coloringClinicalDataPromise);
@@ -4545,7 +4484,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 }
                 return (
                     <div>
-                        {this.dataAvailability}
+                        {this.props.store.studies.result.length > 1 &&
+                            this.dataAvailability}
                         <div
                             data-test="PlotsTabPlotDiv"
                             className="borderedChart posRelative"
@@ -4826,12 +4766,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         <strong className="quickPlotsTitle">Examples: </strong>
                         {this.quickPlotButtons}
                     </div>
-                    {/* <div className="dataAvailabilityContainer">
-                        <strong className="dataAvailabilityTitle">
-                            Data Availability:{' '}
-                        </strong>
-                        {this.dataAvailability}
-                    </div> */}
                     <div style={{ display: 'flex' }}>
                         <div className="leftColumn">
                             {this.dataTypeOptions.isComplete &&
