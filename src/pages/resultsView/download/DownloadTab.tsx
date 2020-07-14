@@ -53,11 +53,8 @@ import styles from './styles.module.scss';
 import classNames from 'classnames';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
 import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/WindowWidthBox';
-import {
-    DefaultTooltip,
-    getMobxPromiseGroupStatus,
-    remoteData,
-} from 'cbioportal-frontend-commons';
+import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
+import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import onMobxPromise from 'shared/lib/onMobxPromise';
 import {
@@ -617,7 +614,7 @@ export default class DownloadTab extends React.Component<
     });
 
     public render() {
-        const status = getMobxPromiseGroupStatus(
+        const status = getRemoteDataGroupStatus(
             this.geneAlterationData,
             this.caseAlterationData,
             this.oqls,

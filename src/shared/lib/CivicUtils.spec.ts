@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import { MobxPromise } from 'mobxpromise';
-import { getCivicEntry } from 'react-mutation-mapper';
+import { getCivicEntry } from 'cbioportal-utils';
 
 import { Mutation } from 'cbioportal-ts-api-client';
 import { fetchCivicGenes, fetchCivicVariants } from './CivicUtils';

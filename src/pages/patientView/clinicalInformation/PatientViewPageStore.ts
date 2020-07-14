@@ -21,7 +21,6 @@ import internalClient from '../../../shared/api/cbioportalInternalClientInstance
 import { computed, observable, action, runInAction } from 'mobx';
 import {
     getBrowserWindow,
-    IOncoKbData,
     remoteData,
     stringListToSet,
 } from 'cbioportal-frontend-commons';
@@ -43,13 +42,8 @@ import {
     GenomeNexusAPIInternal,
 } from 'genome-nexus-ts-api-client';
 import {
-    getMyCancerGenomeData,
-    ICivicGene,
-    ICivicVariant,
-    IHotspotIndex,
-    IMyCancerGenomeData,
-    indexHotspotsData,
     ONCOKB_DEFAULT_INFO,
+    USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
 } from 'react-mutation-mapper';
 import { ClinicalInformationData } from 'shared/model/ClinicalInformation';
 import VariantCountCache from 'shared/cache/VariantCountCache';
@@ -128,10 +122,16 @@ import { getGeneFilterDefault } from './PatientViewPageStoreUtil';
 import { checkNonProfiledGenesExist } from '../PatientViewPageUtils';
 import autobind from 'autobind-decorator';
 import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mutationMapper/MutationMapperUtils';
-import { USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB } from 'react-mutation-mapper';
 import {
-    getMyVariantInfoAnnotationsFromIndexedVariantAnnotations,
+    ICivicGene,
+    ICivicVariant,
+    IHotspotIndex,
+    IMyCancerGenomeData,
+    indexHotspotsData,
     IMyVariantInfoIndex,
+    getMyCancerGenomeData,
+    getMyVariantInfoAnnotationsFromIndexedVariantAnnotations,
+    IOncoKbData,
 } from 'cbioportal-utils';
 
 type PageMode = 'patient' | 'sample';

@@ -57,7 +57,7 @@ function createVariantMap(
 /**
  * CIViC
  */
-export default class CivicAPI {
+export class CivicAPI {
     /**
      * Retrieves the gene entries for the ids given, if they are in the Civic API.
      */
@@ -114,3 +114,5 @@ export default class CivicAPI {
             });
     }
 }
+
+export default CivicAPI;

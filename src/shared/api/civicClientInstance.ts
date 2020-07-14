@@ -1,4 +1,4 @@
-import { CivicAPI } from 'react-mutation-mapper';
+import { CivicAPI } from 'cbioportal-utils';
 
 const client = new CivicAPI();
 

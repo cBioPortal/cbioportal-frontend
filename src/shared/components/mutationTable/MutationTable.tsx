@@ -51,19 +51,16 @@ import { IColumnVisibilityControlsProps } from '../columnVisibilityControls/Colu
 import {
     generateQueryVariantId,
     IOncoKbData,
-} from 'cbioportal-frontend-commons';
-import { IMyVariantInfoIndex } from 'cbioportal-utils';
-import { VariantAnnotation } from 'genome-nexus-ts-api-client';
-import { CancerGene } from 'oncokb-ts-api-client';
-import {
-    getAnnotationData,
-    IAnnotation,
     ICivicGene,
     ICivicVariant,
     IHotspotIndex,
     IMyCancerGenomeData,
     RemoteData,
-} from 'react-mutation-mapper';
+} from 'cbioportal-utils';
+import { IMyVariantInfoIndex } from 'cbioportal-utils';
+import { VariantAnnotation } from 'genome-nexus-ts-api-client';
+import { CancerGene } from 'oncokb-ts-api-client';
+import { getAnnotationData, IAnnotation } from 'react-mutation-mapper';
 import HgvscColumnFormatter from './column/HgvscColumnFormatter';
 import HgvsgColumnFormatter from './column/HgvsgColumnFormatter';
 import GnomadColumnFormatter from './column/GnomadColumnFormatter';

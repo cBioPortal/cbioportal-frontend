@@ -8,9 +8,9 @@ import {
     DefaultTooltip,
     EllipsisTextTooltip,
 } from 'cbioportal-frontend-commons';
+import { MobxCache } from 'cbioportal-utils';
 import { PostTranslationalModification } from 'genome-nexus-ts-api-client';
 
-import { MobxCache } from '../../model/MobxCache';
 import MutationMapperStore from '../../model/MutationMapperStore';
 import { compareByPtmTypePriority, ptmColor } from '../../util/PtmUtils';
 import PtmAnnotationTable from '../ptm/PtmAnnotationTable';
