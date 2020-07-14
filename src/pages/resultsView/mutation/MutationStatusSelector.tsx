@@ -3,13 +3,13 @@ import { observer } from 'mobx-react';
 import * as React from 'react';
 import {
     BadgeLabel,
-    formatPercentValue,
     MUTATION_STATUS_BADGE_STYLE_OVERRIDE,
     MutationStatusBadgeSelector,
     MutationStatusBadgeSelectorProps,
 } from 'react-mutation-mapper';
 
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { formatPercentValue } from 'cbioportal-utils';
 
 export function getFilterOptionLabel(content: {
     title: string;

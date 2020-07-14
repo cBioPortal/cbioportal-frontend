@@ -47,11 +47,13 @@ import {
 import oncokbClient from 'shared/api/oncokbClientInstance';
 import genomeNexusClient from 'shared/api/genomeNexusClientInstance';
 import {
+    EvidenceType,
     generateAnnotateStructuralVariantQuery,
     generateCopyNumberAlterationQuery,
     generateIdToIndicatorMap,
     generateProteinChangeQuery,
-} from 'cbioportal-frontend-commons';
+    IOncoKbData,
+} from 'cbioportal-utils';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
 import { MobxPromise } from 'mobxpromise';
 import { keywordToCosmic } from 'shared/lib/AnnotationUtils';
@@ -77,7 +79,6 @@ import {
     OncoKbAPI,
     OncoKBInfo,
 } from 'oncokb-ts-api-client';
-import { EvidenceType, IOncoKbData } from 'cbioportal-frontend-commons';
 import { REFERENCE_GENOME } from './referenceGenomeUtils';
 import {
     DEFAULT_SURVIVAL_PRIORITY,

@@ -1,8 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
-
-import { parseMyCancerGenomeLink } from '../../util/MyCancerGenomeUtils';
+import { parseMyCancerGenomeLink } from 'cbioportal-utils';
 
 import mcgLogo from '../../images/mcg_logo.png';
 import annotationStyles from '../column/annotation.module.scss';

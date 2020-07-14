@@ -1,9 +1,7 @@
-import {
-    cachePostMethodsOnClient,
-    IOncoKbData,
-} from 'cbioportal-frontend-commons';
+import { cachePostMethodsOnClient } from 'cbioportal-frontend-commons';
 import {
     indexAnnotationsByGenomicLocation,
+    IOncoKbData,
     Mutation,
     uniqueGenomicLocations,
 } from 'cbioportal-utils';

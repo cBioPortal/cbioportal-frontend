@@ -1,7 +1,12 @@
 import autobind from 'autobind-decorator';
 import MobxPromise from 'mobxpromise';
-import { IOncoKbData } from 'cbioportal-frontend-commons';
-import { Mutation } from 'cbioportal-utils';
+import {
+    defaultHotspotFilter,
+    IHotspotIndex,
+    IOncoKbData,
+    isHotspot,
+    Mutation,
+} from 'cbioportal-utils';
 
 import { HotspotFilter } from '../filter/HotspotFilter';
 import { MutationFilter } from '../filter/MutationFilter';
@@ -9,10 +14,8 @@ import { MutationStatusFilter } from '../filter/MutationStatusFilter';
 import { OncoKbFilter } from '../filter/OncoKbFilter';
 import { PositionFilter } from '../filter/PositionFilter';
 import { ProteinImpactTypeFilter } from '../filter/ProteinImpactTypeFilter';
-import { IHotspotIndex } from '../model/CancerHotspot';
 import { DataFilter, DataFilterType } from '../model/DataFilter';
 import { ApplyFilterFn, FilterApplier } from '../model/FilterApplier';
-import { defaultHotspotFilter, isHotspot } from '../util/CancerHotspotsUtils';
 import {
     applyDefaultMutationFilter,
     applyDefaultMutationStatusFilter,
