@@ -29,6 +29,7 @@ import groupComparisonStyles from '../../../pages/groupComparison/styles.module.
 import styles from '../../groupComparison/styles.module.scss';
 import GroupSelector from '../../groupComparison/groupSelector/GroupSelector';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
+import MethylationEnrichments from 'pages/groupComparison/MethylationEnrichments';
 
 export interface IComparisonTabProps {
     urlWrapper: ResultsViewURLWrapper;
@@ -123,6 +124,7 @@ export default class ComparisonTab extends React.Component<
             this.store.copyNumberEnrichmentProfiles,
             this.store.mRNAEnrichmentProfiles,
             this.store.proteinEnrichmentProfiles,
+            this.store.methylationEnrichmentProfiles,
             this.store.survivalClinicalDataExists,
         ],
         render: () => {
@@ -218,6 +220,22 @@ export default class ComparisonTab extends React.Component<
                             }
                         >
                             <ProteinEnrichments
+                                store={this.store}
+                                resultsViewMode={true}
+                            />
+                        </MSKTab>
+                    )}
+                    {this.store.showMethylationTab && (
+                        <MSKTab
+                            id={ResultsViewComparisonSubTab.METHYLATION}
+                            linkText="Methylation"
+                            anchorClassName={
+                                this.store.methylationTabUnavailable
+                                    ? 'greyedOut'
+                                    : ''
+                            }
+                        >
+                            <MethylationEnrichments
                                 store={this.store}
                                 resultsViewMode={true}
                             />
