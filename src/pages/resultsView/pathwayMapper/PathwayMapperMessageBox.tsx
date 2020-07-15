@@ -2,8 +2,7 @@ import * as React from 'react';
 import FontAwesome from 'react-fontawesome';
 
 interface PathwayMapperMessageBoxProps {
-    message: string | null;
-    defaultMessage: string;
+    message: string;
     loadingMessage: string;
     onClearMessage: () => void;
 }
@@ -11,8 +10,7 @@ const PathwayMapperMessageBox: React.SFC<
     PathwayMapperMessageBoxProps
 > = props => {
     const message = props.message;
-    const isWarningMessage =
-        message !== props.loadingMessage && message !== props.defaultMessage;
+    const isWarningMessage = message !== props.loadingMessage;
 
     return (
         <div
@@ -23,21 +21,16 @@ const PathwayMapperMessageBox: React.SFC<
             style={{
                 marginLeft: '1%',
                 marginBottom: '0px',
-                color: message !== props.defaultMessage ? 'black' : 'gray',
+                color: 'black',
                 maxHeight: '35px',
                 overflowY: 'auto',
+                display: message.length == 0 ? 'none' : 'block',
             }}
         >
             <button
                 type="button"
                 className="close"
-                onClick={() => {
-                    props.onClearMessage();
-                }}
-                style={{
-                    display:
-                        message !== props.defaultMessage ? 'block' : 'none',
-                }}
+                onClick={props.onClearMessage}
             >
                 <FontAwesome name="times" />
             </button>

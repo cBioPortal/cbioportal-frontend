@@ -37,7 +37,6 @@ interface IResultsViewPathwayMapperProps {
     urlWrapper: ResultsViewURLWrapper;
 }
 
-const DEFAULT_MESSAGE = 'Welcome to Pathways tab...';
 const LOADING_MESSAGE = 'Loading alteration data...';
 
 @observer
@@ -93,7 +92,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
 
     @computed get message(): string {
         if (this.isNewStoreReady && this.warningMessage === LOADING_MESSAGE) {
-            return DEFAULT_MESSAGE;
+            return '';
         }
 
         if (
@@ -105,7 +104,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
         }
 
         if (!this.warningMessage) {
-            return DEFAULT_MESSAGE;
+            return '';
         }
 
         return this.warningMessage;
@@ -214,7 +213,6 @@ export default class ResultsViewPathwayMapper extends React.Component<
 
                             <PathwayMapperMessageBox
                                 message={this.message}
-                                defaultMessage={DEFAULT_MESSAGE}
                                 loadingMessage={LOADING_MESSAGE}
                                 onClearMessage={this.clearMessage}
                             />
