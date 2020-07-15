@@ -37,6 +37,7 @@ import {
     pickMRNAEnrichmentProfiles,
     pickMutationEnrichmentProfiles,
     pickProteinEnrichmentProfiles,
+    pickMethylationEnrichmentProfiles,
 } from '../../../pages/resultsView/enrichments/EnrichmentsUtil';
 import { makeEnrichmentDataPromise } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
 import internalClient from '../../api/cbioportalInternalClientInstance';
@@ -115,6 +116,12 @@ export default class ComparisonStore {
                     GroupComparisonTab.PROTEIN,
                     !!this.tabHasBeenShown.get(GroupComparisonTab.PROTEIN) ||
                         this.showProteinTab
+                );
+                this.tabHasBeenShown.set(
+                    GroupComparisonTab.METHYLATION,
+                    !!this.tabHasBeenShown.get(
+                        GroupComparisonTab.METHYLATION
+                    ) || this.showMethylationTab
                 );
             });
         }); // do this after timeout so that all subclasses have time to construct
@@ -437,6 +444,16 @@ export default class ComparisonStore {
             ),
     });
 
+    public readonly methylationEnrichmentProfiles = remoteData({
+        await: () => [this.molecularProfilesInActiveStudies],
+        invoke: () =>
+            Promise.resolve(
+                pickMethylationEnrichmentProfiles(
+                    this.molecularProfilesInActiveStudies.result!
+                )
+            ),
+    });
+
     @observable.ref private _mutationEnrichmentProfileMap: {
         [studyId: string]: MolecularProfile;
     } = {};
@@ -447,6 +464,9 @@ export default class ComparisonStore {
         [studyId: string]: MolecularProfile;
     } = {};
     @observable.ref private _proteinEnrichmentProfileMap: {
+        [studyId: string]: MolecularProfile;
+    } = {};
+    @observable.ref private _methylationEnrichmentProfileMap: {
         [studyId: string]: MolecularProfile;
     } = {};
 
@@ -534,6 +554,27 @@ export default class ComparisonStore {
         },
     });
 
+    readonly selectedMethylationEnrichmentProfileMap = remoteData({
+        await: () => [this.methylationEnrichmentProfiles],
+        invoke: () => {
+            if (_.isEmpty(this._methylationEnrichmentProfileMap)) {
+                const molecularProfilesbyStudyId = _.groupBy(
+                    this.methylationEnrichmentProfiles.result!,
+                    profile => profile.studyId
+                );
+                // Select only one molecular profile for each study
+                return Promise.resolve(
+                    _.mapValues(
+                        molecularProfilesbyStudyId,
+                        molecularProfiles => molecularProfiles[0]
+                    )
+                );
+            } else {
+                return Promise.resolve(this._methylationEnrichmentProfileMap);
+            }
+        },
+    });
+
     @action
     public setMutationEnrichmentProfileMap(profileMap: {
         [studyId: string]: MolecularProfile;
@@ -560,6 +601,13 @@ export default class ComparisonStore {
         [studyId: string]: MolecularProfile;
     }) {
         this._proteinEnrichmentProfileMap = profileMap;
+    }
+
+    @action
+    public setMethylationEnrichmentProfileMap(profileMap: {
+        [studyId: string]: MolecularProfile;
+    }) {
+        this._methylationEnrichmentProfileMap = profileMap;
     }
 
     readonly mutationEnrichmentAnalysisGroups = remoteData({
@@ -943,7 +991,7 @@ export default class ComparisonStore {
         await: () => [this.proteinEnrichmentDataRequestGroups],
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         getSelectedProfileMap: () =>
-            this.selectedProteinEnrichmentProfileMap.result!, // returns an empty array if the selected study doesn't have any mRNA profiles
+            this.selectedProteinEnrichmentProfileMap.result!, // returns an empty array if the selected study doesn't have any protein profiles
         fetchData: () => {
             if (
                 this.proteinEnrichmentDataRequestGroups.result &&
@@ -952,6 +1000,90 @@ export default class ComparisonStore {
                 return internalClient.fetchExpressionEnrichmentsUsingPOST({
                     enrichmentType: 'SAMPLE',
                     groups: this.proteinEnrichmentDataRequestGroups.result!,
+                });
+            } else {
+                return Promise.resolve([]);
+            }
+        },
+    });
+
+    readonly methylationEnrichmentAnalysisGroups = remoteData({
+        await: () => [
+            this.selectedMethylationEnrichmentProfileMap,
+            this.enrichmentAnalysisGroups,
+        ],
+        invoke: () => {
+            let studyIds = Object.keys(
+                this.selectedMethylationEnrichmentProfileMap.result!
+            );
+            // assumes single study for now
+            if (studyIds.length === 1) {
+                return Promise.resolve(
+                    this.enrichmentAnalysisGroups.result!.reduce(
+                        (acc: EnrichmentAnalysisComparisonGroup[], group) => {
+                            // filter samples having mutation profile
+                            const filteredSamples = group.samples.filter(
+                                sample =>
+                                    this.selectedMethylationEnrichmentProfileMap
+                                        .result![sample.studyId] !== undefined
+                            );
+                            if (filteredSamples.length > 0) {
+                                acc.push({
+                                    ...group,
+                                    count: filteredSamples.length,
+                                    samples: filteredSamples,
+                                    description: `samples in ${group.name}`,
+                                });
+                            }
+                            return acc;
+                        },
+                        []
+                    )
+                );
+            } else {
+                return Promise.resolve([]);
+            }
+        },
+    });
+
+    readonly methylationEnrichmentDataRequestGroups = remoteData({
+        await: () => [
+            this.methylationEnrichmentAnalysisGroups,
+            this.selectedMethylationEnrichmentProfileMap,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                this.methylationEnrichmentAnalysisGroups.result!.map(group => {
+                    const molecularProfileCaseIdentifiers = group.samples.map(
+                        sample => ({
+                            caseId: sample.sampleId,
+                            molecularProfileId: this
+                                .selectedMethylationEnrichmentProfileMap
+                                .result![sample.studyId].molecularProfileId,
+                        })
+                    );
+                    return {
+                        name: group.name,
+                        molecularProfileCaseIdentifiers,
+                    };
+                })
+            );
+        },
+    });
+
+    readonly methylationEnrichmentData = makeEnrichmentDataPromise({
+        await: () => [this.methylationEnrichmentDataRequestGroups],
+        referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
+        getSelectedProfileMap: () =>
+            this.selectedMethylationEnrichmentProfileMap.result!, // returns an empty array if the selected study doesn't have any methylation profiles
+        fetchData: () => {
+            if (
+                this.methylationEnrichmentDataRequestGroups.result &&
+                this.methylationEnrichmentDataRequestGroups.result.length > 1
+            ) {
+                return internalClient.fetchExpressionEnrichmentsUsingPOST({
+                    enrichmentType: 'SAMPLE',
+                    groups: this.methylationEnrichmentDataRequestGroups.result!,
                 });
             } else {
                 return Promise.resolve([]);
@@ -1088,6 +1220,32 @@ export default class ComparisonStore {
             (this.activeStudyIds.isComplete &&
                 this.activeStudyIds.result.length > 1) || //more than one active study
             !this.proteinTabShowable
+        );
+    }
+
+    @computed get methylationTabShowable() {
+        return (
+            this.methylationEnrichmentProfiles.isComplete &&
+            this.methylationEnrichmentProfiles.result!.length > 0
+        );
+    }
+
+    @computed get showMethylationTab() {
+        return (
+            this.methylationTabShowable ||
+            (this.activeGroups.isComplete &&
+                this.activeGroups.result!.length === 0 &&
+                this.tabHasBeenShown.get(GroupComparisonTab.METHYLATION))
+        );
+    }
+
+    @computed get methylationTabUnavailable() {
+        return (
+            (this.activeGroups.isComplete &&
+                this.activeGroups.result.length < 2) || //less than two active groups
+            (this.activeStudyIds.isComplete &&
+                this.activeStudyIds.result.length > 1) || //more than one active study
+            !this.methylationTabShowable
         );
     }
 
