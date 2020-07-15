@@ -4,7 +4,7 @@ import { DataFilterType, onFilterOptionSelect } from 'react-mutation-mapper';
 import { observer } from 'mobx-react';
 import { action, computed } from 'mobx';
 
-import { getMobxPromiseGroupStatus } from 'cbioportal-frontend-commons';
+import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import { EnsemblTranscript } from 'genome-nexus-ts-api-client';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import CancerTypeCache from 'shared/cache/CancerTypeCache';
@@ -72,7 +72,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
 
     protected get isMutationTableDataLoading() {
         return (
-            getMobxPromiseGroupStatus(
+            getRemoteDataGroupStatus(
                 this.props.store.clinicalDataForSamples,
                 this.props.store.studiesForSamplesWithoutCancerTypeClinicalData,
                 this.props.store.canonicalTranscript

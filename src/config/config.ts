@@ -31,7 +31,7 @@ import {
     GenomeNexusAPIInternal,
 } from 'genome-nexus-ts-api-client';
 import { OncoKbAPI } from 'oncokb-ts-api-client';
-import { CivicAPI } from 'react-mutation-mapper';
+import { CivicAPI } from 'cbioportal-utils';
 import AppConfig from 'appConfig';
 import { sendSentryMessage } from '../shared/lib/tracking';
 import { log } from '../shared/lib/consoleLog';

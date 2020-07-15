@@ -4,8 +4,11 @@ import { observer } from 'mobx-react';
 import * as React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 
-import { ICivicEntry, ICivicVariantData } from '../../model/Civic';
-import { CIVIC_NA_VALUE } from '../../util/CivicUtils';
+import {
+    CIVIC_NA_VALUE,
+    ICivicEntry,
+    ICivicVariantData,
+} from 'cbioportal-utils';
 import { errorIcon, loaderIcon } from '../StatusHelpers';
 import CivicCard from './CivicCard';
 

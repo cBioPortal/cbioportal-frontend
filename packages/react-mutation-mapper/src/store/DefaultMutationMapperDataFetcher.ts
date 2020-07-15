@@ -3,13 +3,12 @@ import request from 'superagent';
 import Response = request.Response;
 
 import {
-    IOncoKbData,
+    AggregatedHotspots,
     EvidenceType,
     generateProteinChangeQuery,
     generateAnnotateStructuralVariantQuery,
-} from 'cbioportal-frontend-commons';
-import {
     getMyVariantInfoAnnotationsFromIndexedVariantAnnotations,
+    IOncoKbData,
     Mutation,
     uniqueGenomicLocations,
 } from 'cbioportal-utils';
@@ -18,6 +17,7 @@ import {
     AnnotateStructuralVariantQuery,
     CancerGene,
     OncoKbAPI,
+    OncoKBInfo,
 } from 'oncokb-ts-api-client';
 import {
     EnsemblFilter,
@@ -32,7 +32,6 @@ import {
     MyVariantInfo,
 } from 'genome-nexus-ts-api-client';
 
-import { AggregatedHotspots } from '../model/CancerHotspot';
 import { MutationMapperDataFetcher } from '../model/MutationMapperDataFetcher';
 import {
     DEFAULT_MY_GENE_URL_TEMPLATE,
@@ -44,7 +43,6 @@ import {
     initOncoKbClient,
     ONCOKB_DEFAULT_DATA,
 } from '../util/DataFetcherUtils';
-import { OncoKBInfo } from 'oncokb-ts-api-client';
 
 export interface MutationMapperDataFetcherConfig {
     myGeneUrlTemplate?: string;

@@ -34,15 +34,14 @@ import {
 } from 'cbioportal-ts-api-client';
 import client from 'shared/api/cbioportalClientInstance';
 import { action, computed, observable, ObservableMap, reaction } from 'mobx';
+import { remoteData, stringListToSet } from 'cbioportal-frontend-commons';
 import {
     generateQueryVariantId,
+    getProteinPositionFromProteinChange,
+    IHotspotIndex,
+    indexHotspotsData,
     IOncoKbData,
-    remoteData,
-    stringListToSet,
-    getBrowserWindow,
-    stringListToIndexSet,
-} from 'cbioportal-frontend-commons';
-import { getProteinPositionFromProteinChange } from 'cbioportal-utils';
+} from 'cbioportal-utils';
 import {
     VariantAnnotation,
     GenomeNexusAPI,
@@ -78,7 +77,6 @@ import {
     fetchSurvivalDataExists,
     getSurvivalClinicalAttributesPrefix,
 } from 'shared/lib/StoreUtils';
-import { IHotspotIndex, indexHotspotsData } from 'react-mutation-mapper';
 import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
 import ResultsViewMutationMapperStore from './mutation/ResultsViewMutationMapperStore';
 import AppConfig from 'appConfig';

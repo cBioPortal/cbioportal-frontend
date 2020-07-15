@@ -4,10 +4,11 @@ import { cached } from 'mobxpromise';
 import {
     annotateMutations,
     getMyVariantInfoAnnotationsFromIndexedVariantAnnotations,
+    IHotspotIndex,
+    indexHotspotsData,
     IMyVariantInfoIndex,
     resolveDefaultsForMissingValues,
 } from 'cbioportal-utils';
-import { IHotspotIndex, indexHotspotsData } from 'react-mutation-mapper';
 
 import AppConfig from 'appConfig';
 

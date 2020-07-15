@@ -7,7 +7,7 @@ import _ from 'lodash';
 import ErrorMessage from '../ErrorMessage';
 import Spinner from 'react-spinkit';
 import { MobxPromise } from 'mobxpromise';
-import { getMobxPromiseGroupStatus } from 'cbioportal-frontend-commons';
+import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import autobind from 'autobind-decorator';
 import Timer = NodeJS.Timer;
 
@@ -31,7 +31,7 @@ function getItemStatus(
         if (item.promises.length === 0) {
             return 'complete';
         } else {
-            return getMobxPromiseGroupStatus(...item.promises);
+            return getRemoteDataGroupStatus(...item.promises);
         }
     } else {
         return 'pending';

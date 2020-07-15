@@ -2,11 +2,11 @@ import {
     getMyVariantInfoAnnotation,
     getVariantAnnotation,
     Mutation,
+    RemoteData,
 } from 'cbioportal-utils';
 import { MyVariantInfo, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import * as React from 'react';
 
-import { RemoteData } from '../../model/RemoteData';
 import { errorIcon, loaderIcon } from '../StatusHelpers';
 
 export type MyVariantInfoProps = {
