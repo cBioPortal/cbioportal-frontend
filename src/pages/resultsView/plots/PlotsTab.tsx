@@ -55,7 +55,6 @@ import {
     waterfallPlotTooltip,
     getColoringMenuOptionValue,
     basicAppearance,
-    getSuffixOfMolecularProfile,
     getAxisDataOverlapSampleCount,
 } from './PlotsTabUtils';
 import {
@@ -105,6 +104,7 @@ import { SpecialAttribute } from '../../../shared/cache/ClinicalDataCache';
 import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledCheckbox';
 import CBIOPORTAL_VICTORY_THEME from '../../../shared/theme/cBioPoralTheme';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
+import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 
 enum EventKey {
     horz_logScale,
@@ -500,7 +500,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             <strong>Horizontal Axis: </strong>
                             {`${horzAxisDataSampleCount} samples from ${
                                 studies.length
-                            } ${Pluralize('study', studies.length)}:`}
+                            } ${Pluralize('study', studies.length)}`}
                         </div>
                     );
                 }
@@ -525,7 +525,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             <strong>Horizontal Axis: </strong>
                             {`${horzAxisDataSampleCount} samples from ${
                                 studies.length
-                            } ${Pluralize('study', studies.length)}:`}
+                            } ${Pluralize('study', studies.length)}`}
                         </div>
                     );
                 }
@@ -559,7 +559,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             <strong>Vertical Axis: </strong>
                             {`${vertAxisDataSampleCount} samples from ${
                                 studies.length
-                            } ${Pluralize('study', studies.length)}:`}
+                            } ${Pluralize('study', studies.length)}`}
                         </div>
                     );
                 }
@@ -584,7 +584,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             <strong>Vertical Axis: </strong>
                             {`${vertAxisDataSampleCount} samples from ${
                                 studies.length
-                            } ${Pluralize('study', studies.length)}:`}
+                            } ${Pluralize('study', studies.length)}`}
                         </div>
                     );
                 }
@@ -594,7 +594,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         components = [
             <div className="alert alert-info dataAvailabilityAlert">
                 {`There are ${axisOverlapSampleCount} samples matching both profiles (axis) will be shown `}
-                <InfoIcon tooltip={<div>{components}</div>} />
+                <div data-test="dataAvailabilityAlertInfoIcon">
+                    <InfoIcon tooltip={<div>{components}</div>} />
+                </div>
             </div>,
         ];
 
@@ -1779,37 +1781,41 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 this.props.store.molecularProfileIdSuffixToMolecularProfiles
                     .result[this.horzSelection.dataSourceId]
             ) {
-                const profiles = this.props.store
-                    .molecularProfileIdSuffixToMolecularProfiles.result[
-                    this.horzSelection.dataSourceId!
-                ];
-                const allMeta: GenericAssayMeta[] = [];
-                _.forEach(profiles, profile => {
-                    if (
-                        this.props.store
-                            .genericAssayEntitiesGroupByMolecularProfileId
-                            .result &&
-                        this.props.store
-                            .genericAssayEntitiesGroupByMolecularProfileId
-                            .result[profile.molecularProfileId]
-                    ) {
-                        allMeta.push(
-                            ...this.props.store
-                                .genericAssayEntitiesGroupByMolecularProfileId
-                                .result[profile.molecularProfileId]
-                        );
-                    }
-                });
-
-                const uniqueAllMeta = _.uniqBy(allMeta, meta => meta.stableId);
                 return Promise.resolve(
-                    uniqueAllMeta.map((meta: GenericAssayMeta) => ({
-                        value: meta.stableId,
-                        label:
-                            'NAME' in meta.genericEntityMetaProperties
-                                ? meta.genericEntityMetaProperties['NAME']
-                                : '',
-                    }))
+                    _.chain(
+                        this.props.store
+                            .molecularProfileIdSuffixToMolecularProfiles.result[
+                            this.horzSelection.dataSourceId!
+                        ]
+                    )
+                        .reduce(
+                            (acc, profile) => {
+                                if (
+                                    this.props.store
+                                        .genericAssayEntitiesGroupByMolecularProfileId
+                                        .result &&
+                                    this.props.store
+                                        .genericAssayEntitiesGroupByMolecularProfileId
+                                        .result[profile.molecularProfileId]
+                                ) {
+                                    this.props.store.genericAssayEntitiesGroupByMolecularProfileId.result[
+                                        profile.molecularProfileId
+                                    ].forEach(meta => {
+                                        acc[meta.stableId] = meta;
+                                    });
+                                    return acc;
+                                }
+                            },
+                            {} as { [stableId: string]: GenericAssayMeta }
+                        )
+                        .map(meta => ({
+                            value: meta.stableId,
+                            label:
+                                'NAME' in meta.genericEntityMetaProperties
+                                    ? meta.genericEntityMetaProperties['NAME']
+                                    : '',
+                        }))
+                        .value()
                 );
             }
             return Promise.resolve([] as any[]);
@@ -1839,41 +1845,40 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     this.props.store.molecularProfileIdSuffixToMolecularProfiles
                         .result[this.vertSelection.dataSourceId]
                 ) {
-                    const profiles = this.props.store
-                        .molecularProfileIdSuffixToMolecularProfiles.result[
-                        this.vertSelection.dataSourceId!
-                    ];
-                    const allMeta: GenericAssayMeta[] = [];
-                    _.forEach(profiles, profile => {
-                        if (
-                            this.props.store
-                                .genericAssayEntitiesGroupByMolecularProfileId
-                                .result &&
-                            this.props.store
-                                .genericAssayEntitiesGroupByMolecularProfileId
-                                .result[profile.molecularProfileId]
-                        ) {
-                            allMeta.push(
-                                ...this.props.store
-                                    .genericAssayEntitiesGroupByMolecularProfileId
-                                    .result[profile.molecularProfileId]
-                            );
-                        }
-                    });
-
-                    const uniqueAllMeta = _.uniqBy(
-                        allMeta,
-                        meta => meta.stableId
-                    );
-                    verticalOptions = uniqueAllMeta.map(
-                        (meta: GenericAssayMeta) => ({
+                    verticalOptions = _.chain(
+                        this.props.store
+                            .molecularProfileIdSuffixToMolecularProfiles.result[
+                            this.vertSelection.dataSourceId!
+                        ]
+                    )
+                        .reduce(
+                            (acc, profile) => {
+                                if (
+                                    this.props.store
+                                        .genericAssayEntitiesGroupByMolecularProfileId
+                                        .result &&
+                                    this.props.store
+                                        .genericAssayEntitiesGroupByMolecularProfileId
+                                        .result[profile.molecularProfileId]
+                                ) {
+                                    this.props.store.genericAssayEntitiesGroupByMolecularProfileId.result[
+                                        profile.molecularProfileId
+                                    ].forEach(meta => {
+                                        acc[meta.stableId] = meta;
+                                    });
+                                    return acc;
+                                }
+                            },
+                            {} as { [stableId: string]: GenericAssayMeta }
+                        )
+                        .map(meta => ({
                             value: meta.stableId,
                             label:
                                 'NAME' in meta.genericEntityMetaProperties
                                     ? meta.genericEntityMetaProperties['NAME']
                                     : '',
-                        })
-                    );
+                        }))
+                        .value();
                 }
                 // if horzSelection has the same dataType selected, add a SAME_SELECTED_OPTION option
                 if (
@@ -1989,10 +1994,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     readonly clinicalAttributesGroupByclinicalAttributeId = remoteData<{
         [clinicalAttributeId: string]: ClinicalAttribute[];
     }>({
-        await: () => [
-            this.props.store.clinicalAttributes,
-            this.props.store.studyIds,
-        ],
+        await: () => [this.props.store.clinicalAttributes],
         invoke: () => {
             return Promise.resolve(
                 _.groupBy(
@@ -2124,14 +2126,28 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     } else return profile.molecularAlterationType;
                 }), // create a map from profile type to list of profiles of that type
                 profilesOfType =>
-                    // use unique suffix of molecular profile id as the dataSource
-                    _.uniqBy(
+                    // create options out of those profiles
+                    _.reduce(
                         sortMolecularProfilesForDisplay(profilesOfType),
-                        profile => getSuffixOfMolecularProfile(profile)
-                    ).map(p => ({
-                        value: getSuffixOfMolecularProfile(p),
-                        label: p.name,
-                    })) // create options out of those profiles
+                        (uniqueOptions, profile) => {
+                            const profileSuffix = getSuffixOfMolecularProfile(
+                                profile
+                            );
+                            // use unique suffix of molecular profile id as the dataSource
+                            return uniqueOptions
+                                .map(option => option.value)
+                                .includes(profileSuffix)
+                                ? uniqueOptions
+                                : [
+                                      ...uniqueOptions,
+                                      {
+                                          value: profileSuffix,
+                                          label: profile.name,
+                                      },
+                                  ];
+                        },
+                        [] as { value: string; label: string }[]
+                    )
             );
             if (this.clinicalAttributeOptions.result!.length) {
                 // add clinical attributes

@@ -454,3 +454,15 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
 });
+
+describe('plots tab multiple studies screenshot tests', function() {
+    before(function() {
+        goToUrlAndSetLocalStorage(
+            `${CBIOPORTAL_URL}/results/plots?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=lgg_ucsf_2014%2Cbrca_tcga&case_set_id=all&data_priority=0&gene_list=TP53&geneset_list=%20&plots_coloring_selection=%7B%7D&plots_horz_selection=%7B"selectedGeneOption"%3A7157%2C"dataType"%3A"clinical_attribute"%2C"selectedDataSourceOption"%3A"CANCER_TYPE_DETAILED"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A7157%2C"dataType"%3A"clinical_attribute"%2C"selectedDataSourceOption"%3A"CANCER_TYPE"%7D&profileFilter=0&tab_index=tab_visualize`
+        );
+        browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]', 20000);
+    });
+    it('plots tab multiple studies with data availability alert', function() {
+        waitForAndCheckPlotsTab();
+    });
+});

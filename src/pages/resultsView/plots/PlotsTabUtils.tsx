@@ -976,10 +976,10 @@ function makeAxisDataPromise_Molecular(
         [molecularProfileIdSuffix: string]: MolecularProfile[];
     }>
 ): MobxPromise<IAxisData> {
-    let promises: MobxPromise<any>[] = []; /* = ;*/
     return remoteData({
         await: () => {
             const ret: MobxPromise<any>[] = [];
+            let promises: MobxPromise<any>[] = [];
             if (molecularProfileIdSuffixToMolecularProfiles.isComplete) {
                 const profileIds = molecularProfileIdSuffixToMolecularProfiles.result![
                     molecularProfileIdSuffix
@@ -1029,9 +1029,7 @@ function makeAxisDataPromise_Molecular(
             if (dataType === AlterationTypeConstants.MUTATION_EXTENDED) {
                 // mutation profile
                 let mutations: Mutation[] = [];
-                promises.forEach(promise => {
-                    mutations.push(...promise.result!);
-                });
+                mutations.push(...mutationCache.get({ entrezGeneId }).result!);
 
                 return Promise.resolve(
                     makeAxisDataPromise_Molecular_MakeMutationData(
@@ -1052,10 +1050,15 @@ function makeAxisDataPromise_Molecular(
                             AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
                         profile.datatype === 'DISCRETE'
                 );
-                let data: NumericGeneMolecularData[] = [];
-                promises.forEach(promise => {
-                    data.push(...promise.result!);
-                });
+
+                const data: NumericGeneMolecularData[] = _.flatMap(
+                    profileIds,
+                    profileId =>
+                        numericGeneMolecularDataCache.get({
+                            entrezGeneId,
+                            molecularProfileId: profileId,
+                        }).result!
+                );
 
                 return Promise.resolve({
                     data: data.map(d => {
@@ -1184,7 +1187,6 @@ function makeAxisDataPromise_Geneset(
             const profiles = molecularProfileIdSuffixToMolecularProfiles.result![
                 molecularProfileIdSuffix
             ];
-            const data: GenesetMolecularData[] = [];
             const makeRequest = true;
             await Promise.all(
                 profiles.map(profile =>
@@ -1197,15 +1199,15 @@ function makeAxisDataPromise_Geneset(
                     )
                 )
             );
-            profiles.forEach(profile => {
-                const dataForEachProfile = genesetMolecularDataCachePromise.result!.get(
-                    {
+
+            const data: GenesetMolecularData[] = _.flatMap(
+                profiles,
+                profile =>
+                    genesetMolecularDataCachePromise.result!.get({
                         molecularProfileId: profile.molecularProfileId,
                         genesetId,
-                    }
-                )!.data!;
-                data.push(...dataForEachProfile);
-            });
+                    })!.data!
+            );
 
             return Promise.resolve({
                 data: data.map(d => {
@@ -1241,7 +1243,6 @@ function makeAxisDataPromise_GenericAssay(
             const profiles = molecularProfileIdSuffixToMolecularProfiles.result![
                 molecularProfileIdSuffix
             ];
-            const data: GenericAssayDataEnhanced[] = [];
             const makeRequest = true;
             await Promise.all(
                 profiles.map(profile =>
@@ -1254,15 +1255,15 @@ function makeAxisDataPromise_GenericAssay(
                     )
                 )
             );
-            profiles.forEach(profile => {
-                const dataForEachProfile = genericAssayMolecularDataCachePromise.result!.get(
-                    {
+
+            const data: GenericAssayDataEnhanced[] = _.flatMap(
+                profiles,
+                profile =>
+                    genericAssayMolecularDataCachePromise.result!.get({
                         molecularProfileId: profile.molecularProfileId,
                         stableId: entityId,
-                    }
-                )!.data!;
-                data.push(...dataForEachProfile);
-            });
+                    })!.data!
+            );
 
             return Promise.resolve({
                 data: data.map(d => {
@@ -1385,10 +1386,6 @@ export function makeAxisDataPromise(
             break;
     }
     return ret;
-}
-
-export function getSuffixOfMolecularProfile(profile: MolecularProfile) {
-    return profile.molecularProfileId.replace(profile.studyId + '_', '');
 }
 
 export function tableCellTextColor(val: number, min: number, max: number) {
