@@ -423,6 +423,17 @@ export function pickProteinEnrichmentProfiles(profiles: MolecularProfile[]) {
     return filterAndSortProfiles(protProfiles);
 }
 
+export function pickMethylationEnrichmentProfiles(
+    profiles: MolecularProfile[]
+) {
+    const methylationProfiles = profiles.filter(p => {
+        return (
+            p.molecularAlterationType === AlterationTypeConstants.METHYLATION
+        );
+    });
+    return methylationProfiles;
+}
+
 export function getAlterationEnrichmentColumns(
     groups: { name: string; description: string; color?: string }[],
     alteredVsUnalteredMode?: boolean

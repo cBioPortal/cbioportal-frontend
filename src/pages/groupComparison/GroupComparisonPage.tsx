@@ -36,6 +36,7 @@ import styles from './styles.module.scss';
 import 'cbioportal-frontend-commons/dist/styles.css';
 import { OverlapStrategy } from '../../shared/lib/comparison/ComparisonStore';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
+import MethylationEnrichments from './MethylationEnrichments';
 
 export interface IGroupComparisonPageProps {
     routing: any;
@@ -111,6 +112,7 @@ export default class GroupComparisonPage extends React.Component<
             this.store.copyNumberEnrichmentProfiles,
             this.store.mRNAEnrichmentProfiles,
             this.store.proteinEnrichmentProfiles,
+            this.store.methylationEnrichmentProfiles,
             this.store.survivalClinicalDataExists,
         ],
         render: () => {
@@ -198,6 +200,19 @@ export default class GroupComparisonPage extends React.Component<
                             }
                         >
                             <ProteinEnrichments store={this.store} />
+                        </MSKTab>
+                    )}
+                    {this.store.showMethylationTab && (
+                        <MSKTab
+                            id={GroupComparisonTab.METHYLATION}
+                            linkText="Methylation"
+                            anchorClassName={
+                                this.store.methylationTabUnavailable
+                                    ? 'greyedOut'
+                                    : ''
+                            }
+                        >
+                            <MethylationEnrichments store={this.store} />
                         </MSKTab>
                     )}
                 </MSKTabs>
