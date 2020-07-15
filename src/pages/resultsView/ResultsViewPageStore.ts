@@ -209,6 +209,7 @@ import {
 import { makeUniqueColorGetter } from '../../shared/components/plots/PlotUtils';
 import ifNotDefined from '../../shared/lib/ifNotDefined';
 import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
+import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -3430,10 +3431,7 @@ export class ResultsViewPageStore {
                     _.groupBy(
                         this.molecularProfilesInStudies.result,
                         molecularProfile =>
-                            molecularProfile.molecularProfileId.replace(
-                                molecularProfile.studyId + '_',
-                                ''
-                            )
+                            getSuffixOfMolecularProfile(molecularProfile)
                     )
                 );
             },
