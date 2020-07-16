@@ -16180,6 +16180,17 @@ oncokb-styles@~0.1.2:
   resolved "https://registry.yarnpkg.com/oncokb-styles/-/oncokb-styles-0.1.2.tgz#8b26c0a0829787cdc1b595d3a021b3266607102b"
   integrity sha512-tuy5s3qFxgf1ogMATQSRPNgLlAMrvOOTCAN1dm/wJ+VZoStbJ7g36/qHwc99UPfh3vrB05broLodF+k58p5tUw==
 
+oncoprintjs@4.2.3:
+  version "4.2.3"
+  resolved "https://registry.yarnpkg.com/oncoprintjs/-/oncoprintjs-4.2.3.tgz#d455566212a16de18a29f3808c192389d99cf279"
+  integrity sha512-2sGryJOsXvZDNb3ms/yOvAme8I8v+fF6n9vqzB4wxWOQLTuJDZ9Uqy2OZdJEtksPCuIdmbJYzGwOxrNJ4ka84A==
+  dependencies:
+    gl-matrix "2.3.2"
+    jquery "^3.0.0"
+    jstat "^1.7.1"
+    lodash "^4.17.15"
+    tayden-clusterfck "^0.7.0"
+
 oncoprintjs@4.2.4:
   version "4.2.4"
   resolved "https://registry.yarnpkg.com/oncoprintjs/-/oncoprintjs-4.2.4.tgz#ddfb3704b2a09a32585f3895622a5f5d3a6557aa"
@@ -16742,9 +16753,9 @@ pathval@^1.1.0:
   resolved "https://registry.yarnpkg.com/pathval/-/pathval-1.1.0.tgz#b942e6d4bde653005ef6b71361def8727d0645e0"
   integrity sha1-uULm1L3mUwBe9rcTYd74cn0GReA=
 
-"pathway-mapper@github:iVis-at-Bilkent/pathway-mapper#dbf72dac455b0df75fc097cd59fd6f2cf0359b23":
+"pathway-mapper@github:iVis-at-Bilkent/pathway-mapper#43564adb53cafb9e1b1018c9d5aaf19ffc0d18e7":
   version "2.0.3"
-  resolved "https://codeload.github.com/iVis-at-Bilkent/pathway-mapper/tar.gz/dbf72dac455b0df75fc097cd59fd6f2cf0359b23"
+  resolved "https://codeload.github.com/iVis-at-Bilkent/pathway-mapper/tar.gz/43564adb53cafb9e1b1018c9d5aaf19ffc0d18e7"
   dependencies:
     "@datastructures-js/max-heap" "^2.0.0"
     autobind-decorator "^2.4.0"
@@ -16763,6 +16774,7 @@ pathval@^1.1.0:
     file-saver "^2.0.2"
     jquery-ui-dist "^1.12.1"
     konva "^1.6.3"
+    oncoprintjs "4.2.3"
     react-loader-spinner "^2.3.0"
     react-scrollbar "^0.5.6"
     react-table "^6.10.0"
