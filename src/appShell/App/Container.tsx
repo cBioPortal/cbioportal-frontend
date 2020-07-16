@@ -1,6 +1,8 @@
 import * as React from 'react';
 
+import 'cbioportal-frontend-commons/dist/styles.css';
 import '../../globalStyles/prefixed-global.scss';
+
 import PortalHeader from './PortalHeader';
 import { getBrowserWindow, isWebdriver } from 'cbioportal-frontend-commons';
 import { observer } from 'mobx-react';

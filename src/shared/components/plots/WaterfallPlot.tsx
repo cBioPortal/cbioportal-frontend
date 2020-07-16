@@ -3,10 +3,6 @@ import * as React from 'react';
 import { observer, Observer } from 'mobx-react';
 import bind from 'bind-decorator';
 import { computed, observable } from 'mobx';
-import CBIOPORTAL_VICTORY_THEME, {
-    baseLabelStyles,
-    legendLabelStyles,
-} from '../../theme/cBioPoralTheme';
 import Timer = NodeJS.Timer;
 import {
     VictoryChart,
@@ -33,8 +29,9 @@ import {
     IValue1D,
 } from 'pages/resultsView/plots/PlotsTabUtils';
 import {
-    getTextHeight,
-    getTextWidth,
+    CBIOPORTAL_VICTORY_THEME,
+    baseLabelStyles,
+    legendLabelStyles,
     wrapText,
 } from 'cbioportal-frontend-commons';
 import { clamp } from '../../lib/NumberUtils';

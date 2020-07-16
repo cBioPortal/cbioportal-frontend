@@ -10,10 +10,12 @@ import {
     VictoryStack,
     VictoryLabel,
 } from 'victory';
-import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import {
+    CBIOPORTAL_VICTORY_THEME,
+    DefaultTooltip,
+} from 'cbioportal-frontend-commons';
 import { Popover } from 'react-bootstrap';
 import { getBarChartTooltipContent } from 'pages/resultsView/enrichments/EnrichmentsUtil';
-import CBIOPORTAL_VICTORY_THEME from '../../../shared/theme/cBioPoralTheme';
 
 export interface IMiniBarChartProps {
     totalAlteredCount: number;
