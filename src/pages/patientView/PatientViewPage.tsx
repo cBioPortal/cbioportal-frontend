@@ -615,9 +615,7 @@ export default class PatientViewPage extends React.Component<
                                                 sampleManager
                                                     .clinicalDataLegacyCleanAndDerived[
                                                     sample.id
-                                                ],
-                                                this.patientViewPageStore
-                                                    .studyId
+                                                ]
                                             )}
                                     </span>,
                                     this.toggleGenePanelModal,
