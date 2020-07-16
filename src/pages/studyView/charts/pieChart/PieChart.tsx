@@ -13,13 +13,16 @@ import {
     getFrequencyStr,
     toSvgDomNodeWithLegend,
 } from 'pages/studyView/StudyViewUtils';
-import CBIOPORTAL_VICTORY_THEME from 'shared/theme/cBioPoralTheme';
 import { AbstractChart } from 'pages/studyView/charts/ChartContainer';
 import autobind from 'autobind-decorator';
 import { ClinicalDataCountSummary } from 'pages/studyView/StudyViewUtils';
 import ClinicalTable from 'pages/studyView/table/ClinicalTable';
 import { STUDY_VIEW_CONFIG } from '../../StudyViewConfig';
-import { DefaultTooltip, getTextWidth } from 'cbioportal-frontend-commons';
+import {
+    CBIOPORTAL_VICTORY_THEME,
+    DefaultTooltip,
+    getTextWidth,
+} from 'cbioportal-frontend-commons';
 import { DEFAULT_NA_COLOR } from 'shared/lib/Colors';
 import ifNotDefined from '../../../../shared/lib/ifNotDefined';
 
