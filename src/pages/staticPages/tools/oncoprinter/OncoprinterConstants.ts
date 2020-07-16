@@ -599,7 +599,7 @@ TCGA-25-2393-01
 
 // generate using seeded random number so its the same every time but we don't have to type it out manually
 const rng = new DeterministicRNG();
-const samples = [
+const exampleSampleList = [
     'TCGA-25-2392-01',
     'TCGA-25-2393-01',
     'TCGA-04-1331-01',
@@ -972,7 +972,7 @@ const samples = [
 const cancerTypeValues = ['Prostate', 'Lung', 'Breast', ONCOPRINTER_VAL_NA];
 export const exampleClinicalData =
     `sample\tAGE(${ClinicalTrackDataType.NUMBER})\tCANCER_TYPE\tMUTATION_COUNT(${ClinicalTrackDataType.LOG_NUMBER})\tMUTATION_SPECTRUM(C>A/C>G/C>T/T>A/T>C/T>G)\n` +
-    samples
+    exampleSampleList
         .map(sampleId => {
             return [
                 sampleId,
@@ -990,7 +990,7 @@ export const exampleClinicalData =
 
 export const exampleHeatmapData =
     `sample\tmethylation(${HeatmapTrackDataType.HEATMAP_01})\tzscores(${HeatmapTrackDataType.HEATMAP_ZSCORE})\theatmap(${HeatmapTrackDataType.HEATMAP})\n` +
-    samples
+    exampleSampleList
         .map(sampleId => {
             return [
                 sampleId,
