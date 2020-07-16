@@ -450,7 +450,7 @@ export default class Oncoprinter extends React.Component<
                                     )
                                 }
                                 genesetHeatmapTracks={[]}
-                                heatmapTracks={[]}
+                                heatmapTracks={this.props.store.heatmapTracks}
                                 divId={this.props.divId}
                                 width={this.width}
                                 caseLinkOutInTooltips={false}
