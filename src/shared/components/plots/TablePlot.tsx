@@ -2,7 +2,6 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { computed, observable } from 'mobx';
 import { bind } from 'bind-decorator';
-import CBIOPORTAL_VICTORY_THEME from '../../theme/cBioPoralTheme';
 import {
     VictoryAxis,
     VictoryBoxPlot,
@@ -20,7 +19,7 @@ import naturalSort from 'javascript-natural-sort';
 import * as d3Scale from 'd3-scale';
 import measureText from 'measure-text';
 import {
-    stringListToIndexSet,
+    CBIOPORTAL_VICTORY_THEME,
     stringListToMap,
 } from 'cbioportal-frontend-commons';
 import { wrapTick } from './TickUtils';

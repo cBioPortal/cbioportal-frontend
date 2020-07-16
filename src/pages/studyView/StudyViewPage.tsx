@@ -46,7 +46,6 @@ import SocialAuthButton from '../../shared/components/SocialAuthButton';
 import { ServerConfigHelpers } from '../../config/config';
 import { getButtonNameWithDownPointer } from './StudyViewUtils';
 import { Alert, Modal } from 'react-bootstrap';
-import 'cbioportal-frontend-commons/dist/styles.css';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import styles from './styles.module.scss';
