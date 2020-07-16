@@ -19,6 +19,7 @@ import Oncoprint, {
     GENETIC_TRACK_GROUP_INDEX,
     GeneticTrackDatum_Data,
     GeneticTrackSpec,
+    IGenesetHeatmapTrackSpec,
     IHeatmapTrackSpec,
 } from './Oncoprint';
 import OncoprintControls, {
@@ -80,6 +81,7 @@ import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import {
     getOncoprinterClinicalInput,
     getOncoprinterGeneticInput,
+    getOncoprinterHeatmapInput,
 } from '../../../pages/staticPages/tools/oncoprinter/OncoprinterImportUtils';
 import { buildCBioPortalPageUrl } from '../../api/urls';
 
@@ -901,6 +903,7 @@ export default class ResultsViewOncoprint extends React.Component<
                                 this.geneticTracks,
                                 this.clinicalTracks,
                                 this.heatmapTracks,
+                                this.genesetHeatmapTracks,
                                 this.props.store
                                     .clinicalAttributeIdToClinicalAttribute,
                             ],
@@ -910,6 +913,7 @@ export default class ResultsViewOncoprint extends React.Component<
                                 geneticTracks: GeneticTrackSpec[],
                                 clinicalTracks: ClinicalTrackSpec[],
                                 heatmapTracks: IHeatmapTrackSpec[],
+                                genesetHeatmapTracks: IGenesetHeatmapTrackSpec[],
                                 attributeIdToAttribute: {
                                     [attributeId: string]: ClinicalAttribute;
                                 }
@@ -950,9 +954,18 @@ export default class ResultsViewOncoprint extends React.Component<
                                     );
                                 }
 
-                                if (this.heatmapTracks.result!.length > 0) {
+                                let heatmapInput = '';
+                                if (heatmapTracks.length > 0) {
+                                    heatmapInput = getOncoprinterHeatmapInput(
+                                        heatmapTracks,
+                                        caseIds,
+                                        this.oncoprintAnalysisCaseType
+                                    );
+                                }
+
+                                if (genesetHeatmapTracks.length > 0) {
                                     alert(
-                                        'Note: heatmap tracks are not currently supported in Oncoprinter.'
+                                        'Oncoprinter does not support geneset heatmaps - all other tracks will still be exported.'
                                     );
                                 }
 
@@ -962,6 +975,7 @@ export default class ResultsViewOncoprint extends React.Component<
                                 oncoprinterWindow.clientPostedData = {
                                     genetic: geneticInput,
                                     clinical: clinicalInput,
+                                    heatmap: heatmapInput,
                                 };
                             }
                         );
