@@ -21,7 +21,7 @@ describe('plots tab tests', function() {
         var text = toolTips[toolTips.length - 1].getText();
         assert.equal(
             text,
-            'The data on Horizontal Axis and Vertical Axis can come from different studies.\nOnly data from studies that exist in both axes will be shown on the plots.\nHorizontal Axis: 1164 samples from 2 studies\nVertical Axis: 1164 samples from 2 studies'
+            'Data availability per profile/axis:\nHorizontal Axis: 1164 samples from 2 studies\nVertical Axis: 1164 samples from 2 studies\nIntersection of the two axes: 1164 samples from 2 studies'
         );
     });
 });

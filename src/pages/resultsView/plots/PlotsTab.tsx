@@ -62,6 +62,7 @@ import {
     GenericAssayMeta,
     Gene,
     ClinicalData,
+    CancerStudy,
 } from 'cbioportal-ts-api-client';
 import Timer = NodeJS.Timer;
 import ScatterPlot from 'shared/components/plots/ScatterPlot';
@@ -459,17 +460,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.horzAxisDataPromise.result!,
             this.vertAxisDataPromise.result!
         );
+        let horzAxisStudies: CancerStudy[] = [];
+        let vertAxisStudies: CancerStudy[] = [];
+        let isHorzAxisNoneOptionSelected = false;
+        let isVertAxisNoneOptionSelected = false;
 
         components.push(
             <div>
-                <div>
-                    The data on Horizontal Axis and Vertical Axis can come from
-                    different studies.
-                </div>
-                <div>
-                    Only data from studies that exist in both axes will be shown
-                    on the plots.
-                </div>
+                <div>Data availability per profile/axis:</div>
             </div>
         );
 
@@ -479,6 +477,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 break;
             // when no datatype is selected (`None`)
             case NONE_SELECTED_OPTION_STRING_VALUE:
+                isHorzAxisNoneOptionSelected = true;
                 break;
             case CLIN_ATTR_DATA_TYPE:
                 if (
@@ -492,15 +491,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     const studyIds = attributes.map(
                         attribute => attribute.studyId
                     );
-                    const studies = this.props.store.studies.result.filter(
+                    horzAxisStudies = this.props.store.studies.result.filter(
                         study => studyIds.includes(study.studyId)
                     );
                     components.push(
                         <div>
                             <strong>Horizontal Axis: </strong>
                             {`${horzAxisDataSampleCount} samples from ${
-                                studies.length
-                            } ${Pluralize('study', studies.length)}`}
+                                horzAxisStudies.length
+                            } ${Pluralize('study', horzAxisStudies.length)}`}
                         </div>
                     );
                 }
@@ -517,15 +516,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             this.horzSelection.dataSourceId
                         ].map(profile => profile.studyId)
                     );
-                    const studies = this.props.store.studies.result.filter(
+                    horzAxisStudies = this.props.store.studies.result.filter(
                         study => studyIds.includes(study.studyId)
                     );
                     components.push(
                         <div>
                             <strong>Horizontal Axis: </strong>
                             {`${horzAxisDataSampleCount} samples from ${
-                                studies.length
-                            } ${Pluralize('study', studies.length)}`}
+                                horzAxisStudies.length
+                            } ${Pluralize('study', horzAxisStudies.length)}`}
                         </div>
                     );
                 }
@@ -538,6 +537,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 break;
             // when no datatype is selected (`None`)
             case NONE_SELECTED_OPTION_STRING_VALUE:
+                isVertAxisNoneOptionSelected = true;
                 break;
             case CLIN_ATTR_DATA_TYPE:
                 if (
@@ -551,15 +551,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     const studyIds = attributes.map(
                         attribute => attribute.studyId
                     );
-                    const studies = this.props.store.studies.result.filter(
+                    vertAxisStudies = this.props.store.studies.result.filter(
                         study => studyIds.includes(study.studyId)
                     );
                     components.push(
                         <div>
                             <strong>Vertical Axis: </strong>
                             {`${vertAxisDataSampleCount} samples from ${
-                                studies.length
-                            } ${Pluralize('study', studies.length)}`}
+                                vertAxisStudies.length
+                            } ${Pluralize('study', vertAxisStudies.length)}`}
                         </div>
                     );
                 }
@@ -576,24 +576,39 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             this.vertSelection.dataSourceId
                         ].map(profile => profile.studyId)
                     );
-                    const studies = this.props.store.studies.result.filter(
+                    vertAxisStudies = this.props.store.studies.result.filter(
                         study => studyIds.includes(study.studyId)
                     );
                     components.push(
                         <div>
                             <strong>Vertical Axis: </strong>
                             {`${vertAxisDataSampleCount} samples from ${
-                                studies.length
-                            } ${Pluralize('study', studies.length)}`}
+                                vertAxisStudies.length
+                            } ${Pluralize('study', vertAxisStudies.length)}`}
                         </div>
                     );
                 }
                 break;
         }
 
+        // add intersection info
+        const intersectionStudiesOfTwoAxis = isHorzAxisNoneOptionSelected
+            ? vertAxisStudies
+            : isVertAxisNoneOptionSelected
+            ? horzAxisStudies
+            : _.intersection(horzAxisStudies, vertAxisStudies);
+        components.push(
+            <div>
+                <strong>Intersection of the two axes: </strong>
+                {`${axisOverlapSampleCount} samples from ${
+                    intersectionStudiesOfTwoAxis.length
+                } ${Pluralize('study', intersectionStudiesOfTwoAxis.length)}`}
+            </div>
+        );
+
         components = [
             <div className="alert alert-info dataAvailabilityAlert">
-                {`There are ${axisOverlapSampleCount} samples matching both profiles (axis) will be shown `}
+                {`Showing ${axisOverlapSampleCount} samples with data in both profiles (axes)`}
                 <div data-test="dataAvailabilityAlertInfoIcon">
                     <InfoIcon tooltip={<div>{components}</div>} />
                 </div>
@@ -4500,8 +4515,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 }
                 return (
                     <div>
-                        {this.props.store.studies.result.length > 1 &&
-                            this.dataAvailability}
+                        {this.dataAvailability}
                         <div
                             data-test="PlotsTabPlotDiv"
                             className="borderedChart posRelative"
