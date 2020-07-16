@@ -74,6 +74,31 @@ export default class PatientViewMutationsTab extends React.Component<
         this.showTimeline = !this.showTimeline;
     }
 
+    @computed get selectedGroupByOption() {
+        let option = this.groupByOptions.find(
+            opt => opt.value == this.props.store.groupById
+        );
+        return option
+            ? { label: option.label, value: this.props.store.groupById }
+            : '';
+    }
+
+    @computed get groupByOptions() {
+        const clinicalAttributes = this.props.sampleManager.getClinicalAttributeList(
+            this.props.sampleManager.samples
+        );
+        return [
+            {
+                label: 'None',
+                value: 'None',
+            },
+            ...clinicalAttributes.map(item => ({
+                label: `${item.value}`,
+                value: `${item.id}`,
+            })),
+        ];
+    }
+
     private dataStore = new PatientViewMutationsDataStore(
         () => this.mergedMutations,
         this.props.urlWrapper
@@ -88,6 +113,19 @@ export default class PatientViewMutationsTab extends React.Component<
     set vafLineChartLogScale(o: boolean) {
         this.props.urlWrapper.updateURL(currentParams => {
             currentParams.genomicEvolutionSettings.logScaleChart = o.toString();
+            return currentParams;
+        });
+    }
+
+    get vafShowTimeline() {
+        return (
+            this.props.urlWrapper.query.genomicEvolutionSettings
+                .vafShowTimeline === 'true'
+        );
+    }
+    set vafShowTimeline(o: boolean) {
+        this.props.urlWrapper.updateURL(currentParams => {
+            currentParams.genomicEvolutionSettings.vafShowTimeline = o.toString();
             return currentParams;
         });
     }
@@ -197,7 +235,46 @@ export default class PatientViewMutationsTab extends React.Component<
                         dontFade
                     />
                 </div>
+                <div
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: 5,
+                    }}
+                >
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <LabeledCheckbox
+                            checked={this.vafShowTimeline}
+                            onChange={() =>
+                                (this.vafShowTimeline = !this.vafShowTimeline)
+                            }
+                            labelProps={{ style: { marginRight: 10 } }}
+                            inputProps={{ 'data-test': 'VAFShowTimeline' }}
+                        >
+                            <span style={{ marginTop: -3 }}>Show timeline</span>
+                        </LabeledCheckbox>
+
+                        <span style={{ marginTop: -3, marginRight: 3 }}>
+                            Group by:
+                        </span>
+                        <div style={{ minWidth: 355, width: 355, zIndex: 20 }}>
+                            <ReactSelect
+                                value={this.selectedGroupByOption}
+                                options={this.groupByOptions}
+                                onChange={(option: any) => {
+                                    this.props.store.groupById = option
+                                        ? option.value
+                                        : '';
+                                }}
+                                clearable={false}
+                                searchable={true}
+                            />
+                        </div>
+                    </div>
+                </div>
                 <VAFLineChart
+                    store={this.props.store}
                     dataStore={this.dataStore}
                     samples={this.props.store.samples.result!}
                     coverageInformation={
@@ -210,6 +287,7 @@ export default class PatientViewMutationsTab extends React.Component<
                     svgRef={this.vafLineChartSvgRef}
                     logScale={this.vafLineChartLogScale}
                     zeroToOneAxis={this.vafLineChartZeroToOneYAxis}
+                    vafTimeline={this.vafShowTimeline}
                 />
             </div>
         ),

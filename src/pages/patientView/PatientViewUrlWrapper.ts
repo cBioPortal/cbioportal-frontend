@@ -21,6 +21,7 @@ export type PatientViewUrlQuery = {
         yAxisDataRangeInChart?: string;
 
         showOnlySelectedMutationsInTable?: string;
+        vafShowTimeline?: string;
     };
 };
 
@@ -47,6 +48,7 @@ export default class PatientViewUrlWrapper extends URLWrapper<
                     yAxisDataRangeInChart: '',
 
                     showOnlySelectedMutationsInTable: '',
+                    vafShowTimeline: '',
                 },
             },
         });

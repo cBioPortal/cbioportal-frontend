@@ -267,6 +267,15 @@ export class PatientViewPageStore {
         this.openResourceTabMap.set(resourceId, open);
     }
 
+    @observable _groupById = 'None';
+    get groupById() {
+        return this._groupById;
+    }
+
+    set groupById(value: string) {
+        this._groupById = value;
+    }
+
     @observable
     public mutationTableGeneFilterOption: GeneFilterOption = getGeneFilterDefault(
         getBrowserWindow().frontendConfig

@@ -20,15 +20,45 @@ function isPointBasedOnRealVAF(d: { mutationStatus: MutationStatus }) {
     );
 }
 
+function splitMutationsBySampleGroup(
+    mutations: Mutation[][],
+    sampleGroup: { [s: string]: string }
+) {
+    let groupedMutation: { [s: string]: Mutation[] } = {};
+    let groupedMutations: Mutation[][] = [];
+
+    mutations.forEach((mutation, i) => {
+        groupedMutation = {};
+        mutation.forEach((sample, j) => {
+            if (groupedMutation[sampleGroup[sample.sampleId]] === undefined) {
+                groupedMutation[sampleGroup[sample.sampleId]] = [];
+            }
+            //sample.groupByValue = sampleGroup[sample.sampleId];
+            groupedMutation[sampleGroup[sample.sampleId]].push(sample);
+        });
+        for (const m in groupedMutation) {
+            groupedMutations.push(groupedMutation[m]);
+        }
+    });
+    return groupedMutations;
+}
+
 export function computeRenderData(
     samples: Sample[],
     mutations: Mutation[][],
     sampleIdIndex: { [sampleId: string]: number },
     mutationProfileId: string,
-    coverageInformation: CoverageInformation
+    coverageInformation: CoverageInformation,
+    vafTimeline: boolean,
+    sampleTimelinePosition: number[],
+    groupById: string,
+    sampleGroup: { [s: string]: string }
 ) {
     const grayPoints: IPoint[] = []; // points that are purely interpolated for rendering, dont have data of their own
     const lineData: IPoint[][] = [];
+
+    if (groupById != undefined && groupById != 'none')
+        mutations = splitMutationsBySampleGroup(mutations, sampleGroup);
 
     for (const mergedMutation of mutations) {
         // determine data points in line for this mutation
@@ -41,6 +71,7 @@ export function computeRenderData(
             const sampleKey = mutation.uniqueSampleKey;
             const sampleId = mutation.sampleId;
             const vaf = getVariantAlleleFrequency(mutation);
+
             if (vaf !== null) {
                 // has VAF data
 
@@ -48,7 +79,12 @@ export function computeRenderData(
                     if (mutation.tumorAltCount > 0) {
                         // add point for uncalled mutation with supporting reads
                         thisLineData.push({
-                            x: sampleIdIndex[sampleId],
+                            x:
+                                vafTimeline === false
+                                    ? sampleIdIndex[sampleId]
+                                    : sampleTimelinePosition[
+                                          sampleIdIndex[sampleId]
+                                      ],
                             y: vaf,
                             sampleId,
                             mutation,
@@ -60,7 +96,12 @@ export function computeRenderData(
                 } else {
                     // add point for called mutation with VAF data
                     thisLineData.push({
-                        x: sampleIdIndex[sampleId],
+                        x:
+                            vafTimeline === false
+                                ? sampleIdIndex[sampleId]
+                                : sampleTimelinePosition[
+                                      sampleIdIndex[sampleId]
+                                  ],
                         y: vaf,
                         sampleId,
                         mutation,
@@ -71,7 +112,10 @@ export function computeRenderData(
             } else {
                 // no VAF data - add point which will be extrapolated
                 thisLineData.push({
-                    x: sampleIdIndex[sampleId],
+                    x:
+                        vafTimeline === false
+                            ? sampleIdIndex[sampleId]
+                            : sampleTimelinePosition[sampleIdIndex[sampleId]],
                     sampleId,
                     mutation,
                     mutationStatus: MutationStatus.MUTATED_BUT_NO_VAF,
@@ -94,14 +138,24 @@ export function computeRenderData(
                 ) {
                     // not profiled
                     thisLineData.push({
-                        x: sampleIdIndex[sample.sampleId],
+                        x:
+                            vafTimeline === false
+                                ? sampleIdIndex[sample.sampleId]
+                                : sampleTimelinePosition[
+                                      sampleIdIndex[sample.sampleId]
+                                  ],
                         sampleId: sample.sampleId,
                         mutation,
                         mutationStatus: MutationStatus.NOT_PROFILED,
                     });
                 } else {
                     thisLineData.push({
-                        x: sampleIdIndex[sample.sampleId],
+                        x:
+                            vafTimeline === false
+                                ? sampleIdIndex[sample.sampleId]
+                                : sampleTimelinePosition[
+                                      sampleIdIndex[sample.sampleId]
+                                  ],
                         y: 0,
                         sampleId: sample.sampleId,
                         mutation,

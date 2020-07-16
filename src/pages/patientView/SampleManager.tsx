@@ -230,6 +230,51 @@ class SampleManager {
         });
     }
 
+    getClinicalAttributeList(samples: Array<ClinicalDataBySampleId>) {
+        let clinicalAttributes: { id: string; value: string }[] = [];
+
+        samples.forEach((sample, sampleIndex) => {
+            sample.clinicalData.forEach((clinicalData, clinicalDataIndex) => {
+                if (
+                    clinicalAttributes.find(
+                        item => item.id === clinicalData.clinicalAttributeId
+                    ) === undefined
+                )
+                    clinicalAttributes.push({
+                        id: clinicalData.clinicalAttributeId,
+                        value: clinicalData.clinicalAttribute.displayName,
+                    });
+            });
+        });
+        return clinicalAttributes;
+    }
+
+    getClinicalAttributeSampleList(
+        samples: Array<ClinicalDataBySampleId>,
+        clinicalAttributeId: string
+    ) {
+        let clinicalAttributeSamplesMap = new Map();
+        if (clinicalAttributeId === undefined) return [];
+
+        samples.forEach((sample, sampleIndex) => {
+            sample.clinicalData.forEach((clinicalData, clinicalDataIndex) => {
+                if (clinicalData.clinicalAttributeId === clinicalAttributeId) {
+                    let sampleList = clinicalAttributeSamplesMap.get(
+                        clinicalData.value
+                    );
+                    if (sampleList === undefined) sampleList = [];
+                    sampleList.push(sample.id);
+
+                    clinicalAttributeSamplesMap.set(
+                        clinicalData.value,
+                        sampleList
+                    );
+                }
+            });
+        });
+        return clinicalAttributeSamplesMap;
+    }
+
     getComponentForSample(
         sampleId: string,
         fillOpacity: number = 1,
