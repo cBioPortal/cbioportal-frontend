@@ -20,7 +20,7 @@ export interface IPathwayMapperTable {
     genes: string[];
 }
 
-enum IPathwayMapperTableColumnType {
+export enum IPathwayMapperTableColumnType {
     NAME,
     SCORE,
     GENES,
@@ -31,6 +31,9 @@ interface IPathwayMapperTableProps {
     selectedPathway: string;
     changePathway: (pathway: string) => void;
     initialSortColumn?: string;
+    columnsOverride?: {
+        [columnEnum: number]: Partial<PathwayMapperTableColumn>;
+    };
 }
 
 type PathwayMapperTableColumn = Column<IPathwayMapperTable>;
@@ -70,6 +73,7 @@ export default class PathwayMapperTable extends React.Component<
             IPathwayMapperTableColumnType.SCORE,
             IPathwayMapperTableColumnType.GENES,
         ],
+        columnsOverride: {},
         initialSortColumn: 'Score',
     };
     @observable protected _columns: {
@@ -125,6 +129,8 @@ export default class PathwayMapperTable extends React.Component<
             ) => d.name.toUpperCase().includes(filterStringUpper),
             sortBy: (d: IPathwayMapperTable) => d.name,
             download: (d: IPathwayMapperTable) => d.name,
+
+            ...this.props.columnsOverride![IPathwayMapperTableColumnType.NAME],
         };
 
         this._columns[IPathwayMapperTableColumnType.SCORE] = {
@@ -142,6 +148,8 @@ export default class PathwayMapperTable extends React.Component<
             ) => (d.score + '').includes(filterStringUpper),
             sortBy: (d: IPathwayMapperTable) => d.score,
             download: (d: IPathwayMapperTable) => d.score + '',
+
+            ...this.props.columnsOverride![IPathwayMapperTableColumnType.SCORE],
         };
 
         this._columns[IPathwayMapperTableColumnType.GENES] = {
@@ -161,8 +169,19 @@ export default class PathwayMapperTable extends React.Component<
                 );
             },
             tooltip: <span>Genes matched</span>,
+            filter: (
+                d: IPathwayMapperTable,
+                filterString: string,
+                filterStringUpper: string
+            ) =>
+                d.genes
+                    .join(' ')
+                    .toUpperCase()
+                    .includes(filterStringUpper),
             sortBy: (d: IPathwayMapperTable) => d.genes.length,
             download: (d: IPathwayMapperTable) => d.genes.toString(),
+
+            ...this.props.columnsOverride![IPathwayMapperTableColumnType.GENES],
         };
     }
 
