@@ -742,11 +742,11 @@ export function parseGeneticInput(
     input: string
 ):
     | {
-          status: 'complete';
+          parseSuccess: true;
           result: OncoprinterGeneticInputLine[];
           error: undefined;
       }
-    | { status: 'error'; result: undefined; error: string } {
+    | { parseSuccess: false; result: undefined; error: string } {
     const lines = input
         .trim()
         .split('\n')
@@ -890,13 +890,13 @@ export function parseGeneticInput(
             }
         });
         return {
-            status: 'complete',
+            parseSuccess: true,
             result: result.filter(x => !!x) as OncoprinterGeneticInputLine[],
             error: undefined,
         };
     } catch (e) {
         return {
-            status: 'error',
+            parseSuccess: false,
             result: undefined,
             error: e.message,
         };

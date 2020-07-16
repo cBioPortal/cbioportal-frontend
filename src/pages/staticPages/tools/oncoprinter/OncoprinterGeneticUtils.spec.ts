@@ -32,7 +32,7 @@ describe('OncoprinterGeneticUtils', () => {
             assert.deepEqual(
                 parseGeneticInput('sample_id TP53 FUSION FUSION'),
                 {
-                    status: 'complete',
+                    parseSuccess: true,
                     result: [
                         {
                             sampleId: 'sample_id',
@@ -57,7 +57,7 @@ describe('OncoprinterGeneticUtils', () => {
             assert.deepEqual(
                 parseGeneticInput('sampleid	BRCA1	Q1538A	MISSENSE_GERMLINE'),
                 {
-                    status: 'complete',
+                    parseSuccess: true,
                     result: [
                         {
                             sampleId: 'sampleid',
@@ -75,7 +75,7 @@ describe('OncoprinterGeneticUtils', () => {
             assert.deepEqual(
                 parseGeneticInput('sampleid	BRCA1	Q1538A	TRUNC_DRIVER'),
                 {
-                    status: 'complete',
+                    parseSuccess: true,
                     result: [
                         {
                             sampleId: 'sampleid',
@@ -95,7 +95,7 @@ describe('OncoprinterGeneticUtils', () => {
                     'sampleid	BRCA1	Q1538A	MISSENSE_GERMLINE_DRIVER'
                 ),
                 {
-                    status: 'complete',
+                    parseSuccess: true,
                     result: [
                         {
                             sampleId: 'sampleid',
