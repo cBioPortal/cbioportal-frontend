@@ -208,7 +208,7 @@
     "oncoprintjs": "4.2.4",
     "pako": "2.0.2",
     "parameter-validator": "^1.0.2",
-    "pathway-mapper": "github:iVis-at-Bilkent/pathway-mapper#dbf72dac455b0df75fc097cd59fd6f2cf0359b23",
+    "pathway-mapper": "github:iVis-at-Bilkent/pathway-mapper#43564adb53cafb9e1b1018c9d5aaf19ffc0d18e7",
     "pdfobject": "^2.0.201604172",
     "pegjs": "^0.10.0",
     "plotly.js": "^1.42.5",

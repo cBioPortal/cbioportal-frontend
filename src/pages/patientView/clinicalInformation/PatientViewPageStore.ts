@@ -2307,6 +2307,7 @@ export class PatientViewPageStore {
             this.getMutationPutativeDriverInfo,
             this.entrezGeneIdToGene,
             this.getOncoKbCnaAnnotationForOncoprint,
+            this.getDiscreteCNAPutativeDriverInfo,
         ],
         invoke: () =>
             Promise.resolve(
