@@ -1,7 +1,6 @@
-import { Mutation } from 'cbioportal-utils';
 import * as _ from 'lodash';
 
-import CivicDataFetcher from '../store/CivicDataFetcher';
+import CivicDataFetcher from './CivicDataFetcher';
 import {
     ICivicEntry,
     ICivicGene,
@@ -9,6 +8,7 @@ import {
     ICivicVariant,
     ICivicVariantData,
 } from '../model/Civic';
+import { Mutation } from '../model/Mutation';
 
 export type MutationSpec = {
     gene: { hugoGeneSymbol: string };

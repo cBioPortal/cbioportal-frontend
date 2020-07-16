@@ -4,7 +4,7 @@ import * as React from 'react';
 import { ReactNode } from 'react';
 import { TableProps } from 'react-table';
 
-import { Mutation } from 'cbioportal-utils';
+import { MobxCache, Mutation } from 'cbioportal-utils';
 
 import { DefaultPubMedCache } from '../../cache/DefaultPubMedCache';
 import { MutationAlignerCache } from '../../cache/MutationAlignerCache';
@@ -12,7 +12,6 @@ import { FilterResetPanel } from './FilterResetPanel';
 import { DataFilter } from '../../model/DataFilter';
 import { ApplyFilterFn, FilterApplier } from '../../model/FilterApplier';
 import { LollipopPlotControlsConfig } from '../../model/LollipopPlotControlsConfig';
-import { MobxCache } from '../../model/MobxCache';
 import { MutationMapperDataFetcher } from '../../model/MutationMapperDataFetcher';
 import { MutationMapperStore } from '../../model/MutationMapperStore';
 import { DefaultLollipopPlotControlsConfig } from '../../store/DefaultLollipopPlotControlsConfig';

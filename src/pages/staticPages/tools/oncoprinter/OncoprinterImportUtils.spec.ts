@@ -2,11 +2,16 @@ import { assert } from 'chai';
 import {
     getOncoprinterClinicalInput,
     getOncoprinterGeneticInput,
+    getOncoprinterHeatmapInput,
 } from './OncoprinterImportUtils';
-import { AlterationTypeConstants } from '../../../resultsView/ResultsViewPageStore';
+import {
+    AlterationTypeConstants,
+    DataTypeConstants,
+} from '../../../resultsView/ResultsViewPageStore';
 import { PUTATIVE_DRIVER } from '../../../../shared/constants';
 import { SpecialAttribute } from '../../../../shared/cache/ClinicalDataCache';
-import { ONCOPRINTER_CLINICAL_VAL_NA } from './OncoprinterClinicalUtils';
+import { ONCOPRINTER_VAL_NA } from './OncoprinterClinicalAndHeatmapUtils';
+import { IHeatmapTrackSpec } from '../../../../shared/components/oncoprint/Oncoprint';
 
 describe('OncoprinterImportUtils', () => {
     describe('getOncoprinterGeneticInput', () => {
@@ -242,7 +247,7 @@ describe('OncoprinterImportUtils', () => {
             },
         };
 
-        it('produces correct oncoprinter clinical input for 2 samples x 4 tracks', () => {
+        it('produces correct oncoprinter clinical and heatmap input for 2 samples x 4 tracks', () => {
             assert.deepEqual(
                 getOncoprinterClinicalInput(
                     data,
@@ -257,8 +262,8 @@ describe('OncoprinterImportUtils', () => {
                     'sample'
                 ),
                 'Sample  Age(number)  Mutation_Count(lognumber)  Cancer_type(string)  Mutation_Spectrum(C>A/C>G/C>T/T>A/T>C/T>G)\n' +
-                    `sample1  ${ONCOPRINTER_CLINICAL_VAL_NA}  5  Prostate  3/4/5/10/2/0\n` +
-                    `sample2  19  12  ${ONCOPRINTER_CLINICAL_VAL_NA}  ${ONCOPRINTER_CLINICAL_VAL_NA}`
+                    `sample1  ${ONCOPRINTER_VAL_NA}  5  Prostate  3/4/5/10/2/0\n` +
+                    `sample2  19  12  ${ONCOPRINTER_VAL_NA}  ${ONCOPRINTER_VAL_NA}`
             );
         });
         it('produces correct oncoprinter clinical input for 2 patients x 4 tracks', () => {
@@ -276,8 +281,119 @@ describe('OncoprinterImportUtils', () => {
                     'patient'
                 ),
                 'Sample  Age(number)  Mutation_Count(lognumber)  Cancer_type(string)  Mutation_Spectrum(C>A/C>G/C>T/T>A/T>C/T>G)\n' +
-                    `patient1  ${ONCOPRINTER_CLINICAL_VAL_NA}  5  Prostate  3/4/5/10/2/0\n` +
-                    `patient2  19  12  ${ONCOPRINTER_CLINICAL_VAL_NA}  ${ONCOPRINTER_CLINICAL_VAL_NA}`
+                    `patient1  ${ONCOPRINTER_VAL_NA}  5  Prostate  3/4/5/10/2/0\n` +
+                    `patient2  19  12  ${ONCOPRINTER_VAL_NA}  ${ONCOPRINTER_VAL_NA}`
+            );
+        });
+    });
+
+    describe('getOncoprinterHeatmapInput', () => {
+        const heatmapTracks: IHeatmapTrackSpec[] = [
+            {
+                key: 'mrna-zscores',
+                label: 'PTEN',
+                molecularProfileId: 'zscores',
+                molecularAlterationType: 'MRNA_EXPRESSION',
+                molecularProfileName: 'mRNA (z-scores)',
+                datatype: DataTypeConstants.ZSCORE,
+                data: [
+                    {
+                        profile_data: 1.5,
+                        sample: 'sample1',
+                        patient: 'patient1',
+                        study_id: '',
+                        uid: 'sample1',
+                        na: false,
+                    },
+                    {
+                        profile_data: -1,
+                        sample: 'sample2',
+                        patient: 'patient2',
+                        study_id: '',
+                        uid: 'sample2',
+                        na: false,
+                    },
+                ],
+                trackGroupIndex: 2,
+            },
+            {
+                key: 'mrna',
+                label: 'BRCA1',
+                molecularProfileId: 'mrna',
+                molecularAlterationType: 'MRNA_EXPRESSION',
+                molecularProfileName: 'mRNA values',
+                datatype: DataTypeConstants.CONTINUOUS,
+                data: [
+                    {
+                        profile_data: 6,
+                        sample: 'sample1',
+                        patient: 'patient1',
+                        study_id: '',
+                        uid: 'sample1',
+                        na: false,
+                    },
+                    {
+                        profile_data: null,
+                        sample: 'sample2',
+                        patient: 'patient2',
+                        study_id: '',
+                        uid: 'sample2',
+                        na: true,
+                    },
+                ],
+                trackGroupIndex: 2,
+            },
+            {
+                key: 'methylation',
+                label: 'TP53',
+                molecularProfileId: 'methylation',
+                molecularAlterationType: 'METHYLATION',
+                molecularProfileName: 'Methylation (HM27)',
+                datatype: DataTypeConstants.CONTINUOUS,
+                data: [
+                    {
+                        profile_data: 0.3,
+                        sample: 'sample1',
+                        patient: 'patient1',
+                        study_id: '',
+                        uid: 'sample1',
+                        na: false,
+                    },
+                    {
+                        profile_data: 0.8,
+                        sample: 'sample2',
+                        patient: 'patient2',
+                        study_id: '',
+                        uid: 'sample2',
+                        na: false,
+                    },
+                ],
+                trackGroupIndex: 2,
+            },
+        ];
+
+        it('produces correct oncoprinter heatmap input for 2 samples x 3 tracks', () => {
+            assert.equal(
+                getOncoprinterHeatmapInput(
+                    heatmapTracks,
+                    ['sample1', 'sample2'],
+                    'sample'
+                ),
+                `Sample  PTEN_mRNA_z-scores(heatmapZscores)  BRCA1_mRNA_values(heatmap)  TP53_Methylation_HM27(heatmap01)\n` +
+                    `sample1  1.5  6  0.3\n` +
+                    `sample2  -1  ${ONCOPRINTER_VAL_NA}  0.8`
+            );
+        });
+        it('produces correct oncoprinter heatmap input for 2 patients x 3 tracks', () => {
+            assert.equal(
+                getOncoprinterHeatmapInput(
+                    heatmapTracks,
+                    ['patient1', 'patient2'],
+                    'patient'
+                ),
+                'Sample  PTEN_mRNA_z-scores(heatmapZscores)  BRCA1_mRNA_values(heatmap)  TP53_Methylation_HM27(heatmap01)\n' +
+                    `patient1  1.5  6  0.3\n` +
+                    `patient2  -1  ${ONCOPRINTER_VAL_NA}  0.8`
             );
         });
     });

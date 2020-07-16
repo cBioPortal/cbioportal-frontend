@@ -136,8 +136,6 @@ export { OncoKbFilter } from './filter/OncoKbFilter';
 export { PositionFilter } from './filter/PositionFilter';
 export { ProteinImpactTypeFilter } from './filter/ProteinImpactTypeFilter';
 
-export { AggregatedHotspots, IHotspotIndex } from './model/CancerHotspot';
-export * from './model/Civic';
 export { DataFilter, DataFilterType } from './model/DataFilter';
 export { DataStore } from './model/DataStore';
 export { DomainSpec } from './model/DomainSpec';
@@ -146,18 +144,10 @@ export { IProteinImpactTypeColors } from './model/ProteinImpact';
 export { LollipopSpec } from './model/LollipopSpec';
 export { MutationMapperDataFetcher } from './model/MutationMapperDataFetcher';
 export { MutationMapperStore } from './model/MutationMapperStore';
-export * from './model/MyCancerGenome';
-export { RemoteData } from './model/RemoteData';
 export { SequenceSpec } from './model/SequenceSpec';
 
-export { default as CivicAPI } from './store/CivicDataFetcher';
-
-export * from './util/CancerHotspotsUtils';
-export * from './util/CivicUtils';
 export * from './util/DataFetcherUtils';
 export * from './util/FilterUtils';
-export * from './util/FormatUtils';
-export * from './util/MyCancerGenomeUtils';
 export * from './util/ReactTableUtils';
 export {
     MUTATION_TYPE_PRIORITY,

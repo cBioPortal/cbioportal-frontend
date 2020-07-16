@@ -1,6 +1,7 @@
 import * as $ from 'jquery';
 import _ from 'underscore';
 import * as React from 'react';
+import * as styleConsts from './clinicalAttributesStyleConsts.ts';
 
 /**
  * Functions for dealing with clinical attributes.
@@ -196,29 +197,38 @@ function cleanAndDerive(clinicalData) {
  * @param {object} clinicalData     - key/value pairs of clinical data
  * @param {string} cancerStudyId    - short name of cancer study
  */
-function getSpanElements(clinicalData, cancerStudyId) {
-    return getSpanElementsFromCleanData(
-        cleanAndDerive(clinicalData),
-        cancerStudyId
-    );
+function getSpanElements(clinicalData) {
+    return getSpanElementsFromCleanData(cleanAndDerive(clinicalData));
 }
 
-function getSpanElementsFromCleanData(
-    clinicalAttributesCleanDerived,
-    cancerStudyId
-) {
-    let spans = [];
-    return Object.keys(clinicalAttributesCleanDerived).map(key => {
+function getSpanElementsFromCleanData(clinicalAttributesCleanDerived) {
+    const config = styleConsts.config;
+    const sortedKeys = Object.keys(clinicalAttributesCleanDerived)
+        .sort((a, b) => {
+            return styleConsts.compare(a, b, config);
+        })
+        .filter(key => {
+            return styleConsts.inConfig(key, config);
+        });
+
+    return sortedKeys.map(key => {
         let value = clinicalAttributesCleanDerived[key];
+        const [prefix, middle, suffix] = styleConsts.stringBuilder(
+            value,
+            key,
+            config,
+            sortedKeys
+        );
         return (
             <span
                 is
-                class="clinical-attribute"
-                attr-id={key}
-                attr-value={value}
-                study={cancerStudyId}
+                style={{
+                    color: styleConsts.calculateColor(value, key, config),
+                }}
             >
-                {value}
+                <span class="dark-comma">{prefix}</span>
+                {middle}
+                <span class="dark-comma">{suffix}</span>
             </span>
         );
     });

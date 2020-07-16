@@ -1,8 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 
-import { LEVELS } from 'cbioportal-frontend-commons';
-import { Mutation } from 'cbioportal-utils';
+import { LEVELS, Mutation } from 'cbioportal-utils';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 
 import OncoKbSummaryTable from '../oncokb/OncoKbSummaryTable';

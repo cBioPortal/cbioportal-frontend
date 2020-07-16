@@ -4,14 +4,10 @@ import { Mutation } from 'cbioportal-ts-api-client';
 import {
     getMyVariantInfoAnnotation,
     IMyVariantInfoIndex,
+    RemoteData,
 } from 'cbioportal-utils';
 import { MyVariantInfo, VariantAnnotation } from 'genome-nexus-ts-api-client';
-import {
-    Gnomad,
-    gnomadDownload,
-    gnomadSortValue,
-    RemoteData,
-} from 'react-mutation-mapper';
+import { Gnomad, gnomadDownload, gnomadSortValue } from 'react-mutation-mapper';
 
 export default class GnomadColumnFormatter {
     public static renderFunction(

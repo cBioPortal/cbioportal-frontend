@@ -13,7 +13,7 @@ import {
     getAlterationCountsForCancerTypesForAllGenes,
 } from '../../../shared/lib/alterationCountHelpers';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
-import { getMobxPromiseGroupStatus } from 'cbioportal-frontend-commons';
+import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 import { ResultsViewURLQueryEnum } from 'pages/resultsView/ResultsViewURLWrapper';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
@@ -195,7 +195,7 @@ export default class CancerSummaryContainer extends React.Component<
     }
 
     public render() {
-        const status = getMobxPromiseGroupStatus(
+        const status = getRemoteDataGroupStatus(
             this.props.store.samplesExtendedWithClinicalData,
             this.props.store.oqlFilteredAlterationsByGeneBySampleKey,
             this.props.store.studies,

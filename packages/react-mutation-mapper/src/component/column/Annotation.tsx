@@ -1,24 +1,24 @@
 import {
-    getMobxPromiseGroupStatus,
+    getCivicEntry,
+    getMyCancerGenomeLinks,
+    getRemoteDataGroupStatus,
+    ICivicEntry,
+    ICivicGene,
+    ICivicVariant,
+    IHotspotIndex,
+    IMyCancerGenomeData,
     IOncoKbData,
-} from 'cbioportal-frontend-commons';
-import { Mutation } from 'cbioportal-utils';
+    is3dHotspot,
+    isRecurrentHotspot,
+    MobxCache,
+    Mutation,
+    RemoteData,
+} from 'cbioportal-utils';
 import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
-import { IHotspotIndex } from '../../model/CancerHotspot';
-import { ICivicEntry, ICivicGene, ICivicVariant } from '../../model/Civic';
-import { MobxCache } from '../../model/MobxCache';
-import { IMyCancerGenomeData } from '../../model/MyCancerGenome';
-import { RemoteData } from '../../model/RemoteData';
-import {
-    is3dHotspot,
-    isRecurrentHotspot,
-} from '../../util/CancerHotspotsUtils';
-import { getCivicEntry } from '../../util/CivicUtils';
-import { getMyCancerGenomeLinks } from '../../util/MyCancerGenomeUtils';
 import { getIndicatorData } from '../../util/OncoKbUtils';
 import { defaultArraySortMethod } from '../../util/ReactTableUtils';
 import Civic, { sortValue as civicSortValue } from '../civic/Civic';
@@ -160,7 +160,7 @@ export function getAnnotationData(
                 civicGenes.status &&
                 civicVariants &&
                 civicVariants.status
-                    ? getMobxPromiseGroupStatus(civicGenes, civicVariants)
+                    ? getRemoteDataGroupStatus(civicGenes, civicVariants)
                     : 'pending',
             hasCivicVariants: true,
             myCancerGenomeLinks: myCancerGenomeData

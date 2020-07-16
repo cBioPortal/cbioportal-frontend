@@ -1,6 +1,6 @@
 import { action, observable } from 'mobx';
 
-import { CacheData, MobxCache } from '../model/MobxCache';
+import { CacheData, MobxCache } from 'cbioportal-utils';
 
 export abstract class DefaultStringQueryCache<D>
     implements MobxCache<D, string> {

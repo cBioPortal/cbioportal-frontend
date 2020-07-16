@@ -9,7 +9,7 @@ import classnames from 'classnames';
 import styles from './DownloadControls.module.scss';
 import { saveSvg, saveSvgAsPng } from 'save-svg-as-png';
 import svgToPdfDownload from '../../lib/svgToPdfDownload';
-import { isPromiseLike } from '../../lib/PromiseUtils';
+import { isPromiseLike } from 'cbioportal-utils';
 import { CSSProperties } from 'react';
 
 type ButtonSpec = {

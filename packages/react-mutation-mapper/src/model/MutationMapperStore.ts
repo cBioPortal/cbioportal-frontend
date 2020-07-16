@@ -1,5 +1,13 @@
-import { IOncoKbData } from 'cbioportal-frontend-commons';
-import { Gene, Mutation } from 'cbioportal-utils';
+import {
+    Gene,
+    ICivicGene,
+    ICivicVariant,
+    IHotspotIndex,
+    IMyCancerGenomeData,
+    IOncoKbData,
+    Mutation,
+    RemoteData,
+} from 'cbioportal-utils';
 import {
     EnsemblTranscript,
     Hotspot,
@@ -13,11 +21,7 @@ import {
     IndicatorQueryResp,
     OncoKBInfo,
 } from 'oncokb-ts-api-client';
-import { IHotspotIndex } from './CancerHotspot';
-import { ICivicGene, ICivicVariant } from './Civic';
 import DataStore from './DataStore';
-import { IMyCancerGenomeData } from './MyCancerGenome';
-import { RemoteData } from './RemoteData';
 
 export interface MutationMapperStore {
     gene: Gene;
