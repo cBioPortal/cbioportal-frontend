@@ -426,12 +426,11 @@ export function pickProteinEnrichmentProfiles(profiles: MolecularProfile[]) {
 export function pickMethylationEnrichmentProfiles(
     profiles: MolecularProfile[]
 ) {
-    const methylationProfiles = profiles.filter(p => {
+    return profiles.filter(p => {
         return (
             p.molecularAlterationType === AlterationTypeConstants.METHYLATION
         );
     });
-    return methylationProfiles;
 }
 
 export function getAlterationEnrichmentColumns(

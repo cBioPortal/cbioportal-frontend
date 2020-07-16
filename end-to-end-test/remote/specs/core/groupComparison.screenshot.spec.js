@@ -352,6 +352,22 @@ describe('group comparison page screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
+        it('group comparison page methylation enrichments tab several groups', function() {
+            browser.click('.tabAnchor_methylation');
+            browser.waitForVisible(
+                'div[data-test="GroupComparisonMethylationEnrichments"]',
+                10000
+            );
+            browser.waitForVisible('b=MTRF1L', 10000);
+            browser.click('b=MTRF1L');
+            browser.waitForVisible('div[data-test="MiniBoxPlot"]', 20000);
+            browser.moveToObject('body', 0, 0);
+            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
+                hide: ['.qtip'],
+            });
+            assertScreenShotMatch(res);
+        });
+
         it('group comparison page mutation enrichments tab two groups', function() {
             // deselect two groups
             browser.click('button[data-test="groupSelectorButtonGARS mutant"]');
@@ -427,6 +443,21 @@ describe('group comparison page screenshot tests', function() {
             );
             browser.waitForVisible('b=ETS1', 10000);
             browser.click('b=ETS1');
+            browser.moveToObject('body', 0, 0);
+            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
+                hide: ['.qtip'],
+            });
+            assertScreenShotMatch(res);
+        });
+
+        it('group comparison page methylation enrichments tab two groups', function() {
+            browser.click('.tabAnchor_methylation');
+            browser.waitForVisible(
+                'div[data-test="GroupComparisonMethylationEnrichments"]',
+                10000
+            );
+            browser.waitForVisible('b=BET1', 10000);
+            browser.click('b=BET1');
             browser.moveToObject('body', 0, 0);
             var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
                 hide: ['.qtip'],
