@@ -214,7 +214,7 @@ export default class OncoprinterTool extends React.Component<
                 style={{ display: this.dataInputOpened ? undefined : 'none' }}
             >
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <div className={styles.inputSection}>
+                    <div>
                         <ControlLabel style={{ marginBottom: 7 }}>
                             Step 1) Input genomic alteration data (optional):
                         </ControlLabel>
@@ -254,7 +254,7 @@ export default class OncoprinterTool extends React.Component<
                         <input ref={this.geneticFileInputRef} type="file" />
                     </div>
                     <hr style={{ width: '100%' }} />
-                    <div className={styles.inputSection}>
+                    <div>
                         <ControlLabel style={{ marginBottom: 7 }}>
                             Step 2) Input clinical data (optional):
                         </ControlLabel>
@@ -294,7 +294,7 @@ export default class OncoprinterTool extends React.Component<
                         <input ref={this.clinicalFileInputRef} type="file" />
                     </div>
                     <hr style={{ width: '100%' }} />
-                    <div className={styles.inputSection}>
+                    <div>
                         <ControlLabel style={{ marginBottom: 7 }}>
                             Step 3) Input heatmap data (optional):
                         </ControlLabel>

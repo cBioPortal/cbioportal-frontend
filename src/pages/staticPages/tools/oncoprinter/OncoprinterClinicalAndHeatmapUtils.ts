@@ -44,14 +44,14 @@ type OncoprinterHeatmapTrackDatum = Pick<
 // This isn't meant to be plugged into mobxpromise machinery i.e. with `await`
 type ParseInputResult<TrackSpecType> =
     | {
-          status: 'complete';
+          parseSuccess: true;
           result: {
               headers: TrackSpecType[];
               data: OncoprinterOrderedValuesInputLine[];
           };
           error: undefined;
       }
-    | { status: 'error'; result: undefined; error: string };
+    | { parseSuccess: false; result: undefined; error: string };
 
 const ATTRIBUTE_REGEX = /^((?:[^\(\)])+)(?:\(([^\(\)]+)\))?$/;
 const COUNTS_MAP_ATTRIBUTE_TYPE_REGEX = /^(?:[^\/]+\/)+[^\/]+$/;
@@ -203,14 +203,14 @@ export function parseClinicalInput(
     input: string
 ):
     | {
-          status: 'complete';
+          parseSuccess: true;
           result: {
               headers: OncoprinterClinicalTrackSpec[];
               data: OncoprinterOrderedValuesInputLine[];
           };
           error: undefined;
       }
-    | { status: 'error'; result: undefined; error: string } {
+    | { parseSuccess: false; result: undefined; error: string } {
     return parseInput(input, 'clinical');
 }
 
@@ -218,14 +218,14 @@ export function parseHeatmapInput(
     input: string
 ):
     | {
-          status: 'complete';
+          parseSuccess: true;
           result: {
               headers: OncoprinterHeatmapTrackSpec[];
               data: OncoprinterOrderedValuesInputLine[];
           };
           error: undefined;
       }
-    | { status: 'error'; result: undefined; error: string } {
+    | { parseSuccess: false; result: undefined; error: string } {
     return parseInput(input, 'heatmap');
 }
 
@@ -252,7 +252,7 @@ function parseInput(
 
     if (lines.length === 0) {
         return {
-            status: 'complete',
+            parseSuccess: true,
             result: { headers: [], data: [] },
             error: undefined,
         };
@@ -287,7 +287,7 @@ function parseInput(
             }
         });
         return {
-            status: 'complete',
+            parseSuccess: true,
             result: {
                 headers: attributes,
                 data: result.filter(
@@ -300,7 +300,7 @@ function parseInput(
             | ParseInputResult<OncoprinterHeatmapTrackSpec>;
     } catch (e) {
         return {
-            status: 'error',
+            parseSuccess: false,
             result: undefined,
             error: e.message,
         };

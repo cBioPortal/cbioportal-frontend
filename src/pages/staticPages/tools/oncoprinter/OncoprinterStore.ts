@@ -202,7 +202,7 @@ export default class OncoprinterStore {
         }
 
         const parsed = parseGeneticInput(this._geneticDataInput);
-        if (parsed.status === 'error') {
+        if (!parsed.parseSuccess) {
             return {
                 error: parsed.error,
                 result: null,
@@ -224,7 +224,7 @@ export default class OncoprinterStore {
         }
 
         const parsed = parseClinicalInput(this._clinicalDataInput);
-        if (parsed.status === 'error') {
+        if (!parsed.parseSuccess) {
             return {
                 error: parsed.error,
                 result: null,
@@ -246,7 +246,7 @@ export default class OncoprinterStore {
         }
 
         const parsed = parseHeatmapInput(this._heatmapDataInput);
-        if (parsed.status === 'error') {
+        if (!parsed.parseSuccess) {
             return {
                 error: parsed.error,
                 result: null,
