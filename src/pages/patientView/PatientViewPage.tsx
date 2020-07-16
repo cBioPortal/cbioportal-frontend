@@ -74,6 +74,7 @@ import {
     PatientViewPageTabs,
     PatientViewResourceTabPrefix,
 } from './PatientViewPageTabs';
+import PatientViewPathwayMapper from './pathwayMapper/PatientViewPathwayMapper';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
 import { MakeMobxView } from '../../shared/components/MobxView';
 import ResourceTab from '../../shared/components/resources/ResourceTab';
@@ -1450,6 +1451,25 @@ export default class PatientViewPage extends React.Component<
                                             />
                                         </MSKTab>
                                     )}
+                                <MSKTab
+                                    key={8}
+                                    id={PatientViewPageTabs.PATHWAY_MAPPER}
+                                    linkText={'Pathways'}
+                                >
+                                    {true /*showPM ? ( control if the values are complete*/ ? (
+                                        <PatientViewPathwayMapper
+                                            store={this.patientViewPageStore}
+                                            appStore={this.props.appStore}
+                                            urlWrapper={this.urlWrapper}
+                                        />
+                                    ) : (
+                                        <LoadingIndicator
+                                            isLoading={true}
+                                            size={'big'}
+                                            center={true}
+                                        />
+                                    )}
+                                </MSKTab>
 
                                 <MSKTab
                                     key={2}
