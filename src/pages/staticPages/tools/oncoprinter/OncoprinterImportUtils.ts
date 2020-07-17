@@ -2,27 +2,23 @@ import {
     ClinicalTrackDatum,
     GeneticTrackDatum,
     GeneticTrackDatum_Data,
+    IHeatmapTrackSpec,
 } from '../../../../shared/components/oncoprint/Oncoprint';
 import {
     isType2,
     OncoprinterGeneticInputLine,
     OncoprinterGeneticInputLineType2,
 } from './OncoprinterGeneticUtils';
-import {
-    ClinicalAttribute,
-    ClinicalData,
-    PatientIdentifier,
-    SampleIdentifier,
-} from 'cbioportal-ts-api-client';
+import { ClinicalAttribute } from 'cbioportal-ts-api-client';
 import { isNotGermlineMutation } from '../../../../shared/lib/MutationUtils';
 import { AlterationTypeConstants } from '../../../resultsView/ResultsViewPageStore';
 import { getOncoprintMutationType } from '../../../../shared/components/oncoprint/DataUtils';
 import { cna_profile_data_to_string } from '../../../../shared/lib/oql/AccessorsForOqlFilter';
 import {
     ClinicalTrackDataType,
-    ONCOPRINTER_CLINICAL_VAL_NA,
-    OncoprinterClinicalInputLine,
-} from './OncoprinterClinicalUtils';
+    HeatmapTrackDataType,
+    ONCOPRINTER_VAL_NA,
+} from './OncoprinterClinicalAndHeatmapUtils';
 import _ from 'lodash';
 import { PUTATIVE_DRIVER } from '../../../../shared/constants';
 import {
@@ -48,6 +44,23 @@ const geneticAlterationToDataType: {
     protHigh: AlterationTypeConstants.PROTEIN_LEVEL,
     protLow: AlterationTypeConstants.PROTEIN_LEVEL,
 };
+
+function getHeatmapType(
+    molecularProfileId: string,
+    molecularAlterationType: string
+) {
+    //console.log(molecularProfileId, molecularAlterationType);
+    if (/zscores/i.test(molecularProfileId)) {
+        return HeatmapTrackDataType.HEATMAP_ZSCORE;
+    } else {
+        switch (molecularAlterationType) {
+            case AlterationTypeConstants.METHYLATION:
+                return HeatmapTrackDataType.HEATMAP_01;
+            default:
+                return HeatmapTrackDataType.HEATMAP;
+        }
+    }
+}
 
 function getOncoprinterParsedGeneticInputLine(
     d: GeneticTrackDatum_Data,
@@ -153,11 +166,67 @@ export function getOncoprinterGeneticInput(
 }
 
 function sanitizeColumnData(s: string) {
+    // take out spaces
     return s.replace(/\s+/g, '_');
 }
 
+function sanitizeColumnName(s: string) {
+    // take out parentheses and spaces
+    return s.replace(/[()]/g, '').replace(/\s+/g, '_');
+}
+
+export function getOncoprinterHeatmapInput(
+    heatmapTracks: IHeatmapTrackSpec[],
+    caseIds: string[],
+    sampleOrPatient: 'sample' | 'patient'
+) {
+    const heatmapTrackToCaseToHeatmapData = _.mapValues(
+        _.keyBy(heatmapTracks, t => t.key),
+        track => _.keyBy(track.data, d => d[sampleOrPatient])
+    );
+    const rows: any[] = [];
+    // header row
+    rows.push(
+        ['Sample'].concat(
+            heatmapTracks.map(
+                track =>
+                    `${sanitizeColumnName(
+                        `${track.label}_${track.molecularProfileName}`
+                    )}(${getHeatmapType(
+                        track.molecularProfileId,
+                        track.molecularAlterationType
+                    )})`
+            )
+        )
+    );
+
+    // data
+    for (const caseId of caseIds) {
+        rows.push(
+            [caseId as any].concat(
+                heatmapTracks.map(track => {
+                    const datum =
+                        heatmapTrackToCaseToHeatmapData[track.key][caseId];
+                    if (
+                        !datum ||
+                        datum.na ||
+                        datum.profile_data === null ||
+                        isNaN(datum.profile_data)
+                    ) {
+                        return ONCOPRINTER_VAL_NA;
+                    }
+
+                    return datum.profile_data;
+                })
+            )
+        );
+    }
+
+    return rows.map(row => row.join('  ')).join('\n');
+}
+
 export function getOncoprinterClinicalInput(
-    data: ClinicalTrackDatum[],
+    clinicalData: ClinicalTrackDatum[],
     caseIds: string[],
     attributeIds: string[],
     attributeIdToAttribute: {
@@ -168,15 +237,14 @@ export function getOncoprinterClinicalInput(
     },
     sampleOrPatient: 'sample' | 'patient'
 ): string {
-    const caseToClinicalData = _.groupBy(data, d => d[sampleOrPatient]);
-
+    const caseToClinicalData = _.groupBy(clinicalData, d => d[sampleOrPatient]);
     const rows: any[] = [];
     // header row
     rows.push(
         ['Sample'].concat(
             attributeIds.map(attributeId => {
                 const attribute = attributeIdToAttribute[attributeId];
-                const name = sanitizeColumnData(attribute.displayName);
+                const name = sanitizeColumnName(attribute.displayName);
                 let datatype = attribute.datatype.toLowerCase();
                 if (attribute.clinicalAttributeId === 'MUTATION_COUNT') {
                     datatype = ClinicalTrackDataType.LOG_NUMBER;
@@ -203,7 +271,7 @@ export function getOncoprinterClinicalInput(
                         );
 
                     if (!datum || datum.na || !datum.attr_val) {
-                        return ONCOPRINTER_CLINICAL_VAL_NA;
+                        return ONCOPRINTER_VAL_NA;
                     }
 
                     if (attributeId === SpecialAttribute.MutationSpectrum) {

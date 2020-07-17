@@ -117,7 +117,7 @@ export default class PatientHeader extends React.Component<
                         >
                             {patient.id}
                         </a>
-                        {getSpanElements(clinicalDataLegacy, studyId)}
+                        {getSpanElements(clinicalDataLegacy)}
                     </span>
                 </DefaultTooltip>
             )
