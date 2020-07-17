@@ -77,7 +77,7 @@ describe('single study query', function() {
 
             checkBox.waitForExist(10000);
 
-            browser.click('[data-test="StudySelect"]');
+            browser.click('[data-test="StudySelect"] input');
 
             clickQueryByGeneButton();
 
