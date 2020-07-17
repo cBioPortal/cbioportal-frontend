@@ -926,7 +926,8 @@ function makeAxisDataPromise_Clinical(
             if (attribute.patientAttribute) {
                 // produce sample data from patient clinical data
                 for (const d of data) {
-                    const samples = _patientKeyToSamples[d.uniquePatientKey];
+                    const samples =
+                        _patientKeyToSamples[d.uniquePatientKey] || [];
                     for (const sample of samples) {
                         axisData_Data.push({
                             uniqueSampleKey: sample.uniqueSampleKey,
