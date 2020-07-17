@@ -30,6 +30,7 @@ import { AppStore } from './AppStore';
 import { handleLongUrls } from 'shared/lib/handleLongUrls';
 import 'shared/polyfill/canvasToBlob';
 import mobx from 'mobx';
+import { setCurrentURLHeader } from 'shared/lib/extraHeader';
 
 superagentCache(superagent);
 
@@ -70,6 +71,12 @@ if (getBrowserWindow().navigator.webdriver) {
     });
 
     setNetworkListener();
+}
+
+// for cbioportal instances, add an extra custom HTTP header to
+// aid debugging in Sentry
+if (/cbioportal\.org/.test(getBrowserWindow().location.href)) {
+    setCurrentURLHeader();
 }
 
 // expose version on window
