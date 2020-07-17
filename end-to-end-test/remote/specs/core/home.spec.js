@@ -66,7 +66,7 @@ describe('homepage', function() {
 
         assert.equal(browser.isExisting(caseSetSelectorClass), false);
 
-        browser.click('[data-test="StudySelect"]');
+        browser.click('[data-test="StudySelect"] input');
 
         clickQueryByGeneButton();
 
