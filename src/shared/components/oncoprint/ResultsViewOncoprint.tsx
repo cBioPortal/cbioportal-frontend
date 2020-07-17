@@ -1145,10 +1145,6 @@ export default class ResultsViewOncoprint extends React.Component<
         });
     }
 
-    removeHeatmapTracksByProfileId(molecularProfileId: string) {
-        this.addHeatmapTracks;
-    }
-
     private toggleColumnMode() {
         switch (this.oncoprintAnalysisCaseType) {
             case OncoprintAnalysisCaseType.SAMPLE:
