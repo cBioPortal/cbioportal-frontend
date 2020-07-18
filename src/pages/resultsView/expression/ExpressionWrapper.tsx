@@ -54,6 +54,7 @@ import BoxScatterPlot, {
 } from '../../../shared/components/plots/BoxScatterPlot';
 import { ColoringType, PlotType } from '../plots/PlotsTab';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
+import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 
 export interface ExpressionWrapperProps {
     store: ResultsViewPageStore;
@@ -725,6 +726,7 @@ export default class ExpressionWrapper extends React.Component<
                         style={{ marginTop: -1, marginBottom: 12 }}
                     />
                     <AlterationFilterWarning store={this.props.store} />
+                    <CaseFilterWarning store={this.props.store} />
                 </div>
                 {this.studySelectorModalVisible && this.studySelectionModal}
                 <div style={{ marginBottom: 15 }}>

@@ -78,6 +78,7 @@ import AlterationFilterWarning from '../banners/AlterationFilterWarning';
 import WindowStore from '../window/WindowStore';
 import { OncoprintAnalysisCaseType } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
+import CaseFilterWarning from '../banners/CaseFilterWarning';
 import {
     getOncoprinterClinicalInput,
     getOncoprinterGeneticInput,
@@ -246,10 +247,10 @@ export default class ResultsViewOncoprint extends React.Component<
             }
 
             if (
-                this.props.store.samples.result &&
-                this.props.store.patients.result &&
-                this.props.store.samples.result.length >
-                    this.props.store.patients.result.length
+                this.props.store.filteredSamples.result &&
+                this.props.store.filteredPatients.result &&
+                this.props.store.filteredSamples.result.length >
+                    this.props.store.filteredPatients.result.length
             ) {
                 list.push(SpecialAttribute.NumSamplesPerPatient);
             }
@@ -1306,9 +1307,9 @@ export default class ResultsViewOncoprint extends React.Component<
     }
 
     @computed get alphabeticalSampleOrder() {
-        if (this.props.store.samples.isComplete) {
+        if (this.props.store.filteredSamples.isComplete) {
             return _.sortBy(
-                this.props.store.samples.result!,
+                this.props.store.filteredSamples.result!,
                 sample => sample.sampleId
             ).map(sample => sample.uniqueSampleKey);
         } else {
@@ -1317,9 +1318,9 @@ export default class ResultsViewOncoprint extends React.Component<
     }
 
     @computed get alphabeticalPatientOrder() {
-        if (this.props.store.patients.isComplete) {
+        if (this.props.store.filteredPatients.isComplete) {
             return _.sortBy(
-                this.props.store.patients.result!,
+                this.props.store.filteredPatients.result!,
                 patient => patient.patientId
             ).map(patient => patient.uniquePatientKey);
         } else {
@@ -1694,10 +1695,10 @@ export default class ResultsViewOncoprint extends React.Component<
         let queryingLabel: string;
         if (
             this.props.store.genes.isComplete &&
-            this.props.store.samples.isComplete
+            this.props.store.filteredSamples.isComplete
         ) {
             const numGenes = this.props.store.genes.result!.length;
-            const numSamples = this.props.store.samples.result!.length;
+            const numSamples = this.props.store.filteredSamples.result!.length;
             queryingLabel = `Querying ${numGenes} genes in ${numSamples} samples`;
         } else {
             queryingLabel = 'Querying ... genes in ... samples';
@@ -1781,6 +1782,13 @@ export default class ResultsViewOncoprint extends React.Component<
                         tabReflectsOql={true}
                     />
                     <AlterationFilterWarning store={this.props.store} />
+                    <CaseFilterWarning
+                        store={this.props.store}
+                        isPatientMode={
+                            this.oncoprintAnalysisCaseType ===
+                            OncoprintAnalysisCaseType.PATIENT
+                        }
+                    />
                 </div>
 
                 <div

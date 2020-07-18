@@ -53,8 +53,8 @@ describe('Oncoprint sortBy URL parameter', () => {
     ] as Sample[];
 
     const storeMock = ({
-        samples: { isComplete: true, result: samples },
-        patients: { isComplete: true, result: patients },
+        filteredSamples: { isComplete: true, result: samples },
+        filteredPatients: { isComplete: true, result: patients },
         givenSampleOrder: { isComplete: true, result: caseList },
         molecularProfileIdToMolecularProfile: { isComplete: true },
     } as any) as ResultsViewPageStore;

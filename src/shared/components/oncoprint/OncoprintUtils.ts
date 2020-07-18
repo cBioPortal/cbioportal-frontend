@@ -780,27 +780,27 @@ export function makeGeneticTracksMobxPromise(
 ) {
     return remoteData<GeneticTrackSpec[]>({
         await: () => [
-            oncoprint.props.store.samples,
-            oncoprint.props.store.patients,
+            oncoprint.props.store.filteredSamples,
+            oncoprint.props.store.filteredPatients,
             oncoprint.props.store
                 .oqlFilteredCaseAggregatedDataByUnflattenedOQLLine,
             oncoprint.props.store.coverageInformation,
-            oncoprint.props.store.sequencedSampleKeysByGene,
-            oncoprint.props.store.sequencedPatientKeysByGene,
+            oncoprint.props.store.filteredSequencedSampleKeysByGene,
+            oncoprint.props.store.filteredSequencedPatientKeysByGene,
             oncoprint.props.store.selectedMolecularProfiles,
         ],
         invoke: async () => {
             const trackFunction = makeGeneticTrackWith({
                 sampleMode,
                 oncoprint,
-                samples: oncoprint.props.store.samples.result!,
-                patients: oncoprint.props.store.patients.result!,
+                samples: oncoprint.props.store.filteredSamples.result!,
+                patients: oncoprint.props.store.filteredPatients.result!,
                 coverageInformation: oncoprint.props.store.coverageInformation
                     .result!,
                 sequencedSampleKeysByGene: oncoprint.props.store
-                    .sequencedSampleKeysByGene.result!,
+                    .filteredSequencedSampleKeysByGene.result!,
                 sequencedPatientKeysByGene: oncoprint.props.store
-                    .sequencedPatientKeysByGene.result!,
+                    .filteredSequencedPatientKeysByGene.result!,
                 selectedMolecularProfiles: oncoprint.props.store
                     .selectedMolecularProfiles.result!,
                 expansionIndexMap: oncoprint.expansionsByGeneticTrackKey,
@@ -821,8 +821,8 @@ export function makeClinicalTracksMobxPromise(
     return remoteData<ClinicalTrackSpec[]>({
         await: () => {
             let ret: MobxPromise<any>[] = [
-                oncoprint.props.store.samples,
-                oncoprint.props.store.patients,
+                oncoprint.props.store.filteredSamples,
+                oncoprint.props.store.filteredPatients,
                 oncoprint.props.store.clinicalAttributeIdToClinicalAttribute,
                 oncoprint.alteredKeys,
             ];
@@ -874,8 +874,8 @@ export function makeClinicalTracksMobxPromise(
                     data: makeClinicalTrackData(
                         attribute,
                         sampleMode
-                            ? oncoprint.props.store.samples.result!
-                            : oncoprint.props.store.patients.result!,
+                            ? oncoprint.props.store.filteredSamples.result!
+                            : oncoprint.props.store.filteredPatients.result!,
                         dataAndColors.data
                     ),
                     altered_uids,
@@ -944,8 +944,8 @@ export function makeHeatmapTracksMobxPromise(
 ) {
     return remoteData<IHeatmapTrackSpec[]>({
         await: () => [
-            oncoprint.props.store.samples,
-            oncoprint.props.store.patients,
+            oncoprint.props.store.filteredSamples,
+            oncoprint.props.store.filteredPatients,
             oncoprint.props.store.molecularProfileIdToMolecularProfile,
             oncoprint.props.store.geneMolecularDataCache,
         ],
@@ -985,8 +985,8 @@ export function makeHeatmapTracksMobxPromise(
                 true
             );
 
-            const samples = oncoprint.props.store.samples.result!;
-            const patients = oncoprint.props.store.patients.result!;
+            const samples = oncoprint.props.store.filteredSamples.result!;
+            const patients = oncoprint.props.store.filteredPatients.result!;
 
             return cacheQueries.map(query => {
                 const molecularProfileId = query.molecularProfileId;
@@ -1063,8 +1063,8 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
 ) {
     return remoteData<IHeatmapTrackSpec[]>({
         await: () => [
-            oncoprint.props.store.samples,
-            oncoprint.props.store.patients,
+            oncoprint.props.store.filteredSamples,
+            oncoprint.props.store.filteredPatients,
             oncoprint.props.store.molecularProfileIdToMolecularProfile,
             oncoprint.props.store.genericAssayMolecularDataCache,
             oncoprint.props.store
@@ -1120,8 +1120,8 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                 true
             );
 
-            const samples = oncoprint.props.store.samples.result!;
-            const patients = oncoprint.props.store.patients.result!;
+            const samples = oncoprint.props.store.filteredSamples.result!;
+            const patients = oncoprint.props.store.filteredPatients.result!;
 
             const tracks = cacheQueries.map(query => {
                 const molecularProfileId = query.molecularProfileId;
@@ -1207,15 +1207,15 @@ export function makeGenesetHeatmapExpansionsMobxPromise(
 ) {
     return remoteData<IGenesetExpansionMap>({
         await: () => [
-            oncoprint.props.store.samples,
-            oncoprint.props.store.patients,
+            oncoprint.props.store.filteredSamples,
+            oncoprint.props.store.filteredPatients,
             oncoprint.props.store.molecularProfileIdToMolecularProfile,
             oncoprint.props.store.geneMolecularDataCache,
             oncoprint.props.store.genesetCorrelatedGeneCache,
         ],
         invoke: async () => {
-            const samples = oncoprint.props.store.samples.result!;
-            const patients = oncoprint.props.store.patients.result!;
+            const samples = oncoprint.props.store.filteredSamples.result!;
+            const patients = oncoprint.props.store.filteredPatients.result!;
             const molecularProfileIdToMolecularProfile = oncoprint.props.store
                 .molecularProfileIdToMolecularProfile.result!;
             const dataCache = oncoprint.props.store.geneMolecularDataCache
@@ -1307,8 +1307,8 @@ export function makeGenesetHeatmapTracksMobxPromise(
 ) {
     return remoteData<IGenesetHeatmapTrackSpec[]>({
         await: () => [
-            oncoprint.props.store.samples,
-            oncoprint.props.store.patients,
+            oncoprint.props.store.filteredSamples,
+            oncoprint.props.store.filteredPatients,
             oncoprint.props.store.genesetMolecularProfile,
             oncoprint.props.store.genesetMolecularDataCache,
             oncoprint.props.store.genesetLinkMap,
@@ -1316,8 +1316,8 @@ export function makeGenesetHeatmapTracksMobxPromise(
             expansionMapPromise,
         ],
         invoke: async () => {
-            const samples = oncoprint.props.store.samples.result!;
-            const patients = oncoprint.props.store.patients.result!;
+            const samples = oncoprint.props.store.filteredSamples.result!;
+            const patients = oncoprint.props.store.filteredPatients.result!;
             const molecularProfile = oncoprint.props.store
                 .genesetMolecularProfile.result!;
             const dataCache = oncoprint.props.store.genesetMolecularDataCache

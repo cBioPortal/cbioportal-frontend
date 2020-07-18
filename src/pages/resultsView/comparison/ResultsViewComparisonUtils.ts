@@ -1,5 +1,6 @@
 import {
     ComparisonGroup,
+    filterStudiesAttr,
     finalizeStudiesAttr,
     getNumPatients,
     getNumSamples,
@@ -44,7 +45,7 @@ export function completeSessionGroups(
         // assign color to group if no color given
         let color = groupData.color || getColor();
 
-        const { nonExistentSamples, studies } = finalizeStudiesAttr(
+        let { nonExistentSamples, studies } = finalizeStudiesAttr(
             groupData,
             sampleSet
         );
