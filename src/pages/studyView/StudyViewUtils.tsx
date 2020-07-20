@@ -72,6 +72,7 @@ import {
 } from 'pages/resultsView/ResultsViewPageStore';
 import { decideMolecularProfileSortingOrder } from 'pages/resultsView/download/DownloadUtils';
 import { Datalabel } from 'shared/lib/DataUtils';
+import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -2605,10 +2606,7 @@ export function getMolecularProfileOptions(
             return true;
         })
         .groupBy(molecularProfile =>
-            molecularProfile.molecularProfileId.replace(
-                molecularProfile.studyId + '_',
-                ''
-            )
+            getSuffixOfMolecularProfile(molecularProfile)
         )
         .map((profiles, value) => {
             const uniqueProfiledSamples = _.chain(profiles)
