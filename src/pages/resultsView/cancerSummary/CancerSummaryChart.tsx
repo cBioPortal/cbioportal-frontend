@@ -620,6 +620,13 @@ export class CancerSummaryChart extends React.Component<
         });
     }
 
+    @autobind
+    private downloadData() {}
+
+    @autobind
+    private getData() {
+        return '';
+    }
     @autobind private getChart() {
         return (
             <div style={this.overflowStyle} className="borderedChart">
