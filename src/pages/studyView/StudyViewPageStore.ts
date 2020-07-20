@@ -174,6 +174,7 @@ import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescrip
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { Datalabel } from 'shared/lib/DataUtils';
+import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 
 export type ChartUserSetting = {
     id: string;
@@ -4858,10 +4859,7 @@ export class StudyViewPageStore {
 
     @computed get molecularProfileMapByType() {
         return _.groupBy(this.molecularProfiles.result, molecularProfile =>
-            molecularProfile.molecularProfileId.replace(
-                molecularProfile.studyId + '_',
-                ''
-            )
+            getSuffixOfMolecularProfile(molecularProfile)
         );
     }
 
