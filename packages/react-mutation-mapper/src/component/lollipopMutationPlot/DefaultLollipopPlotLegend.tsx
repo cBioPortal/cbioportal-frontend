@@ -4,12 +4,14 @@ import {
     MUT_COLOR_MISSENSE,
     MUT_COLOR_OTHER,
     MUT_COLOR_TRUNC,
+    MUT_COLOR_FUSION,
 } from '../../util/MutationTypeUtils';
 
 type DefaultLollipopPlotLegendProps = {
     missenseColor?: string;
     truncatingColor?: string;
     inframeColor?: string;
+    fusionColor?: string;
     otherColor?: string;
 };
 
@@ -20,6 +22,7 @@ export default class DefaultLollipopPlotLegend extends React.Component<
         missenseColor: MUT_COLOR_MISSENSE,
         truncatingColor: MUT_COLOR_TRUNC,
         inframeColor: MUT_COLOR_INFRAME,
+        fusionColor: MUT_COLOR_FUSION,
         otherColor: MUT_COLOR_OTHER,
     };
 
@@ -56,6 +59,11 @@ export default class DefaultLollipopPlotLegend extends React.Component<
                                 Inframe Mutations
                             </strong>
                             : Inframe deletion, Inframe insertion
+                        </li>
+                        <li>
+                            <strong style={{ color: this.props.fusionColor }}>
+                                Fusion Mutations
+                            </strong>
                         </li>
                         <li>
                             <strong style={{ color: this.props.otherColor }}>

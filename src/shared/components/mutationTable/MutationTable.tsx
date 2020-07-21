@@ -115,6 +115,7 @@ export interface IMutationTableProps {
     initialSortDirection?: SortDirection;
     paginationProps?: IPaginationControlsProps;
     showCountHeader?: boolean;
+    selectedTranscriptId?: string;
     columnVisibility?: { [columnId: string]: boolean };
     columnVisibilityProps?: IColumnVisibilityControlsProps;
     onRowClick?: (d: Mutation[]) => void;
@@ -935,17 +936,24 @@ export default class MutationTable<
                 this.props.genomeNexusCache ? (
                     HgvscColumnFormatter.renderFunction(
                         d,
-                        this.props.genomeNexusCache
+                        this.props.genomeNexusCache,
+                        this.props.selectedTranscriptId
                     )
                 ) : (
                     <span></span>
                 ),
             download: (d: Mutation[]) =>
-                HgvscColumnFormatter.download(d, this.props
-                    .genomeNexusCache as GenomeNexusCache),
+                HgvscColumnFormatter.download(
+                    d,
+                    this.props.genomeNexusCache as GenomeNexusCache,
+                    this.props.selectedTranscriptId
+                ),
             sortBy: (d: Mutation[]) =>
-                HgvscColumnFormatter.getSortValue(d, this.props
-                    .genomeNexusCache as GenomeNexusCache),
+                HgvscColumnFormatter.getSortValue(
+                    d,
+                    this.props.genomeNexusCache as GenomeNexusCache,
+                    this.props.selectedTranscriptId
+                ),
             visible: false,
             align: 'right',
         };

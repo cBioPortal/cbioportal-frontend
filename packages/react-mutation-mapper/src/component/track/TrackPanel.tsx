@@ -71,7 +71,12 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
                     <PtmTrack
                         store={this.props.store}
                         pubMedCache={this.props.pubMedCache}
-                        ensemblTranscriptId={this.props.store.activeTranscript}
+                        ensemblTranscriptId={
+                            this.props.store.activeTranscript &&
+                            this.props.store.activeTranscript.result
+                                ? this.props.store.activeTranscript.result
+                                : undefined
+                        }
                         dataStore={this.props.store.dataStore}
                         width={this.props.geneWidth}
                         xOffset={this.props.geneXOffset}

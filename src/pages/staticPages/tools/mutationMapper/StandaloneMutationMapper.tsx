@@ -57,7 +57,21 @@ export default class StandaloneMutationMapper extends MutationMapper<
                 generateGenomeNexusHgvsgUrl={
                     this.props.generateGenomeNexusHgvsgUrl
                 }
+                selectedTranscriptId={this.props.store.activeTranscript.result}
             />
+        );
+    }
+
+    protected get isMutationTableDataLoading() {
+        return this.props.store.activeTranscript.isPending;
+    }
+
+    protected get mutationTable(): JSX.Element | null {
+        return (
+            <span>
+                {!this.isMutationTableDataLoading &&
+                    this.mutationTableComponent}
+            </span>
         );
     }
 }

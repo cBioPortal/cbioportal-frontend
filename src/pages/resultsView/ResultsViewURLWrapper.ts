@@ -82,6 +82,9 @@ export enum ResultsViewURLQueryEnum {
     genetic_profile_ids_PROFILE_GENESET_SCORE = 'genetic_profile_ids_PROFILE_GENESET_SCORE',
     genetic_profile_ids_GENERIC_ASSAY = 'genetic_profile_ids_GENERIC_ASSAY',
     genetic_profile_ids = 'genetic_profile_ids',
+
+    mutations_gene = 'mutations_gene',
+    mutations_transcript_id = 'mutations_transcript_id',
 }
 
 type StringValuedParams = Exclude<
@@ -135,6 +138,14 @@ export default class ResultsViewURLWrapper extends URLWrapper<
                 plots_coloring_selection: {
                     isSessionProp: false,
                     nestedObjectProps: PlotsColoringParamProps,
+                },
+
+                // mutations
+                mutations_gene: {
+                    isSessionProp: false,
+                },
+                mutations_transcript_id: {
+                    isSessionProp: false,
                 },
 
                 // session props here

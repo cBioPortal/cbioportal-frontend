@@ -18,6 +18,7 @@ import {
 } from 'shared/constants';
 import { toSampleUuid } from './UuidUtils';
 import {
+    MUT_COLOR_FUSION,
     MUT_COLOR_INFRAME,
     MUT_COLOR_MISSENSE,
     MUT_COLOR_OTHER,
@@ -30,6 +31,7 @@ export const DEFAULT_PROTEIN_IMPACT_TYPE_COLORS: IProteinImpactTypeColors = {
     missenseColor: MUT_COLOR_MISSENSE,
     inframeColor: MUT_COLOR_INFRAME,
     truncatingColor: MUT_COLOR_TRUNC,
+    fusionColor: MUT_COLOR_FUSION,
     otherColor: MUT_COLOR_OTHER,
 };
 
