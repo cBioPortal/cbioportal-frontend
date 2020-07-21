@@ -75,7 +75,10 @@ export default class ResultsViewMutationMapper extends MutationMapper<
             getRemoteDataGroupStatus(
                 this.props.store.clinicalDataForSamples,
                 this.props.store.studiesForSamplesWithoutCancerTypeClinicalData,
-                this.props.store.canonicalTranscript
+                this.props.store.canonicalTranscript,
+                this.props.store.mutationData,
+                this.props.store.indexedVariantAnnotations,
+                this.props.store.activeTranscript
             ) === 'pending'
         );
     }
@@ -84,11 +87,11 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         const canonicalTranscriptId =
             this.props.store.canonicalTranscript.result &&
             this.props.store.canonicalTranscript.result.transcriptId;
-        const transcript = (this.props.store.activeTranscript &&
-        this.props.store.activeTranscript === canonicalTranscriptId
+        const transcript = (this.props.store.activeTranscript.result &&
+        this.props.store.activeTranscript.result === canonicalTranscriptId
             ? this.props.store.canonicalTranscript.result
             : this.props.store.transcriptsByTranscriptId[
-                  this.props.store.activeTranscript!
+                  this.props.store.activeTranscript.result!
               ]) as EnsemblTranscript;
         return transcript && transcript.exons && transcript.exons.length > 0
             ? transcript.exons.length.toString()
@@ -141,6 +144,8 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 generateGenomeNexusHgvsgUrl={
                     this.props.store.generateGenomeNexusHgvsgUrl
                 }
+                isCanonicalTranscript={this.props.store.isCanonicalTranscript}
+                selectedTranscriptId={this.props.store.activeTranscript.result}
             />
         );
     }

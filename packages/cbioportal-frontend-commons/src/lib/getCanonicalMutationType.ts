@@ -22,6 +22,7 @@ export enum ProteinImpactType {
     MISSENSE = CanonicalMutationType.MISSENSE,
     TRUNCATING = CanonicalMutationType.TRUNCATING,
     INFRAME = CanonicalMutationType.INFRAME,
+    FUSION = CanonicalMutationType.FUSION,
     OTHER = CanonicalMutationType.OTHER,
 }
 
@@ -107,6 +108,7 @@ export function getProteinImpactTypeFromCanonical(
             return ProteinImpactType.INFRAME;
         case CanonicalMutationType.NONSTART:
         case CanonicalMutationType.FUSION:
+            return ProteinImpactType.FUSION;
         case CanonicalMutationType.SILENT:
         case CanonicalMutationType.OTHER:
         default:

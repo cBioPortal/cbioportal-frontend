@@ -258,6 +258,7 @@ export default class ResultsViewPage extends React.Component<
                             <Mutations
                                 store={store}
                                 appStore={this.props.appStore}
+                                urlWrapper={this.urlWrapper}
                             />
                         </MSKTab>
                     );
@@ -688,7 +689,6 @@ export default class ResultsViewPage extends React.Component<
                                         </div>
                                     )}
                                 </div>
-
                                 {// we don't show the result tabs if we don't have valid query
                                 this.showTabs &&
                                     !this.resultsViewPageStore.genesInvalid &&
@@ -720,7 +720,8 @@ export default class ResultsViewPage extends React.Component<
     public render() {
         if (
             this.urlWrapper.isPendingSession ||
-            this.urlWrapper.isLoadingSession
+            this.urlWrapper.isLoadingSession ||
+            !this.resultsViewPageStore.studies.isComplete
         ) {
             return (
                 <LoadingIndicator isLoading={true} center={true} size={'big'} />

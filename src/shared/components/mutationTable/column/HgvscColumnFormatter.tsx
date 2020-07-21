@@ -14,7 +14,8 @@ import GenomeNexusCache, {
 export default class HgvscColumnFormatter {
     public static renderFunction(
         data: Mutation[],
-        genomeNexusCache: GenomeNexusCache | undefined
+        genomeNexusCache: GenomeNexusCache | undefined,
+        selectedTranscriptId?: string
     ) {
         const genomeNexusCacheData = HgvscColumnFormatter.getGenomeNexusDataFromCache(
             data,
@@ -23,7 +24,10 @@ export default class HgvscColumnFormatter {
         return (
             <div>
                 <span>
-                    {HgvscColumnFormatter.getHgvscDataViz(genomeNexusCacheData)}
+                    {HgvscColumnFormatter.getHgvscDataViz(
+                        genomeNexusCacheData,
+                        selectedTranscriptId
+                    )}
                 </span>
             </div>
         );
@@ -40,7 +44,8 @@ export default class HgvscColumnFormatter {
     }
 
     private static getHgvscDataViz(
-        genomeNexusCacheData: GenomeNexusCacheDataType | null
+        genomeNexusCacheData: GenomeNexusCacheDataType | null,
+        selectedTranscriptId?: string
     ) {
         let status: TableCellStatus | null = null;
 
@@ -52,7 +57,8 @@ export default class HgvscColumnFormatter {
             status = TableCellStatus.NA;
         } else {
             let hgvscData = HgvscColumnFormatter.getData(
-                genomeNexusCacheData.data
+                genomeNexusCacheData.data,
+                selectedTranscriptId
             );
             if (hgvscData == null) {
                 return hgvscData;
@@ -84,18 +90,33 @@ export default class HgvscColumnFormatter {
     }
 
     public static getData(
-        genomeNexusData: VariantAnnotation | null
+        genomeNexusData: VariantAnnotation | null,
+        selectedTranscriptId?: string
     ): string | null {
         if (!genomeNexusData) {
             return null;
         }
-        return genomeNexusData.annotation_summary.transcriptConsequenceSummary
-            .hgvsc;
+        let data: string | null =
+            genomeNexusData.annotation_summary.transcriptConsequenceSummary
+                .hgvsc;
+        // return data from transcriptConsequenceSummaries if transcript dropdown is enabled
+        if (selectedTranscriptId) {
+            const transcriptConsequenceSummary = genomeNexusData.annotation_summary.transcriptConsequenceSummaries.find(
+                transcriptConsequenceSummary =>
+                    transcriptConsequenceSummary.transcriptId ===
+                    selectedTranscriptId
+            );
+            data = transcriptConsequenceSummary
+                ? transcriptConsequenceSummary.hgvsc
+                : null;
+        }
+        return data;
     }
 
     public static download(
         data: Mutation[],
-        genomeNexusCache: GenomeNexusCache
+        genomeNexusCache: GenomeNexusCache,
+        selectedTranscriptId?: string
     ): string {
         const genomeNexusData = HgvscColumnFormatter.getGenomeNexusDataFromCache(
             data,
@@ -103,7 +124,10 @@ export default class HgvscColumnFormatter {
         );
         const hgvscData =
             genomeNexusData &&
-            HgvscColumnFormatter.getData(genomeNexusData.data);
+            HgvscColumnFormatter.getData(
+                genomeNexusData.data,
+                selectedTranscriptId
+            );
 
         if (!hgvscData) {
             return '';
@@ -114,7 +138,8 @@ export default class HgvscColumnFormatter {
 
     public static getSortValue(
         data: Mutation[],
-        genomeNexusCache: GenomeNexusCache
+        genomeNexusCache: GenomeNexusCache,
+        selectedTranscriptId?: string
     ): number | null {
         const genomeNexusCacheData = HgvscColumnFormatter.getGenomeNexusDataFromCache(
             data,
@@ -122,7 +147,8 @@ export default class HgvscColumnFormatter {
         );
         if (genomeNexusCacheData) {
             let hgvscData = HgvscColumnFormatter.getData(
-                genomeNexusCacheData.data
+                genomeNexusCacheData.data,
+                selectedTranscriptId
             );
             if (hgvscData == null) {
                 return null;

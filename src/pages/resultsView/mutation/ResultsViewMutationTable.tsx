@@ -13,6 +13,7 @@ import ExonColumnFormatter from 'shared/components/mutationTable/column/ExonColu
 export interface IResultsViewMutationTableProps extends IMutationTableProps {
     // add results view specific props here if needed
     totalNumberOfExons?: string;
+    isCanonicalTranscript: boolean | undefined;
 }
 //
 @observer
@@ -86,6 +87,10 @@ export default class ResultsViewMutationTable extends MutationTable<
                 ? this.props.dataStore.allData
                 : this.props.data
         );
+
+        // disable annotation column if non canonical transcript is selected
+        this._columns[MutationTableColumnType.ANNOTATION].shouldExclude = () =>
+            this.props.isCanonicalTranscript === false;
 
         // order columns
         this._columns[MutationTableColumnType.STUDY].order = 0;
