@@ -25,6 +25,7 @@ import MutationMapperStore, {
     IMutationMapperStoreConfig,
 } from 'shared/components/mutationMapper/MutationMapperStore';
 import { IServerConfig } from '../../../config/IAppConfig';
+import { computed } from 'mobx';
 
 export default class ResultsViewMutationMapperStore extends MutationMapperStore {
     constructor(
@@ -66,7 +67,8 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
         },
         public generateGenomeNexusHgvsgUrl: (hgvsg: string) => string,
         protected genomenexusClient?: GenomeNexusAPI,
-        protected genomenexusInternalClient?: GenomeNexusAPIInternal
+        protected genomenexusInternalClient?: GenomeNexusAPIInternal,
+        public getTranscriptId?: () => string
     ) {
         super(
             mutationMapperConfig,
@@ -98,5 +100,18 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
             this.getMutationCountCache,
             this.getDiscreteCNACache
         );
+    }
+
+    @computed
+    get isCanonicalTranscript(): boolean {
+        if (this.canonicalTranscript.result && this.activeTranscript.result) {
+            // if transcript dropdown is enabled, return true for canonical transcript
+            return (
+                this.activeTranscript.result ===
+                this.canonicalTranscript.result.transcriptId
+            );
+        }
+        // return true if transcript dropdown is disabled
+        return true;
     }
 }

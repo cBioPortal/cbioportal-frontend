@@ -6,14 +6,14 @@ import {
     applyDataFilters,
     DataFilterType,
     DefaultMutationMapperDataFetcher,
-    DefaultMutationMapperStore,
     groupDataByProteinImpactType,
     groupOncoKbIndicatorDataByMutations,
+    DefaultMutationMapperStore,
 } from 'react-mutation-mapper';
 import {
     defaultOncoKbIndicatorFilter,
-    getMutationsToTranscriptId,
     IHotspotIndex,
+    getMutationsByTranscriptId,
     Mutation as SimpleMutation,
 } from 'cbioportal-utils';
 
@@ -80,7 +80,8 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
             [uniqueSampleKey: string]: string;
         },
         protected genomenexusClient?: GenomeNexusAPI,
-        protected genomenexusInternalClient?: GenomeNexusAPIInternal
+        protected genomenexusInternalClient?: GenomeNexusAPIInternal,
+        public getTranscriptId?: () => string
     ) {
         super(
             gene,
@@ -92,7 +93,8 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
                 enableCivic: mutationMapperConfig.show_civic,
                 enableOncoKb: mutationMapperConfig.show_oncokb,
             },
-            getMutations
+            getMutations,
+            getTranscriptId
         );
 
         const unnormalizedGetMutations = this.getMutations;
@@ -157,10 +159,10 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
 
     readonly alignmentData = remoteData(
         {
-            await: () => [this.mutationData],
+            await: () => [this.mutationData, this.activeTranscript],
             invoke: async () => {
-                if (this.activeTranscript) {
-                    return fetchPdbAlignmentData(this.activeTranscript);
+                if (this.activeTranscript.result) {
+                    return fetchPdbAlignmentData(this.activeTranscript.result);
                 } else {
                     return [];
                 }
@@ -273,15 +275,20 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
     } {
         if (
             this.indexedVariantAnnotations.result &&
-            this.transcriptsWithAnnotations.result
+            this.transcriptsWithAnnotations.result &&
+            this.canonicalTranscript.isComplete
         ) {
             return _.fromPairs(
                 this.transcriptsWithAnnotations.result.map((t: string) => [
                     t,
-                    getMutationsToTranscriptId(
+                    getMutationsByTranscriptId(
                         this.getMutations(),
                         t,
-                        this.indexedVariantAnnotations.result!!
+                        this.indexedVariantAnnotations.result!,
+                        this.canonicalTranscript.result
+                            ? this.canonicalTranscript.result!.transcriptId ===
+                                  t
+                            : false
                     ),
                 ])
             );

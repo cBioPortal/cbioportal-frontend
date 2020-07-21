@@ -59,6 +59,7 @@ export interface IMutationMapperProps {
     genomeNexusCache?: GenomeNexusCache;
     genomeNexusMutationAssessorCache?: GenomeNexusMutationAssessorCache;
     generateGenomeNexusHgvsgUrl: (hgvsg: string) => string;
+    onTranscriptChange?: (transcript: string) => void;
     // server config properties
     genomeNexusUrl?: string;
     oncoKbPublicApiUrl?: string;

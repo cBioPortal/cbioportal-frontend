@@ -59,6 +59,7 @@ export interface IServerConfig {
     show_genomenexus: boolean;
     show_pathway_mapper: boolean;
     show_mutation_mapper_tool_grch38: boolean;
+    show_transcript_dropdown: boolean;
     skin_documentation_about: string | null;
     skin_documentation_software: string | null;
     skin_documentation_baseurl: string | null;

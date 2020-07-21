@@ -35,8 +35,8 @@ describe('MutationTypeColumnFormatter', () => {
         mutationType: 'other',
     });
 
-    const unknownMutation = initMutation({
-        mutationType: 'a_strange_type_of_mutation',
+    const fusionMutation = initMutation({
+        mutationType: 'fusion',
     });
 
     const tableData = [
@@ -47,14 +47,14 @@ describe('MutationTypeColumnFormatter', () => {
         [spliceSite],
         [frameshiftDeletion],
         [otherMutation],
-        [unknownMutation],
+        [fusionMutation],
     ];
 
     let msVarComponent: ReactWrapper<any, any>;
     let msMutComponent: ReactWrapper<any, any>;
     let stopgainSnvComponent: ReactWrapper<any, any>;
     let nonFsDelComponent: ReactWrapper<any, any>;
-    let unknownMutComponent: ReactWrapper<any, any>;
+    let fusionMutComponent: ReactWrapper<any, any>;
     let fsDelComponent: ReactWrapper<any, any>;
     let otherMutComponent: ReactWrapper<any, any>;
     let spliceComponent: ReactWrapper<any, any>;
@@ -90,8 +90,8 @@ describe('MutationTypeColumnFormatter', () => {
             MutationTypeColumnFormatter.renderFunction(data)
         );
 
-        data = [unknownMutation];
-        unknownMutComponent = mount(
+        data = [fusionMutation];
+        fusionMutComponent = mount(
             MutationTypeColumnFormatter.renderFunction(data)
         );
 
@@ -164,16 +164,16 @@ describe('MutationTypeColumnFormatter', () => {
             'FS del'
         );
         testRenderedValues(
-            unknownMutComponent,
-            'a_strange_type_of_mutation',
-            MutationTypeColumnFormatter.MAIN_MUTATION_TYPE_MAP.other.className,
-            'Other'
+            fusionMutComponent,
+            'fusion',
+            MutationTypeColumnFormatter.MAIN_MUTATION_TYPE_MAP.fusion.className,
+            'Fusion'
         );
         testRenderedValues(
             otherMutComponent,
             'other',
-            MutationTypeColumnFormatter.MAIN_MUTATION_TYPE_MAP.other.className,
-            'Other'
+            styles.otherMutation,
+            'other'
         );
     });
 

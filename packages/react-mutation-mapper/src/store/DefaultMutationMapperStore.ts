@@ -4,10 +4,10 @@ import {
     AggregatedHotspots,
     defaultHotspotFilter,
     genomicLocationString,
-    getMutationsToTranscriptId,
     getMyCancerGenomeData,
     groupCancerHotspotDataByPosition,
     groupHotspotsByMutations,
+    getMutationsByTranscriptId,
     groupMutationsByProteinStartPos,
     indexHotspotsData,
     ICivicGene,
@@ -20,6 +20,7 @@ import {
     uniqueGenomicLocations,
 } from 'cbioportal-utils';
 import { Gene, Mutation, IMyVariantInfoIndex } from 'cbioportal-utils';
+
 import {
     CancerGene,
     IndicatorQueryResp,
@@ -89,50 +90,77 @@ interface DefaultMutationMapperStoreConfig {
 
 class DefaultMutationMapperStore implements MutationMapperStore {
     @observable
-    private _activeTranscript: string | undefined = undefined;
+    private _selectedTranscript: string | undefined = undefined;
+
+    // this allows us to keep selected transcript state in one of two places
+    // external (e.g. url)
+    // internal (_selectedTranscript)
+    // we default to external
+    @computed get selectedTranscript(): string | undefined {
+        if (this.getTranscriptId) {
+            return this.getTranscriptId();
+        } else {
+            return this._selectedTranscript;
+        }
+    }
 
     constructor(
         public gene: Gene,
         protected config: DefaultMutationMapperStoreConfig,
-        protected getMutations: () => Mutation[]
+        protected getMutations: () => Mutation[],
+        public getTranscriptId?: () => string | undefined
     ) {}
 
-    @computed
-    public get activeTranscript(): string | undefined {
-        let activeTranscript;
-        const canonicalTranscriptId =
-            !this.canonicalTranscript.isPending &&
-            this.canonicalTranscript.result
-                ? this.canonicalTranscript.result.transcriptId
-                : undefined;
+    readonly activeTranscript: MobxPromise<string | undefined> = remoteData(
+        {
+            await: () => [
+                this.allTranscripts,
+                this.canonicalTranscript,
+                this.transcriptsWithAnnotations,
+            ],
+            invoke: async () => {
+                let activeTranscript;
+                const canonicalTranscriptId = this.canonicalTranscript.result
+                    ? this.canonicalTranscript.result.transcriptId
+                    : undefined;
+                const selectedTranscript =
+                    this.selectedTranscript &&
+                    this.allTranscripts.result &&
+                    this.allTranscripts.result.find(
+                        transcript =>
+                            transcript.transcriptId === this.selectedTranscript
+                    )
+                        ? this.selectedTranscript
+                        : undefined;
 
-        if (this._activeTranscript !== undefined) {
-            activeTranscript = this._activeTranscript;
-        } else if (this.config.filterMutationsBySelectedTranscript) {
-            if (
-                this.transcriptsWithAnnotations.result &&
-                this.transcriptsWithAnnotations.result.length > 0 &&
-                canonicalTranscriptId &&
-                !this.transcriptsWithAnnotations.result.includes(
-                    canonicalTranscriptId
-                )
-            ) {
-                // if there are annotated transcripts and activeTranscript does
-                // not have any, change the active transcript
-                activeTranscript = this.transcriptsWithAnnotations.result[0];
-            } else {
-                activeTranscript = canonicalTranscriptId;
-            }
-        } else {
-            activeTranscript = canonicalTranscriptId;
-        }
+                if (selectedTranscript) {
+                    activeTranscript = selectedTranscript;
+                } else if (this.config.filterMutationsBySelectedTranscript) {
+                    if (
+                        this.transcriptsWithAnnotations.result &&
+                        this.transcriptsWithAnnotations.result.length > 0 &&
+                        canonicalTranscriptId &&
+                        !this.transcriptsWithAnnotations.result.includes(
+                            canonicalTranscriptId
+                        )
+                    ) {
+                        activeTranscript = this.transcriptsWithAnnotations
+                            .result[0];
+                    } else {
+                        activeTranscript = canonicalTranscriptId;
+                    }
+                } else {
+                    activeTranscript = canonicalTranscriptId;
+                }
 
-        // TODO this.activeTranscript = activeTranscript?
-        return activeTranscript;
-    }
+                return activeTranscript;
+            },
+        },
+        undefined
+    );
 
-    public set activeTranscript(transcript: string | undefined) {
-        this._activeTranscript = transcript;
+    public setSelectedTranscript(transcript: string | undefined) {
+        this._selectedTranscript = transcript;
     }
 
     @computed
@@ -169,19 +197,24 @@ class DefaultMutationMapperStore implements MutationMapperStore {
             this.canonicalTranscript.isPending ||
             (this.config.filterMutationsBySelectedTranscript &&
                 (this.transcriptsWithAnnotations.isPending ||
-                    this.indexedVariantAnnotations.isPending))
+                    this.indexedVariantAnnotations.isPending) &&
+                this.canonicalTranscript.isPending)
         ) {
             return [];
         } else if (
             this.config.filterMutationsBySelectedTranscript &&
-            this.activeTranscript &&
+            this.activeTranscript.result &&
             this.indexedVariantAnnotations.result &&
             !_.isEmpty(this.indexedVariantAnnotations.result)
         ) {
-            return getMutationsToTranscriptId(
+            return getMutationsByTranscriptId(
                 this.getMutations(),
-                this.activeTranscript,
-                this.indexedVariantAnnotations.result
+                this.activeTranscript.result,
+                this.indexedVariantAnnotations.result,
+                this.canonicalTranscript.result
+                    ? this.canonicalTranscript.result.transcriptId ===
+                          this.activeTranscript.result
+                    : false
             );
         } else {
             return this.getMutations();
@@ -548,6 +581,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
                 this.indexedVariantAnnotations,
                 this.allTranscripts,
                 this.transcriptsWithProteinLength,
+                this.canonicalTranscript,
             ],
             invoke: async () => {
                 if (
@@ -593,10 +627,14 @@ class DefaultMutationMapperStore implements MutationMapperStore {
                     // makes sure the annotations are actually of the form we are displaying (e.g. nonsynonymous)
                     return transcripts.filter(
                         (t: string) =>
-                            getMutationsToTranscriptId(
+                            getMutationsByTranscriptId(
                                 this.getMutations(),
                                 t,
-                                this.indexedVariantAnnotations.result!
+                                this.indexedVariantAnnotations.result!,
+                                this.canonicalTranscript.result
+                                    ? this.canonicalTranscript.result!
+                                          .transcriptId === t
+                                    : false
                             ).length > 0
                     );
                 } else {
@@ -612,10 +650,12 @@ class DefaultMutationMapperStore implements MutationMapperStore {
 
     readonly ptmData: MobxPromise<PostTranslationalModification[]> = remoteData(
         {
-            await: () => [this.mutationData],
+            await: () => [this.mutationData, this.activeTranscript],
             invoke: async () => {
-                if (this.activeTranscript) {
-                    return this.dataFetcher.fetchPtmData(this.activeTranscript);
+                if (this.activeTranscript.result) {
+                    return this.dataFetcher.fetchPtmData(
+                        this.activeTranscript.result
+                    );
                 } else {
                     return [];
                 }
@@ -660,12 +700,12 @@ class DefaultMutationMapperStore implements MutationMapperStore {
 
     readonly cancerHotspotsData: MobxPromise<Hotspot[]> = remoteData(
         {
-            await: () => [this.mutationData],
+            await: () => [this.mutationData, this.activeTranscript],
             invoke: async () => {
-                if (this.activeTranscript) {
+                if (this.activeTranscript.result) {
                     // TODO resolve protein start pos if missing
                     return this.dataFetcher.fetchCancerHotspotData(
-                        this.activeTranscript
+                        this.activeTranscript.result
                     );
                 } else {
                     return [];
@@ -872,15 +912,20 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     get mutationsByTranscriptId(): { [transcriptId: string]: Mutation[] } {
         if (
             this.indexedVariantAnnotations.result &&
-            this.transcriptsWithAnnotations.result
+            this.transcriptsWithAnnotations.result &&
+            this.canonicalTranscript.isComplete
         ) {
             return _.fromPairs(
                 this.transcriptsWithAnnotations.result.map((t: string) => [
                     t,
-                    getMutationsToTranscriptId(
+                    getMutationsByTranscriptId(
                         this.getMutations(),
                         t,
-                        this.indexedVariantAnnotations.result!!
+                        this.indexedVariantAnnotations.result!,
+                        this.canonicalTranscript.result
+                            ? this.canonicalTranscript.result!.transcriptId ===
+                                  t
+                            : false
                     ),
                 ])
             );
