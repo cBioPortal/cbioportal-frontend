@@ -209,6 +209,7 @@ import {
 import { makeUniqueColorGetter } from '../../shared/components/plots/PlotUtils';
 import ifNotDefined from '../../shared/lib/ifNotDefined';
 import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
+import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -3413,6 +3414,24 @@ export class ResultsViewPageStore {
                             return map;
                         },
                         {}
+                    )
+                );
+            },
+        },
+        {}
+    );
+
+    readonly molecularProfileIdSuffixToMolecularProfiles = remoteData<{
+        [molecularProfileIdSuffix: string]: MolecularProfile[];
+    }>(
+        {
+            await: () => [this.molecularProfilesInStudies],
+            invoke: () => {
+                return Promise.resolve(
+                    _.groupBy(
+                        this.molecularProfilesInStudies.result,
+                        molecularProfile =>
+                            getSuffixOfMolecularProfile(molecularProfile)
                     )
                 );
             },

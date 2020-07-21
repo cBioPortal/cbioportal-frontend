@@ -230,15 +230,6 @@ export default class ResultsViewPage extends React.Component<
 
             {
                 id: ResultsViewTab.PLOTS,
-                hide: () => {
-                    if (!this.resultsViewPageStore.studies.isComplete) {
-                        return true;
-                    } else {
-                        return (
-                            this.resultsViewPageStore.studies.result!.length > 1
-                        );
-                    }
-                },
                 getTab: () => {
                     return (
                         <MSKTab
