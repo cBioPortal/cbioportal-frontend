@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-utils",
   "description": "cBioPortal Utilities",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
