@@ -862,6 +862,8 @@ export type VariantAnnotation = {
 
         'oncokb': OncokbAnnotation
 
+        'originalVariantQuery': string
+
         'ptms': PtmAnnotation
 
         'seq_region_name': string
