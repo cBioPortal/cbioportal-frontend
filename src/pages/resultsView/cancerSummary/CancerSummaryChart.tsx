@@ -9,6 +9,7 @@ import {
     VictoryStack,
     VictoryBar,
 } from 'victory';
+import { tsvFormat } from 'd3-dsv';
 import {
     IAlterationCountMap,
     IAlterationData,
@@ -24,7 +25,11 @@ import classnames from 'classnames';
 import * as ReactDOM from 'react-dom';
 import WindowStore from 'shared/components/window/WindowStore';
 import { Popover } from 'react-bootstrap';
-import { DownloadControls, pluralize } from 'cbioportal-frontend-commons';
+import {
+    DownloadControls,
+    DataType,
+    pluralize,
+} from 'cbioportal-frontend-commons';
 import {
     HORIZONTAL_OFFSET,
     VERTICAL_OFFSET,
@@ -621,12 +626,26 @@ export class CancerSummaryChart extends React.Component<
     }
 
     @autobind
-    private downloadData() {}
+    private getData(dataType: DataType) {
+        return tsvFormat(this.convertDataToDownloadData(this.props.data));
+    }
 
     @autobind
-    private getData() {
-        return '';
+    private convertDataToDownloadData(data: any[][]): any[] {
+        const downloadData: any[] = [];
+
+        data.forEach(elementar => {
+            elementar.forEach(element => {
+                downloadData.push({
+                    x: element.x,
+                    y: element.y,
+                    'Alteration Type': element.alterationType,
+                });
+            });
+        });
+        return downloadData;
     }
+
     @autobind private getChart() {
         return (
             <div style={this.overflowStyle} className="borderedChart">
@@ -755,9 +774,11 @@ export class CancerSummaryChart extends React.Component<
                 </div>
                 <DownloadControls
                     getSvg={() => this.svg}
+                    getData={(dataType: DataType) => this.getData(dataType)}
                     filename="cancer_types_summary"
                     dontFade={true}
                     type="button"
+                    buttons={['SVG', 'PNG', 'PDF', 'Data']}
                     style={{ position: 'absolute', top: 10, right: 10 }}
                 />
             </div>
