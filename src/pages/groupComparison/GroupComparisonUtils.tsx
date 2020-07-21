@@ -56,6 +56,7 @@ export type StudyViewComparisonGroup = Omit<GroupData, 'studies' | 'color'> & {
     uid: string; // unique in the session
     studies: { id: string; samples: string[]; patients: string[] }[]; // include patients, filter out nonexistent samples
     nonExistentSamples: SampleIdentifier[]; // samples specified in the group which no longer exist in our DB
+    isSharedGroup?: boolean;
 };
 
 export type ClinicalDataEnrichmentWithQ = ClinicalDataEnrichment & {
