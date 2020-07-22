@@ -47,6 +47,7 @@ export interface IExpressionEnrichmentContainerProps {
         [uniqueSampleKey: string]: ExtendedAlteration[];
     };
     isGeneCheckBoxEnabled?: boolean;
+    isMethylation?: boolean;
 }
 
 @observer
@@ -179,7 +180,8 @@ export default class ExpressionEnrichmentContainer extends React.Component<
     @computed get customColumns() {
         return getExpressionEnrichmentColumns(
             this.props.groups,
-            this.props.alteredVsUnalteredMode
+            this.props.alteredVsUnalteredMode,
+            this.props.isMethylation
         );
     }
 
@@ -210,7 +212,11 @@ export default class ExpressionEnrichmentContainer extends React.Component<
         if (this.isTwoGroupAnalysis && this.props.alteredVsUnalteredMode) {
             columns.push(ExpressionEnrichmentTableColumnType.TENDENCY);
         } else {
-            columns.push(ExpressionEnrichmentTableColumnType.EXPRESSED);
+            if (this.props.isMethylation) {
+                columns.push(ExpressionEnrichmentTableColumnType.METHYLATION);
+            } else {
+                columns.push(ExpressionEnrichmentTableColumnType.EXPRESSED);
+            }
         }
 
         return columns;

@@ -80,6 +80,7 @@ export default class MethylationEnrichments extends React.Component<
                             this.props.store.sampleKeyToSample.result!
                         }
                         isGeneCheckBoxEnabled={this.props.resultsViewMode}
+                        isMethylation={true}
                     />
                 </div>
             );
