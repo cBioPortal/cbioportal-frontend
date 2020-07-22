@@ -547,7 +547,8 @@ export function getAlterationEnrichmentColumns(
 
 export function getExpressionEnrichmentColumns(
     groups: { name: string; description: string; color?: string }[],
-    alteredVsUnalteredMode?: boolean
+    alteredVsUnalteredMode?: boolean,
+    isMethylation?: boolean
 ): ExpressionEnrichmentTableColumn[] {
     // minimum 2 group are required for enrichment analysis
     if (groups.length < 2) {
@@ -559,6 +560,8 @@ export function getExpressionEnrichmentColumns(
     let enrichedGroupColum: ExpressionEnrichmentTableColumn = {
         name: alteredVsUnalteredMode
             ? ExpressionEnrichmentTableColumnType.TENDENCY
+            : isMethylation
+            ? ExpressionEnrichmentTableColumnType.METHYLATION
             : ExpressionEnrichmentTableColumnType.EXPRESSED,
         render: (d: ExpressionEnrichmentRow) => {
             if (d.pValue === undefined) {
