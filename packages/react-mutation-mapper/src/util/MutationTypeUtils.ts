@@ -14,12 +14,14 @@ import { IProteinImpactTypeColors } from '../model/ProteinImpact';
 export const MUT_COLOR_MISSENSE = '#008000';
 export const MUT_COLOR_INFRAME = '#993404';
 export const MUT_COLOR_TRUNC = '#000000';
+export const MUT_COLOR_FUSION = '#8b00c9';
 export const MUT_COLOR_OTHER = '#CF58BC';
 
 export const DEFAULT_PROTEIN_IMPACT_TYPE_COLORS: IProteinImpactTypeColors = {
     missenseColor: MUT_COLOR_MISSENSE,
     inframeColor: MUT_COLOR_INFRAME,
     truncatingColor: MUT_COLOR_TRUNC,
+    fusionColor: MUT_COLOR_FUSION,
     otherColor: MUT_COLOR_OTHER,
 };
 
@@ -92,6 +94,8 @@ export function getColorForProteinImpactType(
                 return colors.truncatingColor;
             case 'inframe':
                 return colors.inframeColor;
+            case 'fusion':
+                return colors.fusionColor;
             default:
                 return colors.otherColor;
         }

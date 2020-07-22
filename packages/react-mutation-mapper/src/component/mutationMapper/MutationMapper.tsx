@@ -99,6 +99,7 @@ export type MutationMapperProps = {
     groupFilters?: { group: string; filter: DataFilter }[];
     filterAppliersOverride?: { [filterType: string]: ApplyFilterFn };
     filterApplier?: FilterApplier;
+    onTranscriptChange?: (transcript: string) => void;
 };
 
 export function initDefaultMutationMapperStore(props: MutationMapperProps) {
@@ -371,7 +372,7 @@ export default class MutationMapper<
                 transcriptsByTranscriptId={this.store.transcriptsByTranscriptId}
                 canonicalTranscript={this.store.canonicalTranscript}
                 loadingIndicator={this.props.geneSummaryLoadingIndicator}
-                activeTranscript={this.store.activeTranscript}
+                activeTranscript={this.store.activeTranscript!.result}
                 indexedVariantAnnotations={this.store.indexedVariantAnnotations}
                 transcriptsWithAnnotations={
                     this.store.transcriptsWithAnnotations
@@ -454,7 +455,9 @@ export default class MutationMapper<
         return (
             this.store.mutationData.isPending ||
             this.isMutationPlotDataLoading ||
-            this.isMutationTableDataLoading
+            this.isMutationTableDataLoading ||
+            (!!this.store.activeTranscript &&
+                this.store.activeTranscript.isPending)
         );
     }
 
@@ -493,8 +496,13 @@ export default class MutationMapper<
 
     @action.bound
     protected handleTranscriptChange(transcriptId: string) {
-        this.store.activeTranscript = transcriptId;
+        if (this.store.setSelectedTranscript) {
+            this.store.setSelectedTranscript(transcriptId);
+        }
         // TODO this.close3dPanel();
+        if (this.props.onTranscriptChange) {
+            this.props.onTranscriptChange(transcriptId);
+        }
     }
 
     @action.bound

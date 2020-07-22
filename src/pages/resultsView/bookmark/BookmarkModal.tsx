@@ -11,7 +11,12 @@ var Clipboard = require('clipboard');
 
 @observer
 export class BookmarkModal extends React.Component<
-    { onHide: () => void; urlPromise: Promise<any>; title: string },
+    {
+        onHide: () => void;
+        urlPromise: Promise<any>;
+        title: string;
+        description?: string;
+    },
     {}
 > {
     @observable
@@ -91,9 +96,7 @@ export class BookmarkModal extends React.Component<
                     >
                         <form>
                             <div className="form-group">
-                                <label htmlFor="exampleInputAmount">
-                                    Share link
-                                </label>
+                                <p>{this.props.description}</p>
                                 <div className="input-group">
                                     <input
                                         type="text"

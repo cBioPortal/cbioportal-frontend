@@ -56,13 +56,6 @@ export default class ProteinChangeColumnFormatter {
         }
     }
 
-    public static renderPlainText(data: Mutation[]) {
-        // use text as display value
-        const text: string = ProteinChangeColumnFormatter.getDisplayValue(data);
-
-        return <span>{text}</span>;
-    }
-
     public static renderWithMutationStatus(data: Mutation[]) {
         // use text as display value
         const text: string = ProteinChangeColumnFormatter.getDisplayValue(data);

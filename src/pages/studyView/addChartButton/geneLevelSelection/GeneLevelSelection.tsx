@@ -214,7 +214,7 @@ export default class GeneLevelSelection extends React.Component<
             <div>
                 <ErrorMessage
                     message={
-                        'There was an error loading saved groups. Please try again.'
+                        'There was an error loading data. Please try again.'
                     }
                 />
             </div>

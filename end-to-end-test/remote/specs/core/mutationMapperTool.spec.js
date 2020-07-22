@@ -108,8 +108,8 @@ describe('Mutation Mapper Tool', function() {
                 .value[0].click();
 
             // check number of mutations on this transcript (this gets Showing
-            // 1-23 of 23 Mutations)
-            browser.waitForText('.//*[text()[contains(.,"23 Mutations")]]');
+            // 1-27 of 27 Mutations)
+            browser.waitForText('.//*[text()[contains(.,"27 Mutations")]]');
         });
 
         it('should show all transcripts when using protein changes', () => {
@@ -242,8 +242,8 @@ describe('Mutation Mapper Tool', function() {
             browser.waitForVisible('[class=borderedChart]', 20000);
 
             // the canonical transcript id for HIST1H2BN is ENST00000396980, but
-            // this mutation only applies to ENST00000606613
-            browser.waitForText('.//*[text()[contains(.,"ENST00000606613")]]');
+            // this mutation applies to ENST00000606613 and ENST00000449538
+            browser.waitForText('.//*[text()[contains(.,"ENST00000449538")]]');
 
             browser.waitForText('.//*[text()[contains(.,"1 Mutation")]]');
         });

@@ -3132,6 +3132,7 @@
       "required": [
         "id",
         "intergenic_consequences",
+        "originalVariantQuery",
         "variant"
       ],
       "properties": {
@@ -3199,6 +3200,10 @@
         "oncokb": {
           "description": "Oncokb",
           "$ref": "#/definitions/OncokbAnnotation"
+        },
+        "originalVariantQuery": {
+          "type": "string",
+          "description": "Original variant query"
         },
         "ptms": {
           "description": "Post Translational Modifications",
