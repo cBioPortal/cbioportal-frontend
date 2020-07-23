@@ -9,6 +9,7 @@ import {
     PatientIdentifier,
     PatientFilter,
     ReferenceGenomeGene,
+    ClinicalData,
 } from 'cbioportal-ts-api-client';
 import { action, computed } from 'mobx';
 import AccessorsForOqlFilter, {
@@ -45,6 +46,11 @@ import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
 import { AlteredStatus } from './mutualExclusivity/MutualExclusivityUtil';
 import { Group } from '../../shared/api/ComparisonGroupClient';
 import { isNotGermlineMutation } from '../../shared/lib/MutationUtils';
+import {
+    ChartUserSetting,
+    CustomGroup,
+} from 'pages/studyView/StudyViewPageStore';
+import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { CoverageInformation } from '../../shared/lib/GenePanelUtils';
 import { GenericAssayEnrichment } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { GenericAssayEnrichmentWithQ } from './enrichments/EnrichmentsUtil';
@@ -56,13 +62,14 @@ type CustomDriverAnnotationReport = {
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
-export type ExtendedClinicalAttribute = Pick<
+export type ExtendedClinicalAttribute = Omit<
     ClinicalAttribute,
-    'datatype' | 'description' | 'displayName' | 'patientAttribute'
+    'clinicalAttributeId'
 > & {
     clinicalAttributeId: string | SpecialAttribute;
     molecularProfileIds?: string[];
     comparisonGroup?: Group;
+    data?: ClinicalData[];
 };
 
 export type SampleAlteredMap = { [trackOqlKey: string]: AlteredStatus[] };
@@ -748,4 +755,31 @@ export function parseGenericAssayGroups(
         {}
     );
     return parsedGroups;
+}
+
+export function makeCustomChartData(
+    attribute: ExtendedClinicalAttribute,
+    chartGroups: CustomGroup[],
+    sampleMap: ComplexKeyMap<Sample>
+): ClinicalData[] {
+    const ret = [];
+    for (const group of chartGroups) {
+        const value = group.name;
+        for (const sampleId of group.sampleIdentifiers) {
+            const sample = sampleMap.get(sampleId, ['sampleId', 'studyId']);
+            if (sample) {
+                ret.push({
+                    clinicalAttribute: attribute as ClinicalAttribute,
+                    clinicalAttributeId: attribute.clinicalAttributeId,
+                    value,
+                    patientId: sampleId.patientId,
+                    sampleId: sampleId.sampleId,
+                    studyId: sampleId.studyId,
+                    uniquePatientKey: sample.uniquePatientKey,
+                    uniqueSampleKey: sample.uniqueSampleKey,
+                });
+            }
+        }
+    }
+    return ret;
 }
