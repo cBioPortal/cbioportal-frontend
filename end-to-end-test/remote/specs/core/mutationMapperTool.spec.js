@@ -288,10 +288,10 @@ describe('Mutation Mapper Tool', function() {
 
             browser.waitForVisible('[class=borderedChart]', 20000);
 
-            // check total number of mutations (this gets Showing 1-12 of 12
+            // check total number of mutations (this gets Showing 1-14 of 14
             // Mutations)
             const mutationCount = browser.getText(
-                './/*[text()[contains(.,"12 Mutations")]]'
+                './/*[text()[contains(.,"14 Mutations")]]'
             );
             assert.ok(mutationCount.length > 0);
         });
