@@ -18,7 +18,8 @@ export const GenomicFormatHelp = (
         <br />
         <strong>(2)</strong> <code>Sample</code>&#9;<code>Gene</code>&#9;
         <code>Alteration</code>&#9;
-        <code>Type</code>
+        <code>Type</code>&#9;
+        <code>Track Name (optional)</code>
         <br />
         {/*<strong>(3) (MAF format, mutation only)</strong> <code>Sample</code>, <code>Cancer Type</code>, <code>Protein Change</code>, <code>Mutation Type</code>,	<code>Chromosome</code>,
         <code>Start position</code>, <code>End position</code>, <code>Reference allele</code>,	<code>Variant allele</code><br/>
@@ -134,6 +135,13 @@ export const GenomicFormatHelp = (
                         <code>PROT</code>: a protein expression event
                     </li>
                 </ul>
+            </li>
+            <li>
+                <code>Track Name</code>: Optional way to create a track with a
+                different label than the gene. A common use case is to have more
+                than one track with the same gene, e.g. where one track shows
+                different data for each sample. Another use case could be to
+                have one track that has data from more than one gene.
             </li>
         </ol>
     </div>

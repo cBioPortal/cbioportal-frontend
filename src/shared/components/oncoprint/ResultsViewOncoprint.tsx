@@ -927,12 +927,8 @@ export default class ResultsViewOncoprint extends React.Component<
 
                                 let geneticInput = '';
                                 if (geneticTracks.length > 0) {
-                                    const oncoprintGeneticData = _.flatMap(
-                                        geneticTracks,
-                                        (track: GeneticTrackSpec) => track.data
-                                    );
                                     geneticInput = getOncoprinterGeneticInput(
-                                        oncoprintGeneticData,
+                                        geneticTracks,
                                         caseIds,
                                         this.oncoprintAnalysisCaseType
                                     );
