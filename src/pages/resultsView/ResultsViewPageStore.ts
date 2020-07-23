@@ -126,6 +126,7 @@ import {
     computeCustomDriverAnnotationReport,
     DEFAULT_GENOME,
     excludeSpecialMolecularProfiles,
+    ExtendedClinicalAttribute,
     fetchPatients,
     fetchQueriedStudies,
     filterAndAnnotateMutations,
@@ -137,6 +138,7 @@ import {
     groupDataByCase,
     initializeCustomDriverAnnotationSettings,
     isRNASeqProfile,
+    makeCustomChartData,
     OncoprintAnalysisCaseType,
     parseGenericAssayGroups,
 } from './ResultsViewPageStoreUtils';
@@ -993,13 +995,12 @@ export class ResultsViewPageStore {
         },
     });
 
-    readonly clinicalAttributes = remoteData<
-        (ClinicalAttribute & { molecularProfileIds?: string[] })[]
-    >({
+    readonly clinicalAttributes = remoteData<ExtendedClinicalAttribute[]>({
         await: () => [
             this.studyIds,
             this.clinicalAttributes_profiledIn,
             this.clinicalAttributes_comparisonGroupMembership,
+            this.clinicalAttributes_customCharts,
             this.samples,
             this.patients,
         ],
@@ -1043,12 +1044,13 @@ export class ResultsViewPageStore {
                     patientAttribute: true,
                 } as ClinicalAttribute);
             }
-            return serverAttributes
-                .concat(specialAttributes)
-                .concat(this.clinicalAttributes_profiledIn.result!)
-                .concat(
-                    this.clinicalAttributes_comparisonGroupMembership.result!
-                );
+            return [
+                ...serverAttributes,
+                ...specialAttributes,
+                ...this.clinicalAttributes_profiledIn.result!,
+                ...this.clinicalAttributes_comparisonGroupMembership.result!,
+                ...this.clinicalAttributes_customCharts.result!,
+            ];
         },
     });
 
@@ -1072,6 +1074,7 @@ export class ResultsViewPageStore {
             this.studyToDataQueryFilter,
             this.clinicalAttributes_profiledIn,
             this.clinicalAttributes_comparisonGroupMembership,
+            this.clinicalAttributes_customCharts,
         ],
         invoke: async () => {
             let clinicalAttributeCountFilter: ClinicalAttributeCountFilter;
@@ -1150,6 +1153,12 @@ export class ResultsViewPageStore {
                         return sampleMap.has({ studyId, sampleId });
                     }
                 );
+            }
+            // add counts for custom chart clinical attributes
+            for (const attr of this.clinicalAttributes_customCharts.result!) {
+                ret[attr.clinicalAttributeId] = attr.data!.filter(
+                    d => d.value !== 'NA'
+                ).length;
             }
             return ret;
         },
@@ -2289,6 +2298,43 @@ export class ResultsViewPageStore {
         },
         onError: error => {},
         default: [],
+    });
+
+    readonly clinicalAttributes_customCharts = remoteData({
+        await: () => [this.studies, this.sampleMap],
+        invoke: async () => {
+            const studyIds = this.studies.result!.map(s => s.studyId);
+            let ret: ExtendedClinicalAttribute[] = [];
+            try {
+                const userSettings = await sessionServiceClient.fetchUserSettings(
+                    studyIds
+                );
+                if (userSettings) {
+                    // Find custom charts.
+                    // TODO: Replace with specific API for custom charts. Current filter method is to just find charts with `groups` specification.
+                    ret = userSettings.chartSettings
+                        .filter(s => !!s.groups)
+                        .map(s => {
+                            const attr: ExtendedClinicalAttribute = {
+                                datatype: 'STRING',
+                                description: s.description || '',
+                                displayName: s.name || '',
+                                patientAttribute: s.patientAttribute,
+                                clinicalAttributeId: s.id,
+                                studyId: '',
+                                priority: '',
+                            };
+                            attr.data = makeCustomChartData(
+                                attr,
+                                s.groups!,
+                                this.sampleMap.result!
+                            );
+                            return attr;
+                        });
+                }
+            } catch (e) {}
+            return ret;
+        },
     });
 
     @computed
@@ -4737,7 +4783,8 @@ export class ResultsViewPageStore {
         this.studyIdToStudy,
         this.coverageInformation,
         this.filteredSampleKeyToSample,
-        this.filteredPatientKeyToPatient
+        this.filteredPatientKeyToPatient,
+        this.clinicalAttributes_customCharts
     );
 
     public mutationCache = new MobxPromiseCache<
