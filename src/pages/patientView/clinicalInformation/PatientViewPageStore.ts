@@ -686,7 +686,6 @@ export class PatientViewPageStore {
                 AppConfig.serverConfig.isoformOverrideSource,
                 this.genomeNexusClient
             );
-
             return getMyVariantInfoAnnotationsFromIndexedVariantAnnotations(
                 indexedVariantAnnotations
             );
