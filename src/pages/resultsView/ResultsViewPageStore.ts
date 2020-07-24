@@ -1432,9 +1432,10 @@ export class ResultsViewPageStore {
                 const dataQueryFilter = studyToDataQueryFilter[profile.studyId];
 
                 // there could be no samples if a study doesn't have a sample list matching a specified category (e.g. cna only)
+                // skip when sampleIds is an empty list
                 if (
                     !dataQueryFilter ||
-                    (!dataQueryFilter.sampleIds &&
+                    (_.isEmpty(dataQueryFilter.sampleIds) &&
                         !dataQueryFilter.sampleListId)
                 ) {
                     continue;
@@ -4792,16 +4793,24 @@ export class ResultsViewPageStore {
                         const molecularProfileId = this
                             .studyToMutationMolecularProfile.result![studyId]
                             .molecularProfileId;
-                        const dqf = this.studyToDataQueryFilter.result![
-                            studyId
-                        ];
-                        if (dqf && molecularProfileId) {
+                        const dataQueryFilter = this.studyToDataQueryFilter
+                            .result![studyId];
+
+                        if (
+                            !dataQueryFilter ||
+                            (_.isEmpty(dataQueryFilter.sampleIds) &&
+                                !dataQueryFilter.sampleListId)
+                        ) {
+                            return Promise.resolve([]);
+                        }
+
+                        if (molecularProfileId) {
                             return client.fetchMutationsInMolecularProfileUsingPOST(
                                 {
                                     molecularProfileId,
                                     mutationFilter: {
                                         entrezGeneIds: [q.entrezGeneId],
-                                        ...dqf,
+                                        ...dataQueryFilter,
                                     } as MutationFilter,
                                     projection: 'DETAILED',
                                 }
