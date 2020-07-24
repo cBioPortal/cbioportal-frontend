@@ -163,6 +163,7 @@ export interface IHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     onRemove?: () => void;
     onClickRemoveInTrackMenu?: () => void;
     molecularProfileName?: string;
+    genericAssayType?: string;
     pivotThreshold?: number;
     sortOrder?: string;
     maxProfileValue?: number;

@@ -1131,6 +1131,7 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                     .genericAssayMolecularDataCache.result!;
 
                 const entityId = query.stableId;
+                const genericAssayType = profile.genericAssayType;
                 const pivotThreshold = profile.pivotThreshold;
                 const sortOrder = profile.sortOrder;
                 const entityLinkMap = oncoprint.props.store
@@ -1164,6 +1165,7 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                         })),
                         sortOrder
                     ),
+                    genericAssayType: genericAssayType,
                     pivotThreshold: pivotThreshold,
                     sortOrder: sortOrder,
                     trackLinkUrl: entityLinkMap[entityId],

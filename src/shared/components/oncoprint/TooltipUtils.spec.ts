@@ -15,6 +15,8 @@ import {
 import $ from 'jquery';
 import { MolecularProfile, Mutation } from 'cbioportal-ts-api-client';
 import { getPatientViewUrl, getSampleViewUrl } from '../../api/urls';
+import AppConfig from 'appConfig';
+import ServerConfigDefaults from 'config/serverConfigDefaults';
 
 describe('Oncoprint TooltipUtils', () => {
     describe('getCaseViewElt', () => {
@@ -2581,6 +2583,10 @@ describe('Oncoprint TooltipUtils', () => {
             false
         );
 
+        before(() => {
+            AppConfig.serverConfig.generic_assay_display_text = ServerConfigDefaults.generic_assay_display_text!;
+        });
+
         it('should show data rounded to 2 decimal digits', () => {
             // one data
             let tooltipResult = tooltip([
@@ -2685,49 +2691,59 @@ describe('Oncoprint TooltipUtils', () => {
             );
         });
 
-        const fTreamentTooltip = makeHeatmapTrackTooltip(
-            { molecularAlterationType: 'GENERIC_ASSAY' } as any,
+        const genericAssayTooltip = makeHeatmapTrackTooltip(
+            {
+                molecularAlterationType: 'GENERIC_ASSAY',
+                genericAssayType: 'TREATMENT_RESPONSE',
+            } as any,
             false
         );
 
         it('Should handle categories for generic assay genetic alterations', () => {
-            const tooltipResult = fTreamentTooltip([
+            const tooltipResult = genericAssayTooltip([
                 { profile_data: 8, sample: 'sampleID', category: '>8.00' },
             ]);
             assert.isTrue(
-                tooltipResult.html().indexOf('<b>&gt;8.00</b>') > -1,
+                tooltipResult
+                    .html()
+                    .indexOf('<br>Treatment Response: <b>&gt;8.00</b><br>') >
+                    -1,
                 'generic assay - category is displayed when available'
             );
         });
 
         it('Should handle categories for multiple generic assay genetic alterations', () => {
-            const tooltipResult = fTreamentTooltip([
+            const tooltipResult = genericAssayTooltip([
                 { profile_data: 8, sample: 'sampleID', category: '>8.00' },
                 { profile_data: 7, sample: 'sampleID', category: '>7.00' },
             ]);
             assert.isTrue(
                 tooltipResult
                     .html()
-                    .indexOf('<b>&gt;8.00, &gt;7.00 (2 data points)</b>') > -1,
+                    .indexOf(
+                        '<br>Treatment Response: <b>&gt;8.00, &gt;7.00 (2 data points)</b><br>'
+                    ) > -1,
                 'generic assay - multiple categories are displayed when under mouse'
             );
         });
 
         it('Should handle single values and single category for multiple generic assay genetic alterations', () => {
-            const tooltipResult = fTreamentTooltip([
+            const tooltipResult = genericAssayTooltip([
                 { profile_data: 8, sample: 'sampleID', category: '' },
                 { profile_data: 7, sample: 'sampleID', category: '>7.00' },
             ]);
             assert.isTrue(
                 tooltipResult
                     .html()
-                    .indexOf('<b>8.00</b> and <b>&gt;7.00</b>') > -1,
+                    .indexOf(
+                        '<br>Treatment Response: <b>8.00</b> and <b>&gt;7.00</b><br>'
+                    ) > -1,
                 'generic assay - multiple categories are displayed when under mouse'
             );
         });
 
         it('Should handle multiple values and multiple categories for multiple generic assay genetic alterations', () => {
-            const tooltipResult = fTreamentTooltip([
+            const tooltipResult = genericAssayTooltip([
                 { profile_data: 6, sample: 'sampleID', category: '' },
                 { profile_data: 8, sample: 'sampleID', category: '' },
                 { profile_data: 7, sample: 'sampleID', category: '>7.00' },
@@ -2738,7 +2754,7 @@ describe('Oncoprint TooltipUtils', () => {
                 tooltipResult
                     .html()
                     .indexOf(
-                        '<b>7.00 (average of 2 values)</b> and <b>&gt;7.00, &gt;9.00 (3 data points)</b>'
+                        '<br>Treatment Response: <b>7.00 (average of 2 values)</b> and <b>&gt;7.00, &gt;9.00 (3 data points)</b><br>'
                     ) > -1,
                 'generic assay - multiple values and categories (unique) are displayed when under mouse'
             );
