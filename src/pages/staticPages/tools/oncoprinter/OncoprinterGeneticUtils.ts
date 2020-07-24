@@ -93,6 +93,7 @@ export type OncoprinterGeneticInputLineType2 = OncoprinterGeneticInputLineType1 
         | 'mrnaLow'
         | 'protHigh'
         | 'protLow';
+    trackName?: string;
     isGermline?: boolean;
     isCustomDriver?: boolean;
     proteinChange?: string;
@@ -509,13 +510,13 @@ export function getSampleGeneticTrackData(
     hugoGeneSymbolToGene: { [hugoGeneSymbol: string]: Gene },
     excludeGermlineMutations: boolean
 ): {
-    [hugoGeneSymbol: string]: {
+    [trackName: string]: {
         sampleId: string;
         data: OncoprinterGeneticTrackDatum_Data[];
     }[];
 } {
-    const geneToSampleIdToData: {
-        [hugoGeneSymbol: string]: {
+    const trackToSampleIdToData: {
+        [trackName: string]: {
             [sampleId: string]: OncoprinterGeneticTrackDatum['data'];
         };
     } = {};
@@ -525,11 +526,12 @@ export function getSampleGeneticTrackData(
     ) as OncoprinterGeneticInputLineType2[];
     // collect data by gene x sample
     for (const inputLine of type2Lines) {
-        if (!(inputLine.hugoGeneSymbol in geneToSampleIdToData)) {
+        const trackName = inputLine.trackName || inputLine.hugoGeneSymbol;
+        if (!(trackName in trackToSampleIdToData)) {
             // add track if it doesnt yet exist
-            geneToSampleIdToData[inputLine.hugoGeneSymbol] = {};
+            trackToSampleIdToData[trackName] = {};
         }
-        const sampleIdToData = geneToSampleIdToData[inputLine.hugoGeneSymbol];
+        const sampleIdToData = trackToSampleIdToData[trackName];
         if (!(inputLine.sampleId in sampleIdToData)) {
             sampleIdToData[inputLine.sampleId] = [];
         }
@@ -546,14 +548,14 @@ export function getSampleGeneticTrackData(
     }
     // add missing samples
     for (const inputLine of oncoprinterInput) {
-        _.forEach(geneToSampleIdToData, (sampleToData, gene) => {
+        _.forEach(trackToSampleIdToData, (sampleToData, trackName) => {
             if (!(inputLine.sampleId in sampleToData)) {
                 sampleToData[inputLine.sampleId] = [];
             }
         });
     }
 
-    return _.mapValues(geneToSampleIdToData, sampleIdToData =>
+    return _.mapValues(trackToSampleIdToData, sampleIdToData =>
         _.chain(sampleIdToData)
             .map((data, sampleId) => ({ sampleId, data }))
             .value()
@@ -755,7 +757,7 @@ export function parseGeneticInput(
         const result = lines.map((line, lineIndex) => {
             if (
                 lineIndex === 0 &&
-                _.isEqual(lines[0].map(s => s.toLowerCase()), [
+                _.isEqual(lines[0].map(s => s.toLowerCase()).slice(0, 4), [
                     'sample',
                     'gene',
                     'alteration',
@@ -769,7 +771,7 @@ export function parseGeneticInput(
             if (line.length === 1) {
                 // Type 1 line
                 return { sampleId: line[0] };
-            } else if (line.length === 4) {
+            } else if (line.length === 4 || line.length === 5) {
                 // Type 2 line
                 const sampleId = line[0];
                 const hugoGeneSymbol = line[1];
@@ -777,9 +779,11 @@ export function parseGeneticInput(
                 const lcAlteration = alteration.toLowerCase();
                 const type = line[3];
                 const lcType = type.toLowerCase();
+                const trackName = line.length === 5 ? line[4] : undefined;
                 let ret: Partial<OncoprinterGeneticInputLineType2> = {
                     sampleId,
                     hugoGeneSymbol,
+                    trackName,
                 };
 
                 switch (lcType) {

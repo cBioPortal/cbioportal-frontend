@@ -1,5 +1,6 @@
 import { assert } from 'chai';
 import {
+    generateUniqueLabel,
     getOncoprinterClinicalInput,
     getOncoprinterGeneticInput,
     getOncoprinterHeatmapInput,
@@ -14,108 +15,147 @@ import { ONCOPRINTER_VAL_NA } from './OncoprinterClinicalAndHeatmapUtils';
 import { IHeatmapTrackSpec } from '../../../../shared/components/oncoprint/Oncoprint';
 
 describe('OncoprinterImportUtils', () => {
+    describe('generateUniqueLabel', () => {
+        it('returns the same unique label if its unused, and keeps count correctly', () => {
+            const counts: any = {};
+            const label = generateUniqueLabel('label', counts);
+            assert.equal(label, 'label');
+            assert.deepEqual(counts, { label: 1 });
+        });
+        it('disambiguates an already-used label, and keeps track of counts correctly', () => {
+            const counts: any = { label: 1 };
+            const label = generateUniqueLabel('label', counts);
+            assert.equal(label, 'label_2');
+            assert.deepEqual(counts, { label: 2, label_2: 1 });
+        });
+        it('disambiguates correctly when the same label is already used, and keeps track of counts correctly', () => {
+            const counts: any = { label: 2, label_2: 1 };
+            let label = generateUniqueLabel('label', counts);
+            assert.equal(label, 'label_3');
+            assert.deepEqual(counts, { label: 3, label_2: 1, label_3: 1 });
+
+            label = generateUniqueLabel('label_2', counts);
+            assert.equal(label, 'label_2_2');
+            assert.deepEqual(counts, {
+                label: 3,
+                label_2: 2,
+                label_3: 1,
+                label_2_2: 1,
+            });
+        });
+    });
     describe('getOncoprinterGeneticInput', () => {
         const data: any[] = [
             {
-                sample: 'sample1',
-                patient: 'patient1',
+                label: 'label1',
                 data: [
                     {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.MUTATION_EXTENDED,
-                        proteinChange: 'proteinChange1',
-                        mutationType: 'missense',
-                        hugoGeneSymbol: 'gene1',
-                        mutationStatus: 'germline',
-                        driverFilter: PUTATIVE_DRIVER,
+                        sample: 'sample1',
+                        patient: 'patient1',
+                        data: [
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.MUTATION_EXTENDED,
+                                proteinChange: 'proteinChange1',
+                                mutationType: 'missense',
+                                hugoGeneSymbol: 'gene1',
+                                mutationStatus: 'germline',
+                                driverFilter: PUTATIVE_DRIVER,
+                            },
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                                hugoGeneSymbol: 'gene1',
+                                value: -2,
+                            },
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.MRNA_EXPRESSION,
+                                hugoGeneSymbol: 'gene1',
+                                alterationSubType: 'high',
+                            },
+                        ],
                     },
                     {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.COPY_NUMBER_ALTERATION,
-                        hugoGeneSymbol: 'gene1',
-                        value: -2,
-                    },
-                    {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.MRNA_EXPRESSION,
-                        hugoGeneSymbol: 'gene1',
-                        alterationSubType: 'high',
+                        sample: 'sample2',
+                        patient: 'patient2',
+                        data: [
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.MUTATION_EXTENDED,
+                                proteinChange: 'proteinChange2',
+                                mutationType: 'frameshift',
+                                mutationStatus: 'germline',
+                                hugoGeneSymbol: 'gene1',
+                            },
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                                hugoGeneSymbol: 'gene1',
+                                value: 2,
+                            },
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.PROTEIN_LEVEL,
+                                hugoGeneSymbol: 'gene1',
+                                alterationSubType: 'high',
+                            },
+                        ],
                     },
                 ],
             },
             {
-                sample: 'sample1',
-                patient: 'patient1',
+                label: 'label2',
                 data: [
                     {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.MUTATION_EXTENDED,
-                        proteinChange: 'promoter',
-                        mutationType: 'promoter',
-                        hugoGeneSymbol: 'gene2',
+                        sample: 'sample1',
+                        patient: 'patient1',
+                        data: [
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.MUTATION_EXTENDED,
+                                proteinChange: 'promoter',
+                                mutationType: 'promoter',
+                                hugoGeneSymbol: 'gene2',
+                            },
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                                hugoGeneSymbol: 'gene2',
+                                value: 1,
+                            },
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.MRNA_EXPRESSION,
+                                hugoGeneSymbol: 'gene2',
+                                alterationSubType: 'low',
+                            },
+                        ],
                     },
                     {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.COPY_NUMBER_ALTERATION,
-                        hugoGeneSymbol: 'gene2',
-                        value: 1,
-                    },
-                    {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.MRNA_EXPRESSION,
-                        hugoGeneSymbol: 'gene2',
-                        alterationSubType: 'low',
-                    },
-                ],
-            },
-            {
-                sample: 'sample2',
-                patient: 'patient2',
-                data: [
-                    {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.MUTATION_EXTENDED,
-                        proteinChange: 'proteinChange2',
-                        mutationType: 'frameshift',
-                        mutationStatus: 'germline',
-                        hugoGeneSymbol: 'gene1',
-                    },
-                    {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.COPY_NUMBER_ALTERATION,
-                        hugoGeneSymbol: 'gene1',
-                        value: 2,
-                    },
-                    {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.PROTEIN_LEVEL,
-                        hugoGeneSymbol: 'gene1',
-                        alterationSubType: 'high',
-                    },
-                ],
-            },
-            {
-                sample: 'sample2',
-                patient: 'patient2',
-                data: [
-                    {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.MUTATION_EXTENDED,
-                        proteinChange: 'proteinChange3',
-                        mutationType: 'fusion',
-                        hugoGeneSymbol: 'gene2',
-                    },
-                    {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.COPY_NUMBER_ALTERATION,
-                        hugoGeneSymbol: 'gene2',
-                        value: 0,
-                    },
-                    {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.PROTEIN_LEVEL,
-                        hugoGeneSymbol: 'gene2',
-                        alterationSubType: 'low',
+                        sample: 'sample2',
+                        patient: 'patient2',
+                        data: [
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.MUTATION_EXTENDED,
+                                proteinChange: 'proteinChange3',
+                                mutationType: 'fusion',
+                                hugoGeneSymbol: 'gene2',
+                            },
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                                hugoGeneSymbol: 'gene2',
+                                value: 0,
+                            },
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.PROTEIN_LEVEL,
+                                hugoGeneSymbol: 'gene2',
+                                alterationSubType: 'low',
+                            },
+                        ],
                     },
                 ],
             },
@@ -127,18 +167,18 @@ describe('OncoprinterImportUtils', () => {
                     ['sample1', 'sample2'],
                     'sample'
                 ),
-                'sample1  gene1  proteinChange1  MISSENSE_GERMLINE_DRIVER\n' +
-                    'sample1  gene1  HOMDEL  CNA\n' +
-                    'sample1  gene1  HIGH  EXP\n' +
-                    'sample1  gene2  promoter  PROMOTER\n' +
-                    'sample1  gene2  GAIN  CNA\n' +
-                    'sample1  gene2  LOW  EXP\n' +
-                    'sample2  gene1  proteinChange2  TRUNC_GERMLINE\n' +
-                    'sample2  gene1  AMP  CNA\n' +
-                    'sample2  gene1  HIGH  PROT\n' +
-                    'sample2  gene2  proteinChange3  FUSION\n' +
+                'sample1  gene1  proteinChange1  MISSENSE_GERMLINE_DRIVER  label1\n' +
+                    'sample1  gene1  HOMDEL  CNA  label1\n' +
+                    'sample1  gene1  HIGH  EXP  label1\n' +
+                    'sample2  gene1  proteinChange2  TRUNC_GERMLINE  label1\n' +
+                    'sample2  gene1  AMP  CNA  label1\n' +
+                    'sample2  gene1  HIGH  PROT  label1\n' +
+                    'sample1  gene2  promoter  PROMOTER  label2\n' +
+                    'sample1  gene2  GAIN  CNA  label2\n' +
+                    'sample1  gene2  LOW  EXP  label2\n' +
+                    'sample2  gene2  proteinChange3  FUSION  label2\n' +
                     'sample2\n' +
-                    'sample2  gene2  LOW  PROT\n' +
+                    'sample2  gene2  LOW  PROT  label2\n' +
                     'sample1\nsample2'
             );
         });
@@ -149,18 +189,18 @@ describe('OncoprinterImportUtils', () => {
                     ['patient1', 'patient2'],
                     'patient'
                 ),
-                'patient1  gene1  proteinChange1  MISSENSE_GERMLINE_DRIVER\n' +
-                    'patient1  gene1  HOMDEL  CNA\n' +
-                    'patient1  gene1  HIGH  EXP\n' +
-                    'patient1  gene2  promoter  PROMOTER\n' +
-                    'patient1  gene2  GAIN  CNA\n' +
-                    'patient1  gene2  LOW  EXP\n' +
-                    'patient2  gene1  proteinChange2  TRUNC_GERMLINE\n' +
-                    'patient2  gene1  AMP  CNA\n' +
-                    'patient2  gene1  HIGH  PROT\n' +
-                    'patient2  gene2  proteinChange3  FUSION\n' +
+                'patient1  gene1  proteinChange1  MISSENSE_GERMLINE_DRIVER  label1\n' +
+                    'patient1  gene1  HOMDEL  CNA  label1\n' +
+                    'patient1  gene1  HIGH  EXP  label1\n' +
+                    'patient2  gene1  proteinChange2  TRUNC_GERMLINE  label1\n' +
+                    'patient2  gene1  AMP  CNA  label1\n' +
+                    'patient2  gene1  HIGH  PROT  label1\n' +
+                    'patient1  gene2  promoter  PROMOTER  label2\n' +
+                    'patient1  gene2  GAIN  CNA  label2\n' +
+                    'patient1  gene2  LOW  EXP  label2\n' +
+                    'patient2  gene2  proteinChange3  FUSION  label2\n' +
                     'patient2\n' +
-                    'patient2  gene2  LOW  PROT\n' +
+                    'patient2  gene2  LOW  PROT  label2\n' +
                     'patient1\npatient2'
             );
         });

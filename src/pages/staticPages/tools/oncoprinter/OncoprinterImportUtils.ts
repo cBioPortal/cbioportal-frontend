@@ -64,6 +64,7 @@ function getHeatmapType(
 
 function getOncoprinterParsedGeneticInputLine(
     d: GeneticTrackDatum_Data,
+    trackLabel: string,
     caseId: string
 ): OncoprinterGeneticInputLine {
     const alteration = getOncoprinterGeneticAlteration(d);
@@ -71,6 +72,7 @@ function getOncoprinterParsedGeneticInputLine(
         const oncoprinterInput: Partial<OncoprinterGeneticInputLineType2> = {};
         oncoprinterInput.sampleId = caseId;
         oncoprinterInput.hugoGeneSymbol = d.hugoGeneSymbol;
+        oncoprinterInput.trackName = trackLabel;
         oncoprinterInput.alteration = alteration;
         oncoprinterInput.proteinChange = d.proteinChange;
         oncoprinterInput.isGermline = !isNotGermlineMutation(d);
@@ -140,25 +142,57 @@ function getOncoprinterGeneticInputLine(parsed: OncoprinterGeneticInputLine) {
                 line.push('FUSION');
                 break;
         }
+        if (parsed.trackName) {
+            line.push(sanitizeColumnData(parsed.trackName));
+        }
     }
     return line.join('  ');
 }
 
+export function generateUniqueLabel(
+    trackLabel: string,
+    usedLabelCount: { [label: string]: number }
+) {
+    // Adds numbers to the end of `trackLabel` to get to a unique label
+    let label = trackLabel;
+    usedLabelCount[label] = usedLabelCount[label] || 0;
+    usedLabelCount[label] += 1;
+
+    while (usedLabelCount[label] > 1) {
+        // if this label is already used, disambiguate, then increment the counter
+        //  then try again
+        label = `${label}_${usedLabelCount[label]}`;
+        usedLabelCount[label] = usedLabelCount[label] || 0;
+        usedLabelCount[label] += 1;
+    }
+
+    return label;
+}
+
 export function getOncoprinterGeneticInput(
-    oncoprintData: Pick<GeneticTrackDatum, 'data' | 'sample' | 'patient'>[],
+    oncoprintData: {
+        label: string;
+        data: Pick<GeneticTrackDatum, 'data' | 'sample' | 'patient'>[];
+    }[],
     caseIds: string[],
     sampleOrPatient: 'sample' | 'patient'
 ) {
-    const parsedLines = [];
-    for (const oncoprintDatum of oncoprintData) {
-        parsedLines.push(
-            ...oncoprintDatum.data.map(d => {
-                return getOncoprinterParsedGeneticInputLine(d, oncoprintDatum[
-                    sampleOrPatient
-                ] as string);
+    // handle case where tracks have same label
+    const usedLabelCount: { [trackLabel: string]: number } = {};
+
+    const parsedLines = _.flatMapDeep(oncoprintData, track => {
+        const label = generateUniqueLabel(track.label, usedLabelCount);
+
+        return track.data.map(oncoprintDatum =>
+            oncoprintDatum.data.map(d => {
+                return getOncoprinterParsedGeneticInputLine(
+                    d,
+                    label,
+                    oncoprintDatum[sampleOrPatient] as string
+                );
             })
         );
-    }
+    });
     return parsedLines
         .map(getOncoprinterGeneticInputLine)
         .concat(caseIds)
