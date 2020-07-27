@@ -10,7 +10,7 @@ import {
     ExpressionEnrichmentWithQ,
     getExpressionRowData,
     getExpressionScatterData,
-    getExpressionEnrichmentColumns,
+    getEnrichmentColumns,
     getFilteredData,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import { ExpressionEnrichmentRow } from 'shared/model/ExpressionEnrichmentRow';
@@ -41,6 +41,7 @@ export interface IExpressionEnrichmentContainerProps {
     sampleKeyToSample: {
         [uniqueSampleKey: string]: Sample;
     };
+    enrichmentType: string;
     alteredVsUnalteredMode?: boolean;
     queriedHugoGeneSymbols?: string[];
     oqlFilteredCaseAggregatedData?: {
@@ -178,7 +179,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<
     }
 
     @computed get customColumns() {
-        return getExpressionEnrichmentColumns(
+        return getEnrichmentColumns(
             this.props.groups,
             this.props.alteredVsUnalteredMode,
             this.props.isMethylation
@@ -302,6 +303,8 @@ export default class ExpressionEnrichmentContainer extends React.Component<
                             this.props.oqlFilteredCaseAggregatedData
                         }
                         selectedRow={this.selectedRow}
+                        enrichmentType={this.props.enrichmentType}
+                        isMethylation={this.props.isMethylation}
                     />
                 </div>
 

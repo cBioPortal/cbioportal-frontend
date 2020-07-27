@@ -118,9 +118,9 @@ export default class ComparisonStore {
                         this.showProteinTab
                 );
                 this.tabHasBeenShown.set(
-                    GroupComparisonTab.METHYLATION,
+                    GroupComparisonTab.DNAMETHYLATION,
                     !!this.tabHasBeenShown.get(
-                        GroupComparisonTab.METHYLATION
+                        GroupComparisonTab.DNAMETHYLATION
                     ) || this.showMethylationTab
                 );
             });
@@ -1235,7 +1235,7 @@ export default class ComparisonStore {
             this.methylationTabShowable ||
             (this.activeGroups.isComplete &&
                 this.activeGroups.result!.length === 0 &&
-                this.tabHasBeenShown.get(GroupComparisonTab.METHYLATION))
+                this.tabHasBeenShown.get(GroupComparisonTab.DNAMETHYLATION))
         );
     }
 

@@ -227,8 +227,8 @@ export default class ComparisonTab extends React.Component<
                     )}
                     {this.store.showMethylationTab && (
                         <MSKTab
-                            id={ResultsViewComparisonSubTab.METHYLATION}
-                            linkText="Methylation"
+                            id={ResultsViewComparisonSubTab.DNAMETHYLATION}
+                            linkText="DNA Methylation"
                             anchorClassName={
                                 this.store.methylationTabUnavailable
                                     ? 'greyedOut'
