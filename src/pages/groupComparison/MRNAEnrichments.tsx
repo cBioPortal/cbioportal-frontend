@@ -76,6 +76,7 @@ export default class MRNAEnrichments extends React.Component<
                             this.props.store.sampleKeyToSample.result!
                         }
                         isGeneCheckBoxEnabled={this.props.resultsViewMode}
+                        enrichmentType={'mRNA expression'}
                     />
                 </div>
             );

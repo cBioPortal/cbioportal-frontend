@@ -353,7 +353,7 @@ describe('group comparison page screenshot tests', function() {
         });
 
         it('group comparison page methylation enrichments tab several groups', function() {
-            browser.click('.tabAnchor_methylation');
+            browser.click('.tabAnchor_dna_methylation');
             browser.waitForVisible(
                 'div[data-test="GroupComparisonMethylationEnrichments"]',
                 10000
@@ -451,7 +451,7 @@ describe('group comparison page screenshot tests', function() {
         });
 
         it('group comparison page methylation enrichments tab two groups', function() {
-            browser.click('.tabAnchor_methylation');
+            browser.click('.tabAnchor_dna_methylation');
             browser.waitForVisible(
                 'div[data-test="GroupComparisonMethylationEnrichments"]',
                 10000

@@ -204,8 +204,8 @@ export default class GroupComparisonPage extends React.Component<
                     )}
                     {this.store.showMethylationTab && (
                         <MSKTab
-                            id={GroupComparisonTab.METHYLATION}
-                            linkText="Methylation"
+                            id={GroupComparisonTab.DNAMETHYLATION}
+                            linkText="DNA Methylation"
                             anchorClassName={
                                 this.store.methylationTabUnavailable
                                     ? 'greyedOut'
