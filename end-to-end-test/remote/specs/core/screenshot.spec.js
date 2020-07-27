@@ -23,7 +23,7 @@ function waitForAndCheckPlotsTab() {
     assertScreenShotMatch(res);
 }
 
-function runResultsTestSuite(prefix) {
+function runResultsTestSuite(prefix, options = {}) {
     it(`${prefix} render the oncoprint`, function() {
         waitForOncoprint(10000);
         var res = browser.checkElement('.oncoprintContainer', {
@@ -142,7 +142,7 @@ function runResultsTestSuite(prefix) {
         browser.waitForVisible(
             'div[data-test="GroupComparisonMRNAEnrichments"]'
         );
-        browser.click('b=ETV5');
+        browser.click(options.mrnaEnrichmentsRowSelector || 'b=ETV5');
         browser.waitForVisible('div[data-test="MiniBoxPlot"]');
         var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
             hide: ['.qtip'],
@@ -422,7 +422,9 @@ describe('results page tabs while excluding unprofiled samples', function() {
         setResultsPageSettingsMenuOpen(false);
     });
 
-    runResultsTestSuite('excluding unprofiled samples');
+    runResultsTestSuite('excluding unprofiled samples', {
+        mrnaEnrichmentsRowSelector: 'b=PRR22',
+    });
 });
 
 describe('error messaging for 400 error', function() {
