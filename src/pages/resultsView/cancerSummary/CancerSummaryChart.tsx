@@ -636,11 +636,13 @@ export class CancerSummaryChart extends React.Component<
 
         data.forEach(elementar => {
             elementar.forEach(element => {
-                downloadData.push({
-                    x: element.x,
-                    y: element.y,
-                    'Alteration Type': element.alterationType,
-                });
+                if (element.y != 0) {
+                    downloadData.push({
+                        x: element.x,
+                        y: element.y,
+                        'Alteration Type': element.alterationType,
+                    });
+                }
             });
         });
         return downloadData;
