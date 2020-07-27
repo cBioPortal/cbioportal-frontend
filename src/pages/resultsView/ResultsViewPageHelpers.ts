@@ -30,7 +30,7 @@ export enum ResultsViewComparisonSubTab {
     CNA = 'cna',
     MRNA = 'mrna',
     PROTEIN = 'protein',
-    METHYLATION = 'methylation',
+    DNAMETHYLATION = 'dna_methylation',
 }
 
 export function getTabId(pathname: string) {

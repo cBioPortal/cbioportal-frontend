@@ -6,5 +6,5 @@ export enum GroupComparisonTab {
     PROTEIN = 'protein',
     SURVIVAL = 'survival',
     CLINICAL = 'clinical',
-    METHYLATION = 'methylation',
+    DNAMETHYLATION = 'dna_methylation',
 }

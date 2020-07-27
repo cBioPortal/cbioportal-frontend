@@ -45,11 +45,13 @@ export interface IExpressionEnrichmentsBoxPlotProps {
     sampleKeyToSample: {
         [uniqueSampleKey: string]: Sample;
     };
+    enrichmentType: string;
     queriedHugoGeneSymbols?: string[];
     oqlFilteredCaseAggregatedData?: {
         [uniqueSampleKey: string]: ExtendedAlteration[];
     };
     selectedRow?: ExpressionEnrichmentWithQ;
+    isMethylation?: boolean;
 }
 
 @observer
@@ -220,8 +222,8 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
                             <b>{d.sampleId}</b>
                         </a>
                         <br />
-                        mRNA expression{this.logScale ? ' (log2)' : ''}:{' '}
-                        {d.value.toFixed(3)}
+                        {this.props.enrichmentType}
+                        {this.logScale ? ' (log2)' : ''}: {d.value.toFixed(3)}
                         {!!alterationContent && <br />}
                         {alterationContent}
                     </div>
@@ -254,7 +256,7 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
             this.boxPlotData.isComplete &&
             this.boxPlotData.result.length > 0
         ) {
-            let axisLabelX = `group`;
+            let axisLabelX = `Group`;
             if (this.props.queriedHugoGeneSymbols !== undefined) {
                 axisLabelX = `Query: ${getGeneSummary(
                     this.props.queriedHugoGeneSymbols
@@ -267,7 +269,11 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
                         buttons={['SVG', 'PNG', 'Data']}
                         getSvg={() => this.svgContainer}
                         getData={this.getData}
-                        filename={'expression_enrichment'}
+                        filename={`${
+                            this.props.isMethylation
+                                ? 'methylation'
+                                : 'expression'
+                        }_enrichment`}
                         dontFade={true}
                         style={{ position: 'absolute', right: 10, top: 10 }}
                         type="button"
