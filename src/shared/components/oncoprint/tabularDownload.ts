@@ -32,7 +32,7 @@ export function getTabularDownloadData(
         MUTATIONS: {},
         MRNA: {},
         PROTEIN: {},
-        FUSION: {},
+        STRUCTURAL_VARIANT: {},
     };
 
     //Create maps for genetic data
@@ -74,8 +74,8 @@ export function getTabularDownloadData(
         low: 'Protein Low',
         high: 'Protein High',
     };
-    const fusionMap: any = {
-        true: 'Fusion',
+    const structuralVariantMap: any = {
+        true: 'Structural Variant',
     };
 
     //Add genetic data
@@ -95,8 +95,8 @@ export function getTabularDownloadData(
         if (oncoprintData.PROTEIN[currentGeneName] === undefined) {
             oncoprintData.PROTEIN[currentGeneName] = {};
         }
-        if (oncoprintData.FUSION[currentGeneName] === undefined) {
-            oncoprintData.FUSION[currentGeneName] = {};
+        if (oncoprintData.STRUCTURAL_VARIANT[currentGeneName] === undefined) {
+            oncoprintData.STRUCTURAL_VARIANT[currentGeneName] = {};
         }
         //Iterate over all patients/samples of the track and add them to oncoprintData
         for (const geneticTrackDatum of currentTrackData) {
@@ -108,7 +108,7 @@ export function getTabularDownloadData(
             oncoprintData.MUTATIONS[currentGeneName][id] = '';
             oncoprintData.MRNA[currentGeneName][id] = '';
             oncoprintData.PROTEIN[currentGeneName][id] = '';
-            oncoprintData.FUSION[currentGeneName][id] = '';
+            oncoprintData.STRUCTURAL_VARIANT[currentGeneName][id] = '';
             if (geneticTrackDatum.disp_cna !== undefined) {
                 oncoprintData.CNA[currentGeneName][id] = cnaMap[
                     geneticTrackDatum.disp_cna
@@ -116,12 +116,16 @@ export function getTabularDownloadData(
                     ? cnaMap[geneticTrackDatum.disp_cna]
                     : geneticTrackDatum.disp_cna;
             }
-            if (geneticTrackDatum.disp_fusion !== undefined) {
-                oncoprintData.FUSION[currentGeneName][id] = fusionMap[
-                    geneticTrackDatum.disp_fusion + ''
+            if (geneticTrackDatum.disp_structuralVariant !== undefined) {
+                oncoprintData.STRUCTURAL_VARIANT[currentGeneName][
+                    id
+                ] = structuralVariantMap[
+                    geneticTrackDatum.disp_structuralVariant + ''
                 ]
-                    ? fusionMap[geneticTrackDatum.disp_fusion + '']
-                    : geneticTrackDatum.disp_fusion;
+                    ? structuralVariantMap[
+                          geneticTrackDatum.disp_structuralVariant + ''
+                      ]
+                    : geneticTrackDatum.disp_structuralVariant;
             }
             if (geneticTrackDatum.disp_mrna !== undefined) {
                 oncoprintData.MRNA[currentGeneName][id] = mrnaMap[

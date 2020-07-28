@@ -6,6 +6,7 @@ import {
     GenePanelData,
     MolecularProfile,
     Mutation,
+    StructuralVariant,
 } from 'cbioportal-ts-api-client';
 import client from 'shared/api/cbioportalClientInstance';
 import { ClinicalTrackSpec, GeneticTrackDatum } from './Oncoprint';
@@ -445,7 +446,7 @@ export function makeGeneticTrackTooltip(
     alterationTypesInQuery?: string[]
 ) {
     // TODO: all the data here is old API data
-    function listOfMutationOrFusionDataToHTML(
+    function listOfMutationDataToHTML(
         data: any[],
         multipleSamplesUnderMouse: boolean
     ) {
@@ -511,6 +512,53 @@ export function makeGeneticTrackTooltip(
                     if (germline) {
                         ret.append(generateGermlineLabel());
                     }
+                    // finally, add the number of samples with this, if multipleSamplesUnderMouse
+                    if (multipleSamplesUnderMouse) {
+                        ret.append(`&nbsp;(${count})`);
+                    }
+                    return ret;
+                }
+            );
+    }
+    function listOfStructuralVariantDataToHTML(
+        data: any[],
+        multipleSamplesUnderMouse: boolean
+    ) {
+        const countsMap = new ListIndexedMapOfCounts();
+        for (const d of data) {
+            countsMap.increment(
+                d.site1HugoSymbol,
+                d.site2HugoSymbol,
+                d.eventInfo,
+                d.variantClass,
+                d.oncokb_oncogenic
+            );
+        }
+        return countsMap
+            .entries()
+            .map(
+                ({
+                    key: [
+                        site1HugoSymbol,
+                        site2HugoSymbol,
+                        eventInfo,
+                        variantClass,
+                        oncokb_oncogenic,
+                    ],
+                    value: count,
+                }) => {
+                    var ret = $('<span>').addClass('nobreak');
+                    ret.append(
+                        `<b class="nobreak">${site1HugoSymbol}${
+                            site2HugoSymbol ? '-' + site2HugoSymbol : ''
+                        }, ${variantClass}, Event Info: ${eventInfo}</b>`
+                    );
+                    if (oncokb_oncogenic) {
+                        ret.append(
+                            `<img src="${oncokbImg}" title="${oncokb_oncogenic}" style="height:11px; width:11px;margin-left:3px"/>`
+                        );
+                    }
+
                     // finally, add the number of samples with this, if multipleSamplesUnderMouse
                     if (multipleSamplesUnderMouse) {
                         ret.append(`&nbsp;(${count})`);
@@ -604,7 +652,7 @@ export function makeGeneticTrackTooltip(
         let cna: any[] = [];
         let mrna: any[] = [];
         let prot: any[] = [];
-        let fusions: any[] = [];
+        let structuralVariants: any[] = [];
         // collect all data under mouse
         for (const d of dataUnderMouse) {
             for (let i = 0; i < d.data.length; i++) {
@@ -613,7 +661,7 @@ export function makeGeneticTrackTooltip(
                     datum.molecularProfileAlterationType;
                 const hugoGeneSymbol = datum.hugoGeneSymbol;
                 switch (molecularAlterationType) {
-                    case 'MUTATION_EXTENDED':
+                    case AlterationTypeConstants.MUTATION_EXTENDED: {
                         const tooltip_datum: any = {};
                         tooltip_datum.hugo_gene_symbol = hugoGeneSymbol;
                         tooltip_datum.amino_acid_change = datum.proteinChange;
@@ -634,12 +682,28 @@ export function makeGeneticTrackTooltip(
                         if (oncokb_oncogenic) {
                             tooltip_datum.oncokb_oncogenic = oncokb_oncogenic;
                         }
-                        (datum.alterationSubType === 'fusion'
-                            ? fusions
-                            : mutations
-                        ).push(tooltip_datum);
+                        mutations.push(tooltip_datum);
                         break;
-                    case 'COPY_NUMBER_ALTERATION':
+                    }
+                    case AlterationTypeConstants.STRUCTURAL_VARIANT: {
+                        const tooltip_datum: any = {};
+                        const structuralVariantDatum: StructuralVariant = datum as any;
+                        tooltip_datum.site1HugoSymbol =
+                            structuralVariantDatum.site1HugoSymbol;
+                        tooltip_datum.site2HugoSymbol =
+                            structuralVariantDatum.site2HugoSymbol;
+                        tooltip_datum.eventInfo =
+                            structuralVariantDatum.eventInfo;
+                        tooltip_datum.variantClass =
+                            structuralVariantDatum.variantClass;
+                        const oncokb_oncogenic = datum.oncoKbOncogenic;
+                        if (oncokb_oncogenic) {
+                            tooltip_datum.oncokb_oncogenic = oncokb_oncogenic;
+                        }
+                        structuralVariants.push(tooltip_datum);
+                        break;
+                    }
+                    case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
                         if (
                             disp_cna.hasOwnProperty(
                                 datum.value as AnnotatedNumericGeneMolecularData['value']
@@ -659,11 +723,12 @@ export function makeGeneticTrackTooltip(
                             cna.push(tooltip_datum);
                         }
                         break;
-                    case 'MRNA_EXPRESSION':
-                    case 'PROTEIN_LEVEL':
+                    case AlterationTypeConstants.MRNA_EXPRESSION:
+                    case AlterationTypeConstants.PROTEIN_LEVEL:
                         let direction = datum.alterationSubType;
                         let array =
-                            molecularAlterationType === 'MRNA_EXPRESSION'
+                            molecularAlterationType ===
+                            AlterationTypeConstants.MRNA_EXPRESSION
                                 ? mrna
                                 : prot;
                         if (direction === 'high') {
@@ -681,23 +746,23 @@ export function makeGeneticTrackTooltip(
                 }
             }
         }
-        if (fusions.length > 0) {
-            ret.append('Fusion: ');
-            fusions = listOfMutationOrFusionDataToHTML(
-                fusions,
+        if (structuralVariants.length > 0) {
+            ret.append('Structural Variant: ');
+            structuralVariants = listOfStructuralVariantDataToHTML(
+                structuralVariants,
                 dataUnderMouse.length > 1
             );
-            for (var i = 0; i < fusions.length; i++) {
+            for (var i = 0; i < structuralVariants.length; i++) {
                 if (i > 0) {
                     ret.append(',');
                 }
-                ret.append(fusions[i]);
+                ret.append(structuralVariants[i]);
             }
             ret.append('<br>');
         }
         if (mutations.length > 0) {
             ret.append('Mutation: ');
-            mutations = listOfMutationOrFusionDataToHTML(
+            mutations = listOfMutationDataToHTML(
                 mutations,
                 dataUnderMouse.length > 1
             );

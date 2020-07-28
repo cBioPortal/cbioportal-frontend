@@ -431,7 +431,7 @@ describe('DownloadUtils', () => {
                 uid: 'UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3',
                 trackLabel: 'EGFR',
                 data: sampleDataWithBothMutationAndFusion,
-                disp_fusion: true,
+                disp_structuralVariant: true,
                 disp_cna: 'amp',
                 disp_mut: 'missense_rec',
             };

@@ -16,6 +16,7 @@ import {
     AnnotatedMutation,
     AnnotatedNumericGeneMolecularData,
     ExtendedAlteration,
+    AnnotatedStructuralVariant,
 } from '../../../pages/resultsView/ResultsViewPageStore';
 import './styles.scss';
 import { ShapeParams } from 'oncoprintjs/dist/js/oncoprintshape';
@@ -78,7 +79,10 @@ export interface IGenericAssayHeatmapTrackDatum extends IBaseHeatmapTrackDatum {
 }
 
 export type GeneticTrackDatum_Data = Pick<
-    ExtendedAlteration & AnnotatedMutation & AnnotatedNumericGeneMolecularData,
+    ExtendedAlteration &
+        AnnotatedMutation &
+        AnnotatedNumericGeneMolecularData &
+        AnnotatedStructuralVariant,
     | 'hugoGeneSymbol'
     | 'molecularProfileAlterationType'
     | 'proteinChange'
@@ -115,7 +119,7 @@ export type GeneticTrackDatum = {
     disp_cna?: string;
     disp_mrna?: string;
     disp_prot?: string;
-    disp_fusion?: boolean;
+    disp_structuralVariant?: boolean;
     disp_germ?: boolean;
 };
 

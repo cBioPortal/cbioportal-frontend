@@ -60,6 +60,7 @@ export enum ResultsViewURLQueryEnum {
     plots_vert_selection = 'plots_vert_selection',
 
     genetic_profile_ids_PROFILE_MUTATION_EXTENDED = 'genetic_profile_ids_PROFILE_MUTATION_EXTENDED',
+    genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT = 'genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT',
     genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION = 'genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION',
     genetic_profile_ids_PROFILE_MRNA_EXPRESSION = 'genetic_profile_ids_PROFILE_MRNA_EXPRESSION',
     genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION = 'genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION',
@@ -132,6 +133,9 @@ export default class ResultsViewURLWrapper extends URLWrapper<
                 Z_SCORE_THRESHOLD: { isSessionProp: true },
                 geneset_list: { isSessionProp: true },
                 genetic_profile_ids_PROFILE_MUTATION_EXTENDED: {
+                    isSessionProp: true,
+                },
+                genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT: {
                     isSessionProp: true,
                 },
                 genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: {

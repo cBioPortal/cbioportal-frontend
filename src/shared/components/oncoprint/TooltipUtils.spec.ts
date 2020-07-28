@@ -11,6 +11,7 @@ import {
     AlterationTypeConstants,
     AnnotatedExtendedAlteration,
     AnnotatedMutation,
+    AnnotatedStructuralVariant,
 } from '../../../pages/resultsView/ResultsViewPageStore';
 import $ from 'jquery';
 import { MolecularProfile, Mutation } from 'cbioportal-ts-api-client';
@@ -192,10 +193,17 @@ describe('Oncoprint TooltipUtils', () => {
                 ...props,
             } as AnnotatedExtendedAlteration;
         }
-        function makeFusion(
-            props: Partial<AnnotatedExtendedAlteration>
-        ): AnnotatedExtendedAlteration {
-            return makeMutation({ alterationSubType: 'fusion', ...props });
+        function makeStructuralVariant(
+            props: Partial<AnnotatedStructuralVariant>
+        ): AnnotatedStructuralVariant {
+            return {
+                hugoGeneSymbol: 'GENE',
+                site1HugoSymbol: 'GENE',
+                molecularProfileAlterationType:
+                    AlterationTypeConstants.STRUCTURAL_VARIANT,
+                variantClass: 'fusion',
+                ...props,
+            } as AnnotatedStructuralVariant;
         }
         function makeCna(
             props: Partial<AnnotatedExtendedAlteration>
@@ -1497,11 +1505,20 @@ describe('Oncoprint TooltipUtils', () => {
                 );
             });
             it('single genetic alteration in single case - fusion', () => {
-                datum.data = [makeFusion({ proteinChange: 'PC1' })];
+                datum.data = [
+                    makeStructuralVariant({
+                        site2HugoSymbol: 'GENE2',
+                        eventInfo: 'GENE-GENE2',
+                    }),
+                ];
                 tooltipOutput = tooltip([datum]);
-                assert.equal(tooltipOutput.text().match(/Fusion:/g)!.length, 1);
                 assert.equal(
-                    tooltipOutput.text().match(/GENE PC1/g)!.length,
+                    tooltipOutput.text().match(/Structural Variant:/g)!.length,
+                    1
+                );
+                assert.equal(
+                    tooltipOutput.text().match(/Event Info: GENE-GENE2/g)!
+                        .length,
                     1
                 );
                 assert.equal(
@@ -1511,13 +1528,23 @@ describe('Oncoprint TooltipUtils', () => {
                 );
 
                 datum.data = [
-                    makeFusion({ proteinChange: 'PC1' }),
-                    makeFusion({ proteinChange: 'PC1' }),
+                    makeStructuralVariant({
+                        site2HugoSymbol: 'GENE2',
+                        eventInfo: 'GENE-GENE2',
+                    }),
+                    makeStructuralVariant({
+                        site2HugoSymbol: 'GENE3',
+                        eventInfo: 'GENE-GENE3',
+                    }),
                 ];
                 tooltipOutput = tooltip([datum]);
-                assert.equal(tooltipOutput.text().match(/Fusion:/g)!.length, 1);
                 assert.equal(
-                    tooltipOutput.text().match(/GENE PC1/g)!.length,
+                    tooltipOutput.text().match(/Structural Variant:/g)!.length,
+                    1
+                );
+                assert.equal(
+                    tooltipOutput.text().match(/Event Info: GENE-GENE2/g)!
+                        .length,
                     1
                 );
                 assert.equal(
@@ -1748,18 +1775,33 @@ describe('Oncoprint TooltipUtils', () => {
                 );
             });
             it('single genetic alteration across multiple cases - fusion', () => {
-                datum.data = [makeFusion({ proteinChange: 'PC1' })];
+                datum.data = [
+                    makeStructuralVariant({
+                        site2HugoSymbol: 'GENE2',
+                        eventInfo: 'GENE-GENE2',
+                    }),
+                ];
                 tooltipOutput = tooltip([datum, datum, datum]);
-                assert.equal(tooltipOutput.text().match(/Fusion:/g)!.length, 1);
                 assert.equal(
-                    tooltipOutput.text().match(/GENE PC1\xa0\(3\)/g)!.length,
+                    tooltipOutput.text().match(/Structural Variant:/g)!.length,
+                    1
+                );
+                assert.equal(
+                    tooltipOutput
+                        .text()
+                        .match(/Event Info: GENE-GENE2\xa0\(3\)/g)!.length,
                     1
                 );
 
                 tooltipOutput = tooltip([datum, emptyDatum]);
-                assert.equal(tooltipOutput.text().match(/Fusion:/g)!.length, 1);
                 assert.equal(
-                    tooltipOutput.text().match(/GENE PC1\xa0\(1\)/g)!.length,
+                    tooltipOutput.text().match(/Structural Variant:/g)!.length,
+                    1
+                );
+                assert.equal(
+                    tooltipOutput
+                        .text()
+                        .match(/Event Info: GENE-GENE2\xa0\(1\)/g)!.length,
                     1
                 );
             });
@@ -1878,17 +1920,28 @@ describe('Oncoprint TooltipUtils', () => {
             });
             it('multiple alterations of same type in single case - fusion', () => {
                 datum.data = [
-                    makeFusion({ proteinChange: 'PC1' }),
-                    makeFusion({ proteinChange: 'PC2' }),
+                    makeStructuralVariant({
+                        site2HugoSymbol: 'GENE2',
+                        eventInfo: 'GENE-GENE2',
+                    }),
+                    makeStructuralVariant({
+                        site2HugoSymbol: 'GENE3',
+                        eventInfo: 'GENE-GENE3',
+                    }),
                 ];
                 tooltipOutput = tooltip([datum]);
-                assert.equal(tooltipOutput.text().match(/Fusion:/g)!.length, 1);
                 assert.equal(
-                    tooltipOutput.text().match(/GENE PC1/g)!.length,
+                    tooltipOutput.text().match(/Structural Variant:/g)!.length,
                     1
                 );
                 assert.equal(
-                    tooltipOutput.text().match(/GENE PC2/g)!.length,
+                    tooltipOutput.text().match(/Event Info: GENE-GENE2/g)!
+                        .length,
+                    1
+                );
+                assert.equal(
+                    tooltipOutput.text().match(/Event Info: GENE-GENE2/g)!
+                        .length,
                     1
                 );
                 assert.equal(
@@ -2006,28 +2059,44 @@ describe('Oncoprint TooltipUtils', () => {
             });
             it('multiple alterations of same type across multiple cases - fusion', () => {
                 datum.data = [
-                    makeFusion({ proteinChange: 'PC1' }),
-                    makeFusion({ proteinChange: 'PC2' }),
+                    makeStructuralVariant({
+                        site2HugoSymbol: 'GENE2',
+                        eventInfo: 'GENE-GENE2',
+                    }),
+                    makeStructuralVariant({
+                        site2HugoSymbol: 'GENE3',
+                        eventInfo: 'GENE-GENE3',
+                    }),
                 ];
                 tooltipOutput = tooltip([datum, datum, datum, datum]);
-                assert.equal(tooltipOutput.text().match(/Fusion:/g)!.length, 1);
                 assert.equal(
-                    tooltipOutput.text().match(/GENE PC1\xa0\(4\)/g)!.length,
+                    tooltipOutput.text().match(/Structural Variant:/g)!.length,
                     1
                 );
                 assert.equal(
-                    tooltipOutput.text().match(/GENE PC2\xa0\(4\)/g)!.length,
+                    tooltipOutput
+                        .text()
+                        .match(/Event Info: GENE-GENE2\xa0\(4\)/g)!.length,
+                    1
+                );
+                assert.equal(
+                    tooltipOutput.text().match(/GENE-GENE3\xa0\(4\)/g)!.length,
                     1
                 );
 
                 tooltipOutput = tooltip([datum, datum, emptyDatum, emptyDatum]);
-                assert.equal(tooltipOutput.text().match(/Fusion:/g)!.length, 1);
                 assert.equal(
-                    tooltipOutput.text().match(/GENE PC1\xa0\(2\)/g)!.length,
+                    tooltipOutput.text().match(/Structural Variant:/g)!.length,
                     1
                 );
                 assert.equal(
-                    tooltipOutput.text().match(/GENE PC2\xa0\(2\)/g)!.length,
+                    tooltipOutput
+                        .text()
+                        .match(/Event Info: GENE-GENE2\xa0\(2\)/g)!.length,
+                    1
+                );
+                assert.equal(
+                    tooltipOutput.text().match(/GENE-GENE3\xa0\(2\)/g)!.length,
                     1
                 );
             });
@@ -2145,8 +2214,14 @@ describe('Oncoprint TooltipUtils', () => {
                 datum.data = [
                     makeMutation({ proteinChange: 'PC1' }),
                     makeMutation({ proteinChange: 'PC2' }),
-                    makeFusion({ proteinChange: 'fusion1' }),
-                    makeFusion({ proteinChange: 'fusion2' }),
+                    makeStructuralVariant({
+                        site2HugoSymbol: 'GENE2',
+                        eventInfo: 'GENE-GENE2',
+                    }),
+                    makeStructuralVariant({
+                        site2HugoSymbol: 'GENE3',
+                        eventInfo: 'GENE-GENE3',
+                    }),
                     makeCna({ value: 2 }),
                     makeCna({ value: -2 }),
                     makeMrna({ alterationSubType: 'high' }),
@@ -2167,13 +2242,18 @@ describe('Oncoprint TooltipUtils', () => {
                     1
                 );
 
-                assert.equal(tooltipOutput.text().match(/Fusion:/g)!.length, 1);
                 assert.equal(
-                    tooltipOutput.text().match(/GENE fusion1/g)!.length,
+                    tooltipOutput.text().match(/Structural Variant:/g)!.length,
                     1
                 );
                 assert.equal(
-                    tooltipOutput.text().match(/GENE fusion2/g)!.length,
+                    tooltipOutput.text().match(/Event Info: GENE-GENE2/g)!
+                        .length,
+                    1
+                );
+                assert.equal(
+                    tooltipOutput.text().match(/Event Info: GENE-GENE3/g)!
+                        .length,
                     1
                 );
 
@@ -2212,8 +2292,14 @@ describe('Oncoprint TooltipUtils', () => {
                 datum.data = [
                     makeMutation({ proteinChange: 'PC1' }),
                     makeMutation({ proteinChange: 'PC2' }),
-                    makeFusion({ proteinChange: 'fusion1' }),
-                    makeFusion({ proteinChange: 'fusion2' }),
+                    makeStructuralVariant({
+                        site2HugoSymbol: 'GENE2',
+                        eventInfo: 'GENE-GENE2',
+                    }),
+                    makeStructuralVariant({
+                        site2HugoSymbol: 'GENE3',
+                        eventInfo: 'GENE-GENE3',
+                    }),
                     makeCna({ value: 2 }),
                     makeCna({ value: -2 }),
                     makeMrna({ alterationSubType: 'high' }),
@@ -2223,7 +2309,10 @@ describe('Oncoprint TooltipUtils', () => {
                 const datum2 = Object.assign({}, emptyDatum, {
                     data: [
                         makeMutation({ proteinChange: 'PC1' }),
-                        makeFusion({ proteinChange: 'fusion2' }),
+                        makeStructuralVariant({
+                            site2HugoSymbol: 'GENE3',
+                            eventInfo: 'GENE-GENE3',
+                        }),
                         makeCna({ value: 1 }),
                         makeMrna({ alterationSubType: 'low' }),
                         makeProt({ alterationSubType: 'high' }),
@@ -2250,15 +2339,20 @@ describe('Oncoprint TooltipUtils', () => {
                     1
                 );
 
-                assert.equal(tooltipOutput.text().match(/Fusion:/g)!.length, 1);
                 assert.equal(
-                    tooltipOutput.text().match(/GENE fusion1\xa0\(3\)/g)!
-                        .length,
+                    tooltipOutput.text().match(/Structural Variant:/g)!.length,
                     1
                 );
                 assert.equal(
-                    tooltipOutput.text().match(/GENE fusion2\xa0\(4\)/g)!
-                        .length,
+                    tooltipOutput
+                        .text()
+                        .match(/Event Info: GENE-GENE2\xa0\(3\)/g)!.length,
+                    1
+                );
+                assert.equal(
+                    tooltipOutput
+                        .text()
+                        .match(/Event Info: GENE-GENE3\xa0\(4\)/g)!.length,
                     1
                 );
 

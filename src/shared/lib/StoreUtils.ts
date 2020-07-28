@@ -1401,6 +1401,7 @@ export async function fetchSurvivalDataExists(
 
 export function getAlterationTypesInOql(parsedQueryLines: SingleGeneQuery[]) {
     let haveMutInQuery = false;
+    let haveStructuralVariantInQuery = false;
     let haveCnaInQuery = false;
     let haveMrnaInQuery = false;
     let haveProtInQuery = false;
@@ -1409,6 +1410,9 @@ export function getAlterationTypesInOql(parsedQueryLines: SingleGeneQuery[]) {
         for (const alteration of queryLine.alterations || []) {
             haveMutInQuery =
                 haveMutInQuery || alteration.alteration_type === 'mut';
+            haveStructuralVariantInQuery =
+                haveStructuralVariantInQuery ||
+                alteration.alteration_type === 'fusion';
             haveCnaInQuery =
                 haveCnaInQuery || alteration.alteration_type === 'cna';
             haveMrnaInQuery =
@@ -1419,6 +1423,7 @@ export function getAlterationTypesInOql(parsedQueryLines: SingleGeneQuery[]) {
     }
     return {
         haveMutInQuery,
+        haveStructuralVariantInQuery,
         haveCnaInQuery,
         haveMrnaInQuery,
         haveProtInQuery,

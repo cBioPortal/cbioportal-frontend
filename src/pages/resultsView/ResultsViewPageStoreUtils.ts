@@ -12,6 +12,7 @@ import {
     PatientIdentifier,
     PatientFilter,
     ReferenceGenomeGene,
+    StructuralVariant,
 } from 'cbioportal-ts-api-client';
 import { action, computed } from 'mobx';
 import AccessorsForOqlFilter, {
@@ -35,6 +36,7 @@ import {
     IQueriedMergedTrackCaseData,
     ResultsViewPageStore,
     AlterationTypeConstants,
+    AnnotatedStructuralVariant,
 } from './ResultsViewPageStore';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
@@ -158,6 +160,33 @@ export function annotateMutationPutativeDriver(
     ) as AnnotatedMutation;
 }
 
+export function annotateStructuralVariantPutativeDriver(
+    structuralVariant: StructuralVariant,
+    putativeDriverInfo: {
+        oncoKb: string;
+        hotspots: boolean;
+        cbioportalCount: boolean;
+        cosmicCount: boolean;
+        customDriverBinary: boolean;
+        customDriverTier?: string;
+    }
+): AnnotatedStructuralVariant {
+    const putativeDriver = !!(
+        putativeDriverInfo.oncoKb ||
+        putativeDriverInfo.hotspots ||
+        putativeDriverInfo.cbioportalCount ||
+        putativeDriverInfo.cosmicCount ||
+        putativeDriverInfo.customDriverBinary ||
+        putativeDriverInfo.customDriverTier
+    );
+    return {
+        putativeDriver,
+        isHotspot: putativeDriverInfo.hotspots,
+        oncoKbOncogenic: putativeDriverInfo.oncoKb,
+        ...structuralVariant,
+    } as AnnotatedStructuralVariant;
+}
+
 export type FilteredAndAnnotatedMutationsReport<
     T extends AnnotatedMutation = AnnotatedMutation
 > = {
@@ -212,10 +241,83 @@ export function filterAndAnnotateMutations(
     };
 }
 
+export type FilteredAndAnnotatedStructuralVariantsReport<
+    T extends AnnotatedStructuralVariant = AnnotatedStructuralVariant
+> = {
+    data: T[];
+    vus: T[];
+    germline: T[];
+    vusAndGermline: T[];
+};
+
+export function filterAndAnnotateStructuralVariants(
+    structuralVariants: StructuralVariant[],
+    getPutativeDriverInfo: (
+        structuralVariant: StructuralVariant
+    ) => {
+        oncoKb: string;
+        hotspots: boolean;
+        cbioportalCount: boolean;
+        cosmicCount: boolean;
+        customDriverBinary: boolean;
+        customDriverTier?: string;
+    }
+): FilteredAndAnnotatedStructuralVariantsReport<AnnotatedStructuralVariant> {
+    const vus: AnnotatedStructuralVariant[] = [];
+    const germline: AnnotatedStructuralVariant[] = [];
+    const vusAndGermline: AnnotatedStructuralVariant[] = [];
+    const filteredAnnotatedMutations = [];
+    for (const structuralVariant of structuralVariants) {
+        const annotatedMutation = annotateStructuralVariantPutativeDriver(
+            structuralVariant,
+            getPutativeDriverInfo(structuralVariant)
+        ); // annotate
+        annotatedMutation.entrezGeneId = structuralVariant.site1EntrezGeneId;
+        annotatedMutation.hugoGeneSymbol = structuralVariant.site1HugoSymbol;
+        const isGermline = false;
+        const isVus = !annotatedMutation.putativeDriver;
+        if (isGermline && isVus) {
+            vusAndGermline.push(annotatedMutation);
+        } else if (isGermline) {
+            germline.push(annotatedMutation);
+        } else if (isVus) {
+            vus.push(annotatedMutation);
+        } else {
+            filteredAnnotatedMutations.push(annotatedMutation);
+        }
+    }
+    return {
+        data: filteredAnnotatedMutations,
+        vus,
+        germline,
+        vusAndGermline,
+    };
+}
+
 export function compileMutations<
     T extends AnnotatedMutation = AnnotatedMutation
 >(
     report: FilteredAndAnnotatedMutationsReport<T>,
+    excludeVus: boolean,
+    excludeGermline: boolean
+) {
+    let mutations = report.data;
+    if (!excludeVus) {
+        mutations = mutations.concat(report.vus);
+    }
+    if (!excludeGermline) {
+        mutations = mutations.concat(report.germline);
+    }
+    if (!excludeVus && !excludeGermline) {
+        mutations = mutations.concat(report.vusAndGermline);
+    }
+    return mutations;
+}
+
+export function compileStructuralVariants<
+    T extends AnnotatedStructuralVariant = AnnotatedStructuralVariant
+>(
+    report: FilteredAndAnnotatedStructuralVariantsReport<T>,
     excludeVus: boolean,
     excludeGermline: boolean
 ) {
@@ -458,7 +560,10 @@ export function groupDataByCase(
 export function filterSubQueryData(
     queryStructure: UnflattenedOQLLineFilterOutput<object>,
     defaultOQLQuery: string,
-    data: (AnnotatedMutation | NumericGeneMolecularData)[],
+    data: (
+        | AnnotatedMutation
+        | NumericGeneMolecularData
+        | AnnotatedStructuralVariant)[],
     accessorsInstance: AccessorsForOqlFilter,
     samples: { uniqueSampleKey: string }[],
     patients: { uniquePatientKey: string }[]
@@ -542,6 +647,7 @@ export function getMolecularProfiles(query: any) {
     //if there's only one study, we read profiles from query params and filter out undefined
     let molecularProfiles = [
         query.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
+        query.genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT,
         query.genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
         query.genetic_profile_ids_PROFILE_MRNA_EXPRESSION,
         query.genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION,

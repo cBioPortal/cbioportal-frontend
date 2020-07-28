@@ -83,6 +83,7 @@ export type CancerStudyQueryUrlParams = {
     cancer_study_id: string;
     cancer_study_list?: string;
     genetic_profile_ids_PROFILE_MUTATION_EXTENDED: string;
+    genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT: string;
     genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: string;
     genetic_profile_ids_PROFILE_MRNA_EXPRESSION: string;
     genetic_profile_ids_PROFILE_METHYLATION: string;
@@ -1557,6 +1558,14 @@ export class QueryStore {
             ]
         );
     }
+    @computed get defaultStructuralVariantProfile() {
+        return (
+            this.defaultProfilesForOql &&
+            this.defaultProfilesForOql[
+                AlterationTypeConstants.STRUCTURAL_VARIANT
+            ]
+        );
+    }
     @computed get defaultCnaProfile() {
         return (
             this.defaultProfilesForOql &&
@@ -1886,6 +1895,11 @@ export class QueryStore {
             )
                 return 'Mutation data query specified in OQL, but no mutation profile is available for the selected study.';
             if (
+                this.alterationTypesInOQL.haveStructuralVariantInQuery &&
+                !this.defaultStructuralVariantProfile
+            )
+                return 'Structural variant data query specified in OQL, but no structural variant profile is available for the selected study.';
+            if (
                 this.alterationTypesInOQL.haveCnaInQuery &&
                 !this.defaultCnaProfile
             )
@@ -2037,6 +2051,7 @@ export class QueryStore {
 
         let profileIds = [
             params.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
+            params.genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT,
             params.genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
             params.genetic_profile_ids_PROFILE_MRNA_EXPRESSION,
             params.genetic_profile_ids_PROFILE_METHYLATION,
