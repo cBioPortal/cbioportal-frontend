@@ -161,7 +161,10 @@ export default class WebAPIPage extends React.Component<{}, {}> {
                         ln?cancer_study_id=gbm_tcga&amp;q=EGFR+NF1
                     </a>
                 </p>
-                <p>And a link to TP53 mutations across all cancer studies:</p>
+                <p>
+                    And a link to TP53 mutations across a curated set of
+                    non-redundant studies:
+                </p>
                 <p>
                     <a href="ln?q=TP53:MUT">ln?q=TP53:MUT</a>
                 </p>
