@@ -5,6 +5,10 @@ import { PatientViewUrlParams } from '../../pages/patientView/PatientViewPage';
 import AppConfig from 'appConfig';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import { EncodedURLParam } from './bitly';
+import { ServerConfigHelpers } from 'config/config';
+import { CategorizedConfigItems } from 'config/IAppConfig';
+import _ from 'lodash';
+import client from 'shared/api/cbioportalClientInstance';
 
 export function restoreRouteAfterRedirect(injected: {
     routing: ExtendedRouterStore;
@@ -107,17 +111,54 @@ export function handleCaseDO() {
     );
 }
 
+async function getCuratedNonRedundantStudyList() {
+    // Parse curated non-redundant set from AppConfig
+    let quickSelectButtons: CategorizedConfigItems = {};
+    if (AppConfig.serverConfig.skin_quick_select_buttons) {
+        try {
+            quickSelectButtons = ServerConfigHelpers.parseConfigFormat(
+                AppConfig.serverConfig.skin_quick_select_buttons
+            );
+        } catch (ex) {
+            return {};
+        }
+    }
+
+    const curatedNonRedundantStudyIdsArray = _.find(
+        quickSelectButtons,
+        (studyIds, buttonName) => {
+            const [buttonText, tooltipText] = buttonName.split('|');
+            return buttonText
+                .toLowerCase()
+                .includes('curated set of non-redundant studies');
+        }
+    );
+    if (curatedNonRedundantStudyIdsArray) {
+        // filter out studies that user doesnt have access to
+        const allStudies = await client.getAllStudiesUsingGET({});
+        const accessStudyIds = _.keyBy(allStudies, s => s.studyId);
+
+        const filteredIds = curatedNonRedundantStudyIdsArray.filter(
+            s => s in accessStudyIds
+        );
+        return filteredIds.join(',');
+    }
+    return undefined;
+}
 /*
  * Handle LinkOut of style /ln?q=TP53:MUT and ln?cancer_study_id=gbm_tcga&q=EGFR+NF1.
  */
-export function handleLinkOut() {
+export async function handleLinkOut() {
     const routingStore: ExtendedRouterStore = getBrowserWindow().routingStore;
     const currentQuery = routingStore.location.query;
+
+    const curatedList = await getCuratedNonRedundantStudyList();
 
     const data = {
         case_set_id: 'all',
         gene_list: currentQuery.q.replace('+', ','),
         cancer_study_list:
+            curatedList ||
             currentQuery.cancer_study_id ||
             // use same set of studies as quick search gene query if no
             // specific study is supplied

@@ -21,6 +21,7 @@ import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarn
 import { Mutation } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import ResultsViewURLWrapper from '../ResultsViewURLWrapper';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 
 export interface IMutationsPageProps {
     routing?: any;
@@ -103,6 +104,13 @@ export default class Mutations extends React.Component<
                             this.props.store.mutationsByGene.result
                         )}
                     </MSKTabs>
+                )}
+                {this.props.store.mutationsByGene.isPending && (
+                    <LoadingIndicator
+                        center={true}
+                        size="big"
+                        isLoading={true}
+                    />
                 )}
             </div>
         );
