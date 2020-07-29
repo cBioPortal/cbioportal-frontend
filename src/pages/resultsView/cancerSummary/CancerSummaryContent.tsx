@@ -806,9 +806,13 @@ export class CancerSummaryContent extends React.Component<
                                 }
                                 xLabels={this.chartData.labels}
                                 xAxisString={
-                                    _.keyBy(GroupByOptions, 'value')[
-                                        this.props.groupAlterationsBy
-                                    ].label
+                                    (
+                                        GroupByOptions.find(
+                                            o =>
+                                                o.value ==
+                                                this.props.groupAlterationsBy
+                                        ) || {}
+                                    ).label || 'Cancer'
                                 }
                                 handleStudyLinkout={
                                     this.props.handleStudyLinkout!
