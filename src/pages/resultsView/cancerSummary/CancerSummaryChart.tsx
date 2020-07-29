@@ -9,7 +9,7 @@ import {
     VictoryStack,
     VictoryBar,
 } from 'victory';
-import { tsvFormat } from 'd3-dsv';
+import { tsvFormatRows } from 'd3-dsv';
 import {
     IAlterationCountMap,
     IAlterationData,
@@ -57,6 +57,7 @@ interface CancerSummaryChartProps {
     }[];
     countsByGroup: { [groupName: string]: IAlterationData };
     xLabels: string[];
+    xAxisString: string;
     representedAlterations: { [alterationType: string]: boolean };
     isPercentage: boolean;
     showLinks: boolean;
@@ -627,25 +628,37 @@ export class CancerSummaryChart extends React.Component<
 
     @autobind
     private getData(dataType: DataType) {
-        return tsvFormat(this.convertDataToDownloadData(this.props.data));
+        let flatdata = this.convertDataToDownloadData(this.props.data);
+        return tsvFormatRows(
+            [
+                [this.props.xAxisString, this.yAxisLabel, 'Alteration Type'],
+            ].concat(flatdata)
+        );
     }
 
     @autobind
-    private convertDataToDownloadData(data: any[][]): any[] {
-        const downloadData: any[] = [];
-
-        data.forEach(elementar => {
-            elementar.forEach(element => {
-                if (element.y != 0) {
-                    downloadData.push({
-                        x: element.x,
-                        y: element.y,
-                        'Alteration Type': element.alterationType,
-                    });
+    private convertDataToDownloadData(
+        data: {
+            x: string;
+            y: number;
+            alterationType: string;
+        }[][]
+    ): string[][] {
+        let downloadDataArray = [];
+        let rowcount = data.length;
+        let colcount = data[0].length;
+        for (var j = 0; j < colcount; j++) {
+            for (var i = 0; i < rowcount; i++) {
+                if (data[i][j].y != 0) {
+                    downloadDataArray.push([
+                        data[i][j].x,
+                        data[i][j].y.toString(),
+                        data[i][j].alterationType,
+                    ]);
                 }
-            });
-        });
-        return downloadData;
+            }
+        }
+        return downloadDataArray;
     }
 
     @autobind private getChart() {
@@ -776,7 +789,7 @@ export class CancerSummaryChart extends React.Component<
                 </div>
                 <DownloadControls
                     getSvg={() => this.svg}
-                    getData={(dataType: DataType) => this.getData(dataType)}
+                    getData={this.getData}
                     filename="cancer_types_summary"
                     dontFade={true}
                     type="button"
