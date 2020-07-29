@@ -9,6 +9,7 @@ import {
     VictoryStack,
     VictoryBar,
 } from 'victory';
+import { tsvFormatRows } from 'd3-dsv';
 import {
     IAlterationCountMap,
     IAlterationData,
@@ -24,7 +25,11 @@ import classnames from 'classnames';
 import * as ReactDOM from 'react-dom';
 import WindowStore from 'shared/components/window/WindowStore';
 import { Popover } from 'react-bootstrap';
-import { DownloadControls, pluralize } from 'cbioportal-frontend-commons';
+import {
+    DownloadControls,
+    DataType,
+    pluralize,
+} from 'cbioportal-frontend-commons';
 import {
     HORIZONTAL_OFFSET,
     VERTICAL_OFFSET,
@@ -52,6 +57,7 @@ interface CancerSummaryChartProps {
     }[];
     countsByGroup: { [groupName: string]: IAlterationData };
     xLabels: string[];
+    xAxisString: string;
     representedAlterations: { [alterationType: string]: boolean };
     isPercentage: boolean;
     showLinks: boolean;
@@ -620,6 +626,41 @@ export class CancerSummaryChart extends React.Component<
         });
     }
 
+    @autobind
+    private getData(dataType: DataType) {
+        let flatdata = this.convertDataToDownloadData(this.props.data);
+        return tsvFormatRows(
+            [
+                [this.props.xAxisString, this.yAxisLabel, 'Alteration Type'],
+            ].concat(flatdata)
+        );
+    }
+
+    @autobind
+    private convertDataToDownloadData(
+        data: {
+            x: string;
+            y: number;
+            alterationType: string;
+        }[][]
+    ): string[][] {
+        let downloadDataArray = [];
+        let rowcount = data.length;
+        let colcount = data[0].length;
+        for (var j = 0; j < colcount; j++) {
+            for (var i = 0; i < rowcount; i++) {
+                if (data[i][j].y != 0) {
+                    downloadDataArray.push([
+                        data[i][j].x,
+                        data[i][j].y.toString(),
+                        data[i][j].alterationType,
+                    ]);
+                }
+            }
+        }
+        return downloadDataArray;
+    }
+
     @autobind private getChart() {
         return (
             <div style={this.overflowStyle} className="borderedChart">
@@ -748,9 +789,11 @@ export class CancerSummaryChart extends React.Component<
                 </div>
                 <DownloadControls
                     getSvg={() => this.svg}
+                    getData={this.getData}
                     filename="cancer_types_summary"
                     dontFade={true}
                     type="button"
+                    buttons={['SVG', 'PNG', 'PDF', 'Data']}
                     style={{ position: 'absolute', top: 10, right: 10 }}
                 />
             </div>
