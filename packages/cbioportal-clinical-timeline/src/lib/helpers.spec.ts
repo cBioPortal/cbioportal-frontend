@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import * as _ from 'lodash';
-import { getPointInTrimmedSpace } from './helpers';
+import { formatDate, getPointInTrimmedSpace } from './helpers';
 import intersect from './intersect';
 
 describe('getPointInTrimmedSpace', () => {
@@ -126,8 +126,38 @@ describe('intersect', () => {
         assert.isTrue(intersect(-100, -10, -50, 20), 'overlap');
         assert.isTrue(intersect(-50, 20, -100, -10), 'overlap');
         assert.isTrue(intersect(-100, -10, -10, 20), 'overlap single point');
+        assert.isTrue(
+            intersect(-100, -10, -30, -20),
+            'one contains other - negative'
+        );
+        assert.isTrue(
+            intersect(100, 110, 105, 108),
+            'one contains other - positive'
+        );
+        assert.isTrue(
+            intersect(-10, 5, -5, 3),
+            'one contains other - spanning zero'
+        );
         assert.isFalse(intersect(-100, -10, -9, 20), 'no overlap');
 
         assert.isTrue(intersect(100, -10, -9, 20), 'reversed coordinates');
+    });
+});
+
+describe('formatDate', () => {
+    it('formats correctly', () => {
+        assert.equal(formatDate(0), '0 days');
+        assert.equal(formatDate(1), '1 day');
+        assert.equal(formatDate(29), '29 days');
+        assert.equal(formatDate(31), '1 month, 1 day');
+        assert.equal(formatDate(59), '1 month, 29 days');
+        assert.equal(formatDate(365), '1 year');
+        assert.equal(formatDate(365 * 2), '2 years');
+        assert.equal(formatDate(365 * 3), '3 years');
+        assert.equal(formatDate(365 * 3 + 1), '3 years, 1 day');
+        assert.equal(
+            formatDate(365 * 3 + 30 * 2 + 1),
+            '3 years, 2 months, 1 day'
+        );
     });
 });
