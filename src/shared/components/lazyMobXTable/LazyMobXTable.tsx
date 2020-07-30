@@ -82,6 +82,7 @@ type LazyMobXTableProps<T> = {
     itemsLabel?: string;
     itemsLabelPlural?: string;
     showFilter?: boolean;
+    showFilterClearButton?: boolean;
     showCopyDownload?: boolean;
     copyDownloadProps?: ICopyDownloadControlsProps;
     showPagination?: boolean;
@@ -249,7 +250,7 @@ function getDownloadObject<T>(columns: Column<T>[], rowData: T) {
 }
 
 export class LazyMobXTableStore<T> {
-    public filterString: string | undefined;
+    @observable public filterString: string | undefined;
     @observable private _itemsLabel: string | undefined;
     @observable private _itemsLabelPlural: string | undefined;
     @observable public sortColumn: string;
@@ -758,6 +759,7 @@ export default class LazyMobXTable<T> extends React.Component<
 
     public static defaultProps = {
         showFilter: true,
+        showFilterClearButton: false,
         showCopyDownload: true,
         showPagination: true,
         showColumnVisibility: true,
@@ -825,6 +827,9 @@ export default class LazyMobXTable<T> extends React.Component<
                     this.store.setFilterString(filterValue);
                 }, 400);
             })(),
+            clearFilterText: () => {
+                this.store.setFilterString('');
+            },
             visibilityToggle: (columnId: string): void => {
                 // toggle visibility
                 this.updateColumnVisibility(
@@ -944,7 +949,11 @@ export default class LazyMobXTable<T> extends React.Component<
                     {this.props.showFilter ? (
                         <div
                             className={`pull-right form-group has-feedback input-group-sm tableFilter`}
-                            style={{ display: 'inline-block', marginLeft: 5 }}
+                            style={{
+                                display: 'inline-block',
+                                marginLeft: 5,
+                                position: 'relative',
+                            }}
                         >
                             <input
                                 ref={this.handlers.filterInputRef}
@@ -954,11 +963,34 @@ export default class LazyMobXTable<T> extends React.Component<
                                 className="form-control tableSearchInput"
                                 style={{ width: 200 }}
                             />
-                            <span
-                                className="fa fa-search form-control-feedback"
-                                aria-hidden="true"
-                                style={{ zIndex: 0 }}
-                            />
+                            {this.props.showFilterClearButton &&
+                            this.store.filterString ? (
+                                <span
+                                    style={{
+                                        fontSize: 18,
+                                        cursor: 'pointer',
+                                        color: 'rgb(153, 153, 153)',
+                                        position: 'absolute',
+                                        right: 9,
+                                        top: 2,
+                                        zIndex: 10,
+                                    }}
+                                    onClick={this.handlers.clearFilterText}
+                                >
+                                    x
+                                </span>
+                            ) : (
+                                <span
+                                    className="fa fa-search form-control-feedback"
+                                    aria-hidden="true"
+                                    style={{
+                                        zIndex: 0,
+                                        width: 30,
+                                        height: 30,
+                                        lineHeight: '30px',
+                                    }}
+                                />
+                            )}
                         </div>
                     ) : (
                         ''
