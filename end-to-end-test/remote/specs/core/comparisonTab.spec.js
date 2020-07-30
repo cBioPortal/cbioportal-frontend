@@ -20,7 +20,7 @@ describe('results view comparison tab venn diagram tests', function() {
             );
         });
 
-        it.only('create group button disabled as default', function() {
+        it('create group button disabled as default', function() {
             assert.equal(browser.isEnabled(SampleCreateGroupButton), false);
             assert.equal(browser.isEnabled(PatientCreateGroupButton), false);
         });

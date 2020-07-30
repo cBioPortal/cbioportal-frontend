@@ -1,14 +1,14 @@
 import React from 'react';
-import { TimelineEvent, TimelineTrack } from './types';
+import { TimelineEvent, TimelineTrackSpecification } from './types';
 import _ from 'lodash';
 
 export type ITrackEventConfig = {
     trackTypeMatch: RegExp;
-    configureTrack: (track: TimelineTrack) => any;
+    configureTrack: (track: TimelineTrackSpecification) => any;
 };
 
 export const configureTracks = function(
-    tracks: TimelineTrack[],
+    tracks: TimelineTrackSpecification[],
     trackConfigs: ITrackEventConfig[]
 ) {
     tracks.forEach(track => {

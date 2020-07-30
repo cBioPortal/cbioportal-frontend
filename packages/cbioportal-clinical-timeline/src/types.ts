@@ -2,16 +2,24 @@ export interface TimelineEvent {
     start: number;
     end: number;
     event: any;
-    render(item: TimelineEvent): JSX.Element | string;
+    render?(item: TimelineEvent): JSX.Element | string;
 }
 
-export interface TimelineTrack {
+export enum TimelineTrackType {
+    DEFAULT,
+    LINE_CHART,
+}
+
+export interface TimelineTrackSpecification {
     items: TimelineEvent[];
     type: string;
+    uid: string;
     label?: string;
-    tracks?: TimelineTrack[];
-    render?: (e: TimelineEvent) => JSX.Element | string;
+    tracks?: TimelineTrackSpecification[];
+    renderEvent?: (e: TimelineEvent) => JSX.Element | string;
     renderTooltip?: (e: TimelineEvent) => JSX.Element | string;
+    trackType?: TimelineTrackType;
+    getLineChartValue?: (e: TimelineEvent) => number | null;
 }
 
 export interface TimelineTick {
@@ -27,6 +35,7 @@ export interface EventPosition {
     left: string;
     pixelLeft: number;
     width: string;
+    pixelWidth: number;
 }
 
 export enum TickIntervalEnum {

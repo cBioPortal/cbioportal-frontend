@@ -121,6 +121,9 @@ th.reactable-header-sort-asc:after {
 
 .rc-tooltip {
     opacity: 1 !important;
+    border-radius: $border-radius-base;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+    padding: 0;
 
     &.hideTooltipArrow {
         .rc-tooltip-arrow {
@@ -513,6 +516,29 @@ h3.hr {
     border: 1px dashed $borderColor !important;
 }
 
+.popover {
+    &.cbioTooltip {
+        position: absolute !important;
+        display: block !important;
+        max-width: 600px !important;
+        border-radius: $border-radius-base;
+        box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+        div:last-child {
+            white-space: nowrap;
+        }
+
+        p {
+            margin-bottom: 0 !important;
+        }
+
+        .popover-content,
+        p,
+        td {
+            font-size: 11px !important;
+        }
+    }
+}
+
 .inlineBlock {
     display: inline-block;
 }
@@ -598,4 +624,15 @@ h4.blackHeader,
 h5.blackHeader,
 h6.blackHeader {
     color: black !important;
+}
+
+.noselect {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.nowrap {
+    white-space: nowrap;
 }
