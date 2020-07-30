@@ -10,12 +10,14 @@ import TrackHeader from './TrackHeader';
 import TickRow from './TickRow';
 import { TickIntervalEnum } from './types';
 import './timeline.scss';
+import { WindowWrapper } from 'cbioportal-frontend-commons';
 
 (window as any).$ = $;
 
 interface ITimelineProps {
     store: TimelineStore;
     customRows?: (store: TimelineStore) => JSX.Element;
+    width: number;
 }
 
 const getFocusedPoints = _.debounce(function(
@@ -143,8 +145,11 @@ function handleMouseEvents(e: any, store: TimelineStore, refs: any) {
 const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     store,
     customRows,
-}) {
+    width,
+}: ITimelineProps) {
     const [viewPortWidth, setViewPortWidth] = useState<number | null>(null);
+    const height = 500; // TODO: compute height
+    const labelsWidth = 300; // TODO: compute
 
     const [zoomBound, setZoomBound] = useState<string | null>(null);
 
@@ -170,6 +175,8 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
         myZoom = store.absoluteWidth / store.zoomedWidth;
     }
 
+    const renderWidth = viewPortWidth ? viewPortWidth / myZoom : 0;
+
     return (
         <div ref={refs.wrapper} className={'tl-timeline-wrapper'}>
             {store.zoomBounds && (
@@ -194,13 +201,15 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                     </div>
                 </div>
 
-                <div className={'tl-timelineviewport'}>
+                <div
+                    className={'tl-timelineviewport'}
+                    style={{
+                        width: width - labelsWidth,
+                    }}
+                >
                     {viewPortWidth && store.ticks && (
                         <div
                             className={'tl-timeline'}
-                            style={{
-                                width: viewPortWidth * myZoom,
-                            }}
                             id={'tl-timeline'}
                             ref={refs.timeline}
                             onMouseDown={e => handleMouseEvents(e, store, refs)}
@@ -222,11 +231,13 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                                 className={'tl-zoom-selectbox'}
                             ></div>
 
-                            <TickRow store={store} />
+                            <svg height={height} width={renderWidth}>
+                                <TickRow store={store} width={renderWidth} />
+                            </svg>
 
-                            <TimelineTracks store={store} />
+                            {/*<TimelineTracks store={store} />*/}
 
-                            {customRows && customRows(store)}
+                            {/*customRows && customRows(store)*/}
                         </div>
                     )}
                 </div>

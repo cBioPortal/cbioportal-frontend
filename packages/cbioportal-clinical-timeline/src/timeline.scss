@@ -1,6 +1,8 @@
 $width: 1200px;
 $borderColor: #ccc;
 $tickRowHeight: 20px;
+$majorTickHeight: 6px;
+$minorTickHeight: 3px;
 $rowHeight: 20px;
 
 .tl-timeline-wrapper {
@@ -139,15 +141,40 @@ $rowHeight: 20px;
             .fa {
                 font-size: 14px;
             }
+        }
+        .tl-tick-label {
+            font-size: 9px;
+            font-family: Arial;
+            text-anchor: middle;
 
-            .tl-tickline {
-                position: absolute;
-                height: 6px;
-                width: 1px;
-                left: 50%;
-                bottom: 0;
-                background-color: #aaa;
+            &.tl-major-tick-label {
+                fill: #333;
+                transform: translate(0, 1em);
             }
+            &.tl-minor-tick-label {
+                fill: #aaa;
+                transform: translate(0, 1.5em);
+            }
+        }
+        .tl-major-tick-line {
+            height: $majorTickHeight;
+            width: 1px;
+            transform: translate(0, $tickRowHeight - $majorTickHeight);
+            fill: #aaa;
+        }
+        .tl-minor-tick-line {
+            height: $minorTickHeight;
+            width: 1px;
+            transform: translate(0, $tickRowHeight - $minorTickHeight);
+            fill: #aaa;
+        }
+        .tl-tick-axis {
+            transform: translate(0, $tickRowHeight - 1px);
+            fill: #ccc;
+            height: 1px;
+        }
+        .tl-timeline-trim-squiqqle {
+            transform: translate(0, $tickRowHeight - 6px);
         }
 
         .tl-timeline-minortick {
@@ -185,10 +212,6 @@ $rowHeight: 20px;
     .tl-timeline-trim {
         .tl-timeline-tickline {
             display: none;
-        }
-
-        .tl-timeline-trim-squiqqle {
-            margin-top: 14px;
         }
 
         + div {

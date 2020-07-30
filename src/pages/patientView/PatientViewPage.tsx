@@ -905,6 +905,10 @@ export default class PatientViewPage extends React.Component<
                                                         sampleManager={
                                                             sampleManager
                                                         }
+                                                        width={
+                                                            WindowStore.size
+                                                                .width
+                                                        }
                                                     />
                                                 </div>
 

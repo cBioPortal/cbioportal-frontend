@@ -79,10 +79,11 @@ export interface ITimeline2Props {
     data: ClinicalEvent[];
     caseMetaData: ISampleMetaDeta;
     sampleManager: SampleManager;
+    width: number;
 }
 
 const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
-    function({ data, caseMetaData, sampleManager }) {
+    function({ data, caseMetaData, sampleManager, width }: ITimeline2Props) {
         const [events, setEvents] = useState<TimelineTrack[] | null>(null);
 
         const [store, setStore] = useState<TimelineStore | null>(null);
@@ -400,6 +401,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
             return (
                 <Timeline
                     store={store}
+                    width={width}
                     customRows={store => {
                         return (
                             <VAFChartWrapper

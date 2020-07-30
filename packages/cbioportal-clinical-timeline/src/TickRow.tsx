@@ -6,204 +6,215 @@ import _ from 'lodash';
 
 interface ITickRowProps {
     store: TimelineStore;
+    width: number;
+}
+
+function makeSquiggle() {
+    const points = [
+        'M0,5',
+        'L2.5,8',
+        'L5,0',
+        'L7.5,10',
+        'L10,0',
+        'L12.5,10',
+        'L15,0',
+        'L17.5,8',
+        'L20,5',
+    ];
+    return (
+        <g className={'tl-timeline-trim-squiqqle'}>
+            <g className="kink">
+                <rect width={20} height={10} fill={'#ffffff'} />
+                <path
+                    d={points.join('')}
+                    stroke={'#999999'}
+                    stroke-width="0.5"
+                    fill="none"
+                    className="kink-line"
+                />
+            </g>
+        </g>
+    );
 }
 
 const TickRow: React.FunctionComponent<ITickRowProps> = observer(function({
     store,
-}) {
+    width,
+}: ITickRowProps) {
+    const ticks = store.ticks.filter((tick, index) => {
+        // filter out ticks that directly follow a trim
+        return index === 0 || !store.ticks[index - 1].isTrim;
+    });
     return (
-        <div className={'tl-ticks'}>
-            {store.ticks.map((tick: TimelineTick) => {
-                let content: JSX.Element | null = null;
+        <>
+            <g className={'tl-ticks'}>
+                <rect className={'tl-tick-axis'} width={width} />
+                {ticks.map((tick: TimelineTick) => {
+                    let content: JSX.Element | null = null;
 
-                const normalTickWidth = store.tickInterval; //store.ticks[1].end - store.ticks[1].start;
+                    let startPoint;
+                    if (tick === store.firstTick) {
+                        startPoint = tick.end - store.tickInterval + 1; //tick.end - normalTickWidth - 1;
+                    } else {
+                        startPoint = tick.start;
+                    }
 
-                const minorTicks: JSX.Element[] = [];
+                    const majorTickPosition = store.getPosition({
+                        start: startPoint,
+                    });
+                    const style = majorTickPosition
+                        ? {
+                              transform: `translate(${majorTickPosition.left}, 0)`,
+                          }
+                        : undefined;
+                    const minorTicks: JSX.Element[] = [];
 
-                let startPoint;
+                    if (tick.isTrim) {
+                        content = makeSquiggle();
+                    } else {
+                        const count = startPoint / store.tickInterval;
+                        const unit =
+                            store.tickInterval === TickIntervalEnum.MONTH
+                                ? 'm'
+                                : 'y';
 
-                if (tick === store.firstTick) {
-                    startPoint = tick.end - store.tickInterval + 1; //tick.end - normalTickWidth - 1;
-                } else {
-                    startPoint = tick.start;
-                }
+                        let majorLabel: string = '';
 
-                const majorTickPosition = store.getPosition({
-                    start: startPoint,
-                });
+                        if (count < 0) {
+                            majorLabel = `${count}${unit}`;
+                        }
 
-                const style = majorTickPosition
-                    ? {
-                          left: majorTickPosition.left,
-                      }
-                    : undefined;
+                        if (count === 0) {
+                            majorLabel = '0';
+                        }
 
-                if (tick.isTrim === true) {
-                    // @ts-ignore
-                    const points = [
-                        'M0,5',
-                        'L2.5,8',
-                        'L5,0',
-                        'L7.5,10',
-                        'L10,0',
-                        'L12.5,10',
-                        'L15,0',
-                        'L17.5,8',
-                        'L20,5',
-                    ];
-                    content = (
-                        <div className={'tl-timeline-trim-squiqqle'}>
-                            {_.range(1).map(() => {
-                                return (
-                                    <svg height="10" width="20">
-                                        <g className="kink">
-                                            <path
-                                                d={points.join('')}
-                                                stroke={'#999999'}
-                                                stroke-width="0.5"
-                                                fill="none"
-                                                className="kink-line"
-                                                style={{ cursor: 'pointer' }}
-                                            ></path>
+                        if (count > 0) {
+                            majorLabel = `${count}${unit}`;
+                        }
+
+                        content = (
+                            <>
+                                <text
+                                    className={
+                                        'tl-tick-label tl-major-tick-label'
+                                    }
+                                >
+                                    {majorLabel}
+                                </text>
+                                <rect className={'tl-major-tick-line'} />
+                            </>
+                        );
+
+                        if (store.tickPixelWidth > 150) {
+                            const minorTickWidth = TickIntervalEnum.MONTH;
+
+                            for (let i = 1; i < 12; i++) {
+                                let minorStyle = undefined;
+
+                                const position = store.getPosition({
+                                    start: startPoint + minorTickWidth * i,
+                                });
+
+                                if (position) {
+                                    minorStyle = {
+                                        transform: `translate(${position.left}, 0)`,
+                                    };
+                                }
+
+                                let minorLabel = '';
+                                let showLabel = false;
+                                if (store.tickPixelWidth > 150) {
+                                    if (i % 4 === 0) {
+                                        // only odd
+                                        showLabel = true;
+                                    }
+                                    if (store.tickPixelWidth > 700) {
+                                        showLabel = true;
+                                    }
+                                }
+
+                                if (showLabel) {
+                                    let minorCount = i;
+                                    if (count < 0) {
+                                        minorCount = 12 - i;
+                                        majorLabel =
+                                            count + 1 === 0
+                                                ? ''
+                                                : `${count + 1}${unit}`;
+                                        minorLabel =
+                                            count === -1
+                                                ? `-${minorCount}m`
+                                                : `${majorLabel} ${minorCount}m`;
+                                    } else {
+                                        minorLabel =
+                                            count === 0
+                                                ? `${minorCount}m`
+                                                : `${majorLabel} ${minorCount}m`;
+                                    }
+                                }
+
+                                if (minorStyle) {
+                                    minorTicks.push(
+                                        <g style={minorStyle}>
+                                            <text
+                                                className={
+                                                    'tl-tick-label tl-minor-tick-label'
+                                                }
+                                            >
+                                                {minorLabel}
+                                            </text>
+                                            <rect
+                                                className={'tl-minor-tick-line'}
+                                            />
                                         </g>
-                                    </svg>
-                                );
-                            })}
-                            <div className={'tl-timeline-tickline'}></div>
-                        </div>
-                    );
-                } else {
-                    const count = startPoint / store.tickInterval;
-                    const unit =
-                        store.tickInterval === TickIntervalEnum.MONTH
-                            ? 'm'
-                            : 'y';
-
-                    let majorLabel: string = '';
-
-                    if (count < 0) {
-                        majorLabel = `${count}${unit}`;
-                    }
-
-                    if (count === 0) {
-                        majorLabel = '0';
-                    }
-
-                    if (count > 0) {
-                        majorLabel = `${count}${unit}`;
-                    }
-
-                    content = tick.isTrim ? null : (
-                        <>
-                            {majorLabel}
-                            <div className={'tl-tickline'}></div>
-                        </>
-                    );
-
-                    if (store.tickPixelWidth > 150) {
-                        const minorTickWidth = TickIntervalEnum.MONTH;
-
-                        for (let i = 1; i < 12; i++) {
-                            let minorStyle = undefined;
-
-                            const position = store.getPosition({
-                                start: startPoint + minorTickWidth * i,
-                            });
-
-                            if (position) {
-                                minorStyle = {
-                                    left: position.left,
-                                };
-                            }
-
-                            let minorLabel = '';
-                            let showLabel = false;
-                            if (store.tickPixelWidth > 150) {
-                                if (i % 4 === 0) {
-                                    // only odd
-                                    showLabel = true;
+                                    );
                                 }
-                                if (store.tickPixelWidth > 700) {
-                                    showLabel = true;
-                                }
-                            }
-
-                            if (showLabel) {
-                                let minorCount = i;
-                                if (count < 0) {
-                                    minorCount = 12 - i;
-                                    majorLabel =
-                                        count + 1 === 0
-                                            ? ''
-                                            : `${count + 1}${unit}`;
-                                    minorLabel =
-                                        count === -1
-                                            ? `-${minorCount}m`
-                                            : `${majorLabel} ${minorCount}m`;
-                                } else {
-                                    minorLabel =
-                                        count === 0
-                                            ? `${minorCount}m`
-                                            : `${majorLabel} ${minorCount}m`;
-                                }
-                            }
-
-                            if (minorStyle) {
-                                minorTicks.push(
-                                    <div
-                                        className={'tl-timeline-minortick'}
-                                        style={minorStyle}
-                                    >
-                                        {minorLabel}
-                                        <div className={'tl-tickline'}></div>
-                                    </div>
-                                );
                             }
                         }
                     }
-                }
 
-                // DAY TICKS
-                // if (store.tickPixelWidth > 2000) {
-                //     const dayTickWidth = TickIntervalEnum.MONTH/30;
-                //     for (let i = 0; i <= 365; i++) {
-                //
-                //         if (i % 30 !== 0) {
-                //             const position = majorTickPosition && store.getPosition(
-                //                 {start: startPoint + dayTickWidth * i},
-                //                 store.trimmedLimit
-                //             );
-                //             if (position) {
-                //                 minorTicks.push(
-                //                     <div className={'tl-daytick'} style={{left: position.left}}>
-                //                         <div className={'tl-tickline'}></div>
-                //                     </div>
-                //                 )
-                //             }
-                //         }
-                //     }
-                //
-                //
-                // }
+                    // DAY TICKS
+                    // if (store.tickPixelWidth > 2000) {
+                    //     const dayTickWidth = TickIntervalEnum.MONTH/30;
+                    //     for (let i = 0; i <= 365; i++) {
+                    //
+                    //         if (i % 30 !== 0) {
+                    //             const position = majorTickPosition && store.getPosition(
+                    //                 {start: startPoint + dayTickWidth * i},
+                    //                 store.trimmedLimit
+                    //             );
+                    //             if (position) {
+                    //                 minorTicks.push(
+                    //                     <div className={'tl-daytick'} style={{left: position.left}}>
+                    //                         <div className={'tl-tickline'}></div>
+                    //                     </div>
+                    //                 )
+                    //             }
+                    //         }
+                    //     }
+                    //
+                    //
+                    // }
 
-                return (
-                    <>
-                        {style && (
-                            <div
-                                className={
-                                    tick.isTrim ? 'tl-timeline-trim' : ''
-                                }
-                                style={style}
-                            >
-                                {content}
-                            </div>
-                        )}
+                    return (
+                        <>
+                            {style && (
+                                <g
+                                    className={
+                                        tick.isTrim ? 'tl-timeline-trim' : ''
+                                    }
+                                    style={style}
+                                >
+                                    {content}
+                                </g>
+                            )}
 
-                        {minorTicks}
-                    </>
-                );
-            })}
-        </div>
+                            {minorTicks}
+                        </>
+                    );
+                })}
+            </g>
+        </>
     );
 });
 
