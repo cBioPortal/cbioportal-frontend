@@ -3,13 +3,14 @@ import React from 'react';
 const SampleMarker: React.FunctionComponent<{
     color: string;
     label: string;
-}> = function({ color, label }) {
+    y: number;
+}> = function({ color, label, y }) {
     return (
-        <svg width="15" height="15">
-            <circle cx="7.5" cy="7.5" r="7" fill={color} />
+        <g transform={`translate(0 ${y})`}>
+            <circle cx="0" cy="0" r="7" fill={color} />
             <text
-                x="50%"
-                y="50%"
+                x="0"
+                y="0"
                 text-anchor="middle"
                 fill="white"
                 font-size="10px"
@@ -18,7 +19,7 @@ const SampleMarker: React.FunctionComponent<{
             >
                 {label}
             </text>
-        </svg>
+        </g>
     );
 };
 
