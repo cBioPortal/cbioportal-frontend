@@ -1,6 +1,13 @@
-import { TimelineEvent, TimelineTick } from '../types';
+import {
+    TimelineEvent,
+    TimelineTick,
+    TimelineTrackSpecification,
+} from '../types';
 import { intersect } from './intersect';
 import _ from 'lodash';
+import { getTrackHeight } from '../TimelineTrack';
+
+export const REMOVE_FOR_DOWNLOAD_CLASSNAME = 'tl-remove-for-download';
 
 export function getAttributeValue(name: string, event: TimelineEvent) {
     const att = _.at(event as any, ['event.attributes']);
@@ -14,7 +21,10 @@ const TRIM_TICK_THRESHHOLD = 4;
 
 const TICK_OFFSET = 30;
 
-export function getTrimmedTicks(ticks: TimelineTick[]): TimelineTick[] {
+export function getTrimmedTicks(
+    ticks: TimelineTick[],
+    expandedTrims: boolean
+): TimelineTick[] {
     let tickCache: TimelineTick[] = [];
     let offset = 0;
 
@@ -24,7 +34,9 @@ export function getTrimmedTicks(ticks: TimelineTick[]): TimelineTick[] {
             tickCache.push(tick);
             // see if we are going to collapse a new trim region
         } else {
-            if (tickCache.length >= TRIM_TICK_THRESHHOLD) {
+            const isTrim =
+                !expandedTrims && tickCache.length >= TRIM_TICK_THRESHHOLD;
+            if (isTrim) {
                 // we want to leave the first trimmed tick as a normal tick
                 // because it serves as an end to last tick region
                 // otherwise, it will appear as though points are inside the trimmed region
@@ -156,4 +168,55 @@ export function getPointInTrimmedSpaceFromScreenRead(
         }
     });
     return result;
+}
+
+export function sortNestedTracks(tracks: TimelineTrackSpecification[]) {
+    // sort nested tracks by start date of first item
+    return _.sortBy(tracks, t =>
+        t.items && t.items.length ? t.items[0].start : 0
+    );
+}
+
+export function formatDate(dayCount: number) {
+    let years, months, days;
+
+    years = Math.floor(dayCount / 365);
+    months = Math.floor((dayCount - years * 365) / 30);
+    days = Math.floor(dayCount - years * 365 - months * 30);
+
+    let arr = [];
+
+    if (years > 0) arr.push(`${years} year${years === 1 ? '' : 's'}`);
+    if (months > 0) arr.push(`${months} month${months === 1 ? '' : 's'}`);
+    if (dayCount === 0 || days > 0)
+        arr.push(`${days} day${days === 1 ? '' : 's'}`);
+
+    return arr.join(', ');
+}
+
+function flattenTrack(
+    track: TimelineTrackSpecification,
+    indent: number,
+    isTrackCollapsed: (trackUid: string) => boolean
+): { track: TimelineTrackSpecification; indent: number; height: number }[] {
+    const ret = [{ track, indent, height: getTrackHeight(track) }];
+
+    if (!isTrackCollapsed(track.uid) && track.tracks) {
+        // if track is not collapsed, then sort nested tracks and recurse
+        const sortedNestedTracks = sortNestedTracks(track.tracks);
+        ret.push(
+            ..._.flatMap(sortedNestedTracks, t =>
+                flattenTrack(t, indent + 17, isTrackCollapsed)
+            )
+        );
+    }
+
+    return ret;
+}
+
+export function flattenTracks(
+    tracks: TimelineTrackSpecification[],
+    isTrackCollapsed: (trackUid: string) => boolean
+) {
+    return _.flatMap(tracks, t => flattenTrack(t, 5, isTrackCollapsed));
 }

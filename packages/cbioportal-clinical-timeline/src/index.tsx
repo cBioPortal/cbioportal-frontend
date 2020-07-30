@@ -4,6 +4,8 @@ export { TimelineStore } from './TimelineStore';
 
 export { default as Timeline } from './Timeline';
 
+export { TIMELINE_TRACK_HEIGHT } from './TimelineTrack';
+
 export * from './lib/helpers';
 
 export * from './types';

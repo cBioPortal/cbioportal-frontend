@@ -37,7 +37,7 @@
     "react-dom": "^15.0.0 || ^16.0.0"
   },
   "dependencies": {
-
+    "cbioportal-frontend-commons": "^0.3.2"
   },
   "devDependencies": {
     "@testing-library/react": "^9.3.2",
