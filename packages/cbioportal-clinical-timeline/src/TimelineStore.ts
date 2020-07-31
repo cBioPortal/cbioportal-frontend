@@ -4,7 +4,7 @@ import {
     TimelineEvent,
     TimelineTrack,
 } from './types';
-import { computed, observable } from 'mobx';
+import { action, computed, observable } from 'mobx';
 import {
     getFullTicks,
     getPerc,
@@ -18,6 +18,22 @@ import autobind from 'autobind-decorator';
 export class TimelineStore {
     constructor(tracks: TimelineTrack[]) {
         this.data = tracks;
+    }
+
+    @observable.ref tooltipContent: JSX.Element | string | null = null;
+    @observable mousePosition = { x: 0, y: 0 };
+
+    @autobind
+    @action
+    setTooltipContent(c: JSX.Element | string | null) {
+        this.tooltipContent = c;
+    }
+
+    @autobind
+    @action
+    setMousePosition(p: { x: number; y: number }) {
+        this.mousePosition.x = p.x;
+        this.mousePosition.y = p.y;
     }
 
     @computed get limit() {

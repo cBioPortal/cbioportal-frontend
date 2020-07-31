@@ -1,9 +1,11 @@
 import { EventPosition, TimelineEvent, TimelineTrack } from './types';
-import React from 'react';
+import React, { useState } from 'react';
 import Tooltip from 'rc-tooltip';
 import classNames from 'classnames';
 import _ from 'lodash';
 import $ from 'jquery';
+import { Portal } from 'react-overlays/lib';
+import { Popover } from 'react-bootstrap';
 
 export interface ITimelineRowProps {
     trackData: TimelineTrack;
@@ -12,7 +14,9 @@ export interface ITimelineRowProps {
         item: TimelineEvent,
         limit: number
     ) => EventPosition | undefined;
-    handleMouseHover: (e: React.MouseEvent<SVGGElement>) => void;
+    handleRowHover: (e: React.MouseEvent<SVGGElement>) => void;
+    setTooltipContent: (e: string | JSX.Element | null) => void;
+    setMousePosition: (p: { x: number; y: number }) => void;
     y: number;
     width: number;
 }
@@ -58,13 +62,26 @@ function renderRange(pixelWidth: number) {
     );
 }
 
+function getTooltipContent(
+    trackData: TimelineTrack,
+    itemGroup: TimelineEvent[]
+) {
+    if (trackData.renderTooltip) {
+        return trackData.renderTooltip(itemGroup[0]);
+    } else {
+        return <EventTooltipContent event={itemGroup[0]} />;
+    }
+}
+
 export const TimelineRow: React.FunctionComponent<
     ITimelineRowProps
 > = function({
     trackData,
     limit,
     getPosition,
-    handleMouseHover,
+    handleRowHover,
+    setTooltipContent,
+    setMousePosition,
     y,
     width,
 }: ITimelineRowProps) {
@@ -80,8 +97,8 @@ export const TimelineRow: React.FunctionComponent<
             style={{
                 transform: `translate(0, ${y}px)`,
             }}
-            onMouseEnter={handleMouseHover}
-            onMouseLeave={handleMouseHover}
+            onMouseEnter={handleRowHover}
+            onMouseLeave={handleRowHover}
         >
             <rect
                 className={'tl-row-highlight'}
@@ -89,6 +106,10 @@ export const TimelineRow: React.FunctionComponent<
                 y={0}
                 height={TIMELINE_ROW_HEIGHT}
                 width={width}
+                // hide tooltip when mouse over the background rect
+                onMouseMove={() => {
+                    setTooltipContent(null);
+                }}
             />
             {eventsGroupedByPosition &&
                 _.map(eventsGroupedByPosition, itemGroup => {
@@ -119,10 +140,19 @@ export const TimelineRow: React.FunctionComponent<
                                 'tl-item': true,
                                 'tl-item-point': isPoint,
                             })}
+                            onMouseMove={(e: React.MouseEvent<any>) => {
+                                setTooltipContent(
+                                    getTooltipContent(trackData, itemGroup)
+                                );
+                                setMousePosition({
+                                    x: e.pageX,
+                                    y: e.pageY,
+                                });
+                            }}
                         >
                             {content}
                         </g>
-                    ); // TODO: tooltip
+                    );
                     /*return (
                     <Tooltip
                         mouseEnterDelay={0.2}

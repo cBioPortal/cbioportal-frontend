@@ -1,10 +1,17 @@
-import { TickIntervalEnum, TimelineTick, TimelineTrack } from './types';
+import {
+    TickIntervalEnum,
+    TimelineEvent,
+    TimelineTick,
+    TimelineTrack,
+} from './types';
 import { TIMELINE_ROW_HEIGHT, TimelineRow } from './TimelineRow';
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { TimelineStore } from './TimelineStore';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
 import $ from 'jquery';
+import { Portal } from 'react-overlays/lib';
+import { Popover } from 'react-bootstrap';
 
 export interface ITimelineTracks {
     store: TimelineStore;
@@ -61,13 +68,27 @@ export const TimelineTracks: React.FunctionComponent<
                             limit={store.trimmedLimit}
                             trackData={row}
                             getPosition={store.getPosition}
-                            handleMouseHover={hoverCallback}
+                            handleRowHover={hoverCallback}
+                            setTooltipContent={store.setTooltipContent}
+                            setMousePosition={store.setMousePosition}
                             y={TIMELINE_ROW_HEIGHT * (i + 1)}
                             width={width}
                         />
                     );
                 })}
             </g>
+            {store.tooltipContent && (
+                <Portal container={document.body}>
+                    <Popover
+                        arrowOffsetTop={17}
+                        className={'tl-timeline-tooltip'}
+                        positionLeft={store.mousePosition.x + 10}
+                        positionTop={store.mousePosition.y - 17}
+                    >
+                        {store.tooltipContent}
+                    </Popover>
+                </Portal>
+            )}
         </>
     );
 });
