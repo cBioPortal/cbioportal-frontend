@@ -62,20 +62,18 @@ export class TimelineStore {
         const normalizedStart = start - this.firstTick.start;
         const normalizedEnd = end - this.firstTick.start;
 
-        let width =
-            getPerc(normalizedEnd, this.absoluteWidth) -
-            getPerc(normalizedStart, this.absoluteWidth) +
-            '%';
-
-        width =
-            getPerc(normalizedEnd - normalizedStart, this.absoluteWidth) + '%';
+        const widthPerc = getPerc(
+            normalizedEnd - normalizedStart,
+            this.absoluteWidth
+        );
 
         return {
             left: getPerc(normalizedStart, this.absoluteWidth) + '%',
-            width: width,
+            width: widthPerc + '%',
             pixelLeft:
                 (getPerc(normalizedStart, this.absoluteWidth) / 100) *
                 this.pixelWidth,
+            pixelWidth: (widthPerc / 100) * this.pixelWidth,
         };
     }
 

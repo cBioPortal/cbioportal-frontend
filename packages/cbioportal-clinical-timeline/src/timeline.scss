@@ -111,10 +111,7 @@ $rowHeight: 20px;
     }
 
     .tl-item-range {
-        min-width: 1px;
-        background-color: rgb(31, 119, 180);
-        border-radius: 5px;
-        height: 5px;
+        fill: rgb(31, 119, 180);
     }
 
     .tl-trim-region {
@@ -174,7 +171,7 @@ $rowHeight: 20px;
             height: 1px;
         }
         .tl-timeline-trim-squiqqle {
-            transform: translate(0, $tickRowHeight - 6px);
+            transform: translate(-6px, $tickRowHeight - 6px);
         }
 
         .tl-timeline-minortick {

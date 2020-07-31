@@ -27,6 +27,7 @@ export interface EventPosition {
     left: string;
     pixelLeft: number;
     width: string;
+    pixelWidth: number;
 }
 
 export enum TickIntervalEnum {

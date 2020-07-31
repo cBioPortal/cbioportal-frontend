@@ -220,22 +220,24 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                             }
                         >
                             <div ref={refs.cursor} className={'tl-cursor'}>
-                                <div ref={refs.cursorText}></div>
+                                <div ref={refs.cursorText} />
                             </div>
                             <div
                                 ref={refs.zoomSelectBoxMask}
                                 className={'tl-zoom-selectbox-mask'}
-                            ></div>
+                            />
                             <div
                                 ref={refs.zoomSelectBox}
                                 className={'tl-zoom-selectbox'}
-                            ></div>
+                            />
 
                             <svg height={height} width={renderWidth}>
                                 <TickRow store={store} width={renderWidth} />
+                                <TimelineTracks
+                                    store={store}
+                                    width={renderWidth}
+                                />
                             </svg>
-
-                            {/*<TimelineTracks store={store} />*/}
 
                             {/*customRows && customRows(store)*/}
                         </div>
