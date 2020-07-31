@@ -144,7 +144,6 @@ export class DefaultMutationMapperDataFetcher
             isoformOverrideSource,
             client
         );
-
         return getMyVariantInfoAnnotationsFromIndexedVariantAnnotations(
             indexedVariantAnnotations
         );
@@ -241,7 +240,6 @@ export class DefaultMutationMapperDataFetcher
         const genomicLocations: GenomicLocation[] = uniqueGenomicLocations(
             mutations
         );
-
         return client.fetchHotspotAnnotationByGenomicLocationPOST({
             genomicLocations: genomicLocations,
         });
