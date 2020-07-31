@@ -16,7 +16,7 @@ import { WindowWrapper } from 'cbioportal-frontend-commons';
 
 interface ITimelineProps {
     store: TimelineStore;
-    customRows?: (store: TimelineStore) => JSX.Element;
+    customRows?: (store: TimelineStore) => SVGGElement;
     width: number;
 }
 
@@ -175,7 +175,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
         myZoom = store.absoluteWidth / store.zoomedWidth;
     }
 
-    const renderWidth = viewPortWidth ? viewPortWidth / myZoom : 0;
+    const renderWidth = viewPortWidth ? viewPortWidth * myZoom : 0;
 
     return (
         <div ref={refs.wrapper} className={'tl-timeline-wrapper'}>
@@ -237,9 +237,8 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                                     store={store}
                                     width={renderWidth}
                                 />
+                                {customRows && customRows(store)}
                             </svg>
-
-                            {/*customRows && customRows(store)*/}
                         </div>
                     )}
                 </div>

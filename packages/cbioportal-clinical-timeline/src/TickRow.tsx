@@ -41,15 +41,11 @@ const TickRow: React.FunctionComponent<ITickRowProps> = observer(function({
     store,
     width,
 }: ITickRowProps) {
-    const ticks = store.ticks.filter((tick, index) => {
-        // filter out ticks that directly follow a trim
-        return index === 0 || !store.ticks[index - 1].isTrim;
-    });
     return (
         <>
             <g className={'tl-ticks'}>
                 <rect className={'tl-tick-axis'} width={width} />
-                {ticks.map((tick: TimelineTick) => {
+                {store.ticks.map((tick: TimelineTick, index: number) => {
                     let content: JSX.Element | null = null;
 
                     let startPoint;
@@ -64,7 +60,7 @@ const TickRow: React.FunctionComponent<ITickRowProps> = observer(function({
                     });
                     const style = majorTickPosition
                         ? {
-                              transform: `translate(${majorTickPosition.left}, 0)`,
+                              transform: `translate(${majorTickPosition.pixelLeft}px, 0)`,
                           }
                         : undefined;
                     const minorTicks: JSX.Element[] = [];
@@ -117,7 +113,7 @@ const TickRow: React.FunctionComponent<ITickRowProps> = observer(function({
 
                                 if (position) {
                                     minorStyle = {
-                                        transform: `translate(${position.left}, 0)`,
+                                        transform: `translate(${position.pixelLeft}px, 0)`,
                                     };
                                 }
 
@@ -196,9 +192,12 @@ const TickRow: React.FunctionComponent<ITickRowProps> = observer(function({
                     //
                     // }
 
+                    const rightAfterTrim =
+                        index > 0 && store.ticks[index - 1].isTrim;
+
                     return (
                         <>
-                            {style && (
+                            {!rightAfterTrim && style && (
                                 <g
                                     className={
                                         tick.isTrim ? 'tl-timeline-trim' : ''

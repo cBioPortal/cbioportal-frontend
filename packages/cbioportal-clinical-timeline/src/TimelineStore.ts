@@ -162,7 +162,7 @@ export class TimelineStore {
     @observable hoveredRowIndex: number | undefined;
 
     setScroll() {
-        let perc = 0;
+        let pixelLeft = 0;
 
         if (this.zoomBounds) {
             const trimmedPos = this.getPosition({
@@ -171,14 +171,10 @@ export class TimelineStore {
             });
 
             if (trimmedPos) {
-                // @ts-ignore
-                perc =
-                    (parseFloat(trimmedPos.left) / 100) *
-                    $('#tl-timeline').width()!;
+                pixelLeft = trimmedPos.pixelLeft;
             }
         }
-
-        //@ts-ignore
-        document.getElementById('tl-timeline')!.parentNode!.scrollLeft = perc;
+        (document.getElementById('tl-timeline')!
+            .parentNode! as any).scrollLeft = pixelLeft;
     }
 }

@@ -4,9 +4,10 @@ import { TIMELINE_ROW_HEIGHT } from 'cbioportal-clinical-timeline/src/TimelineRo
 const SampleMarker: React.FunctionComponent<{
     color: string;
     label: string;
-}> = function({ color, label }) {
+    y: number;
+}> = function({ color, label, y }) {
     return (
-        <g style={{ transform: `translate(0, ${TIMELINE_ROW_HEIGHT / 2}px)` }}>
+        <g style={{ transform: `translate(0, ${y}px)` }}>
             <circle cx="0" cy="0" r="7" fill={color} />
             <text
                 x="0"

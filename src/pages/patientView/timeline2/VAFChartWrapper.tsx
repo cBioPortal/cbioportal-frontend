@@ -126,7 +126,11 @@ const VAFChartWrapper: React.FunctionComponent<
 
                             return (
                                 <g transform={`translate(${x - 7.5},0)`}>
-                                    <SampleMarker color={color} label={label} />
+                                    <SampleMarker
+                                        color={color}
+                                        label={label}
+                                        y={0}
+                                    />
                                 </g>
                             );
                         })}

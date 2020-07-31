@@ -17,6 +17,7 @@ import { getAttributeValue } from 'cbioportal-clinical-timeline';
 import SampleManager from 'pages/patientView/SampleManager';
 import VAFChartWrapper from 'pages/patientView/timeline2/VAFChartWrapper';
 import SampleMarker from 'pages/patientView/timeline2/SampleMarker';
+import { TIMELINE_ROW_HEIGHT } from 'cbioportal-clinical-timeline/src/TimelineRow';
 
 function getData(eventData: any) {
     return _.groupBy(eventData, (e: any) => e.eventType.toUpperCase());
@@ -226,6 +227,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                                             <SampleMarker
                                                 color={color}
                                                 label={label}
+                                                y={TIMELINE_ROW_HEIGHT / 2}
                                             />
                                         );
                                     };
@@ -402,14 +404,14 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                 <Timeline
                     store={store}
                     width={width}
-                    customRows={store => {
+                    /*customRows={store => {
                         return (
                             <VAFChartWrapper
                                 store={store}
                                 sampleMetaData={caseMetaData}
                             />
                         );
-                    }}
+                    }}*/
                 />
             );
         } else {
