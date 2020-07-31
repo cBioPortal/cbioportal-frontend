@@ -37,14 +37,18 @@ export function initializeTracking() {
 }
 
 export function trackEvent(event: GAEvent) {
-    getGAInstance()(
-        'send',
-        'event',
-        event.category,
-        event.action,
-        event.label,
-        event.fieldsObject
-    );
+    // trackEvent is used to send custom UI events which may depend on custom configuration within GA
+    // for other installers, we want to shut these off, leaving them with bare-bones out-of-box GA implemenation
+    if (/cbioportal\.org$|mskcc\.org$/.test(getBrowserWindow().location.host)) {
+        getGAInstance()(
+            'send',
+            'event',
+            event.category,
+            event.action,
+            event.label,
+            event.fieldsObject
+        );
+    }
 }
 
 export function serializeEvent(gaEvent: GAEvent) {
