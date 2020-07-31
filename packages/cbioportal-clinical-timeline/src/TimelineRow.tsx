@@ -3,6 +3,7 @@ import React from 'react';
 import Tooltip from 'rc-tooltip';
 import classNames from 'classnames';
 import _ from 'lodash';
+import $ from 'jquery';
 
 export interface ITimelineRowProps {
     trackData: TimelineTrack;
@@ -11,7 +12,7 @@ export interface ITimelineRowProps {
         item: TimelineEvent,
         limit: number
     ) => EventPosition | undefined;
-    handleMouseHover: (e: React.MouseEvent<HTMLDivElement>) => void;
+    handleMouseHover: (e: React.MouseEvent<SVGGElement>) => void;
     y: number;
     width: number;
 }
@@ -79,9 +80,16 @@ export const TimelineRow: React.FunctionComponent<
             style={{
                 transform: `translate(0, ${y}px)`,
             }}
-            //onMouseEnter={handleMouseHover}
-            //onMouseLeave={handleMouseHover}
+            onMouseEnter={handleMouseHover}
+            onMouseLeave={handleMouseHover}
         >
+            <rect
+                className={'tl-row-highlight'}
+                x={0}
+                y={0}
+                height={TIMELINE_ROW_HEIGHT}
+                width={width}
+            />
             {eventsGroupedByPosition &&
                 _.map(eventsGroupedByPosition, itemGroup => {
                     const item = itemGroup[0];

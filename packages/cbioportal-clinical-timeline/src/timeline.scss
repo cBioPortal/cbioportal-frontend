@@ -45,6 +45,7 @@ $rowHeight: 20px;
         display: none;
         z-index: 10;
         overflow: visible;
+        pointer-events: none;
 
         > div {
             position: absolute;
@@ -64,15 +65,16 @@ $rowHeight: 20px;
     }
 
     .tl-row {
-        min-height: $rowHeight;
-        position: relative;
-        z-index: 30;
-        display: flex;
-        border-bottom: 1px dashed #eee;
-        align-items: center;
+        pointer-events: all;
+
+        rect.tl-row-highlight {
+            fill: #ffffff;
+        }
 
         &:hover {
-            background-color: rgba(163, 163, 163, 0.2);
+            rect.tl-row-highlight {
+                fill: #f2f2f2;
+            }
         }
     }
 
@@ -123,22 +125,6 @@ $rowHeight: 20px;
     }
 
     .tl-ticks {
-        position: relative;
-        height: $tickRowHeight;
-        border-bottom: 1px solid $borderColor;
-
-        > div {
-            backface-visibility: hidden;
-            position: absolute;
-            height: $rowHeight;
-            min-width: 1px;
-            font-size: 9px;
-            transform: translate(-50%, 0%);
-
-            .fa {
-                font-size: 14px;
-            }
-        }
         .tl-tick-label {
             font-size: 9px;
             font-family: Arial;

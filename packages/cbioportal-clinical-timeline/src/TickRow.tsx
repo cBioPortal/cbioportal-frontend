@@ -24,11 +24,11 @@ function makeSquiggle() {
     return (
         <g className={'tl-timeline-trim-squiqqle'}>
             <g className="kink">
-                <rect width={20} height={10} fill={'#ffffff'} />
+                <rect y={5} height={1} width={20} fill={'#ffffff'} />
                 <path
                     d={points.join('')}
-                    stroke={'#999999'}
-                    stroke-width="0.5"
+                    stroke={'#ccc'}
+                    stroke-width="1"
                     fill="none"
                     className="kink-line"
                 />

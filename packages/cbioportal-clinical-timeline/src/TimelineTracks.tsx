@@ -27,7 +27,7 @@ function expandTrack(track: TimelineTrack): TimelineTrack[] {
 export const TimelineTracks: React.FunctionComponent<
     ITimelineTracks
 > = observer(function({ store, width, customTracks }) {
-    const hoverCallback = (e: React.MouseEvent<HTMLDivElement>) => {
+    const hoverCallback = (e: React.MouseEvent<SVGGElement>) => {
         switch (e.type) {
             case 'mouseenter':
                 const rowIndex = _.findIndex(
@@ -36,8 +36,7 @@ export const TimelineTracks: React.FunctionComponent<
                 );
                 if (rowIndex !== undefined) {
                     $('.tl-row-hover').text(`
-                        .tl-timeline-tracklabels > div:nth-child(${rowIndex +
-                            1}) {
+                 .tl-timeline-tracklabels > div:nth-child(${rowIndex + 1}) {
                                 background:#F2F2F2;
                             }
                         }
@@ -49,6 +48,7 @@ export const TimelineTracks: React.FunctionComponent<
                 break;
         }
     };
+
     const tracks = _.flatMap(store.data, expandTrack);
 
     return (
@@ -60,8 +60,8 @@ export const TimelineTracks: React.FunctionComponent<
                         <TimelineRow
                             limit={store.trimmedLimit}
                             trackData={row}
-                            handleMouseHover={hoverCallback}
                             getPosition={store.getPosition}
+                            handleMouseHover={hoverCallback}
                             y={TIMELINE_ROW_HEIGHT * (i + 1)}
                             width={width}
                         />

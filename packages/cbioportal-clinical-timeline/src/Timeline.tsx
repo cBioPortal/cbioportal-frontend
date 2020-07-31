@@ -10,7 +10,6 @@ import TrackHeader from './TrackHeader';
 import TickRow from './TickRow';
 import { TickIntervalEnum } from './types';
 import './timeline.scss';
-import { WindowWrapper } from 'cbioportal-frontend-commons';
 
 (window as any).$ = $;
 
@@ -232,12 +231,12 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                             />
 
                             <svg height={height} width={renderWidth}>
-                                <TickRow store={store} width={renderWidth} />
                                 <TimelineTracks
                                     store={store}
                                     width={renderWidth}
                                 />
                                 {customRows && customRows(store)}
+                                <TickRow store={store} width={renderWidth} />
                             </svg>
                         </div>
                     )}
