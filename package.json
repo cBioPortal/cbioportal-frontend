@@ -188,7 +188,7 @@
     "numeral": "^2.0.6",
     "object-sizeof": "^1.2.0",
     "oncokb-ts-api-client": "^1.1.0",
-    "oncoprintjs": "4.2.0",
+    "oncoprintjs": "4.2.1",
     "parameter-validator": "^1.0.2",
     "pathway-mapper": "github:iVis-at-Bilkent/pathway-mapper#dbf72dac455b0df75fc097cd59fd6f2cf0359b23",
     "pdfobject": "^2.0.201604172",
