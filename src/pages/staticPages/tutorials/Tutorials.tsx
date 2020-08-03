@@ -192,7 +192,13 @@ export default class Tutorials extends React.Component<{}, {}> {
                             href={`${AppConfig.serverConfig
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Webinar 1 Introduction to cBioPortal.pdf`}
                         >
-                            Download slides
+                            Download PDF
+                        </a>
+                    </h4>
+                    <span style={{ color: '#eee' }}> | </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                            View slides
                         </a>
                     </h4>
                 </div>
@@ -234,7 +240,13 @@ export default class Tutorials extends React.Component<{}, {}> {
                             href={`${AppConfig.serverConfig
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Webinar 2 Mutation Details and Patient View.pdf`}
                         >
-                            Download slides
+                            Download PDF
+                        </a>
+                    </h4>
+                    <span style={{ color: '#eee' }}> | </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                            View slides
                         </a>
                     </h4>
                 </div>
@@ -276,7 +288,13 @@ export default class Tutorials extends React.Component<{}, {}> {
                             href={`${AppConfig.serverConfig
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Webinar 3 Expression Data Analysis.pdf`}
                         >
-                            Download slides
+                            Download PDF
+                        </a>
+                    </h4>
+                    <span style={{ color: '#eee' }}> | </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                            View slides
                         </a>
                     </h4>
                 </div>
@@ -318,7 +336,13 @@ export default class Tutorials extends React.Component<{}, {}> {
                             href={`${AppConfig.serverConfig
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Webinar 4 Group Comparison.pdf`}
                         >
-                            Download slides
+                            Download PDF
+                        </a>
+                    </h4>
+                    <span style={{ color: '#eee' }}> | </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                            View slides
                         </a>
                     </h4>
                 </div>
@@ -361,7 +385,13 @@ export default class Tutorials extends React.Component<{}, {}> {
                             href={`${AppConfig.serverConfig
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Webinar 5 API and R Client.pdf`}
                         >
-                            Download slides
+                            Download PDF
+                        </a>
+                    </h4>
+                    <span style={{ color: '#eee' }}> | </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                            View slides
                         </a>
                     </h4>
                     <span style={{ color: '#eee' }}> | </span>
@@ -388,14 +418,22 @@ export default class Tutorials extends React.Component<{}, {}> {
                     height="434"
                     allowFullScreen={true}
                 ></iframe>
-                <h4>
-                    <a
-                        href={`${AppConfig.serverConfig
-                            .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 1 Single Study Exploration.pdf`}
-                    >
-                        Download tutorial
-                    </a>
-                </h4>
+                <div>
+                    <h4 style={{ display: 'inline' }}>
+                        <a
+                            href={`${AppConfig.serverConfig
+                                .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 1 Single Study Exploration.pdf`}
+                        >
+                            Download tutorial
+                        </a>
+                    </h4>
+                    <span style={{ color: '#eee' }}> | </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                            View slides
+                        </a>
+                    </h4>
+                </div>
                 <hr />
                 <h2 id={'single-study-query'}>
                     Tutorial #2: Single Study Query
@@ -408,14 +446,22 @@ export default class Tutorials extends React.Component<{}, {}> {
                     height="434"
                     allowFullScreen={true}
                 ></iframe>
-                <h4>
-                    <a
-                        href={`${AppConfig.serverConfig
-                            .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 2 Single Study Query.pdf`}
-                    >
-                        Download tutorial
-                    </a>
-                </h4>
+                <div>
+                    <h4 style={{ display: 'inline' }}>
+                        <a
+                            href={`${AppConfig.serverConfig
+                                .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 2 Single Study Query.pdf`}
+                        >
+                            Download tutorial
+                        </a>
+                    </h4>
+                    <span style={{ color: '#eee' }}> | </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                            View slides
+                        </a>
+                    </h4>
+                </div>
                 <hr />
                 <h2 id={'patient-view'}>
                     Tutorial #3: Patient View
@@ -428,14 +474,22 @@ export default class Tutorials extends React.Component<{}, {}> {
                     height="434"
                     allowFullScreen={true}
                 ></iframe>
-                <h4>
-                    <a
-                        href={`${AppConfig.serverConfig
-                            .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 3 Patient View.pdf`}
-                    >
-                        Download tutorial
-                    </a>
-                </h4>
+                <div>
+                    <h4 style={{ display: 'inline' }}>
+                        <a
+                            href={`${AppConfig.serverConfig
+                                .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 3 Patient View.pdf`}
+                        >
+                            Download tutorial
+                        </a>
+                    </h4>
+                    <span style={{ color: '#eee' }}> | </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                            View slides
+                        </a>
+                    </h4>
+                </div>
                 <hr />
                 <h2 id={'virtual-studies'}>
                     Tutorial #4: Virtual Studies
@@ -448,14 +502,22 @@ export default class Tutorials extends React.Component<{}, {}> {
                     height="434"
                     allowFullScreen={true}
                 ></iframe>
-                <h4>
-                    <a
-                        href={`${AppConfig.serverConfig
-                            .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 4 Virtual Studies.pdf`}
-                    >
-                        Download tutorial
-                    </a>
-                </h4>
+                <div>
+                    <h4 style={{ display: 'inline' }}>
+                        <a
+                            href={`${AppConfig.serverConfig
+                                .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 4 Virtual Studies.pdf`}
+                        >
+                            Download tutorial
+                        </a>
+                    </h4>
+                    <span style={{ color: '#eee' }}> | </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                            View slides
+                        </a>
+                    </h4>
+                </div>
                 <hr />
                 <h2 id={'oql'}>
                     Tutorial #5: Onco Query Language (OQL)
@@ -468,14 +530,22 @@ export default class Tutorials extends React.Component<{}, {}> {
                     height="434"
                     allowFullScreen={true}
                 ></iframe>
-                <h4>
-                    <a
-                        href={`${AppConfig.serverConfig
-                            .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 5 Onco Query Language.pdf`}
-                    >
-                        Download tutorial
-                    </a>
-                </h4>
+                <div>
+                    <h4 style={{ display: 'inline' }}>
+                        <a
+                            href={`${AppConfig.serverConfig
+                                .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 5 Onco Query Language.pdf`}
+                        >
+                            Download tutorial
+                        </a>
+                    </h4>
+                    <span style={{ color: '#eee' }}> | </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                            View slides
+                        </a>
+                    </h4>
+                </div>
                 <hr />
                 <h2 id={'group-comparison'}>
                     Tutorial #6: Group Comparison
@@ -488,14 +558,22 @@ export default class Tutorials extends React.Component<{}, {}> {
                     height="434"
                     allowFullScreen={true}
                 ></iframe>
-                <h4>
-                    <a
-                        href={`${AppConfig.serverConfig
-                            .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 6 Group Comparison.pdf`}
-                    >
-                        Download tutorial
-                    </a>
-                </h4>
+                <div>
+                    <h4 style={{ display: 'inline' }}>
+                        <a
+                            href={`${AppConfig.serverConfig
+                                .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 6 Group Comparison.pdf`}
+                        >
+                            Download tutorial
+                        </a>
+                    </h4>
+                    <span style={{ color: '#eee' }}> | </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                            View slides
+                        </a>
+                    </h4>
+                </div>
                 <hr />
                 <h2 id={'pathways'}>
                     Tutorial #7: Pathways
@@ -508,14 +586,22 @@ export default class Tutorials extends React.Component<{}, {}> {
                     height="434"
                     allowFullScreen={true}
                 ></iframe>
-                <h4>
-                    <a
-                        href={`${AppConfig.serverConfig
-                            .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 7 Pathways.pdf`}
-                    >
-                        Download tutorial
-                    </a>
-                </h4>
+                <div>
+                    <h4 style={{ display: 'inline' }}>
+                        <a
+                            href={`${AppConfig.serverConfig
+                                .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 7 Pathways.pdf`}
+                        >
+                            Download tutorial
+                        </a>
+                    </h4>
+                    <span style={{ color: '#eee' }}> | </span>
+                    <h4 style={{ display: 'inline' }}>
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                            View slides
+                        </a>
+                    </h4>
+                </div>
             </PageLayout>
         );
     }
