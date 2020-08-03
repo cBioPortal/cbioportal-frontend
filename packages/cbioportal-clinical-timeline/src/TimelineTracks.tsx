@@ -12,6 +12,7 @@ import { observer } from 'mobx-react';
 import $ from 'jquery';
 import { Portal } from 'react-overlays/lib';
 import { Popover } from 'react-bootstrap';
+import { sortNestedTracks } from './lib/helpers';
 
 export interface ITimelineTracks {
     store: TimelineStore;
@@ -23,9 +24,7 @@ function expandTrack(track: TimelineTrack): TimelineTrack[] {
     const ret = [track];
     if (track.tracks) {
         // we want to sort nested tracks by start date of first item
-        const sortedNestedTracks = _.sortBy(track.tracks, t =>
-            t.items && t.items.length ? t.items[0].start : 0
-        );
+        const sortedNestedTracks = sortNestedTracks(track.tracks);
         ret.push(..._.flatMap(sortedNestedTracks, expandTrack));
     }
     return ret;

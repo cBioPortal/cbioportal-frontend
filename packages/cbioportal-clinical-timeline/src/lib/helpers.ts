@@ -1,6 +1,8 @@
-import { TimelineEvent, TimelineTick } from '../types';
+import { TimelineEvent, TimelineTick, TimelineTrack } from '../types';
 import { intersect } from './intersect';
 import _ from 'lodash';
+
+export const REMOVE_FOR_DOWNLOAD_CLASSNAME = 'tl-remove-for-download';
 
 export function getAttributeValue(name: string, event: TimelineEvent) {
     const att = _.at(event as any, ['event.attributes']);
@@ -156,4 +158,11 @@ export function getPointInTrimmedSpaceFromScreenRead(
         }
     });
     return result;
+}
+
+export function sortNestedTracks(tracks: TimelineTrack[]) {
+    // sort nested tracks by start date of first item
+    return _.sortBy(tracks, t =>
+        t.items && t.items.length ? t.items[0].start : 0
+    );
 }

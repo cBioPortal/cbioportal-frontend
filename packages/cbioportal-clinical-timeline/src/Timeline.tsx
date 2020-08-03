@@ -1,15 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Observer, observer } from 'mobx-react-lite';
+import { observer } from 'mobx-react-lite';
 import TimelineTracks from './TimelineTracks';
 import { TimelineStore } from './TimelineStore';
 import _ from 'lodash';
 import $ from 'jquery';
-import { getPointInTrimmedSpaceFromScreenRead } from './lib/helpers';
+import {
+    getPointInTrimmedSpaceFromScreenRead,
+    REMOVE_FOR_DOWNLOAD_CLASSNAME,
+} from './lib/helpers';
 import intersect from './lib/intersect';
 import TrackHeader from './TrackHeader';
 import TickRow from './TickRow';
 import { TickIntervalEnum } from './types';
 import './timeline.scss';
+import { DownloadControls } from 'cbioportal-frontend-commons';
 
 (window as any).$ = $;
 
@@ -159,7 +163,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     const refs = {
         cursor: useRef(null),
         wrapper: useRef(null),
-        timeline: useRef(null),
+        timeline: useRef<SVGSVGElement>(null),
         zoomSelectBox: useRef(null),
         zoomSelectBoxMask: useRef(null),
         cursorText: useRef(null),
@@ -207,7 +211,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                 <div
                     className={'tl-timelineviewport'}
                     style={{
-                        width: width - labelsWidth,
+                        width: width - 20 - labelsWidth,
                     }}
                 >
                     {viewPortWidth && store.ticks && (
@@ -248,9 +252,29 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                         </div>
                     )}
                 </div>
+                <DownloadControls
+                    filename="timeline"
+                    getSvg={() => getSvg(store, refs.timeline.current)}
+                    dontFade={true}
+                    type={'button'}
+                />
             </div>
         </div>
     );
 });
+
+function getSvg(store: TimelineStore, timelineSvg: SVGSVGElement | null) {
+    if (!timelineSvg) {
+        return null;
+    }
+
+    // Clone node so we don't disrupt the UI
+    timelineSvg = timelineSvg.cloneNode(true) as SVGSVGElement;
+    // Filter out non-download elements
+    $(timelineSvg)
+        .find(`.${REMOVE_FOR_DOWNLOAD_CLASSNAME}`)
+        .remove();
+    return timelineSvg;
+}
 
 export default Timeline;

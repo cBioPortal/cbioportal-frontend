@@ -6,6 +6,7 @@ import _ from 'lodash';
 import $ from 'jquery';
 import { Portal } from 'react-overlays/lib';
 import { Popover } from 'react-bootstrap';
+import { REMOVE_FOR_DOWNLOAD_CLASSNAME } from './lib/helpers';
 
 export interface ITimelineRowProps {
     trackData: TimelineTrack;
@@ -101,7 +102,7 @@ export const TimelineRow: React.FunctionComponent<
             onMouseLeave={handleRowHover}
         >
             <rect
-                className={'tl-row-highlight'}
+                className={`tl-row-highlight ${REMOVE_FOR_DOWNLOAD_CLASSNAME}`}
                 x={0}
                 y={0}
                 height={TIMELINE_ROW_HEIGHT}
