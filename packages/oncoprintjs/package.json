@@ -6,6 +6,7 @@
   "main": "./dist/oncoprint.bundle.js",
   "scripts": {
     "build": "rm -rf ./dist/* && webpack",
+    "build-dev": "yarn build --env.DEV=true",
     "test": "jest",
     "test:watch": "npm run test -- --watch"
   },
