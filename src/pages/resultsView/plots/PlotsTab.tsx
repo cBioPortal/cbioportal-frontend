@@ -2839,6 +2839,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     private scatterPlotTooltip(d: IScatterPlotData) {
         return scatterPlotTooltip(
             d,
+            this.props.store.studyIdToStudy.result! || {},
             this.horzLogScaleFunction,
             this.vertLogScaleFunction,
             this.coloringMenuSelection.selectedOption &&
@@ -2850,6 +2851,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     private waterfallPlotTooltip(d: IWaterfallPlotData) {
         return waterfallPlotTooltip(
             d,
+            this.props.store.studyIdToStudy.result || {},
             this.coloringMenuSelection.selectedOption &&
                 this.coloringMenuSelection.selectedOption.info.clinicalAttribute
         );
@@ -2861,6 +2863,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             if (this.boxPlotData.isComplete) {
                 content = boxPlotTooltip(
                     d,
+                    this.props.store.studyIdToStudy.result || {},
                     this.boxPlotData.result.horizontal,
                     this.boxPlotData.result.horizontal
                         ? this.horzLogScaleFunction
