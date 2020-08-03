@@ -84,7 +84,10 @@ function handleMouseEvents(e: any, store: TimelineStore, refs: any) {
             break;
 
         case 'mousemove':
-            const pos = e.clientX - $timeline.offset()!.left;
+            const pos =
+                e.clientX -
+                $timeline.offset()!.left +
+                ($(document).scrollLeft() || 0);
             if (store.dragging) {
                 e.preventDefault();
                 if (store.dragging.start === null) {
@@ -131,7 +134,10 @@ function handleMouseEvents(e: any, store: TimelineStore, refs: any) {
                 const label = `${yearText}${monthText}${dayText}`;
 
                 $(refs.cursor.current).css({
-                    left: e.clientX - $timeline.offset()!.left,
+                    left:
+                        e.clientX -
+                        $timeline.offset()!.left +
+                        ($(document).scrollLeft() || 0),
                     display: 'block',
                 });
 
@@ -149,8 +155,6 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     const [viewPortWidth, setViewPortWidth] = useState<number | null>(null);
     const height = 500; // TODO: compute height
     const labelsWidth = 300; // TODO: compute
-
-    const [zoomBound, setZoomBound] = useState<string | null>(null);
 
     const refs = {
         cursor: useRef(null),
@@ -210,7 +214,6 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                         <div
                             className={'tl-timeline'}
                             id={'tl-timeline'}
-                            ref={refs.timeline}
                             onMouseDown={e => handleMouseEvents(e, store, refs)}
                             onMouseUp={e => handleMouseEvents(e, store, refs)}
                             onMouseMove={e => handleMouseEvents(e, store, refs)}
@@ -230,7 +233,11 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                                 className={'tl-zoom-selectbox'}
                             />
 
-                            <svg height={height} width={renderWidth}>
+                            <svg
+                                ref={refs.timeline}
+                                width={renderWidth}
+                                height={height}
+                            >
                                 <TimelineTracks
                                     store={store}
                                     width={renderWidth}
