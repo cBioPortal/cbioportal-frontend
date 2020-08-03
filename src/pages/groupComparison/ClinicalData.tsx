@@ -468,15 +468,12 @@ export default class ClinicalData extends React.Component<
 
     @computed get scatterPlotTooltip() {
         return (d: IBoxScatterPlotPoint) => {
-            let content;
+            let content = <span></span>;
             if (this.boxPlotData.isComplete) {
-                content = boxPlotTooltip(d, this.boxPlotData.result.horizontal);
-            } else {
-                content = (
-                    <span>
-                        Loading... (this shouldnt appear because the box plot
-                        shouldnt be visible)
-                    </span>
+                content = boxPlotTooltip(
+                    d,
+                    this.props.store.activeStudyIdToStudy.result!,
+                    this.boxPlotData.result.horizontal
                 );
             }
             return content;

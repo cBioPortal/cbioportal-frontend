@@ -10,6 +10,7 @@ import {
 } from './PlotsTab';
 import { MobxPromise } from 'mobxpromise';
 import {
+    CancerStudy,
     ClinicalAttribute,
     ClinicalData,
     Gene,
@@ -25,7 +26,7 @@ import {
     stringListToIndexSet,
 } from 'cbioportal-frontend-commons';
 import MobxPromiseCache from '../../../shared/lib/MobxPromiseCache';
-import { getSampleViewUrl } from '../../../shared/api/urls';
+import { getSampleViewUrl, getStudySummaryUrl } from '../../../shared/api/urls';
 import _ from 'lodash';
 import * as React from 'react';
 import {
@@ -2110,8 +2111,37 @@ function tooltipClinicalDataSection(
     }
 }
 
+function sampleIdForTooltip<D extends IPlotSampleData>(
+    d: D,
+    studyIdToStudy: { [studyId: string]: CancerStudy }
+) {
+    return (
+        <>
+            <a
+                href={getSampleViewUrl(d.studyId, d.sampleId)}
+                target="_blank"
+                style={{ whiteSpace: 'pre-line', wordBreak: 'break-word' }}
+            >
+                {d.sampleId}
+            </a>
+            {_.values(studyIdToStudy).length > 1 && [
+                // show study id if more than one study in query
+                <br />,
+                <a
+                    href={getStudySummaryUrl(d.studyId)}
+                    target="_blank"
+                    style={{ whiteSpace: 'pre-line', wordBreak: 'break-word' }}
+                >
+                    {studyIdToStudy[d.studyId].name}
+                </a>,
+            ]}
+        </>
+    );
+}
+
 function generalScatterPlotTooltip<D extends IPlotSampleData>(
     d: D,
+    studyIdToStudy: { [studyId: string]: CancerStudy },
     getHorzCoord: (d: D) => any,
     getVertCoord: (d: D) => any,
     horzKeyThresholdType: keyof D,
@@ -2152,9 +2182,7 @@ function generalScatterPlotTooltip<D extends IPlotSampleData>(
         : vertCoord;
     return (
         <div>
-            <a href={getSampleViewUrl(d.studyId, d.sampleId)} target="_blank">
-                {d.sampleId}
-            </a>
+            {sampleIdForTooltip(d, studyIdToStudy)}
             <div>
                 Horizontal:{' '}
                 <span style={{ fontWeight: 'bold' }}> {horzLabel}</span>
@@ -2174,10 +2202,12 @@ function generalScatterPlotTooltip<D extends IPlotSampleData>(
 
 export function waterfallPlotTooltip(
     d: IWaterfallPlotData,
+    studyIdToStudy: { [studyId: string]: CancerStudy },
     coloringClinicalAttribute?: ClinicalAttribute
 ) {
     return generalWaterfallPlotTooltip<IWaterfallPlotData>(
         d,
+        studyIdToStudy,
         'value',
         'thresholdType',
         coloringClinicalAttribute
@@ -2186,6 +2216,7 @@ export function waterfallPlotTooltip(
 
 function generalWaterfallPlotTooltip<D extends IWaterfallPlotData>(
     d: D,
+    studyIdToStudy: { [studyId: string]: CancerStudy },
     valueKey: keyof D,
     thresholdTypeKey?: keyof D,
     coloringClinicalAttribute?: ClinicalAttribute
@@ -2213,13 +2244,7 @@ function generalWaterfallPlotTooltip<D extends IWaterfallPlotData>(
 
     return (
         <div>
-            <a
-                href={getSampleViewUrl(d.studyId, d.sampleId)}
-                target="_blank"
-                style={{ whiteSpace: 'pre-line', wordBreak: 'break-word' }}
-            >
-                {d.sampleId}
-            </a>
+            {sampleIdForTooltip(d, studyIdToStudy)}
             <div>
                 Value:{' '}
                 <span style={{ fontWeight: 'bold' }}>
@@ -2239,12 +2264,14 @@ function generalWaterfallPlotTooltip<D extends IWaterfallPlotData>(
 
 export function scatterPlotTooltip(
     d: IScatterPlotData,
+    studyIdToStudy: { [studyId: string]: CancerStudy },
     logX?: IAxisLogScaleParams | undefined,
     logY?: IAxisLogScaleParams | undefined,
     coloringClinicalAttribute?: ClinicalAttribute
 ) {
     return generalScatterPlotTooltip(
         d,
+        studyIdToStudy,
         logX ? d => logX.fLogScale(d.x) : d => d.x,
         logY ? d => logY.fLogScale(d.y) : d => d.y,
         'xThresholdType',
@@ -2255,6 +2282,7 @@ export function scatterPlotTooltip(
 
 export function boxPlotTooltip(
     d: IBoxScatterPlotPoint,
+    studyIdToStudy: { [studyId: string]: CancerStudy },
     horizontal: boolean,
     log?: IAxisLogScaleParams | undefined,
     coloringClinicalAttribute?: ClinicalAttribute
@@ -2273,6 +2301,7 @@ export function boxPlotTooltip(
         : ('thresholdType' as any);
     return generalScatterPlotTooltip(
         d,
+        studyIdToStudy,
         log && horizontal ? d => log.fLogScale(d.value) : d => d[horzAxisKey],
         log && !horizontal ? d => log.fLogScale(d.value) : d => d[vertAxisKey],
         horzThresholdTypeKey,
