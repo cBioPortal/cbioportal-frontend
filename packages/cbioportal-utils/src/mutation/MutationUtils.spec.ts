@@ -165,18 +165,12 @@ describe('MutationUtils', () => {
                 'genomic location string should be:  1,100,100,C,G'
             );
         });
-        it('normalizes chromosome and extracts genomic location', () => {
-            let genomicLocation: GenomicLocation = {
-                chromosome: '23',
-                start: 100,
-                end: 100,
-                referenceAllele: 'C',
-                variantAllele: 'G',
-            };
+        it('normalizes chromosome', () => {
+            let chromosome: string = '23';
             assert.equal(
-                genomicLocationString(genomicLocation),
-                'X,100,100,C,G',
-                'genomic location string should be:  X,100,100,C,G'
+                normalizeChromosome(chromosome),
+                'X',
+                'normalized chromosome should be: X'
             );
         });
     });
