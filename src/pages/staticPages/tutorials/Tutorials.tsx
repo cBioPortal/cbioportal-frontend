@@ -424,7 +424,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                             href={`${AppConfig.serverConfig
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 1 Single Study Exploration.pdf`}
                         >
-                            Download tutorial
+                            Download PDF
                         </a>
                     </h4>
                     <span style={{ color: '#eee' }}> | </span>
@@ -452,7 +452,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                             href={`${AppConfig.serverConfig
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 2 Single Study Query.pdf`}
                         >
-                            Download tutorial
+                            Download PDF
                         </a>
                     </h4>
                     <span style={{ color: '#eee' }}> | </span>
@@ -480,7 +480,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                             href={`${AppConfig.serverConfig
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 3 Patient View.pdf`}
                         >
-                            Download tutorial
+                            Download PDF
                         </a>
                     </h4>
                     <span style={{ color: '#eee' }}> | </span>
@@ -508,7 +508,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                             href={`${AppConfig.serverConfig
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 4 Virtual Studies.pdf`}
                         >
-                            Download tutorial
+                            Download PDF
                         </a>
                     </h4>
                     <span style={{ color: '#eee' }}> | </span>
@@ -536,7 +536,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                             href={`${AppConfig.serverConfig
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 5 Onco Query Language.pdf`}
                         >
-                            Download tutorial
+                            Download PDF
                         </a>
                     </h4>
                     <span style={{ color: '#eee' }}> | </span>
@@ -564,7 +564,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                             href={`${AppConfig.serverConfig
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 6 Group Comparison.pdf`}
                         >
-                            Download tutorial
+                            Download PDF
                         </a>
                     </h4>
                     <span style={{ color: '#eee' }}> | </span>
@@ -592,7 +592,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                             href={`${AppConfig.serverConfig
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 7 Pathways.pdf`}
                         >
-                            Download tutorial
+                            Download PDF
                         </a>
                     </h4>
                     <span style={{ color: '#eee' }}> | </span>
