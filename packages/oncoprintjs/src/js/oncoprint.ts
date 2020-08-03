@@ -61,6 +61,11 @@ const nextTrackId = (function () {
 export default class Oncoprint {
     // this is the controller
 
+    private lastSortId = 0;
+    private incrementLastSortId() {
+        this.lastSortId = (this.lastSortId + 1) % 1000000; // make sure we don't have any overflow problems. Definitely won't have a million sorts pending at once
+    }
+
     public destroyed:boolean;
     public webgl_unavailable:boolean;
     private $ctr:JQuery;
@@ -1041,7 +1046,19 @@ export default class Oncoprint {
             return;
         }
         const self = this;
+
+        // Increment lastSortId in order to indicate that a new sort is initiated.
+        this.incrementLastSortId();
+        const thisSortId = this.lastSortId;
+
         this.model.sort().then(function(x) {
+            // Make sure lastSortId is still the same as it was when we first called sort()
+            // If not, then just skip updating.
+            //
+            // This prevents bugs due to stale sorts finishing asynchronously in the wrong order.
+            if (self.lastSortId !== thisSortId) {
+                return;
+            }
             self.label_view.sort(self.model, self.getCellViewHeight);
             self.track_options_view.sort(self.model, self.getCellViewHeight);
             self.cell_view.sort(self.model);
