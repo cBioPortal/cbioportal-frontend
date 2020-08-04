@@ -59,6 +59,12 @@ export enum AlterationContainerType {
     COPY_NUMBER = 'COPY_NUMBER',
 }
 
+export enum EnrichmentType {
+    MRNA_EXPRESSION = 'mRNA expression',
+    PROTEIN_EXPRESSION = 'protein expression',
+    DNA_METHYLATION = 'DNA methylation',
+}
+
 export function PERCENTAGE_IN_headerRender(name: string) {
     return (
         <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -423,6 +429,16 @@ export function pickProteinEnrichmentProfiles(profiles: MolecularProfile[]) {
     return filterAndSortProfiles(protProfiles);
 }
 
+export function pickMethylationEnrichmentProfiles(
+    profiles: MolecularProfile[]
+) {
+    return profiles.filter(p => {
+        return (
+            p.molecularAlterationType === AlterationTypeConstants.METHYLATION
+        );
+    });
+}
+
 export function getAlterationEnrichmentColumns(
     groups: { name: string; description: string; color?: string }[],
     alteredVsUnalteredMode?: boolean
@@ -535,8 +551,9 @@ export function getAlterationEnrichmentColumns(
     return columns;
 }
 
-export function getExpressionEnrichmentColumns(
+export function getEnrichmentColumns(
     groups: { name: string; description: string; color?: string }[],
+    enrichmentType: EnrichmentType,
     alteredVsUnalteredMode?: boolean
 ): ExpressionEnrichmentTableColumn[] {
     // minimum 2 group are required for enrichment analysis
@@ -545,10 +562,14 @@ export function getExpressionEnrichmentColumns(
     }
     let columns: ExpressionEnrichmentTableColumn[] = [];
     const nameToGroup = _.keyBy(groups, g => g.name);
+    const isMethylation = enrichmentType === EnrichmentType.DNA_METHYLATION;
+    const typeOfEnrichment = isMethylation ? 'methylation' : 'expression';
 
     let enrichedGroupColum: ExpressionEnrichmentTableColumn = {
         name: alteredVsUnalteredMode
             ? ExpressionEnrichmentTableColumnType.TENDENCY
+            : isMethylation
+            ? ExpressionEnrichmentTableColumnType.METHYLATION
             : ExpressionEnrichmentTableColumnType.EXPRESSED,
         render: (d: ExpressionEnrichmentRow) => {
             if (d.pValue === undefined) {
@@ -583,7 +604,9 @@ export function getExpressionEnrichmentColumns(
         ) => d.enrichedGroup.toUpperCase().includes(filterStringUpper),
         sortBy: (d: ExpressionEnrichmentRow) => d.enrichedGroup,
         download: (d: ExpressionEnrichmentRow) => d.enrichedGroup,
-        tooltip: <span>The group with the highest expression frequency</span>,
+        tooltip: (
+            <span>The group with the highest {typeOfEnrichment} frequency</span>
+        ),
     };
 
     if (groups.length === 2) {
@@ -596,8 +619,9 @@ export function getExpressionEnrichmentColumns(
             ),
             tooltip: (
                 <span>
-                    Log2 of ratio of (unlogged) mean in {group1.name} to
-                    (unlogged) mean in {group2.name}
+                    Log2 of ratio of {isMethylation ? '' : '(unlogged)'} mean in{' '}
+                    {group1.name} to {isMethylation ? '' : '(unlogged)'} mean in{' '}
+                    {group2.name}
                 </span>
             ),
             sortBy: (d: ExpressionEnrichmentRow) => Number(d.logRatio),
@@ -636,8 +660,8 @@ export function getExpressionEnrichmentColumns(
             ),
             tooltip: (
                 <span>
-                    Mean log2 expression of the listed gene in{' '}
-                    {group.description}
+                    Mean {isMethylation ? '' : 'log2'} {typeOfEnrichment} of the
+                    listed gene in {group.description}
                 </span>
             ),
             sortBy: (d: ExpressionEnrichmentRow) =>
@@ -660,8 +684,8 @@ export function getExpressionEnrichmentColumns(
             ),
             tooltip: (
                 <span>
-                    Standard deviation of log2 expression of the listed gene in{' '}
-                    {group.description}
+                    Standard deviation of {isMethylation ? '' : 'log2'}{' '}
+                    {typeOfEnrichment} of the listed gene in {group.description}
                 </span>
             ),
             sortBy: (d: ExpressionEnrichmentRow) =>
