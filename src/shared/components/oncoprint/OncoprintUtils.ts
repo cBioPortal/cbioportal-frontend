@@ -114,7 +114,7 @@ function makeGenesetHeatmapUnexpandHandler(
             // only remove if the expansion if it isn't needed in another track
             // group than the one this track is being removed from; keep the
             // expansion if the track is being re-rendered into a different
-            // track group  
+            // track group
             if (myTrackGroup === oncoprint.genesetHeatmapTrackGroupIndex) {
                 // this is a MobX Observable Array, so it should have findIndex
                 // implemented even in IE
