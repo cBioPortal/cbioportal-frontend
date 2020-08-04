@@ -9,6 +9,15 @@ interface ITickRowProps {
     width: number;
 }
 
+const TICK_ROW_HEIGHT = 20;
+const TICK_LABEL_STYLE: any = {
+    fontSize: 9,
+    fontFamily: 'Arial',
+    textAnchor: 'middle',
+};
+const MAJOR_TICK_HEIGHT = 6;
+const MINOR_TICK_HEIGHT = 3;
+
 function makeSquiggle() {
     const points = [
         'M0,5',
@@ -22,17 +31,14 @@ function makeSquiggle() {
         'L20,5',
     ];
     return (
-        <g className={'tl-timeline-trim-squiqqle'}>
-            <g className="kink">
-                <rect y={5} height={1} width={20} fill={'#ffffff'} />
-                <path
-                    d={points.join('')}
-                    stroke={'#ccc'}
-                    stroke-width="1"
-                    fill="none"
-                    className="kink-line"
-                />
-            </g>
+        <g style={{ transform: `translate(-6px, ${TICK_ROW_HEIGHT - 6}px` }}>
+            <rect y={5} height={1} width={20} fill={'#ffffff'} />
+            <path
+                d={points.join('')}
+                stroke={'#ccc'}
+                stroke-width="1"
+                fill="none"
+            />
         </g>
     );
 }
@@ -43,8 +49,15 @@ const TickRow: React.FunctionComponent<ITickRowProps> = observer(function({
 }: ITickRowProps) {
     return (
         <>
-            <g className={'tl-ticks'}>
-                <rect className={'tl-tick-axis'} width={width} />
+            <g>
+                <rect
+                    style={{
+                        transform: `translate(0, ${TICK_ROW_HEIGHT - 1}px)`,
+                    }}
+                    fill={'#ccc'}
+                    height={1}
+                    width={width}
+                />
                 {store.ticks.map((tick: TimelineTick, index: number) => {
                     let content: JSX.Element | null = null;
 
@@ -91,13 +104,23 @@ const TickRow: React.FunctionComponent<ITickRowProps> = observer(function({
                         content = (
                             <>
                                 <text
-                                    className={
-                                        'tl-tick-label tl-major-tick-label'
-                                    }
+                                    style={{
+                                        fill: '#333',
+                                        transform: 'translate(0, 1em)',
+                                        ...TICK_LABEL_STYLE,
+                                    }}
                                 >
                                     {majorLabel}
                                 </text>
-                                <rect className={'tl-major-tick-line'} />
+                                <rect
+                                    height={MAJOR_TICK_HEIGHT}
+                                    width={1}
+                                    style={{
+                                        transform: `translate(0, ${TICK_ROW_HEIGHT -
+                                            MAJOR_TICK_HEIGHT}px)`,
+                                    }}
+                                    fill={'#aaa'}
+                                />
                             </>
                         );
 
@@ -153,14 +176,23 @@ const TickRow: React.FunctionComponent<ITickRowProps> = observer(function({
                                     minorTicks.push(
                                         <g style={minorStyle}>
                                             <text
-                                                className={
-                                                    'tl-tick-label tl-minor-tick-label'
-                                                }
+                                                style={{
+                                                    fill: '#aaa',
+                                                    transform:
+                                                        'translate(0, 1.5em)',
+                                                    ...TICK_LABEL_STYLE,
+                                                }}
                                             >
                                                 {minorLabel}
                                             </text>
                                             <rect
-                                                className={'tl-minor-tick-line'}
+                                                height={MINOR_TICK_HEIGHT}
+                                                width={1}
+                                                style={{
+                                                    transform: `translate(0, ${TICK_ROW_HEIGHT -
+                                                        MINOR_TICK_HEIGHT}px)`,
+                                                }}
+                                                fill={'#aaa'}
                                             />
                                         </g>
                                     );
@@ -198,14 +230,7 @@ const TickRow: React.FunctionComponent<ITickRowProps> = observer(function({
                     return (
                         <>
                             {!rightAfterTrim && style && (
-                                <g
-                                    className={
-                                        tick.isTrim ? 'tl-timeline-trim' : ''
-                                    }
-                                    style={style}
-                                >
-                                    {content}
-                                </g>
+                                <g style={style}>{content}</g>
                             )}
 
                             {minorTicks}

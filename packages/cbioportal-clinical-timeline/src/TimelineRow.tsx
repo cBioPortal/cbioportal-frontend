@@ -1,11 +1,6 @@
 import { EventPosition, TimelineEvent, TimelineTrack } from './types';
-import React, { useState } from 'react';
-import Tooltip from 'rc-tooltip';
-import classNames from 'classnames';
+import React from 'react';
 import _ from 'lodash';
-import $ from 'jquery';
-import { Portal } from 'react-overlays/lib';
-import { Popover } from 'react-bootstrap';
 import { REMOVE_FOR_DOWNLOAD_CLASSNAME } from './lib/helpers';
 
 export interface ITimelineRowProps {
@@ -53,12 +48,12 @@ function renderRange(pixelWidth: number) {
     const height = 5;
     return (
         <rect
-            className={'tl-item-range'}
             width={pixelWidth}
             height={height}
             y={(TIMELINE_ROW_HEIGHT - height) / 2}
             rx="2"
             ry="2"
+            fill="rgb(31, 119, 180)"
         />
     );
 }
@@ -116,8 +111,10 @@ export const TimelineRow: React.FunctionComponent<
                 _.map(eventsGroupedByPosition, itemGroup => {
                     const item = itemGroup[0];
                     const position = getPosition(item, limit);
-                    const style = position && {
-                        transform: `translate(${position.pixelLeft}px, 0)`,
+                    let style: any = {
+                        transform: position
+                            ? `translate(${position.pixelLeft}px, 0)`
+                            : undefined,
                     };
 
                     let content: JSX.Element | null | string = null;
@@ -137,10 +134,6 @@ export const TimelineRow: React.FunctionComponent<
                     return (
                         <g
                             style={style}
-                            className={classNames({
-                                'tl-item': true,
-                                'tl-item-point': isPoint,
-                            })}
                             onMouseMove={(e: React.MouseEvent<any>) => {
                                 setTooltipContent(
                                     getTooltipContent(trackData, itemGroup)
