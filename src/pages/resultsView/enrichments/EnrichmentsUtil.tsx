@@ -59,6 +59,12 @@ export enum AlterationContainerType {
     COPY_NUMBER = 'COPY_NUMBER',
 }
 
+export enum EnrichmentType {
+    MRNA_EXPRESSION = 'mRNA expression',
+    PROTEIN_EXPRESSION = 'protein expression',
+    DNA_METHYLATION = 'DNA methylation',
+}
+
 export function PERCENTAGE_IN_headerRender(name: string) {
     return (
         <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -547,8 +553,8 @@ export function getAlterationEnrichmentColumns(
 
 export function getEnrichmentColumns(
     groups: { name: string; description: string; color?: string }[],
-    alteredVsUnalteredMode?: boolean,
-    isMethylation?: boolean
+    enrichmentType: EnrichmentType,
+    alteredVsUnalteredMode?: boolean
 ): ExpressionEnrichmentTableColumn[] {
     // minimum 2 group are required for enrichment analysis
     if (groups.length < 2) {
@@ -556,6 +562,7 @@ export function getEnrichmentColumns(
     }
     let columns: ExpressionEnrichmentTableColumn[] = [];
     const nameToGroup = _.keyBy(groups, g => g.name);
+    const isMethylation = enrichmentType === EnrichmentType.DNA_METHYLATION;
     const typeOfEnrichment = isMethylation ? 'methylation' : 'expression';
 
     let enrichedGroupColum: ExpressionEnrichmentTableColumn = {
