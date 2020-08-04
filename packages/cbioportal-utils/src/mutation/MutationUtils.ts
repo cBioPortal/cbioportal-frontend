@@ -67,11 +67,7 @@ export function extractGenomicLocation(
 }
 
 export function genomicLocationString(genomicLocation: GenomicLocation) {
-    return `${normalizeChromosome(genomicLocation.chromosome)},${
-        genomicLocation.start
-    },${genomicLocation.end},${genomicLocation.referenceAllele},${
-        genomicLocation.variantAllele
-    }`;
+    return `${genomicLocation.chromosome},${genomicLocation.start},${genomicLocation.end},${genomicLocation.referenceAllele},${genomicLocation.variantAllele}`;
 }
 
 export function uniqueGenomicLocations(
