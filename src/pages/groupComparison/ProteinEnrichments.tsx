@@ -10,6 +10,7 @@ import ErrorMessage from '../../shared/components/ErrorMessage';
 import { MakeEnrichmentsTabUI } from './GroupComparisonUtils';
 import * as _ from 'lodash';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
+import { EnrichmentType } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 
 export interface IProteinEnrichmentsProps {
     store: ComparisonStore;
@@ -76,7 +77,7 @@ export default class ProteinEnrichments extends React.Component<
                             this.props.store.sampleKeyToSample.result!
                         }
                         isGeneCheckBoxEnabled={this.props.resultsViewMode}
-                        enrichmentType={'protein expression'}
+                        enrichmentType={EnrichmentType.PROTEIN_EXPRESSION}
                     />
                 </div>
             );

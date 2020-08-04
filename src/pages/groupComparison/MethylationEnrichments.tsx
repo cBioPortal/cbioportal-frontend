@@ -10,6 +10,7 @@ import ErrorMessage from '../../shared/components/ErrorMessage';
 import { MakeEnrichmentsTabUI } from './GroupComparisonUtils';
 import * as _ from 'lodash';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
+import { EnrichmentType } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 
 export interface IMethylationEnrichmentsProps {
     store: ComparisonStore;
@@ -80,8 +81,7 @@ export default class MethylationEnrichments extends React.Component<
                             this.props.store.sampleKeyToSample.result!
                         }
                         isGeneCheckBoxEnabled={this.props.resultsViewMode}
-                        isMethylation={true}
-                        enrichmentType={'DNA methylation'}
+                        enrichmentType={EnrichmentType.DNA_METHYLATION}
                     />
                 </div>
             );

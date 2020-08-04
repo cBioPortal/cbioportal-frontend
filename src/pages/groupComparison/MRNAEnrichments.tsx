@@ -10,6 +10,7 @@ import ExpressionEnrichmentContainer from '../resultsView/enrichments/Expression
 import { MakeEnrichmentsTabUI } from './GroupComparisonUtils';
 import * as _ from 'lodash';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
+import { EnrichmentType } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 
 export interface IMRNAEnrichmentsProps {
     store: ComparisonStore;
@@ -76,7 +77,7 @@ export default class MRNAEnrichments extends React.Component<
                             this.props.store.sampleKeyToSample.result!
                         }
                         isGeneCheckBoxEnabled={this.props.resultsViewMode}
-                        enrichmentType={'mRNA expression'}
+                        enrichmentType={EnrichmentType.MRNA_EXPRESSION}
                     />
                 </div>
             );
