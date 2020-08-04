@@ -15,7 +15,9 @@ import { ClinicalEvent } from 'cbioportal-ts-api-client';
 import { configureTracks } from 'cbioportal-clinical-timeline';
 import { getAttributeValue } from 'cbioportal-clinical-timeline';
 import SampleManager from 'pages/patientView/SampleManager';
-import VAFChartWrapper from 'pages/patientView/timeline2/VAFChartWrapper';
+import VAFChartWrapper, {
+    VAF_CHART_ROW_HEIGHT,
+} from 'pages/patientView/timeline2/VAFChartWrapper';
 import SampleMarker from 'pages/patientView/timeline2/SampleMarker';
 import { TIMELINE_ROW_HEIGHT } from 'cbioportal-clinical-timeline/src/TimelineRow';
 
@@ -404,14 +406,19 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                 <Timeline
                     store={store}
                     width={width}
-                    /*customRows={store => {
-                        return (
-                            <VAFChartWrapper
-                                store={store}
-                                sampleMetaData={caseMetaData}
-                            />
-                        );
-                    }}*/
+                    customRows={[
+                        {
+                            renderHeader: () => 'VAF',
+                            renderRow: (store: TimelineStore) => (
+                                <VAFChartWrapper
+                                    store={store}
+                                    sampleMetaData={caseMetaData}
+                                />
+                            ),
+                            height: () => VAF_CHART_ROW_HEIGHT,
+                            labelForExport: 'VAF',
+                        },
+                    ]}
                 />
             );
         } else {

@@ -9,7 +9,7 @@ interface ITickRowProps {
     width: number;
 }
 
-const TICK_ROW_HEIGHT = 20;
+export const TICK_ROW_HEIGHT = 20;
 const TICK_LABEL_STYLE: any = {
     fontSize: 9,
     fontFamily: 'Arial',

@@ -13,11 +13,13 @@ import $ from 'jquery';
 import { Portal } from 'react-overlays/lib';
 import { Popover } from 'react-bootstrap';
 import { sortNestedTracks } from './lib/helpers';
+import CustomRow, { CustomRowSpecification } from './CustomRow';
+import { TICK_ROW_HEIGHT } from './TickRow';
 
 export interface ITimelineTracks {
     store: TimelineStore;
     width: number;
-    customTracks?: (store: TimelineStore) => JSX.Element[] | JSX.Element;
+    customTracks?: CustomRowSpecification[];
 }
 
 function expandTrack(track: TimelineTrack): TimelineTrack[] {
@@ -57,11 +59,15 @@ export const TimelineTracks: React.FunctionComponent<
 
     const tracks = _.flatMap(store.data, expandTrack);
 
+    let nextY = 0;
+
     return (
         <>
             <style className={'tl-row-hover'} />
-            <g className={'tl-rowGroup'}>
-                {tracks.map((row, i) => {
+            <g style={{ transform: `translate(0, ${TICK_ROW_HEIGHT}px)` }}>
+                {tracks.map(row => {
+                    const y = nextY;
+                    nextY += TIMELINE_ROW_HEIGHT;
                     return (
                         <TimelineRow
                             limit={store.trimmedLimit}
@@ -70,11 +76,25 @@ export const TimelineTracks: React.FunctionComponent<
                             handleRowHover={hoverCallback}
                             setTooltipContent={store.setTooltipContent}
                             setMousePosition={store.setMousePosition}
-                            y={TIMELINE_ROW_HEIGHT * (i + 1)}
+                            y={y}
                             width={width}
                         />
                     );
                 })}
+                {customTracks &&
+                    customTracks.map(track => {
+                        const y = nextY;
+                        nextY += track.height(store);
+                        return (
+                            <CustomRow
+                                store={store}
+                                specification={track}
+                                handleRowHover={hoverCallback}
+                                width={width}
+                                y={y}
+                            />
+                        );
+                    })}
             </g>
             {store.tooltipContent && (
                 <Portal container={document.body}>

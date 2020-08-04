@@ -14,12 +14,14 @@ import TickRow from './TickRow';
 import { TickIntervalEnum } from './types';
 import './timeline.scss';
 import { DownloadControls } from 'cbioportal-frontend-commons';
+import CustomRow, { CustomRowSpecification } from './CustomRow';
+import CustomTrackHeader from './CustomTrackHeader';
 
 (window as any).$ = $;
 
 interface ITimelineProps {
     store: TimelineStore;
-    customRows?: (store: TimelineStore) => SVGGElement;
+    customRows?: CustomRowSpecification[];
     width: number;
 }
 
@@ -202,9 +204,18 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
             <div className={'tl-timeline-display'}>
                 <div className={'tl-timeline-leftbar'}>
                     <div className={'tl-timeline-tracklabels'}>
-                        {store.data.map((track, i) => {
+                        {store.data.map(track => {
                             return <TrackHeader track={track} />;
                         })}
+                        {customRows &&
+                            customRows.map(track => {
+                                return (
+                                    <CustomTrackHeader
+                                        store={store}
+                                        specification={track}
+                                    />
+                                );
+                            })}
                     </div>
                 </div>
 
@@ -245,9 +256,10 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                                 <TimelineTracks
                                     store={store}
                                     width={renderWidth}
+                                    customTracks={customRows}
                                 />
-                                {customRows && customRows(store)}
-                                <TickRow store={store} width={renderWidth} />
+                                <TickRow store={store} width={renderWidth} /> //
+                                needs to go on top so that it's not covered
                             </svg>
                         </div>
                     )}
