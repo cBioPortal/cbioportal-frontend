@@ -4237,6 +4237,7 @@ export class ResultsViewPageStore {
         {
             await: () => [this.mutations],
             invoke: async () =>
+                AppConfig.serverConfig.show_transcript_dropdown &&
                 this.mutations.result
                     ? await fetchVariantAnnotationsIndexedByGenomicLocation(
                           this.mutations.result,
