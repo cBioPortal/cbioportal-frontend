@@ -4,35 +4,35 @@ import autobind from 'autobind-decorator';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import { MakeMobxView } from '../../shared/components/MobxView';
 import EnrichmentsDataSetDropdown from '../resultsView/enrichments/EnrichmentsDataSetDropdown';
-import LoadingIndicator from '../../shared/components/loadingIndicator/LoadingIndicator';
-import ErrorMessage from '../../shared/components/ErrorMessage';
 import ExpressionEnrichmentContainer from '../resultsView/enrichments/ExpressionEnrichmentsContainer';
+import Loader from '../../shared/components/loadingIndicator/LoadingIndicator';
+import ErrorMessage from '../../shared/components/ErrorMessage';
 import { MakeEnrichmentsTabUI } from './GroupComparisonUtils';
 import * as _ from 'lodash';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 import { EnrichmentType } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 
-export interface IMRNAEnrichmentsProps {
+export interface IMethylationEnrichmentsProps {
     store: ComparisonStore;
     resultsViewMode?: boolean;
 }
 
 @observer
-export default class MRNAEnrichments extends React.Component<
-    IMRNAEnrichmentsProps,
+export default class MethylationEnrichments extends React.Component<
+    IMethylationEnrichmentsProps,
     {}
 > {
     @autobind
     private onChangeProfile(profileMap: {
         [studyId: string]: MolecularProfile;
     }) {
-        this.props.store.setMRNAEnrichmentProfileMap(profileMap);
+        this.props.store.setMethylationEnrichmentProfileMap(profileMap);
     }
 
     readonly tabUI = MakeEnrichmentsTabUI(
         () => this.props.store,
         () => this.enrichmentsUI,
-        'mRNA',
+        'methylation',
         true,
         true,
         false
@@ -40,36 +40,40 @@ export default class MRNAEnrichments extends React.Component<
 
     readonly enrichmentsUI = MakeMobxView({
         await: () => [
-            this.props.store.mRNAEnrichmentData,
-            this.props.store.selectedmRNAEnrichmentProfileMap,
-            this.props.store.mrnaEnrichmentAnalysisGroups,
+            this.props.store.methylationEnrichmentData,
+            this.props.store.selectedMethylationEnrichmentProfileMap,
+            this.props.store.methylationEnrichmentAnalysisGroups,
             this.props.store.studies,
-            this.props.store.sampleKeyToSample,
         ],
         render: () => {
-            // since mRNA enrichments tab is enabled only for one study, selectedProteinEnrichmentProfileMap
+            // since methylation enrichments tab is enabled only for one study, selectedMethylationEnrichmentProfileMap
             // would contain only one key.
             const studyIds = Object.keys(
-                this.props.store.selectedmRNAEnrichmentProfileMap.result!
+                this.props.store.selectedMethylationEnrichmentProfileMap.result!
             );
             const selectedProfile = this.props.store
-                .selectedmRNAEnrichmentProfileMap.result![studyIds[0]];
+                .selectedMethylationEnrichmentProfileMap.result![studyIds[0]];
             return (
-                <div data-test="GroupComparisonMRNAEnrichments">
+                <div data-test="GroupComparisonMethylationEnrichments">
                     <EnrichmentsDataSetDropdown
-                        dataSets={this.props.store.mRNAEnrichmentProfiles}
+                        dataSets={
+                            this.props.store.methylationEnrichmentProfiles
+                        }
                         onChange={this.onChangeProfile}
                         selectedProfileByStudyId={
-                            this.props.store.selectedmRNAEnrichmentProfileMap
-                                .result!
+                            this.props.store
+                                .selectedMethylationEnrichmentProfileMap.result!
                         }
                         alwaysShow={true}
                         studies={this.props.store.studies.result!}
                     />
                     <ExpressionEnrichmentContainer
-                        data={this.props.store.mRNAEnrichmentData.result!}
+                        data={
+                            this.props.store.methylationEnrichmentData.result!
+                        }
                         groups={
-                            this.props.store.mrnaEnrichmentAnalysisGroups.result
+                            this.props.store.methylationEnrichmentAnalysisGroups
+                                .result
                         }
                         selectedProfile={selectedProfile}
                         alteredVsUnalteredMode={false}
@@ -77,13 +81,13 @@ export default class MRNAEnrichments extends React.Component<
                             this.props.store.sampleKeyToSample.result!
                         }
                         isGeneCheckBoxEnabled={this.props.resultsViewMode}
-                        enrichmentType={EnrichmentType.MRNA_EXPRESSION}
+                        enrichmentType={EnrichmentType.DNA_METHYLATION}
                     />
                 </div>
             );
         },
         renderPending: () => (
-            <LoadingIndicator center={true} isLoading={true} size={'big'} />
+            <Loader center={true} isLoading={true} size={'big'} />
         ),
         renderError: () => <ErrorMessage />,
     });

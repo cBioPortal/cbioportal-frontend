@@ -438,6 +438,41 @@ describe('results view comparison tab screenshot tests', function() {
             });
             assertScreenShotMatch(res);
         });
+
+        it('results view comparison tab methylation enrichments tab several groups', function() {
+            goToUrlAndSetLocalStorage(
+                `${CBIOPORTAL_URL}/results/comparison?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=blca_tcga_pub_2017&case_set_id=blca_tcga_pub_2017_all&comparison_selectedGroups=%5B"KRAS"%2C"NRAS"%2C"BRAF"%5D&comparison_subtab=dna_methylation&data_priority=0&gene_list=KRAS%2520NRAS%2520BRAF&gene_set_choice=user-defined-list&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=blca_tcga_pub_2017_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=blca_tcga_pub_2017_rna_seq_v2_mrna_median_Zscores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=blca_tcga_pub_2017_mutations&genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION=blca_tcga_pub_2017_rppa_Zscores&profileFilter=0&tab_index=tab_visualize`
+            );
+            browser.waitForVisible(
+                'div[data-test="GroupComparisonMethylationEnrichments"]',
+                10000
+            );
+            browser.waitForVisible('b=HDAC1', 10000);
+            browser.click('b=HDAC1');
+            browser.waitForVisible('div[data-test="MiniBoxPlot"]', 20000);
+            browser.moveToObject('body', 0, 0);
+            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
+                hide: ['.qtip'],
+            });
+            assertScreenShotMatch(res);
+        });
+
+        it('results view comparison tab methylation enrichments tab two groups', function() {
+            // deselect a group
+            browser.click('button[data-test="groupSelectorButtonBRAF"]');
+
+            browser.waitForVisible(
+                'div[data-test="GroupComparisonMethylationEnrichments"]',
+                10000
+            );
+            browser.waitForVisible('b=RER1', 10000);
+            browser.click('b=RER1');
+            browser.moveToObject('body', 0, 0);
+            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
+                hide: ['.qtip'],
+            });
+            assertScreenShotMatch(res);
+        });
     });
 
     describe('delete group from session', function() {

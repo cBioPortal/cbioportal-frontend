@@ -10,8 +10,9 @@ import {
     ExpressionEnrichmentWithQ,
     getExpressionRowData,
     getExpressionScatterData,
-    getExpressionEnrichmentColumns,
+    getEnrichmentColumns,
     getFilteredData,
+    EnrichmentType,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import { ExpressionEnrichmentRow } from 'shared/model/ExpressionEnrichmentRow';
 import AddCheckedGenes from 'pages/resultsView/enrichments/AddCheckedGenes';
@@ -41,6 +42,7 @@ export interface IExpressionEnrichmentContainerProps {
     sampleKeyToSample: {
         [uniqueSampleKey: string]: Sample;
     };
+    enrichmentType: EnrichmentType;
     alteredVsUnalteredMode?: boolean;
     queriedHugoGeneSymbols?: string[];
     oqlFilteredCaseAggregatedData?: {
@@ -177,8 +179,9 @@ export default class ExpressionEnrichmentContainer extends React.Component<
     }
 
     @computed get customColumns() {
-        return getExpressionEnrichmentColumns(
+        return getEnrichmentColumns(
             this.props.groups,
+            this.props.enrichmentType,
             this.props.alteredVsUnalteredMode
         );
     }
@@ -210,7 +213,11 @@ export default class ExpressionEnrichmentContainer extends React.Component<
         if (this.isTwoGroupAnalysis && this.props.alteredVsUnalteredMode) {
             columns.push(ExpressionEnrichmentTableColumnType.TENDENCY);
         } else {
-            columns.push(ExpressionEnrichmentTableColumnType.EXPRESSED);
+            if (this.props.enrichmentType === EnrichmentType.DNA_METHYLATION) {
+                columns.push(ExpressionEnrichmentTableColumnType.METHYLATION);
+            } else {
+                columns.push(ExpressionEnrichmentTableColumnType.EXPRESSED);
+            }
         }
 
         return columns;
@@ -296,6 +303,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<
                             this.props.oqlFilteredCaseAggregatedData
                         }
                         selectedRow={this.selectedRow}
+                        enrichmentType={this.props.enrichmentType}
                     />
                 </div>
 
