@@ -473,6 +473,7 @@ export default class ComparisonStore {
     readonly selectedStudyMutationEnrichmentProfileMap = remoteData({
         await: () => [this.mutationEnrichmentProfiles],
         invoke: () => {
+            // set default enrichmentProfileMap if not selected yet
             if (_.isEmpty(this._mutationEnrichmentProfileMap)) {
                 const molecularProfilesbyStudyId = _.groupBy(
                     this.mutationEnrichmentProfiles.result!,
@@ -494,6 +495,7 @@ export default class ComparisonStore {
     readonly selectedStudyCopyNumberEnrichmentProfileMap = remoteData({
         await: () => [this.copyNumberEnrichmentProfiles],
         invoke: () => {
+            // set default enrichmentProfileMap if not selected yet
             if (_.isEmpty(this._copyNumberEnrichmentProfileMap)) {
                 const molecularProfilesbyStudyId = _.groupBy(
                     this.copyNumberEnrichmentProfiles.result!,
@@ -515,6 +517,7 @@ export default class ComparisonStore {
     readonly selectedmRNAEnrichmentProfileMap = remoteData({
         await: () => [this.mRNAEnrichmentProfiles],
         invoke: () => {
+            // set default enrichmentProfileMap if not selected yet
             if (_.isEmpty(this._mRNAEnrichmentProfileMap)) {
                 const molecularProfilesbyStudyId = _.groupBy(
                     this.mRNAEnrichmentProfiles.result!,
@@ -536,6 +539,7 @@ export default class ComparisonStore {
     readonly selectedProteinEnrichmentProfileMap = remoteData({
         await: () => [this.proteinEnrichmentProfiles],
         invoke: () => {
+            // set default enrichmentProfileMap if not selected yet
             if (_.isEmpty(this._proteinEnrichmentProfileMap)) {
                 const molecularProfilesbyStudyId = _.groupBy(
                     this.proteinEnrichmentProfiles.result!,
@@ -557,6 +561,7 @@ export default class ComparisonStore {
     readonly selectedMethylationEnrichmentProfileMap = remoteData({
         await: () => [this.methylationEnrichmentProfiles],
         invoke: () => {
+            // set default enrichmentProfileMap if not selected yet
             if (_.isEmpty(this._methylationEnrichmentProfileMap)) {
                 const molecularProfilesbyStudyId = _.groupBy(
                     this.methylationEnrichmentProfiles.result!,

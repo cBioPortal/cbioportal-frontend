@@ -12,6 +12,7 @@ import {
     getExpressionScatterData,
     getEnrichmentColumns,
     getFilteredData,
+    EnrichmentType,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import { ExpressionEnrichmentRow } from 'shared/model/ExpressionEnrichmentRow';
 import AddCheckedGenes from 'pages/resultsView/enrichments/AddCheckedGenes';
@@ -41,14 +42,13 @@ export interface IExpressionEnrichmentContainerProps {
     sampleKeyToSample: {
         [uniqueSampleKey: string]: Sample;
     };
-    enrichmentType: string;
+    enrichmentType: EnrichmentType;
     alteredVsUnalteredMode?: boolean;
     queriedHugoGeneSymbols?: string[];
     oqlFilteredCaseAggregatedData?: {
         [uniqueSampleKey: string]: ExtendedAlteration[];
     };
     isGeneCheckBoxEnabled?: boolean;
-    isMethylation?: boolean;
 }
 
 @observer
@@ -181,8 +181,8 @@ export default class ExpressionEnrichmentContainer extends React.Component<
     @computed get customColumns() {
         return getEnrichmentColumns(
             this.props.groups,
-            this.props.alteredVsUnalteredMode,
-            this.props.isMethylation
+            this.props.enrichmentType,
+            this.props.alteredVsUnalteredMode
         );
     }
 
@@ -213,7 +213,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<
         if (this.isTwoGroupAnalysis && this.props.alteredVsUnalteredMode) {
             columns.push(ExpressionEnrichmentTableColumnType.TENDENCY);
         } else {
-            if (this.props.isMethylation) {
+            if (this.props.enrichmentType === EnrichmentType.DNA_METHYLATION) {
                 columns.push(ExpressionEnrichmentTableColumnType.METHYLATION);
             } else {
                 columns.push(ExpressionEnrichmentTableColumnType.EXPRESSED);
@@ -304,7 +304,6 @@ export default class ExpressionEnrichmentContainer extends React.Component<
                         }
                         selectedRow={this.selectedRow}
                         enrichmentType={this.props.enrichmentType}
-                        isMethylation={this.props.isMethylation}
                     />
                 </div>
 

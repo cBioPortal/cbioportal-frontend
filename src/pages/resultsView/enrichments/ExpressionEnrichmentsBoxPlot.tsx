@@ -6,6 +6,7 @@ import { MolecularProfile, Sample } from 'cbioportal-ts-api-client';
 import {
     ExpressionEnrichmentWithQ,
     getAlterationsTooltipContent,
+    EnrichmentType,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import * as _ from 'lodash';
 import autobind from 'autobind-decorator';
@@ -45,13 +46,12 @@ export interface IExpressionEnrichmentsBoxPlotProps {
     sampleKeyToSample: {
         [uniqueSampleKey: string]: Sample;
     };
-    enrichmentType: string;
+    enrichmentType: EnrichmentType;
     queriedHugoGeneSymbols?: string[];
     oqlFilteredCaseAggregatedData?: {
         [uniqueSampleKey: string]: ExtendedAlteration[];
     };
     selectedRow?: ExpressionEnrichmentWithQ;
-    isMethylation?: boolean;
 }
 
 @observer
@@ -270,7 +270,8 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
                         getSvg={() => this.svgContainer}
                         getData={this.getData}
                         filename={`${
-                            this.props.isMethylation
+                            this.props.enrichmentType ===
+                            EnrichmentType.DNA_METHYLATION
                                 ? 'methylation'
                                 : 'expression'
                         }_enrichment`}
