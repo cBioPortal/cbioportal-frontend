@@ -15,13 +15,11 @@ export enum ClonalValue {
     NA = 'NA',
 }
 
-function getClonalValue(mutation: Mutation): ClonalValue {
+export function getClonalValue(mutation: Mutation): ClonalValue {
     let textValue: ClonalValue = ClonalValue.NA;
     if (hasASCNProperty(mutation, 'clonal')) {
         textValue =
-            mutation.alleleSpecificCopyNumber.clonal in ClonalValue &&
-            mutation.alleleSpecificCopyNumber.clonal !==
-                ClonalValue.INDETERMINATE
+            mutation.alleleSpecificCopyNumber.clonal in ClonalValue
                 ? (ClonalValue as any)[mutation.alleleSpecificCopyNumber.clonal] // needs the cast to prevent typescript error
                 : ClonalValue.NA;
     }
@@ -70,6 +68,8 @@ export default class ClonalColumnFormatter {
                 'ccfExpectedCopies'
             )
                 ? mutation.alleleSpecificCopyNumber.ccfExpectedCopies.toString()
+                : hasASCNProperty(mutation, 'ascnMethod')
+                ? 'INDETERMINATE'
                 : 'NA';
         }
 
@@ -83,8 +83,16 @@ export default class ClonalColumnFormatter {
                         >
                             <ClonalElement
                                 sampleId={sampleId}
-                                clonalValue={sampleToValue[sampleId]}
-                                ccfExpectedCopies={sampleToCCF[sampleId]}
+                                clonalValue={
+                                    sampleToValue[sampleId]
+                                        ? sampleToValue[sampleId]
+                                        : ClonalValue.NA
+                                }
+                                ccfExpectedCopies={
+                                    sampleToCCF[sampleId]
+                                        ? sampleToCCF[sampleId]
+                                        : 'NA'
+                                }
                                 sampleManager={sampleManager}
                             />
                         </span>

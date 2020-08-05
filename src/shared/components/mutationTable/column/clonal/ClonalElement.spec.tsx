@@ -25,6 +25,12 @@ describe('ClonalElement', () => {
 
     const indeterminate = {
         sampleId: 'S003',
+        clonalValue: ClonalValue.INDETERMINATE,
+        ccfExpectedCopies: 'NA',
+    };
+
+    const na = {
+        sampleId: 'S004',
         clonalValue: ClonalValue.NA,
         ccfExpectedCopies: 'NA',
     };
@@ -103,23 +109,31 @@ describe('ClonalElement', () => {
         );
     }
 
-    it('generates limegreen circle with tooltip for clonal', () => {
+    it('generates black circle with tooltip for clonal', () => {
         testExpectedValidClonalElement(
             clonal,
-            ClonalColor.LIMEGREEN,
-            ClonalColor.LIMEGREEN
+            ClonalColor.BLACK,
+            ClonalColor.BLACK
         );
     });
 
-    it('generates white circle with tooltip for subclonal', () => {
+    it('generates striped circle with tooltip for subclonal', () => {
         testExpectedValidClonalElement(
             subclonal,
-            ClonalColor.WHITE,
-            ClonalColor.DIMGREY
+            ClonalColor.STRIPED,
+            ClonalColor.BLACK
         );
     });
 
-    it('generates lightgrey circle with tooltip for clonal NA', () => {
-        testExpectedInvalidClonalElement(indeterminate, ClonalColor.LIGHTGREY);
+    it('generates lightgrey circle with tooltip for indeterminate', () => {
+        testExpectedValidClonalElement(
+            indeterminate,
+            ClonalColor.LIGHTGREY,
+            ClonalColor.LIGHTGREY
+        );
+    });
+
+    it('generates invisible circle with no tooltip for clonal NA', () => {
+        testExpectedInvalidClonalElement(na, ClonalColor.LIGHTGREY);
     });
 });

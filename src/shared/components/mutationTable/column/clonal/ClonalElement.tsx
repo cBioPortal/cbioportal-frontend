@@ -3,34 +3,67 @@ import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import SampleManager from 'pages/patientView/SampleManager';
 import { ClonalValue } from './ClonalColumnFormatter';
 
+export const stripePattern = (
+    <svg>
+        <defs>
+            <pattern
+                id="stripePattern"
+                patternUnits="userSpaceOnUse"
+                width="4"
+                height="4"
+            >
+                <path
+                    d="M-1,1 l2,-2
+              M-.5,2.5 l3,-3
+              M0,4 l4,-4
+              M1.5,4.5 l3,-3d
+              M3,5 l2,-2"
+                    stroke="black"
+                    strokeWidth=".5"
+                />
+            </pattern>
+        </defs>
+    </svg>
+);
+
 export enum ClonalColor {
     LIMEGREEN = 'limegreen',
     DIMGREY = 'dimgrey',
     LIGHTGREY = 'lightgrey',
+    STRIPED = 'url(#stripePattern)',
     WHITE = 'white',
+    BLACK = 'black',
 }
 
-function getClonalCircleColor(clonalValue: string): ClonalColor {
+export function getClonalCircleColor(clonalValue: string): ClonalColor {
     switch (clonalValue) {
         case ClonalValue.CLONAL:
-            return ClonalColor.LIMEGREEN;
+            return ClonalColor.BLACK;
         case ClonalValue.SUBCLONAL:
-            return ClonalColor.WHITE;
+            return ClonalColor.STRIPED;
+        case ClonalValue.INDETERMINATE:
+            return ClonalColor.LIGHTGREY;
         // Indeterminate/NA falls under this case
         default:
-            return ClonalColor.LIGHTGREY;
+            return ClonalColor.DIMGREY;
     }
+}
+
+export function getOptionalPattern(clonalValue: string) {
+    return clonalValue === ClonalValue.SUBCLONAL ? stripePattern : null;
 }
 
 function getClonalStrokeColor(clonalValue: string): ClonalColor {
     switch (clonalValue) {
         case ClonalValue.CLONAL:
-            return ClonalColor.LIMEGREEN;
+            return ClonalColor.BLACK;
         case ClonalValue.SUBCLONAL:
-            return ClonalColor.DIMGREY;
+            return ClonalColor.BLACK;
+        case ClonalValue.INDETERMINATE:
+            return ClonalColor.LIGHTGREY;
         // Indeterminate/NA falls under this case
         default:
-            return ClonalColor.LIGHTGREY;
+            return ClonalColor.DIMGREY;
     }
 }
 
@@ -88,6 +121,7 @@ const ClonalCircle: React.FunctionComponent<{
                     : 'na'
             }-icon`}
         >
+            {getOptionalPattern(props.clonalValue)}
             <circle
                 cx={5}
                 cy={5}
@@ -97,7 +131,7 @@ const ClonalCircle: React.FunctionComponent<{
                 fill={getClonalCircleColor(props.clonalValue)}
                 opacity={
                     getClonalCircleColor(props.clonalValue) !==
-                    ClonalColor.LIGHTGREY
+                    ClonalColor.DIMGREY
                         ? 100
                         : 0
                 }

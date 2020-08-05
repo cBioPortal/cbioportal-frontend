@@ -222,7 +222,7 @@ describe('ASCNCopyNumberElement', () => {
             </span>
         */
         const bElement = ascnCopyNumberElementTooltip.find('b');
-        expect(bElement).to.have.text(ASCNCopyNumberValueEnum.NA);
+        expect(bElement).to.have.length(0);
 
         const spanCount = countSpansWithCopyNumberText(
             ascnCopyNumberElementTooltip,

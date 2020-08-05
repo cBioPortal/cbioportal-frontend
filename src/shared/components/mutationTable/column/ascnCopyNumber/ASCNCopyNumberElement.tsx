@@ -11,6 +11,7 @@ import {
 export enum ASCNCopyNumberValueEnum {
     WGD = 'WGD',
     NA = 'NA',
+    INDETERMINATE = 'INDETERMINATE',
     AMPBALANCED = 'Amp (Balanced)',
     AMPLOH = 'Amp (LOH)',
     AMP = 'Amp',
@@ -93,6 +94,7 @@ function getASCNCopyNumberOpacity(
         case '0':
         case '-1':
         case '-2':
+        case 'INDETERMINATE':
             return ASCNCopyNumberOpacityEnum.OPAQUE;
         default:
             return ASCNCopyNumberOpacityEnum.TRANSPARENT;
@@ -142,12 +144,14 @@ export const ASCNCopyNumberElementTooltip: React.FunctionComponent<{
                 </span>
             ) : null}
             <span>
-                <b>{ascnCopyNumberCall}</b>
                 {ascnCopyNumberCall !== ASCNCopyNumberValueEnum.NA ? (
                     <span>
+                        <b>{ascnCopyNumberCall}</b>
                         {` (${props.wgdValue} with total copy number of ${props.totalCopyNumberValue} and a minor copy number of ${props.minorCopyNumberValue})`}
                     </span>
-                ) : null}
+                ) : (
+                    <span>{'Indeterminate sample'}</span>
+                )}
             </span>
         </span>
     );
@@ -201,7 +205,9 @@ const ASCNCopyNumberIcon: React.FunctionComponent<{
                             props.ascnCopyNumberValue
                         )}
                     >
-                        {props.totalCopyNumberValue}
+                        {props.totalCopyNumberValue === 'INDETERMINATE'
+                            ? '-'
+                            : props.totalCopyNumberValue}
                     </text>
                 </svg>
             </g>
@@ -221,9 +227,7 @@ const ASCNCopyNumberElement: React.FunctionComponent<{
 }> = props => {
     const hasAllRequiredValues: boolean =
         props.totalCopyNumberValue !== ASCNCopyNumberValueEnum.NA &&
-        props.ascnCopyNumberValue !== ASCNCopyNumberValueEnum.NA &&
-        props.wgdValue !== ASCNCopyNumberValueEnum.NA &&
-        getASCNCopyNumberColor(props.ascnCopyNumberValue) !== ASCN_BLACK;
+        props.wgdValue !== ASCNCopyNumberValueEnum.NA;
 
     if (hasAllRequiredValues) {
         return (
