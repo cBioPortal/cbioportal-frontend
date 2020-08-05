@@ -3,6 +3,10 @@ import { Mutation } from 'cbioportal-ts-api-client';
 import { hasASCNProperty } from 'shared/lib/MutationUtils';
 import SampleManager from 'pages/patientView/SampleManager';
 import CancerCellFractionElement from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionElement';
+import {
+    getClonalValue,
+    ClonalValue,
+} from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
 
 /**
  * @author Avery Wang
@@ -30,6 +34,7 @@ export const getDefaultCancerCellFractionColumnDefinition = (
         sortBy: (d: Mutation[]) => d.map(m => +getCancerCellFractionValue(m)),
         download: (d: Mutation[]) =>
             CancerCellFractionColumnFormatter.getCancerCellFractionDownload(d),
+        visible: false,
     };
 };
 
@@ -45,6 +50,7 @@ export default class CancerCellFractionColumnFormatter {
         sampleManager?: SampleManager | null
     ) {
         const sampleToCCFValue: { [key: string]: string } = {};
+        const sampleToClonalValue: { [key: string]: string } = {};
         for (const mutation of data) {
             sampleToCCFValue[mutation.sampleId] = hasASCNProperty(
                 mutation,
@@ -52,11 +58,13 @@ export default class CancerCellFractionColumnFormatter {
             )
                 ? mutation.alleleSpecificCopyNumber.ccfExpectedCopies.toFixed(2)
                 : 'NA';
+            sampleToClonalValue[mutation.sampleId] = getClonalValue(mutation);
         }
         return (
             <span data-test="ccf-cell">
                 <CancerCellFractionElement
                     sampleIds={sampleIds}
+                    sampleToClonalValue={sampleToClonalValue}
                     sampleToCCFValue={sampleToCCFValue}
                     sampleManager={sampleManager}
                 />

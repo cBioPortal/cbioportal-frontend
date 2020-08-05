@@ -54,8 +54,8 @@ export const getDefaultExpectedAltCopiesColumnDefinition = (
     sampleManager?: SampleManager | null
 ) => {
     return {
-        name: 'Expected Alt Copies',
-        tooltip: <span>Best Guess for Expected Alt Copies / Total Copies</span>,
+        name: 'Mutant Integer Copy #',
+        tooltip: <span>Best Guess for Mutant Integer Cop #</span>,
         render: (d: Mutation[]) =>
             ExpectedAltCopiesColumnFormatter.renderFunction(
                 d,
@@ -69,6 +69,7 @@ export const getDefaultExpectedAltCopiesColumnDefinition = (
             ),
         download: (d: Mutation[]) =>
             ExpectedAltCopiesColumnFormatter.getExpectedAltCopiesDownload(d),
+        visible: false,
     };
 };
 
@@ -85,33 +86,31 @@ export default class ExpectedAltCopiesColumnFormatter {
     ) {
         const sampleToTotalCopyNumber: { [key: string]: string } = {};
         const sampleToExpectedAltCopies: { [key: string]: string } = {};
+
+        // only signify NA (no FACETS analysis done) if ASCN METHOD not set
+        // else indicate indeterminte
         for (const mutation of data) {
             sampleToTotalCopyNumber[mutation.sampleId] = hasASCNProperty(
                 mutation,
                 'totalCopyNumber'
             )
                 ? mutation.alleleSpecificCopyNumber.totalCopyNumber.toString()
+                : hasASCNProperty(mutation, 'ascnMethod')
+                ? 'INDETERMINATE'
                 : RESPONSE_VALUE_NA;
             sampleToExpectedAltCopies[mutation.sampleId] = hasASCNProperty(
                 mutation,
                 'expectedAltCopies'
             )
                 ? mutation.alleleSpecificCopyNumber.expectedAltCopies.toString()
+                : hasASCNProperty(mutation, 'ascnMethod')
+                ? 'INDETERMINATE'
                 : RESPONSE_VALUE_NA;
         }
 
-        // exclude samples with invalid count value (undefined || emtpy || lte 0)
-        const samplesWithValue = sampleIds.filter(
-            sampleId =>
-                sampleToTotalCopyNumber[sampleId] &&
-                sampleToExpectedAltCopies[sampleId] &&
-                sampleToTotalCopyNumber[sampleId] !== RESPONSE_VALUE_NA &&
-                sampleToExpectedAltCopies[sampleId] !== RESPONSE_VALUE_NA
-        );
-
         return (
             <span data-test="eac-cell">
-                {samplesWithValue.map((sampleId: string, index: number) => {
+                {sampleIds.map((sampleId: string, index: number) => {
                     return (
                         <span
                             key={sampleId}
@@ -121,13 +120,16 @@ export default class ExpectedAltCopiesColumnFormatter {
                                 sampleId={sampleId}
                                 totalCopyNumberValue={
                                     sampleToTotalCopyNumber[sampleId]
+                                        ? sampleToTotalCopyNumber[sampleId]
+                                        : 'NA'
                                 }
                                 expectedAltCopiesValue={
                                     sampleToExpectedAltCopies[sampleId]
+                                        ? sampleToExpectedAltCopies[sampleId]
+                                        : 'NA'
                                 }
                                 sampleManager={sampleManager}
                             />
-                            {index !== samplesWithValue.length - 1 ? ';' : ''}
                         </span>
                     );
                 })}

@@ -1566,7 +1566,8 @@ export class ResultsViewPageStore {
             const entrezGeneIdToGene = this.entrezGeneIdToGene.result!;
             let result: (
                 | AnnotatedMutation
-                | AnnotatedNumericGeneMolecularData)[] = [];
+                | AnnotatedNumericGeneMolecularData
+            )[] = [];
             result = result.concat(this.filteredAndAnnotatedMutations.result!);
             result = result.concat(
                 this.filteredAndAnnotatedMolecularData.result!
@@ -1647,7 +1648,8 @@ export class ResultsViewPageStore {
             if (this.oqlText.trim() != '') {
                 let data: (
                     | AnnotatedMutation
-                    | AnnotatedNumericGeneMolecularData)[] = [];
+                    | AnnotatedNumericGeneMolecularData
+                )[] = [];
                 data = data.concat(this.filteredAndAnnotatedMutations.result!);
                 data = data.concat(
                     this.filteredAndAnnotatedMolecularData.result!
@@ -2516,10 +2518,12 @@ export class ResultsViewPageStore {
                         ret[sampleSpec.studyId][sampleSpec.sampleId] = true;
                     } else if (sampleSpec.sampleListId) {
                         // mark sample list to query later
-                        sampleListsToQuery.push(sampleSpec as {
-                            studyId: string;
-                            sampleListId: string;
-                        });
+                        sampleListsToQuery.push(
+                            sampleSpec as {
+                                studyId: string;
+                                sampleListId: string;
+                            }
+                        );
                     }
                 }
                 // query for sample lists
@@ -2548,15 +2552,12 @@ export class ResultsViewPageStore {
     readonly studyToSampleListId = remoteData<{ [studyId: string]: string }>({
         await: () => [this.samplesSpecification],
         invoke: async () => {
-            return this.samplesSpecification.result!.reduce(
-                (map, next) => {
-                    if (next.sampleListId) {
-                        map[next.studyId] = next.sampleListId;
-                    }
-                    return map;
-                },
-                {} as { [studyId: string]: string }
-            );
+            return this.samplesSpecification.result!.reduce((map, next) => {
+                if (next.sampleListId) {
+                    map[next.studyId] = next.sampleListId;
+                }
+                return map;
+            }, {} as { [studyId: string]: string });
         },
     });
 
@@ -4391,9 +4392,11 @@ export class ResultsViewPageStore {
                         );
                     });
                 } else {
-                    return Promise.resolve(((mutation: Mutation) => false) as (
-                        m: Mutation
-                    ) => boolean);
+                    return Promise.resolve(
+                        ((mutation: Mutation) => false) as (
+                            m: Mutation
+                        ) => boolean
+                    );
                 }
             } else if (this.indexedHotspotData.isError) {
                 return Promise.resolve(new Error());

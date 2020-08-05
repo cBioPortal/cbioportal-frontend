@@ -365,6 +365,24 @@ describe('patient view page', function() {
             before(() => {
                 goToUrlAndSetLocalStorage(ascnPatientViewUrl);
                 waitForPatientView();
+                const mutationsTable = '[data-test=patientview-mutation-table]';
+                $(`${mutationsTable} button#dropdown-custom-1`).click();
+                $(`${mutationsTable} ul.dropdown-menu`)
+                    .$$('li label input')[19]
+                    .click();
+                $(`${mutationsTable} ul.dropdown-menu`)
+                    .$$('li label input')[20]
+                    .click();
+                $(`${mutationsTable} ul.dropdown-menu`)
+                    .$$('li label input')[21]
+                    .click();
+                $(`${mutationsTable} button#dropdown-custom-1`).click();
+            });
+
+            afterEach(() => {
+                // move somewhere safe so that all tooltips close or open tooltips block others from opening
+                browser.moveToObject('body', 0, 0); // offset 0, 0 relative to the top-left corner of the element
+                browser.pause(200); // it takes a bit of time to close the tooltip after moving
             });
 
             const c = 'clonal-icon';
@@ -393,21 +411,16 @@ describe('patient view page', function() {
             it('displays clonal column tooltip on mouseover element', () => {
                 browser.moveToObject(
                     'span[data-test=clonal-cell] span span svg circle'
-                ); // moves pointer to plot thumbnail
+                );
                 $(
                     'div[role=tooltip] div[data-test=clonal-tooltip]'
                 ).waitForExist();
             });
 
-            it('displays ccf column tooltip on mouseover element', () => {
-                browser.moveToObject('span[data-test=ccf-cell] span'); // moves pointer to plot thumbnail
-                $(
-                    'div[role=tooltip] span[data-test=ccf-tooltip]'
-                ).waitForExist();
-            });
-
             it('displays expected alt copies column tooltip on mouseover element', () => {
-                browser.moveToObject('span[data-test=eac-cell] span span'); // moves pointer to plot thumbnail
+                browser.moveToObject(
+                    'span[data-test=eac-cell] span span svg g rect'
+                );
                 $(
                     'div[role=tooltip] span[data-test=eac-tooltip]'
                 ).waitForExist();
@@ -416,9 +429,16 @@ describe('patient view page', function() {
             it('displays integer copy number column tooltip on mouseover element', () => {
                 browser.moveToObject(
                     'span[data-test=ascn-copy-number-cell] span span svg g rect'
-                ); // moves pointer to plot thumbnail
+                );
                 $(
                     'div[role=tooltip] span[data-test=ascn-copy-number-tooltip]'
+                ).waitForExist();
+            });
+
+            it('displays ccf column tooltip on mouseover element', () => {
+                browser.moveToObject('span[data-test=ccf-cell] span');
+                $(
+                    'div[role=tooltip] span[data-test=ccf-tooltip]'
                 ).waitForExist();
             });
         });
