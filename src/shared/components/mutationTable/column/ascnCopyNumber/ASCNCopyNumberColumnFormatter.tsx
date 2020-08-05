@@ -114,7 +114,7 @@ export const getDefaultASCNCopyNumberColumnDefinition = (
     sampleManager?: SampleManager | null
 ) => {
     return {
-        name: 'Integer Copy #',
+        name: 'Total Integer Copy #',
         render: (d: Mutation[]) =>
             ASCNCopyNumberColumnFormatter.renderFunction(
                 d,
@@ -128,6 +128,7 @@ export const getDefaultASCNCopyNumberColumnDefinition = (
                 sampleIdToClinicalDataMap,
                 sampleIds ? sampleIds : d.length > 0 ? [d[0].sampleId] : []
             ),
+        visible: false,
     };
 };
 
@@ -155,18 +156,24 @@ export default class ASCNCopyNumberColumnFormatter {
                 'totalCopyNumber'
             )
                 ? mutation.alleleSpecificCopyNumber.totalCopyNumber.toString()
+                : hasASCNProperty(mutation, 'ascnMethod')
+                ? ASCNCopyNumberValueEnum.INDETERMINATE
                 : ASCNCopyNumberValueEnum.NA;
             sampleToMinorCopyNumber[mutation.sampleId] = hasASCNProperty(
                 mutation,
                 'minorCopyNumber'
             )
                 ? mutation.alleleSpecificCopyNumber.minorCopyNumber.toString()
+                : hasASCNProperty(mutation, 'ascnMethod')
+                ? ASCNCopyNumberValueEnum.INDETERMINATE
                 : ASCNCopyNumberValueEnum.NA;
             sampleToASCNCopyNumber[mutation.sampleId] = hasASCNProperty(
                 mutation,
                 MUTATION_DATA_FIELD_ENUM.ASCN_INTEGER_COPY_NUMBER
             )
                 ? mutation.alleleSpecificCopyNumber.ascnIntegerCopyNumber.toString()
+                : hasASCNProperty(mutation, 'ascnMethod')
+                ? ASCNCopyNumberValueEnum.INDETERMINATE
                 : ASCNCopyNumberValueEnum.NA;
         }
         if (

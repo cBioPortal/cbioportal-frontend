@@ -39,6 +39,7 @@ export const ASCN_GAIN = '#e15b5b';
 export const ASCN_HETLOSS = '#2a5eea';
 export const ASCN_HOMDEL = '#0000ff';
 export const ASCN_LIGHTGREY = '#bcbcbc';
+export const ASCN_DARKGREY = '#a9a9a9';
 export const ASCN_BLACK = '#000000';
 export const ASCN_WHITE = '#ffffff';
 

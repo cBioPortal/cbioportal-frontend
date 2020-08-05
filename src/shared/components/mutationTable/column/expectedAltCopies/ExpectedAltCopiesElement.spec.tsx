@@ -5,6 +5,7 @@ import { assert, expect } from 'chai';
 import {
     default as ExpectedAltCopiesElement,
     ExpectedAltCopiesElementTooltip,
+    ExpectedAltCopiesColor,
 } from './ExpectedAltCopiesElement';
 import { Mutation, AlleleSpecificCopyNumber } from 'cbioportal-ts-api-client';
 
@@ -42,6 +43,25 @@ describe('ExpectedAltCopiesElement', () => {
         ).to.exist;
     }
 
+    function testExpectedIndeterminateAltCopiesElementTooltip(
+        expectedAltCopiesElement: any
+    ) {
+        let expectedAltCopiesElementTooltip = mount(
+            <ExpectedAltCopiesElementTooltip
+                {...(expectedAltCopiesElement.find('DefaultTooltip').props()
+                    .overlay as any).props}
+            />
+        );
+        expect(
+            expectedAltCopiesElementTooltip.findWhere(
+                node =>
+                    node.type() === 'span' &&
+                    node.children().length == 0 &&
+                    node.text() == 'Indeterminate sample'
+            )
+        ).to.exist;
+    }
+
     it('generates ExpectedAltCopiesElement with Tooltip', () => {
         // only mutations with tcn/expectedAltCopies available map to an element
         let expectedAltCopiesElementTest = mount(
@@ -49,9 +69,26 @@ describe('ExpectedAltCopiesElement', () => {
                 {...getExpectedAltCopiesProps('S001', '4', '2')}
             />
         );
-        expect(expectedAltCopiesElementTest.find('span').text()).to.equal(
-            '2/4'
+        expect(expectedAltCopiesElementTest.find('span').text()).to.equal('2');
+        expect(expectedAltCopiesElementTest.find('rect').prop('fill')).to.equal(
+            ExpectedAltCopiesColor.WHITE
         );
         testExpectedAltCopiesElementTooltip(expectedAltCopiesElementTest);
+    });
+
+    it('generates indeterminate ExpectedAltCopiesElement with Tooltip', () => {
+        // only mutations with tcn/expectedAltCopies available map to an element
+        let expectedAltCopiesElementTest = mount(
+            <ExpectedAltCopiesElement
+                {...getExpectedAltCopiesProps('S001', '3', 'INDETERMINATE')}
+            />
+        );
+        expect(expectedAltCopiesElementTest.find('span').text()).to.equal('-');
+        expect(expectedAltCopiesElementTest.find('rect').prop('fill')).to.equal(
+            ExpectedAltCopiesColor.LIGHTGREY
+        );
+        testExpectedIndeterminateAltCopiesElementTooltip(
+            expectedAltCopiesElementTest
+        );
     });
 });

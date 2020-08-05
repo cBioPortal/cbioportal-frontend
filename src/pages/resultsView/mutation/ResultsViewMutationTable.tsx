@@ -109,8 +109,8 @@ export default class ResultsViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.CLONAL].order = 47;
         this._columns[MutationTableColumnType.CANCER_CELL_FRACTION].order = 48;
         this._columns[MutationTableColumnType.EXPECTED_ALT_COPIES].order = 49;
-        this._columns[MutationTableColumnType.COPY_NUM].order = 50;
-        this._columns[MutationTableColumnType.ASCN_COPY_NUM].order = 51;
+        this._columns[MutationTableColumnType.ASCN_COPY_NUM].order = 50;
+        this._columns[MutationTableColumnType.COPY_NUM].order = 51;
         this._columns[MutationTableColumnType.COSMIC].order = 60;
         this._columns[MutationTableColumnType.MUTATION_STATUS].order = 70;
         this._columns[MutationTableColumnType.VALIDATION_STATUS].order = 80;
