@@ -102,7 +102,7 @@ describe('ExpectedAltCopiesColumnFormatter', () => {
         );
         testExpectedNumberOfExpectedAltCopiesElements(
             expectedAltCopiesColumnTest,
-            3
+            6
         );
 
         expectedAltCopiesColumnTest = mount(
@@ -123,7 +123,7 @@ describe('ExpectedAltCopiesColumnFormatter', () => {
         );
         testExpectedNumberOfExpectedAltCopiesElements(
             expectedAltCopiesColumnTest,
-            0
+            1
         );
     });
 
@@ -149,7 +149,12 @@ describe('ExpectedAltCopiesColumnFormatter', () => {
             '4',
             '1'
         );
-        expect(sampleToExpectedAltCopiesElement['S002']).to.not.exist;
+        testExpectedExpectedAltCopiesElementProperties(
+            sampleToExpectedAltCopiesElement['S002'],
+            'S002',
+            'INDETERMINATE',
+            '1'
+        );
         testExpectedExpectedAltCopiesElementProperties(
             sampleToExpectedAltCopiesElement['S003'],
             'S003',
@@ -162,40 +167,17 @@ describe('ExpectedAltCopiesColumnFormatter', () => {
             '2',
             '1'
         );
-        expect(sampleToExpectedAltCopiesElement['S005']).to.not.exist;
-        expect(sampleToExpectedAltCopiesElement['S006']).to.not.exist;
-    });
-
-    it('semi-colons placed after correct ExpectedAltCopiesElement(s)', () => {
-        let expectedAltCopiesColumnTest = mount(
-            getDefaultExpectedAltCopiesColumnDefinition(
-                ['S001', 'S002', 'S003', 'S004', 'S005', 'S006'],
-                null
-            ).render(mutations)
+        testExpectedExpectedAltCopiesElementProperties(
+            sampleToExpectedAltCopiesElement['S005'],
+            'S005',
+            '2',
+            'INDETERMINATE'
         );
-        // not last and valid - has delimiter
-        expect(
-            expectedAltCopiesColumnTest
-                .findWhere(
-                    node => node.type() === 'span' && node.key() === 'S001'
-                )
-                .text()
-        ).to.have.string(';');
-        // not last but valid - has delimiter
-        expect(
-            expectedAltCopiesColumnTest
-                .findWhere(
-                    node => node.type() === 'span' && node.key() === 'S003'
-                )
-                .text()
-        ).to.have.string(';');
-        // last valid - should not have delimiter
-        expect(
-            expectedAltCopiesColumnTest
-                .findWhere(
-                    node => node.type() === 'span' && node.key() === 'S004'
-                )
-                .text()
-        ).to.not.have.string(';');
+        testExpectedExpectedAltCopiesElementProperties(
+            sampleToExpectedAltCopiesElement['S006'],
+            'S006',
+            'NA',
+            'NA'
+        );
     });
 });

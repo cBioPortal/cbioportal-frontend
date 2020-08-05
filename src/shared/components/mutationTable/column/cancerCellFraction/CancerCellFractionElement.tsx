@@ -1,9 +1,16 @@
 import * as React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import SampleManager from 'pages/patientView/SampleManager';
+import {
+    ClonalColor,
+    getClonalCircleColor,
+    getOptionalPattern,
+    stripePattern,
+} from 'shared/components/mutationTable/column/clonal/ClonalElement';
+import { ClonalValue } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
 
 export const maxBarHeight = 12;
-const barWidth = 6;
+const barWidth = 5;
 const barSpacing = 3;
 export const indexToBarLeft = (n: number) => n * (barWidth + barSpacing);
 
@@ -40,25 +47,32 @@ export const CancerCellFractionElementTooltip: React.FunctionComponent<{
 
 const CancerCellFractionBar: React.FunctionComponent<{
     ccfValue: string;
-    color: string;
+    clonalValue: string;
+    color: any;
     barX: number;
 }> = props => {
     const barHeight =
         (isNaN(+props.ccfValue) ? 0 : +props.ccfValue) * maxBarHeight;
     const barY = maxBarHeight - barHeight;
     return (
-        <rect
-            x={props.barX}
-            y={barY}
-            width={barWidth}
-            height={barHeight}
-            fill={props.color}
-        />
+        <svg>
+            {getOptionalPattern(props.clonalValue)}
+            <rect
+                x={props.barX}
+                y={barY}
+                stroke={'black'}
+                strokeWidth={1}
+                width={barWidth}
+                height={barHeight}
+                fill={props.color}
+            />
+        </svg>
     );
 };
 
 const CancerCellFractionBarGraph: React.FunctionComponent<{
     sampleIds: string[];
+    sampleToClonalValue: { [key: string]: string };
     sampleToCCFValue: { [key: string]: string };
     sampleManager?: SampleManager | null;
 }> = props => {
@@ -80,11 +94,10 @@ const CancerCellFractionBarGraph: React.FunctionComponent<{
                     <CancerCellFractionBar
                         key={sample}
                         ccfValue={props.sampleToCCFValue[sample]}
-                        color={
-                            props.sampleManager
-                                ? props.sampleManager.getColorForSample(sample)
-                                : 'black'
-                        }
+                        clonalValue={props.sampleToClonalValue[sample]}
+                        color={getClonalCircleColor(
+                            props.sampleToClonalValue[sample]
+                        )}
                         barX={barX[sample]}
                     />
                 );
@@ -95,6 +108,7 @@ const CancerCellFractionBarGraph: React.FunctionComponent<{
 
 const CancerCellFractionElement: React.FunctionComponent<{
     sampleIds: string[];
+    sampleToClonalValue: { [key: string]: string };
     sampleToCCFValue: { [key: string]: string };
     sampleManager?: SampleManager | null;
 }> = props => {

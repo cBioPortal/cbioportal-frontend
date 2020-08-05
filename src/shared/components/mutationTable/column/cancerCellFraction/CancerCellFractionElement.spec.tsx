@@ -8,6 +8,8 @@ import {
     maxBarHeight,
     indexToBarLeft,
 } from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionElement';
+import { getClonalCircleColor } from 'shared/components/mutationTable/column/clonal/ClonalElement';
+import { ClonalValue } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
 import SampleManager from 'pages/patientView/SampleManager';
 import { initMutation } from 'test/MutationMockUtils';
 
@@ -36,6 +38,12 @@ describe('CancerCellFractionElement', () => {
         S003: '1.00',
     };
 
+    const sampleToClonalValue = {
+        S001: 'SUBCLONAL',
+        S002: 'NA',
+        S003: 'CLONAL',
+    };
+
     const multiSampleSampleManager = new SampleManager([
         { id: 'S001', clinicalData: [] },
         { id: 'S002', clinicalData: [] },
@@ -45,6 +53,7 @@ describe('CancerCellFractionElement', () => {
     function getCancerCellFractionProps(multi: boolean, valid: boolean) {
         return {
             sampleIds: multi ? ['S001', 'S002', 'S003'] : ['S001'],
+            sampleToClonalValue: sampleToClonalValue,
             sampleToCCFValue: multi
                 ? valid
                     ? validMultiSampleToCCFValue
@@ -69,10 +78,12 @@ describe('CancerCellFractionElement', () => {
     function testExpectedBarRectangle(
         barRectangle: any,
         expectedHeight: number,
-        expectedY: number
+        expectedY: number,
+        clonalValue: ClonalValue
     ) {
         expect(barRectangle.height).to.equal(expectedHeight);
         expect(barRectangle.y).to.equal(expectedY);
+        expect(barRectangle.fill).to.equal(getClonalCircleColor(clonalValue));
     }
 
     function testExpectedCancerCellFractionTooltip(
@@ -134,17 +145,20 @@ describe('CancerCellFractionElement', () => {
         testExpectedBarRectangle(
             sampleToCCFBar['S001'].find('rect').props(),
             maxBarHeight * 0.5,
-            maxBarHeight - maxBarHeight * 0.5
+            maxBarHeight - maxBarHeight * 0.5,
+            ClonalValue.SUBCLONAL
         );
         testExpectedBarRectangle(
             sampleToCCFBar['S002'].find('rect').props(),
             0,
-            maxBarHeight
+            maxBarHeight,
+            ClonalValue.NA
         );
         testExpectedBarRectangle(
             sampleToCCFBar['S003'].find('rect').props(),
             maxBarHeight,
-            0
+            0,
+            ClonalValue.CLONAL
         );
         testExpectedCancerCellFractionTooltip(
             multiSampleCancerCellFractionColumn,
@@ -180,17 +194,20 @@ describe('CancerCellFractionElement', () => {
         testExpectedBarRectangle(
             sampleToCCFBar['S001'].find('rect').props(),
             0,
-            maxBarHeight
+            maxBarHeight,
+            ClonalValue.SUBCLONAL
         );
         testExpectedBarRectangle(
             sampleToCCFBar['S002'].find('rect').props(),
             0,
-            maxBarHeight
+            maxBarHeight,
+            ClonalValue.NA
         );
         testExpectedBarRectangle(
             sampleToCCFBar['S003'].find('rect').props(),
             0,
-            maxBarHeight
+            maxBarHeight,
+            ClonalValue.CLONAL
         );
         testExpectedCancerCellFractionTooltip(
             multiSampleCancerCellFractionColumn,

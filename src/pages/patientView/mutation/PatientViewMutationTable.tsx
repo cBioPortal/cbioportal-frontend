@@ -285,12 +285,13 @@ export default class PatientViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.HGVSC].order = 82;
         this._columns[MutationTableColumnType.MUTATION_STATUS].order = 90;
         this._columns[MutationTableColumnType.VALIDATION_STATUS].order = 100;
-        this._columns[MutationTableColumnType.ASCN_METHOD].order = 105;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 110;
-        this._columns[MutationTableColumnType.VARIANT_TYPE].order = 115;
+        this._columns[MutationTableColumnType.VARIANT_TYPE].order = 114;
+        this._columns[MutationTableColumnType.ASCN_METHOD].order = 115;
         this._columns[MutationTableColumnType.CLONAL].order = 116;
         this._columns[MutationTableColumnType.CANCER_CELL_FRACTION].order = 117;
         this._columns[MutationTableColumnType.EXPECTED_ALT_COPIES].order = 118;
+        this._columns[MutationTableColumnType.ASCN_COPY_NUM].order = 119;
         this._columns[MutationTableColumnType.CENTER].order = 120;
         this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ].order = 130;
         this._columns[MutationTableColumnType.VAR_READS].order = 140;
@@ -298,7 +299,6 @@ export default class PatientViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.VAR_READS_N].order = 170;
         this._columns[MutationTableColumnType.REF_READS_N].order = 175;
         this._columns[MutationTableColumnType.COPY_NUM].order = 177;
-        this._columns[MutationTableColumnType.ASCN_COPY_NUM].order = 181;
         this._columns[MutationTableColumnType.MRNA_EXPR].order = 182;
         this._columns[MutationTableColumnType.COHORT].order = 183;
         this._columns[MutationTableColumnType.COSMIC].order = 184;
