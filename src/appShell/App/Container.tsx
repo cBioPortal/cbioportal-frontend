@@ -17,6 +17,7 @@ import {
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import ErrorScreen from 'shared/components/errorScreen/ErrorScreen';
 import { ServerConfigHelpers } from 'config/config';
+import StudyViewWarning from 'pages/studyView/studyPageHeader/studyViewWarning/StudyViewWarning';
 
 interface IContainerProps {
     location: Location;
@@ -90,6 +91,15 @@ export default class Container extends React.Component<IContainerProps, {}> {
 
                 <div className="pageTopContainer">
                     <UserMessager />
+                    {localStorage.getItem('private_study_link_warning') !==
+                        'Yes' &&
+                        AppConfig.serverConfig.skin_study_view_blurb && (
+                            <StudyViewWarning
+                                message={
+                                    AppConfig.serverConfig.skin_study_view_blurb
+                                }
+                            />
+                        )}
                     <div className="contentWidth">
                         <PortalHeader appStore={this.appStore} />
                     </div>

@@ -45,6 +45,8 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_description:
         'The cBioPortal for Cancer Genomics provides visualization, analysis and download of large-scale cancer genomics data sets',
     show_genomenexus: true,
+    skin_study_view_blurb:
+        'All URLs in this website are private - do NOT include in manuscripts.',
     skin_authorization_message:
         'Access to this portal is only available to authorized users.',
     skin_documentation_about: 'About-Us.md',
