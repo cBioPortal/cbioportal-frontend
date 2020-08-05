@@ -24,6 +24,7 @@ import GenomeNexusCache, {
     GenomeNexusCacheDataType,
 } from 'shared/cache/GenomeNexusCache';
 import * as _ from 'lodash';
+import { SHOW_MUTATION_ASSESSOR } from 'shared/lib/genomeNexusAnnotationSourcesUtils';
 
 type FunctionalImpactColumnTooltipProps = {
     active: 'mutationAssessor' | 'sift' | 'polyPhen2';
@@ -46,9 +47,6 @@ interface FunctionalImpactData {
     polyPhenScore: number | undefined;
     polyPhenPrediction: string | undefined;
 }
-// mutation assessor server is not stable
-// set "SHOW_MUTATION_ASSESSOR = true" to enable mutation assessor
-const SHOW_MUTATION_ASSESSOR = false;
 
 class FunctionalImpactColumnTooltip extends React.Component<
     FunctionalImpactColumnTooltipProps,
