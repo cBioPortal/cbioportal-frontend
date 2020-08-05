@@ -1286,8 +1286,9 @@ export class PatientViewPageStore {
             await: () => [this.civicGenes, this.mutationData],
             invoke: async () => {
                 if (this.cnaCivicGenes.status == 'complete') {
-                    return fetchCivicVariants(this.cnaCivicGenes
-                        .result as ICivicGene);
+                    return fetchCivicVariants(
+                        this.cnaCivicGenes.result as ICivicGene
+                    );
                 }
             },
             onError: (err: Error) => {

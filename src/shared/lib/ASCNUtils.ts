@@ -24,6 +24,8 @@ export function getASCNCopyNumberColor(
             return ASCN_HETLOSS;
         case '-2':
             return ASCN_HOMDEL;
+        case 'INDETERMINATE':
+            return ASCN_LIGHTGREY;
         default:
             return ASCN_BLACK;
     }
@@ -44,6 +46,8 @@ export function getASCNCopyNumberStrokeColor(
             return ASCN_HETLOSS;
         case '-2':
             return ASCN_HOMDEL;
+        case 'INDETERMINATE':
+            return 'ASCN_LIGHTGREY';
         default:
             return ASCN_BLACK;
     }

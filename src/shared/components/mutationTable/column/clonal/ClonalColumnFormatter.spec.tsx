@@ -49,6 +49,7 @@ describe('ClonalColumnFormatter', () => {
         });
         delete emptyMutation.alleleSpecificCopyNumber.clonal;
         delete emptyMutation.alleleSpecificCopyNumber.ccfExpectedCopies;
+        delete emptyMutation.alleleSpecificCopyNumber;
         return emptyMutation;
     }
 
@@ -129,7 +130,7 @@ describe('ClonalColumnFormatter', () => {
         testExpectedClonalElementProperties(
             sampleToClonalElement['S003'],
             'S003',
-            ClonalValue.NA,
+            ClonalValue.INDETERMINATE,
             '0.55'
         );
         testExpectedClonalElementProperties(
