@@ -1,6 +1,5 @@
 $width: 1200px;
 $borderColor: #ccc;
-$rowHeight: 20px;
 $tickRowHeight: 20px;
 
 .tl-timeline-wrapper {
@@ -90,7 +89,6 @@ $tickRowHeight: 20px;
             white-space: nowrap;
             flex-direction: row;
             align-items: center;
-            height: $rowHeight;
             border-bottom: 1px dashed #eee;
             padding-right: 10px;
         }

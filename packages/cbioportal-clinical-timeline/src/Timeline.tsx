@@ -9,8 +9,11 @@ import {
     REMOVE_FOR_DOWNLOAD_CLASSNAME,
 } from './lib/helpers';
 import intersect from './lib/intersect';
-import TrackHeader from './TrackHeader';
-import TickRow from './TickRow';
+import TrackHeader, {
+    EXPORT_TRACK_HEADER_BORDER_CLASSNAME,
+    getTrackHeadersG,
+} from './TrackHeader';
+import TickRow, { TICK_AXIS_COLOR } from './TickRow';
 import { TickIntervalEnum } from './types';
 import './timeline.scss';
 import { DownloadControls } from 'cbioportal-frontend-commons';
@@ -166,6 +169,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
         cursor: useRef(null),
         wrapper: useRef(null),
         timeline: useRef<SVGSVGElement>(null),
+        timelineTracksArea: useRef<SVGGElement>(null),
         zoomSelectBox: useRef(null),
         zoomSelectBoxMask: useRef(null),
         cursorText: useRef(null),
@@ -253,20 +257,31 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                                 width={renderWidth}
                                 height={height}
                             >
-                                <TimelineTracks
-                                    store={store}
-                                    width={renderWidth}
-                                    customTracks={customRows}
-                                />
-                                <TickRow store={store} width={renderWidth} /> //
-                                needs to go on top so that it's not covered
+                                <g ref={refs.timelineTracksArea}>
+                                    <TimelineTracks
+                                        store={store}
+                                        width={renderWidth}
+                                        customTracks={customRows}
+                                    />
+                                    <TickRow
+                                        store={store}
+                                        width={renderWidth}
+                                    />{' '}
+                                    {/*TickRow needs to go on top so its not covered by tracks*/}
+                                </g>
                             </svg>
                         </div>
                     )}
                 </div>
                 <DownloadControls
                     filename="timeline"
-                    getSvg={() => getSvg(store, refs.timeline.current)}
+                    getSvg={() =>
+                        getSvg(
+                            store,
+                            refs.timelineTracksArea.current,
+                            customRows
+                        )
+                    }
                     dontFade={true}
                     type={'button'}
                 />
@@ -275,18 +290,93 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     );
 });
 
-function getSvg(store: TimelineStore, timelineSvg: SVGSVGElement | null) {
-    if (!timelineSvg) {
+function getSvg(
+    store: TimelineStore,
+    timelineG: SVGGElement | null,
+    customRows?: CustomRowSpecification[]
+) {
+    if (!timelineG) {
         return null;
     }
 
-    // Clone node so we don't disrupt the UI
-    timelineSvg = timelineSvg.cloneNode(true) as SVGSVGElement;
-    // Filter out non-download elements
-    $(timelineSvg)
-        .find(`.${REMOVE_FOR_DOWNLOAD_CLASSNAME}`)
-        .remove();
-    return timelineSvg;
+    const svg = (document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'svg'
+    ) as unknown) as SVGElement;
+    document.body.appendChild(svg); // add to body so that we can do getBBox calculations for layout
+
+    const everythingG = (document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'g'
+    ) as unknown) as SVGGElement;
+    svg.append(everythingG);
+
+    try {
+        // Add headers
+        const headersG = getTrackHeadersG(store, customRows);
+        everythingG.appendChild(headersG);
+        const headersSize = headersG.getBBox();
+        const headersPadding = 10;
+
+        // Add separating line between headers and tracks
+        const separatingLine = (document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'line'
+        ) as unknown) as SVGLineElement;
+        separatingLine.setAttribute(
+            'x1',
+            `${headersSize.width + headersPadding}`
+        );
+        separatingLine.setAttribute(
+            'x2',
+            `${headersSize.width + headersPadding}`
+        );
+        separatingLine.setAttribute('y1', '0');
+        separatingLine.setAttribute(
+            'y2',
+            `${headersSize.y + headersSize.height}`
+        );
+        separatingLine.setAttribute(
+            'style',
+            `stroke-width:1; stroke:${TICK_AXIS_COLOR}`
+        );
+        everythingG.appendChild(separatingLine);
+
+        // Add tracks
+        // Clone node so we don't disrupt the UI
+        timelineG = timelineG.cloneNode(true) as SVGGElement;
+        everythingG.appendChild(timelineG);
+        // Move tracks over from labels
+        timelineG.setAttribute(
+            'style',
+            `transform: translate(${headersSize.width + headersPadding}px, 0)`
+        );
+
+        const everythingSize = everythingG.getBBox();
+
+        // Set svg size to include everything
+        svg.setAttribute('width', `${everythingSize.width}`);
+        svg.setAttribute('height', `${everythingSize.height}`);
+
+        // Finishing touches
+        // Filter out non-download elements
+        $(svg)
+            .find(`.${REMOVE_FOR_DOWNLOAD_CLASSNAME}`)
+            .remove();
+
+        // Extend track header borders
+        $(svg)
+            .find(`.${EXPORT_TRACK_HEADER_BORDER_CLASSNAME}`)
+            .each(function() {
+                this.setAttribute(
+                    'x2',
+                    `${headersSize.width + headersPadding}`
+                );
+            });
+    } finally {
+        document.body.removeChild(svg); // remove from body no matter what happens
+    }
+    return svg;
 }
 
 export default Timeline;

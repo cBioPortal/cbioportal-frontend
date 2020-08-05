@@ -35,13 +35,15 @@ function makeSquiggle() {
             <rect y={5} height={1} width={20} fill={'#ffffff'} />
             <path
                 d={points.join('')}
-                stroke={'#ccc'}
+                stroke={TICK_AXIS_COLOR}
                 stroke-width="1"
                 fill="none"
             />
         </g>
     );
 }
+
+export const TICK_AXIS_COLOR = '#ccc';
 
 const TickRow: React.FunctionComponent<ITickRowProps> = observer(function({
     store,
@@ -54,7 +56,7 @@ const TickRow: React.FunctionComponent<ITickRowProps> = observer(function({
                     style={{
                         transform: `translate(0, ${TICK_ROW_HEIGHT - 1}px)`,
                     }}
-                    fill={'#ccc'}
+                    fill={TICK_AXIS_COLOR}
                     height={1}
                     width={width}
                 />

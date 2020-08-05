@@ -15,21 +15,12 @@ import { Popover } from 'react-bootstrap';
 import { sortNestedTracks } from './lib/helpers';
 import CustomRow, { CustomRowSpecification } from './CustomRow';
 import { TICK_ROW_HEIGHT } from './TickRow';
+import { expandTracks } from './TrackHeader';
 
 export interface ITimelineTracks {
     store: TimelineStore;
     width: number;
     customTracks?: CustomRowSpecification[];
-}
-
-function expandTrack(track: TimelineTrack): TimelineTrack[] {
-    const ret = [track];
-    if (track.tracks) {
-        // we want to sort nested tracks by start date of first item
-        const sortedNestedTracks = sortNestedTracks(track.tracks);
-        ret.push(..._.flatMap(sortedNestedTracks, expandTrack));
-    }
-    return ret;
 }
 
 export const TimelineTracks: React.FunctionComponent<
@@ -57,7 +48,7 @@ export const TimelineTracks: React.FunctionComponent<
         }
     };
 
-    const tracks = _.flatMap(store.data, expandTrack);
+    const tracks = expandTracks(store.data).map(t => t.track);
 
     let nextY = 0;
 
