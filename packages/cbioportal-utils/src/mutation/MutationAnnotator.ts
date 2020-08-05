@@ -128,6 +128,9 @@ export function getMutationByTranscriptId(
             (tc: TranscriptConsequenceSummary) =>
                 tc.transcriptId === ensemblTranscriptId
         );
+    if (isCanonicalTranscript) {
+        return mutation;
+    }
     if (
         variantAnnotation &&
         transcriptConsequenceSummaries &&
