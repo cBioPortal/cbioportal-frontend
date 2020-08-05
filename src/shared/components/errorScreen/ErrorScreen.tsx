@@ -4,7 +4,8 @@ import { observer } from 'mobx-react';
 import './errorScreen.scss';
 import AppConfig from 'appConfig';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
-import { If, Then, Else } from 'react-if';
+import { computed } from 'mobx';
+var Clipboard = require('clipboard');
 
 interface IErrorScreenProps {
     errorLog?: string;
@@ -18,6 +19,28 @@ export default class ErrorScreen extends React.Component<
     IErrorScreenProps,
     {}
 > {
+    copyToClip: HTMLButtonElement | null;
+
+    componentDidMount(): void {
+        new Clipboard(this.copyToClip, {
+            text: function() {
+                return JSON.stringify(this.errorLog);
+            }.bind(this),
+            container: this.copyToClip,
+        });
+    }
+
+    @computed get errorLog() {
+        const errorLog: any = this.props.errorLog
+            ? JSON.parse(this.props.errorLog)
+            : undefined;
+
+        // add the current url to error log
+        if (errorLog) errorLog.url = window.location.href;
+
+        return errorLog;
+    }
+
     public render() {
         const location = getBrowserWindow().location.href;
         const subject = 'cBioPortal user reported error';
@@ -53,26 +76,42 @@ export default class ErrorScreen extends React.Component<
 
                 {AppConfig.serverConfig.skin_email_contact && (
                     <div style={{ marginTop: 20 }}>
-                        If this error persists, please contact us at{' '}
-                        <a
-                            href={`mailto:${
-                                AppConfig.serverConfig.skin_email_contact
-                            }?subject=${encodeURIComponent(
-                                subject
-                            )}&body=${encodeURIComponent(
-                                this.props.errorLog || ''
-                            )}`}
-                        >
-                            {AppConfig.serverConfig.skin_email_contact}
-                        </a>
+                        <p style={{ marginBottom: 20 }}>
+                            Please contact us at{' '}
+                            <a
+                                href={`mailto:${
+                                    AppConfig.serverConfig.skin_email_contact
+                                }?subject=${encodeURIComponent(
+                                    subject
+                                )}&body=${encodeURIComponent(
+                                    window.location.href
+                                )};${encodeURIComponent(
+                                    this.props.errorLog || ''
+                                )}`}
+                            >
+                                {AppConfig.serverConfig.skin_email_contact}
+                            </a>
+                            .
+                        </p>
+                        <p>
+                            Copy-paste the error log below and provide a
+                            click-by-click description of how you arrived at the
+                            error.
+                        </p>
                     </div>
                 )}
 
-                {this.props.errorLog && (
+                {this.errorLog && (
                     <div style={{ marginTop: 20 }} className="form-group">
-                        <label>Error log:</label>
+                        <button
+                            style={{ marginBottom: 5 }}
+                            ref={el => (this.copyToClip = el)}
+                            className={'btn btn-xs'}
+                        >
+                            Copy Error Log to Clipboard
+                        </button>
                         <textarea
-                            value={this.props.errorLog}
+                            value={JSON.stringify(this.errorLog)}
                             className={'form-control'}
                         ></textarea>
                     </div>
