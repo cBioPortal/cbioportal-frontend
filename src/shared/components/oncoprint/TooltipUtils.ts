@@ -324,9 +324,12 @@ export function makeGeneticTrackTooltip_getCoverageInformation(
     let dispNotProfiledGenePanelIds: string[] = [];
     let profiledInTypes: { [type: string]: string } | undefined = undefined;
     if (profiled_in) {
-        dispProfiledGenePanelIds = _.uniq((profiled_in.map(
-            x => x.genePanelId
-        ) as (string | undefined)[]).filter(x => !!x) as string[]);
+        dispProfiledGenePanelIds = _.uniq(
+            (profiled_in.map(x => x.genePanelId) as (
+                | string
+                | undefined
+            )[]).filter(x => !!x) as string[]
+        );
         dispProfiledIn = _.uniq(profiled_in.map(x => x.molecularProfileId));
         if (molecularProfileIdToMolecularProfile) {
             profiledInTypes = _.keyBy(

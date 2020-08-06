@@ -203,9 +203,11 @@ export default class ComparisonStore {
             };
             if (this.isLoggedIn) {
                 // need to add all groups belonging to this user for this origin
-                ret.user = (await comparisonClient.getGroupsForStudies(
-                    this.origin.result!
-                )).map(g => g.data.name);
+                ret.user = (
+                    await comparisonClient.getGroupsForStudies(
+                        this.origin.result!
+                    )
+                ).map(g => g.data.name);
             }
             return ret;
         },
@@ -1351,16 +1353,18 @@ export default class ComparisonStore {
         ],
         invoke: () => {
             const patientToSamplesSet = this.patientToSamplesSet.result!;
-            return Promise.resolve(partitionCasesByGroupMembership(
-                this._activeGroupsNotOverlapRemoved.result!,
-                group => getPatientIdentifiers([group]),
-                patientIdentifier =>
-                    patientToSamplesSet.get({
-                        studyId: patientIdentifier.studyId,
-                        patientId: patientIdentifier.patientId,
-                    })![0].uniquePatientKey,
-                this.activePatientKeysNotOverlapRemoved.result!
-            ) as { key: { [uid: string]: boolean }; value: string[] }[]);
+            return Promise.resolve(
+                partitionCasesByGroupMembership(
+                    this._activeGroupsNotOverlapRemoved.result!,
+                    group => getPatientIdentifiers([group]),
+                    patientIdentifier =>
+                        patientToSamplesSet.get({
+                            studyId: patientIdentifier.studyId,
+                            patientId: patientIdentifier.patientId,
+                        })![0].uniquePatientKey,
+                    this.activePatientKeysNotOverlapRemoved.result!
+                ) as { key: { [uid: string]: boolean }; value: string[] }[]
+            );
         },
     });
 

@@ -822,19 +822,19 @@ describe('StudyViewUtils', () => {
             const normalizedNumericalData = generateNumericalData(
                 numericalBins
             );
-            assert.deepEqual(normalizedNumericalData.map(data => data.x), [
-                1,
-                2.5,
-                3.5,
-                4.5,
-                5.5,
-            ]);
+            assert.deepEqual(
+                normalizedNumericalData.map(data => data.x),
+                [1, 2.5, 3.5, 4.5, 5.5]
+            );
 
             const normalizedCategoryData = generateCategoricalData(
                 categoryBins,
                 6
             );
-            assert.deepEqual(normalizedCategoryData.map(data => data.x), [7]);
+            assert.deepEqual(
+                normalizedCategoryData.map(data => data.x),
+                [7]
+            );
         });
 
         it('processes log scaled data bins including NA and REDACTED counts', () => {
@@ -900,25 +900,19 @@ describe('StudyViewUtils', () => {
             const normalizedNumericalData = generateNumericalData(
                 numericalBins
             );
-            assert.deepEqual(normalizedNumericalData.map(data => data.x), [
-                1,
-                2.5,
-                3.5,
-                4.5,
-                5.5,
-                6.5,
-                7.5,
-                9,
-            ]);
+            assert.deepEqual(
+                normalizedNumericalData.map(data => data.x),
+                [1, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 9]
+            );
 
             const normalizedCategoryData = generateCategoricalData(
                 categoryBins,
                 9
             );
-            assert.deepEqual(normalizedCategoryData.map(data => data.x), [
-                10,
-                11,
-            ]);
+            assert.deepEqual(
+                normalizedCategoryData.map(data => data.x),
+                [10, 11]
+            );
         });
 
         it('processes log scaled data bins including negative values and NA and REDACTED counts', () => {
@@ -994,28 +988,19 @@ describe('StudyViewUtils', () => {
             const normalizedNumericalData = generateNumericalData(
                 numericalBins
             );
-            assert.deepEqual(normalizedNumericalData.map(data => data.x), [
-                2.5,
-                3.5,
-                4.5,
-                5.5,
-                6.5,
-                7.5,
-                8.5,
-                9.5,
-                10.5,
-                11.5,
-                12.5,
-            ]);
+            assert.deepEqual(
+                normalizedNumericalData.map(data => data.x),
+                [2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5, 11.5, 12.5]
+            );
 
             const normalizedCategoryData = generateCategoricalData(
                 categoryBins,
                 13
             );
-            assert.deepEqual(normalizedCategoryData.map(data => data.x), [
-                14,
-                15,
-            ]);
+            assert.deepEqual(
+                normalizedCategoryData.map(data => data.x),
+                [14, 15]
+            );
         });
 
         it('processes log scaled data bins starting with zero and including NA counts', () => {
@@ -1079,22 +1064,19 @@ describe('StudyViewUtils', () => {
             const normalizedNumericalData = generateNumericalData(
                 numericalBins
             );
-            assert.deepEqual(normalizedNumericalData.map(data => data.x), [
-                1.5,
-                2.5,
-                3.5,
-                4.5,
-                5.5,
-                6.5,
-                7.5,
-                8.5,
-            ]);
+            assert.deepEqual(
+                normalizedNumericalData.map(data => data.x),
+                [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5]
+            );
 
             const normalizedCategoryData = generateCategoricalData(
                 categoryBins,
                 9
             );
-            assert.deepEqual(normalizedCategoryData.map(data => data.x), [10]);
+            assert.deepEqual(
+                normalizedCategoryData.map(data => data.x),
+                [10]
+            );
         });
 
         it('processes scientific small numbers data bins', () => {
@@ -1146,12 +1128,10 @@ describe('StudyViewUtils', () => {
             const normalizedNumericalData = generateNumericalData(
                 numericalBins
             );
-            assert.deepEqual(normalizedNumericalData.map(data => data.x), [
-                1.5,
-                2.5,
-                3.5,
-                5,
-            ]);
+            assert.deepEqual(
+                normalizedNumericalData.map(data => data.x),
+                [1.5, 2.5, 3.5, 5]
+            );
 
             const normalizedCategoryData = generateCategoricalData(
                 categoryBins,
@@ -1192,19 +1172,19 @@ describe('StudyViewUtils', () => {
             const normalizedNumericalData = generateNumericalData(
                 numericalBins
             );
-            assert.deepEqual(normalizedNumericalData.map(data => data.x), [
-                1,
-                2,
-                3,
-                4,
-                5,
-            ]);
+            assert.deepEqual(
+                normalizedNumericalData.map(data => data.x),
+                [1, 2, 3, 4, 5]
+            );
 
             const normalizedCategoryData = generateCategoricalData(
                 categoryBins,
                 5
             );
-            assert.deepEqual(normalizedCategoryData.map(data => data.x), [6]);
+            assert.deepEqual(
+                normalizedCategoryData.map(data => data.x),
+                [6]
+            );
         });
 
         it('processes no numerical data bins', () => {
@@ -1247,19 +1227,19 @@ describe('StudyViewUtils', () => {
             const normalizedNumericalData = generateNumericalData(
                 numericalBins
             );
-            assert.deepEqual(normalizedNumericalData.map(data => data.x), []);
+            assert.deepEqual(
+                normalizedNumericalData.map(data => data.x),
+                []
+            );
 
             const normalizedCategoryData = generateCategoricalData(
                 categoryBins,
                 0
             );
-            assert.deepEqual(normalizedCategoryData.map(data => data.x), [
-                1,
-                2,
-                3,
-                4,
-                5,
-            ]);
+            assert.deepEqual(
+                normalizedCategoryData.map(data => data.x),
+                [1, 2, 3, 4, 5]
+            );
         });
 
         it('determines log scale from an array of data bins', () => {
@@ -1783,7 +1763,10 @@ describe('StudyViewUtils', () => {
             // y
             assert.isTrue(
                 isOccupied(
-                    [['1', '1', '', ''], ['2', '2', '', '']],
+                    [
+                        ['1', '1', '', ''],
+                        ['2', '2', '', ''],
+                    ],
                     { x: 2, y: 1 },
                     { w: 2, h: 2 }
                 )
@@ -1806,14 +1789,20 @@ describe('StudyViewUtils', () => {
 
             assert.isTrue(
                 isOccupied(
-                    [['1', '1', ''], ['2', '2', '']],
+                    [
+                        ['1', '1', ''],
+                        ['2', '2', ''],
+                    ],
                     { x: 0, y: 0 },
                     { w: 1, h: 1 }
                 )
             );
             assert.isTrue(
                 isOccupied(
-                    [['1', '1', ''], ['2', '2', '']],
+                    [
+                        ['1', '1', ''],
+                        ['2', '2', ''],
+                    ],
                     { x: 0, y: 1 },
                     { w: 1, h: 1 }
                 )
@@ -1821,7 +1810,10 @@ describe('StudyViewUtils', () => {
 
             assert.isFalse(
                 isOccupied(
-                    [['1', '1', '', ''], ['2', '2', '', '']],
+                    [
+                        ['1', '1', '', ''],
+                        ['2', '2', '', ''],
+                    ],
                     { x: 2, y: 0 },
                     { w: 2, h: 2 }
                 )
@@ -1860,11 +1852,23 @@ describe('StudyViewUtils', () => {
                 y: 1,
             });
             assert.deepEqual(
-                findSpot([['1', '1', ''], ['2', '2', '']], { w: 1, h: 1 }),
+                findSpot(
+                    [
+                        ['1', '1', ''],
+                        ['2', '2', ''],
+                    ],
+                    { w: 1, h: 1 }
+                ),
                 { x: 2, y: 0 }
             );
             assert.deepEqual(
-                findSpot([['1', '1', ''], ['2', '2', '']], { w: 2, h: 1 }),
+                findSpot(
+                    [
+                        ['1', '1', ''],
+                        ['2', '2', ''],
+                    ],
+                    { w: 2, h: 1 }
+                ),
                 { x: 0, y: 2 }
             );
         });

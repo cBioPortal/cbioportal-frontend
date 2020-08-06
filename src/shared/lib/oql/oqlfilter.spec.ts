@@ -331,61 +331,70 @@ describe('filterCBioPortalWebServiceData', () => {
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [0]);
+        assert.deepEqual(
+            (filteredData as any).map((x: any) => x.__id),
+            [0]
+        );
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:SOMATIC',
             MUTATION_DATA,
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [
-            1,
-            2,
-            3,
-            3.1,
-        ]);
+        assert.deepEqual(
+            (filteredData as any).map((x: any) => x.__id),
+            [1, 2, 3, 3.1]
+        );
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:MISSENSE_SOMATIC',
             MUTATION_DATA,
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [1, 2]);
+        assert.deepEqual(
+            (filteredData as any).map((x: any) => x.__id),
+            [1, 2]
+        );
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:INFRAME_SOMATIC',
             MUTATION_DATA,
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [
-            3,
-            3.1,
-        ]);
+        assert.deepEqual(
+            (filteredData as any).map((x: any) => x.__id),
+            [3, 3.1]
+        );
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:INFRAME_GERMLINE',
             MUTATION_DATA,
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), []);
+        assert.deepEqual(
+            (filteredData as any).map((x: any) => x.__id),
+            []
+        );
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:MISSENSE_GERMLINE',
             MUTATION_DATA,
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [0]);
+        assert.deepEqual(
+            (filteredData as any).map((x: any) => x.__id),
+            [0]
+        );
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:MISSENSE_GERMLINE INFRAME_SOMATIC',
             MUTATION_DATA,
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [
-            0,
-            3,
-            3.1,
-        ]);
+        assert.deepEqual(
+            (filteredData as any).map((x: any) => x.__id),
+            [0, 3, 3.1]
+        );
     });
     it('filters properly using the DRIVER modifier', () => {
         const accessorsInstance = new AccessorsForOqlFilter([
@@ -398,14 +407,10 @@ describe('filterCBioPortalWebServiceData', () => {
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [
-            -1,
-            0,
-            1,
-            3,
-            3.1,
-            7,
-        ]);
+        assert.deepEqual(
+            (filteredData as any).map((x: any) => x.__id),
+            [-1, 0, 1, 3, 3.1, 7]
+        );
 
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:MUT=DRIVER',
@@ -413,12 +418,10 @@ describe('filterCBioPortalWebServiceData', () => {
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [
-            0,
-            1,
-            3,
-            3.1,
-        ]);
+        assert.deepEqual(
+            (filteredData as any).map((x: any) => x.__id),
+            [0, 1, 3, 3.1]
+        );
 
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:MISSENSE_DRIVER',
@@ -426,7 +429,10 @@ describe('filterCBioPortalWebServiceData', () => {
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [0, 1]);
+        assert.deepEqual(
+            (filteredData as any).map((x: any) => x.__id),
+            [0, 1]
+        );
 
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:MUT=MISSENSE_DRIVER',
@@ -434,7 +440,10 @@ describe('filterCBioPortalWebServiceData', () => {
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [0, 1]);
+        assert.deepEqual(
+            (filteredData as any).map((x: any) => x.__id),
+            [0, 1]
+        );
 
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:DRIVER_MISSENSE',
@@ -442,7 +451,10 @@ describe('filterCBioPortalWebServiceData', () => {
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [0, 1]);
+        assert.deepEqual(
+            (filteredData as any).map((x: any) => x.__id),
+            [0, 1]
+        );
 
         filteredData = filterCBioPortalWebServiceData(
             'PTEN:DRIVER_HETLOSS',
@@ -450,7 +462,10 @@ describe('filterCBioPortalWebServiceData', () => {
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [8]);
+        assert.deepEqual(
+            (filteredData as any).map((x: any) => x.__id),
+            [8]
+        );
 
         filteredData = filterCBioPortalWebServiceData(
             'PTEN:CNA_DRIVER',
@@ -458,7 +473,10 @@ describe('filterCBioPortalWebServiceData', () => {
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [8]);
+        assert.deepEqual(
+            (filteredData as any).map((x: any) => x.__id),
+            [8]
+        );
 
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1: DRIVER; PTEN:HETLOSS_DRIVER; TP53: DRIVER',
@@ -466,16 +484,10 @@ describe('filterCBioPortalWebServiceData', () => {
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [
-            -1,
-            0,
-            1,
-            3,
-            3.1,
-            7,
-            8,
-            9,
-        ]);
+        assert.deepEqual(
+            (filteredData as any).map((x: any) => x.__id),
+            [-1, 0, 1, 3, 3.1, 7, 8, 9]
+        );
 
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:FUSION_DRIVER',
@@ -483,7 +495,10 @@ describe('filterCBioPortalWebServiceData', () => {
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [-1]);
+        assert.deepEqual(
+            (filteredData as any).map((x: any) => x.__id),
+            [-1]
+        );
 
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:DRIVER_FUSION',
@@ -491,7 +506,10 @@ describe('filterCBioPortalWebServiceData', () => {
             accessorsInstance,
             ''
         );
-        assert.deepEqual((filteredData as any).map((x: any) => x.__id), [-1]);
+        assert.deepEqual(
+            (filteredData as any).map((x: any) => x.__id),
+            [-1]
+        );
     });
 
     it('filters by RANGE modifier alone', () => {
@@ -623,9 +641,9 @@ describe('filterCBioPortalWebServiceDataByUnflattenedOQLLine', () => {
             (filteredData[0] as MergedTrackLineFilterOutput<object>).list,
             2
         );
-        (filteredData[0] as MergedTrackLineFilterOutput<object>).list.forEach(
-            subline => assert.property(subline, 'data')
-        );
+        (filteredData[0] as MergedTrackLineFilterOutput<
+            object
+        >).list.forEach(subline => assert.property(subline, 'data'));
     });
 
     it('returns both a two-element .list and a .data if a merged-gene line precedes a single-gene one', () => {

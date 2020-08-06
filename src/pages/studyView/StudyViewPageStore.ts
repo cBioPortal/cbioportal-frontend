@@ -2389,10 +2389,13 @@ export class StudyViewPageStore {
         default: [],
         onError: error => {},
         onResult: data => {
-            _.each(_.groupBy(data, item => item.attributeId), (item, key) => {
-                this.unfilteredClinicalDataBinCountCache[key] = item;
-                this.newlyAddedCharts.remove(key);
-            });
+            _.each(
+                _.groupBy(data, item => item.attributeId),
+                (item, key) => {
+                    this.unfilteredClinicalDataBinCountCache[key] = item;
+                    this.newlyAddedCharts.remove(key);
+                }
+            );
         },
     });
 
@@ -5380,8 +5383,8 @@ export class StudyViewPageStore {
             ) {
                 const yAxisBinCount = MutationCountVsCnaYBinsMin;
                 const xAxisBinCount = 50;
-                const bins = (await internalClient.fetchClinicalDataDensityPlotUsingPOST(
-                    {
+                const bins = (
+                    await internalClient.fetchClinicalDataDensityPlotUsingPOST({
                         xAxisAttributeId:
                             SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED,
                         yAxisAttributeId:
@@ -5394,8 +5397,8 @@ export class StudyViewPageStore {
                         studyViewFilter: this
                             .studyViewFilterWithFilteredSampleIdentifiers
                             .result!,
-                    }
-                )).filter(bin => bin.count > 0); // only show points for bins with stuff in them
+                    })
+                ).filter(bin => bin.count > 0); // only show points for bins with stuff in them
                 const xBinSize = 1 / xAxisBinCount;
                 const yBinSize =
                     Math.max(...bins.map(bin => bin.binY)) /

@@ -49,7 +49,12 @@ export default class MobxPromiseCache<Query, Result> {
         let ret = promises;
         if (logicalAnd(promises.map(p => p.isComplete))) {
             ret = ret.concat(
-                this.getAll(getQueries.apply(null, promises.map(p => p.result)))
+                this.getAll(
+                    getQueries.apply(
+                        null,
+                        promises.map(p => p.result)
+                    )
+                )
             );
         }
         return ret;

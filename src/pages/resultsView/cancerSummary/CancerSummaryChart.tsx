@@ -89,16 +89,13 @@ export function mergeAlterationDataAcrossAlterationTypes(
     const groupTypes = alterationData[0].map(item => item.x);
 
     // now we want to sum up the alteration rate/count across alteration types for this group
-    const merged = alterationData.reduce(
-        (memo, alterationTypeGroups) => {
-            alterationTypeGroups.forEach(item => {
-                memo[item.x] = memo[item.x] || 0;
-                memo[item.x] += item.y;
-            });
-            return memo;
-        },
-        {} as { [groupKey: string]: number }
-    );
+    const merged = alterationData.reduce((memo, alterationTypeGroups) => {
+        alterationTypeGroups.forEach(item => {
+            memo[item.x] = memo[item.x] || 0;
+            memo[item.x] += item.y;
+        });
+        return memo;
+    }, {} as { [groupKey: string]: number });
 
     // we want an array of one
     return groupTypes.map(groupType => {

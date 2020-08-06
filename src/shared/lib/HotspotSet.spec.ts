@@ -44,8 +44,14 @@ describe('HotspotSet', () => {
     });
 
     it('works with one singleton region and one interval region', () => {
-        const hss = new HotspotSet([[-3, -3], [0, 5]]);
-        assert.deepEqual(hss._getHotspotRegions(), [[-3, -3], [0, 5]]);
+        const hss = new HotspotSet([
+            [-3, -3],
+            [0, 5],
+        ]);
+        assert.deepEqual(hss._getHotspotRegions(), [
+            [-3, -3],
+            [0, 5],
+        ]);
         assert(hss.check(3));
         assert(hss.check(0, 5));
         assert(hss.check(-1, 0));
@@ -67,7 +73,13 @@ describe('HotspotSet', () => {
     });
 
     it('works with one region, consolidated from a few input regions', () => {
-        const hss = new HotspotSet([[4, 20], [0, 5], [2, 6], [-5, 0], [3, 3]]);
+        const hss = new HotspotSet([
+            [4, 20],
+            [0, 5],
+            [2, 6],
+            [-5, 0],
+            [3, 3],
+        ]);
         assert.deepEqual(hss._getHotspotRegions(), [[-5, 20]]);
         assert(hss.check(3));
         assert(hss.check(0, 5));
@@ -94,7 +106,10 @@ describe('HotspotSet', () => {
             [2, 6],
             [-5, 0],
         ]);
-        assert.deepEqual(hss._getHotspotRegions(), [[-5, 20], [24, 70]]);
+        assert.deepEqual(hss._getHotspotRegions(), [
+            [-5, 20],
+            [24, 70],
+        ]);
         assert(hss.check(3));
         assert(hss.check(0, 5));
         assert(hss.check(-1, 0));
