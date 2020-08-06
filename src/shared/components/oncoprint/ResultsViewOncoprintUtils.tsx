@@ -65,7 +65,7 @@ export function makeComparisonGroupClinicalAttributes(
                 displayName: `In group: ${group.data.name}`,
                 comparisonGroup: group,
                 patientAttribute: false,
-            } as (ClinicalAttribute & { comparisonGroup: Group }))
+            } as ClinicalAttribute & { comparisonGroup: Group })
     );
 }
 
@@ -209,7 +209,7 @@ export function makeProfiledInClinicalAttributes(
                     displayName: `Profiled in ${profile.name}`,
                     molecularProfileIds: [profile.molecularProfileId],
                     patientAttribute: false,
-                } as (ClinicalAttribute & { molecularProfileIds: string[] });
+                } as ClinicalAttribute & { molecularProfileIds: string[] };
             } else {
                 // If more than one, or its multiple study query, make one attribute for the entire alteration type
                 return {
@@ -219,7 +219,7 @@ export function makeProfiledInClinicalAttributes(
                     displayName: `Profiled for ${alterationTypeToProfiledForText[alterationType]}`,
                     molecularProfileIds: group.map(p => p.molecularProfileId),
                     patientAttribute: false,
-                } as (ClinicalAttribute & { molecularProfileIds: string[] });
+                } as ClinicalAttribute & { molecularProfileIds: string[] };
             }
         })
         .filter(x => !!x) as (ClinicalAttribute & {

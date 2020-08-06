@@ -318,22 +318,19 @@ export default class MutationOncoprint extends React.Component<
         await: () => [this.sampleIdOrder],
         invoke: () => {
             return Promise.resolve(
-                this.sampleIdOrder.result!.reduce(
-                    (labels, sampleId, index) => {
-                        const labelNumber = index + 1;
-                        labels[sampleId] = {
-                            text: labelNumber.toString(),
-                            angle_in_degrees: 0,
-                            text_color: '#ffffff',
-                            circle_color: this.props.sampleManager!.getColorForSample(
-                                sampleId
-                            ),
-                            left_padding_percent: labelNumber < 10 ? -15 : -34, // label padding depending on how many digits in number
-                        };
-                        return labels;
-                    },
-                    {} as { [sampleId: string]: ColumnLabel }
-                )
+                this.sampleIdOrder.result!.reduce((labels, sampleId, index) => {
+                    const labelNumber = index + 1;
+                    labels[sampleId] = {
+                        text: labelNumber.toString(),
+                        angle_in_degrees: 0,
+                        text_color: '#ffffff',
+                        circle_color: this.props.sampleManager!.getColorForSample(
+                            sampleId
+                        ),
+                        left_padding_percent: labelNumber < 10 ? -15 : -34, // label padding depending on how many digits in number
+                    };
+                    return labels;
+                }, {} as { [sampleId: string]: ColumnLabel })
             );
         },
     });
