@@ -247,9 +247,10 @@ export default class EnhancedReactTable<T> extends React.Component<
 
         // always use the initially sorted columns (this.sortedColumns),
         // otherwise already hidden columns will never appear in the dropdown menu!
-        let columnVisibility: Array<
-            IColumnVisibilityDef
-        > = this.columnVisibilityArraySelector(this.state, this.props);
+        let columnVisibility: Array<IColumnVisibilityDef> = this.columnVisibilityArraySelector(
+            this.state,
+            this.props
+        );
 
         // column headers: an array of Th components
         const headers = this.headersSelector(this.state, this.props);

@@ -96,13 +96,10 @@ export default class AlleleFreqColumnFormatter {
         }
 
         const sampleOrder = sampleManager.getSampleIdsInOrder();
-        const barX = sampleOrder.reduce(
-            (map, sampleId: string, i: number) => {
-                map[sampleId] = AlleleFreqColumnFormatter.indexToBarLeft(i);
-                return map;
-            },
-            {} as { [s: string]: number }
-        );
+        const barX = sampleOrder.reduce((map, sampleId: string, i: number) => {
+            map[sampleId] = AlleleFreqColumnFormatter.indexToBarLeft(i);
+            return map;
+        }, {} as { [s: string]: number });
         const sampleElements = mutations.map((m: Mutation) => {
             const args = AlleleFreqColumnFormatter.getComponentForSampleArgs(m);
             return AlleleFreqColumnFormatter.convertMutationToSampleElement(
@@ -116,15 +113,12 @@ export default class AlleleFreqColumnFormatter {
                 )
             );
         });
-        const sampleToElements = sampleElements.reduce(
-            (map, elements: any) => {
-                if (elements) {
-                    map[elements.sampleId] = elements;
-                }
-                return map;
-            },
-            {} as { [s: string]: any }
-        );
+        const sampleToElements = sampleElements.reduce((map, elements: any) => {
+            if (elements) {
+                map[elements.sampleId] = elements;
+            }
+            return map;
+        }, {} as { [s: string]: any });
         const elementsInSampleOrder = sampleOrder
             .map((sampleId: string) => sampleToElements[sampleId])
             .filter((x: any) => !!x);

@@ -17,9 +17,9 @@ export interface IGroupLegendLabelComponentProps {
     datum?: any;
 }
 
-export const GroupLegendLabelComponent: React.FunctionComponent<
-    IGroupLegendLabelComponentProps
-> = (props: IGroupLegendLabelComponentProps) => {
+export const GroupLegendLabelComponent: React.FunctionComponent<IGroupLegendLabelComponentProps> = (
+    props: IGroupLegendLabelComponentProps
+) => {
     const { uidToGroup, dx, dy, datum, text, ...rest } = props;
 
     const group = uidToGroup[props.text!];
@@ -48,9 +48,9 @@ export const GroupLegendLabelComponent: React.FunctionComponent<
     );
 };
 
-export const SurvivalTabGroupLegendLabelComponent: React.FunctionComponent<
-    IGroupLegendLabelComponentProps
-> = (props: IGroupLegendLabelComponentProps) => {
+export const SurvivalTabGroupLegendLabelComponent: React.FunctionComponent<IGroupLegendLabelComponentProps> = (
+    props: IGroupLegendLabelComponentProps
+) => {
     const { uidToGroup, dx, dy, datum, text, ...rest } = props;
 
     const groupUids = JSON.parse(text!) as string[];

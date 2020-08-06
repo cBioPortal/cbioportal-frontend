@@ -319,7 +319,7 @@
     "karma-webpack": "^3.0.5",
     "mocha": "^5.2.0",
     "pre-commit": "^1.2.2",
-    "prettier": "1.18.2",
+    "prettier": "1.19.1",
     "request": "^2.88.0",
     "sinon": "^4.1.3",
     "swagger-js-codegen": "git+https://github.com/cBioPortal/swagger-js-codegen.git#0362f4a1e2d116ad6dffc36e4b57cdfbc93956cf",

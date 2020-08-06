@@ -143,31 +143,37 @@ describe('accumulatingDebounce', () => {
             return acc;
         };
 
-        deb = accumulatingDebounce(finalFn, addFn, () => [], 0, () => {
-            expiredTimeouts++;
-            if (finalFnCalls === 1 && expiredTimeouts === 2) {
-                assert(
-                    !deb.isPending(),
-                    'before we add more arguments, no timeout is set to happen'
-                );
-                deb(6);
-                assert(
-                    deb.isPending(),
-                    'after adding arguments, timeout is set to happen'
-                );
-            } else if (finalFnCalls === 2 && expiredTimeouts === 3) {
-                assert(
-                    !deb.isPending(),
-                    'before we add more arguments, no timeout is set to happen'
-                );
-                deb(7);
-                deb(8);
-                assert(
-                    deb.isPending(),
-                    'after adding arguments, timeout is set to happen'
-                );
+        deb = accumulatingDebounce(
+            finalFn,
+            addFn,
+            () => [],
+            0,
+            () => {
+                expiredTimeouts++;
+                if (finalFnCalls === 1 && expiredTimeouts === 2) {
+                    assert(
+                        !deb.isPending(),
+                        'before we add more arguments, no timeout is set to happen'
+                    );
+                    deb(6);
+                    assert(
+                        deb.isPending(),
+                        'after adding arguments, timeout is set to happen'
+                    );
+                } else if (finalFnCalls === 2 && expiredTimeouts === 3) {
+                    assert(
+                        !deb.isPending(),
+                        'before we add more arguments, no timeout is set to happen'
+                    );
+                    deb(7);
+                    deb(8);
+                    assert(
+                        deb.isPending(),
+                        'after adding arguments, timeout is set to happen'
+                    );
+                }
             }
-        });
+        );
         deb(1);
         deb(2);
         deb(3);

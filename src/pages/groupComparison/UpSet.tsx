@@ -157,15 +157,12 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
             .value();
 
         return _.chain(this.props.uidToGroup)
-            .reduce(
-                (acc, group, uid) => {
-                    if (uid in usedGroupUids) {
-                        acc.push(group);
-                    }
-                    return acc;
-                },
-                [] as ComparisonGroup[]
-            )
+            .reduce((acc, group, uid) => {
+                if (uid in usedGroupUids) {
+                    acc.push(group);
+                }
+                return acc;
+            }, [] as ComparisonGroup[])
             .orderBy(group => group.nameWithOrdinal, 'desc')
             .value();
     }
