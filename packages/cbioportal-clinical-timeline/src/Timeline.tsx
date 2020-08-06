@@ -10,6 +10,7 @@ import {
 } from './lib/helpers';
 import intersect from './lib/intersect';
 import TrackHeader, {
+    expandTracks,
     EXPORT_TRACK_HEADER_BORDER_CLASSNAME,
     getTrackHeadersG,
 } from './TrackHeader';
@@ -19,6 +20,7 @@ import './timeline.scss';
 import { DownloadControls } from 'cbioportal-frontend-commons';
 import CustomTrack, { CustomTrackSpecification } from './CustomTrack';
 import CustomTrackHeader from './CustomTrackHeader';
+import { TIMELINE_TRACK_HEIGHT } from './TimelineTrack';
 
 (window as any).$ = $;
 
@@ -162,8 +164,10 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     width,
 }: ITimelineProps) {
     const [viewPortWidth, setViewPortWidth] = useState<number | null>(null);
-    const height = 500; // TODO: compute height
-    const labelsWidth = 300; // TODO: compute
+    const height =
+        TICK_AXIS_HEIGHT +
+        expandTracks(store.data).length * TIMELINE_TRACK_HEIGHT +
+        _.sumBy(customTracks || [], t => t.height(store));
 
     const refs = {
         cursor: useRef(null),
@@ -205,10 +209,12 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                 </div>
             )}
 
-            <div className={'tl-timeline-display'}>
+            <div style={{ flexBasis: width - 28, display: 'flex' }}>
+                {' '}
+                {/* -20 for room for download controls*/}
                 <div
                     className={'tl-timeline-leftbar'}
-                    style={{ paddingTop: TICK_AXIS_HEIGHT }}
+                    style={{ paddingTop: TICK_AXIS_HEIGHT, flexShrink: 0 }}
                 >
                     <div className={'tl-timeline-tracklabels'}>
                         {store.data.map(track => {
@@ -225,12 +231,9 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                             })}
                     </div>
                 </div>
-
                 <div
                     className={'tl-timelineviewport'}
-                    style={{
-                        width: width - 20 - labelsWidth,
-                    }}
+                    style={{ flexShrink: 1 }}
                 >
                     {viewPortWidth && store.ticks && (
                         <div
@@ -287,6 +290,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                     }
                     dontFade={true}
                     type={'button'}
+                    style={{ marginLeft: 7 }}
                 />
             </div>
         </div>
