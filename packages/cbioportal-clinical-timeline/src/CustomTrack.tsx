@@ -1,41 +1,40 @@
 import { TimelineStore } from './TimelineStore';
 import * as React from 'react';
 import { REMOVE_FOR_DOWNLOAD_CLASSNAME } from './lib/helpers';
-import { TIMELINE_ROW_HEIGHT } from './TimelineRow';
 
-export type CustomRowSpecification = {
+export type CustomTrackSpecification = {
     renderHeader: (store: TimelineStore) => any; // any = react renderable, string or element or null or etc.
-    renderRow: (store: TimelineStore) => React.ReactElement<SVGGElement>;
+    renderTrack: (store: TimelineStore) => React.ReactElement<SVGGElement>;
     height: (store: TimelineStore) => number;
     labelForExport: string;
 };
 
-export interface ICustomRowProps {
+export interface ICustomTrackProps {
     store: TimelineStore;
-    specification: CustomRowSpecification;
+    specification: CustomTrackSpecification;
     width: number;
     y: number;
-    handleRowHover: (e: React.MouseEvent<SVGGElement>) => void;
+    handleTrackHover: (e: React.MouseEvent<SVGGElement>) => void;
 }
 
-const CustomRow: React.FunctionComponent<ICustomRowProps> = function({
+const CustomTrack: React.FunctionComponent<ICustomTrackProps> = function({
     store,
     specification,
     width,
     y,
-    handleRowHover,
-}: ICustomRowProps) {
+    handleTrackHover,
+}: ICustomTrackProps) {
     return (
         <g
-            className={'tl-row'}
+            className={'tl-track'}
             style={{
                 transform: `translate(0, ${y}px)`,
             }}
-            onMouseEnter={handleRowHover}
-            onMouseLeave={handleRowHover}
+            onMouseEnter={handleTrackHover}
+            onMouseLeave={handleTrackHover}
         >
             <rect
-                className={`tl-row-highlight ${REMOVE_FOR_DOWNLOAD_CLASSNAME}`}
+                className={`tl-track-highlight ${REMOVE_FOR_DOWNLOAD_CLASSNAME}`}
                 x={0}
                 y={0}
                 height={specification.height(store)}
@@ -45,9 +44,9 @@ const CustomRow: React.FunctionComponent<ICustomRowProps> = function({
                     store.setTooltipContent(null);
                 }}
             />
-            {specification.renderRow(store)}
+            {specification.renderTrack(store)}
         </g>
     );
 };
 
-export default CustomRow;
+export default CustomTrack;

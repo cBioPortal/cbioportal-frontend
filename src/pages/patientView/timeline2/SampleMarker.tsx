@@ -1,5 +1,5 @@
 import React from 'react';
-import { TIMELINE_ROW_HEIGHT } from 'cbioportal-clinical-timeline/src/TimelineRow';
+import { TIMELINE_TRACK_HEIGHT } from 'cbioportal-clinical-timeline/src/TimelineTrack';
 
 const SampleMarker: React.FunctionComponent<{
     color: string;

@@ -1,6 +1,5 @@
 $width: 1200px;
 $borderColor: #ccc;
-$tickRowHeight: 20px;
 
 .tl-timeline-wrapper {
     position: relative;
@@ -61,17 +60,17 @@ $tickRowHeight: 20px;
         }
     }
 
-    .tl-row {
+    .tl-track {
         // This CSS is solely for the hover highlight effect
         pointer-events: all;
 
-        rect.tl-row-highlight {
+        rect.tl-track-highlight {
             fill: #f2f2f2;
             opacity: 0;
         }
 
         &:hover {
-            rect.tl-row-highlight {
+            rect.tl-track-highlight {
                 opacity: 1;
             }
         }
@@ -79,8 +78,6 @@ $tickRowHeight: 20px;
 }
 
 .tl-timeline-leftbar {
-    padding-top: $tickRowHeight;
-
     .tl-timeline-tracklabels {
         font-size: 12px;
         text-transform: capitalize;

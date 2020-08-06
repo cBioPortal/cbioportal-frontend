@@ -5,11 +5,11 @@ export interface TimelineEvent {
     render(item: TimelineEvent): JSX.Element | string;
 }
 
-export interface TimelineTrack {
+export interface TimelineTrackSpecification {
     items: TimelineEvent[];
     type: string;
     label?: string;
-    tracks?: TimelineTrack[];
+    tracks?: TimelineTrackSpecification[];
     render?: (e: TimelineEvent) => JSX.Element | string;
     renderTooltip?: (e: TimelineEvent) => JSX.Element | string;
 }

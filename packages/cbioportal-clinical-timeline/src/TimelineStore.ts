@@ -2,7 +2,7 @@ import {
     EventPosition,
     TickIntervalEnum,
     TimelineEvent,
-    TimelineTrack,
+    TimelineTrackSpecification,
 } from './types';
 import { action, computed, observable } from 'mobx';
 import {
@@ -16,7 +16,7 @@ import $ from 'jquery';
 import autobind from 'autobind-decorator';
 
 export class TimelineStore {
-    constructor(tracks: TimelineTrack[]) {
+    constructor(tracks: TimelineTrackSpecification[]) {
         this.data = tracks;
     }
 
@@ -97,10 +97,10 @@ export class TimelineStore {
         return this.lastTick.end + Math.abs(this.firstTick.start);
     }
 
-    @observable.ref data: TimelineTrack[];
+    @observable.ref data: TimelineTrackSpecification[];
 
     @computed get allItems(): TimelineEvent[] {
-        function getItems(track: TimelineTrack): TimelineEvent[] {
+        function getItems(track: TimelineTrackSpecification): TimelineEvent[] {
             if (track.tracks && track.tracks.length > 0) {
                 return _.flatten(track.tracks.map(t => getItems(t)));
             } else {
@@ -175,7 +175,7 @@ export class TimelineStore {
         return !this.zoomedWidth ? 1 : this.absoluteWidth / this.zoomedWidth!;
     }
 
-    @observable hoveredRowIndex: number | undefined;
+    @observable hoveredTrackIndex: number | undefined;
 
     setScroll() {
         let pixelLeft = 0;

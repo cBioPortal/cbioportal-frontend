@@ -2,9 +2,9 @@ import {
     TickIntervalEnum,
     TimelineEvent,
     TimelineTick,
-    TimelineTrack,
+    TimelineTrackSpecification,
 } from './types';
-import { TIMELINE_ROW_HEIGHT, TimelineRow } from './TimelineRow';
+import { TIMELINE_TRACK_HEIGHT, TimelineTrack } from './TimelineTrack';
 import React, { useCallback, useState } from 'react';
 import { TimelineStore } from './TimelineStore';
 import _ from 'lodash';
@@ -13,14 +13,14 @@ import $ from 'jquery';
 import { Portal } from 'react-overlays/lib';
 import { Popover } from 'react-bootstrap';
 import { sortNestedTracks } from './lib/helpers';
-import CustomRow, { CustomRowSpecification } from './CustomRow';
-import { TICK_ROW_HEIGHT } from './TickRow';
+import CustomTrack, { CustomTrackSpecification } from './CustomTrack';
+import { TICK_AXIS_HEIGHT } from './TickAxis';
 import { expandTracks } from './TrackHeader';
 
 export interface ITimelineTracks {
     store: TimelineStore;
     width: number;
-    customTracks?: CustomRowSpecification[];
+    customTracks?: CustomTrackSpecification[];
 }
 
 export const TimelineTracks: React.FunctionComponent<
@@ -29,13 +29,13 @@ export const TimelineTracks: React.FunctionComponent<
     const hoverCallback = (e: React.MouseEvent<SVGGElement>) => {
         switch (e.type) {
             case 'mouseenter':
-                const rowIndex = _.findIndex(
+                const trackIndex = _.findIndex(
                     e.currentTarget.parentNode!.children,
                     el => el === e.currentTarget
                 );
-                if (rowIndex !== undefined) {
-                    $('.tl-row-hover').text(`
-                 .tl-timeline-tracklabels > div:nth-child(${rowIndex + 1}) {
+                if (trackIndex !== undefined) {
+                    $('.tl-header-hover-style').text(`
+                 .tl-timeline-tracklabels > div:nth-child(${trackIndex + 1}) {
                                 background:#F2F2F2;
                             }
                         }
@@ -43,7 +43,7 @@ export const TimelineTracks: React.FunctionComponent<
                 }
                 break;
             default:
-                $('.tl-row-hover').empty();
+                $('.tl-header-hover-style').empty();
                 break;
         }
     };
@@ -54,17 +54,17 @@ export const TimelineTracks: React.FunctionComponent<
 
     return (
         <>
-            <style className={'tl-row-hover'} />
-            <g style={{ transform: `translate(0, ${TICK_ROW_HEIGHT}px)` }}>
-                {tracks.map(row => {
+            <style className={'tl-header-hover-style'} />
+            <g style={{ transform: `translate(0, ${TICK_AXIS_HEIGHT}px)` }}>
+                {tracks.map(track => {
                     const y = nextY;
-                    nextY += TIMELINE_ROW_HEIGHT;
+                    nextY += TIMELINE_TRACK_HEIGHT;
                     return (
-                        <TimelineRow
+                        <TimelineTrack
                             limit={store.trimmedLimit}
-                            trackData={row}
+                            trackData={track}
                             getPosition={store.getPosition}
-                            handleRowHover={hoverCallback}
+                            handleTrackHover={hoverCallback}
                             setTooltipContent={store.setTooltipContent}
                             setMousePosition={store.setMousePosition}
                             y={y}
@@ -77,10 +77,10 @@ export const TimelineTracks: React.FunctionComponent<
                         const y = nextY;
                         nextY += track.height(store);
                         return (
-                            <CustomRow
+                            <CustomTrack
                                 store={store}
                                 specification={track}
-                                handleRowHover={hoverCallback}
+                                handleTrackHover={hoverCallback}
                                 width={width}
                                 y={y}
                             />

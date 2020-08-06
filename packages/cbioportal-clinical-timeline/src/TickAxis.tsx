@@ -4,12 +4,12 @@ import { TimelineStore } from './TimelineStore';
 import { observer } from 'mobx-react';
 import _ from 'lodash';
 
-interface ITickRowProps {
+interface ITickAxisProps {
     store: TimelineStore;
     width: number;
 }
 
-export const TICK_ROW_HEIGHT = 20;
+export const TICK_AXIS_HEIGHT = 20;
 const TICK_LABEL_STYLE: any = {
     fontSize: 9,
     fontFamily: 'Arial',
@@ -31,7 +31,7 @@ function makeSquiggle() {
         'L20,5',
     ];
     return (
-        <g style={{ transform: `translate(-6px, ${TICK_ROW_HEIGHT - 6}px` }}>
+        <g style={{ transform: `translate(-6px, ${TICK_AXIS_HEIGHT - 6}px` }}>
             <rect y={5} height={1} width={20} fill={'#ffffff'} />
             <path
                 d={points.join('')}
@@ -45,16 +45,16 @@ function makeSquiggle() {
 
 export const TICK_AXIS_COLOR = '#ccc';
 
-const TickRow: React.FunctionComponent<ITickRowProps> = observer(function({
+const TickAxis: React.FunctionComponent<ITickAxisProps> = observer(function({
     store,
     width,
-}: ITickRowProps) {
+}: ITickAxisProps) {
     return (
         <>
             <g>
                 <rect
                     style={{
-                        transform: `translate(0, ${TICK_ROW_HEIGHT - 1}px)`,
+                        transform: `translate(0, ${TICK_AXIS_HEIGHT - 1}px)`,
                     }}
                     fill={TICK_AXIS_COLOR}
                     height={1}
@@ -118,7 +118,7 @@ const TickRow: React.FunctionComponent<ITickRowProps> = observer(function({
                                     height={MAJOR_TICK_HEIGHT}
                                     width={1}
                                     style={{
-                                        transform: `translate(0, ${TICK_ROW_HEIGHT -
+                                        transform: `translate(0, ${TICK_AXIS_HEIGHT -
                                             MAJOR_TICK_HEIGHT}px)`,
                                     }}
                                     fill={'#aaa'}
@@ -191,7 +191,7 @@ const TickRow: React.FunctionComponent<ITickRowProps> = observer(function({
                                                 height={MINOR_TICK_HEIGHT}
                                                 width={1}
                                                 style={{
-                                                    transform: `translate(0, ${TICK_ROW_HEIGHT -
+                                                    transform: `translate(0, ${TICK_AXIS_HEIGHT -
                                                         MINOR_TICK_HEIGHT}px)`,
                                                 }}
                                                 fill={'#aaa'}
@@ -244,4 +244,4 @@ const TickRow: React.FunctionComponent<ITickRowProps> = observer(function({
     );
 });
 
-export default TickRow;
+export default TickAxis;

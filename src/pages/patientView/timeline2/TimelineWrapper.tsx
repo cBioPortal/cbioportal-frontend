@@ -5,7 +5,7 @@ import { observer } from 'mobx-react-lite';
 import 'cbioportal-clinical-timeline/dist/styles.css';
 
 import {
-    TimelineTrack,
+    TimelineTrackSpecification,
     TimelineStore,
     Timeline,
     TimelineEvent,
@@ -19,7 +19,7 @@ import VAFChartWrapper, {
     VAF_CHART_ROW_HEIGHT,
 } from 'pages/patientView/timeline2/VAFChartWrapper';
 import SampleMarker from 'pages/patientView/timeline2/SampleMarker';
-import { TIMELINE_ROW_HEIGHT } from 'cbioportal-clinical-timeline/src/TimelineRow';
+import { TIMELINE_TRACK_HEIGHT } from 'cbioportal-clinical-timeline/src/TimelineTrack';
 
 function getData(eventData: any) {
     return _.groupBy(eventData, (e: any) => e.eventType.toUpperCase());
@@ -37,7 +37,7 @@ function makeItems(items: any) {
     });
 }
 
-function splitCats(splits: string[], cat: any): TimelineTrack {
+function splitCats(splits: string[], cat: any): TimelineTrackSpecification {
     if (!cat[0].attributes.find((att: any) => att.key === splits[0])) {
         return {
             type: 'moo',
@@ -50,7 +50,7 @@ function splitCats(splits: string[], cat: any): TimelineTrack {
         item => item.attributes.find((att: any) => att.key === splits[0]).value
     );
 
-    const tracks: TimelineTrack[] = _.map(groups, (group, key) => {
+    const tracks: TimelineTrackSpecification[] = _.map(groups, (group, key) => {
         if (splits.length > 1) {
             const track = splitCats(splits.slice(1), group);
             track.type = key;
@@ -87,7 +87,9 @@ export interface ITimeline2Props {
 
 const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
     function({ data, caseMetaData, sampleManager, width }: ITimeline2Props) {
-        const [events, setEvents] = useState<TimelineTrack[] | null>(null);
+        const [events, setEvents] = useState<
+            TimelineTrackSpecification[] | null
+        >(null);
 
         const [store, setStore] = useState<TimelineStore | null>(null);
 
@@ -113,7 +115,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                 trackEventRenderers: [
                     {
                         trackTypeMatch: /LAB_TEST/i,
-                        configureTrack: (cat: TimelineTrack) => {
+                        configureTrack: (cat: TimelineTrackSpecification) => {
                             const psaTrack = cat.tracks
                                 ? cat.tracks.find(t => t.type === 'PSA')
                                 : undefined;
@@ -156,7 +158,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                     },
                     {
                         trackTypeMatch: /SPECIMEN|SAMPLE ACQUISITION|SEQUENCING/i,
-                        configureTrack: (cat: TimelineTrack) => {
+                        configureTrack: (cat: TimelineTrackSpecification) => {
                             // we want a custom tooltip for samples, which includes clinical data
                             // not included in the timeline event
                             cat.renderTooltip = function(event: TimelineEvent) {
@@ -229,7 +231,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                                             <SampleMarker
                                                 color={color}
                                                 label={label}
-                                                y={TIMELINE_ROW_HEIGHT / 2}
+                                                y={TIMELINE_TRACK_HEIGHT / 2}
                                             />
                                         );
                                     };
@@ -263,7 +265,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                 // status track
                 baseConfig.trackEventRenderers.push({
                     trackTypeMatch: /STATUS|Med Onc Assessment/i,
-                    configureTrack: (cat: TimelineTrack) => {
+                    configureTrack: (cat: TimelineTrackSpecification) => {
                         cat.label = 'Med Onc Assessment';
                         const colorMappings = [
                             { re: /indeter/i, color: '#ffffff' },
@@ -305,7 +307,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                 // imaging track
                 baseConfig.trackEventRenderers.push({
                     trackTypeMatch: /IMAGING/i,
-                    configureTrack: (cat: TimelineTrack) => {
+                    configureTrack: (cat: TimelineTrackSpecification) => {
                         cat.label = 'Imaging Assessment';
 
                         const colorMappings = [
@@ -406,10 +408,10 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                 <Timeline
                     store={store}
                     width={width}
-                    customRows={[
+                    customTracks={[
                         {
                             renderHeader: () => 'VAF',
-                            renderRow: (store: TimelineStore) => (
+                            renderTrack: (store: TimelineStore) => (
                                 <VAFChartWrapper
                                     store={store}
                                     sampleMetaData={caseMetaData}

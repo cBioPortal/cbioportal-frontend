@@ -1,11 +1,11 @@
 import * as React from 'react';
-import { TimelineTrack } from './types';
-import { CustomRowSpecification } from './CustomRow';
+import { TimelineTrackSpecification } from './types';
+import { CustomTrackSpecification } from './CustomTrack';
 import { TimelineStore } from './TimelineStore';
 
 interface ICustomTrackHeaderProps {
     store: TimelineStore;
-    specification: CustomRowSpecification;
+    specification: CustomTrackSpecification;
 }
 
 const CustomTrackHeader: React.FunctionComponent<

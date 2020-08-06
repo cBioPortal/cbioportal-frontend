@@ -1,23 +1,27 @@
-import { EventPosition, TimelineEvent, TimelineTrack } from './types';
+import {
+    EventPosition,
+    TimelineEvent,
+    TimelineTrackSpecification,
+} from './types';
 import React from 'react';
 import _ from 'lodash';
 import { REMOVE_FOR_DOWNLOAD_CLASSNAME } from './lib/helpers';
 
-export interface ITimelineRowProps {
-    trackData: TimelineTrack;
+export interface ITimelineTrackProps {
+    trackData: TimelineTrackSpecification;
     limit: number;
     getPosition: (
         item: TimelineEvent,
         limit: number
     ) => EventPosition | undefined;
-    handleRowHover: (e: React.MouseEvent<SVGGElement>) => void;
+    handleTrackHover: (e: React.MouseEvent<SVGGElement>) => void;
     setTooltipContent: (e: string | JSX.Element | null) => void;
     setMousePosition: (p: { x: number; y: number }) => void;
     y: number;
     width: number;
 }
 
-export const TIMELINE_ROW_HEIGHT = 20;
+export const TIMELINE_TRACK_HEIGHT = 20;
 /*
  get events with identical positions so we can stack them
  */
@@ -27,7 +31,10 @@ export function groupEventsByPosition(events: TimelineEvent[]) {
     });
 }
 
-function renderPoint(event: TimelineEvent, trackData: TimelineTrack) {
+function renderPoint(
+    event: TimelineEvent,
+    trackData: TimelineTrackSpecification
+) {
     if (event.render) {
         return event.render(event);
     } else if (trackData.render) {
@@ -36,7 +43,7 @@ function renderPoint(event: TimelineEvent, trackData: TimelineTrack) {
         return (
             <circle
                 cx="0"
-                cy={TIMELINE_ROW_HEIGHT / 2}
+                cy={TIMELINE_TRACK_HEIGHT / 2}
                 r="4"
                 fill="rgb(31, 119, 180)"
             />
@@ -50,7 +57,7 @@ function renderRange(pixelWidth: number) {
         <rect
             width={pixelWidth}
             height={height}
-            y={(TIMELINE_ROW_HEIGHT - height) / 2}
+            y={(TIMELINE_TRACK_HEIGHT - height) / 2}
             rx="2"
             ry="2"
             fill="rgb(31, 119, 180)"
@@ -59,7 +66,7 @@ function renderRange(pixelWidth: number) {
 }
 
 function getTooltipContent(
-    trackData: TimelineTrack,
+    trackData: TimelineTrackSpecification,
     itemGroup: TimelineEvent[]
 ) {
     if (trackData.renderTooltip) {
@@ -69,18 +76,18 @@ function getTooltipContent(
     }
 }
 
-export const TimelineRow: React.FunctionComponent<
-    ITimelineRowProps
+export const TimelineTrack: React.FunctionComponent<
+    ITimelineTrackProps
 > = function({
     trackData,
     limit,
     getPosition,
-    handleRowHover,
+    handleTrackHover,
     setTooltipContent,
     setMousePosition,
     y,
     width,
-}: ITimelineRowProps) {
+}: ITimelineTrackProps) {
     let eventsGroupedByPosition;
 
     if (trackData.items) {
@@ -89,18 +96,18 @@ export const TimelineRow: React.FunctionComponent<
 
     return (
         <g
-            className={'tl-row'}
+            className={'tl-track'}
             style={{
                 transform: `translate(0, ${y}px)`,
             }}
-            onMouseEnter={handleRowHover}
-            onMouseLeave={handleRowHover}
+            onMouseEnter={handleTrackHover}
+            onMouseLeave={handleTrackHover}
         >
             <rect
-                className={`tl-row-highlight ${REMOVE_FOR_DOWNLOAD_CLASSNAME}`}
+                className={`tl-track-highlight ${REMOVE_FOR_DOWNLOAD_CLASSNAME}`}
                 x={0}
                 y={0}
-                height={TIMELINE_ROW_HEIGHT}
+                height={TIMELINE_TRACK_HEIGHT}
                 width={width}
                 // hide tooltip when mouse over the background rect
                 onMouseMove={() => {
@@ -178,8 +185,8 @@ export const TimelineRow: React.FunctionComponent<
             <line
                 x1={0}
                 x2={width}
-                y1={TIMELINE_ROW_HEIGHT - 0.5}
-                y2={TIMELINE_ROW_HEIGHT - 0.5}
+                y1={TIMELINE_TRACK_HEIGHT - 0.5}
+                y2={TIMELINE_TRACK_HEIGHT - 0.5}
                 stroke={'#eee'}
                 strokeWidth={1}
                 strokeDasharray={'3,2'}

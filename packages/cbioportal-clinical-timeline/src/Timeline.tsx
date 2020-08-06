@@ -13,18 +13,18 @@ import TrackHeader, {
     EXPORT_TRACK_HEADER_BORDER_CLASSNAME,
     getTrackHeadersG,
 } from './TrackHeader';
-import TickRow, { TICK_AXIS_COLOR } from './TickRow';
+import TickAxis, { TICK_AXIS_COLOR, TICK_AXIS_HEIGHT } from './TickAxis';
 import { TickIntervalEnum } from './types';
 import './timeline.scss';
 import { DownloadControls } from 'cbioportal-frontend-commons';
-import CustomRow, { CustomRowSpecification } from './CustomRow';
+import CustomTrack, { CustomTrackSpecification } from './CustomTrack';
 import CustomTrackHeader from './CustomTrackHeader';
 
 (window as any).$ = $;
 
 interface ITimelineProps {
     store: TimelineStore;
-    customRows?: CustomRowSpecification[];
+    customTracks?: CustomTrackSpecification[];
     width: number;
 }
 
@@ -158,7 +158,7 @@ function handleMouseEvents(e: any, store: TimelineStore, refs: any) {
 
 const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     store,
-    customRows,
+    customTracks,
     width,
 }: ITimelineProps) {
     const [viewPortWidth, setViewPortWidth] = useState<number | null>(null);
@@ -206,13 +206,16 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
             )}
 
             <div className={'tl-timeline-display'}>
-                <div className={'tl-timeline-leftbar'}>
+                <div
+                    className={'tl-timeline-leftbar'}
+                    style={{ paddingTop: TICK_AXIS_HEIGHT }}
+                >
                     <div className={'tl-timeline-tracklabels'}>
                         {store.data.map(track => {
                             return <TrackHeader track={track} />;
                         })}
-                        {customRows &&
-                            customRows.map(track => {
+                        {customTracks &&
+                            customTracks.map(track => {
                                 return (
                                     <CustomTrackHeader
                                         store={store}
@@ -261,13 +264,13 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                                     <TimelineTracks
                                         store={store}
                                         width={renderWidth}
-                                        customTracks={customRows}
+                                        customTracks={customTracks}
                                     />
-                                    <TickRow
+                                    <TickAxis
                                         store={store}
                                         width={renderWidth}
                                     />{' '}
-                                    {/*TickRow needs to go on top so its not covered by tracks*/}
+                                    {/*TickAxis needs to go on top so its not covered by tracks*/}
                                 </g>
                             </svg>
                         </div>
@@ -279,7 +282,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                         getSvg(
                             store,
                             refs.timelineTracksArea.current,
-                            customRows
+                            customTracks
                         )
                     }
                     dontFade={true}
@@ -293,7 +296,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
 function getSvg(
     store: TimelineStore,
     timelineG: SVGGElement | null,
-    customRows?: CustomRowSpecification[]
+    customTracks?: CustomTrackSpecification[]
 ) {
     if (!timelineG) {
         return null;
@@ -313,7 +316,7 @@ function getSvg(
 
     try {
         // Add headers
-        const headersG = getTrackHeadersG(store, customRows);
+        const headersG = getTrackHeadersG(store, customTracks);
         everythingG.appendChild(headersG);
         const headersSize = headersG.getBBox();
         const headersPadding = 10;

@@ -1,4 +1,8 @@
-import { TimelineEvent, TimelineTick, TimelineTrack } from '../types';
+import {
+    TimelineEvent,
+    TimelineTick,
+    TimelineTrackSpecification,
+} from '../types';
 import { intersect } from './intersect';
 import _ from 'lodash';
 
@@ -160,7 +164,7 @@ export function getPointInTrimmedSpaceFromScreenRead(
     return result;
 }
 
-export function sortNestedTracks(tracks: TimelineTrack[]) {
+export function sortNestedTracks(tracks: TimelineTrackSpecification[]) {
     // sort nested tracks by start date of first item
     return _.sortBy(tracks, t =>
         t.items && t.items.length ? t.items[0].start : 0
