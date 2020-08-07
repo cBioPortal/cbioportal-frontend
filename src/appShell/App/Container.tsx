@@ -17,6 +17,9 @@ import {
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import ErrorScreen from 'shared/components/errorScreen/ErrorScreen';
 import { ServerConfigHelpers } from 'config/config';
+import StudyViewWarning, {
+    shouldShowStudyViewWarning,
+} from 'pages/studyView/studyPageHeader/studyViewWarning/StudyViewWarning';
 
 interface IContainerProps {
     location: Location;
@@ -90,6 +93,9 @@ export default class Container extends React.Component<IContainerProps, {}> {
 
                 <div className="pageTopContainer">
                     <UserMessager />
+
+                    {shouldShowStudyViewWarning() && <StudyViewWarning />}
+
                     <div className="contentWidth">
                         <PortalHeader appStore={this.appStore} />
                     </div>
