@@ -65,8 +65,7 @@ export const TimelineTracks: React.FunctionComponent<
                             trackData={track}
                             getPosition={store.getPosition}
                             handleTrackHover={hoverCallback}
-                            setTooltipContent={store.setTooltipContent}
-                            setMousePosition={store.setMousePosition}
+                            store={store}
                             y={y}
                             width={width}
                         />

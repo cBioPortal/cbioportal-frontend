@@ -3,9 +3,11 @@ import {
     TimelineEvent,
     TimelineTrackSpecification,
 } from './types';
-import React from 'react';
+import React, { useState } from 'react';
 import _ from 'lodash';
 import { REMOVE_FOR_DOWNLOAD_CLASSNAME } from './lib/helpers';
+import { getTextHeight, getTextWidth } from 'cbioportal-frontend-commons';
+import { TimelineStore } from './TimelineStore';
 
 export interface ITimelineTrackProps {
     trackData: TimelineTrackSpecification;
@@ -15,8 +17,7 @@ export interface ITimelineTrackProps {
         limit: number
     ) => EventPosition | undefined;
     handleTrackHover: (e: React.MouseEvent<SVGGElement>) => void;
-    setTooltipContent: (e: string | JSX.Element | null) => void;
-    setMousePosition: (p: { x: number; y: number }) => void;
+    store: TimelineStore;
     y: number;
     width: number;
 }
@@ -31,22 +32,60 @@ export function groupEventsByPosition(events: TimelineEvent[]) {
     });
 }
 
-function renderPoint(
-    event: TimelineEvent,
+function renderSuperscript(number: number) {
+    return (
+        <g style={{ transform: 'translate(1px, 1px)' }}>
+            <rect
+                x={0}
+                y={0}
+                rx={2}
+                ry={2}
+                height={getTextHeight(number + '', 'Arial', '8px') + 2}
+                width={
+                    getTextWidth('x', 'Arial', '6px') +
+                    getTextWidth(number + '', 'Arial', '8px') +
+                    2
+                }
+                fill={'white'}
+                stroke={'#eee'}
+            />
+            <text
+                x={1}
+                y={0}
+                dy={'1em'}
+                className="noselect"
+                style={{ fill: 'black', pointerEvents: 'none' }}
+            >
+                <tspan dy="1.3em" style={{ fontSize: 6 }}>
+                    x
+                </tspan>
+                <tspan style={{ fontSize: 8 }}>{number}</tspan>
+            </text>
+        </g>
+    );
+}
+
+export function renderPoint(
+    events: TimelineEvent[],
     trackData: TimelineTrackSpecification
 ) {
-    if (event.render) {
-        return event.render(event);
-    } else if (trackData.render) {
-        return trackData.render(event);
+    if (events.length === 1 && events[0].render) {
+        return events[0].render(events[0]);
+    } else if (events.length === 1 && trackData.render) {
+        return trackData.render(events[0]);
     } else {
+        // If there's specific render functions and multiple data,
+        //  we'll show that render in the tooltip.
         return (
-            <circle
-                cx="0"
-                cy={TIMELINE_TRACK_HEIGHT / 2}
-                r="4"
-                fill="rgb(31, 119, 180)"
-            />
+            <g>
+                {events.length > 1 && renderSuperscript(events.length)}
+                <circle
+                    cx="0"
+                    cy={TIMELINE_TRACK_HEIGHT / 2}
+                    r="4"
+                    fill="rgb(31, 119, 180)"
+                />
+            </g>
         );
     }
 }
@@ -65,17 +104,6 @@ function renderRange(pixelWidth: number) {
     );
 }
 
-function getTooltipContent(
-    trackData: TimelineTrackSpecification,
-    itemGroup: TimelineEvent[]
-) {
-    if (trackData.renderTooltip) {
-        return trackData.renderTooltip(itemGroup[0]);
-    } else {
-        return <EventTooltipContent event={itemGroup[0]} />;
-    }
-}
-
 export const TimelineTrack: React.FunctionComponent<
     ITimelineTrackProps
 > = function({
@@ -83,8 +111,7 @@ export const TimelineTrack: React.FunctionComponent<
     limit,
     getPosition,
     handleTrackHover,
-    setTooltipContent,
-    setMousePosition,
+    store,
     y,
     width,
 }: ITimelineTrackProps) {
@@ -109,9 +136,9 @@ export const TimelineTrack: React.FunctionComponent<
                 y={0}
                 height={TIMELINE_TRACK_HEIGHT}
                 width={width}
-                // hide tooltip when mouse over the background rect
                 onMouseMove={() => {
-                    setTooltipContent(null);
+                    // hide tooltip when mouse over the background rect
+                    store.setTooltipModel(null);
                 }}
             />
             {eventsGroupedByPosition &&
@@ -129,11 +156,7 @@ export const TimelineTrack: React.FunctionComponent<
                     const isPoint = item.start === item.end;
 
                     if (isPoint) {
-                        content = renderPoint(item, trackData);
-
-                        if (itemGroup.length > 1) {
-                            // TODO: handle multiple simultaneous data points
-                        }
+                        content = renderPoint(itemGroup, trackData);
                     } else if (position && position.pixelWidth) {
                         content = renderRange(position.pixelWidth);
                     }
@@ -141,46 +164,23 @@ export const TimelineTrack: React.FunctionComponent<
                     return (
                         <g
                             style={style}
-                            onMouseMove={(e: React.MouseEvent<any>) => {
-                                setTooltipContent(
-                                    getTooltipContent(trackData, itemGroup)
-                                );
-                                setMousePosition({
+                            onMouseMove={e => {
+                                store.setTooltipModel({
+                                    track: trackData,
+                                    events: itemGroup,
+                                });
+                                store.setMousePosition({
                                     x: e.pageX,
                                     y: e.pageY,
                                 });
+                            }}
+                            onClick={() => {
+                                store.nextTooltipEvent();
                             }}
                         >
                             {content}
                         </g>
                     );
-                    /*return (
-                    <Tooltip
-                        mouseEnterDelay={0.2}
-                        mouseLeaveDelay={0}
-                        destroyTooltipOnHide={
-                            { keepParent: false } as any
-                        } // typings are wrong
-                        overlayClassName={'tl-timeline-tooltip'}
-                        overlay={() => {
-                            return trackData.renderTooltip ? (
-                                trackData.renderTooltip(item)
-                            ) : (
-                                <EventTooltipContent event={item} />
-                            );
-                        }}
-                    >
-                        <g
-                            style={style}
-                            className={classNames({
-                                'tl-item': true,
-                                'tl-item-point': isPoint,
-                                'tl-item-range': !isPoint,
-                            })}
-                        >
-                            {content}
-                        </g>
-                    </Tooltip>*/
                 })}
             <line
                 x1={0}
@@ -195,29 +195,31 @@ export const TimelineTrack: React.FunctionComponent<
     );
 };
 
-const EventTooltipContent: React.FunctionComponent<{
+export const EventTooltipContent: React.FunctionComponent<{
     event: TimelineEvent;
 }> = function({ event }) {
     return (
-        <table>
-            {_.map(event.event.attributes, (att: any) => {
-                return (
-                    <tr>
-                        <th>{att.key.replace('_', ' ')}</th>
-                        <td>{att.value}</td>
-                    </tr>
-                );
-            })}
-            <tr>
-                <th>START DATE:</th>
-                <td>{event.event.startNumberOfDaysSinceDiagnosis}</td>
-            </tr>
-            {event.event.endNumberOfDaysSinceDiagnosis && (
+        <div>
+            <table>
+                {_.map(event.event.attributes, (att: any) => {
+                    return (
+                        <tr>
+                            <th>{att.key.replace('_', ' ')}</th>
+                            <td>{att.value}</td>
+                        </tr>
+                    );
+                })}
                 <tr>
-                    <th>END DATE:</th>
-                    <td>{event.event.endNumberOfDaysSinceDiagnosis}</td>
+                    <th>START DATE:</th>
+                    <td>{event.event.startNumberOfDaysSinceDiagnosis}</td>
                 </tr>
-            )}
-        </table>
+                {event.event.endNumberOfDaysSinceDiagnosis && (
+                    <tr>
+                        <th>END DATE:</th>
+                        <td>{event.event.endNumberOfDaysSinceDiagnosis}</td>
+                    </tr>
+                )}
+            </table>
+        </div>
     );
 };

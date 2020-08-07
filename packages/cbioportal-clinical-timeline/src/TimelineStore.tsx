@@ -14,19 +14,139 @@ import {
 import _ from 'lodash';
 import $ from 'jquery';
 import autobind from 'autobind-decorator';
+import * as React from 'react';
+import {
+    EventTooltipContent,
+    renderPoint,
+    TIMELINE_TRACK_HEIGHT,
+} from './TimelineTrack';
 
 export class TimelineStore {
     constructor(tracks: TimelineTrackSpecification[]) {
         this.data = tracks;
+
+        $(document).on('keydown', e => {
+            let preventDefault = false;
+            if (this.tooltipContent !== null) {
+                switch (e.which) {
+                    case 37:
+                    //left
+                    case 40:
+                        //down
+                        this.prevTooltipEvent();
+                        preventDefault = true;
+                        break;
+                    case 38:
+                    //up
+                    case 39:
+                        //right
+                        this.nextTooltipEvent();
+                        preventDefault = true;
+                        break;
+                }
+            }
+            if (preventDefault) {
+                e.preventDefault();
+            }
+        });
     }
 
-    @observable.ref tooltipContent: JSX.Element | string | null = null;
+    @observable private tooltipModel = null as null | {
+        track: TimelineTrackSpecification;
+        events: TimelineEvent[];
+        index: number;
+    };
+
     @observable mousePosition = { x: 0, y: 0 };
 
     @autobind
     @action
-    setTooltipContent(c: JSX.Element | string | null) {
-        this.tooltipContent = c;
+    setTooltipModel(
+        model: null | {
+            track: TimelineTrackSpecification;
+            events: TimelineEvent[];
+        }
+    ) {
+        this.tooltipModel = model
+            ? {
+                  ...model,
+                  index: 0,
+              }
+            : null;
+    }
+
+    @autobind
+    @action
+    nextTooltipEvent() {
+        this.tooltipModel!.index =
+            (this.tooltipModel!.index + 1) % this.tooltipModel!.events.length;
+    }
+
+    @autobind
+    @action
+    prevTooltipEvent() {
+        this.tooltipModel!.index = Math.abs(
+            (this.tooltipModel!.index - 1) % this.tooltipModel!.events.length
+        );
+    }
+
+    @computed get tooltipContent() {
+        if (!this.tooltipModel) {
+            return null;
+        }
+
+        const activeItem = this.tooltipModel.events[this.tooltipModel.index];
+        let content;
+        if (this.tooltipModel.track.renderTooltip) {
+            content = this.tooltipModel.track.renderTooltip(activeItem);
+        } else {
+            content = <EventTooltipContent event={activeItem} />;
+        }
+
+        const multipleItems = this.tooltipModel.events.length > 1;
+        let style: any = {};
+        let point = null;
+        if (multipleItems) {
+            style = {
+                borderBottom: '1px dashed white',
+                paddingBottom: 5,
+            };
+            point = (
+                <svg
+                    width={TIMELINE_TRACK_HEIGHT}
+                    height={TIMELINE_TRACK_HEIGHT}
+                    style={{ marginRight: 5, marginTop: 2 }}
+                >
+                    <g
+                        style={{
+                            transform: `translate(${TIMELINE_TRACK_HEIGHT /
+                                2}px, 0)`,
+                        }}
+                    >
+                        {renderPoint([activeItem], this.tooltipModel.track)}
+                    </g>
+                </svg>
+            );
+        }
+
+        return (
+            <div>
+                <div style={style}>{content}</div>
+                {multipleItems && (
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                        }}
+                    >
+                        {point}
+                        {this.tooltipModel.index + 1} of{' '}
+                        {this.tooltipModel.events.length}. Click or use arrow
+                        keys to see others.
+                    </div>
+                )}
+            </div>
+        );
     }
 
     @autobind

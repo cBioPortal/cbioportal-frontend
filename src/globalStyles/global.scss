@@ -620,3 +620,10 @@ h5.blackHeader,
 h6.blackHeader {
     color: black !important;
 }
+
+.noselect {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
