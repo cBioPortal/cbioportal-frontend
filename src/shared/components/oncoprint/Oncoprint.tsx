@@ -55,7 +55,8 @@ export type ClinicalTrackSpec = {
     | {
           datatype: 'string';
           category_to_color?: { [category: string]: string };
-      });
+      }
+);
 
 export interface IBaseHeatmapTrackDatum {
     profile_data: number | null;

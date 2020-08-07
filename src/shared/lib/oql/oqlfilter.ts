@@ -913,8 +913,8 @@ export function filterCBioPortalWebServiceDataByOQLLine(
 export function filterCBioPortalWebServiceDataByOQLLine(
     oql_query: string,
     data:
-        | ((AnnotatedMutation | NumericGeneMolecularData)[])
-        | ((Mutation | NumericGeneMolecularData)[]),
+        | (AnnotatedMutation | NumericGeneMolecularData)[]
+        | (Mutation | NumericGeneMolecularData)[],
     accessors: any,
     default_oql?: string
 ) {

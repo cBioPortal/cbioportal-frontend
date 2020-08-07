@@ -223,16 +223,18 @@ export default class ExpressionWrapper extends React.Component<
             ),
         invoke: () => {
             // TODO: this cache is leading to some ugly code
-            return Promise.resolve(_.flatten(
-                this.props.numericGeneMolecularDataCache
-                    .getAll(
-                        this.selectedExpressionProfiles.result!.map(p => ({
-                            entrezGeneId: this.selectedGene.entrezGeneId,
-                            molecularProfileId: p.molecularProfileId,
-                        }))
-                    )
-                    .map(promise => promise.result!)
-            ) as NumericGeneMolecularData[]);
+            return Promise.resolve(
+                _.flatten(
+                    this.props.numericGeneMolecularDataCache
+                        .getAll(
+                            this.selectedExpressionProfiles.result!.map(p => ({
+                                entrezGeneId: this.selectedGene.entrezGeneId,
+                                molecularProfileId: p.molecularProfileId,
+                            }))
+                        )
+                        .map(promise => promise.result!)
+                ) as NumericGeneMolecularData[]
+            );
         },
     });
 

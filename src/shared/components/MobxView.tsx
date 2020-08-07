@@ -13,7 +13,8 @@ export type MobxView = {
     | {
           status: 'complete';
           component: ValidRender;
-      });
+      }
+);
 
 type MobxView_await = () => { status: 'complete' | 'error' | 'pending' }[];
 type MobxView_render = () => ValidRender;

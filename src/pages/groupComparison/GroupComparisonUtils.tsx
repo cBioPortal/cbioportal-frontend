@@ -740,17 +740,14 @@ export function partitionCasesByGroupMembership(
     //  entries in the output for nonempty lists.
 
     const partitionMap = new ComplexKeyGroupsMap<string>();
-    const groupToCaseKeys = groupsNotOverlapRemoved.reduce(
-        (map, group) => {
-            map[group.uid] = _.keyBy(
-                getCaseIdentifiers(group).map(id => {
-                    return getUniqueCaseKey(id);
-                })
-            );
-            return map;
-        },
-        {} as { [uid: string]: { [uniqueCaseKey: string]: any } }
-    );
+    const groupToCaseKeys = groupsNotOverlapRemoved.reduce((map, group) => {
+        map[group.uid] = _.keyBy(
+            getCaseIdentifiers(group).map(id => {
+                return getUniqueCaseKey(id);
+            })
+        );
+        return map;
+    }, {} as { [uid: string]: { [uniqueCaseKey: string]: any } });
 
     for (const caseKey of caseKeys) {
         const key: any = {};
