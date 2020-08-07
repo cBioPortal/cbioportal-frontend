@@ -299,8 +299,8 @@ export default class CoExpressionTab extends React.Component<
                 }
 
                 if (
-                    dataFilter.sampleIds === undefined &&
-                    dataFilter.sampleListId === undefined
+                    _.isEmpty(dataFilter.sampleIds) &&
+                    _.isEmpty(dataFilter.sampleListId)
                 ) {
                     return Promise.resolve([]);
                 }
