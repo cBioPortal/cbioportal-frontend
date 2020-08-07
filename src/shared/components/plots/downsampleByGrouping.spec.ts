@@ -31,12 +31,18 @@ describe('downsampleByGrouping', () => {
             {
                 x: 0,
                 y: 0,
-                data: [{ x: 0, y: 0, blah: 'A' }, { x: 1, y: 0, blah: 'B' }],
+                data: [
+                    { x: 0, y: 0, blah: 'A' },
+                    { x: 1, y: 0, blah: 'B' },
+                ],
             },
             {
                 x: 0,
                 y: 3,
-                data: [{ x: 0, y: 3, blah: 'D' }, { x: 0, y: 4, blah: 'E' }],
+                data: [
+                    { x: 0, y: 3, blah: 'D' },
+                    { x: 0, y: 4, blah: 'E' },
+                ],
             },
             { x: 1, y: 5, data: [{ x: 1, y: 5, blah: 'F' }] },
             { x: 2, y: 0, data: [{ x: 2, y: 0, blah: 'C' }] },
@@ -56,7 +62,10 @@ describe('downsampleByGrouping', () => {
             {
                 x: 0,
                 y: 3,
-                data: [{ x: 0, y: 3, blah: 'D' }, { x: 0, y: 4, blah: 'E' }],
+                data: [
+                    { x: 0, y: 3, blah: 'D' },
+                    { x: 0, y: 4, blah: 'E' },
+                ],
             },
             { x: 1, y: 5, data: [{ x: 1, y: 5, blah: 'F' }] },
         ]);
@@ -76,7 +85,10 @@ describe('downsampleByGrouping', () => {
             {
                 x: 0,
                 y: 4,
-                data: [{ x: 0, y: 4, blah: 'E' }, { x: 1, y: 5, blah: 'F' }],
+                data: [
+                    { x: 0, y: 4, blah: 'E' },
+                    { x: 1, y: 5, blah: 'F' },
+                ],
             },
         ]);
     });

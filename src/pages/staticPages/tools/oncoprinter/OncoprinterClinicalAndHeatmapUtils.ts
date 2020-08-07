@@ -312,7 +312,10 @@ export function getClinicalOncoprintData(
 ) {
     const clinicalTracks: {
         [trackName: string]: OncoprinterClinicalTrackDatum[];
-    } = _.mapValues(_.keyBy(attributes, a => a.trackName), () => []);
+    } = _.mapValues(
+        _.keyBy(attributes, a => a.trackName),
+        () => []
+    );
 
     parsedLines.forEach((line, lineIndex) => {
         for (let i = 0; i < attributes.length; i++) {
@@ -330,7 +333,10 @@ export function getHeatmapOncoprintData(
 ) {
     const heatmapTracks: {
         [trackName: string]: OncoprinterHeatmapTrackDatum[];
-    } = _.mapValues(_.keyBy(attributes, a => a.trackName), () => []);
+    } = _.mapValues(
+        _.keyBy(attributes, a => a.trackName),
+        () => []
+    );
 
     parsedLines.forEach((line, lineIndex) => {
         for (let i = 0; i < attributes.length; i++) {

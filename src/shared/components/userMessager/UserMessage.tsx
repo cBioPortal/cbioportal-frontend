@@ -78,7 +78,8 @@ export default class UserMessager extends React.Component<
         if (
             !isWebdriver() &&
             !this.dismissed &&
-            (this.messageData.isComplete && this.shownMessage)
+            this.messageData.isComplete &&
+            this.shownMessage
         ) {
             return (
                 <div className={styles.messager}>

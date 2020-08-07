@@ -28,15 +28,12 @@ export function getClinicalAttributeColoring(
             break;
         case 'NUMBER':
             // TODO: calculate gradient with data
-            const numbers = (data as ClinicalData[]).reduce(
-                (nums, d) => {
-                    if (d.value && !isNaN(d.value as any)) {
-                        nums.push(parseFloat(d.value));
-                    }
-                    return nums;
-                },
-                [] as number[]
-            );
+            const numbers = (data as ClinicalData[]).reduce((nums, d) => {
+                if (d.value && !isNaN(d.value as any)) {
+                    nums.push(parseFloat(d.value));
+                }
+                return nums;
+            }, [] as number[]);
             const min = _.min(numbers)!;
             const max = _.max(numbers)!;
             if (min !== undefined && max !== undefined) {
