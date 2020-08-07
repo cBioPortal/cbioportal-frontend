@@ -176,10 +176,11 @@ export default class GroupComparisonStore extends ComparisonStore {
             let ret: ComparisonGroup[] = [];
             const sampleSet = this.sampleMap.result!;
 
-            let defaultGroupColors = pickClinicalDataColors(_.map(
-                this._session.result!.groups,
-                group => ({ value: group.name })
-            ) as any);
+            let defaultGroupColors = pickClinicalDataColors(
+                _.map(this._session.result!.groups, group => ({
+                    value: group.name,
+                })) as any
+            );
 
             const finalizeGroup = (
                 groupData: SessionGroupData,

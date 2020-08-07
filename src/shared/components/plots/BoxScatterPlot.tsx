@@ -808,29 +808,22 @@ export default class BoxScatterPlot<
         return boxData
             .map(d =>
                 calculateBoxPlotModel(
-                    d.data.reduce(
-                        (data, next) => {
-                            if (
-                                !boxCalculationFilter ||
-                                (boxCalculationFilter &&
-                                    boxCalculationFilter(next))
-                            ) {
-                                // filter out values in calculating boxes, if a filter is specified ^^
-                                if (this.props.logScale) {
-                                    data.push(
-                                        this.props.logScale.fLogScale(
-                                            next.value,
-                                            0
-                                        )
-                                    );
-                                } else {
-                                    data.push(next.value);
-                                }
+                    d.data.reduce((data, next) => {
+                        if (
+                            !boxCalculationFilter ||
+                            (boxCalculationFilter && boxCalculationFilter(next))
+                        ) {
+                            // filter out values in calculating boxes, if a filter is specified ^^
+                            if (this.props.logScale) {
+                                data.push(
+                                    this.props.logScale.fLogScale(next.value, 0)
+                                );
+                            } else {
+                                data.push(next.value);
                             }
-                            return data;
-                        },
-                        [] as number[]
-                    )
+                        }
+                        return data;
+                    }, [] as number[])
                 )
             )
             .map((model, i) => {

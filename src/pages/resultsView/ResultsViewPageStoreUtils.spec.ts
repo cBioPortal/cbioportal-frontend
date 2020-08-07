@@ -1934,10 +1934,10 @@ describe('ResultsViewPageStoreUtils', () => {
                 ['physical_study_1', 'physical_study_2'],
                 virtualStudies
             );
-            assert.deepEqual(_.map(test, obj => obj.studyId), [
-                'physical_study_1',
-                'physical_study_2',
-            ]);
+            assert.deepEqual(
+                _.map(test, obj => obj.studyId),
+                ['physical_study_1', 'physical_study_2']
+            );
         });
 
         it('when only virtual studies are present', async () => {
@@ -1946,10 +1946,10 @@ describe('ResultsViewPageStoreUtils', () => {
                 ['virtual_study_1', 'virtual_study_2'],
                 virtualStudies
             );
-            assert.deepEqual(_.map(test, obj => obj.studyId), [
-                'virtual_study_1',
-                'virtual_study_2',
-            ]);
+            assert.deepEqual(
+                _.map(test, obj => obj.studyId),
+                ['virtual_study_1', 'virtual_study_2']
+            );
         });
 
         it('when physical and virtual studies are present', async () => {
@@ -1958,10 +1958,10 @@ describe('ResultsViewPageStoreUtils', () => {
                 ['physical_study_1', 'virtual_study_2'],
                 virtualStudies
             );
-            assert.deepEqual(_.map(test, obj => obj.studyId), [
-                'physical_study_1',
-                'virtual_study_2',
-            ]);
+            assert.deepEqual(
+                _.map(test, obj => obj.studyId),
+                ['physical_study_1', 'virtual_study_2']
+            );
         });
 
         //this case is not possible because id in these scenarios are first identified in QueryBuilder.java and
