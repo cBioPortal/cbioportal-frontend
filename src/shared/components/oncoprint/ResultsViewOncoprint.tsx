@@ -507,8 +507,8 @@ export default class ResultsViewOncoprint extends React.Component<
             },
             get ngchmButtonActive() {
                 return AppConfig.serverConfig.show_mdacc_heatmap &&
-                    (self.props.store.remoteNgchmUrl.result &&
-                        self.props.store.remoteNgchmUrl.result != '')
+                    self.props.store.remoteNgchmUrl.result &&
+                    self.props.store.remoteNgchmUrl.result != ''
                     ? true
                     : false;
             },

@@ -1843,6 +1843,39 @@ export function pickClinicalAttrColorsByIndex(
     );
 }
 
+export function pickUnusedColor(
+    data: ClinicalDataCount[],
+    usedColors: Set<string>,
+    availableColors: string[] = COLORS
+): { [attribute: string]: string } {
+    let colorIndex = 0;
+
+    return _.reduce(
+        data,
+        (acc: { [id: string]: string }, slice) => {
+            if (
+                !isNAClinicalValue(slice.value) &&
+                !getClinicalValueColor(slice.value)
+            ) {
+                if (usedColors.size < availableColors.length) {
+                    while (
+                        usedColors.has(
+                            availableColors[colorIndex % availableColors.length]
+                        )
+                    ) {
+                        colorIndex++;
+                    }
+                }
+                acc[slice.value] =
+                    availableColors[colorIndex % availableColors.length];
+                colorIndex++;
+            }
+            return acc;
+        },
+        {}
+    );
+}
+
 export function calculateClinicalDataCountFrequency(
     data: ChartDataCountSet,
     numOfSelectedSamples: number
@@ -1892,6 +1925,17 @@ export function pickClinicalDataColors(
         ...pickClinicalAttrColorsByIndex(data, availableColors),
         ...fixedColors,
     };
+}
+
+export function pickNewColorForClinicData(
+    d: ClinicalDataCount,
+    usedColors: Set<string>
+) {
+    let dList = [];
+    dList.push(d);
+    const fixedColors = pickClinicalAttrFixedColors(dList);
+    if (_.values(fixedColors).length != 0) return _.values(fixedColors)[0];
+    return _.values(pickUnusedColor(dList, usedColors))[0];
 }
 
 export function isNAClinicalValue(value: string) {

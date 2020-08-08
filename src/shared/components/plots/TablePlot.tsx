@@ -135,9 +135,7 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
 
     @computed get tableData(): ITableData {
         // count by categories
-        const tableCounts: StringListIndexedMap<
-            number
-        > = new StringListIndexedMap();
+        const tableCounts: StringListIndexedMap<number> = new StringListIndexedMap();
         for (const entry of iterateOverEntries(
             this.props.horzData,
             this.props.vertData

@@ -6,8 +6,8 @@ function getUniqueSampleKeyToCategories(
 ) {
     const ret: {
         [sampleKey: string]: {
-            horz?: string | (string[]);
-            vert?: string | (string[]);
+            horz?: string | string[];
+            vert?: string | string[];
         };
     } = {};
     for (const d of horzData) {

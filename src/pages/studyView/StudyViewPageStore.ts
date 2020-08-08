@@ -104,6 +104,7 @@ import {
     getGenomicDataAsClinicalData,
     convertGenomicDataBinsToClinicalDataBins,
     getGenomicChartUniqueKey,
+    pickNewColorForClinicData,
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -288,6 +289,9 @@ export type OncokbCancerGene = {
 export class StudyViewPageStore {
     private reactionDisposers: IReactionDisposer[] = [];
 
+    private chartItemToColor: Map<string, string>;
+    private chartToUsedColors: Map<string, Set<string>>;
+
     public studyViewQueryFilter: StudyViewURLQuery;
 
     @observable showComparisonGroupUI = false;
@@ -297,6 +301,8 @@ export class StudyViewPageStore {
         private sessionServiceIsEnabled: boolean,
         private urlWrapper: StudyViewURLWrapper
     ) {
+        this.chartItemToColor = new Map();
+        this.chartToUsedColors = new Map();
         this.reactionDisposers.push(
             reaction(
                 () => this.loadingInitialDataForSummaryTab,
@@ -2389,10 +2395,13 @@ export class StudyViewPageStore {
         default: [],
         onError: error => {},
         onResult: data => {
-            _.each(_.groupBy(data, item => item.attributeId), (item, key) => {
-                this.unfilteredClinicalDataBinCountCache[key] = item;
-                this.newlyAddedCharts.remove(key);
-            });
+            _.each(
+                _.groupBy(data, item => item.attributeId),
+                (item, key) => {
+                    this.unfilteredClinicalDataBinCountCache[key] = item;
+                    this.newlyAddedCharts.remove(key);
+                }
+            );
         },
     });
 
@@ -2485,18 +2494,74 @@ export class StudyViewPageStore {
                             .clinicalAttributeId,
                     } as ClinicalDataCountItem);
                     let counts: ClinicalDataCount[] = [];
+                    let attributeId: string = '';
                     if (data !== undefined) {
                         counts = data.counts;
+                        attributeId = data.attributeId;
+                        if (!this.chartToUsedColors.has(attributeId))
+                            this.chartToUsedColors.set(attributeId, new Set());
                     }
-                    return getClinicalDataCountWithColorByClinicalDataCount(
+
+                    let res = getClinicalDataCountWithColorByClinicalDataCount(
                         counts
                     );
+                    res.forEach(item => {
+                        let colorMapKey = this.generateColorMapKey(
+                            attributeId,
+                            item.value
+                        );
+                        // If the item doesn't has an assigned color
+                        if (!this.chartItemToColor.has(colorMapKey)) {
+                            // If the color has not been used
+                            if (
+                                !this.chartToUsedColors
+                                    .get(attributeId)
+                                    ?.has(item.color)
+                            ) {
+                                this.chartItemToColor.set(
+                                    colorMapKey,
+                                    item.color
+                                );
+                                this.chartToUsedColors
+                                    .get(attributeId)
+                                    ?.add(item.color);
+                            } else {
+                                // Pick up a new color if the color has been used
+                                let d = {
+                                    value: item.value,
+                                    count: item.count,
+                                };
+                                let newColor = pickNewColorForClinicData(
+                                    d,
+                                    this.chartToUsedColors.get(attributeId) ||
+                                        new Set()
+                                );
+                                this.chartItemToColor.set(
+                                    colorMapKey,
+                                    newColor
+                                );
+                                this.chartToUsedColors
+                                    .get(attributeId)
+                                    ?.add(newColor);
+                                item.color = newColor;
+                            }
+                        } else {
+                            item.color = this.chartItemToColor.get(
+                                colorMapKey
+                            )!;
+                        }
+                    });
+                    return res;
                 },
                 onError: error => {},
                 default: [],
             });
         }
         return this.clinicalDataCountPromises[uniqueKey];
+    }
+
+    private generateColorMapKey(id: string, value: string) {
+        return `${id}.${value}`;
     }
 
     public getClinicalDataBin(chartMeta: ChartMeta) {
@@ -5380,8 +5445,8 @@ export class StudyViewPageStore {
             ) {
                 const yAxisBinCount = MutationCountVsCnaYBinsMin;
                 const xAxisBinCount = 50;
-                const bins = (await internalClient.fetchClinicalDataDensityPlotUsingPOST(
-                    {
+                const bins = (
+                    await internalClient.fetchClinicalDataDensityPlotUsingPOST({
                         xAxisAttributeId:
                             SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED,
                         yAxisAttributeId:
@@ -5394,8 +5459,8 @@ export class StudyViewPageStore {
                         studyViewFilter: this
                             .studyViewFilterWithFilteredSampleIdentifiers
                             .result!,
-                    }
-                )).filter(bin => bin.count > 0); // only show points for bins with stuff in them
+                    })
+                ).filter(bin => bin.count > 0); // only show points for bins with stuff in them
                 const xBinSize = 1 / xAxisBinCount;
                 const yBinSize =
                     Math.max(...bins.map(bin => bin.binY)) /

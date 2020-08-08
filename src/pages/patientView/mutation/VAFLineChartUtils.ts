@@ -122,9 +122,9 @@ export function computeRenderData(
         }
         while (
             thisLineData.length > 0 &&
-            !isPointBasedOnRealVAF(thisLineData[
-                thisLineData.length - 1
-            ] as IPoint)
+            !isPointBasedOnRealVAF(
+                thisLineData[thisLineData.length - 1] as IPoint
+            )
         ) {
             thisLineData.pop();
         }

@@ -1572,8 +1572,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     },
                 ];
             }
-            const options = (noneDatatypeOption || []).concat((this
-                .dataTypeOptions.result || []) as any[]);
+            const options = (noneDatatypeOption || []).concat(
+                (this.dataTypeOptions.result || []) as any[]
+            );
             return Promise.resolve(options);
         },
     });
@@ -1596,8 +1597,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 ];
             }
             return Promise.resolve(
-                (noneDatatypeOption || []).concat((this.dataTypeOptions
-                    .result || []) as any[])
+                (noneDatatypeOption || []).concat(
+                    (this.dataTypeOptions.result || []) as any[]
+                )
             );
         },
     });
@@ -1639,8 +1641,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 ];
             }
             return Promise.resolve(
-                (sameGeneOption || []).concat((this.horzGeneOptions.result ||
-                    []) as any[])
+                (sameGeneOption || []).concat(
+                    (this.horzGeneOptions.result || []) as any[]
+                )
             );
         },
     });
@@ -1655,9 +1658,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         invoke: () => {
             const allOptions: (
                 | Omit<ColoringMenuOmnibarOption, 'value'>
-                | Omit<ColoringMenuOmnibarGroup, 'options'> & {
+                | (Omit<ColoringMenuOmnibarGroup, 'options'> & {
                       options: Omit<ColoringMenuOmnibarOption, 'value'>[];
-                  })[] = [];
+                  })
+            )[] = [];
 
             // add gene options
             allOptions.push({
@@ -1713,9 +1717,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     );
                 }
             });
-            return Promise.resolve(allOptions as (
-                | ColoringMenuOmnibarOption
-                | ColoringMenuOmnibarGroup)[]);
+            return Promise.resolve(
+                allOptions as (
+                    | ColoringMenuOmnibarOption
+                    | ColoringMenuOmnibarGroup
+                )[]
+            );
         },
     });
 
@@ -1755,8 +1762,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 }
             }
             return Promise.resolve(
-                (sameGenesetOption || []).concat((this.horzGenesetOptions
-                    .result || []) as any[])
+                (sameGenesetOption || []).concat(
+                    (this.horzGenesetOptions.result || []) as any[]
+                )
             );
         },
     });
@@ -1803,26 +1811,23 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             this.horzSelection.dataSourceId!
                         ]
                     )
-                        .reduce(
-                            (acc, profile) => {
-                                if (
-                                    this.props.store
-                                        .genericAssayEntitiesGroupByMolecularProfileId
-                                        .result &&
-                                    this.props.store
-                                        .genericAssayEntitiesGroupByMolecularProfileId
-                                        .result[profile.molecularProfileId]
-                                ) {
-                                    this.props.store.genericAssayEntitiesGroupByMolecularProfileId.result[
-                                        profile.molecularProfileId
-                                    ].forEach(meta => {
-                                        acc[meta.stableId] = meta;
-                                    });
-                                    return acc;
-                                }
-                            },
-                            {} as { [stableId: string]: GenericAssayMeta }
-                        )
+                        .reduce((acc, profile) => {
+                            if (
+                                this.props.store
+                                    .genericAssayEntitiesGroupByMolecularProfileId
+                                    .result &&
+                                this.props.store
+                                    .genericAssayEntitiesGroupByMolecularProfileId
+                                    .result[profile.molecularProfileId]
+                            ) {
+                                this.props.store.genericAssayEntitiesGroupByMolecularProfileId.result[
+                                    profile.molecularProfileId
+                                ].forEach(meta => {
+                                    acc[meta.stableId] = meta;
+                                });
+                                return acc;
+                            }
+                        }, {} as { [stableId: string]: GenericAssayMeta })
                         .map(meta => ({
                             value: meta.stableId,
                             label:
@@ -1866,26 +1871,23 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             this.vertSelection.dataSourceId!
                         ]
                     )
-                        .reduce(
-                            (acc, profile) => {
-                                if (
-                                    this.props.store
-                                        .genericAssayEntitiesGroupByMolecularProfileId
-                                        .result &&
-                                    this.props.store
-                                        .genericAssayEntitiesGroupByMolecularProfileId
-                                        .result[profile.molecularProfileId]
-                                ) {
-                                    this.props.store.genericAssayEntitiesGroupByMolecularProfileId.result[
-                                        profile.molecularProfileId
-                                    ].forEach(meta => {
-                                        acc[meta.stableId] = meta;
-                                    });
-                                    return acc;
-                                }
-                            },
-                            {} as { [stableId: string]: GenericAssayMeta }
-                        )
+                        .reduce((acc, profile) => {
+                            if (
+                                this.props.store
+                                    .genericAssayEntitiesGroupByMolecularProfileId
+                                    .result &&
+                                this.props.store
+                                    .genericAssayEntitiesGroupByMolecularProfileId
+                                    .result[profile.molecularProfileId]
+                            ) {
+                                this.props.store.genericAssayEntitiesGroupByMolecularProfileId.result[
+                                    profile.molecularProfileId
+                                ].forEach(meta => {
+                                    acc[meta.stableId] = meta;
+                                });
+                                return acc;
+                            }
+                        }, {} as { [stableId: string]: GenericAssayMeta })
                         .map(meta => ({
                             value: meta.stableId,
                             label:
@@ -1931,11 +1933,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 }
             }
             return Promise.resolve(
-                (sameGenericAssayOption || []).concat((verticalOptions ||
-                    []) as {
-                    value: string;
-                    label: string;
-                }[])
+                (sameGenericAssayOption || []).concat(
+                    (verticalOptions || []) as {
+                        value: string;
+                        label: string;
+                    }[]
+                )
             );
         },
     });
@@ -2553,8 +2556,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return (
             this.horzAxisDataPromise.isComplete &&
             this.horzAxisDataPromise.result!.data.length > 0 &&
-            (this.vertAxisDataPromise.isComplete &&
-                this.vertAxisDataPromise.result!.data.length > 0)
+            this.vertAxisDataPromise.isComplete &&
+            this.vertAxisDataPromise.result!.data.length > 0
         );
     }
 

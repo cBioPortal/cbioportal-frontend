@@ -179,7 +179,7 @@ export const WATERFALLPLOT_SIDELENGTH_SAMPLE_MULTIPLICATION_FACTOR = 1.6;
 export interface IAxisData {
     data: {
         uniqueSampleKey: string;
-        value: string | number | (string[]) | (number[]); // if theres a list, then we'll make one data point per value
+        value: string | number | string[] | number[]; // if theres a list, then we'll make one data point per value
     }[];
     hugoGeneSymbol?: string;
     datatype: string; //"string" or "number"
@@ -188,7 +188,7 @@ export interface IAxisData {
 export interface IStringAxisData {
     data: {
         uniqueSampleKey: string;
-        value: string | (string[]);
+        value: string | string[];
         thresholdType?: '>' | '<' | undefined;
     }[];
     categoryOrder?: string[];
@@ -198,7 +198,7 @@ export interface IStringAxisData {
 export interface INumberAxisData {
     data: {
         uniqueSampleKey: string;
-        value: number | (number[]);
+        value: number | number[];
         thresholdType?: '>' | '<' | undefined;
     }[];
     hugoGeneSymbol?: string;
@@ -1442,7 +1442,9 @@ export function getAxisLabel(
                 selection.entrezGeneId !== undefined &&
                 selection.entrezGeneId !== NONE_SELECTED_OPTION_NUMERICAL_VALUE
             ) {
-                label = `${entrezGeneIdToGene[selection.entrezGeneId].hugoGeneSymbol}: ${profile.name}`;
+                label = `${
+                    entrezGeneIdToGene[selection.entrezGeneId].hugoGeneSymbol
+                }: ${profile.name}`;
             }
             break;
     }

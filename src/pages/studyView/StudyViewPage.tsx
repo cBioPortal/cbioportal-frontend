@@ -437,30 +437,25 @@ export default class StudyViewPage extends React.Component<
             const resourceDataById = this.store.resourceIdToResourceData
                 .result!;
 
-            const tabs: JSX.Element[] = sorted.reduce(
-                (list, def) => {
-                    const data = resourceDataById[def.resourceId];
-                    if (data && data.length > 0) {
-                        list.push(
-                            <MSKTab
-                                key={getStudyViewResourceTabId(def.resourceId)}
-                                id={getStudyViewResourceTabId(def.resourceId)}
-                                linkText={def.displayName}
-                                onClickClose={this.closeResourceTab}
-                            >
-                                <ResourceTab
-                                    resourceData={
-                                        resourceDataById[def.resourceId]
-                                    }
-                                    urlWrapper={this.urlWrapper}
-                                />
-                            </MSKTab>
-                        );
-                    }
-                    return list;
-                },
-                [] as JSX.Element[]
-            );
+            const tabs: JSX.Element[] = sorted.reduce((list, def) => {
+                const data = resourceDataById[def.resourceId];
+                if (data && data.length > 0) {
+                    list.push(
+                        <MSKTab
+                            key={getStudyViewResourceTabId(def.resourceId)}
+                            id={getStudyViewResourceTabId(def.resourceId)}
+                            linkText={def.displayName}
+                            onClickClose={this.closeResourceTab}
+                        >
+                            <ResourceTab
+                                resourceData={resourceDataById[def.resourceId]}
+                                urlWrapper={this.urlWrapper}
+                            />
+                        </MSKTab>
+                    );
+                }
+                return list;
+            }, [] as JSX.Element[]);
             return tabs;
         },
     });

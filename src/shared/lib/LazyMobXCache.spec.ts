@@ -523,7 +523,10 @@ describe('LazyMobXCache', () => {
             await cache.getPromise([{ numAsString: '3' }]).then(callback);
             assert.equal(callback.callCount, 2); // immediately called
             assert.equal(cache.activePromisesCount, 0);
-            assert.deepEqual(callback.args[1][0].map((x: any) => x.data), [78]);
+            assert.deepEqual(
+                callback.args[1][0].map((x: any) => x.data),
+                [78]
+            );
             cache.get({ numAsString: '2' });
             cache.get({ numAsString: '1' });
             await cache
@@ -535,17 +538,19 @@ describe('LazyMobXCache', () => {
                 .then(callback);
             assert.equal(callback.callCount, 3);
             assert.equal(cache.activePromisesCount, 0);
-            assert.deepEqual(callback.args[2][0].map((x: any) => x.data), [
-                78,
-                53,
-                28,
-            ]);
+            assert.deepEqual(
+                callback.args[2][0].map((x: any) => x.data),
+                [78, 53, 28]
+            );
             return true;
         });
         it('resolves when the selected queries become available: request made', done => {
             let callback = sinon.spy((data: CacheData<number, string>[]) => {
                 assert.equal(callback.callCount, 1);
-                assert.deepEqual(data.map(x => x.data), [28, 103]);
+                assert.deepEqual(
+                    data.map(x => x.data),
+                    [28, 103]
+                );
                 done();
             });
             cache
@@ -555,7 +560,10 @@ describe('LazyMobXCache', () => {
         it('resolves when the selected queries become available: request not made', done => {
             let callback = sinon.spy((data: CacheData<number, string>[]) => {
                 assert.equal(callback.callCount, 1);
-                assert.deepEqual(data.map(x => x.data), [28, 103]);
+                assert.deepEqual(
+                    data.map(x => x.data),
+                    [28, 103]
+                );
                 done();
             });
             cache
