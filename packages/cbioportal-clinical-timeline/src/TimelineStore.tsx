@@ -91,9 +91,11 @@ export class TimelineStore {
     @autobind
     @action
     prevTooltipEvent() {
-        this.tooltipModel!.index = Math.abs(
-            (this.tooltipModel!.index - 1) % this.tooltipModel!.events.length
-        );
+        let nextIndex = this.tooltipModel!.index - 1;
+        while (nextIndex < 0) {
+            nextIndex += this.tooltipModel!.events.length;
+        }
+        this.tooltipModel!.index = nextIndex;
     }
 
     @computed get tooltipContent() {
@@ -110,18 +112,13 @@ export class TimelineStore {
         }
 
         const multipleItems = this.tooltipModel.events.length > 1;
-        let style: any = {};
         let point = null;
         if (multipleItems) {
-            style = {
-                borderBottom: '1px dashed white',
-                paddingBottom: 5,
-            };
             point = (
                 <svg
                     width={TIMELINE_TRACK_HEIGHT}
                     height={TIMELINE_TRACK_HEIGHT}
-                    style={{ marginRight: 5, marginTop: 2 }}
+                    style={{ marginRight: 5 }}
                 >
                     <g
                         style={{
@@ -137,12 +134,14 @@ export class TimelineStore {
 
         return (
             <div>
-                <div style={style}>{content}</div>
                 {multipleItems && (
                     <div
                         style={{
                             display: 'flex',
                             alignItems: 'center',
+                            borderBottom: '1px dashed white',
+                            paddingBottom: 3,
+                            marginBottom: 3,
                         }}
                     >
                         {point}
@@ -151,6 +150,7 @@ export class TimelineStore {
                         keys to see others.
                     </div>
                 )}
+                <div>{content}</div>
             </div>
         );
     }
