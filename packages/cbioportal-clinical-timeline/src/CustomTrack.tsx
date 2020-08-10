@@ -1,6 +1,7 @@
 import { TimelineStore } from './TimelineStore';
 import * as React from 'react';
 import { REMOVE_FOR_DOWNLOAD_CLASSNAME } from './lib/helpers';
+import { TIMELINE_TRACK_HEIGHT } from './TimelineTrack';
 
 export type CustomTrackSpecification = {
     renderHeader: (store: TimelineStore) => any; // any = react renderable, string or element or null or etc.
@@ -45,6 +46,15 @@ const CustomTrack: React.FunctionComponent<ICustomTrackProps> = function({
                 }}
             />
             {specification.renderTrack(store)}
+            <line
+                x1={0}
+                x2={width}
+                y1={specification.height(store) - 0.5}
+                y2={specification.height(store) - 0.5}
+                stroke={'#eee'}
+                strokeWidth={1}
+                strokeDasharray={'3,2'}
+            />
         </g>
     );
 };
