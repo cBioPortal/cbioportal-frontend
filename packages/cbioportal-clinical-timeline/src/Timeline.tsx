@@ -190,7 +190,6 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     customTracks,
     width,
 }: ITimelineProps) {
-    const [viewPortWidth, setViewPortWidth] = useState<number | null>(null);
     const height =
         TICK_AXIS_HEIGHT +
         expandTracks(store.data).length * TIMELINE_TRACK_HEIGHT +
@@ -210,7 +209,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     // of componentDidMount
     useEffect(() => {
         setTimeout(() => {
-            setViewPortWidth(store.viewPortWidth);
+            store.updateViewPortWidth();
         }, 10);
     }, []);
 
@@ -219,7 +218,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
         myZoom = store.absoluteWidth / store.zoomedWidth;
     }
 
-    const renderWidth = viewPortWidth ? viewPortWidth * myZoom : 0;
+    const renderWidth = store.viewPortWidth ? store.viewPortWidth * myZoom : 0;
 
     return (
         <div ref={refs.wrapper} className={'tl-timeline-wrapper'}>
@@ -269,7 +268,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                     className={'tl-timelineviewport'}
                     style={{ flexShrink: 1, height }}
                 >
-                    {viewPortWidth && store.ticks && (
+                    {store.viewPortWidth > 0 && store.ticks && (
                         <div
                             className={'tl-timeline'}
                             id={'tl-timeline'}

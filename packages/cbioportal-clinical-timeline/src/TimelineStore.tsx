@@ -49,6 +49,12 @@ export class TimelineStore {
                 e.preventDefault();
             }
         });
+
+        if (window) {
+            $(window).resize(() => {
+                this.updateViewPortWidth();
+            });
+        }
     }
 
     @observable private tooltipModel = null as null | {
@@ -171,9 +177,11 @@ export class TimelineStore {
         | { start: number | null; end: number | null }
         | undefined = undefined;
 
-    @computed get viewPortWidth() {
-        const width = $('.tl-timelineviewport').width()!;
-        return width;
+    @observable viewPortWidth: number = 0;
+
+    @action
+    public updateViewPortWidth() {
+        this.viewPortWidth = $('.tl-timelineviewport').width()!;
     }
 
     setZoomBounds(start?: number, end?: number) {
