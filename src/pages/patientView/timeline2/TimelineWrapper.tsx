@@ -142,14 +142,12 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                                             (max || 1)!;
                                         perc = perc > 0.2 ? perc : 0.2;
                                         return (
-                                            <svg width="18" height="19">
-                                                <circle
-                                                    cx={10}
-                                                    cy={10}
-                                                    r={8 * perc}
-                                                    fill={'#999999'}
-                                                />
-                                            </svg>
+                                            <circle
+                                                cx={0}
+                                                cy={TIMELINE_TRACK_HEIGHT / 2}
+                                                r={8 * perc}
+                                                fill={'#999999'}
+                                            />
                                         );
                                     };
                                 });
@@ -289,15 +287,13 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                             }
                             event.render = event => {
                                 return (
-                                    <svg width="10" height="10">
-                                        <circle
-                                            cx="5"
-                                            cy="5"
-                                            r="4"
-                                            stroke="#999999"
-                                            fill={color}
-                                        />
-                                    </svg>
+                                    <circle
+                                        cx="0"
+                                        cy={TIMELINE_TRACK_HEIGHT / 2}
+                                        r="4"
+                                        stroke="#999999"
+                                        fill={color}
+                                    />
                                 );
                             };
                         });
@@ -336,15 +332,13 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                                 }
                                 event.render = event => {
                                     return (
-                                        <svg width="10" height="10">
-                                            <circle
-                                                cx="5"
-                                                cy="5"
-                                                r="4"
-                                                stroke="#999999"
-                                                fill={color}
-                                            />
-                                        </svg>
+                                        <circle
+                                            cx="0"
+                                            cy={TIMELINE_TRACK_HEIGHT / 2}
+                                            r="4"
+                                            stroke="#999999"
+                                            fill={color}
+                                        />
                                     );
                                 };
                             });
