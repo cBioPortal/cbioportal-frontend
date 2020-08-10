@@ -115,7 +115,7 @@ function makeGenesetHeatmapUnexpandHandler(
             // group than the one this track is being removed from; keep the
             // expansion if the track is being re-rendered into a different
             // track group
-            if (myTrackGroup === oncoprint.genesetHeatmapTrackGroup) {
+            if (myTrackGroup === oncoprint.genesetHeatmapTrackGroupIndex) {
                 // this is a MobX Observable Array, so it should have findIndex
                 // implemented even in IE
                 const indexToRemove = list.findIndex(
@@ -1237,7 +1237,7 @@ export function makeGenesetHeatmapExpansionsMobxPromise(
             const genesetGeneCache = oncoprint.props.store
                 .genesetCorrelatedGeneCache.result!;
 
-            const trackGroup = oncoprint.genesetHeatmapTrackGroup;
+            const trackGroupIndex = oncoprint.genesetHeatmapTrackGroupIndex;
             const expansionsByGenesetTrack =
                 oncoprint.expansionsByGenesetHeatmapTrackKey;
 
@@ -1276,7 +1276,7 @@ export function makeGenesetHeatmapExpansionsMobxPromise(
                                 molecularProfileId
                             ];
                         return {
-                            key: `EXPANSIONTRACK_${gsTrack},${hugoGeneSymbol},GROUP${trackGroup}`,
+                            key: `EXPANSIONTRACK_${gsTrack},${hugoGeneSymbol},GROUP${trackGroupIndex!}`,
                             label: '  ' + hugoGeneSymbol,
                             labelColor: 'grey',
                             info: correlationValue.toFixed(2),
@@ -1293,12 +1293,12 @@ export function makeGenesetHeatmapExpansionsMobxPromise(
                                 sampleMode ? samples : patients,
                                 data
                             ),
-                            trackGroupIndex: trackGroup,
+                            trackGroupIndex: trackGroupIndex!,
                             onRemove: makeGenesetHeatmapUnexpandHandler(
                                 oncoprint,
                                 gsTrack,
                                 entrezGeneId,
-                                trackGroup,
+                                trackGroupIndex!,
                                 genesetGeneCache.reset.bind(
                                     genesetGeneCache,
                                     gsTrack
@@ -1342,7 +1342,7 @@ export function makeGenesetHeatmapTracksMobxPromise(
             const expansions = expansionMapPromise.result!;
 
             // observe computed property based on other tracks
-            const trackGroup = oncoprint.genesetHeatmapTrackGroup;
+            const trackGroupIndex = oncoprint.genesetHeatmapTrackGroupIndex;
 
             if (!molecularProfile.isApplicable) {
                 return [];
@@ -1360,7 +1360,7 @@ export function makeGenesetHeatmapTracksMobxPromise(
             return genesetIds.map(genesetId => {
                 const expansionMapKey = `GENESETHEATMAPTRACK_${molecularProfileId},${genesetId}`;
                 return {
-                    key: `GENESETHEATMAPTRACK_${molecularProfileId},${genesetId},GROUP${trackGroup}`,
+                    key: `GENESETHEATMAPTRACK_${molecularProfileId},${genesetId},GROUP${trackGroupIndex!}`,
                     label: genesetId,
                     molecularProfileId,
                     molecularAlterationType:
@@ -1383,7 +1383,7 @@ export function makeGenesetHeatmapTracksMobxPromise(
                                 value: parseFloat(d.value!),
                             }))
                     ),
-                    trackGroupIndex: trackGroup,
+                    trackGroupIndex: trackGroupIndex!,
                     expansionCallback: makeGenesetHeatmapExpandHandler(
                         oncoprint,
                         expansionMapKey,
