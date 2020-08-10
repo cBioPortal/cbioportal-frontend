@@ -233,7 +233,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                 </div>
                 <div
                     className={'tl-timelineviewport'}
-                    style={{ flexShrink: 1 }}
+                    style={{ flexShrink: 1, height }}
                 >
                     {viewPortWidth && store.ticks && (
                         <div
@@ -262,6 +262,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                                 ref={refs.timeline}
                                 width={renderWidth}
                                 height={height}
+                                className={'tl-timeline-svg'}
                             >
                                 <g ref={refs.timelineTracksArea}>
                                     <TimelineTracks
