@@ -108,7 +108,6 @@ export default class DriverAnnotationControls extends React.Component<
     private onCustomDriverTierCheckboxClick(
         event: React.MouseEvent<HTMLInputElement>
     ) {
-        let a = 1;
         this.props.handlers.onSelectCustomDriverAnnotationTier &&
             this.props.handlers.onSelectCustomDriverAnnotationTier(
                 (event.target as HTMLInputElement).value,
