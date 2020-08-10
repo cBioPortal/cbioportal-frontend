@@ -99,6 +99,7 @@ export function getProteinImpactTypeFromCanonical(
         case CanonicalMutationType.FRAMESHIFT:
         case CanonicalMutationType.NONSENSE:
         case CanonicalMutationType.SPLICE_SITE:
+        case CanonicalMutationType.NONSTART:
         case CanonicalMutationType.NONSTOP:
         case CanonicalMutationType.TRUNCATING:
             return ProteinImpactType.TRUNCATING;
@@ -106,7 +107,6 @@ export function getProteinImpactTypeFromCanonical(
         case CanonicalMutationType.IN_FRAME_DEL:
         case CanonicalMutationType.INFRAME:
             return ProteinImpactType.INFRAME;
-        case CanonicalMutationType.NONSTART:
         case CanonicalMutationType.FUSION:
             return ProteinImpactType.FUSION;
         case CanonicalMutationType.SILENT:
