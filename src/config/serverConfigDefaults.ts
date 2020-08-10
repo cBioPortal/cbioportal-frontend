@@ -3,7 +3,6 @@ import { IServerConfig } from './IAppConfig';
 const ServerConfigDefaults: Partial<IServerConfig> = {
     app_version: '1.0',
     api_cache_limit: 450,
-    dat_uuid_revoke_other_tokens: true,
     dat_method: 'none',
     disabled_tabs: '',
     genomenexus_url: 'https://v1.genomenexus.org',
@@ -41,9 +40,12 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     show_civic: false,
     show_pathway_mapper: true,
     show_mutation_mapper_tool_grch38: true,
+    show_transcript_dropdown: false,
     skin_description:
         'The cBioPortal for Cancer Genomics provides visualization, analysis and download of large-scale cancer genomics data sets',
     show_genomenexus: true,
+    // TODO should support more sources such as clinvar,gnomad,sift
+    show_genomenexus_annotation_sources: 'mutation_assessor',
     skin_authorization_message:
         'Access to this portal is only available to authorized users.',
     skin_documentation_about: 'About-Us.md',

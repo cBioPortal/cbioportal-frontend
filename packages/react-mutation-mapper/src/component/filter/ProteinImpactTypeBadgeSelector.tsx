@@ -26,6 +26,7 @@ const VALUES = [
     ProteinImpactType.MISSENSE,
     ProteinImpactType.TRUNCATING,
     ProteinImpactType.INFRAME,
+    ProteinImpactType.FUSION,
     ProteinImpactType.OTHER,
 ];
 

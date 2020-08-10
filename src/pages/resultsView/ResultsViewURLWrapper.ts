@@ -62,6 +62,7 @@ export enum ResultsViewURLQueryEnum {
     oncoprint_sort_by_mutation_type = 'oncoprint_sort_by_mutation_type',
     oncoprint_sort_by_drivers = 'oncoprint_sort_by_drivers',
     exclude_germline_mutations = 'exclude_germline_mutations',
+    hide_unprofiled_samples = 'hide_unprofiled_samples',
     patient_enrichments = 'patient_enrichments',
 
     comparison_subtab = 'comparison_subtab',
@@ -81,6 +82,9 @@ export enum ResultsViewURLQueryEnum {
     genetic_profile_ids_PROFILE_GENESET_SCORE = 'genetic_profile_ids_PROFILE_GENESET_SCORE',
     genetic_profile_ids_GENERIC_ASSAY = 'genetic_profile_ids_GENERIC_ASSAY',
     genetic_profile_ids = 'genetic_profile_ids',
+
+    mutations_gene = 'mutations_gene',
+    mutations_transcript_id = 'mutations_transcript_id',
 }
 
 type StringValuedParams = Exclude<
@@ -114,6 +118,7 @@ export default class ResultsViewURLWrapper extends URLWrapper<
                 oncoprint_sort_by_drivers: { isSessionProp: false },
                 generic_assay_groups: { isSessionProp: false },
                 exclude_germline_mutations: { isSessionProp: false },
+                hide_unprofiled_samples: { isSessionProp: false },
                 patient_enrichments: { isSessionProp: false },
 
                 comparison_subtab: { isSessionProp: false },
@@ -133,6 +138,14 @@ export default class ResultsViewURLWrapper extends URLWrapper<
                 plots_coloring_selection: {
                     isSessionProp: false,
                     nestedObjectProps: PlotsColoringParamProps,
+                },
+
+                // mutations
+                mutations_gene: {
+                    isSessionProp: false,
+                },
+                mutations_transcript_id: {
+                    isSessionProp: false,
                 },
 
                 // session props here

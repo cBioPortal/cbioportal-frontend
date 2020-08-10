@@ -12,6 +12,7 @@ describe('MutationAnnotator', () => {
     const variantAnnotations = [
         {
             variant: 'X:g.66937331T>A',
+            originalVariantQuery: 'X,66937331,66937331,T,A',
             colocatedVariants: [
                 {
                     dbSnpId: 'COSM73703',
@@ -172,6 +173,7 @@ describe('MutationAnnotator', () => {
         },
         {
             variant: '17:g.41242962_41242963insGA',
+            originalVariantQuery: '17,41242962,41242963,-,GA',
             colocatedVariants: [
                 {
                     gnomad_nfe_maf: '9.314E-6',
@@ -997,6 +999,7 @@ describe('MutationAnnotator', () => {
         },
         {
             variant: '13:g.32912813G>T',
+            originalVariantQuery: '13,32912813,32912813,G,T',
             colocatedVariants: [
                 {
                     dbSnpId: 'COSM946800',
@@ -1129,6 +1132,7 @@ describe('MutationAnnotator', () => {
         },
         {
             variant: '12:g.133214671G>C',
+            originalVariantQuery: '12,133214671,133214671,G,C',
             colocatedVariants: [
                 {
                     dbSnpId: 'COSM78324',
@@ -1417,6 +1421,7 @@ describe('MutationAnnotator', () => {
         },
         {
             variant: '17:g.7577539G>A',
+            originalVariantQuery: '17,7577539,7577539,G,A',
             colocatedVariants: [
                 {
                     dbSnpId: 'CM010465',
@@ -1981,6 +1986,7 @@ describe('MutationAnnotator', () => {
         },
         {
             variant: '10:g.89692905G>A',
+            originalVariantQuery: '10,89692905,89692905,G,A',
             colocatedVariants: [
                 {
                     dbSnpId: 'CM981670',
@@ -2241,7 +2247,6 @@ describe('MutationAnnotator', () => {
                 mutationsWithGenomicLocation,
                 indexedVariantAnnotations
             );
-
             assert.notDeepEqual(
                 data,
                 mutationsWithGenomicLocation,

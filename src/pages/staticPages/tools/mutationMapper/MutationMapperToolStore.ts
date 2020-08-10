@@ -195,11 +195,9 @@ export default class MutationMapperToolStore {
                 let mutations: Partial<Mutation>[] = [];
 
                 if (this.annotatedMutations) {
-                    mutations = normalizeMutations(this
-                        .annotatedMutations as Pick<
-                        Mutation,
-                        'chr'
-                    >[]) as Partial<Mutation>[];
+                    mutations = normalizeMutations(
+                        this.annotatedMutations as Pick<Mutation, 'chr'>[]
+                    ) as Partial<Mutation>[];
                     resolveDefaultsForMissingValues(mutations);
                     updateMissingGeneInfo(mutations, this.genesByHugoSymbol);
                 }

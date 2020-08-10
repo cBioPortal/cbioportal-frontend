@@ -73,16 +73,18 @@ export default class QuerySummary extends React.Component<
                 onClick={() => {
                     submitToStudyViewPage(
                         this.props.store.queriedStudies.result,
-                        this.props.store.samples.result,
+                        this.props.store.filteredSamples.result!,
                         this.props.store.queriedVirtualStudies.result.length >
                             0,
+                        this.props.store.filteredSamples.result!.length <
+                            this.props.store.samples.result!.length,
                         this.props.store.sampleLists.result
                     );
                 }}
             >
                 {getPatientSampleSummary(
-                    this.props.store.samples.result,
-                    this.props.store.patients.result
+                    this.props.store.filteredSamples.result!,
+                    this.props.store.filteredPatients.result!
                 )}
             </a>
         );
@@ -92,8 +94,8 @@ export default class QuerySummary extends React.Component<
         await: () => [
             this.props.store.queriedStudies,
             this.props.store.sampleLists,
-            this.props.store.samples,
-            this.props.store.patients,
+            this.props.store.filteredSamples,
+            this.props.store.filteredPatients,
         ],
         render: () => {
             const sampleListName =
@@ -146,8 +148,8 @@ export default class QuerySummary extends React.Component<
 
     readonly multipleStudyUI = MakeMobxView({
         await: () => [
-            this.props.store.samples,
-            this.props.store.patients,
+            this.props.store.filteredSamples,
+            this.props.store.filteredPatients,
             this.props.store.queriedStudies,
             this.props.store.sampleLists,
         ],
@@ -209,17 +211,17 @@ export default class QuerySummary extends React.Component<
 
     readonly alterationSummary = MakeMobxView({
         await: () => [
-            this.props.store.samples,
-            this.props.store.patients,
-            this.props.store.alteredSampleKeys,
-            this.props.store.alteredPatientKeys,
+            this.props.store.filteredSamples,
+            this.props.store.filteredPatients,
+            this.props.store.filteredAlteredSampleKeys,
+            this.props.store.filteredAlteredPatientKeys,
         ],
         render: () =>
             getAlterationSummary(
-                this.props.store.samples.result!.length,
-                this.props.store.patients.result!.length,
-                this.props.store.alteredSampleKeys.result!.length,
-                this.props.store.alteredPatientKeys.result!.length,
+                this.props.store.filteredSamples.result!.length,
+                this.props.store.filteredPatients.result!.length,
+                this.props.store.filteredAlteredSampleKeys.result!.length,
+                this.props.store.filteredAlteredPatientKeys.result!.length,
                 this.props.store.hugoGeneSymbols.length
             ),
     });

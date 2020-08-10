@@ -70,6 +70,7 @@ import { IVirtualStudyProps } from 'pages/studyView/virtualStudy/VirtualStudy';
 import { Alteration } from 'shared/lib/oql/oql-parser';
 import autobind from 'autobind-decorator';
 import FontAwesome from 'react-fontawesome';
+import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 
 export interface IDownloadTabProps {
     store: ResultsViewPageStore;
@@ -104,14 +105,14 @@ export default class DownloadTab extends React.Component<
     readonly geneAlterationData = remoteData<IGeneAlteration[]>({
         await: () => [
             this.props.store.oqlFilteredCaseAggregatedDataByOQLLine,
-            this.props.store.sequencedSampleKeysByGene,
+            this.props.store.filteredSequencedSampleKeysByGene,
         ],
         invoke: () =>
             Promise.resolve(
                 generateGeneAlterationData(
                     this.props.store.oqlFilteredCaseAggregatedDataByOQLLine
                         .result!,
-                    this.props.store.sequencedSampleKeysByGene.result!
+                    this.props.store.filteredSequencedSampleKeysByGene.result!
                 )
             ),
     });
@@ -130,7 +131,7 @@ export default class DownloadTab extends React.Component<
             this.props.store.oqlFilteredCaseAggregatedDataByOQLLine,
             this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine,
             this.props.store.coverageInformation,
-            this.props.store.samples,
+            this.props.store.filteredSamples,
             this.geneAlterationDataByGene,
             this.props.store.molecularProfileIdToMolecularProfile,
         ],
@@ -145,7 +146,7 @@ export default class DownloadTab extends React.Component<
                         .oqlFilteredCaseAggregatedDataByUnflattenedOQLLine
                         .result!,
                     this.props.store.coverageInformation.result!,
-                    this.props.store.samples.result!,
+                    this.props.store.filteredSamples.result!,
                     this.geneAlterationDataByGene.result!,
                     this.props.store.molecularProfileIdToMolecularProfile
                         .result!
@@ -657,6 +658,7 @@ export default class DownloadTab extends React.Component<
                                 tabReflectsOql={true}
                             />
                             <AlterationFilterWarning store={this.props.store} />
+                            <CaseFilterWarning store={this.props.store} />
                         </div>
                         <div>
                             <FeatureTitle

@@ -17,7 +17,6 @@ import {
 import styles from '../styles.module.scss';
 import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
 import {
-    addSamplesParameters,
     getGroupParameters,
     getSelectedGroups,
 } from './ComparisonGroupManagerUtils';
@@ -30,9 +29,13 @@ import { sleepUntil } from '../../../shared/lib/TimeUtils';
 import { LoadingPhase } from '../GroupComparisonLoading';
 import _ from 'lodash';
 import { serializeEvent } from 'shared/lib/tracking';
+import AppConfig from 'appConfig';
+import { openSocialAuthWindow } from 'shared/lib/openSocialAuthWindow';
+import classnames from 'classnames';
 
 export interface IComparisonGroupManagerProps {
     store: StudyViewPageStore;
+    shareGroups: (groups: StudyViewComparisonGroup[]) => void;
 }
 
 @observer
@@ -97,21 +100,6 @@ export default class ComparisonGroupManager extends React.Component<
     @action
     private deleteGroup(group: StudyViewComparisonGroup) {
         this.props.store.toggleComparisonGroupMarkedForDeletion(group.uid);
-    }
-
-    @autobind
-    @action
-    private async addSamplesToGroup(group: StudyViewComparisonGroup) {
-        if (this.props.store.selectedSamples.result) {
-            await comparisonClient.updateGroup(
-                group.uid,
-                addSamplesParameters(
-                    group,
-                    this.props.store.selectedSamples.result
-                )
-            );
-            this.props.store.notifyComparisonGroupsChange();
-        }
     }
 
     @autobind
@@ -181,16 +169,17 @@ export default class ComparisonGroupManager extends React.Component<
     }
 
     @autobind
-    private async renameGroup(
-        newName: string,
-        group: StudyViewComparisonGroup
-    ) {
-        const { name, ...rest } = group;
-        await comparisonClient.updateGroup(group.uid, {
-            name: newName,
-            ...rest,
-        });
-        this.props.store.notifyComparisonGroupsChange();
+    private shareSingleGroup(group: StudyViewComparisonGroup) {
+        this.props.shareGroups([group]);
+    }
+
+    @autobind
+    private shareGroups() {
+        const selectedGroups = getSelectedGroups(
+            this.props.store.comparisonGroups.result || [],
+            this.props.store
+        );
+        this.props.shareGroups(selectedGroups);
     }
 
     private readonly groupsSection = MakeMobxView({
@@ -202,9 +191,6 @@ export default class ComparisonGroupManager extends React.Component<
         render: () => {
             if (this.props.store.comparisonGroups.result!.length > 0) {
                 // show this component if there are groups, and if filteredGroups is complete
-                const allGroupNames = this.props.store.comparisonGroups.result!.map(
-                    group => group.name
-                );
                 return (
                     <div className={styles.groupCheckboxes}>
                         {this.filteredGroups.result!.length > 0 ? (
@@ -216,10 +202,9 @@ export default class ComparisonGroupManager extends React.Component<
                                         group.uid
                                     )}
                                     restore={this.restoreGroup}
-                                    rename={this.renameGroup}
                                     delete={this.deleteGroup}
-                                    addSelectedSamples={this.addSamplesToGroup}
-                                    allGroupNames={allGroupNames}
+                                    studyIds={this.props.store.studyIds}
+                                    shareGroup={this.shareSingleGroup}
                                 />
                             ))
                         ) : (
@@ -280,18 +265,47 @@ export default class ComparisonGroupManager extends React.Component<
         }
     }
 
+    private get shareButton() {
+        if (
+            this.props.store.comparisonGroups.isComplete &&
+            this.props.store.comparisonGroups.result.length > 0
+        ) {
+            // only show select button if there are any groups
+            return (
+                <button
+                    className="btn btn-sm btn-default"
+                    disabled={
+                        getSelectedGroups(
+                            this.props.store.comparisonGroups.result,
+                            this.props.store
+                        ).length === 0
+                    }
+                    style={{ marginLeft: 7 }}
+                    onClick={this.shareGroups}
+                >
+                    Share
+                </button>
+            );
+        } else {
+            return null;
+        }
+    }
+
+    @computed get allGroupNames() {
+        return this.props.store.comparisonGroups.isComplete
+            ? this.props.store.comparisonGroups.result!.map(group => group.name)
+            : undefined;
+    }
+
     @computed get submitNewGroupDisabled() {
         const selectedSamples = this.props.store.selectedSamples.isComplete
             ? this.props.store.selectedSamples.result
             : undefined;
-        const allGroupNames = this.props.store.comparisonGroups.isComplete
-            ? this.props.store.comparisonGroups.result!.map(group => group.name)
-            : undefined;
         return (
             !selectedSamples ||
             this.inputGroupName.length === 0 ||
-            !allGroupNames ||
-            allGroupNames.includes(this.inputGroupName)
+            !this.allGroupNames ||
+            this.allGroupNames.includes(this.inputGroupName)
         );
     }
 
@@ -308,8 +322,8 @@ export default class ComparisonGroupManager extends React.Component<
                 this.props.store.studyIds
             )
         );
-        this.props.store.setComparisonGroupSelected(id); // created groups start selected
         this.props.store.notifyComparisonGroupsChange();
+        this.props.store.setComparisonGroupSelected(id); // created groups start selected
         this.cancelAddGroup();
     }
 
@@ -401,6 +415,7 @@ export default class ComparisonGroupManager extends React.Component<
                     >
                         {this.compareButton}
                         {this.viewButton}
+                        {this.shareButton}
                     </div>
                 );
             } else {
@@ -411,13 +426,9 @@ export default class ComparisonGroupManager extends React.Component<
 
     private get addGroupPanel() {
         let contents: any;
-        const inputWidth = 235;
         const createOrAddButtonWidth = 58;
         const selectedSamples = this.props.store.selectedSamples.isComplete
             ? this.props.store.selectedSamples.result
-            : undefined;
-        const allGroupNames = this.props.store.comparisonGroups.isComplete
-            ? this.props.store.comparisonGroups.result!.map(group => group.name)
             : undefined;
         if (this.addGroupPanelOpen) {
             contents = [
@@ -457,8 +468,8 @@ export default class ComparisonGroupManager extends React.Component<
                     >
                         <DefaultTooltip
                             visible={
-                                allGroupNames &&
-                                allGroupNames.includes(this.inputGroupName)
+                                this.allGroupNames &&
+                                this.allGroupNames.includes(this.inputGroupName)
                             }
                             overlay={
                                 <div>
@@ -534,6 +545,65 @@ export default class ComparisonGroupManager extends React.Component<
         this.props.store.deleteMarkedComparisonGroups();
     }
 
+    @computed get existSharedGroups() {
+        return (
+            this.props.store.comparisonGroups.result.filter(
+                group => group.isSharedGroup
+            ).length > 0
+        );
+    }
+
+    @computed get notificationMessages() {
+        let notificationMessages: JSX.Element[] = [];
+        if (this.props.store.comparisonGroups.result.length > 0) {
+            // Notify if there any shared groups
+            if (this.existSharedGroups) {
+                notificationMessages.push(
+                    <>
+                        <span
+                            className={classnames({
+                                [styles.sharedGroup]: true,
+                            })}
+                        >
+                            Highlighted rows
+                        </span>{' '}
+                        are shared groups.
+                    </>
+                );
+            }
+            // Notify that shared and page-session groups are not saved for non-logged users
+            if (
+                !this.props.store.isLoggedIn &&
+                AppConfig.serverConfig.authenticationMethod &&
+                AppConfig.serverConfig.authenticationMethod.includes(
+                    'social_auth'
+                )
+            ) {
+                notificationMessages.push(
+                    <>
+                        <br />
+                        The groups above will not be saved without &nbsp;
+                        <button
+                            className="btn btn-default btn-xs"
+                            onClick={() =>
+                                openSocialAuthWindow(this.props.store.appStore)
+                            }
+                        >
+                            Login
+                        </button>
+                        <br />
+                    </>
+                );
+            } else if (this.existSharedGroups) {
+                // Notify if shared groups are saved to user profile
+                notificationMessages.push(
+                    <>They have been saved to your profile.</>
+                );
+            }
+        }
+        return notificationMessages;
+    }
+
     render() {
         return (
             <div
@@ -542,6 +612,14 @@ export default class ComparisonGroupManager extends React.Component<
             >
                 {this.header}
                 {this.groupsSection.component}
+                {this.notificationMessages.length > 0 && (
+                    <>
+                        <br />
+                        <i className="text-warning">
+                            Note: {this.notificationMessages}
+                        </i>
+                    </>
+                )}
                 {this.actionButtons.component}
                 <hr />
                 {this.addGroupPanel}

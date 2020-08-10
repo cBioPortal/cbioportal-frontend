@@ -34,6 +34,7 @@ export enum ExpressionEnrichmentTableColumnType {
     Q_VALUE = 'Q_VALUE',
     TENDENCY = 'Tendency',
     EXPRESSED = 'Higher expression in',
+    METHYLATION = 'Higher methylation in',
     MEAN_SUFFIX = ' mean',
     STANDARD_DEVIATION_SUFFIX = ' standard deviation',
 }

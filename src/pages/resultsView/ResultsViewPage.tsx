@@ -52,10 +52,6 @@ import OQLTextArea, {
     GeneBoxType,
 } from 'shared/components/GeneSelectionBox/OQLTextArea';
 import browser from 'bowser';
-import { GroupComparisonTab } from '../groupComparison/GroupComparisonTabs';
-import NotUsingGenePanelWarning from './NotUsingGenePanelWarning';
-import Survival from '../groupComparison/Survival';
-import ResultsViewComparisonStore from './comparison/ResultsViewComparisonStore';
 import { QueryStore } from '../../shared/components/query/QueryStore';
 
 export function initStore(
@@ -234,15 +230,6 @@ export default class ResultsViewPage extends React.Component<
 
             {
                 id: ResultsViewTab.PLOTS,
-                hide: () => {
-                    if (!this.resultsViewPageStore.studies.isComplete) {
-                        return true;
-                    } else {
-                        return (
-                            this.resultsViewPageStore.studies.result!.length > 1
-                        );
-                    }
-                },
                 getTab: () => {
                     return (
                         <MSKTab
@@ -271,6 +258,7 @@ export default class ResultsViewPage extends React.Component<
                             <Mutations
                                 store={store}
                                 appStore={this.props.appStore}
+                                urlWrapper={this.urlWrapper}
                             />
                         </MSKTab>
                     );
@@ -393,15 +381,15 @@ export default class ResultsViewPage extends React.Component<
                     !this.resultsViewPageStore.studies.isComplete,
                 getTab: () => {
                     const showPM =
-                        store.sequencedSampleKeysByGene.isComplete &&
+                        store.filteredSequencedSampleKeysByGene.isComplete &&
                         store.oqlFilteredCaseAggregatedDataByOQLLine
                             .isComplete &&
                         store.genes.isComplete &&
                         store.samples.isComplete &&
                         store.patients.isComplete &&
                         store.coverageInformation.isComplete &&
-                        store.sequencedSampleKeysByGene.isComplete &&
-                        store.sequencedPatientKeysByGene.isComplete &&
+                        store.filteredSequencedSampleKeysByGene.isComplete &&
+                        store.filteredSequencedPatientKeysByGene.isComplete &&
                         store.selectedMolecularProfiles.isComplete &&
                         store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine
                             .isComplete;
@@ -701,7 +689,6 @@ export default class ResultsViewPage extends React.Component<
                                         </div>
                                     )}
                                 </div>
-
                                 {// we don't show the result tabs if we don't have valid query
                                 this.showTabs &&
                                     !this.resultsViewPageStore.genesInvalid &&
@@ -733,7 +720,8 @@ export default class ResultsViewPage extends React.Component<
     public render() {
         if (
             this.urlWrapper.isPendingSession ||
-            this.urlWrapper.isLoadingSession
+            this.urlWrapper.isLoadingSession ||
+            !this.resultsViewPageStore.studies.isComplete
         ) {
             return (
                 <LoadingIndicator isLoading={true} center={true} size={'big'} />

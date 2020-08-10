@@ -267,7 +267,13 @@ async function fetch(
     return ret;
 }
 
-export default class ClinicalDataCache extends MobxPromiseCache<
+function keyFn(q: ExtendedClinicalAttribute) {
+    return `${q.clinicalAttributeId},${(q.molecularProfileIds || []).join(
+        '-'
+    )},${q.patientAttribute}`;
+}
+
+export class UnfilteredClinicalDataCache extends MobxPromiseCache<
     ExtendedClinicalAttribute,
     ClinicalDataCacheEntry
 > {
@@ -304,10 +310,84 @@ export default class ClinicalDataCache extends MobxPromiseCache<
                     };
                 },
             }),
-            q =>
-                `${q.clinicalAttributeId},${(q.molecularProfileIds || []).join(
-                    '-'
-                )},${q.patientAttribute}`
+            keyFn
         );
+    }
+}
+
+export default class ClinicalDataCache extends MobxPromiseCache<
+    ExtendedClinicalAttribute,
+    ClinicalDataCacheEntry
+> {
+    private unfilteredClinicalDataCache: UnfilteredClinicalDataCache;
+
+    constructor(
+        samplesPromise: MobxPromise<Sample[]>,
+        patientsPromise: MobxPromise<Patient[]>,
+        studyToMutationMolecularProfilePromise: MobxPromise<{
+            [studyId: string]: MolecularProfile;
+        }>,
+        studyIdToStudyPromise: MobxPromise<{ [studyId: string]: CancerStudy }>,
+        coverageInformationPromise: MobxPromise<CoverageInformation>,
+        filteredSampleKeyToSample: MobxPromise<{
+            [uniqueSampleKey: string]: Sample;
+        }>,
+        filteredPatientKeyToPatient: MobxPromise<{
+            [uniquePatientKey: string]: Patient;
+        }>
+    ) {
+        const unfilteredClinicalDataCache = new UnfilteredClinicalDataCache(
+            samplesPromise,
+            patientsPromise,
+            studyToMutationMolecularProfilePromise,
+            studyIdToStudyPromise,
+            coverageInformationPromise
+        );
+        super(
+            q => ({
+                await: () => [
+                    unfilteredClinicalDataCache.get(q),
+                    filteredSampleKeyToSample,
+                    filteredPatientKeyToPatient,
+                ],
+                invoke: () => {
+                    const { data, ...rest } = unfilteredClinicalDataCache.get(
+                        q
+                    ).result!;
+                    if (q.patientAttribute) {
+                        const patientKeyToPatient = filteredPatientKeyToPatient.result!;
+                        return Promise.resolve(
+                            // typescript having some issues, so had to do this typing
+                            {
+                                data: (data as {
+                                    uniquePatientKey: string;
+                                }[]).filter(
+                                    d =>
+                                        d.uniquePatientKey in
+                                        patientKeyToPatient
+                                ) as OncoprintClinicalData,
+                                ...rest,
+                            }
+                        );
+                    } else {
+                        const sampleKeyToSample = filteredSampleKeyToSample.result!;
+                        return Promise.resolve(
+                            // typescript having some issues, so had to do this typing
+                            {
+                                data: (data as {
+                                    uniqueSampleKey: string;
+                                }[]).filter(
+                                    (d: OncoprintClinicalData[0]) =>
+                                        d.uniqueSampleKey in sampleKeyToSample
+                                ) as OncoprintClinicalData,
+                                ...rest,
+                            }
+                        );
+                    }
+                },
+            }),
+            keyFn
+        );
+        this.unfilteredClinicalDataCache = unfilteredClinicalDataCache;
     }
 }

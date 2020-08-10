@@ -2264,18 +2264,22 @@ describe('LazyMobXTable', () => {
         it('gives just the column names when theres no data in the table', async () => {
             let table = mount(<Table columns={columns} data={[]} />);
             assert.deepEqual(
-                (await (table.instance() as LazyMobXTable<
-                    any
-                >).getDownloadDataPromise()).text,
+                (
+                    await (table.instance() as LazyMobXTable<
+                        any
+                    >).getDownloadDataPromise()
+                ).text,
                 'Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n'
             );
         });
         it("gives one row of data when theres one row. data given for every column, including hidden, and without download def'n. if no data, gives empty string for that cell.", async () => {
             let table = mount(<Table columns={columns} data={[data[0]]} />);
             assert.deepEqual(
-                (await (table.instance() as LazyMobXTable<
-                    any
-                >).getDownloadDataPromise()).text,
+                (
+                    await (table.instance() as LazyMobXTable<
+                        any
+                    >).getDownloadDataPromise()
+                ).text,
                 'Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n' +
                     '0\t0\tasdfj\t\t0HELLO123456\t\t\r\n'
             );
@@ -2283,9 +2287,11 @@ describe('LazyMobXTable', () => {
         it("gives data for all rows. data given for every column, including hidden, and without download def'n. if no data, gives empty string for that cell", async () => {
             let table = mount(<Table columns={columns} data={data} />);
             assert.deepEqual(
-                (await (table.instance() as LazyMobXTable<
-                    any
-                >).getDownloadDataPromise()).text,
+                (
+                    await (table.instance() as LazyMobXTable<
+                        any
+                    >).getDownloadDataPromise()
+                ).text,
                 'Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n' +
                     '0\t0\tasdfj\t\t0HELLO123456\t\t\r\n' +
                     '1\t6\tkdfjpo\t\t1HELLO123456\t\t\r\n' +
@@ -2305,9 +2311,11 @@ describe('LazyMobXTable', () => {
             );
 
             assert.deepEqual(
-                (await (table.instance() as LazyMobXTable<
-                    any
-                >).getDownloadDataPromise()).text,
+                (
+                    await (table.instance() as LazyMobXTable<
+                        any
+                    >).getDownloadDataPromise()
+                ).text,
                 'Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n' +
                     '3\t-1\tzijxcpo\t\t3HELLO123456\t\t\r\n' +
                     '0\t0\tasdfj\t\t0HELLO123456\t\t\r\n' +
@@ -2320,9 +2328,11 @@ describe('LazyMobXTable', () => {
         it('gives data for data with multiple elements', async () => {
             let table = mount(<Table columns={columns} data={multiData} />);
             assert.deepEqual(
-                (await (table.instance() as LazyMobXTable<
-                    any
-                >).getDownloadDataPromise()).text,
+                (
+                    await (table.instance() as LazyMobXTable<
+                        any
+                    >).getDownloadDataPromise()
+                ).text,
                 'Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n' +
                     '0\t0\tasdfj\t\t0HELLO123456\t\t\r\n' +
                     '1\t6\tkdfjpo\t\t1HELLO123456\t\t\r\n' +
@@ -2349,9 +2359,11 @@ describe('LazyMobXTable', () => {
             const table = mount(<Table columns={cols} data={[]} />);
 
             assert.deepEqual(
-                (await (table.instance() as LazyMobXTable<
-                    any
-                >).getDownloadDataPromise()).text,
+                (
+                    await (table.instance() as LazyMobXTable<
+                        any
+                    >).getDownloadDataPromise()
+                ).text,
                 'Myth\tScience: Ruining everything since 1543\r\n'
             );
         });

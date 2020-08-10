@@ -805,6 +805,15 @@ export class CancerSummaryContent extends React.Component<
                                     this.hideGenomicAlterations
                                 }
                                 xLabels={this.chartData.labels}
+                                xAxisString={
+                                    (
+                                        GroupByOptions.find(
+                                            o =>
+                                                o.value ==
+                                                this.props.groupAlterationsBy
+                                        ) || {}
+                                    ).label || 'Cancer'
+                                }
                                 handleStudyLinkout={
                                     this.props.handleStudyLinkout!
                                 }

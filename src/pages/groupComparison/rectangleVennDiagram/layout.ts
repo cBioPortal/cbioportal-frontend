@@ -23,6 +23,13 @@ export function getRegionLabelPosition(
     setRectangles: SetRectangles
 ) {
     const regionShape = getRegionShape(sets, setRectangles);
+    if (regionShape.length === 0) {
+        // If regionShape is empty, then we can't put a label in it.
+        // We get here if we have a non-empty set intersection that has
+        //  an empty region in the computed venn layout. This means a
+        //  good layout was not found.
+        return null;
+    }
 
     // Put label in center of biggest area rectangle in the region shape
     const sortedRegionRectangles = _.sortBy(

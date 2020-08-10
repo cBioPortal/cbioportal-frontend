@@ -77,7 +77,7 @@
 }
 
 .groupLineItemActionButtons {
-    min-width: 45px;
+    display: flex;
     > span {
         margin-left: 5px;
         i {
@@ -87,6 +87,10 @@
             }
         }
     }
+}
+
+.sharedGroup {
+    background-color: #ffffaa !important;
 }
 
 .headerControls {

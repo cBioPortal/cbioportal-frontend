@@ -18,7 +18,7 @@ describe('CancerSummaryContainer', () => {
                     studies: {
                         result: [1, 2],
                     },
-                    samplesExtendedWithClinicalData: {
+                    filteredSamplesExtendedWithClinicalData: {
                         result: [
                             { cancerType: 'colon' },
                             { cancerType: 'brain' },
@@ -53,7 +53,7 @@ describe('CancerSummaryContainer', () => {
             );
 
             // now test if there's only one uniq cancerType
-            mockInstance.props.store.samplesExtendedWithClinicalData.result[1].cancerType =
+            mockInstance.props.store.filteredSamplesExtendedWithClinicalData.result[1].cancerType =
                 'colon';
             assert.equal(
                 method.apply(mockInstance),

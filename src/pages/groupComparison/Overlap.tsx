@@ -245,16 +245,18 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
         ],
         invoke: () => {
             const sampleSet = this.props.store.sampleMap.result!;
-            return Promise.resolve(partitionCasesByGroupMembership(
-                this.props.store._selectedGroups.result!,
-                group => getSampleIdentifiers([group]),
-                sampleIdentifier =>
-                    sampleSet.get({
-                        studyId: sampleIdentifier.studyId,
-                        sampleId: sampleIdentifier.sampleId,
-                    })!.uniqueSampleKey,
-                this.activeSamples.result!.map(s => s.uniqueSampleKey)
-            ) as { key: { [uid: string]: boolean }; value: string[] }[]);
+            return Promise.resolve(
+                partitionCasesByGroupMembership(
+                    this.props.store._selectedGroups.result!,
+                    group => getSampleIdentifiers([group]),
+                    sampleIdentifier =>
+                        sampleSet.get({
+                            studyId: sampleIdentifier.studyId,
+                            sampleId: sampleIdentifier.sampleId,
+                        })!.uniqueSampleKey,
+                    this.activeSamples.result!.map(s => s.uniqueSampleKey)
+                ) as { key: { [uid: string]: boolean }; value: string[] }[]
+            );
         },
     });
 
@@ -267,16 +269,20 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
         invoke: () => {
             const patientToSamplesSet = this.props.store.patientToSamplesSet
                 .result!;
-            return Promise.resolve(partitionCasesByGroupMembership(
-                this.props.store._selectedGroups.result!,
-                group => getPatientIdentifiers([group]),
-                patientIdentifier =>
-                    patientToSamplesSet.get({
-                        studyId: patientIdentifier.studyId,
-                        patientId: patientIdentifier.patientId,
-                    })![0].uniquePatientKey,
-                _.uniq(this.activeSamples.result!.map(s => s.uniquePatientKey))
-            ) as { key: { [uid: string]: boolean }; value: string[] }[]);
+            return Promise.resolve(
+                partitionCasesByGroupMembership(
+                    this.props.store._selectedGroups.result!,
+                    group => getPatientIdentifiers([group]),
+                    patientIdentifier =>
+                        patientToSamplesSet.get({
+                            studyId: patientIdentifier.studyId,
+                            patientId: patientIdentifier.patientId,
+                        })![0].uniquePatientKey,
+                    _.uniq(
+                        this.activeSamples.result!.map(s => s.uniquePatientKey)
+                    )
+                ) as { key: { [uid: string]: boolean }; value: string[] }[]
+            );
         },
     });
 

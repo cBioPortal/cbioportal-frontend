@@ -233,7 +233,10 @@ export function buildTimeline(
                     display: 'circle',
                     color: '#000',
                     tooltip_tables: [
-                        [['START_DATE', days], ['STATUS', 'DECEASED']],
+                        [
+                            ['START_DATE', days],
+                            ['STATUS', 'DECEASED'],
+                        ],
                     ],
                 };
 

@@ -1,16 +1,15 @@
 var assert = require('assert');
 var expect = require('chai').expect;
-var waitForOncoprint = require('../../../shared/specUtils').waitForOncoprint;
-var setOncoprintMutationsMenuOpen = require('../../../shared/specUtils')
-    .setOncoprintMutationsMenuOpen;
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var waitForNetworkQuiet = require('../../../shared/specUtils')
-    .waitForNetworkQuiet;
-var sessionServiceIsEnabled = require('../../../shared/specUtils')
-    .sessionServiceIsEnabled;
-var assertScreenShotMatch = require('../../../shared/lib/testUtils')
-    .assertScreenShotMatch;
+const {
+    waitForOncoprint,
+    setResultsPageSettingsMenuOpen,
+    setOncoprintMutationsMenuOpen,
+    goToUrlAndSetLocalStorage,
+    waitForNetworkQuiet,
+    sessionServiceIsEnabled,
+} = require('../../../shared/specUtils');
+
+const { assertScreenShotMatch } = require('../../../shared/lib/testUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
@@ -24,7 +23,7 @@ function waitForAndCheckPlotsTab() {
     assertScreenShotMatch(res);
 }
 
-function runResultsTestSuite(prefix) {
+function runResultsTestSuite(prefix, options = {}) {
     it(`${prefix} render the oncoprint`, function() {
         waitForOncoprint(10000);
         var res = browser.checkElement('.oncoprintContainer', {
@@ -143,7 +142,7 @@ function runResultsTestSuite(prefix) {
         browser.waitForVisible(
             'div[data-test="GroupComparisonMRNAEnrichments"]'
         );
-        browser.click('b=ETV5');
+        browser.click(options.mrnaEnrichmentsRowSelector || 'b=ETV5');
         browser.waitForVisible('div[data-test="MiniBoxPlot"]');
         var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
             hide: ['.qtip'],
@@ -408,6 +407,24 @@ describe('result page tabs, loading from session id', function() {
     });
 
     runResultsTestSuite('session');
+});
+
+describe('results page tabs while excluding unprofiled samples', function() {
+    before(() => {
+        goToUrlAndSetLocalStorage(
+            `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=gbm_tcga&case_set_id=gbm_tcga_all&data_priority=0&gene_list=EGFR%250APTEN%250AIDH1%250ATP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=gbm_tcga_mrna_median_all_sample_Zscores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_mutations&hide_unprofiled_samples=false&profileFilter=0&tab_index=tab_visualize`
+        );
+        waitForOncoprint(10000);
+        setResultsPageSettingsMenuOpen(true);
+        browser.waitForExist('input[data-test="HideUnprofiled"]');
+        browser.click('input[data-test="HideUnprofiled"]');
+        waitForOncoprint(10000);
+        setResultsPageSettingsMenuOpen(false);
+    });
+
+    runResultsTestSuite('excluding unprofiled samples', {
+        mrnaEnrichmentsRowSelector: 'b=PRR22',
+    });
 });
 
 describe('error messaging for 400 error', function() {

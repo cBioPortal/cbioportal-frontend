@@ -12,6 +12,7 @@ import {
     ClinicalTrackSpec,
     GeneticTrackDatum,
     IBaseHeatmapTrackSpec,
+    IHeatmapTrackSpec,
 } from './Oncoprint';
 import {
     AnnotatedExtendedAlteration,
@@ -36,6 +37,7 @@ export const TOOLTIP_DIV_CLASS = 'oncoprint__tooltip';
 
 const tooltipTextElementNaN = 'N/A';
 import './styles.scss';
+import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/PlotsTabUtils';
 
 function sampleViewAnchorTag(study_id: string, sample_id: string) {
     return `<a class="nobreak" href="${getSampleViewUrl(
@@ -219,7 +221,10 @@ export function makeHeatmapTrackTooltip(
                     data_header = 'METHYLATION: ';
                     break;
                 case AlterationTypeConstants.GENERIC_ASSAY:
-                    data_header = 'GENERIC ASSAY: ';
+                    // track for GENERIC_ASSAY type always has the genericAssayType
+                    data_header = `${deriveDisplayTextFromGenericAssayType(
+                        (trackSpec as IHeatmapTrackSpec).genericAssayType!
+                    )}: `;
                     break;
                 default:
                     data_header = 'Value: ';
@@ -319,9 +324,12 @@ export function makeGeneticTrackTooltip_getCoverageInformation(
     let dispNotProfiledGenePanelIds: string[] = [];
     let profiledInTypes: { [type: string]: string } | undefined = undefined;
     if (profiled_in) {
-        dispProfiledGenePanelIds = _.uniq((profiled_in.map(
-            x => x.genePanelId
-        ) as (string | undefined)[]).filter(x => !!x) as string[]);
+        dispProfiledGenePanelIds = _.uniq(
+            (profiled_in.map(x => x.genePanelId) as (
+                | string
+                | undefined
+            )[]).filter(x => !!x) as string[]
+        );
         dispProfiledIn = _.uniq(profiled_in.map(x => x.molecularProfileId));
         if (molecularProfileIdToMolecularProfile) {
             profiledInTypes = _.keyBy(

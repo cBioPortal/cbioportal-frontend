@@ -141,25 +141,22 @@ export default class TumorColumnFormatter {
             molecularProfileId?: string;
         }
     >(data: T[]) {
-        return data.reduce(
-            (map, next: T, currentIndex: number) => {
-                // Indicate called mutations with true,
-                // uncalled mutations with supporting reads as false
-                // exclude uncalled mutations without supporting reads completely
-                if (
-                    next.molecularProfileId &&
-                    isUncalled(next.molecularProfileId)
-                ) {
-                    if (next.tumorAltCount && next.tumorAltCount > 0) {
-                        map[next.sampleId] = false;
-                    }
-                } else {
-                    map[next.sampleId] = true;
+        return data.reduce((map, next: T, currentIndex: number) => {
+            // Indicate called mutations with true,
+            // uncalled mutations with supporting reads as false
+            // exclude uncalled mutations without supporting reads completely
+            if (
+                next.molecularProfileId &&
+                isUncalled(next.molecularProfileId)
+            ) {
+                if (next.tumorAltCount && next.tumorAltCount > 0) {
+                    map[next.sampleId] = false;
                 }
-                return map;
-            },
-            {} as { [s: string]: boolean }
-        );
+            } else {
+                map[next.sampleId] = true;
+            }
+            return map;
+        }, {} as { [s: string]: boolean });
     }
 
     public static getProfiledSamplesForGene(

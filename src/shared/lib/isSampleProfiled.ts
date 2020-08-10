@@ -51,6 +51,19 @@ function getSampleProfiledReport(
     return ret;
 }
 
+export function isSampleProfiledInSomeMolecularProfile(
+    uniqueSampleKey: string,
+    coverageInformation: CoverageInformation,
+    hugoGeneSymbol: string
+) {
+    const profiledReport = getSampleProfiledReport(
+        uniqueSampleKey,
+        coverageInformation,
+        hugoGeneSymbol
+    );
+    return _.some(profiledReport);
+}
+
 export function isSampleProfiledInMultiple(
     uniqueSampleKey: string,
     molecularProfileIds: string[],
