@@ -44,6 +44,8 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_description:
         'The cBioPortal for Cancer Genomics provides visualization, analysis and download of large-scale cancer genomics data sets',
     show_genomenexus: true,
+    // TODO should support more sources such as clinvar,gnomad,sift
+    show_genomenexus_annotation_sources: 'mutation_assessor',
     skin_authorization_message:
         'Access to this portal is only available to authorized users.',
     skin_documentation_about: 'About-Us.md',
