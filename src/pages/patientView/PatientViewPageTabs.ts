@@ -1,3 +1,4 @@
+import PatientViewUrlWrapper from './PatientViewUrlWrapper';
 export enum PatientViewPageTabs {
     Summary = 'summary',
     genomicEvolution = 'genomicEvolution',
@@ -25,3 +26,23 @@ export function extractResourceIdFromTabId(tabId: string) {
         return undefined;
     }
 }
+
+/* REWRITE
+export function addGenesToQuery(
+    urlWrapper: PatientViewUrlWrapper,
+    selectedGenes: string[],
+    tab: PatientViewPageTabs = PatientViewPageTabs.Summary
+) {
+    // add selected genes and go to the target tab
+    const geneList = urlWrapper.query[ResultsViewURLQueryEnum.gene_list];
+
+    urlWrapper.updateURL(
+        {
+            [ResultsViewURLQueryEnum.gene_list]: `${geneList}\n${selectedGenes.join(
+                ' '
+            )}`,
+        },
+        `results/${tab}`
+    );
+}
+*/
