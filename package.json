@@ -52,7 +52,7 @@
     "test:watch": "yarn run test -- --watch",
     "test:debug": "yarn run test -- --debug --browsers=Chrome_with_debugging --single-run=false",
     "prettierFixCurrentChanges": "STAGED_AND_CHANGED_FILES=$(git diff HEAD --name-only --cached --diff-filter=d) && ([ -z \"$STAGED_AND_CHANGED_FILES\" ] && echo \"Nothing to prettify\" || (yarn run prettier --write $(echo $STAGED_AND_CHANGED_FILES) && git add -f $(echo $STAGED_AND_CHANGED_FILES)))",
-    "prettierCheckCircleCI": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && git remote __tmp__cbio-repo https://github.com/cBioPortal/cbioportal-frontend.git && git fetch __tmp__cbio-repo $(echo $BRANCH_ENV) && CHANGED_FILES=$(git diff cbio-repo/$(echo $BRANCH_ENV) --name-only --diff-filter=d) && [ ! -z \"$CHANGED_FILES\" ] && yarn run prettier -c $(echo $CHANGED_FILES) && git remote remove __tmp__cbio-repo",
+    "prettierCheckCircleCI": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && CHANGED_FILES=$(git diff origin/$(echo $BRANCH_ENV) --name-only --diff-filter=d) && [ ! -z \"$CHANGED_FILES\" ] && yarn run prettier -c $(echo $CHANGED_FILES)",
     "prettierFixLocal": "CHANGED_FILES=$(git diff $(echo $BRANCH_ENV) --name-only --diff-filter=d) && ([ ! -z \"$CHANGED_FILES\" ] && yarn run prettier --write $(echo $CHANGED_FILES) || echo \"Nothing to prettify\")",
     "prettierAll": "yarn run prettier --write $(git ls-files | grep '\\(.js\\|.ts\\|.scss\\|.css\\)')",
     "checkIncorrectImportStatements": "./scripts/check_incorrect_import_statements.sh",
