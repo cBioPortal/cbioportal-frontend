@@ -16,7 +16,7 @@ export interface ITimelineTrackProps {
         item: TimelineEvent,
         limit: number
     ) => EventPosition | undefined;
-    handleTrackHover: (e: React.MouseEvent<SVGGElement>) => void;
+    handleTrackHover: (e: React.MouseEvent<any>) => void;
     store: TimelineStore;
     y: number;
     width: number;

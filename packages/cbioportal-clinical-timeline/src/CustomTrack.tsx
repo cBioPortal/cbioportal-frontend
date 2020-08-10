@@ -15,7 +15,7 @@ export interface ICustomTrackProps {
     specification: CustomTrackSpecification;
     width: number;
     y: number;
-    handleTrackHover: (e: React.MouseEvent<SVGGElement>) => void;
+    handleTrackHover: (e: React.MouseEvent<any>) => void;
 }
 
 const CustomTrack: React.FunctionComponent<ICustomTrackProps> = function({

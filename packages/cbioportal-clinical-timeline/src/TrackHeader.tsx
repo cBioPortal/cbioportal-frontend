@@ -9,6 +9,7 @@ import { TimelineStore } from './TimelineStore';
 
 interface ITrackHeaderProps {
     track: TimelineTrackSpecification;
+    handleTrackHover: (e: React.MouseEvent<any>) => void;
     level?: number;
 }
 
@@ -18,36 +19,38 @@ export function getTrackLabel(track: TimelineTrackSpecification) {
 
 const TrackHeader: React.FunctionComponent<ITrackHeaderProps> = function({
     track,
+    handleTrackHover,
     level = 5,
 }) {
-    if (track.tracks) {
-        // we want to sort by first item start date
-        let sortedTracks = _.sortBy(track.tracks, t =>
+    // we want to sort by first item start date
+    const sortedTracks =
+        track.tracks &&
+        _.sortBy(track.tracks, t =>
             t.items && t.items.length ? t.items[0].start : 0
         );
 
-        return (
-            <>
-                <div
-                    style={{
-                        paddingLeft: level,
-                        height: TIMELINE_TRACK_HEIGHT,
-                    }}
-                >
-                    {getTrackLabel(track)}
-                </div>
-                {sortedTracks.map(track => (
-                    <TrackHeader level={level + 17} track={track} />
-                ))}
-            </>
-        );
-    } else {
-        return (
-            <div style={{ paddingLeft: level, height: TIMELINE_TRACK_HEIGHT }}>
+    return (
+        <>
+            <div
+                style={{
+                    paddingLeft: level,
+                    height: TIMELINE_TRACK_HEIGHT,
+                }}
+                onMouseEnter={handleTrackHover}
+                onMouseLeave={handleTrackHover}
+            >
                 {getTrackLabel(track)}
             </div>
-        );
-    }
+            {sortedTracks &&
+                sortedTracks.map(track => (
+                    <TrackHeader
+                        handleTrackHover={handleTrackHover}
+                        level={level + 17}
+                        track={track}
+                    />
+                ))}
+        </>
+    );
 };
 
 function expandTrack(

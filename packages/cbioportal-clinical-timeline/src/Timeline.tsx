@@ -158,6 +158,33 @@ function handleMouseEvents(e: any, store: TimelineStore, refs: any) {
     }
 }
 
+const hoverCallback = (e: React.MouseEvent<any>) => {
+    switch (e.type) {
+        case 'mouseenter':
+            const trackIndex = _.findIndex(
+                e.currentTarget.parentNode!.children,
+                el => el === e.currentTarget
+            );
+            if (trackIndex !== undefined) {
+                $('.tl-header-hover-style').text(`
+                    .tl-timeline-tracklabels > div:nth-child(${trackIndex +
+                        1}) {
+                        background:#F2F2F2;
+                    }
+                    
+                    .tl-timeline .tl-track:nth-child(${trackIndex +
+                        1}) rect.tl-track-highlight {
+                        opacity: 1 !important;
+                    }
+                `);
+            }
+            break;
+        default:
+            $('.tl-header-hover-style').empty();
+            break;
+    }
+};
+
 const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     store,
     customTracks,
@@ -209,6 +236,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                 </div>
             )}
 
+            <style className={'tl-header-hover-style'} />
             <div style={{ flexBasis: width - 28, display: 'flex' }}>
                 {' '}
                 {/* -20 for room for download controls*/}
@@ -218,7 +246,12 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                 >
                     <div className={'tl-timeline-tracklabels'}>
                         {store.data.map(track => {
-                            return <TrackHeader track={track} />;
+                            return (
+                                <TrackHeader
+                                    track={track}
+                                    handleTrackHover={hoverCallback}
+                                />
+                            );
                         })}
                         {customTracks &&
                             customTracks.map(track => {
@@ -226,6 +259,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                                     <CustomTrackHeader
                                         store={store}
                                         specification={track}
+                                        handleTrackHover={hoverCallback}
                                     />
                                 );
                             })}
@@ -269,6 +303,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                                         store={store}
                                         width={renderWidth}
                                         customTracks={customTracks}
+                                        handleTrackHover={hoverCallback}
                                     />
                                     <TickAxis
                                         store={store}

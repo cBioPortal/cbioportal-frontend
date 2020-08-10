@@ -57,18 +57,13 @@ $borderColor: #ccc;
     }
 
     .tl-track {
-        // This CSS is solely for the hover highlight effect
+        // This allows sensing the pointer for the purpose of the hover effect
         pointer-events: all;
 
         rect.tl-track-highlight {
+            // On mouse hover, another handler will turn this opacity to 1
             fill: #f2f2f2;
             opacity: 0;
-        }
-
-        &:hover {
-            rect.tl-track-highlight {
-                opacity: 1;
-            }
         }
     }
 }

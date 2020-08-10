@@ -20,41 +20,19 @@ import { expandTracks } from './TrackHeader';
 export interface ITimelineTracks {
     store: TimelineStore;
     width: number;
+    handleTrackHover: (e: React.MouseEvent<SVGGElement>) => void;
     customTracks?: CustomTrackSpecification[];
 }
 
 export const TimelineTracks: React.FunctionComponent<
     ITimelineTracks
-> = observer(function({ store, width, customTracks }) {
-    const hoverCallback = (e: React.MouseEvent<SVGGElement>) => {
-        switch (e.type) {
-            case 'mouseenter':
-                const trackIndex = _.findIndex(
-                    e.currentTarget.parentNode!.children,
-                    el => el === e.currentTarget
-                );
-                if (trackIndex !== undefined) {
-                    $('.tl-header-hover-style').text(`
-                 .tl-timeline-tracklabels > div:nth-child(${trackIndex + 1}) {
-                                background:#F2F2F2;
-                            }
-                        }
-                    `);
-                }
-                break;
-            default:
-                $('.tl-header-hover-style').empty();
-                break;
-        }
-    };
-
+> = observer(function({ store, width, handleTrackHover, customTracks }) {
     const tracks = expandTracks(store.data).map(t => t.track);
 
     let nextY = 0;
 
     return (
         <>
-            <style className={'tl-header-hover-style'} />
             <g style={{ transform: `translate(0, ${TICK_AXIS_HEIGHT}px)` }}>
                 {tracks.map(track => {
                     const y = nextY;
@@ -64,7 +42,7 @@ export const TimelineTracks: React.FunctionComponent<
                             limit={store.trimmedLimit}
                             trackData={track}
                             getPosition={store.getPosition}
-                            handleTrackHover={hoverCallback}
+                            handleTrackHover={handleTrackHover}
                             store={store}
                             y={y}
                             width={width}
@@ -79,7 +57,7 @@ export const TimelineTracks: React.FunctionComponent<
                             <CustomTrack
                                 store={store}
                                 specification={track}
-                                handleTrackHover={hoverCallback}
+                                handleTrackHover={handleTrackHover}
                                 width={width}
                                 y={y}
                             />
