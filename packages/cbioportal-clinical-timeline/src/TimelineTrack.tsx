@@ -34,32 +34,15 @@ export function groupEventsByPosition(events: TimelineEvent[]) {
 
 function renderSuperscript(number: number) {
     return (
-        <g style={{ transform: 'translate(1px, 1px)' }}>
-            <rect
-                x={0}
-                y={0}
-                rx={2}
-                ry={2}
-                height={getTextHeight(number + '', 'Arial', '8px') + 2}
-                width={
-                    getTextWidth('x', 'Arial', '6px') +
-                    getTextWidth(number + '', 'Arial', '8px') +
-                    2
-                }
-                fill={'white'}
-                stroke={'#eee'}
-            />
+        <g style={{ transform: 'translate(1px, -8px)' }}>
             <text
                 x={1}
                 y={0}
                 dy={'1em'}
                 className="noselect"
-                style={{ fill: 'black', pointerEvents: 'none' }}
+                style={{ fill: '#666', pointerEvents: 'none' }}
             >
-                <tspan dy="1.3em" style={{ fontSize: 6 }}>
-                    x
-                </tspan>
-                <tspan style={{ fontSize: 8 }}>{number}</tspan>
+                <tspan style={{ fontSize: 7 }}>{number}</tspan>
             </text>
         </g>
     );
