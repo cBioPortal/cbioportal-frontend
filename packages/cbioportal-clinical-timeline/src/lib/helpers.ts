@@ -170,3 +170,19 @@ export function sortNestedTracks(tracks: TimelineTrackSpecification[]) {
         t.items && t.items.length ? t.items[0].start : 0
     );
 }
+
+export function formatDate(dayCount: number) {
+    let years, months, days;
+
+    years = Math.floor(dayCount / 365);
+    months = Math.floor((dayCount - years * 365) / 30);
+    days = Math.floor(dayCount - years * 365 - months * 30);
+
+    let arr = [];
+
+    if (years > 0) arr.push(`${years} year${years > 1 ? 's' : ''}`);
+    if (months > 0) arr.push(`${months} month${months > 1 ? 's' : ''}`);
+    if (days > 0) arr.push(`${days} day${days > 1 ? 's' : ''}`);
+
+    return arr.join(', ');
+}

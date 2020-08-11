@@ -20,6 +20,7 @@ import VAFChartWrapper, {
 } from 'pages/patientView/timeline2/VAFChartWrapper';
 import SampleMarker from 'pages/patientView/timeline2/SampleMarker';
 import { TIMELINE_TRACK_HEIGHT } from 'cbioportal-clinical-timeline/src/TimelineTrack';
+import { formatDate } from 'cbioportal-clinical-timeline';
 
 function getData(eventData: any) {
     return _.groupBy(eventData, (e: any) => e.eventType.toUpperCase());
@@ -40,7 +41,7 @@ function makeItems(items: any) {
 function splitCats(splits: string[], cat: any): TimelineTrackSpecification {
     if (!cat[0].attributes.find((att: any) => att.key === splits[0])) {
         return {
-            type: 'moo',
+            type: '',
             items: makeItems(cat),
         };
     }
@@ -99,6 +100,8 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
             let baseConfig: any = {
                 sortOrder: [
                     'Specimen',
+                    'Sequencing',
+                    'Sample Acquisition',
                     'Surgery',
                     'Med Onc Assessment',
                     'Status',
@@ -200,7 +203,9 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                                             )}
                                             <tr>
                                                 <th>START DATE</th>
-                                                <td>{event.start}</td>
+                                                <td className={'nowrap'}>
+                                                    {formatDate(event.start)}
+                                                </td>
                                             </tr>
                                         </table>
                                     );
@@ -402,19 +407,19 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                 <Timeline
                     store={store}
                     width={width}
-                    customTracks={[
-                        {
-                            renderHeader: () => 'VAF',
-                            renderTrack: (store: TimelineStore) => (
-                                <VAFChartWrapper
-                                    store={store}
-                                    sampleMetaData={caseMetaData}
-                                />
-                            ),
-                            height: () => VAF_CHART_ROW_HEIGHT,
-                            labelForExport: 'VAF',
-                        },
-                    ]}
+                    // customTracks={[
+                    //     {
+                    //         renderHeader: () => 'VAF',
+                    //         renderTrack: (store: TimelineStore) => (
+                    //             <VAFChartWrapper
+                    //                 store={store}
+                    //                 sampleMetaData={caseMetaData}
+                    //             />
+                    //         ),
+                    //         height: () => VAF_CHART_ROW_HEIGHT,
+                    //         labelForExport: 'VAF',
+                    //     },
+                    // ]}
                 />
             );
         } else {

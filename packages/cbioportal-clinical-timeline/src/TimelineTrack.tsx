@@ -5,7 +5,7 @@ import {
 } from './types';
 import React, { useState } from 'react';
 import _ from 'lodash';
-import { REMOVE_FOR_DOWNLOAD_CLASSNAME } from './lib/helpers';
+import { formatDate, REMOVE_FOR_DOWNLOAD_CLASSNAME } from './lib/helpers';
 import { getTextHeight, getTextWidth } from 'cbioportal-frontend-commons';
 import { TimelineStore } from './TimelineStore';
 
@@ -194,12 +194,20 @@ export const EventTooltipContent: React.FunctionComponent<{
                 })}
                 <tr>
                     <th>START DATE:</th>
-                    <td>{event.event.startNumberOfDaysSinceDiagnosis}</td>
+                    <td className={'nowrap'}>
+                        {formatDate(
+                            event.event.startNumberOfDaysSinceDiagnosis
+                        )}
+                    </td>
                 </tr>
                 {event.event.endNumberOfDaysSinceDiagnosis && (
                     <tr>
                         <th>END DATE:</th>
-                        <td>{event.event.endNumberOfDaysSinceDiagnosis}</td>
+                        <td className={'nowrap'}>
+                            {formatDate(
+                                event.event.endNumberOfDaysSinceDiagnosis
+                            )}
+                        </td>
                     </tr>
                 )}
             </table>
