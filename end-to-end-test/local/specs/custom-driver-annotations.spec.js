@@ -18,9 +18,7 @@ const oncoprintTabUrl =
 
 describe('custom driver annotations feature', function() {
     if (useExternalFrontend) {
-        
         describe('oncoprint tab', () => {
-            
             beforeEach(() => {
                 goToUrlAndSetLocalStorage(oncoprintTabUrl);
                 waitForOncoprint(100000);
@@ -75,7 +73,6 @@ describe('custom driver annotations feature', function() {
                     .click();
                 waitForOncoprint();
                 assert(!$('div.alert-info').isExisting());
-
             });
 
             it('(de-)selects custom driver checkboxes with main annotation select option', () => {
