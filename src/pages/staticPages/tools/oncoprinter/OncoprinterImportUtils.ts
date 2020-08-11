@@ -20,11 +20,11 @@ import {
     ONCOPRINTER_VAL_NA,
 } from './OncoprinterClinicalAndHeatmapUtils';
 import _ from 'lodash';
-import { PUTATIVE_DRIVER } from '../../../../shared/constants';
 import {
     MUTATION_SPECTRUM_CATEGORIES,
     SpecialAttribute,
 } from '../../../../shared/cache/ClinicalDataCache';
+import { PUTATIVE_DRIVER } from 'shared/lib/StoreUtils';
 
 const geneticAlterationToDataType: {
     [alterationType in OncoprinterGeneticInputLineType2['alteration']]: string;

@@ -2,6 +2,7 @@ import {
     AnnotatedExtendedAlteration,
     AnnotatedMutation,
     CaseAggregatedData,
+    CustomDriverNumericGeneMolecularData,
     ExtendedAlteration,
 } from '../../../pages/resultsView/ResultsViewPageStore';
 import {
@@ -159,14 +160,18 @@ export function fillGeneticTrackDatum(
         const molecularAlterationType = event.molecularProfileAlterationType;
         switch (molecularAlterationType) {
             case 'COPY_NUMBER_ALTERATION':
-                const cnaEvent =
+                let oncoprintCnaType =
                     cnaDataToString[
-                        event.value as NumericGeneMolecularData['value']
+                        event.value as CustomDriverNumericGeneMolecularData['value']
                     ];
-                if (cnaEvent) {
+                if (oncoprintCnaType) {
+                    if (event.putativeDriver) {
+                        oncoprintCnaType += '_rec';
+                    }
                     // not diploid
-                    dispCnaCounts[cnaEvent] = dispCnaCounts[cnaEvent] || 0;
-                    dispCnaCounts[cnaEvent] += 1;
+                    dispCnaCounts[oncoprintCnaType] =
+                        dispCnaCounts[oncoprintCnaType] || 0;
+                    dispCnaCounts[oncoprintCnaType] += 1;
                 }
                 break;
             case 'MRNA_EXPRESSION':
