@@ -9,3 +9,4 @@ declare module 'jspdf-yworks';
 declare module 'react-rangeslider';
 declare module 'react-select';
 declare module 'react-file-download';
+declare module 'd3-dsv';

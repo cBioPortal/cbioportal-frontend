@@ -1,4 +1,8 @@
-import { DownloadControls, EditableSpan } from 'cbioportal-frontend-commons';
+import {
+    DownloadControls,
+    DataType,
+    EditableSpan,
+} from 'cbioportal-frontend-commons';
 import { numberOfLeadingDecimalZeros } from 'cbioportal-utils';
 import classnames from 'classnames';
 import _ from 'lodash';
@@ -6,6 +10,9 @@ import * as React from 'react';
 import Slider from 'react-rangeslider';
 import { computed } from 'mobx';
 import { observer } from 'mobx-react';
+import { MutationMapperStore } from '../../model/MutationMapperStore';
+import MutationMapperDataStore from '../../../../../src/shared/components/mutationMapper/MutationMapperDataStore';
+import { tsvFormat } from 'd3-dsv';
 
 import { calcYMaxInput } from '../../util/LollipopPlotUtils';
 import TrackSelector, {
@@ -16,6 +23,7 @@ import TrackSelector, {
 
 import 'react-rangeslider/lib/index.css';
 import styles from './lollipopMutationPlot.module.scss';
+import autobind from 'autobind-decorator';
 
 type LollipopMutationPlotControlsProps = {
     showControls: boolean;
@@ -46,6 +54,7 @@ type LollipopMutationPlotControlsProps = {
     showYMaxSlider?: boolean;
     showLegendToggle?: boolean;
     showDownloadControls?: boolean;
+    mutationmapperStore: MutationMapperStore;
     onTrackVisibilityChange?: (selectedTrackIds: string[]) => void;
     getSVG: () => SVGElement;
 };
@@ -200,13 +209,42 @@ export default class LollipopMutationPlotControls extends React.Component<
         );
     }
 
+    @autobind
+    private getData(
+        dataType?: DataType
+    ): string | PromiseLike<string | null> | null {
+        var flatdata: any = '';
+        if (this.props.mutationmapperStore == undefined) flatdata = 'undefined';
+        else
+            flatdata = tsvFormat(
+                this.convertDataToDownloadMMSData(
+                    this.props.mutationmapperStore
+                )
+            );
+
+        return flatdata;
+    }
+
+    private convertDataToDownloadMMSData(mms?: MutationMapperStore) {
+        if (mms && mms.mutationData) {
+            let data = mms.mutationData.result || [];
+            let downloadData: any[] = [];
+            data.forEach(m => {
+                downloadData.push(m);
+            });
+            return downloadData;
+        } else return ' ';
+    }
+
     protected get downloadControls() {
         return (
             <DownloadControls
                 getSvg={this.props.getSVG}
-                filename={`${this.props.hugoGeneSymbol}_lollipop.svg`}
+                getData={this.getData}
+                filename={`${this.props.hugoGeneSymbol}_lollipop`}
                 dontFade={true}
                 type="button"
+                buttons={['SVG', 'PNG', 'PDF', 'Data']}
             />
         );
     }
