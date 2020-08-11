@@ -247,7 +247,7 @@ export default class AccessorsForOqlFilter
             AlterationTypeConstants.COPY_NUMBER_ALTERATION
         ) {
             // covers CNA
-            return !!(d as AnnotatedNumericGeneMolecularData).oncoKbOncogenic;
+            return (d as AnnotatedNumericGeneMolecularData).putativeDriver;
         } else {
             return null;
         }

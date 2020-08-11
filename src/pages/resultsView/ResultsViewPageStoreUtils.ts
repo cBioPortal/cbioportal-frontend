@@ -391,7 +391,11 @@ export function annotateMolecularDatum(
         }
     }
     return Object.assign(
-        { oncoKbOncogenic: oncogenic, hugoGeneSymbol },
+        {
+            putativeDriver: !!oncogenic,
+            oncoKbOncogenic: oncogenic,
+            hugoGeneSymbol,
+        },
         molecularDatum
     );
 }

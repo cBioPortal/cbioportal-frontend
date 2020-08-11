@@ -292,6 +292,7 @@ export interface AnnotatedMutation extends Mutation {
 export interface AnnotatedNumericGeneMolecularData
     extends NumericGeneMolecularData {
     hugoGeneSymbol: string;
+    putativeDriver: boolean;
     oncoKbOncogenic: string;
 }
 
@@ -4036,8 +4037,7 @@ export class ResultsViewPageStore {
             const data = this.molecularData.result!.reduce(
                 (acc: AnnotatedNumericGeneMolecularData[], next) => {
                     const d = annotateNumericGeneMolecularData(next);
-                    if (d.oncoKbOncogenic) {
-                        // truthy check - empty string means not driver
+                    if (d.putativeDriver) {
                         acc.push(d);
                     } else {
                         vus.push(d);
@@ -4080,12 +4080,13 @@ export class ResultsViewPageStore {
                 .result!;
             const entrezGeneIdToGene = this.entrezGeneIdToGene.result!;
             return Promise.resolve((data: NumericGeneMolecularData) => {
-                return annotateMolecularDatum(
+                const annot = annotateMolecularDatum(
                     data,
                     getOncoKbAnnotation,
                     profileIdToProfile,
                     entrezGeneIdToGene
                 );
+                return annot;
             });
         },
     });
