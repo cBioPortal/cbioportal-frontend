@@ -180,9 +180,10 @@ export function formatDate(dayCount: number) {
 
     let arr = [];
 
-    if (years > 0) arr.push(`${years} year${years > 1 ? 's' : ''}`);
-    if (months > 0) arr.push(`${months} month${months > 1 ? 's' : ''}`);
-    if (days > 0) arr.push(`${days} day${days > 1 ? 's' : ''}`);
+    if (years > 0) arr.push(`${years} year${years === 1 ? '' : 's'}`);
+    if (months > 0) arr.push(`${months} month${months === 1 ? '' : 's'}`);
+    if (dayCount === 0 || days > 0)
+        arr.push(`${days} day${days === 1 ? '' : 's'}`);
 
     return arr.join(', ');
 }
