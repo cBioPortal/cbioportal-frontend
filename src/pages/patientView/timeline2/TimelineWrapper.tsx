@@ -11,7 +11,7 @@ import {
     TimelineEvent,
 } from 'cbioportal-clinical-timeline';
 
-import { ClinicalEvent } from 'cbioportal-ts-api-client';
+import { ClinicalEvent, ClinicalEventData } from 'cbioportal-ts-api-client';
 import { configureTracks } from 'cbioportal-clinical-timeline';
 import { getAttributeValue } from 'cbioportal-clinical-timeline';
 import SampleManager from 'pages/patientView/SampleManager';
@@ -22,12 +22,8 @@ import SampleMarker from 'pages/patientView/timeline2/SampleMarker';
 import { TIMELINE_TRACK_HEIGHT } from 'cbioportal-clinical-timeline/src/TimelineTrack';
 import { formatDate } from 'cbioportal-clinical-timeline';
 
-function getData(eventData: any) {
-    return _.groupBy(eventData, (e: any) => e.eventType.toUpperCase());
-}
-
-function makeItems(items: any) {
-    return items.map((e: any) => {
+function makeItems(eventData: ClinicalEvent[]) {
+    return eventData.map((e: ClinicalEvent) => {
         return {
             end:
                 e.endNumberOfDaysSinceDiagnosis ||
@@ -38,34 +34,61 @@ function makeItems(items: any) {
     });
 }
 
-function splitCats(splits: string[], cat: any): TimelineTrackSpecification {
-    if (!cat[0].attributes.find((att: any) => att.key === splits[0])) {
+function organizeDataIntoTracks(
+    trackStructure: string[],
+    eventData: ClinicalEvent[]
+): TimelineTrackSpecification {
+    if (
+        _.some(
+            eventData,
+            d =>
+                !d.attributes.find(
+                    (att: ClinicalEventData) => att.key === trackStructure[0]
+                )
+        )
+    ) {
+        // TODO: Do we have to do this even if just a few events lack complete data?
+
+        // If eventData does not contain data for the root attribute of this trackStructure,
+        //  then we can't organize the data, so just put all the items into one track.
         return {
             type: '',
-            items: makeItems(cat),
+            items: makeItems(eventData),
         };
     }
 
-    const groups = _.groupBy(
-        cat,
-        item => item.attributes.find((att: any) => att.key === splits[0]).value
-    );
-
-    const tracks: TimelineTrackSpecification[] = _.map(groups, (group, key) => {
-        if (splits.length > 1) {
-            const track = splitCats(splits.slice(1), group);
-            track.type = key;
-            return track;
-        } else {
-            return {
-                type: key,
-                items: makeItems(group),
-            };
-        }
+    const dataByRootValue = _.groupBy(eventData, item => {
+        return item.attributes.find(
+            (att: any) => att.key === trackStructure[0]
+        )!.value;
     });
 
+    const tracks: TimelineTrackSpecification[] = _.map(
+        dataByRootValue,
+        (data, rootValue) => {
+            if (trackStructure.length > 1) {
+                // If trackStructure is non-trivial, recurse for this rootValue
+                const track = organizeDataIntoTracks(
+                    trackStructure.slice(1),
+                    data
+                );
+                track.type = rootValue;
+                return track;
+            } else {
+                // If trackStructure is trivial, then just return a single track for this rootValue
+                return {
+                    type: rootValue,
+                    items: makeItems(data),
+                };
+            }
+        }
+    );
+
+    // Finally, organize all tracks under an empty root track
     const track = {
-        type: cat[0].attributes.find((att: any) => att.key === splits[0]).value,
+        type: eventData[0].attributes.find(
+            (att: ClinicalEventData) => att.key === trackStructure[0]
+        )!.value,
         tracks,
         items: [],
     };
@@ -111,7 +134,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                     'Lab_test',
                     'Treatment',
                 ],
-                splitConfig: [
+                trackStructures: [
                     ['TREATMENT', 'TREATMENT_TYPE', 'SUBTYPE', 'AGENT'],
                     ['LAB_TEST', 'TEST'],
                 ],
@@ -259,8 +282,8 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                     'Med Onc Assessment',
                 ];
 
-                // this differs from default in that on genie, we do NOT split on subtype. we hide on subtype
-                baseConfig.splitConfig = [
+                // this differs from default in that on genie, we do NOT distinguish tracks based on subtype. we hide on subtype
+                baseConfig.trackStructures = [
                     ['TREATMENT', 'TREATMENT_TYPE', 'AGENT'],
                     ['LAB_TEST', 'TEST'],
                 ];
@@ -350,52 +373,68 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                         }
                     },
                 });
-            } else {
             }
 
-            const keyedSplits = _.keyBy(baseConfig.splitConfig, arr => arr[0]);
+            const trackStructuresByRoot = _.keyBy(
+                baseConfig.trackStructures,
+                arr => arr[0]
+            );
 
-            //data[0].startNumberOfDaysSinceDiagnosis = -720;
+            //cats
+            const dataByEventType = _.groupBy(data, (e: ClinicalEvent) =>
+                e.eventType.toUpperCase()
+            );
 
-            const cats = getData(data);
-
-            //configureTracks(_.values(d), baseConfig.trackEventRenderers);
-
-            const merged = _.uniq(
+            const allTracksInOrder: string[] = _.uniq(
                 baseConfig.sortOrder
                     .map((name: string) => name.toUpperCase())
-                    .concat(Object.keys(cats))
+                    .concat(Object.keys(dataByEventType))
             );
             const sortedCats = _.reduce(
-                merged,
-                (agg: { [k: string]: any }, key: string) => {
-                    if (key in cats) {
-                        agg[key] = cats[key];
+                allTracksInOrder,
+                (agg: { [k: string]: any }, trackKey: string) => {
+                    if (trackKey in dataByEventType) {
+                        agg[trackKey] = dataByEventType[trackKey];
                     }
                     return agg;
                 },
                 {}
             );
 
-            const d = _.map(sortedCats, (cat, key) => {
-                if (key in keyedSplits) {
-                    const splits = splitCats(keyedSplits[key].slice(1), cat);
-                    return {
-                        type: key,
-                        items: [],
-                        tracks: splits.tracks,
-                    };
-                } else {
-                    return {
-                        type: key,
-                        items: makeItems(cat),
-                    };
-                }
-            });
+            const trackSpecifications = allTracksInOrder.reduce(
+                (specs: TimelineTrackSpecification[], trackKey) => {
+                    const data = dataByEventType[trackKey];
+                    if (!data) {
+                        return specs;
+                    }
 
-            configureTracks(d, baseConfig.trackEventRenderers);
+                    if (trackKey in trackStructuresByRoot) {
+                        const splits = organizeDataIntoTracks(
+                            trackStructuresByRoot[trackKey].slice(1),
+                            data
+                        );
+                        specs.push({
+                            type: trackKey,
+                            items: [],
+                            tracks: splits.tracks,
+                        });
+                    } else {
+                        specs.push({
+                            type: trackKey,
+                            items: makeItems(data),
+                        });
+                    }
+                    return specs;
+                },
+                []
+            );
 
-            const store = new TimelineStore(d);
+            configureTracks(
+                trackSpecifications,
+                baseConfig.trackEventRenderers
+            );
+
+            const store = new TimelineStore(trackSpecifications);
 
             setStore(store);
 
@@ -423,7 +462,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                 />
             );
         } else {
-            return <div></div>;
+            return <div />;
         }
     }
 );
