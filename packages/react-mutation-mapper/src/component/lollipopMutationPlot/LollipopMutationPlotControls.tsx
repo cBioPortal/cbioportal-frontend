@@ -1,4 +1,8 @@
-import { DownloadControls, EditableSpan } from 'cbioportal-frontend-commons';
+import {
+    DownloadControls,
+    DataType,
+    EditableSpan,
+} from 'cbioportal-frontend-commons';
 import { numberOfLeadingDecimalZeros } from 'cbioportal-utils';
 import classnames from 'classnames';
 import _ from 'lodash';
@@ -48,6 +52,7 @@ type LollipopMutationPlotControlsProps = {
     showDownloadControls?: boolean;
     onTrackVisibilityChange?: (selectedTrackIds: string[]) => void;
     getSVG: () => SVGElement;
+    getDownloadData?: () => string;
 };
 
 function formatInputValue(value: number, step: number = 1) {
@@ -204,9 +209,15 @@ export default class LollipopMutationPlotControls extends React.Component<
         return (
             <DownloadControls
                 getSvg={this.props.getSVG}
-                filename={`${this.props.hugoGeneSymbol}_lollipop.svg`}
+                getData={this.props.getDownloadData}
+                filename={`${this.props.hugoGeneSymbol}_lollipop`}
                 dontFade={true}
                 type="button"
+                buttons={
+                    this.props.getDownloadData !== undefined
+                        ? ['SVG', 'PNG', 'PDF', 'Data']
+                        : ['SVG', 'PNG', 'PDF']
+                }
             />
         );
     }

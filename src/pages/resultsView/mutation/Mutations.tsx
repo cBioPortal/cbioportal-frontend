@@ -3,6 +3,7 @@ import { observer } from 'mobx-react';
 import { MSKTabs, MSKTab } from 'shared/components/MSKTabs/MSKTabs';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import ResultsViewMutationMapper from './ResultsViewMutationMapper';
+import ResultsViewMutationMapperStore from './ResultsViewMutationMapperStore';
 import { convertToMutationMapperProps } from 'shared/components/mutationMapper/MutationMapperConfig';
 import MutationMapperUserSelectionStore from 'shared/components/mutationMapper/MutationMapperUserSelectionStore';
 import { computed, action } from 'mobx';
@@ -10,6 +11,7 @@ import AppConfig from 'appConfig';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
 import autobind from 'autobind-decorator';
 import { AppStore } from '../../../AppStore';
+import { DataType } from 'cbioportal-frontend-commons';
 
 import './mutations.scss';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
@@ -18,7 +20,7 @@ import {
     getOncoKbApiUrl,
 } from 'shared/api/urls';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
-import { Mutation } from 'cbioportal-ts-api-client';
+import { Mutation, CancerStudy } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import ResultsViewURLWrapper from '../ResultsViewURLWrapper';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
@@ -229,6 +231,7 @@ export default class Mutations extends React.Component<
                         showTranscriptDropDown={
                             AppConfig.serverConfig.show_transcript_dropdown
                         }
+                        getDownloadData={this.getDownloadData}
                         onTranscriptChange={this.onTranscriptChange}
                     />
                 </div>
@@ -236,6 +239,20 @@ export default class Mutations extends React.Component<
         } else {
             return null;
         }
+    }
+
+    @autobind
+    protected getDownloadData(dataType?: DataType): string {
+        if (
+            this.selectedGene &&
+            this.props.store.getMutationMapperStore(this.selectedGene)
+        ) {
+            const mutationMapperStore = this.props.store.getMutationMapperStore(
+                this.selectedGene
+            )!;
+            return mutationMapperStore.getDownloadData();
+        }
+        return '';
     }
 
     @autobind

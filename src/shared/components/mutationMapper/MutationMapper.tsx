@@ -60,6 +60,7 @@ export interface IMutationMapperProps {
     genomeNexusMutationAssessorCache?: GenomeNexusMutationAssessorCache;
     generateGenomeNexusHgvsgUrl: (hgvsg: string) => string;
     onTranscriptChange?: (transcript: string) => void;
+    getDownloadData?: () => string;
     // server config properties
     genomeNexusUrl?: string;
     oncoKbPublicApiUrl?: string;
@@ -210,6 +211,7 @@ export default class MutationMapper<
                 trackDataStatus={this.trackDataStatus}
                 onTrackVisibilityChange={this.onTrackVisibilityChange}
                 getLollipopColor={getColorForProteinImpactType}
+                getDownloadData={this.props.getDownloadData}
                 filterResetPanel={
                     !this.props.store.dataStore.showingAllData &&
                     this.filterResetPanel !== null

@@ -26,6 +26,7 @@ import MutationMapperStore, {
 } from 'shared/components/mutationMapper/MutationMapperStore';
 import { IServerConfig } from '../../../config/IAppConfig';
 import { computed } from 'mobx';
+import { tsvFormat } from 'd3-dsv';
 
 export default class ResultsViewMutationMapperStore extends MutationMapperStore {
     constructor(
@@ -113,5 +114,15 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
         }
         // return true if transcript dropdown is disabled
         return true;
+    }
+
+    public getDownloadData(): string {
+        const mutations = this.getMutations();
+        const sidToStudy = this.studyIdToStudy.result!;
+        const downloadData = mutations.map(m => {
+            const study = sidToStudy[m.studyId];
+            return Object.assign({}, m, { studyName: study.name });
+        });
+        return tsvFormat(downloadData);
     }
 }

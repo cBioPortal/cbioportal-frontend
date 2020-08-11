@@ -50,6 +50,7 @@ export type LollipopMutationPlotProps = {
     mutationAlignerCache?: MobxCache<string>;
     getLollipopColor?: (mutations: Partial<Mutation>[]) => string;
     getMutationCount?: (mutation: Partial<Mutation>) => number;
+    getDownloadData?: () => string;
     topYAxisSymbol?: string;
     bottomYAxisSymbol?: string;
     topYAxisDefaultMax?: number;
@@ -660,6 +661,7 @@ export default class LollipopMutationPlot extends React.Component<
                         showTrackSelector={this.props.showTrackSelector}
                         onTrackVisibilityChange={this.onTrackVisibilityChange}
                         getSVG={this.getSVG}
+                        getDownloadData={this.props.getDownloadData}
                     />
                     <Collapse isOpened={this.controlsConfig.legendShown}>
                         {this.props.legend || <DefaultLollipopPlotLegend />}
