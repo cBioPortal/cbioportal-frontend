@@ -448,15 +448,22 @@ export function MakeEnrichmentsTabUI(
             } else {
                 const content: any = [];
                 content.push(
-                    <OverlapExclusionIndicator
-                        store={store}
-                        only={
-                            patientAnalysisPossible &&
-                            store.usePatientLevelEnrichments
-                                ? 'patient'
-                                : 'sample'
-                        }
-                    />
+                    <div
+                        style={{
+                            marginLeft:
+                                enrichmentType == 'alterations' ? 213 : 0,
+                        }}
+                    >
+                        <OverlapExclusionIndicator
+                            store={store}
+                            only={
+                                patientAnalysisPossible &&
+                                store.usePatientLevelEnrichments
+                                    ? 'patient'
+                                    : 'sample'
+                            }
+                        />
+                    </div>
                 );
                 content.push(getEnrichmentsUI().component);
                 return content;

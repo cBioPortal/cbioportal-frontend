@@ -4,6 +4,8 @@ import {
     GenomicEnrichment,
 } from 'cbioportal-ts-api-client';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
+import { ExpressionEnrichmentRow } from 'shared/model/ExpressionEnrichmentRow';
+import { MolecularProfile } from 'cbioportal-ts-api-client';
 import {
     ExpressionEnrichmentRow,
     GenericAssayEnrichmentRow,
@@ -65,6 +67,7 @@ export enum GeneOptionLabel {
 export enum AlterationContainerType {
     MUTATION = 'MUTATION',
     COPY_NUMBER = 'COPY_NUMBER',
+    ALTERATIONS = 'ALTERATIONS',
 }
 
 export enum EnrichmentType {

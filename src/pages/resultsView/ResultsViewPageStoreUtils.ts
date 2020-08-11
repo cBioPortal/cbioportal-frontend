@@ -632,6 +632,77 @@ export function makeEnrichmentDataPromise<
     });
 }
 
+export function makeEnrichmentDataPromiseWithoutProfile<
+    T extends {
+        cytoband?: string;
+        hugoGeneSymbol: string;
+        pValue: number;
+        qValue?: number;
+    }
+>(params: {
+    storeForExcludingQueryGenes?: ResultsViewPageStore;
+    await: MobxPromise_await;
+    referenceGenesPromise: MobxPromise<{
+        [hugoGeneSymbol: string]: ReferenceGenomeGene;
+    }>;
+    fetchData: () => Promise<T[]>;
+}): MobxPromise<(T & { qValue: number })[]> {
+    return remoteData({
+        await: () => {
+            const ret = params.await();
+            if (params.storeForExcludingQueryGenes) {
+                ret.push(
+                    params.storeForExcludingQueryGenes.selectedMolecularProfiles
+                );
+            }
+            ret.push(params.referenceGenesPromise);
+            return ret;
+        },
+        invoke: async () => {
+            let data = await params.fetchData();
+            // filter out query genes, if looking at a queried profile
+            // its important that we filter out *before* calculating Q values
+            if (params.storeForExcludingQueryGenes) {
+                const queryGenes = _.keyBy(
+                    params.storeForExcludingQueryGenes.hugoGeneSymbols,
+                    x => x.toUpperCase()
+                );
+                data = data.filter(
+                    d => !(d.hugoGeneSymbol.toUpperCase() in queryGenes)
+                );
+            }
+
+            let referenceGenes = params.referenceGenesPromise.result!;
+            // add cytoband from reference gene
+            for (const d of data) {
+                const refGene = referenceGenes[d.hugoGeneSymbol];
+
+                if (refGene) d.cytoband = refGene.cytoband;
+            }
+
+            const dataWithpValue: T[] = [];
+            const dataWithoutpValue: T[] = [];
+            data.forEach(datum => {
+                datum.pValue === undefined
+                    ? dataWithoutpValue.push(datum)
+                    : dataWithpValue.push(datum);
+            });
+
+            const sortedByPValue = _.sortBy(dataWithpValue, c => c.pValue);
+            const qValues = calculateQValues(sortedByPValue.map(c => c.pValue));
+
+            qValues.forEach((qValue, index) => {
+                sortedByPValue[index].qValue = qValue;
+            });
+
+            return sortEnrichmentData([
+                ...sortedByPValue,
+                ...dataWithoutpValue,
+            ]);
+        },
+    });
+}
+
 function sortEnrichmentData(data: any[]): any[] {
     return _.sortBy(data, ['pValue', 'hugoGeneSymbol']);
 }
