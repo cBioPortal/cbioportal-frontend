@@ -33,6 +33,7 @@ import GeneBarPlot from './GeneBarPlot';
 import WindowStore from 'shared/components/window/WindowStore';
 import ReactSelect from 'react-select';
 import { EnrichmentAnalysisComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
+import ComparisonStore from 'shared/lib/comparison/ComparisonStore';
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
@@ -44,6 +45,7 @@ export interface IAlterationEnrichmentContainerProps {
     containerType: AlterationContainerType;
     patientLevelEnrichments: boolean;
     onSetPatientLevelEnrichments: (patientLevel: boolean) => void;
+    comparisonStore?: ComparisonStore;
 }
 
 @observer
@@ -395,10 +397,41 @@ export default class AlterationEnrichmentContainer extends React.Component<
         );
     }
 
+    get plotHeight() {
+        if (
+            this.props.containerType === AlterationContainerType.ALTERATIONS &&
+            this.props.comparisonStore!.overlapComputations.isComplete
+        ) {
+            const selectionInfo = this.props.comparisonStore!
+                .overlapComputations.result!;
+            if (
+                (!selectionInfo.totalSampleOverlap &&
+                    !selectionInfo.totalPatientOverlap) ||
+                (this.props.patientLevelEnrichments === false &&
+                    !selectionInfo.totalSampleOverlap) ||
+                (this.props.patientLevelEnrichments === true &&
+                    !selectionInfo.totalPatientOverlap)
+            ) {
+                return 554;
+            }
+            return 470;
+        }
+        return 0;
+    }
+
     public render() {
         if (this.props.data.length === 0) {
             return (
-                <div className={'alert alert-info'}>
+                <div
+                    className={'alert alert-info'}
+                    style={{
+                        marginLeft:
+                            this.props.containerType ===
+                            AlterationContainerType.ALTERATIONS
+                                ? 210
+                                : 0,
+                    }}
+                >
                     No data/result available
                 </div>
             );
@@ -408,8 +441,31 @@ export default class AlterationEnrichmentContainer extends React.Component<
             <div className={styles.Container}>
                 <div
                     className={styles.ChartsPanel}
-                    style={{ maxWidth: WindowStore.size.width - 60 }}
+                    style={{
+                        maxWidth: WindowStore.size.width - 60,
+                        position:
+                            this.props.containerType ===
+                            AlterationContainerType.ALTERATIONS
+                                ? 'relative'
+                                : 'static',
+                        zIndex:
+                            this.props.containerType ===
+                            AlterationContainerType.ALTERATIONS
+                                ? 1
+                                : 'auto',
+                    }}
                 >
+                    <div
+                        className={styles.ChartsPanel}
+                        style={{
+                            width:
+                                this.props.containerType ===
+                                AlterationContainerType.ALTERATIONS
+                                    ? 197.64
+                                    : 0,
+                            height: this.plotHeight,
+                        }}
+                    ></div>
                     {this.isTwoGroupAnalysis && (
                         <MiniScatterChart
                             data={getAlterationScatterData(
@@ -434,7 +490,6 @@ export default class AlterationEnrichmentContainer extends React.Component<
                             onSelectionCleared={this.onSelectionCleared}
                         />
                     )}
-
                     {this.isTwoGroupAnalysis && (
                         <MiniFrequencyScatterChart
                             data={getAlterationFrequencyScatterData(
