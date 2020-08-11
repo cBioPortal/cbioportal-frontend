@@ -236,9 +236,10 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     customTracks,
     width,
 }: ITimelineProps) {
+    const expandedTracks = expandTracks(store.data);
     const height =
         TICK_AXIS_HEIGHT +
-        expandTracks(store.data).length * TIMELINE_TRACK_HEIGHT +
+        _.sumBy(expandedTracks, t => t.height) +
         _.sumBy(customTracks || [], t => t.height(store));
 
     const refs = {
@@ -307,10 +308,12 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                     style={{ paddingTop: TICK_AXIS_HEIGHT, flexShrink: 0 }}
                 >
                     <div className={'tl-timeline-tracklabels'}>
-                        {store.data.map(track => {
+                        {expandedTracks.map(track => {
                             return (
                                 <TrackHeader
-                                    track={track}
+                                    track={track.track}
+                                    height={track.height}
+                                    paddingLeft={track.indent}
                                     handleTrackHover={memoizedHoverCallback}
                                 />
                             );
