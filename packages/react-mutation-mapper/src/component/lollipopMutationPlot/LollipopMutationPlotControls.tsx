@@ -11,7 +11,6 @@ import Slider from 'react-rangeslider';
 import { computed } from 'mobx';
 import { observer } from 'mobx-react';
 import { MutationMapperStore } from '../../model/MutationMapperStore';
-import MutationMapperDataStore from '../../../../../src/shared/components/mutationMapper/MutationMapperDataStore';
 import { tsvFormat } from 'd3-dsv';
 
 import { calcYMaxInput } from '../../util/LollipopPlotUtils';
