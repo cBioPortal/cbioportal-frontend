@@ -4019,33 +4019,23 @@ export class ResultsViewPageStore {
         await: () => [
             this.molecularData,
             this.entrezGeneIdToGene,
-            this.getOncoKbCnaAnnotationForOncoprint,
+            this.annotateNumericGeneMolecularData,
             this.molecularProfileIdToMolecularProfile,
         ],
         invoke: () => {
             const entrezGeneIdToGene = this.entrezGeneIdToGene.result!;
-            let getOncoKbAnnotation: (
+            let annotateNumericGeneMolecularData: (
                 datum: NumericGeneMolecularData
-            ) => IndicatorQueryResp | undefined;
-            if (
-                this.getOncoKbCnaAnnotationForOncoprint.result! instanceof Error
-            ) {
-                getOncoKbAnnotation = () => undefined;
-            } else {
-                getOncoKbAnnotation = this.getOncoKbCnaAnnotationForOncoprint
-                    .result! as typeof getOncoKbAnnotation;
-            }
+            ) => AnnotatedNumericGeneMolecularData;
+            annotateNumericGeneMolecularData = this
+                .annotateNumericGeneMolecularData
+                .result! as typeof annotateNumericGeneMolecularData;
             const profileIdToProfile = this.molecularProfileIdToMolecularProfile
                 .result!;
             const vus: AnnotatedNumericGeneMolecularData[] = [];
             const data = this.molecularData.result!.reduce(
                 (acc: AnnotatedNumericGeneMolecularData[], next) => {
-                    const d = annotateMolecularDatum(
-                        next,
-                        getOncoKbAnnotation,
-                        profileIdToProfile,
-                        entrezGeneIdToGene
-                    );
+                    const d = annotateNumericGeneMolecularData(next);
                     if (d.oncoKbOncogenic) {
                         // truthy check - empty string means not driver
                         acc.push(d);
@@ -4059,6 +4049,43 @@ export class ResultsViewPageStore {
             return Promise.resolve({
                 data,
                 vus,
+            });
+        },
+    });
+
+    readonly annotateNumericGeneMolecularData = remoteData<
+        | Error
+        | ((
+              data: NumericGeneMolecularData
+          ) => AnnotatedNumericGeneMolecularData)
+    >({
+        await: () => [
+            this.getOncoKbCnaAnnotationForOncoprint,
+            this.molecularProfileIdToMolecularProfile,
+            this.entrezGeneIdToGene,
+        ],
+        invoke: () => {
+            let getOncoKbAnnotation: (
+                datum: NumericGeneMolecularData
+            ) => IndicatorQueryResp | undefined;
+            if (
+                this.getOncoKbCnaAnnotationForOncoprint.result! instanceof Error
+            ) {
+                getOncoKbAnnotation = () => undefined;
+            } else {
+                getOncoKbAnnotation = this.getOncoKbCnaAnnotationForOncoprint
+                    .result! as typeof getOncoKbAnnotation;
+            }
+            const profileIdToProfile = this.molecularProfileIdToMolecularProfile
+                .result!;
+            const entrezGeneIdToGene = this.entrezGeneIdToGene.result!;
+            return Promise.resolve((data: NumericGeneMolecularData) => {
+                return annotateMolecularDatum(
+                    data,
+                    getOncoKbAnnotation,
+                    profileIdToProfile,
+                    entrezGeneIdToGene
+                );
             });
         },
     });
@@ -4092,12 +4119,7 @@ export class ResultsViewPageStore {
     >(q => ({
         await: () =>
             this.numericGeneMolecularDataCache.await(
-                [
-                    this.studyToMolecularProfileDiscreteCna,
-                    this.entrezGeneIdToGene,
-                    this.getOncoKbCnaAnnotationForOncoprint,
-                    this.molecularProfileIdToMolecularProfile,
-                ],
+                [this.studyToMolecularProfileDiscreteCna],
                 studyToMolecularProfileDiscrete => {
                     return _.values(studyToMolecularProfileDiscrete).map(p => ({
                         entrezGeneId: q.entrezGeneId,
@@ -4118,28 +4140,15 @@ export class ResultsViewPageStore {
                     )
                     .map(p => p.result!)
             );
-            const entrezGeneIdToGene = this.entrezGeneIdToGene.result!;
-            let getOncoKbAnnotation: (
+            let annotateNumericGeneMolecularData: (
                 datum: NumericGeneMolecularData
-            ) => IndicatorQueryResp | undefined;
-            if (
-                this.getOncoKbCnaAnnotationForOncoprint.result! instanceof Error
-            ) {
-                getOncoKbAnnotation = () => undefined;
-            } else {
-                getOncoKbAnnotation = this.getOncoKbCnaAnnotationForOncoprint
-                    .result! as typeof getOncoKbAnnotation;
-            }
-            const profileIdToProfile = this.molecularProfileIdToMolecularProfile
-                .result!;
+            ) => AnnotatedNumericGeneMolecularData;
+            annotateNumericGeneMolecularData = this
+                .annotateNumericGeneMolecularData
+                .result! as typeof annotateNumericGeneMolecularData;
             return Promise.resolve(
                 results.map(d => {
-                    return annotateMolecularDatum(
-                        d,
-                        getOncoKbAnnotation,
-                        profileIdToProfile,
-                        entrezGeneIdToGene
-                    );
+                    return annotateNumericGeneMolecularData(d);
                 })
             );
         },
