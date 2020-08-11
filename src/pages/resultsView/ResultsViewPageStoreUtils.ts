@@ -1,38 +1,39 @@
 import {
-    Gene,
-    NumericGeneMolecularData,
-    MolecularProfile,
-    Mutation,
-    Sample,
     CancerStudy,
     ClinicalAttribute,
-    PatientIdentifier,
-    PatientFilter,
-    ReferenceGenomeGene,
     ClinicalData,
+    DiscreteCopyNumberData,
+    MolecularProfile,
+    Mutation,
+    NumericGeneMolecularData,
+    PatientFilter,
+    PatientIdentifier,
+    ReferenceGenomeGene,
+    Sample,
 } from 'cbioportal-ts-api-client';
-import { action, computed } from 'mobx';
+import { action, ObservableMap } from 'mobx';
 import AccessorsForOqlFilter, {
     getSimplifiedMutationType,
 } from '../../shared/lib/oql/AccessorsForOqlFilter';
 import {
-    OQLLineFilterOutput,
-    UnflattenedOQLLineFilterOutput,
     filterCBioPortalWebServiceDataByUnflattenedOQLLine,
     isMergedTrackFilter,
     MergedTrackLineFilterOutput,
+    OQLLineFilterOutput,
+    UnflattenedOQLLineFilterOutput,
 } from '../../shared/lib/oql/oqlfilter';
 import oql_parser from '../../shared/lib/oql/oql-parser';
-import { groupBy } from '../../shared/lib/StoreUtils';
+import { getOncoKbOncogenic, groupBy } from '../../shared/lib/StoreUtils';
 import {
+    AlterationTypeConstants,
     AnnotatedExtendedAlteration,
-    AnnotatedNumericGeneMolecularData,
     AnnotatedMutation,
+    AnnotatedNumericGeneMolecularData,
     CaseAggregatedData,
+    CustomDriverNumericGeneMolecularData,
     IQueriedCaseData,
     IQueriedMergedTrackCaseData,
     ResultsViewPageStore,
-    AlterationTypeConstants,
 } from './ResultsViewPageStore';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
@@ -45,11 +46,7 @@ import { SpecialAttribute } from '../../shared/cache/ClinicalDataCache';
 import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
 import { AlteredStatus } from './mutualExclusivity/MutualExclusivityUtil';
 import { Group } from '../../shared/api/ComparisonGroupClient';
-import { isNotGermlineMutation } from '../../shared/lib/MutationUtils';
-import {
-    ChartUserSetting,
-    CustomGroup,
-} from 'pages/studyView/StudyViewPageStore';
+import { CustomGroup } from 'pages/studyView/StudyViewPageStore';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { CoverageInformation } from '../../shared/lib/GenePanelUtils';
 import { GenericAssayEnrichment } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
@@ -75,14 +72,14 @@ export type ExtendedClinicalAttribute = Omit<
 export type SampleAlteredMap = { [trackOqlKey: string]: AlteredStatus[] };
 
 export function computeCustomDriverAnnotationReport(
-    mutations: Mutation[]
+    annotations: { driverFilter: string; driverTiersFilter: string }[]
 ): CustomDriverAnnotationReport {
     let hasBinary = false;
     let tiersMap: { [tier: string]: boolean } = {};
-    for (const mutation of mutations) {
-        hasBinary = hasBinary || !!mutation.driverFilter;
-        if (mutation.driverTiersFilter) {
-            tiersMap[mutation.driverTiersFilter] = true;
+    for (const annotation of annotations) {
+        hasBinary = hasBinary || !!annotation.driverFilter;
+        if (annotation.driverTiersFilter) {
+            tiersMap[annotation.driverTiersFilter] = true;
         }
     }
     return {
@@ -153,6 +150,35 @@ export function annotateMutationPutativeDriver(
     ) as AnnotatedMutation;
 }
 
+export function annotateMolecularDatum(
+    molecularDatum: NumericGeneMolecularData,
+    putativeDriverInfo: {
+        oncoKb: string;
+        customDriverBinary: boolean;
+        customDriverTier?: string;
+    },
+    discreteCnaProfileIds?: string[]
+): AnnotatedNumericGeneMolecularData {
+    const isCna =
+        !discreteCnaProfileIds ||
+        discreteCnaProfileIds.includes(molecularDatum.molecularProfileId);
+    const putativeDriver =
+        isCna &&
+        !!(
+            putativeDriverInfo.oncoKb ||
+            putativeDriverInfo.customDriverBinary ||
+            (putativeDriverInfo.customDriverTier &&
+                putativeDriverInfo.customDriverTier !== '')
+        );
+    return Object.assign(
+        {
+            putativeDriver,
+            oncoKbOncogenic: isCna && putativeDriverInfo.oncoKb,
+        },
+        molecularDatum
+    ) as AnnotatedNumericGeneMolecularData;
+}
+
 export type FilteredAndAnnotatedMutationsReport<
     T extends AnnotatedMutation = AnnotatedMutation
 > = {
@@ -162,55 +188,12 @@ export type FilteredAndAnnotatedMutationsReport<
     vusAndGermline: T[];
 };
 
-export function filterAndAnnotateMutations(
-    mutations: Mutation[],
-    getPutativeDriverInfo: (
-        mutation: Mutation
-    ) => {
-        oncoKb: string;
-        hotspots: boolean;
-        cbioportalCount: boolean;
-        cosmicCount: boolean;
-        customDriverBinary: boolean;
-        customDriverTier?: string;
-    },
-    entrezGeneIdToGene: {
-        [entrezGeneId: number]: {
-            hugoGeneSymbol: string;
-            entrezGeneId: number;
-        };
-    }
-): FilteredAndAnnotatedMutationsReport<AnnotatedMutation> {
-    const vus: AnnotatedMutation[] = [];
-    const germline: AnnotatedMutation[] = [];
-    const vusAndGermline: AnnotatedMutation[] = [];
-    const filteredAnnotatedMutations = [];
-    for (const mutation of mutations) {
-        const annotatedMutation = annotateMutationPutativeDriver(
-            mutation,
-            getPutativeDriverInfo(mutation)
-        ); // annotate
-        annotatedMutation.hugoGeneSymbol =
-            entrezGeneIdToGene[mutation.entrezGeneId].hugoGeneSymbol;
-        const isGermline = !isNotGermlineMutation(mutation);
-        const isVus = !annotatedMutation.putativeDriver;
-        if (isGermline && isVus) {
-            vusAndGermline.push(annotatedMutation);
-        } else if (isGermline) {
-            germline.push(annotatedMutation);
-        } else if (isVus) {
-            vus.push(annotatedMutation);
-        } else {
-            filteredAnnotatedMutations.push(annotatedMutation);
-        }
-    }
-    return {
-        data: filteredAnnotatedMutations,
-        vus,
-        germline,
-        vusAndGermline,
-    };
-}
+export type FilteredAndAnnotatedDiscreteCNAReport<
+    T extends CustomDriverNumericGeneMolecularData = CustomDriverNumericGeneMolecularData
+> = {
+    data: T[];
+    vus: T[];
+};
 
 export function compileMutations<
     T extends AnnotatedMutation = AnnotatedMutation
@@ -237,18 +220,6 @@ export const ONCOKB_ONCOGENIC_LOWERCASE = [
     'predicted oncogenic',
     'oncogenic',
 ];
-
-export function getOncoKbOncogenic(response: IndicatorQueryResp): string {
-    if (
-        ONCOKB_ONCOGENIC_LOWERCASE.indexOf(
-            (response.oncogenic || '').toLowerCase()
-        ) > -1
-    ) {
-        return response.oncogenic;
-    } else {
-        return '';
-    }
-}
 
 export async function fetchQueriedStudies(
     allPhysicalStudies: { [id: string]: CancerStudy },
@@ -755,6 +726,90 @@ export function parseGenericAssayGroups(
         {}
     );
     return parsedGroups;
+}
+
+export function createDiscreteCopyNumberDataKey(
+    d: NumericGeneMolecularData | DiscreteCopyNumberData
+) {
+    return d.sampleId + '_' + d.molecularProfileId + '_' + d.entrezGeneId;
+}
+
+export function evaluateDiscreteCNAPutativeDriverInfo(
+    cnaDatum: CustomDriverNumericGeneMolecularData,
+    oncoKbDatum: IndicatorQueryResp | undefined | null | false,
+    customDriverAnnotationsActive: boolean,
+    customDriverTierSelection: ObservableMap<boolean> | undefined
+) {
+    const oncoKb = oncoKbDatum ? getOncoKbOncogenic(oncoKbDatum) : '';
+
+    // Set driverFilter to true when:
+    // (1) custom drivers active in settings menu
+    // (2) the datum has a custom driver annotation
+    const customDriverBinary: boolean =
+        (customDriverAnnotationsActive &&
+            cnaDatum.driverFilter === 'Putative_Driver') ||
+        false;
+
+    // Set tier information to the tier name when the tiers checkbox
+    // is selected for the corresponding tier of the datum in settings menu.
+    // This forces the CNA to be counted as a driver mutation.
+    const customDriverTier: string | undefined =
+        cnaDatum.driverTiersFilter &&
+        customDriverTierSelection &&
+        customDriverTierSelection.get(cnaDatum.driverTiersFilter)
+            ? cnaDatum.driverTiersFilter
+            : undefined;
+
+    return {
+        oncoKb,
+        customDriverBinary,
+        customDriverTier,
+    };
+}
+
+export function evaluateMutationPutativeDriverInfo(
+    mutation: Mutation,
+    oncoKbDatum: IndicatorQueryResp | undefined | null | false,
+    hotspotAnnotationsActive: boolean,
+    hotspotDriver: boolean,
+    cbioportalCountActive: boolean,
+    cbioportalCountExceeded: boolean,
+    cosmicCountActive: boolean,
+    cosmicCountExceeded: boolean,
+    customDriverAnnotationsActive: boolean,
+    customDriverTierSelection: ObservableMap<boolean> | undefined
+) {
+    const oncoKb = oncoKbDatum ? getOncoKbOncogenic(oncoKbDatum) : '';
+    const hotspots = hotspotAnnotationsActive && hotspotDriver;
+    const cbioportalCount = cbioportalCountActive && cosmicCountExceeded;
+    const cosmicCount = cosmicCountActive && cosmicCountExceeded;
+
+    // Set driverFilter to true when:
+    // (1) custom drivers active in settings menu
+    // (2) the datum has a custom driver annotation
+    const customDriverBinary: boolean = !!(
+        customDriverAnnotationsActive &&
+        mutation.driverFilter === 'Putative_Driver'
+    );
+
+    // Set tier information to the tier name when the tiers checkbox
+    // is selected for the corresponding tier of the datum in settings menu.
+    // This forces the Mutation to be counted as a driver mutation.
+    const customDriverTier: string | undefined =
+        mutation.driverTiersFilter &&
+        customDriverTierSelection &&
+        customDriverTierSelection.get(mutation.driverTiersFilter)
+            ? mutation.driverTiersFilter
+            : undefined;
+
+    return {
+        oncoKb,
+        hotspots,
+        cbioportalCount,
+        cosmicCount,
+        customDriverBinary,
+        customDriverTier,
+    };
 }
 
 export function makeCustomChartData(

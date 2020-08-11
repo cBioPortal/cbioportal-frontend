@@ -6,6 +6,7 @@ import {
 import * as _ from 'lodash';
 import {
     AlterationTypeConstants,
+    CustomDriverNumericGeneMolecularData,
     AnnotatedExtendedAlteration,
     AnnotatedMutation,
     AnnotatedNumericGeneMolecularData,
@@ -116,7 +117,7 @@ export type Datum =
     | Mutation
     | NumericGeneMolecularData
     | AnnotatedMutation
-    | AnnotatedNumericGeneMolecularData;
+    | CustomDriverNumericGeneMolecularData;
 
 export default class AccessorsForOqlFilter
     implements IAccessorsForOqlFilter<Datum> {
@@ -158,7 +159,7 @@ export default class AccessorsForOqlFilter
                 (d as NumericGeneMolecularData).value
             ];
         } else {
-            return null;
+            return undefined;
         }
     }
 
@@ -254,7 +255,7 @@ export default class AccessorsForOqlFilter
             AlterationTypeConstants.COPY_NUMBER_ALTERATION
         ) {
             // covers CNA
-            return !!(d as AnnotatedNumericGeneMolecularData).oncoKbOncogenic;
+            return !!(d as AnnotatedNumericGeneMolecularData).putativeDriver;
         } else {
             return null;
         }
