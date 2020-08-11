@@ -236,6 +236,14 @@ export type DataFilterValue = {
 export type DiscreteCopyNumberData = {
     'alteration': number
 
+        'driverFilter': string
+
+        'driverFilterAnnotation': string
+
+        'driverTiersFilter': string
+
+        'driverTiersFilterAnnotation': string
+
         'entrezGeneId': number
 
         'gene': Gene

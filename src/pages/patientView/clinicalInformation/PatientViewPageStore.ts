@@ -16,7 +16,6 @@ import {
     ResourceData,
     Sample,
     SampleMolecularIdentifier,
-    GenericAssayDataFilter,
     GenericAssayData,
     GenericAssayMeta,
     GenericAssayDataMultipleStudyFilter,
@@ -61,6 +60,8 @@ import MutationCountCache from 'shared/cache/MutationCountCache';
 import AppConfig from 'appConfig';
 import {
     concatMutationData,
+    evaluateDiscreteCNAPutativeDriverInfo,
+    evaluateMutationPutativeDriverInfo,
     existsSomeMutationWithAscnPropertyInCollection,
     fetchClinicalData,
     fetchClinicalDataForPatient,
@@ -84,6 +85,7 @@ import {
     fetchStudiesForSamplesWithoutCancerTypeClinicalData,
     fetchVariantAnnotationsIndexedByGenomicLocation,
     filterAndAnnotateMolecularData,
+    filterAndAnnotateMutations,
     findDiscreteMolecularProfile,
     findMolecularProfileIdDiscrete,
     findMrnaRankMolecularProfileId,
@@ -139,10 +141,6 @@ import {
 import { groupTrialMatchesById } from '../trialMatch/TrialMatchTableUtils';
 import { GeneFilterOption } from '../mutation/GeneFilterMenu';
 import TumorColumnFormatter from '../mutation/column/TumorColumnFormatter';
-import {
-    filterAndAnnotateMutations,
-    getOncoKbOncogenic,
-} from '../../resultsView/ResultsViewPageStoreUtils';
 import { getVariantAlleleFrequency } from 'shared/lib/MutationUtils';
 import { AppStore, SiteError } from 'AppStore';
 import { getGeneFilterDefault } from './PatientViewPageStoreUtil';
@@ -165,6 +163,7 @@ import { GeneticTrackDatum } from 'shared/components/oncoprint/Oncoprint';
 import {
     AlterationTypeConstants,
     AnnotatedExtendedAlteration,
+    CustomDriverNumericGeneMolecularData,
 } from 'pages/resultsView/ResultsViewPageStore';
 import {
     cna_profile_data_to_string,
@@ -1770,11 +1769,44 @@ export class PatientViewPageStore {
         );
     }
 
+    readonly getDiscreteCNAPutativeDriverInfo = remoteData({
+        await: () => [this.getOncoKbCnaAnnotationForOncoprint],
+        invoke: () => {
+            return Promise.resolve(
+                (
+                    cnaDatum: CustomDriverNumericGeneMolecularData
+                ): {
+                    oncoKb: string;
+                    customDriverBinary: boolean;
+                } => {
+                    const getOncoKBAnnotationFunc = this
+                        .getOncoKbCnaAnnotationForOncoprint.result!;
+                    const oncoKbDatum:
+                        | IndicatorQueryResp
+                        | undefined
+                        | null
+                        | false =
+                        getOncoKBAnnotationFunc &&
+                        !(getOncoKBAnnotationFunc instanceof Error) &&
+                        getOncoKBAnnotationFunc(cnaDatum);
+
+                    // Note: custom driver annotations are part of the incoming datum
+                    return evaluateDiscreteCNAPutativeDriverInfo(
+                        cnaDatum,
+                        oncoKbDatum,
+                        false,
+                        undefined
+                    );
+                }
+            );
+        },
+    });
+
     @computed
     get annotatedExtendedAlterationData(): AnnotatedExtendedAlteration[] {
         const filteredAndAnnotatedMutations = filterAndAnnotateMutations(
             _.flatten(this.mergedMutationDataIncludingUncalledFilteredByGene),
-            this.getPutativeDriverInfo.result!,
+            this.getMutationPutativeDriverInfo.result!,
             this.entrezGeneIdToGene.result!
         );
 
@@ -1790,9 +1822,8 @@ export class PatientViewPageStore {
                 ...d,
                 value: d.alteration,
             })),
-            this.entrezGeneIdToGene,
-            this.getOncoKbCnaAnnotationForOncoprint,
-            this.molecularProfileIdToMolecularProfile
+            this.getDiscreteCNAPutativeDriverInfo.result!,
+            this.entrezGeneIdToGene
         );
 
         const cnaData = [
@@ -2147,14 +2178,13 @@ export class PatientViewPageStore {
             invoke: async () =>
                 fetchCnaOncoKbDataForOncoprint(
                     this.oncoKbAnnotatedGenes,
-                    this.molecularData,
-                    this.molecularProfileIdToMolecularProfile
+                    this.molecularData
                 ),
         },
         ONCOKB_DEFAULT
     );
 
-    readonly getPutativeDriverInfo = remoteData({
+    readonly getMutationPutativeDriverInfo = remoteData({
         await: () => [
             this.getOncoKbMutationAnnotationForOncoprint,
             this.isHotspotForOncoprint,
@@ -2181,23 +2211,28 @@ export class PatientViewPageStore {
                     ) &&
                     getOncoKbMutationAnnotationForOncoprint(mutation);
 
-                let oncoKb: string = '';
-                if (oncoKbDatum) {
-                    oncoKb = getOncoKbOncogenic(oncoKbDatum);
-                }
-
-                const hotspots: boolean =
+                const isHotspotDriver =
                     !(this.isHotspotForOncoprint.result instanceof Error) &&
                     this.isHotspotForOncoprint.result!(mutation);
+                const cbioportalCountExceeded = false;
+                const cosmicCountExceeded = false;
 
-                return {
-                    oncoKb,
-                    hotspots,
-                    // TODO support these too?
-                    cbioportalCount: false,
-                    cosmicCount: false,
-                    customDriverBinary: false,
-                };
+                // Note:
+                // - custom driver annotations are part of the incoming datum
+                // - cbio counts, cosmic and custom driver annnotations are
+                //   not used for driver evaluation
+                return evaluateMutationPutativeDriverInfo(
+                    mutation,
+                    oncoKbDatum,
+                    true,
+                    isHotspotDriver,
+                    false,
+                    cbioportalCountExceeded,
+                    false,
+                    cosmicCountExceeded,
+                    false,
+                    undefined
+                );
             });
         },
     });
@@ -2262,7 +2297,7 @@ export class PatientViewPageStore {
             this.mutationMolecularProfile,
             this.discreteMolecularProfile,
             this.coverageInformation,
-            this.getPutativeDriverInfo,
+            this.getMutationPutativeDriverInfo,
             this.entrezGeneIdToGene,
             this.getOncoKbCnaAnnotationForOncoprint,
         ],

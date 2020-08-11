@@ -34,22 +34,20 @@ import {
 } from 'oncokb-ts-api-client';
 import {
     cancerTypeForOncoKb,
+    getOncoKbOncogenic,
     ONCOKB_DEFAULT,
+    PUTATIVE_DRIVER,
     queryOncoKbCopyNumberAlterationData,
     queryOncoKbData,
 } from '../../../../shared/lib/StoreUtils';
 import { default as oncokbClient } from '../../../../shared/api/oncokbClientInstance';
 import MobxPromise from 'mobxpromise';
-import { getOncoKbOncogenic } from '../../../resultsView/ResultsViewPageStoreUtils';
 import { mutationCountByPositionKey } from '../../../resultsView/mutationCountHelpers';
 import { getAlterationString } from '../../../../shared/lib/CopyNumberUtils';
 import { GERMLINE_REGEXP } from '../../../../shared/lib/MutationUtils';
 import { parseOQLQuery } from '../../../../shared/lib/oql/oqlfilter';
 import { Alteration, MUTCommand } from '../../../../shared/lib/oql/oql-parser';
-import {
-    MUTATION_STATUS_GERMLINE,
-    PUTATIVE_DRIVER,
-} from '../../../../shared/constants';
+import { MUTATION_STATUS_GERMLINE } from '../../../../shared/constants';
 
 export type OncoprinterGeneticTrackDatum = Pick<
     GeneticTrackDatum,
