@@ -202,9 +202,10 @@ export async function fetchAllReferenceGenomeGenes(
 ) {
     if (AppConfig.serverConfig.app_name === 'public-portal') {
         // this is temporary
-        return $.get(
-            getFrontendAssetUrl('reactapp/reference_genome_hg19.json')
-        );
+        return $.ajax({
+            url: getFrontendAssetUrl('reactapp/reference_genome_hg19.json'),
+            dataType: 'json',
+        });
     }
     if (genomeName) {
         return await client.getAllReferenceGenomeGenesUsingGET({
