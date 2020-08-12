@@ -1,7 +1,4 @@
-import {
-    AlterationTypeConstants,
-    GenericAssayTypeConstants,
-} from '../../../pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewPageStore';
 import client from 'shared/api/cbioportalClientInstance';
 import {
     GenericAssayMetaFilter,
@@ -147,4 +144,36 @@ export function fetchGenericAssayDataByStableIdsAndMolecularIds(
             molecularProfileIds: molecularProfileIds,
         } as GenericAssayDataMultipleStudyFilter,
     });
+}
+
+export function makeGenericAssayOption(meta: GenericAssayMeta) {
+    // Note: name and desc are optional fields for generic assay entities
+    // When not provided in the data file, these fields are assigned the
+    // value of the entity_stable_id. The code below hides fields when
+    // indentical to the entity_stable_id.
+    const name =
+        'NAME' in meta.genericEntityMetaProperties
+            ? meta.genericEntityMetaProperties['NAME']
+            : NOT_APPLICABLE_VALUE;
+    const description =
+        'DESCRIPTION' in meta.genericEntityMetaProperties
+            ? meta.genericEntityMetaProperties['DESCRIPTION']
+            : NOT_APPLICABLE_VALUE;
+    const uniqueName = name !== meta.stableId;
+    const uniqueDesc = description !== meta.stableId && description !== name;
+    let label = '';
+    if (!uniqueName && !uniqueDesc) {
+        label = meta.stableId;
+    } else if (!uniqueName) {
+        label = `${meta.stableId}: ${description}`;
+    } else if (!uniqueDesc) {
+        label = `${name} (${meta.stableId})`;
+    } else {
+        label = `${name} (${meta.stableId}): ${description}`;
+    }
+
+    return {
+        value: meta.stableId,
+        label: label,
+    };
 }
