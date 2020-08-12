@@ -610,7 +610,7 @@ describe('auto-selecting needed profiles for oql in query form', () => {
     before(() => {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
     });
-    it('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
+    it.skip('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
         browser.waitForExist('.studyItem_acc_tcga_pan_can_atlas_2018', 20000);
         browser.click('.studyItem_acc_tcga_pan_can_atlas_2018');
         clickQueryByGeneButton();
@@ -693,7 +693,7 @@ describe('results page quick oql edit', () => {
         );
     });
 
-    it('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
+    it.skip('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
         browser.waitForExist('[data-test="oqlQuickEditButton"]', 20000);
         browser.click('[data-test="oqlQuickEditButton"]');
 
