@@ -1,9 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, {
+    MutableRefObject,
+    useCallback,
+    useEffect,
+    useRef,
+    useState,
+} from 'react';
 import { observer } from 'mobx-react-lite';
 import TimelineTracks from './TimelineTracks';
 import { TimelineStore } from './TimelineStore';
 import _ from 'lodash';
-import $ from 'jquery';
+import jQuery from 'jquery';
 import {
     getPointInTrimmedSpaceFromScreenRead,
     REMOVE_FOR_DOWNLOAD_CLASSNAME,
@@ -21,8 +27,6 @@ import { DownloadControls } from 'cbioportal-frontend-commons';
 import CustomTrack, { CustomTrackSpecification } from './CustomTrack';
 import CustomTrackHeader from './CustomTrackHeader';
 import { TIMELINE_TRACK_HEIGHT } from './TimelineTrack';
-
-(window as any).$ = $;
 
 interface ITimelineProps {
     store: TimelineStore;
@@ -45,13 +49,13 @@ const getFocusedPoints = _.debounce(function(
 100);
 
 function handleMouseEvents(e: any, store: TimelineStore, refs: any) {
-    const $timeline = $(refs.timeline.current);
-    const $zoomSelectBox = $(refs.zoomSelectBox.current);
-    const $zoomSelectBoxMask = $(refs.zoomSelectBoxMask.current);
+    const $timeline = jQuery(refs.timeline.current);
+    const $zoomSelectBox = jQuery(refs.zoomSelectBox.current);
+    const $zoomSelectBoxMask = jQuery(refs.zoomSelectBoxMask.current);
 
     switch (e.type) {
         case 'mouseleave':
-            $(refs.cursor.current).hide();
+            jQuery(refs.cursor.current).hide();
             break;
 
         case 'mouseup':
@@ -98,7 +102,7 @@ function handleMouseEvents(e: any, store: TimelineStore, refs: any) {
             const pos =
                 e.clientX -
                 $timeline.offset()!.left +
-                ($(document).scrollLeft() || 0);
+                (jQuery(document).scrollLeft() || 0);
             if (store.dragging) {
                 e.preventDefault();
                 if (store.dragging.start === null) {
@@ -144,29 +148,31 @@ function handleMouseEvents(e: any, store: TimelineStore, refs: any) {
 
                 const label = `${yearText}${monthText}${dayText}`;
 
-                $(refs.cursor.current).css({
+                jQuery(refs.cursor.current).css({
                     left:
                         e.clientX -
                         $timeline.offset()!.left +
-                        ($(document).scrollLeft() || 0),
+                        (jQuery(document).scrollLeft() || 0),
                     display: 'block',
                 });
-
-                //$(refs.cursorText.current).html(label);
             }
             break;
     }
 }
 
-const hoverCallback = (e: React.MouseEvent<any>) => {
-    switch (e.type) {
-        case 'mouseenter':
-            const trackIndex = _.findIndex(
-                e.currentTarget.parentNode!.children,
-                el => el === e.currentTarget
-            );
-            if (trackIndex !== undefined) {
-                $('.tl-header-hover-style').text(`
+const hoverCallback = (
+    e: React.MouseEvent<any>,
+    styleTag: MutableRefObject<null>
+) => {
+    if (styleTag && styleTag.current) {
+        switch (e.type) {
+            case 'mouseenter':
+                const trackIndex = _.findIndex(
+                    e.currentTarget.parentNode!.children,
+                    el => el === e.currentTarget
+                );
+                if (trackIndex !== undefined) {
+                    jQuery(styleTag.current!).text(`
                     .tl-timeline-tracklabels > div:nth-child(${trackIndex +
                         1}) {
                         background:#F2F2F2;
@@ -177,13 +183,53 @@ const hoverCallback = (e: React.MouseEvent<any>) => {
                         opacity: 1 !important;
                     }
                 `);
-            }
-            break;
-        default:
-            $('.tl-header-hover-style').empty();
-            break;
+                }
+                break;
+            default:
+                jQuery(styleTag.current!).empty();
+                break;
+        }
     }
 };
+
+function bindToDOMEvents(store: TimelineStore, refs: any) {
+    const keydown = function(e: JQuery.Event) {
+        let preventDefault = false;
+        if (store.tooltipContent !== null) {
+            switch (e.which) {
+                case 37:
+                //left
+                case 40:
+                    //down
+                    store.prevTooltipEvent();
+                    preventDefault = true;
+                    break;
+                case 38:
+                //up
+                case 39:
+                    //right
+                    store.nextTooltipEvent();
+                    preventDefault = true;
+                    break;
+            }
+        }
+        if (preventDefault) {
+            e.preventDefault();
+        }
+    };
+
+    jQuery(document).on('keydown', keydown as any);
+
+    const resize = function() {
+        store.viewPortWidth = jQuery(refs.timelineViewPort.current).width()!;
+    };
+    jQuery(window).on('resize', resize);
+
+    return function() {
+        jQuery(window).off('resize', resize);
+        jQuery(document).off('keydown', keydown);
+    };
+}
 
 const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     store,
@@ -203,14 +249,31 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
         zoomSelectBox: useRef(null),
         zoomSelectBoxMask: useRef(null),
         cursorText: useRef(null),
+        hoverStyleTag: useRef(null),
+        timelineViewPort: useRef(null),
     };
+
+    const memoizedHoverCallback = useCallback(
+        (e: React.MouseEvent) => {
+            hoverCallback(e, refs.hoverStyleTag);
+        },
+        [refs.hoverStyleTag]
+    );
 
     // on mount, there will be no element to measure, so we need to do this on equivalent
     // of componentDidMount
     useEffect(() => {
         setTimeout(() => {
-            store.updateViewPortWidth();
+            store.viewPortWidth = jQuery(
+                refs.timelineViewPort.current!
+            ).width()!;
         }, 10);
+
+        const cleanupDomEvents = bindToDOMEvents(store, refs);
+
+        return function cleanup() {
+            cleanupDomEvents();
+        };
     }, []);
 
     let myZoom = 1;
@@ -235,7 +298,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                 </div>
             )}
 
-            <style className={'tl-header-hover-style'} />
+            <style ref={refs.hoverStyleTag} />
             <div style={{ flexBasis: width - 28, display: 'flex' }}>
                 {' '}
                 {/* -20 for room for download controls*/}
@@ -248,7 +311,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                             return (
                                 <TrackHeader
                                     track={track}
-                                    handleTrackHover={hoverCallback}
+                                    handleTrackHover={memoizedHoverCallback}
                                 />
                             );
                         })}
@@ -258,13 +321,14 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                                     <CustomTrackHeader
                                         store={store}
                                         specification={track}
-                                        handleTrackHover={hoverCallback}
+                                        handleTrackHover={memoizedHoverCallback}
                                     />
                                 );
                             })}
                     </div>
                 </div>
                 <div
+                    ref={refs.timelineViewPort}
                     className={'tl-timelineviewport'}
                     style={{ flexShrink: 1, height }}
                 >
@@ -302,7 +366,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                                         store={store}
                                         width={renderWidth}
                                         customTracks={customTracks}
-                                        handleTrackHover={hoverCallback}
+                                        handleTrackHover={memoizedHoverCallback}
                                     />
                                     <TickAxis
                                         store={store}
@@ -402,12 +466,12 @@ function getSvg(
 
         // Finishing touches
         // Filter out non-download elements
-        $(svg)
+        jQuery(svg)
             .find(`.${REMOVE_FOR_DOWNLOAD_CLASSNAME}`)
             .remove();
 
         // Extend track header borders
-        $(svg)
+        jQuery(svg)
             .find(`.${EXPORT_TRACK_HEADER_BORDER_CLASSNAME}`)
             .each(function() {
                 this.setAttribute(

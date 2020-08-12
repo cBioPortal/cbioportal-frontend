@@ -12,7 +12,7 @@ import {
     getTrimmedTicks,
 } from './lib/helpers';
 import _ from 'lodash';
-import $ from 'jquery';
+import jQuery from 'jquery';
 import autobind from 'autobind-decorator';
 import * as React from 'react';
 import {
@@ -24,37 +24,6 @@ import {
 export class TimelineStore {
     constructor(tracks: TimelineTrackSpecification[]) {
         this.data = tracks;
-
-        $(document).on('keydown', e => {
-            let preventDefault = false;
-            if (this.tooltipContent !== null) {
-                switch (e.which) {
-                    case 37:
-                    //left
-                    case 40:
-                        //down
-                        this.prevTooltipEvent();
-                        preventDefault = true;
-                        break;
-                    case 38:
-                    //up
-                    case 39:
-                        //right
-                        this.nextTooltipEvent();
-                        preventDefault = true;
-                        break;
-                }
-            }
-            if (preventDefault) {
-                e.preventDefault();
-            }
-        });
-
-        if (window) {
-            $(window).resize(() => {
-                this.updateViewPortWidth();
-            });
-        }
     }
 
     @observable private tooltipModel = null as null | {
@@ -168,7 +137,6 @@ export class TimelineStore {
 
     @computed get tickInterval() {
         return TickIntervalEnum.YEAR;
-        //return Math.abs(this.firstTick.end - this.firstTick.start + 1);
     }
 
     @observable.ref zoomBounds: { start: number; end: number } | undefined;
@@ -178,11 +146,6 @@ export class TimelineStore {
         | undefined = undefined;
 
     @observable viewPortWidth: number = 0;
-
-    @action
-    public updateViewPortWidth() {
-        this.viewPortWidth = $('.tl-timelineviewport').width()!;
-    }
 
     setZoomBounds(start?: number, end?: number) {
         if (start && end) {
