@@ -35,32 +35,15 @@ function makeItems(eventData: ClinicalEvent[]) {
 }
 
 function organizeDataIntoTracks(
+    rootTrackType: string,
     trackStructure: string[],
     eventData: ClinicalEvent[]
 ): TimelineTrackSpecification {
-    if (
-        _.some(
-            eventData,
-            d =>
-                !d.attributes.find(
-                    (att: ClinicalEventData) => att.key === trackStructure[0]
-                )
-        )
-    ) {
-        // TODO: Do we have to do this even if just a few events lack complete data?
-
-        // If eventData does not contain data for the root attribute of this trackStructure,
-        //  then we can't organize the data, so just put all the items into one track.
-        return {
-            type: '',
-            items: makeItems(eventData),
-        };
-    }
-
     const dataByRootValue = _.groupBy(eventData, item => {
-        return item.attributes.find(
+        const rootData = item.attributes.find(
             (att: any) => att.key === trackStructure[0]
-        )!.value;
+        );
+        return rootData ? rootData.value : 'Other';
     });
 
     const tracks: TimelineTrackSpecification[] = _.map(
@@ -69,10 +52,10 @@ function organizeDataIntoTracks(
             if (trackStructure.length > 1) {
                 // If trackStructure is non-trivial, recurse for this rootValue
                 const track = organizeDataIntoTracks(
+                    rootValue,
                     trackStructure.slice(1),
                     data
                 );
-                track.type = rootValue;
                 return track;
             } else {
                 // If trackStructure is trivial, then just return a single track for this rootValue
@@ -86,9 +69,7 @@ function organizeDataIntoTracks(
 
     // Finally, organize all tracks under an empty root track
     const track = {
-        type: eventData[0].attributes.find(
-            (att: ClinicalEventData) => att.key === trackStructure[0]
-        )!.value,
+        type: rootTrackType,
         tracks,
         items: [],
     };
@@ -380,7 +361,6 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                 arr => arr[0]
             );
 
-            //cats
             const dataByEventType = _.groupBy(data, (e: ClinicalEvent) =>
                 e.eventType.toUpperCase()
             );
@@ -389,16 +369,6 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                 baseConfig.sortOrder
                     .map((name: string) => name.toUpperCase())
                     .concat(Object.keys(dataByEventType))
-            );
-            const sortedCats = _.reduce(
-                allTracksInOrder,
-                (agg: { [k: string]: any }, trackKey: string) => {
-                    if (trackKey in dataByEventType) {
-                        agg[trackKey] = dataByEventType[trackKey];
-                    }
-                    return agg;
-                },
-                {}
             );
 
             const trackSpecifications = allTracksInOrder.reduce(
@@ -409,15 +379,13 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                     }
 
                     if (trackKey in trackStructuresByRoot) {
-                        const splits = organizeDataIntoTracks(
-                            trackStructuresByRoot[trackKey].slice(1),
-                            data
+                        specs.push(
+                            organizeDataIntoTracks(
+                                trackKey,
+                                trackStructuresByRoot[trackKey].slice(1),
+                                data
+                            )
                         );
-                        specs.push({
-                            type: trackKey,
-                            items: [],
-                            tracks: splits.tracks,
-                        });
                     } else {
                         specs.push({
                             type: trackKey,
