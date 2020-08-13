@@ -80,14 +80,14 @@ export type CoverageInformation = {
 export type SampleAlteredMap = { [trackOqlKey: string]: AlteredStatus[] };
 
 export function computeCustomDriverAnnotationReport(
-    mutations: Mutation[]
+    annotations: { driverFilter: string; driverTiersFilter: string }[]
 ): CustomDriverAnnotationReport {
     let hasBinary = false;
     let tiersMap: { [tier: string]: boolean } = {};
-    for (const mutation of mutations) {
-        hasBinary = hasBinary || !!mutation.driverFilter;
-        if (mutation.driverTiersFilter) {
-            tiersMap[mutation.driverTiersFilter] = true;
+    for (const annotation of annotations) {
+        hasBinary = hasBinary || !!annotation.driverFilter;
+        if (annotation.driverTiersFilter) {
+            tiersMap[annotation.driverTiersFilter] = true;
         }
     }
     return {
@@ -395,6 +395,11 @@ export function annotateMolecularDatum(
             putativeDriver: !!oncogenic,
             oncoKbOncogenic: oncogenic,
             hugoGeneSymbol,
+            //TODO Make these fields optional for all the rest of the classes?
+            driverFilter: '',
+            driverFilterAnnotation: '',
+            driverTiersFilter: '',
+            driverTiersFilterAnnotation: '',
         },
         molecularDatum
     );

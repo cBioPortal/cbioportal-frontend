@@ -29,6 +29,10 @@ describe('CohortColumnFormatter', () => {
             studyId: 'STUDY1',
             uniquePatientKey: '',
             uniqueSampleKey: '',
+            driverFilter: '',
+            driverFilterAnnotation: '',
+            driverTiersFilter: '',
+            driverTiersFilterAnnotation: '',
         },
         {
             alteration: 2,
@@ -45,6 +49,10 @@ describe('CohortColumnFormatter', () => {
             studyId: 'STUDY1',
             uniquePatientKey: '',
             uniqueSampleKey: '',
+            driverFilter: '',
+            driverFilterAnnotation: '',
+            driverTiersFilter: '',
+            driverTiersFilterAnnotation: '',
         },
     ];
 

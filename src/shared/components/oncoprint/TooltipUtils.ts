@@ -541,13 +541,30 @@ export function makeGeneticTrackTooltip(
     function listOfCNAToHTML(data: any[], multipleSamplesUnderMouse: boolean) {
         const countsMap = new ListIndexedMapOfCounts();
         for (const d of data) {
-            countsMap.increment(d.hugo_gene_symbol, d.cna, d.oncokb_oncogenic);
+            countsMap.increment(
+                d.hugo_gene_symbol,
+                d.cna,
+                d.oncokb_oncogenic,
+                d.driver_filter,
+                //FIXME Should not be part of the key
+                d.driver_filter_annotation,
+                d.driver_tiers_filter,
+                d.driver_tiers_filter_annotation
+            );
         }
         return countsMap
             .entries()
             .map(
                 ({
-                    key: [hugo_gene_symbol, cna, oncokb_oncogenic],
+                    key: [
+                        hugo_gene_symbol,
+                        cna,
+                        oncokb_oncogenic,
+                        driver_filter,
+                        driver_filter_annotation,
+                        driver_tiers_filter,
+                        driver_tiers_filter_annotation,
+                    ],
                     value: count,
                 }) => {
                     var ret = $('<span>').addClass('nobreak');
@@ -557,6 +574,18 @@ export function makeGeneticTrackTooltip(
                     if (oncokb_oncogenic) {
                         ret.append(
                             `<img src=${oncokbImg} title="${oncokb_oncogenic}" style="height:11px; width:11px;margin-left:3px"/>`
+                        );
+                    }
+                    //If we have data for the binary custom driver annotations, append an icon to the tooltip with the annotation information
+                    if (driver_filter && driver_filter === 'Putative_Driver') {
+                        ret.append(
+                            `<img src="${customDriverImg}" title="${driver_filter}: ${driver_filter_annotation}" alt="driver filter" style="height:11px; width:11px;margin-left:3px"/>`
+                        );
+                    }
+                    //If we have data for the class custom driver annotations, append an icon to the tooltip with the annotation information
+                    if (driver_tiers_filter) {
+                        ret.append(
+                            `<img src="${customDriverTiersImg}" title="${driver_tiers_filter}: ${driver_tiers_filter_annotation}" alt="driver tiers filter" style="height:11px; width:11px;margin-left:3px"/>`
                         );
                     }
                     // finally, add the number of samples with this, if multipleSamplesUnderMouse
@@ -671,6 +700,13 @@ export function makeGeneticTrackTooltip(
                                     ],
                                 hugo_gene_symbol: hugoGeneSymbol,
                             };
+                            tooltip_datum.driver_filter = datum.driverFilter;
+                            tooltip_datum.driver_filter_annotation =
+                                datum.driverFilterAnnotation;
+                            tooltip_datum.driver_tiers_filter =
+                                datum.driverTiersFilter;
+                            tooltip_datum.driver_tiers_filter_annotation =
+                                datum.driverTiersFilterAnnotation;
                             const oncokb_oncogenic = datum.oncoKbOncogenic;
                             if (oncokb_oncogenic) {
                                 tooltip_datum.oncokb_oncogenic = oncokb_oncogenic;

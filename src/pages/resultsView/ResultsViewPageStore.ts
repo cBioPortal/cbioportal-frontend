@@ -31,6 +31,8 @@ import {
     SampleList,
     SampleMolecularIdentifier,
     GenericAssayData,
+    DiscreteCopyNumberFilter,
+    DiscreteCopyNumberData,
 } from 'cbioportal-ts-api-client';
 import client from 'shared/api/cbioportalClientInstance';
 import { remoteData, stringListToSet } from 'cbioportal-frontend-commons';
@@ -293,6 +295,10 @@ export interface AnnotatedNumericGeneMolecularData
     extends NumericGeneMolecularData {
     hugoGeneSymbol: string;
     putativeDriver: boolean;
+    driverFilter: string;
+    driverFilterAnnotation: string;
+    driverTiersFilter: string;
+    driverTiersFilterAnnotation: string;
     oncoKbOncogenic: string;
 }
 
@@ -3938,10 +3944,13 @@ export class ResultsViewPageStore {
         hasBinary: boolean;
         tiers: string[];
     }>({
-        await: () => [this.mutations],
+        await: () => [this.mutations, this._annotatedMolecularDataReport],
         invoke: () => {
             return Promise.resolve(
-                computeCustomDriverAnnotationReport(this.mutations.result!)
+                computeCustomDriverAnnotationReport([
+                    ...this.mutations.result!,
+                    ...this._annotatedMolecularDataReport.result!,
+                ])
             );
         },
         onResult: result => {
@@ -4017,39 +4026,57 @@ export class ResultsViewPageStore {
     }));
 
     readonly _filteredAndAnnotatedMolecularDataReport = remoteData({
+        /**/
+        await: () => [this._annotatedMolecularDataReport],
+        invoke: async () => {
+            const vus: AnnotatedNumericGeneMolecularData[] = [];
+            const data = this._annotatedMolecularDataReport.result!.reduce(
+                (acc: AnnotatedNumericGeneMolecularData[], next) => {
+                    const selected = !!(
+                        next.driverTiersFilter &&
+                        this.driverAnnotationSettings.driverTiers.get(
+                            next.driverTiersFilter
+                        )
+                    );
+                    if (selected || next.putativeDriver) {
+                        acc.push(next);
+                    } else {
+                        vus.push(next);
+                    }
+                    return acc;
+                },
+                [] as AnnotatedNumericGeneMolecularData[]
+            );
+            return {
+                data,
+                vus,
+            };
+        },
+    });
+
+    readonly _annotatedMolecularDataReport = remoteData({
         await: () => [
             this.molecularData,
             this.entrezGeneIdToGene,
             this.annotateNumericGeneMolecularData,
             this.molecularProfileIdToMolecularProfile,
         ],
-        invoke: () => {
+        invoke: async () => {
             const entrezGeneIdToGene = this.entrezGeneIdToGene.result!;
             let annotateNumericGeneMolecularData: (
                 datum: NumericGeneMolecularData
-            ) => AnnotatedNumericGeneMolecularData;
+            ) => Promise<AnnotatedNumericGeneMolecularData>;
             annotateNumericGeneMolecularData = this
                 .annotateNumericGeneMolecularData
                 .result! as typeof annotateNumericGeneMolecularData;
             const profileIdToProfile = this.molecularProfileIdToMolecularProfile
                 .result!;
-            const vus: AnnotatedNumericGeneMolecularData[] = [];
-            const data = this.molecularData.result!.reduce(
-                (acc: AnnotatedNumericGeneMolecularData[], next) => {
-                    const d = annotateNumericGeneMolecularData(next);
-                    if (d.putativeDriver) {
-                        acc.push(d);
-                    } else {
-                        vus.push(d);
-                    }
-                    return acc;
-                },
-                [] as AnnotatedNumericGeneMolecularData[]
+            const annotatedMolecularData: AnnotatedNumericGeneMolecularData[] = await Promise.all(
+                this.molecularData.result!.map(d =>
+                    annotateNumericGeneMolecularData(d)
+                )
             );
-            return Promise.resolve({
-                data,
-                vus,
-            });
+            return annotatedMolecularData;
         },
     });
 
@@ -4057,14 +4084,14 @@ export class ResultsViewPageStore {
         | Error
         | ((
               data: NumericGeneMolecularData
-          ) => AnnotatedNumericGeneMolecularData)
+          ) => Promise<AnnotatedNumericGeneMolecularData>)
     >({
         await: () => [
             this.getOncoKbCnaAnnotationForOncoprint,
             this.molecularProfileIdToMolecularProfile,
             this.entrezGeneIdToGene,
         ],
-        invoke: () => {
+        invoke: async () => {
             let getOncoKbAnnotation: (
                 datum: NumericGeneMolecularData
             ) => IndicatorQueryResp | undefined;
@@ -4076,20 +4103,57 @@ export class ResultsViewPageStore {
                 getOncoKbAnnotation = this.getOncoKbCnaAnnotationForOncoprint
                     .result! as typeof getOncoKbAnnotation;
             }
+
             const profileIdToProfile = this.molecularProfileIdToMolecularProfile
                 .result!;
             const entrezGeneIdToGene = this.entrezGeneIdToGene.result!;
-            return Promise.resolve((data: NumericGeneMolecularData) => {
-                const annot = annotateMolecularDatum(
+
+            return async (data: NumericGeneMolecularData) => {
+                var annot = annotateMolecularDatum(
                     data,
                     getOncoKbAnnotation,
                     profileIdToProfile,
                     entrezGeneIdToGene
                 );
+                //TODO Remove this if and call to annotateMolecularDatum when loading of onkokb to custom annotations will be implemented
+                await this.setCustomAnnotationFields(annot);
                 return annot;
-            });
+            };
         },
     });
+
+    readonly setCustomAnnotationFields = async (
+        molecularData: AnnotatedNumericGeneMolecularData
+    ) => {
+        //TODO Has to be optimised. e.g. Pull data in batches, use cache
+        const discreteCopyNumberData: DiscreteCopyNumberData[] = await client.fetchDiscreteCopyNumbersInMolecularProfileUsingPOST(
+            {
+                //FIXME HOMDEL_AND_AMP just to make backend read data from the tables where we have custom annotations!
+                discreteCopyNumberEventType: 'HOMDEL_AND_AMP',
+                discreteCopyNumberFilter: {
+                    entrezGeneIds: [molecularData.entrezGeneId],
+                    sampleIds: [molecularData.sampleId],
+                } as DiscreteCopyNumberFilter,
+                molecularProfileId: molecularData.molecularProfileId,
+                projection: 'DETAILED',
+            }
+        );
+
+        if (!discreteCopyNumberData || discreteCopyNumberData.length < 1) {
+            return;
+        }
+
+        const cnaEntry = discreteCopyNumberData[0];
+        molecularData.driverFilter = cnaEntry.driverFilter;
+        molecularData.driverFilterAnnotation = cnaEntry.driverFilterAnnotation;
+        molecularData.driverTiersFilter = cnaEntry.driverTiersFilter;
+        molecularData.driverTiersFilterAnnotation =
+            cnaEntry.driverTiersFilterAnnotation;
+
+        molecularData.putativeDriver =
+            this.driverAnnotationSettings.customBinary &&
+            cnaEntry.driverFilter === 'Putative_Driver';
+    };
 
     readonly filteredAndAnnotatedMolecularData = remoteData<
         AnnotatedNumericGeneMolecularData[]
@@ -4120,7 +4184,10 @@ export class ResultsViewPageStore {
     >(q => ({
         await: () =>
             this.numericGeneMolecularDataCache.await(
-                [this.studyToMolecularProfileDiscreteCna],
+                [
+                    this.studyToMolecularProfileDiscreteCna,
+                    this.annotateNumericGeneMolecularData,
+                ],
                 studyToMolecularProfileDiscrete => {
                     return _.values(studyToMolecularProfileDiscrete).map(p => ({
                         entrezGeneId: q.entrezGeneId,
@@ -4143,11 +4210,11 @@ export class ResultsViewPageStore {
             );
             let annotateNumericGeneMolecularData: (
                 datum: NumericGeneMolecularData
-            ) => AnnotatedNumericGeneMolecularData;
+            ) => Promise<AnnotatedNumericGeneMolecularData>;
             annotateNumericGeneMolecularData = this
                 .annotateNumericGeneMolecularData
                 .result! as typeof annotateNumericGeneMolecularData;
-            return Promise.resolve(
+            return Promise.all(
                 results.map(d => {
                     return annotateNumericGeneMolecularData(d);
                 })
