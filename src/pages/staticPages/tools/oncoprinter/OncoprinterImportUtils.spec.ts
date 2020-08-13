@@ -179,7 +179,7 @@ describe('OncoprinterImportUtils', () => {
                     'sample1  gene2  promoter  PROMOTER  label2\n' +
                     'sample1  gene2  GAIN  CNA  label2\n' +
                     'sample1  gene2  LOW  EXP  label2\n' +
-                    'sample2  gene2  STRUCTURAL VARIANT\n' +
+                    'sample2  gene1  STRUCTURAL VARIANT  label2\n' +
                     'sample2\n' +
                     'sample2  gene2  LOW  PROT  label2\n' +
                     'sample1\nsample2'
@@ -201,7 +201,7 @@ describe('OncoprinterImportUtils', () => {
                     'patient1  gene2  promoter  PROMOTER  label2\n' +
                     'patient1  gene2  GAIN  CNA  label2\n' +
                     'patient1  gene2  LOW  EXP  label2\n' +
-                    'patient2  gene2  STRUCTURAL VARIANT\n' +
+                    'patient2  gene1  STRUCTURAL VARIANT  label2\n' +
                     'patient2\n' +
                     'patient2  gene2  LOW  PROT  label2\n' +
                     'patient1\npatient2'

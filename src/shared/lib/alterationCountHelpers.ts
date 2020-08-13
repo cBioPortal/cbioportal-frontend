@@ -106,7 +106,7 @@ export function countAlterationOccurences(
                 homdel: 0, // -2
                 hetloss: 0, // -1
                 gain: 0, // 1
-                fusion: 0,
+                structuralVariant: 0,
                 mrnaExpressionHigh: 0,
                 mrnaExpressionLow: 0,
                 protExpressionHigh: 0,
@@ -253,8 +253,8 @@ export function countAlterationOccurences(
                                     case AlterationTypeConstants.MUTATION_EXTENDED:
                                         counts.mutated++;
                                         break;
-                                    case AlterationTypeConstants.FUSION:
-                                        counts.fusion++;
+                                    case AlterationTypeConstants.STRUCTURAL_VARIANT:
+                                        counts.structuralVariant++;
                                         break;
                                 }
                             }
