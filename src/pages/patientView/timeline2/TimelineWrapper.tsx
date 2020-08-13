@@ -5,22 +5,20 @@ import { observer } from 'mobx-react-lite';
 import 'cbioportal-clinical-timeline/dist/styles.css';
 
 import {
-    TimelineTrackSpecification,
-    TimelineStore,
+    configureTracks,
+    formatDate,
+    getAttributeValue,
     Timeline,
     TimelineEvent,
+    TimelineStore,
+    TimelineTrackSpecification,
+    TimelineTrackType,
 } from 'cbioportal-clinical-timeline';
 
-import { ClinicalEvent, ClinicalEventData } from 'cbioportal-ts-api-client';
-import { configureTracks } from 'cbioportal-clinical-timeline';
-import { getAttributeValue } from 'cbioportal-clinical-timeline';
+import { ClinicalEvent } from 'cbioportal-ts-api-client';
 import SampleManager from 'pages/patientView/SampleManager';
-import VAFChartWrapper, {
-    VAF_CHART_ROW_HEIGHT,
-} from 'pages/patientView/timeline2/VAFChartWrapper';
 import SampleMarker from 'pages/patientView/timeline2/SampleMarker';
 import { TIMELINE_TRACK_HEIGHT } from 'cbioportal-clinical-timeline/src/TimelineTrack';
-import { formatDate } from 'cbioportal-clinical-timeline';
 
 function makeItems(eventData: ClinicalEvent[]) {
     return eventData.map((e: ClinicalEvent) => {
@@ -128,6 +126,21 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                                 : undefined;
 
                             if (psaTrack && psaTrack && psaTrack.items.length) {
+                                psaTrack.trackType =
+                                    TimelineTrackType.LINE_CHART;
+                                psaTrack.getLineChartValue = (
+                                    e: TimelineEvent
+                                ) => {
+                                    const val = getAttributeValue('VALUE', e);
+                                    if (val === undefined) {
+                                        return null;
+                                    } else {
+                                        return parseFloat(
+                                            val.replace(/^[<>]/gi, '')
+                                        );
+                                    }
+                                };
+
                                 const psaValues = psaTrack.items.map(event => {
                                     const val = getAttributeValue(
                                         'VALUE',
@@ -142,7 +155,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                                 //console.log(psaValues.map(v => v.value));
                                 const max = _.max(psaValues);
 
-                                psaTrack.items.forEach(event => {
+                                /*psaTrack.items.forEach(event => {
                                     event.render = () => {
                                         let perc =
                                             getAttributeValue('VALUE', event) /
@@ -157,7 +170,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                                             />
                                         );
                                     };
-                                });
+                                });*/
                             }
                         },
                     },

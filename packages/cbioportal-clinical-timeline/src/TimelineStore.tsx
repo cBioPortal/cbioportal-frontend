@@ -95,7 +95,11 @@ export class TimelineStore {
                                 2}px, 0)`,
                         }}
                     >
-                        {renderPoint([activeItem], this.tooltipModel.track)}
+                        {renderPoint(
+                            [activeItem],
+                            this.tooltipModel.track,
+                            TIMELINE_TRACK_HEIGHT
+                        )}
                     </g>
                 </svg>
             );

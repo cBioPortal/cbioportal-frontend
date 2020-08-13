@@ -27,7 +27,7 @@ export interface ITimelineTracks {
 export const TimelineTracks: React.FunctionComponent<
     ITimelineTracks
 > = observer(function({ store, width, handleTrackHover, customTracks }) {
-    const tracks = expandTracks(store.data).map(t => t.track);
+    const tracks = expandTracks(store.data);
 
     let nextY = 0;
 
@@ -36,15 +36,16 @@ export const TimelineTracks: React.FunctionComponent<
             <g style={{ transform: `translate(0, ${TICK_AXIS_HEIGHT}px)` }}>
                 {tracks.map(track => {
                     const y = nextY;
-                    nextY += TIMELINE_TRACK_HEIGHT;
+                    nextY += track.height;
                     return (
                         <TimelineTrack
                             limit={store.trimmedLimit}
-                            trackData={track}
+                            trackData={track.track}
                             getPosition={store.getPosition}
                             handleTrackHover={handleTrackHover}
                             store={store}
                             y={y}
+                            height={track.height}
                             width={width}
                         />
                     );
