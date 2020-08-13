@@ -65,18 +65,31 @@ export const TimelineTracks: React.FunctionComponent<
                         );
                     })}
             </g>
-            {store.tooltipContent && (
-                <Portal container={document.body}>
-                    <Popover
-                        arrowOffsetTop={17}
-                        className={'tl-timeline-tooltip'}
-                        positionLeft={store.mousePosition.x + 10}
-                        positionTop={store.mousePosition.y - 17}
-                    >
-                        {store.tooltipContent}
-                    </Popover>
-                </Portal>
-            )}
+            {store.tooltipContent &&
+                (() => {
+                    const placementLeft = store.mousePosition.x > width / 2;
+                    return (
+                        <Portal container={document.body}>
+                            <Popover
+                                arrowOffsetTop={17}
+                                placement={placementLeft ? 'left' : 'right'}
+                                style={{
+                                    transform: placementLeft
+                                        ? 'translate(-100%, 0)'
+                                        : '',
+                                }}
+                                className={'tl-timeline-tooltip'}
+                                positionLeft={
+                                    store.mousePosition.x +
+                                    (placementLeft ? -10 : 10)
+                                }
+                                positionTop={store.mousePosition.y - 17}
+                            >
+                                {store.tooltipContent}
+                            </Popover>
+                        </Portal>
+                    );
+                })()}
         </>
     );
 });
