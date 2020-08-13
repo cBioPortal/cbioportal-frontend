@@ -61,6 +61,8 @@ import StudyViewURLWrapper from './StudyViewURLWrapper';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
 import { ResourceData } from 'cbioportal-ts-api-client';
 import $ from 'jquery';
+import { StudyViewComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
+import { getStudySummaryUrl } from 'shared/api/urls';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -112,7 +114,6 @@ export default class StudyViewPage extends React.Component<
     @observable private toolbarLeft: number = 0;
 
     @observable showCustomSelectTooltip = false;
-    @observable showGroupsTooltip = false;
     @observable private showReturnToDefaultChartListModal: boolean = false;
 
     constructor(props: IStudyViewPageProps) {
@@ -156,14 +157,26 @@ export default class StudyViewPage extends React.Component<
             'filterValues',
         ]);
 
-        const filterJson = hash || getBrowserWindow().studyPageFilter;
+        let hashString: string = hash || getBrowserWindow().studyPageFilter;
         delete (window as any).studyPageFilter;
 
-        if (filterJson) {
-            const filters = filterJson.match(/filterJson=([^&]*)/);
-            if (filters && filters.length > 1) {
-                newStudyViewFilter.filters = filters[1];
-            }
+        if (hashString) {
+            hashString = hashString.substring(1);
+            hashString.split('&').forEach(datum => {
+                if (datum.startsWith('filterJson')) {
+                    const filters = datum.match(/filterJson=([^&]*)/);
+                    if (filters && filters.length > 1) {
+                        newStudyViewFilter.filters = filters[1];
+                    }
+                } else if (datum.startsWith('sharedGroups')) {
+                    const sharedGroups = datum.match(/sharedGroups=([^&]*)/);
+                    if (sharedGroups && sharedGroups.length > 1) {
+                        newStudyViewFilter.sharedGroups = sharedGroups[1];
+                        // Open group comparison manager if there are shared groups in the url
+                        this.store.showComparisonGroupUI = true;
+                    }
+                }
+            });
         }
         if (!_.isEqual(newStudyViewFilter, this.store.studyViewQueryFilter)) {
             this.store.updateStoreFromURL(newStudyViewFilter);
@@ -218,6 +231,33 @@ export default class StudyViewPage extends React.Component<
     @action
     toggleBookmarkModal() {
         this.showBookmarkModal = !this.showBookmarkModal;
+    }
+
+    @observable shareLinkModal = false;
+
+    @autobind
+    @action
+    toggleShareLinkModal() {
+        this.shareLinkModal = !this.shareLinkModal;
+        this.sharedGroups = [];
+    }
+
+    private getShareBookmarkUrl: Promise<any> = Promise.resolve(null);
+    private sharedGroups: StudyViewComparisonGroup[] = [];
+
+    @autobind
+    @action
+    openShareUrlModal(groups: StudyViewComparisonGroup[]) {
+        this.shareLinkModal = true;
+        this.sharedGroups = groups;
+        const groupIds = groups.map(group => group.uid);
+        this.getShareBookmarkUrl = Promise.resolve({
+            bitlyUrl: undefined,
+            fullUrl: `${window.location.protocol}//${window.location.host}${
+                window.location.pathname
+            }${window.location.search}#sharedGroups=${groupIds.join(',')}`,
+            sessionUrl: undefined,
+        });
     }
 
     @autobind
@@ -334,7 +374,7 @@ export default class StudyViewPage extends React.Component<
                 {/*    </InfoBeacon>*/}
                 {/*</If>*/}
                 <DefaultTooltip
-                    visible={this.showGroupsTooltip}
+                    visible={this.store.showComparisonGroupUI}
                     trigger={['click']}
                     placement="bottomLeft"
                     destroyTooltipOnHide={true}
@@ -345,7 +385,9 @@ export default class StudyViewPage extends React.Component<
                         arrowEl.style.right = '10px';
                     }}
                     onVisibleChange={visible => {
-                        this.showGroupsTooltip = !!visible;
+                        if (!this.shareLinkModal) {
+                            this.store.showComparisonGroupUI = !!visible;
+                        }
                     }}
                     getTooltipContainer={() =>
                         document.getElementById(
@@ -354,42 +396,20 @@ export default class StudyViewPage extends React.Component<
                     }
                     overlay={
                         <div style={{ width: 350 }}>
-                            {this.props.appStore.isLoggedIn ? (
-                                <ComparisonGroupManager store={this.store} />
-                            ) : (
-                                <span>
-                                    Please log in to use the custom groups
-                                    feature to save and compare sub-cohorts.
-                                    <If
-                                        condition={
-                                            AppConfig.serverConfig
-                                                .authenticationMethod &&
-                                            AppConfig.serverConfig.authenticationMethod.includes(
-                                                'social_auth'
-                                            )
-                                        }
-                                    >
-                                        <div
-                                            className={'text-center'}
-                                            style={{ padding: 20 }}
-                                        >
-                                            <SocialAuthButton
-                                                appStore={this.props.appStore}
-                                            />
-                                        </div>
-                                    </If>
-                                </span>
-                            )}
+                            <ComparisonGroupManager
+                                store={this.store}
+                                shareGroups={this.openShareUrlModal}
+                            />
                         </div>
                     }
                 >
                     <button
                         className={classNames('btn btn-primary btn-xs', {
-                            active: this.showGroupsTooltip,
+                            active: this.store.showComparisonGroupUI,
                         })}
                         id={'groupManagementButton'}
                         data-test="groups-button"
-                        aria-pressed={this.showGroupsTooltip}
+                        aria-pressed={this.store.showComparisonGroupUI}
                         style={{ marginLeft: '10px' }}
                         data-event={serializeEvent({
                             action: 'openGroupManagement',
@@ -417,30 +437,25 @@ export default class StudyViewPage extends React.Component<
             const resourceDataById = this.store.resourceIdToResourceData
                 .result!;
 
-            const tabs: JSX.Element[] = sorted.reduce(
-                (list, def) => {
-                    const data = resourceDataById[def.resourceId];
-                    if (data && data.length > 0) {
-                        list.push(
-                            <MSKTab
-                                key={getStudyViewResourceTabId(def.resourceId)}
-                                id={getStudyViewResourceTabId(def.resourceId)}
-                                linkText={def.displayName}
-                                onClickClose={this.closeResourceTab}
-                            >
-                                <ResourceTab
-                                    resourceData={
-                                        resourceDataById[def.resourceId]
-                                    }
-                                    urlWrapper={this.urlWrapper}
-                                />
-                            </MSKTab>
-                        );
-                    }
-                    return list;
-                },
-                [] as JSX.Element[]
-            );
+            const tabs: JSX.Element[] = sorted.reduce((list, def) => {
+                const data = resourceDataById[def.resourceId];
+                if (data && data.length > 0) {
+                    list.push(
+                        <MSKTab
+                            key={getStudyViewResourceTabId(def.resourceId)}
+                            id={getStudyViewResourceTabId(def.resourceId)}
+                            linkText={def.displayName}
+                            onClickClose={this.closeResourceTab}
+                        >
+                            <ResourceTab
+                                resourceData={resourceDataById[def.resourceId]}
+                                urlWrapper={this.urlWrapper}
+                            />
+                        </MSKTab>
+                    );
+                }
+                return list;
+            }, [] as JSX.Element[]);
             return tabs;
         },
     });
@@ -453,6 +468,20 @@ export default class StudyViewPage extends React.Component<
                         onHide={this.toggleBookmarkModal}
                         title={'Bookmark this filter'}
                         urlPromise={this.getBookmarkUrl()}
+                    />
+                )}
+                {this.shareLinkModal && (
+                    <BookmarkModal
+                        onHide={this.toggleShareLinkModal}
+                        title={
+                            this.sharedGroups.length > 1
+                                ? `Share ${this.sharedGroups.length} Groups`
+                                : 'Share Group'
+                        }
+                        urlPromise={this.getShareBookmarkUrl}
+                        description={
+                            'Please send the following link to users with whom you want to share the selected group(s).'
+                        }
                     />
                 )}
 

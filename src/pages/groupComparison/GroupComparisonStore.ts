@@ -167,19 +167,20 @@ export default class GroupComparisonStore extends ComparisonStore {
     }
 
     readonly _unsortedOriginalGroups = remoteData<ComparisonGroup[]>({
-        await: () => [this._session, this.sampleSet],
+        await: () => [this._session, this.sampleMap],
         invoke: () => {
             // (1) ensure color
             // (2) filter out, and add list of, nonexistent samples
             // (3) add patients
 
             let ret: ComparisonGroup[] = [];
-            const sampleSet = this.sampleSet.result!;
+            const sampleSet = this.sampleMap.result!;
 
-            let defaultGroupColors = pickClinicalDataColors(_.map(
-                this._session.result!.groups,
-                group => ({ value: group.name })
-            ) as any);
+            let defaultGroupColors = pickClinicalDataColors(
+                _.map(this._session.result!.groups, group => ({
+                    value: group.name,
+                })) as any
+            );
 
             const finalizeGroup = (
                 groupData: SessionGroupData,

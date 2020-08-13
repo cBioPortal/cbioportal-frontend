@@ -156,10 +156,10 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
         {
             await: () => [
                 this.props.store._selectedGroups,
-                this.props.store.sampleSet,
+                this.props.store.sampleMap,
             ],
             invoke: () => {
-                const sampleSet = this.props.store.sampleSet.result!;
+                const sampleSet = this.props.store.sampleMap.result!;
                 const groupsWithSamples = _.map(
                     this.props.store._selectedGroups.result,
                     group => {
@@ -189,10 +189,10 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
         {
             await: () => [
                 this.props.store._selectedGroups,
-                this.props.store.sampleSet,
+                this.props.store.sampleMap,
             ],
             invoke: () => {
-                const sampleSet = this.props.store.sampleSet.result!;
+                const sampleSet = this.props.store.sampleMap.result!;
                 const groupsWithPatients = _.map(
                     this.props.store._selectedGroups.result,
                     group => {
@@ -223,10 +223,10 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
     private activeSamples = remoteData({
         await: () => [
             this.props.store._selectedGroups,
-            this.props.store.sampleSet,
+            this.props.store.sampleMap,
         ],
         invoke: () => {
-            const sampleSet = this.props.store.sampleSet.result!;
+            const sampleSet = this.props.store.sampleMap.result!;
             const activeSampleIdentifiers = getSampleIdentifiers(
                 this.props.store._selectedGroups.result!
             );
@@ -240,21 +240,23 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
     private readonly samplesVennPartition = remoteData({
         await: () => [
             this.props.store._selectedGroups,
-            this.props.store.sampleSet,
+            this.props.store.sampleMap,
             this.activeSamples,
         ],
         invoke: () => {
-            const sampleSet = this.props.store.sampleSet.result!;
-            return Promise.resolve(partitionCasesByGroupMembership(
-                this.props.store._selectedGroups.result!,
-                group => getSampleIdentifiers([group]),
-                sampleIdentifier =>
-                    sampleSet.get({
-                        studyId: sampleIdentifier.studyId,
-                        sampleId: sampleIdentifier.sampleId,
-                    })!.uniqueSampleKey,
-                this.activeSamples.result!.map(s => s.uniqueSampleKey)
-            ) as { key: { [uid: string]: boolean }; value: string[] }[]);
+            const sampleSet = this.props.store.sampleMap.result!;
+            return Promise.resolve(
+                partitionCasesByGroupMembership(
+                    this.props.store._selectedGroups.result!,
+                    group => getSampleIdentifiers([group]),
+                    sampleIdentifier =>
+                        sampleSet.get({
+                            studyId: sampleIdentifier.studyId,
+                            sampleId: sampleIdentifier.sampleId,
+                        })!.uniqueSampleKey,
+                    this.activeSamples.result!.map(s => s.uniqueSampleKey)
+                ) as { key: { [uid: string]: boolean }; value: string[] }[]
+            );
         },
     });
 
@@ -267,16 +269,20 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
         invoke: () => {
             const patientToSamplesSet = this.props.store.patientToSamplesSet
                 .result!;
-            return Promise.resolve(partitionCasesByGroupMembership(
-                this.props.store._selectedGroups.result!,
-                group => getPatientIdentifiers([group]),
-                patientIdentifier =>
-                    patientToSamplesSet.get({
-                        studyId: patientIdentifier.studyId,
-                        patientId: patientIdentifier.patientId,
-                    })![0].uniquePatientKey,
-                _.uniq(this.activeSamples.result!.map(s => s.uniquePatientKey))
-            ) as { key: { [uid: string]: boolean }; value: string[] }[]);
+            return Promise.resolve(
+                partitionCasesByGroupMembership(
+                    this.props.store._selectedGroups.result!,
+                    group => getPatientIdentifiers([group]),
+                    patientIdentifier =>
+                        patientToSamplesSet.get({
+                            studyId: patientIdentifier.studyId,
+                            patientId: patientIdentifier.patientId,
+                        })![0].uniquePatientKey,
+                    _.uniq(
+                        this.activeSamples.result!.map(s => s.uniquePatientKey)
+                    )
+                ) as { key: { [uid: string]: boolean }; value: string[] }[]
+            );
         },
     });
 

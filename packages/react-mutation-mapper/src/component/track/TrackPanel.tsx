@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { computed } from 'mobx';
+import { MobxCache } from 'cbioportal-utils';
 
-import { MobxCache } from '../../model/MobxCache';
 import MutationMapperStore from '../../model/MutationMapperStore';
 import { TrackName, TrackVisibility } from './TrackSelector';
 import HotspotTrack from './HotspotTrack';
@@ -37,7 +37,7 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
         return Math.max(proteinLength, 1);
     }
 
-    get availableTracks() {
+    get availableTracks(): { [trackName: string]: JSX.Element | null } {
         return {
             [TrackName.CancerHotspots]:
                 !this.props.trackVisibility ||
@@ -71,7 +71,12 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
                     <PtmTrack
                         store={this.props.store}
                         pubMedCache={this.props.pubMedCache}
-                        ensemblTranscriptId={this.props.store.activeTranscript}
+                        ensemblTranscriptId={
+                            this.props.store.activeTranscript &&
+                            this.props.store.activeTranscript.result
+                                ? this.props.store.activeTranscript.result
+                                : undefined
+                        }
                         dataStore={this.props.store.dataStore}
                         width={this.props.geneWidth}
                         xOffset={this.props.geneXOffset}

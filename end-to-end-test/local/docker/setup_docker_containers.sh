@@ -57,14 +57,6 @@ build_database_container() {
         fi
         sleep 10
     done
-
-    # migrate database schema to most recent version
-    echo Migrating database schema to most recent version ...
-    docker run --rm \
-        --net=$DOCKER_NETWORK_NAME \
-        -v "$TEST_HOME/local/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
-        $BACKEND_IMAGE_NAME \
-        python3 /cbioportal/core/src/main/scripts/migrate_db.py -y -p /cbioportal/portal.properties -s /cbioportal/db-scripts/src/main/resources/migration.sql
 }
 
 run_database_container() {
@@ -74,7 +66,7 @@ run_database_container() {
     docker run -d \
         --name=$DB_HOST \
         --net=$DOCKER_NETWORK_NAME \
-        -e MYSQL_ROOT_PASSWORD=$DB_USER \
+        -e MYSQL_ROOT_PASSWORD=$DB_PASSWORD \
         -e MYSQL_USER=$DB_USER \
         -e MYSQL_PASSWORD=$DB_PASSWORD \
         -e MYSQL_DATABASE=$DB_PORTAL_DB_NAME \
@@ -94,7 +86,7 @@ run_cbioportal_container() {
         --name=$E2E_CBIOPORTAL_HOST_NAME \
         --net=$DOCKER_NETWORK_NAME \
         -v "$TEST_HOME/local/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
-        -e JAVA_OPTS="-Xms2g -Xmx4g -Dauthenticate=false" \
+        -e JAVA_OPTS="-Xms2g -Xmx4g -Dauthenticate=false -Dapp.name=localdbe2e" \
         -p 8081:8080 \
         $BACKEND_IMAGE_NAME \
         /bin/sh -c 'java ${JAVA_OPTS} -jar webapp-runner.jar /app.war'

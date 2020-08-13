@@ -1,5 +1,13 @@
-import { IOncoKbData } from 'cbioportal-frontend-commons';
-import { Gene, Mutation } from 'cbioportal-utils';
+import {
+    Gene,
+    ICivicGene,
+    ICivicVariant,
+    IHotspotIndex,
+    IMyCancerGenomeData,
+    IOncoKbData,
+    Mutation,
+    RemoteData,
+} from 'cbioportal-utils';
 import {
     EnsemblTranscript,
     Hotspot,
@@ -13,21 +21,14 @@ import {
     IndicatorQueryResp,
     OncoKBInfo,
 } from 'oncokb-ts-api-client';
-import { IHotspotIndex } from './CancerHotspot';
-import { ICivicGene, ICivicVariant } from './Civic';
 import DataStore from './DataStore';
-import { IMyCancerGenomeData } from './MyCancerGenome';
-import { RemoteData } from './RemoteData';
 
 export interface MutationMapperStore {
     gene: Gene;
     dataStore: DataStore;
     uniprotId: RemoteData<string | undefined>;
-    activeTranscript?: string;
+    activeTranscript?: RemoteData<string | undefined>;
     canonicalTranscript: RemoteData<EnsemblTranscript | undefined>;
-    mutationAlignerLinks: RemoteData<
-        { [pfamAccession: string]: string } | undefined
-    >;
     mutationData: RemoteData<Partial<Mutation>[] | undefined>;
     pfamDomainData: RemoteData<PfamDomain[] | undefined>;
     allTranscripts: RemoteData<EnsemblTranscript[] | undefined>;
@@ -73,6 +74,8 @@ export interface MutationMapperStore {
     transcriptsWithAnnotations: RemoteData<string[] | undefined>;
     transcriptsWithProteinLength: RemoteData<string[] | undefined>;
     mutationsByTranscriptId: { [transcriptId: string]: Mutation[] };
+    setSelectedTranscript?: (id: string | undefined) => void;
+    getTranscriptId?: () => string | undefined;
 }
 
 export default MutationMapperStore;

@@ -7,15 +7,15 @@ import {
     IAnnotation,
     USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
     oncoKbAnnotationSortValue,
-    RemoteData,
 } from 'react-mutation-mapper';
 import { CancerStudy, StructuralVariant } from 'cbioportal-ts-api-client';
 import { IAnnotationColumnProps } from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
+import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import {
+    RemoteData,
     IOncoKbData,
     generateQueryStructuralVariantId,
-} from 'cbioportal-frontend-commons';
-import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
+} from 'cbioportal-utils';
 
 export default class AnnotationColumnFormatter {
     public static getData(

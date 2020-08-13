@@ -1,4 +1,4 @@
-import { IHotspotIndex } from 'react-mutation-mapper';
+import { IHotspotIndex } from 'cbioportal-utils';
 import {
     Mutation,
     Gene,
@@ -20,12 +20,12 @@ import MutationCountCache from 'shared/cache/MutationCountCache';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
-import GenomeNexusMyVariantInfoCache from 'shared/cache/GenomeNexusMyVariantInfoCache';
 import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownloadDataFetcher';
 import MutationMapperStore, {
     IMutationMapperStoreConfig,
 } from 'shared/components/mutationMapper/MutationMapperStore';
 import { IServerConfig } from '../../../config/IAppConfig';
+import { computed } from 'mobx';
 
 export default class ResultsViewMutationMapperStore extends MutationMapperStore {
     constructor(
@@ -45,7 +45,6 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
         private getMutationCountCache: () => MutationCountCache,
         private getGenomeNexusCache: () => GenomeNexusCache,
         private getGenomeNexusMutationAssessorCache: () => GenomeNexusMutationAssessorCache,
-        private getGenomeNexusMyVariantInfoCache: () => GenomeNexusMyVariantInfoCache,
         private getDiscreteCNACache: () => DiscreteCNACache,
         public studyToMolecularProfileDiscrete: {
             [studyId: string]: MolecularProfile;
@@ -68,7 +67,8 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
         },
         public generateGenomeNexusHgvsgUrl: (hgvsg: string) => string,
         protected genomenexusClient?: GenomeNexusAPI,
-        protected genomenexusInternalClient?: GenomeNexusAPIInternal
+        protected genomenexusInternalClient?: GenomeNexusAPIInternal,
+        public getTranscriptId?: () => string
     ) {
         super(
             mutationMapperConfig,
@@ -97,9 +97,21 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
             this.studyToMolecularProfileDiscrete,
             this.getGenomeNexusCache,
             this.getGenomeNexusMutationAssessorCache,
-            this.getGenomeNexusMyVariantInfoCache,
             this.getMutationCountCache,
             this.getDiscreteCNACache
         );
+    }
+
+    @computed
+    get isCanonicalTranscript(): boolean {
+        if (this.canonicalTranscript.result && this.activeTranscript.result) {
+            // if transcript dropdown is enabled, return true for canonical transcript
+            return (
+                this.activeTranscript.result ===
+                this.canonicalTranscript.result.transcriptId
+            );
+        }
+        // return true if transcript dropdown is disabled
+        return true;
     }
 }

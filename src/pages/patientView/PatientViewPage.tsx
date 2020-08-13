@@ -398,32 +398,25 @@ export default class PatientViewPage extends React.Component<
             const resourceDataById = this.patientViewPageStore
                 .resourceIdToResourceData.result!;
 
-            const tabs: JSX.Element[] = sorted.reduce(
-                (list, def) => {
-                    const data = resourceDataById[def.resourceId];
-                    if (data && data.length > 0) {
-                        list.push(
-                            <MSKTab
-                                key={getPatientViewResourceTabId(
-                                    def.resourceId
-                                )}
-                                id={getPatientViewResourceTabId(def.resourceId)}
-                                linkText={def.displayName}
-                                onClickClose={this.closeResourceTab}
-                            >
-                                <ResourceTab
-                                    resourceData={
-                                        resourceDataById[def.resourceId]
-                                    }
-                                    urlWrapper={this.urlWrapper}
-                                />
-                            </MSKTab>
-                        );
-                    }
-                    return list;
-                },
-                [] as JSX.Element[]
-            );
+            const tabs: JSX.Element[] = sorted.reduce((list, def) => {
+                const data = resourceDataById[def.resourceId];
+                if (data && data.length > 0) {
+                    list.push(
+                        <MSKTab
+                            key={getPatientViewResourceTabId(def.resourceId)}
+                            id={getPatientViewResourceTabId(def.resourceId)}
+                            linkText={def.displayName}
+                            onClickClose={this.closeResourceTab}
+                        >
+                            <ResourceTab
+                                resourceData={resourceDataById[def.resourceId]}
+                                urlWrapper={this.urlWrapper}
+                            />
+                        </MSKTab>
+                    );
+                }
+                return list;
+            }, [] as JSX.Element[]);
             return tabs;
         },
     });
@@ -557,9 +550,7 @@ export default class PatientViewPage extends React.Component<
                                                 sampleManager
                                                     .clinicalDataLegacyCleanAndDerived[
                                                     sample.id
-                                                ],
-                                                this.patientViewPageStore
-                                                    .studyId
+                                                ]
                                             )}
                                     </span>,
                                     this.toggleGenePanelModal,
@@ -1006,6 +997,11 @@ export default class PatientViewPage extends React.Component<
                                                             .patientViewPageStore
                                                             .indexedVariantAnnotations
                                                     }
+                                                    indexedMyVariantInfoAnnotations={
+                                                        this
+                                                            .patientViewPageStore
+                                                            .indexedMyVariantInfoAnnotations
+                                                    }
                                                     discreteCNACache={
                                                         this
                                                             .patientViewPageStore
@@ -1030,11 +1026,6 @@ export default class PatientViewPage extends React.Component<
                                                         this
                                                             .patientViewPageStore
                                                             .genomeNexusMutationAssessorCache
-                                                    }
-                                                    genomeNexusMyVariantInfoCache={
-                                                        this
-                                                            .patientViewPageStore
-                                                            .genomeNexusMyVariantInfoCache
                                                     }
                                                     mrnaExprRankMolecularProfileId={
                                                         this

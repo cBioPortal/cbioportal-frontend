@@ -33,12 +33,12 @@ export default class StandaloneMutationMapper extends MutationMapper<
                 indexedVariantAnnotations={
                     this.props.store.indexedVariantAnnotations
                 }
+                indexedMyVariantInfoAnnotations={
+                    this.props.store.indexedMyVariantInfoAnnotations
+                }
                 genomeNexusCache={this.props.genomeNexusCache}
                 genomeNexusMutationAssessorCache={
                     this.props.genomeNexusMutationAssessorCache
-                }
-                genomeNexusMyVariantInfoCache={
-                    this.props.genomeNexusMyVariantInfoCache
                 }
                 pubMedCache={this.props.pubMedCache}
                 dataStore={this.props.store.dataStore}
@@ -57,7 +57,21 @@ export default class StandaloneMutationMapper extends MutationMapper<
                 generateGenomeNexusHgvsgUrl={
                     this.props.generateGenomeNexusHgvsgUrl
                 }
+                selectedTranscriptId={this.props.store.activeTranscript.result}
             />
+        );
+    }
+
+    protected get isMutationTableDataLoading() {
+        return this.props.store.activeTranscript.isPending;
+    }
+
+    protected get mutationTable(): JSX.Element | null {
+        return (
+            <span>
+                {!this.isMutationTableDataLoading &&
+                    this.mutationTableComponent}
+            </span>
         );
     }
 }

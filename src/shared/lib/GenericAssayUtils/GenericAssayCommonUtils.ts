@@ -7,6 +7,7 @@ import {
     GenericAssayMetaFilter,
     GenericAssayDataFilter,
     GenericAssayMeta,
+    GenericAssayDataMultipleStudyFilter,
 } from 'cbioportal-ts-api-client';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
@@ -134,4 +135,16 @@ export async function fetchGenericAssayData(
     );
     const results = await Promise.all(dataPromises);
     return results;
+}
+
+export function fetchGenericAssayDataByStableIdsAndMolecularIds(
+    stableIds: string[],
+    molecularProfileIds: string[]
+) {
+    return client.fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST({
+        genericAssayDataMultipleStudyFilter: {
+            genericAssayStableIds: stableIds,
+            molecularProfileIds: molecularProfileIds,
+        } as GenericAssayDataMultipleStudyFilter,
+    });
 }

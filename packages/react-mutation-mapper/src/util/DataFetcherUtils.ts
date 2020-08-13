@@ -1,9 +1,7 @@
-import {
-    cachePostMethodsOnClient,
-    IOncoKbData,
-} from 'cbioportal-frontend-commons';
+import { cachePostMethodsOnClient } from 'cbioportal-frontend-commons';
 import {
     indexAnnotationsByGenomicLocation,
+    IOncoKbData,
     Mutation,
     uniqueGenomicLocations,
 } from 'cbioportal-utils';
@@ -15,7 +13,9 @@ import { OncoKbAPI, OncoKBInfo } from 'oncokb-ts-api-client';
 import _ from 'lodash';
 
 export const DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE =
-    'https://www.cbioportal.org/getMutationAligner.json?pfamAccession=<%= pfamDomainId %>';
+    'http://mutationaligner.org/api/domains/<%= pfamDomainId %>?metadata=true';
+export const DEFAULT_MUTATION_ALIGNER_PROXY_URL_TEMPLATE =
+    'https://www.cbioportal.org/proxy/mutationaligner.org/api/domains/<%= pfamDomainId %>?metadata=true';
 export const DEFAULT_MY_GENE_URL_TEMPLATE =
     'https://mygene.info/v3/gene/<%= entrezGeneId %>?fields=uniprot';
 export const DEFAULT_UNIPROT_ID_URL_TEMPLATE =

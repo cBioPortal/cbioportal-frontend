@@ -1324,6 +1324,886 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
+    downloadDataAccessTokenUsingGETURL(parameters: {
+        'authenticated' ? : boolean,
+        'authorities0Authority' ? : string,
+        'credentials' ? : {},
+        'details' ? : {},
+        'principal' ? : {},
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/data-access-token';
+        if (parameters['authenticated'] !== undefined) {
+            queryParameters['authenticated'] = parameters['authenticated'];
+        }
+
+        if (parameters['authorities0Authority'] !== undefined) {
+            queryParameters['authorities[0].authority'] = parameters['authorities0Authority'];
+        }
+
+        if (parameters['credentials'] !== undefined) {
+            queryParameters['credentials'] = parameters['credentials'];
+        }
+
+        if (parameters['details'] !== undefined) {
+            queryParameters['details'] = parameters['details'];
+        }
+
+        if (parameters['principal'] !== undefined) {
+            queryParameters['principal'] = parameters['principal'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * downloadDataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingGET
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    downloadDataAccessTokenUsingGETWithHttpInfo(parameters: {
+        'authenticated' ? : boolean,
+        'authorities0Authority' ? : string,
+        'credentials' ? : {},
+        'details' ? : {},
+        'principal' ? : {},
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/data-access-token';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = '*/*';
+
+            if (parameters['authenticated'] !== undefined) {
+                queryParameters['authenticated'] = parameters['authenticated'];
+            }
+
+            if (parameters['authorities0Authority'] !== undefined) {
+                queryParameters['authorities[0].authority'] = parameters['authorities0Authority'];
+            }
+
+            if (parameters['credentials'] !== undefined) {
+                queryParameters['credentials'] = parameters['credentials'];
+            }
+
+            if (parameters['details'] !== undefined) {
+                queryParameters['details'] = parameters['details'];
+            }
+
+            if (parameters['principal'] !== undefined) {
+                queryParameters['principal'] = parameters['principal'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * downloadDataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingGET
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    downloadDataAccessTokenUsingGET(parameters: {
+        'authenticated' ? : boolean,
+        'authorities0Authority' ? : string,
+        'credentials' ? : {},
+        'details' ? : {},
+        'principal' ? : {},
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < string > {
+        return this.downloadDataAccessTokenUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    downloadDataAccessTokenUsingHEADURL(parameters: {
+        'authenticated' ? : boolean,
+        'authorities0Authority' ? : string,
+        'credentials' ? : {},
+        'details' ? : {},
+        'principal' ? : {},
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/data-access-token';
+        if (parameters['authenticated'] !== undefined) {
+            queryParameters['authenticated'] = parameters['authenticated'];
+        }
+
+        if (parameters['authorities0Authority'] !== undefined) {
+            queryParameters['authorities[0].authority'] = parameters['authorities0Authority'];
+        }
+
+        if (parameters['credentials'] !== undefined) {
+            queryParameters['credentials'] = parameters['credentials'];
+        }
+
+        if (parameters['details'] !== undefined) {
+            queryParameters['details'] = parameters['details'];
+        }
+
+        if (parameters['principal'] !== undefined) {
+            queryParameters['principal'] = parameters['principal'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * downloadDataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingHEAD
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    downloadDataAccessTokenUsingHEADWithHttpInfo(parameters: {
+        'authenticated' ? : boolean,
+        'authorities0Authority' ? : string,
+        'credentials' ? : {},
+        'details' ? : {},
+        'principal' ? : {},
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/data-access-token';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = '*/*';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['authenticated'] !== undefined) {
+                queryParameters['authenticated'] = parameters['authenticated'];
+            }
+
+            if (parameters['authorities0Authority'] !== undefined) {
+                queryParameters['authorities[0].authority'] = parameters['authorities0Authority'];
+            }
+
+            if (parameters['credentials'] !== undefined) {
+                queryParameters['credentials'] = parameters['credentials'];
+            }
+
+            if (parameters['details'] !== undefined) {
+                queryParameters['details'] = parameters['details'];
+            }
+
+            if (parameters['principal'] !== undefined) {
+                queryParameters['principal'] = parameters['principal'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('HEAD', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * downloadDataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingHEAD
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    downloadDataAccessTokenUsingHEAD(parameters: {
+        'authenticated' ? : boolean,
+        'authorities0Authority' ? : string,
+        'credentials' ? : {},
+        'details' ? : {},
+        'principal' ? : {},
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < string > {
+        return this.downloadDataAccessTokenUsingHEADWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    downloadDataAccessTokenUsingPOSTURL(parameters: {
+        'authenticated' ? : boolean,
+        'authorities0Authority' ? : string,
+        'credentials' ? : {},
+        'details' ? : {},
+        'principal' ? : {},
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/data-access-token';
+        if (parameters['authenticated'] !== undefined) {
+            queryParameters['authenticated'] = parameters['authenticated'];
+        }
+
+        if (parameters['authorities0Authority'] !== undefined) {
+            queryParameters['authorities[0].authority'] = parameters['authorities0Authority'];
+        }
+
+        if (parameters['credentials'] !== undefined) {
+            queryParameters['credentials'] = parameters['credentials'];
+        }
+
+        if (parameters['details'] !== undefined) {
+            queryParameters['details'] = parameters['details'];
+        }
+
+        if (parameters['principal'] !== undefined) {
+            queryParameters['principal'] = parameters['principal'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * downloadDataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingPOST
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    downloadDataAccessTokenUsingPOSTWithHttpInfo(parameters: {
+        'authenticated' ? : boolean,
+        'authorities0Authority' ? : string,
+        'credentials' ? : {},
+        'details' ? : {},
+        'principal' ? : {},
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/data-access-token';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = '*/*';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['authenticated'] !== undefined) {
+                queryParameters['authenticated'] = parameters['authenticated'];
+            }
+
+            if (parameters['authorities0Authority'] !== undefined) {
+                queryParameters['authorities[0].authority'] = parameters['authorities0Authority'];
+            }
+
+            if (parameters['credentials'] !== undefined) {
+                queryParameters['credentials'] = parameters['credentials'];
+            }
+
+            if (parameters['details'] !== undefined) {
+                queryParameters['details'] = parameters['details'];
+            }
+
+            if (parameters['principal'] !== undefined) {
+                queryParameters['principal'] = parameters['principal'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * downloadDataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingPOST
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    downloadDataAccessTokenUsingPOST(parameters: {
+        'authenticated' ? : boolean,
+        'authorities0Authority' ? : string,
+        'credentials' ? : {},
+        'details' ? : {},
+        'principal' ? : {},
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < string > {
+        return this.downloadDataAccessTokenUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    downloadDataAccessTokenUsingPUTURL(parameters: {
+        'authenticated' ? : boolean,
+        'authorities0Authority' ? : string,
+        'credentials' ? : {},
+        'details' ? : {},
+        'principal' ? : {},
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/data-access-token';
+        if (parameters['authenticated'] !== undefined) {
+            queryParameters['authenticated'] = parameters['authenticated'];
+        }
+
+        if (parameters['authorities0Authority'] !== undefined) {
+            queryParameters['authorities[0].authority'] = parameters['authorities0Authority'];
+        }
+
+        if (parameters['credentials'] !== undefined) {
+            queryParameters['credentials'] = parameters['credentials'];
+        }
+
+        if (parameters['details'] !== undefined) {
+            queryParameters['details'] = parameters['details'];
+        }
+
+        if (parameters['principal'] !== undefined) {
+            queryParameters['principal'] = parameters['principal'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * downloadDataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingPUT
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    downloadDataAccessTokenUsingPUTWithHttpInfo(parameters: {
+        'authenticated' ? : boolean,
+        'authorities0Authority' ? : string,
+        'credentials' ? : {},
+        'details' ? : {},
+        'principal' ? : {},
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/data-access-token';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = '*/*';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['authenticated'] !== undefined) {
+                queryParameters['authenticated'] = parameters['authenticated'];
+            }
+
+            if (parameters['authorities0Authority'] !== undefined) {
+                queryParameters['authorities[0].authority'] = parameters['authorities0Authority'];
+            }
+
+            if (parameters['credentials'] !== undefined) {
+                queryParameters['credentials'] = parameters['credentials'];
+            }
+
+            if (parameters['details'] !== undefined) {
+                queryParameters['details'] = parameters['details'];
+            }
+
+            if (parameters['principal'] !== undefined) {
+                queryParameters['principal'] = parameters['principal'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('PUT', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * downloadDataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingPUT
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    downloadDataAccessTokenUsingPUT(parameters: {
+        'authenticated' ? : boolean,
+        'authorities0Authority' ? : string,
+        'credentials' ? : {},
+        'details' ? : {},
+        'principal' ? : {},
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < string > {
+        return this.downloadDataAccessTokenUsingPUTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    downloadDataAccessTokenUsingDELETEURL(parameters: {
+        'authenticated' ? : boolean,
+        'authorities0Authority' ? : string,
+        'credentials' ? : {},
+        'details' ? : {},
+        'principal' ? : {},
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/data-access-token';
+        if (parameters['authenticated'] !== undefined) {
+            queryParameters['authenticated'] = parameters['authenticated'];
+        }
+
+        if (parameters['authorities0Authority'] !== undefined) {
+            queryParameters['authorities[0].authority'] = parameters['authorities0Authority'];
+        }
+
+        if (parameters['credentials'] !== undefined) {
+            queryParameters['credentials'] = parameters['credentials'];
+        }
+
+        if (parameters['details'] !== undefined) {
+            queryParameters['details'] = parameters['details'];
+        }
+
+        if (parameters['principal'] !== undefined) {
+            queryParameters['principal'] = parameters['principal'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * downloadDataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingDELETE
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    downloadDataAccessTokenUsingDELETEWithHttpInfo(parameters: {
+        'authenticated' ? : boolean,
+        'authorities0Authority' ? : string,
+        'credentials' ? : {},
+        'details' ? : {},
+        'principal' ? : {},
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/data-access-token';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = '*/*';
+
+            if (parameters['authenticated'] !== undefined) {
+                queryParameters['authenticated'] = parameters['authenticated'];
+            }
+
+            if (parameters['authorities0Authority'] !== undefined) {
+                queryParameters['authorities[0].authority'] = parameters['authorities0Authority'];
+            }
+
+            if (parameters['credentials'] !== undefined) {
+                queryParameters['credentials'] = parameters['credentials'];
+            }
+
+            if (parameters['details'] !== undefined) {
+                queryParameters['details'] = parameters['details'];
+            }
+
+            if (parameters['principal'] !== undefined) {
+                queryParameters['principal'] = parameters['principal'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('DELETE', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * downloadDataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingDELETE
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    downloadDataAccessTokenUsingDELETE(parameters: {
+        'authenticated' ? : boolean,
+        'authorities0Authority' ? : string,
+        'credentials' ? : {},
+        'details' ? : {},
+        'principal' ? : {},
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < string > {
+        return this.downloadDataAccessTokenUsingDELETEWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    downloadDataAccessTokenUsingOPTIONSURL(parameters: {
+        'authenticated' ? : boolean,
+        'authorities0Authority' ? : string,
+        'credentials' ? : {},
+        'details' ? : {},
+        'principal' ? : {},
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/data-access-token';
+        if (parameters['authenticated'] !== undefined) {
+            queryParameters['authenticated'] = parameters['authenticated'];
+        }
+
+        if (parameters['authorities0Authority'] !== undefined) {
+            queryParameters['authorities[0].authority'] = parameters['authorities0Authority'];
+        }
+
+        if (parameters['credentials'] !== undefined) {
+            queryParameters['credentials'] = parameters['credentials'];
+        }
+
+        if (parameters['details'] !== undefined) {
+            queryParameters['details'] = parameters['details'];
+        }
+
+        if (parameters['principal'] !== undefined) {
+            queryParameters['principal'] = parameters['principal'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * downloadDataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingOPTIONS
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    downloadDataAccessTokenUsingOPTIONSWithHttpInfo(parameters: {
+        'authenticated' ? : boolean,
+        'authorities0Authority' ? : string,
+        'credentials' ? : {},
+        'details' ? : {},
+        'principal' ? : {},
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/data-access-token';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = '*/*';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['authenticated'] !== undefined) {
+                queryParameters['authenticated'] = parameters['authenticated'];
+            }
+
+            if (parameters['authorities0Authority'] !== undefined) {
+                queryParameters['authorities[0].authority'] = parameters['authorities0Authority'];
+            }
+
+            if (parameters['credentials'] !== undefined) {
+                queryParameters['credentials'] = parameters['credentials'];
+            }
+
+            if (parameters['details'] !== undefined) {
+                queryParameters['details'] = parameters['details'];
+            }
+
+            if (parameters['principal'] !== undefined) {
+                queryParameters['principal'] = parameters['principal'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('OPTIONS', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * downloadDataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingOPTIONS
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    downloadDataAccessTokenUsingOPTIONS(parameters: {
+        'authenticated' ? : boolean,
+        'authorities0Authority' ? : string,
+        'credentials' ? : {},
+        'details' ? : {},
+        'principal' ? : {},
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < string > {
+        return this.downloadDataAccessTokenUsingOPTIONSWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    downloadDataAccessTokenUsingPATCHURL(parameters: {
+        'authenticated' ? : boolean,
+        'authorities0Authority' ? : string,
+        'credentials' ? : {},
+        'details' ? : {},
+        'principal' ? : {},
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/data-access-token';
+        if (parameters['authenticated'] !== undefined) {
+            queryParameters['authenticated'] = parameters['authenticated'];
+        }
+
+        if (parameters['authorities0Authority'] !== undefined) {
+            queryParameters['authorities[0].authority'] = parameters['authorities0Authority'];
+        }
+
+        if (parameters['credentials'] !== undefined) {
+            queryParameters['credentials'] = parameters['credentials'];
+        }
+
+        if (parameters['details'] !== undefined) {
+            queryParameters['details'] = parameters['details'];
+        }
+
+        if (parameters['principal'] !== undefined) {
+            queryParameters['principal'] = parameters['principal'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * downloadDataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingPATCH
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    downloadDataAccessTokenUsingPATCHWithHttpInfo(parameters: {
+        'authenticated' ? : boolean,
+        'authorities0Authority' ? : string,
+        'credentials' ? : {},
+        'details' ? : {},
+        'principal' ? : {},
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/data-access-token';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = '*/*';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['authenticated'] !== undefined) {
+                queryParameters['authenticated'] = parameters['authenticated'];
+            }
+
+            if (parameters['authorities0Authority'] !== undefined) {
+                queryParameters['authorities[0].authority'] = parameters['authorities0Authority'];
+            }
+
+            if (parameters['credentials'] !== undefined) {
+                queryParameters['credentials'] = parameters['credentials'];
+            }
+
+            if (parameters['details'] !== undefined) {
+                queryParameters['details'] = parameters['details'];
+            }
+
+            if (parameters['principal'] !== undefined) {
+                queryParameters['principal'] = parameters['principal'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('PATCH', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * downloadDataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingPATCH
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    downloadDataAccessTokenUsingPATCH(parameters: {
+        'authenticated' ? : boolean,
+        'authorities0Authority' ? : string,
+        'credentials' ? : {},
+        'details' ? : {},
+        'principal' ? : {},
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < string > {
+        return this.downloadDataAccessTokenUsingPATCHWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     getAllDataAccessTokensUsingGETURL(parameters: {
         'authenticated' ? : boolean,
         'authorities0Authority' ? : string,
@@ -1451,20 +2331,16 @@ export default class CBioPortalAPIInternal {
             });
         };
     createDataAccessTokenUsingPOSTURL(parameters: {
-        'allowRevocationOfOtherTokens' ? : boolean,
         'authenticated' ? : boolean,
         'authorities0Authority' ? : string,
         'credentials' ? : {},
         'details' ? : {},
+        'myAllowRevocationOfOtherTokens' ? : boolean,
         'principal' ? : {},
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/data-access-tokens';
-        if (parameters['allowRevocationOfOtherTokens'] !== undefined) {
-            queryParameters['allowRevocationOfOtherTokens'] = parameters['allowRevocationOfOtherTokens'];
-        }
-
         if (parameters['authenticated'] !== undefined) {
             queryParameters['authenticated'] = parameters['authenticated'];
         }
@@ -1479,6 +2355,10 @@ export default class CBioPortalAPIInternal {
 
         if (parameters['details'] !== undefined) {
             queryParameters['details'] = parameters['details'];
+        }
+
+        if (parameters['myAllowRevocationOfOtherTokens'] !== undefined) {
+            queryParameters['myAllowRevocationOfOtherTokens'] = parameters['myAllowRevocationOfOtherTokens'];
         }
 
         if (parameters['principal'] !== undefined) {
@@ -1499,19 +2379,19 @@ export default class CBioPortalAPIInternal {
      * createDataAccessToken
      * @method
      * @name CBioPortalAPIInternal#createDataAccessTokenUsingPOST
-     * @param {boolean} allowRevocationOfOtherTokens - allowRevocationOfOtherTokens
      * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} myAllowRevocationOfOtherTokens - myAllowRevocationOfOtherTokens
      * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     createDataAccessTokenUsingPOSTWithHttpInfo(parameters: {
-        'allowRevocationOfOtherTokens' ? : boolean,
         'authenticated' ? : boolean,
         'authorities0Authority' ? : string,
         'credentials' ? : {},
         'details' ? : {},
+        'myAllowRevocationOfOtherTokens' ? : boolean,
         'principal' ? : {},
         $queryParameters ? : any,
             $domain ? : string
@@ -1528,10 +2408,6 @@ export default class CBioPortalAPIInternal {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
-            if (parameters['allowRevocationOfOtherTokens'] !== undefined) {
-                queryParameters['allowRevocationOfOtherTokens'] = parameters['allowRevocationOfOtherTokens'];
-            }
-
             if (parameters['authenticated'] !== undefined) {
                 queryParameters['authenticated'] = parameters['authenticated'];
             }
@@ -1546,6 +2422,10 @@ export default class CBioPortalAPIInternal {
 
             if (parameters['details'] !== undefined) {
                 queryParameters['details'] = parameters['details'];
+            }
+
+            if (parameters['myAllowRevocationOfOtherTokens'] !== undefined) {
+                queryParameters['myAllowRevocationOfOtherTokens'] = parameters['myAllowRevocationOfOtherTokens'];
             }
 
             if (parameters['principal'] !== undefined) {
@@ -1568,19 +2448,19 @@ export default class CBioPortalAPIInternal {
      * createDataAccessToken
      * @method
      * @name CBioPortalAPIInternal#createDataAccessTokenUsingPOST
-     * @param {boolean} allowRevocationOfOtherTokens - allowRevocationOfOtherTokens
      * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} myAllowRevocationOfOtherTokens - myAllowRevocationOfOtherTokens
      * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     createDataAccessTokenUsingPOST(parameters: {
-        'allowRevocationOfOtherTokens' ? : boolean,
         'authenticated' ? : boolean,
         'authorities0Authority' ? : string,
         'credentials' ? : {},
         'details' ? : {},
+        'myAllowRevocationOfOtherTokens' ? : boolean,
         'principal' ? : {},
         $queryParameters ? : any,
             $domain ? : string

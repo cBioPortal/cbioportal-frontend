@@ -6,13 +6,14 @@ import {
     applyDataFilters,
     DataFilterType,
     DefaultMutationMapperDataFetcher,
-    DefaultMutationMapperStore,
     groupDataByProteinImpactType,
     groupOncoKbIndicatorDataByMutations,
-    IHotspotIndex,
+    DefaultMutationMapperStore,
 } from 'react-mutation-mapper';
 import {
-    getMutationsToTranscriptId,
+    defaultOncoKbIndicatorFilter,
+    IHotspotIndex,
+    getMutationsByTranscriptId,
     Mutation as SimpleMutation,
 } from 'cbioportal-utils';
 
@@ -20,10 +21,6 @@ import defaultGenomeNexusClient from 'shared/api/genomeNexusClientInstance';
 import defaultInternalGenomeNexusClient from 'shared/api/genomeNexusInternalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
 import { Gene, Mutation } from 'cbioportal-ts-api-client';
-import {
-    defaultOncoKbIndicatorFilter,
-    IOncoKbData,
-} from 'cbioportal-frontend-commons';
 
 import ResidueMappingCache from 'shared/cache/ResidueMappingCache';
 import {
@@ -83,7 +80,8 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
             [uniqueSampleKey: string]: string;
         },
         protected genomenexusClient?: GenomeNexusAPI,
-        protected genomenexusInternalClient?: GenomeNexusAPIInternal
+        protected genomenexusInternalClient?: GenomeNexusAPIInternal,
+        public getTranscriptId?: () => string
     ) {
         super(
             gene,
@@ -95,7 +93,8 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
                 enableCivic: mutationMapperConfig.show_civic,
                 enableOncoKb: mutationMapperConfig.show_oncokb,
             },
-            getMutations
+            getMutations,
+            getTranscriptId
         );
 
         const unnormalizedGetMutations = this.getMutations;
@@ -160,10 +159,10 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
 
     readonly alignmentData = remoteData(
         {
-            await: () => [this.mutationData],
+            await: () => [this.mutationData, this.activeTranscript],
             invoke: async () => {
-                if (this.activeTranscript) {
-                    return fetchPdbAlignmentData(this.activeTranscript);
+                if (this.activeTranscript.result) {
+                    return fetchPdbAlignmentData(this.activeTranscript.result);
                 } else {
                     return [];
                 }
@@ -276,15 +275,20 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
     } {
         if (
             this.indexedVariantAnnotations.result &&
-            this.transcriptsWithAnnotations.result
+            this.transcriptsWithAnnotations.result &&
+            this.canonicalTranscript.isComplete
         ) {
             return _.fromPairs(
                 this.transcriptsWithAnnotations.result.map((t: string) => [
                     t,
-                    getMutationsToTranscriptId(
+                    getMutationsByTranscriptId(
                         this.getMutations(),
                         t,
-                        this.indexedVariantAnnotations.result!!
+                        this.indexedVariantAnnotations.result!,
+                        this.canonicalTranscript.result
+                            ? this.canonicalTranscript.result!.transcriptId ===
+                                  t
+                            : false
                     ),
                 ])
             );

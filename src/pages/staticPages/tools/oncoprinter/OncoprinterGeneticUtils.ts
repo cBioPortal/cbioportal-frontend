@@ -21,10 +21,10 @@ import {
 import {
     generateCopyNumberAlterationQuery,
     generateQueryVariantId,
+    getProteinPositionFromProteinChange,
     EvidenceType,
     IOncoKbData,
-} from 'cbioportal-frontend-commons';
-import { getProteinPositionFromProteinChange } from 'cbioportal-utils';
+} from 'cbioportal-utils';
 import {
     AnnotateCopyNumberAlterationQuery,
     OncoKbAPI,
@@ -94,6 +94,7 @@ export type OncoprinterGeneticInputLineType2 = OncoprinterGeneticInputLineType1 
         | 'protHigh'
         | 'protLow'
         | 'structuralVariant';
+    trackName?: string;
     isGermline?: boolean;
     isCustomDriver?: boolean;
     proteinChange?: string;
@@ -514,13 +515,13 @@ export function getSampleGeneticTrackData(
     hugoGeneSymbolToGene: { [hugoGeneSymbol: string]: Gene },
     excludeGermlineMutations: boolean
 ): {
-    [hugoGeneSymbol: string]: {
+    [trackName: string]: {
         sampleId: string;
         data: OncoprinterGeneticTrackDatum_Data[];
     }[];
 } {
-    const geneToSampleIdToData: {
-        [hugoGeneSymbol: string]: {
+    const trackToSampleIdToData: {
+        [trackName: string]: {
             [sampleId: string]: OncoprinterGeneticTrackDatum['data'];
         };
     } = {};
@@ -530,11 +531,12 @@ export function getSampleGeneticTrackData(
     ) as OncoprinterGeneticInputLineType2[];
     // collect data by gene x sample
     for (const inputLine of type2Lines) {
-        if (!(inputLine.hugoGeneSymbol in geneToSampleIdToData)) {
+        const trackName = inputLine.trackName || inputLine.hugoGeneSymbol;
+        if (!(trackName in trackToSampleIdToData)) {
             // add track if it doesnt yet exist
-            geneToSampleIdToData[inputLine.hugoGeneSymbol] = {};
+            trackToSampleIdToData[trackName] = {};
         }
-        const sampleIdToData = geneToSampleIdToData[inputLine.hugoGeneSymbol];
+        const sampleIdToData = trackToSampleIdToData[trackName];
         if (!(inputLine.sampleId in sampleIdToData)) {
             sampleIdToData[inputLine.sampleId] = [];
         }
@@ -551,14 +553,14 @@ export function getSampleGeneticTrackData(
     }
     // add missing samples
     for (const inputLine of oncoprinterInput) {
-        _.forEach(geneToSampleIdToData, (sampleToData, gene) => {
+        _.forEach(trackToSampleIdToData, (sampleToData, trackName) => {
             if (!(inputLine.sampleId in sampleToData)) {
                 sampleToData[inputLine.sampleId] = [];
             }
         });
     }
 
-    return _.mapValues(geneToSampleIdToData, sampleIdToData =>
+    return _.mapValues(trackToSampleIdToData, sampleIdToData =>
         _.chain(sampleIdToData)
             .map((data, sampleId) => ({ sampleId, data }))
             .value()
@@ -747,11 +749,11 @@ export function parseGeneticInput(
     input: string
 ):
     | {
-          status: 'complete';
+          parseSuccess: true;
           result: OncoprinterGeneticInputLine[];
           error: undefined;
       }
-    | { status: 'error'; result: undefined; error: string } {
+    | { parseSuccess: false; result: undefined; error: string } {
     const lines = input
         .trim()
         .split('\n')
@@ -760,7 +762,7 @@ export function parseGeneticInput(
         const result = lines.map((line, lineIndex) => {
             if (
                 lineIndex === 0 &&
-                _.isEqual(lines[0].map(s => s.toLowerCase()), [
+                _.isEqual(lines[0].map(s => s.toLowerCase()).slice(0, 4), [
                     'sample',
                     'gene',
                     'alteration',
@@ -774,7 +776,7 @@ export function parseGeneticInput(
             if (line.length === 1) {
                 // Type 1 line
                 return { sampleId: line[0] };
-            } else if (line.length === 4) {
+            } else if (line.length === 4 || line.length === 5) {
                 // Type 2 line
                 const sampleId = line[0];
                 const hugoGeneSymbol = line[1];
@@ -782,9 +784,11 @@ export function parseGeneticInput(
                 const lcAlteration = alteration.toLowerCase();
                 const type = line[3];
                 const lcType = type.toLowerCase();
+                const trackName = line.length === 5 ? line[4] : undefined;
                 let ret: Partial<OncoprinterGeneticInputLineType2> = {
                     sampleId,
                     hugoGeneSymbol,
+                    trackName,
                 };
 
                 switch (lcType) {
@@ -853,7 +857,7 @@ export function parseGeneticInput(
                         }
 
                         for (const modifier of parsedMutation.modifiers) {
-                            switch (modifier) {
+                            switch (modifier.type) {
                                 case 'GERMLINE':
                                     ret.isGermline = true;
                                     break;
@@ -895,13 +899,13 @@ export function parseGeneticInput(
             }
         });
         return {
-            status: 'complete',
+            parseSuccess: true,
             result: result.filter(x => !!x) as OncoprinterGeneticInputLine[],
             error: undefined,
         };
     } catch (e) {
         return {
-            status: 'error',
+            parseSuccess: false,
             result: undefined,
             error: e.message,
         };

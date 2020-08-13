@@ -2,25 +2,25 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import {
     buildCivicEntry,
-    civicSortValue,
-    DEFAULT_ANNOTATION_DATA,
-    GenericAnnotation,
-    IAnnotation,
+    generateQueryVariantId,
     ICivicEntry,
     ICivicGene,
     ICivicGeneData,
     ICivicVariant,
     ICivicVariantData,
+    IOncoKbData,
+    RemoteData,
+} from 'cbioportal-utils';
+import {
+    civicSortValue,
+    DEFAULT_ANNOTATION_DATA,
+    GenericAnnotation,
+    IAnnotation,
     USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
     oncoKbAnnotationSortValue,
-    RemoteData,
 } from 'react-mutation-mapper';
 import { CancerStudy, DiscreteCopyNumberData } from 'cbioportal-ts-api-client';
 import { IAnnotationColumnProps } from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
-import {
-    generateQueryVariantId,
-    IOncoKbData,
-} from 'cbioportal-frontend-commons';
 import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
 import { getCivicCNAVariants } from 'shared/lib/CivicUtils';

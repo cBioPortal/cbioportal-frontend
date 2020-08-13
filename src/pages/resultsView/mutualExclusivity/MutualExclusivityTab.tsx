@@ -23,6 +23,7 @@ import MobxPromise from 'mobxpromise';
 import { SampleAlteredMap } from '../ResultsViewPageStoreUtils';
 import Pluralize from 'pluralize';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
+import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 
 export interface IMutualExclusivityTabProps {
     store?: ResultsViewPageStore;
@@ -136,6 +137,7 @@ export default class MutualExclusivityTab extends React.Component<
                                 <AlterationFilterWarning
                                     store={this.props.store}
                                 />
+                                <CaseFilterWarning store={this.props.store} />
                             </div>
                         )}
 
@@ -178,9 +180,12 @@ export default class MutualExclusivityTab extends React.Component<
                                 {this.filteredTrackOqlsMessage}
                             </div>
                         )}
-                        {this.props.store && (
-                            <AlterationFilterWarning store={this.props.store} />
-                        )}
+                        {this.props.store && [
+                            <AlterationFilterWarning
+                                store={this.props.store}
+                            />,
+                            <CaseFilterWarning store={this.props.store} />,
+                        ]}
                     </div>
                 );
             }

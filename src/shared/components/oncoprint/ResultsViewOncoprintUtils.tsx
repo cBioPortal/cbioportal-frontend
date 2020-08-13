@@ -12,6 +12,8 @@ import { Group } from '../../api/ComparisonGroupClient';
 import * as React from 'react';
 import { ISelectOption } from './controls/OncoprintControls';
 import { NOT_APPLICABLE_VALUE } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { TrackGroupHeader, TrackGroupIndex } from 'oncoprintjs';
+import { HeatmapTrackGroupRecord } from 'shared/components/oncoprint/ResultsViewOncoprint';
 
 export const alterationTypeToProfiledForText: {
     [alterationType: string]: string;
@@ -65,7 +67,7 @@ export function makeComparisonGroupClinicalAttributes(
                 displayName: `In group: ${group.data.name}`,
                 comparisonGroup: group,
                 patientAttribute: false,
-            } as (ClinicalAttribute & { comparisonGroup: Group }))
+            } as ClinicalAttribute & { comparisonGroup: Group })
     );
 }
 
@@ -209,7 +211,7 @@ export function makeProfiledInClinicalAttributes(
                     displayName: `Profiled in ${profile.name}`,
                     molecularProfileIds: [profile.molecularProfileId],
                     patientAttribute: false,
-                } as (ClinicalAttribute & { molecularProfileIds: string[] });
+                } as ClinicalAttribute & { molecularProfileIds: string[] };
             } else {
                 // If more than one, or its multiple study query, make one attribute for the entire alteration type
                 return {
@@ -219,7 +221,7 @@ export function makeProfiledInClinicalAttributes(
                     displayName: `Profiled for ${alterationTypeToProfiledForText[alterationType]}`,
                     molecularProfileIds: group.map(p => p.molecularProfileId),
                     patientAttribute: false,
-                } as (ClinicalAttribute & { molecularProfileIds: string[] });
+                } as ClinicalAttribute & { molecularProfileIds: string[] };
             }
         })
         .filter(x => !!x) as (ClinicalAttribute & {
@@ -275,4 +277,101 @@ export function genericAssayEntitiesToSelectOptionsGroupByGenericAssayType(gener
             });
         }
     );
+}
+
+export function makeTrackGroupHeaders(
+    molecularProfileIdToMolecularProfile: { [p: string]: MolecularProfile },
+    molecularProfileIdToHeatmapTracks: { [p: string]: HeatmapTrackGroupRecord },
+    genesetHeatmapTrackGroupIndex: number | undefined,
+    getClusteredTrackGroupIndex: () => number | undefined,
+    onClickClusterCallback: (index: TrackGroupIndex) => void,
+    onClickDontClusterCallback: () => void,
+    onClickDeleteCallback: (index: TrackGroupIndex) => void
+): { [trackGroupIndex: number]: TrackGroupHeader } {
+    var headers = _.reduce(
+        molecularProfileIdToHeatmapTracks,
+        (headerMap, nextEntry) => {
+            headerMap[nextEntry.trackGroupIndex] = makeTrackGroupHeader(
+                'heatmap',
+                molecularProfileIdToMolecularProfile[
+                    nextEntry.molecularProfileId
+                ].name,
+                nextEntry.trackGroupIndex,
+                getClusteredTrackGroupIndex,
+                onClickClusterCallback,
+                onClickDontClusterCallback,
+                onClickDeleteCallback
+            );
+            return headerMap;
+        },
+        {} as { [trackGroupIndex: number]: TrackGroupHeader }
+    );
+
+    if (genesetHeatmapTrackGroupIndex !== undefined) {
+        headers[genesetHeatmapTrackGroupIndex] = makeTrackGroupHeader(
+            'geneset',
+            'GSVA Scores',
+            genesetHeatmapTrackGroupIndex!,
+            getClusteredTrackGroupIndex,
+            onClickClusterCallback,
+            onClickDontClusterCallback,
+            onClickDeleteCallback
+        );
+    }
+
+    return headers;
+}
+
+function makeTrackGroupHeader(
+    type: 'heatmap' | 'geneset',
+    text: string,
+    trackGroupIndex: number,
+    getClusteredTrackGroupIndex: () => number | undefined,
+    onClickClusterCallback: (index: TrackGroupIndex) => void,
+    onClickDontClusterCallback: () => void,
+    onClickDeleteCallback: (index: TrackGroupIndex) => void
+): TrackGroupHeader {
+    const header = {
+        label: { text: text },
+        options: [
+            {
+                label: 'Cluster',
+                onClick: onClickClusterCallback,
+                weight: () => {
+                    if (getClusteredTrackGroupIndex() === trackGroupIndex) {
+                        return 'bold';
+                    } else {
+                        return 'normal';
+                    }
+                },
+            },
+            {
+                label: "Don't cluster",
+                onClick: () => {
+                    if (getClusteredTrackGroupIndex() === trackGroupIndex) {
+                        onClickDontClusterCallback();
+                    }
+                },
+                weight: () => {
+                    if (getClusteredTrackGroupIndex() === trackGroupIndex) {
+                        return 'normal';
+                    } else {
+                        return 'bold';
+                    }
+                },
+            },
+        ],
+    } as TrackGroupHeader;
+
+    if (type !== 'geneset') {
+        header.options.push({
+            separator: true,
+        });
+        header.options.push({
+            label: 'Delete',
+            onClick: onClickDeleteCallback,
+        });
+    }
+
+    return header;
 }

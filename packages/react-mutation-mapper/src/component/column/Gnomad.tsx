@@ -1,10 +1,8 @@
 import autobind from 'autobind-decorator';
-import { getMyVariantInfoAnnotation, Mutation } from 'cbioportal-utils';
 import { MyVariantInfo, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
-import { RemoteData } from '../../model/RemoteData';
 import { defaultSortMethod } from '../../util/ReactTableUtils';
 import GnomadFrequency, {
     calculateAlleleFrequency,
@@ -14,18 +12,10 @@ import {
     renderMyVariantInfoContent,
 } from './MyVariantInfoHelper';
 
-export function getMyVariantInfoData(
-    mutation?: Mutation,
-    indexedMyVariantInfoAnnotations?: RemoteData<
-        { [genomicLocation: string]: MyVariantInfo } | undefined
-    >
-) {
-    return getMyVariantInfoAnnotation(
-        mutation,
-        indexedMyVariantInfoAnnotations
-            ? indexedMyVariantInfoAnnotations.result
-            : undefined
-    );
+export function download(myVariantInfo?: MyVariantInfo): string {
+    const value = sortValue(myVariantInfo);
+
+    return value ? value.toString() : '';
 }
 
 export function sortValue(myVariantInfo?: MyVariantInfo): number | null {

@@ -4,12 +4,11 @@ import { DataFilterType, onFilterOptionSelect } from 'react-mutation-mapper';
 import { observer } from 'mobx-react';
 import { action, computed } from 'mobx';
 
-import { getMobxPromiseGroupStatus } from 'cbioportal-frontend-commons';
+import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import { EnsemblTranscript } from 'genome-nexus-ts-api-client';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import CancerTypeCache from 'shared/cache/CancerTypeCache';
 import MutationCountCache from 'shared/cache/MutationCountCache';
-import GenomeNexusMyVariantInfoCache from 'shared/cache/GenomeNexusMyVariantInfoCache';
 
 import {
     IMutationMapperProps,
@@ -26,7 +25,6 @@ export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     discreteCNACache?: DiscreteCNACache;
     cancerTypeCache?: CancerTypeCache;
     mutationCountCache?: MutationCountCache;
-    genomeNexusMyVariantInfoCache?: GenomeNexusMyVariantInfoCache;
     userEmailAddress: string;
 }
 
@@ -74,10 +72,13 @@ export default class ResultsViewMutationMapper extends MutationMapper<
 
     protected get isMutationTableDataLoading() {
         return (
-            getMobxPromiseGroupStatus(
+            getRemoteDataGroupStatus(
                 this.props.store.clinicalDataForSamples,
                 this.props.store.studiesForSamplesWithoutCancerTypeClinicalData,
-                this.props.store.canonicalTranscript
+                this.props.store.canonicalTranscript,
+                this.props.store.mutationData,
+                this.props.store.indexedVariantAnnotations,
+                this.props.store.activeTranscript
             ) === 'pending'
         );
     }
@@ -86,11 +87,11 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         const canonicalTranscriptId =
             this.props.store.canonicalTranscript.result &&
             this.props.store.canonicalTranscript.result.transcriptId;
-        const transcript = (this.props.store.activeTranscript &&
-        this.props.store.activeTranscript === canonicalTranscriptId
+        const transcript = (this.props.store.activeTranscript.result &&
+        this.props.store.activeTranscript.result === canonicalTranscriptId
             ? this.props.store.canonicalTranscript.result
             : this.props.store.transcriptsByTranscriptId[
-                  this.props.store.activeTranscript!
+                  this.props.store.activeTranscript.result!
               ]) as EnsemblTranscript;
         return transcript && transcript.exons && transcript.exons.length > 0
             ? transcript.exons.length.toString()
@@ -115,9 +116,6 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 genomeNexusMutationAssessorCache={
                     this.props.genomeNexusMutationAssessorCache
                 }
-                genomeNexusMyVariantInfoCache={
-                    this.props.genomeNexusMyVariantInfoCache
-                }
                 dataStore={this.props.store.dataStore}
                 itemsLabelPlural={this.itemsLabelPlural}
                 downloadDataFetcher={this.props.store.downloadDataFetcher}
@@ -125,6 +123,9 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 hotspotData={this.props.store.indexedHotspotData}
                 indexedVariantAnnotations={
                     this.props.store.indexedVariantAnnotations
+                }
+                indexedMyVariantInfoAnnotations={
+                    this.props.store.indexedMyVariantInfoAnnotations
                 }
                 cosmicData={this.props.store.cosmicData.result}
                 oncoKbData={this.props.store.oncoKbData}
@@ -143,6 +144,8 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 generateGenomeNexusHgvsgUrl={
                     this.props.store.generateGenomeNexusHgvsgUrl
                 }
+                isCanonicalTranscript={this.props.store.isCanonicalTranscript}
+                selectedTranscriptId={this.props.store.activeTranscript.result}
             />
         );
     }

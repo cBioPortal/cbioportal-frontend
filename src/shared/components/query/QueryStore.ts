@@ -1800,7 +1800,8 @@ export class QueryStore {
             (!this.submitError &&
                 (this.genes.isComplete || this.genesets.isComplete) &&
                 this.asyncUrlParams.isComplete) ||
-            (!!this.oql.error || !!this.genesetIdsQuery.error)
+            !!this.oql.error ||
+            !!this.genesetIdsQuery.error
         ); // to make "Please click 'Submit' to see location of error." possible
     }
 

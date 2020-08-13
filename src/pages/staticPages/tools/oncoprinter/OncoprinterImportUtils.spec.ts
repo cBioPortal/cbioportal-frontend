@@ -1,119 +1,164 @@
 import { assert } from 'chai';
 import {
+    generateUniqueLabel,
     getOncoprinterClinicalInput,
     getOncoprinterGeneticInput,
+    getOncoprinterHeatmapInput,
 } from './OncoprinterImportUtils';
-import { AlterationTypeConstants } from '../../../resultsView/ResultsViewPageStore';
+import {
+    AlterationTypeConstants,
+    DataTypeConstants,
+} from '../../../resultsView/ResultsViewPageStore';
 import { PUTATIVE_DRIVER } from '../../../../shared/constants';
 import { SpecialAttribute } from '../../../../shared/cache/ClinicalDataCache';
-import { ONCOPRINTER_CLINICAL_VAL_NA } from './OncoprinterClinicalUtils';
+import { ONCOPRINTER_VAL_NA } from './OncoprinterClinicalAndHeatmapUtils';
+import { IHeatmapTrackSpec } from '../../../../shared/components/oncoprint/Oncoprint';
 
 describe('OncoprinterImportUtils', () => {
+    describe('generateUniqueLabel', () => {
+        it('returns the same unique label if its unused, and keeps count correctly', () => {
+            const counts: any = {};
+            const label = generateUniqueLabel('label', counts);
+            assert.equal(label, 'label');
+            assert.deepEqual(counts, { label: 1 });
+        });
+        it('disambiguates an already-used label, and keeps track of counts correctly', () => {
+            const counts: any = { label: 1 };
+            const label = generateUniqueLabel('label', counts);
+            assert.equal(label, 'label_2');
+            assert.deepEqual(counts, { label: 2, label_2: 1 });
+        });
+        it('disambiguates correctly when the same label is already used, and keeps track of counts correctly', () => {
+            const counts: any = { label: 2, label_2: 1 };
+            let label = generateUniqueLabel('label', counts);
+            assert.equal(label, 'label_3');
+            assert.deepEqual(counts, { label: 3, label_2: 1, label_3: 1 });
+
+            label = generateUniqueLabel('label_2', counts);
+            assert.equal(label, 'label_2_2');
+            assert.deepEqual(counts, {
+                label: 3,
+                label_2: 2,
+                label_3: 1,
+                label_2_2: 1,
+            });
+        });
+    });
     describe('getOncoprinterGeneticInput', () => {
         const data: any[] = [
             {
-                sample: 'sample1',
-                patient: 'patient1',
+                label: 'label1',
                 data: [
                     {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.MUTATION_EXTENDED,
-                        proteinChange: 'proteinChange1',
-                        mutationType: 'missense',
-                        hugoGeneSymbol: 'gene1',
-                        mutationStatus: 'germline',
-                        driverFilter: PUTATIVE_DRIVER,
+                        sample: 'sample1',
+                        patient: 'patient1',
+                        data: [
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.MUTATION_EXTENDED,
+                                proteinChange: 'proteinChange1',
+                                mutationType: 'missense',
+                                hugoGeneSymbol: 'gene1',
+                                mutationStatus: 'germline',
+                                driverFilter: PUTATIVE_DRIVER,
+                            },
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                                hugoGeneSymbol: 'gene1',
+                                value: -2,
+                            },
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.MRNA_EXPRESSION,
+                                hugoGeneSymbol: 'gene1',
+                                alterationSubType: 'high',
+                            },
+                        ],
                     },
                     {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.COPY_NUMBER_ALTERATION,
-                        hugoGeneSymbol: 'gene1',
-                        value: -2,
-                    },
-                    {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.MRNA_EXPRESSION,
-                        hugoGeneSymbol: 'gene1',
-                        alterationSubType: 'high',
+                        sample: 'sample2',
+                        patient: 'patient2',
+                        data: [
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.MUTATION_EXTENDED,
+                                proteinChange: 'proteinChange2',
+                                mutationType: 'frameshift',
+                                mutationStatus: 'germline',
+                                hugoGeneSymbol: 'gene1',
+                            },
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                                hugoGeneSymbol: 'gene1',
+                                value: 2,
+                            },
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.PROTEIN_LEVEL,
+                                hugoGeneSymbol: 'gene1',
+                                alterationSubType: 'high',
+                            },
+                        ],
                     },
                 ],
             },
             {
-                sample: 'sample1',
-                patient: 'patient1',
+                label: 'label2',
                 data: [
                     {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.MUTATION_EXTENDED,
-                        proteinChange: 'promoter',
-                        mutationType: 'promoter',
-                        hugoGeneSymbol: 'gene2',
+                        sample: 'sample1',
+                        patient: 'patient1',
+                        data: [
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.MUTATION_EXTENDED,
+                                proteinChange: 'promoter',
+                                mutationType: 'promoter',
+                                hugoGeneSymbol: 'gene2',
+                            },
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                                hugoGeneSymbol: 'gene2',
+                                value: 1,
+                            },
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.MRNA_EXPRESSION,
+                                hugoGeneSymbol: 'gene2',
+                                alterationSubType: 'low',
+                            },
+                        ],
                     },
                     {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.COPY_NUMBER_ALTERATION,
-                        hugoGeneSymbol: 'gene2',
-                        value: 1,
-                    },
-                    {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.MRNA_EXPRESSION,
-                        hugoGeneSymbol: 'gene2',
-                        alterationSubType: 'low',
-                    },
-                ],
-            },
-            {
-                sample: 'sample2',
-                patient: 'patient2',
-                data: [
-                    {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.MUTATION_EXTENDED,
-                        proteinChange: 'proteinChange2',
-                        mutationType: 'frameshift',
-                        mutationStatus: 'germline',
-                        hugoGeneSymbol: 'gene1',
-                    },
-                    {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.COPY_NUMBER_ALTERATION,
-                        hugoGeneSymbol: 'gene1',
-                        value: 2,
-                    },
-                    {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.PROTEIN_LEVEL,
-                        hugoGeneSymbol: 'gene1',
-                        alterationSubType: 'high',
-                    },
-                ],
-            },
-            {
-                sample: 'sample2',
-                patient: 'patient2',
-                data: [
-                    {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.STRUCTURAL_VARIANT,
-                        hugoGeneSymbol: 'gene1',
-                        site1HugoSymbol: 'gene1',
-                        site2HugoSymbol: 'gene2',
-                        eventInfo: 'gene1-gene2',
-                        variantClass: 'Fusion',
-                        comments: 'gene1 gene1-gene2',
-                    },
-                    {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.COPY_NUMBER_ALTERATION,
-                        hugoGeneSymbol: 'gene2',
-                        value: 0,
-                    },
-                    {
-                        molecularProfileAlterationType:
-                            AlterationTypeConstants.PROTEIN_LEVEL,
-                        hugoGeneSymbol: 'gene2',
-                        alterationSubType: 'low',
+                        sample: 'sample2',
+                        patient: 'patient2',
+                        data: [
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.STRUCTURAL_VARIANT,
+                                hugoGeneSymbol: 'gene1',
+                                site1HugoSymbol: 'gene1',
+                                site2HugoSymbol: 'gene2',
+                                eventInfo: 'gene1-gene2',
+                                variantClass: 'Fusion',
+                                comments: 'gene1 gene1-gene2',
+                            },
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                                hugoGeneSymbol: 'gene2',
+                                value: 0,
+                            },
+                            {
+                                molecularProfileAlterationType:
+                                    AlterationTypeConstants.PROTEIN_LEVEL,
+                                hugoGeneSymbol: 'gene2',
+                                alterationSubType: 'low',
+                            },
+                        ],
                     },
                 ],
             },
@@ -125,18 +170,18 @@ describe('OncoprinterImportUtils', () => {
                     ['sample1', 'sample2'],
                     'sample'
                 ),
-                'sample1  gene1  proteinChange1  MISSENSE_GERMLINE_DRIVER\n' +
-                    'sample1  gene1  HOMDEL  CNA\n' +
-                    'sample1  gene1  HIGH  EXP\n' +
-                    'sample1  gene2  promoter  PROMOTER\n' +
-                    'sample1  gene2  GAIN  CNA\n' +
-                    'sample1  gene2  LOW  EXP\n' +
-                    'sample2  gene1  proteinChange2  TRUNC_GERMLINE\n' +
-                    'sample2  gene1  AMP  CNA\n' +
-                    'sample2  gene1  HIGH  PROT\n' +
-                    'sample2  gene1  STRUCTURAL VARIANT\n' +
+                'sample1  gene1  proteinChange1  MISSENSE_GERMLINE_DRIVER  label1\n' +
+                    'sample1  gene1  HOMDEL  CNA  label1\n' +
+                    'sample1  gene1  HIGH  EXP  label1\n' +
+                    'sample2  gene1  proteinChange2  TRUNC_GERMLINE  label1\n' +
+                    'sample2  gene1  AMP  CNA  label1\n' +
+                    'sample2  gene1  HIGH  PROT  label1\n' +
+                    'sample1  gene2  promoter  PROMOTER  label2\n' +
+                    'sample1  gene2  GAIN  CNA  label2\n' +
+                    'sample1  gene2  LOW  EXP  label2\n' +
+                    'sample2  gene2  STRUCTURAL VARIANT\n' +
                     'sample2\n' +
-                    'sample2  gene2  LOW  PROT\n' +
+                    'sample2  gene2  LOW  PROT  label2\n' +
                     'sample1\nsample2'
             );
         });
@@ -147,18 +192,18 @@ describe('OncoprinterImportUtils', () => {
                     ['patient1', 'patient2'],
                     'patient'
                 ),
-                'patient1  gene1  proteinChange1  MISSENSE_GERMLINE_DRIVER\n' +
-                    'patient1  gene1  HOMDEL  CNA\n' +
-                    'patient1  gene1  HIGH  EXP\n' +
-                    'patient1  gene2  promoter  PROMOTER\n' +
-                    'patient1  gene2  GAIN  CNA\n' +
-                    'patient1  gene2  LOW  EXP\n' +
-                    'patient2  gene1  proteinChange2  TRUNC_GERMLINE\n' +
-                    'patient2  gene1  AMP  CNA\n' +
-                    'patient2  gene1  HIGH  PROT\n' +
-                    'patient2  gene1  STRUCTURAL VARIANT\n' +
+                'patient1  gene1  proteinChange1  MISSENSE_GERMLINE_DRIVER  label1\n' +
+                    'patient1  gene1  HOMDEL  CNA  label1\n' +
+                    'patient1  gene1  HIGH  EXP  label1\n' +
+                    'patient2  gene1  proteinChange2  TRUNC_GERMLINE  label1\n' +
+                    'patient2  gene1  AMP  CNA  label1\n' +
+                    'patient2  gene1  HIGH  PROT  label1\n' +
+                    'patient1  gene2  promoter  PROMOTER  label2\n' +
+                    'patient1  gene2  GAIN  CNA  label2\n' +
+                    'patient1  gene2  LOW  EXP  label2\n' +
+                    'patient2  gene2  STRUCTURAL VARIANT\n' +
                     'patient2\n' +
-                    'patient2  gene2  LOW  PROT\n' +
+                    'patient2  gene2  LOW  PROT  label2\n' +
                     'patient1\npatient2'
             );
         });
@@ -245,7 +290,7 @@ describe('OncoprinterImportUtils', () => {
             },
         };
 
-        it('produces correct oncoprinter clinical input for 2 samples x 4 tracks', () => {
+        it('produces correct oncoprinter clinical and heatmap input for 2 samples x 4 tracks', () => {
             assert.deepEqual(
                 getOncoprinterClinicalInput(
                     data,
@@ -260,8 +305,8 @@ describe('OncoprinterImportUtils', () => {
                     'sample'
                 ),
                 'Sample  Age(number)  Mutation_Count(lognumber)  Cancer_type(string)  Mutation_Spectrum(C>A/C>G/C>T/T>A/T>C/T>G)\n' +
-                    `sample1  ${ONCOPRINTER_CLINICAL_VAL_NA}  5  Prostate  3/4/5/10/2/0\n` +
-                    `sample2  19  12  ${ONCOPRINTER_CLINICAL_VAL_NA}  ${ONCOPRINTER_CLINICAL_VAL_NA}`
+                    `sample1  ${ONCOPRINTER_VAL_NA}  5  Prostate  3/4/5/10/2/0\n` +
+                    `sample2  19  12  ${ONCOPRINTER_VAL_NA}  ${ONCOPRINTER_VAL_NA}`
             );
         });
         it('produces correct oncoprinter clinical input for 2 patients x 4 tracks', () => {
@@ -279,8 +324,119 @@ describe('OncoprinterImportUtils', () => {
                     'patient'
                 ),
                 'Sample  Age(number)  Mutation_Count(lognumber)  Cancer_type(string)  Mutation_Spectrum(C>A/C>G/C>T/T>A/T>C/T>G)\n' +
-                    `patient1  ${ONCOPRINTER_CLINICAL_VAL_NA}  5  Prostate  3/4/5/10/2/0\n` +
-                    `patient2  19  12  ${ONCOPRINTER_CLINICAL_VAL_NA}  ${ONCOPRINTER_CLINICAL_VAL_NA}`
+                    `patient1  ${ONCOPRINTER_VAL_NA}  5  Prostate  3/4/5/10/2/0\n` +
+                    `patient2  19  12  ${ONCOPRINTER_VAL_NA}  ${ONCOPRINTER_VAL_NA}`
+            );
+        });
+    });
+
+    describe('getOncoprinterHeatmapInput', () => {
+        const heatmapTracks: IHeatmapTrackSpec[] = [
+            {
+                key: 'mrna-zscores',
+                label: 'PTEN',
+                molecularProfileId: 'zscores',
+                molecularAlterationType: 'MRNA_EXPRESSION',
+                molecularProfileName: 'mRNA (z-scores)',
+                datatype: DataTypeConstants.ZSCORE,
+                data: [
+                    {
+                        profile_data: 1.5,
+                        sample: 'sample1',
+                        patient: 'patient1',
+                        study_id: '',
+                        uid: 'sample1',
+                        na: false,
+                    },
+                    {
+                        profile_data: -1,
+                        sample: 'sample2',
+                        patient: 'patient2',
+                        study_id: '',
+                        uid: 'sample2',
+                        na: false,
+                    },
+                ],
+                trackGroupIndex: 2,
+            },
+            {
+                key: 'mrna',
+                label: 'BRCA1',
+                molecularProfileId: 'mrna',
+                molecularAlterationType: 'MRNA_EXPRESSION',
+                molecularProfileName: 'mRNA values',
+                datatype: DataTypeConstants.CONTINUOUS,
+                data: [
+                    {
+                        profile_data: 6,
+                        sample: 'sample1',
+                        patient: 'patient1',
+                        study_id: '',
+                        uid: 'sample1',
+                        na: false,
+                    },
+                    {
+                        profile_data: null,
+                        sample: 'sample2',
+                        patient: 'patient2',
+                        study_id: '',
+                        uid: 'sample2',
+                        na: true,
+                    },
+                ],
+                trackGroupIndex: 2,
+            },
+            {
+                key: 'methylation',
+                label: 'TP53',
+                molecularProfileId: 'methylation',
+                molecularAlterationType: 'METHYLATION',
+                molecularProfileName: 'Methylation (HM27)',
+                datatype: DataTypeConstants.CONTINUOUS,
+                data: [
+                    {
+                        profile_data: 0.3,
+                        sample: 'sample1',
+                        patient: 'patient1',
+                        study_id: '',
+                        uid: 'sample1',
+                        na: false,
+                    },
+                    {
+                        profile_data: 0.8,
+                        sample: 'sample2',
+                        patient: 'patient2',
+                        study_id: '',
+                        uid: 'sample2',
+                        na: false,
+                    },
+                ],
+                trackGroupIndex: 2,
+            },
+        ];
+
+        it('produces correct oncoprinter heatmap input for 2 samples x 3 tracks', () => {
+            assert.equal(
+                getOncoprinterHeatmapInput(
+                    heatmapTracks,
+                    ['sample1', 'sample2'],
+                    'sample'
+                ),
+                `Sample  PTEN_mRNA_z-scores(heatmapZscores)  BRCA1_mRNA_values(heatmap)  TP53_Methylation_HM27(heatmap01)\n` +
+                    `sample1  1.5  6  0.3\n` +
+                    `sample2  -1  ${ONCOPRINTER_VAL_NA}  0.8`
+            );
+        });
+        it('produces correct oncoprinter heatmap input for 2 patients x 3 tracks', () => {
+            assert.equal(
+                getOncoprinterHeatmapInput(
+                    heatmapTracks,
+                    ['patient1', 'patient2'],
+                    'patient'
+                ),
+                'Sample  PTEN_mRNA_z-scores(heatmapZscores)  BRCA1_mRNA_values(heatmap)  TP53_Methylation_HM27(heatmap01)\n' +
+                    `patient1  1.5  6  0.3\n` +
+                    `patient2  -1  ${ONCOPRINTER_VAL_NA}  0.8`
             );
         });
     });

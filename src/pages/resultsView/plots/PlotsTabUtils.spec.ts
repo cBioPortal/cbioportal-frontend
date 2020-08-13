@@ -573,7 +573,7 @@ describe('PlotsTabUtils', () => {
         it('gives the correct result with no mutations', () => {
             assert.deepEqual(
                 makeAxisDataPromise_Molecular_MakeMutationData(
-                    molecularProfileId,
+                    [molecularProfileId],
                     'BRCA1',
                     [],
                     {} as any,
@@ -591,7 +591,7 @@ describe('PlotsTabUtils', () => {
         it('gives the correct result for mutated vs wild type data', () => {
             assert.deepEqual(
                 makeAxisDataPromise_Molecular_MakeMutationData(
-                    molecularProfileId,
+                    [molecularProfileId],
                     'BRCA1',
                     mutations,
                     coverageInformation,
@@ -634,7 +634,7 @@ describe('PlotsTabUtils', () => {
         it('gives the correct result for mutation type data', () => {
             assert.deepEqual(
                 makeAxisDataPromise_Molecular_MakeMutationData(
-                    molecularProfileId,
+                    [molecularProfileId],
                     'BRCA1',
                     mutations,
                     coverageInformation,

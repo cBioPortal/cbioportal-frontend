@@ -1268,8 +1268,8 @@ function transitionGenesetHeatmapTrack(
             description: `Gene set scores from ${nextSpec.molecularProfileId}`,
             link_url: nextSpec.trackLinkUrl,
             tooltipFn: makeHeatmapTrackTooltip(
-                nextSpec.molecularAlterationType,
-                true
+                nextSpec,
+                nextProps.caseLinkOutInTooltips
             ),
             onSortDirectionChange: nextProps.onTrackSortDirectionChange,
             expandCallback: nextSpec.expansionCallback,
@@ -1307,7 +1307,7 @@ function transitionGenesetHeatmapTrack(
         // set tooltip, its cheap
         oncoprint.setTrackTooltipFn(
             trackId,
-            makeHeatmapTrackTooltip(nextSpec.molecularAlterationType, true)
+            makeHeatmapTrackTooltip(nextSpec, nextProps.caseLinkOutInTooltips)
         );
         updateExpansionTracks<IHeatmapTrackSpec, { heatmap?: TrackId }>(
             nextSpec,
@@ -1383,7 +1383,10 @@ export function transitionHeatmapTrack(
             ),
             tooltipFn:
                 nextSpec.tooltip ||
-                makeHeatmapTrackTooltip(nextSpec.molecularAlterationType, true),
+                makeHeatmapTrackTooltip(
+                    nextSpec,
+                    nextProps.caseLinkOutInTooltips
+                ),
             track_info: nextSpec.info || '',
             onSortDirectionChange: nextProps.onTrackSortDirectionChange,
             expansion_of: expansionParentKey
@@ -1456,7 +1459,10 @@ export function transitionHeatmapTrack(
         oncoprint.setTrackTooltipFn(
             trackId,
             nextSpec.tooltip ||
-                makeHeatmapTrackTooltip(nextSpec.molecularAlterationType, true)
+                makeHeatmapTrackTooltip(
+                    nextSpec,
+                    nextProps.caseLinkOutInTooltips
+                )
         );
     }
 }

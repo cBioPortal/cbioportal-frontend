@@ -6,17 +6,19 @@ import {
     civicDownload,
     getAnnotationData,
     IAnnotation,
-    ICivicGene,
-    ICivicVariant,
-    IHotspotIndex,
-    RemoteData,
-    IMyCancerGenomeData,
     myCancerGenomeDownload,
     oncoKbAnnotationDownload,
 } from 'react-mutation-mapper';
+import {
+    ICivicGene,
+    ICivicVariant,
+    IHotspotIndex,
+    IMyCancerGenomeData,
+    IOncoKbData,
+    RemoteData,
+} from 'cbioportal-utils';
 import OncokbPubMedCache from 'shared/cache/PubMedCache';
 import { CancerStudy, Mutation } from 'cbioportal-ts-api-client';
-import { IOncoKbData } from 'cbioportal-frontend-commons';
 import { CancerGene } from 'oncokb-ts-api-client';
 
 export interface IAnnotationColumnProps extends AnnotationProps {

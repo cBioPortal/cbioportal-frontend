@@ -3,13 +3,12 @@ import request from 'superagent';
 import Response = request.Response;
 
 import {
-    IOncoKbData,
+    AggregatedHotspots,
     EvidenceType,
     generateProteinChangeQuery,
     generateAnnotateStructuralVariantQuery,
-} from 'cbioportal-frontend-commons';
-import {
     getMyVariantInfoAnnotationsFromIndexedVariantAnnotations,
+    IOncoKbData,
     Mutation,
     uniqueGenomicLocations,
 } from 'cbioportal-utils';
@@ -18,6 +17,7 @@ import {
     AnnotateStructuralVariantQuery,
     CancerGene,
     OncoKbAPI,
+    OncoKBInfo,
 } from 'oncokb-ts-api-client';
 import {
     EnsemblFilter,
@@ -32,10 +32,8 @@ import {
     MyVariantInfo,
 } from 'genome-nexus-ts-api-client';
 
-import { AggregatedHotspots } from '../model/CancerHotspot';
 import { MutationMapperDataFetcher } from '../model/MutationMapperDataFetcher';
 import {
-    DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE,
     DEFAULT_MY_GENE_URL_TEMPLATE,
     DEFAULT_UNIPROT_ID_URL_TEMPLATE,
     fetchVariantAnnotationsIndexedByGenomicLocation,
@@ -45,7 +43,6 @@ import {
     initOncoKbClient,
     ONCOKB_DEFAULT_DATA,
 } from '../util/DataFetcherUtils';
-import { OncoKBInfo } from 'oncokb-ts-api-client';
 
 export interface MutationMapperDataFetcherConfig {
     myGeneUrlTemplate?: string;
@@ -113,18 +110,6 @@ export class DefaultMutationMapperDataFetcher
         return uniprotData.text.split('\n')[1];
     }
 
-    public fetchMutationAlignerLink(
-        pfamDomainId: string
-    ): request.SuperAgentRequest {
-        return request.get(
-            getUrl(
-                this.config.mutationAlignerUrlTemplate ||
-                    DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE,
-                { pfamDomainId }
-            )
-        );
-    }
-
     public async fetchPfamDomainData(
         pfamAccessions: string[],
         client: GenomeNexusAPI = this.genomeNexusClient
@@ -159,7 +144,6 @@ export class DefaultMutationMapperDataFetcher
             isoformOverrideSource,
             client
         );
-
         return getMyVariantInfoAnnotationsFromIndexedVariantAnnotations(
             indexedVariantAnnotations
         );
@@ -256,7 +240,6 @@ export class DefaultMutationMapperDataFetcher
         const genomicLocations: GenomicLocation[] = uniqueGenomicLocations(
             mutations
         );
-
         return client.fetchHotspotAnnotationByGenomicLocationPOST({
             genomicLocations: genomicLocations,
         });

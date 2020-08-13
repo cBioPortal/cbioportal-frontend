@@ -1,5 +1,5 @@
 import autobind from 'autobind-decorator';
-import { Mutation } from 'cbioportal-utils';
+import { MobxCache, Mutation } from 'cbioportal-utils';
 import { PfamDomain, PfamDomainRange } from 'genome-nexus-ts-api-client';
 import _ from 'lodash';
 import { action, computed, observable } from 'mobx';
@@ -12,7 +12,6 @@ import $ from 'jquery';
 import { DomainSpec } from '../../model/DomainSpec';
 import { LollipopPlotControlsConfig } from '../../model/LollipopPlotControlsConfig';
 import { LollipopPlacement, LollipopSpec } from '../../model/LollipopSpec';
-import { MobxCache } from '../../model/MobxCache';
 import { MutationMapperStore } from '../../model/MutationMapperStore';
 import { SequenceSpec } from '../../model/SequenceSpec';
 import { DefaultLollipopPlotControlsConfig } from '../../store/DefaultLollipopPlotControlsConfig';
@@ -40,6 +39,7 @@ import {
 import TrackPanel from '../track/TrackPanel';
 
 import './lollipopMutationPlot.scss';
+import DomainTooltip from '../lollipopPlot/DomainTooltip';
 
 const DEFAULT_PROTEIN_LENGTH = 10;
 
@@ -47,6 +47,7 @@ export type LollipopMutationPlotProps = {
     store: MutationMapperStore;
     controlsConfig?: LollipopPlotControlsConfig;
     pubMedCache?: MobxCache;
+    mutationAlignerCache?: MobxCache<string>;
     getLollipopColor?: (mutations: Partial<Mutation>[]) => string;
     getMutationCount?: (mutation: Partial<Mutation>) => number;
     topYAxisSymbol?: string;
@@ -264,13 +265,15 @@ export default class LollipopMutationPlot extends React.Component<
                 (this.props.store.allTranscripts.isComplete &&
                     this.props.store.allTranscripts.result &&
                     this.props.store.activeTranscript &&
+                    this.props.store.activeTranscript.isComplete &&
+                    this.props.store.activeTranscript.result &&
                     this.props.store.transcriptsByTranscriptId[
-                        this.props.store.activeTranscript
+                        this.props.store.activeTranscript.result
                     ] &&
                     // we want to show the stop codon too (so we allow proteinLength +1 as well)
                     codon >
                         this.props.store.transcriptsByTranscriptId[
-                            this.props.store.activeTranscript
+                            this.props.store.activeTranscript.result
                         ].proteinLength +
                             1)
             ) {
@@ -325,55 +328,6 @@ export default class LollipopMutationPlot extends React.Component<
         return specs;
     }
 
-    private mutationAlignerLink(pfamAccession: string): JSX.Element | null {
-        if (
-            this.props.store.mutationAlignerLinks &&
-            this.props.store.mutationAlignerLinks.result
-        ) {
-            const mutationAlignerLink = this.props.store.mutationAlignerLinks
-                .result[pfamAccession];
-            return mutationAlignerLink ? (
-                <a href={mutationAlignerLink} target="_blank">
-                    Mutation Aligner
-                </a>
-            ) : null;
-        } else {
-            return null;
-        }
-    }
-
-    private domainTooltip(
-        range: PfamDomainRange,
-        domain: PfamDomain | undefined,
-        pfamAcc: string
-    ): JSX.Element {
-        const pfamAccession = domain ? domain.pfamAccession : pfamAcc;
-
-        // if no domain info, then just display the accession
-        const domainInfo = domain
-            ? `${domain.name}: ${domain.description}`
-            : pfamAccession;
-
-        return (
-            <div style={{ maxWidth: 200 }}>
-                <div>
-                    {domainInfo} ({range.pfamDomainStart} -{' '}
-                    {range.pfamDomainEnd})
-                </div>
-                <div>
-                    <a
-                        style={{ marginRight: '5px' }}
-                        href={`http://pfam.xfam.org/family/${pfamAccession}`}
-                        target="_blank"
-                    >
-                        PFAM
-                    </a>
-                    {this.mutationAlignerLink(pfamAccession)}
-                </div>
-            </div>
-        );
-    }
-
     @computed private get domains(): DomainSpec[] {
         if (
             !this.props.store.pfamDomainData.isComplete ||
@@ -381,21 +335,25 @@ export default class LollipopMutationPlot extends React.Component<
             this.props.store.pfamDomainData.result.length === 0 ||
             !this.props.store.allTranscripts.isComplete ||
             !this.props.store.allTranscripts.result ||
-            !this.props.store.activeTranscript ||
+            !(
+                this.props.store.activeTranscript &&
+                this.props.store.activeTranscript.isComplete
+            ) ||
+            !this.props.store.activeTranscript.result ||
             !this.props.store.transcriptsByTranscriptId[
-                this.props.store.activeTranscript
+                this.props.store.activeTranscript.result
             ] ||
             !this.props.store.transcriptsByTranscriptId[
-                this.props.store.activeTranscript
+                this.props.store.activeTranscript.result
             ].pfamDomains ||
             this.props.store.transcriptsByTranscriptId[
-                this.props.store.activeTranscript
+                this.props.store.activeTranscript.result
             ].pfamDomains.length === 0
         ) {
             return [];
         } else {
             return this.props.store.transcriptsByTranscriptId[
-                this.props.store.activeTranscript
+                this.props.store.activeTranscript.result
             ].pfamDomains.map((range: PfamDomainRange) => {
                 const domain = this.domainMap[range.pfamDomainId];
                 return {
@@ -403,10 +361,15 @@ export default class LollipopMutationPlot extends React.Component<
                     endCodon: range.pfamDomainEnd,
                     label: domain ? domain.name : range.pfamDomainId,
                     color: this.domainColorMap[range.pfamDomainId],
-                    tooltip: this.domainTooltip(
-                        range,
-                        domain,
-                        range.pfamDomainId
+                    tooltip: (
+                        <DomainTooltip
+                            range={range}
+                            domain={domain}
+                            pfamDomainId={range.pfamDomainId}
+                            mutationAlignerCache={
+                                this.props.mutationAlignerCache
+                            }
+                        />
                     ),
                 };
             });
@@ -420,19 +383,21 @@ export default class LollipopMutationPlot extends React.Component<
             !this.props.store.allTranscripts.isPending &&
             this.props.store.allTranscripts.result &&
             this.props.store.activeTranscript &&
+            !this.props.store.activeTranscript.isPending &&
+            this.props.store.activeTranscript.result &&
             this.props.store.transcriptsByTranscriptId[
-                this.props.store.activeTranscript
+                this.props.store.activeTranscript.result
             ] &&
             this.props.store.transcriptsByTranscriptId[
-                this.props.store.activeTranscript
+                this.props.store.activeTranscript.result
             ].pfamDomains &&
             this.props.store.transcriptsByTranscriptId[
-                this.props.store.activeTranscript
+                this.props.store.activeTranscript.result
             ].pfamDomains.length > 0
         ) {
             return generatePfamDomainColorMap(
                 this.props.store.transcriptsByTranscriptId[
-                    this.props.store.activeTranscript
+                    this.props.store.activeTranscript.result
                 ].pfamDomains
             );
         } else {
@@ -459,11 +424,12 @@ export default class LollipopMutationPlot extends React.Component<
         return (
             (this.props.store.allTranscripts.result &&
                 this.props.store.activeTranscript &&
+                this.props.store.activeTranscript.result &&
                 this.props.store.transcriptsByTranscriptId[
-                    this.props.store.activeTranscript
+                    this.props.store.activeTranscript.result
                 ] &&
                 this.props.store.transcriptsByTranscriptId[
-                    this.props.store.activeTranscript
+                    this.props.store.activeTranscript.result
                 ].proteinLength) ||
             // Math.round(this.props.store.gene.length / 3);
             DEFAULT_PROTEIN_LENGTH

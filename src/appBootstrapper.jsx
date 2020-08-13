@@ -30,6 +30,7 @@ import { AppStore } from './AppStore';
 import { handleLongUrls } from 'shared/lib/handleLongUrls';
 import 'shared/polyfill/canvasToBlob';
 import mobx from 'mobx';
+import { setCurrentURLHeader } from 'shared/lib/extraHeader';
 
 superagentCache(superagent);
 
@@ -72,6 +73,12 @@ if (getBrowserWindow().navigator.webdriver) {
     setNetworkListener();
 }
 
+// for cbioportal instances, add an extra custom HTTP header to
+// aid debugging in Sentry
+if (/cbioportal\.org/.test(getBrowserWindow().location.href)) {
+    setCurrentURLHeader();
+}
+
 // expose version on window
 window.FRONTEND_VERSION = VERSION;
 window.FRONTEND_COMMIT = COMMIT;
@@ -81,6 +88,9 @@ window.FRONTEND_COMMIT = COMMIT;
 window.postLoadForMskCIS = function() {
     AppConfig.hide_login = true;
 };
+
+// this is the only supported way to disable tracking for the $3Dmol.js
+window.$3Dmol = { notrack: true };
 
 // make sure lodash doesn't overwrite (or set) global underscore
 _.noConflict();

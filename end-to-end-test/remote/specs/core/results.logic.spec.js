@@ -24,29 +24,10 @@ function setInputText(selector, text) {
 var searchInputSelector = '.autosuggest input[type=text]';
 
 describe('cross cancer query', function() {
-    it('should show cross cancer bar chart with TP53 in title when selecting multiple studies and querying for TP53', function() {
-        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);
-
-        $('[data-test="StudySelect"]').waitForExist(20000);
-        var checkBoxes = $$('[data-test="StudySelect"]');
-
-        checkBoxes.forEach(function(checkBox, i) {
-            // select a proportion of existing studies
-            if (i % 20 === 0) {
-                checkBox.click();
-            }
-        });
-
-        clickQueryByGeneButton();
-
-        // query tp53
-        $('[data-test="geneSet"]').setValue('TP53');
-
-        browser.waitForEnabled('[data-test="queryButton"]', 30000);
-
-        browser.scroll(0, 0);
-
-        browser.click('[data-test="queryButton"]');
+    it('should show cross cancer bar chart be defai;t with TP53 in title when selecting multiple studies and querying for single gene TP53', function() {
+        goToUrlAndSetLocalStorage(
+            `${CBIOPORTAL_URL}/results/cancerTypesSummary?cancer_study_list=chol_tcga%2Cblca_tcga_pub%2Ccoadread_tcga&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=0&case_set_id=all&gene_list=TP53&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
+        );
 
         // wait for cancer types summary to appear
         $('[data-test="cancerTypeSummaryChart"]').waitForExist(60000);
@@ -77,7 +58,7 @@ describe('single study query', function() {
 
             checkBox.waitForExist(10000);
 
-            browser.click('[data-test="StudySelect"]');
+            browser.click('[data-test="StudySelect"] input');
 
             clickQueryByGeneButton();
 
@@ -552,20 +533,5 @@ describe('invalid query from url', function() {
 
         browser.waitForExist('#modifyQueryBtn', 3000);
         waitForOncoprint(ONCOPRINT_TIMEOUT);
-    });
-});
-
-describe('survival redirect button', function() {
-    it('redirects to comparison survival tab', () => {
-        goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/results/oncoprint?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_set_id=coadread_tcga_pub_nonhypermut&comparison_subtab=survival&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations`
-        );
-
-        browser.waitForExist('.tabAnchor.tabAnchor_survival', 10000);
-        browser.click('.tabAnchor.tabAnchor_survival');
-        browser.waitForExist(
-            'div[data-test="ComparisonPageSurvivalTabDiv"]',
-            60000
-        );
     });
 });

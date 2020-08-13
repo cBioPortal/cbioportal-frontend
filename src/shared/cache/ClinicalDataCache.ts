@@ -3,14 +3,11 @@ import {
     CancerStudy,
     ClinicalAttribute,
     ClinicalData,
-    GenePanelData,
     MolecularProfile,
-    Patient,
-    Sample,
-} from 'cbioportal-ts-api-client';
-import {
     MutationSpectrum,
     MutationSpectrumFilter,
+    Patient,
+    Sample,
 } from 'cbioportal-ts-api-client';
 import { MobxPromise } from 'mobxpromise';
 import {
@@ -20,8 +17,14 @@ import {
 import _ from 'lodash';
 import client from '../api/cbioportalClientInstance';
 import internalClient from '../api/cbioportalInternalClientInstance';
-import { Group } from '../api/ComparisonGroupClient';
 import ComplexKeySet from '../lib/complexKeyDataStructures/ComplexKeySet';
+import { makeUniqueColorGetter } from '../components/plots/PlotUtils';
+import { RESERVED_CLINICAL_VALUE_COLORS } from '../lib/Colors';
+import { interpolateReds } from 'd3-scale-chromatic';
+import {
+    getClinicalAttributeColoring,
+    OncoprintClinicalData,
+} from './ClinicalDataCacheUtils';
 
 export enum SpecialAttribute {
     MutationSpectrum = 'NO_CONTEXT_MUTATION_SIGNATURE',
@@ -82,7 +85,16 @@ export function clinicalAttributeIsLocallyComputed(attribute: {
     );
 }
 
-type OncoprintClinicalData = ClinicalData[] | MutationSpectrum[];
+export type ClinicalDataCacheEntry = {
+    data: OncoprintClinicalData;
+    // Compute colors here so that we can use the same color
+    //  scheme for a clinical attribute throughout the portal,
+    //  e.g. in oncoprint and plots tab.
+    categoryToColor?: { [value: string]: string };
+    numericalValueToColor?: (x: number) => string;
+    logScaleNumericalValueToColor?: (x: number) => string;
+    numericalValueRange?: [number, number];
+};
 
 function makeComparisonGroupData(
     attribute: ExtendedClinicalAttribute,
@@ -163,7 +175,7 @@ async function fetch(
     studyToMutationMolecularProfile: { [studyId: string]: MolecularProfile },
     studyIdToStudy: { [studyId: string]: CancerStudy },
     coverageInformation: CoverageInformation
-) {
+): Promise<OncoprintClinicalData> {
     let ret: OncoprintClinicalData;
     let studyToSamples: { [studyId: string]: Sample[] };
     switch (attribute.clinicalAttributeId) {
@@ -255,9 +267,15 @@ async function fetch(
     return ret;
 }
 
-export default class ClinicalDataCache extends MobxPromiseCache<
+function keyFn(q: ExtendedClinicalAttribute) {
+    return `${q.clinicalAttributeId},${(q.molecularProfileIds || []).join(
+        '-'
+    )},${q.patientAttribute}`;
+}
+
+export class UnfilteredClinicalDataCache extends MobxPromiseCache<
     ExtendedClinicalAttribute,
-    OncoprintClinicalData
+    ClinicalDataCacheEntry
 > {
     constructor(
         samplesPromise: MobxPromise<Sample[]>,
@@ -277,20 +295,99 @@ export default class ClinicalDataCache extends MobxPromiseCache<
                     studyIdToStudyPromise,
                     coverageInformationPromise,
                 ],
-                invoke: () =>
-                    fetch(
+                invoke: async () => {
+                    const data: OncoprintClinicalData = await fetch(
                         q,
                         samplesPromise.result!,
                         patientsPromise.result!,
                         studyToMutationMolecularProfilePromise.result!,
                         studyIdToStudyPromise.result!,
                         coverageInformationPromise.result!
-                    ),
+                    );
+                    return {
+                        data,
+                        ...getClinicalAttributeColoring(data, q.datatype),
+                    };
+                },
             }),
-            q =>
-                `${q.clinicalAttributeId},${(q.molecularProfileIds || []).join(
-                    '-'
-                )},${q.patientAttribute}`
+            keyFn
         );
+    }
+}
+
+export default class ClinicalDataCache extends MobxPromiseCache<
+    ExtendedClinicalAttribute,
+    ClinicalDataCacheEntry
+> {
+    private unfilteredClinicalDataCache: UnfilteredClinicalDataCache;
+
+    constructor(
+        samplesPromise: MobxPromise<Sample[]>,
+        patientsPromise: MobxPromise<Patient[]>,
+        studyToMutationMolecularProfilePromise: MobxPromise<{
+            [studyId: string]: MolecularProfile;
+        }>,
+        studyIdToStudyPromise: MobxPromise<{ [studyId: string]: CancerStudy }>,
+        coverageInformationPromise: MobxPromise<CoverageInformation>,
+        filteredSampleKeyToSample: MobxPromise<{
+            [uniqueSampleKey: string]: Sample;
+        }>,
+        filteredPatientKeyToPatient: MobxPromise<{
+            [uniquePatientKey: string]: Patient;
+        }>
+    ) {
+        const unfilteredClinicalDataCache = new UnfilteredClinicalDataCache(
+            samplesPromise,
+            patientsPromise,
+            studyToMutationMolecularProfilePromise,
+            studyIdToStudyPromise,
+            coverageInformationPromise
+        );
+        super(
+            q => ({
+                await: () => [
+                    unfilteredClinicalDataCache.get(q),
+                    filteredSampleKeyToSample,
+                    filteredPatientKeyToPatient,
+                ],
+                invoke: () => {
+                    const { data, ...rest } = unfilteredClinicalDataCache.get(
+                        q
+                    ).result!;
+                    if (q.patientAttribute) {
+                        const patientKeyToPatient = filteredPatientKeyToPatient.result!;
+                        return Promise.resolve(
+                            // typescript having some issues, so had to do this typing
+                            {
+                                data: (data as {
+                                    uniquePatientKey: string;
+                                }[]).filter(
+                                    d =>
+                                        d.uniquePatientKey in
+                                        patientKeyToPatient
+                                ) as OncoprintClinicalData,
+                                ...rest,
+                            }
+                        );
+                    } else {
+                        const sampleKeyToSample = filteredSampleKeyToSample.result!;
+                        return Promise.resolve(
+                            // typescript having some issues, so had to do this typing
+                            {
+                                data: (data as {
+                                    uniqueSampleKey: string;
+                                }[]).filter(
+                                    (d: OncoprintClinicalData[0]) =>
+                                        d.uniqueSampleKey in sampleKeyToSample
+                                ) as OncoprintClinicalData,
+                                ...rest,
+                            }
+                        );
+                    }
+                },
+            }),
+            keyFn
+        );
+        this.unfilteredClinicalDataCache = unfilteredClinicalDataCache;
     }
 }

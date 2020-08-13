@@ -22,6 +22,7 @@ import {
     MUT_COLOR_MISSENSE,
     MUT_COLOR_OTHER,
     MUT_COLOR_TRUNC,
+    STRUCTURAL_VARIANT_COLOR,
 } from 'shared/lib/Colors';
 import { normalizeMutations } from '../components/mutationMapper/MutationMapperUtils';
 import { getSimplifiedMutationType } from './oql/AccessorsForOqlFilter';
@@ -30,6 +31,7 @@ export const DEFAULT_PROTEIN_IMPACT_TYPE_COLORS: IProteinImpactTypeColors = {
     missenseColor: MUT_COLOR_MISSENSE,
     inframeColor: MUT_COLOR_INFRAME,
     truncatingColor: MUT_COLOR_TRUNC,
+    fusionColor: STRUCTURAL_VARIANT_COLOR,
     otherColor: MUT_COLOR_OTHER,
 };
 

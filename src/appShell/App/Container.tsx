@@ -17,10 +17,24 @@ import {
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import ErrorScreen from 'shared/components/errorScreen/ErrorScreen';
 import { ServerConfigHelpers } from 'config/config';
+import StudyViewWarning, {
+    shouldShowStudyViewWarning,
+} from 'pages/studyView/studyPageHeader/studyViewWarning/StudyViewWarning';
 
 interface IContainerProps {
     location: Location;
     children: React.ReactNode;
+}
+
+function isLocalDBServer() {
+    try {
+        return (
+            (window as any).frontendConfig.serverConfig.app_name ===
+            'localdbe2e'
+        );
+    } catch (ex) {
+        return false;
+    }
 }
 
 @observer
@@ -42,7 +56,11 @@ export default class Container extends React.Component<IContainerProps, {}> {
     }
 
     render() {
-        if (!isWebdriver() && !ServerConfigHelpers.sessionServiceIsEnabled()) {
+        if (
+            !isLocalDBServer() &&
+            !isWebdriver() &&
+            !ServerConfigHelpers.sessionServiceIsEnabled()
+        ) {
             return (
                 <div className="contentWrapper">
                     <ErrorScreen
@@ -75,6 +93,9 @@ export default class Container extends React.Component<IContainerProps, {}> {
 
                 <div className="pageTopContainer">
                     <UserMessager />
+
+                    {shouldShowStudyViewWarning() && <StudyViewWarning />}
+
                     <div className="contentWidth">
                         <PortalHeader appStore={this.appStore} />
                     </div>

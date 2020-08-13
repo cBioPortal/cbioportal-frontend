@@ -10,16 +10,16 @@ import {
 import AppConfig from 'appConfig';
 
 export type PlotsSelectionParam = {
-    selectedGeneOption: string;
-    selectedGenesetOption: string;
-    selectedGenericAssayOption: string;
-    dataType: string;
-    selectedDataSourceOption: string;
-    mutationCountBy: string;
-    logScale: string;
+    selectedGeneOption?: string;
+    selectedGenesetOption?: string;
+    selectedGenericAssayOption?: string;
+    dataType?: string;
+    selectedDataSourceOption?: string;
+    mutationCountBy?: string;
+    logScale?: string;
 };
 
-const PlotsSelectionParamProps: PlotsSelectionParam = {
+const PlotsSelectionParamProps: Required<PlotsSelectionParam> = {
     selectedGeneOption: '',
     selectedGenesetOption: '',
     selectedGenericAssayOption: '',
@@ -27,6 +27,20 @@ const PlotsSelectionParamProps: PlotsSelectionParam = {
     selectedDataSourceOption: '',
     mutationCountBy: '',
     logScale: '',
+};
+
+export type PlotsColoringParam = {
+    selectedOption?: string;
+    logScale?: string;
+    colorByMutationType?: string;
+    colorByCopyNumber?: string;
+};
+
+const PlotsColoringParamProps: Required<PlotsColoringParam> = {
+    selectedOption: '',
+    logScale: '',
+    colorByMutationType: '',
+    colorByCopyNumber: '',
 };
 
 export enum ResultsViewURLQueryEnum {
@@ -48,6 +62,7 @@ export enum ResultsViewURLQueryEnum {
     oncoprint_sort_by_mutation_type = 'oncoprint_sort_by_mutation_type',
     oncoprint_sort_by_drivers = 'oncoprint_sort_by_drivers',
     exclude_germline_mutations = 'exclude_germline_mutations',
+    hide_unprofiled_samples = 'hide_unprofiled_samples',
     patient_enrichments = 'patient_enrichments',
 
     comparison_subtab = 'comparison_subtab',
@@ -58,6 +73,7 @@ export enum ResultsViewURLQueryEnum {
 
     plots_horz_selection = 'plots_horz_selection',
     plots_vert_selection = 'plots_vert_selection',
+    plots_coloring_selection = 'plots_coloring_selection',
 
     genetic_profile_ids_PROFILE_MUTATION_EXTENDED = 'genetic_profile_ids_PROFILE_MUTATION_EXTENDED',
     genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT = 'genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT',
@@ -67,11 +83,14 @@ export enum ResultsViewURLQueryEnum {
     genetic_profile_ids_PROFILE_GENESET_SCORE = 'genetic_profile_ids_PROFILE_GENESET_SCORE',
     genetic_profile_ids_GENERIC_ASSAY = 'genetic_profile_ids_GENERIC_ASSAY',
     genetic_profile_ids = 'genetic_profile_ids',
+
+    mutations_gene = 'mutations_gene',
+    mutations_transcript_id = 'mutations_transcript_id',
 }
 
 type StringValuedParams = Exclude<
     keyof typeof ResultsViewURLQueryEnum,
-    'plots_horz_selection' | 'plots_vert_selection'
+    'plots_horz_selection' | 'plots_vert_selection' | 'plots_coloring_selection'
 >;
 
 export type ResultsViewURLQuery = {
@@ -79,6 +98,7 @@ export type ResultsViewURLQuery = {
 } & {
     plots_horz_selection: PlotsSelectionParam;
     plots_vert_selection: PlotsSelectionParam;
+    plots_coloring_selection: PlotsColoringParam;
 };
 
 export default class ResultsViewURLWrapper extends URLWrapper<
@@ -99,6 +119,7 @@ export default class ResultsViewURLWrapper extends URLWrapper<
                 oncoprint_sort_by_drivers: { isSessionProp: false },
                 generic_assay_groups: { isSessionProp: false },
                 exclude_germline_mutations: { isSessionProp: false },
+                hide_unprofiled_samples: { isSessionProp: false },
                 patient_enrichments: { isSessionProp: false },
 
                 comparison_subtab: { isSessionProp: false },
@@ -114,6 +135,18 @@ export default class ResultsViewURLWrapper extends URLWrapper<
                 plots_vert_selection: {
                     isSessionProp: false,
                     nestedObjectProps: PlotsSelectionParamProps,
+                },
+                plots_coloring_selection: {
+                    isSessionProp: false,
+                    nestedObjectProps: PlotsColoringParamProps,
+                },
+
+                // mutations
+                mutations_gene: {
+                    isSessionProp: false,
+                },
+                mutations_transcript_id: {
+                    isSessionProp: false,
                 },
 
                 // session props here

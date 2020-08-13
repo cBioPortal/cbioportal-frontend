@@ -1,6 +1,7 @@
 import { default as URL, QueryParams } from 'url';
 import AppConfig from 'appConfig';
 import { BuildUrlParams, getBrowserWindow } from 'cbioportal-frontend-commons';
+import { DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE } from 'react-mutation-mapper';
 import * as _ from 'lodash';
 import { GroupComparisonLoadingParams } from '../../pages/groupComparison/GroupComparisonLoading';
 import { GroupComparisonURLQuery } from '../../pages/groupComparison/GroupComparisonURLWrapper';
@@ -173,8 +174,8 @@ export function getUniprotIdUrl(swissProtAccession: string) {
     });
 }
 
-export function getMutationAlignerUrl() {
-    return buildCBioPortalAPIUrl(`getMutationAligner.json`);
+export function getMutationAlignerUrlTemplate() {
+    return getProxyUrlIfNecessary(DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE);
 }
 
 export function getOncoQueryDocUrl() {
@@ -242,9 +243,9 @@ export function getSessionUrl() {
         // TODO: remove this after switch to AWS. This is a hack to use proxy
         // session-service from non apiRoot. We'll have to come up with a better
         // solution for auth portals
-        return buildCBioPortalPageUrl('api-legacy/proxy/session');
+        return buildCBioPortalPageUrl('api/session');
     } else {
-        return buildCBioPortalAPIUrl('api-legacy/proxy/session');
+        return buildCBioPortalAPIUrl('api/session');
     }
 }
 
@@ -256,9 +257,9 @@ export function fetchComparisonGroupsServiceUrl() {
         // TODO: remove this after switch to AWS. This is a hack to use proxy
         // session-service from non apiRoot. We'll have to come up with a better
         // solution for auth portals
-        return buildCBioPortalPageUrl('api-legacy/proxy/session/groups/fetch');
+        return buildCBioPortalPageUrl('api/session/groups/fetch');
     } else {
-        return buildCBioPortalAPIUrl('api-legacy/proxy/session/groups/fetch');
+        return buildCBioPortalAPIUrl('api/session/groups/fetch');
     }
 }
 
@@ -270,9 +271,9 @@ export function getComparisonGroupServiceUrl() {
         // TODO: remove this after switch to AWS. This is a hack to use proxy
         // session-service from non apiRoot. We'll have to come up with a better
         // solution for auth portals
-        return buildCBioPortalPageUrl('api-legacy/proxy/session/group');
+        return buildCBioPortalPageUrl('api/session/group');
     } else {
-        return buildCBioPortalAPIUrl('api-legacy/proxy/session/group');
+        return buildCBioPortalAPIUrl('api/session/group');
     }
 }
 
@@ -284,13 +285,9 @@ export function getComparisonSessionServiceUrl() {
         // TODO: remove this after switch to AWS. This is a hack to use proxy
         // session-service from non apiRoot. We'll have to come up with a better
         // solution for auth portals
-        return buildCBioPortalPageUrl(
-            'api-legacy/proxy/session/comparison_session'
-        );
+        return buildCBioPortalPageUrl('api/session/comparison_session');
     } else {
-        return buildCBioPortalAPIUrl(
-            'api-legacy/proxy/session/comparison_session'
-        );
+        return buildCBioPortalAPIUrl('api/session/comparison_session');
     }
 }
 
@@ -329,14 +326,6 @@ export function getStudyDownloadListUrl() {
     return buildCBioPortalAPIUrl(
         'proxy/download.cbioportal.org/study_list.json'
     );
-}
-
-export function getBitlyServiceUrl() {
-    return buildCBioPortalAPIUrl('api-legacy/proxy/bitly');
-}
-
-export function getLegacyCopyNumberUrl() {
-    return buildCBioPortalAPIUrl('api-legacy/copynumbersegments');
 }
 
 export function getMDAndersonHeatmapPatientUrl(patientId: string) {

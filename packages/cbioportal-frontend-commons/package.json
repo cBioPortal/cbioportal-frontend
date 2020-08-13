@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-frontend-commons",
   "description": "cBioPortal Frontend Modules",
-  "version": "0.2.13",
+  "version": "0.3.3",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
@@ -18,15 +18,17 @@
   "license": "AGPL-3.0-or-later",
   "repository": "cBioPortal/cbioportal-frontend",
   "scripts": {
-    "build": "cross-env NODE_ENV=production NODE_OPTIONS=--max-old-space-size=2048 yarn run rollup",
+    "build": "yarn run tcm && cross-env NODE_ENV=production NODE_OPTIONS=--max-old-space-size=2048 yarn run rollup",
     "start": "yarn run watch",
-    "watch": "yarn run rollup:watch",
+    "watch": "concurrently \"yarn run tcm:watch\" \"yarn run rollup:watch\"",
     "watchSSL": "yarn run watch",
     "rollup": "rollup -c rollup.config.ts",
-    "rollup:watch": "rollup -c rollup.config.ts -w",
+    "rollup:watch": "yarn run rollup --watch",
+    "tcm": "tcm -p src/**/*.module.scss",
+    "tcm:watch": "yarn run tcm --watch",
     "prepare": "yarn run build",
     "test": "cross-env CI=1 react-scripts-ts test --env=jsdom",
-    "test:watch": "yarn run test -- --watch"
+    "test:watch": "yarn run test --watch"
   },
   "peerDependencies": {
     "mobx": "^3.0.0 || ^4.0.0 || ^5.0.0",
@@ -36,13 +38,14 @@
   },
   "dependencies": {
     "autobind-decorator": "^2.1.0",
+    "cbioportal-utils": "^0.2.3",
     "classnames": "^2.2.5",
     "jquery": "^3.2.1",
     "lodash": "^4.17.11",
     "measure-text": "0.0.4",
     "mobxpromise": "github:cbioportal/mobxpromise#v1.0.2",
     "object-sizeof": "^1.2.0",
-    "oncokb-ts-api-client": "^1.0.4",
+    "oncokb-ts-api-client": "^1.1.0",
     "rc-tooltip": "3.7.3",
     "react-file-download": "^0.3.2",
     "react-select": "^3.0.4",

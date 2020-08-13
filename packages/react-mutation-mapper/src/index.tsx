@@ -3,10 +3,7 @@ export {
     download as civicDownload,
     sortValue as civicSortValue,
 } from './component/civic/Civic';
-export {
-    default as ClinVarId,
-    getClinVarId,
-} from './component/clinvar/ClinVarId';
+export { default as ClinVarId } from './component/clinvar/ClinVarId';
 export {
     AnnotationProps,
     default as Annotation,
@@ -18,17 +15,25 @@ export {
 } from './component/column/Annotation';
 export {
     default as ClinVar,
+    download as clinVarDownload,
     sortValue as clinVarSortValue,
 } from './component/column/ClinVar';
 export { default as ColumnHeader } from './component/column/ColumnHeader';
+export {
+    default as Dbsnp,
+    download as dbsnpDownload,
+    sortValue as dbsnpSortValue,
+} from './component/column/Dbsnp';
 export {
     default as HotspotAnnotation,
     sortValue as hotspotAnnotationSortValue,
 } from './component/column/HotspotAnnotation';
 export {
     default as Gnomad,
+    download as gnomadDownload,
     sortValue as gnomadSortValue,
 } from './component/column/Gnomad';
+export { default as DbsnpId } from './component/dbsnp/DbsnpId';
 export {
     default as MyCancerGenome,
     download as myCancerGenomeDownload,
@@ -65,23 +70,17 @@ export {
 } from './component/filter/MutationStatusBadgeSelector';
 export {
     default as GnomadFrequency,
-    calculateAlleleFrequency as calculateGnomadAllelFrequency,
+    calculateAlleleFrequency as calculateGnomadAlleleFrequency,
 } from './component/gnomad/GnomadFrequency';
-export {
-    default as GnomadFrequencyTable,
-} from './component/gnomad/GnomadFrequencyTable';
+export { default as GnomadFrequencyTable } from './component/gnomad/GnomadFrequencyTable';
 export {
     default as OncoKB,
     sortValue as oncoKbAnnotationSortValue,
     download as oncoKbAnnotationDownload,
     IOncoKbProps,
 } from './component/oncokb/OncoKB';
-export {
-    default as OncoKBSuggestAnnotationLinkout,
-} from './component/oncokb/OncoKBSuggestAnnotationLinkout';
-export {
-    default as OncoKbTreatmentTable,
-} from './component/oncokb/OncoKbTreatmentTable';
+export { default as OncoKBSuggestAnnotationLinkout } from './component/oncokb/OncoKBSuggestAnnotationLinkout';
+export { default as OncoKbTreatmentTable } from './component/oncokb/OncoKbTreatmentTable';
 export { default as OncoKbFeedback } from './component/oncokb/OncoKbFeedback';
 export { default as OncoKbTooltip } from './component/oncokb/OncoKbTooltip';
 export { default as ReferenceList } from './component/oncokb/ReferenceList';
@@ -97,20 +96,14 @@ export {
     ColumnSortDirection,
     DataTableColumn,
 } from './component/dataTable/DataTable';
-export {
-    default as DefaultMutationTable,
-} from './component/mutationTable/DefaultMutationTable';
+export { default as DefaultMutationTable } from './component/mutationTable/DefaultMutationTable';
 export * from './component/mutationTable/MutationColumnHelper';
 export { default as Domain } from './component/lollipopPlot/Domain';
 export { default as HotspotInfo } from './component/hotspot/HotspotInfo';
 export { default as Lollipop } from './component/lollipopPlot/Lollipop';
-export {
-    default as LollipopMutationPlot,
-} from './component/lollipopMutationPlot/LollipopMutationPlot';
+export { default as LollipopMutationPlot } from './component/lollipopMutationPlot/LollipopMutationPlot';
 export { default as LollipopPlot } from './component/lollipopPlot/LollipopPlot';
-export {
-    default as LollipopPlotNoTooltip,
-} from './component/lollipopPlot/LollipopPlotNoTooltip';
+export { default as LollipopPlotNoTooltip } from './component/lollipopPlot/LollipopPlotNoTooltip';
 export { default as Sequence } from './component/lollipopPlot/LollipopPlot';
 export {
     default as MutationMapper,
@@ -131,28 +124,18 @@ export { OncoKbFilter } from './filter/OncoKbFilter';
 export { PositionFilter } from './filter/PositionFilter';
 export { ProteinImpactTypeFilter } from './filter/ProteinImpactTypeFilter';
 
-export { AggregatedHotspots, IHotspotIndex } from './model/CancerHotspot';
-export * from './model/Civic';
 export { DataFilter, DataFilterType } from './model/DataFilter';
 export { DataStore } from './model/DataStore';
 export { DomainSpec } from './model/DomainSpec';
 export { ApplyFilterFn, FilterApplier } from './model/FilterApplier';
 export { IProteinImpactTypeColors } from './model/ProteinImpact';
 export { LollipopSpec } from './model/LollipopSpec';
-export * from './model/MyCancerGenome';
 export { MutationMapperDataFetcher } from './model/MutationMapperDataFetcher';
 export { MutationMapperStore } from './model/MutationMapperStore';
-export { RemoteData } from './model/RemoteData';
 export { SequenceSpec } from './model/SequenceSpec';
 
-export { default as CivicAPI } from './store/CivicDataFetcher';
-
-export * from './util/CancerHotspotsUtils';
-export * from './util/CivicUtils';
 export * from './util/DataFetcherUtils';
 export * from './util/FilterUtils';
-export * from './util/FormatUtils';
-export * from './util/MyCancerGenomeUtils';
 export * from './util/ReactTableUtils';
 export {
     MUTATION_TYPE_PRIORITY,
@@ -165,15 +148,7 @@ export {
 } from './util/OncoKbUtils';
 export * from './util/TrackUtils';
 
-export {
-    default as DefaultMutationMapperDataFetcher,
-} from './store/DefaultMutationMapperDataFetcher';
-export {
-    default as DefaultMutationMapperDataStore,
-} from './store/DefaultMutationMapperDataStore';
-export {
-    default as DefaultMutationMapperFilterApplier,
-} from './store/DefaultMutationMapperFilterApplier';
-export {
-    default as DefaultMutationMapperStore,
-} from './store/DefaultMutationMapperStore';
+export { default as DefaultMutationMapperDataFetcher } from './store/DefaultMutationMapperDataFetcher';
+export { default as DefaultMutationMapperDataStore } from './store/DefaultMutationMapperDataStore';
+export { default as DefaultMutationMapperFilterApplier } from './store/DefaultMutationMapperFilterApplier';
+export { default as DefaultMutationMapperStore } from './store/DefaultMutationMapperStore';

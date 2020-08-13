@@ -30,11 +30,10 @@ import { ICoExpressionPlotProps } from './CoExpressionPlot';
 import { bind } from 'bind-decorator';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
 import { IDataQueryFilter } from 'shared/lib/StoreUtils';
-import {
-    remoteData,
-    getMobxPromiseGroupStatus,
-} from 'cbioportal-frontend-commons';
+import { remoteData } from 'cbioportal-frontend-commons';
+import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
+import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 
 export interface ICoExpressionTabProps {
     store: ResultsViewPageStore;
@@ -188,7 +187,7 @@ export default class CoExpressionTab extends React.Component<
         await: () => [
             this.props.store.coexpressionTabMolecularProfiles,
             this.isSelectedGeneticEntityAGeneSet,
-            this.props.store.molecularProfileIdToProfiledSamples,
+            this.props.store.molecularProfileIdToProfiledFilteredSamples,
         ],
         invoke: () => {
             let filteredProfiles: MolecularProfile[] = [];
@@ -204,7 +203,8 @@ export default class CoExpressionTab extends React.Component<
             return Promise.resolve(
                 getProfileOptions(
                     filteredProfiles,
-                    this.props.store.molecularProfileIdToProfiledSamples.result!
+                    this.props.store.molecularProfileIdToProfiledFilteredSamples
+                        .result!
                 )
             );
         },
@@ -213,13 +213,14 @@ export default class CoExpressionTab extends React.Component<
     readonly yProfileOptions = remoteData<{ label: string; value: string }[]>({
         await: () => [
             this.props.store.coexpressionTabMolecularProfiles,
-            this.props.store.molecularProfileIdToProfiledSamples,
+            this.props.store.molecularProfileIdToProfiledFilteredSamples,
         ],
         invoke: () => {
             return Promise.resolve(
                 getProfileOptions(
                     this.props.store.coexpressionTabMolecularProfiles.result!,
-                    this.props.store.molecularProfileIdToProfiledSamples.result!
+                    this.props.store.molecularProfileIdToProfiledFilteredSamples
+                        .result!
                 )
             );
         },
@@ -261,7 +262,7 @@ export default class CoExpressionTab extends React.Component<
         q => ({
             await: () => [
                 this.props.store.entrezGeneIdToReferenceGene,
-                this.props.store.molecularProfileIdToProfiledSamples,
+                this.props.store.molecularProfileIdToProfiledFilteredSamples,
             ],
             invoke: async () => {
                 let threshold = 0.3;
@@ -270,11 +271,11 @@ export default class CoExpressionTab extends React.Component<
                 }
 
                 const profileXSamples = this.props.store
-                    .molecularProfileIdToProfiledSamples.result![
+                    .molecularProfileIdToProfiledFilteredSamples.result![
                     q.profileX.molecularProfileId
                 ];
                 const profileYSamples = this.props.store
-                    .molecularProfileIdToProfiledSamples.result![
+                    .molecularProfileIdToProfiledFilteredSamples.result![
                     q.profileY.molecularProfileId
                 ];
 
@@ -298,8 +299,8 @@ export default class CoExpressionTab extends React.Component<
                 }
 
                 if (
-                    dataFilter.sampleIds === undefined &&
-                    dataFilter.sampleListId === undefined
+                    _.isEmpty(dataFilter.sampleIds) &&
+                    _.isEmpty(dataFilter.sampleListId)
                 ) {
                     return Promise.resolve([]);
                 }
@@ -624,9 +625,9 @@ export default class CoExpressionTab extends React.Component<
             );
         }
 
-        const status = getMobxPromiseGroupStatus(
+        const status = getRemoteDataGroupStatus(
             this.props.store.genes,
-            this.props.store.molecularProfileIdToProfiledSamples,
+            this.props.store.molecularProfileIdToProfiledFilteredSamples,
             this.props.store.coexpressionTabMolecularProfiles
         );
 
@@ -642,6 +643,7 @@ export default class CoExpressionTab extends React.Component<
                         store={this.props.store}
                         isUnaffected={true}
                     />
+                    <CaseFilterWarning store={this.props.store} />
                 </div>
 
                 {status === 'complete' && divContents}

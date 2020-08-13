@@ -1,5 +1,5 @@
 import { observable } from 'mobx';
-import { getMobxPromiseGroupStatus } from 'cbioportal-frontend-commons';
+import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 
 export type MobxView = {
     isComplete: boolean;
@@ -13,7 +13,8 @@ export type MobxView = {
     | {
           status: 'complete';
           component: ValidRender;
-      });
+      }
+);
 
 type MobxView_await = () => { status: 'complete' | 'error' | 'pending' }[];
 type MobxView_render = () => ValidRender;
@@ -49,7 +50,7 @@ export function MakeMobxView(params: {
     return observable({
         get status() {
             const awaitElements = params.await();
-            const promiseStatus = getMobxPromiseGroupStatus(
+            const promiseStatus = getRemoteDataGroupStatus(
                 ...awaitElements
             ) as any;
             return promiseStatus;

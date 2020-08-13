@@ -1,14 +1,21 @@
 import autobind from 'autobind-decorator';
+import { getClinVarId } from 'cbioportal-utils';
 import { MyVariantInfo } from 'genome-nexus-ts-api-client';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
 import { defaultSortMethod } from '../../util/ReactTableUtils';
-import ClinVarId, { getClinVarId } from '../clinvar/ClinVarId';
+import ClinVarId from '../clinvar/ClinVarId';
 import {
     MyVariantInfoProps,
     renderMyVariantInfoContent,
 } from './MyVariantInfoHelper';
+
+export function download(myVariantInfo?: MyVariantInfo): string {
+    const value = sortValue(myVariantInfo);
+
+    return value ? value.toString() : '';
+}
 
 export function sortValue(myVariantInfo?: MyVariantInfo): number | null {
     const id = getClinVarId(myVariantInfo);

@@ -52,8 +52,9 @@ import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicato
 import BoxScatterPlot, {
     IBoxScatterPlotData,
 } from '../../../shared/components/plots/BoxScatterPlot';
-import { ViewType, PlotType } from '../plots/PlotsTab';
+import { ColoringType, PlotType } from '../plots/PlotsTab';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
+import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 
 export interface ExpressionWrapperProps {
     store: ResultsViewPageStore;
@@ -222,16 +223,18 @@ export default class ExpressionWrapper extends React.Component<
             ),
         invoke: () => {
             // TODO: this cache is leading to some ugly code
-            return Promise.resolve(_.flatten(
-                this.props.numericGeneMolecularDataCache
-                    .getAll(
-                        this.selectedExpressionProfiles.result!.map(p => ({
-                            entrezGeneId: this.selectedGene.entrezGeneId,
-                            molecularProfileId: p.molecularProfileId,
-                        }))
-                    )
-                    .map(promise => promise.result!)
-            ) as NumericGeneMolecularData[]);
+            return Promise.resolve(
+                _.flatten(
+                    this.props.numericGeneMolecularDataCache
+                        .getAll(
+                            this.selectedExpressionProfiles.result!.map(p => ({
+                                entrezGeneId: this.selectedGene.entrezGeneId,
+                                molecularProfileId: p.molecularProfileId,
+                            }))
+                        )
+                        .map(promise => promise.result!)
+                ) as NumericGeneMolecularData[]
+            );
         },
     });
 
@@ -609,13 +612,13 @@ export default class ExpressionWrapper extends React.Component<
 
     @computed get viewType() {
         if (this.showMutations && this.showCna) {
-            return ViewType.MutationTypeAndCopyNumber;
+            return ColoringType.MutationTypeAndCopyNumber;
         } else if (this.showMutations) {
-            return ViewType.MutationType;
+            return ColoringType.MutationType;
         } else if (this.showCna) {
-            return ViewType.CopyNumber;
+            return ColoringType.CopyNumber;
         } else {
-            return ViewType.None;
+            return ColoringType.None;
         }
     }
 
@@ -725,6 +728,7 @@ export default class ExpressionWrapper extends React.Component<
                         style={{ marginTop: -1, marginBottom: 12 }}
                     />
                     <AlterationFilterWarning store={this.props.store} />
+                    <CaseFilterWarning store={this.props.store} />
                 </div>
                 {this.studySelectorModalVisible && this.studySelectionModal}
                 <div style={{ marginBottom: 15 }}>

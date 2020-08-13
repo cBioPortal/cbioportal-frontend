@@ -148,6 +148,7 @@ export default class ActionButtons extends React.Component<
                 >
                     <button
                         className="btn btn-default btn-sm"
+                        disabled={!this.props.loadingComplete}
                         onClick={this.openCases}
                         data-event={serializeEvent({
                             category: 'studyPage',

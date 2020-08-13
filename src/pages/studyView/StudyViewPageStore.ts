@@ -105,6 +105,7 @@ import {
     getGenomicDataAsClinicalData,
     convertGenomicDataBinsToClinicalDataBins,
     getGenomicChartUniqueKey,
+    pickNewColorForClinicData,
     getFilteredMolecularProfilesByAlterationType,
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
@@ -176,6 +177,9 @@ import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescrip
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { Datalabel } from 'shared/lib/DataUtils';
+import { Group } from '../../shared/api/ComparisonGroupClient';
+import PromisePlus from 'shared/lib/PromisePlus';
+import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 
 export type ChartUserSetting = {
     id: string;
@@ -236,6 +240,7 @@ export type StudyViewURLQuery = {
     filters?: string;
     filterAttributeId?: string;
     filterValues?: string;
+    sharedGroups?: string;
 };
 
 export type CustomGroup = {
@@ -286,13 +291,20 @@ export type OncokbCancerGene = {
 export class StudyViewPageStore {
     private reactionDisposers: IReactionDisposer[] = [];
 
+    private chartItemToColor: Map<string, string>;
+    private chartToUsedColors: Map<string, Set<string>>;
+
     public studyViewQueryFilter: StudyViewURLQuery;
 
+    @observable showComparisonGroupUI = false;
+
     constructor(
-        private appStore: AppStore,
+        public appStore: AppStore,
         private sessionServiceIsEnabled: boolean,
         private urlWrapper: StudyViewURLWrapper
     ) {
+        this.chartItemToColor = new Map();
+        this.chartToUsedColors = new Map();
         this.reactionDisposers.push(
             reaction(
                 () => this.loadingInitialDataForSummaryTab,
@@ -480,48 +492,177 @@ export class StudyViewPageStore {
         }
     }
 
-    @action public markSelectedGroupsForDeletion() {
-        onMobxPromise(this.comparisonGroups, groups => {
-            for (const group of groups) {
-                if (this.isComparisonGroupSelected(group.uid)) {
-                    this.toggleComparisonGroupMarkedForDeletion(group.uid);
-                }
-            }
-        });
-    }
-
     @action public async deleteMarkedComparisonGroups() {
         const deletionPromises = [];
         for (const groupId of this._comparisonGroupsMarkedForDeletion.keys()) {
             if (this.isComparisonGroupMarkedForDeletion(groupId)) {
-                deletionPromises.push(comparisonClient.deleteGroup(groupId));
+                if (this.isLoggedIn) {
+                    const promise = comparisonClient.deleteGroup(groupId);
+                    deletionPromises.push(promise);
+                    this._pendingChanges.push(new PromisePlus(promise));
+                }
+                // delete it even from the shared group set
+                delete this.sharedGroupSet[groupId];
+
                 this._selectedComparisonGroups.delete(groupId);
             }
         }
+
         await Promise.all(deletionPromises);
         this._comparisonGroupsMarkedForDeletion.clear();
         this.notifyComparisonGroupsChange();
     }
 
-    readonly comparisonGroups = remoteData<StudyViewComparisonGroup[]>({
-        await: () => [this.sampleSet],
+    // edge case: user deletes/add a group, then opens the panel again,
+    //          and the getGroups request responds before the deleteGroup/addGroup
+    //          request completes, thus showing a group that should be
+    //          (and soon will be) deleted. We fix this by waiting
+    //          until deletions/additions are done before allowing getGroups requests.
+    @observable _pendingChanges: PromisePlus<any>[] = [];
+
+    readonly pendingDecision = remoteData<boolean>({
+        invoke: async () => {
+            this._pendingChanges = this._pendingChanges.filter(
+                x => x.status !== 'pending'
+            );
+            await Promise.all(this._pendingChanges.map(p => p.promise)); // wait for pending deletions to finish
+            return false;
+        },
+        default: true,
+    });
+
+    //Save any shared groups to user profile if user login after page is loaded
+    public async saveGroupsToUserProfile(groups: StudyViewComparisonGroup[]) {
+        if (this.isLoggedIn) {
+            const addPromises: Promise<void>[] = [];
+            groups.forEach(group => {
+                // undefined for page session groups
+                if (group.isSharedGroup || group.isSharedGroup === undefined) {
+                    const promise = comparisonClient.addGroupToUser(group.uid);
+                    addPromises.push(promise);
+                }
+            });
+            await Promise.all(addPromises);
+        }
+    }
+
+    readonly userSavedGroups = remoteData<StudyViewComparisonGroup[]>({
+        await: () => [this.sampleSet, this.pendingDecision],
         invoke: async () => {
             // reference this so its responsive to changes
             this._comparisonGroupsChangeCount;
-            if (this.studyIds.length > 0) {
+            if (
+                this.studyIds.length > 0 &&
+                this.isLoggedIn &&
+                !this.pendingDecision.result
+            ) {
                 const groups = await comparisonClient.getGroupsForStudies(
                     this.studyIds.slice()
                 ); // slice because cant pass mobx
+
                 return groups.map(group =>
                     Object.assign(
                         group.data,
-                        { uid: group.id },
+                        { uid: group.id, isSharedGroup: false },
                         finalizeStudiesAttr(group.data, this.sampleSet.result!)
                     )
                 );
-            } else {
-                return [];
             }
+            return [];
+        },
+        default: [],
+    });
+
+    readonly sharedGroups = remoteData<StudyViewComparisonGroup[]>({
+        await: () => [this.sampleSet, this.queriedPhysicalStudyIds],
+        invoke: async () => {
+            const promises: Promise<Group>[] = [];
+            Object.keys(this.sharedGroupSet).forEach(groupId => {
+                promises.push(comparisonClient.getGroup(groupId));
+            });
+            const studyIdsSet = stringListToSet(
+                this.queriedPhysicalStudyIds.result!
+            );
+            const groups = await Promise.all(promises);
+            return groups
+                .filter(
+                    group =>
+                        !_.some(
+                            group.data.studies,
+                            study => studyIdsSet[study.id] === undefined
+                        )
+                )
+                .map(group =>
+                    Object.assign(
+                        group.data,
+                        { uid: group.id, isSharedGroup: true },
+                        finalizeStudiesAttr(group.data, this.sampleSet.result!)
+                    )
+                );
+        },
+        default: [],
+    });
+
+    readonly comparisonGroups = remoteData<StudyViewComparisonGroup[]>({
+        await: () => [this.userSavedGroups, this.sharedGroups],
+        invoke: async () => {
+            let groups: StudyViewComparisonGroup[] = _.cloneDeep(
+                this.userSavedGroups.result
+            );
+            let groupIdSet: { [s: string]: boolean } = stringListToSet(
+                groups.map(group => group.uid)
+            );
+            if (this.sharedGroups.result.length > 0) {
+                this.sharedGroups.result.forEach(sharedGroup => {
+                    if (groupIdSet[sharedGroup.uid] === undefined) {
+                        groups.push(sharedGroup);
+                        groupIdSet[sharedGroup.uid] = true;
+                    }
+                });
+            }
+
+            // group present in page session which are not saved to user account
+            const missingGroupIds = this._selectedComparisonGroups
+                .keys()
+                .filter(groupId => groupIdSet[groupId] === undefined);
+
+            if (missingGroupIds.length > 0) {
+                const promises = [];
+                for (const groupId of missingGroupIds) {
+                    promises.push(comparisonClient.getGroup(groupId));
+                }
+                const studyIdsSet = stringListToSet(
+                    this.queriedPhysicalStudyIds.result!
+                );
+                let newGroups: Group[] = await Promise.all(promises);
+
+                newGroups
+                    .filter(
+                        group =>
+                            !_.some(
+                                group.data.studies,
+                                study => studyIdsSet[study.id] === undefined
+                            )
+                    )
+                    .forEach(group =>
+                        groups.push(
+                            Object.assign(
+                                group.data,
+                                { uid: group.id },
+                                finalizeStudiesAttr(
+                                    group.data,
+                                    this.sampleSet.result!
+                                )
+                            )
+                        )
+                    );
+            }
+
+            return groups;
+        },
+        default: [],
+        onResult: groups => {
+            this.saveGroupsToUserProfile(groups);
         },
     });
 
@@ -925,6 +1066,8 @@ export class StudyViewPageStore {
 
     private newlyAddedCharts = observable.array<string>();
 
+    @observable public sharedGroupSet: { [id: string]: boolean } = {};
+
     private unfilteredClinicalDataCountCache: {
         [uniqueKey: string]: ClinicalDataCountItem;
     } = {};
@@ -1036,6 +1179,11 @@ export class StudyViewPageStore {
                 // update if different
                 this.studyIds = studyIds;
             }
+        }
+        if (query.sharedGroups) {
+            this.sharedGroupSet = stringListToSet(
+                query.sharedGroups.trim().split(',')
+            );
         }
 
         // We do not support studyIds in the query filters
@@ -2257,10 +2405,13 @@ export class StudyViewPageStore {
         default: [],
         onError: error => {},
         onResult: data => {
-            _.each(_.groupBy(data, item => item.attributeId), (item, key) => {
-                this.unfilteredClinicalDataBinCountCache[key] = item;
-                this.newlyAddedCharts.remove(key);
-            });
+            _.each(
+                _.groupBy(data, item => item.attributeId),
+                (item, key) => {
+                    this.unfilteredClinicalDataBinCountCache[key] = item;
+                    this.newlyAddedCharts.remove(key);
+                }
+            );
         },
     });
 
@@ -2353,18 +2504,74 @@ export class StudyViewPageStore {
                             .clinicalAttributeId,
                     } as ClinicalDataCountItem);
                     let counts: ClinicalDataCount[] = [];
+                    let attributeId: string = '';
                     if (data !== undefined) {
                         counts = data.counts;
+                        attributeId = data.attributeId;
+                        if (!this.chartToUsedColors.has(attributeId))
+                            this.chartToUsedColors.set(attributeId, new Set());
                     }
-                    return getClinicalDataCountWithColorByClinicalDataCount(
+
+                    let res = getClinicalDataCountWithColorByClinicalDataCount(
                         counts
                     );
+                    res.forEach(item => {
+                        let colorMapKey = this.generateColorMapKey(
+                            attributeId,
+                            item.value
+                        );
+                        // If the item doesn't has an assigned color
+                        if (!this.chartItemToColor.has(colorMapKey)) {
+                            // If the color has not been used
+                            if (
+                                !this.chartToUsedColors
+                                    .get(attributeId)
+                                    ?.has(item.color)
+                            ) {
+                                this.chartItemToColor.set(
+                                    colorMapKey,
+                                    item.color
+                                );
+                                this.chartToUsedColors
+                                    .get(attributeId)
+                                    ?.add(item.color);
+                            } else {
+                                // Pick up a new color if the color has been used
+                                let d = {
+                                    value: item.value,
+                                    count: item.count,
+                                };
+                                let newColor = pickNewColorForClinicData(
+                                    d,
+                                    this.chartToUsedColors.get(attributeId) ||
+                                        new Set()
+                                );
+                                this.chartItemToColor.set(
+                                    colorMapKey,
+                                    newColor
+                                );
+                                this.chartToUsedColors
+                                    .get(attributeId)
+                                    ?.add(newColor);
+                                item.color = newColor;
+                            }
+                        } else {
+                            item.color = this.chartItemToColor.get(
+                                colorMapKey
+                            )!;
+                        }
+                    });
+                    return res;
                 },
                 onError: error => {},
                 default: [],
             });
         }
         return this.clinicalDataCountPromises[uniqueKey];
+    }
+
+    private generateColorMapKey(id: string, value: string) {
+        return `${id}.${value}`;
     }
 
     public getClinicalDataBin(chartMeta: ChartMeta) {
@@ -3972,12 +4179,7 @@ export class StudyViewPageStore {
             }
         });
 
-        const cancerTypeIds = _.uniq(
-            this.queriedPhysicalStudies.result.map(study => study.cancerTypeId)
-        );
-        const survivalUniqueKeys = this.survivalPlotKeys;
-
-        survivalUniqueKeys.forEach(key => {
+        this.survivalPlotKeys.forEach(key => {
             this.chartsType.set(key, ChartTypeEnum.SURVIVAL);
             this.chartsDimension.set(
                 key,
@@ -3985,12 +4187,7 @@ export class StudyViewPageStore {
             );
             if (getDefaultPriorityByUniqueKey(key) !== 0) {
                 // hide *_SURVIVAL chart if cancer type is mixed or have more than one cancer type
-                if (
-                    cancerTypeIds.length === 1 &&
-                    cancerTypeIds[0] !== 'mixed'
-                ) {
-                    this.changeChartVisibility(key, true);
-                }
+                this.changeChartVisibility(key, true);
             }
         });
 
@@ -4882,10 +5079,7 @@ export class StudyViewPageStore {
 
     @computed get molecularProfileMapByType() {
         return _.groupBy(this.molecularProfiles.result, molecularProfile =>
-            molecularProfile.molecularProfileId.replace(
-                molecularProfile.studyId + '_',
-                ''
-            )
+            getSuffixOfMolecularProfile(molecularProfile)
         );
     }
 
@@ -5265,8 +5459,8 @@ export class StudyViewPageStore {
             ) {
                 const yAxisBinCount = MutationCountVsCnaYBinsMin;
                 const xAxisBinCount = 50;
-                const bins = (await internalClient.fetchClinicalDataDensityPlotUsingPOST(
-                    {
+                const bins = (
+                    await internalClient.fetchClinicalDataDensityPlotUsingPOST({
                         xAxisAttributeId:
                             SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED,
                         yAxisAttributeId:
@@ -5279,8 +5473,8 @@ export class StudyViewPageStore {
                         studyViewFilter: this
                             .studyViewFilterWithFilteredSampleIdentifiers
                             .result!,
-                    }
-                )).filter(bin => bin.count > 0); // only show points for bins with stuff in them
+                    })
+                ).filter(bin => bin.count > 0); // only show points for bins with stuff in them
                 const xBinSize = 1 / xAxisBinCount;
                 const yBinSize =
                     Math.max(...bins.map(bin => bin.binY)) /

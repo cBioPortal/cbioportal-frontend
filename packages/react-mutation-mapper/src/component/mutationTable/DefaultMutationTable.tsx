@@ -1,5 +1,14 @@
-import { IOncoKbData } from 'cbioportal-frontend-commons';
-import { Mutation } from 'cbioportal-utils';
+import {
+    ICivicGene,
+    ICivicVariant,
+    IHotspotIndex,
+    IMyCancerGenomeData,
+    IOncoKbData,
+    getRemoteDataGroupStatus,
+    MobxCache,
+    Mutation,
+    RemoteData,
+} from 'cbioportal-utils';
 import { MyVariantInfo, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
 import _ from 'lodash';
@@ -10,19 +19,15 @@ import { Column } from 'react-table';
 
 import Annotation, { getAnnotationData } from '../column/Annotation';
 import ClinVar from '../column/ClinVar';
-import Gnomad, { getMyVariantInfoData } from '../column/Gnomad';
+import Dbsnp from '../column/Dbsnp';
+import Gnomad from '../column/Gnomad';
+import { getMyVariantInfoData } from '../column/MyVariantInfoHelper';
 import { MutationFilterValue } from '../../filter/MutationFilter';
-import { IHotspotIndex } from '../../model/CancerHotspot';
-import { ICivicGene, ICivicVariant } from '../../model/Civic';
 import { DataFilterType } from '../../model/DataFilter';
-import { MobxCache } from '../../model/MobxCache';
-import { IMyCancerGenomeData } from '../../model/MyCancerGenome';
-import { RemoteData } from '../../model/RemoteData';
 import {
     findNonTextInputFilters,
     TEXT_INPUT_FILTER_ID,
 } from '../../util/FilterUtils';
-import { getRemoteDataGroupStatus } from '../../util/RemoteDataUtils';
 import DataTable, {
     DataTableColumn,
     DataTableProps,
@@ -76,7 +81,9 @@ export default class DefaultMutationTable extends React.Component<
 
     @computed
     get annotationColumnDataStatus() {
-        return getRemoteDataGroupStatus(_.compact(this.annotationColumnData));
+        return getRemoteDataGroupStatus(
+            ..._.compact(this.annotationColumnData)
+        );
     }
 
     @computed
@@ -123,9 +130,11 @@ export default class DefaultMutationTable extends React.Component<
         switch (columnKey) {
             case MutationColumn.ANNOTATION:
                 return this.annotationColumnAccessor;
+            case MutationColumn.GNOMAD:
+                return this.myVariantInfoAccessor;
             case MutationColumn.CLINVAR:
                 return this.myVariantInfoAccessor;
-            case MutationColumn.GNOMAD:
+            case MutationColumn.DBSNP:
                 return this.myVariantInfoAccessor;
             default:
                 return undefined;
@@ -168,6 +177,15 @@ export default class DefaultMutationTable extends React.Component<
             case MutationColumn.CLINVAR:
                 return (column: any) => (
                     <ClinVar
+                        mutation={column.original}
+                        indexedMyVariantInfoAnnotations={
+                            this.props.indexedMyVariantInfoAnnotations
+                        }
+                    />
+                );
+            case MutationColumn.DBSNP:
+                return (column: any) => (
+                    <Dbsnp
                         mutation={column.original}
                         indexedMyVariantInfoAnnotations={
                             this.props.indexedMyVariantInfoAnnotations

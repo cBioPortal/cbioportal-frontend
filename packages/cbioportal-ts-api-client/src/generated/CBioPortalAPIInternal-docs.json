@@ -476,6 +476,380 @@
         "deprecated": false
       }
     },
+    "/data-access-token": {
+      "get": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "downloadDataAccessToken",
+        "operationId": "downloadDataAccessTokenUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "authenticated",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "authorities[0].authority",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "credentials",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
+            "name": "details",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
+            "name": "principal",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "head": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "downloadDataAccessToken",
+        "operationId": "downloadDataAccessTokenUsingHEAD",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "authenticated",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "authorities[0].authority",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "credentials",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
+            "name": "details",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
+            "name": "principal",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "post": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "downloadDataAccessToken",
+        "operationId": "downloadDataAccessTokenUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "authenticated",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "authorities[0].authority",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "credentials",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
+            "name": "details",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
+            "name": "principal",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "put": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "downloadDataAccessToken",
+        "operationId": "downloadDataAccessTokenUsingPUT",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "authenticated",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "authorities[0].authority",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "credentials",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
+            "name": "details",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
+            "name": "principal",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "delete": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "downloadDataAccessToken",
+        "operationId": "downloadDataAccessTokenUsingDELETE",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "authenticated",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "authorities[0].authority",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "credentials",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
+            "name": "details",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
+            "name": "principal",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "options": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "downloadDataAccessToken",
+        "operationId": "downloadDataAccessTokenUsingOPTIONS",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "authenticated",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "authorities[0].authority",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "credentials",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
+            "name": "details",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
+            "name": "principal",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "patch": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "downloadDataAccessToken",
+        "operationId": "downloadDataAccessTokenUsingPATCH",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "authenticated",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "authorities[0].authority",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "credentials",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
+            "name": "details",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
+            "name": "principal",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
     "/data-access-tokens": {
       "get": {
         "tags": [
@@ -545,13 +919,6 @@
         ],
         "parameters": [
           {
-            "name": "allowRevocationOfOtherTokens",
-            "in": "query",
-            "description": "allowRevocationOfOtherTokens",
-            "required": false,
-            "type": "boolean"
-          },
-          {
             "name": "authenticated",
             "in": "query",
             "required": false,
@@ -574,6 +941,13 @@
             "in": "query",
             "required": false,
             "type": "object"
+          },
+          {
+            "name": "myAllowRevocationOfOtherTokens",
+            "in": "query",
+            "description": "myAllowRevocationOfOtherTokens",
+            "required": false,
+            "type": "boolean"
           },
           {
             "name": "principal",
@@ -2290,11 +2664,11 @@
       "properties": {
         "creation": {
           "type": "string",
-          "format": "date-time"
+          "example": "yyyy-MM-dd HH:mm:ss"
         },
         "expiration": {
           "type": "string",
-          "format": "date-time"
+          "example": "yyyy-MM-dd HH:mm:ss"
         },
         "token": {
           "type": "string"

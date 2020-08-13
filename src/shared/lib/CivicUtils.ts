@@ -7,9 +7,9 @@ import {
     ICivicGene,
     ICivicVariant,
     ICivicVariantData,
-} from 'react-mutation-mapper';
-
+} from 'cbioportal-utils';
 import { DiscreteCopyNumberData, Mutation } from 'cbioportal-ts-api-client';
+
 import { concatMutationData } from './StoreUtils';
 
 export function getCivicCNAVariants(

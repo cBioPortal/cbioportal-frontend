@@ -48,12 +48,14 @@ import {
 import oncokbClient from 'shared/api/oncokbClientInstance';
 import genomeNexusClient from 'shared/api/genomeNexusClientInstance';
 import {
+    EvidenceType,
     generateAnnotateStructuralVariantQuery,
     generateCopyNumberAlterationQuery,
     generateIdToIndicatorMap,
     generateProteinChangeQuery,
+    IOncoKbData,
     generateAnnotateStructuralVariantQueryFromGenes,
-} from 'cbioportal-frontend-commons';
+} from 'cbioportal-utils';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
 import { MobxPromise } from 'mobxpromise';
 import { keywordToCosmic } from 'shared/lib/AnnotationUtils';
@@ -80,7 +82,6 @@ import {
     OncoKbAPI,
     OncoKBInfo,
 } from 'oncokb-ts-api-client';
-import { EvidenceType, IOncoKbData } from 'cbioportal-frontend-commons';
 import { REFERENCE_GENOME } from './referenceGenomeUtils';
 import {
     DEFAULT_SURVIVAL_PRIORITY,
@@ -217,9 +218,10 @@ export async function fetchAllReferenceGenomeGenes(
 ) {
     if (AppConfig.serverConfig.app_name === 'public-portal') {
         // this is temporary
-        return $.get(
-            getFrontendAssetUrl('reactapp/reference_genome_hg19.json')
-        );
+        return $.ajax({
+            url: getFrontendAssetUrl('reactapp/reference_genome_hg19.json'),
+            dataType: 'json',
+        });
     }
     if (genomeName) {
         return await client.getAllReferenceGenomeGenesUsingGET({

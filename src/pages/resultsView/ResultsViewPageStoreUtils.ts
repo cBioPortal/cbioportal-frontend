@@ -563,7 +563,8 @@ export function filterSubQueryData(
     data: (
         | AnnotatedMutation
         | NumericGeneMolecularData
-        | AnnotatedStructuralVariant)[],
+        | AnnotatedStructuralVariant
+    )[],
     accessorsInstance: AccessorsForOqlFilter,
     samples: { uniqueSampleKey: string }[],
     patients: { uniquePatientKey: string }[]
@@ -932,7 +933,8 @@ export function fetchPatients(samples: Sample[]) {
     });
 }
 
-export function excludeMutationAndSVProfiles(
+// special profiles includes mutation genetic profiles and structural variant profiles and generic assay profiles
+export function excludeSpecialMolecularProfiles(
     molecularprofiles: MolecularProfile[]
 ): MolecularProfile[] {
     const mutationAlterationTypes = [
@@ -940,6 +942,7 @@ export function excludeMutationAndSVProfiles(
         AlterationTypeConstants.MUTATION_UNCALLED,
         AlterationTypeConstants.FUSION,
         AlterationTypeConstants.STRUCTURAL_VARIANT,
+        AlterationTypeConstants.GENERIC_ASSAY,
     ];
     return molecularprofiles.filter(
         profile =>

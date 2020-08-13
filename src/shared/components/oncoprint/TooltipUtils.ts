@@ -9,7 +9,12 @@ import {
     StructuralVariant,
 } from 'cbioportal-ts-api-client';
 import client from 'shared/api/cbioportalClientInstance';
-import { ClinicalTrackSpec, GeneticTrackDatum } from './Oncoprint';
+import {
+    ClinicalTrackSpec,
+    GeneticTrackDatum,
+    IBaseHeatmapTrackSpec,
+    IHeatmapTrackSpec,
+} from './Oncoprint';
 import {
     AnnotatedExtendedAlteration,
     AnnotatedMutation,
@@ -33,6 +38,7 @@ export const TOOLTIP_DIV_CLASS = 'oncoprint__tooltip';
 
 const tooltipTextElementNaN = 'N/A';
 import './styles.scss';
+import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/PlotsTabUtils';
 
 function sampleViewAnchorTag(study_id: string, sample_id: string) {
     return `<a class="nobreak" href="${getSampleViewUrl(
@@ -194,7 +200,7 @@ export function makeClinicalTrackTooltip(
     };
 }
 export function makeHeatmapTrackTooltip(
-    genetic_alteration_type: MolecularProfile['molecularAlterationType'],
+    trackSpec: IBaseHeatmapTrackSpec,
     link_id?: boolean
 ) {
     return function(dataUnderMouse: any[]) {
@@ -202,19 +208,29 @@ export function makeHeatmapTrackTooltip(
         let valueTextElement = tooltipTextElementNaN;
         let categoryTextElement = '';
 
-        switch (genetic_alteration_type) {
-            case AlterationTypeConstants.MRNA_EXPRESSION:
-                data_header = 'MRNA: ';
-                break;
-            case AlterationTypeConstants.PROTEIN_LEVEL:
-                data_header = 'PROT: ';
-                break;
-            case AlterationTypeConstants.METHYLATION:
-                data_header = 'METHYLATION: ';
-                break;
-            case AlterationTypeConstants.GENERIC_ASSAY:
-                data_header = 'GENERIC ASSAY: ';
-                break;
+        if (trackSpec.tooltipValueLabel) {
+            data_header = `${trackSpec.tooltipValueLabel}: `;
+        } else {
+            switch (trackSpec.molecularAlterationType) {
+                case AlterationTypeConstants.MRNA_EXPRESSION:
+                    data_header = 'MRNA: ';
+                    break;
+                case AlterationTypeConstants.PROTEIN_LEVEL:
+                    data_header = 'PROT: ';
+                    break;
+                case AlterationTypeConstants.METHYLATION:
+                    data_header = 'METHYLATION: ';
+                    break;
+                case AlterationTypeConstants.GENERIC_ASSAY:
+                    // track for GENERIC_ASSAY type always has the genericAssayType
+                    data_header = `${deriveDisplayTextFromGenericAssayType(
+                        (trackSpec as IHeatmapTrackSpec).genericAssayType!
+                    )}: `;
+                    break;
+                default:
+                    data_header = 'Value: ';
+                    break;
+            }
         }
 
         let profileDataSum = 0;
@@ -227,7 +243,7 @@ export function makeHeatmapTrackTooltip(
                 typeof d.profile_data !== 'undefined'
             ) {
                 if (
-                    genetic_alteration_type ===
+                    trackSpec.molecularAlterationType ===
                         AlterationTypeConstants.GENERIC_ASSAY &&
                     d.category
                 ) {
@@ -309,9 +325,12 @@ export function makeGeneticTrackTooltip_getCoverageInformation(
     let dispNotProfiledGenePanelIds: string[] = [];
     let profiledInTypes: { [type: string]: string } | undefined = undefined;
     if (profiled_in) {
-        dispProfiledGenePanelIds = _.uniq((profiled_in.map(
-            x => x.genePanelId
-        ) as (string | undefined)[]).filter(x => !!x) as string[]);
+        dispProfiledGenePanelIds = _.uniq(
+            (profiled_in.map(x => x.genePanelId) as (
+                | string
+                | undefined
+            )[]).filter(x => !!x) as string[]
+        );
         dispProfiledIn = _.uniq(profiled_in.map(x => x.molecularProfileId));
         if (molecularProfileIdToMolecularProfile) {
             profiledInTypes = _.keyBy(

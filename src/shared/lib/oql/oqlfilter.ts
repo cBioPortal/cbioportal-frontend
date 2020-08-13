@@ -28,6 +28,7 @@ import AccessorsForOqlFilter, {
     Datum,
     SimplifiedMutationType,
 } from './AccessorsForOqlFilter';
+import ifNotDefined from '../ifNotDefined';
 
 export interface IAccessorsForOqlFilter<T> {
     // a null return for an attribute means that attribute
@@ -266,7 +267,7 @@ export function doesQueryContainMutationOQL(oql_query: string): boolean {
                     break;
                 } else if (alteration.alteration_type === 'any') {
                     // any DRIVER specification, which includes mutation
-                    if (alteration.modifiers.indexOf('DRIVER') > -1) {
+                    if (alteration.modifiers.find(m => m.type === 'DRIVER')) {
                         ret = true;
                         break;
                     }
@@ -278,6 +279,20 @@ export function doesQueryContainMutationOQL(oql_query: string): boolean {
         }
     }
     return ret;
+}
+
+function parsedOQLMutationModifierToSourceOQL(
+    modifier: MutationModifier
+): string {
+    switch (modifier.type) {
+        case 'RANGE':
+            return `(${ifNotDefined(modifier.start, '')}-${ifNotDefined(
+                modifier.end,
+                ''
+            )}${modifier.completeOverlapOnly ? '*' : ''})`;
+        default:
+            return modifier.type;
+    }
 }
 
 export function parsedOQLAlterationToSourceOQL(alteration: Alteration): string {
@@ -295,7 +310,7 @@ export function parsedOQLAlterationToSourceOQL(alteration: Alteration): string {
             }
             if (alteration.modifiers.length > 0) {
                 ret += '_';
-                ret += alteration.modifiers.join('_');
+                ret += alteration.modifiers.map(m => m.type).join('_');
             }
             return ret;
         case 'mut':
@@ -324,7 +339,9 @@ export function parsedOQLAlterationToSourceOQL(alteration: Alteration): string {
             if (underscoreBeforeModifiers && alteration.modifiers.length > 0) {
                 ret += '_';
             }
-            ret += alteration.modifiers.join('_');
+            ret += alteration.modifiers
+                .map(parsedOQLMutationModifierToSourceOQL)
+                .join('_');
             return ret;
         case 'exp':
             return 'EXP' + alteration.constr_rel + alteration.constr_val;
@@ -335,12 +352,12 @@ export function parsedOQLAlterationToSourceOQL(alteration: Alteration): string {
                 'FUSION' +
                 alteration.modifiers
                     .map(function(modifier) {
-                        return '_' + modifier;
+                        return '_' + modifier.type;
                     })
                     .join('')
             );
         case 'any':
-            return alteration.modifiers.join('_');
+            return alteration.modifiers.map(m => m.type).join('_');
     }
 }
 export function unparseOQLQueryLine(parsed_oql_line: SingleGeneQuery): string {
@@ -468,7 +485,7 @@ function isDatumWantedByAnyTypeWithModifiersCommand<T>(
     for (var i = 0; i < alt_cmd.modifiers.length; i++) {
         var modifier = alt_cmd.modifiers[i];
         var datumWanted = null;
-        switch (modifier) {
+        switch (modifier.type) {
             case 'DRIVER':
                 const cnaValue = accessors.cna(datum);
                 datumWanted =
@@ -677,10 +694,33 @@ function isDatumWantedByOQLMutationModifier<T>(
     datum: T,
     accessors: IAccessorsForOqlFilter<T>
 ) {
-    switch (modifier) {
+    switch (modifier.type) {
         case 'GERMLINE':
         case 'SOMATIC':
-            return accessors.mut_status(datum) === modifier.toLowerCase();
+            return accessors.mut_status(datum) === modifier.type.toLowerCase();
+        case 'RANGE':
+            const mutationRange = accessors.mut_position(datum);
+            if (!mutationRange) {
+                return false;
+            }
+            const queryRange = [
+                ifNotDefined(modifier.start, Number.NEGATIVE_INFINITY),
+                ifNotDefined(modifier.end, Number.POSITIVE_INFINITY),
+            ];
+            if (modifier.completeOverlapOnly) {
+                // only if queryRange contains mutationRnage
+                return (
+                    queryRange[0] <= mutationRange[0] &&
+                    queryRange[1] >= mutationRange[1]
+                );
+            } else {
+                // if queryRange and mutationRange overlap at all
+                return (
+                    queryRange[0] <= mutationRange[1] &&
+                    mutationRange[0] <= queryRange[1]
+                );
+            }
+            break;
         default:
             return isDatumWantedByOQLAlterationModifier(
                 modifier,
@@ -695,7 +735,7 @@ function isDatumWantedByOQLAlterationModifier<T>(
     datum: T,
     accessors: IAccessorsForOqlFilter<T>
 ) {
-    switch (modifier) {
+    switch (modifier.type) {
         case 'DRIVER':
             return accessors.is_driver(datum);
         default:
@@ -867,7 +907,8 @@ export function filterCBioPortalWebServiceDataByOQLLine(
     data: (
         | AnnotatedMutation
         | NumericGeneMolecularData
-        | AnnotatedStructuralVariant)[],
+        | AnnotatedStructuralVariant
+    )[],
     accessors: any,
     default_oql?: string
 ): OQLLineFilterOutput<ExtendedAlteration & AnnotatedMutation>[];
@@ -881,12 +922,12 @@ export function filterCBioPortalWebServiceDataByOQLLine(
 export function filterCBioPortalWebServiceDataByOQLLine(
     oql_query: string,
     data:
-        | ((
+        | (
               | AnnotatedMutation
               | NumericGeneMolecularData
               | AnnotatedStructuralVariant
-          )[])
-        | ((Mutation | NumericGeneMolecularData | StructuralVariant)[]),
+          )[]
+        | (Mutation | NumericGeneMolecularData | StructuralVariant)[],
     accessors: any,
     default_oql?: string
 ) {
@@ -907,7 +948,8 @@ export function filterCBioPortalWebServiceDataByUnflattenedOQLLine(
     data: (
         | AnnotatedMutation
         | NumericGeneMolecularData
-        | AnnotatedStructuralVariant)[],
+        | AnnotatedStructuralVariant
+    )[],
     accessors: any,
     default_oql?: string
 ): UnflattenedOQLLineFilterOutput<ExtendedAlteration & AnnotatedMutation>[] {

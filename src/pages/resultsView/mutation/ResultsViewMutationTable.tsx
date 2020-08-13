@@ -9,11 +9,11 @@ import CancerTypeColumnFormatter from 'shared/components/mutationTable/column/Ca
 import TumorAlleleFreqColumnFormatter from 'shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter';
 import { Mutation } from 'cbioportal-ts-api-client';
 import ExonColumnFormatter from 'shared/components/mutationTable/column/ExonColumnFormatter';
-import GnomadColumnFormatter from 'shared/components/mutationTable/column/GnomadColumnFormatter';
 
 export interface IResultsViewMutationTableProps extends IMutationTableProps {
     // add results view specific props here if needed
     totalNumberOfExons?: string;
+    isCanonicalTranscript: boolean | undefined;
 }
 //
 @observer
@@ -88,13 +88,17 @@ export default class ResultsViewMutationTable extends MutationTable<
                 : this.props.data
         );
 
+        // disable annotation column if non canonical transcript is selected
+        this._columns[MutationTableColumnType.ANNOTATION].shouldExclude = () =>
+            this.props.isCanonicalTranscript === false;
+
         // order columns
         this._columns[MutationTableColumnType.STUDY].order = 0;
         this._columns[MutationTableColumnType.SAMPLE_ID].order = 10;
         this._columns[MutationTableColumnType.CANCER_TYPE].order = 15;
         this._columns[MutationTableColumnType.PROTEIN_CHANGE].order = 20;
         this._columns[MutationTableColumnType.ANNOTATION].order = 30;
-        this._columns[MutationTableColumnType.HGVSG].order = 35;
+
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT].order = 38;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 40;
         this._columns[MutationTableColumnType.VARIANT_TYPE].order = 45;
@@ -108,6 +112,8 @@ export default class ResultsViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.END_POS].order = 130;
         this._columns[MutationTableColumnType.REF_ALLELE].order = 140;
         this._columns[MutationTableColumnType.VAR_ALLELE].order = 150;
+        this._columns[MutationTableColumnType.HGVSG].order = 151;
+        this._columns[MutationTableColumnType.HGVSC].order = 152;
         this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ].order = 160;
         this._columns[MutationTableColumnType.NORMAL_ALLELE_FREQ].order = 170;
         this._columns[MutationTableColumnType.VAR_READS].order = 180;
@@ -116,7 +122,6 @@ export default class ResultsViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.REF_READS_N].order = 210;
         this._columns[MutationTableColumnType.NUM_MUTATIONS].order = 220;
         this._columns[MutationTableColumnType.EXON].order = 230;
-        this._columns[MutationTableColumnType.HGVSC].order = 240;
         this._columns[MutationTableColumnType.GNOMAD].order = 260;
         this._columns[MutationTableColumnType.CLINVAR].order = 270;
         this._columns[MutationTableColumnType.DBSNP].order = 280;

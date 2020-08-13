@@ -30,19 +30,21 @@ import {
     SampleIdentifier,
     SampleList,
     SampleMolecularIdentifier,
+    GenericAssayData,
     StructuralVariant,
     StructuralVariantFilter,
 } from 'cbioportal-ts-api-client';
 import client from 'shared/api/cbioportalClientInstance';
+import { remoteData, stringListToSet } from 'cbioportal-frontend-commons';
 import { action, computed, observable, ObservableMap, reaction } from 'mobx';
 import {
     generateQueryVariantId,
+    getProteinPositionFromProteinChange,
+    IHotspotIndex,
+    indexHotspotsData,
     IOncoKbData,
-    remoteData,
-    stringListToSet,
     generateQueryStructuralVariantId,
-} from 'cbioportal-frontend-commons';
-import { getProteinPositionFromProteinChange } from 'cbioportal-utils';
+} from 'cbioportal-utils';
 import {
     VariantAnnotation,
     GenomeNexusAPI,
@@ -53,7 +55,6 @@ import { cached, labelMobxPromises, MobxPromise } from 'mobxpromise';
 import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
-import GenomeNexusMyVariantInfoCache from 'shared/cache/GenomeNexusMyVariantInfoCache';
 import CancerTypeCache from 'shared/cache/CancerTypeCache';
 import MutationCountCache from 'shared/cache/MutationCountCache';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
@@ -80,7 +81,6 @@ import {
     getSurvivalClinicalAttributesPrefix,
     fetchStructuralVariantOncoKbData,
 } from 'shared/lib/StoreUtils';
-import { IHotspotIndex, indexHotspotsData } from 'react-mutation-mapper';
 import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
 import ResultsViewMutationMapperStore from './mutation/ResultsViewMutationMapperStore';
 import AppConfig from 'appConfig';
@@ -121,7 +121,7 @@ import {
     computeCustomDriverAnnotationReport,
     computeGenePanelInformation,
     CoverageInformation,
-    excludeMutationAndSVProfiles,
+    excludeSpecialMolecularProfiles,
     fetchPatients,
     fetchQueriedStudies,
     filterAndAnnotateMutations,
@@ -170,7 +170,11 @@ import { ErrorMessages } from '../../shared/enums/ErrorEnums';
 import sessionServiceClient from '../../shared/api/sessionServiceInstance';
 import { VirtualStudy } from 'shared/model/VirtualStudy';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
-import { Group } from '../../shared/api/ComparisonGroupClient';
+import {
+    Group,
+    Session,
+    SessionGroupData,
+} from '../../shared/api/ComparisonGroupClient';
 import { AppStore } from '../../AppStore';
 import { getNumSamples } from '../groupComparison/GroupComparisonUtils';
 import autobind from 'autobind-decorator';
@@ -194,12 +198,25 @@ import { ChartTypeEnum } from 'pages/studyView/StudyViewConfig';
 import {
     fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAssayType,
     fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
+    fetchGenericAssayDataByStableIdsAndMolecularIds,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import ComplexKeySet from '../../shared/lib/complexKeyDataStructures/ComplexKeySet';
 import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mutationMapper/MutationMapperUtils';
 import { getGenomeNexusHgvsgUrl } from 'shared/api/urls';
 import ResultsViewComparisonStore from './comparison/ResultsViewComparisonStore';
 import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
+import {
+    ALTERED_COLOR,
+    completeSessionGroups,
+    getAlteredByOncoprintTrackGroups,
+    getAlteredVsUnalteredGroups,
+    ResultsViewComparisonGroup,
+    UNALTERED_COLOR,
+} from './comparison/ResultsViewComparisonUtils';
+import { makeUniqueColorGetter } from '../../shared/components/plots/PlotUtils';
+import ifNotDefined from '../../shared/lib/ifNotDefined';
+import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
+import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -551,6 +568,10 @@ export class ResultsViewPageStore {
 
     public driverAnnotationsReactionDisposer: any;
 
+    private mutationMapperStoreByGene: {
+        [hugoGeneSymbol: string]: ResultsViewMutationMapperStore;
+    } = {};
+
     @computed get oqlText() {
         return this.urlWrapper.query.gene_list;
     }
@@ -649,6 +670,30 @@ export class ResultsViewPageStore {
     public setExcludeGermlineMutations(e: boolean) {
         this.urlWrapper.updateURL({
             exclude_germline_mutations: e.toString(),
+        });
+    }
+
+    @computed
+    public get usePatientLevelEnrichments() {
+        return this.urlWrapper.query.patient_enrichments === 'true';
+    }
+
+    @autobind
+    @action
+    public setUsePatientLevelEnrichments(e: boolean) {
+        this.urlWrapper.updateURL({ patient_enrichments: e.toString() });
+    }
+
+    @computed
+    public get hideUnprofiledSamples() {
+        return this.urlWrapper.query.hide_unprofiled_samples === 'true';
+    }
+
+    @autobind
+    @action
+    public setHideUnprofiledSamples(e: boolean) {
+        this.urlWrapper.updateURL({
+            hide_unprofiled_samples: e.toString(),
         });
     }
 
@@ -812,7 +857,7 @@ export class ResultsViewPageStore {
         }
     }
 
-    readonly comparisonGroups = remoteData<Group[]>({
+    readonly savedComparisonGroupsForStudies = remoteData<Group[]>({
         await: () => [this.queriedStudies],
         invoke: async () => {
             let ret: Group[] = [];
@@ -829,20 +874,106 @@ export class ResultsViewPageStore {
             }
             // add any groups that are referenced in URL
             for (const id of this.comparisonGroupsReferencedInURL) {
-                ret.push(await comparisonClient.getGroup(id));
+                try {
+                    ret.push(await comparisonClient.getGroup(id));
+                } catch (e) {
+                    // ignore any errors with group ids that don't exist
+                }
             }
             return ret;
+        },
+    });
+
+    readonly queryDerivedGroups = remoteData<SessionGroupData[]>({
+        await: () => [
+            this.studyIds,
+            this.filteredAlteredSamples,
+            this.filteredUnalteredSamples,
+            this.filteredAlteredPatients,
+            this.filteredUnalteredPatients,
+            this.filteredSamples,
+            this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine,
+            this.defaultOQLQuery,
+        ],
+        invoke: () => {
+            const groups: SessionGroupData[] = [];
+
+            // altered/unaltered groups
+            groups.push(
+                ...getAlteredVsUnalteredGroups(
+                    this.usePatientLevelEnrichments,
+                    this.studyIds.result!,
+                    this.filteredAlteredSamples.result!,
+                    this.filteredUnalteredSamples.result!,
+                    this.queryContainsOql
+                )
+            );
+
+            // altered per oncoprint track groups
+            groups.push(
+                ...getAlteredByOncoprintTrackGroups(
+                    this.usePatientLevelEnrichments,
+                    this.studyIds.result!,
+                    this.filteredSamples.result!,
+                    this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine
+                        .result!,
+                    this.defaultOQLQuery.result!
+                )
+            );
+            return Promise.resolve(groups);
+        },
+    });
+
+    readonly comparisonTabComparisonSession = remoteData<Session>({
+        await: () => [this.studyIds],
+        invoke: () => {
+            const sessionId = this.urlWrapper.query
+                .comparison_createdGroupsSessionId;
+
+            if (sessionId) {
+                // if theres a session holding onto user-created groups, add groups from there
+                return comparisonClient.getComparisonSession(sessionId);
+            } else {
+                return Promise.resolve({
+                    id: '',
+                    groups: [],
+                    origin: this.studyIds.result!,
+                });
+            }
+        },
+    });
+    readonly comparisonTabGroups = remoteData<ResultsViewComparisonGroup[]>({
+        await: () => [
+            this.queryDerivedGroups,
+            this.comparisonTabComparisonSession,
+            this.sampleMap,
+        ],
+        invoke: () => {
+            const uniqueColorGetter = makeUniqueColorGetter([
+                ALTERED_COLOR,
+                UNALTERED_COLOR,
+            ]);
+            const groups = this.queryDerivedGroups.result!.concat(
+                this.comparisonTabComparisonSession.result!.groups
+            );
+            const defaultOrderGroups = completeSessionGroups(
+                this.usePatientLevelEnrichments,
+                groups,
+                this.sampleMap.result!,
+                uniqueColorGetter
+            );
+            return Promise.resolve(defaultOrderGroups);
         },
     });
 
     readonly clinicalAttributes_comparisonGroupMembership = remoteData<
         (ClinicalAttribute & { comparisonGroup: Group })[]
     >({
-        await: () => [this.comparisonGroups],
+        await: () => [this.savedComparisonGroupsForStudies],
         invoke: () =>
             Promise.resolve(
                 makeComparisonGroupClinicalAttributes(
-                    this.comparisonGroups.result!
+                    this.savedComparisonGroupsForStudies.result!
                 )
             ),
     });
@@ -930,7 +1061,7 @@ export class ResultsViewPageStore {
     readonly clinicalAttributeIdToAvailableSampleCount = remoteData({
         await: () => [
             this.samples,
-            this.sampleSet,
+            this.sampleMap,
             this.studies,
             this.clinicalAttributes,
             this.studyToDataQueryFilter,
@@ -1005,13 +1136,13 @@ export class ResultsViewPageStore {
                 ret[attr.clinicalAttributeId] = this.samples.result!.length;
             }
             // add counts for "ComparisonGroup" clinical attributes
-            const sampleSet = this.sampleSet.result!;
+            const sampleMap = this.sampleMap.result!;
             for (const attr of this.clinicalAttributes_comparisonGroupMembership
                 .result!) {
                 ret[attr.clinicalAttributeId] = getNumSamples(
                     attr.comparisonGroup!.data,
                     (studyId, sampleId) => {
-                        return sampleSet.has({ studyId, sampleId });
+                        return sampleMap.has({ studyId, sampleId });
                     }
                 );
             }
@@ -1021,9 +1152,9 @@ export class ResultsViewPageStore {
 
     readonly cnSegments = remoteData<CopyNumberSeg[]>(
         {
-            await: () => [this.samples],
+            await: () => [this.filteredSamples],
             invoke: () =>
-                fetchCopyNumberSegmentsForSamples(this.samples.result),
+                fetchCopyNumberSegmentsForSamples(this.filteredSamples.result!),
         },
         []
     );
@@ -1032,7 +1163,11 @@ export class ResultsViewPageStore {
         [chromosome: string]: MobxPromise<CopyNumberSeg[]>;
     }>(
         {
-            await: () => [this.genes, this.samples, this.referenceGenes],
+            await: () => [
+                this.genes,
+                this.filteredSamples,
+                this.referenceGenes,
+            ],
             invoke: () => {
                 const uniqueReferenceGeneChromosomes = _.uniq(
                     this.referenceGenes.result!.map(g => g.chromosome)
@@ -1050,7 +1185,7 @@ export class ResultsViewPageStore {
                             map[chromosome] = remoteData<CopyNumberSeg[]>({
                                 invoke: () =>
                                     fetchCopyNumberSegmentsForSamples(
-                                        this.samples.result,
+                                        this.filteredSamples.result!,
                                         chromosome
                                     ),
                             });
@@ -1072,9 +1207,9 @@ export class ResultsViewPageStore {
             this.samples,
         ],
         invoke: () => {
-            // we get mutations with mutations endpoint, structural variants and fusions with structural variant endpoint.
-            // filter out mutation genetic profile and structural variant profiles
-            const profilesWithoutMutationProfile = excludeMutationAndSVProfiles(
+            // we get mutations with mutations endpoint, structural variants and fusions with structural variant endpoint, generic assay with generic assay endpoint.
+            // filter out mutation genetic profile and structural variant profiles and generic assay profiles
+            const profilesWithoutMutationProfile = excludeSpecialMolecularProfiles(
                 this.selectedMolecularProfiles.result!
             );
             const genes = this.genes.result;
@@ -1134,7 +1269,7 @@ export class ResultsViewPageStore {
         invoke: () => {
             // we get mutations with mutations endpoint, structural variants and fusions with structural variant endpoint.
             // filter out mutation genetic profile and structural variant profiles
-            const profilesWithoutMutationProfile = excludeMutationAndSVProfiles(
+            const profilesWithoutMutationProfile = excludeSpecialMolecularProfiles(
                 this.nonSelectedDownloadableMolecularProfiles.result
             );
             const genes = this.genes.result;
@@ -1317,9 +1452,10 @@ export class ResultsViewPageStore {
                 const dataQueryFilter = studyToDataQueryFilter[profile.studyId];
 
                 // there could be no samples if a study doesn't have a sample list matching a specified category (e.g. cna only)
+                // skip when sampleIds is an empty list
                 if (
                     !dataQueryFilter ||
-                    (!dataQueryFilter.sampleIds &&
+                    (_.isEmpty(dataQueryFilter.sampleIds) &&
                         !dataQueryFilter.sampleListId)
                 ) {
                     continue;
@@ -1506,6 +1642,14 @@ export class ResultsViewPageStore {
         ],
         invoke: () => {
             if (this.oqlText.trim() != '') {
+                let data: (
+                    | AnnotatedMutation
+                    | AnnotatedNumericGeneMolecularData
+                )[] = [];
+                data = data.concat(this.filteredAndAnnotatedMutations.result!);
+                data = data.concat(
+                    this.filteredAndAnnotatedMolecularData.result!
+                );
                 return Promise.resolve(
                     filterCBioPortalWebServiceData(
                         this.oqlText,
@@ -1629,7 +1773,7 @@ export class ResultsViewPageStore {
     readonly isSampleAlteredMap = remoteData({
         await: () => [
             this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine,
-            this.samples,
+            this.filteredSamples,
             this.coverageInformation,
             this.selectedMolecularProfiles,
             this.studyToMolecularProfiles,
@@ -1637,7 +1781,7 @@ export class ResultsViewPageStore {
         invoke: async () => {
             return getSampleAlteredMap(
                 this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!,
-                this.samples.result,
+                this.filteredSamples.result!,
                 this.oqlText,
                 this.coverageInformation.result,
                 this.selectedMolecularProfiles.result!.map(
@@ -1768,50 +1912,11 @@ export class ResultsViewPageStore {
         { samples: {}, patients: {} }
     );
 
-    readonly sequencedSampleKeys = remoteData<string[]>({
-        await: () => [
-            this.samples,
-            this.coverageInformation,
-            this.selectedMolecularProfiles,
-        ],
-        invoke: () => {
-            const genePanelInformation = this.coverageInformation.result!;
-            const profileIds = this.selectedMolecularProfiles.result!.map(
-                p => p.molecularProfileId
-            );
-            return Promise.resolve(
-                _.chain(this.samples.result!)
-                    .filter(sample => {
-                        return _.some(
-                            isSampleProfiledInMultiple(
-                                sample.uniqueSampleKey,
-                                profileIds,
-                                genePanelInformation
-                            )
-                        );
-                    })
-                    .map(s => s.uniqueSampleKey)
-                    .value()
-            );
-        },
-    });
-
-    readonly sequencedPatientKeys = remoteData<string[]>({
-        await: () => [this.sampleKeyToSample, this.sequencedSampleKeys],
-        invoke: async () => {
-            const sampleKeyToSample = this.sampleKeyToSample.result!;
-            return _.chain(this.sequencedSampleKeys.result!)
-                .map(k => sampleKeyToSample[k].uniquePatientKey)
-                .uniq()
-                .value();
-        },
-    });
-
-    readonly sequencedSampleKeysByGene = remoteData<{
+    readonly filteredSequencedSampleKeysByGene = remoteData<{
         [hugoGeneSymbol: string]: string[];
     }>({
         await: () => [
-            this.samples,
+            this.filteredSamples,
             this.genes,
             this.coverageInformation,
             this.selectedMolecularProfiles,
@@ -1827,7 +1932,7 @@ export class ResultsViewPageStore {
                         map: { [hugoGeneSymbol: string]: string[] },
                         next: Gene
                     ) => {
-                        map[next.hugoGeneSymbol] = this.samples
+                        map[next.hugoGeneSymbol] = this.filteredSamples
                             .result!.map(s => s.uniqueSampleKey)
                             .filter(k => {
                                 return _.some(
@@ -1847,26 +1952,17 @@ export class ResultsViewPageStore {
         },
     });
 
-    readonly existUnsequencedSamplesInAGene = remoteData<boolean>({
-        await: () => [this.samples, this.sequencedSampleKeysByGene],
-        invoke: () => {
-            const totalSamples = this.samples.result!.length;
-            return Promise.resolve(
-                _.some(this.sequencedSampleKeysByGene.result!, sampleKeys => {
-                    return sampleKeys.length < totalSamples;
-                })
-            );
-        },
-    });
-
-    readonly sequencedPatientKeysByGene = remoteData<{
+    readonly filteredSequencedPatientKeysByGene = remoteData<{
         [hugoGeneSymbol: string]: string[];
     }>({
-        await: () => [this.sampleKeyToSample, this.sequencedSampleKeysByGene],
+        await: () => [
+            this.sampleKeyToSample,
+            this.filteredSequencedSampleKeysByGene,
+        ],
         invoke: async () => {
             const sampleKeyToSample = this.sampleKeyToSample.result!;
             return _.mapValues(
-                this.sequencedSampleKeysByGene.result!,
+                this.filteredSequencedSampleKeysByGene.result!,
                 sampleKeys => {
                     return _.chain(sampleKeys)
                         .map(k => sampleKeyToSample[k].uniquePatientKey)
@@ -1877,13 +1973,13 @@ export class ResultsViewPageStore {
         },
     });
 
-    readonly alteredSampleKeys = remoteData({
-        await: () => [this.samples, this.oqlFilteredCaseAggregatedData],
+    readonly filteredAlteredSampleKeys = remoteData({
+        await: () => [this.filteredSamples, this.oqlFilteredCaseAggregatedData],
         invoke: () => {
             const caseAggregatedData = this.oqlFilteredCaseAggregatedData
                 .result!.samples;
             return Promise.resolve(
-                this.samples
+                this.filteredSamples
                     .result!.map(s => s.uniqueSampleKey)
                     .filter(sampleKey => {
                         return caseAggregatedData[sampleKey].length > 0;
@@ -1892,12 +1988,15 @@ export class ResultsViewPageStore {
         },
     });
 
-    readonly alteredSamples = remoteData<Sample[]>(
+    readonly filteredAlteredSamples = remoteData<Sample[]>(
         {
-            await: () => [this.sampleKeyToSample, this.alteredSampleKeys],
+            await: () => [
+                this.sampleKeyToSample,
+                this.filteredAlteredSampleKeys,
+            ],
             invoke: () => {
                 return Promise.resolve(
-                    this.alteredSampleKeys.result!.map(
+                    this.filteredAlteredSampleKeys.result!.map(
                         a => this.sampleKeyToSample.result![a]
                     )
                 );
@@ -1906,13 +2005,16 @@ export class ResultsViewPageStore {
         []
     );
 
-    readonly alteredPatients = remoteData({
-        await: () => [this.patients, this.oqlFilteredCaseAggregatedData],
+    readonly filteredAlteredPatients = remoteData({
+        await: () => [
+            this.filteredPatients,
+            this.oqlFilteredCaseAggregatedData,
+        ],
         invoke: () => {
             const caseAggregatedData = this.oqlFilteredCaseAggregatedData
                 .result!;
             return Promise.resolve(
-                this.patients.result!.filter(
+                this.filteredPatients.result!.filter(
                     patient =>
                         !!caseAggregatedData.patients[patient.uniquePatientKey]
                             .length
@@ -1921,21 +2023,23 @@ export class ResultsViewPageStore {
         },
     });
 
-    readonly alteredPatientKeys = remoteData({
-        await: () => [this.alteredPatients],
+    readonly filteredAlteredPatientKeys = remoteData({
+        await: () => [this.filteredAlteredPatients],
         invoke: () =>
             Promise.resolve(
-                this.alteredPatients.result!.map(p => p.uniquePatientKey)
+                this.filteredAlteredPatients.result!.map(
+                    p => p.uniquePatientKey
+                )
             ),
     });
 
-    readonly unalteredSampleKeys = remoteData({
-        await: () => [this.samples, this.oqlFilteredCaseAggregatedData],
+    readonly filteredUnalteredSampleKeys = remoteData({
+        await: () => [this.filteredSamples, this.oqlFilteredCaseAggregatedData],
         invoke: () => {
             const caseAggregatedData = this.oqlFilteredCaseAggregatedData
                 .result!;
             return Promise.resolve(
-                this.samples
+                this.filteredSamples
                     .result!.map(s => s.uniqueSampleKey)
                     .filter(
                         sampleKey =>
@@ -1945,12 +2049,15 @@ export class ResultsViewPageStore {
         },
     });
 
-    readonly unalteredSamples = remoteData<Sample[]>(
+    readonly filteredUnalteredSamples = remoteData<Sample[]>(
         {
-            await: () => [this.sampleKeyToSample, this.unalteredSampleKeys],
+            await: () => [
+                this.sampleKeyToSample,
+                this.filteredUnalteredSampleKeys,
+            ],
             invoke: () => {
                 const unalteredSamples: Sample[] = [];
-                this.unalteredSampleKeys.result!.forEach(a =>
+                this.filteredUnalteredSampleKeys.result!.forEach(a =>
                     unalteredSamples.push(this.sampleKeyToSample.result![a])
                 );
                 return Promise.resolve(unalteredSamples);
@@ -1959,21 +2066,16 @@ export class ResultsViewPageStore {
         []
     );
 
-    readonly unalteredPatientKeys = remoteData({
-        await: () => [this.unalteredPatients],
-        invoke: () =>
-            Promise.resolve(
-                this.unalteredPatients.result!.map(p => p.uniquePatientKey)
-            ),
-    });
-
-    readonly unalteredPatients = remoteData({
-        await: () => [this.patients, this.oqlFilteredCaseAggregatedData],
+    readonly filteredUnalteredPatients = remoteData({
+        await: () => [
+            this.filteredPatients,
+            this.oqlFilteredCaseAggregatedData,
+        ],
         invoke: () => {
             const caseAggregatedData = this.oqlFilteredCaseAggregatedData
                 .result!;
             return Promise.resolve(
-                this.patients.result!.filter(
+                this.filteredPatients.result!.filter(
                     patient =>
                         !caseAggregatedData.patients[patient.uniquePatientKey]
                             .length
@@ -2049,20 +2151,20 @@ export class ResultsViewPageStore {
             ),
     });
 
-    readonly samplesByDetailedCancerType = remoteData<{
+    readonly filteredSamplesByDetailedCancerType = remoteData<{
         [cancerType: string]: Sample[];
     }>({
-        await: () => [this.samples, this.clinicalDataForSamples],
+        await: () => [this.filteredSamples, this.clinicalDataForSamples],
         invoke: () => {
             let groupedSamples = this.groupSamplesByCancerType(
                 this.clinicalDataForSamples.result,
-                this.samples.result,
+                this.filteredSamples.result!,
                 'CANCER_TYPE'
             );
             if (_.size(groupedSamples) === 1) {
                 groupedSamples = this.groupSamplesByCancerType(
                     this.clinicalDataForSamples.result,
-                    this.samples.result,
+                    this.filteredSamples.result!,
                     'CANCER_TYPE_DETAILED'
                 );
             }
@@ -2070,12 +2172,18 @@ export class ResultsViewPageStore {
         },
     });
 
-    readonly samplesExtendedWithClinicalData = remoteData<ExtendedSample[]>({
-        await: () => [this.samples, this.clinicalDataForSamples, this.studies],
+    readonly filteredSamplesExtendedWithClinicalData = remoteData<
+        ExtendedSample[]
+    >({
+        await: () => [
+            this.filteredSamples,
+            this.clinicalDataForSamples,
+            this.studies,
+        ],
         invoke: () => {
             return Promise.resolve(
                 extendSamplesWithCancerType(
-                    this.samples.result,
+                    this.filteredSamples.result!,
                     this.clinicalDataForSamples.result,
                     this.studies.result
                 )
@@ -2428,10 +2536,12 @@ export class ResultsViewPageStore {
                         ret[sampleSpec.studyId][sampleSpec.sampleId] = true;
                     } else if (sampleSpec.sampleListId) {
                         // mark sample list to query later
-                        sampleListsToQuery.push(sampleSpec as {
-                            studyId: string;
-                            sampleListId: string;
-                        });
+                        sampleListsToQuery.push(
+                            sampleSpec as {
+                                studyId: string;
+                                sampleListId: string;
+                            }
+                        );
                     }
                 }
                 // query for sample lists
@@ -2460,15 +2570,12 @@ export class ResultsViewPageStore {
     readonly studyToSampleListId = remoteData<{ [studyId: string]: string }>({
         await: () => [this.samplesSpecification],
         invoke: async () => {
-            return this.samplesSpecification.result!.reduce(
-                (map, next) => {
-                    if (next.sampleListId) {
-                        map[next.studyId] = next.sampleListId;
-                    }
-                    return map;
-                },
-                {} as { [studyId: string]: string }
-            );
+            return this.samplesSpecification.result!.reduce((map, next) => {
+                if (next.sampleListId) {
+                    map[next.studyId] = next.sampleListId;
+                }
+                return map;
+            }, {} as { [studyId: string]: string });
         },
     });
 
@@ -2871,6 +2978,7 @@ export class ResultsViewPageStore {
             this.selectedMolecularProfiles,
             this.defaultOQLQuery,
             this.mutationsReportByGene,
+            this.filteredSampleKeyToSample,
         ],
         invoke: () => {
             return Promise.resolve(
@@ -2895,89 +3003,74 @@ export class ResultsViewPageStore {
                                     )
                             );
                         }
-                        return compileMutations(
+                        const filteredMutations = compileMutations(
                             mutationGroups,
                             this.mutationsTabFilteringSettings.excludeVus,
                             this.mutationsTabFilteringSettings.excludeGermline
                         );
+                        if (this.hideUnprofiledSamples) {
+                            // filter unprofiled samples
+                            const sampleMap = this.filteredSampleKeyToSample
+                                .result!;
+                            return filteredMutations.filter(
+                                m => m.uniqueSampleKey in sampleMap
+                            );
+                        } else {
+                            return filteredMutations;
+                        }
                     }
                 )
             );
         },
     });
 
-    readonly mutationMapperStores = remoteData<{
-        [hugoGeneSymbol: string]: ResultsViewMutationMapperStore;
-    }>(
-        {
-            await: () => [
-                this.genes,
-                this.oncoKbCancerGenes,
-                this.uniqueSampleKeyToTumorType,
-                this.mutations,
-                this.mutationsByGene,
-            ],
-            invoke: () => {
-                if (this.genes.result) {
-                    // we have to use _.reduce, otherwise this.genes.result (Immutable, due to remoteData) will return
-                    //  an Immutable as the result of reduce, and MutationMapperStore when it is made immutable all the
-                    //  mobx machinery going on in the readonly remoteDatas and observables somehow gets messed up.
-                    return Promise.resolve(
-                        _.reduce(
-                            this.genes.result,
-                            (
-                                map: {
-                                    [hugoGeneSymbol: string]: ResultsViewMutationMapperStore;
-                                },
-                                gene: Gene
-                            ) => {
-                                map[
-                                    gene.hugoGeneSymbol
-                                ] = new ResultsViewMutationMapperStore(
-                                    AppConfig.serverConfig,
-                                    {},
-                                    gene,
-                                    this.samples,
-                                    this.oncoKbCancerGenes,
-                                    () =>
-                                        this.mutationsByGene.result![
-                                            gene.hugoGeneSymbol
-                                        ] || [],
-                                    () => this.mutationCountCache,
-                                    () => this.genomeNexusCache,
-                                    () => this.genomeNexusMutationAssessorCache,
-                                    () => this.genomeNexusMyVariantInfoCache,
-                                    () => this.discreteCNACache,
-                                    this.studyToMolecularProfileDiscreteCna.result!,
-                                    this.studyIdToStudy,
-                                    this.molecularProfileIdToMolecularProfile,
-                                    this.clinicalDataForSamples,
-                                    this.studiesForSamplesWithoutCancerTypeClinicalData,
-                                    this.germlineConsentedSamples,
-                                    this.indexedHotspotData,
-                                    this.indexedVariantAnnotations,
-                                    this.uniqueSampleKeyToTumorType.result!,
-                                    this.generateGenomeNexusHgvsgUrl,
-                                    this.genomeNexusClient,
-                                    this.genomeNexusInternalClient
-                                );
-                                return map;
-                            },
-                            {}
-                        )
-                    );
-                } else {
-                    return Promise.resolve({});
-                }
+    public createMutationMapperStoreForSelectedGene(gene: Gene) {
+        const store = new ResultsViewMutationMapperStore(
+            AppConfig.serverConfig,
+            {
+                filterMutationsBySelectedTranscript: true,
             },
-        },
-        {}
-    );
+            gene,
+            this.filteredSamples,
+            this.oncoKbCancerGenes,
+            () => this.mutationsByGene.result![gene.hugoGeneSymbol] || [],
+            () => this.mutationCountCache,
+            () => this.genomeNexusCache,
+            () => this.genomeNexusMutationAssessorCache,
+            () => this.discreteCNACache,
+            this.studyToMolecularProfileDiscreteCna.result!,
+            this.studyIdToStudy,
+            this.molecularProfileIdToMolecularProfile,
+            this.clinicalDataForSamples,
+            this.studiesForSamplesWithoutCancerTypeClinicalData,
+            this.germlineConsentedSamples,
+            this.indexedHotspotData,
+            this.indexedVariantAnnotations,
+            this.uniqueSampleKeyToTumorType.result!,
+            this.generateGenomeNexusHgvsgUrl,
+            this.genomeNexusClient,
+            this.genomeNexusInternalClient,
+            () => this.urlWrapper.query.mutations_transcript_id
+        );
+        this.mutationMapperStoreByGene[gene.hugoGeneSymbol] = store;
+        return store;
+    }
 
     public getMutationMapperStore(
-        hugoGeneSymbol: string
+        gene: Gene
     ): ResultsViewMutationMapperStore | undefined {
-        return this.mutationMapperStores.result[hugoGeneSymbol];
+        if (
+            this.genes.isComplete &&
+            this.oncoKbCancerGenes.isComplete &&
+            this.uniqueSampleKeyToTumorType.isComplete &&
+            this.mutations.isComplete &&
+            this.mutationsByGene.isComplete
+        ) {
+            return this.mutationMapperStoreByGene[gene.hugoGeneSymbol]
+                ? this.mutationMapperStoreByGene[gene.hugoGeneSymbol]
+                : this.createMutationMapperStoreForSelectedGene(gene);
+        }
+        return undefined;
     }
 
     readonly oncoKbCancerGenes = remoteData(
@@ -3146,18 +3239,90 @@ export class ResultsViewPageStore {
         []
     );
 
-    readonly sampleSet = remoteData({
+    readonly sampleMap = remoteData({
         await: () => [this.samples],
         invoke: () => {
             return Promise.resolve(
-                ComplexKeySet.from(
-                    this.samples.result!.map(s => ({
-                        studyId: s.studyId,
-                        sampleId: s.sampleId,
-                    }))
-                )
+                ComplexKeyMap.from(this.samples.result!, s => ({
+                    studyId: s.studyId,
+                    sampleId: s.sampleId,
+                }))
             );
         },
+    });
+
+    readonly filteredSamples = remoteData({
+        await: () => [
+            this.samples,
+            this.coverageInformation,
+            this.genes,
+            this.selectedMolecularProfiles,
+        ],
+        invoke: () => {
+            if (this.hideUnprofiledSamples) {
+                // only show samples that are profiled in every gene in every selected profile
+                const genes = this.genes.result!;
+                const coverageInfo = this.coverageInformation.result!;
+                const queryProfileIds = this.selectedMolecularProfiles.result!.map(
+                    p => p.molecularProfileId
+                );
+                return Promise.resolve(
+                    this.samples.result!.filter(sample => {
+                        return _.every(genes, gene => {
+                            return _.every(
+                                isSampleProfiledInMultiple(
+                                    sample.uniqueSampleKey,
+                                    queryProfileIds,
+                                    coverageInfo,
+                                    gene.hugoGeneSymbol
+                                )
+                            );
+                        });
+                    })
+                );
+            } else {
+                return Promise.resolve(this.samples.result!);
+            }
+        },
+    });
+
+    readonly filteredSampleKeyToSample = remoteData({
+        await: () => [this.filteredSamples],
+        invoke: () =>
+            Promise.resolve(
+                _.keyBy(this.filteredSamples.result!, s => s.uniqueSampleKey)
+            ),
+    });
+
+    readonly filteredPatients = remoteData({
+        await: () => [
+            this.filteredSamples,
+            this.patients,
+            this.patientKeyToPatient,
+        ],
+        invoke: () => {
+            if (this.hideUnprofiledSamples) {
+                const patientKeyToPatient = this.patientKeyToPatient.result!;
+                return Promise.resolve(
+                    _.uniqBy(
+                        this.filteredSamples.result!.map(
+                            s => patientKeyToPatient[s.uniquePatientKey]
+                        ),
+                        patient => patient.uniquePatientKey
+                    )
+                );
+            } else {
+                return Promise.resolve(this.patients.result!);
+            }
+        },
+    });
+
+    readonly filteredPatientKeyToPatient = remoteData({
+        await: () => [this.filteredPatients],
+        invoke: () =>
+            Promise.resolve(
+                _.keyBy(this.filteredPatients.result!, p => p.uniquePatientKey)
+            ),
     });
 
     readonly sampleKeyToSample = remoteData({
@@ -3181,12 +3346,12 @@ export class ResultsViewPageStore {
         },
     });
 
-    readonly patientKeyToSamples = remoteData({
-        await: () => [this.samples],
+    readonly patientKeyToFilteredSamples = remoteData({
+        await: () => [this.filteredSamples],
         invoke: () => {
             return Promise.resolve(
                 _.groupBy(
-                    this.samples.result!,
+                    this.filteredSamples.result!,
                     sample => sample.uniquePatientKey
                 )
             );
@@ -3326,7 +3491,7 @@ export class ResultsViewPageStore {
             ],
             invoke: () => {
                 return Promise.resolve(
-                    excludeMutationAndSVProfiles(
+                    excludeSpecialMolecularProfiles(
                         _.difference(
                             this.molecularProfilesInStudies.result!,
                             this.selectedMolecularProfiles.result!
@@ -3356,6 +3521,24 @@ export class ResultsViewPageStore {
                             return map;
                         },
                         {}
+                    )
+                );
+            },
+        },
+        {}
+    );
+
+    readonly molecularProfileIdSuffixToMolecularProfiles = remoteData<{
+        [molecularProfileIdSuffix: string]: MolecularProfile[];
+    }>(
+        {
+            await: () => [this.molecularProfilesInStudies],
+            invoke: () => {
+                return Promise.resolve(
+                    _.groupBy(
+                        this.molecularProfilesInStudies.result,
+                        molecularProfile =>
+                            getSuffixOfMolecularProfile(molecularProfile)
                     )
                 );
             },
@@ -3775,6 +3958,103 @@ export class ResultsViewPageStore {
         },
     });
 
+    readonly genericAssayProfiles = remoteData<MolecularProfile[]>({
+        await: () => [this.molecularProfilesInStudies],
+        invoke: () => {
+            return Promise.resolve(
+                this.molecularProfilesInStudies.result.filter(
+                    profile =>
+                        profile.molecularAlterationType ===
+                        AlterationTypeConstants.GENERIC_ASSAY
+                )
+            );
+        },
+    });
+
+    readonly genericAssayProfilesGroupByProfileIdSuffix = remoteData<{
+        [profileIdSuffix: string]: MolecularProfile[];
+    }>({
+        await: () => [this.genericAssayProfiles],
+        invoke: () => {
+            return Promise.resolve(
+                _.groupBy(this.genericAssayProfiles.result, molecularProfile =>
+                    molecularProfile.molecularProfileId.replace(
+                        molecularProfile.studyId + '_',
+                        ''
+                    )
+                )
+            );
+        },
+    });
+
+    readonly genericAssayEntityStableIdsGroupByProfileIdSuffix = remoteData<{
+        [profileIdSuffix: string]: string[];
+    }>({
+        await: () => [
+            this.genericAssayEntitiesGroupByMolecularProfileId,
+            this.genericAssayProfilesGroupByProfileIdSuffix,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                _.mapValues(
+                    this.genericAssayProfilesGroupByProfileIdSuffix.result,
+                    profiles => {
+                        return _.chain(profiles)
+                            .map(
+                                profile =>
+                                    this
+                                        .genericAssayEntitiesGroupByMolecularProfileId
+                                        .result![profile.molecularProfileId]
+                            )
+                            .flatten()
+                            .map(entity => entity.stableId)
+                            .uniq()
+                            .value();
+                    }
+                )
+            );
+        },
+    });
+
+    readonly genericAssayDataGroupByProfileIdSuffix = remoteData<{
+        [profileIdSuffix: string]: GenericAssayData[];
+    }>({
+        await: () => [
+            this.genericAssayProfilesGroupByProfileIdSuffix,
+            this.genericAssayEntityStableIdsGroupByProfileIdSuffix,
+        ],
+        invoke: async () => {
+            const genericAssayDataGroupByProfileIdSuffix: {
+                [profileIdSuffix: string]: GenericAssayData[];
+            } = {};
+
+            await Promise.all(
+                _.map(
+                    this.genericAssayProfilesGroupByProfileIdSuffix.result,
+                    (profiles, profileIdSuffix) => {
+                        const molecularIds = profiles.map(
+                            profile => profile.molecularProfileId
+                        );
+                        const stableIds = this
+                            .genericAssayEntityStableIdsGroupByProfileIdSuffix
+                            .result![profileIdSuffix];
+
+                        return fetchGenericAssayDataByStableIdsAndMolecularIds(
+                            stableIds,
+                            molecularIds
+                        ).then(genericAssayData => {
+                            genericAssayDataGroupByProfileIdSuffix[
+                                profileIdSuffix
+                            ] = genericAssayData;
+                        });
+                    }
+                )
+            );
+
+            return genericAssayDataGroupByProfileIdSuffix;
+        },
+    });
+
     readonly customDriverAnnotationReport = remoteData<{
         hasBinary: boolean;
         tiers: string[];
@@ -3829,15 +4109,24 @@ export class ResultsViewPageStore {
     });
 
     readonly filteredAndAnnotatedMutations = remoteData<AnnotatedMutation[]>({
-        await: () => [this._filteredAndAnnotatedMutationsReport],
-        invoke: () =>
-            Promise.resolve(
-                compileMutations(
-                    this._filteredAndAnnotatedMutationsReport.result!,
-                    this.driverAnnotationSettings.excludeVUS,
-                    this.excludeGermlineMutations
+        await: () => [
+            this._filteredAndAnnotatedMutationsReport,
+            this.filteredSampleKeyToSample,
+        ],
+        invoke: () => {
+            const filteredMutations = compileMutations(
+                this._filteredAndAnnotatedMutationsReport.result!,
+                this.driverAnnotationSettings.excludeVUS,
+                this.excludeGermlineMutations
+            );
+            const filteredSampleKeyToSample = this.filteredSampleKeyToSample
+                .result!;
+            return Promise.resolve(
+                filteredMutations.filter(
+                    m => m.uniqueSampleKey in filteredSampleKeyToSample
                 )
-            ),
+            );
+        },
     });
 
     readonly filteredAndAnnotatedStructuralVariants = remoteData<
@@ -3928,7 +4217,10 @@ export class ResultsViewPageStore {
     readonly filteredAndAnnotatedMolecularData = remoteData<
         AnnotatedNumericGeneMolecularData[]
     >({
-        await: () => [this._filteredAndAnnotatedMolecularDataReport],
+        await: () => [
+            this._filteredAndAnnotatedMolecularDataReport,
+            this.filteredSampleKeyToSample,
+        ],
         invoke: () => {
             let data = this._filteredAndAnnotatedMolecularDataReport.result!
                 .data;
@@ -3937,7 +4229,11 @@ export class ResultsViewPageStore {
                     this._filteredAndAnnotatedMolecularDataReport.result!.vus
                 );
             }
-            return Promise.resolve(data);
+            const filteredSampleKeyToSample = this.filteredSampleKeyToSample
+                .result!;
+            return Promise.resolve(
+                data.filter(d => d.uniqueSampleKey in filteredSampleKeyToSample)
+            );
         },
     });
 
@@ -4147,6 +4443,7 @@ export class ResultsViewPageStore {
         {
             await: () => [this.mutations],
             invoke: async () =>
+                AppConfig.serverConfig.show_transcript_dropdown &&
                 this.mutations.result
                     ? await fetchVariantAnnotationsIndexedByGenomicLocation(
                           this.mutations.result,
@@ -4191,9 +4488,11 @@ export class ResultsViewPageStore {
                         return isRecurrentHotspot(mutation, indexedHotspotData);
                     });
                 } else {
-                    return Promise.resolve(((mutation: Mutation) => false) as (
-                        m: Mutation
-                    ) => boolean);
+                    return Promise.resolve(
+                        ((mutation: Mutation) => false) as (
+                            m: Mutation
+                        ) => boolean
+                    );
                 }
             } else if (this.indexedHotspotData.isError) {
                 return Promise.resolve(new Error());
@@ -4531,9 +4830,9 @@ export class ResultsViewPageStore {
         },
     });
 
-    readonly molecularProfileIdToProfiledSamples = remoteData({
+    readonly molecularProfileIdToProfiledFilteredSamples = remoteData({
         await: () => [
-            this.samples,
+            this.filteredSamples,
             this.coverageInformation,
             this.molecularProfilesInStudies,
         ],
@@ -4547,7 +4846,7 @@ export class ResultsViewPageStore {
                 ret[profileId] = [];
             }
             let profiledReport: boolean[] = [];
-            for (const sample of this.samples.result!) {
+            for (const sample of this.filteredSamples.result!) {
                 profiledReport = isSampleProfiledInMultiple(
                     sample.uniqueSampleKey,
                     profileIds,
@@ -4579,15 +4878,6 @@ export class ResultsViewPageStore {
         return new GenomeNexusMutationAssessorCache(
             createVariantAnnotationsByMutationFetcher(
                 ['annotation_summary', 'mutation_assessor'],
-                this.genomeNexusClient
-            )
-        );
-    }
-
-    @cached get genomeNexusMyVariantInfoCache() {
-        return new GenomeNexusMyVariantInfoCache(
-            createVariantAnnotationsByMutationFetcher(
-                ['my_variant_info'],
                 this.genomeNexusClient
             )
         );
@@ -4712,7 +5002,7 @@ export class ResultsViewPageStore {
     readonly geneCache = new GeneCache();
     readonly genesetCache = new GenesetCache();
 
-    public numericGeneMolecularDataCache = new MobxPromiseCache<
+    private _numericGeneMolecularDataCache = new MobxPromiseCache<
         { entrezGeneId: number; molecularProfileId: string },
         NumericGeneMolecularData[]
     >(q => ({
@@ -4738,13 +5028,31 @@ export class ResultsViewPageStore {
             }
         },
     }));
+    public numericGeneMolecularDataCache = new MobxPromiseCache<
+        { entrezGeneId: number; molecularProfileId: string },
+        NumericGeneMolecularData[]
+    >(q => ({
+        await: () => [
+            this._numericGeneMolecularDataCache.get(q),
+            this.filteredSampleKeyToSample,
+        ],
+        invoke: () => {
+            const data = this._numericGeneMolecularDataCache.get(q).result!;
+            const sampleMap = this.filteredSampleKeyToSample.result!;
+            return Promise.resolve(
+                data.filter(d => d.uniqueSampleKey in sampleMap)
+            );
+        },
+    }));
 
     public clinicalDataCache = new ClinicalDataCache(
         this.samples,
         this.patients,
         this.studyToMutationMolecularProfile,
         this.studyIdToStudy,
-        this.coverageInformation
+        this.coverageInformation,
+        this.filteredSampleKeyToSample,
+        this.filteredPatientKeyToPatient
     );
 
     public mutationCache = new MobxPromiseCache<
@@ -4764,16 +5072,24 @@ export class ResultsViewPageStore {
                         const molecularProfileId = this
                             .studyToMutationMolecularProfile.result![studyId]
                             .molecularProfileId;
-                        const dqf = this.studyToDataQueryFilter.result![
-                            studyId
-                        ];
-                        if (dqf && molecularProfileId) {
+                        const dataQueryFilter = this.studyToDataQueryFilter
+                            .result![studyId];
+
+                        if (
+                            !dataQueryFilter ||
+                            (_.isEmpty(dataQueryFilter.sampleIds) &&
+                                !dataQueryFilter.sampleListId)
+                        ) {
+                            return Promise.resolve([]);
+                        }
+
+                        if (molecularProfileId) {
                             return client.fetchMutationsInMolecularProfileUsingPOST(
                                 {
                                     molecularProfileId,
                                     mutationFilter: {
                                         entrezGeneIds: [q.entrezGeneId],
-                                        ...dqf,
+                                        ...dataQueryFilter,
                                     } as MutationFilter,
                                     projection: 'DETAILED',
                                 }

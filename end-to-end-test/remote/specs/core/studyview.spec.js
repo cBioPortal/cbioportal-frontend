@@ -539,6 +539,10 @@ describe('multi studies', () => {
         waitForNetworkQuiet();
     });
 
+    it('check for survival plots', () => {
+        assertScreenShotMatch(checkElementWithMouseDisabled('#mainColumn'));
+    });
+
     it('multi studies view should not have the raw data available', () => {
         assert(!browser.isExisting(STUDY_SUMMARY_RAW_DATA_DOWNLOAD));
     });
@@ -623,7 +627,7 @@ describe('the gene panel is loaded properly', () => {
     });
 });
 
-describe('submit genes to results view query', () => {
+describe.skip('submit genes to results view query', () => {
     it('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/study/summary?id=acc_tcga_pan_can_atlas_2018`

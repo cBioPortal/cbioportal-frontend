@@ -37,6 +37,7 @@ import {
     pickMRNAEnrichmentProfiles,
     pickMutationEnrichmentProfiles,
     pickProteinEnrichmentProfiles,
+    pickMethylationEnrichmentProfiles,
 } from '../../../pages/resultsView/enrichments/EnrichmentsUtil';
 import { makeEnrichmentDataPromise } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
 import internalClient from '../../api/cbioportalInternalClientInstance';
@@ -115,6 +116,12 @@ export default class ComparisonStore {
                     GroupComparisonTab.PROTEIN,
                     !!this.tabHasBeenShown.get(GroupComparisonTab.PROTEIN) ||
                         this.showProteinTab
+                );
+                this.tabHasBeenShown.set(
+                    GroupComparisonTab.DNAMETHYLATION,
+                    !!this.tabHasBeenShown.get(
+                        GroupComparisonTab.DNAMETHYLATION
+                    ) || this.showMethylationTab
                 );
             });
         }); // do this after timeout so that all subclasses have time to construct
@@ -196,9 +203,11 @@ export default class ComparisonStore {
             };
             if (this.isLoggedIn) {
                 // need to add all groups belonging to this user for this origin
-                ret.user = (await comparisonClient.getGroupsForStudies(
-                    this.origin.result!
-                )).map(g => g.data.name);
+                ret.user = (
+                    await comparisonClient.getGroupsForStudies(
+                        this.origin.result!
+                    )
+                ).map(g => g.data.name);
             }
             return ret;
         },
@@ -247,10 +256,10 @@ export default class ComparisonStore {
     });
 
     readonly enrichmentAnalysisGroups = remoteData({
-        await: () => [this.activeGroups, this.sampleSet],
+        await: () => [this.activeGroups, this.sampleMap],
         invoke: () => {
             const sampleSet =
-                this.sampleSet.result || new ComplexKeyMap<Sample>();
+                this.sampleMap.result || new ComplexKeyMap<Sample>();
             const groups = this.activeGroups.result!.map(group => {
                 const samples: Sample[] = [];
                 group.studies.forEach(studyEntry => {
@@ -323,12 +332,12 @@ export default class ComparisonStore {
     });
 
     readonly activeSamplesNotOverlapRemoved = remoteData({
-        await: () => [this.sampleSet, this._activeGroupsNotOverlapRemoved],
+        await: () => [this.sampleMap, this._activeGroupsNotOverlapRemoved],
         invoke: () => {
             const activeSampleIdentifiers = getSampleIdentifiers(
                 this._activeGroupsNotOverlapRemoved.result!
             );
-            const sampleSet = this.sampleSet.result!;
+            const sampleSet = this.sampleMap.result!;
             return Promise.resolve(
                 activeSampleIdentifiers.map(
                     sampleIdentifier => sampleSet.get(sampleIdentifier)!
@@ -437,6 +446,16 @@ export default class ComparisonStore {
             ),
     });
 
+    public readonly methylationEnrichmentProfiles = remoteData({
+        await: () => [this.molecularProfilesInActiveStudies],
+        invoke: () =>
+            Promise.resolve(
+                pickMethylationEnrichmentProfiles(
+                    this.molecularProfilesInActiveStudies.result!
+                )
+            ),
+    });
+
     @observable.ref private _mutationEnrichmentProfileMap: {
         [studyId: string]: MolecularProfile;
     } = {};
@@ -449,10 +468,14 @@ export default class ComparisonStore {
     @observable.ref private _proteinEnrichmentProfileMap: {
         [studyId: string]: MolecularProfile;
     } = {};
+    @observable.ref private _methylationEnrichmentProfileMap: {
+        [studyId: string]: MolecularProfile;
+    } = {};
 
     readonly selectedStudyMutationEnrichmentProfileMap = remoteData({
         await: () => [this.mutationEnrichmentProfiles],
         invoke: () => {
+            // set default enrichmentProfileMap if not selected yet
             if (_.isEmpty(this._mutationEnrichmentProfileMap)) {
                 const molecularProfilesbyStudyId = _.groupBy(
                     this.mutationEnrichmentProfiles.result!,
@@ -474,6 +497,7 @@ export default class ComparisonStore {
     readonly selectedStudyCopyNumberEnrichmentProfileMap = remoteData({
         await: () => [this.copyNumberEnrichmentProfiles],
         invoke: () => {
+            // set default enrichmentProfileMap if not selected yet
             if (_.isEmpty(this._copyNumberEnrichmentProfileMap)) {
                 const molecularProfilesbyStudyId = _.groupBy(
                     this.copyNumberEnrichmentProfiles.result!,
@@ -495,6 +519,7 @@ export default class ComparisonStore {
     readonly selectedmRNAEnrichmentProfileMap = remoteData({
         await: () => [this.mRNAEnrichmentProfiles],
         invoke: () => {
+            // set default enrichmentProfileMap if not selected yet
             if (_.isEmpty(this._mRNAEnrichmentProfileMap)) {
                 const molecularProfilesbyStudyId = _.groupBy(
                     this.mRNAEnrichmentProfiles.result!,
@@ -516,6 +541,7 @@ export default class ComparisonStore {
     readonly selectedProteinEnrichmentProfileMap = remoteData({
         await: () => [this.proteinEnrichmentProfiles],
         invoke: () => {
+            // set default enrichmentProfileMap if not selected yet
             if (_.isEmpty(this._proteinEnrichmentProfileMap)) {
                 const molecularProfilesbyStudyId = _.groupBy(
                     this.proteinEnrichmentProfiles.result!,
@@ -530,6 +556,28 @@ export default class ComparisonStore {
                 );
             } else {
                 return Promise.resolve(this._proteinEnrichmentProfileMap);
+            }
+        },
+    });
+
+    readonly selectedMethylationEnrichmentProfileMap = remoteData({
+        await: () => [this.methylationEnrichmentProfiles],
+        invoke: () => {
+            // set default enrichmentProfileMap if not selected yet
+            if (_.isEmpty(this._methylationEnrichmentProfileMap)) {
+                const molecularProfilesbyStudyId = _.groupBy(
+                    this.methylationEnrichmentProfiles.result!,
+                    profile => profile.studyId
+                );
+                // Select only one molecular profile for each study
+                return Promise.resolve(
+                    _.mapValues(
+                        molecularProfilesbyStudyId,
+                        molecularProfiles => molecularProfiles[0]
+                    )
+                );
+            } else {
+                return Promise.resolve(this._methylationEnrichmentProfileMap);
             }
         },
     });
@@ -560,6 +608,13 @@ export default class ComparisonStore {
         [studyId: string]: MolecularProfile;
     }) {
         this._proteinEnrichmentProfileMap = profileMap;
+    }
+
+    @action
+    public setMethylationEnrichmentProfileMap(profileMap: {
+        [studyId: string]: MolecularProfile;
+    }) {
+        this._methylationEnrichmentProfileMap = profileMap;
     }
 
     readonly mutationEnrichmentAnalysisGroups = remoteData({
@@ -943,7 +998,7 @@ export default class ComparisonStore {
         await: () => [this.proteinEnrichmentDataRequestGroups],
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         getSelectedProfileMap: () =>
-            this.selectedProteinEnrichmentProfileMap.result!, // returns an empty array if the selected study doesn't have any mRNA profiles
+            this.selectedProteinEnrichmentProfileMap.result!, // returns an empty array if the selected study doesn't have any protein profiles
         fetchData: () => {
             if (
                 this.proteinEnrichmentDataRequestGroups.result &&
@@ -952,6 +1007,90 @@ export default class ComparisonStore {
                 return internalClient.fetchExpressionEnrichmentsUsingPOST({
                     enrichmentType: 'SAMPLE',
                     groups: this.proteinEnrichmentDataRequestGroups.result!,
+                });
+            } else {
+                return Promise.resolve([]);
+            }
+        },
+    });
+
+    readonly methylationEnrichmentAnalysisGroups = remoteData({
+        await: () => [
+            this.selectedMethylationEnrichmentProfileMap,
+            this.enrichmentAnalysisGroups,
+        ],
+        invoke: () => {
+            let studyIds = Object.keys(
+                this.selectedMethylationEnrichmentProfileMap.result!
+            );
+            // assumes single study for now
+            if (studyIds.length === 1) {
+                return Promise.resolve(
+                    this.enrichmentAnalysisGroups.result!.reduce(
+                        (acc: EnrichmentAnalysisComparisonGroup[], group) => {
+                            // filter samples having mutation profile
+                            const filteredSamples = group.samples.filter(
+                                sample =>
+                                    this.selectedMethylationEnrichmentProfileMap
+                                        .result![sample.studyId] !== undefined
+                            );
+                            if (filteredSamples.length > 0) {
+                                acc.push({
+                                    ...group,
+                                    count: filteredSamples.length,
+                                    samples: filteredSamples,
+                                    description: `samples in ${group.name}`,
+                                });
+                            }
+                            return acc;
+                        },
+                        []
+                    )
+                );
+            } else {
+                return Promise.resolve([]);
+            }
+        },
+    });
+
+    readonly methylationEnrichmentDataRequestGroups = remoteData({
+        await: () => [
+            this.methylationEnrichmentAnalysisGroups,
+            this.selectedMethylationEnrichmentProfileMap,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                this.methylationEnrichmentAnalysisGroups.result!.map(group => {
+                    const molecularProfileCaseIdentifiers = group.samples.map(
+                        sample => ({
+                            caseId: sample.sampleId,
+                            molecularProfileId: this
+                                .selectedMethylationEnrichmentProfileMap
+                                .result![sample.studyId].molecularProfileId,
+                        })
+                    );
+                    return {
+                        name: group.name,
+                        molecularProfileCaseIdentifiers,
+                    };
+                })
+            );
+        },
+    });
+
+    readonly methylationEnrichmentData = makeEnrichmentDataPromise({
+        await: () => [this.methylationEnrichmentDataRequestGroups],
+        referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
+        getSelectedProfileMap: () =>
+            this.selectedMethylationEnrichmentProfileMap.result!, // returns an empty array if the selected study doesn't have any methylation profiles
+        fetchData: () => {
+            if (
+                this.methylationEnrichmentDataRequestGroups.result &&
+                this.methylationEnrichmentDataRequestGroups.result.length > 1
+            ) {
+                return internalClient.fetchExpressionEnrichmentsUsingPOST({
+                    enrichmentType: 'SAMPLE',
+                    groups: this.methylationEnrichmentDataRequestGroups.result!,
                 });
             } else {
                 return Promise.resolve([]);
@@ -1091,7 +1230,33 @@ export default class ComparisonStore {
         );
     }
 
-    public readonly sampleSet = remoteData({
+    @computed get methylationTabShowable() {
+        return (
+            this.methylationEnrichmentProfiles.isComplete &&
+            this.methylationEnrichmentProfiles.result!.length > 0
+        );
+    }
+
+    @computed get showMethylationTab() {
+        return (
+            this.methylationTabShowable ||
+            (this.activeGroups.isComplete &&
+                this.activeGroups.result!.length === 0 &&
+                this.tabHasBeenShown.get(GroupComparisonTab.DNAMETHYLATION))
+        );
+    }
+
+    @computed get methylationTabUnavailable() {
+        return (
+            (this.activeGroups.isComplete &&
+                this.activeGroups.result.length < 2) || //less than two active groups
+            (this.activeStudyIds.isComplete &&
+                this.activeStudyIds.result.length > 1) || //more than one active study
+            !this.methylationTabShowable
+        );
+    }
+
+    public readonly sampleMap = remoteData({
         await: () => [this.samples],
         invoke: () => {
             const sampleSet = new ComplexKeyMap<Sample>();
@@ -1156,9 +1321,9 @@ export default class ComparisonStore {
     });
 
     public readonly sampleKeyToGroups = remoteData({
-        await: () => [this._originalGroups, this.sampleSet],
+        await: () => [this._originalGroups, this.sampleMap],
         invoke: () => {
-            const sampleSet = this.sampleSet.result!;
+            const sampleSet = this.sampleMap.result!;
             const groups = this._originalGroups.result!;
             const ret: {
                 [uniqueSampleKey: string]: { [groupUid: string]: boolean };
@@ -1188,16 +1353,18 @@ export default class ComparisonStore {
         ],
         invoke: () => {
             const patientToSamplesSet = this.patientToSamplesSet.result!;
-            return Promise.resolve(partitionCasesByGroupMembership(
-                this._activeGroupsNotOverlapRemoved.result!,
-                group => getPatientIdentifiers([group]),
-                patientIdentifier =>
-                    patientToSamplesSet.get({
-                        studyId: patientIdentifier.studyId,
-                        patientId: patientIdentifier.patientId,
-                    })![0].uniquePatientKey,
-                this.activePatientKeysNotOverlapRemoved.result!
-            ) as { key: { [uid: string]: boolean }; value: string[] }[]);
+            return Promise.resolve(
+                partitionCasesByGroupMembership(
+                    this._activeGroupsNotOverlapRemoved.result!,
+                    group => getPatientIdentifiers([group]),
+                    patientIdentifier =>
+                        patientToSamplesSet.get({
+                            studyId: patientIdentifier.studyId,
+                            patientId: patientIdentifier.patientId,
+                        })![0].uniquePatientKey,
+                    this.activePatientKeysNotOverlapRemoved.result!
+                ) as { key: { [uid: string]: boolean }; value: string[] }[]
+            );
         },
     });
 

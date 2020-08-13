@@ -4,14 +4,14 @@ import * as React from 'react';
 import { ReactNode } from 'react';
 import { TableProps } from 'react-table';
 
-import { Mutation } from 'cbioportal-utils';
+import { MobxCache, Mutation } from 'cbioportal-utils';
 
 import { DefaultPubMedCache } from '../../cache/DefaultPubMedCache';
+import { MutationAlignerCache } from '../../cache/MutationAlignerCache';
 import { FilterResetPanel } from './FilterResetPanel';
 import { DataFilter } from '../../model/DataFilter';
 import { ApplyFilterFn, FilterApplier } from '../../model/FilterApplier';
 import { LollipopPlotControlsConfig } from '../../model/LollipopPlotControlsConfig';
-import { MobxCache } from '../../model/MobxCache';
 import { MutationMapperDataFetcher } from '../../model/MutationMapperDataFetcher';
 import { MutationMapperStore } from '../../model/MutationMapperStore';
 import { DefaultLollipopPlotControlsConfig } from '../../store/DefaultLollipopPlotControlsConfig';
@@ -69,8 +69,10 @@ export type MutationMapperProps = {
     mutationTableInitialSortDirection?: ColumnSortDirection;
     mutationRates?: MutationRate[];
     pubMedCache?: MobxCache;
+    mutationAlignerCache?: MobxCache;
     // TODO annotateMutations?: boolean;
     dataFetcher?: MutationMapperDataFetcher;
+    mutationAlignerUrlTemplate?: string;
     genomeNexusUrl?: string;
     oncoKbUrl?: string;
     enableOncoKb?: boolean;
@@ -97,6 +99,7 @@ export type MutationMapperProps = {
     groupFilters?: { group: string; filter: DataFilter }[];
     filterAppliersOverride?: { [filterType: string]: ApplyFilterFn };
     filterApplier?: FilterApplier;
+    onTranscriptChange?: (transcript: string) => void;
 };
 
 export function initDefaultMutationMapperStore(props: MutationMapperProps) {
@@ -232,6 +235,13 @@ export default class MutationMapper<
             : new DefaultPubMedCache();
     }
 
+    protected get mutationAlignerCache(): MobxCache {
+        // mutationAlignerUrlTemplate property is ignored if a custom cache implementation is provided
+        return this.props.mutationAlignerCache
+            ? this.props.mutationAlignerCache!
+            : new MutationAlignerCache(this.props.mutationAlignerUrlTemplate);
+    }
+
     @computed
     protected get windowWrapper(): { size: { width: number; height: number } } {
         return this.props.windowWrapper
@@ -307,6 +317,7 @@ export default class MutationMapper<
                 store={this.store}
                 controlsConfig={this.lollipopPlotControlsConfig}
                 pubMedCache={this.pubMedCache}
+                mutationAlignerCache={this.mutationAlignerCache}
                 geneWidth={this.geneWidth}
                 vizHeight={this.props.plotVizHeight}
                 trackVisibility={this.trackVisibility}
@@ -361,7 +372,7 @@ export default class MutationMapper<
                 transcriptsByTranscriptId={this.store.transcriptsByTranscriptId}
                 canonicalTranscript={this.store.canonicalTranscript}
                 loadingIndicator={this.props.geneSummaryLoadingIndicator}
-                activeTranscript={this.store.activeTranscript}
+                activeTranscript={this.store.activeTranscript!.result}
                 indexedVariantAnnotations={this.store.indexedVariantAnnotations}
                 transcriptsWithAnnotations={
                     this.store.transcriptsWithAnnotations
@@ -444,7 +455,9 @@ export default class MutationMapper<
         return (
             this.store.mutationData.isPending ||
             this.isMutationPlotDataLoading ||
-            this.isMutationTableDataLoading
+            this.isMutationTableDataLoading ||
+            (!!this.store.activeTranscript &&
+                this.store.activeTranscript.isPending)
         );
     }
 
@@ -483,8 +496,13 @@ export default class MutationMapper<
 
     @action.bound
     protected handleTranscriptChange(transcriptId: string) {
-        this.store.activeTranscript = transcriptId;
+        if (this.store.setSelectedTranscript) {
+            this.store.setSelectedTranscript(transcriptId);
+        }
         // TODO this.close3dPanel();
+        if (this.props.onTranscriptChange) {
+            this.props.onTranscriptChange(transcriptId);
+        }
     }
 
     @action.bound

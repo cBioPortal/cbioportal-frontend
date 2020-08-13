@@ -1,19 +1,8 @@
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { getClinVarId } from 'cbioportal-utils';
 import { MyVariantInfo } from 'genome-nexus-ts-api-client';
 import { observer } from 'mobx-react';
 import * as React from 'react';
-
-export function getClinVarId(myVariantInfo?: MyVariantInfo): string | null {
-    if (
-        myVariantInfo &&
-        myVariantInfo.clinVar &&
-        myVariantInfo.clinVar.variantId
-    ) {
-        return myVariantInfo.clinVar.variantId.toString();
-    } else {
-        return null;
-    }
-}
 
 export type ClinVarIdProps = {
     myVariantInfo?: MyVariantInfo;

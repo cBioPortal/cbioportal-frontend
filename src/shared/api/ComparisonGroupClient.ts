@@ -4,12 +4,10 @@ import {
     getComparisonGroupServiceUrl,
     getComparisonSessionServiceUrl,
 } from './urls';
-import { VirtualStudy, VirtualStudyData } from '../model/VirtualStudy';
-import { ClinicalAttribute } from 'cbioportal-ts-api-client';
-import PromisePlus from '../lib/PromisePlus';
+import { VirtualStudyData } from '../model/VirtualStudy';
 import { Omit } from '../lib/TypeScriptUtils';
 
-export type SessionGroupData = Omit<VirtualStudyData, 'studyViewFilter'> & {
+export type SessionGroupData = GroupData & {
     uid?: string;
     color?: string; // for charts
 };
@@ -27,21 +25,6 @@ export type Group = {
 export type GroupData = Omit<VirtualStudyData, 'studyViewFilter'>;
 
 export default class ComparisonGroupClient {
-    // edge case: user deletes a group, then opens the panel again,
-    //          and the getGroups request responds before the deleteGroup
-    //          request completes, thus showing a group that should be
-    //          (and soon will be) deleted. We fix this by waiting
-    //          until deletions are done before allowing getGroups requests.
-    private _pendingDeletions: PromisePlus<any>[] = [];
-
-    private getPendingDeletions() {
-        // filter out non-pending deletions
-        this._pendingDeletions = this._pendingDeletions.filter(
-            x => x.status !== 'pending'
-        );
-        return this._pendingDeletions.map(p => p.promise);
-    }
-
     // Groups
     public addGroup(group: GroupData): Promise<{ id: string }> {
         return request
@@ -68,8 +51,6 @@ export default class ComparisonGroupClient {
     }
 
     public async getGroupsForStudies(studyIds: string[]): Promise<Group[]> {
-        await Promise.all(this.getPendingDeletions()); // wait for pending deletions to finish
-
         return request
             .post(fetchComparisonGroupsServiceUrl())
             .send(studyIds)
@@ -79,12 +60,15 @@ export default class ComparisonGroupClient {
     }
 
     public deleteGroup(id: string) {
-        const req = request
+        return request
             .get(`${getComparisonGroupServiceUrl()}/delete/${id}`)
             .then(() => {});
+    }
 
-        this._pendingDeletions.push(new PromisePlus(req));
-        return req;
+    public addGroupToUser(id: string) {
+        return request
+            .get(`${getComparisonGroupServiceUrl()}/add/${id}`)
+            .then(() => {});
     }
 
     // Group Comparison Sessions
