@@ -127,9 +127,19 @@ export async function fetchGenericAssayData(
             } as GenericAssayDataFilter,
         };
     });
-    const dataPromises = params.map(param =>
-        client.fetchGenericAssayDataInMolecularProfileUsingPOST(param)
-    );
+    const dataPromises = params.map((param: any) => {
+        // do not request data by using empty sample list
+        if (
+            _.isEmpty(param.genericAssayDataFilter.sampleIds) &&
+            !param.genericAssayDataFilter.sampleListId
+        ) {
+            return Promise.resolve([]);
+        } else {
+            return client.fetchGenericAssayDataInMolecularProfileUsingPOST(
+                param
+            );
+        }
+    });
     const results = await Promise.all(dataPromises);
     return results;
 }
