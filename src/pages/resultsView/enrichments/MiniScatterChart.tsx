@@ -9,15 +9,14 @@ import {
 } from 'victory';
 import { observable, action, computed } from 'mobx';
 import { Popover } from 'react-bootstrap';
-import CBIOPORTAL_VICTORY_THEME, {
-    axisLabelStyles,
-} from '../../../shared/theme/cBioPoralTheme';
 import { formatLogOddsRatio } from 'shared/lib/FormatUtils';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import autobind from 'autobind-decorator';
 import SelectionComponent from './SelectionComponent';
 import HoverablePoint from './HoverablePoint';
 import {
+    axisLabelStyles,
+    CBIOPORTAL_VICTORY_THEME,
     DownloadControls,
     getTextWidth,
     truncateWithEllipsis,

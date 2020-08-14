@@ -2,14 +2,8 @@ import * as React from 'react';
 import { observer, Observer } from 'mobx-react';
 import { computed, observable, action } from 'mobx';
 import { bind } from 'bind-decorator';
-import CBIOPORTAL_VICTORY_THEME, {
-    axisTickLabelStyles,
-    legendLabelStyles,
-} from '../../theme/cBioPoralTheme';
 import ifNotDefined from '../../lib/ifNotDefined';
-import { BoxPlotModel, calculateBoxPlotModel } from '../../lib/boxPlotUtils';
-import ScatterPlotTooltip from './ScatterPlotTooltip';
-import Timer = NodeJS.Timer;
+import { calculateBoxPlotModel } from '../../lib/boxPlotUtils';
 import {
     VictoryBoxPlot,
     VictoryChart,
@@ -22,19 +16,22 @@ import { IBaseScatterPlotData } from './ScatterPlot';
 import {
     getBottomLegendHeight,
     getDeterministicRandomNumber,
-    getLegendDataHeight,
     getLegendItemsPerRow,
     getMaxLegendLabelWidth,
     LegendDataWithId,
     separateScatterDataByAppearance,
 } from './PlotUtils';
 import { logicalAnd } from '../../lib/LogicUtils';
-import { tickFormatNumeral, wrapTick } from './TickUtils';
+import { tickFormatNumeral } from './TickUtils';
 import { makeScatterPlotSizeFunction } from './PlotUtils';
 import {
-    getTextHeight,
+    CBIOPORTAL_VICTORY_THEME,
+    axisTickLabelStyles,
     getTextWidth,
+    ScatterPlotTooltip,
+    ScatterPlotTooltipHelper,
     truncateWithEllipsis,
+    wrapText,
 } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
 import { dataPointIsLimited } from 'shared/components/plots/PlotUtils';
@@ -47,8 +44,6 @@ import { Popover } from 'react-bootstrap';
 import * as ReactDOM from 'react-dom';
 import classnames from 'classnames';
 import WindowStore from '../window/WindowStore';
-import { wrapText } from 'cbioportal-frontend-commons';
-import { clamp } from '../../lib/NumberUtils';
 import LegendDataComponent from './LegendDataComponent';
 import LegendLabelComponent from './LegendLabelComponent';
 
@@ -131,65 +126,27 @@ const BOX_STYLES = {
 export default class BoxScatterPlot<
     D extends IBaseBoxScatterPlotPoint
 > extends React.Component<IBoxScatterPlotProps<D>, {}> {
-    @observable.ref private scatterPlotTooltipModel: any | null = null;
-    @observable private pointHovered: boolean = false;
-    private mouseEvents: any = this.makeMouseEvents();
     @observable.ref private container: HTMLDivElement;
     @observable.ref private boxPlotTooltipModel: any | null;
     @observable private mousePosition = { x: 0, y: 0 };
+
+    private scatterPlotTooltipHelper: ScatterPlotTooltipHelper = new ScatterPlotTooltipHelper();
 
     @bind
     private containerRef(container: HTMLDivElement) {
         this.container = container;
     }
 
-    private makeMouseEvents() {
-        let disappearTimeout: Timer | null = null;
-        const disappearDelayMs = 250;
+    get mouseEvents() {
+        return this.scatterPlotTooltipHelper.mouseEvents;
+    }
 
-        return [
-            {
-                target: 'data',
-                eventHandlers: {
-                    onMouseOver: () => {
-                        return [
-                            {
-                                target: 'data',
-                                mutation: (props: any) => {
-                                    this.scatterPlotTooltipModel = props;
-                                    this.pointHovered = true;
+    get scatterPlotTooltipModel() {
+        return this.scatterPlotTooltipHelper.tooltipModel;
+    }
 
-                                    if (disappearTimeout !== null) {
-                                        clearTimeout(disappearTimeout);
-                                        disappearTimeout = null;
-                                    }
-
-                                    return { active: true };
-                                },
-                            },
-                        ];
-                    },
-                    onMouseOut: () => {
-                        return [
-                            {
-                                target: 'data',
-                                mutation: () => {
-                                    if (disappearTimeout !== null) {
-                                        clearTimeout(disappearTimeout);
-                                    }
-
-                                    disappearTimeout = setTimeout(() => {
-                                        this.pointHovered = false;
-                                    }, disappearDelayMs);
-
-                                    return { active: false };
-                                },
-                            },
-                        ];
-                    },
-                },
-            },
-        ];
+    get pointHovered() {
+        return this.scatterPlotTooltipHelper.pointHovered;
     }
 
     private get boxPlotEvents() {
@@ -967,7 +924,7 @@ export default class BoxScatterPlot<
                 />
             );
         } else {
-            return <span></span>;
+            return <span />;
         }
     }
 

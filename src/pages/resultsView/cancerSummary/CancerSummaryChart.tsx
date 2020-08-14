@@ -18,7 +18,6 @@ import {
 import { observable, computed, action } from 'mobx';
 import { observer, Observer } from 'mobx-react';
 import { CSSProperties } from 'react';
-import CBIOPORTAL_VICTORY_THEME from '../../../shared/theme/cBioPoralTheme';
 import autobind from 'autobind-decorator';
 import { adjustedLongestLabelLength } from '../../../shared/lib/VictoryChartUtils';
 import classnames from 'classnames';
@@ -26,6 +25,7 @@ import * as ReactDOM from 'react-dom';
 import WindowStore from 'shared/components/window/WindowStore';
 import { Popover } from 'react-bootstrap';
 import {
+    CBIOPORTAL_VICTORY_THEME,
     DownloadControls,
     DataType,
     pluralize,

@@ -11,9 +11,10 @@ import {
 } from 'victory';
 import { computed, observable } from 'mobx';
 import * as _ from 'lodash';
-import CBIOPORTAL_VICTORY_THEME, {
+import {
+    CBIOPORTAL_VICTORY_THEME,
     axisTickLabelStyles,
-} from 'shared/theme/cBioPoralTheme';
+} from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
 import { ComparisonGroup } from './GroupComparisonUtils';
 import {
