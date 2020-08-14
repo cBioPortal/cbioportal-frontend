@@ -2092,7 +2092,7 @@ export class ResultsViewPageStore {
             // first group them by gene symbol
             const groupedGenesMap = _.groupBy(
                 this.oqlFilteredAlterations.result!,
-                alteration => alteration.gene.hugoGeneSymbol
+                alteration => alteration.hugoGeneSymbol
             );
             // kind of ugly but this fixes a bug where sort order of genes not respected
             // yes we are relying on add order of js map. in theory not guaranteed, in practice guaranteed

@@ -242,6 +242,21 @@ export function generateMutationDownloadData(
         : [];
 }
 
+export function generateStructuralDownloadData(
+    sampleAlterationDataByGene: { [key: string]: ExtendedAlteration[] },
+    samples: Sample[] = [],
+    genes: Gene[] = []
+): string[][] {
+    return sampleAlterationDataByGene
+        ? generateDownloadData(
+              sampleAlterationDataByGene,
+              samples,
+              genes,
+              extractStructuralVariantValue
+          )
+        : [];
+}
+
 export function generateMrnaData(
     unfilteredCaseAggregatedData?: CaseAggregatedData<ExtendedAlteration>
 ): { [key: string]: ExtendedAlteration[] } {
@@ -285,6 +300,24 @@ export function generateCnaData(
         return (
             alteration.molecularProfileAlterationType ===
             AlterationTypeConstants.COPY_NUMBER_ALTERATION
+        );
+    };
+
+    return unfilteredCaseAggregatedData
+        ? generateSampleAlterationDataByGene(
+              unfilteredCaseAggregatedData,
+              sampleFilter
+          )
+        : {};
+}
+
+export function generateStructuralVariantData(
+    unfilteredCaseAggregatedData?: CaseAggregatedData<ExtendedAlteration>
+): { [key: string]: ExtendedAlteration[] } {
+    const sampleFilter = (alteration: ExtendedAlteration) => {
+        return (
+            alteration.molecularProfileAlterationType ===
+            AlterationTypeConstants.STRUCTURAL_VARIANT
         );
     };
 
@@ -404,7 +437,7 @@ export function generateSampleAlterationDataByGene(
 
     _.values(unfilteredCaseAggregatedData.samples).forEach(alterations => {
         alterations.forEach(alteration => {
-            const key = `${alteration.gene.hugoGeneSymbol}_${alteration.uniqueSampleKey}`;
+            const key = `${alteration.hugoGeneSymbol}_${alteration.uniqueSampleKey}`;
             sampleDataByGene[key] = sampleDataByGene[key] || [];
 
             // if no filter function provided nothing is filtered out,
@@ -735,6 +768,19 @@ export function hasValidMutationData(sampleAlterationDataByGene: {
 
 function extractMutationValue(alteration: ExtendedAlteration) {
     return alteration.proteinChange;
+}
+
+export function hasValidStructuralVariantData(sampleAlterationDataByGene: {
+    [key: string]: ExtendedAlteration[];
+}): boolean {
+    return hasValidData(
+        sampleAlterationDataByGene,
+        extractStructuralVariantValue
+    );
+}
+
+function extractStructuralVariantValue(alteration: ExtendedAlteration) {
+    return alteration.eventInfo;
 }
 
 export function decideMolecularProfileSortingOrder(
