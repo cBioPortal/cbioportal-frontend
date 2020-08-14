@@ -11,12 +11,12 @@ import { TimelineStore } from './TimelineStore';
 import _ from 'lodash';
 import jQuery from 'jquery';
 import {
+    expandTracks,
     getPointInTrimmedSpaceFromScreenRead,
     REMOVE_FOR_DOWNLOAD_CLASSNAME,
 } from './lib/helpers';
 import intersect from './lib/intersect';
 import TrackHeader, {
-    expandTracks,
     EXPORT_TRACK_HEADER_BORDER_CLASSNAME,
     getTrackHeadersG,
 } from './TrackHeader';
@@ -236,7 +236,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     customTracks,
     width,
 }: ITimelineProps) {
-    const expandedTracks = expandTracks(store.data);
+    const expandedTracks = store.data;
     const height =
         TICK_AXIS_HEIGHT +
         _.sumBy(expandedTracks, t => t.height) +
@@ -247,6 +247,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
         wrapper: useRef(null),
         timeline: useRef<SVGSVGElement>(null),
         timelineTracksArea: useRef<SVGGElement>(null),
+        timelineHeadersArea: useRef(null),
         zoomSelectBox: useRef(null),
         zoomSelectBoxMask: useRef(null),
         cursorText: useRef(null),
@@ -267,6 +268,12 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
         setTimeout(() => {
             store.viewPortWidth = jQuery(
                 refs.timelineViewPort.current!
+            ).width()!;
+
+            // keep initial width so that collapsing tracks doesn't lead to
+            //  the header area shrinking in width
+            store.headersWidth = jQuery(
+                refs.timelineHeadersArea.current!
             ).width()!;
         }, 10);
 
@@ -307,10 +314,17 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                     className={'tl-timeline-leftbar'}
                     style={{ paddingTop: TICK_AXIS_HEIGHT, flexShrink: 0 }}
                 >
-                    <div className={'tl-timeline-tracklabels'}>
+                    <div
+                        ref={refs.timelineHeadersArea}
+                        className={'tl-timeline-tracklabels'}
+                        style={{
+                            minWidth: store.headersWidth,
+                        }}
+                    >
                         {expandedTracks.map(track => {
                             return (
                                 <TrackHeader
+                                    store={store}
                                     track={track.track}
                                     height={track.height}
                                     paddingLeft={track.indent}

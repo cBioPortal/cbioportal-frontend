@@ -37,7 +37,8 @@ const OTHER = 'Other';
 function organizeDataIntoTracks(
     rootTrackType: string,
     trackStructure: string[],
-    eventData: ClinicalEvent[]
+    eventData: ClinicalEvent[],
+    uid: string
 ): TimelineTrackSpecification {
     const dataByRootValue = _.groupBy(eventData, item => {
         const rootData = item.attributes.find(
@@ -54,7 +55,8 @@ function organizeDataIntoTracks(
                 const track = organizeDataIntoTracks(
                     rootValue,
                     trackStructure.slice(1),
-                    data
+                    data,
+                    `${uid}.${rootValue}`
                 );
                 return track;
             } else {
@@ -62,6 +64,7 @@ function organizeDataIntoTracks(
                 return {
                     type: rootValue,
                     items: makeItems(data),
+                    uid: `${uid}.${rootValue}`,
                 };
             }
         }
@@ -72,6 +75,7 @@ function organizeDataIntoTracks(
         type: rootTrackType,
         tracks,
         items: [],
+        uid,
     };
 
     return track;
@@ -425,7 +429,8 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                                 organizeDataIntoTracks(
                                     trackKey,
                                     trackStructuresByRoot[trackKey].slice(1),
-                                    data
+                                    data,
+                                    trackKey
                                 )
                             )
                         );
@@ -433,6 +438,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                         specs.push({
                             type: trackKey,
                             items: makeItems(data),
+                            uid: trackKey,
                         });
                     }
                     return specs;

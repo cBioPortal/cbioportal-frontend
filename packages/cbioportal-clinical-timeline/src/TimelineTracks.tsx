@@ -12,10 +12,9 @@ import { observer } from 'mobx-react';
 import $ from 'jquery';
 import { Portal } from 'react-overlays/lib';
 import { Popover } from 'react-bootstrap';
-import { sortNestedTracks } from './lib/helpers';
+import { expandTracks, sortNestedTracks } from './lib/helpers';
 import CustomTrack, { CustomTrackSpecification } from './CustomTrack';
 import { TICK_AXIS_HEIGHT } from './TickAxis';
-import { expandTracks } from './TrackHeader';
 
 export interface ITimelineTracks {
     store: TimelineStore;
@@ -27,7 +26,7 @@ export interface ITimelineTracks {
 export const TimelineTracks: React.FunctionComponent<
     ITimelineTracks
 > = observer(function({ store, width, handleTrackHover, customTracks }) {
-    const tracks = expandTracks(store.data);
+    const tracks = store.data;
 
     let nextY = 0;
 

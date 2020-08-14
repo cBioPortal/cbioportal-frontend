@@ -1,13 +1,13 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { TimelineTrackSpecification } from './types';
-import _ from 'lodash';
-import { sortNestedTracks } from './lib/helpers';
-import { getTrackHeight, TIMELINE_TRACK_HEIGHT } from './TimelineTrack';
 import { TICK_AXIS_HEIGHT } from './TickAxis';
 import { CustomTrackSpecification } from './CustomTrack';
 import { TimelineStore } from './TimelineStore';
+import { useLocalStore, useObserver } from 'mobx-react-lite';
+import { observer } from 'mobx-react';
 
 interface ITrackHeaderProps {
+    store: TimelineStore;
     track: TimelineTrackSpecification;
     handleTrackHover: (e: React.MouseEvent<any>) => void;
     height: number;
@@ -19,48 +19,58 @@ export function getTrackLabel(track: TimelineTrackSpecification) {
 }
 
 const TrackHeader: React.FunctionComponent<ITrackHeaderProps> = function({
+    store,
     track,
     handleTrackHover,
     height,
     paddingLeft = 5,
 }) {
-    return (
+    const collapseCallback = useCallback(
+        () => store.toggleTrackCollapse(track.uid),
+        [track] // todo: would this work or do i have to use a normal props and dereference the prop here?
+    );
+
+    return useObserver(() => (
         <>
             <div
                 style={{
                     paddingLeft,
                     height,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
                 }}
                 onMouseEnter={handleTrackHover}
                 onMouseLeave={handleTrackHover}
             >
-                {getTrackLabel(track)}
+                <span
+                    style={{
+                        opacity: store.isTrackCollapsed(track.uid) ? 0.5 : 1,
+                    }}
+                >
+                    {getTrackLabel(track)}
+                </span>
+                {track.tracks && track.tracks.length > 0 && (
+                    <button
+                        onClick={collapseCallback}
+                        className={'btn btn-xs btn-default'}
+                        style={{
+                            fontSize: 10,
+                            lineHeight: 0.5,
+                            padding: 3,
+                        }}
+                    >
+                        {store.isTrackCollapsed(track.uid) ? (
+                            <i className={'fa fa-plus fa-sm'} />
+                        ) : (
+                            <i className={'fa fa-minus fa-sm'} />
+                        )}
+                    </button>
+                )}
             </div>
         </>
-    );
+    ));
 };
-
-function expandTrack(
-    track: TimelineTrackSpecification,
-    indent: number
-): { track: TimelineTrackSpecification; indent: number; height: number }[] {
-    const ret = [{ track, indent, height: getTrackHeight(track) }];
-    if (track.tracks) {
-        // we want to sort nested tracks by start date of first item
-        const sortedNestedTracks = sortNestedTracks(track.tracks);
-        ret.push(
-            ..._.flatMap(sortedNestedTracks, t => expandTrack(t, indent + 17))
-        );
-    }
-    return ret;
-}
-
-export function expandTracks(
-    tracks: TimelineTrackSpecification[],
-    leftPadding: number | undefined = 5
-) {
-    return _.flatMap(tracks, t => expandTrack(t, leftPadding));
-}
 
 export const EXPORT_TRACK_HEADER_STYLE =
     'font-size: 12px;text-transform: uppercase; font-family:Arial';
@@ -68,8 +78,7 @@ export const EXPORT_TRACK_HEADER_BORDER_CLASSNAME = 'track-header-border';
 
 export function getTrackHeadersG(
     store: TimelineStore,
-    customTracks?: CustomTrackSpecification[],
-    leftPadding: number | undefined = 5
+    customTracks?: CustomTrackSpecification[]
 ) {
     const g = (document.createElementNS(
         'http://www.w3.org/2000/svg',
@@ -106,7 +115,7 @@ export function getTrackHeadersG(
 
     let y = TICK_AXIS_HEIGHT;
 
-    const expandedTracks = expandTracks(store.data, leftPadding);
+    const expandedTracks = store.data;
     for (const t of expandedTracks) {
         const text = makeTextElement(t.indent, y);
         text.textContent = getTrackLabel(t.track);

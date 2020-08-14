@@ -13,6 +13,7 @@ export enum TimelineTrackType {
 export interface TimelineTrackSpecification {
     items: TimelineEvent[];
     type: string;
+    uid: string;
     label?: string;
     tracks?: TimelineTrackSpecification[];
     renderEvent?: (e: TimelineEvent) => JSX.Element | string;

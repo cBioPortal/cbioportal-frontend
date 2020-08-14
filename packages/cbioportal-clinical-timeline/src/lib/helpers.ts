@@ -5,6 +5,7 @@ import {
 } from '../types';
 import { intersect } from './intersect';
 import _ from 'lodash';
+import { getTrackHeight } from '../TimelineTrack';
 
 export const REMOVE_FOR_DOWNLOAD_CLASSNAME = 'tl-remove-for-download';
 
@@ -186,4 +187,31 @@ export function formatDate(dayCount: number) {
         arr.push(`${days} day${days === 1 ? '' : 's'}`);
 
     return arr.join(', ');
+}
+
+function expandTrack(
+    track: TimelineTrackSpecification,
+    indent: number,
+    isTrackCollapsed: (trackUid: string) => boolean
+): { track: TimelineTrackSpecification; indent: number; height: number }[] {
+    const ret = [{ track, indent, height: getTrackHeight(track) }];
+
+    if (!isTrackCollapsed(track.uid) && track.tracks) {
+        // if track is not collapsed, then sort nested tracks and recurse
+        const sortedNestedTracks = sortNestedTracks(track.tracks);
+        ret.push(
+            ..._.flatMap(sortedNestedTracks, t =>
+                expandTrack(t, indent + 17, isTrackCollapsed)
+            )
+        );
+    }
+
+    return ret;
+}
+
+export function expandTracks(
+    tracks: TimelineTrackSpecification[],
+    isTrackCollapsed: (trackUid: string) => boolean
+) {
+    return _.flatMap(tracks, t => expandTrack(t, 5, isTrackCollapsed));
 }

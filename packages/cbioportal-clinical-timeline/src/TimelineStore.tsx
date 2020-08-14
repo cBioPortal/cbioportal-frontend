@@ -6,6 +6,7 @@ import {
 } from './types';
 import { action, computed, observable } from 'mobx';
 import {
+    expandTracks,
     getFullTicks,
     getPerc,
     getPointInTrimmedSpace,
@@ -22,8 +23,32 @@ import {
 } from './TimelineTrack';
 
 export class TimelineStore {
+    @observable.ref _data: TimelineTrackSpecification[];
+    private collapsedTracks = observable.map();
+
     constructor(tracks: TimelineTrackSpecification[]) {
-        this.data = tracks;
+        this._data = tracks;
+    }
+
+    @computed get data(): {
+        track: TimelineTrackSpecification;
+        indent: number;
+        height: number;
+    }[] {
+        // flatten track structure and annotate with important info, and filter out collapsed track children
+        return expandTracks(this._data, this.isTrackCollapsed);
+    }
+
+    @action toggleTrackCollapse(trackUid: string) {
+        if (this.collapsedTracks.has(trackUid)) {
+            this.collapsedTracks.delete(trackUid);
+        } else {
+            this.collapsedTracks.set(trackUid, true);
+        }
+    }
+
+    @autobind isTrackCollapsed(trackUid: string) {
+        return this.collapsedTracks.has(trackUid);
     }
 
     @observable private tooltipModel = null as null | {
@@ -145,6 +170,7 @@ export class TimelineStore {
         | undefined = undefined;
 
     @observable viewPortWidth: number = 0;
+    @observable headersWidth: number = 0;
 
     setZoomBounds(start?: number, end?: number) {
         if (start && end) {
@@ -187,8 +213,6 @@ export class TimelineStore {
         return this.lastTick.end + Math.abs(this.firstTick.start);
     }
 
-    @observable.ref data: TimelineTrackSpecification[];
-
     @computed get allItems(): TimelineEvent[] {
         function getItems(track: TimelineTrackSpecification): TimelineEvent[] {
             if (track.tracks && track.tracks.length > 0) {
@@ -198,7 +222,7 @@ export class TimelineStore {
             }
         }
 
-        const events = _.flattenDeep(this.data.map(t => getItems(t)));
+        const events = _.flattenDeep(this.data.map(t => getItems(t.track)));
 
         return _.sortBy(events, e => e.start);
     }
