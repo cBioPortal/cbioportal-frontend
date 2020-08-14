@@ -31,7 +31,7 @@ function makeSquiggle() {
         'L20,5',
     ];
     return (
-        <g style={{ transform: `translate(-6px, ${TICK_AXIS_HEIGHT - 6}px` }}>
+        <g transform={`translate(-6 ${TICK_AXIS_HEIGHT - 6})`}>
             <rect y={5} height={1} width={20} fill={'#ffffff'} />
             <path
                 d={points.join('')}
@@ -53,9 +53,7 @@ const TickAxis: React.FunctionComponent<ITickAxisProps> = observer(function({
         <>
             <g>
                 <rect
-                    style={{
-                        transform: `translate(0, ${TICK_AXIS_HEIGHT - 1}px)`,
-                    }}
+                    transform={`translate(0 ${TICK_AXIS_HEIGHT - 1})`}
                     fill={TICK_AXIS_COLOR}
                     height={1}
                     width={width}
@@ -73,10 +71,8 @@ const TickAxis: React.FunctionComponent<ITickAxisProps> = observer(function({
                     const majorTickPosition = store.getPosition({
                         start: startPoint,
                     });
-                    const style = majorTickPosition
-                        ? {
-                              transform: `translate(${majorTickPosition.pixelLeft}px, 0)`,
-                          }
+                    const transform = majorTickPosition
+                        ? `translate(${majorTickPosition.pixelLeft} 0)`
                         : undefined;
                     const minorTicks: JSX.Element[] = [];
 
@@ -106,9 +102,9 @@ const TickAxis: React.FunctionComponent<ITickAxisProps> = observer(function({
                         content = (
                             <>
                                 <text
+                                    dy={'1em'}
                                     style={{
                                         fill: '#333',
-                                        transform: 'translate(0, 1em)',
                                         ...TICK_LABEL_STYLE,
                                     }}
                                 >
@@ -117,10 +113,8 @@ const TickAxis: React.FunctionComponent<ITickAxisProps> = observer(function({
                                 <rect
                                     height={MAJOR_TICK_HEIGHT}
                                     width={1}
-                                    style={{
-                                        transform: `translate(0, ${TICK_AXIS_HEIGHT -
-                                            MAJOR_TICK_HEIGHT}px)`,
-                                    }}
+                                    transform={`translate(0 ${TICK_AXIS_HEIGHT -
+                                        MAJOR_TICK_HEIGHT})`}
                                     fill={'#aaa'}
                                 />
                             </>
@@ -130,17 +124,13 @@ const TickAxis: React.FunctionComponent<ITickAxisProps> = observer(function({
                             const minorTickWidth = TickIntervalEnum.MONTH;
 
                             for (let i = 1; i < 12; i++) {
-                                let minorStyle = undefined;
-
                                 const position = store.getPosition({
                                     start: startPoint + minorTickWidth * i,
                                 });
 
-                                if (position) {
-                                    minorStyle = {
-                                        transform: `translate(${position.pixelLeft}px, 0)`,
-                                    };
-                                }
+                                const transform = position
+                                    ? `translate(${position.pixelLeft} 0)`
+                                    : undefined;
 
                                 let minorLabel = '';
                                 let showLabel = false;
@@ -174,14 +164,13 @@ const TickAxis: React.FunctionComponent<ITickAxisProps> = observer(function({
                                     }
                                 }
 
-                                if (minorStyle) {
+                                if (transform) {
                                     minorTicks.push(
-                                        <g style={minorStyle}>
+                                        <g transform={transform}>
                                             <text
+                                                dy={'1.5em'}
                                                 style={{
                                                     fill: '#aaa',
-                                                    transform:
-                                                        'translate(0, 1.5em)',
                                                     ...TICK_LABEL_STYLE,
                                                 }}
                                             >
@@ -190,10 +179,8 @@ const TickAxis: React.FunctionComponent<ITickAxisProps> = observer(function({
                                             <rect
                                                 height={MINOR_TICK_HEIGHT}
                                                 width={1}
-                                                style={{
-                                                    transform: `translate(0, ${TICK_AXIS_HEIGHT -
-                                                        MINOR_TICK_HEIGHT}px)`,
-                                                }}
+                                                transform={`translate(0 ${TICK_AXIS_HEIGHT -
+                                                    MINOR_TICK_HEIGHT})`}
                                                 fill={'#aaa'}
                                             />
                                         </g>
@@ -231,8 +218,8 @@ const TickAxis: React.FunctionComponent<ITickAxisProps> = observer(function({
 
                     return (
                         <>
-                            {!rightAfterTrim && style && (
-                                <g style={style}>{content}</g>
+                            {!rightAfterTrim && transform && (
+                                <g transform={transform}>{content}</g>
                             )}
 
                             {minorTicks}

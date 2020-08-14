@@ -7,7 +7,7 @@ const SampleMarker: React.FunctionComponent<{
     y: number;
 }> = function({ color, label, y }) {
     return (
-        <g style={{ transform: `translate(0, ${y}px)` }}>
+        <g transform={`translate(0 ${y})`}>
             <circle cx="0" cy="0" r="7" fill={color} />
             <text
                 x="0"

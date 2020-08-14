@@ -89,12 +89,7 @@ export class TimelineStore {
                     height={TIMELINE_TRACK_HEIGHT}
                     style={{ marginRight: 5 }}
                 >
-                    <g
-                        style={{
-                            transform: `translate(${TIMELINE_TRACK_HEIGHT /
-                                2}px, 0)`,
-                        }}
-                    >
+                    <g transform={`translate(${TIMELINE_TRACK_HEIGHT / 2} 0)`}>
                         {renderPoint(
                             [activeItem],
                             this.tooltipModel.track,

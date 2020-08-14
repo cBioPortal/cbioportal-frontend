@@ -24,9 +24,7 @@ function renderMaskedSheet(width:number, y:number, fill:string) {
     return (
         <>
             {renderCenteredSheet(width, y, fill)}
-            <g style={{
-                transform:`translate(0, -${(1-maskProportion) * height/2}px)`
-            }}>
+            <g transform={`translate(0 -${(1-maskProportion) * height/2})`}>
                 {renderCenteredSheet(maskProportion * width, y, "#fff", 0.3)}
             </g>
         </>
