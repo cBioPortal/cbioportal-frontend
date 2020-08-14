@@ -35,9 +35,6 @@ import {
     filterScatterData,
     SurvivalPlotFilters,
 } from './SurvivalUtil';
-import CBIOPORTAL_VICTORY_THEME, {
-    baseLabelStyles,
-} from '../../../shared/theme/cBioPoralTheme';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { getPatientViewUrl } from '../../../shared/api/urls';
 import { DefaultTooltip, DownloadControls } from 'cbioportal-frontend-commons';
@@ -48,7 +45,12 @@ import { toSvgDomNodeWithLegend } from '../../studyView/StudyViewUtils';
 import classnames from 'classnames';
 import { ClinicalAttribute } from 'cbioportal-ts-api-client';
 import TruncatedTextWithTooltipSVG from '../../../shared/components/TruncatedTextWithTooltipSVG';
-import { EditableSpan, pluralize } from 'cbioportal-frontend-commons';
+import {
+    baseLabelStyles,
+    CBIOPORTAL_VICTORY_THEME,
+    EditableSpan,
+    pluralize,
+} from 'cbioportal-frontend-commons';
 
 export enum LegendLocation {
     TOOLTIP = 'tooltip',

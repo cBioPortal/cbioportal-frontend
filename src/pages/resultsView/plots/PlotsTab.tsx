@@ -71,6 +71,7 @@ import TablePlot from 'shared/components/plots/TablePlot';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import InfoIcon from '../../../shared/components/InfoIcon';
 import {
+    CBIOPORTAL_VICTORY_THEME,
     DownloadControls,
     remoteData,
     wrapText,
@@ -103,7 +104,6 @@ import ResultsViewURLWrapper, {
 import MobxPromise from 'mobxpromise';
 import { SpecialAttribute } from '../../../shared/cache/ClinicalDataCache';
 import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledCheckbox';
-import CBIOPORTAL_VICTORY_THEME from '../../../shared/theme/cBioPoralTheme';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 
