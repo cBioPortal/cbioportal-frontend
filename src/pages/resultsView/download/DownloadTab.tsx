@@ -1191,10 +1191,11 @@ export default class DownloadTab extends React.Component<
         });
     }
 
+    @autobind
     private handleTransposedStructuralVariantDownload() {
         onMobxPromise(this.structuralVariantDownloadData, data => {
             const text = this.downloadDataText(this.unzipDownloadData(data));
-            fileDownload(text, 'structural_variants.txt');
+            fileDownload(text, 'structural_variants_transposed.txt');
         });
     }
 

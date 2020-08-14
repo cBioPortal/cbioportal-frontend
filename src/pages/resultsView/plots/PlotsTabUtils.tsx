@@ -7,6 +7,8 @@ import {
     NONE_SELECTED_OPTION_NUMERICAL_VALUE,
     NONE_SELECTED_OPTION_STRING_VALUE,
     PlotType,
+    StructuralVariantCountBy,
+    PlotsTabOption,
 } from './PlotsTab';
 import { MobxPromise } from 'mobxpromise';
 import {
@@ -19,6 +21,7 @@ import {
     Mutation,
     NumericGeneMolecularData,
     Sample,
+    StructuralVariant,
 } from 'cbioportal-ts-api-client';
 import {
     capitalize,
@@ -83,6 +86,7 @@ export const CLIN_ATTR_DATA_TYPE = 'clinical_attribute';
 export const GENESET_DATA_TYPE = 'GENESET_SCORE';
 export const dataTypeToDisplayType: { [s: string]: string } = {
     [AlterationTypeConstants.MUTATION_EXTENDED]: 'Mutation',
+    [AlterationTypeConstants.STRUCTURAL_VARIANT]: 'Structural Variant',
     [AlterationTypeConstants.COPY_NUMBER_ALTERATION]: 'Copy Number',
     [AlterationTypeConstants.MRNA_EXPRESSION]: 'mRNA',
     [AlterationTypeConstants.PROTEIN_LEVEL]: 'Protein Level',
@@ -101,7 +105,6 @@ export const mutationTypeToDisplayName: {
 } = {
     missense: 'Missense',
     inframe: 'Inframe',
-    fusion: 'Fusion',
     promoter: 'Promoter',
     trunc: 'Truncating',
     other: 'Other',
@@ -110,6 +113,7 @@ export const mutationTypeToDisplayName: {
 export const dataTypeDisplayOrder = [
     CLIN_ATTR_DATA_TYPE,
     AlterationTypeConstants.MUTATION_EXTENDED,
+    AlterationTypeConstants.STRUCTURAL_VARIANT,
     AlterationTypeConstants.COPY_NUMBER_ALTERATION,
     AlterationTypeConstants.MRNA_EXPRESSION,
     GENESET_DATA_TYPE,
@@ -965,12 +969,17 @@ function makeAxisDataPromise_Molecular(
     molecularProfileIdSuffix: string,
     dataType: string,
     mutationCache: MobxPromiseCache<{ entrezGeneId: number }, Mutation[]>,
+    structuralVariantCache: MobxPromiseCache<
+        { entrezGeneId: number },
+        StructuralVariant[]
+    >,
     numericGeneMolecularDataCache: MobxPromiseCache<
         { entrezGeneId: number; molecularProfileId: string },
         NumericGeneMolecularData[]
     >,
     entrezGeneIdToGene: MobxPromise<{ [entrezGeneId: number]: Gene }>,
     mutationCountBy: MutationCountBy,
+    structuralVariantCountBy: StructuralVariantCountBy,
     coverageInformation: MobxPromise<CoverageInformation>,
     samples: MobxPromise<Sample[]>,
     molecularProfileIdSuffixToMolecularProfiles: MobxPromise<{
@@ -994,6 +1003,15 @@ function makeAxisDataPromise_Molecular(
                     ) {
                         // mutation profile
                         promises.push(mutationCache.get({ entrezGeneId }));
+                        ret.push(coverageInformation);
+                        ret.push(samples);
+                    } else if (
+                        dataType === AlterationTypeConstants.STRUCTURAL_VARIANT
+                    ) {
+                        // structural variant profile
+                        promises.push(
+                            structuralVariantCache.get({ entrezGeneId })
+                        );
                         ret.push(coverageInformation);
                         ret.push(samples);
                     } else {
@@ -1039,6 +1057,25 @@ function makeAxisDataPromise_Molecular(
                         mutations,
                         coverageInformation.result!,
                         mutationCountBy,
+                        samples.result!
+                    )
+                );
+            } else if (
+                dataType === AlterationTypeConstants.STRUCTURAL_VARIANT
+            ) {
+                // structural variant profile
+                let structuralVariants: StructuralVariant[] = [];
+                structuralVariants.push(
+                    ...structuralVariantCache.get({ entrezGeneId }).result!
+                );
+
+                return Promise.resolve(
+                    makeAxisDataPromise_Molecular_MakeStructuralVariantData(
+                        profileIds,
+                        hugoGeneSymbol,
+                        structuralVariants,
+                        coverageInformation.result!,
+                        structuralVariantCountBy,
                         samples.result!
                     )
                 );
@@ -1170,6 +1207,71 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
         categoryOrder,
     } as IStringAxisData;
 }
+export function makeAxisDataPromise_Molecular_MakeStructuralVariantData(
+    molecularProfileIds: string[],
+    hugoGeneSymbol: string,
+    structuralVariants: StructuralVariant[],
+    coverageInformation: CoverageInformation,
+    structuralVariantCountBy: StructuralVariantCountBy,
+    samples: Pick<Sample, 'uniqueSampleKey'>[]
+) {
+    // collect mutations by sample by type
+    const sampleToVariantClass = _.mapValues(
+        _.groupBy(structuralVariants, m => m.uniqueSampleKey),
+        sampleMuts => _.uniq(sampleMuts.map(m => m.variantClass))
+    );
+
+    const data = samples.map(s => {
+        const variantClasses = sampleToVariantClass[s.uniqueSampleKey];
+        let value: string | string[];
+        if (!variantClasses) {
+            // variantClasses would never be an empty array because its generated by _.groupBy,
+            //  so we need only check if it exists
+            if (
+                !_.some(
+                    isSampleProfiledInMultiple(
+                        s.uniqueSampleKey,
+                        molecularProfileIds,
+                        coverageInformation,
+                        hugoGeneSymbol
+                    ),
+                    isSampleProfiled => isSampleProfiled === true
+                )
+            ) {
+                // its not profiled
+                value = STRUCTURAL_VARIANT_PROFILE_COUNT_NOT_PROFILED;
+            } else {
+                // otherwise, its profiled and no structural variants
+                value = STRUCTURAL_VARIANT_PROFILE_COUNT_NOT_MUTATED;
+            }
+        } else {
+            // we have mutations
+            switch (structuralVariantCountBy) {
+                case StructuralVariantCountBy.VariantType:
+                    // if more than one type, its "Multiple"
+                    if (variantClasses.length > 1) {
+                        value = STRUCTURAL_VARIANT_PROFILE_COUNT_MULTIPLE;
+                    } else {
+                        value = variantClasses;
+                    }
+                    break;
+                case StructuralVariantCountBy.MutatedVsWildType:
+                default:
+                    value = STRUCTURAL_VARIANT_PROFILE_COUNT_MUTATED;
+                    break;
+            }
+        }
+        return {
+            uniqueSampleKey: s.uniqueSampleKey,
+            value,
+        };
+    });
+    return {
+        data,
+        hugoGeneSymbol,
+        datatype: 'string',
+    } as IStringAxisData;
+}
 
 function makeAxisDataPromise_Geneset(
     genesetId: string,
@@ -1293,6 +1395,10 @@ export function makeAxisDataPromise(
     entrezGeneIdToGene: MobxPromise<{ [entrezGeneId: number]: Gene }>,
     clinicalDataCache: ClinicalDataCache,
     mutationCache: MobxPromiseCache<{ entrezGeneId: number }, Mutation[]>,
+    structuralVariantCache: MobxPromiseCache<
+        { entrezGeneId: number },
+        StructuralVariant[]
+    >,
     numericGeneMolecularDataCache: MobxPromiseCache<
         { entrezGeneId: number; molecularProfileId: string },
         NumericGeneMolecularData[]
@@ -1376,9 +1482,11 @@ export function makeAxisDataPromise(
                     selection.dataSourceId,
                     selection.dataType,
                     mutationCache,
+                    structuralVariantCache,
                     numericGeneMolecularDataCache,
                     entrezGeneIdToGene,
                     selection.mutationCountBy,
+                    selection.structuralVariantCountBy,
                     coverageInformation,
                     samples,
                     molecularProfileIdSuffixToMolecularProfiles
@@ -1734,7 +1842,15 @@ const cnaCategoryOrder = ['-2', '-1', '0', '1', '2'].map(
 export const MUT_PROFILE_COUNT_MUTATED = 'Mutated';
 export const MUT_PROFILE_COUNT_MULTIPLE = 'Multiple';
 export const MUT_PROFILE_COUNT_NOT_MUTATED = 'Wild type';
-export const MUT_PROFILE_COUNT_NOT_PROFILED = 'Not profiled';
+export const MUT_PROFILE_COUNT_NOT_PROFILED = 'Not profiled for mutations';
+export const STRUCTURAL_VARIANT_PROFILE_COUNT_MUTATED =
+    'With Structural Variants';
+export const STRUCTURAL_VARIANT_PROFILE_COUNT_MULTIPLE =
+    'Multiple structural variants';
+export const STRUCTURAL_VARIANT_PROFILE_COUNT_NOT_MUTATED =
+    'No Structural Variants';
+export const STRUCTURAL_VARIANT_PROFILE_COUNT_NOT_PROFILED =
+    'Not profiled for structural variants';
 export const mutTypeCategoryOrder = [
     mutationTypeToDisplayName.missense,
     mutationTypeToDisplayName.inframe,
@@ -3280,4 +3396,15 @@ export function getLimitValues(data: any[]): string[] {
         })
         .uniq()
         .value();
+}
+
+export function isAlterationTypePresent(
+    dataTypeOptions: PlotsTabOption[],
+    vertical: boolean,
+    alterationTypeConstants: string
+) {
+    return (
+        vertical &&
+        !!dataTypeOptions.find(o => o.value === alterationTypeConstants)
+    );
 }
