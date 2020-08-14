@@ -570,6 +570,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                         store={store}
                         width={width}
                         onClickDownload={() => downloadZippedTracks(data)}
+                        hideLabels={true}
                         customTracks={[
                             {
                                 renderHeader: () => 'VAF',
