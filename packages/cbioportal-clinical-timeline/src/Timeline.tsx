@@ -27,11 +27,14 @@ import { DownloadControls } from 'cbioportal-frontend-commons';
 import CustomTrack, { CustomTrackSpecification } from './CustomTrack';
 import CustomTrackHeader from './CustomTrackHeader';
 
+import classNames from 'classnames';
+
 interface ITimelineProps {
     store: TimelineStore;
     onClickDownload: () => void;
     customTracks?: CustomTrackSpecification[];
     width: number;
+    hideLabels?: boolean;
 }
 
 const getFocusedPoints = _.debounce(function(
@@ -248,6 +251,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     store,
     customTracks,
     width,
+    hideLabels = false,
     onClickDownload,
 }: ITimelineProps) {
     const tracks = store.data;
@@ -343,7 +347,9 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                 >
                     <div
                         ref={refs.timelineHeadersArea}
-                        className={'tl-timeline-tracklabels'}
+                        className={classNames('tl-timeline-tracklabels', {
+                            'tl-displaynone': hideLabels,
+                        })}
                         style={{
                             minWidth: store.headersWidth,
                         }}
