@@ -11,7 +11,7 @@ import { TimelineStore } from './TimelineStore';
 import _ from 'lodash';
 import jQuery from 'jquery';
 import {
-    expandTracks,
+    flattenTracks,
     getPointInTrimmedSpaceFromScreenRead,
     REMOVE_FOR_DOWNLOAD_CLASSNAME,
 } from './lib/helpers';
@@ -236,10 +236,10 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     customTracks,
     width,
 }: ITimelineProps) {
-    const expandedTracks = store.data;
+    const tracks = store.data;
     const height =
         TICK_AXIS_HEIGHT +
-        _.sumBy(expandedTracks, t => t.height) +
+        _.sumBy(tracks, t => t.height) +
         _.sumBy(customTracks || [], t => t.height(store));
 
     const refs = {
@@ -321,7 +321,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                             minWidth: store.headersWidth,
                         }}
                     >
-                        {expandedTracks.map(track => {
+                        {tracks.map(track => {
                             return (
                                 <TrackHeader
                                     store={store}

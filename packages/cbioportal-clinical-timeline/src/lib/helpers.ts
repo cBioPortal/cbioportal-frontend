@@ -189,7 +189,7 @@ export function formatDate(dayCount: number) {
     return arr.join(', ');
 }
 
-function expandTrack(
+function flattenTrack(
     track: TimelineTrackSpecification,
     indent: number,
     isTrackCollapsed: (trackUid: string) => boolean
@@ -201,7 +201,7 @@ function expandTrack(
         const sortedNestedTracks = sortNestedTracks(track.tracks);
         ret.push(
             ..._.flatMap(sortedNestedTracks, t =>
-                expandTrack(t, indent + 17, isTrackCollapsed)
+                flattenTrack(t, indent + 17, isTrackCollapsed)
             )
         );
     }
@@ -209,9 +209,9 @@ function expandTrack(
     return ret;
 }
 
-export function expandTracks(
+export function flattenTracks(
     tracks: TimelineTrackSpecification[],
     isTrackCollapsed: (trackUid: string) => boolean
 ) {
-    return _.flatMap(tracks, t => expandTrack(t, 5, isTrackCollapsed));
+    return _.flatMap(tracks, t => flattenTrack(t, 5, isTrackCollapsed));
 }

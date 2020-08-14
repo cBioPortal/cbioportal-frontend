@@ -115,8 +115,8 @@ export function getTrackHeadersG(
 
     let y = TICK_AXIS_HEIGHT;
 
-    const expandedTracks = store.data;
-    for (const t of expandedTracks) {
+    const tracks = store.data;
+    for (const t of tracks) {
         const text = makeTextElement(t.indent, y);
         text.textContent = getTrackLabel(t.track);
         g.appendChild(text);

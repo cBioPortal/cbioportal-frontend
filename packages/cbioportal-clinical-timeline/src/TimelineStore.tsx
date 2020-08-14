@@ -6,7 +6,7 @@ import {
 } from './types';
 import { action, computed, observable } from 'mobx';
 import {
-    expandTracks,
+    flattenTracks,
     getFullTicks,
     getPerc,
     getPointInTrimmedSpace,
@@ -36,7 +36,7 @@ export class TimelineStore {
         height: number;
     }[] {
         // flatten track structure and annotate with important info, and filter out collapsed track children
-        return expandTracks(this._data, this.isTrackCollapsed);
+        return flattenTracks(this._data, this.isTrackCollapsed);
     }
 
     @action toggleTrackCollapse(trackUid: string) {

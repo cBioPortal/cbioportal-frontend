@@ -12,7 +12,7 @@ import { observer } from 'mobx-react';
 import $ from 'jquery';
 import { Portal } from 'react-overlays/lib';
 import { Popover } from 'react-bootstrap';
-import { expandTracks, sortNestedTracks } from './lib/helpers';
+import { flattenTracks, sortNestedTracks } from './lib/helpers';
 import CustomTrack, { CustomTrackSpecification } from './CustomTrack';
 import { TICK_AXIS_HEIGHT } from './TickAxis';
 
