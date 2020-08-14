@@ -5,15 +5,17 @@ import {
     VictoryChart,
     VictoryLabel,
     VictoryScatter,
-    VictorySelectionContainer,
 } from 'victory';
-import CBIOPORTAL_VICTORY_THEME from '../../../../shared/theme/cBioPoralTheme';
+import {
+    CBIOPORTAL_VICTORY_THEME,
+    ScatterPlotTooltip,
+    makeTooltipMouseEvents,
+    VictorySelectionContainerWithLegend,
+} from 'cbioportal-frontend-commons';
 import { computed, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import { tickFormatNumeral } from '../../../../shared/components/plots/TickUtils';
-import { makeMouseEvents } from '../../../../shared/components/plots/PlotUtils';
 import _ from 'lodash';
-import ScatterPlotTooltip from '../../../../shared/components/plots/ScatterPlotTooltip';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { AbstractChart } from '../ChartContainer';
 import { interpolatePlasma } from 'd3-scale-chromatic';
@@ -46,37 +48,6 @@ export interface IStudyViewDensityScatterPlotProps {
 const NUM_AXIS_TICKS = 8;
 const DOMAIN_PADDING = 15;
 
-class _VictorySelectionContainerWithLegend extends VictorySelectionContainer {
-    // we have to do this because otherwise adding the legend element messes up the
-    //  VictoryChart layout system
-
-    render() {
-        const {
-            activateSelectedData,
-            onSelection,
-            containerRef,
-            gradient,
-            legend,
-            children,
-            ...rest
-        } = this.props as any;
-        return (
-            <VictorySelectionContainer
-                activateSelectedData={false}
-                onSelection={onSelection}
-                containerRef={containerRef}
-                children={children
-                    .concat(legend)
-                    .concat(<defs>{gradient}</defs>)}
-                {...rest}
-            />
-        );
-    }
-}
-
-// need to do this for typescript reasons, because Victory isn't well typed
-const VictorySelectionContainerWithLegend = _VictorySelectionContainerWithLegend as any;
-
 @observer
 export default class StudyViewDensityScatterPlot
     extends React.Component<IStudyViewDensityScatterPlotProps, {}>
@@ -84,7 +55,7 @@ export default class StudyViewDensityScatterPlot
     @observable tooltipModel: any | null = null;
     @observable pointHovered: boolean = false;
     @observable mouseIsDown: boolean = false;
-    public mouseEvents: any = makeMouseEvents(this);
+    public mouseEvents: any = makeTooltipMouseEvents(this);
 
     private xAxis: any | null = null;
     private yAxis: any | null = null;

@@ -3,11 +3,6 @@ import * as React from 'react';
 import { observer, Observer } from 'mobx-react';
 import bind from 'bind-decorator';
 import { computed, observable } from 'mobx';
-import CBIOPORTAL_VICTORY_THEME, {
-    baseLabelStyles,
-    legendLabelStyles,
-} from '../../theme/cBioPoralTheme';
-import Timer = NodeJS.Timer;
 import {
     VictoryChart,
     VictoryAxis,
@@ -17,7 +12,6 @@ import {
     VictoryLine,
 } from 'victory';
 import jStat from 'jStat';
-import ScatterPlotTooltip from './ScatterPlotTooltip';
 import { tickFormatNumeral } from './TickUtils';
 import {
     computeCorrelationPValue,
@@ -25,12 +19,11 @@ import {
     separateScatterDataByAppearance,
     dataPointIsLimited,
     LegendDataWithId,
-    getLegendDataHeight,
     getBottomLegendHeight,
     getMaxLegendLabelWidth,
     getLegendItemsPerRow,
 } from './PlotUtils';
-import { clamp, toConditionalPrecision } from '../../lib/NumberUtils';
+import { toConditionalPrecision } from '../../lib/NumberUtils';
 import { getRegressionComputations } from './ScatterPlotUtils';
 import {
     IAxisLogScaleParams,
@@ -38,8 +31,10 @@ import {
 } from 'pages/resultsView/plots/PlotsTabUtils';
 import ifNotDefined from '../../lib/ifNotDefined';
 import {
-    getTextHeight,
-    getTextWidth,
+    CBIOPORTAL_VICTORY_THEME,
+    baseLabelStyles,
+    ScatterPlotTooltip,
+    ScatterPlotTooltipHelper,
     wrapText,
 } from 'cbioportal-frontend-commons';
 import LegendDataComponent from './LegendDataComponent';
@@ -105,64 +100,24 @@ const LEFT_PADDING = 25;
 export default class ScatterPlot<
     D extends IBaseScatterPlotData
 > extends React.Component<IScatterPlotProps<D>, {}> {
-    @observable.ref tooltipModel: any | null = null;
-    @observable pointHovered: boolean = false;
-    private mouseEvents: any = this.makeMouseEvents();
-
     @observable.ref private container: HTMLDivElement;
+    private tooltipHelper: ScatterPlotTooltipHelper = new ScatterPlotTooltipHelper();
 
     @bind
     private containerRef(container: HTMLDivElement) {
         this.container = container;
     }
 
-    private makeMouseEvents() {
-        let disappearTimeout: Timer | null = null;
-        const disappearDelayMs = 250;
+    get mouseEvents() {
+        return this.tooltipHelper.mouseEvents;
+    }
 
-        return [
-            {
-                target: 'data',
-                eventHandlers: {
-                    onMouseOver: () => {
-                        return [
-                            {
-                                target: 'data',
-                                mutation: (props: any) => {
-                                    this.tooltipModel = props;
-                                    this.pointHovered = true;
+    get tooltipModel() {
+        return this.tooltipHelper.tooltipModel;
+    }
 
-                                    if (disappearTimeout !== null) {
-                                        clearTimeout(disappearTimeout);
-                                        disappearTimeout = null;
-                                    }
-
-                                    return { active: true };
-                                },
-                            },
-                        ];
-                    },
-                    onMouseOut: () => {
-                        return [
-                            {
-                                target: 'data',
-                                mutation: () => {
-                                    if (disappearTimeout !== null) {
-                                        clearTimeout(disappearTimeout);
-                                    }
-
-                                    disappearTimeout = setTimeout(() => {
-                                        this.pointHovered = false;
-                                    }, disappearDelayMs);
-
-                                    return { active: false };
-                                },
-                            },
-                        ];
-                    },
-                },
-            },
-        ];
+    get pointHovered() {
+        return this.tooltipHelper.pointHovered;
     }
 
     @computed get fontFamily() {

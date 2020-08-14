@@ -8,7 +8,6 @@ import {
 } from 'victory';
 import { computed, observable } from 'mobx';
 import _ from 'lodash';
-import CBIOPORTAL_VICTORY_THEME from 'shared/theme/cBioPoralTheme';
 import { ClinicalDataBin, DataFilterValue } from 'cbioportal-ts-api-client';
 import { AbstractChart } from 'pages/studyView/charts/ChartContainer';
 import autobind from 'autobind-decorator';
@@ -22,15 +21,14 @@ import {
     needAdditionShiftForLogScaleBarChart,
 } from '../../StudyViewUtils';
 import { STUDY_VIEW_CONFIG } from '../../StudyViewConfig';
-import {
-    getTextDiagonal,
-    getTextHeight,
-    getTextWidth,
-} from 'cbioportal-frontend-commons';
 import { DEFAULT_NA_COLOR } from 'shared/lib/Colors';
 import BarChartToolTip, { ToolTipModel } from './BarChartToolTip';
 import WindowStore from 'shared/components/window/WindowStore';
 import ReactDOM from 'react-dom';
+import {
+    CBIOPORTAL_VICTORY_THEME,
+    calcPlotBottomPadding,
+} from 'cbioportal-frontend-commons';
 
 export interface IBarChartProps {
     data: ClinicalDataBin[];
@@ -183,33 +181,14 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
 
     @computed
     get bottomPadding(): number {
-        const MAX_PADDING = 40;
-        const MIN_PADDING = 10; // used when tickFormat is empty
-        const padding =
-            _.max(
-                this.tickFormat.map((tick: string | string[]) => {
-                    const content = _.isArray(tick) ? tick.join() : tick;
-                    const fontFamily =
-                        VICTORY_THEME.axis.style.tickLabels.fontFamily;
-                    const fontSize = `${VICTORY_THEME.axis.style.tickLabels.fontSize}px`;
-                    const textHeight = getTextHeight(
-                        content,
-                        fontFamily,
-                        fontSize
-                    );
-                    const textWidth = getTextWidth(
-                        content,
-                        fontFamily,
-                        fontSize
-                    );
-                    const textDiagonal = getTextDiagonal(textHeight, textWidth);
-                    return (
-                        10 +
-                        textDiagonal * Math.sin((Math.PI * TILT_ANGLE) / 180)
-                    );
-                })
-            ) || MIN_PADDING;
-        return padding > MAX_PADDING ? MAX_PADDING : padding;
+        return calcPlotBottomPadding(
+            VICTORY_THEME.axis.style.tickLabels.fontFamily,
+            VICTORY_THEME.axis.style.tickLabels.fontSize,
+            this.tickFormat,
+            TILT_ANGLE,
+            40,
+            10
+        );
     }
 
     @computed
