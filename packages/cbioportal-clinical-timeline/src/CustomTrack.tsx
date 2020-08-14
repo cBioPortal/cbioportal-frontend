@@ -28,9 +28,7 @@ const CustomTrack: React.FunctionComponent<ICustomTrackProps> = function({
     return (
         <g
             className={'tl-track'}
-            style={{
-                transform: `translate(0, ${y}px)`,
-            }}
+            transform={`translate(0 ${y})`}
             onMouseEnter={handleTrackHover}
             onMouseLeave={handleTrackHover}
         >

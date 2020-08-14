@@ -90,13 +90,17 @@ export function getTrackHeight(track: TimelineTrackSpecification) {
 
 function renderSuperscript(number: number) {
     return (
-        <g style={{ transform: 'translate(1px, -8px)' }}>
+        <g transform={'translate(1 -8)'}>
             <text
                 x={1}
                 y={0}
                 dy={'1em'}
                 className="noselect"
-                style={{ fill: '#666', pointerEvents: 'none' }}
+                style={{
+                    fontFamily: 'Arial',
+                    fill: '#666',
+                    pointerEvents: 'none',
+                }}
             >
                 <tspan style={{ fontSize: 7 }}>{number}</tspan>
             </text>
@@ -224,11 +228,6 @@ export const TimelineTrack: React.FunctionComponent<
         _.map(eventsGroupedByPosition, itemGroup => {
             const firstItem = itemGroup[0];
             const position = getPosition(firstItem, limit);
-            let style: any = {
-                transform: position
-                    ? `translate(${position.pixelLeft}px, 0)`
-                    : undefined,
-            };
 
             let content: JSX.Element | null | string = null;
 
@@ -254,7 +253,11 @@ export const TimelineTrack: React.FunctionComponent<
 
             return (
                 <g
-                    style={style}
+                    transform={
+                        position
+                            ? `translate(${position.pixelLeft} 0)`
+                            : undefined
+                    }
                     onMouseMove={e => {
                         store.setTooltipModel({
                             track: trackData,
@@ -277,9 +280,7 @@ export const TimelineTrack: React.FunctionComponent<
     return (
         <g
             className={'tl-track'}
-            style={{
-                transform: `translate(0, ${y}px)`,
-            }}
+            transform={`translate(0 ${y})`}
             onMouseEnter={handleTrackHover}
             onMouseLeave={handleTrackHover}
         >

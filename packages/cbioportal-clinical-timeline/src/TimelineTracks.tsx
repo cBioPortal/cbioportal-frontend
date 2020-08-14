@@ -33,7 +33,7 @@ export const TimelineTracks: React.FunctionComponent<
 
     return (
         <>
-            <g style={{ transform: `translate(0, ${TICK_AXIS_HEIGHT}px)` }}>
+            <g transform={`translate(0 ${TICK_AXIS_HEIGHT})`}>
                 {tracks.map(track => {
                     const y = nextY;
                     nextY += track.height;

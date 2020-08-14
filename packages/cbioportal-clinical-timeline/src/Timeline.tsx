@@ -457,8 +457,8 @@ function getSvg(
         everythingG.appendChild(timelineG);
         // Move tracks over from labels
         timelineG.setAttribute(
-            'style',
-            `transform: translate(${headersSize.width + headersPadding}px, 0)`
+            'transform',
+            `translate(${headersSize.width + headersPadding} 0)`
         );
 
         const everythingSize = everythingG.getBBox();
