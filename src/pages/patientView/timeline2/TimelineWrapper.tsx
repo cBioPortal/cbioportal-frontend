@@ -32,6 +32,8 @@ function makeItems(eventData: ClinicalEvent[]) {
     });
 }
 
+const OTHER = 'Other';
+
 function organizeDataIntoTracks(
     rootTrackType: string,
     trackStructure: string[],
@@ -41,7 +43,7 @@ function organizeDataIntoTracks(
         const rootData = item.attributes.find(
             (att: any) => att.key === trackStructure[0]
         );
-        return rootData ? rootData.value : 'Other';
+        return rootData ? rootData.value : OTHER;
     });
 
     const tracks: TimelineTrackSpecification[] = _.map(
@@ -73,6 +75,32 @@ function organizeDataIntoTracks(
     };
 
     return track;
+}
+
+function collapseOTHERTracks(rootTrack: TimelineTrackSpecification) {
+    // In-place operation modifying the input.
+
+    // Recursively find cases where there is only one child track, an Other,
+    //  and absorb its items and descendents into the parent.
+    // If rootTrack only has one child track and it is an OTHER track, then
+    //  absorb its items and descendants into rootTrack. Keep going until
+    //  this is no longer true.
+    while (
+        rootTrack.tracks &&
+        rootTrack.tracks.length === 1 &&
+        rootTrack.tracks[0].type === OTHER
+    ) {
+        rootTrack.items = rootTrack.items.concat(rootTrack.tracks[0].items);
+        rootTrack.tracks = rootTrack.tracks[0].tracks;
+    }
+
+    // Recurse
+    if (rootTrack.tracks) {
+        rootTrack.tracks.forEach(collapseOTHERTracks);
+    }
+
+    // Finally, return the (possibly modified) argument for easy chaining
+    return rootTrack;
 }
 
 export interface ISampleMetaDeta {
@@ -393,10 +421,12 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
 
                     if (trackKey in trackStructuresByRoot) {
                         specs.push(
-                            organizeDataIntoTracks(
-                                trackKey,
-                                trackStructuresByRoot[trackKey].slice(1),
-                                data
+                            collapseOTHERTracks(
+                                organizeDataIntoTracks(
+                                    trackKey,
+                                    trackStructuresByRoot[trackKey].slice(1),
+                                    data
+                                )
                             )
                         );
                     } else {

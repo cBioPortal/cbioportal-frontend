@@ -8,6 +8,7 @@ import React from 'react';
 import _ from 'lodash';
 import { formatDate, REMOVE_FOR_DOWNLOAD_CLASSNAME } from './lib/helpers';
 import { TimelineStore } from './TimelineStore';
+import { renderStack } from './svg/renderStack';
 
 export interface ITimelineTrackProps {
     trackData: TimelineTrackSpecification;
@@ -103,7 +104,7 @@ function renderSuperscript(number: number) {
     );
 }
 
-function renderLineChartLine(points: { x: number; y: number }[]) {
+function renderLineChartLines(points: { x: number; y: number }[]) {
     if (points.length < 2) {
         return null;
     }
@@ -170,7 +171,11 @@ export function renderPoint(
         return (
             <g>
                 {events.length > 1 && renderSuperscript(events.length)}
-                <circle cx="0" cy={y} r="4" fill="rgb(31, 119, 180)" />
+                {events.length > 1 ? (
+                    renderStack(10, TIMELINE_TRACK_HEIGHT / 2, '#222222')
+                ) : (
+                    <circle cx="0" cy={y} r="4" fill="rgb(31, 119, 180)" />
+                )}
             </g>
         );
     }
@@ -289,7 +294,8 @@ export const TimelineTrack: React.FunctionComponent<
                     store.setTooltipModel(null);
                 }}
             />
-            {renderLineChartLine(linePoints)}
+            {trackData.trackType === TimelineTrackType.LINE_CHART &&
+                renderLineChartLines(linePoints)}
             {points}
             <line
                 x1={0}

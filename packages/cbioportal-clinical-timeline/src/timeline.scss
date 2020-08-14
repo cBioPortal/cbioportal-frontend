@@ -71,7 +71,7 @@ $borderColor: #ccc;
 .tl-timeline-leftbar {
     .tl-timeline-tracklabels {
         font-size: 12px;
-        text-transform: capitalize;
+        text-transform: uppercase;
         > div {
             white-space: nowrap;
             border-bottom: 1px dashed #eee;

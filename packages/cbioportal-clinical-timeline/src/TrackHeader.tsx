@@ -63,7 +63,7 @@ export function expandTracks(
 }
 
 export const EXPORT_TRACK_HEADER_STYLE =
-    'font-size: 12px;text-transform: capitalize; font-family:Arial';
+    'font-size: 12px;text-transform: uppercase; font-family:Arial';
 export const EXPORT_TRACK_HEADER_BORDER_CLASSNAME = 'track-header-border';
 
 export function getTrackHeadersG(
