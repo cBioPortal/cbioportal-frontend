@@ -1614,7 +1614,9 @@ export function calculateLayout(
                 y: position.y,
                 w: dimension.w,
                 h: dimension.h,
-                isResizable: false,
+                minH: dimension.minH,
+                minW: dimension.minW,
+                isResizable: true,
             });
             const xMax = position.x + dimension.w;
             const yMax = position.y + dimension.h;
@@ -1660,7 +1662,7 @@ export function calculateNewLayoutForFocusedChart(
         y,
         w: currentFocusedChartByUserDimension.w,
         h: currentFocusedChartByUserDimension.h,
-        isResizable: false,
+        isResizable: true,
     };
 }
 

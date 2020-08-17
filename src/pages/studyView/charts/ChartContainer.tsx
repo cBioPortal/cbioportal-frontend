@@ -55,6 +55,7 @@ import {
     MultiSelectionTable,
 } from 'pages/studyView/table/MultiSelectionTable';
 import { FreqColumnTypeEnum } from '../TableUtils';
+import { Dimensions } from 'react-virtualized';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -339,9 +340,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     }
 
     // Scatter plot has a weird height setting.
-    getScatterPlotHeight() {
+    getScatterPlotHeight(height: number) {
         return (
-            STUDY_VIEW_CONFIG.layout.grid.h * 2 - this.chartHeaderHeight + 33
+            STUDY_VIEW_CONFIG.layout.grid.h * height -
+            this.chartHeaderHeight +
+            33
         );
     }
 
@@ -710,7 +713,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                     this.props.dimension,
                                     this.borderWidth
                                 )}
-                                height={this.getScatterPlotHeight()}
+                                height={this.getScatterPlotHeight(
+                                    this.props.dimension.h
+                                )}
                                 yBinsMin={MutationCountVsCnaYBinsMin}
                                 onSelection={this.props.onValueSelection}
                                 selectionBounds={

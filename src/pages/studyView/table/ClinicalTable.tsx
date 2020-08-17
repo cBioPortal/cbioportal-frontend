@@ -64,11 +64,15 @@ export default class ClinicalTable extends React.Component<
 
     @computed
     get columnsWidth() {
-        // last two columns width are 80, 60
+        const numberWidth = 80;
+        const freqWidth = 60;
+        const categoryWidth = correctColumnWidth(
+            this.props.width! - (numberWidth + freqWidth)
+        );
         return {
-            [ColumnKey.CATEGORY]: correctColumnWidth(this.props.width! - 140),
-            [ColumnKey.NUMBER]: 80,
-            [ColumnKey.FREQ]: 60,
+            [ColumnKey.CATEGORY]: categoryWidth,
+            [ColumnKey.NUMBER]: numberWidth,
+            [ColumnKey.FREQ]: freqWidth,
         };
     }
 
@@ -110,147 +114,154 @@ export default class ClinicalTable extends React.Component<
         return this.props.label ? this.props.label : ColumnKey.CATEGORY;
     }
 
-    private _columns = [
-        {
-            name: this.firstColumnName,
-            render: (data: ClinicalDataCountSummary) => {
-                return (
-                    <div
-                        className={styles.labelContent}
-                        onMouseEnter={event => {
-                            this.tooltipLabelMouseEnter(data.value);
-                        }}
-                        onMouseLeave={this.tooltipLabelMouseLeave}
-                    >
-                        <svg
-                            width="18"
-                            height="12"
-                            className={styles.labelContentSVG}
+    @computed
+    private get columns() {
+        return [
+            {
+                name: this.firstColumnName,
+                render: (data: ClinicalDataCountSummary) => {
+                    return (
+                        <div
+                            className={styles.labelContent}
+                            onMouseEnter={event => {
+                                this.tooltipLabelMouseEnter(data.value);
+                            }}
+                            onMouseLeave={this.tooltipLabelMouseLeave}
                         >
-                            <g>
-                                <rect
-                                    x="0"
-                                    y="0"
-                                    width="12"
-                                    height="12"
-                                    fill={data.color}
-                                />
-                            </g>
-                        </svg>
+                            <svg
+                                width="18"
+                                height="12"
+                                className={styles.labelContentSVG}
+                            >
+                                <g>
+                                    <rect
+                                        x="0"
+                                        y="0"
+                                        width="12"
+                                        height="12"
+                                        fill={data.color}
+                                    />
+                                </g>
+                            </svg>
+                            <EllipsisTextTooltip
+                                text={data.value}
+                            ></EllipsisTextTooltip>
+                        </div>
+                    );
+                },
+                headerRender: () => {
+                    const style: any = {};
+                    let text = this.firstColumnName;
+                    if (!this.props.label) {
+                        style.opacity = 0;
+                        text = '.';
+                    }
+                    return (
                         <EllipsisTextTooltip
-                            text={data.value}
+                            style={style}
+                            text={text}
+                            hideTooltip={true}
                         ></EllipsisTextTooltip>
-                    </div>
-                );
+                    );
+                },
+                tooltip: getClinicalAttributeOverlay(
+                    this.firstColumnName,
+                    this.props.labelDescription
+                        ? this.props.labelDescription
+                        : ''
+                ),
+                filter: (
+                    d: ClinicalDataCountSummary,
+                    f: string,
+                    filterStringUpper: string
+                ) => d.value.toUpperCase().includes(filterStringUpper),
+                sortBy: (d: ClinicalDataCountSummary) => d.value,
+                defaultSortDirection: 'asc' as 'asc',
+                width: this.columnsWidth[ColumnKey.CATEGORY],
             },
-            headerRender: () => {
-                const style: any = {};
-                let text = this.firstColumnName;
-                if (!this.props.label) {
-                    style.opacity = 0;
-                    text = '.';
-                }
-                return (
-                    <EllipsisTextTooltip
-                        style={style}
-                        text={text}
-                        hideTooltip={true}
-                    ></EllipsisTextTooltip>
-                );
-            },
-            tooltip: getClinicalAttributeOverlay(
-                this.firstColumnName,
-                this.props.labelDescription ? this.props.labelDescription : ''
-            ),
-            filter: (
-                d: ClinicalDataCountSummary,
-                f: string,
-                filterStringUpper: string
-            ) => d.value.toUpperCase().includes(filterStringUpper),
-            sortBy: (d: ClinicalDataCountSummary) => d.value,
-            defaultSortDirection: 'asc' as 'asc',
-            width: this.columnsWidth[ColumnKey.CATEGORY],
-        },
-        {
-            name: ColumnKey.NUMBER,
-            headerRender: () => {
-                return (
-                    <div
-                        style={{
-                            marginLeft: this.cellMargin[ColumnKey.NUMBER],
+            {
+                name: ColumnKey.NUMBER,
+                headerRender: () => {
+                    return (
+                        <div
+                            style={{
+                                marginLeft: this.cellMargin[ColumnKey.NUMBER],
+                            }}
+                        >
+                            #
+                        </div>
+                    );
+                },
+                render: (data: ClinicalDataCountSummary) => (
+                    <LabeledCheckbox
+                        checked={_.includes(this.props.filters, data.value)}
+                        onChange={event => this.onUserSelection(data.value)}
+                        labelProps={{
+                            style: {
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                marginLeft: this.cellMargin[ColumnKey.NUMBER],
+                                marginRight: this.cellMargin[ColumnKey.NUMBER],
+                            },
+                        }}
+                        inputProps={{
+                            className: styles.autoMarginCheckbox,
                         }}
                     >
-                        #
-                    </div>
-                );
+                        {data.count.toLocaleString()}
+                    </LabeledCheckbox>
+                ),
+                tooltip: (
+                    <span>
+                        Number of{' '}
+                        {this.props.patientAttribute ? 'patients' : 'samples'}
+                    </span>
+                ),
+                filter: (d: ClinicalDataCountSummary, f: string) =>
+                    d.count.toString().includes(f),
+                sortBy: (d: ClinicalDataCountSummary) => d.count,
+                defaultSortDirection: 'desc' as 'desc',
+                width: this.columnsWidth[ColumnKey.NUMBER],
             },
-            render: (data: ClinicalDataCountSummary) => (
-                <LabeledCheckbox
-                    checked={_.includes(this.props.filters, data.value)}
-                    onChange={event => this.onUserSelection(data.value)}
-                    labelProps={{
-                        style: {
+            {
+                name: ColumnKey.FREQ,
+                headerRender: () => {
+                    return (
+                        <div
+                            style={{
+                                marginLeft: this.cellMargin[ColumnKey.FREQ],
+                            }}
+                        >
+                            Freq
+                        </div>
+                    );
+                },
+                render: (data: ClinicalDataCountSummary) => (
+                    <span
+                        style={{
+                            flexDirection: 'row-reverse',
                             display: 'flex',
-                            justifyContent: 'space-between',
-                            marginLeft: this.cellMargin[ColumnKey.NUMBER],
-                            marginRight: this.cellMargin[ColumnKey.NUMBER],
-                        },
-                    }}
-                    inputProps={{
-                        className: styles.autoMarginCheckbox,
-                    }}
-                >
-                    {data.count.toLocaleString()}
-                </LabeledCheckbox>
-            ),
-            tooltip: (
-                <span>
-                    Number of{' '}
-                    {this.props.patientAttribute ? 'patients' : 'samples'}
-                </span>
-            ),
-            filter: (d: ClinicalDataCountSummary, f: string) =>
-                d.count.toString().includes(f),
-            sortBy: (d: ClinicalDataCountSummary) => d.count,
-            defaultSortDirection: 'desc' as 'desc',
-            width: this.columnsWidth[ColumnKey.NUMBER],
-        },
-        {
-            name: ColumnKey.FREQ,
-            headerRender: () => {
-                return (
-                    <div
-                        style={{ marginLeft: this.cellMargin[ColumnKey.FREQ] }}
+                            marginRight: this.cellMargin[ColumnKey.FREQ],
+                        }}
                     >
-                        Freq
-                    </div>
-                );
+                        {data.freq}
+                    </span>
+                ),
+                tooltip: (
+                    <span>
+                        Percentage of{' '}
+                        {this.props.patientAttribute ? 'patients' : 'samples'}
+                    </span>
+                ),
+                filter: (d: ClinicalDataCountSummary, f: string) => {
+                    return d.freq.includes(f);
+                },
+                sortBy: (d: ClinicalDataCountSummary) => d.percentage, //sort freq column using count
+                defaultSortDirection: 'desc' as 'desc',
+                width: this.columnsWidth[ColumnKey.FREQ],
             },
-            render: (data: ClinicalDataCountSummary) => (
-                <span
-                    style={{
-                        flexDirection: 'row-reverse',
-                        display: 'flex',
-                        marginRight: this.cellMargin[ColumnKey.FREQ],
-                    }}
-                >
-                    {data.freq}
-                </span>
-            ),
-            tooltip: (
-                <span>
-                    Percentage of{' '}
-                    {this.props.patientAttribute ? 'patients' : 'samples'}
-                </span>
-            ),
-            filter: (d: ClinicalDataCountSummary, f: string) => {
-                return d.freq.includes(f);
-            },
-            sortBy: (d: ClinicalDataCountSummary) => d.percentage, //sort freq column using count
-            defaultSortDirection: 'desc' as 'desc',
-            width: this.columnsWidth[ColumnKey.FREQ],
-        },
-    ];
+        ];
+    }
 
     @autobind
     private onUserSelection(filter: string) {
@@ -303,7 +314,7 @@ export default class ClinicalTable extends React.Component<
                 width={this.props.width}
                 height={this.props.height}
                 data={this.props.data || []}
-                columns={this._columns}
+                columns={this.columns}
                 addAll={this.addAll}
                 removeAll={this.removeAll}
                 showAddRemoveAllButtons={this.props.showAddRemoveAllButtons}
