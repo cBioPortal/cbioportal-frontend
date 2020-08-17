@@ -13,11 +13,15 @@ import {
     GenomicDataBin,
 } from 'cbioportal-ts-api-client';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import ReactGridLayout from 'react-grid-layout';
+import ReactGridLayout, { WidthProvider, Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { observer } from 'mobx-react';
-import { ChartTypeEnum, STUDY_VIEW_CONFIG } from '../StudyViewConfig';
+import {
+    ChartTypeEnum,
+    STUDY_VIEW_CONFIG,
+    ChartDimension,
+} from '../StudyViewConfig';
 import ProgressIndicator, {
     IProgressIndicatorItem,
 } from '../../../shared/components/progressIndicator/ProgressIndicator';
@@ -29,6 +33,8 @@ import { DataType } from 'cbioportal-frontend-commons';
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore;
 }
+
+const ResizingReactGridLayout = WidthProvider(ReactGridLayout);
 
 // making this an observer (mobx-react) causes this component to re-render any time
 // there is a change to any observable value which is referenced in its render method.
@@ -86,6 +92,7 @@ export class StudySummaryTab extends React.Component<
             },
             onLayoutChange: (layout: ReactGridLayout.Layout[]) => {
                 this.store.updateCurrentGridLayout(layout);
+                this.onResize(layout);
             },
             resetGeneFilter: (chartMeta: ChartMeta) => {
                 this.store.resetGeneFilter(chartMeta.uniqueKey);
@@ -356,6 +363,25 @@ export class StudySummaryTab extends React.Component<
     };
 
     @autobind
+    onResize(newLayout: Layout[]) {
+        newLayout
+            .filter(l => {
+                const layout = this.store.chartsDimension.get(l.i as string);
+                return layout && (layout.h !== l.h || layout.w !== l.w);
+            })
+            .forEach(l => {
+                const key = l.i as string;
+                const toUpdate = this.store.chartsDimension.get(
+                    key
+                ) as ChartDimension;
+
+                toUpdate.h = l.h;
+                toUpdate.w = l.w;
+                this.store.chartsDimension.set(key, toUpdate);
+            });
+    }
+
+    @autobind
     getProgressItems(elapsedSecs: number): IProgressIndicatorItem[] {
         return [
             {
@@ -495,6 +521,7 @@ export class StudySummaryTab extends React.Component<
                                     onLayoutChange={
                                         this.handlers.onLayoutChange
                                     }
+                                    onResizeStop={this.onResize}
                                 >
                                     {this.store.visibleAttributes.map(
                                         this.renderAttributeChart

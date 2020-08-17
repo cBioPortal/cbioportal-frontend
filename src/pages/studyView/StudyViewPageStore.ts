@@ -3962,7 +3962,7 @@ export class StudyViewPageStore {
             if (chartUserSettings.layout) {
                 this.currentGridLayout.push({
                     i: chartUserSettings.id,
-                    isResizable: false,
+                    isResizable: true,
                     moved: false,
                     static: false,
                     ...chartUserSettings.layout,
@@ -4208,13 +4208,20 @@ export class StudyViewPageStore {
         }
     }
 
-    private getTableDimensionByNumberOfRecords(records: number) {
+    private getTableDimensionByNumberOfRecords(
+        records: number
+    ): ChartDimension {
         return records <= STUDY_VIEW_CONFIG.thresholds.rowsInTableForOneGrid
             ? {
                   w: 2,
                   h: 1,
+                  minW: 2,
               }
-            : { w: 2, h: 2 };
+            : {
+                  w: 2,
+                  h: 2,
+                  minW: 2,
+              };
     }
 
     @autobind
