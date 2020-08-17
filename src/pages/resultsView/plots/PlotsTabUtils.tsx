@@ -290,7 +290,8 @@ export function getColoringMenuOptionValue(
     option: Omit<ColoringMenuOmnibarOption, 'value'>
 ) {
     return `${option.info.entrezGeneId}_${JSON.stringify(
-        option.info.clinicalAttribute
+        option.info.clinicalAttribute,
+        ['clinicalAttributeId', 'patientAttribute', 'studyId']
     )}`;
 }
 
@@ -1443,9 +1444,7 @@ export function getAxisLabel(
                 selection.entrezGeneId !== undefined &&
                 selection.entrezGeneId !== NONE_SELECTED_OPTION_NUMERICAL_VALUE
             ) {
-                label = `${
-                    entrezGeneIdToGene[selection.entrezGeneId].hugoGeneSymbol
-                }: ${profile.name}`;
+                label = `${entrezGeneIdToGene[selection.entrezGeneId].hugoGeneSymbol}: ${profile.name}`;
             }
             break;
     }
