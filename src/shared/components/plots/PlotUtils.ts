@@ -5,11 +5,12 @@ import {
     IThreshold1D,
     IThreshold2D,
 } from 'pages/resultsView/plots/PlotsTabUtils';
-import Timeout = NodeJS.Timeout;
-import { getTextHeight, getTextWidth } from 'cbioportal-frontend-commons';
-import CBIOPORTAL_VICTORY_THEME, {
+import {
+    CBIOPORTAL_VICTORY_THEME,
+    getTextHeight,
+    getTextWidth,
     legendLabelStyles,
-} from '../../theme/cBioPoralTheme';
+} from 'cbioportal-frontend-commons';
 import { clamp } from '../../lib/NumberUtils';
 
 export type LegendDataWithId<D = any> = {
@@ -145,58 +146,6 @@ function getSeedFromUniqueKey(uniqueKey: string) {
 export function getJitterForCase(uniqueKey: string) {
     const seed = getSeedFromUniqueKey(uniqueKey);
     return getDeterministicRandomNumber(seed, [-1, 1]);
-}
-
-export function makeMouseEvents(self: {
-    tooltipModel: any;
-    pointHovered: boolean;
-}) {
-    let disappearTimeout: Timeout | null = null;
-    const disappearDelayMs = 250;
-
-    return [
-        {
-            target: 'data',
-            eventHandlers: {
-                onMouseOver: () => {
-                    return [
-                        {
-                            target: 'data',
-                            mutation: (props: any) => {
-                                self.tooltipModel = props;
-                                self.pointHovered = true;
-
-                                if (disappearTimeout !== null) {
-                                    clearTimeout(disappearTimeout);
-                                    disappearTimeout = null;
-                                }
-
-                                return { active: true };
-                            },
-                        },
-                    ];
-                },
-                onMouseOut: () => {
-                    return [
-                        {
-                            target: 'data',
-                            mutation: () => {
-                                if (disappearTimeout !== null) {
-                                    clearTimeout(disappearTimeout);
-                                }
-
-                                disappearTimeout = setTimeout(() => {
-                                    self.pointHovered = false;
-                                }, disappearDelayMs);
-
-                                return { active: false };
-                            },
-                        },
-                    ];
-                },
-            },
-        },
-    ];
 }
 
 export function makeScatterPlotSizeFunction<D>(

@@ -31,7 +31,7 @@ import {
     VictoryLine,
 } from 'victory';
 import { QueryStoreComponent } from './QueryStore';
-import CBIOPORTAL_VICTORY_THEME from '../../theme/cBioPoralTheme';
+import { CBIOPORTAL_VICTORY_THEME } from 'cbioportal-frontend-commons';
 
 class GenesetsVolcanoTable extends LazyMobXTable<Geneset> {}
 

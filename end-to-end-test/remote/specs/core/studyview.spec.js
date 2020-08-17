@@ -627,7 +627,7 @@ describe('the gene panel is loaded properly', () => {
     });
 });
 
-describe('submit genes to results view query', () => {
+describe.skip('submit genes to results view query', () => {
     it('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/study/summary?id=acc_tcga_pan_can_atlas_2018`

@@ -59,7 +59,6 @@ import request from 'superagent';
 import { remoteData, getBrowserWindow } from 'cbioportal-frontend-commons';
 import TrialMatchTable from './trialMatch/TrialMatchTable';
 
-import 'cbioportal-frontend-commons/dist/styles.css';
 import 'react-mutation-mapper/dist/styles.css';
 import 'react-table/react-table.css';
 import { trackPatient, trackEvent } from 'shared/lib/tracking';

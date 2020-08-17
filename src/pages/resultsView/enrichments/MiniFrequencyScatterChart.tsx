@@ -10,15 +10,14 @@ import {
     VictorySelectionContainer,
     VictoryLine,
 } from 'victory';
-import CBIOPORTAL_VICTORY_THEME, {
-    axisLabelStyles,
-} from '../../../shared/theme/cBioPoralTheme';
 import { Popover } from 'react-bootstrap';
 import { formatLogOddsRatio } from '../../../shared/lib/FormatUtils';
 import { toConditionalPrecision } from '../../../shared/lib/NumberUtils';
 import SelectionComponent from './SelectionComponent';
 import HoverablePoint from './HoverablePoint';
 import {
+    axisLabelStyles,
+    CBIOPORTAL_VICTORY_THEME,
     DownloadControls,
     getTextWidth,
     truncateWithEllipsis,

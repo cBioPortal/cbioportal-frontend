@@ -3,11 +3,10 @@ import { Observer, observer } from 'mobx-react';
 import { IStringAxisData } from '../../../pages/resultsView/plots/PlotsTabUtils';
 import { computed, observable } from 'mobx';
 import { bind } from 'bind-decorator';
-import CBIOPORTAL_VICTORY_THEME, {
+import {
     axisTickLabelStyles,
     baseLabelStyles,
-} from '../../theme/cBioPoralTheme';
-import {
+    CBIOPORTAL_VICTORY_THEME,
     getTextWidth,
     stringListToIndexSet,
 } from 'cbioportal-frontend-commons';

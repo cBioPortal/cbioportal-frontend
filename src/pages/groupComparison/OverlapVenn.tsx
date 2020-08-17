@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { VictoryLabel, VictoryLegend } from 'victory';
-import CBIOPORTAL_VICTORY_THEME from 'shared/theme/cBioPoralTheme';
+import { CBIOPORTAL_VICTORY_THEME } from 'cbioportal-frontend-commons';
 import { action, computed, observable } from 'mobx';
 import { ComparisonGroup } from './GroupComparisonUtils';
 import RectangleVennDiagram from './rectangleVennDiagram/RectangleVennDiagram';

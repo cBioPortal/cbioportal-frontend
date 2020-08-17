@@ -513,27 +513,6 @@ h3.hr {
     border: 1px dashed $borderColor !important;
 }
 
-.popover {
-    &.cbioTooltip {
-        position: absolute !important;
-        display: block !important;
-        max-width: 600px !important;
-        div:last-child {
-            white-space: nowrap;
-        }
-
-        p {
-            margin-bottom: 0 !important;
-        }
-
-        .popover-content,
-        p,
-        td {
-            font-size: 11px !important;
-        }
-    }
-}
-
 .inlineBlock {
     display: inline-block;
 }
