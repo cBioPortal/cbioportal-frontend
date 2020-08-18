@@ -11,7 +11,7 @@ import {
     ClinicalAttribute,
     PatientIdentifier,
     PatientFilter,
-    ReferenceGenomeGene,
+    ReferenceGenomeGene, DiscreteCopyNumberData,
 } from 'cbioportal-ts-api-client';
 import { action, computed } from 'mobx';
 import AccessorsForOqlFilter, {
@@ -869,4 +869,8 @@ export function parseGenericAssayGroups(
         {}
     );
     return parsedGroups;
+}
+
+export function createDiscreteCopyNumberDataKey(d: NumericGeneMolecularData | DiscreteCopyNumberData) {
+    return d.sampleId + "_" + d.molecularProfileId + "_" + d.entrezGeneId;
 }

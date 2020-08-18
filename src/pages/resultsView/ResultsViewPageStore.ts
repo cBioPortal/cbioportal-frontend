@@ -118,7 +118,7 @@ import {
     compileMutations,
     computeCustomDriverAnnotationReport,
     computeGenePanelInformation,
-    CoverageInformation,
+    CoverageInformation, createDiscreteCopyNumberDataKey,
     excludeSpecialMolecularProfiles,
     fetchPatients,
     fetchQueriedStudies,
@@ -2763,6 +2763,61 @@ export class ResultsViewPageStore {
         },
     });
 
+
+    readonly discreteCopyNumberAlterations = remoteData<DiscreteCopyNumberData[]>({
+        await: () => [
+            this.genes,
+            this.studyToMolecularProfileDiscreteCna,
+            this.samples
+        ],
+        invoke: async () => {
+
+            const studyIdToProfileMap = this.studyToMolecularProfileDiscreteCna.result!;
+            const cnaMolecularProfileIds = _(studyIdToProfileMap).values().map((m:MolecularProfile) => {
+                return m.molecularProfileId;}).value();
+
+            if (cnaMolecularProfileIds.length == 0) {
+                return [];
+            }
+
+            const entrezGeneIds = _.map(this.genes.result, (gene: Gene) => gene.entrezGeneId);
+
+            const promises = _.map(cnaMolecularProfileIds, (cnaMolecularProfileId) => {
+
+                const sampleIds = _.map(this.samples.result, (sample: Sample) => {
+                    if (sample.studyId in studyIdToProfileMap) {
+                        return sample.sampleId;
+                    }
+                })
+
+                return client.fetchDiscreteCopyNumbersInMolecularProfileUsingPOST(
+                    {
+                        discreteCopyNumberEventType: 'HOMDEL_AND_AMP',
+                        discreteCopyNumberFilter: {
+                            entrezGeneIds,
+                            sampleIds
+                        } as DiscreteCopyNumberFilter,
+                        molecularProfileId: cnaMolecularProfileId,
+                        projection: 'DETAILED',
+                    }
+                );
+
+            });
+
+            let outdata = [] as DiscreteCopyNumberData[];
+            await Promise.all(promises).then((cnaData: any[]) => {
+                outdata = _.flattenDeep(cnaData);
+            });
+
+            return Promise.resolve(outdata);
+
+        },
+    });
+    
+    @computed get sampleIdAndEntrezIdToDiscreteCopyNumberData() {
+        return _.keyBy(this.discreteCopyNumberAlterations.result, (d: DiscreteCopyNumberData) => createDiscreteCopyNumberDataKey(d));
+    }
+    
     readonly mutations = remoteData<Mutation[]>({
         await: () => [
             this.genes,
@@ -4054,12 +4109,13 @@ export class ResultsViewPageStore {
         },
     });
 
+    // written by Ruslan
     readonly _annotatedMolecularDataReport = remoteData({
         await: () => [
             this.molecularData,
             this.entrezGeneIdToGene,
-            this.annotateNumericGeneMolecularData,
-            this.molecularProfileIdToMolecularProfile,
+            this.annotatedNumericGeneMolecularData,
+            this.molecularProfileIdToMolecularProfile
         ],
         invoke: async () => {
             const entrezGeneIdToGene = this.entrezGeneIdToGene.result!;
@@ -4067,7 +4123,7 @@ export class ResultsViewPageStore {
                 datum: NumericGeneMolecularData
             ) => Promise<AnnotatedNumericGeneMolecularData>;
             annotateNumericGeneMolecularData = this
-                .annotateNumericGeneMolecularData
+                .annotatedNumericGeneMolecularData
                 .result! as typeof annotateNumericGeneMolecularData;
             const profileIdToProfile = this.molecularProfileIdToMolecularProfile
                 .result!;
@@ -4080,7 +4136,8 @@ export class ResultsViewPageStore {
         },
     });
 
-    readonly annotateNumericGeneMolecularData = remoteData<
+    // written by Ruslan
+    readonly annotatedNumericGeneMolecularData = remoteData<
         | Error
         | ((
               data: NumericGeneMolecularData
@@ -4090,6 +4147,7 @@ export class ResultsViewPageStore {
             this.getOncoKbCnaAnnotationForOncoprint,
             this.molecularProfileIdToMolecularProfile,
             this.entrezGeneIdToGene,
+            this.discreteCopyNumberAlterations
         ],
         invoke: async () => {
             let getOncoKbAnnotation: (
@@ -4115,44 +4173,33 @@ export class ResultsViewPageStore {
                     profileIdToProfile,
                     entrezGeneIdToGene
                 );
-                //TODO Remove this if and call to annotateMolecularDatum when loading of onkokb to custom annotations will be implemented
-                await this.setCustomAnnotationFields(annot);
+
+                this.setCustomAnnotationFields(annot);
+                
                 return annot;
-            };
+            }
+            
         },
     });
 
-    readonly setCustomAnnotationFields = async (
+    readonly setCustomAnnotationFields = (
         molecularData: AnnotatedNumericGeneMolecularData
     ) => {
-        //TODO Has to be optimised. e.g. Pull data in batches, use cache
-        const discreteCopyNumberData: DiscreteCopyNumberData[] = await client.fetchDiscreteCopyNumbersInMolecularProfileUsingPOST(
-            {
-                //FIXME HOMDEL_AND_AMP just to make backend read data from the tables where we have custom annotations!
-                discreteCopyNumberEventType: 'HOMDEL_AND_AMP',
-                discreteCopyNumberFilter: {
-                    entrezGeneIds: [molecularData.entrezGeneId],
-                    sampleIds: [molecularData.sampleId],
-                } as DiscreteCopyNumberFilter,
-                molecularProfileId: molecularData.molecularProfileId,
-                projection: 'DETAILED',
-            }
-        );
-
-        if (!discreteCopyNumberData || discreteCopyNumberData.length < 1) {
+        const datumKey = createDiscreteCopyNumberDataKey(molecularData);
+        if (!(datumKey in this.sampleIdAndEntrezIdToDiscreteCopyNumberData)) {
             return;
         }
-
-        const cnaEntry = discreteCopyNumberData[0];
-        molecularData.driverFilter = cnaEntry.driverFilter;
-        molecularData.driverFilterAnnotation = cnaEntry.driverFilterAnnotation;
-        molecularData.driverTiersFilter = cnaEntry.driverTiersFilter;
+        const discreteCopyNumberData = this.sampleIdAndEntrezIdToDiscreteCopyNumberData[datumKey];
+        
+        molecularData.driverFilter = discreteCopyNumberData.driverFilter;
+        molecularData.driverFilterAnnotation = discreteCopyNumberData.driverFilterAnnotation;
+        molecularData.driverTiersFilter = discreteCopyNumberData.driverTiersFilter;
         molecularData.driverTiersFilterAnnotation =
-            cnaEntry.driverTiersFilterAnnotation;
+            discreteCopyNumberData.driverTiersFilterAnnotation;
 
         molecularData.putativeDriver =
             this.driverAnnotationSettings.customBinary &&
-            cnaEntry.driverFilter === 'Putative_Driver';
+            discreteCopyNumberData.driverFilter === 'Putative_Driver';
     };
 
     readonly filteredAndAnnotatedMolecularData = remoteData<
@@ -4178,6 +4225,7 @@ export class ResultsViewPageStore {
         },
     });
 
+    // adds (custom) annotations to the MolecularData of discrete CNAs
     public annotatedCnaCache = new MobxPromiseCache<
         { entrezGeneId: number },
         AnnotatedNumericGeneMolecularData[]
@@ -4186,7 +4234,7 @@ export class ResultsViewPageStore {
             this.numericGeneMolecularDataCache.await(
                 [
                     this.studyToMolecularProfileDiscreteCna,
-                    this.annotateNumericGeneMolecularData,
+                    this.annotatedNumericGeneMolecularData,
                 ],
                 studyToMolecularProfileDiscrete => {
                     return _.values(studyToMolecularProfileDiscrete).map(p => ({
@@ -4208,11 +4256,10 @@ export class ResultsViewPageStore {
                     )
                     .map(p => p.result!)
             );
-            let annotateNumericGeneMolecularData: (
-                datum: NumericGeneMolecularData
-            ) => Promise<AnnotatedNumericGeneMolecularData>;
+            // TODO what is going on here?
+            let annotateNumericGeneMolecularData: (datum: NumericGeneMolecularData) => Promise<AnnotatedNumericGeneMolecularData>;
             annotateNumericGeneMolecularData = this
-                .annotateNumericGeneMolecularData
+                .annotatedNumericGeneMolecularData
                 .result! as typeof annotateNumericGeneMolecularData;
             return Promise.all(
                 results.map(d => {
