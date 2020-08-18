@@ -1453,11 +1453,11 @@ export function getAxisLabel(
             !!(
                 profile &&
                 selection.selectedGenericAssayOption &&
-                selection.selectedGenericAssayOption.label
+                selection.selectedGenericAssayOption.plotAxisLabel
             )
         ) {
             const genericAssayEntityName =
-                selection.selectedGenericAssayOption.label;
+                selection.selectedGenericAssayOption.plotAxisLabel;
             label = `${genericAssayEntityName}: ${profile.name}`;
         }
     }

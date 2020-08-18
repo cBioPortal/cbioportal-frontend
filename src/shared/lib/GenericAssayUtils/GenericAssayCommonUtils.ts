@@ -156,7 +156,10 @@ export function fetchGenericAssayDataByStableIdsAndMolecularIds(
     });
 }
 
-export function makeGenericAssayOption(meta: GenericAssayMeta) {
+export function makeGenericAssayOption(
+    meta: GenericAssayMeta,
+    isPlotsTabOption?: boolean
+) {
     // Note: name and desc are optional fields for generic assay entities
     // When not provided in the data file, these fields are assigned the
     // value of the entity_stable_id. The code below hides fields when
@@ -182,6 +185,16 @@ export function makeGenericAssayOption(meta: GenericAssayMeta) {
         label = `${name} (${meta.stableId}): ${description}`;
     }
 
+    if (isPlotsTabOption) {
+        return {
+            value: meta.stableId,
+            label: label,
+            plotAxisLabel:
+                'NAME' in meta.genericEntityMetaProperties
+                    ? meta.genericEntityMetaProperties['NAME']
+                    : meta.stableId,
+        };
+    }
     return {
         value: meta.stableId,
         label: label,

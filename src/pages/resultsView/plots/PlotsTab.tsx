@@ -206,6 +206,7 @@ export type PlotsTabDataSource = {
 export type PlotsTabOption = {
     value: string;
     label: string;
+    plotAxisLabel?: string;
     isGenericAssayType?: boolean;
 };
 
@@ -1829,7 +1830,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 return acc;
                             }
                         }, {} as { [stableId: string]: GenericAssayMeta })
-                        .map(makeGenericAssayOption)
+                        .map(entity => makeGenericAssayOption(entity, true))
                         .value()
                 );
             }
@@ -1883,7 +1884,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 return acc;
                             }
                         }, {} as { [stableId: string]: GenericAssayMeta })
-                        .map(makeGenericAssayOption)
+                        .map(entity => makeGenericAssayOption(entity, true))
                         .value();
                 }
                 // if horzSelection has the same dataType selected, add a SAME_SELECTED_OPTION option
@@ -1917,6 +1918,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 this.horzSelection.selectedGenericAssayOption
                                     .label
                             })`,
+                            plotAxisLabel: `Same ${deriveDisplayTextFromGenericAssayType(
+                                firstProfile.genericAssayType
+                            )} (${
+                                this.horzSelection.selectedGenericAssayOption
+                                    .plotAxisLabel
+                            })`,
                         },
                     ];
                 }
@@ -1926,6 +1933,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     (verticalOptions || []) as {
                         value: string;
                         label: string;
+                        plotAxisLabel: string;
                     }[]
                 )
             );
