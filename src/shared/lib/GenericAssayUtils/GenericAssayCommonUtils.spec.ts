@@ -83,5 +83,26 @@ describe('GenericAssayCommonUtils', () => {
                 expect
             );
         });
+
+        it('add plotAxisLabel for plot tab options', () => {
+            const genericAssayEntity: GenericAssayMeta = {
+                stableId: 'id_1',
+                entityType: 'GENERIC_ASSAY',
+                genericEntityMetaProperties: {
+                    NAME: 'name_1',
+                    DESCRIPTION: 'desc_1',
+                },
+            };
+
+            const expect = {
+                value: 'id_1',
+                label: 'name_1 (id_1): desc_1',
+                plotAxisLabel: 'name_1',
+            };
+            assert.deepEqual(
+                makeGenericAssayOption(genericAssayEntity, true),
+                expect
+            );
+        });
     });
 });

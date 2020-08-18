@@ -238,7 +238,9 @@ export function genericAssayEntitiesToSelectOptionsGroupByGenericAssayType(gener
     return _.mapValues(
         genericAssayEntitiesGroupByGenericAssayType,
         genericAssayEntities => {
-            return _.map(genericAssayEntities, makeGenericAssayOption);
+            return _.map(genericAssayEntities, entity =>
+                makeGenericAssayOption(entity)
+            );
         }
     );
 }
