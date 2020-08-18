@@ -1444,7 +1444,9 @@ export function getAxisLabel(
                 selection.entrezGeneId !== undefined &&
                 selection.entrezGeneId !== NONE_SELECTED_OPTION_NUMERICAL_VALUE
             ) {
-                label = `${entrezGeneIdToGene[selection.entrezGeneId].hugoGeneSymbol}: ${profile.name}`;
+                label = `${
+                    entrezGeneIdToGene[selection.entrezGeneId].hugoGeneSymbol
+                }: ${profile.name}`;
             }
             break;
     }
