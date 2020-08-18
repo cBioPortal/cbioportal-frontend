@@ -177,13 +177,9 @@ describe('gsva feature', function() {
             });
 
             it('adds gene set name to entry component', () => {
-                console.log('A');
                 $('button[data-test=GENESET_VOLCANO_BUTTON]').waitForExist();
-                console.log('B');
                 browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
-                console.log('C');
                 $('div.modal-dialog').waitForExist();
-                console.log('D');
                 // find the GO_ATP_DEPENDENT_CHROMATIN_REMODELING entry and check its checkbox
                 $('span=GO_ATP_DEPENDENT_CHROMATIN_REMODELING').waitForExist();
                 var checkBox = $('span=GO_ATP_DEPENDENT_CHROMATIN_REMODELING')
@@ -191,27 +187,19 @@ describe('gsva feature', function() {
                     .$('..')
                     .$$('td')[3]
                     .$('label input');
-                console.log('E');
                 checkBox.waitForVisible();
-                console.log('F');
                 browser.waitUntil(() => {
                     checkBox.click();
                     return checkBox.isSelected();
                 });
 
-                console.log('G');
                 $('button=Add selection to the query').waitForExist();
-                console.log('H');
                 browser.$('button=Add selection to the query').click();
 
-                console.log('I');
                 $('span*=All gene sets are valid').waitForExist();
 
-                console.log('J');
                 var textArea = browser.$('[data-test=GENESETS_TEXT_AREA]');
-                console.log('K');
                 textArea.waitForExist();
-                console.log('L');
                 assert.equal(
                     textArea.getText(),
                     'GO_ATP_DEPENDENT_CHROMATIN_REMODELING'
