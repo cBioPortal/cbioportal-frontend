@@ -1,10 +1,5 @@
-import { Hotspot } from 'genome-nexus-ts-api-client';
-import { IHotspotIndex, isHotspot } from 'cbioportal-utils';
-
 import { CosmicMutation } from 'cbioportal-ts-api-client';
 import { ICosmicData } from 'shared/model/Cosmic';
-import { Mutation } from 'cbioportal-ts-api-client';
-import { normalizeMutation } from '../components/mutationMapper/MutationMapperUtils';
 
 /**
  * Utility functions related to annotation data.
@@ -29,29 +24,4 @@ export function keywordToCosmic(
     });
 
     return map;
-}
-
-export function recurrentHotspotFilter(hotspot: Hotspot) {
-    // only single and indel mutations are regular hotspots
-    return (
-        hotspot.type.toLowerCase().includes('single') ||
-        hotspot.type.toLowerCase().includes('indel')
-    );
-}
-
-export function isRecurrentHotspot(
-    mutation: Mutation,
-    index: IHotspotIndex
-): boolean {
-    return isHotspot(
-        normalizeMutation(mutation),
-        index,
-        recurrentHotspotFilter
-    );
-}
-
-export function is3dHotspot(mutation: Mutation, index: IHotspotIndex): boolean {
-    return isHotspot(normalizeMutation(mutation), index, hotspot =>
-        hotspot.type.toLowerCase().includes('3d')
-    );
 }

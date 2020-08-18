@@ -106,6 +106,15 @@ export function filter3dHotspotsByMutations(
     );
 }
 
+export function filterSpliceHotspotsByMutations(
+    mutations: Mutation[],
+    index: IHotspotIndex
+): Hotspot[] {
+    return filterHotspotsByMutations(mutations, index, (hotspot: Hotspot) =>
+        hotspot.type.toLowerCase().includes('splice')
+    );
+}
+
 export function isRecurrentHotspot(
     mutation: Mutation,
     index: IHotspotIndex
@@ -115,6 +124,25 @@ export function isRecurrentHotspot(
 
 export function is3dHotspot(mutation: Mutation, index: IHotspotIndex): boolean {
     return filter3dHotspotsByMutations([mutation], index).length > 0;
+}
+
+export function isSpliceHotspot(
+    mutation: Mutation,
+    index: IHotspotIndex
+): boolean {
+    return filterSpliceHotspotsByMutations([mutation], index).length > 0;
+}
+
+export function isNon3dHotspot(mutation: Mutation, index: IHotspotIndex) {
+    // if mutation type is splice, get splice hotspot, otherwise get recurrent hotspot
+    if (
+        mutation.mutationType &&
+        mutation.mutationType.toLowerCase().includes('splice')
+    ) {
+        return isSpliceHotspot(mutation, index);
+    } else {
+        return isRecurrentHotspot(mutation, index);
+    }
 }
 
 export function isHotspot(
@@ -128,6 +156,9 @@ export function isHotspot(
 export function defaultHotspotFilter(hotspot: Hotspot) {
     const type = hotspot.type.toLowerCase();
     return (
-        type.includes('single') || type.includes('indel') || type.includes('3d')
+        type.includes('single') ||
+        type.includes('indel') ||
+        type.includes('3d') ||
+        type.includes('splice')
     );
 }
