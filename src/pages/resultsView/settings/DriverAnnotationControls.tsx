@@ -44,9 +44,6 @@ export interface IDriverAnnotationControlsHandlers {
     onChangeAnnotateCOSMICInputValue?: (value: string) => void;
     onSelectCustomDriverAnnotationBinary?: (s: boolean) => void;
     onSelectCustomDriverAnnotationTier?: (value: string, s: boolean) => void;
-    onCustomDriverTierCheckboxClick?: (
-        event: React.MouseEvent<HTMLInputElement>
-    ) => void;
 }
 
 export interface IDriverAnnotationControlsProps {
@@ -105,6 +102,22 @@ export default class DriverAnnotationControls extends React.Component<
                     );
                 break;
         }
+    }
+
+    @autobind
+    private onCustomDriverTierCheckboxClick(
+        event: React.MouseEvent<HTMLInputElement>
+    ) {
+        this.props.handlers.onSelectCustomDriverAnnotationTier &&
+            this.props.handlers.onSelectCustomDriverAnnotationTier(
+                (event.target as HTMLInputElement).value,
+                !(
+                    this.props.state.selectedCustomDriverAnnotationTiers &&
+                    this.props.state.selectedCustomDriverAnnotationTiers.get(
+                        (event.target as HTMLInputElement).value
+                    )
+                )
+            );
     }
 
     render() {
@@ -345,7 +358,7 @@ export default class DriverAnnotationControls extends React.Component<
                     )}
                     {!!this.props.state
                         .customDriverAnnotationTiersMenuLabel && (
-                        <span>
+                        <span data-test="annotateCustomTiers">
                             <span className="caret" />
                             &nbsp;&nbsp;
                             <span>
@@ -385,7 +398,7 @@ export default class DriverAnnotationControls extends React.Component<
                                                     )
                                                 }
                                                 onClick={
-                                                    this.props.handlers
+                                                    this
                                                         .onCustomDriverTierCheckboxClick
                                                 }
                                             />{' '}
