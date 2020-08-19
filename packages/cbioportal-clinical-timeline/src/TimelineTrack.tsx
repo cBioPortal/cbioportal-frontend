@@ -161,6 +161,8 @@ function getPointY(
     return y;
 }
 
+const POINT_RADIUS = 4;
+
 export function renderPoint(
     events: TimelineEvent[],
     trackData: TimelineTrackSpecification,
@@ -179,7 +181,12 @@ export function renderPoint(
                 {events.length > 1 ? (
                     renderStack(10, TIMELINE_TRACK_HEIGHT / 2, '#222222')
                 ) : (
-                    <circle cx="0" cy={y} r="4" fill="rgb(31, 119, 180)" />
+                    <circle
+                        cx="0"
+                        cy={y}
+                        r={POINT_RADIUS}
+                        fill="rgb(31, 119, 180)"
+                    />
                 )}
             </g>
         );
@@ -190,7 +197,7 @@ function renderRange(pixelWidth: number) {
     const height = 5;
     return (
         <rect
-            width={pixelWidth}
+            width={Math.max(pixelWidth, 2 * POINT_RADIUS)}
             height={height}
             y={(TIMELINE_TRACK_HEIGHT - height) / 2}
             rx="2"
