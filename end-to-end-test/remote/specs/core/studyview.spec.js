@@ -627,10 +627,10 @@ describe('the gene panel is loaded properly', () => {
     });
 });
 
-describe.skip('submit genes to results view query', () => {
+describe('submit genes to results view query', () => {
     it('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
         goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/study/summary?id=acc_tcga_pan_can_atlas_2018`
+            `${CBIOPORTAL_URL}/study/summary?id=brca_mskcc_2019`
         );
         browser.waitForExist('[data-test="geneSet"]', 5000);
         setInputText('[data-test="geneSet"]', 'PTEN: PROT>0');
@@ -650,13 +650,16 @@ describe.skip('submit genes to results view query', () => {
         }, 5000);
     });
     it('auto-selects an mrna profile when mrna oql is entered', () => {
+        goToUrlAndSetLocalStorage(
+            `${CBIOPORTAL_URL}/study/summary?id=acc_tcga_pan_can_atlas_2018`
+        );
         const studyViewTabId = browser.getTabIds()[0];
 
         // enter oql
-        browser.waitForExist('textarea[data-test="geneSet"]', 2000);
+        browser.waitForExist('textarea[data-test="geneSet"]', 10000);
         setInputText('textarea[data-test="geneSet"]', 'PTEN: EXP>1');
 
-        browser.waitForEnabled('button[data-test="geneSetSubmit"]', 5000);
+        browser.waitForEnabled('button[data-test="geneSetSubmit"]', 10000);
         browser.click('button[data-test="geneSetSubmit"]');
 
         // switch tabs to results view
