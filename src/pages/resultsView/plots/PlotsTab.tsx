@@ -4809,7 +4809,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 <Observer>{this.controls}</Observer>
                             ) : (
                                 <LoadingIndicator
-                                    isLoading={true}
+                                    isLoading={
+                                        this.props.store
+                                            .customDriverAnnotationReport
+                                            .isPending
+                                    }
                                     center={true}
                                     size={'big'}
                                 />

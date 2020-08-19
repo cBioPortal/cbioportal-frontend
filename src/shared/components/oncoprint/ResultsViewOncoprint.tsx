@@ -1553,7 +1553,8 @@ export default class ResultsViewOncoprint extends React.Component<
                 this.props.store.molecularProfileIdToMolecularProfile,
                 this.alterationTypesInQuery,
                 this.alteredKeys,
-                this.heatmapTrackHeaders
+                this.heatmapTrackHeaders,
+                this.props.store.customDriverAnnotationReport
             ) === 'pending'
         );
     }
