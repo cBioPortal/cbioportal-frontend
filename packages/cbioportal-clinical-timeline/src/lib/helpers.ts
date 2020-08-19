@@ -55,8 +55,7 @@ export function getTrimmedTicks(
 
                 const lastTick = tickCache[tickCache.length - 1];
 
-                //offset += (TICK_OFFSET);
-                offset += trimmedTicks.length * (tick.end - tick.start + 1);
+                offset += _.sumBy(trimmedTicks, t => t.end - t.start + 1);
 
                 lastTick.offset = offset;
 
