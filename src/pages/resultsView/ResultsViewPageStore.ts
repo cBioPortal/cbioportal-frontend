@@ -118,7 +118,8 @@ import {
     compileMutations,
     computeCustomDriverAnnotationReport,
     computeGenePanelInformation,
-    CoverageInformation, createDiscreteCopyNumberDataKey,
+    CoverageInformation,
+    createDiscreteCopyNumberDataKey,
     excludeSpecialMolecularProfiles,
     fetchPatients,
     fetchQueriedStudies,
@@ -212,6 +213,7 @@ import { makeUniqueColorGetter } from '../../shared/components/plots/PlotUtils';
 import ifNotDefined from '../../shared/lib/ifNotDefined';
 import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
+import { constant } from 'lodash';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -2763,46 +2765,58 @@ export class ResultsViewPageStore {
         },
     });
 
-
-    readonly discreteCopyNumberAlterations = remoteData<DiscreteCopyNumberData[]>({
+    readonly discreteCopyNumberAlterations = remoteData<
+        DiscreteCopyNumberData[]
+    >({
         await: () => [
             this.genes,
             this.studyToMolecularProfileDiscreteCna,
-            this.samples
+            this.samples,
         ],
         invoke: async () => {
-
-            const studyIdToProfileMap = this.studyToMolecularProfileDiscreteCna.result!;
-            const cnaMolecularProfileIds = _(studyIdToProfileMap).values().map((m:MolecularProfile) => {
-                return m.molecularProfileId;}).value();
+            const studyIdToProfileMap = this.studyToMolecularProfileDiscreteCna
+                .result!;
+            const cnaMolecularProfileIds = _(studyIdToProfileMap)
+                .values()
+                .map((m: MolecularProfile) => {
+                    return m.molecularProfileId;
+                })
+                .value();
 
             if (cnaMolecularProfileIds.length == 0) {
                 return [];
             }
 
-            const entrezGeneIds = _.map(this.genes.result, (gene: Gene) => gene.entrezGeneId);
+            const entrezGeneIds = _.map(
+                this.genes.result,
+                (gene: Gene) => gene.entrezGeneId
+            );
 
-            const promises = _.map(cnaMolecularProfileIds, (cnaMolecularProfileId) => {
+            const promises = _.map(
+                cnaMolecularProfileIds,
+                cnaMolecularProfileId => {
+                    const sampleIds = _.map(
+                        this.samples.result,
+                        (sample: Sample) => {
+                            if (sample.studyId in studyIdToProfileMap) {
+                                return sample.sampleId;
+                            }
+                        }
+                    );
 
-                const sampleIds = _.map(this.samples.result, (sample: Sample) => {
-                    if (sample.studyId in studyIdToProfileMap) {
-                        return sample.sampleId;
-                    }
-                })
-
-                return client.fetchDiscreteCopyNumbersInMolecularProfileUsingPOST(
-                    {
-                        discreteCopyNumberEventType: 'HOMDEL_AND_AMP',
-                        discreteCopyNumberFilter: {
-                            entrezGeneIds,
-                            sampleIds
-                        } as DiscreteCopyNumberFilter,
-                        molecularProfileId: cnaMolecularProfileId,
-                        projection: 'DETAILED',
-                    }
-                );
-
-            });
+                    return client.fetchDiscreteCopyNumbersInMolecularProfileUsingPOST(
+                        {
+                            discreteCopyNumberEventType: 'HOMDEL_AND_AMP',
+                            discreteCopyNumberFilter: {
+                                entrezGeneIds,
+                                sampleIds,
+                            } as DiscreteCopyNumberFilter,
+                            molecularProfileId: cnaMolecularProfileId,
+                            projection: 'DETAILED',
+                        }
+                    );
+                }
+            );
 
             let outdata = [] as DiscreteCopyNumberData[];
             await Promise.all(promises).then((cnaData: any[]) => {
@@ -2810,14 +2824,16 @@ export class ResultsViewPageStore {
             });
 
             return Promise.resolve(outdata);
-
         },
     });
-    
+
     @computed get sampleIdAndEntrezIdToDiscreteCopyNumberData() {
-        return _.keyBy(this.discreteCopyNumberAlterations.result, (d: DiscreteCopyNumberData) => createDiscreteCopyNumberDataKey(d));
+        return _.keyBy(
+            this.discreteCopyNumberAlterations.result,
+            (d: DiscreteCopyNumberData) => createDiscreteCopyNumberDataKey(d)
+        );
     }
-    
+
     readonly mutations = remoteData<Mutation[]>({
         await: () => [
             this.genes,
@@ -4019,6 +4035,7 @@ export class ResultsViewPageStore {
         },
     });
 
+    // FIXME remove later: --> here all PD annotations are added to mutation types
     readonly _filteredAndAnnotatedMutationsReport = remoteData({
         await: () => [
             this.mutations,
@@ -4081,7 +4098,6 @@ export class ResultsViewPageStore {
     }));
 
     readonly _filteredAndAnnotatedMolecularDataReport = remoteData({
-        /**/
         await: () => [this._annotatedMolecularDataReport],
         invoke: async () => {
             const vus: AnnotatedNumericGeneMolecularData[] = [];
@@ -4109,24 +4125,21 @@ export class ResultsViewPageStore {
         },
     });
 
-    // written by Ruslan
     readonly _annotatedMolecularDataReport = remoteData({
         await: () => [
             this.molecularData,
             this.entrezGeneIdToGene,
-            this.annotatedNumericGeneMolecularData,
-            this.molecularProfileIdToMolecularProfile
+            this.annotateNumericGeneMolecularData,
+            this.molecularProfileIdToMolecularProfile,
         ],
         invoke: async () => {
             const entrezGeneIdToGene = this.entrezGeneIdToGene.result!;
-            let annotateNumericGeneMolecularData: (
-                datum: NumericGeneMolecularData
-            ) => Promise<AnnotatedNumericGeneMolecularData>;
-            annotateNumericGeneMolecularData = this
-                .annotatedNumericGeneMolecularData
-                .result! as typeof annotateNumericGeneMolecularData;
             const profileIdToProfile = this.molecularProfileIdToMolecularProfile
                 .result!;
+            const annotateNumericGeneMolecularData = this
+                .annotateNumericGeneMolecularData.result! as (
+                datum: NumericGeneMolecularData
+            ) => Promise<AnnotatedNumericGeneMolecularData>;
             const annotatedMolecularData: AnnotatedNumericGeneMolecularData[] = await Promise.all(
                 this.molecularData.result!.map(d =>
                     annotateNumericGeneMolecularData(d)
@@ -4136,8 +4149,7 @@ export class ResultsViewPageStore {
         },
     });
 
-    // written by Ruslan
-    readonly annotatedNumericGeneMolecularData = remoteData<
+    readonly annotateNumericGeneMolecularData = remoteData<
         | Error
         | ((
               data: NumericGeneMolecularData
@@ -4147,7 +4159,7 @@ export class ResultsViewPageStore {
             this.getOncoKbCnaAnnotationForOncoprint,
             this.molecularProfileIdToMolecularProfile,
             this.entrezGeneIdToGene,
-            this.discreteCopyNumberAlterations
+            this.discreteCopyNumberAlterations,
         ],
         invoke: async () => {
             let getOncoKbAnnotation: (
@@ -4175,10 +4187,9 @@ export class ResultsViewPageStore {
                 );
 
                 this.setCustomAnnotationFields(annot);
-                
+
                 return annot;
-            }
-            
+            };
         },
     });
 
@@ -4189,11 +4200,14 @@ export class ResultsViewPageStore {
         if (!(datumKey in this.sampleIdAndEntrezIdToDiscreteCopyNumberData)) {
             return;
         }
-        const discreteCopyNumberData = this.sampleIdAndEntrezIdToDiscreteCopyNumberData[datumKey];
-        
+        const discreteCopyNumberData = this
+            .sampleIdAndEntrezIdToDiscreteCopyNumberData[datumKey];
+
         molecularData.driverFilter = discreteCopyNumberData.driverFilter;
-        molecularData.driverFilterAnnotation = discreteCopyNumberData.driverFilterAnnotation;
-        molecularData.driverTiersFilter = discreteCopyNumberData.driverTiersFilter;
+        molecularData.driverFilterAnnotation =
+            discreteCopyNumberData.driverFilterAnnotation;
+        molecularData.driverTiersFilter =
+            discreteCopyNumberData.driverTiersFilter;
         molecularData.driverTiersFilterAnnotation =
             discreteCopyNumberData.driverTiersFilterAnnotation;
 
@@ -4234,7 +4248,8 @@ export class ResultsViewPageStore {
             this.numericGeneMolecularDataCache.await(
                 [
                     this.studyToMolecularProfileDiscreteCna,
-                    this.annotatedNumericGeneMolecularData,
+                    this.annotateNumericGeneMolecularData,
+                    this.discreteCopyNumberAlterations,
                 ],
                 studyToMolecularProfileDiscrete => {
                     return _.values(studyToMolecularProfileDiscrete).map(p => ({
@@ -4256,11 +4271,10 @@ export class ResultsViewPageStore {
                     )
                     .map(p => p.result!)
             );
-            // TODO what is going on here?
-            let annotateNumericGeneMolecularData: (datum: NumericGeneMolecularData) => Promise<AnnotatedNumericGeneMolecularData>;
-            annotateNumericGeneMolecularData = this
-                .annotatedNumericGeneMolecularData
-                .result! as typeof annotateNumericGeneMolecularData;
+            const annotateNumericGeneMolecularData = this
+                .annotateNumericGeneMolecularData.result! as (
+                data: NumericGeneMolecularData
+            ) => Promise<AnnotatedNumericGeneMolecularData>;
             return Promise.all(
                 results.map(d => {
                     return annotateNumericGeneMolecularData(d);
