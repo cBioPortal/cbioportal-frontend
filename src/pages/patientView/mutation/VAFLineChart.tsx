@@ -34,6 +34,7 @@ import invertIncreasingFunction, {
 import { mutationTooltip } from './PatientViewMutationsTabUtils';
 import { tickFormatNumeral } from '../../../shared/components/plots/TickUtils';
 import { computeRenderData, IPoint } from './VAFLineChartUtils';
+import { GROUP_BY_NONE } from '../timeline2/VAFChartControls';
 
 export interface IVAFLineChartProps {
     samples: Sample[];
@@ -328,7 +329,9 @@ export default class VAFLineChart extends React.Component<
             this.mutations,
             this.sampleIdIndex,
             this.props.mutationProfileId,
-            this.props.coverageInformation
+            this.props.coverageInformation,
+            GROUP_BY_NONE,
+            {}
         );
     }
 

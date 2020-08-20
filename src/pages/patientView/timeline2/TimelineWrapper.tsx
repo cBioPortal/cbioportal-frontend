@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import _ from 'lodash';
 import { observer } from 'mobx-react-lite';
+import { CoverageInformation } from '../../resultsView/ResultsViewPageStoreUtils';
+import { Sample } from 'cbioportal-ts-api-client';
+import PatientViewMutationsDataStore from '../mutation/PatientViewMutationsDataStore';
+import VAFChartControls from './VAFChartControls';
+import VAFChartWrapper from 'pages/patientView/timeline2/VAFChartWrapper';
+import TimelineWrapperStore from 'pages/patientView/timeline2/TimelineWrapperStore';
 
 import 'cbioportal-clinical-timeline/dist/styles.css';
 
@@ -122,19 +128,36 @@ export interface ISampleMetaDeta {
 }
 
 export interface ITimeline2Props {
+    dataStore: PatientViewMutationsDataStore;
     data: ClinicalEvent[];
     caseMetaData: ISampleMetaDeta;
     sampleManager: SampleManager;
     width: number;
+    samples: Sample[];
+    mutationProfileId: string;
+    coverageInformation: CoverageInformation;
 }
 
 const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
-    function({ data, caseMetaData, sampleManager, width }: ITimeline2Props) {
+    function({
+        dataStore,
+        data,
+        caseMetaData,
+        sampleManager,
+        width,
+        samples,
+        mutationProfileId,
+        coverageInformation,
+    }: ITimeline2Props) {
         const [events, setEvents] = useState<
             TimelineTrackSpecification[] | null
         >(null);
 
         const [store, setStore] = useState<TimelineStore | null>(null);
+        const [
+            wrapperStore,
+            setWrapperStore,
+        ] = useState<TimelineWrapperStore | null>(null);
 
         useEffect(() => {
             var isGenieBpcStudy = window.location.href.includes('genie_bpc');
@@ -533,29 +556,49 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
 
             setStore(store);
 
+            const wrapperStore = new TimelineWrapperStore();
+
+            setWrapperStore(wrapperStore);
+
             (window as any).store = store;
         }, []);
 
-        if (store) {
+        if (store && wrapperStore) {
             return (
-                <Timeline
-                    store={store}
-                    width={width}
-                    onClickDownload={() => downloadZippedTracks(data)}
-                    // customTracks={[
-                    //     {
-                    //         renderHeader: () => 'VAF',
-                    //         renderTrack: (store: TimelineStore) => (
-                    //             <VAFChartWrapper
-                    //                 store={store}
-                    //                 sampleMetaData={caseMetaData}
-                    //             />
-                    //         ),
-                    //         height: () => VAF_CHART_ROW_HEIGHT,
-                    //         labelForExport: 'VAF',
-                    //     },
-                    // ]}
-                />
+                <div>
+                    <Timeline
+                        store={store}
+                        width={width}
+                        onClickDownload={() => downloadZippedTracks(data)}
+                        customTracks={[
+                            {
+                                renderHeader: () => 'VAF',
+                                renderTrack: (store: TimelineStore) => (
+                                    <VAFChartWrapper
+                                        dataStore={dataStore}
+                                        store={store}
+                                        wrapperStore={wrapperStore}
+                                        sampleMetaData={caseMetaData}
+                                        samples={samples}
+                                        mutationProfileId={mutationProfileId}
+                                        coverageInformation={
+                                            coverageInformation
+                                        }
+                                        sampleManager={sampleManager}
+                                    />
+                                ),
+                                height: (store: TimelineStore) => {
+                                    return wrapperStore.vafChartHeight;
+                                },
+                                labelForExport: 'VAF',
+                            },
+                        ]}
+                    />
+                    <VAFChartControls
+                        wrapperStore={wrapperStore}
+                        sampleManager={sampleManager}
+                    />
+                </div>
             );
         } else {
             return <div />;

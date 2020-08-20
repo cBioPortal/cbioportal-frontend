@@ -36,6 +36,7 @@ import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
 import { validateParametersPatientView } from '../../shared/lib/validateParameters';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ValidationAlert from 'shared/components/ValidationAlert';
+import PatientViewMutationsDataStore from './mutation/PatientViewMutationsDataStore';
 import AppConfig from 'appConfig';
 import { getMouseIcon } from './SVGIcons';
 
@@ -59,6 +60,7 @@ import request from 'superagent';
 import { remoteData, getBrowserWindow } from 'cbioportal-frontend-commons';
 import TrialMatchTable from './trialMatch/TrialMatchTable';
 
+import 'cbioportal-frontend-commons/dist/styles.css';
 import 'react-mutation-mapper/dist/styles.css';
 import 'react-table/react-table.css';
 import { trackPatient, trackEvent } from 'shared/lib/tracking';
@@ -78,6 +80,8 @@ import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
 import { MakeMobxView } from '../../shared/components/MobxView';
 import ResourceTab from '../../shared/components/resources/ResourceTab';
 import TimelineWrapper from './timeline2/TimelineWrapper';
+import { isFusion } from '../../shared/lib/MutationUtils';
+import { Mutation } from 'cbioportal-ts-api-client';
 
 export interface IPatientViewPageProps {
     params: any; // react route
@@ -198,6 +202,20 @@ export default class PatientViewPage extends React.Component<
         );
         this.onCnaTableColumnVisibilityToggled = this.onCnaTableColumnVisibilityToggled.bind(
             this
+        );
+    }
+
+    private dataStore = new PatientViewMutationsDataStore(
+        () => this.mergedMutations,
+        this.urlWrapper
+    );
+
+    @computed get mergedMutations() {
+        // remove fusions
+        return this.patientViewPageStore.mergedMutationDataIncludingUncalledFilteredByGene.filter(
+            mutationArray => {
+                return !isFusion(mutationArray[0]);
+            }
         );
     }
 
@@ -452,6 +470,23 @@ export default class PatientViewPage extends React.Component<
         } else {
             return null;
         }
+    }
+
+    @autobind
+    private onMutationTableRowClick(d: Mutation[]) {
+        if (d.length) {
+            this.dataStore.toggleSelectedMutation(d[0]);
+        }
+    }
+    @autobind
+    private onMutationTableRowMouseEnter(d: Mutation[]) {
+        if (d.length) {
+            this.dataStore.setMouseOverMutation(d[0]);
+        }
+    }
+    @autobind
+    private onMutationTableRowMouseLeave() {
+        this.dataStore.setMouseOverMutation(null);
     }
 
     readonly resourceTabs = MakeMobxView({
@@ -889,6 +924,9 @@ export default class PatientViewPage extends React.Component<
                                                     {' '}
                                                     {this.showNewTimeline && (
                                                         <TimelineWrapper
+                                                            dataStore={
+                                                                this.dataStore
+                                                            }
                                                             caseMetaData={{
                                                                 color:
                                                                     sampleManager.sampleColors,
@@ -909,6 +947,24 @@ export default class PatientViewPage extends React.Component<
                                                             width={
                                                                 WindowStore.size
                                                                     .width
+                                                            }
+                                                            samples={
+                                                                this
+                                                                    .patientViewPageStore
+                                                                    .samples
+                                                                    .result
+                                                            }
+                                                            mutationProfileId={
+                                                                this
+                                                                    .patientViewPageStore
+                                                                    .mutationMolecularProfileId
+                                                                    .result!
+                                                            }
+                                                            coverageInformation={
+                                                                this
+                                                                    .patientViewPageStore
+                                                                    .coverageInformation
+                                                                    .result
                                                             }
                                                         />
                                                     )}
@@ -1259,6 +1315,18 @@ export default class PatientViewPage extends React.Component<
                                                         this
                                                             .patientViewPageStore
                                                             .generateGenomeNexusHgvsgUrl
+                                                    }
+                                                    onRowClick={
+                                                        this
+                                                            .onMutationTableRowClick
+                                                    }
+                                                    onRowMouseEnter={
+                                                        this
+                                                            .onMutationTableRowMouseEnter
+                                                    }
+                                                    onRowMouseLeave={
+                                                        this
+                                                            .onMutationTableRowMouseLeave
                                                     }
                                                 />
                                             </div>

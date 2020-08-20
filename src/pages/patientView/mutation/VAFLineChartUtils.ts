@@ -4,6 +4,7 @@ import { isSampleProfiled } from '../../../shared/lib/isSampleProfiled';
 import _ from 'lodash';
 import { Mutation, Sample } from 'cbioportal-ts-api-client';
 import { CoverageInformation } from '../../resultsView/ResultsViewPageStoreUtils';
+import { GROUP_BY_NONE } from '../timeline2/VAFChartControls';
 
 export interface IPoint {
     x: number;
@@ -20,15 +21,45 @@ function isPointBasedOnRealVAF(d: { mutationStatus: MutationStatus }) {
     );
 }
 
+function splitMutationsBySampleGroup(
+    mutations: Mutation[][],
+    sampleGroup: { [s: string]: string }
+) {
+    let groupedMutation: { [s: string]: Mutation[] } = {};
+    let groupedMutations: Mutation[][] = [];
+
+    mutations.forEach((mutation, i) => {
+        groupedMutation = {};
+        mutation.forEach((sample, j) => {
+            if (groupedMutation[sampleGroup[sample.sampleId]] === undefined) {
+                groupedMutation[sampleGroup[sample.sampleId]] = [];
+            }
+            groupedMutation[sampleGroup[sample.sampleId]].push(sample);
+        });
+        for (const m in groupedMutation) {
+            groupedMutations.push(groupedMutation[m]);
+        }
+    });
+    return groupedMutations;
+}
+
 export function computeRenderData(
     samples: Sample[],
     mutations: Mutation[][],
     sampleIdIndex: { [sampleId: string]: number },
     mutationProfileId: string,
-    coverageInformation: CoverageInformation
+    coverageInformation: CoverageInformation,
+    groupByOption: string,
+    sampleIdToClinicalValue: { [sampleId: string]: string }
 ) {
     const grayPoints: IPoint[] = []; // points that are purely interpolated for rendering, dont have data of their own
     const lineData: IPoint[][] = [];
+
+    if (groupByOption && groupByOption != GROUP_BY_NONE)
+        mutations = splitMutationsBySampleGroup(
+            mutations,
+            sampleIdToClinicalValue
+        );
 
     for (const mergedMutation of mutations) {
         // determine data points in line for this mutation
