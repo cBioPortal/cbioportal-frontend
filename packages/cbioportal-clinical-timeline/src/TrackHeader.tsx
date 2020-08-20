@@ -4,7 +4,7 @@ import { TICK_AXIS_HEIGHT } from './TickAxis';
 import { CustomTrackSpecification } from './CustomTrack';
 import { TimelineStore } from './TimelineStore';
 import { useLocalStore, useObserver } from 'mobx-react-lite';
-import { TruncatedText } from 'cbioportal-frontend-commons';
+import { observer } from 'mobx-react';
 
 interface ITrackHeaderProps {
     store: TimelineStore;
@@ -27,7 +27,7 @@ const TrackHeader: React.FunctionComponent<ITrackHeaderProps> = function({
 }) {
     const collapseCallback = useCallback(
         () => store.toggleTrackCollapse(track.uid),
-        [track]
+        [track] // todo: would this work or do i have to use a normal props and dereference the prop here?
     );
 
     return useObserver(() => (
@@ -48,7 +48,7 @@ const TrackHeader: React.FunctionComponent<ITrackHeaderProps> = function({
                         opacity: store.isTrackCollapsed(track.uid) ? 0.5 : 1,
                     }}
                 >
-                    <TruncatedText text={getTrackLabel(track)} maxLength={20} />
+                    {getTrackLabel(track)}
                 </span>
                 {store.enableCollapseTrack &&
                     track.tracks &&

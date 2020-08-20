@@ -5,7 +5,7 @@ import {
     TableCellStatusIndicator,
     TableCellStatus,
 } from 'cbioportal-frontend-commons';
-import TruncatedText from 'cbioportal-frontend-commons/src/components/truncatedText/TruncatedText';
+import TruncatedText from 'shared/components/TruncatedText';
 
 export default class CancerTypeColumnFormatter {
     public static getData(
