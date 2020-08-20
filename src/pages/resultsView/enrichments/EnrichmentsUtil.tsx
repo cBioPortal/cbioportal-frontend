@@ -25,7 +25,7 @@ import styles from './styles.module.scss';
 import classNames from 'classnames';
 import { IMultipleCategoryBarPlotData } from 'shared/components/plots/MultipleCategoryBarPlot';
 import { getTextColor } from '../../groupComparison/OverlapUtils';
-import TruncatedText from 'shared/components/TruncatedText';
+import TruncatedText from 'cbioportal-frontend-commons/src/components/truncatedText/TruncatedText';
 import {
     ExpressionEnrichmentTableColumn,
     ExpressionEnrichmentTableColumnType,

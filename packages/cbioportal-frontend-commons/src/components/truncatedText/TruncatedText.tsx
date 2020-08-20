@@ -2,7 +2,7 @@ import * as React from 'react';
 import classNames from 'classnames';
 import { observer } from 'mobx-react';
 import { computed } from 'mobx';
-import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import DefaultTooltip from '../defaultTooltip/DefaultTooltip';
 
 export interface ITruncatedTextProps {
     text: string;
