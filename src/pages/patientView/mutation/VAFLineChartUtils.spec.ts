@@ -7,6 +7,7 @@ import { makeMutationHeatmapData } from './oncoprint/MutationOncoprintUtils';
 import { MutationOncoprintMode } from './oncoprint/MutationOncoprint';
 import { assertDeepEqualInAnyOrder } from '../../../shared/lib/SpecUtils';
 import { computeRenderData, IPoint } from './VAFLineChartUtils';
+import { GROUP_BY_NONE } from '../timeline2/VAFChartControls';
 import _ from 'lodash';
 
 describe('VAFLineChartUtils', () => {
@@ -160,7 +161,9 @@ describe('VAFLineChartUtils', () => {
                     [],
                     sampleIdIndex,
                     'mutations',
-                    makeCoverageInfo([1, 2, 3], [])
+                    makeCoverageInfo([1, 2, 3], []),
+                    GROUP_BY_NONE,
+                    {}
                 ),
                 {
                     grayPoints: [],
@@ -199,7 +202,9 @@ describe('VAFLineChartUtils', () => {
                     ],
                     sampleIdIndex,
                     'mutations',
-                    makeCoverageInfo([1, 2, 3], [])
+                    makeCoverageInfo([1, 2, 3], []),
+                    GROUP_BY_NONE,
+                    {}
                 ),
                 {
                     grayPoints: [],
@@ -349,7 +354,9 @@ describe('VAFLineChartUtils', () => {
                     ],
                     sampleIdIndex,
                     'mutations',
-                    makeCoverageInfo([1, 2, 3], [])
+                    makeCoverageInfo([1, 2, 3], []),
+                    GROUP_BY_NONE,
+                    {}
                 ),
                 {
                     grayPoints: [
@@ -482,7 +489,9 @@ describe('VAFLineChartUtils', () => {
                     ],
                     sampleIdIndex,
                     'mutations',
-                    makeCoverageInfo([1, 2, 3], [])
+                    makeCoverageInfo([1, 2, 3], []),
+                    GROUP_BY_NONE,
+                    {}
                 ),
                 {
                     grayPoints: [
@@ -576,7 +585,9 @@ describe('VAFLineChartUtils', () => {
                     ],
                     sampleIdIndex,
                     'mutations',
-                    makeCoverageInfo([1, 2, 3], [])
+                    makeCoverageInfo([1, 2, 3], []),
+                    GROUP_BY_NONE,
+                    {}
                 ),
                 {
                     grayPoints: [],
@@ -699,7 +710,9 @@ describe('VAFLineChartUtils', () => {
                                 },
                             },
                         ]
-                    )
+                    ),
+                    GROUP_BY_NONE,
+                    {}
                 ),
                 {
                     grayPoints: [
@@ -794,7 +807,9 @@ describe('VAFLineChartUtils', () => {
                     ],
                     sampleIdIndex,
                     'mutations',
-                    makeCoverageInfo([1, 2], [3])
+                    makeCoverageInfo([1, 2], [3]),
+                    GROUP_BY_NONE,
+                    {}
                 ),
                 {
                     grayPoints: [],
