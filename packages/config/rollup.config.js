@@ -47,7 +47,6 @@ export default function getRollupOptions(
             url(),
             svgr(),
             typescript({
-                rollupCommonJSResolveHack: true,
                 clean: true,
             }),
             json(),
