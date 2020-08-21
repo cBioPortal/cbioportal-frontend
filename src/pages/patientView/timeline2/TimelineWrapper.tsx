@@ -148,6 +148,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                 trackStructures: [
                     ['TREATMENT', 'TREATMENT_TYPE', 'SUBTYPE', 'AGENT'],
                     ['LAB_TEST', 'TEST'],
+                    ['DIAGNOSIS', 'SUBTYPE'],
                 ],
                 trackEventRenderers: [
                     {
