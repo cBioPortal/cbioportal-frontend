@@ -939,3 +939,49 @@ export function evaluateDiscreteCopyNumberAlterationPutativeDriverInfo(
         customDriverTier,
     };
 }
+
+export function evaluateMutationPutativeDriverInfo(
+    mutation: Mutation,
+    oncoKbDatum: IndicatorQueryResp | undefined | null | false,
+    hotspotAnnotationsActive: boolean,
+    hotspotDriver: boolean,
+    cbioportalCountActive: boolean,
+    cbioportalCountExceeded: boolean,
+    cosmicCountActive: boolean,
+    cosmicCountExceeded: boolean,
+    customDriverAnnotationsActive: boolean,
+    customDriverTierSelection: ObservableMap<boolean> | undefined
+) {
+    
+    const oncoKb = oncoKbDatum ? getOncoKbOncogenic(oncoKbDatum) : '';
+    const hotspots = hotspotAnnotationsActive && hotspotDriver;
+    const cbioportalCount = cbioportalCountActive && cosmicCountExceeded;
+    const cosmicCount = cosmicCountActive && cosmicCountExceeded;
+
+    // Set driverFilter to true when:
+    // (1) custom drivers active in settings menu
+    // (2) the datum has a custom driver annotation
+    const customDriverBinary: boolean =
+        (customDriverAnnotationsActive &&
+            mutation.driverFilter === 'Putative_Driver') ||
+        false;
+
+    // Set tier information to the tier name when the tiers checkbox
+    // is selected for the corresponding tier of the datum in settings menu.
+    // This forces the Mutation to be counted as a driver mutation.
+    const customDriverTier: string | undefined =
+        mutation.driverTiersFilter &&
+        customDriverTierSelection &&
+        customDriverTierSelection.get(mutation.driverTiersFilter)
+            ? mutation.driverTiersFilter
+            : undefined;
+
+    return {
+        oncoKb,
+        hotspots,
+        cbioportalCount,
+        cosmicCount,
+        customDriverBinary,
+        customDriverTier,
+    };
+}

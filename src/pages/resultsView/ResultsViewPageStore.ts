@@ -121,6 +121,7 @@ import {
     CoverageInformation,
     createDiscreteCopyNumberDataKey,
     evaluateDiscreteCopyNumberAlterationPutativeDriverInfo,
+    evaluateMutationPutativeDriverInfo,
     excludeSpecialMolecularProfiles,
     fetchPatients,
     fetchQueriedStudies,
@@ -458,7 +459,7 @@ export type ModifyQueryParams = {
 };
 
 /* fields and methods in the class below are ordered based on roughly
-/* chronological setup concerns, rather than on encapsulation and public API */
+/* chronological setup concerns, rather than on encapsulation and public API *
 /* tslint:disable: member-ordering */
 export class ResultsViewPageStore {
     constructor(private appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
@@ -4300,56 +4301,28 @@ export class ResultsViewPageStore {
                         getOncoKbMutationAnnotationForOncoprint instanceof Error
                     ) &&
                     getOncoKbMutationAnnotationForOncoprint(mutation);
-
-                let oncoKb: string = '';
-                if (oncoKbDatum) {
-                    oncoKb = getOncoKbOncogenic(oncoKbDatum);
-                }
-
-                const hotspots: boolean =
-                    this.driverAnnotationSettings.hotspots &&
-                    !(this.isHotspotForOncoprint.result instanceof Error) &&
-                    this.isHotspotForOncoprint.result!(mutation);
-
-                const cbioportalCount: boolean =
-                    this.driverAnnotationSettings.cbioportalCount &&
-                    this.getCBioportalCount.isComplete &&
+                
+                const isHotspotDriver = !(this.isHotspotForOncoprint.result instanceof Error) && this.isHotspotForOncoprint.result!(mutation);
+                const cbioportalCountExceeded = this.getCBioportalCount.isComplete &&
                     this.getCBioportalCount.result!(mutation) >=
-                        this.driverAnnotationSettings.cbioportalCountThreshold;
-
-                const cosmicCount: boolean =
-                    this.driverAnnotationSettings.cosmicCount &&
-                    this.getCosmicCount.isComplete &&
+                    this.driverAnnotationSettings.cbioportalCountThreshold;
+                const cosmicCountExceeded = this.getCosmicCount.isComplete &&
                     this.getCosmicCount.result!(mutation) >=
-                        this.driverAnnotationSettings.cosmicCountThreshold;
+                    this.driverAnnotationSettings.cosmicCountThreshold;
 
-                // Set driverFilter to true when:
-                // (1) custom drivers active in settings menu
-                // (2) the datum has a custom driver annotation
-                const customDriverBinary: boolean =
-                    (this.driverAnnotationSettings.customBinary &&
-                        mutation.driverFilter === 'Putative_Driver') ||
-                    false;
-
-                // Set tier information to the tier name when the tiers checkbox
-                // is selected for the corresponding tier of the datum in settings menu.
-                // This forces the Mutation to be counted as a driver mutation.
-                const customDriverTier: string | undefined =
-                    mutation.driverTiersFilter &&
-                    this.driverAnnotationSettings.driverTiers.get(
-                        mutation.driverTiersFilter
-                    )
-                        ? mutation.driverTiersFilter
-                        : undefined;
-
-                return {
-                    oncoKb,
-                    hotspots,
-                    cbioportalCount,
-                    cosmicCount,
-                    customDriverBinary,
-                    customDriverTier,
-                };
+                // Note: custom driver annotations are part of the incoming datum
+                return evaluateMutationPutativeDriverInfo(
+                    mutation,
+                    oncoKbDatum,
+                    this.driverAnnotationSettings.hotspots,
+                    isHotspotDriver,
+                    this.driverAnnotationSettings.cbioportalCount,
+                    cbioportalCountExceeded,
+                    this.driverAnnotationSettings.cosmicCount,
+                    cosmicCountExceeded,
+                    this.driverAnnotationSettings.customBinary,
+                    this.driverAnnotationSettings.driverTiers
+                );
             });
         },
     });

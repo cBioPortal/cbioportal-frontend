@@ -1368,6 +1368,152 @@ describe('ResultsViewPageStoreUtils', () => {
         });
     });
 
+    describe('evaluateDiscreteCopyNumberAlterationPutativeDriverInfo', () => {
+        it('no driver annotations present', () => {
+            assert.deepEqual(
+                evaluateDiscreteCopyNumberAlterationPutativeDriverInfo(
+                    {
+                        entrezGeneId: 1,
+                        value: 0,
+                        driverFilter: 'Putative_Passenger',
+                        driverFilterAnnotation: '',
+                        driverTiersFilter: 'Class 1',
+                        driverTiersFilterAnnotation: '',
+                    } as DiscreteCopyNumberAlterationMolecularData,
+                    {
+                        oncogenic: 'Unknown',
+                    } as IndicatorQueryResp,
+                    false,
+                    observable.map<boolean>({ 'Class 1': false })
+                ),
+                {
+                    oncoKb: '',
+                    customDriverBinary: false,
+                    customDriverTier: undefined,
+                }
+            );
+        });
+        it('OncoKb', () => {
+            assert.deepEqual(
+                evaluateDiscreteCopyNumberAlterationPutativeDriverInfo(
+                    {
+                        entrezGeneId: 1,
+                        value: 0,
+                        driverFilter: 'Putative_Passenger',
+                        driverFilterAnnotation: '',
+                        driverTiersFilter: 'Class 1',
+                        driverTiersFilterAnnotation: '',
+                    } as DiscreteCopyNumberAlterationMolecularData,
+                    {
+                        oncogenic: 'Oncogenic',
+                    } as IndicatorQueryResp,
+                    false,
+                    observable.map<boolean>({ 'Class 1': false })
+                ),
+                {
+                    oncoKb: 'Oncogenic',
+                    customDriverBinary: false,
+                    customDriverTier: undefined,
+                }
+            );
+        });
+        it('custom driver annnotation', () => {
+            assert.deepEqual(
+                evaluateDiscreteCopyNumberAlterationPutativeDriverInfo(
+                    {
+                        entrezGeneId: 1,
+                        value: 0,
+                        driverFilter: 'Putative_Driver',
+                        driverFilterAnnotation: '',
+                        driverTiersFilter: 'Class 1',
+                        driverTiersFilterAnnotation: '',
+                    } as DiscreteCopyNumberAlterationMolecularData,
+                    {
+                        oncogenic: 'Unknown',
+                    } as IndicatorQueryResp,
+                    false,
+                    observable.map<boolean>({ 'Class 1': false })
+                ),
+                {
+                    oncoKb: '',
+                    customDriverBinary: false,
+                    customDriverTier: undefined,
+                }
+            );
+            assert.deepEqual(
+                evaluateDiscreteCopyNumberAlterationPutativeDriverInfo(
+                    {
+                        entrezGeneId: 1,
+                        value: 0,
+                        driverFilter: 'Putative_Driver',
+                        driverFilterAnnotation: '',
+                        driverTiersFilter: 'Class 1',
+                        driverTiersFilterAnnotation: '',
+                    } as DiscreteCopyNumberAlterationMolecularData,
+                    {
+                        oncogenic: 'Unknown',
+                    } as IndicatorQueryResp,
+                    true,
+                    observable.map<boolean>({ 'Class 1': false })
+                ),
+                {
+                    oncoKb: '',
+                    customDriverBinary: true,
+                    customDriverTier: undefined,
+                }
+            );
+        });
+        it('custom tiers active', () => {
+            assert.deepEqual(
+                evaluateDiscreteCopyNumberAlterationPutativeDriverInfo(
+                    {
+                        entrezGeneId: 1,
+                        value: 0,
+                        driverFilter: 'Putative_Passenger',
+                        driverFilterAnnotation: '',
+                        driverTiersFilter: 'Class 1',
+                        driverTiersFilterAnnotation: '',
+                    } as DiscreteCopyNumberAlterationMolecularData,
+                    {
+                        oncogenic: 'Unknown',
+                    } as IndicatorQueryResp,
+                    false,
+                    observable.map<boolean>({ 'Class 1': true })
+                ),
+                {
+                    oncoKb: '',
+                    customDriverBinary: false,
+                    customDriverTier: 'Class 1',
+                }
+            );
+            assert.deepEqual(
+                evaluateDiscreteCopyNumberAlterationPutativeDriverInfo(
+                    {
+                        entrezGeneId: 1,
+                        value: 0,
+                        driverFilter: 'Putative_Passenger',
+                        driverFilterAnnotation: '',
+                        driverTiersFilter: 'Class 2',
+                        driverTiersFilterAnnotation: '',
+                    } as DiscreteCopyNumberAlterationMolecularData,
+                    {
+                        oncogenic: 'Unknown',
+                    } as IndicatorQueryResp,
+                    false,
+                    observable.map<boolean>({
+                        'Class 2': false,
+                        'Class 1': true,
+                    })
+                ),
+                {
+                    oncoKb: '',
+                    customDriverBinary: false,
+                    customDriverTier: undefined,
+                }
+            );
+        });
+    });
+    
     describe('getOncoKbOncogenic', () => {
         it('should return Likely Oncogenic if thats the input', () => {
             assert.equal(
@@ -3353,151 +3499,5 @@ describe('parseGenericAssayGroups', () => {
             expectedResult,
             'return result for multiple correct formatted generic assay groups'
         );
-    });
-
-    describe('evaluateDiscreteCopyNumberAlterationPutativeDriverInfo', () => {
-        it('no driver annotations present', () => {
-            assert.deepEqual(
-                evaluateDiscreteCopyNumberAlterationPutativeDriverInfo(
-                    {
-                        entrezGeneId: 1,
-                        value: 0,
-                        driverFilter: 'Putative_Passenger',
-                        driverFilterAnnotation: '',
-                        driverTiersFilter: 'Class 1',
-                        driverTiersFilterAnnotation: '',
-                    } as DiscreteCopyNumberAlterationMolecularData,
-                    {
-                        oncogenic: 'Unknown',
-                    } as IndicatorQueryResp,
-                    false,
-                    observable.map<boolean>({ 'Class 1': false })
-                ),
-                {
-                    oncoKb: '',
-                    customDriverBinary: false,
-                    customDriverTier: '',
-                }
-            );
-        });
-        it('OncoKb', () => {
-            assert.deepEqual(
-                evaluateDiscreteCopyNumberAlterationPutativeDriverInfo(
-                    {
-                        entrezGeneId: 1,
-                        value: 0,
-                        driverFilter: 'Putative_Passenger',
-                        driverFilterAnnotation: '',
-                        driverTiersFilter: 'Class 1',
-                        driverTiersFilterAnnotation: '',
-                    } as DiscreteCopyNumberAlterationMolecularData,
-                    {
-                        oncogenic: 'Oncogenic',
-                    } as IndicatorQueryResp,
-                    false,
-                    observable.map<boolean>({ 'Class 1': false })
-                ),
-                {
-                    oncoKb: 'Oncogenic',
-                    customDriverBinary: false,
-                    customDriverTier: '',
-                }
-            );
-        });
-        it('custom driver annnotation', () => {
-            assert.deepEqual(
-                evaluateDiscreteCopyNumberAlterationPutativeDriverInfo(
-                    {
-                        entrezGeneId: 1,
-                        value: 0,
-                        driverFilter: 'Putative_Driver',
-                        driverFilterAnnotation: '',
-                        driverTiersFilter: 'Class 1',
-                        driverTiersFilterAnnotation: '',
-                    } as DiscreteCopyNumberAlterationMolecularData,
-                    {
-                        oncogenic: 'Unknown',
-                    } as IndicatorQueryResp,
-                    false,
-                    observable.map<boolean>({ 'Class 1': false })
-                ),
-                {
-                    oncoKb: '',
-                    customDriverBinary: false,
-                    customDriverTier: '',
-                }
-            );
-            assert.deepEqual(
-                evaluateDiscreteCopyNumberAlterationPutativeDriverInfo(
-                    {
-                        entrezGeneId: 1,
-                        value: 0,
-                        driverFilter: 'Putative_Driver',
-                        driverFilterAnnotation: '',
-                        driverTiersFilter: 'Class 1',
-                        driverTiersFilterAnnotation: '',
-                    } as DiscreteCopyNumberAlterationMolecularData,
-                    {
-                        oncogenic: 'Unknown',
-                    } as IndicatorQueryResp,
-                    true,
-                    observable.map<boolean>({ 'Class 1': false })
-                ),
-                {
-                    oncoKb: '',
-                    customDriverBinary: true,
-                    customDriverTier: '',
-                }
-            );
-        });
-        it('custom tiers active', () => {
-            assert.deepEqual(
-                evaluateDiscreteCopyNumberAlterationPutativeDriverInfo(
-                    {
-                        entrezGeneId: 1,
-                        value: 0,
-                        driverFilter: 'Putative_Passenger',
-                        driverFilterAnnotation: '',
-                        driverTiersFilter: 'Class 1',
-                        driverTiersFilterAnnotation: '',
-                    } as DiscreteCopyNumberAlterationMolecularData,
-                    {
-                        oncogenic: 'Unknown',
-                    } as IndicatorQueryResp,
-                    false,
-                    observable.map<boolean>({ 'Class 1': true })
-                ),
-                {
-                    oncoKb: '',
-                    customDriverBinary: false,
-                    customDriverTier: 'Class 1',
-                }
-            );
-            assert.deepEqual(
-                evaluateDiscreteCopyNumberAlterationPutativeDriverInfo(
-                    {
-                        entrezGeneId: 1,
-                        value: 0,
-                        driverFilter: 'Putative_Passenger',
-                        driverFilterAnnotation: '',
-                        driverTiersFilter: 'Class 2',
-                        driverTiersFilterAnnotation: '',
-                    } as DiscreteCopyNumberAlterationMolecularData,
-                    {
-                        oncogenic: 'Unknown',
-                    } as IndicatorQueryResp,
-                    false,
-                    observable.map<boolean>({
-                        'Class 2': false,
-                        'Class 1': true,
-                    })
-                ),
-                {
-                    oncoKb: '',
-                    customDriverBinary: false,
-                    customDriverTier: '',
-                }
-            );
-        });
     });
 });
