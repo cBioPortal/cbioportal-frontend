@@ -120,6 +120,7 @@ import {
     computeGenePanelInformation,
     CoverageInformation,
     createDiscreteCopyNumberDataKey,
+    evaluateDiscreteCopyNumberAlterationPutativeDriverInfo,
     excludeSpecialMolecularProfiles,
     fetchPatients,
     fetchQueriedStudies,
@@ -4359,9 +4360,6 @@ export class ResultsViewPageStore {
             if (this.driverAnnotationSettings.oncoKb) {
                 toAwait.push(this.getOncoKbCnaAnnotationForOncoprint);
             }
-            if (this.driverAnnotationSettings.customBinary) {
-                toAwait.push(this.discreteCopyNumberAlterations);
-            }
             return toAwait;
         },
         invoke: () => {
@@ -4373,7 +4371,7 @@ export class ResultsViewPageStore {
                     customDriverBinary: boolean;
                     customDriverTier?: string | undefined;
                 } => {
-                    const getOncoKbCnaAnnotationForOncoprint = this
+                    const getOncoKBAnnotationFunc = this
                         .getOncoKbCnaAnnotationForOncoprint.result!;
                     const oncoKbDatum:
                         | IndicatorQueryResp
@@ -4381,41 +4379,17 @@ export class ResultsViewPageStore {
                         | null
                         | false =
                         this.driverAnnotationSettings.oncoKb &&
-                        getOncoKbCnaAnnotationForOncoprint &&
-                        !(
-                            getOncoKbCnaAnnotationForOncoprint instanceof Error
-                        ) &&
-                        getOncoKbCnaAnnotationForOncoprint(cnaDatum);
+                        getOncoKBAnnotationFunc &&
+                        !(getOncoKBAnnotationFunc instanceof Error) &&
+                        getOncoKBAnnotationFunc(cnaDatum);
 
-                    let oncoKb = '';
-                    if (oncoKbDatum) {
-                        oncoKb = getOncoKbOncogenic(oncoKbDatum);
-                    }
-
-                    // Set driverFilter to true when:
-                    // (1) custom drivers active in settings menu
-                    // (2) the datum has a custom driver annotation
-                    const customDriverBinary: boolean =
-                        (this.driverAnnotationSettings.customBinary &&
-                            cnaDatum.driverFilter === 'Putative_Driver') ||
-                        false;
-
-                    // Set tier information to the tier name when the tiers checkbox
-                    // is selected for the corresponding tier of the datum in settings menu.
-                    // This forces the CNA to be counted as a driver mutation.
-                    const customDriverTier: string | undefined =
-                        cnaDatum.driverTiersFilter &&
-                        this.driverAnnotationSettings.driverTiers.get(
-                            cnaDatum.driverTiersFilter
-                        )
-                            ? cnaDatum.driverTiersFilter
-                            : undefined;
-
-                    return {
-                        oncoKb,
-                        customDriverBinary,
-                        customDriverTier,
-                    };
+                    // Note: custom driver annotations are part of the incoming datum
+                    return evaluateDiscreteCopyNumberAlterationPutativeDriverInfo(
+                        cnaDatum,
+                        oncoKbDatum,
+                        this.driverAnnotationSettings.customBinary,
+                        this.driverAnnotationSettings.driverTiers
+                    );
                 }
             );
         },
