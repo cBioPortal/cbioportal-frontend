@@ -115,7 +115,10 @@ export async function fetchGenericAssayData(
     entityIdsByProfile: { [molecularProfileId: string]: string[] },
     sampleFilterByProfile: { [molecularProfileId: string]: IDataQueryFilter }
 ) {
-    const params = _.map(entityIdsByProfile, (entityIds, profileId) => {
+    const params: {
+        molecularProfileId: string;
+        genericAssayDataFilter: GenericAssayDataFilter;
+    }[] = _.map(entityIdsByProfile, (entityIds, profileId) => {
         return {
             molecularProfileId: profileId,
             genericAssayDataFilter: {
@@ -127,7 +130,7 @@ export async function fetchGenericAssayData(
             } as GenericAssayDataFilter,
         };
     });
-    const dataPromises = params.map((param: any) => {
+    const dataPromises = params.map(param => {
         // do not request data by using empty sample list
         if (
             _.isEmpty(param.genericAssayDataFilter.sampleIds) &&
@@ -174,7 +177,8 @@ export function makeGenericAssayOption(
             : NOT_APPLICABLE_VALUE;
     const uniqueName = name !== meta.stableId;
     const uniqueDesc = description !== meta.stableId && description !== name;
-    let label = '';
+    // set stableId as default label
+    let label = meta.stableId;
     if (!uniqueName && !uniqueDesc) {
         label = meta.stableId;
     } else if (!uniqueName) {
