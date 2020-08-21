@@ -11,7 +11,8 @@ import {
     ClinicalAttribute,
     PatientIdentifier,
     PatientFilter,
-    ReferenceGenomeGene, DiscreteCopyNumberData,
+    ReferenceGenomeGene,
+    DiscreteCopyNumberData,
 } from 'cbioportal-ts-api-client';
 import { action, computed } from 'mobx';
 import AccessorsForOqlFilter, {
@@ -28,13 +29,14 @@ import oql_parser from '../../shared/lib/oql/oql-parser';
 import { groupBy } from '../../shared/lib/StoreUtils';
 import {
     AnnotatedExtendedAlteration,
-    AnnotatedNumericGeneMolecularData,
     AnnotatedMutation,
     CaseAggregatedData,
     IQueriedCaseData,
     IQueriedMergedTrackCaseData,
     ResultsViewPageStore,
     AlterationTypeConstants,
+    DiscreteCopyNumberAlterationMolecularData,
+    AnnotatedDiscreteCopyNumberAlterationMolecularData,
 } from './ResultsViewPageStore';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
@@ -158,6 +160,28 @@ export function annotateMutationPutativeDriver(
     ) as AnnotatedMutation;
 }
 
+export function annotateDiscreteCopyNumberAlterationPutativeDriver(
+    cnaMolecularDatum: DiscreteCopyNumberAlterationMolecularData,
+    putativeDriverInfo: {
+        oncoKb: string;
+        customDriverBinary: boolean;
+        customDriverTier?: string;
+    }
+): AnnotatedDiscreteCopyNumberAlterationMolecularData {
+    const putativeDriver = !!(
+        putativeDriverInfo.oncoKb ||
+        putativeDriverInfo.customDriverBinary ||
+        putativeDriverInfo.customDriverTier
+    );
+    return Object.assign(
+        {
+            putativeDriver,
+            oncoKbOncogenic: putativeDriverInfo.oncoKb,
+        },
+        cnaMolecularDatum
+    ) as AnnotatedDiscreteCopyNumberAlterationMolecularData;
+}
+
 export type FilteredAndAnnotatedMutationsReport<
     T extends AnnotatedMutation = AnnotatedMutation
 > = {
@@ -165,6 +189,13 @@ export type FilteredAndAnnotatedMutationsReport<
     vus: T[];
     germline: T[];
     vusAndGermline: T[];
+};
+
+export type FilteredAndAnnotatedDiscreteCopyNumberAlterationReport<
+    T extends AnnotatedDiscreteCopyNumberAlterationMolecularData = AnnotatedDiscreteCopyNumberAlterationMolecularData
+> = {
+    data: T[];
+    vus: T[];
 };
 
 export function filterAndAnnotateMutations(
@@ -209,6 +240,41 @@ export function filterAndAnnotateMutations(
         vus,
         germline,
         vusAndGermline,
+    };
+}
+
+export function filterAndAnnotateDiscreteCopyNumberAlterations(
+    cnaData: DiscreteCopyNumberAlterationMolecularData[],
+    getPutativeDriverInfo: (
+        cnaDatum: DiscreteCopyNumberAlterationMolecularData
+    ) => {
+        oncoKb: string;
+        customDriverBinary: boolean;
+        customDriverTier?: string | undefined;
+    },
+    entrezGeneIdToGene: { [entrezGeneId: number]: Gene }
+): FilteredAndAnnotatedDiscreteCopyNumberAlterationReport<
+    AnnotatedDiscreteCopyNumberAlterationMolecularData
+> {
+    const vus: AnnotatedDiscreteCopyNumberAlterationMolecularData[] = [];
+    const filteredAnnotatedCnaData = [];
+    for (const cnaDatum of cnaData) {
+        const annotatedCna = annotateDiscreteCopyNumberAlterationPutativeDriver(
+            cnaDatum,
+            getPutativeDriverInfo(cnaDatum)
+        ); // annotate
+        annotatedCna.hugoGeneSymbol =
+            entrezGeneIdToGene[cnaDatum.entrezGeneId].hugoGeneSymbol;
+        const isVus = !annotatedCna.putativeDriver;
+        if (isVus) {
+            vus.push(annotatedCna);
+        } else {
+            filteredAnnotatedCnaData.push(annotatedCna);
+        }
+    }
+    return {
+        data: filteredAnnotatedCnaData,
+        vus,
     };
 }
 
@@ -366,43 +432,6 @@ export function computeGenePanelInformation(
         samples: sampleInfo,
         patients: patientInfo,
     };
-}
-
-export function annotateMolecularDatum(
-    molecularDatum: NumericGeneMolecularData,
-    getOncoKbCnaAnnotationForOncoprint: (
-        datum: NumericGeneMolecularData
-    ) => IndicatorQueryResp | undefined,
-    molecularProfileIdToMolecularProfile: {
-        [molecularProfileId: string]: MolecularProfile;
-    },
-    entrezGeneIdToGene: { [entrezGeneId: number]: Gene }
-): AnnotatedNumericGeneMolecularData {
-    const hugoGeneSymbol =
-        entrezGeneIdToGene[molecularDatum.entrezGeneId].hugoGeneSymbol;
-    let oncogenic = '';
-    if (
-        molecularProfileIdToMolecularProfile[molecularDatum.molecularProfileId]
-            .molecularAlterationType === 'COPY_NUMBER_ALTERATION'
-    ) {
-        const oncoKbDatum = getOncoKbCnaAnnotationForOncoprint(molecularDatum);
-        if (oncoKbDatum) {
-            oncogenic = getOncoKbOncogenic(oncoKbDatum);
-        }
-    }
-    return Object.assign(
-        {
-            putativeDriver: !!oncogenic,
-            oncoKbOncogenic: oncogenic,
-            hugoGeneSymbol,
-            //TODO Make these fields optional for all the rest of the classes?
-            driverFilter: '',
-            driverFilterAnnotation: '',
-            driverTiersFilter: '',
-            driverTiersFilterAnnotation: '',
-        },
-        molecularDatum
-    );
 }
 
 export async function fetchQueriedStudies(
@@ -871,6 +900,8 @@ export function parseGenericAssayGroups(
     return parsedGroups;
 }
 
-export function createDiscreteCopyNumberDataKey(d: NumericGeneMolecularData | DiscreteCopyNumberData) {
-    return d.sampleId + "_" + d.molecularProfileId + "_" + d.entrezGeneId;
+export function createDiscreteCopyNumberDataKey(
+    d: NumericGeneMolecularData | DiscreteCopyNumberData
+) {
+    return d.sampleId + '_' + d.molecularProfileId + '_' + d.entrezGeneId;
 }

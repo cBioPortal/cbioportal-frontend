@@ -21,9 +21,9 @@ import {
 import { Mutation, Sample, Gene } from 'cbioportal-ts-api-client';
 import {
     AlterationTypeConstants,
-    AnnotatedNumericGeneMolecularData,
     AnnotatedMutation,
     GenericAssayTypeConstants,
+    AnnotatedDiscreteCopyNumberAlterationMolecularData,
 } from '../ResultsViewPageStore';
 import { MutationCountBy, AxisMenuSelection } from './PlotsTab';
 import {
@@ -242,7 +242,7 @@ describe('PlotsTabUtils', () => {
                         oncoKbOncogenic: 'DuplicationD',
                         value: 4,
                     },
-                ] as AnnotatedNumericGeneMolecularData[],
+                ] as AnnotatedDiscreteCopyNumberAlterationMolecularData[],
             },
         };
 

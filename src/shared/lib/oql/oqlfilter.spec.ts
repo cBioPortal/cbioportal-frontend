@@ -19,8 +19,8 @@ import { assert } from 'chai';
 import sinon from 'sinon';
 import {
     AlterationTypeConstants,
+    AnnotatedDiscreteCopyNumberAlterationMolecularData,
     AnnotatedMutation,
-    AnnotatedNumericGeneMolecularData,
 } from '../../../pages/resultsView/ResultsViewPageStore';
 
 // This file uses type assertions to force functions that use overly specific
@@ -144,7 +144,7 @@ const THREE_GENE_TWO_SAMPLE_CNA_DATA = ([
             length: 4576,
         },
     },
-] as any) as AnnotatedNumericGeneMolecularData[];
+] as any) as AnnotatedDiscreteCopyNumberAlterationMolecularData[];
 // I believe these metadata to be all `new AccessorsForOqlFilter()` needs
 const DATA_PROFILE = {
     molecularAlterationType: 'COPY_NUMBER_ALTERATION',

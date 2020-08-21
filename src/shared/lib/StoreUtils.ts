@@ -791,39 +791,27 @@ export async function fetchCnaOncoKbData(
 export async function fetchCnaOncoKbDataWithNumericGeneMolecularData(
     uniqueSampleKeyToTumorType: { [uniqueSampleKey: string]: string },
     annotatedGenes: { [entrezGeneId: number]: boolean },
-    geneMolecularData: MobxPromise<NumericGeneMolecularData[]>,
-    molecularProfileIdToMolecularProfile: {
-        [molecularProfileId: string]: MolecularProfile;
-    },
+    cnaMolecularData: MobxPromise<NumericGeneMolecularData[]>,
     evidenceTypes?: string,
     client: OncoKbAPI = oncokbClient
 ) {
-    if (!geneMolecularData.result || geneMolecularData.result.length === 0) {
+    if (!cnaMolecularData.result || cnaMolecularData.result.length === 0) {
         return ONCOKB_DEFAULT;
     } else {
-        const alterationsToQuery = _.filter(
-            geneMolecularData.result,
-            molecularDatum => {
-                return (
-                    molecularProfileIdToMolecularProfile[
-                        molecularDatum.molecularProfileId
-                    ].molecularAlterationType ===
-                        AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
-                    !!annotatedGenes[molecularDatum.entrezGeneId]
-                );
-            }
-        );
         const queryVariants = _.uniqBy(
-            _.map(alterationsToQuery, (datum: NumericGeneMolecularData) => {
-                return generateCopyNumberAlterationQuery(
-                    datum.entrezGeneId,
-                    cancerTypeForOncoKb(
-                        datum.uniqueSampleKey,
-                        uniqueSampleKeyToTumorType
-                    ),
-                    getAlterationString(datum.value)
-                );
-            }).filter(query => query.copyNameAlterationType),
+            _.map(
+                cnaMolecularData.result!,
+                (datum: NumericGeneMolecularData) => {
+                    return generateCopyNumberAlterationQuery(
+                        datum.entrezGeneId,
+                        cancerTypeForOncoKb(
+                            datum.uniqueSampleKey,
+                            uniqueSampleKeyToTumorType
+                        ),
+                        getAlterationString(datum.value)
+                    );
+                }
+            ).filter(query => query.copyNameAlterationType),
             (query: AnnotateCopyNumberAlterationQuery) => query.id
         );
         return queryOncoKbCopyNumberAlterationData(queryVariants, client);

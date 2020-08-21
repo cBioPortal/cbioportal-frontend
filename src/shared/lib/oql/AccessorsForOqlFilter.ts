@@ -6,9 +6,9 @@ import {
 import * as _ from 'lodash';
 import {
     AlterationTypeConstants,
+    AnnotatedDiscreteCopyNumberAlterationMolecularData,
     AnnotatedExtendedAlteration,
     AnnotatedMutation,
-    AnnotatedNumericGeneMolecularData,
 } from '../../../pages/resultsView/ResultsViewPageStore';
 import { isNotGermlineMutation } from '../MutationUtils';
 import { IAccessorsForOqlFilter } from './oqlfilter';
@@ -100,7 +100,7 @@ export type Datum =
     | Mutation
     | NumericGeneMolecularData
     | AnnotatedMutation
-    | AnnotatedNumericGeneMolecularData;
+    | AnnotatedDiscreteCopyNumberAlterationMolecularData;
 
 export default class AccessorsForOqlFilter
     implements IAccessorsForOqlFilter<Datum> {
@@ -247,7 +247,8 @@ export default class AccessorsForOqlFilter
             AlterationTypeConstants.COPY_NUMBER_ALTERATION
         ) {
             // covers CNA
-            return (d as AnnotatedNumericGeneMolecularData).putativeDriver;
+            return (d as AnnotatedDiscreteCopyNumberAlterationMolecularData)
+                .putativeDriver;
         } else {
             return null;
         }

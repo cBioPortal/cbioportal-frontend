@@ -114,7 +114,7 @@ import {
 } from './mutationCountHelpers';
 import { CancerStudyQueryUrlParams } from 'shared/components/query/QueryStore';
 import {
-    annotateMolecularDatum,
+    annotateDiscreteCopyNumberAlterationPutativeDriver,
     compileMutations,
     computeCustomDriverAnnotationReport,
     computeGenePanelInformation,
@@ -123,6 +123,7 @@ import {
     excludeSpecialMolecularProfiles,
     fetchPatients,
     fetchQueriedStudies,
+    filterAndAnnotateDiscreteCopyNumberAlterations,
     filterAndAnnotateMutations,
     FilteredAndAnnotatedMutationsReport,
     filterSubQueryData,
@@ -293,21 +294,25 @@ export interface AnnotatedMutation extends Mutation {
     simplifiedMutationType: SimplifiedMutationType;
 }
 
-export interface AnnotatedNumericGeneMolecularData
+export interface DiscreteCopyNumberAlterationMolecularData
     extends NumericGeneMolecularData {
-    hugoGeneSymbol: string;
-    putativeDriver: boolean;
     driverFilter: string;
     driverFilterAnnotation: string;
     driverTiersFilter: string;
     driverTiersFilterAnnotation: string;
+}
+
+export interface AnnotatedDiscreteCopyNumberAlterationMolecularData
+    extends DiscreteCopyNumberAlterationMolecularData {
+    hugoGeneSymbol: string;
+    putativeDriver: boolean;
     oncoKbOncogenic: string;
 }
 
 export interface AnnotatedExtendedAlteration
     extends ExtendedAlteration,
         AnnotatedMutation,
-        AnnotatedNumericGeneMolecularData {}
+        AnnotatedDiscreteCopyNumberAlterationMolecularData {}
 
 export interface ExtendedSample extends Sample {
     cancerType: string;
@@ -1247,6 +1252,52 @@ export class ResultsViewPageStore {
         },
     });
 
+    // Isolate discrete CNA data from other NumericMolecularData
+    // and add the custom driver annotations to data points
+    readonly discreteCopyNumberAlterationMolecularData = remoteData<
+        DiscreteCopyNumberAlterationMolecularData[]
+    >({
+        await: () => [this.discreteCopyNumberAlterations, this.molecularData],
+        invoke: () => {
+            const cnaData = _(this.molecularData.result)
+                .filter((d: NumericGeneMolecularData) => {
+                    _.includes(
+                        this.cnaMolecularProfileIds,
+                        d.molecularProfileId
+                    );
+                })
+                .forEach((d: DiscreteCopyNumberAlterationMolecularData) => {
+                    // Lookup the DiscreteCopyNumberData datum that
+                    // holds the custom driver annotation.
+                    const discreteCopyNumberDatumKey = createDiscreteCopyNumberDataKey(
+                        d
+                    );
+                    const discreteCopyNumberDatum =
+                        discreteCopyNumberDatumKey in
+                        this.sampleIdAndEntrezIdToDiscreteCopyNumberData
+                            ? this.sampleIdAndEntrezIdToDiscreteCopyNumberData[
+                                  discreteCopyNumberDatumKey
+                              ]
+                            : undefined;
+
+                    d.driverFilter = discreteCopyNumberDatum
+                        ? discreteCnaData.driverFilter
+                        : '';
+                    d.driverFilterAnnotation = discreteCopyNumberDatum
+                        ? discreteCnaData.driverFilterAnnotation
+                        : '';
+                    d.driverTiersFilter = discreteCopyNumberDatum
+                        ? discreteCnaData.driverTiersFilter
+                        : '';
+                    d.driverTiersFilterAnnotation = discreteCopyNumberDatum
+                        ? discreteCnaData.driverTiersFilterAnnotation
+                        : '';
+                })
+                .value() as DiscreteCopyNumberAlterationMolecularData[];
+            return Promise.resolve(cnaData);
+        },
+    });
+
     // other molecular profiles data download needs the data from non queried molecular profiles
     readonly nonSelectedDownloadableMolecularData = remoteData<
         NumericGeneMolecularData[]
@@ -1543,7 +1594,7 @@ export class ResultsViewPageStore {
     readonly nonOqlFilteredAlterations = remoteData<ExtendedAlteration[]>({
         await: () => [
             this.filteredAndAnnotatedMutations,
-            this.filteredAndAnnotatedMolecularData,
+            this.filteredAndAnnotatedDiscreteCopyNumberAlterationMolecularData,
             this.selectedMolecularProfiles,
             this.entrezGeneIdToGene,
         ],
@@ -1554,11 +1605,13 @@ export class ResultsViewPageStore {
             const entrezGeneIdToGene = this.entrezGeneIdToGene.result!;
             let result: (
                 | AnnotatedMutation
-                | AnnotatedNumericGeneMolecularData
+                | AnnotatedDiscreteCopyNumberAlterationMolecularData
             )[] = [];
             result = result.concat(this.filteredAndAnnotatedMutations.result!);
             result = result.concat(
-                this.filteredAndAnnotatedMolecularData.result!
+                this
+                    .filteredAndAnnotatedDiscreteCopyNumberAlterationMolecularData
+                    .result!
             );
             return Promise.resolve(
                 result.map(d => {
@@ -1603,14 +1656,16 @@ export class ResultsViewPageStore {
 
     readonly oqlFilteredMolecularDataReport = remoteData({
         await: () => [
-            this._filteredAndAnnotatedMolecularDataReport,
+            this._filteredAndAnnotatedDiscreteCopyNumberAlterationsReport,
             this.selectedMolecularProfiles,
             this.defaultOQLQuery,
         ],
         invoke: () => {
             return Promise.resolve(
                 _.mapValues(
-                    this._filteredAndAnnotatedMolecularDataReport.result!,
+                    this
+                        ._filteredAndAnnotatedDiscreteCopyNumberAlterationsReport
+                        .result!,
                     data =>
                         filterCBioPortalWebServiceData(
                             this.oqlText,
@@ -1628,7 +1683,7 @@ export class ResultsViewPageStore {
     readonly oqlFilteredAlterations = remoteData<ExtendedAlteration[]>({
         await: () => [
             this.filteredAndAnnotatedMutations,
-            this.filteredAndAnnotatedMolecularData,
+            this.filteredAndAnnotatedDiscreteCopyNumberAlterationMolecularData,
             this.selectedMolecularProfiles,
             this.defaultOQLQuery,
         ],
@@ -1636,11 +1691,13 @@ export class ResultsViewPageStore {
             if (this.oqlText.trim() != '') {
                 let data: (
                     | AnnotatedMutation
-                    | AnnotatedNumericGeneMolecularData
+                    | AnnotatedDiscreteCopyNumberAlterationMolecularData
                 )[] = [];
                 data = data.concat(this.filteredAndAnnotatedMutations.result!);
                 data = data.concat(
-                    this.filteredAndAnnotatedMolecularData.result!
+                    this
+                        .filteredAndAnnotatedDiscreteCopyNumberAlterationMolecularData
+                        .result!
                 );
                 return Promise.resolve(
                     filterCBioPortalWebServiceData(
@@ -1707,7 +1764,7 @@ export class ResultsViewPageStore {
     >({
         await: () => [
             this.filteredAndAnnotatedMutations,
-            this.filteredAndAnnotatedMolecularData,
+            this.filteredAndAnnotatedDiscreteCopyNumberAlterationMolecularData,
             this.selectedMolecularProfiles,
             this.defaultOQLQuery,
             this.samples,
@@ -1716,7 +1773,9 @@ export class ResultsViewPageStore {
         invoke: () => {
             const data = [
                 ...this.filteredAndAnnotatedMutations.result!,
-                ...this.filteredAndAnnotatedMolecularData.result!,
+                ...this
+                    .filteredAndAnnotatedDiscreteCopyNumberAlterationMolecularData
+                    .result!,
             ];
             const accessorsInstance = new AccessorsForOqlFilter(
                 this.selectedMolecularProfiles.result!
@@ -1782,7 +1841,7 @@ export class ResultsViewPageStore {
     >({
         await: () => [
             this.filteredAndAnnotatedMutations,
-            this.filteredAndAnnotatedMolecularData,
+            this.filteredAndAnnotatedDiscreteCopyNumberAlterationMolecularData,
             this.selectedMolecularProfiles,
             this.defaultOQLQuery,
             this.samples,
@@ -1798,7 +1857,9 @@ export class ResultsViewPageStore {
                     this.oqlText,
                     [
                         ...this.filteredAndAnnotatedMutations.result!,
-                        ...this.filteredAndAnnotatedMolecularData.result!,
+                        ...this
+                            .filteredAndAnnotatedDiscreteCopyNumberAlterationMolecularData
+                            .result!,
                     ],
                     new AccessorsForOqlFilter(
                         this.selectedMolecularProfiles.result!
@@ -2314,6 +2375,13 @@ export class ResultsViewPageStore {
         onError: error => {},
         default: [],
     });
+
+    @computed get cnaMolecularProfileIds() {
+        return _.map(
+            this.cnaProfiles,
+            (p: MolecularProfile) => p.molecularProfileId
+        );
+    }
 
     @computed
     get chartMetaSet(): { [id: string]: ChartMeta } {
@@ -4015,12 +4083,15 @@ export class ResultsViewPageStore {
         hasBinary: boolean;
         tiers: string[];
     }>({
-        await: () => [this.mutations, this._annotatedMolecularDataReport],
+        await: () => [
+            this.mutations,
+            this.discreteCopyNumberAlterationMolecularData,
+        ],
         invoke: () => {
             return Promise.resolve(
                 computeCustomDriverAnnotationReport([
                     ...this.mutations.result!,
-                    ...this._annotatedMolecularDataReport.result!,
+                    ...this.discreteCopyNumberAlterationMolecularData.result!,
                 ])
             );
         },
@@ -4035,18 +4106,17 @@ export class ResultsViewPageStore {
         },
     });
 
-    // FIXME remove later: --> here all PD annotations are added to mutation types
     readonly _filteredAndAnnotatedMutationsReport = remoteData({
         await: () => [
             this.mutations,
-            this.getPutativeDriverInfo,
+            this.getMutationPutativeDriverInfo,
             this.entrezGeneIdToGene,
         ],
         invoke: () => {
             return Promise.resolve(
                 filterAndAnnotateMutations(
                     this.mutations.result!,
-                    this.getPutativeDriverInfo.result!,
+                    this.getMutationPutativeDriverInfo.result!,
                     this.entrezGeneIdToGene.result!
                 )
             );
@@ -4080,13 +4150,13 @@ export class ResultsViewPageStore {
     >(q => ({
         await: () => [
             this.mutationCache.get(q),
-            this.getPutativeDriverInfo,
+            this.getMutationPutativeDriverInfo,
             this.entrezGeneIdToGene,
         ],
         invoke: () => {
             const filteredAndAnnotatedReport = filterAndAnnotateMutations(
                 this.mutationCache.get(q).result!,
-                this.getPutativeDriverInfo.result!,
+                this.getMutationPutativeDriverInfo.result!,
                 this.entrezGeneIdToGene.result!
             );
             const data = filteredAndAnnotatedReport.data
@@ -4097,159 +4167,61 @@ export class ResultsViewPageStore {
         },
     }));
 
-    readonly _filteredAndAnnotatedMolecularDataReport = remoteData({
-        await: () => [this._annotatedMolecularDataReport],
-        invoke: async () => {
-            const vus: AnnotatedNumericGeneMolecularData[] = [];
-            const data = this._annotatedMolecularDataReport.result!.reduce(
-                (acc: AnnotatedNumericGeneMolecularData[], next) => {
-                    const selected = !!(
-                        next.driverTiersFilter &&
-                        this.driverAnnotationSettings.driverTiers.get(
-                            next.driverTiersFilter
-                        )
-                    );
-                    if (selected || next.putativeDriver) {
-                        acc.push(next);
-                    } else {
-                        vus.push(next);
-                    }
-                    return acc;
-                },
-                [] as AnnotatedNumericGeneMolecularData[]
-            );
-            return {
-                data,
-                vus,
-            };
-        },
-    });
-
-    readonly _annotatedMolecularDataReport = remoteData({
-        await: () => [
-            this.molecularData,
-            this.entrezGeneIdToGene,
-            this.annotateNumericGeneMolecularData,
-            this.molecularProfileIdToMolecularProfile,
-        ],
-        invoke: async () => {
-            const entrezGeneIdToGene = this.entrezGeneIdToGene.result!;
-            const profileIdToProfile = this.molecularProfileIdToMolecularProfile
-                .result!;
-            const annotateNumericGeneMolecularData = this
-                .annotateNumericGeneMolecularData.result! as (
-                datum: NumericGeneMolecularData
-            ) => Promise<AnnotatedNumericGeneMolecularData>;
-            const annotatedMolecularData: AnnotatedNumericGeneMolecularData[] = await Promise.all(
-                this.molecularData.result!.map(d =>
-                    annotateNumericGeneMolecularData(d)
-                )
-            );
-            return annotatedMolecularData;
-        },
-    });
-
-    readonly annotateNumericGeneMolecularData = remoteData<
-        | Error
-        | ((
-              data: NumericGeneMolecularData
-          ) => Promise<AnnotatedNumericGeneMolecularData>)
-    >({
-        await: () => [
-            this.getOncoKbCnaAnnotationForOncoprint,
-            this.molecularProfileIdToMolecularProfile,
-            this.entrezGeneIdToGene,
-            this.discreteCopyNumberAlterations,
-        ],
-        invoke: async () => {
-            let getOncoKbAnnotation: (
-                datum: NumericGeneMolecularData
-            ) => IndicatorQueryResp | undefined;
-            if (
-                this.getOncoKbCnaAnnotationForOncoprint.result! instanceof Error
-            ) {
-                getOncoKbAnnotation = () => undefined;
-            } else {
-                getOncoKbAnnotation = this.getOncoKbCnaAnnotationForOncoprint
-                    .result! as typeof getOncoKbAnnotation;
-            }
-
-            const profileIdToProfile = this.molecularProfileIdToMolecularProfile
-                .result!;
-            const entrezGeneIdToGene = this.entrezGeneIdToGene.result!;
-
-            return async (data: NumericGeneMolecularData) => {
-                var annot = annotateMolecularDatum(
-                    data,
-                    getOncoKbAnnotation,
-                    profileIdToProfile,
-                    entrezGeneIdToGene
+    readonly _filteredAndAnnotatedDiscreteCopyNumberAlterationsReport = remoteData(
+        {
+            await: () => [
+                this.discreteCopyNumberAlterationMolecularData,
+                this.getDiscreteCopyNumberAlterationPutativeDriverInfo,
+                this.entrezGeneIdToGene,
+            ],
+            invoke: () => {
+                return Promise.resolve(
+                    filterAndAnnotateDiscreteCopyNumberAlterations(
+                        this.discreteCopyNumberAlterationMolecularData.result!,
+                        this.getDiscreteCopyNumberAlterationPutativeDriverInfo
+                            .result!,
+                        this.entrezGeneIdToGene.result!
+                    )
                 );
-
-                this.setCustomAnnotationFields(annot);
-
-                return annot;
-            };
-        },
-    });
-
-    readonly setCustomAnnotationFields = (
-        molecularData: AnnotatedNumericGeneMolecularData
-    ) => {
-        const datumKey = createDiscreteCopyNumberDataKey(molecularData);
-        if (!(datumKey in this.sampleIdAndEntrezIdToDiscreteCopyNumberData)) {
-            return;
+            },
         }
-        const discreteCopyNumberData = this
-            .sampleIdAndEntrezIdToDiscreteCopyNumberData[datumKey];
+    );
 
-        molecularData.driverFilter = discreteCopyNumberData.driverFilter;
-        molecularData.driverFilterAnnotation =
-            discreteCopyNumberData.driverFilterAnnotation;
-        molecularData.driverTiersFilter =
-            discreteCopyNumberData.driverTiersFilter;
-        molecularData.driverTiersFilterAnnotation =
-            discreteCopyNumberData.driverTiersFilterAnnotation;
-
-        molecularData.putativeDriver =
-            this.driverAnnotationSettings.customBinary &&
-            discreteCopyNumberData.driverFilter === 'Putative_Driver';
-    };
-
-    readonly filteredAndAnnotatedMolecularData = remoteData<
-        AnnotatedNumericGeneMolecularData[]
+    readonly filteredAndAnnotatedDiscreteCopyNumberAlterationMolecularData = remoteData<
+        AnnotatedDiscreteCopyNumberAlterationMolecularData[]
     >({
         await: () => [
-            this._filteredAndAnnotatedMolecularDataReport,
+            this._filteredAndAnnotatedDiscreteCopyNumberAlterationsReport,
             this.filteredSampleKeyToSample,
         ],
         invoke: () => {
-            let data = this._filteredAndAnnotatedMolecularDataReport.result!
-                .data;
+            let data = this
+                ._filteredAndAnnotatedDiscreteCopyNumberAlterationsReport
+                .result!.data;
             if (!this.driverAnnotationSettings.excludeVUS) {
                 data = data.concat(
-                    this._filteredAndAnnotatedMolecularDataReport.result!.vus
+                    this
+                        ._filteredAndAnnotatedDiscreteCopyNumberAlterationsReport
+                        .result!.vus
                 );
             }
-            const filteredSampleKeyToSample = this.filteredSampleKeyToSample
-                .result!;
-            return Promise.resolve(
-                data.filter(d => d.uniqueSampleKey in filteredSampleKeyToSample)
+            data = data.filter(
+                d => d.uniqueSampleKey in this.filteredSampleKeyToSample.result!
             );
+            return Promise.resolve(data);
         },
     });
 
-    // adds (custom) annotations to the MolecularData of discrete CNAs
     public annotatedCnaCache = new MobxPromiseCache<
         { entrezGeneId: number },
-        AnnotatedNumericGeneMolecularData[]
+        AnnotatedDiscreteCopyNumberAlterationMolecularData[]
     >(q => ({
         await: () =>
             this.numericGeneMolecularDataCache.await(
                 [
                     this.studyToMolecularProfileDiscreteCna,
-                    this.annotateNumericGeneMolecularData,
-                    this.discreteCopyNumberAlterations,
+                    this.getDiscreteCopyNumberAlterationPutativeDriverInfo,
+                    this.entrezGeneIdToGene,
                 ],
                 studyToMolecularProfileDiscrete => {
                     return _.values(studyToMolecularProfileDiscrete).map(p => ({
@@ -4259,7 +4231,7 @@ export class ResultsViewPageStore {
                 }
             ),
         invoke: () => {
-            const results = _.flatten(
+            const cnaData = _.flatten(
                 this.numericGeneMolecularDataCache
                     .getAll(
                         _.values(
@@ -4270,20 +4242,25 @@ export class ResultsViewPageStore {
                         }))
                     )
                     .map(p => p.result!)
+            ) as DiscreteCopyNumberAlterationMolecularData[];
+            const filteredAndAnnotatedReport = filterAndAnnotateDiscreteCopyNumberAlterations(
+                cnaData,
+                this.getDiscreteCopyNumberAlterationPutativeDriverInfo.result!,
+                this.entrezGeneIdToGene.result!
             );
-            const annotateNumericGeneMolecularData = this
-                .annotateNumericGeneMolecularData.result! as (
-                data: NumericGeneMolecularData
-            ) => Promise<AnnotatedNumericGeneMolecularData>;
-            return Promise.all(
-                results.map(d => {
-                    return annotateNumericGeneMolecularData(d);
-                })
+            const data = filteredAndAnnotatedReport.data.concat(
+                filteredAndAnnotatedReport.vus
+            );
+
+            return Promise.resolve(
+                filteredAndAnnotatedReport.data.concat(
+                    filteredAndAnnotatedReport.vus
+                )
             );
         },
     }));
 
-    readonly getPutativeDriverInfo = remoteData({
+    readonly getMutationPutativeDriverInfo = remoteData({
         await: () => {
             const toAwait = [];
             if (this.driverAnnotationSettings.oncoKb) {
@@ -4345,11 +4322,17 @@ export class ResultsViewPageStore {
                     this.getCosmicCount.result!(mutation) >=
                         this.driverAnnotationSettings.cosmicCountThreshold;
 
+                // Set driverFilter to true when:
+                // (1) custom drivers active in settings menu
+                // (2) the datum has a custom driver annotation
                 const customDriverBinary: boolean =
                     (this.driverAnnotationSettings.customBinary &&
                         mutation.driverFilter === 'Putative_Driver') ||
                     false;
 
+                // Set tier information to the tier name when the tiers checkbox
+                // is selected for the corresponding tier of the datum in settings menu.
+                // This forces the Mutation to be counted as a driver mutation.
                 const customDriverTier: string | undefined =
                     mutation.driverTiersFilter &&
                     this.driverAnnotationSettings.driverTiers.get(
@@ -4367,6 +4350,74 @@ export class ResultsViewPageStore {
                     customDriverTier,
                 };
             });
+        },
+    });
+
+    readonly getDiscreteCopyNumberAlterationPutativeDriverInfo = remoteData({
+        await: () => {
+            const toAwait = [];
+            if (this.driverAnnotationSettings.oncoKb) {
+                toAwait.push(this.getOncoKbCnaAnnotationForOncoprint);
+            }
+            if (this.driverAnnotationSettings.customBinary) {
+                toAwait.push(this.discreteCopyNumberAlterations);
+            }
+            return toAwait;
+        },
+        invoke: () => {
+            return Promise.resolve(
+                (
+                    cnaDatum: DiscreteCopyNumberAlterationMolecularData
+                ): {
+                    oncoKb: string;
+                    customDriverBinary: boolean;
+                    customDriverTier?: string | undefined;
+                } => {
+                    const getOncoKbCnaAnnotationForOncoprint = this
+                        .getOncoKbCnaAnnotationForOncoprint.result!;
+                    const oncoKbDatum:
+                        | IndicatorQueryResp
+                        | undefined
+                        | null
+                        | false =
+                        this.driverAnnotationSettings.oncoKb &&
+                        getOncoKbCnaAnnotationForOncoprint &&
+                        !(
+                            getOncoKbCnaAnnotationForOncoprint instanceof Error
+                        ) &&
+                        getOncoKbCnaAnnotationForOncoprint(cnaDatum);
+
+                    let oncoKb = '';
+                    if (oncoKbDatum) {
+                        oncoKb = getOncoKbOncogenic(oncoKbDatum);
+                    }
+
+                    // Set driverFilter to true when:
+                    // (1) custom drivers active in settings menu
+                    // (2) the datum has a custom driver annotation
+                    const customDriverBinary: boolean =
+                        (this.driverAnnotationSettings.customBinary &&
+                            cnaDatum.driverFilter === 'Putative_Driver') ||
+                        false;
+
+                    // Set tier information to the tier name when the tiers checkbox
+                    // is selected for the corresponding tier of the datum in settings menu.
+                    // This forces the CNA to be counted as a driver mutation.
+                    const customDriverTier: string | undefined =
+                        cnaDatum.driverTiersFilter &&
+                        this.driverAnnotationSettings.driverTiers.get(
+                            cnaDatum.driverTiersFilter
+                        )
+                            ? cnaDatum.driverTiersFilter
+                            : undefined;
+
+                    return {
+                        oncoKb,
+                        customDriverBinary,
+                        customDriverTier,
+                    };
+                }
+            );
         },
     });
 
@@ -4494,8 +4545,7 @@ export class ResultsViewPageStore {
             await: () => [
                 this.uniqueSampleKeyToTumorType,
                 this.oncoKbAnnotatedGenes,
-                this.molecularData,
-                this.molecularProfileIdToMolecularProfile,
+                this.discreteCopyNumberAlterationMolecularData,
             ],
             invoke: async () => {
                 if (AppConfig.serverConfig.show_oncokb) {
@@ -4504,8 +4554,7 @@ export class ResultsViewPageStore {
                         result = await fetchCnaOncoKbDataWithNumericGeneMolecularData(
                             {},
                             this.oncoKbAnnotatedGenes.result!,
-                            this.molecularData,
-                            this.molecularProfileIdToMolecularProfile.result!,
+                            this.discreteCopyNumberAlterationMolecularData,
                             'ONCOGENIC'
                         );
                     } catch (e) {
