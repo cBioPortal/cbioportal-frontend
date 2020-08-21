@@ -1,5 +1,5 @@
 import { default as TruncatedText, truncateText } from './TruncatedText';
-import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { DefaultTooltip } from 'dist';
 import React from 'react';
 import { assert } from 'chai';
 import { shallow, mount, ReactWrapper } from 'enzyme';
