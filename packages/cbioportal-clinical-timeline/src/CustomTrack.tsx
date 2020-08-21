@@ -1,7 +1,6 @@
 import { TimelineStore } from './TimelineStore';
 import * as React from 'react';
 import { REMOVE_FOR_DOWNLOAD_CLASSNAME } from './lib/helpers';
-import { TIMELINE_TRACK_HEIGHT } from './TimelineTrack';
 
 export type CustomTrackSpecification = {
     renderHeader: (store: TimelineStore) => any; // any = react renderable, string or element or null or etc.

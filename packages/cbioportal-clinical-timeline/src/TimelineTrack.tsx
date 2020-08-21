@@ -6,7 +6,13 @@ import {
 } from './types';
 import React, { useCallback, useState } from 'react';
 import _ from 'lodash';
-import { formatDate, REMOVE_FOR_DOWNLOAD_CLASSNAME } from './lib/helpers';
+import {
+    formatDate,
+    REMOVE_FOR_DOWNLOAD_CLASSNAME,
+    TIMELINE_LINE_CHART_TRACK_HEIGHT,
+    TIMELINE_TRACK_HEIGHT,
+    getTrackHeight,
+} from './lib/helpers';
 import { TimelineStore } from './TimelineStore';
 import { renderStack } from './svg/renderStack';
 import { observer } from 'mobx-react';
@@ -25,8 +31,6 @@ export interface ITimelineTrackProps {
     width: number;
 }
 
-export const TIMELINE_TRACK_HEIGHT = 20;
-export const TIMELINE_LINE_CHART_TRACK_HEIGHT = 100; // TODO: dynamic?
 /*
  get events with identical positions so we can stack them
  */
@@ -76,17 +80,6 @@ function getLineChartYCoordinate(
         (trackValueRange.max - trackValueRange.min);
 
     return padding + (1 - plottingProportion) * plottingHeight; // 1-p because SVG y axis points down
-}
-
-export function getTrackHeight(track: TimelineTrackSpecification) {
-    switch (track.trackType) {
-        case TimelineTrackType.LINE_CHART:
-            return TIMELINE_LINE_CHART_TRACK_HEIGHT;
-        case TimelineTrackType.DEFAULT:
-        case undefined:
-        default:
-            return TIMELINE_TRACK_HEIGHT;
-    }
 }
 
 function renderSuperscript(number: number) {

@@ -11,16 +11,13 @@ import {
     getPerc,
     getPointInTrimmedSpace,
     getTrimmedTicks,
+    TIMELINE_TRACK_HEIGHT,
 } from './lib/helpers';
 import _ from 'lodash';
-import jQuery from 'jquery';
+
 import autobind from 'autobind-decorator';
 import * as React from 'react';
-import {
-    EventTooltipContent,
-    renderPoint,
-    TIMELINE_TRACK_HEIGHT,
-} from './TimelineTrack';
+import { EventTooltipContent, renderPoint } from './TimelineTrack';
 
 type TooltipModel = {
     track: TimelineTrackSpecification;
