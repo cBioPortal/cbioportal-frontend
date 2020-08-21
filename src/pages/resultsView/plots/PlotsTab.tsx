@@ -3457,28 +3457,26 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     }
 
     @computed get selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl() {
-        if (this.props.store.molecularProfileIdToMolecularProfile.isComplete) {
-            const result = _.reduce(
-                this.props.store.selectedGenericAssayEntities,
-                (acc, value, key) => {
-                    if (
-                        this.props.store.molecularProfileIdToMolecularProfile
-                            .result[key]
-                    ) {
-                        const type = this.props.store
-                            .molecularProfileIdToMolecularProfile.result[key]
-                            .genericAssayType;
-                        acc[type] = acc[type]
-                            ? _.union(value, acc[type])
-                            : value;
-                        return acc;
-                    }
-                },
-                {} as { [genericAssayType: string]: string[] }
-            );
-            return result;
-        }
-        return undefined;
+        const result = _.reduce(
+            this.props.store
+                .selectedGenericAssayEntitiesGroupByMolecularProfileId,
+            (acc, entityId, profileId) => {
+                if (
+                    this.props.store.molecularProfileIdToMolecularProfile
+                        .result[profileId]
+                ) {
+                    const type = this.props.store
+                        .molecularProfileIdToMolecularProfile.result[profileId]
+                        .genericAssayType;
+                    acc[type] = acc[type]
+                        ? _.union(entityId, acc[type])
+                        : entityId;
+                }
+                return acc;
+            },
+            {} as { [genericAssayType: string]: string[] }
+        );
+        return result;
     }
 
     private makeGenericAssayGroupOptions(
