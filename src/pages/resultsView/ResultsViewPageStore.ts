@@ -1281,16 +1281,16 @@ export class ResultsViewPageStore {
                             : undefined;
 
                     d.driverFilter = discreteCopyNumberDatum
-                        ? discreteCnaData.driverFilter
+                        ? discreteCopyNumberDatum.driverFilter
                         : '';
                     d.driverFilterAnnotation = discreteCopyNumberDatum
-                        ? discreteCnaData.driverFilterAnnotation
+                        ? discreteCopyNumberDatum.driverFilterAnnotation
                         : '';
                     d.driverTiersFilter = discreteCopyNumberDatum
-                        ? discreteCnaData.driverTiersFilter
+                        ? discreteCopyNumberDatum.driverTiersFilter
                         : '';
                     d.driverTiersFilterAnnotation = discreteCopyNumberDatum
-                        ? discreteCnaData.driverTiersFilterAnnotation
+                        ? discreteCopyNumberDatum.driverTiersFilterAnnotation
                         : '';
                 })
                 .value() as DiscreteCopyNumberAlterationMolecularData[];

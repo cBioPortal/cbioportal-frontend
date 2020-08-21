@@ -171,7 +171,7 @@ export function annotateDiscreteCopyNumberAlterationPutativeDriver(
     const putativeDriver = !!(
         putativeDriverInfo.oncoKb ||
         putativeDriverInfo.customDriverBinary ||
-        putativeDriverInfo.customDriverTier
+        (putativeDriverInfo.customDriverTier && putativeDriverInfo.customDriverTier !== '')
     );
     return Object.assign(
         {
