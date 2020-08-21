@@ -1,10 +1,4 @@
-import {
-    TickIntervalEnum,
-    TimelineEvent,
-    TimelineTick,
-    TimelineTrackSpecification,
-} from './types';
-import { TIMELINE_TRACK_HEIGHT, TimelineTrack } from './TimelineTrack';
+import { TimelineTrack } from './TimelineTrack';
 import React, { useCallback, useState } from 'react';
 import { TimelineStore } from './TimelineStore';
 import _ from 'lodash';
@@ -12,7 +6,11 @@ import { observer } from 'mobx-react';
 import $ from 'jquery';
 import { Portal } from 'react-overlays/lib';
 import { Popover } from 'react-bootstrap';
-import { flattenTracks, sortNestedTracks } from './lib/helpers';
+import {
+    flattenTracks,
+    sortNestedTracks,
+    TIMELINE_TRACK_HEIGHT,
+} from './lib/helpers';
 import CustomTrack, { CustomTrackSpecification } from './CustomTrack';
 import { TICK_AXIS_HEIGHT } from './TickAxis';
 import { useObserver } from 'mobx-react-lite';

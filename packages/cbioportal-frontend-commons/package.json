@@ -47,6 +47,7 @@
     "object-sizeof": "^1.2.0",
     "oncokb-ts-api-client": "^1.1.0",
     "rc-tooltip": "3.7.3",
+    "react-bootstrap": "0.31.5",
     "react-file-download": "^0.3.2",
     "react-overlays": "0.7.4",
     "react-select": "^3.0.4",

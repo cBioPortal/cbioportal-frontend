@@ -14,6 +14,7 @@ import {
     flattenTracks,
     getPointInTrimmedSpaceFromScreenRead,
     REMOVE_FOR_DOWNLOAD_CLASSNAME,
+    TIMELINE_TRACK_HEIGHT,
 } from './lib/helpers';
 import intersect from './lib/intersect';
 import TrackHeader, {
@@ -26,7 +27,6 @@ import './timeline.scss';
 import { DownloadControls } from 'cbioportal-frontend-commons';
 import CustomTrack, { CustomTrackSpecification } from './CustomTrack';
 import CustomTrackHeader from './CustomTrackHeader';
-import { TIMELINE_TRACK_HEIGHT } from './TimelineTrack';
 
 interface ITimelineProps {
     store: TimelineStore;
