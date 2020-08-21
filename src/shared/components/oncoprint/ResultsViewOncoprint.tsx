@@ -182,18 +182,21 @@ export default class ResultsViewOncoprint extends React.Component<
 
     @computed get selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl() {
         const result = _.reduce(
-            this.props.store.selectedGenericAssayEntities,
-            (acc, value, key) => {
+            this.props.store
+                .selectedGenericAssayEntitiesGroupByMolecularProfileId,
+            (acc, entityId, profileId) => {
                 if (
                     this.props.store.molecularProfileIdToMolecularProfile
-                        .result[key]
+                        .result[profileId]
                 ) {
                     const type = this.props.store
-                        .molecularProfileIdToMolecularProfile.result[key]
+                        .molecularProfileIdToMolecularProfile.result[profileId]
                         .genericAssayType;
-                    acc[type] = acc[type] ? _.union(value, acc[type]) : value;
-                    return acc;
+                    acc[type] = acc[type]
+                        ? _.union(entityId, acc[type])
+                        : entityId;
                 }
+                return acc;
             },
             {} as { [genericAssayType: string]: string[] }
         );
