@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { MolecularProfile, Mutation } from 'cbioportal-ts-api-client';
-import { TruncatedText } from 'cbioportal-frontend-commons';
+import TruncatedText from 'shared/components/TruncatedText';
 import { getPatientViewUrl, getSampleViewUrl } from '../../../api/urls';
 
 /**

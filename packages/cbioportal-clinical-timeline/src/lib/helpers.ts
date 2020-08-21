@@ -2,13 +2,10 @@ import {
     TimelineEvent,
     TimelineTick,
     TimelineTrackSpecification,
-    TimelineTrackType,
 } from '../types';
 import { intersect } from './intersect';
 import _ from 'lodash';
-
-export const TIMELINE_TRACK_HEIGHT = 20;
-export const TIMELINE_LINE_CHART_TRACK_HEIGHT = 100; // TODO: dynamic?
+import { getTrackHeight } from '../TimelineTrack';
 
 export const REMOVE_FOR_DOWNLOAD_CLASSNAME = 'tl-remove-for-download';
 
@@ -18,17 +15,6 @@ export function getAttributeValue(name: string, event: TimelineEvent) {
         ? att[0].find((a: any) => a.key === 'RESULT')
         : undefined;
     return attObj ? attObj.value : undefined;
-}
-
-export function getTrackHeight(track: TimelineTrackSpecification) {
-    switch (track.trackType) {
-        case TimelineTrackType.LINE_CHART:
-            return TIMELINE_LINE_CHART_TRACK_HEIGHT;
-        case TimelineTrackType.DEFAULT:
-        case undefined:
-        default:
-            return TIMELINE_TRACK_HEIGHT;
-    }
 }
 
 const TRIM_TICK_THRESHHOLD = 4;
