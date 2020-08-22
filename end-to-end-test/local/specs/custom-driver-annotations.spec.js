@@ -18,7 +18,7 @@ const oncoprintTabUrl =
 
 const oncoprintTabUrlCna =
     CBIOPORTAL_URL +
-    '/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_all&data_priority=0&gene_list=OR11H1%250ATMEM247%250AABLIM1%250AADAMTS20%250ACADM2%250ADTNB%250AKAT2A%250AMSH3%250AMYB%250ANPIPB15%250AOTOR%250AP2RY10%250APIEZO1&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&profileFilter=0&tab_index=tab_visualize';
+    '/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_cnaseq&data_priority=0&gene_list=ACAP3%2520AGRN&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&profileFilter=0&tab_index=tab_visualize&show_samples=true';
 
 describe('custom driver annotations feature', function() {
     if (useExternalFrontend) {
@@ -97,6 +97,7 @@ describe('custom driver annotations feature', function() {
             });
         });
     }
+    
     describe('oncoprint tab - discete CNA', () => {
         beforeEach(() => {
             goToUrlAndSetLocalStorage(oncoprintTabUrlCna);
@@ -108,13 +109,11 @@ describe('custom driver annotations feature', function() {
             var topCheckBox = $('input[data-test=annotateCustomBinary]');
             assert(topCheckBox.isSelected());
 
-            var tiersCheckboxes = $('span[data-test=annotateCustomTiers]').$$(
-                'input'
-            );
+            var tiersCheckboxes = $(
+                'span[data-test=annotateCustomTiers]'
+            ).$$('input');
             assert(tiersCheckboxes[0].isSelected());
             assert(tiersCheckboxes[1].isSelected());
-            assert(tiersCheckboxes[2].isSelected());
-            assert(tiersCheckboxes[3].isSelected());
         });
 
         it('allows deselection of Tiers checkboxes', () => {
@@ -127,16 +126,6 @@ describe('custom driver annotations feature', function() {
             class2Checkbox.click();
             waitForOncoprint();
             assert(!class2Checkbox.isSelected());
-
-            var class3Checkbox = $('label*=Class 3').$('input');
-            class3Checkbox.click();
-            waitForOncoprint();
-            assert(!class3Checkbox.isSelected());
-
-            var class4Checkbox = $('label*=Class 4').$('input');
-            class4Checkbox.click();
-            waitForOncoprint();
-            assert(!class4Checkbox.isSelected());
         });
 
         it('updates selected samples when VUS alterations are excluded', () => {
@@ -148,61 +137,40 @@ describe('custom driver annotations feature', function() {
             $('label*=Class 2')
                 .$('input')
                 .click();
-            $('label*=Class 3')
-                .$('input')
-                .click();
-            $('label*=Class 4')
-                .$('input')
-                .click();
 
             $('input[data-test=HideVUS]').click();
             waitForOncoprint();
-            assert($('div.alert-info*=8 mutations').isExisting());
+            assert($('div.alert-info*=17 mutation').isExisting());
 
             $('label*=Class 1')
                 .$('input')
                 .click();
             waitForOncoprint();
-            assert($('div.alert-info*=6 mutations').isExisting());
+            assert($('div.alert-info*=17 mutation').isExisting());
 
             $('label*=Class 2')
                 .$('input')
                 .click();
             waitForOncoprint();
-            assert($('div.alert-info*=4 mutations').isExisting());
-
-            $('label*=Class 3')
-                .$('input')
-                .click();
-            waitForOncoprint();
-            assert($('div.alert-info*=2 mutations').isExisting());
-
-            $('label*=Class 4')
-                .$('input')
-                .click();
-            waitForOncoprint();
-            assert($('div.alert-info*=1 mutation').isExisting());
+            assert($('div.alert-info*=16 mutation').isExisting());
         });
 
         it('(de-)selects custom driver checkboxes with main annotation select option', () => {
             var topCheckBox = $('input[data-test=annotateCustomBinary]');
-            var tiersCheckboxes = $('span[data-test=annotateCustomTiers]').$$(
-                'input'
-            );
+            var tiersCheckboxes = $(
+                'span[data-test=annotateCustomTiers]'
+            ).$$('input');
 
             $('input[data-test=ColorByDriver]').click();
             assert(!topCheckBox.isSelected());
             assert(!tiersCheckboxes[0].isSelected());
             assert(!tiersCheckboxes[1].isSelected());
-            assert(!tiersCheckboxes[2].isSelected());
-            assert(!tiersCheckboxes[3].isSelected());
 
             $('input[data-test=ColorByDriver]').click();
             assert(topCheckBox.isSelected());
             assert(tiersCheckboxes[0].isSelected());
             assert(tiersCheckboxes[1].isSelected());
-            assert(tiersCheckboxes[2].isSelected());
-            assert(tiersCheckboxes[3].isSelected());
         });
     });
+    
 });
