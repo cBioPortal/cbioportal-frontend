@@ -1244,7 +1244,7 @@ export class ResultsViewPageStore {
                                     (gene: Gene) => gene.entrezGeneId
                                 ),
                                 sampleMolecularIdentifiers: identifiers,
-                            } as MolecularDataMultipleStudyFilter,
+                            } as MolecularDataMultipleStudyFilter
                         }
                     );
                 }
@@ -1261,14 +1261,13 @@ export class ResultsViewPageStore {
     >({
         await: () => [this.discreteCopyNumberAlterations, this.molecularData],
         invoke: () => {
-            const cnaData = _(this.molecularData.result)
-                .filter((d: NumericGeneMolecularData) => {
-                    _.includes(
+            const cnaData = _.filter(this.molecularData.result as any, (d: any) => {
+                    return _.includes(
                         this.cnaMolecularProfileIds,
                         d.molecularProfileId
                     );
-                })
-                .forEach((d: DiscreteCopyNumberAlterationMolecularData) => {
+                });
+            _.forEach(cnaData, (d: any) => {
                     // Lookup the DiscreteCopyNumberData datum that
                     // holds the custom driver annotation.
                     const discreteCopyNumberDatumKey = createDiscreteCopyNumberDataKey(
@@ -1294,9 +1293,8 @@ export class ResultsViewPageStore {
                     d.driverTiersFilterAnnotation = discreteCopyNumberDatum
                         ? discreteCopyNumberDatum.driverTiersFilterAnnotation
                         : '';
-                })
-                .value() as DiscreteCopyNumberAlterationMolecularData[];
-            return Promise.resolve(cnaData);
+                });
+            return Promise.resolve(cnaData as DiscreteCopyNumberAlterationMolecularData[]);
         },
     });
 
@@ -2379,12 +2377,14 @@ export class ResultsViewPageStore {
     });
 
     @computed get cnaMolecularProfileIds() {
-        return _.map(
-            this.cnaProfiles,
+        const profiles = this.cnaProfiles.isComplete? this.cnaProfiles.result : [];
+        const profileIds = _.map(
+            profiles,
             (p: MolecularProfile) => p.molecularProfileId
         );
+        return profileIds;
     }
-
+    
     @computed
     get chartMetaSet(): { [id: string]: ChartMeta } {
         let _chartMetaSet: { [id: string]: ChartMeta } = {} as {
@@ -2841,19 +2841,11 @@ export class ResultsViewPageStore {
         await: () => [
             this.genes,
             this.studyToMolecularProfileDiscreteCna,
-            this.samples,
+            this.samples
         ],
         invoke: async () => {
-            const studyIdToProfileMap = this.studyToMolecularProfileDiscreteCna
-                .result!;
-            const cnaMolecularProfileIds = _(studyIdToProfileMap)
-                .values()
-                .map((m: MolecularProfile) => {
-                    return m.molecularProfileId;
-                })
-                .value();
-
-            if (cnaMolecularProfileIds.length == 0) {
+            
+            if (this.cnaMolecularProfileIds.length == 0) {
                 return [];
             }
 
@@ -2863,12 +2855,12 @@ export class ResultsViewPageStore {
             );
 
             const promises = _.map(
-                cnaMolecularProfileIds,
+                this.cnaMolecularProfileIds,
                 cnaMolecularProfileId => {
                     const sampleIds = _.map(
                         this.samples.result,
                         (sample: Sample) => {
-                            if (sample.studyId in studyIdToProfileMap) {
+                            if (sample.studyId in this.studyToMolecularProfileDiscreteCna.result) {
                                 return sample.sampleId;
                             }
                         }
@@ -2893,7 +2885,7 @@ export class ResultsViewPageStore {
                 outdata = _.flattenDeep(cnaData);
             });
 
-            return Promise.resolve(outdata);
+            return Promise.resolve(outdata as DiscreteCopyNumberData[]);
         },
     });
 
