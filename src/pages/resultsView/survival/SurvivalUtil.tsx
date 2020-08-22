@@ -489,3 +489,15 @@ export function getSurvivalAttributes(clinicalAttributes: ClinicalAttribute[]) {
         .uniq()
         .value();
 }
+
+export function notSurvivalAttribute(
+    survivalClinicalAttributesPrefixes: string[],
+    attributeId: string
+) {
+    return _.every(survivalClinicalAttributesPrefixes, prefix => {
+        return (
+            `${prefix}_STATUS` !== attributeId &&
+            `${prefix}_MONTHS` !== attributeId
+        );
+    });
+}
