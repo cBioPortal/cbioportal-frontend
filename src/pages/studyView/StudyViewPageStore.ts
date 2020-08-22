@@ -170,6 +170,7 @@ import {
     getSurvivalAttributes,
     plotsPriority,
     getSurvivalStatusBoolean,
+    notSurvivalAttribute,
 } from 'pages/resultsView/survival/SurvivalUtil';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
@@ -3543,10 +3544,20 @@ export class StudyViewPageStore {
         let _chartMetaSet = this._customCharts.toJS();
         _chartMetaSet = _.merge(_chartMetaSet, this._geneSpecificCharts.toJS());
 
+        // only filter out survival attributes when there are more than 4 types of survival attributes
+        const filteredClinicalAttributes =
+            _.entries(this.survivalClinicalAttributesPrefix.result).length > 4
+                ? _.filter(this.clinicalAttributes.result, attribute =>
+                      notSurvivalAttribute(
+                          this.survivalClinicalAttributesPrefix.result,
+                          attribute.clinicalAttributeId
+                      )
+                  )
+                : this.clinicalAttributes.result;
         // Add meta information for each of the clinical attribute
         // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
         _.reduce(
-            this.clinicalAttributes.result,
+            filteredClinicalAttributes,
             (acc: { [id: string]: ChartMeta }, attribute) => {
                 const uniqueKey = getUniqueKey(attribute);
                 acc[uniqueKey] = {
