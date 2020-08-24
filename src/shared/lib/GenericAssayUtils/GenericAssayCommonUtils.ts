@@ -1,7 +1,4 @@
-import {
-    AlterationTypeConstants,
-    GenericAssayTypeConstants,
-} from '../../../pages/resultsView/ResultsViewPageStore';
+import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewPageStore';
 import client from 'shared/api/cbioportalClientInstance';
 import {
     GenericAssayMetaFilter,
@@ -118,7 +115,10 @@ export async function fetchGenericAssayData(
     entityIdsByProfile: { [molecularProfileId: string]: string[] },
     sampleFilterByProfile: { [molecularProfileId: string]: IDataQueryFilter }
 ) {
-    const params = _.map(entityIdsByProfile, (entityIds, profileId) => {
+    const params: {
+        molecularProfileId: string;
+        genericAssayDataFilter: GenericAssayDataFilter;
+    }[] = _.map(entityIdsByProfile, (entityIds, profileId) => {
         return {
             molecularProfileId: profileId,
             genericAssayDataFilter: {
@@ -130,9 +130,19 @@ export async function fetchGenericAssayData(
             } as GenericAssayDataFilter,
         };
     });
-    const dataPromises = params.map(param =>
-        client.fetchGenericAssayDataInMolecularProfileUsingPOST(param)
-    );
+    const dataPromises = params.map(param => {
+        // do not request data by using empty sample list
+        if (
+            _.isEmpty(param.genericAssayDataFilter.sampleIds) &&
+            !param.genericAssayDataFilter.sampleListId
+        ) {
+            return Promise.resolve([]);
+        } else {
+            return client.fetchGenericAssayDataInMolecularProfileUsingPOST(
+                param
+            );
+        }
+    });
     const results = await Promise.all(dataPromises);
     return results;
 }
@@ -147,4 +157,50 @@ export function fetchGenericAssayDataByStableIdsAndMolecularIds(
             molecularProfileIds: molecularProfileIds,
         } as GenericAssayDataMultipleStudyFilter,
     });
+}
+
+export function makeGenericAssayOption(
+    meta: GenericAssayMeta,
+    isPlotsTabOption?: boolean
+) {
+    // Note: name and desc are optional fields for generic assay entities
+    // When not provided in the data file, these fields are assigned the
+    // value of the entity_stable_id. The code below hides fields when
+    // indentical to the entity_stable_id.
+    const name =
+        'NAME' in meta.genericEntityMetaProperties
+            ? meta.genericEntityMetaProperties['NAME']
+            : NOT_APPLICABLE_VALUE;
+    const description =
+        'DESCRIPTION' in meta.genericEntityMetaProperties
+            ? meta.genericEntityMetaProperties['DESCRIPTION']
+            : NOT_APPLICABLE_VALUE;
+    const uniqueName = name !== meta.stableId;
+    const uniqueDesc = description !== meta.stableId && description !== name;
+    // set stableId as default label
+    let label = meta.stableId;
+    if (!uniqueName && !uniqueDesc) {
+        label = meta.stableId;
+    } else if (!uniqueName) {
+        label = `${meta.stableId}: ${description}`;
+    } else if (!uniqueDesc) {
+        label = `${name} (${meta.stableId})`;
+    } else {
+        label = `${name} (${meta.stableId}): ${description}`;
+    }
+
+    if (isPlotsTabOption) {
+        return {
+            value: meta.stableId,
+            label: label,
+            plotAxisLabel:
+                'NAME' in meta.genericEntityMetaProperties
+                    ? meta.genericEntityMetaProperties['NAME']
+                    : meta.stableId,
+        };
+    }
+    return {
+        value: meta.stableId,
+        label: label,
+    };
 }

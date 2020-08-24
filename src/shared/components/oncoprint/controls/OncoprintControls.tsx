@@ -167,7 +167,6 @@ export interface IOncoprintControlsProps {
 }
 
 export interface ISelectOption {
-    id: string;
     value: string;
     label: string;
 }
@@ -284,7 +283,7 @@ export default class OncoprintControls extends React.Component<
                       _.map(
                           this
                               .genericAssayEntitiesSelectOptionsInSelectedHeatmapProfile,
-                          option => option.id
+                          option => option.value
                       )
                   )
                 : [];
@@ -346,7 +345,7 @@ export default class OncoprintControls extends React.Component<
                 _.map(
                     this
                         .genericAssayEntitiesSelectOptionsInSelectedHeatmapProfile,
-                    option => option.id
+                    option => option.value
                 )
             );
         } else {
@@ -663,7 +662,7 @@ export default class OncoprintControls extends React.Component<
                     .result[
                     this.props.state.selectedHeatmapProfileGenericAssayType!
                 ]!,
-                'id'
+                (option: ISelectOption) => option.value
             );
         }
         return {};
@@ -680,7 +679,7 @@ export default class OncoprintControls extends React.Component<
         // if choose select all option, add all filtered options
         if (
             selectInfo.action === 'select-option' &&
-            selectInfo.option.id === 'select_all_filtered_options'
+            selectInfo.option.value === 'select_all_filtered_options'
         ) {
             // use union to keep previous selected options and new added options
             candidateOptions = _.union(
@@ -689,7 +688,7 @@ export default class OncoprintControls extends React.Component<
             );
         }
         // map to id
-        let candidateIds = candidateOptions.map(o => o.id);
+        let candidateIds = candidateOptions.map(o => o.value);
         // filter out select all option from the candidate id list
         candidateIds = candidateIds.filter(
             id => id !== 'select_all_filtered_options'
@@ -744,7 +743,7 @@ export default class OncoprintControls extends React.Component<
                 this.isOptionIncludingText(
                     this._genericAssaySearchText,
                     option
-                ) && !this._selectedGenericAssayEntityIds.includes(option.id)
+                ) && !this._selectedGenericAssayEntityIds.includes(option.value)
         ).length;
         if (
             this._genericAssaySearchText.length > 0 &&
@@ -784,7 +783,7 @@ export default class OncoprintControls extends React.Component<
         }
         return (
             this.isOptionIncludingText(filterString, option) &&
-            !this._selectedGenericAssayEntityIds.includes(option.id)
+            !this._selectedGenericAssayEntityIds.includes(option.value)
         );
     }
 
