@@ -2,9 +2,9 @@ import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewP
 import client from 'shared/api/cbioportalClientInstance';
 import {
     GenericAssayMetaFilter,
-    GenericAssayDataFilter,
     GenericAssayMeta,
     GenericAssayDataMultipleStudyFilter,
+    GenericAssayFilter,
 } from 'cbioportal-ts-api-client';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
@@ -117,7 +117,7 @@ export async function fetchGenericAssayData(
 ) {
     const params: {
         molecularProfileId: string;
-        genericAssayDataFilter: GenericAssayDataFilter;
+        genericAssayDataFilter: GenericAssayFilter;
     }[] = _.map(entityIdsByProfile, (entityIds, profileId) => {
         return {
             molecularProfileId: profileId,
@@ -127,7 +127,7 @@ export async function fetchGenericAssayData(
                 // the Swagger-generated type expected by the client method below
                 // incorrectly requires both samples and a sample list;
                 // use 'as' to tell TypeScript that this object really does fit.
-            } as GenericAssayDataFilter,
+            } as GenericAssayFilter,
         };
     });
     const dataPromises = params.map(param => {
