@@ -565,7 +565,7 @@ export class ResultsViewPageStore {
             : [];
     }
 
-    @computed get selectedGenericAssayEntities() {
+    @computed get selectedGenericAssayEntitiesGroupByMolecularProfileId() {
         return parseGenericAssayGroups(
             this.urlWrapper.query.generic_assay_groups
         );
@@ -3769,9 +3769,11 @@ export class ResultsViewPageStore {
             return Promise.resolve(
                 _.mapValues(
                     this.genericAssayEntitiesGroupByGenericAssayType.result,
-                    (value, key) => {
+                    (value, profileId) => {
                         const selectedEntityIds = this
-                            .selectedGenericAssayEntities[key];
+                            .selectedGenericAssayEntitiesGroupByMolecularProfileId[
+                            profileId
+                        ];
                         return value.filter(entity =>
                             selectedEntityIds.includes(entity.stableId)
                         );
