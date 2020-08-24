@@ -241,8 +241,9 @@ export default class Mutations extends React.Component<
         }
     }
 
+    @autobind
     @action
-    public getDownloadData(dataType?: DataType): string {
+    protected getDownloadData(dataType?: DataType): string {
         var flatdata: any = '';
         var mutations;
         /*if (
