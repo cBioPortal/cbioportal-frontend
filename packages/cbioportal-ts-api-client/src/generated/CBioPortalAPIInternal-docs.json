@@ -1210,6 +1210,57 @@
         "deprecated": false
       }
     },
+    "/generic-assay-data-bin-counts/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch generic assay data bin counts by study view filter",
+        "operationId": "fetchGenericAssayDataBinCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "dataBinMethod",
+            "in": "query",
+            "description": "Method for data binning",
+            "required": false,
+            "type": "string",
+            "default": "DYNAMIC",
+            "allowEmptyValue": false,
+            "enum": [
+              "STATIC",
+              "DYNAMIC"
+            ]
+          },
+          {
+            "in": "body",
+            "name": "genericAssayDataBinCountFilter",
+            "description": "Generic assay data bin count filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GenericAssayDataBinCountFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenericAssayDataBin"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
     "/geneset-hierarchy/fetch": {
       "post": {
         "tags": [
@@ -2328,6 +2379,30 @@
       },
       "title": "AlterationEnrichment"
     },
+    "AndedPatientTreatmentFilters": {
+      "type": "object",
+      "properties": {
+        "filters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OredPatientTreatmentFilters"
+          }
+        }
+      },
+      "title": "AndedPatientTreatmentFilters"
+    },
+    "AndedSampleTreatmentFilters": {
+      "type": "object",
+      "properties": {
+        "filters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OredSampleTreatmentFilters"
+          }
+        }
+      },
+      "title": "AndedSampleTreatmentFilters"
+    },
     "CaseListDataCount": {
       "type": "object",
       "properties": {
@@ -2773,6 +2848,91 @@
         }
       },
       "title": "GeneFilter"
+    },
+    "GenericAssayDataBin": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "end": {
+          "type": "number"
+        },
+        "profileType": {
+          "type": "string"
+        },
+        "specialValue": {
+          "type": "string"
+        },
+        "stableId": {
+          "type": "string"
+        },
+        "start": {
+          "type": "number"
+        }
+      },
+      "title": "GenericAssayDataBin"
+    },
+    "GenericAssayDataBinCountFilter": {
+      "type": "object",
+      "properties": {
+        "genericAssayDataBinFilters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GenericAssayDataBinFilter"
+          }
+        },
+        "studyViewFilter": {
+          "$ref": "#/definitions/StudyViewFilter"
+        }
+      },
+      "title": "GenericAssayDataBinCountFilter"
+    },
+    "GenericAssayDataBinFilter": {
+      "type": "object",
+      "properties": {
+        "customBins": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "disableLogScale": {
+          "type": "boolean"
+        },
+        "end": {
+          "type": "number"
+        },
+        "profileType": {
+          "type": "string"
+        },
+        "stableId": {
+          "type": "string"
+        },
+        "start": {
+          "type": "number"
+        }
+      },
+      "title": "GenericAssayDataBinFilter"
+    },
+    "GenericAssayDataFilter": {
+      "type": "object",
+      "properties": {
+        "profileType": {
+          "type": "string"
+        },
+        "stableId": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataFilterValue"
+          }
+        }
+      },
+      "title": "GenericAssayDataFilter"
     },
     "Geneset": {
       "type": "object",
@@ -3401,6 +3561,39 @@
       },
       "title": "MutationSpectrumFilter"
     },
+    "OredPatientTreatmentFilters": {
+      "type": "object",
+      "properties": {
+        "filters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PatientTreatmentFilter"
+          }
+        }
+      },
+      "title": "OredPatientTreatmentFilters"
+    },
+    "OredSampleTreatmentFilters": {
+      "type": "object",
+      "properties": {
+        "filters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SampleTreatmentFilter"
+          }
+        }
+      },
+      "title": "OredSampleTreatmentFilters"
+    },
+    "PatientTreatmentFilter": {
+      "type": "object",
+      "properties": {
+        "treatment": {
+          "type": "string"
+        }
+      },
+      "title": "PatientTreatmentFilter"
+    },
     "Sample": {
       "type": "object",
       "required": [
@@ -3460,6 +3653,23 @@
       },
       "title": "SampleIdentifier"
     },
+    "SampleTreatmentFilter": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "string",
+          "enum": [
+            "Pre",
+            "Post",
+            "Unknown"
+          ]
+        },
+        "treatment": {
+          "type": "string"
+        }
+      },
+      "title": "SampleTreatmentFilter"
+    },
     "ServerStatusMessage": {
       "type": "object",
       "properties": {
@@ -3493,6 +3703,12 @@
             "$ref": "#/definitions/GeneFilter"
           }
         },
+        "genericAssayDataFilters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GenericAssayDataFilter"
+          }
+        },
         "genomicDataFilters": {
           "type": "array",
           "items": {
@@ -3508,11 +3724,17 @@
             }
           }
         },
+        "patientTreatmentFilters": {
+          "$ref": "#/definitions/AndedPatientTreatmentFilters"
+        },
         "sampleIdentifiers": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/SampleIdentifier"
           }
+        },
+        "sampleTreatmentFilters": {
+          "$ref": "#/definitions/AndedSampleTreatmentFilters"
         },
         "studyIds": {
           "type": "array",
