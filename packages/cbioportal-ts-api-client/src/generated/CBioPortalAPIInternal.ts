@@ -13,6 +13,14 @@ export type AlterationEnrichment = {
         'pValue': number
 
 };
+export type AndedPatientTreatmentFilters = {
+    'filters': Array < OredPatientTreatmentFilters >
+
+};
+export type AndedSampleTreatmentFilters = {
+    'filters': Array < OredSampleTreatmentFilters >
+
+};
 export type CaseListDataCount = {
     'count': number
 
@@ -210,6 +218,48 @@ export type GeneFilter = {
         >
 
         'molecularProfileIds': Array < string >
+
+};
+export type GenericAssayDataBin = {
+    'count': number
+
+        'end': number
+
+        'profileType': string
+
+        'specialValue': string
+
+        'stableId': string
+
+        'start': number
+
+};
+export type GenericAssayDataBinCountFilter = {
+    'genericAssayDataBinFilters': Array < GenericAssayDataBinFilter >
+
+        'studyViewFilter': StudyViewFilter
+
+};
+export type GenericAssayDataBinFilter = {
+    'customBins': Array < number >
+
+        'disableLogScale': boolean
+
+        'end': number
+
+        'profileType': string
+
+        'stableId': string
+
+        'start': number
+
+};
+export type GenericAssayDataFilter = {
+    'profileType': string
+
+        'stableId': string
+
+        'values': Array < DataFilterValue >
 
 };
 export type Geneset = {
@@ -494,6 +544,18 @@ export type MutationSpectrumFilter = {
         'sampleListId': string
 
 };
+export type OredPatientTreatmentFilters = {
+    'filters': Array < PatientTreatmentFilter >
+
+};
+export type OredSampleTreatmentFilters = {
+    'filters': Array < SampleTreatmentFilter >
+
+};
+export type PatientTreatmentFilter = {
+    'treatment': string
+
+};
 export type Sample = {
     'copyNumberSegmentPresent': boolean
 
@@ -520,6 +582,12 @@ export type SampleIdentifier = {
         'studyId': string
 
 };
+export type SampleTreatmentFilter = {
+    'time': "Pre" | "Post" | "Unknown"
+
+        'treatment': string
+
+};
 export type ServerStatusMessage = {
     'status': string
 
@@ -532,12 +600,18 @@ export type StudyViewFilter = {
 
         'geneFilters': Array < GeneFilter >
 
+        'genericAssayDataFilters': Array < GenericAssayDataFilter >
+
         'genomicDataFilters': Array < GenomicDataFilter >
 
         'genomicProfiles': Array < Array < string >
         >
 
+        'patientTreatmentFilters': AndedPatientTreatmentFilters
+
         'sampleIdentifiers': Array < SampleIdentifier >
+
+        'sampleTreatmentFilters': AndedSampleTreatmentFilters
 
         'studyIds': Array < string >
 
@@ -2980,6 +3054,95 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < MutationCountByGene >
         > {
             return this.fetchFusionGenesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchGenericAssayDataBinCountsUsingPOSTURL(parameters: {
+        'dataBinMethod' ? : "STATIC" | "DYNAMIC",
+        'genericAssayDataBinCountFilter': GenericAssayDataBinCountFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/generic-assay-data-bin-counts/fetch';
+        if (parameters['dataBinMethod'] !== undefined) {
+            queryParameters['dataBinMethod'] = parameters['dataBinMethod'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch generic assay data bin counts by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchGenericAssayDataBinCountsUsingPOST
+     * @param {string} dataBinMethod - Method for data binning
+     * @param {} genericAssayDataBinCountFilter - Generic assay data bin count filter
+     */
+    fetchGenericAssayDataBinCountsUsingPOSTWithHttpInfo(parameters: {
+        'dataBinMethod' ? : "STATIC" | "DYNAMIC",
+        'genericAssayDataBinCountFilter': GenericAssayDataBinCountFilter,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/generic-assay-data-bin-counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['dataBinMethod'] !== undefined) {
+                queryParameters['dataBinMethod'] = parameters['dataBinMethod'];
+            }
+
+            if (parameters['genericAssayDataBinCountFilter'] !== undefined) {
+                body = parameters['genericAssayDataBinCountFilter'];
+            }
+
+            if (parameters['genericAssayDataBinCountFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: genericAssayDataBinCountFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch generic assay data bin counts by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchGenericAssayDataBinCountsUsingPOST
+     * @param {string} dataBinMethod - Method for data binning
+     * @param {} genericAssayDataBinCountFilter - Generic assay data bin count filter
+     */
+    fetchGenericAssayDataBinCountsUsingPOST(parameters: {
+            'dataBinMethod' ? : "STATIC" | "DYNAMIC",
+            'genericAssayDataBinCountFilter': GenericAssayDataBinCountFilter,
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < GenericAssayDataBin >
+        > {
+            return this.fetchGenericAssayDataBinCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
