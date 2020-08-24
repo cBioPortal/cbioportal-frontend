@@ -11,7 +11,6 @@ import Slider from 'react-rangeslider';
 import { computed } from 'mobx';
 import { observer } from 'mobx-react';
 import { MutationMapperStore } from '../../model/MutationMapperStore';
-import { tsvFormat } from 'd3-dsv';
 
 import { calcYMaxInput } from '../../util/LollipopPlotUtils';
 import TrackSelector, {
@@ -56,6 +55,7 @@ type LollipopMutationPlotControlsProps = {
     mutationmapperStore: MutationMapperStore;
     onTrackVisibilityChange?: (selectedTrackIds: string[]) => void;
     getSVG: () => SVGElement;
+    getDownloadData?: () => string;
 };
 
 function formatInputValue(value: number, step: number = 1) {
@@ -208,38 +208,11 @@ export default class LollipopMutationPlotControls extends React.Component<
         );
     }
 
-    @autobind
-    private getData(
-        dataType?: DataType
-    ): string | PromiseLike<string | null> | null {
-        var flatdata: any = '';
-        if (this.props.mutationmapperStore == undefined) flatdata = 'undefined';
-        else
-            flatdata = tsvFormat(
-                this.convertDataToDownloadMMSData(
-                    this.props.mutationmapperStore
-                )
-            );
-
-        return flatdata;
-    }
-
-    private convertDataToDownloadMMSData(mms?: MutationMapperStore) {
-        if (mms && mms.mutationData) {
-            let data = mms.mutationData.result || [];
-            let downloadData: any[] = [];
-            data.forEach(m => {
-                downloadData.push(m);
-            });
-            return downloadData;
-        } else return ' ';
-    }
-
     protected get downloadControls() {
         return (
             <DownloadControls
                 getSvg={this.props.getSVG}
-                getData={this.getData}
+                getData={this.props.getDownloadData}
                 filename={`${this.props.hugoGeneSymbol}_lollipop`}
                 dontFade={true}
                 type="button"

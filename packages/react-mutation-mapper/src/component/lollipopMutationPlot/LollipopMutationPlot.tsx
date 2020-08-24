@@ -50,6 +50,7 @@ export type LollipopMutationPlotProps = {
     mutationAlignerCache?: MobxCache<string>;
     getLollipopColor?: (mutations: Partial<Mutation>[]) => string;
     getMutationCount?: (mutation: Partial<Mutation>) => number;
+    getDownloadData?: () => string;
     topYAxisSymbol?: string;
     bottomYAxisSymbol?: string;
     topYAxisDefaultMax?: number;

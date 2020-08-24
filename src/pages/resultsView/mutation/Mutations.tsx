@@ -10,6 +10,8 @@ import AppConfig from 'appConfig';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
 import autobind from 'autobind-decorator';
 import { AppStore } from '../../../AppStore';
+import { DataType } from 'cbioportal-frontend-commons';
+import { tsvFormat } from 'd3-dsv';
 
 import './mutations.scss';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
@@ -229,6 +231,7 @@ export default class Mutations extends React.Component<
                         showTranscriptDropDown={
                             AppConfig.serverConfig.show_transcript_dropdown
                         }
+                        getDownloadData={this.getDownloadData}
                         onTranscriptChange={this.onTranscriptChange}
                     />
                 </div>
@@ -236,6 +239,43 @@ export default class Mutations extends React.Component<
         } else {
             return null;
         }
+    }
+
+    @action
+    public getDownloadData(dataType?: DataType): string {
+        var flatdata: any = '';
+        var mutations;
+        /*if (
+            this.selectedGene &&
+            this.props.store.getMutationMapperStore(this.selectedGene)
+        ) {
+             mutationMapperStore = this.props.store.getMutationMapperStore(
+                this.selectedGene
+            )!;
+        }*/
+        mutations = this.props.store.mutations.result || [];
+        flatdata = tsvFormat(this.convertDataToDownloadMMSData(mutations));
+        /*
+        if (mutationMapperStore == undefined) flatdata = 'undefined';
+        else
+            flatdata = tsvFormat(
+                this.convertDataToDownloadMMSData(
+                    mutations
+                )
+            );
+        */
+        return flatdata;
+    }
+
+    protected convertDataToDownloadMMSData(mutations: Mutation[]) {
+        // if (mms && mms.mutationData) {
+        let data = mutations || [];
+        let downloadData: any[] = [];
+        data.forEach(m => {
+            downloadData.push(m);
+        });
+        return downloadData;
+        //} else return ' ';
     }
 
     @autobind
