@@ -36,7 +36,7 @@
       "description": " "
     },
     {
-      "name": "Expression Enrichments",
+      "name": "Enrichments",
       "description": " "
     },
     {
@@ -1073,10 +1073,10 @@
     "/expression-enrichments/fetch": {
       "post": {
         "tags": [
-          "Expression Enrichments"
+          "Enrichments"
         ],
-        "summary": "Fetch expression enrichments in a molecular profile",
-        "operationId": "fetchExpressionEnrichmentsUsingPOST",
+        "summary": "Fetch genomic enrichments in a molecular profile",
+        "operationId": "fetchGenomicEnrichmentsUsingPOST",
         "consumes": [
           "application/json"
         ],
@@ -1116,7 +1116,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ExpressionEnrichment"
+                "$ref": "#/definitions/GenomicEnrichment"
               }
             }
           }
@@ -1254,6 +1254,60 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/GenericAssayDataBin"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/generic-assay-enrichments/fetch": {
+      "post": {
+        "tags": [
+          "Enrichments"
+        ],
+        "summary": "Fetch generic assay enrichments in a molecular profile",
+        "operationId": "fetchGenericAssayEnrichmentsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "enrichmentType",
+            "in": "query",
+            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
+            "required": false,
+            "type": "string",
+            "default": "SAMPLE",
+            "allowEmptyValue": false,
+            "enum": [
+              "SAMPLE",
+              "PATIENT"
+            ]
+          },
+          {
+            "in": "body",
+            "name": "groups",
+            "description": "List of groups containing sample and molecular profile identifiers",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MolecularProfileCasesGroupFilter"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenericAssayEnrichment"
               }
             }
           }
@@ -2797,37 +2851,6 @@
       },
       "title": "DensityPlotBin"
     },
-    "ExpressionEnrichment": {
-      "type": "object",
-      "required": [
-        "entrezGeneId",
-        "groupsStatistics",
-        "hugoGeneSymbol",
-        "pValue"
-      ],
-      "properties": {
-        "cytoband": {
-          "type": "string"
-        },
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "groupsStatistics": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/GroupStatistics"
-          }
-        },
-        "hugoGeneSymbol": {
-          "type": "string"
-        },
-        "pValue": {
-          "type": "number"
-        }
-      },
-      "title": "ExpressionEnrichment"
-    },
     "GeneFilter": {
       "type": "object",
       "properties": {
@@ -2933,6 +2956,40 @@
         }
       },
       "title": "GenericAssayDataFilter"
+    },
+    "GenericAssayEnrichment": {
+      "type": "object",
+      "required": [
+        "genericEntityMetaProperties",
+        "groupsStatistics",
+        "name",
+        "pValue",
+        "stableId"
+      ],
+      "properties": {
+        "genericEntityMetaProperties": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "groupsStatistics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GroupStatistics"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "pValue": {
+          "type": "number"
+        },
+        "stableId": {
+          "type": "string"
+        }
+      },
+      "title": "GenericAssayEnrichment"
     },
     "Geneset": {
       "type": "object",
@@ -3173,6 +3230,37 @@
         }
       },
       "title": "GenomicDataFilter"
+    },
+    "GenomicEnrichment": {
+      "type": "object",
+      "required": [
+        "entrezGeneId",
+        "groupsStatistics",
+        "hugoGeneSymbol",
+        "pValue"
+      ],
+      "properties": {
+        "cytoband": {
+          "type": "string"
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "groupsStatistics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GroupStatistics"
+          }
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "pValue": {
+          "type": "number"
+        }
+      },
+      "title": "GenomicEnrichment"
     },
     "Gistic": {
       "type": "object",
