@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {
     AlterationEnrichment,
-    ExpressionEnrichment,
+    GenomicEnrichment,
 } from 'cbioportal-ts-api-client';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import { ExpressionEnrichmentRow } from 'shared/model/ExpressionEnrichmentRow';
@@ -37,7 +37,7 @@ export type AlterationEnrichmentWithQ = AlterationEnrichment & {
     qValue: number;
     value?: number /* used for copy number in group comparison */;
 };
-export type ExpressionEnrichmentWithQ = ExpressionEnrichment & {
+export type ExpressionEnrichmentWithQ = GenomicEnrichment & {
     qValue: number;
 };
 
