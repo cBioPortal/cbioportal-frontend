@@ -631,7 +631,7 @@ describe('auto-selecting needed profiles for oql in query form', () => {
         // submit is disabled
         assert(!browser.isEnabled('button[data-test="queryButton"]'));
     });
-    it('auto-selects an mrna profile when mrna oql is entered', () => {
+    it.skip('auto-selects an mrna profile when mrna oql is entered', () => {
         // make sure profiles selector is loaded
         browser.waitForExist(
             'div[data-test="molecularProfileSelector"] input[type="checkbox"]',
