@@ -137,11 +137,13 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                     'Sequencing',
                     'Sample Acquisition',
                     'Surgery',
+                    'Med Onc',
                     'Med Onc Assessment',
                     'Status',
                     'Diagnostics',
                     'Diagnostic',
                     'Imaging',
+                    'Imaging Assessment',
                     'Lab_test',
                     'Treatment',
                 ],
@@ -217,6 +219,16 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                                     (att: any) => att.key === 'SAMPLE_ID'
                                 );
 
+                                const errorDiv = (
+                                    <div>
+                                        Error. Cannot find data for sample.
+                                    </div>
+                                );
+
+                                if (!hoveredSample || !hoveredSample.value) {
+                                    return errorDiv;
+                                }
+
                                 const sampleWithClinicalData = sampleManager.samples.find(
                                     sample => {
                                         return (
@@ -268,11 +280,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                                         </table>
                                     );
                                 } else {
-                                    return (
-                                        <div>
-                                            Error. Cannot find data for sample.
-                                        </div>
-                                    );
+                                    return errorDiv;
                                 }
                             };
 
@@ -310,6 +318,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                     'Surgery',
                     'Diagnostics',
                     'Diagnostic',
+                    'Diagnosis',
                     'Treatment',
                     'Lab_test',
                     'Status',
@@ -325,7 +334,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
 
                 // status track
                 baseConfig.trackEventRenderers.push({
-                    trackTypeMatch: /STATUS|Med Onc Assessment/i,
+                    trackTypeMatch: /Med Onc Assessment|MedOnc/i,
                     configureTrack: (cat: TimelineTrackSpecification) => {
                         cat.label = 'Med Onc Assessment';
                         const colorMappings = [
@@ -337,7 +346,10 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                         ];
                         cat.items.forEach((event, i) => {
                             const status = event.event.attributes.find(
-                                (att: any) => att.key === 'STATUS'
+                                (att: any) =>
+                                    att.key === 'CANCER_STATUS' ||
+                                    att.key === 'CA_STATUS_VARIABLE' ||
+                                    att.key === 'CURATED_CANCER_STATUS'
                             );
                             let color = '#ffffff';
                             if (status) {
@@ -382,7 +394,9 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                         if (cat.items && cat.items.length) {
                             cat.items.forEach((event, i) => {
                                 const status = event.event.attributes.find(
-                                    (att: any) => att.key === 'IMAGE_OVERALL'
+                                    (att: any) =>
+                                        att.key === 'IMAGE_OVERALL' ||
+                                        att.key == 'CANCER_STATUS'
                                 );
                                 let color = '#ffffff';
                                 if (status) {
