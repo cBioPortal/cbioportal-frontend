@@ -347,8 +347,6 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                         cat.items.forEach((event, i) => {
                             const status = event.event.attributes.find(
                                 (att: any) =>
-                                    att.key === 'CANCER_STATUS' ||
-                                    att.key === 'CA_STATUS_VARIABLE' ||
                                     att.key === 'CURATED_CANCER_STATUS'
                             );
                             let color = '#ffffff';
@@ -396,7 +394,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                                 const status = event.event.attributes.find(
                                     (att: any) =>
                                         att.key === 'IMAGE_OVERALL' ||
-                                        att.key == 'CANCER_STATUS'
+                                        att.key == 'CURATED_CANCER_STATUS'
                                 );
                                 let color = '#ffffff';
                                 if (status) {
