@@ -71,6 +71,8 @@ export enum ChartTypeEnum {
     CNA_GENES_TABLE = 'CNA_GENES_TABLE',
     GENOMIC_PROFILES_TABLE = 'GENOMIC_PROFILES_TABLE',
     CASE_LIST_TABLE = 'CASE_LIST_TABLE',
+    SAMPLE_TREATMENTS_TABLE = 'SAMPLE_TREATMENTS_TABLE',
+    PATIENT_TREATMENTS_TABLE = 'PATIENT_TREATMENTS_TABLE',
     NONE = 'NONE',
 }
 
@@ -85,6 +87,8 @@ export enum ChartTypeNameEnum {
     CNA_GENES_TABLE = 'table',
     GENOMIC_PROFILES_TABLE = 'table',
     CASE_LIST_TABLE = 'table',
+    SAMPLE_TREATMENTS_TABLE = 'table',
+    PATIENT_TREATMENTS_TABLE = 'table',
     NONE = 'none',
 }
 
@@ -189,6 +193,16 @@ const studyViewFrontEnd = {
                 minW: 2,
             },
             [ChartTypeEnum.CASE_LIST_TABLE]: {
+                w: 2,
+                h: 2,
+                minW: 2,
+            },
+            [ChartTypeEnum.SAMPLE_TREATMENTS_TABLE]: {
+                w: 2,
+                h: 2,
+                minW: 2,
+            },
+            [ChartTypeEnum.PATIENT_TREATMENTS_TABLE]: {
                 w: 2,
                 h: 2,
                 minW: 2,
