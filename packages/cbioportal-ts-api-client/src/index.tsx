@@ -24,7 +24,7 @@ export {
     CosmicMutation,
     ClinicalDataBin,
     DensityPlotBin,
-    ExpressionEnrichment,
+    GenomicEnrichment,
     GeneFilter,
     Geneset,
     GenesetCorrelation,
