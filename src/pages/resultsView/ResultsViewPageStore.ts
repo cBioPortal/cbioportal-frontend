@@ -41,7 +41,7 @@ import {
     IHotspotIndex,
     indexHotspotsData,
     IOncoKbData,
-    isNon3dHotspot,
+    isLinearClusterHotspot,
 } from 'cbioportal-utils';
 import {
     VariantAnnotation,
@@ -4284,7 +4284,10 @@ export class ResultsViewPageStore {
                 const indexedHotspotData = this.indexedHotspotData.result;
                 if (indexedHotspotData) {
                     return Promise.resolve((mutation: Mutation) => {
-                        return isNon3dHotspot(mutation, indexedHotspotData);
+                        return isLinearClusterHotspot(
+                            mutation,
+                            indexedHotspotData
+                        );
                     });
                 } else {
                     return Promise.resolve(

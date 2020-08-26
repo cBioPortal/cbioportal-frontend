@@ -6,14 +6,12 @@ import {
     indexHotspots,
     isHotspot,
     is3dHotspot,
-    isRecurrentHotspot,
-    isSpliceHotspot,
-    filterRecurrentHotspotsByMutations,
     filter3dHotspotsByMutations,
     filterHotspotsByMutations,
     groupHotspotsByMutations,
     defaultHotspotFilter,
-    isNon3dHotspot,
+    isLinearClusterHotspot,
+    filterLinearClusterHotspotsByMutations,
 } from './CancerHotspotsUtils';
 
 describe('CancerHotspotsUtils', () => {
@@ -376,37 +374,52 @@ describe('CancerHotspotsUtils', () => {
         });
     });
 
-    describe('isRecurrentHotspot', () => {
-        it('checks if a mutation is a hotspot mutation by isRecurrentHotspot()', () => {
+    describe('isLinearClusterHotspot', () => {
+        it('checks if a mutation is a single or indel hotspot mutation by isLinearClusterHotspot()', () => {
             assert.isTrue(
-                isRecurrentHotspot(hotspotMutation1, hotspotIndex),
+                isLinearClusterHotspot(hotspotMutation1, hotspotIndex),
                 'TP53 R273C should be a recurrent hotspot mutation.'
             );
 
             assert.isTrue(
-                isRecurrentHotspot(hotspotMutation2, hotspotIndex),
+                isLinearClusterHotspot(hotspotMutation2, hotspotIndex),
                 'TP53 R273A should be a recurrent hotspot mutation.'
             );
 
             assert.isTrue(
-                isRecurrentHotspot(hotspotMutation3, hotspotIndex),
+                isLinearClusterHotspot(hotspotMutation3, hotspotIndex),
                 'PIK3CA R38H should be a recurrent hotspot mutation.'
             );
 
             assert.isFalse(
-                isRecurrentHotspot(notHotspotMutation, hotspotIndex),
+                isLinearClusterHotspot(notHotspotMutation, hotspotIndex),
                 'SMURF1 R101F should not be a recurrent hotspot mutation.'
             );
 
             assert.isFalse(
-                isRecurrentHotspot(hotspot3dMutation, hotspotIndex),
+                isLinearClusterHotspot(hotspot3dMutation, hotspotIndex),
                 'SMURF1 R101N should not be a recurrent hotspot mutation.'
+            );
+        });
+
+        it('checks if a mutation is a splice hotspot mutation by isLinearClusterHotspot()', () => {
+            assert.isFalse(
+                isLinearClusterHotspot(notHotspotMutation, spliceHotspotIndex),
+                'SMURF1 R101F should not be a splice hotspot mutation.'
+            );
+
+            assert.isTrue(
+                isLinearClusterHotspot(
+                    hotspotSpliceMutation,
+                    spliceHotspotIndex
+                ),
+                'MET X1010 should be a splice hotspot mutation.'
             );
         });
     });
 
     describe('is3dHotspot', () => {
-        it('checks if a mutation is a hotspot mutation by is3dHotspot()', () => {
+        it('checks if a mutation is a 3d hotspot mutation by is3dHotspot()', () => {
             assert.isFalse(
                 is3dHotspot(notHotspotMutation, hotspot3dIndex),
                 'SMURF1 R101F should not be a 3d hotspot mutation.'
@@ -415,34 +428,6 @@ describe('CancerHotspotsUtils', () => {
             assert.isTrue(
                 is3dHotspot(hotspot3dMutation, hotspot3dIndex),
                 'SMURF1 R101N should be a 3d hotspot mutation.'
-            );
-        });
-    });
-
-    describe('isSpliceHotspot', () => {
-        it('checks if a mutation is a hotspot mutation by isSpliceHotspot()', () => {
-            assert.isFalse(
-                isSpliceHotspot(notHotspotMutation, spliceHotspotIndex),
-                'SMURF1 R101F should not be a splice hotspot mutation.'
-            );
-
-            assert.isTrue(
-                isSpliceHotspot(hotspotSpliceMutation, spliceHotspotIndex),
-                'MET X1010 should be a splice hotspot mutation.'
-            );
-        });
-    });
-
-    describe('isNon3dHotspot', () => {
-        it('checks if a mutation is a hotspot mutation by isNon3dHotspot()', () => {
-            assert.isTrue(
-                isNon3dHotspot(hotspotSpliceMutation, spliceHotspotIndex),
-                'MET X1010 should be a non-3d(splice) hotspot mutation.'
-            );
-
-            assert.isTrue(
-                isRecurrentHotspot(hotspotMutation1, hotspotIndex),
-                'TP53 R273C should be a non-3d(recurrent) hotspot mutation.'
             );
         });
     });
@@ -501,7 +486,7 @@ describe('CancerHotspotsUtils', () => {
         });
 
         it('filters recurrent hotspots correctly', () => {
-            const filtered = filterRecurrentHotspotsByMutations(
+            const filtered = filterLinearClusterHotspotsByMutations(
                 mutations,
                 hotspotIndex
             );
