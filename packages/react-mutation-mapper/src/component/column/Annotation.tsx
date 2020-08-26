@@ -9,7 +9,7 @@ import {
     IMyCancerGenomeData,
     IOncoKbData,
     is3dHotspot,
-    isNon3dHotspot,
+    isLinearClusterHotspot,
     MobxCache,
     Mutation,
     RemoteData,
@@ -170,7 +170,7 @@ export function getAnnotationData(
                 hotspotData &&
                 hotspotData.result &&
                 hotspotData.status === 'complete'
-                    ? isNon3dHotspot(mutation, hotspotData.result)
+                    ? isLinearClusterHotspot(mutation, hotspotData.result)
                     : false,
             is3dHotspot:
                 hotspotData &&
