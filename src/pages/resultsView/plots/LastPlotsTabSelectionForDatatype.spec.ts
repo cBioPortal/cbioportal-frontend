@@ -1,6 +1,10 @@
 import { assert } from 'chai';
 import LastPlotsTabSelectionForDatatype from './LastPlotsTabSelectionForDatatype';
-import { AxisMenuSelection, MutationCountBy } from './PlotsTab';
+import {
+    AxisMenuSelection,
+    MutationCountBy,
+    StructuralVariantCountBy,
+} from './PlotsTab';
 import sinon from 'sinon';
 
 // couldn't figure out how to do this with sinon
@@ -17,6 +21,7 @@ function createFakeCallbacks() {
 // used in PlotsTabSelectionHistory
 const untestedSelectionFields: AxisMenuSelection = {
     mutationCountBy: MutationCountBy.MutationType,
+    structuralVariantCountBy: StructuralVariantCountBy.VariantType,
     logScale: false,
 };
 

@@ -16,6 +16,7 @@ export type PlotsSelectionParam = {
     dataType?: string;
     selectedDataSourceOption?: string;
     mutationCountBy?: string;
+    structuralVariantCountBy?: string;
     logScale?: string;
 };
 
@@ -26,6 +27,7 @@ const PlotsSelectionParamProps: Required<PlotsSelectionParam> = {
     dataType: '',
     selectedDataSourceOption: '',
     mutationCountBy: '',
+    structuralVariantCountBy: '',
     logScale: '',
 };
 

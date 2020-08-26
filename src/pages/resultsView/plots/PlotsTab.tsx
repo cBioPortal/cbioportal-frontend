@@ -56,6 +56,7 @@ import {
     getColoringMenuOptionValue,
     basicAppearance,
     getAxisDataOverlapSampleCount,
+    isAlterationTypePresent,
 } from './PlotsTabUtils';
 import {
     ClinicalAttribute,
@@ -154,6 +155,11 @@ export enum MutationCountBy {
     MutatedVsWildType = 'MutatedVsWildType',
 }
 
+export enum StructuralVariantCountBy {
+    VariantType = 'VariantType',
+    MutatedVsWildType = 'MutatedVsWildType',
+}
+
 export type AxisMenuSelection = {
     entrezGeneId?: number;
     genesetId?: string;
@@ -166,6 +172,7 @@ export type AxisMenuSelection = {
     dataType?: string;
     dataSourceId?: string;
     mutationCountBy: MutationCountBy;
+    structuralVariantCountBy: StructuralVariantCountBy;
     logScale: boolean;
 };
 
@@ -232,6 +239,13 @@ const LEGEND_TO_BOTTOM_WIDTH_THRESHOLD = 550; // when plot is wider than this va
 const mutationCountByOptions = [
     { value: MutationCountBy.MutationType, label: 'Mutation Type' },
     { value: MutationCountBy.MutatedVsWildType, label: 'Mutated vs Wild-type' },
+];
+const structuralVariantCountByOptions = [
+    { value: StructuralVariantCountBy.VariantType, label: 'Variant Type' },
+    {
+        value: StructuralVariantCountBy.MutatedVsWildType,
+        label: 'Variant vs No Variant',
+    },
 ];
 
 const discreteVsDiscretePlotTypeOptions = [
@@ -732,21 +746,28 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 if (this._dataType === undefined && dataTypeOptions.length) {
                     // return computed default if _dataType is undefined and if there are options to select a default value from
                     if (
-                        vertical &&
-                        !!dataTypeOptions.find(
-                            o =>
-                                o.value ===
-                                AlterationTypeConstants.MRNA_EXPRESSION
+                        isAlterationTypePresent(
+                            dataTypeOptions,
+                            vertical,
+                            AlterationTypeConstants.MRNA_EXPRESSION
                         )
                     ) {
                         // default for the vertical axis is mrna, if one is available
                         return AlterationTypeConstants.MRNA_EXPRESSION;
                     } else if (
-                        !vertical &&
-                        !!dataTypeOptions.find(
-                            o =>
-                                o.value ===
-                                AlterationTypeConstants.COPY_NUMBER_ALTERATION
+                        isAlterationTypePresent(
+                            dataTypeOptions,
+                            !vertical,
+                            AlterationTypeConstants.STRUCTURAL_VARIANT
+                        )
+                    ) {
+                        // default for the horizontal axis is CNA, if one is available
+                        return AlterationTypeConstants.STRUCTURAL_VARIANT;
+                    } else if (
+                        isAlterationTypePresent(
+                            dataTypeOptions,
+                            !vertical,
+                            AlterationTypeConstants.COPY_NUMBER_ALTERATION
                         )
                     ) {
                         // default for the horizontal axis is CNA, if one is available
@@ -826,6 +847,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             },
             set mutationCountBy(m: MutationCountBy) {
                 this._mutationCountBy = m;
+            },
+            get structuralVariantCountBy() {
+                if (this._structuralVariantCountBy === undefined) {
+                    // default
+                    return StructuralVariantCountBy.VariantType;
+                } else {
+                    return this._structuralVariantCountBy;
+                }
+            },
+            set structuralVariantCountBy(s: StructuralVariantCountBy) {
+                this._structuralVariantCountBy = s;
             },
             get logScale() {
                 return this._logScale && logScalePossible(this);
@@ -1126,6 +1158,25 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         currentParams.plots_vert_selection.mutationCountBy = c;
                     } else {
                         currentParams.plots_horz_selection.mutationCountBy = c;
+                    }
+                    return currentParams;
+                });
+            },
+
+            get _structuralVariantCountBy() {
+                const urlSelection =
+                    (vertical
+                        ? self.props.urlWrapper.query.plots_vert_selection
+                        : self.props.urlWrapper.query.plots_horz_selection) ||
+                    {};
+                return urlSelection.structuralVariantCountBy as StructuralVariantCountBy;
+            },
+            set _structuralVariantCountBy(c: StructuralVariantCountBy) {
+                self.props.urlWrapper.updateURL(currentParams => {
+                    if (vertical) {
+                        currentParams.plots_vert_selection.structuralVariantCountBy = c;
+                    } else {
+                        currentParams.plots_horz_selection.structuralVariantCountBy = c;
                     }
                     return currentParams;
                 });
@@ -2332,6 +2383,22 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @autobind
     @action
+    public onVerticalAxisStructuralVariantCountBySelect(option: any) {
+        this.vertSelection.structuralVariantCountBy = option.value;
+        this.viewLimitValues = true;
+        this.autoChooseColoringMenuGene();
+    }
+
+    @autobind
+    @action
+    public onHorizontalAxisStructuralVariantCountBySelect(option: any) {
+        this.horzSelection.structuralVariantCountBy = option.value;
+        this.viewLimitValues = true;
+        this.autoChooseColoringMenuGene();
+    }
+
+    @autobind
+    @action
     private onDiscreteVsDiscretePlotTypeSelect(option: any) {
         this.discreteVsDiscretePlotType = option.value;
     }
@@ -2570,6 +2637,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.props.store.entrezGeneIdToGene,
             this.props.store.clinicalDataCache,
             this.props.store.mutationCache,
+            this.props.store.structuralVariantCache,
             this.props.store.numericGeneMolecularDataCache,
             this.props.store.coverageInformation,
             this.props.store.filteredSamples,
@@ -2587,6 +2655,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.props.store.entrezGeneIdToGene,
             this.props.store.clinicalDataCache,
             this.props.store.mutationCache,
+            this.props.store.structuralVariantCache,
             this.props.store.numericGeneMolecularDataCache,
             this.props.store.coverageInformation,
             this.props.store.filteredSamples,
@@ -3016,6 +3085,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     ? this.onVerticalAxisMutationCountBySelect
                     : this.onHorizontalAxisMutationCountBySelect;
                 break;
+            case AlterationTypeConstants.STRUCTURAL_VARIANT:
+                dataSourceLabel = 'Group Structural variants by';
+                dataSourceValue = axisSelection.structuralVariantCountBy;
+                dataSourceOptions = structuralVariantCountByOptions;
+                onDataSourceChange = vertical
+                    ? this.onVerticalAxisStructuralVariantCountBySelect
+                    : this.onHorizontalAxisStructuralVariantCountBySelect;
+                break;
             case undefined:
                 break;
             default:
@@ -3032,7 +3109,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         let dataSourceDescription: string = '';
         if (
             dataSourceValue &&
-            axisSelection.dataType !== AlterationTypeConstants.MUTATION_EXTENDED
+            axisSelection.dataType !==
+                AlterationTypeConstants.MUTATION_EXTENDED &&
+            axisSelection.dataType !==
+                AlterationTypeConstants.STRUCTURAL_VARIANT
         ) {
             if (axisSelection.dataType === CLIN_ATTR_DATA_TYPE) {
                 dataSourceDescription = this

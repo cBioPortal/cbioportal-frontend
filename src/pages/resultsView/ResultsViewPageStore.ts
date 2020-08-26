@@ -1502,7 +1502,9 @@ export class ResultsViewPageStore {
                     profile.molecularAlterationType ===
                         AlterationTypeConstants.GENESET_SCORE ||
                     profile.molecularAlterationType ===
-                        AlterationTypeConstants.GENERIC_ASSAY
+                        AlterationTypeConstants.GENERIC_ASSAY ||
+                    profile.molecularAlterationType ===
+                        AlterationTypeConstants.STRUCTURAL_VARIANT
                 ) {
                     // geneset profile, we dont have the META projection for geneset data, so just add it
                     /*promises.push(internalClient.fetchGeneticDataItemsUsingPOST({
@@ -2664,16 +2666,14 @@ export class ResultsViewPageStore {
         [studyId: string]: MolecularProfile;
     }>(
         {
-            await: () => [this.molecularProfilesInStudies],
+            await: () => [this.mutationProfiles],
             invoke: () => {
-                const ret: { [studyId: string]: MolecularProfile } = {};
-                for (const profile of this.molecularProfilesInStudies.result) {
-                    const studyId = profile.studyId;
-                    if (!ret[studyId] && isMutationProfile(profile)) {
-                        ret[studyId] = profile;
-                    }
-                }
-                return Promise.resolve(ret);
+                return Promise.resolve(
+                    _.keyBy(
+                        this.mutationProfiles.result,
+                        (profile: MolecularProfile) => profile.studyId
+                    )
+                );
             },
         },
         {}
@@ -2797,20 +2797,17 @@ export class ResultsViewPageStore {
     });
 
     readonly mutations = remoteData<Mutation[]>({
-        await: () => [this.genes, this.samples, this.mutationProfiles],
+        await: () => [
+            this.genes,
+            this.samples,
+            this.studyToMutationMolecularProfile,
+        ],
         invoke: async () => {
-            const mutationProfiles = this.mutationProfiles.result;
-
-            if (mutationProfiles.length === 0) {
+            if (_.isEmpty(this.studyToMutationMolecularProfile.result)) {
                 return [];
             }
-
-            const studyIdToProfileMap: {
-                [studyId: string]: MolecularProfile;
-            } = _.keyBy(
-                mutationProfiles,
-                (profile: MolecularProfile) => profile.studyId
-            );
+            const studyIdToProfileMap = this.studyToMutationMolecularProfile
+                .result;
 
             const filters = this.samples.result.reduce(
                 (memo, sample: Sample) => {
@@ -2844,22 +2841,37 @@ export class ResultsViewPageStore {
         },
     });
 
-    readonly structuralVariants = remoteData<StructuralVariant[]>({
-        await: () => [this.genes, this.samples, this.structuralVariantProfiles],
-        invoke: async () => {
-            const structuralVariantProfiles = this.structuralVariantProfiles
-                .result;
+    readonly studyToStructuralVariantMolecularProfile = remoteData<{
+        [studyId: string]: MolecularProfile;
+    }>(
+        {
+            await: () => [this.structuralVariantProfiles],
+            invoke: () => {
+                return Promise.resolve(
+                    _.keyBy(
+                        this.structuralVariantProfiles.result,
+                        (profile: MolecularProfile) => profile.studyId
+                    )
+                );
+            },
+        },
+        {}
+    );
 
-            if (structuralVariantProfiles.length === 0) {
+    readonly structuralVariants = remoteData<StructuralVariant[]>({
+        await: () => [
+            this.genes,
+            this.samples,
+            this.studyToStructuralVariantMolecularProfile,
+        ],
+        invoke: async () => {
+            if (
+                _.isEmpty(this.studyToStructuralVariantMolecularProfile.result)
+            ) {
                 return [];
             }
-
-            const studyIdToProfileMap: {
-                [studyId: string]: MolecularProfile;
-            } = _.keyBy(
-                structuralVariantProfiles,
-                (profile: MolecularProfile) => profile.studyId
-            );
+            const studyIdToProfileMap = this
+                .studyToStructuralVariantMolecularProfile.result;
 
             const filters = this.samples.result.reduce(
                 (memo, sample: Sample) => {
@@ -5100,6 +5112,46 @@ export class ResultsViewPageStore {
                     })
                 )
             );
+        },
+    }));
+
+    public structuralVariantCache = new MobxPromiseCache<
+        { entrezGeneId: number },
+        StructuralVariant[]
+    >(q => ({
+        await: () => [
+            this.studyToStructuralVariantMolecularProfile,
+            this.studyToDataQueryFilter,
+        ],
+        invoke: async () => {
+            const studyIdToProfileMap = this
+                .studyToStructuralVariantMolecularProfile.result!;
+
+            if (_.isEmpty(studyIdToProfileMap)) {
+                return Promise.resolve([]);
+            }
+
+            const filters = this.samples.result.reduce(
+                (memo, sample: Sample) => {
+                    if (sample.studyId in studyIdToProfileMap) {
+                        memo.push({
+                            molecularProfileId:
+                                studyIdToProfileMap[sample.studyId]
+                                    .molecularProfileId,
+                            sampleId: sample.sampleId,
+                        });
+                    }
+                    return memo;
+                },
+                [] as StructuralVariantFilter['sampleMolecularIdentifiers']
+            );
+
+            return client.fetchStructuralVariantsUsingPOST({
+                structuralVariantFilter: {
+                    entrezGeneIds: [q.entrezGeneId],
+                    sampleMolecularIdentifiers: filters,
+                } as StructuralVariantFilter,
+            });
         },
     }));
 
