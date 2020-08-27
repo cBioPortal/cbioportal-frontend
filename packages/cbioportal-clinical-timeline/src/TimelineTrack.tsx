@@ -367,13 +367,17 @@ export const EventTooltipContent: React.FunctionComponent<{
                     {_.map(event.event.attributes, (att: any) => {
                         return (
                             <tr>
-                                <th>{att.key.replace('_', ' ')}</th>
+                                <th>{att.key.replace(/_/g, ' ')}</th>
                                 <td>{att.value}</td>
                             </tr>
                         );
                     })}
                     <tr>
-                        <th>START DATE:</th>
+                        <th>{`${
+                            event.event.endNumberOfDaysSinceDiagnosis
+                                ? 'START DATE'
+                                : 'DATE'
+                        }`}</th>
                         <td className={'nowrap'}>
                             {formatDate(
                                 event.event.startNumberOfDaysSinceDiagnosis
@@ -382,7 +386,7 @@ export const EventTooltipContent: React.FunctionComponent<{
                     </tr>
                     {event.event.endNumberOfDaysSinceDiagnosis && (
                         <tr>
-                            <th>END DATE:</th>
+                            <th>END DATE</th>
                             <td className={'nowrap'}>
                                 {formatDate(
                                     event.event.endNumberOfDaysSinceDiagnosis
