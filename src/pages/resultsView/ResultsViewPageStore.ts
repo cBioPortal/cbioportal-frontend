@@ -41,6 +41,7 @@ import {
     IHotspotIndex,
     indexHotspotsData,
     IOncoKbData,
+    isLinearClusterHotspot,
 } from 'cbioportal-utils';
 import {
     VariantAnnotation,
@@ -151,7 +152,6 @@ import {
     getGenesetProfiles,
     sortRnaSeqProfilesToTop,
 } from './coExpression/CoExpressionTabUtils';
-import { isRecurrentHotspot } from '../../shared/lib/AnnotationUtils';
 import { generateDownloadFilenamePrefixByStudies } from 'shared/lib/FilenameUtils';
 import {
     convertComparisonGroupClinicalAttribute,
@@ -4284,7 +4284,10 @@ export class ResultsViewPageStore {
                 const indexedHotspotData = this.indexedHotspotData.result;
                 if (indexedHotspotData) {
                     return Promise.resolve((mutation: Mutation) => {
-                        return isRecurrentHotspot(mutation, indexedHotspotData);
+                        return isLinearClusterHotspot(
+                            mutation,
+                            indexedHotspotData
+                        );
                     });
                 } else {
                     return Promise.resolve(
