@@ -1,7 +1,7 @@
 import {
     defaultHotspotFilter,
     filter3dHotspotsByMutations,
-    filterRecurrentHotspotsByMutations,
+    filterLinearClusterHotspotsByMutations,
     IHotspotIndex,
     isHotspot,
     Mutation,
@@ -33,7 +33,7 @@ export function hotspotTooltip(
     hotspotIndex: IHotspotIndex,
     hotspots: Hotspot[]
 ) {
-    const hotspotsRecurrent = filterRecurrentHotspotsByMutations(
+    const hotspotsLinearCluster = filterLinearClusterHotspotsByMutations(
         mutations,
         hotspotIndex
     );
@@ -56,7 +56,7 @@ export function hotspotTooltip(
 
     return (
         <HotspotInfo
-            isHotspot={hotspotsRecurrent.length > 0}
+            isHotspot={hotspotsLinearCluster.length > 0}
             is3dHotspot={hotspots3d.length > 0}
             count={hotspotCount}
             customInfo={residueInfo}
