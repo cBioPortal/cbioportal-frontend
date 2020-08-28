@@ -1926,17 +1926,6 @@ export class StudyViewPageStore {
     }
 
     @action
-    changeChartsVisibility(charts: { [uniqueKey: string]: boolean }) {
-        _.each(charts, (visible, uniqueKey) => {
-            if (visible) {
-                this._chartVisibility.set(uniqueKey, true);
-            } else {
-                this._chartVisibility.delete(uniqueKey);
-            }
-        });
-    }
-
-    @action
     resetFilterAndChangeChartVisibility(
         chartUniqueKey: string,
         visible: boolean
@@ -2151,12 +2140,12 @@ export class StudyViewPageStore {
             ) {
                 // delete it instead of setting it to false
                 // because adding chart back would insert in middle instead of appending at last
-                this._chartVisibility.delete(chartId);
+                this.changeChartVisibility(chartId, false);
             }
         });
         _.each(visibleChartIds, uniqueKey => {
             if (this._chartVisibility.get(uniqueKey) === undefined) {
-                this._chartVisibility.set(uniqueKey, true);
+                this.changeChartVisibility(uniqueKey, true);
             }
         });
     }
@@ -3492,7 +3481,7 @@ export class StudyViewPageStore {
         });
         this._customCharts.set(uniqueKey, chartMeta);
         this._customChartMap.set(uniqueKey, newChart);
-        this._chartVisibility.set(uniqueKey, true);
+        this.changeChartVisibility(uniqueKey, true);
         this._customChartsSelectedCases.set(uniqueKey, allCases);
         this.chartsType.set(uniqueKey, ChartTypeEnum.PIE_CHART);
         this.chartsDimension.set(uniqueKey, { w: 1, h: 1 });
@@ -3524,7 +3513,7 @@ export class StudyViewPageStore {
             );
 
             if (this._geneSpecificChartMap.has(uniqueKey)) {
-                this._chartVisibility.set(uniqueKey, true);
+                this.changeChartVisibility(uniqueKey, true);
             } else {
                 const newChartName = newChart.name
                     ? newChart.name
@@ -3542,7 +3531,7 @@ export class StudyViewPageStore {
                 this._geneSpecificCharts.set(uniqueKey, chartMeta);
 
                 this._geneSpecificChartMap.set(uniqueKey, newChart);
-                this._chartVisibility.set(uniqueKey, true);
+                this.changeChartVisibility(uniqueKey, true);
                 this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
                 this.chartsDimension.set(uniqueKey, { w: 2, h: 1 });
 
@@ -4148,18 +4137,29 @@ export class StudyViewPageStore {
             }
         }
 
-        if (!_.isEmpty(this.patientTreatments.result)) {
-            this.chartsType.set(
-                SpecialChartsUniqueKeyEnum.PATIENT_TREATMENTS,
-                ChartTypeEnum.PATIENT_TREATMENTS_TABLE
-            );
-        }
-
-        if (!_.isEmpty(this.sampleTreatments.result)) {
-            this.chartsType.set(
+        if (this.displayTreatments.result) {
+            this.changeChartVisibility(
                 SpecialChartsUniqueKeyEnum.SAMPLE_TREATMENTS,
-                ChartTypeEnum.SAMPLE_TREATMENTS_TABLE
+                true
             );
+            this.changeChartVisibility(
+                SpecialChartsUniqueKeyEnum.PATIENT_TREATMENTS,
+                true
+            );
+
+            if (!_.isEmpty(this.patientTreatments.result)) {
+                this.chartsType.set(
+                    SpecialChartsUniqueKeyEnum.PATIENT_TREATMENTS,
+                    ChartTypeEnum.PATIENT_TREATMENTS_TABLE
+                );
+            }
+
+            if (!_.isEmpty(this.sampleTreatments.result)) {
+                this.chartsType.set(
+                    SpecialChartsUniqueKeyEnum.SAMPLE_TREATMENTS,
+                    ChartTypeEnum.SAMPLE_TREATMENTS_TABLE
+                );
+            }
         }
 
         if (!_.isEmpty(this.mutationProfiles.result)) {
@@ -4552,7 +4552,7 @@ export class StudyViewPageStore {
                         this.samples.result.length
                     )
                 ) {
-                    this._chartVisibility.set(attributeId, true);
+                    this.changeChartVisibility(attributeId, true);
                 }
                 this.chartsType.set(attributeId, ChartTypeEnum.BAR_CHART);
                 this.chartsDimension.set(
