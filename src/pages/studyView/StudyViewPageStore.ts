@@ -6444,11 +6444,7 @@ export class StudyViewPageStore {
                     count =
                         this.molecularProfileSampleCountSet.result[
                             MolecularAlterationType_filenameSuffix.STRUCTURAL_VARIANT!
-                        ] ||
-                        this.molecularProfileSampleCountSet.result[
-                            MolecularAlterationType_filenameSuffix.FUSION!
-                        ] ||
-                        0;
+                        ] || 0;
                     break;
                 }
                 case ChartTypeEnum.CNA_GENES_TABLE: {

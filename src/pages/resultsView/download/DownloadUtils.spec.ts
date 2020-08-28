@@ -1208,9 +1208,9 @@ describe('DownloadUtils', () => {
 
         it('should return maximum number for the other types', () => {
             assert.equal(
-                decideMolecularProfileSortingOrder('FUSION'),
+                decideMolecularProfileSortingOrder('STRUCTURAL_VARIANT'),
                 Number.MAX_VALUE,
-                'FUSION should be put to the end'
+                'STRUCTURAL_VARIANT should be put to the end'
             );
         });
     });

@@ -1,5 +1,4 @@
 import { action, computed, observable } from 'mobx';
-import { ResultsViewComparisonSubTab } from '../ResultsViewPageHelpers';
 import ComparisonStore, {
     OverlapStrategy,
 } from '../../../shared/lib/comparison/ComparisonStore';
@@ -8,34 +7,18 @@ import { AppStore } from '../../../AppStore';
 import autobind from 'autobind-decorator';
 import { remoteData, stringListToIndexSet } from 'cbioportal-frontend-commons';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
-import { makeUniqueColorGetter } from '../../../shared/components/plots/PlotUtils';
 import {
-    ALTERED_COLOR,
     ALTERED_GROUP_NAME,
-    getAlteredByOncoprintTrackGroups,
-    getAlteredVsUnalteredGroups,
-    completeSessionGroups,
     ResultsViewComparisonGroup,
-    UNALTERED_COLOR,
     UNALTERED_GROUP_NAME,
 } from './ResultsViewComparisonUtils';
 import _ from 'lodash';
 import ifNotDefined from '../../../shared/lib/ifNotDefined';
-import {
-    Session,
-    SessionGroupData,
-} from '../../../shared/api/ComparisonGroupClient';
+import { Session } from '../../../shared/api/ComparisonGroupClient';
 import comparisonClient from '../../../shared/api/comparisonGroupClientInstance';
-import {
-    ComparisonGroup,
-    filterStudiesAttr,
-} from '../../groupComparison/GroupComparisonUtils';
+import { ComparisonGroup } from '../../groupComparison/GroupComparisonUtils';
 
 export default class ResultsViewComparisonStore extends ComparisonStore {
-    @observable private _currentTabId:
-        | ResultsViewComparisonSubTab
-        | undefined = undefined;
-
     constructor(
         appStore: AppStore,
         private urlWrapper: ResultsViewURLWrapper,

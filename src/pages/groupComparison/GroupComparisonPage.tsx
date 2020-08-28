@@ -37,6 +37,7 @@ import 'cbioportal-frontend-commons/dist/styles.css';
 import { OverlapStrategy } from '../../shared/lib/comparison/ComparisonStore';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import MethylationEnrichments from './MethylationEnrichments';
+import StructuralVariantEnrichments from './StructuralVariantEnrichments';
 
 export interface IGroupComparisonPageProps {
     routing: any;
@@ -163,6 +164,19 @@ export default class GroupComparisonPage extends React.Component<
                             }
                         >
                             <MutationEnrichments store={this.store} />
+                        </MSKTab>
+                    )}
+                    {this.store.showStructuralVariantsTab && (
+                        <MSKTab
+                            id={GroupComparisonTab.STRUCTURAL_VARIANTS}
+                            linkText="Structural Variants"
+                            anchorClassName={
+                                this.store.structuralVariantsTabUnavailable
+                                    ? 'greyedOut'
+                                    : ''
+                            }
+                        >
+                            <StructuralVariantEnrichments store={this.store} />
                         </MSKTab>
                     )}
                     {this.store.showCopyNumberTab && (

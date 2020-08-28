@@ -19,7 +19,6 @@ import { OverlapStrategy } from '../../../shared/lib/comparison/ComparisonStore'
 import ResultsViewComparisonStore from './ResultsViewComparisonStore';
 import { AppStore } from '../../../AppStore';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
-import { ResultsViewComparisonSubTab } from '../ResultsViewPageHelpers';
 import { GroupComparisonTab } from '../../groupComparison/GroupComparisonTabs';
 import Survival from '../../groupComparison/Survival';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
@@ -30,6 +29,7 @@ import styles from '../../groupComparison/styles.module.scss';
 import GroupSelector from '../../groupComparison/groupSelector/GroupSelector';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 import MethylationEnrichments from 'pages/groupComparison/MethylationEnrichments';
+import StructuralVariantEnrichments from 'pages/groupComparison/StructuralVariantEnrichments';
 
 export interface IComparisonTabProps {
     urlWrapper: ResultsViewURLWrapper;
@@ -135,10 +135,7 @@ export default class ComparisonTab extends React.Component<
                     onTabClick={this.props.urlWrapper.setComparisonSubTabId}
                     className="secondaryNavigation comparisonTabSubTabs"
                 >
-                    <MSKTab
-                        id={ResultsViewComparisonSubTab.OVERLAP}
-                        linkText="Overlap"
-                    >
+                    <MSKTab id={GroupComparisonTab.OVERLAP} linkText="Overlap">
                         <Overlap store={this.store} />
                     </MSKTab>
                     {this.store.showSurvivalTab && (
@@ -155,7 +152,7 @@ export default class ComparisonTab extends React.Component<
                         </MSKTab>
                     )}
                     <MSKTab
-                        id={ResultsViewComparisonSubTab.CLINICAL}
+                        id={GroupComparisonTab.CLINICAL}
                         linkText="Clinical"
                         anchorClassName={
                             this.store.clinicalTabUnavailable ? 'greyedOut' : ''
@@ -165,7 +162,7 @@ export default class ComparisonTab extends React.Component<
                     </MSKTab>
                     {this.store.showMutationsTab && (
                         <MSKTab
-                            id={ResultsViewComparisonSubTab.MUTATIONS}
+                            id={GroupComparisonTab.MUTATIONS}
                             linkText="Mutations"
                             anchorClassName={
                                 this.store.mutationsTabUnavailable
@@ -179,9 +176,25 @@ export default class ComparisonTab extends React.Component<
                             />
                         </MSKTab>
                     )}
+                    {this.store.showStructuralVariantsTab && (
+                        <MSKTab
+                            id={GroupComparisonTab.STRUCTURAL_VARIANTS}
+                            linkText="Structural Variants"
+                            anchorClassName={
+                                this.store.structuralVariantsTabUnavailable
+                                    ? 'greyedOut'
+                                    : ''
+                            }
+                        >
+                            <StructuralVariantEnrichments
+                                store={this.store}
+                                resultsViewStore={this.props.store}
+                            />
+                        </MSKTab>
+                    )}
                     {this.store.showCopyNumberTab && (
                         <MSKTab
-                            id={ResultsViewComparisonSubTab.CNA}
+                            id={GroupComparisonTab.CNA}
                             linkText="Copy-number"
                             anchorClassName={
                                 this.store.copyNumberUnavailable
@@ -197,7 +210,7 @@ export default class ComparisonTab extends React.Component<
                     )}
                     {this.store.showMRNATab && (
                         <MSKTab
-                            id={ResultsViewComparisonSubTab.MRNA}
+                            id={GroupComparisonTab.MRNA}
                             linkText="mRNA"
                             anchorClassName={
                                 this.store.mRNATabUnavailable ? 'greyedOut' : ''
@@ -211,7 +224,7 @@ export default class ComparisonTab extends React.Component<
                     )}
                     {this.store.showProteinTab && (
                         <MSKTab
-                            id={ResultsViewComparisonSubTab.PROTEIN}
+                            id={GroupComparisonTab.PROTEIN}
                             linkText="Protein"
                             anchorClassName={
                                 this.store.proteinTabUnavailable
@@ -227,7 +240,7 @@ export default class ComparisonTab extends React.Component<
                     )}
                     {this.store.showMethylationTab && (
                         <MSKTab
-                            id={ResultsViewComparisonSubTab.DNAMETHYLATION}
+                            id={GroupComparisonTab.DNAMETHYLATION}
                             linkText="DNA Methylation"
                             anchorClassName={
                                 this.store.methylationTabUnavailable

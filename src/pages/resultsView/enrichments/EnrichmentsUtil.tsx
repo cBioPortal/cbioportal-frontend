@@ -57,6 +57,7 @@ export enum GeneOptionLabel {
 export enum AlterationContainerType {
     MUTATION = 'MUTATION',
     COPY_NUMBER = 'COPY_NUMBER',
+    STRUCTURAL_VARIANT = 'STRUCTURAL_VARIANT',
 }
 
 export enum EnrichmentType {
@@ -397,6 +398,17 @@ export function pickMutationEnrichmentProfiles(profiles: MolecularProfile[]) {
         (profile: MolecularProfile) =>
             profile.molecularAlterationType ===
             AlterationTypeConstants.MUTATION_EXTENDED
+    );
+}
+
+export function pickStructuralVariantEnrichmentProfiles(
+    profiles: MolecularProfile[]
+) {
+    return _.filter(
+        profiles,
+        (profile: MolecularProfile) =>
+            profile.molecularAlterationType ===
+            AlterationTypeConstants.STRUCTURAL_VARIANT
     );
 }
 

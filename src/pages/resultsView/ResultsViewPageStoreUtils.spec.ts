@@ -1434,7 +1434,7 @@ describe('ResultsViewPageStoreUtils', () => {
                         ({ oncogenic: 'Oncogenic' } as IndicatorQueryResp),
                     {
                         profile: {
-                            molecularAlterationType: 'FUSION',
+                            molecularAlterationType: 'STRUCTURAL_VARIANT',
                         } as MolecularProfile,
                     },
                     { 9: { hugoGeneSymbol: 'genesymbol' } as Gene }
